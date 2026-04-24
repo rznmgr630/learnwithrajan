@@ -1,5 +1,8 @@
 import type { RoadmapDetailDiagramId } from "@/lib/challenge-data";
-import { isNodeRuntimeDiagram, NodeRuntimeDiagram } from "@/components/learn/NodeRuntimeDiagrams";
+import {
+  isNodeRuntimeDiagram,
+  NodeRuntimeDiagram,
+} from "@/components/learn/NodeRuntimeDiagrams";
 
 const figClass =
   "mt-3 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40 text-neutral-200";
@@ -13,38 +16,189 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
-            HTTP/1.1 — one in flight per connection (head-of-line blocking)
+            HTTP/1.1 — sequential: Req 2 is blocked until Resp 1 arrives
+            (head-of-line blocking)
           </figcaption>
-          <svg viewBox="0 0 360 140" className="h-auto w-full text-neutral-300" aria-hidden>
-            <text x="12" y="22" className="fill-neutral-500 text-[11px]">
-              Client
-            </text>
-            <text x="300" y="22" className="fill-neutral-500 text-[11px]">
-              Server
-            </text>
-            <line x1="60" y1="70" x2="300" y2="70" stroke="currentColor" strokeWidth="2" opacity="0.35" />
-            <rect x="12" y="40" width="44" height="18" rx="3" className="fill-sky-600/40 stroke-sky-500/60" strokeWidth="1" />
-            <text x="18" y="53" className="fill-neutral-200 text-[10px]">
-              Req1
-            </text>
-            <rect x="12" y="64" width="44" height="18" rx="3" className="fill-violet-600/30 stroke-violet-500/50" strokeWidth="1" />
-            <text x="18" y="77" className="fill-neutral-200 text-[10px]">
-              Req2
-            </text>
-            <rect x="12" y="88" width="44" height="18" rx="3" className="fill-emerald-600/30 stroke-emerald-500/50" strokeWidth="1" />
-            <text x="18" y="101" className="fill-neutral-200 text-[10px]">
-              Req3
-            </text>
-            <path d="M56 49 H 120 V 75 H 56" fill="none" stroke="#38bdf8" strokeWidth="2" markerEnd="url(#http11-arr)" />
-            <path d="M56 75 H 200 V 101 H 56" fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.9" />
-            <path d="M56 101 H 260 V 127 H 56" fill="none" stroke="#34d399" strokeWidth="2" opacity="0.9" />
+          <svg viewBox="0 0 360 186" className="h-auto w-full" aria-hidden>
             <defs>
-              <marker id="http11-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <marker
+                id="h11-r"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
                 <path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8" />
               </marker>
+              <marker
+                id="h11-b"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+              <marker
+                id="h11-g"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa" />
+              </marker>
+              <marker
+                id="h11-e"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
             </defs>
-            <text x="12" y="132" className="fill-neutral-500 text-[10px]">
-              {"Req2 waits for Req1's response on the same connection."}
+            {/* labels */}
+            <text
+              x="54"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Client
+            </text>
+            <text
+              x="306"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Server
+            </text>
+            {/* timelines */}
+            <line
+              x1="54"
+              y1="22"
+              x2="54"
+              y2="172"
+              stroke="#3f3f46"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="306"
+              y1="22"
+              x2="306"
+              y2="172"
+              stroke="#3f3f46"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            {/* Req 1 */}
+            <line
+              x1="54"
+              y1="38"
+              x2="300"
+              y2="38"
+              stroke="#38bdf8"
+              strokeWidth="2"
+              markerEnd="url(#h11-r)"
+            />
+            <text
+              x="174"
+              y="34"
+              textAnchor="middle"
+              className="fill-sky-400 text-[9px]"
+            >
+              GET /posts
+            </text>
+            {/* Resp 1 */}
+            <line
+              x1="306"
+              y1="78"
+              x2="60"
+              y2="78"
+              stroke="#94a3b8"
+              strokeWidth="2"
+              strokeDasharray="5 3"
+              markerEnd="url(#h11-b)"
+            />
+            <text
+              x="174"
+              y="74"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[9px]"
+            >
+              200 OK
+            </text>
+            {/* blocked indicator */}
+            <rect
+              x="28"
+              y="40"
+              width="22"
+              height="36"
+              rx="2"
+              fill="#fbbf2415"
+              stroke="#fbbf2440"
+              strokeWidth="1"
+            />
+            <text
+              x="39"
+              y="62"
+              textAnchor="middle"
+              className="fill-amber-400/70 text-[8px]"
+            >
+              wait
+            </text>
+            {/* Req 2 — starts only after Resp 1 */}
+            <line
+              x1="54"
+              y1="96"
+              x2="300"
+              y2="96"
+              stroke="#a78bfa"
+              strokeWidth="2"
+              markerEnd="url(#h11-g)"
+            />
+            <text
+              x="174"
+              y="92"
+              textAnchor="middle"
+              className="fill-violet-400 text-[9px]"
+            >
+              GET /users
+            </text>
+            {/* Resp 2 */}
+            <line
+              x1="306"
+              y1="136"
+              x2="60"
+              y2="136"
+              stroke="#64748b"
+              strokeWidth="2"
+              strokeDasharray="5 3"
+              markerEnd="url(#h11-e)"
+            />
+            <text
+              x="174"
+              y="132"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[9px]"
+            >
+              200 OK
+            </text>
+            {/* caption */}
+            <text
+              x="180"
+              y="180"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[9px]"
+            >
+              Req 2 cannot start until Resp 1 is fully received.
             </text>
           </svg>
         </figure>
@@ -54,18 +208,150 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
-            HTTP/2 — many streams, one TCP connection (still one byte stream underneath)
+            HTTP/2 — 3 streams in parallel over one TCP connection (TCP HoL
+            still applies on loss)
           </figcaption>
-          <svg viewBox="0 0 360 130" className="h-auto w-full" aria-hidden>
-            <text x="12" y="20" className="fill-neutral-500 text-[11px]">
-              TCP tunnel
+          <svg viewBox="0 0 360 152" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="h2-r"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8" />
+              </marker>
+              <marker
+                id="h2-v"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa" />
+              </marker>
+              <marker
+                id="h2-g"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#34d399" />
+              </marker>
+            </defs>
+            <text
+              x="32"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Client
             </text>
-            <rect x="40" y="32" width="280" height="72" rx="6" className="fill-neutral-800/80 stroke-neutral-600" strokeWidth="1" />
-            <line x1="52" y1="44" x2="308" y2="44" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
-            <line x1="52" y1="62" x2="308" y2="62" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
-            <line x1="52" y1="80" x2="308" y2="80" stroke="#34d399" strokeWidth="3" strokeLinecap="round" />
-            <text x="52" y="118" className="fill-neutral-500 text-[10px]">
-              Streams multiplex · TCP loss can still stall all streams until retransmit.
+            <text
+              x="328"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Server
+            </text>
+            {/* TCP wrapper */}
+            <rect
+              x="56"
+              y="26"
+              width="248"
+              height="86"
+              rx="6"
+              fill="none"
+              stroke="#3f3f46"
+              strokeWidth="1.5"
+              strokeDasharray="6 3"
+            />
+            <text
+              x="180"
+              y="23"
+              textAnchor="middle"
+              className="fill-neutral-600 text-[9px]"
+            >
+              one TCP connection
+            </text>
+            {/* streams — simultaneous */}
+            <line
+              x1="56"
+              y1="46"
+              x2="298"
+              y2="46"
+              stroke="#38bdf8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#h2-r)"
+            />
+            <text
+              x="174"
+              y="42"
+              textAnchor="middle"
+              className="fill-sky-400 text-[9px]"
+            >
+              Stream 1 — GET /posts
+            </text>
+            <line
+              x1="56"
+              y1="69"
+              x2="298"
+              y2="69"
+              stroke="#a78bfa"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#h2-v)"
+            />
+            <text
+              x="174"
+              y="65"
+              textAnchor="middle"
+              className="fill-violet-400 text-[9px]"
+            >
+              Stream 2 — GET /users
+            </text>
+            <line
+              x1="56"
+              y1="92"
+              x2="298"
+              y2="92"
+              stroke="#34d399"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#h2-g)"
+            />
+            <text
+              x="174"
+              y="88"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[9px]"
+            >
+              Stream 3 — GET /tags
+            </text>
+            {/* note */}
+            <text
+              x="180"
+              y="128"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[9px]"
+            >
+              ⚠ Packet loss on any stream stalls all streams (TCP reassembly is
+              shared).
+            </text>
+            <text
+              x="180"
+              y="144"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[9px]"
+            >
+              HTTP/3 / QUIC removes this coupling.
             </text>
           </svg>
         </figure>
@@ -75,18 +361,141 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
-            HTTP/3 — QUIC streams over UDP (independent loss recovery per stream)
+            HTTP/3 / QUIC — independent loss recovery: Stream 2 stalls, Streams
+            1 &amp; 3 continue
           </figcaption>
-          <svg viewBox="0 0 360 130" className="h-auto w-full" aria-hidden>
-            <text x="140" y="22" className="fill-amber-400/90 text-[11px] font-medium">
-              UDP + QUIC
+          <svg viewBox="0 0 360 160" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="h3-r"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8" />
+              </marker>
+              <marker
+                id="h3-g"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#34d399" />
+              </marker>
+            </defs>
+            <text
+              x="32"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Client
             </text>
-            <path d="M20 95 Q 90 40 180 50 T 340 45" fill="none" stroke="#52525b" strokeWidth="1.5" strokeDasharray="4 3" />
-            <line x1="40" y1="48" x2="300" y2="48" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
-            <line x1="40" y1="68" x2="280" y2="68" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
-            <line x1="40" y1="88" x2="260" y2="88" stroke="#34d399" strokeWidth="3" strokeLinecap="round" />
-            <text x="12" y="118" className="fill-neutral-500 text-[10px]">
-              Packet loss on stream A does not have to block B/C the same way as single TCP HOL.
+            <text
+              x="328"
+              y="18"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[11px] font-medium"
+            >
+              Server
+            </text>
+            <text
+              x="180"
+              y="30"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[10px] font-medium"
+            >
+              UDP + QUIC (per-stream reliability)
+            </text>
+            {/* Stream 1 — OK */}
+            <line
+              x1="56"
+              y1="48"
+              x2="298"
+              y2="48"
+              stroke="#38bdf8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#h3-r)"
+            />
+            <text
+              x="174"
+              y="44"
+              textAnchor="middle"
+              className="fill-sky-400 text-[9px]"
+            >
+              Stream 1 — OK ✓
+            </text>
+            {/* Stream 2 — packet loss, stalls mid-way */}
+            <line
+              x1="56"
+              y1="78"
+              x2="175"
+              y2="78"
+              stroke="#f87171"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <text x="185" y="82" className="fill-red-400 text-[11px] font-bold">
+              ✕
+            </text>
+            <line
+              x1="196"
+              y1="78"
+              x2="298"
+              y2="78"
+              stroke="#f87171"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray="5 4"
+            />
+            <text
+              x="174"
+              y="70"
+              textAnchor="middle"
+              className="fill-red-400 text-[9px]"
+            >
+              Stream 2 — packet loss → retransmit (stalled)
+            </text>
+            {/* Stream 3 — OK, continues despite stream 2 stall */}
+            <line
+              x1="56"
+              y1="108"
+              x2="298"
+              y2="108"
+              stroke="#34d399"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#h3-g)"
+            />
+            <text
+              x="174"
+              y="104"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[9px]"
+            >
+              Stream 3 — OK ✓ (not blocked by Stream 2)
+            </text>
+            {/* notes */}
+            <text
+              x="180"
+              y="132"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[9px]"
+            >
+              Each QUIC stream tracks its own sequence space.
+            </text>
+            <text
+              x="180"
+              y="148"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[9px]"
+            >
+              Stream 2 retransmits independently; 1 and 3 are unaffected.
             </text>
           </svg>
         </figure>
@@ -96,18 +505,40 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
-            Typical HTTP exchange (method + path + headers → status + headers + body)
+            Typical HTTP exchange (method + path + headers → status + headers +
+            body)
           </figcaption>
           <svg viewBox="0 0 360 100" className="h-auto w-full" aria-hidden>
-            <rect x="16" y="24" width="100" height="52" rx="6" className="fill-neutral-800 stroke-neutral-600" strokeWidth="1" />
+            <rect
+              x="16"
+              y="24"
+              width="100"
+              height="52"
+              rx="6"
+              className="fill-neutral-800 stroke-neutral-600"
+              strokeWidth="1"
+            />
             <text x="28" y="46" className="fill-neutral-300 text-[10px]">
               GET /posts/7
             </text>
             <text x="28" y="62" className="fill-neutral-500 text-[9px]">
               Accept: application/json
             </text>
-            <path d="M130 50 H 210" stroke="#64748b" strokeWidth="2" markerEnd="url(#reqresp-arr)" />
-            <rect x="220" y="24" width="124" height="52" rx="6" className="fill-neutral-800 stroke-emerald-600/50" strokeWidth="1" />
+            <path
+              d="M130 50 H 210"
+              stroke="#64748b"
+              strokeWidth="2"
+              markerEnd="url(#reqresp-arr)"
+            />
+            <rect
+              x="220"
+              y="24"
+              width="124"
+              height="52"
+              rx="6"
+              className="fill-neutral-800 stroke-emerald-600/50"
+              strokeWidth="1"
+            />
             <text x="232" y="46" className="fill-emerald-300/90 text-[10px]">
               200 OK
             </text>
@@ -115,7 +546,14 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
               {'{ "title": "…" }'}
             </text>
             <defs>
-              <marker id="reqresp-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <marker
+                id="reqresp-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
                 <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
               </marker>
             </defs>
@@ -130,25 +568,1390 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
             401 vs 403 — identity vs permission
           </figcaption>
           <svg viewBox="0 0 360 108" className="h-auto w-full" aria-hidden>
-            <rect x="12" y="16" width="150" height="76" rx="8" className="fill-amber-950/40 stroke-amber-600/40" strokeWidth="1" />
-            <text x="24" y="40" className="fill-amber-200/90 text-[11px] font-semibold">
+            <rect
+              x="12"
+              y="16"
+              width="150"
+              height="76"
+              rx="8"
+              className="fill-amber-950/40 stroke-amber-600/40"
+              strokeWidth="1"
+            />
+            <text
+              x="24"
+              y="40"
+              className="fill-amber-200/90 text-[11px] font-semibold"
+            >
               No / bad identity?
             </text>
             <text x="24" y="58" className="fill-neutral-400 text-[10px]">
               Missing token, expired JWT
             </text>
-            <text x="24" y="80" className="fill-amber-300 text-[12px] font-bold">
+            <text
+              x="24"
+              y="80"
+              className="fill-amber-300 text-[12px] font-bold"
+            >
               → 401
             </text>
-            <rect x="198" y="16" width="150" height="76" rx="8" className="fill-rose-950/35 stroke-rose-600/40" strokeWidth="1" />
-            <text x="210" y="40" className="fill-rose-200/90 text-[11px] font-semibold">
+            <rect
+              x="198"
+              y="16"
+              width="150"
+              height="76"
+              rx="8"
+              className="fill-rose-950/35 stroke-rose-600/40"
+              strokeWidth="1"
+            />
+            <text
+              x="210"
+              y="40"
+              className="fill-rose-200/90 text-[11px] font-semibold"
+            >
               Known user, not allowed?
             </text>
             <text x="210" y="58" className="fill-neutral-400 text-[10px]">
               Wrong role on resource
             </text>
-            <text x="210" y="80" className="fill-rose-300 text-[12px] font-bold">
+            <text
+              x="210"
+              y="80"
+              className="fill-rose-300 text-[12px] font-bold"
+            >
               → 403
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "acid-transaction":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            ACID transaction — commit path vs rollback path
+          </figcaption>
+          <svg viewBox="0 0 420 172" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="acid-ok"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+              </marker>
+              <marker
+                id="acid-rb"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#f87171" />
+              </marker>
+              <marker
+                id="acid-n"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#71717a" />
+              </marker>
+            </defs>
+            {/* BEGIN */}
+            <rect
+              x="12"
+              y="68"
+              width="64"
+              height="28"
+              rx="4"
+              fill="#1c1c1e"
+              stroke="#71717a"
+              strokeWidth="1"
+            />
+            <text
+              x="44"
+              y="86"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[9px] font-semibold"
+            >
+              BEGIN
+            </text>
+            <line
+              x1="78"
+              y1="82"
+              x2="106"
+              y2="82"
+              stroke="#71717a"
+              strokeWidth="1.5"
+              markerEnd="url(#acid-n)"
+            />
+            {/* OPS block */}
+            <rect
+              x="108"
+              y="56"
+              width="80"
+              height="52"
+              rx="4"
+              fill="#1e3a5f"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeOpacity="0.6"
+            />
+            <text
+              x="148"
+              y="76"
+              textAnchor="middle"
+              className="fill-sky-300 text-[9px] font-semibold"
+            >
+              SQL ops
+            </text>
+            <text
+              x="148"
+              y="90"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              UPDATE A
+            </text>
+            <text
+              x="148"
+              y="102"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              UPDATE B
+            </text>
+            <line
+              x1="190"
+              y1="82"
+              x2="218"
+              y2="82"
+              stroke="#71717a"
+              strokeWidth="1.5"
+              markerEnd="url(#acid-n)"
+            />
+            {/* Decision diamond */}
+            <polygon
+              points="238,60 268,82 238,104 208,82"
+              fill="#2d2000"
+              stroke="#f59e0b"
+              strokeWidth="1"
+            />
+            <text
+              x="238"
+              y="79"
+              textAnchor="middle"
+              className="fill-amber-300 text-[8px]"
+            >
+              all
+            </text>
+            <text
+              x="238"
+              y="91"
+              textAnchor="middle"
+              className="fill-amber-300 text-[8px]"
+            >
+              OK?
+            </text>
+            {/* COMMIT path */}
+            <line
+              x1="268"
+              y1="82"
+              x2="296"
+              y2="82"
+              stroke="#4ade80"
+              strokeWidth="1.5"
+              markerEnd="url(#acid-ok)"
+            />
+            <rect
+              x="298"
+              y="68"
+              width="68"
+              height="28"
+              rx="4"
+              fill="#1a2e1a"
+              stroke="#4ade80"
+              strokeWidth="1"
+              strokeOpacity="0.8"
+            />
+            <text
+              x="332"
+              y="83"
+              textAnchor="middle"
+              className="fill-emerald-300 text-[9px] font-semibold"
+            >
+              COMMIT
+            </text>
+            <text
+              x="332"
+              y="95"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              WAL fsync
+            </text>
+            <text x="268" y="78" className="fill-emerald-500 text-[8px]">
+              yes
+            </text>
+            {/* ROLLBACK path */}
+            <line
+              x1="238"
+              y1="104"
+              x2="238"
+              y2="132"
+              stroke="#f87171"
+              strokeWidth="1.5"
+              markerEnd="url(#acid-rb)"
+            />
+            <rect
+              x="180"
+              y="134"
+              width="116"
+              height="28"
+              rx="4"
+              fill="#3b0f14"
+              stroke="#f87171"
+              strokeWidth="1"
+              strokeOpacity="0.7"
+            />
+            <text
+              x="238"
+              y="149"
+              textAnchor="middle"
+              className="fill-red-300 text-[9px] font-semibold"
+            >
+              ROLLBACK
+            </text>
+            <text
+              x="238"
+              y="161"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              undo all ops — as if nothing ran
+            </text>
+            <text x="242" y="120" className="fill-red-400 text-[8px]">
+              no / error
+            </text>
+            {/* Durability note */}
+            <text x="298" y="112" className="fill-neutral-500 text-[8px]">
+              Durability:
+            </text>
+            <text x="298" y="123" className="fill-neutral-500 text-[8px]">
+              survives crash
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "isolation-levels":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Isolation levels vs concurrency anomalies — ✅ prevented, ❌
+            possible
+          </figcaption>
+          <svg viewBox="0 0 460 148" className="h-auto w-full" aria-hidden>
+            {/* header row */}
+            {[
+              "Isolation level",
+              "Dirty read",
+              "Non-repeatable",
+              "Phantom read",
+              "Default in",
+            ].map((h, i) => (
+              <text
+                key={h}
+                x={i === 0 ? 8 : 118 + (i - 1) * 82}
+                y="22"
+                className="fill-neutral-400 text-[9px] font-semibold"
+              >
+                {h}
+              </text>
+            ))}
+            <line
+              x1="4"
+              y1="28"
+              x2="456"
+              y2="28"
+              stroke="#3f3f46"
+              strokeWidth="1"
+            />
+            {[
+              {
+                level: "Read Uncommitted",
+                dirty: "❌",
+                nonrep: "❌",
+                phantom: "❌",
+                db: "—",
+              },
+              {
+                level: "Read Committed",
+                dirty: "✅",
+                nonrep: "❌",
+                phantom: "❌",
+                db: "PostgreSQL",
+              },
+              {
+                level: "Repeatable Read",
+                dirty: "✅",
+                nonrep: "✅",
+                phantom: "❌",
+                db: "MySQL InnoDB",
+              },
+              {
+                level: "Serializable",
+                dirty: "✅",
+                nonrep: "✅",
+                phantom: "✅",
+                db: "explicit SET",
+              },
+            ].map(({ level, dirty, nonrep, phantom, db }, i) => {
+              const y = 46 + i * 24;
+              const bg = i % 2 === 0 ? "#1c1c1e" : "transparent";
+              return (
+                <g key={level}>
+                  <rect
+                    x="4"
+                    y={y - 12}
+                    width="452"
+                    height="22"
+                    rx="2"
+                    fill={bg}
+                  />
+                  <text x="8" y={y} className="fill-neutral-300 text-[9px]">
+                    {level}
+                  </text>
+                  <text
+                    x="152"
+                    y={y}
+                    className={`text-[9px] ${dirty === "✅" ? "fill-emerald-400" : "fill-red-400"}`}
+                  >
+                    {dirty}
+                  </text>
+                  <text
+                    x="234"
+                    y={y}
+                    className={`text-[9px] ${nonrep === "✅" ? "fill-emerald-400" : "fill-red-400"}`}
+                  >
+                    {nonrep}
+                  </text>
+                  <text
+                    x="316"
+                    y={y}
+                    className={`text-[9px] ${phantom === "✅" ? "fill-emerald-400" : "fill-red-400"}`}
+                  >
+                    {phantom}
+                  </text>
+                  <text x="378" y={y} className="fill-neutral-500 text-[8px]">
+                    {db}
+                  </text>
+                </g>
+              );
+            })}
+            <text x="4" y="144" className="fill-amber-400/70 text-[8px]">
+              Higher isolation = fewer anomalies + more locking overhead. Most
+              apps only need Read Committed.
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "btree-index":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            B-tree index — O(log n) tree traversal vs O(n) sequential scan
+          </figcaption>
+          <svg viewBox="0 0 420 180" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="bt-arr"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#71717a" />
+              </marker>
+              <marker
+                id="bt-hit"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#4ade80" />
+              </marker>
+            </defs>
+            {/* B-tree side */}
+            <text
+              x="8"
+              y="14"
+              className="fill-sky-400 text-[9px] font-semibold"
+            >
+              B-tree index (height ≈ 3–4 for millions of rows)
+            </text>
+            {/* root */}
+            <rect
+              x="150"
+              y="22"
+              width="80"
+              height="22"
+              rx="3"
+              fill="#1e3a5f"
+              stroke="#38bdf8"
+              strokeWidth="1"
+            />
+            <text
+              x="190"
+              y="37"
+              textAnchor="middle"
+              className="fill-sky-300 text-[9px]"
+            >
+              root [50 | 150]
+            </text>
+            {/* internal nodes */}
+            <rect
+              x="60"
+              y="62"
+              width="72"
+              height="20"
+              rx="3"
+              fill="#1c1c1e"
+              stroke="#52525b"
+              strokeWidth="1"
+            />
+            <text
+              x="96"
+              y="76"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[8px]"
+            >
+              [10 | 30]
+            </text>
+            <rect
+              x="164"
+              y="62"
+              width="72"
+              height="20"
+              rx="3"
+              fill="#1c1c1e"
+              stroke="#52525b"
+              strokeWidth="1"
+            />
+            <text
+              x="200"
+              y="76"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[8px]"
+            >
+              [60 | 90]
+            </text>
+            {/* root → internal */}
+            <line
+              x1="170"
+              y1="44"
+              x2="114"
+              y2="62"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            <line
+              x1="210"
+              y1="44"
+              x2="200"
+              y2="62"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            {/* leaf nodes (linked) */}
+            {[10, 30, 60, 90].map((v, i) => (
+              <g key={v}>
+                <rect
+                  x={20 + i * 84}
+                  y="102"
+                  width="72"
+                  height="32"
+                  rx="3"
+                  fill={v === 60 ? "#1a2e1a" : "#1c1c1e"}
+                  stroke={v === 60 ? "#4ade80" : "#3f3f46"}
+                  strokeWidth={v === 60 ? 1.5 : 1}
+                />
+                <text
+                  x={56 + i * 84}
+                  y="116"
+                  textAnchor="middle"
+                  className="fill-neutral-300 text-[8px]"
+                >
+                  {v}
+                </text>
+                <text
+                  x={56 + i * 84}
+                  y="128"
+                  textAnchor="middle"
+                  className="fill-neutral-500 text-[7px]"
+                >
+                  → heap ptr
+                </text>
+                {i < 3 && (
+                  <line
+                    x1={92 + i * 84}
+                    y1="118"
+                    x2={104 + i * 84}
+                    y2="118"
+                    stroke="#3f3f46"
+                    strokeWidth="1"
+                    markerEnd="url(#bt-arr)"
+                  />
+                )}
+              </g>
+            ))}
+            <text x="8" y="152" className="fill-emerald-400 text-[8px]">
+              Query: WHERE id = 60 → 3 page reads (root + internal + leaf) vs
+              full scan of all pages
+            </text>
+            {/* internal → leaves */}
+            <line
+              x1="90"
+              y1="82"
+              x2="56"
+              y2="102"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            <line
+              x1="108"
+              y1="82"
+              x2="140"
+              y2="102"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            <line
+              x1="184"
+              y1="82"
+              x2="224"
+              y2="102"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            <line
+              x1="220"
+              y1="82"
+              x2="308"
+              y2="102"
+              stroke="#52525b"
+              strokeWidth="1"
+              markerEnd="url(#bt-arr)"
+            />
+            {/* seq scan comparison */}
+            <text x="8" y="170" className="fill-neutral-600 text-[8px]">
+              Seq scan: reads every page in the table — O(n). Index: O(log n)
+              traversal + heap fetch.
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "rest-graphql-grpc":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            REST vs GraphQL vs gRPC — client/server interaction model
+          </figcaption>
+          <svg viewBox="0 0 460 192" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="rgg-a"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#71717a" />
+              </marker>
+              <marker
+                id="rgg-b"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#38bdf8" />
+              </marker>
+              <marker
+                id="rgg-g"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#a78bfa" />
+              </marker>
+              <marker
+                id="rgg-r"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#34d399" />
+              </marker>
+            </defs>
+            {/* Column headers */}
+            {[
+              ["REST", "#38bdf8", 76],
+              ["GraphQL", "#a78bfa", 228],
+              ["gRPC", "#34d399", 380],
+            ].map(([label, color, x]) => (
+              <text
+                key={String(label)}
+                x={Number(x)}
+                y="16"
+                textAnchor="middle"
+                style={{ fill: String(color) }}
+                className="text-[10px] font-semibold"
+              >
+                {label}
+              </text>
+            ))}
+            {/* REST */}
+            <rect
+              x="12"
+              y="26"
+              width="128"
+              height="22"
+              rx="3"
+              fill="#082f49"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeOpacity="0.5"
+            />
+            <text
+              x="76"
+              y="41"
+              textAnchor="middle"
+              className="fill-sky-300 text-[8px]"
+            >
+              GET /users/42/posts
+            </text>
+            <line
+              x1="76"
+              y1="50"
+              x2="76"
+              y2="60"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              markerEnd="url(#rgg-b)"
+            />
+            <rect
+              x="12"
+              y="62"
+              width="128"
+              height="22"
+              rx="3"
+              fill="#082f49"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+            />
+            <text
+              x="76"
+              y="77"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[8px]"
+            >
+              200 {"{"} id, title, body, author {"}"}
+            </text>
+            <text
+              x="76"
+              y="102"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[8px]"
+            >
+              ⚠ over-fetches
+            </text>
+            <text
+              x="76"
+              y="114"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              if client needs only title
+            </text>
+            <text
+              x="76"
+              y="132"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ HTTP cache works
+            </text>
+            <text
+              x="76"
+              y="144"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ any client
+            </text>
+            <text
+              x="76"
+              y="156"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              multiple endpoints
+            </text>
+            {/* GraphQL */}
+            <rect
+              x="164"
+              y="26"
+              width="128"
+              height="36"
+              rx="3"
+              fill="#2e1065"
+              stroke="#a78bfa"
+              strokeWidth="1"
+              strokeOpacity="0.5"
+            />
+            <text
+              x="228"
+              y="40"
+              textAnchor="middle"
+              className="fill-violet-300 text-[8px]"
+            >
+              POST /graphql
+            </text>
+            <text
+              x="228"
+              y="54"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              {"{ posts { title } }"}
+            </text>
+            <line
+              x1="228"
+              y1="64"
+              x2="228"
+              y2="74"
+              stroke="#a78bfa"
+              strokeWidth="1"
+              markerEnd="url(#rgg-g)"
+            />
+            <rect
+              x="164"
+              y="76"
+              width="128"
+              height="22"
+              rx="3"
+              fill="#2e1065"
+              stroke="#a78bfa"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+            />
+            <text
+              x="228"
+              y="91"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[8px]"
+            >
+              {"{ data: { posts: [{ title }] } }"}
+            </text>
+            <text
+              x="228"
+              y="114"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ exact fields, no waste
+            </text>
+            <text
+              x="228"
+              y="126"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ one endpoint
+            </text>
+            <text
+              x="228"
+              y="138"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[8px]"
+            >
+              ⚠ POST = no CDN cache
+            </text>
+            <text
+              x="228"
+              y="150"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[8px]"
+            >
+              ⚠ N+1 without DataLoader
+            </text>
+            {/* gRPC */}
+            <rect
+              x="316"
+              y="26"
+              width="132"
+              height="36"
+              rx="3"
+              fill="#1a2e1a"
+              stroke="#34d399"
+              strokeWidth="1"
+              strokeOpacity="0.5"
+            />
+            <text
+              x="382"
+              y="40"
+              textAnchor="middle"
+              className="fill-emerald-300 text-[8px]"
+            >
+              GetPost(id: "42")
+            </text>
+            <text
+              x="382"
+              y="54"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[8px]"
+            >
+              Protobuf binary
+            </text>
+            <line
+              x1="382"
+              y1="64"
+              x2="382"
+              y2="74"
+              stroke="#34d399"
+              strokeWidth="1"
+              markerEnd="url(#rgg-r)"
+            />
+            <rect
+              x="316"
+              y="76"
+              width="132"
+              height="22"
+              rx="3"
+              fill="#1a2e1a"
+              stroke="#34d399"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+            />
+            <text
+              x="382"
+              y="91"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[8px]"
+            >
+              Post {"{"} id, title, … {"}"} binary
+            </text>
+            <text
+              x="382"
+              y="114"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ smallest payload
+            </text>
+            <text
+              x="382"
+              y="126"
+              textAnchor="middle"
+              className="fill-emerald-400/80 text-[8px]"
+            >
+              ✓ streaming built-in
+            </text>
+            <text
+              x="382"
+              y="138"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[8px]"
+            >
+              ⚠ needs code gen
+            </text>
+            <text
+              x="382"
+              y="150"
+              textAnchor="middle"
+              className="fill-amber-400/80 text-[8px]"
+            >
+              ⚠ no browser support
+            </text>
+            {/* dividers */}
+            <line
+              x1="152"
+              y1="20"
+              x2="152"
+              y2="168"
+              stroke="#27272a"
+              strokeWidth="1"
+            />
+            <line
+              x1="304"
+              y1="20"
+              x2="304"
+              y2="168"
+              stroke="#27272a"
+              strokeWidth="1"
+            />
+            <text
+              x="230"
+              y="184"
+              textAnchor="middle"
+              className="fill-neutral-600 text-[8px]"
+            >
+              REST → public APIs · GraphQL → BFF / multi-client · gRPC →
+              internal services
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "cursor-pagination":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Cursor vs offset pagination — offset drifts on inserts; cursor stays
+            stable
+          </figcaption>
+          <svg viewBox="0 0 460 172" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="cp-a"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#71717a" />
+              </marker>
+              <marker
+                id="cp-r"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#f87171" />
+              </marker>
+              <marker
+                id="cp-g"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#4ade80" />
+              </marker>
+            </defs>
+            {/* Labels */}
+            <text
+              x="114"
+              y="14"
+              textAnchor="middle"
+              className="fill-red-400 text-[9px] font-semibold"
+            >
+              Offset (broken on insert)
+            </text>
+            <text
+              x="344"
+              y="14"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[9px] font-semibold"
+            >
+              Cursor (stable)
+            </text>
+            <line
+              x1="228"
+              y1="8"
+              x2="228"
+              y2="168"
+              stroke="#27272a"
+              strokeWidth="1"
+            />
+            {/* Offset side — rows */}
+            {[
+              "Post E (new insert)",
+              "Post D",
+              "Post C",
+              "Post B",
+              "Post A",
+            ].map((label, i) => {
+              const y = 28 + i * 22;
+              const isNew = i === 0;
+              const isPage1 = i >= 1 && i <= 2;
+              const isDupe = i === 2;
+              return (
+                <g key={label}>
+                  <rect
+                    x="12"
+                    y={y}
+                    width="148"
+                    height="18"
+                    rx="2"
+                    fill={isNew ? "#3b0f14" : isDupe ? "#2d1a1a" : "#1c1c1e"}
+                    stroke={isNew ? "#f87171" : isDupe ? "#fb923c" : "#3f3f46"}
+                    strokeWidth={isNew ? 1.5 : 1}
+                  />
+                  <text
+                    x="86"
+                    y={y + 12}
+                    textAnchor="middle"
+                    className={`text-[8px] ${isNew ? "fill-red-300" : isDupe ? "fill-orange-300" : "fill-neutral-400"}`}
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            })}
+            <rect
+              x="10"
+              y="50"
+              width="152"
+              height="44"
+              rx="2"
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+            />
+            <text
+              x="86"
+              y="104"
+              textAnchor="middle"
+              className="fill-sky-400 text-[7px]"
+            >
+              Page 1: LIMIT 2 OFFSET 0
+            </text>
+            <rect
+              x="10"
+              y="72"
+              width="152"
+              height="44"
+              rx="2"
+              fill="none"
+              stroke="#f87171"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+            />
+            <text
+              x="86"
+              y="126"
+              textAnchor="middle"
+              className="fill-red-400 text-[7px]"
+            >
+              Page 2: LIMIT 2 OFFSET 2 → Post C shown twice!
+            </text>
+            {/* Cursor side — rows */}
+            {[
+              "Post E (new insert)",
+              "Post D",
+              "Post C",
+              "Post B",
+              "Post A",
+            ].map((label, i) => {
+              const y = 28 + i * 22;
+              const isNew = i === 0;
+              return (
+                <g key={label + "-r"}>
+                  <rect
+                    x="240"
+                    y={y}
+                    width="148"
+                    height="18"
+                    rx="2"
+                    fill={isNew ? "#1a2e1a" : "#1c1c1e"}
+                    stroke={isNew ? "#4ade80" : "#3f3f46"}
+                    strokeWidth={isNew ? 1.5 : 1}
+                  />
+                  <text
+                    x="314"
+                    y={y + 12}
+                    textAnchor="middle"
+                    className={`text-[8px] ${isNew ? "fill-emerald-300" : "fill-neutral-400"}`}
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            })}
+            <rect
+              x="238"
+              y="50"
+              width="152"
+              height="44"
+              rx="2"
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+            />
+            <text
+              x="314"
+              y="104"
+              textAnchor="middle"
+              className="fill-sky-400 text-[7px]"
+            >
+              Page 1: WHERE ... LIMIT 2 → cursor = Post D
+            </text>
+            <rect
+              x="238"
+              y="72"
+              width="152"
+              height="44"
+              rx="2"
+              fill="none"
+              stroke="#4ade80"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+            />
+            <text
+              x="314"
+              y="126"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[7px]"
+            >
+              Page 2: WHERE key {"<"} cursor → Post C, Post B ✓
+            </text>
+            <text
+              x="314"
+              y="138"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              New insert shifts nothing — cursor is a key, not a position
+            </text>
+            <text
+              x="230"
+              y="160"
+              textAnchor="middle"
+              className="fill-neutral-600 text-[8px]"
+            >
+              Cursor query: WHERE (created_at, id) {"<"} ($ts, $id) ORDER BY
+              created_at DESC LIMIT n
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "rate-limit-token-bucket":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Token bucket — refill at rate R/sec, consume 1 per request, allow
+            bursts up to capacity N
+          </figcaption>
+          <svg viewBox="0 0 420 168" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="tb-a"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#71717a" />
+              </marker>
+              <marker
+                id="tb-g"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#4ade80" />
+              </marker>
+              <marker
+                id="tb-r"
+                markerWidth="5"
+                markerHeight="5"
+                refX="4"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill="#f87171" />
+              </marker>
+            </defs>
+            {/* Bucket */}
+            <rect
+              x="148"
+              y="48"
+              width="84"
+              height="80"
+              rx="4"
+              fill="#1c1c1e"
+              stroke="#52525b"
+              strokeWidth="1.5"
+            />
+            <text
+              x="190"
+              y="42"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[9px]"
+            >
+              bucket (capacity = 10)
+            </text>
+            {/* Tokens inside bucket */}
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+              <circle
+                key={i}
+                cx={162 + (i % 4) * 18}
+                cy={68 + Math.floor(i / 4) * 18}
+                r="6"
+                fill="#1e3a5f"
+                stroke="#38bdf8"
+                strokeWidth="1"
+                strokeOpacity="0.7"
+              />
+            ))}
+            <text
+              x="190"
+              y="120"
+              textAnchor="middle"
+              className="fill-sky-400 text-[8px]"
+            >
+              7 tokens left
+            </text>
+            {/* Refill arrow (top) */}
+            <line
+              x1="190"
+              y1="20"
+              x2="190"
+              y2="46"
+              stroke="#4ade80"
+              strokeWidth="1.5"
+              markerEnd="url(#tb-g)"
+            />
+            <text
+              x="190"
+              y="16"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[8px]"
+            >
+              +R tokens/sec (refill)
+            </text>
+            {/* Request comes in (left) */}
+            <line
+              x1="50"
+              y1="90"
+              x2="146"
+              y2="90"
+              stroke="#38bdf8"
+              strokeWidth="1.5"
+              markerEnd="url(#tb-a)"
+            />
+            <text
+              x="98"
+              y="85"
+              textAnchor="middle"
+              className="fill-sky-400 text-[8px]"
+            >
+              request
+            </text>
+            {/* Allowed path (right) */}
+            <line
+              x1="234"
+              y1="78"
+              x2="310"
+              y2="78"
+              stroke="#4ade80"
+              strokeWidth="1.5"
+              markerEnd="url(#tb-g)"
+            />
+            <rect
+              x="312"
+              y="66"
+              width="72"
+              height="24"
+              rx="3"
+              fill="#1a2e1a"
+              stroke="#4ade80"
+              strokeWidth="1"
+            />
+            <text
+              x="348"
+              y="82"
+              textAnchor="middle"
+              className="fill-emerald-300 text-[8px]"
+            >
+              200 OK
+            </text>
+            <text
+              x="270"
+              y="73"
+              textAnchor="middle"
+              className="fill-emerald-400 text-[7px]"
+            >
+              token {">"} 0: consume 1
+            </text>
+            {/* Rejected path (right, lower) */}
+            <line
+              x1="234"
+              y1="110"
+              x2="310"
+              y2="110"
+              stroke="#f87171"
+              strokeWidth="1.5"
+              markerEnd="url(#tb-r)"
+            />
+            <rect
+              x="312"
+              y="98"
+              width="72"
+              height="24"
+              rx="3"
+              fill="#3b0f14"
+              stroke="#f87171"
+              strokeWidth="1"
+            />
+            <text
+              x="348"
+              y="114"
+              textAnchor="middle"
+              className="fill-red-300 text-[8px]"
+            >
+              429 Too Many
+            </text>
+            <text
+              x="270"
+              y="106"
+              textAnchor="middle"
+              className="fill-red-400 text-[7px]"
+            >
+              bucket empty
+            </text>
+            {/* Burst note */}
+            <text x="14" y="148" className="fill-neutral-500 text-[8px]">
+              Burst: if bucket is full (10 tokens), client can fire 10 rapid
+              requests before rate-limiting kicks in.
+            </text>
+            <text x="14" y="160" className="fill-neutral-500 text-[8px]">
+              Long-term average is always bounded by the refill rate R.
             </text>
           </svg>
         </figure>
