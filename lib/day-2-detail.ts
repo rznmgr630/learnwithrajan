@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "./challenge-data";
 
 export const DAY_2_DETAIL = {
   overview: [
-    "Welcome to Day 2. The core idea: `Node.js` runs your JavaScript on a single thread with `V8`, while `libuv` (and the OS) do the waiting for sockets, files, and timers. Many concurrent connections do not mean one OS thread per connection: they are mostly waiting, multiplexed on one (or a few) threads running JS.",
-    "By the end you should predict `console.log` / `setTimeout` / `Promise` / `process.nextTick` order, explain CPU-bound vs I/O-bound work, and contrast Node’s event loop with Go `goroutine`s in a short answer.",
+    "Node.js handles thousands of concurrent connections on a single JavaScript thread — not because it is fast, but because most server work is waiting. `V8` runs your code; `libuv` hands I/O off to the OS and wakes the thread only when data is ready.",
+    "By the end of Day 2 you should: predict `nextTick` / `Promise` / `setTimeout` order from memory, explain why CPU work on the main thread is dangerous, and contrast Node’s event loop with Go goroutines in two sentences.",
   ],
   sections: [
     {
@@ -12,14 +12,14 @@ export const DAY_2_DETAIL = {
         { type: "diagram", id: "node-one-thread-io" },
         {
           type: "paragraph",
-          text: "Most backend work is waiting: DB, disk, network, DNS. The JS thread runs your code when a callback is ready. While work waits, `libuv` and the OS keep file descriptors; when data is ready, a callback is queued. That is how one thread can handle many in-flight I/O operations.",
+          text: "While a DB query or file read is in flight, `libuv` registers the file descriptor with the OS (`epoll` / `kqueue` / `IOCP`). The JS thread is free. When the OS signals data ready, `libuv` queues the callback and the loop picks it up. 10,000 open connections = 10,000 registered fds — not 10,000 threads.",
         },
         {
           type: "list",
           variant: "bullet",
           items: [
-            "Concurrency is cooperative scheduling of callbacks, not CPU parallelism on the main thread (use `worker_threads` / more processes for that).",
-            "V8 is fast; the main risk is blocking the loop with long sync or CPU-heavy work (below).",
+            "Concurrency here is cooperative callback scheduling, not CPU parallelism — one callback runs to completion before the next starts.",
+            "The danger: any synchronous CPU work (big `JSON.parse`, crypto, encoding) blocks the entire process for every client until it finishes.",
           ],
         },
       ],
@@ -30,7 +30,7 @@ export const DAY_2_DETAIL = {
         { type: "diagram", id: "node-event-loop-phases" },
         {
           type: "paragraph",
-          text: 'One turn of the loop runs timers, pending, poll, `setImmediate` (check), and close handles — use the official Node "event loop" docs as the source of truth. These figures are a mental model.',
+          text: "Each tick: Timers → Pending I/O → Idle/Prepare → Poll → Check (`setImmediate`) → Close. Between every phase transition the microtask queues drain fully (`nextTick` first, then `Promise`). The Poll phase is where Node blocks waiting for I/O when there is nothing else to do.",
         },
         { type: "diagram", id: "node-execution-priority" },
       ],
@@ -40,7 +40,7 @@ export const DAY_2_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "In one go: synchronous call stack first. Then all `process.nextTick` jobs, then all `Promise` microtasks, then macrotasks like `setTimeout(…, 0)` and I/O. Wrong order in an interview = red flag.",
+          text: "Priority order: synchronous call stack → `process.nextTick` queue (fully drained) → `Promise` microtasks (fully drained) → macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level.",
         },
         {
           type: "code",
@@ -59,7 +59,7 @@ export const DAY_2_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "Recursive `process.nextTick` can starve the loop: if you enqueue `nextTick` forever, timers and I/O never get a turn. Never do that in production.",
+          text: "Recursive `process.nextTick` starves the loop permanently — timers and I/O never fire. Use `setImmediate` if you need recursive scheduling; it yields to the loop between iterations.",
         },
         {
           type: "list",
@@ -75,7 +75,7 @@ export const DAY_2_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: 'HTTP is TCP plus a text protocol. `net.createServer` makes "one `socket` per accept" easy to see — the same building block under HTTP/2 later.',
+          text: "HTTP is TCP plus a text framing protocol. `net.createServer` exposes the raw socket layer — one `socket` per accepted connection, the same building block `http.createServer` wraps. Seeing it at the TCP level makes the async model concrete.",
         },
         {
           type: "code",
@@ -105,7 +105,7 @@ export const DAY_2_DETAIL = {
         },
         {
           type: "paragraph",
-          text: 'Each `socket` is a duplex stream. `libuv` registers the fd; when bytes arrive, your callback is scheduled. That is not "one thread blocked per client" like a classic thread-per-request server.',
+          text: "Each `socket` is a duplex stream; `libuv` registers its fd with the OS. The JS thread never blocks waiting for bytes — it is woken only when data arrives. Two open connections, one thread, zero blocking.",
         },
       ],
     },
@@ -176,7 +176,7 @@ export const DAY_2_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "If mean loop delay stays above about 10ms in a server under load, suspect blocking I/O, heavy sync JSON, or hot logging — confirm with a profile, not guesswork.",
+          text: "Mean loop delay above ~10ms under load is a signal — not a diagnosis. Profile first (`clinic doctor` or `--prof`) to confirm the hot synchronous path before changing anything.",
         },
       ],
     },
@@ -322,6 +322,8 @@ export const DAY_2_DETAIL = {
         "`});`",
         "Use `setImmediate` when you want to run something after the current I/O event but before any timers.",
       ].join("\n\n"),
+      callout:
+        "Outside I/O: order is non-deterministic. Inside an I/O callback: setImmediate always wins.",
     },
     {
       question:

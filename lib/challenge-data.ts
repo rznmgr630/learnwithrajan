@@ -1,5 +1,7 @@
 import { DAY_1_DETAIL } from "./day-1-detail";
 import { DAY_2_DETAIL } from "./day-2-detail";
+import { DAY_3_DETAIL } from "./day-3-detail";
+import { DAY_4_DETAIL } from "./day-4-detail";
 
 /** Official “current” day (1-based). Days before this count as done when seeding local progress. */
 export const CURRENT_DAY = 1;
@@ -22,7 +24,13 @@ export type RoadmapDetailDiagramId =
   | "node-one-thread-io"
   | "node-event-loop-phases"
   | "node-execution-priority"
-  | "go-goroutine-mn";
+  | "go-goroutine-mn"
+  | "acid-transaction"
+  | "btree-index"
+  | "isolation-levels"
+  | "rest-graphql-grpc"
+  | "cursor-pagination"
+  | "rate-limit-token-bucket";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
@@ -109,15 +117,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "database", slug: "database" },
           { label: "sql", slug: "sql" },
         ],
-        detail: {
-          overview:
-            "Ground truth for how relational databases store and retrieve your application data.",
-          bullets: [
-            "Write SELECTs with JOINs and explain the plan at a high level.",
-            "Primary keys, foreign keys, and why duplicates bite later.",
-            "Pick one schema change workflow (migrations) and try it end-to-end.",
-          ],
-        },
+        detail: DAY_3_DETAIL,
       },
       {
         day: 4,
@@ -126,15 +126,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "design", slug: "design" },
           { label: "api", slug: "api" },
         ],
-        detail: {
-          overview:
-            "Move from ad-hoc endpoints to APIs teammates can extend without breaking callers.",
-          bullets: [
-            "Versioning, pagination, and filtering conventions for collections.",
-            "Error payloads that stay consistent across resources.",
-            "Idempotency keys or patterns where money or inventory is involved.",
-          ],
-        },
+        detail: DAY_4_DETAIL,
       },
       {
         day: 5,
