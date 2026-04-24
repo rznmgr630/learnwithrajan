@@ -30,7 +30,7 @@ export const DAY_2_DETAIL = {
         { type: "diagram", id: "node-event-loop-phases" },
         {
           type: "paragraph",
-          text: "One turn of the loop runs timers, pending, poll, `setImmediate` (check), and close handles — use the official Node “event loop” docs as the source of truth. These figures are a mental model.",
+          text: 'One turn of the loop runs timers, pending, poll, `setImmediate` (check), and close handles — use the official Node "event loop" docs as the source of truth. These figures are a mental model.',
         },
         { type: "diagram", id: "node-execution-priority" },
       ],
@@ -75,7 +75,7 @@ export const DAY_2_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "HTTP is TCP plus a text protocol. `net.createServer` makes “one `socket` per accept” easy to see — the same building block under HTTP/2 later.",
+          text: 'HTTP is TCP plus a text protocol. `net.createServer` makes "one `socket` per accept" easy to see — the same building block under HTTP/2 later.',
         },
         {
           type: "code",
@@ -105,7 +105,7 @@ export const DAY_2_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "Each `socket` is a duplex stream. `libuv` registers the fd; when bytes arrive, your callback is scheduled. That is not “one thread blocked per client” like a classic thread-per-request server.",
+          text: 'Each `socket` is a duplex stream. `libuv` registers the fd; when bytes arrive, your callback is scheduled. That is not "one thread blocked per client" like a classic thread-per-request server.',
         },
       ],
     },
@@ -117,8 +117,16 @@ export const DAY_2_DETAIL = {
           caption: "Same process, very different effect on the event loop",
           headers: ["Kind", "Example", "Node behavior"],
           rows: [
-            ["I/O-bound", "await `db.query`", "Other work runs while the pool waits. Good by default."],
-            ["CPU-bound", "huge `JSON.parse`, big crypto, encoding", "Blocks the whole process for other clients: use `Worker`, another service, or native work off-thread."],
+            [
+              "I/O-bound",
+              "await `db.query`",
+              "Other work runs while the pool waits. Good by default.",
+            ],
+            [
+              "CPU-bound",
+              "huge `JSON.parse`, big crypto, encoding",
+              "Blocks the whole process for other clients: use `Worker`, another service, or native work off-thread.",
+            ],
           ],
         },
         {
@@ -178,14 +186,31 @@ export const DAY_2_DETAIL = {
         { type: "diagram", id: "go-goroutine-mn" },
         {
           type: "table",
-          caption: "High-level: goroutines are cheap; scheduler maps them to a few OS threads",
+          caption:
+            "High-level: goroutines are cheap; scheduler maps them to a few OS threads",
           headers: ["Topic", "Node.js", "Go"],
           rows: [
             ["Model", "Event loop + async I/O", "Goroutines + M:N scheduler"],
-            ["I/O", "Strong with libuv", "Blocking read looks like sync; runtime parks the goroutine"],
-            ["CPU on one machine", "Bad if on main thread", "Can use several cores with parallel goroutines"],
-            ["Primitives", "callbacks / `async`", "`go` keyword, channels, stdlib"],
-            ["Per-task memory", "small (handles, closures)", "small stacks per goroutine (rough order: ~2KB start)"],
+            [
+              "I/O",
+              "Strong with libuv",
+              "Blocking read looks like sync; runtime parks the goroutine",
+            ],
+            [
+              "CPU on one machine",
+              "Bad if on main thread",
+              "Can use several cores with parallel goroutines",
+            ],
+            [
+              "Primitives",
+              "callbacks / `async`",
+              "`go` keyword, channels, stdlib",
+            ],
+            [
+              "Per-task memory",
+              "small (handles, closures)",
+              "small stacks per goroutine (rough order: ~2KB start)",
+            ],
           ],
         },
         {
@@ -208,11 +233,11 @@ export const DAY_2_DETAIL = {
             "	defer c.Close()",
             "	buf := make([]byte, 1024)",
             "	for {",
-			"		n, err := c.Read(buf)",
-			"		if err != nil { return }",
-			'		_, _ = c.Write(append([]byte("Echo: "), buf[:n]...))',
-			"	}",
-			"}",
+            "		n, err := c.Read(buf)",
+            "		if err != nil { return }",
+            '		_, _ = c.Write(append([]byte("Echo: "), buf[:n]...))',
+            "	}",
+            "}",
           ].join("\n"),
         },
       ],
@@ -238,7 +263,8 @@ export const DAY_2_DETAIL = {
   ],
   faq: [
     {
-      question: "How does Node.js handle 10,000 concurrent connections with a single thread?",
+      question:
+        "How does Node.js handle 10,000 concurrent connections with a single thread?",
       tag: "Core concurrency model",
       answer: [
         "Node.js uses a `single-threaded event loop` together with `non-blocking I/O` through `libuv`. The key insight is that most server work is waiting — not computing.",
@@ -255,7 +281,7 @@ export const DAY_2_DETAIL = {
         "1. Timers — runs `setTimeout()` and `setInterval()` callbacks whose delay has already expired.",
         "2. Pending I/O — runs I/O callbacks deferred from the previous loop (often TCP error paths such as `ECONNREFUSED`).",
         "3. Idle / prepare — internal only; `libuv` gets ready for the poll phase.",
-        "4. Poll — the main I/O phase: Node pulls new I/O events from the OS and runs their callbacks. It can block in this phase when there is nothing else scheduled. This is where Node spends most of its “waiting for work” time.",
+        '4. Poll — the main I/O phase: Node pulls new I/O events from the OS and runs their callbacks. It can block in this phase when there is nothing else scheduled. This is where Node spends most of its "waiting for work" time.',
         "5. Check — runs `setImmediate()` callbacks.",
         "6. Close — runs close-related logic, e.g. `socket.on('close')`.",
         "Between every phase transition, the microtask queues are fully drained: `process.nextTick` first, then `Promise` jobs (and `queueMicrotask`).",
@@ -264,7 +290,8 @@ export const DAY_2_DETAIL = {
         "Memory trick: Timers → Pending → Idle → Poll → Check → Close. 'The Poll phase is where Node lives.'",
     },
     {
-      question: "What is the exact execution order of: sync code, nextTick, Promise, setTimeout, setImmediate?",
+      question:
+        "What is the exact execution order of: sync code, nextTick, Promise, setTimeout, setImmediate?",
       tag: "Execution priority",
       answer: [
         "The classic trace prints: 1 → 4 → 2 → 3 → 5. Run the snippet in Node and match the numbers to the rules below.",
@@ -281,7 +308,8 @@ export const DAY_2_DETAIL = {
       callout: "This is the #1 Node.js interview question. Know it cold.",
     },
     {
-      question: "What is the difference between `setTimeout(fn, 0)` and `setImmediate(fn)`?",
+      question:
+        "What is the difference between `setTimeout(fn, 0)` and `setImmediate(fn)`?",
       tag: "Timers vs check phase",
       answer: [
         "Outside an I/O callback, order is not fixed: either callback can run first, depending on OS timing and how busy the process is. Do not rely on order at the top level.",
@@ -296,7 +324,8 @@ export const DAY_2_DETAIL = {
       ].join("\n\n"),
     },
     {
-      question: "What is event loop starvation and how can `process.nextTick` cause it?",
+      question:
+        "What is event loop starvation and how can `process.nextTick` cause it?",
       tag: "Event loop starvation",
       answer: [
         "Starvation means the event loop never advances to the next phase — I/O callbacks, timers, and `setImmediate` never fire because the microtask queue is never empty.",
@@ -312,29 +341,62 @@ export const DAY_2_DETAIL = {
         "Node.js has no built-in protection against `nextTick` starvation. It's your responsibility.",
     },
     {
-      question: "What is the difference between CPU-bound and I/O-bound code, and why does it matter in Node.js?",
-      answer:
-        "I/O-bound: your code is mostly waiting (DB, network, disk). The main thread can run other JavaScript while `libuv` and the OS wait. CPU-bound: your code is crunching (crypto, big `JSON.parse`, image encode) on the main thread: that blocks the entire process; no other clients get a turn until the work ends. In Node, that is why I/O is “free” in terms of the loop, but CPU on the main thread is dangerous and belongs in `worker_threads`, a child process, or another service.",
+      question:
+        "What is the difference between CPU-bound and I/O-bound code, and why does it matter in Node.js?",
+      tag: "CPU vs I/O",
+      answer: [
+        "I/O-bound code is mostly waiting: database queries, network requests, and disk reads. The Node.js main thread is free while `libuv` and the OS wait for the response — other JavaScript can run. This is the sweet spot for Node.",
+        "CPU-bound code crunches on the main thread: large `JSON.parse`, crypto operations, image encoding. While that runs, no other client gets a turn — the entire process is blocked until the computation ends.",
+        "The practical rule: I/O is free in terms of the event loop. CPU on the main thread is dangerous and belongs in `worker_threads`, a child process, or a separate service.",
+      ].join("\n\n"),
+      callout:
+        "I/O suspends the callback, not the thread. CPU on the main thread blocks everyone until it finishes.",
     },
     {
       question: "What is libuv and what role does it play in Node.js?",
-      answer:
-        "`libuv` is a C library Node uses for the cross-platform event loop, async I/O (wraps `epoll`, `kqueue`, `IOCP` depending on the OS), handles, timers, and a thread pool for a few things that are not always async at the libuv level (e.g. some `fs` calls, `dns` lookup) so the main thread stays non-blocking. Your JavaScript’s “one thread + callbacks” model sits on top of this.",
+      tag: "libuv internals",
+      answer: [
+        "`libuv` is a cross-platform C library that powers the Node.js event loop and non-blocking I/O. It wraps OS-specific async interfaces: `epoll` on Linux, `kqueue` on macOS, `IOCP` on Windows.",
+        "It manages the event loop phases (timers, poll, check, close), async file and network handles, and a thread pool for operations that are not natively async at the OS level — some `fs` calls and `dns.lookup` use this pool so the main thread is never blocked.",
+        "Your JavaScript sees one thread with callbacks. The machinery underneath is `libuv` coordinating OS events and the thread pool.",
+      ].join("\n\n"),
+      callout:
+        "libuv is the bridge between JavaScript’s single thread and the OS’s async I/O primitives.",
     },
     {
-      question: "How do Go goroutines differ from Node.js's event loop for handling concurrency?",
-      answer:
-        "Node (default): a single main thread for JS; concurrency is async I/O and callback scheduling; CPU work on the main thread blocks everyone. Go: many goroutines (very small user-space tasks) are multiplexed (M:N) onto a few OS threads by the runtime. Blocking a goroutine on `Read` does not block the whole process: the scheduler runs other goroutines. So Go gives synchronous-style code for I/O with true parallelism for CPU on multiple cores, while Node keeps one JS call stack and works well when work is I/O shaped and you avoid blocking the loop.",
+      question:
+        "How do Go goroutines differ from Node.js’s event loop for handling concurrency?",
+      tag: "Node vs Go concurrency",
+      answer: [
+        "Node.js uses a single main thread for JavaScript. Concurrency comes from async I/O and callback scheduling — the thread is idle while work waits in the OS. CPU work on the main thread blocks every client.",
+        "Go uses goroutines: lightweight user-space tasks multiplexed (M:N) onto a few OS threads by the Go runtime scheduler. Blocking a goroutine on `Read` does not block the process — the scheduler runs other goroutines. This gives synchronous-looking code that scales across cores.",
+        "The practical difference: Node is great when work is I/O-shaped and you never block the loop. Go handles both I/O and CPU-bound parallelism naturally, using multiple cores without extra process management.",
+      ].join("\n\n"),
+      callout:
+        "Node: one JS thread, async callbacks. Go: many goroutines on a few OS threads, true parallelism.",
     },
     {
-      question: "How would you detect and fix a blocked event loop in a production Node.js app?",
-      answer:
-        "Detect: `perf_hooks` `monitorEventLoopDelay` (high mean or max = lag), APMs (e.g. transaction skew), `npx clinic doctor` or `node --prof` + `node --prof-process`, logging slow route handlers, health checks with timeouts. Fix: find hot synchronous paths (huge JSON, sync `fs` in a hot path, accidental sync crypto); move CPU work to `worker_threads` or a worker service; for isolation or another runtime use `child_process` or a separate process; break long tasks; scale horizontally. Prefer measuring before “optimising” at random.",
+      question:
+        "How would you detect and fix a blocked event loop in a production Node.js app?",
+      tag: "Production debugging",
+      answer: [
+        "Detect with tools: `perf_hooks` `monitorEventLoopDelay` reports mean and max lag. APMs show request latency skew. `npx clinic doctor` and `node --prof` + `node --prof-process` profile CPU hot paths. Health checks with timeouts catch hangs. Slow route handler logs reveal the culprit.",
+        "Fix: find hot synchronous code — large `JSON.parse`, sync `fs` calls in hot paths, sync crypto. Move CPU work to `worker_threads` or a separate worker service. Use `child_process` for isolation. Break long tasks with `setImmediate`. Scale horizontally to spread load.",
+        "Rule: measure first, then fix. Profile to confirm the hot path before optimising.",
+      ].join("\n\n"),
+      callout:
+        "Measure with `monitorEventLoopDelay` and clinic. Fix by moving CPU off the main thread.",
     },
     {
       question: "What is the call stack, and what happens when it overflows?",
-      answer:
-        "The call stack is the LIFO list of function calls: each call pushes a frame; a `return` pops. Only one stack runs per main thread. When nested calls (usually infinite recursion) exceed the engine limit, you get `RangeError: Maximum call stack size exceeded` and the process throws — nothing after that in that stack runs until error handling. Deep synchronous chains can do the same (rare in normal app code, common in runaway bots or bugs).",
+      tag: "Call stack",
+      answer: [
+        "The call stack is a LIFO structure tracking active function calls. Each function call pushes a frame; a `return` pops it. Node.js (V8) has one call stack per main thread — only one function executes at a time.",
+        "When recursive calls nest too deeply, frames accumulate until the engine limit is hit. The result is `RangeError: Maximum call stack size exceeded`. Nothing after the overflow in that stack runs until an error handler catches it.",
+        "Common causes: runaway recursion, unbounded mutual recursion, or deep synchronous chains. Fix with iteration or by breaking work into microtask/macrotask chunks.",
+      ].join("\n\n"),
+      callout:
+        "One stack, one thread. Stack overflow = `RangeError: Maximum call stack size exceeded`.",
     },
   ],
   bullets: [
