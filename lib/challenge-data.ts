@@ -2,6 +2,9 @@ import { DAY_1_DETAIL } from "./day-1-detail";
 import { DAY_2_DETAIL } from "./day-2-detail";
 import { DAY_3_DETAIL } from "./day-3-detail";
 import { DAY_4_DETAIL } from "./day-4-detail";
+import { DAY_5_DETAIL } from "./day-5-detail";
+import { DAY_6_DETAIL } from "./day-6-detail";
+import { DAY_7_DETAIL } from "./day-7-detail";
 
 /** Official “current” day (1-based). Days before this count as done when seeding local progress. */
 export const CURRENT_DAY = 1;
@@ -30,7 +33,14 @@ export type RoadmapDetailDiagramId =
   | "isolation-levels"
   | "rest-graphql-grpc"
   | "cursor-pagination"
-  | "rate-limit-token-bucket";
+  | "rate-limit-token-bucket"
+  | "jwt-flow"
+  | "oauth2-code-flow"
+  | "rbac-model"
+  | "cache-layers"
+  | "cache-aside-pattern"
+  | "log-correlation"
+  | "error-classification";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
@@ -135,15 +145,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "security", slug: "security" },
           { label: "auth", slug: "auth" },
         ],
-        detail: {
-          overview:
-            "Separate who someone is from what they are allowed to do in your system.",
-          bullets: [
-            "Sessions vs bearer tokens: threat model and storage tradeoffs.",
-            "Role-based vs attribute-based access at a practical level.",
-            "Never log secrets; rotate keys without taking the site down.",
-          ],
-        },
+        detail: DAY_5_DETAIL,
       },
       {
         day: 6,
@@ -152,14 +154,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "performance", slug: "performance" },
           { label: "cache", slug: "cache" },
         ],
-        detail: {
-          overview: "Speed up hot paths without serving stale or unsafe data.",
-          bullets: [
-            "HTTP caching headers and CDN behavior at a glance.",
-            "Application caches: TTL, stampede, and invalidation strategies.",
-            "Where a Redis-style store fits vs in-process memoization.",
-          ],
-        },
+        detail: DAY_6_DETAIL,
       },
       {
         day: 7,
@@ -168,15 +163,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "reliability", slug: "reliability" },
           { label: "ops", slug: "ops" },
         ],
-        detail: {
-          overview:
-            "Make failures diagnosable for you and understandable for API consumers.",
-          bullets: [
-            "Structured logs with request IDs across services.",
-            "Classify errors: client mistakes vs transient outages vs bugs.",
-            "Alerting on symptoms users feel, not only process crashes.",
-          ],
-        },
+        detail: DAY_7_DETAIL,
       },
     ],
   },

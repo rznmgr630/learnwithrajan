@@ -1957,6 +1957,1498 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
         </figure>
       );
 
+    // ── Day 5: Authentication & authorisation ──────────────────────────────
+    case "jwt-flow":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            JWT lifecycle — credentials in, signed token out, stateless
+            validation on every request
+          </figcaption>
+          <svg viewBox="0 0 380 200" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="jwt-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+              <marker
+                id="jwt-grn"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+              </marker>
+              <marker
+                id="jwt-sky"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8" />
+              </marker>
+            </defs>
+            {/* actors */}
+            <rect
+              x="10"
+              y="10"
+              width="60"
+              height="24"
+              rx="4"
+              fill="#1e293b"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            <text
+              x="40"
+              y="26"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[9px]"
+            >
+              Client
+            </text>
+            <rect
+              x="160"
+              y="10"
+              width="60"
+              height="24"
+              rx="4"
+              fill="#1e293b"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            <text
+              x="190"
+              y="26"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[9px]"
+            >
+              Server
+            </text>
+            {/* vertical lifelines */}
+            <line
+              x1="40"
+              y1="34"
+              x2="40"
+              y2="196"
+              stroke="#334155"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+            />
+            <line
+              x1="190"
+              y1="34"
+              x2="190"
+              y2="196"
+              stroke="#334155"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+            />
+            {/* step 1: POST /login */}
+            <line
+              x1="40"
+              y1="55"
+              x2="184"
+              y2="55"
+              stroke="#94a3b8"
+              strokeWidth="1.2"
+              markerEnd="url(#jwt-arr)"
+            />
+            <text
+              x="112"
+              y="50"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[8px]"
+            >
+              POST /login {"{"}email, password{"}"}
+            </text>
+            {/* step 2: validate + sign */}
+            <rect
+              x="170"
+              y="62"
+              width="40"
+              height="16"
+              rx="3"
+              fill="#1e3a5f"
+              stroke="#38bdf8"
+              strokeWidth="0.8"
+            />
+            <text
+              x="190"
+              y="73"
+              textAnchor="middle"
+              className="fill-sky-300 text-[7px]"
+            >
+              sign JWT
+            </text>
+            {/* step 3: return token */}
+            <line
+              x1="190"
+              y1="84"
+              x2="46"
+              y2="84"
+              stroke="#4ade80"
+              strokeWidth="1.2"
+              markerEnd="url(#jwt-grn)"
+            />
+            <text
+              x="112"
+              y="80"
+              textAnchor="middle"
+              className="fill-green-400 text-[8px]"
+            >
+              200 {"{"}access_token, refresh_token{"}"}
+            </text>
+            {/* step 4: store in httpOnly cookie */}
+            <rect
+              x="10"
+              y="92"
+              width="60"
+              height="16"
+              rx="3"
+              fill="#1e3a2f"
+              stroke="#4ade80"
+              strokeWidth="0.8"
+            />
+            <text
+              x="40"
+              y="103"
+              textAnchor="middle"
+              className="fill-green-300 text-[7px]"
+            >
+              httpOnly cookie
+            </text>
+            {/* step 5: API request with token */}
+            <line
+              x1="40"
+              y1="118"
+              x2="184"
+              y2="118"
+              stroke="#94a3b8"
+              strokeWidth="1.2"
+              markerEnd="url(#jwt-arr)"
+            />
+            <text
+              x="112"
+              y="113"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[8px]"
+            >
+              GET /api/me Authorization: Bearer …
+            </text>
+            {/* step 6: verify signature */}
+            <rect
+              x="170"
+              y="124"
+              width="40"
+              height="16"
+              rx="3"
+              fill="#1e3a5f"
+              stroke="#38bdf8"
+              strokeWidth="0.8"
+            />
+            <text
+              x="190"
+              y="135"
+              textAnchor="middle"
+              className="fill-sky-300 text-[7px]"
+            >
+              verify sig
+            </text>
+            {/* step 7: response */}
+            <line
+              x1="190"
+              y1="146"
+              x2="46"
+              y2="146"
+              stroke="#4ade80"
+              strokeWidth="1.2"
+              markerEnd="url(#jwt-grn)"
+            />
+            <text
+              x="112"
+              y="142"
+              textAnchor="middle"
+              className="fill-green-400 text-[8px]"
+            >
+              200 user data (no DB session lookup)
+            </text>
+            {/* JWT anatomy label */}
+            <text x="270" y="20" className="fill-neutral-500 text-[8px]">
+              JWT = header.payload.signature
+            </text>
+            <rect
+              x="258"
+              y="26"
+              width="112"
+              height="38"
+              rx="3"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text x="264" y="38" className="fill-sky-400 text-[7px]">
+              header: {"{"} alg, typ {"}"}
+            </text>
+            <text x="264" y="49" className="fill-amber-400 text-[7px]">
+              payload: {"{"} sub, roles, exp {"}"}
+            </text>
+            <text x="264" y="60" className="fill-rose-400 text-[7px]">
+              sig: HMAC(header.payload)
+            </text>
+            {/* expiry note */}
+            <text x="258" y="76" className="fill-neutral-500 text-[7px]">
+              access_token: 15 min | refresh: 7 d
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "oauth2-code-flow":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            OAuth2 authorisation code flow + PKCE — four parties, six steps
+          </figcaption>
+          <svg viewBox="0 0 420 220" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="oa-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+              <marker
+                id="oa-grn"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+              </marker>
+            </defs>
+            {/* four actor boxes */}
+            {[
+              { x: 10, label: "Browser" },
+              { x: 110, label: "Your App" },
+              { x: 230, label: "Auth Server" },
+              { x: 340, label: "Resource" },
+            ].map(({ x, label }) => (
+              <g key={label}>
+                <rect
+                  x={x}
+                  y="8"
+                  width="64"
+                  height="22"
+                  rx="3"
+                  fill="#1e293b"
+                  stroke="#334155"
+                  strokeWidth="1"
+                />
+                <text
+                  x={x + 32}
+                  y="22"
+                  textAnchor="middle"
+                  className="fill-neutral-300 text-[8px]"
+                >
+                  {label}
+                </text>
+                <line
+                  x1={x + 32}
+                  y1="30"
+                  x2={x + 32}
+                  y2="216"
+                  stroke="#334155"
+                  strokeWidth="1"
+                  strokeDasharray="3 3"
+                />
+              </g>
+            ))}
+            {/* step 1 */}
+            <line
+              x1="74"
+              y1="48"
+              x2="174"
+              y2="48"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#oa-arr)"
+            />
+            <text
+              x="122"
+              y="44"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              1. click Login
+            </text>
+            {/* step 2 */}
+            <line
+              x1="174"
+              y1="66"
+              x2="282"
+              y2="66"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#oa-arr)"
+            />
+            <text
+              x="228"
+              y="62"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              2. redirect /authorize + code_challenge
+            </text>
+            {/* step 3 */}
+            <line
+              x1="282"
+              y1="84"
+              x2="120"
+              y2="84"
+              stroke="#4ade80"
+              strokeWidth="1"
+              markerEnd="url(#oa-grn)"
+            />
+            <text
+              x="200"
+              y="80"
+              textAnchor="middle"
+              className="fill-green-400 text-[7px]"
+            >
+              3. user logs in → redirect with code + state
+            </text>
+            {/* step 4 */}
+            <line
+              x1="174"
+              y1="104"
+              x2="282"
+              y2="104"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#oa-arr)"
+            />
+            <text
+              x="228"
+              y="100"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              4. POST /token (code + code_verifier)
+            </text>
+            {/* step 5 */}
+            <line
+              x1="282"
+              y1="122"
+              x2="180"
+              y2="122"
+              stroke="#4ade80"
+              strokeWidth="1"
+              markerEnd="url(#oa-grn)"
+            />
+            <text
+              x="228"
+              y="118"
+              textAnchor="middle"
+              className="fill-green-400 text-[7px]"
+            >
+              5. access_token + id_token
+            </text>
+            {/* step 6 */}
+            <line
+              x1="174"
+              y1="142"
+              x2="356"
+              y2="142"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#oa-arr)"
+            />
+            <text
+              x="264"
+              y="138"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              6. GET /userinfo Authorization: Bearer …
+            </text>
+            {/* step 6 response */}
+            <line
+              x1="356"
+              y1="158"
+              x2="180"
+              y2="158"
+              stroke="#4ade80"
+              strokeWidth="1"
+              markerEnd="url(#oa-grn)"
+            />
+            <text
+              x="264"
+              y="154"
+              textAnchor="middle"
+              className="fill-green-400 text-[7px]"
+            >
+              200 {"{"} sub, email, name {"}"}
+            </text>
+            {/* PKCE note */}
+            <rect
+              x="8"
+              y="174"
+              width="400"
+              height="34"
+              rx="3"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text x="14" y="186" className="fill-amber-400 text-[7px]">
+              PKCE: client generates code_verifier (random), sends
+              code_challenge = SHA256(verifier) in step 2.
+            </text>
+            <text x="14" y="198" className="fill-neutral-400 text-[7px]">
+              Step 4 sends the verifier — server recomputes the hash. Stolen
+              codes cannot be exchanged without the verifier.
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "rbac-model":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            RBAC — users assigned to roles; roles carry permissions; permissions
+            map to resources
+          </figcaption>
+          <svg viewBox="0 0 380 180" className="h-auto w-full" aria-hidden>
+            {/* column headers */}
+            {[
+              { x: 30, label: "Users", color: "#38bdf8" },
+              { x: 140, label: "Roles", color: "#a78bfa" },
+              { x: 250, label: "Permissions", color: "#fb923c" },
+              { x: 340, label: "Resources", color: "#4ade80" },
+            ].map(({ x, label, color }) => (
+              <text
+                key={label}
+                x={x + 20}
+                y="18"
+                textAnchor="middle"
+                style={{ fill: color }}
+                className="text-[9px] font-semibold"
+              >
+                {label}
+              </text>
+            ))}
+            {/* users */}
+            {["Alice", "Bob", "Carol"].map((u, i) => (
+              <g key={u}>
+                <rect
+                  x="10"
+                  y={30 + i * 36}
+                  width="60"
+                  height="22"
+                  rx="4"
+                  fill="#1e293b"
+                  stroke="#38bdf8"
+                  strokeWidth="0.8"
+                />
+                <text
+                  x="40"
+                  y={44 + i * 36}
+                  textAnchor="middle"
+                  className="fill-sky-300 text-[8px]"
+                >
+                  {u}
+                </text>
+              </g>
+            ))}
+            {/* roles */}
+            {["admin", "editor", "viewer"].map((r, i) => (
+              <g key={r}>
+                <rect
+                  x="120"
+                  y={30 + i * 36}
+                  width="60"
+                  height="22"
+                  rx="4"
+                  fill="#1e293b"
+                  stroke="#a78bfa"
+                  strokeWidth="0.8"
+                />
+                <text
+                  x="150"
+                  y={44 + i * 36}
+                  textAnchor="middle"
+                  className="fill-violet-300 text-[8px]"
+                >
+                  {r}
+                </text>
+              </g>
+            ))}
+            {/* permissions */}
+            {["read", "write", "delete"].map((p, i) => (
+              <g key={p}>
+                <rect
+                  x="230"
+                  y={30 + i * 36}
+                  width="60"
+                  height="22"
+                  rx="4"
+                  fill="#1e293b"
+                  stroke="#fb923c"
+                  strokeWidth="0.8"
+                />
+                <text
+                  x="260"
+                  y={44 + i * 36}
+                  textAnchor="middle"
+                  className="fill-orange-300 text-[8px]"
+                >
+                  {p}
+                </text>
+              </g>
+            ))}
+            {/* resources */}
+            {["/users", "/posts", "/admin"].map((res, i) => (
+              <g key={res}>
+                <rect
+                  x="320"
+                  y={30 + i * 36}
+                  width="52"
+                  height="22"
+                  rx="4"
+                  fill="#1e293b"
+                  stroke="#4ade80"
+                  strokeWidth="0.8"
+                />
+                <text
+                  x="346"
+                  y={44 + i * 36}
+                  textAnchor="middle"
+                  className="fill-green-300 text-[8px]"
+                >
+                  {res}
+                </text>
+              </g>
+            ))}
+            {/* arrows: user → role */}
+            <line
+              x1="70"
+              y1="41"
+              x2="120"
+              y2="41"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="70"
+              y1="77"
+              x2="120"
+              y2="77"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="70"
+              y1="41"
+              x2="120"
+              y2="77"
+              stroke="#64748b"
+              strokeWidth="0.8"
+              strokeDasharray="2 2"
+            />
+            {/* role → permission */}
+            <line
+              x1="180"
+              y1="41"
+              x2="230"
+              y2="41"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="180"
+              y1="41"
+              x2="230"
+              y2="77"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="180"
+              y1="41"
+              x2="230"
+              y2="113"
+              stroke="#64748b"
+              strokeWidth="0.8"
+              strokeDasharray="2 2"
+            />
+            <line
+              x1="180"
+              y1="77"
+              x2="230"
+              y2="41"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="180"
+              y1="77"
+              x2="230"
+              y2="77"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            {/* permission → resource */}
+            <line
+              x1="290"
+              y1="41"
+              x2="320"
+              y2="41"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="290"
+              y1="77"
+              x2="320"
+              y2="77"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            <line
+              x1="290"
+              y1="113"
+              x2="320"
+              y2="113"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            {/* legend note */}
+            <text x="10" y="165" className="fill-neutral-500 text-[7px]">
+              Carol has viewer role → read permission only → can GET /posts, not
+              DELETE /users
+            </text>
+          </svg>
+        </figure>
+      );
+
+    // ── Day 6: Caching strategies ──────────────────────────────────────────
+    case "cache-layers":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Cache hierarchy — latency and scope increase as you go deeper
+          </figcaption>
+          <svg viewBox="0 0 380 200" className="h-auto w-full" aria-hidden>
+            {/* layers as concentric rounded rects */}
+            {[
+              {
+                y: 10,
+                h: 174,
+                fill: "#1e3a5f",
+                stroke: "#38bdf8",
+                label: "HTTP Browser Cache",
+                sub: "0 ms · per-browser · immutable assets",
+                lx: 190,
+              },
+              {
+                y: 28,
+                h: 140,
+                fill: "#1e3828",
+                stroke: "#4ade80",
+                label: "CDN Edge (Cloudflare, Fastly)",
+                sub: "10-50 ms · global PoP · public API responses",
+                lx: 190,
+              },
+              {
+                y: 48,
+                h: 104,
+                fill: "#2d1e3a",
+                stroke: "#a78bfa",
+                label: "Redis / Memcached",
+                sub: "1-5 ms · shared cluster · sessions, counters",
+                lx: 190,
+              },
+              {
+                y: 68,
+                h: 68,
+                fill: "#3a2e1e",
+                stroke: "#fb923c",
+                label: "In-process LRU",
+                sub: "< 1 ms · single instance · config, flags",
+                lx: 190,
+              },
+              {
+                y: 90,
+                h: 26,
+                fill: "#1e1e1e",
+                stroke: "#f87171",
+                label: "Origin DB",
+                sub: "100-500 ms",
+                lx: 190,
+              },
+            ].map(({ y, h, fill, stroke, label, sub, lx }) => (
+              <g key={label}>
+                <rect
+                  x="20"
+                  y={y}
+                  width="340"
+                  height={h}
+                  rx="8"
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth="0.8"
+                  opacity="0.6"
+                />
+                <text
+                  x={lx}
+                  y={y + 12}
+                  textAnchor="middle"
+                  style={{ fill: stroke }}
+                  className="text-[8px] font-semibold"
+                >
+                  {label}
+                </text>
+                <text
+                  x={lx}
+                  y={y + 22}
+                  textAnchor="middle"
+                  className="fill-neutral-400 text-[7px]"
+                >
+                  {sub}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </figure>
+      );
+
+    case "cache-aside-pattern":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Cache-aside — app manages reads and write-invalidation explicitly
+          </figcaption>
+          <svg viewBox="0 0 420 190" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="ca-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+              <marker
+                id="ca-grn"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+              </marker>
+              <marker
+                id="ca-red"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#f87171" />
+              </marker>
+            </defs>
+            {/* boxes */}
+            <rect
+              x="10"
+              y="20"
+              width="60"
+              height="22"
+              rx="4"
+              fill="#1e293b"
+              stroke="#38bdf8"
+              strokeWidth="1"
+            />
+            <text
+              x="40"
+              y="34"
+              textAnchor="middle"
+              className="fill-sky-300 text-[9px]"
+            >
+              App
+            </text>
+            <rect
+              x="160"
+              y="20"
+              width="60"
+              height="22"
+              rx="4"
+              fill="#1e293b"
+              stroke="#a78bfa"
+              strokeWidth="1"
+            />
+            <text
+              x="190"
+              y="34"
+              textAnchor="middle"
+              className="fill-violet-300 text-[9px]"
+            >
+              Cache
+            </text>
+            <rect
+              x="310"
+              y="20"
+              width="60"
+              height="22"
+              rx="4"
+              fill="#1e293b"
+              stroke="#4ade80"
+              strokeWidth="1"
+            />
+            <text
+              x="340"
+              y="34"
+              textAnchor="middle"
+              className="fill-green-300 text-[9px]"
+            >
+              Database
+            </text>
+            {/* READ PATH */}
+            <text
+              x="10"
+              y="58"
+              className="fill-sky-400 text-[8px] font-semibold"
+            >
+              READ PATH
+            </text>
+            <line
+              x1="70"
+              y1="66"
+              x2="154"
+              y2="66"
+              stroke="#94a3b8"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-arr)"
+            />
+            <text
+              x="112"
+              y="62"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              check cache
+            </text>
+            <line
+              x1="160"
+              y1="80"
+              x2="76"
+              y2="80"
+              stroke="#f87171"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-red)"
+            />
+            <text
+              x="112"
+              y="76"
+              textAnchor="middle"
+              className="fill-red-400 text-[7px]"
+            >
+              MISS
+            </text>
+            <line
+              x1="70"
+              y1="95"
+              x2="304"
+              y2="95"
+              stroke="#94a3b8"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-arr)"
+            />
+            <text
+              x="186"
+              y="91"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              read DB
+            </text>
+            <line
+              x1="310"
+              y1="109"
+              x2="226"
+              y2="109"
+              stroke="#4ade80"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-grn)"
+            />
+            <text
+              x="266"
+              y="105"
+              textAnchor="middle"
+              className="fill-green-400 text-[7px]"
+            >
+              data
+            </text>
+            <line
+              x1="220"
+              y1="123"
+              x2="76"
+              y2="123"
+              stroke="#94a3b8"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-arr)"
+            />
+            <text
+              x="148"
+              y="117"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              write to cache (TTL=5m) + return
+            </text>
+            {/* WRITE PATH */}
+            <text
+              x="10"
+              y="148"
+              className="fill-amber-400 text-[8px] font-semibold"
+            >
+              WRITE PATH
+            </text>
+            <line
+              x1="70"
+              y1="158"
+              x2="304"
+              y2="158"
+              stroke="#94a3b8"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-arr)"
+            />
+            <text
+              x="186"
+              y="154"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              write DB
+            </text>
+            <line
+              x1="70"
+              y1="173"
+              x2="154"
+              y2="173"
+              stroke="#f87171"
+              strokeWidth="1.1"
+              markerEnd="url(#ca-red)"
+            />
+            <text
+              x="112"
+              y="169"
+              textAnchor="middle"
+              className="fill-red-400 text-[7px]"
+            >
+              DEL key (invalidate)
+            </text>
+          </svg>
+        </figure>
+      );
+
+    // ── Day 7: Error handling & logging ───────────────────────────────────
+    case "log-correlation":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Correlation ID propagation — one ID ties logs across every service
+            in a request
+          </figcaption>
+          <svg viewBox="0 0 420 190" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="lc-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+            </defs>
+            {/* service boxes */}
+            {[
+              { x: 10, label: "Gateway" },
+              { x: 120, label: "Service A" },
+              { x: 230, label: "Service B" },
+              { x: 340, label: "Service C" },
+            ].map(({ x, label }) => (
+              <g key={label}>
+                <rect
+                  x={x}
+                  y="10"
+                  width="70"
+                  height="22"
+                  rx="4"
+                  fill="#1e293b"
+                  stroke="#334155"
+                  strokeWidth="1"
+                />
+                <text
+                  x={x + 35}
+                  y="24"
+                  textAnchor="middle"
+                  className="fill-neutral-300 text-[8px]"
+                >
+                  {label}
+                </text>
+                <line
+                  x1={x + 35}
+                  y1="32"
+                  x2={x + 35}
+                  y2="148"
+                  stroke="#334155"
+                  strokeWidth="1"
+                  strokeDasharray="3 3"
+                />
+              </g>
+            ))}
+            {/* incoming request */}
+            <line
+              x1="0"
+              y1="50"
+              x2="9"
+              y2="50"
+              stroke="#94a3b8"
+              strokeWidth="1.2"
+              markerEnd="url(#lc-arr)"
+            />
+            <text x="2" y="46" className="fill-neutral-500 text-[7px]">
+              req
+            </text>
+            {/* generate correlation ID */}
+            <rect
+              x="10"
+              y="56"
+              width="70"
+              height="16"
+              rx="3"
+              fill="#1e3a5f"
+              stroke="#38bdf8"
+              strokeWidth="0.8"
+            />
+            <text
+              x="45"
+              y="67"
+              textAnchor="middle"
+              className="fill-sky-300 text-[7px]"
+            >
+              gen corr_id
+            </text>
+            {/* propagate */}
+            <line
+              x1="80"
+              y1="80"
+              x2="120"
+              y2="80"
+              stroke="#38bdf8"
+              strokeWidth="1.2"
+              markerEnd="url(#lc-arr)"
+            />
+            <text
+              x="100"
+              y="76"
+              textAnchor="middle"
+              className="fill-sky-400 text-[7px]"
+            >
+              + corr_id
+            </text>
+            <line
+              x1="190"
+              y1="80"
+              x2="230"
+              y2="80"
+              stroke="#38bdf8"
+              strokeWidth="1.2"
+              markerEnd="url(#lc-arr)"
+            />
+            <text
+              x="210"
+              y="76"
+              textAnchor="middle"
+              className="fill-sky-400 text-[7px]"
+            >
+              + corr_id
+            </text>
+            <line
+              x1="300"
+              y1="80"
+              x2="340"
+              y2="80"
+              stroke="#38bdf8"
+              strokeWidth="1.2"
+              markerEnd="url(#lc-arr)"
+            />
+            <text
+              x="320"
+              y="76"
+              textAnchor="middle"
+              className="fill-sky-400 text-[7px]"
+            >
+              + corr_id
+            </text>
+            {/* log lines */}
+            <text x="14" y="106" className="fill-neutral-500 text-[7px]">
+              log: corr_id=req_abc
+            </text>
+            <text x="124" y="106" className="fill-neutral-500 text-[7px]">
+              log: corr_id=req_abc
+            </text>
+            <text x="234" y="106" className="fill-neutral-500 text-[7px]">
+              log: corr_id=req_abc
+            </text>
+            <text x="344" y="106" className="fill-neutral-500 text-[7px]">
+              log: corr_id=req_abc
+            </text>
+            {/* aggregator band */}
+            <rect
+              x="10"
+              y="120"
+              width="400"
+              height="24"
+              rx="4"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text
+              x="210"
+              y="131"
+              textAnchor="middle"
+              className="fill-sky-400 text-[8px] font-semibold"
+            >
+              Log Aggregator — filter: corr_id = req_abc
+            </text>
+            <text
+              x="210"
+              y="140"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              → complete timeline: Gateway → A → B → C in order
+            </text>
+            {/* arrow up from logs to aggregator */}
+            <line
+              x1="210"
+              y1="113"
+              x2="210"
+              y2="120"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            {/* return corr_id in response */}
+            <text x="10" y="162" className="fill-neutral-500 text-[7px]">
+              Response header: X-Correlation-Id: req_abc (client includes in bug
+              reports)
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "error-classification":
+      return (
+        <figure className={figClass}>
+          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+            Error classification — route each error to the right action
+          </figcaption>
+          <svg viewBox="0 0 400 200" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="ec-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+            </defs>
+            {/* root */}
+            <rect
+              x="150"
+              y="8"
+              width="100"
+              height="22"
+              rx="4"
+              fill="#1e293b"
+              stroke="#94a3b8"
+              strokeWidth="1"
+            />
+            <text
+              x="200"
+              y="22"
+              textAnchor="middle"
+              className="fill-neutral-300 text-[9px]"
+            >
+              Error received
+            </text>
+            {/* 4xx branch */}
+            <line
+              x1="200"
+              y1="30"
+              x2="80"
+              y2="58"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#ec-arr)"
+            />
+            <text
+              x="120"
+              y="48"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              4xx?
+            </text>
+            <rect
+              x="20"
+              y="58"
+              width="100"
+              height="26"
+              rx="4"
+              fill="#1e2a1e"
+              stroke="#4ade80"
+              strokeWidth="1"
+            />
+            <text
+              x="70"
+              y="70"
+              textAnchor="middle"
+              className="fill-green-300 text-[8px]"
+            >
+              Client error
+            </text>
+            <text
+              x="70"
+              y="80"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              400 401 403 404 422
+            </text>
+            <rect
+              x="20"
+              y="96"
+              width="100"
+              height="36"
+              rx="4"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text
+              x="70"
+              y="108"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Log at warn/info
+            </text>
+            <text
+              x="70"
+              y="118"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Return descriptive error
+            </text>
+            <text
+              x="70"
+              y="128"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Do not retry
+            </text>
+            {/* 503 branch */}
+            <line
+              x1="200"
+              y1="30"
+              x2="200"
+              y2="58"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#ec-arr)"
+            />
+            <text x="210" y="48" className="fill-neutral-500 text-[7px]">
+              5xx transient?
+            </text>
+            <rect
+              x="150"
+              y="58"
+              width="100"
+              height="26"
+              rx="4"
+              fill="#2d1e1e"
+              stroke="#fb923c"
+              strokeWidth="1"
+            />
+            <text
+              x="200"
+              y="70"
+              textAnchor="middle"
+              className="fill-orange-300 text-[8px]"
+            >
+              Transient error
+            </text>
+            <text
+              x="200"
+              y="80"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              502 503 504 timeout
+            </text>
+            <rect
+              x="150"
+              y="96"
+              width="100"
+              height="36"
+              rx="4"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text
+              x="200"
+              y="108"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Log at warn
+            </text>
+            <text
+              x="200"
+              y="118"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Retry with backoff + jitter
+            </text>
+            <text
+              x="200"
+              y="128"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Alert if sustained
+            </text>
+            {/* 500 bug branch */}
+            <line
+              x1="200"
+              y1="30"
+              x2="320"
+              y2="58"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              markerEnd="url(#ec-arr)"
+            />
+            <text
+              x="282"
+              y="48"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              500 bug?
+            </text>
+            <rect
+              x="280"
+              y="58"
+              width="100"
+              height="26"
+              rx="4"
+              fill="#2d1e1e"
+              stroke="#f87171"
+              strokeWidth="1"
+            />
+            <text
+              x="330"
+              y="70"
+              textAnchor="middle"
+              className="fill-red-300 text-[8px]"
+            >
+              Programmer error
+            </text>
+            <text
+              x="330"
+              y="80"
+              textAnchor="middle"
+              className="fill-neutral-500 text-[7px]"
+            >
+              500 unhandled exception
+            </text>
+            <rect
+              x="280"
+              y="96"
+              width="100"
+              height="36"
+              rx="4"
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text
+              x="330"
+              y="108"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Log at error + stack
+            </text>
+            <text
+              x="330"
+              y="118"
+              textAnchor="middle"
+              className="fill-neutral-400 text-[7px]"
+            >
+              Return generic 500
+            </text>
+            <text
+              x="330"
+              y="128"
+              textAnchor="middle"
+              className="fill-red-400 text-[7px]"
+            >
+              Alert immediately
+            </text>
+            {/* 429 note */}
+            <text x="10" y="150" className="fill-amber-400 text-[7px]">
+              * 429 Too Many Requests is a client error but the client should
+              retry after the Retry-After header delay.
+            </text>
+          </svg>
+        </figure>
+      );
+
     default:
       return null;
   }
