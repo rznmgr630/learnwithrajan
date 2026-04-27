@@ -3,6 +3,10 @@ import {
   isNodeRuntimeDiagram,
   NodeRuntimeDiagram,
 } from "@/components/learn/NodeRuntimeDiagrams";
+import {
+  isWeek2Diagram,
+  Week2Diagram,
+} from "@/components/learn/Week2Diagrams";
 
 const figClass =
   "mt-3 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40 text-neutral-200";
@@ -10,6 +14,9 @@ const figClass =
 export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   if (isNodeRuntimeDiagram(id)) {
     return <NodeRuntimeDiagram id={id} />;
+  }
+  if (isWeek2Diagram(id)) {
+    return <Week2Diagram id={id} />;
   }
   switch (id) {
     case "http11-sequential":
