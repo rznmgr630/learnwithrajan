@@ -5,6 +5,13 @@ import { DAY_4_DETAIL } from "./day-4-detail";
 import { DAY_5_DETAIL } from "./day-5-detail";
 import { DAY_6_DETAIL } from "./day-6-detail";
 import { DAY_7_DETAIL } from "./day-7-detail";
+import { DAY_8_DETAIL } from "./day-8-detail";
+import { DAY_9_DETAIL } from "./day-9-detail";
+import { DAY_10_DETAIL } from "./day-10-detail";
+import { DAY_11_DETAIL } from "./day-11-detail";
+import { DAY_12_DETAIL } from "./day-12-detail";
+import { DAY_13_DETAIL } from "./day-13-detail";
+import { DAY_14_DETAIL } from "./day-14-detail";
 
 /** Official “current” day (1-based). Days before this count as done when seeding local progress. */
 export const CURRENT_DAY = 1;
@@ -40,7 +47,17 @@ export type RoadmapDetailDiagramId =
   | "cache-layers"
   | "cache-aside-pattern"
   | "log-correlation"
-  | "error-classification";
+  | "error-classification"
+  | "lb-round-robin"
+  | "lb-ha-failover"
+  | "erd-one-many"
+  | "deadlock-cycle"
+  | "cap-theorem"
+  | "primary-replica"
+  | "cqrs-sketch"
+  | "inverted-index"
+  | "queue-backpressure"
+  | "producer-consumer";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
@@ -179,6 +196,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "networking", slug: "networking" },
           { label: "architecture", slug: "architecture" },
         ],
+        detail: DAY_8_DETAIL,
       },
       {
         day: 9,
@@ -187,6 +205,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "database", slug: "database" },
           { label: "design", slug: "design" },
         ],
+        detail: DAY_9_DETAIL,
       },
       {
         day: 10,
@@ -195,6 +214,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "database", slug: "database" },
           { label: "theory", slug: "theory" },
         ],
+        detail: DAY_10_DETAIL,
       },
       {
         day: 11,
@@ -203,6 +223,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "database", slug: "database" },
           { label: "nosql", slug: "nosql" },
         ],
+        detail: DAY_11_DETAIL,
       },
       {
         day: 12,
@@ -211,6 +232,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "database", slug: "database" },
           { label: "architecture", slug: "architecture" },
         ],
+        detail: DAY_12_DETAIL,
       },
       {
         day: 13,
@@ -219,6 +241,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "performance", slug: "performance" },
           { label: "database", slug: "database" },
         ],
+        detail: DAY_13_DETAIL,
       },
       {
         day: 14,
@@ -227,6 +250,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
           { label: "reliability", slug: "reliability" },
           { label: "architecture", slug: "architecture" },
         ],
+        detail: DAY_14_DETAIL,
       },
     ],
   },
