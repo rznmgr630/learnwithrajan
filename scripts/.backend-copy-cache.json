@@ -1026,5 +1026,137 @@
 "Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level.": {
 "np": "Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level.",
 "jp": "Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level."
+},
+"Recursive `process.nextTick` starves the loop permanently â timers and I/O never fire. Use `setImmediate` if you need recursive scheduling; it yields to the loop between iterations.": {
+"np": "Recursive `process.nextTick` starves the loop permanently â timers and I/O never fire. Use `setImmediate` if you need recursive scheduling; it yields to the loop between iterations.",
+"jp": "Recursive `process.nextTick` starves the loop permanently â timers and I/O never fire. Use `setImmediate` if you need recursive scheduling; it yields to the loop between iterations."
+},
+"HTTP is TCP plus a text framing protocol. `net.createServer` exposes the raw socket layer â one `socket` per accepted connection, the same building block `http.createServer` wraps. Seeing it at the TCP level makes the async model concrete.": {
+"np": "HTTP is TCP plus a text framing protocol. `net.createServer` exposes the raw socket layer â one `socket` per accepted connection, the same building block `http.createServer` wraps. Seeing it at the TCP level makes the async model concrete.",
+"jp": "HTTP is TCP plus a text framing protocol. `net.createServer` exposes the raw socket layer â one `socket` per accepted connection, the same building block `http.createServer` wraps. Seeing it at the TCP level makes the async model concrete."
+},
+"Each `socket` is a duplex stream; `libuv` registers its fd with the OS. The JS thread never blocks waiting for bytes â it is woken only when data arrives. Two open connections, one thread, zero blocking.": {
+"np": "Each `socket` is a duplex stream; `libuv` registers its fd with the OS. The JS thread never blocks waiting for bytes â it is woken only when data arrives. Two open connections, one thread, zero blocking.",
+"jp": "Each `socket` is a duplex stream; `libuv` registers its fd with the OS. The JS thread never blocks waiting for bytes â it is woken only when data arrives. Two open connections, one thread, zero blocking."
+},
+"Mean loop delay above ~10ms under load is a signal â not a diagnosis. Profile first (`clinic doctor` or `--prof`) to confirm the hot synchronous path before changing anything.": {
+"np": "Mean loop delay above ~10ms under load is a signal â not a diagnosis. Profile first (`clinic doctor` or `--prof`) to confirm the hot synchronous path before changing anything.",
+"jp": "Mean loop delay above ~10ms under load is a signal â not a diagnosis. Profile first (`clinic doctor` or `--prof`) to confirm the hot synchronous path before changing anything."
+},
+"`nextTick` vs `Promise` order is a very common senior Node question â be crisp before Day 3.": {
+"np": "`nextTick` vs `Promise` order is a very common senior Node question â be crisp before Day 3.",
+"jp": "`nextTick` vs `Promise` order is a very common senior Node question â be crisp before Day 3."
+},
+"Same process, very different effect on the event loop": {
+"np": "Same process, very different effect on the event loop",
+"jp": "Same process, very different effect on the event loop"
+},
+"High-level: goroutines are cheap; scheduler maps them to a few OS threads": {
+"np": "High-level: goroutines are cheap; scheduler maps them to a few OS threads",
+"jp": "High-level: goroutines are cheap; scheduler maps them to a few OS threads"
+},
+"The big picture: one thread, many waiting connections": {
+"np": "The big picture: one thread, many waiting connections",
+"jp": "The big picture: one thread, many waiting connections"
+},
+"Event loop and libuv phases (simplified)": {
+"np": "Event loop and libuv phases (simplified)",
+"jp": "Event loop and libuv phases (simplified)"
+},
+"Execution order (the interview gotcha)": {
+"np": "Execution order (the interview gotcha)",
+"jp": "Execution order (the interview gotcha)"
+},
+"Run in Node â output order: 1 â 4 â 2 â 3 â 5": {
+"np": "Run in Node â output order: 1 â 4 â 2 â 3 â 5",
+"jp": "Run in Node â output order: 1 â 4 â 2 â 3 â 5"
+},
+"Raw TCP in Node (before `http.createServer`)": {
+"np": "Raw TCP in Node (before `http.createServer`)",
+"jp": "Raw TCP in Node (before `http.createServer`)"
+},
+"`net.createServer` (CommonJS)": {
+"np": "`net.createServer` (CommonJS)",
+"jp": "`net.createServer` (CommonJS)"
+},
+"CPU-bound vs I/O-bound": {
+"np": "CPU-bound vs I/O-bound",
+"jp": "CPU-bound vs I/O-bound"
+},
+"Pattern: I/O ok, CPU on main bad, `Worker` to offload": {
+"np": "Pattern: I/O ok, CPU on main bad, `Worker` to offload",
+"jp": "Pattern: I/O ok, CPU on main bad, `Worker` to offload"
+},
+"Profiling: event loop delay": {
+"np": "Profiling: event loop delay",
+"jp": "Profiling: event loop delay"
+},
+"`perf_hooks` + `clinic` / `--prof`": {
+"np": "`perf_hooks` + `clinic` / `--prof`",
+"jp": "`perf_hooks` + `clinic` / `--prof`"
+},
+"Go (same dayâs comparison)": {
+"np": "Go (same dayâs comparison)",
+"jp": "Go (same dayâs comparison)"
+},
+"TCP server: new goroutine per `Accept`": {
+"np": "TCP server: new goroutine per `Accept`",
+"jp": "TCP server: new goroutine per `Accept`"
+},
+"Exercises (do all three)": {
+"np": "Exercises (do all three)",
+"jp": "Exercises (do all three)"
+},
+"How does Node.js handle 10,000 concurrent connections with a single thread?": {
+"np": "How does Node.js handle 10,000 concurrent connections with a single thread?",
+"jp": "How does Node.js handle 10,000 concurrent connections with a single thread?"
+},
+"What are the 6 phases of the Node.js event loop, in order?": {
+"np": "What are the 6 phases of the Node.js event loop, in order?",
+"jp": "What are the 6 phases of the Node.js event loop, in order?"
+},
+"What is the exact execution order of: sync code, nextTick, Promise, setTimeout, setImmediate?": {
+"np": "What is the exact execution order of: sync code, nextTick, Promise, setTimeout, setImmediate?",
+"jp": "What is the exact execution order of: sync code, nextTick, Promise, setTimeout, setImmediate?"
+},
+"What is the difference between `setTimeout(fn, 0)` and `setImmediate(fn)`?": {
+"np": "What is the difference between `setTimeout(fn, 0)` and `setImmediate(fn)`?",
+"jp": "What is the difference between `setTimeout(fn, 0)` and `setImmediate(fn)`?"
+},
+"What is event loop starvation and how can `process.nextTick` cause it?": {
+"np": "What is event loop starvation and how can `process.nextTick` cause it?",
+"jp": "What is event loop starvation and how can `process.nextTick` cause it?"
+},
+"What is the difference between CPU-bound and I/O-bound code, and why does it matter in Node.js?": {
+"np": "What is the difference between CPU-bound and I/O-bound code, and why does it matter in Node.js?",
+"jp": "What is the difference between CPU-bound and I/O-bound code, and why does it matter in Node.js?"
+},
+"What is libuv and what role does it play in Node.js?": {
+"np": "What is libuv and what role does it play in Node.js?",
+"jp": "What is libuv and what role does it play in Node.js?"
+},
+"How do Go goroutines differ from Node.jsâs event loop for handling concurrency?": {
+"np": "How do Go goroutines differ from Node.jsâs event loop for handling concurrency?",
+"jp": "How do Go goroutines differ from Node.jsâs event loop for handling concurrency?"
+},
+"How would you detect and fix a blocked event loop in a production Node.js app?": {
+"np": "How would you detect and fix a blocked event loop in a production Node.js app?",
+"jp": "How would you detect and fix a blocked event loop in a production Node.js app?"
+},
+"What is the call stack, and what happens when it overflows?": {
+"np": "What is the call stack, and what happens when it overflows?",
+"jp": "What is the call stack, and what happens when it overflows?"
+},
+"Core concurrency model": {
+"np": "Core concurrency model",
+"jp": "Core concurrency model"
+},
+"Event loop phases": {
+"np": "Event loop phases",
+"jp": "Event loop phases"
+},
+"Execution priority": {
+"np": "Execution priority",
+"jp": "Execution priority"
 }
 }
