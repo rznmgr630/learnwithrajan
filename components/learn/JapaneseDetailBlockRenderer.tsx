@@ -1,5 +1,9 @@
-import type { JapaneseDetailBlock } from "@/lib/japanese-learning/types";
+"use client";
+
+import type { JapaneseDetailBlock, LocalizedString } from "@/lib/japanese-learning/types";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 function DetailTable({
   caption,
@@ -60,6 +64,9 @@ function DetailCode({ title, code }: { title?: string; code: string }) {
 }
 
 export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetailBlock[] }) {
+  const { locale, t } = useLocale();
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
+
   return (
     <div className="mt-3 space-y-4">
       {blocks.map((block, i) => {
@@ -68,7 +75,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
           case "paragraph":
             return (
               <p key={key} className="text-sm leading-relaxed text-neutral-300">
-                <RichText text={block.text} />
+                <RichText text={ls(block.text)} />
               </p>
             );
           case "list": {
@@ -81,7 +88,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
               <List key={key} className={listClass}>
                 {block.items.map((line, li) => (
                   <li key={li} className="pl-1">
-                    <RichText text={line} />
+                    <RichText text={ls(line)} />
                   </li>
                 ))}
               </List>
@@ -91,9 +98,9 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return (
               <DetailTable
                 key={key}
-                caption={block.caption}
-                headers={block.headers}
-                rows={block.rows}
+                caption={block.caption !== undefined ? ls(block.caption) : undefined}
+                headers={block.headers.map(ls)}
+                rows={block.rows.map((row) => row.map(ls))}
               />
             );
           case "code":
@@ -115,55 +122,55 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                     {line.reading ? (
                       <p className="mt-1 font-mono text-xs text-neutral-500">{line.reading}</p>
                     ) : null}
-                    <p className="mt-1 text-sm text-neutral-400">{line.en}</p>
+                    <p className="mt-1 text-sm text-neutral-400">{ls(line.en)}</p>
                   </div>
                 ))}
               </div>
             );
-          case "mcq":
+          case "mcq": {
+            const mcq = block;
+            const correctChoice = ls(mcq.choices[mcq.correctIndex]);
             return (
               <div
                 key={key}
                 className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900/40 p-4"
               >
                 <p className="text-sm font-medium text-neutral-200">
-                  <RichText text={block.question} />
+                  <RichText text={ls(mcq.question)} />
                 </p>
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-neutral-300">
-                  {block.choices.map((c, ci) => (
+                  {mcq.choices.map((c, ci) => (
                     <li key={ci} className="pl-1">
-                      <RichText text={c} />
+                      <RichText text={ls(c)} />
                     </li>
                   ))}
                 </ol>
                 <p className="mt-3 text-sm text-emerald-400/95">
-                  Correct: ({block.correctIndex + 1}) {block.choices[block.correctIndex]}
+                  {t("jpDetail.mcqCorrectLabel")} ({mcq.correctIndex + 1}) {correctChoice}
                 </p>
-                {block.explanation ? (
+                {mcq.explanation ? (
                   <p className="mt-2 text-xs leading-relaxed text-neutral-500">
-                    <RichText text={block.explanation} />
+                    <RichText text={ls(mcq.explanation)} />
                   </p>
                 ) : null}
               </div>
             );
+          }
           case "listening":
             return (
-              <div
-                key={key}
-                className="mt-3 rounded-lg border border-sky-900/40 bg-sky-950/15 p-4"
-              >
+              <div key={key} className="mt-3 rounded-lg border border-sky-900/40 bg-sky-950/15 p-4">
                 {block.title ? (
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
-                    {block.title}
+                    {ls(block.title)}
                   </p>
                 ) : null}
-                <p className="mt-2 text-sm text-neutral-300">{block.scenario}</p>
-                <p className="mt-3 text-sm font-medium text-neutral-200">Task</p>
-                <p className="mt-1 text-sm text-neutral-400">{block.instruction}</p>
+                <p className="mt-2 text-sm text-neutral-300">{ls(block.scenario)}</p>
+                <p className="mt-3 text-sm font-medium text-neutral-200">{t("weeklyPanel.task")}</p>
+                <p className="mt-1 text-sm text-neutral-400">{ls(block.instruction)}</p>
                 {block.youtubeVideos && block.youtubeVideos.length > 0 ? (
                   <div className="mt-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/95">
-                      YouTube (chapter-aligned)
+                      {t("jpDetail.listeningYoutubeHeading")}
                     </p>
                     <ul className="mt-2 space-y-2">
                       {block.youtubeVideos.map((v, vi) => (
@@ -182,18 +189,18 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                   </div>
                 ) : null}
                 <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                  Key phrases
+                  {t("jpDetail.listeningKeyPhrases")}
                 </p>
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-300">
                   {block.keyPhrases.map((p, pi) => (
                     <li key={pi} className="pl-1 font-mono text-xs text-sky-100/90">
-                      {p}
+                      {ls(p)}
                     </li>
                   ))}
                 </ul>
                 {block.studyTip ? (
                   <p className="mt-3 border-t border-sky-900/30 pt-3 text-xs text-neutral-500">
-                    Tip: {block.studyTip}
+                    {t("jpDetail.listeningTipPrefix")} {ls(block.studyTip)}
                   </p>
                 ) : null}
               </div>
@@ -203,7 +210,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
               <div key={key} className="mt-3 space-y-4">
                 {block.caption ? (
                   <p className="text-[11px] text-neutral-500">
-                    <RichText text={block.caption} />
+                    <RichText text={ls(block.caption)} />
                   </p>
                 ) : null}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -227,8 +234,10 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                       <div className="min-w-0 flex-1">
                         <p className="text-2xl font-semibold text-neutral-50">{k.kanji}</p>
                         <p className="mt-1 font-mono text-xs text-sky-200/90">{k.readings}</p>
-                        <p className="mt-1 text-xs text-neutral-400">{k.meaning}</p>
-                        <p className="mt-2 text-[11px] text-neutral-500">Strokes: {k.strokes}</p>
+                        <p className="mt-1 text-xs text-neutral-400">{ls(k.meaning)}</p>
+                        <p className="mt-2 text-[11px] text-neutral-500">
+                          {t("jpDetail.kanjiStrokesLabel")}: {k.strokes}
+                        </p>
                         {k.strokeSvgUrl ? (
                           <a
                             href={k.strokeSvgUrl}
@@ -236,7 +245,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                             rel="noopener noreferrer"
                             className="mt-2 inline-block text-[11px] text-sky-400 hover:text-sky-300 hover:underline"
                           >
-                            Open stroke SVG
+                            {t("jpDetail.kanjiOpenSvg")}
                           </a>
                         ) : null}
                       </div>

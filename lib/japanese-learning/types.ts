@@ -7,14 +7,15 @@ export type JapaneseDialogueLine = {
   speaker?: string;
   ja: string;
   reading?: string;
-  en: string;
+  /** English gloss — localized when triple is provided; Japanese line stays in `ja`. */
+  en: LocalizedString;
 };
 
 /** Blocks used only in Japanese lesson panels (no backend SVG diagrams). */
 export type JapaneseDetailBlock =
-  | { type: "paragraph"; text: string }
-  | { type: "list"; items: string[]; variant?: "bullet" | "number" }
-  | { type: "table"; caption?: string; headers: string[]; rows: string[][] }
+  | { type: "paragraph"; text: LocalizedString }
+  | { type: "list"; items: LocalizedString[]; variant?: "bullet" | "number" }
+  | { type: "table"; caption?: LocalizedString; headers: LocalizedString[]; rows: LocalizedString[][] }
   | { type: "code"; title?: string; code: string }
   | {
       type: "dialogue";
@@ -22,43 +23,43 @@ export type JapaneseDetailBlock =
     }
   | {
       type: "mcq";
-      question: string;
-      choices: string[];
+      question: LocalizedString;
+      choices: LocalizedString[];
       correctIndex: number;
-      explanation?: string;
+      explanation?: LocalizedString;
     }
   | {
       type: "listening";
-      title?: string;
-      scenario: string;
-      instruction: string;
-      keyPhrases: string[];
-      studyTip?: string;
+      title?: LocalizedString;
+      scenario: LocalizedString;
+      instruction: LocalizedString;
+      keyPhrases: LocalizedString[];
+      studyTip?: LocalizedString;
       /** Curated YouTube watch or search URLs for chapter-aligned listening. */
       youtubeVideos?: { url: string; title: string }[];
     }
   | {
       type: "kanjiStrokeStudy";
-      caption?: string;
+      caption?: LocalizedString;
       items: {
         kanji: string;
         readings: string;
-        meaning: string;
+        meaning: LocalizedString;
         strokes: number;
         strokeSvgUrl: string;
       }[];
     };
 
 export interface JapaneseRoadmapDayDetailSection {
-  title: string;
-  items?: string[];
+  title: LocalizedString;
+  items?: LocalizedString[];
   blocks?: JapaneseDetailBlock[];
 }
 
 export interface JapaneseRoadmapDayDetail {
-  overview: string | string[];
+  overview: LocalizedString | LocalizedString[];
   sections?: JapaneseRoadmapDayDetailSection[];
-  bullets?: string[];
+  bullets?: LocalizedString[];
 }
 
 export interface JapaneseRoadmapTag {
