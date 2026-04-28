@@ -1,4 +1,4 @@
-import type { RoadmapDayDetail } from "./challenge-data";
+import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_3_DETAIL = {
   overview: [
