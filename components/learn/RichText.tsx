@@ -42,8 +42,9 @@ function mergeTextRuns(segments: Segment[]): Segment[] {
   return merged;
 }
 
+/** Inline code: neutral surfaces; accent is reserved for links and CTAs elsewhere. */
 const codeClass =
-  "mx-0.5 inline max-w-[min(100%,24rem)] break-words rounded-md border border-neutral-600/80 bg-neutral-800/95 px-1.5 py-0.5 align-baseline font-mono text-[0.88em] font-normal leading-snug text-sky-100/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
+  "mx-0.5 inline max-w-[min(100%,24rem)] break-words rounded-md border border-zinc-300 bg-zinc-100 px-1.5 py-0.5 align-baseline font-mono text-[0.88em] font-normal leading-snug text-zinc-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.04)] dark:border-neutral-600/80 dark:bg-neutral-900 dark:text-zinc-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
 
 type RichTextProps = {
   text: string;

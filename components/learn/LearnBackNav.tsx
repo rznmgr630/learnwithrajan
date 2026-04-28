@@ -7,7 +7,7 @@ export function LearnBackNav() {
   const { t } = useLocale();
 
   return (
-    <Link href="/learn" className="text-sm text-neutral-500 transition hover:text-neutral-300">
+    <Link href="/learn" className="text-sm text-[var(--muted)] transition hover:text-[var(--text)]">
       {t("learn.back")}
     </Link>
   );

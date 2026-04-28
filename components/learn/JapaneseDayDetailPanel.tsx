@@ -74,21 +74,21 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
         aria-label={t("weeklyPanel.close")}
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
+      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
-            <p className="text-xs font-medium text-rose-400/90">{pickLocalized(ctx.weekTitle, locale)}</p>
-            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium text-[var(--accent)]">{pickLocalized(ctx.weekTitle, locale)}</p>
+            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
               {t("japaneseDay.trackLabel")}
             </p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">
+            <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
               {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {ctx.day.title}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
             aria-label={t("weeklyPanel.close")}
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -102,7 +102,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
             {ctx.day.tags.map((tag) => (
               <span
                 key={`${ctx.day.day}-${tag.slug}`}
-                className="rounded-full border border-rose-900/40 bg-rose-950/30 px-2.5 py-1 text-xs font-medium text-rose-100/95"
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
               >
                 {japaneseTagLabel(tag.slug, t)}
               </span>
@@ -110,8 +110,8 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("jpDetail.overviewHeading")}</h3>
-            <div className="mt-2 space-y-3 text-sm leading-relaxed text-neutral-300">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.overviewHeading")}</h3>
+            <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
               {intro.map((p, i) => (
                 <p key={i}>
                   <RichText text={pickLocalized(p, locale)} />
@@ -122,13 +122,13 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
 
           {detail.sections?.map((sec, si) => (
             <div key={`jp-sec-${si}`}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 {pickLocalized(sec.title, locale)}
               </h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <JapaneseDetailBlockRenderer blocks={sec.blocks} />
               ) : sec.items && sec.items.length > 0 ? (
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500">
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
                   {sec.items.map((line, i) => (
                     <li key={i} className="pl-1">
                       <RichText text={pickLocalized(line, locale)} />
@@ -141,8 +141,8 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
 
           {detail.bullets && detail.bullets.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("jpDetail.practiceChecklist")}</h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.practiceChecklist")}</h3>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
                 {detail.bullets.map((line, i) => (
                   <li key={i} className="pl-1">
                     <RichText text={pickLocalized(line, locale)} />
@@ -153,15 +153,15 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           ) : null}
         </div>
 
-        <div className="border-t border-neutral-800 p-5">
+        <div className="border-t border-[var(--border)] p-5">
           <button
             type="button"
             onClick={() => onToggleDone(dayNumber)}
             className={[
               "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition",
               done
-                ? "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                : "bg-rose-600 text-white hover:bg-rose-500",
+                ? "bg-[var(--elevated)] text-[var(--text)] hover:bg-[color-mix(in_oklab,var(--elevated)_88%,var(--accent))]"
+                : "bg-[var(--accent)] text-[var(--accent-fg)] hover:brightness-110",
             ].join(" ")}
           >
             {done ? t("jpDetail.markDayNotDone") : t("jpDetail.markDayDone")}

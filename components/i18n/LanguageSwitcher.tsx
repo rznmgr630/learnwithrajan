@@ -11,7 +11,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value as Locale)}
-        className="rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-neutral-200 outline-none transition hover:border-neutral-600 focus:border-sky-500/60 focus:ring-1 focus:ring-sky-500/30"
+        className="rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-2 py-1.5 text-[var(--text)] outline-none transition hover:border-[var(--accent)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[color-mix(in_oklab,var(--accent)_35%,transparent)]"
         aria-label={t("nav.language")}
       >
         {LOCALES.map((loc) => (

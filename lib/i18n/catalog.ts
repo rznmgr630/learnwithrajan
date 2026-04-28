@@ -353,7 +353,7 @@ export const UI_STRINGS = {
     jp: "公開ラーニングログ",
   },
   "hero.title": {
-    en: "I'm sharing what I build while I learn backend engineering.",
+    en: "I'm sharing what I build as I learn backend engineering.",
     np: "म ब्याकएन्ड इन्जिनियरिङ सिक्दै जाँदा के बनाउँछु त्यो साझा गर्दैछु।",
     jp: "バックエンドを学びながら作っているものを共有しています。",
   },

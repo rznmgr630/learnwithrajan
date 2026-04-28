@@ -7,6 +7,9 @@ import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { TOTAL_DAYS } from "@/lib/challenge-data";
 import { JP_TOTAL_DAYS } from "@/lib/japanese-learning/japanese-n5-data";
 
+const cardClass =
+  "group flex flex-col rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-5 text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]";
+
 export function LearningHubCards() {
   const { t } = useLocale();
   const { completedCount, percent } = useBackend30Progress();
@@ -14,76 +17,70 @@ export function LearningHubCards() {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Link
-        href="/learn/backend-30-days"
-        className="group flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5 text-left shadow-sm transition hover:border-sky-500/40 hover:bg-neutral-900"
-      >
+      <Link href="/learn/backend-30-days" className={cardClass}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-neutral-100 group-hover:text-sky-300">
+            <h2 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
               {t("hub.backend.title")}
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">{t("hub.backend.subtitle")}</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.backend.subtitle")}</p>
           </div>
           <span
-            className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-semibold tabular-nums text-sky-300"
+            className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
             suppressHydrationWarning
           >
             {percent}%
           </span>
         </div>
         <div className="mt-6" suppressHydrationWarning>
-          <div className="flex items-center justify-between text-xs text-neutral-500">
+          <div className="flex items-center justify-between text-xs text-[var(--muted)]">
             <span>{t("hub.backend.progress")}</span>
-            <span className="tabular-nums text-neutral-400">
+            <span className="tabular-nums text-[var(--muted)]">
               {completedCount}/{TOTAL_DAYS} {t("hub.backend.days")}
             </span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-800">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-sky-500 to-violet-500 transition-[width] duration-500"
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
               style={{ width: `${percent}%` }}
             />
           </div>
         </div>
-        <span className="mt-6 text-sm font-medium text-sky-400 transition group-hover:text-sky-300">
+        <span className="mt-6 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
           {t("hub.backend.cta")}
         </span>
       </Link>
 
-      <Link
-        href="/learn/japanese-n5"
-        className="group flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/50 p-5 text-left shadow-sm transition hover:border-rose-500/40 hover:bg-neutral-900"
-      >
+      <Link href="/learn/japanese-n5" className={cardClass}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-neutral-100 group-hover:text-rose-300">
+            <h2 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
               {t("hub.japanese.title")}
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">{t("hub.japanese.subtitle")}</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.japanese.subtitle")}</p>
           </div>
           <span
-            className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-semibold tabular-nums text-rose-300"
+            className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
             suppressHydrationWarning
           >
             {jp.percent}%
           </span>
         </div>
         <div className="mt-6" suppressHydrationWarning>
-          <div className="flex items-center justify-between text-xs text-neutral-500">
+          <div className="flex items-center justify-between text-xs text-[var(--muted)]">
             <span>{t("hub.backend.progress")}</span>
-            <span className="tabular-nums text-neutral-400">
+            <span className="tabular-nums text-[var(--muted)]">
               {jp.completedCount}/{JP_TOTAL_DAYS} {t("hub.backend.days")}
             </span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-800">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-rose-500 to-indigo-500 transition-[width] duration-500"
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
               style={{ width: `${jp.percent}%` }}
             />
           </div>
         </div>
-        <span className="mt-6 text-sm font-medium text-rose-400 transition group-hover:text-rose-300">
+        <span className="mt-6 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
           {t("hub.backend.cta")}
         </span>
       </Link>

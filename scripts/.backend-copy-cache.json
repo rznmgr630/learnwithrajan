@@ -798,5 +798,233 @@
 "What is the difference between text and keyword types in Elasticsearch?": {
 "np": "What is the difference between text and keyword types in Elasticsearch?",
 "jp": "What is the difference between text and keyword types in Elasticsearch?"
+},
+"When should you use PostgreSQL full-text search vs Elasticsearch?": {
+"np": "When should you use PostgreSQL full-text search vs Elasticsearch?",
+"jp": "When should you use PostgreSQL full-text search vs Elasticsearch?"
+},
+"What is a GIN index and when do you use it instead of a B-tree?": {
+"np": "What is a GIN index and when do you use it instead of a B-tree?",
+"jp": "What is a GIN index and when do you use it instead of a B-tree?"
+},
+"What is a partial index and when is it beneficial?": {
+"np": "What is a partial index and when is it beneficial?",
+"jp": "What is a partial index and when is it beneficial?"
+},
+"How do you find and remove unused indexes?": {
+"np": "How do you find and remove unused indexes?",
+"jp": "How do you find and remove unused indexes?"
+},
+"What is BM25 and how is it better than TF-IDF?": {
+"np": "What is BM25 and how is it better than TF-IDF?",
+"jp": "What is BM25 and how is it better than TF-IDF?"
+},
+"Inverted index": {
+"np": "Inverted index",
+"jp": "Inverted index"
+},
+"Elasticsearch": {
+"np": "Elasticsearch",
+"jp": "Elasticsearch"
+},
+"Search engine choice": {
+"np": "Search engine choice",
+"jp": "Search engine choice"
+},
+"PostgreSQL indexes": {
+"np": "PostgreSQL indexes",
+"jp": "PostgreSQL indexes"
+},
+"Partial indexes": {
+"np": "Partial indexes",
+"jp": "Partial indexes"
+},
+"Index maintenance": {
+"np": "Index maintenance",
+"jp": "Index maintenance"
+},
+"Relevance ranking": {
+"np": "Relevance ranking",
+"jp": "Relevance ranking"
+},
+"B-tree for structured lookups. Inverted index for relevance search. Know both.": {
+"np": "B-tree for structured lookups. Inverted index for relevance search. Know both.",
+"jp": "B-tree for structured lookups. Inverted index for relevance search. Know both."
+},
+"Dead indexes are worse than no indexes â they slow down writes without helping reads.": {
+"np": "Dead indexes are worse than no indexes â they slow down writes without helping reads.",
+"jp": "Dead indexes are worse than no indexes â they slow down writes without helping reads."
+},
+"Search is not just SQL LIKE queries. Full-text search, relevance ranking, faceting, and autocomplete are fundamentally different access patterns from key-value lookups or range scans. Understanding the inverted index data structure explains why Elasticsearch and PostgreSQL full-text search exist and when to reach for each.": {
+"np": "Search is not just SQL LIKE queries. Full-text search, relevance ranking, faceting, and autocomplete are fundamentally different access patterns from key-value lookups or range scans. Understanding the inverted index data structure explains why Elasticsearch and PostgreSQL full-text search exist and when to reach for each.",
+"jp": "Search is not just SQL LIKE queries. Full-text search, relevance ranking, faceting, and autocomplete are fundamentally different access patterns from key-value lookups or range scans. Understanding the inverted index data structure explains why Elasticsearch and PostgreSQL full-text search exist and when to reach for each."
+},
+"Day 13 covers B-tree and inverted indexes, PostgreSQL full-text search, Elasticsearch fundamentals, indexing strategies for production, and when to add a dedicated search engine vs optimise the DB.": {
+"np": "Day 13 covers B-tree and inverted indexes, PostgreSQL full-text search, Elasticsearch fundamentals, indexing strategies for production, and when to add a dedicated search engine vs optimise the DB.",
+"jp": "Day 13 covers B-tree and inverted indexes, PostgreSQL full-text search, Elasticsearch fundamentals, indexing strategies for production, and when to add a dedicated search engine vs optimise the DB."
+},
+"Add a generated tsvector column to a posts table, build a GIN index, and write a search endpoint that ranks results by ts_rank.": {
+"np": "Add a generated tsvector column to a posts table, build a GIN index, and write a search endpoint that ranks results by ts_rank.",
+"jp": "Add a generated tsvector column to a posts table, build a GIN index, and write a search endpoint that ranks results by ts_rank."
+},
+"Build an Elasticsearch index with title (text), status (keyword), and tags (keyword), then write a bool query that combines full-text search with a status filter.": {
+"np": "Build an Elasticsearch index with title (text), status (keyword), and tags (keyword), then write a bool query that combines full-text search with a status filter.",
+"jp": "Build an Elasticsearch index with title (text), status (keyword), and tags (keyword), then write a bool query that combines full-text search with a status filter."
+},
+"Run pg_stat_statements on a database after generating traffic, find the top 3 slowest queries, and add the missing index for one of them.": {
+"np": "Run pg_stat_statements on a database after generating traffic, find the top 3 slowest queries, and add the missing index for one of them.",
+"jp": "Run pg_stat_statements on a database after generating traffic, find the top 3 slowest queries, and add the missing index for one of them."
+},
+"Without backpressure, a fast producer sending to a slow consumer causes unbounded buffer growth. Eventually memory runs out â the classic out-of-memory crash under load. Backpressure propagates the slowness upstream: 'I'm full, stop sending for now.'": {
+"np": "Without backpressure, a fast producer sending to a slow consumer causes unbounded buffer growth. Eventually memory runs out â the classic out-of-memory crash under load. Backpressure propagates the slowness upstream: 'I'm full, stop sending for now.'",
+"jp": "Without backpressure, a fast producer sending to a slow consumer causes unbounded buffer growth. Eventually memory runs out â the classic out-of-memory crash under load. Backpressure propagates the slowness upstream: 'I'm full, stop sending for now.'"
+},
+"Node.js Readable and Writable streams implement backpressure natively. When a Writable's internal buffer exceeds highWaterMark, write() returns false â the signal to pause the upstream source. Resume is signalled via the drain event.": {
+"np": "Node.js Readable and Writable streams implement backpressure natively. When a Writable's internal buffer exceeds highWaterMark, write() returns false â the signal to pause the upstream source. Resume is signalled via the drain event.",
+"jp": "Node.js Readable and Writable streams implement backpressure natively. When a Writable's internal buffer exceeds highWaterMark, write() returns false â the signal to pause the upstream source. Resume is signalled via the drain event."
+},
+"Choose the pattern that matches your fan-out and ordering requirements.": {
+"np": "Choose the pattern that matches your fan-out and ordering requirements.",
+"jp": "Choose the pattern that matches your fan-out and ordering requirements."
+},
+"Exactly-once is expensive â design for at-least-once + idempotent consumers.": {
+"np": "Exactly-once is expensive â design for at-least-once + idempotent consumers.",
+"jp": "Exactly-once is expensive â design for at-least-once + idempotent consumers."
+},
+"Backpressure â why it matters": {
+"np": "Backpressure â why it matters",
+"jp": "Backpressure â why it matters"
+},
+"Message queue patterns": {
+"np": "Message queue patterns",
+"jp": "Message queue patterns"
+},
+"Delivery guarantees": {
+"np": "Delivery guarantees",
+"jp": "Delivery guarantees"
+},
+"Idempotent consumer â dedup by message ID": {
+"np": "Idempotent consumer â dedup by message ID",
+"jp": "Idempotent consumer â dedup by message ID"
+},
+"Redis Streams": {
+"np": "Redis Streams",
+"jp": "Redis Streams"
+},
+"Redis Streams â producer + consumer group": {
+"np": "Redis Streams â producer + consumer group",
+"jp": "Redis Streams â producer + consumer group"
+},
+"AWS SQS + SNS patterns": {
+"np": "AWS SQS + SNS patterns",
+"jp": "AWS SQS + SNS patterns"
+},
+"SQS consumer with visibility timeout (Node.js AWS SDK v3)": {
+"np": "SQS consumer with visibility timeout (Node.js AWS SDK v3)",
+"jp": "SQS consumer with visibility timeout (Node.js AWS SDK v3)"
+},
+"Queue design â production checklist": {
+"np": "Queue design â production checklist",
+"jp": "Queue design â production checklist"
+},
+"Node.js stream backpressure": {
+"np": "Node.js stream backpressure",
+"jp": "Node.js stream backpressure"
+},
+"Correct stream piping with backpressure": {
+"np": "Correct stream piping with backpressure",
+"jp": "Correct stream piping with backpressure"
+},
+"What is backpressure and why does it matter in distributed systems?": {
+"np": "What is backpressure and why does it matter in distributed systems?",
+"jp": "What is backpressure and why does it matter in distributed systems?"
+},
+"What is the difference between at-least-once and exactly-once delivery?": {
+"np": "What is the difference between at-least-once and exactly-once delivery?",
+"jp": "What is the difference between at-least-once and exactly-once delivery?"
+},
+"What is a dead letter queue and when should messages go there?": {
+"np": "What is a dead letter queue and when should messages go there?",
+"jp": "What is a dead letter queue and when should messages go there?"
+},
+"What is the visibility timeout in SQS and how should you set it?": {
+"np": "What is the visibility timeout in SQS and how should you set it?",
+"jp": "What is the visibility timeout in SQS and how should you set it?"
+},
+"What is long polling in SQS and why does it matter for cost?": {
+"np": "What is long polling in SQS and why does it matter for cost?",
+"jp": "What is long polling in SQS and why does it matter for cost?"
+},
+"How does an idempotent consumer handle duplicate messages?": {
+"np": "How does an idempotent consumer handle duplicate messages?",
+"jp": "How does an idempotent consumer handle duplicate messages?"
+},
+"When should I use SNS + SQS fan-out vs a direct SQS queue?": {
+"np": "When should I use SNS + SQS fan-out vs a direct SQS queue?",
+"jp": "When should I use SNS + SQS fan-out vs a direct SQS queue?"
+},
+"How does Node.js backpressure work with streams?": {
+"np": "How does Node.js backpressure work with streams?",
+"jp": "How does Node.js backpressure work with streams?"
+},
+"Backpressure": {
+"np": "Backpressure",
+"jp": "Backpressure"
+},
+"Dead letter queue": {
+"np": "Dead letter queue",
+"jp": "Dead letter queue"
+},
+"SQS": {
+"np": "SQS",
+"jp": "SQS"
+},
+"Queue patterns": {
+"np": "Queue patterns",
+"jp": "Queue patterns"
+},
+"Node.js streams": {
+"np": "Node.js streams",
+"jp": "Node.js streams"
+},
+"No backpressure = the fastest producer always wins, eventually crashing the consumer.": {
+"np": "No backpressure = the fastest producer always wins, eventually crashing the consumer.",
+"jp": "No backpressure = the fastest producer always wins, eventually crashing the consumer."
+},
+"No DLQ = one bad message blocks your entire queue. Always configure one.": {
+"np": "No DLQ = one bad message blocks your entire queue. Always configure one.",
+"jp": "No DLQ = one bad message blocks your entire queue. Always configure one."
+},
+"Backpressure is the mechanism by which a slow consumer signals a fast producer to slow down — without it, the consumer's buffer fills, memory exhausts, and the system crashes. Message queues are the most common implementation: they decouple producers from consumers and absorb traffic spikes by buffering work.": {
+"np": "Backpressure is the mechanism by which a slow consumer signals a fast producer to slow down — without it, the consumer's buffer fills, memory exhausts, and the system crashes. Message queues are the most common implementation: they decouple producers from consumers and absorb traffic spikes by buffering work.",
+"jp": "Backpressure is the mechanism by which a slow consumer signals a fast producer to slow down — without it, the consumer's buffer fills, memory exhausts, and the system crashes. Message queues are the most common implementation: they decouple producers from consumers and absorb traffic spikes by buffering work."
+},
+"Day 14 covers backpressure mechanics, the major queue patterns (work queue, pub/sub, fan-out), reliability guarantees (at-least-once vs exactly-once), and practical queue design with Redis Streams, RabbitMQ, and AWS SQS.": {
+"np": "Day 14 covers backpressure mechanics, the major queue patterns (work queue, pub/sub, fan-out), reliability guarantees (at-least-once vs exactly-once), and practical queue design with Redis Streams, RabbitMQ, and AWS SQS.",
+"jp": "Day 14 covers backpressure mechanics, the major queue patterns (work queue, pub/sub, fan-out), reliability guarantees (at-least-once vs exactly-once), and practical queue design with Redis Streams, RabbitMQ, and AWS SQS."
+},
+"Implement a Redis Streams producer that enqueues jobs and a worker that processes them with consumer groups — test what happens when a worker crashes mid-job.": {
+"np": "Implement a Redis Streams producer that enqueues jobs and a worker that processes them with consumer groups — test what happens when a worker crashes mid-job.",
+"jp": "Implement a Redis Streams producer that enqueues jobs and a worker that processes them with consumer groups — test what happens when a worker crashes mid-job."
+},
+"Add a dead letter queue to an SQS setup: configure maxReceiveCount=3, attach a DLQ, and write a monitor that alerts when DLQ depth > 0.": {
+"np": "Add a dead letter queue to an SQS setup: configure maxReceiveCount=3, attach a DLQ, and write a monitor that alerts when DLQ depth > 0.",
+"jp": "Add a dead letter queue to an SQS setup: configure maxReceiveCount=3, attach a DLQ, and write a monitor that alerts when DLQ depth > 0."
+},
+"Demonstrate backpressure in a Node.js Readable → Transform → Writable pipeline: throttle the writable and observe the readable pausing.": {
+"np": "Demonstrate backpressure in a Node.js Readable → Transform → Writable pipeline: throttle the writable and observe the readable pausing.",
+"jp": "Demonstrate backpressure in a Node.js Readable → Transform → Writable pipeline: throttle the writable and observe the readable pausing."
+},
+"While a DB query or file read is in flight, `libuv` registers the file descriptor with the OS (`epoll` / `kqueue` / `IOCP`). The JS thread is free. When the OS signals data ready, `libuv` queues the callback and the loop picks it up. 10,000 open connections = 10,000 registered fds â not 10,000 threads.": {
+"np": "While a DB query or file read is in flight, `libuv` registers the file descriptor with the OS (`epoll` / `kqueue` / `IOCP`). The JS thread is free. When the OS signals data ready, `libuv` queues the callback and the loop picks it up. 10,000 open connections = 10,000 registered fds â not 10,000 threads.",
+"jp": "While a DB query or file read is in flight, `libuv` registers the file descriptor with the OS (`epoll` / `kqueue` / `IOCP`). The JS thread is free. When the OS signals data ready, `libuv` queues the callback and the loop picks it up. 10,000 open connections = 10,000 registered fds â not 10,000 threads."
+},
+"Each tick: Timers â Pending I/O â Idle/Prepare â Poll â Check (`setImmediate`) â Close. Between every phase transition the microtask queues drain fully (`nextTick` first, then `Promise`). The Poll phase is where Node blocks waiting for I/O when there is nothing else to do.": {
+"np": "Each tick: Timers â Pending I/O â Idle/Prepare â Poll â Check (`setImmediate`) â Close. Between every phase transition the microtask queues drain fully (`nextTick` first, then `Promise`). The Poll phase is where Node blocks waiting for I/O when there is nothing else to do.",
+"jp": "Each tick: Timers â Pending I/O â Idle/Prepare â Poll â Check (`setImmediate`) â Close. Between every phase transition the microtask queues drain fully (`nextTick` first, then `Promise`). The Poll phase is where Node blocks waiting for I/O when there is nothing else to do."
+},
+"Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level.": {
+"np": "Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level.",
+"jp": "Priority order: synchronous call stack â `process.nextTick` queue (fully drained) â `Promise` microtasks (fully drained) â macrotasks (`setTimeout`, I/O, `setImmediate`). Mixing these up in an interview is a red flag at the senior level."
 }
 }

@@ -136,7 +136,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "w1",
     title: backendWeekTitle("w1"),
-    dotClass: "bg-purple-500",
+    dotClass: "bg-[var(--accent)]",
     days: [
       dayRow(1, ["networking", "theory"], DAY_1_DETAIL),
       dayRow(2, ["runtime", "core"], DAY_2_DETAIL),
@@ -150,7 +150,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "w2",
     title: backendWeekTitle("w2"),
-    dotClass: "bg-teal-500",
+    dotClass: "bg-[var(--accent)]",
     days: [
       dayRow(8, ["networking", "architecture"], DAY_8_DETAIL),
       dayRow(9, ["database", "design"], DAY_9_DETAIL),
@@ -164,7 +164,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "w3",
     title: backendWeekTitle("w3"),
-    dotClass: "bg-amber-800",
+    dotClass: "bg-[var(--accent)]",
     days: [
       dayRow(15, ["ops", "core"]),
       dayRow(16, ["docker", "ops"]),
@@ -178,7 +178,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "w4",
     title: backendWeekTitle("w4"),
-    dotClass: "bg-orange-500",
+    dotClass: "bg-[var(--accent)]",
     days: [
       dayRow(22, ["ops", "observability"]),
       dayRow(23, ["observability", "ops"]),
@@ -192,7 +192,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "capstone",
     title: backendWeekTitle("capstone"),
-    dotClass: "bg-neutral-500",
+    dotClass: "bg-[var(--accent)]",
     days: [dayRow(29, ["api", "core"]), dayRow(30, ["theory", "ops"])],
   },
 ];

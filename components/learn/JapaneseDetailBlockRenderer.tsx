@@ -16,12 +16,12 @@ function DetailTable({
   rows: string[][];
 }) {
   return (
-    <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-950/50">
-      <table className="w-full min-w-[18rem] border-collapse text-left text-xs text-neutral-300">
+    <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_52%,transparent)]">
+      <table className="w-full min-w-[18rem] border-collapse text-left text-xs text-[var(--muted)]">
         <thead>
-          <tr className="border-b border-neutral-800 bg-neutral-900/90">
+          <tr className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_92%,transparent)]">
             {headers.map((h, hi) => (
-              <th key={hi} className="whitespace-nowrap px-3 py-2 font-semibold text-neutral-200">
+              <th key={hi} className="whitespace-nowrap px-3 py-2 font-semibold text-[var(--text)]">
                 <RichText text={h} />
               </th>
             ))}
@@ -31,7 +31,7 @@ function DetailTable({
           {rows.map((row, ri) => (
             <tr
               key={ri}
-              className="border-b border-neutral-800/70 last:border-0 odd:bg-neutral-900/25"
+              className="border-b border-[var(--border)]/70 last:border-0 odd:bg-[color-mix(in_oklab,var(--elevated)_22%,transparent)]"
             >
               {row.map((cell, ci) => (
                 <td key={ci} className="px-3 py-2 align-top leading-relaxed">
@@ -43,7 +43,7 @@ function DetailTable({
         </tbody>
       </table>
       {caption ? (
-        <p className="border-t border-neutral-800/80 px-3 py-2 text-[11px] text-neutral-500">
+        <p className="border-t border-[var(--border)]/80 px-3 py-2 text-[11px] text-[var(--muted)]">
           <RichText text={caption} />
         </p>
       ) : null}
@@ -53,13 +53,13 @@ function DetailTable({
 
 function DetailCode({ title, code }: { title?: string; code: string }) {
   return (
-    <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-950">
+    <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950">
       {title ? (
-        <div className="border-b border-neutral-800 px-3 py-1.5 text-[11px] font-medium text-neutral-500">
+        <div className="border-b border-neutral-700 px-3 py-1.5 text-[11px] font-medium text-zinc-400">
           <RichText text={title} />
         </div>
       ) : null}
-      <pre className="p-3 font-mono text-[11px] leading-relaxed text-rose-100/90">{code}</pre>
+      <pre className="p-3 font-mono text-[11px] leading-relaxed text-zinc-100">{code}</pre>
     </div>
   );
 }
@@ -75,7 +75,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
         switch (block.type) {
           case "paragraph":
             return (
-              <p key={key} className="text-sm leading-relaxed text-neutral-300">
+              <p key={key} className="text-sm leading-relaxed text-[var(--muted)]">
                 <RichText text={ls(block.text)} />
               </p>
             );
@@ -83,8 +83,8 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             const ordered = block.variant === "number";
             const List = ordered ? "ol" : "ul";
             const listClass = ordered
-              ? "mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:font-mono marker:text-neutral-500"
-              : "mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500";
+              ? "mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:font-mono marker:text-[var(--faint)]"
+              : "mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]";
             return (
               <List key={key} className={listClass}>
                 {block.items.map((line, li) => (
@@ -110,20 +110,20 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return (
               <div
                 key={key}
-                className="mt-3 space-y-3 rounded-lg border border-rose-900/40 bg-rose-950/20 p-4"
+                className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4"
               >
                 {block.lines.map((line, li) => (
                   <div key={li} className="text-sm">
                     {line.speaker ? (
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-300/90">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                         {line.speaker}
                       </p>
                     ) : null}
-                    <p className="mt-1 text-base leading-relaxed text-neutral-100">{line.ja}</p>
+                    <p className="mt-1 text-base leading-relaxed text-[var(--text)]">{line.ja}</p>
                     {line.reading ? (
-                      <p className="mt-1 font-mono text-xs text-neutral-500">{line.reading}</p>
+                      <p className="mt-1 font-mono text-xs text-[var(--muted)]">{line.reading}</p>
                     ) : null}
-                    <p className="mt-1 text-sm text-neutral-400">{resolveDialogueGloss(line.en, locale)}</p>
+                    <p className="mt-1 text-sm text-[var(--muted)]">{resolveDialogueGloss(line.en, locale)}</p>
                   </div>
                 ))}
               </div>
@@ -134,23 +134,23 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return (
               <div
                 key={key}
-                className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900/40 p-4"
+                className="mt-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4"
               >
-                <p className="text-sm font-medium text-neutral-200">
+                <p className="text-sm font-medium text-[var(--text)]">
                   <RichText text={ls(mcq.question)} />
                 </p>
-                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-neutral-300">
+                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-[var(--muted)]">
                   {mcq.choices.map((c, ci) => (
                     <li key={ci} className="pl-1">
                       <RichText text={ls(c)} />
                     </li>
                   ))}
                 </ol>
-                <p className="mt-3 text-sm text-emerald-400/95">
+                <p className="mt-3 text-sm font-medium text-[var(--accent)]">
                   {t("jpDetail.mcqCorrectLabel")} ({mcq.correctIndex + 1}) {correctChoice}
                 </p>
                 {mcq.explanation ? (
-                  <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
                     <RichText text={ls(mcq.explanation)} />
                   </p>
                 ) : null}
@@ -159,18 +159,18 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
           }
           case "listening":
             return (
-              <div key={key} className="mt-3 rounded-lg border border-sky-900/40 bg-sky-950/15 p-4">
+              <div key={key} className="mt-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
                 {block.title ? (
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                     {ls(block.title)}
                   </p>
                 ) : null}
-                <p className="mt-2 text-sm text-neutral-300">{ls(block.scenario)}</p>
-                <p className="mt-3 text-sm font-medium text-neutral-200">{t("weeklyPanel.task")}</p>
-                <p className="mt-1 text-sm text-neutral-400">{ls(block.instruction)}</p>
+                <p className="mt-2 text-sm text-[var(--muted)]">{ls(block.scenario)}</p>
+                <p className="mt-3 text-sm font-medium text-[var(--text)]">{t("weeklyPanel.task")}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{ls(block.instruction)}</p>
                 {block.youtubeVideos && block.youtubeVideos.length > 0 ? (
                   <div className="mt-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/95">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                       {t("jpDetail.listeningYoutubeHeading")}
                     </p>
                     <ul className="mt-2 space-y-2">
@@ -180,7 +180,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                             href={v.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-sky-400 underline-offset-2 hover:text-sky-300 hover:underline"
+                            className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:brightness-110 hover:underline"
                           >
                             {v.title}
                           </a>
@@ -189,18 +189,18 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                     </ul>
                   </div>
                 ) : null}
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                   {t("jpDetail.listeningKeyPhrases")}
                 </p>
-                <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-300">
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
                   {block.keyPhrases.map((p, pi) => (
-                    <li key={pi} className="pl-1 font-mono text-xs text-sky-100/90">
+                    <li key={pi} className="pl-1 font-mono text-xs text-[var(--text)]">
                       {ls(p)}
                     </li>
                   ))}
                 </ul>
                 {block.studyTip ? (
-                  <p className="mt-3 border-t border-sky-900/30 pt-3 text-xs text-neutral-500">
+                  <p className="mt-3 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)]">
                     {t("jpDetail.listeningTipPrefix")} {ls(block.studyTip)}
                   </p>
                 ) : null}
@@ -210,7 +210,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return (
               <div key={key} className="mt-3 space-y-4">
                 {block.caption ? (
-                  <p className="text-[11px] text-neutral-500">
+                  <p className="text-[11px] text-[var(--muted)]">
                     <RichText text={ls(block.caption)} />
                   </p>
                 ) : null}
@@ -218,9 +218,9 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                   {block.items.map((k, ki) => (
                     <div
                       key={ki}
-                      className="flex gap-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-3"
+                      className="flex gap-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_65%,transparent)] p-3"
                     >
-                      <div className="flex min-h-[120px] w-[120px] shrink-0 flex-col items-center justify-center rounded-md border border-neutral-700 bg-neutral-900/80">
+                      <div className="flex min-h-[120px] w-[120px] shrink-0 flex-col items-center justify-center rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_82%,transparent)]">
                         {k.strokeSvgUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element -- remote KanjiVG SVG
                           <img
@@ -229,14 +229,14 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                             className="max-h-[104px] max-w-[104px] object-contain"
                           />
                         ) : (
-                          <span className="text-4xl text-neutral-100">{k.kanji}</span>
+                          <span className="text-4xl text-[var(--text)]">{k.kanji}</span>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-2xl font-semibold text-neutral-50">{k.kanji}</p>
-                        <p className="mt-1 font-mono text-xs text-sky-200/90">{k.readings}</p>
-                        <p className="mt-1 text-xs text-neutral-400">{ls(k.meaning)}</p>
-                        <p className="mt-2 text-[11px] text-neutral-500">
+                        <p className="text-2xl font-semibold text-[var(--text)]">{k.kanji}</p>
+                        <p className="mt-1 font-mono text-xs text-[var(--muted)]">{k.readings}</p>
+                        <p className="mt-1 text-xs text-[var(--muted)]">{ls(k.meaning)}</p>
+                        <p className="mt-2 text-[11px] text-[var(--muted)]">
                           {t("jpDetail.kanjiStrokesLabel")}: {k.strokes}
                         </p>
                         {k.strokeSvgUrl ? (
@@ -244,7 +244,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                             href={k.strokeSvgUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 inline-block text-[11px] text-sky-400 hover:text-sky-300 hover:underline"
+                            className="mt-2 inline-block text-[11px] font-medium text-[var(--accent)] hover:brightness-110 hover:underline"
                           >
                             {t("jpDetail.kanjiOpenSvg")}
                           </a>

@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
-:root {
+/* Manual theme toggle: dark:* utilities follow <html data-theme="dark"> (not OS preference). */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/*
+ * Theme tokens live ONLY on [data-theme]. Do not duplicate on :root — both :root and
+ * html match the same element, so mixing :root + [data-theme="light"] confused cascade
+ * with Tailwind’s @theme layer in some builds. Default is data-theme="dark" on <html>.
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
   --background: #07080c;
   --foreground: #e8eaef;
   --surface: #0f1118;
@@ -12,6 +21,21 @@
   --accent: #38bdf8;
   --accent-fg: #041018;
   --glow: color-mix(in oklab, var(--accent) 28%, transparent);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f6fa;
+  --foreground: #1a1d27;
+  --surface: #ffffff;
+  --elevated: #eaecf4;
+  --border: color-mix(in oklab, #000 12%, transparent);
+  --text: #111827;
+  --muted: #374151;
+  --faint: #6b7280;
+  --accent: #0284c7;
+  --accent-fg: #f0f9ff;
+  --glow: color-mix(in oklab, var(--accent) 14%, transparent);
 }
 
 @theme inline {

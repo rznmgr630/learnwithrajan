@@ -9,7 +9,7 @@ import {
 } from "@/components/learn/Week2Diagrams";
 
 const figClass =
-  "mt-3 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40 text-neutral-200";
+  "mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] text-[var(--text)]";
 
 export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   if (isNodeRuntimeDiagram(id)) {
@@ -22,7 +22,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "http11-sequential":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             HTTP/1.1 — sequential: Req 2 is blocked until Resp 1 arrives
             (head-of-line blocking)
           </figcaption>
@@ -214,7 +214,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "http2-multiplex":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             HTTP/2 — 3 streams in parallel over one TCP connection (TCP HoL
             still applies on loss)
           </figcaption>
@@ -367,7 +367,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "http3-quic":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             HTTP/3 / QUIC — independent loss recovery: Stream 2 stalls, Streams
             1 &amp; 3 continue
           </figcaption>
@@ -511,7 +511,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "request-response":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Typical HTTP exchange (method + path + headers → status + headers +
             body)
           </figcaption>
@@ -571,7 +571,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "status-401-403":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             401 vs 403 — identity vs permission
           </figcaption>
           <svg viewBox="0 0 360 108" className="h-auto w-full" aria-hidden>
@@ -634,7 +634,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "acid-transaction":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             ACID transaction — commit path vs rollback path
           </figcaption>
           <svg viewBox="0 0 420 172" className="h-auto w-full" aria-hidden>
@@ -860,7 +860,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "isolation-levels":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Isolation levels vs concurrency anomalies — ✅ prevented, ❌
             possible
           </figcaption>
@@ -973,7 +973,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "btree-index":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             B-tree index — O(log n) tree traversal vs O(n) sequential scan
           </figcaption>
           <svg viewBox="0 0 420 180" className="h-auto w-full" aria-hidden>
@@ -1177,7 +1177,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "rest-graphql-grpc":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             REST vs GraphQL vs gRPC — client/server interaction model
           </figcaption>
           <svg viewBox="0 0 460 192" className="h-auto w-full" aria-hidden>
@@ -1537,7 +1537,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "cursor-pagination":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Cursor vs offset pagination — offset drifts on inserts; cursor stays
             stable
           </figcaption>
@@ -1767,7 +1767,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "rate-limit-token-bucket":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Token bucket — refill at rate R/sec, consume 1 per request, allow
             bursts up to capacity N
           </figcaption>
@@ -1968,7 +1968,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "jwt-flow":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             JWT lifecycle — credentials in, signed token out, stateless
             validation on every request
           </figcaption>
@@ -2224,7 +2224,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "oauth2-code-flow":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             OAuth2 authorisation code flow + PKCE — four parties, six steps
           </figcaption>
           <svg viewBox="0 0 420 220" className="h-auto w-full" aria-hidden>
@@ -2439,7 +2439,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "rbac-model":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             RBAC — users assigned to roles; roles carry permissions; permissions
             map to resources
           </figcaption>
@@ -2660,7 +2660,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "cache-layers":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Cache hierarchy — latency and scope increase as you go deeper
           </figcaption>
           <svg viewBox="0 0 380 200" className="h-auto w-full" aria-hidden>
@@ -2750,7 +2750,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "cache-aside-pattern":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Cache-aside — app manages reads and write-invalidation explicitly
           </figcaption>
           <svg viewBox="0 0 420 190" className="h-auto w-full" aria-hidden>
@@ -2984,7 +2984,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "log-correlation":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Correlation ID propagation — one ID ties logs across every service
             in a request
           </figcaption>
@@ -3183,7 +3183,7 @@ export function DayDetailDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "error-classification":
       return (
         <figure className={figClass}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Error classification — route each error to the right action
           </figcaption>
           <svg viewBox="0 0 400 200" className="h-auto w-full" aria-hidden>
