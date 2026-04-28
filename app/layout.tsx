@@ -27,14 +27,14 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      data-theme="dark"
+      data-theme="light"
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
     >
       <head>
         {/* Runs before React hydrates — always set explicit data-theme so CSS tokens apply */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
           }}
         />
       </head>
