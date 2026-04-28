@@ -7,6 +7,7 @@ import type {
   JapaneseRoadmapDayDetail,
   JapaneseRoadmapWeek,
   JapaneseWeeklyTest,
+  LocalizedString,
 } from "@/lib/japanese-learning/types";
 
 export const JP_TOTAL_DAYS = 30;
@@ -100,35 +101,55 @@ function weeklyTestForWeekId(weekId: string): JapaneseWeeklyTest | undefined {
 export const JAPANESE_N5_WEEKS: JapaneseRoadmapWeek[] = [
   {
     id: "jn5-w1",
-    title: "Week 1 · Lessons 1–7 · greetings through giving/receiving",
+    title: {
+      en: "Week 1 · Lessons 1–7 · greetings through giving/receiving",
+      np: "हप्ता १ · पाठ १–७ · अभिवादनदेखि दिनु/पाउनुसम्म",
+      jp: "第1週 · 第1–7課 · 挨拶から授受まで",
+    },
     dotClass: "bg-rose-500",
     days: [1, 2, 3, 4, 5, 6, 7].map(buildDay),
     weeklyTest: weeklyTestForWeekId("jn5-w1"),
   },
   {
     id: "jn5-w2",
-    title: "Week 2 · Lessons 8–14 · adjectives through て-form",
+    title: {
+      en: "Week 2 · Lessons 8–14 · adjectives through て-form",
+      np: "हप्ता २ · पाठ ८–१४ · विशेषणदेखि て-रूपसम्म",
+      jp: "第2週 · 第8–14課 · 形容詞からて形まで",
+    },
     dotClass: "bg-pink-500",
     days: [8, 9, 10, 11, 12, 13, 14].map(buildDay),
     weeklyTest: weeklyTestForWeekId("jn5-w2"),
   },
   {
     id: "jn5-w3",
-    title: "Week 3 · Lessons 15–21 · rules through とおもう",
+    title: {
+      en: "Week 3 · Lessons 15–21 · rules through とおもう",
+      np: "हप्ता ३ · पाठ १५–२१ · नियमदेखि とおもう सम्म",
+      jp: "第3週 · 第15–21課 · 規則からとおもうまで",
+    },
     dotClass: "bg-fuchsia-500",
     days: [15, 16, 17, 18, 19, 20, 21].map(buildDay),
     weeklyTest: weeklyTestForWeekId("jn5-w3"),
   },
   {
     id: "jn5-w4",
-    title: "Week 4 · Lessons 22–25 · relatives through conditionals",
+    title: {
+      en: "Week 4 · Lessons 22–25 · relatives through conditionals",
+      np: "हप्ता ४ · पाठ २२–२५ · सम्बन्धित उपवाक्यदेखि सर्तसम्म",
+      jp: "第4週 · 第22–25課 · 連体修飾から条件まで",
+    },
     dotClass: "bg-purple-500",
     days: [22, 23, 24, 25, 26, 27, 28].map(buildDay),
     weeklyTest: weeklyTestForWeekId("jn5-w4"),
   },
   {
     id: "jn5-w5",
-    title: "Week 5 · JLPT N5 sprint & mock mindset",
+    title: {
+      en: "Week 5 · JLPT N5 sprint & mock mindset",
+      np: "हप्ता ५ · JLPT N5 स्प्रिन्ट र मॉक मानसिकता",
+      jp: "第5週 · JLPT N5 スプリントと模試の心構え",
+    },
     dotClass: "bg-indigo-500",
     days: [29, 30].map(buildDay),
     weeklyTest: weeklyTestForWeekId("jn5-w5"),
@@ -141,7 +162,7 @@ export function getAllJapaneseN5Days(): JapaneseRoadmapDay[] {
 
 export function getJapaneseN5DayContext(
   dayNumber: number,
-): { weekTitle: string; day: JapaneseRoadmapDay } | null {
+): { weekTitle: LocalizedString; day: JapaneseRoadmapDay } | null {
   for (const week of JAPANESE_N5_WEEKS) {
     const day = week.days.find((d) => d.day === dayNumber);
     if (day) return { weekTitle: week.title, day };

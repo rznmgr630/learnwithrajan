@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { TOTAL_DAYS } from "@/lib/challenge-data";
 import { JP_TOTAL_DAYS } from "@/lib/japanese-learning/japanese-n5-data";
 
 export function LearningHubCards() {
+  const { t } = useLocale();
   const { completedCount, percent } = useBackend30Progress();
   const jp = useJapaneseN5Progress();
 
@@ -19,9 +21,9 @@ export function LearningHubCards() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-neutral-100 group-hover:text-sky-300">
-              Backend in 30 days
+              {t("hub.backend.title")}
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">Advanced roadmap · weeks & day cards</p>
+            <p className="mt-1 text-sm text-neutral-500">{t("hub.backend.subtitle")}</p>
           </div>
           <span
             className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-semibold tabular-nums text-sky-300"
@@ -32,9 +34,9 @@ export function LearningHubCards() {
         </div>
         <div className="mt-6" suppressHydrationWarning>
           <div className="flex items-center justify-between text-xs text-neutral-500">
-            <span>Progress</span>
+            <span>{t("hub.backend.progress")}</span>
             <span className="tabular-nums text-neutral-400">
-              {completedCount}/{TOTAL_DAYS} days
+              {completedCount}/{TOTAL_DAYS} {t("hub.backend.days")}
             </span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-800">
@@ -45,7 +47,7 @@ export function LearningHubCards() {
           </div>
         </div>
         <span className="mt-6 text-sm font-medium text-sky-400 transition group-hover:text-sky-300">
-          Open roadmap →
+          {t("hub.backend.cta")}
         </span>
       </Link>
 
@@ -56,11 +58,9 @@ export function LearningHubCards() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-neutral-100 group-hover:text-rose-300">
-              Japanese · JLPT N5
+              {t("hub.japanese.title")}
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">
-              Minna no Nihongo I · 30-day syllabus · JLPT N4 later
-            </p>
+            <p className="mt-1 text-sm text-neutral-500">{t("hub.japanese.subtitle")}</p>
           </div>
           <span
             className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-semibold tabular-nums text-rose-300"
@@ -71,9 +71,9 @@ export function LearningHubCards() {
         </div>
         <div className="mt-6" suppressHydrationWarning>
           <div className="flex items-center justify-between text-xs text-neutral-500">
-            <span>Progress</span>
+            <span>{t("hub.backend.progress")}</span>
             <span className="tabular-nums text-neutral-400">
-              {jp.completedCount}/{JP_TOTAL_DAYS} days
+              {jp.completedCount}/{JP_TOTAL_DAYS} {t("hub.backend.days")}
             </span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-800">
@@ -84,7 +84,7 @@ export function LearningHubCards() {
           </div>
         </div>
         <span className="mt-6 text-sm font-medium text-rose-400 transition group-hover:text-rose-300">
-          Open roadmap →
+          {t("hub.backend.cta")}
         </span>
       </Link>
     </div>

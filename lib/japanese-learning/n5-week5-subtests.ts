@@ -181,7 +181,11 @@ export function buildWeek5SubTests(): JapaneseWeeklySubTest[] {
     readingBlocks: READING_BLOCKS,
     listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
     listeningIntroForTest: listeningIntroWeek5,
-    paperSubtitle: "Full JLPT N5-style · 20 questions · Days 29–30 sprint review",
+    paperSubtitle: {
+      en: "Full JLPT N5-style · 20 questions · Days 29–30 sprint review",
+      np: "पूर्ण JLPT N5 शैली · २० प्रश्न · दिन २९–३० स्प्रिन्ट पुनरावलोकन",
+      jp: "JLPT N5総仕上げ形式 · 20問 · Day 29–30 スプリント",
+    },
     paperIntro:
       "このペーパーは語彙・漢字・文法・読解・聴解をまとめています。提出後に正答と解説が表示されます。聴解は埋め込みクリップ＋リンクで繰り返し聞いてください。",
   });

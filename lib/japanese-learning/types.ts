@@ -1,3 +1,7 @@
+import type { Locale, LocalizedString } from "@/lib/i18n/types";
+
+export type { LocalizedString };
+
 /** One turn in a scripted lesson conversation (bilingual + optional speaker label). */
 export type JapaneseDialogueLine = {
   speaker?: string;
@@ -76,8 +80,10 @@ export type JapaneseWeeklyTestItem =
       id: string;
       prompt: string;
       choices: string[];
+      /** Same length as `choices`; usually English. Optional per-locale labels — Japanese prompts stay unchanged. */
+      choicesLocale?: Partial<Record<Locale, string[]>>;
       correctIndex: number;
-      explanation?: string;
+      explanation?: string | LocalizedString;
     }
   | {
       kind: "short";
@@ -106,7 +112,8 @@ export interface JapaneseWeeklyTestSection {
 export interface JapaneseWeeklySubTest {
   id: string;
   label: string;
-  subtitle?: string;
+  subtitle?: LocalizedString;
+  /** Often Japanese-only paper instructions — plain string is OK. */
   intro?: string;
   sections: JapaneseWeeklyTestSection[];
 }
@@ -114,21 +121,22 @@ export interface JapaneseWeeklySubTest {
 /** End-of-week revision modeled after JLPT N5 paper structure (vocab · grammar · reading · listening). */
 export interface JapaneseWeeklyTest {
   id: string;
-  weekLabel: string;
-  title: string;
-  subtitle: string;
+  weekLabel: LocalizedString;
+  title: LocalizedString;
+  subtitle: LocalizedString;
   coversDayRange: [number, number];
-  intro: string;
+  /** UI copy around the test (English / NP / JP); Japanese lesson sentences stay in items. */
+  intro: LocalizedString;
   /** Single paper (weeks 1–4). Omit or leave empty when `subTests` is set. */
   sections: JapaneseWeeklyTestSection[];
-  closingNote?: string;
+  closingNote?: LocalizedString;
   /** Week 5 sprint: multiple full tests (e.g. five × 20 questions). */
   subTests?: JapaneseWeeklySubTest[];
 }
 
 export interface JapaneseRoadmapWeek {
   id: string;
-  title: string;
+  title: LocalizedString;
   dotClass: string;
   days: JapaneseRoadmapDay[];
   weeklyTest?: JapaneseWeeklyTest;

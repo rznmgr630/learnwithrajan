@@ -36,9 +36,21 @@ const listeningIntro: JapaneseWeeklyTestItem = {
 /** Full-course JLPT N5 mock — one sitting, all skill areas. */
 export const N5_FULL_LEVEL_MOCK_EXAM: JapaneseWeeklyTest = {
   id: "jn5-full-mock",
-  weekLabel: "Course",
-  title: "JLPT N5 · Full mock exam",
-  subtitle: "Overall level · vocabulary · kanji · grammar · reading · listening",
+  weekLabel: {
+    en: "Course",
+    np: "पाठ्यक्रम",
+    jp: "コース",
+  },
+  title: {
+    en: "JLPT N5 · Full mock exam",
+    np: "JLPT N5 · पूर्ण मॉक परीक्षा",
+    jp: "JLPT N5 · 総合模試",
+  },
+  subtitle: {
+    en: "Overall level · vocabulary · kanji · grammar · reading · listening",
+    np: "समग्र स्तर · शब्दभण्डार · कांजी · व्याकरण · पढाइ · सुन्ने",
+    jp: "総合レベル · 語彙 · 漢字 · 文法 · 読解 · 聴解",
+  },
   coversDayRange: [1, 30],
   intro:
     "総合模試です。JLPT N5の問題構成に近い順で並べています（言語知識〈文字・語彙〉→言語知識〈文法〉→読解→聴解）。「提出」まで正答は表示されません。",

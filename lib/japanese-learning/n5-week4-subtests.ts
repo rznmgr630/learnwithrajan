@@ -182,7 +182,11 @@ export function buildWeek4SubTests(): JapaneseWeeklySubTest[] {
     readingBlocks: READING_BLOCKS,
     listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
     listeningIntroForTest: listeningIntroW4,
-    paperSubtitle: "JLPT N5-style · 20 questions · Minna Lessons 22–25 · Days 22–28",
+    paperSubtitle: {
+      en: "JLPT N5-style · 20 questions · Minna Lessons 22–25 · Days 22–28",
+      np: "JLPT N5 शैली · २० प्रश्न · मिन्ना पाठ २२–२५ · दिन २२–२८",
+      jp: "JLPT N5形式 · 20問 · 第22–25課 · Day 22–28",
+    },
     paperIntro:
       "Week 4 の五つのペーパーは別問題です。とき・ばあい・たら・もし・授受（あげる／くれる／もらう）・名詞を修飾する節を確認します。",
   });

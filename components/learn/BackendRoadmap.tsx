@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { ROADMAP_WEEKS, TOTAL_DAYS } from "@/lib/challenge-data";
 import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
@@ -33,6 +34,7 @@ function tagClass(slug: string) {
 }
 
 export function BackendRoadmap() {
+  const { t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useBackend30Progress();
   const [openWeekId, setOpenWeekId] = useState<string | null>("w1");
   const [detailDay, setDetailDay] = useState<number | null>(null);
@@ -43,10 +45,8 @@ export function BackendRoadmap() {
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
       <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-100 sm:text-3xl">
-            Backend in 30 days
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">Advanced backend engineering roadmap</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-100 sm:text-3xl">{t("backendRoadmap.title")}</h1>
+          <p className="mt-1 text-sm text-neutral-500">{t("backendRoadmap.subtitle")}</p>
         </div>
       </div>
 
@@ -55,10 +55,10 @@ export function BackendRoadmap() {
         suppressHydrationWarning
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-neutral-400">Overall progress</span>
+          <span className="text-sm text-neutral-400">{t("backendRoadmap.overallProgress")}</span>
           <div className="flex items-center gap-3">
             <span className="text-sm tabular-nums text-neutral-200">
-              {completedCount}/{TOTAL_DAYS} days
+              {completedCount}/{TOTAL_DAYS} {t("hub.backend.days")}
             </span>
             <button
               type="button"
@@ -75,7 +75,10 @@ export function BackendRoadmap() {
             style={{ width: barWidth }}
           />
         </div>
-        <p className="mt-2 text-right text-xs text-neutral-500">{percent}% complete</p>
+        <p className="mt-2 text-right text-xs text-neutral-500">
+          {percent}
+          {t("backendRoadmap.percentComplete")}
+        </p>
       </div>
 
       <div className="mt-8 space-y-2" id="roadmap-weeks">
@@ -97,7 +100,7 @@ export function BackendRoadmap() {
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
                 <span className="flex-1 font-medium text-neutral-100">{week.title}</span>
                 <span className="text-sm tabular-nums text-neutral-500">
-                  {doneInWeek}/{totalInWeek} done
+                  {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
                 <svg
                   className={`h-5 w-5 shrink-0 text-neutral-500 transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
@@ -124,7 +127,9 @@ export function BackendRoadmap() {
                           className="flex flex-col rounded-xl border border-neutral-800 bg-neutral-800/40 p-4 transition hover:border-neutral-700"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-medium text-neutral-500">Day {d.day}</span>
+                            <span className="text-xs font-medium text-neutral-500">
+                              {t("jpRoadmap.dayPrefix")} {d.day}
+                            </span>
                             <button
                               type="button"
                               role="checkbox"
@@ -199,17 +204,8 @@ export function BackendRoadmap() {
             />
           </svg>
         </button>
-        <p
-          id="roadmap-blurb"
-          className="max-w-2xl text-center text-sm leading-relaxed text-neutral-500"
-        >
-          Here&apos;s your full 30-day advanced backend engineering roadmap — fully interactive. Tick
-          days as you finish them; progress syncs in this browser. Tweak the default seed via{" "}
-          <code className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-xs text-neutral-300">
-            CURRENT_DAY
-          </code>{" "}
-          in <span className="font-mono text-xs text-neutral-400">lib/challenge-data.ts</span>. Click a
-          day card (not the checkbox) to read the detail panel.
+        <p id="roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-neutral-500">
+          {t("backendRoadmap.bottomBlurb")}
         </p>
       </div>
 

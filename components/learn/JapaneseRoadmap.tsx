@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDayDetailPanel } from "@/components/learn/JapaneseDayDetailPanel";
 import { JapaneseWeeklyTestPanel } from "@/components/learn/JapaneseWeeklyTestPanel";
 import {
@@ -10,6 +11,7 @@ import {
   resolveJapaneseWeeklyTestForRoadmap,
 } from "@/lib/japanese-learning/japanese-n5-data";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 const TAG_STYLES: Record<string, string> = {
   "jlpt-n5": "bg-rose-400/15 text-rose-100 border-rose-400/25",
@@ -26,6 +28,7 @@ function tagClass(slug: string) {
 }
 
 export function JapaneseRoadmap() {
+  const { locale, t, tParams } = useLocale();
   const {
     completedCount,
     percent,
@@ -49,13 +52,8 @@ export function JapaneseRoadmap() {
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
       <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-100 sm:text-3xl">
-            Japanese · JLPT N5 in 30 days
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Built around Minna no Nihongo I Lessons 1–25 · conversation · particles · grammar · kanji · MCQ ·
-            listening cues
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-100 sm:text-3xl">{t("jpRoadmap.title")}</h1>
+          <p className="mt-1 text-sm text-neutral-500">{t("jpRoadmap.subtitle")}</p>
         </div>
       </div>
 
@@ -64,10 +62,10 @@ export function JapaneseRoadmap() {
         suppressHydrationWarning
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-neutral-400">Overall progress</span>
+          <span className="text-sm text-neutral-400">{t("jpRoadmap.overallProgress")}</span>
           <div className="flex items-center gap-3">
             <span className="text-sm tabular-nums text-neutral-200">
-              {completedCount}/{JP_TOTAL_DAYS} days
+              {completedCount}/{JP_TOTAL_DAYS} {t("jpRoadmap.days")}
             </span>
           </div>
         </div>
@@ -77,9 +75,12 @@ export function JapaneseRoadmap() {
             style={{ width: barWidth }}
           />
         </div>
-        <p className="mt-2 text-right text-xs text-neutral-500">{percent}% complete</p>
+        <p className="mt-2 text-right text-xs text-neutral-500">
+          {percent}
+          {t("jpRoadmap.percentComplete")}
+        </p>
         <p className="mt-1 text-right text-xs text-neutral-600">
-          Weekly tests + full mock: {weeklyTestsCompletedCount}/{weeklyTestTotal} marked done
+          {t("jpRoadmap.weeklyTestsProgress")} {weeklyTestsCompletedCount}/{weeklyTestTotal} {t("jpRoadmap.markedDone")}
         </p>
       </div>
 
@@ -102,9 +103,9 @@ export function JapaneseRoadmap() {
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-neutral-800/50 sm:px-5"
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
-                <span className="flex-1 font-medium text-neutral-100">{week.title}</span>
+                <span className="flex-1 font-medium text-neutral-100">{pickLocalized(week.title, locale)}</span>
                 <span className="text-sm tabular-nums text-neutral-500">
-                  {doneInWeek}/{totalInWeek} done
+                  {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
                 <svg
                   className={`h-5 w-5 shrink-0 text-neutral-500 transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
@@ -131,7 +132,9 @@ export function JapaneseRoadmap() {
                           className="flex flex-col rounded-xl border border-neutral-800 bg-neutral-800/40 p-4 transition hover:border-rose-900/40"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-medium text-neutral-500">Day {d.day}</span>
+                            <span className="text-xs font-medium text-neutral-500">
+                              {t("jpRoadmap.dayPrefix")} {d.day}
+                            </span>
                             <button
                               type="button"
                               role="checkbox"
@@ -168,12 +171,12 @@ export function JapaneseRoadmap() {
                           >
                             <h3 className="text-sm font-semibold leading-snug text-neutral-100">{d.title}</h3>
                             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
-                              {d.tags.map((t) => (
+                              {d.tags.map((tag) => (
                                 <span
-                                  key={`${d.day}-${t.slug}`}
-                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tagClass(t.slug)}`}
+                                  key={`${d.day}-${tag.slug}`}
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tagClass(tag.slug)}`}
                                 >
-                                  {t.label}
+                                  {tag.label}
                                 </span>
                               ))}
                             </div>
@@ -188,27 +191,24 @@ export function JapaneseRoadmap() {
                       <div className="flex flex-col gap-4 rounded-xl border border-indigo-900/35 bg-gradient-to-br from-indigo-950/40 to-neutral-950/40 p-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-indigo-300/90">
-                            Weekly recap · JLPT-style unit test
+                            {t("jpRoadmap.weeklyRecapLabel")}
                           </p>
-                          <h4 className="mt-2 text-base font-semibold leading-snug text-neutral-100">{wt.title}</h4>
-                          <p className="mt-1 text-xs leading-relaxed text-neutral-500">{wt.subtitle}</p>
+                          <h4 className="mt-2 text-base font-semibold leading-snug text-neutral-100">
+                            {pickLocalized(wt.title, locale)}
+                          </h4>
+                          <p className="mt-1 text-xs leading-relaxed text-neutral-500">{pickLocalized(wt.subtitle, locale)}</p>
                           <p className="mt-2 text-[11px] text-neutral-600">
-                            {wt.subTests?.length ? (
-                              <>
-                                Five papers (Test 1–5), 20 MCQs each · vocab · kanji · grammar · reading · listening
-                                (embedded clip + links) · submit to score
-                              </>
-                            ) : (
-                              <>
-                                Covers Days {wt.coversDayRange[0]}–{wt.coversDayRange[1]} · vocab · grammar · reading ·
-                                listening · submit to score
-                              </>
-                            )}
+                            {wt.subTests?.length
+                              ? t("jpRoadmap.fivePapersBlurb")
+                              : tParams("jpRoadmap.singlePaperBlurb", {
+                                  from: wt.coversDayRange[0],
+                                  to: wt.coversDayRange[1],
+                                })}
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-col gap-2 sm:items-end">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-neutral-500">Done</span>
+                            <span className="text-xs text-neutral-500">{t("jpRoadmap.done")}</span>
                             <button
                               type="button"
                               role="checkbox"
@@ -220,9 +220,7 @@ export function JapaneseRoadmap() {
                                   ? "border-indigo-500 bg-indigo-500 text-neutral-950"
                                   : "border-neutral-600 bg-neutral-900 hover:border-neutral-500",
                               ].join(" ")}
-                              aria-label={
-                                weeklyMarked ? "Mark weekly test not completed" : "Mark weekly test completed"
-                              }
+                              aria-label={weeklyMarked ? t("weeklyPanel.markNotDone") : t("weeklyPanel.markDone")}
                             >
                               {weeklyMarked ? (
                                 <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" aria-hidden>
@@ -242,7 +240,7 @@ export function JapaneseRoadmap() {
                             onClick={() => setWeeklyTestWeekId(week.id)}
                             className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
                           >
-                            Open unit test
+                            {t("jpRoadmap.openUnitTest")}
                           </button>
                         </div>
                       </div>
@@ -257,16 +255,22 @@ export function JapaneseRoadmap() {
 
       <div className="mt-10" id="jp-roadmap-full-mock">
         <div className="rounded-2xl border border-amber-900/45 bg-gradient-to-br from-amber-950/35 via-neutral-950/40 to-neutral-900/40 p-5 shadow-xl sm:p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300/95">Course finale · JLPT format</p>
-          <h3 className="mt-2 text-lg font-semibold leading-snug text-neutral-100">{JAPANESE_N5_FULL_LEVEL_MOCK.title}</h3>
-          <p className="mt-1 text-sm leading-relaxed text-neutral-400">{JAPANESE_N5_FULL_LEVEL_MOCK.subtitle}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300/95">{t("jpRoadmap.courseFinale")}</p>
+          <h3 className="mt-2 text-lg font-semibold leading-snug text-neutral-100">
+            {pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.title, locale)}
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-neutral-400">
+            {pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.subtitle, locale)}
+          </p>
           <p className="mt-3 text-[11px] leading-relaxed text-neutral-600">
-            One paper covering Days {JAPANESE_N5_FULL_LEVEL_MOCK.coversDayRange[0]}–{JAPANESE_N5_FULL_LEVEL_MOCK.coversDayRange[1]} ·
-            言語知識（文字・語彙）· 言語知識（文法）· 読解 · 聴解 · embedded listening clip · submit to score
+            {tParams("jpRoadmap.fullMockBlurb", {
+              from: JAPANESE_N5_FULL_LEVEL_MOCK.coversDayRange[0],
+              to: JAPANESE_N5_FULL_LEVEL_MOCK.coversDayRange[1],
+            })}
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-500">Done</span>
+              <span className="text-xs text-neutral-500">{t("jpRoadmap.done")}</span>
               <button
                 type="button"
                 role="checkbox"
@@ -280,8 +284,8 @@ export function JapaneseRoadmap() {
                 ].join(" ")}
                 aria-label={
                   isWeeklyTestDone(JAPANESE_N5_FULL_LEVEL_MOCK.id)
-                    ? "Mark full mock as not completed"
-                    : "Mark full mock as completed"
+                    ? t("weeklyPanel.markMockNotDone")
+                    : t("weeklyPanel.markMockDone")
                 }
               >
                 {isWeeklyTestDone(JAPANESE_N5_FULL_LEVEL_MOCK.id) ? (
@@ -302,22 +306,15 @@ export function JapaneseRoadmap() {
               onClick={() => setWeeklyTestWeekId(JAPANESE_N5_FULL_LEVEL_MOCK.id)}
               className="rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-amber-500"
             >
-              Open full mock exam
+              {t("jpRoadmap.openFullMock")}
             </button>
           </div>
         </div>
       </div>
 
       <div className="mt-14 flex flex-col items-center gap-4" id="jp-roadmap-bottom">
-        <p
-          id="jp-roadmap-blurb"
-          className="max-w-2xl text-center text-sm leading-relaxed text-neutral-500"
-        >
-          Tick days as you finish them — progress stays in this browser. Each lesson mirrors{" "}
-          <span className="font-mono text-xs text-neutral-400">みんなの日本語</span> chapter order with
-          conversation, particle drills, grammar tables, kanji cards, MCQs, and listening tasks (pair with your
-          textbook audio). After each week, use the weekly JLPT-style unit test; at the end of the course, open the
-          full mock exam (same submit-to-score flow). Coming later: JLPT N4 track using the same layout.
+        <p id="jp-roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-neutral-500">
+          {t("jpRoadmap.bottomBlurb")}
         </p>
       </div>
 
