@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { pickLocalized } from "@/lib/i18n/pick";
 import { CURRENT_DAY, getAllRoadmapDays, TOTAL_DAYS } from "@/lib/challenge-data";
 
 const allDays = getAllRoadmapDays();
 
 export function HeroSection() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const pct = Math.round((Math.min(CURRENT_DAY, TOTAL_DAYS) / TOTAL_DAYS) * 100);
+  const todayTitle = allDays.find((d) => d.day === CURRENT_DAY)?.title;
 
   return (
     <section className="relative flex flex-1 overflow-hidden border-b border-[var(--border)]">
@@ -49,7 +51,7 @@ export function HeroSection() {
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:col-span-1">
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--faint)]">{t("hero.todayTheme")}</p>
             <p className="mt-2 text-sm font-medium leading-snug text-[var(--text)]">
-              {allDays.find((d) => d.day === CURRENT_DAY)?.title ?? "—"}
+              {todayTitle !== undefined ? pickLocalized(todayTitle, locale) : "—"}
             </p>
           </div>
         </div>

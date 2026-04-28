@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { DayDetailBlockRenderer } from "@/components/learn/DayDetailBlockRenderer";
 import { RichText } from "@/components/learn/RichText";
+import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadmap-detail";
 import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 type DayDetailPanelProps = {
   dayNumber: number | null;
@@ -18,9 +21,11 @@ function overviewParagraphs(overview: string | string[]): string[] {
 }
 
 export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: DayDetailPanelProps) {
+  const { locale, t } = useLocale();
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getRoadmapDayContext(dayNumber) : null;
-  const detail = ctx ? resolveDayDetail(ctx.day) : null;
+  const detailRaw = ctx ? resolveDayDetail(ctx.day) : null;
+  const detail = detailRaw ? localizeRoadmapDayDetail(detailRaw, locale) : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
@@ -58,9 +63,9 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
       <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
           <div>
-            <p className="text-xs font-medium text-neutral-500">{ctx.weekTitle}</p>
+            <p className="text-xs font-medium text-neutral-500">{pickLocalized(ctx.weekTitle, locale)}</p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">
-              Day {ctx.day.day}: {ctx.day.title}
+              {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {pickLocalized(ctx.day.title, locale)}
             </h2>
           </div>
           <button
@@ -77,18 +82,20 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
           <div className="flex flex-wrap gap-2">
-            {ctx.day.tags.map((t) => (
+            {ctx.day.tags.map((tag) => (
               <span
-                key={`${ctx.day.day}-${t.slug}`}
+                key={`${ctx.day.day}-${tag.slug}`}
                 className="rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-xs font-medium text-neutral-300"
               >
-                {t.label}
+                {pickLocalized(tag.label, locale)}
               </span>
             ))}
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Overview</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              {t("jpDetail.overviewHeading")}
+            </h3>
             <div className="mt-2 space-y-3 text-sm leading-relaxed text-neutral-300">
               {intro.map((p, i) => (
                 <p key={i}>
@@ -100,9 +107,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
 
           {detail.sections?.map((sec) => (
             <div key={sec.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {sec.title}
-              </h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{sec.title}</h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <DayDetailBlockRenderer blocks={sec.blocks} />
               ) : sec.items && sec.items.length > 0 ? (
@@ -120,17 +125,12 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
           {faq.length > 0 ? (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Self-check questions
-                {faq.length > 0 ? (
-                  <span className="ml-1 font-mono text-[11px] font-normal text-neutral-600">
-                    ({faq.length})
-                  </span>
-                ) : null}
+                {t("backendDetail.selfCheckHeading")}
+                <span className="ml-1 font-mono text-[11px] font-normal text-neutral-600">
+                  ({faq.length})
+                </span>
               </h3>
-              <p className="mt-1 text-xs text-neutral-500">
-                All collapsed by default — click a question to reveal its answer; click again to hide
-                it. You can keep several open at once.
-              </p>
+              <p className="mt-1 text-xs text-neutral-500">{t("backendDetail.selfCheckHint")}</p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
                   const expanded = openFaq.has(i);
@@ -211,7 +211,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
           {detail.bullets && detail.bullets.length > 0 ? (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Practice checklist
+                {t("jpDetail.practiceChecklist")}
               </h3>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500">
                 {detail.bullets.map((line, i) => (
@@ -235,7 +235,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
                 : "bg-sky-600 text-white hover:bg-sky-500",
             ].join(" ")}
           >
-            {done ? "Mark as not done" : "Mark day as done"}
+            {done ? t("jpDetail.markDayNotDone") : t("jpDetail.markDayDone")}
           </button>
         </div>
       </aside>

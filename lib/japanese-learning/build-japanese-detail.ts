@@ -12,25 +12,31 @@ import type {
   LocalizedString,
 } from "@/lib/japanese-learning/types";
 
-/** Lesson blueprint — kanji list removed (handled by `twentyKanjiForDay`). */
+/**
+ * Lesson blueprint — kanji list removed (handled by `twentyKanjiForDay`).
+ *
+ * All content fields accept `LocalizedString` so per-field Nepali / Japanese
+ * translations can be added progressively without breaking existing plain-string data.
+ * A plain `string` is a valid `LocalizedString` — it renders as-is in every locale.
+ */
 export type N5LessonSpec = {
   minnaLesson: number | null;
   bookRef: string;
   dialogue: JapaneseDialogueLine[]; // padded to more than 20 lines (≥21) in the builder
-  particles: { particle: string; note: string }[];
-  grammarBullets: string[];
-  grammarTable?: { caption?: string; headers: string[]; rows: string[][] };
+  particles: { particle: string; note: LocalizedString }[];
+  grammarBullets: LocalizedString[];
+  grammarTable?: { caption?: LocalizedString; headers: LocalizedString[]; rows: LocalizedString[][] };
   mcqs: {
-    question: string;
-    choices: string[];
+    question: LocalizedString;
+    choices: LocalizedString[];
     correctIndex: number;
-    explanation?: string;
+    explanation?: LocalizedString;
   }[];
   listening: {
-    scenario: string;
-    instruction: string;
-    keyPhrases: string[];
-    studyTip?: string;
+    scenario: LocalizedString;
+    instruction: LocalizedString;
+    keyPhrases: LocalizedString[];
+    studyTip?: LocalizedString;
   };
 };
 
@@ -107,7 +113,7 @@ export function buildJapaneseDayDetail(
 
   const kanjiIntro: LocalizedString = {
     en: `Practice writing each character on grid paper while tracing stroke order in the diagrams (stroke numbers are embedded in each KanjiVG SVG). Total strokes shown below — match textbook handwriting.`,
-    np: `ट्रेसिंग डायाग्राममा रेखाहरू पछ्याउँदै ग्रिड कागजमा प्रत्येक वर्ण लेख्न अभ्यास गर्नुहोस् (KanjiVG SVG मा रेखा संख्या छ)。तल जम्मा रेखाहरू देखाइएको छ — पाठ्यपुस्तकको हस्तलेखन मिलाउनुहोस्।`,
+    np: `ट्रेसिंग डायाग्राममा रेखाहरू पछ्याउँदै ग्रिड कागजमा प्रत्येक वर्ण लेख्न अभ्यास गर्नुहोस् (KanjiVG SVG मा रेखा संख्या छ)। तल जम्मा रेखाहरू देखाइएको छ — पाठ्यपुस्तकको हस्तलेखन मिलाउनुहोस्।`,
     jp: `各字を方眼紙に書きながら、図の筆順をなぞって練習してください（KanjiVGのSVGに画番号が埋め込まれています）。下の総画数は教科書の手本書きと合わせて確認してください。`,
   };
 

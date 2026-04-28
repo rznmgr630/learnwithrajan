@@ -11,3 +11,10 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   np: "नेपाली",
   jp: "日本語",
 };
+
+/** Regional flags shown next to locale names in the language switcher. */
+export const LOCALE_FLAGS: Record<Locale, string> = {
+  en: "🇬🇧",
+  np: "🇳🇵",
+  jp: "🇯🇵",
+};

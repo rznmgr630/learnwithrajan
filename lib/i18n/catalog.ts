@@ -17,10 +17,25 @@ export const UI_STRINGS = {
     np: "राजनसँग सिकौँ",
     jp: "Learn with Rajan",
   },
-  "footer.tagline": {
-    en: "Built with Next.js and Tailwind — pure frontend, no API routes.",
-    np: "Next.js र Tailwind ले बनाइएको — फ्रन्टइन्ड मात्र, API रुट छैन।",
-    jp: "Next.js と Tailwind で構築 — フロントエンドのみで API ルートはありません。",
+  "footer.creditBeforeHeart": {
+    en: "Made with ",
+    np: "मायासँग ",
+    jp: "",
+  },
+  "footer.creditAfterHeart": {
+    en: "by ",
+    np: "बनाइएको ",
+    jp: "を込めて作成 · ",
+  },
+  "footer.authorName": {
+    en: "Rajan",
+    np: "राजन",
+    jp: "Rajan",
+  },
+  "footer.creditAria": {
+    en: "Made with love by Rajan",
+    np: "मायासँग बनाइएको राजन",
+    jp: "想いを込めて作成 Rajan",
   },
   "learn.title": {
     en: "My learning",
@@ -381,6 +396,16 @@ export const UI_STRINGS = {
     en: "JLPT N5 · Minna no Nihongo I track",
     np: "JLPT N5 · मिन्ना नो निहोन्गो I ट्र्याक",
     jp: "JLPT N5 · 『みんなの日本語』初級Iトラック",
+  },
+  "backendDetail.selfCheckHeading": {
+    en: "Self-check questions",
+    np: "आत्मजाँच प्रश्नहरू",
+    jp: "セルフチェック問題",
+  },
+  "backendDetail.selfCheckHint": {
+    en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once.",
+    np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त छन् — जवाफ देखाउन प्रश्नमा क्लिक गर्नुहोस्; लुकाउन फेरि क्लिक गर्नुहोस्। एकैचोटि धेरै खोलिराख्न सक्नुहुन्छ।",
+    jp: "初期状態ではすべて閉じています。質問をクリックすると答えが開き、もう一度クリックで閉じます。複数開いたままにできます。",
   },
   "jpDetail.overviewHeading": {
     en: "Overview",
