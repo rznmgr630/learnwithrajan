@@ -181,7 +181,11 @@ export function buildWeek2SubTests(): JapaneseWeeklySubTest[] {
     readingBlocks: READING_BLOCKS,
     listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
     listeningIntroForTest: listeningIntroW2,
-    paperSubtitle: "JLPT N5-style · 20 questions · Minna Lessons 8–14 · Days 8–14",
+    paperSubtitle: {
+      en: "JLPT N5-style · 20 questions · Minna Lessons 8–14 · Days 8–14",
+      np: "JLPT N5 शैली · २० प्रश्न · मिन्ना पाठ ८–१४ · दिन ८–१४",
+      jp: "JLPT N5形式 · 20問 · 第8–14課 · Day 8–14",
+    },
     paperIntro:
       "Week 2 の五つのペーパーは別問題です。い・な形容詞、くて・てください、ている などを確認します。提出後に正答とスコアが表示されます。",
   });

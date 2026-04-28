@@ -2,7 +2,11 @@
  * Shared helpers for JLPT-style weekly papers (five tests × 20 MCQs each).
  */
 
-import type { JapaneseWeeklySubTest, JapaneseWeeklyTestItem } from "@/lib/japanese-learning/types";
+import type {
+  JapaneseWeeklySubTest,
+  JapaneseWeeklyTestItem,
+  LocalizedString,
+} from "@/lib/japanese-learning/types";
 import { youtubeClipsForMinnaLesson, youtubeClipsForSprintDay } from "@/lib/japanese-learning/n5-youtube-links";
 
 export const YT_SAMPLE_CLIP_ID = "dPjxIuJZiZc";
@@ -64,7 +68,7 @@ export function buildJlptFivePaperWeek(options: {
   readingBlocks: McqPoolRow[][];
   listeningMcqBlocks: McqPoolRow[][];
   listeningIntroForTest: (testNum: number, tidPrefix: string) => JapaneseWeeklyTestItem;
-  paperSubtitle: string;
+  paperSubtitle: LocalizedString;
   paperIntro: string;
 }): JapaneseWeeklySubTest[] {
   const {

@@ -181,7 +181,11 @@ export function buildWeek1SubTests(): JapaneseWeeklySubTest[] {
     readingBlocks: READING_BLOCKS,
     listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
     listeningIntroForTest: listeningIntroW1,
-    paperSubtitle: "JLPT N5-style · 20 questions · Minna Lessons 1–7 · Days 1–7",
+    paperSubtitle: {
+      en: "JLPT N5-style · 20 questions · Minna Lessons 1–7 · Days 1–7",
+      np: "JLPT N5 शैली · २० प्रश्न · मिन्ना पाठ १–७ · दिन १–७",
+      jp: "JLPT N5形式 · 20問 · 第1–7課 · Day 1–7",
+    },
     paperIntro:
       "Week 1 の五つのペーパーはそれぞれ別の問題セットです（Test 1〜5）。語彙・漢字・文法・読解・聴解の順です。提出後に正答とスコアが表示されます。",
   });

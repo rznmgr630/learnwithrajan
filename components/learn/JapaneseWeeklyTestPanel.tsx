@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type {
   JapaneseWeeklyTest,
   JapaneseWeeklyTestItem,
   JapaneseWeeklyTestSection,
 } from "@/lib/japanese-learning/types";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 type Props = {
   test: JapaneseWeeklyTest | null;
@@ -68,16 +70,18 @@ function WeeklyTestItemBlock({
   shortDraft: string;
   onShortChange: (value: string) => void;
 }) {
+  const { locale, t, tParams } = useLocale();
+
   if (item.kind === "listeningIntro") {
     return (
       <div className="rounded-lg border border-sky-900/40 bg-sky-950/15 p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">聴解 · 準備</p>
         <p className="mt-2 text-sm text-neutral-300">{item.scenario}</p>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Task</p>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.task")}</p>
         <p className="mt-1 text-sm text-neutral-400">{item.instruction}</p>
         {item.embedVideoId ? (
           <div className="mt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Short clip (embedded)</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.embedClip")}</p>
             <div className="mt-2 aspect-video w-full overflow-hidden rounded-lg border border-neutral-800 bg-black">
               <iframe
                 title="Listening sample clip"
@@ -91,7 +95,7 @@ function WeeklyTestItemBlock({
         ) : null}
         {item.youtubeVideos.length > 0 ? (
           <div className="mt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/95">More listening (links)</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/95">{t("weeklyPanel.moreListening")}</p>
             <ul className="mt-2 space-y-2">
               {item.youtubeVideos.map((v, vi) => (
                 <li key={`${v.url}-${vi}`}>
@@ -121,19 +125,19 @@ function WeeklyTestItemBlock({
             value={shortDraft}
             onChange={(e) => onShortChange(e.target.value)}
             rows={4}
-            placeholder="Write your answer here…"
+            placeholder={t("weeklyPanel.placeholderShort")}
             className="mt-4 w-full resize-y rounded-lg border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-indigo-500/60 focus:outline-none focus:ring-1 focus:ring-indigo-500/40"
           />
         ) : (
           <div className="mt-4 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Your answer</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.yourAnswer")}</p>
               <p className="mt-1 whitespace-pre-wrap rounded-lg border border-neutral-700 bg-neutral-950/60 px-3 py-2 text-sm text-neutral-300">
-                {shortDraft.trim() === "" ? "— (empty)" : shortDraft}
+                {shortDraft.trim() === "" ? t("weeklyPanel.emptyAnswer") : shortDraft}
               </p>
             </div>
             <div className="rounded-lg border border-emerald-900/45 bg-emerald-950/20 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400/90">Model answer</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400/90">{t("weeklyPanel.modelAnswer")}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-emerald-100/90">{item.modelAnswer}</p>
             </div>
           </div>
@@ -143,11 +147,15 @@ function WeeklyTestItemBlock({
   }
 
   const mcq = item;
+  const alt = mcq.choicesLocale?.[locale];
+  const choiceLabels =
+    alt && alt.length === mcq.choices.length ? alt : mcq.choices;
+
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
       <p className="whitespace-pre-wrap text-sm font-medium text-neutral-200">{mcq.prompt}</p>
       <ol className="mt-3 space-y-2">
-        {mcq.choices.map((c, ci) => {
+        {choiceLabels.map((c, ci) => {
           const letter = choiceLetter(ci);
           const selected = selectedIndex === ci;
           const isCorrect = ci === mcq.correctIndex;
@@ -187,17 +195,20 @@ function WeeklyTestItemBlock({
       {submitted ? (
         <div className="mt-4 space-y-2 rounded-md border border-neutral-800/90 bg-neutral-950/40 p-3">
           {selectedIndex === undefined ? (
-            <p className="text-xs text-amber-200/90">No option selected — counted as incorrect.</p>
+            <p className="text-xs text-amber-200/90">{t("weeklyPanel.noOption")}</p>
           ) : selectedIndex === mcq.correctIndex ? (
-            <p className="text-xs text-emerald-300/90">Correct.</p>
+            <p className="text-xs text-emerald-300/90">{t("weeklyPanel.correctShort")}</p>
           ) : (
             <p className="text-xs text-red-300/90">
-              Incorrect — your choice was {choiceLetter(selectedIndex)}; correct is {choiceLetter(mcq.correctIndex)}.
+              {tParams("weeklyPanel.incorrectShort", {
+                yours: choiceLetter(selectedIndex),
+                correct: choiceLetter(mcq.correctIndex),
+              })}
             </p>
           )}
           {mcq.explanation ? (
             <p className="border-t border-neutral-800/80 pt-2 text-xs leading-relaxed text-neutral-400">
-              {mcq.explanation}
+              {pickLocalized(mcq.explanation, locale)}
             </p>
           ) : null}
         </div>
@@ -207,6 +218,7 @@ function WeeklyTestItemBlock({
 }
 
 export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onToggleWeeklyTest }: Props) {
+  const { locale, t } = useLocale();
   const open = test !== null;
   const hasSubTests = Boolean(test?.subTests?.length);
   const [activeSubIdx, setActiveSubIdx] = useState(0);
@@ -276,32 +288,38 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
 
   const done = isWeeklyTestDone(test.id);
 
-  const introBlurb = hasSubTests
-    ? (test.subTests?.[activeSubIdx]?.intro ?? test.intro)
-    : test.intro;
+  const activeSub = hasSubTests ? test.subTests?.[activeSubIdx] : undefined;
+  const introBlurb =
+    hasSubTests && activeSub?.intro !== undefined ? activeSub.intro : pickLocalized(test.intro, locale);
+
+  const paperSubtitle =
+    hasSubTests && activeSub?.subtitle !== undefined ? pickLocalized(activeSub.subtitle, locale) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
-      <button type="button" className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" aria-label="Close" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        aria-label={t("weeklyPanel.close")}
+        onClick={onClose}
+      />
       <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
           <div>
             <p className="text-xs font-medium text-indigo-400/90">
-              {test.id === "jn5-full-mock"
-                ? `${test.weekLabel} · JLPT N5 full mock`
-                : `${test.weekLabel} · Weekly unit test`}
+              {pickLocalized(test.weekLabel, locale)}
+              {test.id === "jn5-full-mock" ? t("weeklyPanel.tagFullMock") : t("weeklyPanel.tagWeekly")}
             </p>
-            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-              JLPT N5-style · vocab · grammar · reading · listening
-            </p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">{test.title}</h2>
-            <p className="mt-1 text-sm text-neutral-500">{test.subtitle}</p>
+            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">{t("weeklyPanel.skillsLine")}</p>
+            <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">{pickLocalized(test.title, locale)}</h2>
+            <p className="mt-1 text-sm text-neutral-500">{pickLocalized(test.subtitle, locale)}</p>
+            {paperSubtitle ? <p className="mt-1 text-xs text-neutral-500">{paperSubtitle}</p> : null}
             <p className="mt-2 text-xs text-neutral-600">
-              Days {test.coversDayRange[0]}–{test.coversDayRange[1]}
+              {t("weeklyPanel.daysRange")} {test.coversDayRange[0]}–{test.coversDayRange[1]}
               {hasSubTests && test.subTests ? (
                 <>
                   {" "}
-                  · Paper {activeSubIdx + 1} / {test.subTests.length}
+                  {t("weeklyPanel.paperProgress")} {activeSubIdx + 1} / {test.subTests.length}
                   {test.subTests[activeSubIdx]?.label ? ` (${test.subTests[activeSubIdx].label})` : ""}
                 </>
               ) : null}
@@ -311,7 +329,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
             type="button"
             onClick={onClose}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
-            aria-label="Close"
+            aria-label={t("weeklyPanel.close")}
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
               <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
@@ -344,23 +362,20 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
 
         {submitted ? (
           <div className="border-b border-neutral-800 bg-neutral-900/50 px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Result · {paperKey}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+              {t("weeklyPanel.result")} {paperKey}
+            </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-neutral-100">
-              {score.correct} / {score.total} correct ({percent}%)
+              {score.correct} / {score.total} {t("weeklyPanel.correct")} ({percent}%)
             </p>
-            <p className="mt-1 text-xs text-neutral-500">
-              Score counts multiple-choice items only. Short answers are for practice — compare with the model.
-            </p>
+            <p className="mt-1 text-xs text-neutral-500">{t("weeklyPanel.scoreNote")}</p>
           </div>
         ) : null}
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
           <p className="text-sm leading-relaxed text-neutral-400">{introBlurb}</p>
           {!submitted ? (
-            <p className="rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2 text-xs text-neutral-500">
-              Choose an option for each question, then submit. Correct answers and explanations appear only after you
-              submit.
-            </p>
+            <p className="rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2 text-xs text-neutral-500">{t("weeklyPanel.introHint")}</p>
           ) : null}
 
           {activeSections.map((sec) => (
@@ -395,8 +410,8 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
 
           {test.closingNote ? (
             <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Note</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-400">{test.closingNote}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.noteHeading")}</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-400">{pickLocalized(test.closingNote, locale)}</p>
             </div>
           ) : null}
         </div>
@@ -408,7 +423,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
               onClick={handleSubmit}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500"
             >
-              Submit answers
+              {t("weeklyPanel.submit")}
             </button>
           ) : (
             <button
@@ -416,7 +431,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
               onClick={repeatTest}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:bg-neutral-800"
             >
-              Repeat this paper
+              {t("weeklyPanel.repeat")}
             </button>
           )}
           <button
@@ -431,11 +446,11 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
           >
             {test.id === "jn5-full-mock"
               ? done
-                ? "Mark full mock as not completed"
-                : "Mark full mock as completed"
+                ? t("weeklyPanel.markMockNotDone")
+                : t("weeklyPanel.markMockDone")
               : done
-                ? "Mark weekly test as not completed"
-                : "Mark weekly test as completed"}
+                ? t("weeklyPanel.markNotDone")
+                : t("weeklyPanel.markDone")}
           </button>
         </div>
       </aside>

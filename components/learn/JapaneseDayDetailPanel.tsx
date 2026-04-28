@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import { RichText } from "@/components/learn/RichText";
 import {
   getJapaneseN5DayContext,
   resolveJapaneseN5Detail,
 } from "@/lib/japanese-learning/japanese-n5-data";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 type Props = {
   dayNumber: number | null;
@@ -20,6 +22,7 @@ function overviewParagraphs(overview: string | string[]): string[] {
 }
 
 export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
+  const { locale, t } = useLocale();
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getJapaneseN5DayContext(dayNumber) : null;
   const detail = ctx ? resolveJapaneseN5Detail(ctx.day) : null;
@@ -58,9 +61,9 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
       <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
           <div>
-            <p className="text-xs font-medium text-rose-400/90">{ctx.weekTitle}</p>
+            <p className="text-xs font-medium text-rose-400/90">{pickLocalized(ctx.weekTitle, locale)}</p>
             <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-              JLPT N5 · Minna no Nihongo I track
+              {t("japaneseDay.trackLabel")}
             </p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">
               {ctx.day.title}

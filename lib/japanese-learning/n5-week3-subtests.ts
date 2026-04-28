@@ -181,7 +181,11 @@ export function buildWeek3SubTests(): JapaneseWeeklySubTest[] {
     readingBlocks: READING_BLOCKS,
     listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
     listeningIntroForTest: listeningIntroW3,
-    paperSubtitle: "JLPT N5-style · 20 questions · Minna Lessons 15–21 · Days 15–21",
+    paperSubtitle: {
+      en: "JLPT N5-style · 20 questions · Minna Lessons 15–21 · Days 15–21",
+      np: "JLPT N5 शैली · २० प्रश्न · मिन्ना पाठ १५–२१ · दिन १५–२१",
+      jp: "JLPT N5形式 · 20問 · 第15–21課 · Day 15–21",
+    },
     paperIntro:
       "Week 3 の五つのペーパーは別問題です。禁止・許可・なくてもいい・なければならない・経験・引用のとおもう を練習します。",
   });
