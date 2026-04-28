@@ -1,6 +1,7 @@
 "use client";
 
 import type { JapaneseDetailBlock, LocalizedString } from "@/lib/japanese-learning/types";
+import { resolveDialogueGloss } from "@/lib/japanese-learning/dialogue-gloss-i18n";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { pickLocalized } from "@/lib/i18n/pick";
@@ -122,7 +123,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                     {line.reading ? (
                       <p className="mt-1 font-mono text-xs text-neutral-500">{line.reading}</p>
                     ) : null}
-                    <p className="mt-1 text-sm text-neutral-400">{ls(line.en)}</p>
+                    <p className="mt-1 text-sm text-neutral-400">{resolveDialogueGloss(line.en, locale)}</p>
                   </div>
                 ))}
               </div>
