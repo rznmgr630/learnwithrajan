@@ -1,7 +1,7 @@
 import type { RoadmapDetailDiagramId } from "@/lib/challenge-data";
 
 const fig =
-  "mt-3 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40 text-neutral-200";
+  "mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] text-[var(--text)]";
 
 const NODE_IDS = new Set<RoadmapDetailDiagramId>([
   "node-one-thread-io",
@@ -19,7 +19,7 @@ export function NodeRuntimeDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "node-one-thread-io":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             One JS thread + libuv/OS handles all waiting — bidirectional handoff
           </figcaption>
           <svg viewBox="0 0 400 180" className="h-auto w-full" aria-hidden>
@@ -143,7 +143,7 @@ export function NodeRuntimeDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "node-event-loop-phases":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Event loop phases — microtasks drain between every phase transition
           </figcaption>
           <svg viewBox="0 0 480 148" className="h-auto w-full" aria-hidden>
@@ -258,7 +258,7 @@ export function NodeRuntimeDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "node-execution-priority":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Execution priority — output order: 1 → 4 → 2 → 3 → 5
           </figcaption>
           <svg viewBox="0 0 340 232" className="h-auto w-full" aria-hidden>
@@ -410,7 +410,7 @@ export function NodeRuntimeDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "go-goroutine-mn":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Go M:N scheduler — goroutines (G) multiplexed onto OS threads (M),
             bound to logical CPUs (P)
           </figcaption>

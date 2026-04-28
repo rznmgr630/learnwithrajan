@@ -7,6 +7,7 @@ import type {
   JapaneseWeeklyTestItem,
   JapaneseWeeklyTestSection,
 } from "@/lib/japanese-learning/types";
+import { MCQ_OPTION_TRANSLATIONS } from "@/lib/japanese-learning/mcq-option-translations";
 import { pickLocalized } from "@/lib/i18n/pick";
 
 type Props = {
@@ -55,6 +56,13 @@ function stripShortKeysWithPrefix(obj: Record<string, string>, prefix: string): 
   return next;
 }
 
+function fallbackLocalizedChoice(choice: string, locale: "en" | "np" | "jp"): string {
+  if (locale === "en") return choice;
+  const translated = MCQ_OPTION_TRANSLATIONS[choice];
+  if (!translated) return choice;
+  return locale === "jp" ? translated.jp : translated.np;
+}
+
 function WeeklyTestItemBlock({
   item,
   submitted,
@@ -74,15 +82,15 @@ function WeeklyTestItemBlock({
 
   if (item.kind === "listeningIntro") {
     return (
-      <div className="rounded-lg border border-sky-900/40 bg-sky-950/15 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300">聴解 · 準備</p>
-        <p className="mt-2 text-sm text-neutral-300">{item.scenario}</p>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.task")}</p>
-        <p className="mt-1 text-sm text-neutral-400">{item.instruction}</p>
+      <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">聴解 · 準備</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">{item.scenario}</p>
+        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.task")}</p>
+        <p className="mt-1 text-sm text-[var(--muted)]">{item.instruction}</p>
         {item.embedVideoId ? (
           <div className="mt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.embedClip")}</p>
-            <div className="mt-2 aspect-video w-full overflow-hidden rounded-lg border border-neutral-800 bg-black">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.embedClip")}</p>
+            <div className="mt-2 aspect-video w-full overflow-hidden rounded-lg border border-[var(--border)] bg-black">
               <iframe
                 title="Listening sample clip"
                 src={`https://www.youtube-nocookie.com/embed/${item.embedVideoId}`}
@@ -95,7 +103,7 @@ function WeeklyTestItemBlock({
         ) : null}
         {item.youtubeVideos.length > 0 ? (
           <div className="mt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-rose-300/95">{t("weeklyPanel.moreListening")}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.moreListening")}</p>
             <ul className="mt-2 space-y-2">
               {item.youtubeVideos.map((v, vi) => (
                 <li key={`${v.url}-${vi}`}>
@@ -103,7 +111,7 @@ function WeeklyTestItemBlock({
                     href={v.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-sky-400 underline-offset-2 hover:text-sky-300 hover:underline"
+                    className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:brightness-110 hover:underline"
                   >
                     {v.title}
                   </a>
@@ -118,27 +126,27 @@ function WeeklyTestItemBlock({
 
   if (item.kind === "short") {
     return (
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
-        <p className="whitespace-pre-wrap text-sm font-medium text-neutral-200">{item.prompt}</p>
+      <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
+        <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">{item.prompt}</p>
         {!submitted ? (
           <textarea
             value={shortDraft}
             onChange={(e) => onShortChange(e.target.value)}
             rows={4}
             placeholder={t("weeklyPanel.placeholderShort")}
-            className="mt-4 w-full resize-y rounded-lg border border-neutral-700 bg-neutral-950/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-indigo-500/60 focus:outline-none focus:ring-1 focus:ring-indigo-500/40"
+            className="mt-4 w-full resize-y rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_82%,transparent)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--faint)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[color-mix(in_oklab,var(--accent)_35%,transparent)]"
           />
         ) : (
           <div className="mt-4 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.yourAnswer")}</p>
-              <p className="mt-1 whitespace-pre-wrap rounded-lg border border-neutral-700 bg-neutral-950/60 px-3 py-2 text-sm text-neutral-300">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.yourAnswer")}</p>
+              <p className="mt-1 whitespace-pre-wrap rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_65%,transparent)] px-3 py-2 text-sm text-[var(--muted)]">
                 {shortDraft.trim() === "" ? t("weeklyPanel.emptyAnswer") : shortDraft}
               </p>
             </div>
-            <div className="rounded-lg border border-emerald-900/45 bg-emerald-950/20 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400/90">{t("weeklyPanel.modelAnswer")}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-emerald-100/90">{item.modelAnswer}</p>
+            <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.modelAnswer")}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--text)]">{item.modelAnswer}</p>
             </div>
           </div>
         )}
@@ -149,11 +157,13 @@ function WeeklyTestItemBlock({
   const mcq = item;
   const alt = mcq.choicesLocale?.[locale];
   const choiceLabels =
-    alt && alt.length === mcq.choices.length ? alt : mcq.choices;
+    alt && alt.length === mcq.choices.length
+      ? alt
+      : mcq.choices.map((choice) => fallbackLocalizedChoice(choice, locale));
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
-      <p className="whitespace-pre-wrap text-sm font-medium text-neutral-200">{mcq.prompt}</p>
+    <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
+      <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">{mcq.prompt}</p>
       <ol className="mt-3 space-y-2">
         {choiceLabels.map((c, ci) => {
           const letter = choiceLetter(ci);
@@ -165,15 +175,17 @@ function WeeklyTestItemBlock({
 
           if (!submitted) {
             btnClass += selected
-              ? " border-indigo-500/55 bg-indigo-950/35 text-neutral-100 ring-1 ring-indigo-500/25"
-              : " border-neutral-700 bg-neutral-950/50 text-neutral-300 hover:border-neutral-500";
+              ? " border-[color-mix(in_oklab,var(--accent)_55%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_18%,var(--surface))] text-[var(--text)] ring-1 ring-[color-mix(in_oklab,var(--accent)_25%,transparent)]"
+              : " border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_55%,transparent)] text-[var(--muted)] hover:border-[var(--accent)]";
           } else {
             if (isCorrect) {
-              btnClass += " border-emerald-500/65 bg-emerald-950/25 text-emerald-50 ring-1 ring-emerald-500/25";
+              btnClass +=
+                " border-[color-mix(in_oklab,var(--accent)_55%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_16%,var(--surface))] text-[var(--text)] ring-1 ring-[color-mix(in_oklab,var(--accent)_30%,transparent)]";
             } else if (selected && !isCorrect) {
-              btnClass += " border-red-500/70 bg-red-950/30 text-neutral-100 ring-1 ring-red-500/35";
+              btnClass +=
+                " border-[color-mix(in_oklab,var(--border)_90%,#b91c1c)] bg-[color-mix(in_oklab,var(--background)_55%,transparent)] text-[var(--text)] opacity-90 ring-1 ring-[color-mix(in_oklab,#b91c1c_25%,transparent)]";
             } else {
-              btnClass += " border-neutral-800/90 bg-neutral-950/25 text-neutral-500";
+              btnClass += " border-[var(--border)]/90 bg-[color-mix(in_oklab,var(--background)_28%,transparent)] text-[var(--muted)]";
             }
           }
 
@@ -193,13 +205,13 @@ function WeeklyTestItemBlock({
       </ol>
 
       {submitted ? (
-        <div className="mt-4 space-y-2 rounded-md border border-neutral-800/90 bg-neutral-950/40 p-3">
+        <div className="mt-4 space-y-2 rounded-md border border-[var(--border)]/90 bg-[color-mix(in_oklab,var(--background)_48%,transparent)] p-3">
           {selectedIndex === undefined ? (
-            <p className="text-xs text-amber-200/90">{t("weeklyPanel.noOption")}</p>
+            <p className="text-xs text-[var(--muted)]">{t("weeklyPanel.noOption")}</p>
           ) : selectedIndex === mcq.correctIndex ? (
-            <p className="text-xs text-emerald-300/90">{t("weeklyPanel.correctShort")}</p>
+            <p className="text-xs text-[var(--muted)]">{t("weeklyPanel.correctShort")}</p>
           ) : (
-            <p className="text-xs text-red-300/90">
+            <p className="text-xs text-[var(--muted)]">
               {tParams("weeklyPanel.incorrectShort", {
                 yours: choiceLetter(selectedIndex),
                 correct: choiceLetter(mcq.correctIndex),
@@ -207,7 +219,7 @@ function WeeklyTestItemBlock({
             </p>
           )}
           {mcq.explanation ? (
-            <p className="border-t border-neutral-800/80 pt-2 text-xs leading-relaxed text-neutral-400">
+            <p className="border-t border-[var(--border)]/80 pt-2 text-xs leading-relaxed text-[var(--muted)]">
               {pickLocalized(mcq.explanation, locale)}
             </p>
           ) : null}
@@ -304,18 +316,18 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
         aria-label={t("weeklyPanel.close")}
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
+      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
-            <p className="text-xs font-medium text-indigo-400/90">
+            <p className="text-xs font-medium text-[var(--accent)]">
               {pickLocalized(test.weekLabel, locale)}
               {test.id === "jn5-full-mock" ? t("weeklyPanel.tagFullMock") : t("weeklyPanel.tagWeekly")}
             </p>
-            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">{t("weeklyPanel.skillsLine")}</p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">{pickLocalized(test.title, locale)}</h2>
-            <p className="mt-1 text-sm text-neutral-500">{pickLocalized(test.subtitle, locale)}</p>
-            {paperSubtitle ? <p className="mt-1 text-xs text-neutral-500">{paperSubtitle}</p> : null}
-            <p className="mt-2 text-xs text-neutral-600">
+            <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.skillsLine")}</p>
+            <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">{pickLocalized(test.title, locale)}</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">{pickLocalized(test.subtitle, locale)}</p>
+            {paperSubtitle ? <p className="mt-1 text-xs text-[var(--muted)]">{paperSubtitle}</p> : null}
+            <p className="mt-2 text-xs text-[var(--faint)]">
               {t("weeklyPanel.daysRange")} {test.coversDayRange[0]}–{test.coversDayRange[1]}
               {hasSubTests && test.subTests ? (
                 <>
@@ -329,7 +341,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
           <button
             type="button"
             onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
             aria-label={t("weeklyPanel.close")}
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -339,7 +351,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
         </div>
 
         {hasSubTests && test.subTests ? (
-          <div className="flex flex-wrap gap-2 border-b border-neutral-800 px-5 py-3">
+          <div className="flex flex-wrap gap-2 border-b border-[var(--border)] px-5 py-3">
             {test.subTests.map((st, i) => (
               <button
                 key={st.id}
@@ -348,10 +360,10 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
                 className={[
                   "rounded-lg px-3 py-1.5 text-sm font-medium transition",
                   i === activeSubIdx
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-[var(--accent)] text-[var(--accent-fg)]"
                     : submittedMap[st.id]
-                      ? "border border-emerald-800/60 bg-emerald-950/25 text-emerald-100/90"
-                      : "border border-neutral-700 bg-neutral-900 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200",
+                      ? "border border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_10%,var(--elevated))] text-[var(--text)]"
+                      : "border border-[var(--border)] bg-[var(--elevated)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--text)]",
                 ].join(" ")}
               >
                 {st.label}
@@ -362,27 +374,27 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
         ) : null}
 
         {submitted ? (
-          <div className="border-b border-neutral-800 bg-neutral-900/50 px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+          <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
               {t("weeklyPanel.result")} {paperKey}
             </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums text-neutral-100">
+            <p className="mt-1 text-lg font-semibold tabular-nums text-[var(--text)]">
               {score.correct} / {score.total} {t("weeklyPanel.correct")} ({percent}%)
             </p>
-            <p className="mt-1 text-xs text-neutral-500">{t("weeklyPanel.scoreNote")}</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">{t("weeklyPanel.scoreNote")}</p>
           </div>
         ) : null}
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
-          <p className="text-sm leading-relaxed text-neutral-400">{introBlurb}</p>
+          <p className="text-sm leading-relaxed text-[var(--muted)]">{introBlurb}</p>
           {!submitted ? (
-            <p className="rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2 text-xs text-neutral-500">{t("weeklyPanel.introHint")}</p>
+            <p className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] px-3 py-2 text-xs text-[var(--muted)]">{t("weeklyPanel.introHint")}</p>
           ) : null}
 
           {activeSections.map((sec) => (
             <div key={sec.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{sec.title}</h3>
-              {sec.blurb ? <p className="mt-1 text-xs text-neutral-600">{sec.blurb}</p> : null}
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{sec.title}</h3>
+              {sec.blurb ? <p className="mt-1 text-xs text-[var(--faint)]">{sec.blurb}</p> : null}
               <div className="mt-4 space-y-6">
                 {sec.items.map((item) => (
                   <WeeklyTestItemBlock
@@ -410,19 +422,19 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
           ))}
 
           {test.closingNote ? (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{t("weeklyPanel.noteHeading")}</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-400">{pickLocalized(test.closingNote, locale)}</p>
+            <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.noteHeading")}</p>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{pickLocalized(test.closingNote, locale)}</p>
             </div>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-neutral-800 p-5">
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] p-5">
           {!submitted ? (
             <button
               type="button"
               onClick={handleSubmit}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
             >
               {t("weeklyPanel.submit")}
             </button>
@@ -430,7 +442,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
             <button
               type="button"
               onClick={repeatTest}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:bg-neutral-800"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--elevated)] px-4 py-3 text-sm font-semibold text-[var(--text)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_85%,var(--background))]"
             >
               {t("weeklyPanel.repeat")}
             </button>
@@ -441,8 +453,8 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
             className={[
               "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition",
               done
-                ? "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                : "bg-neutral-700 text-neutral-100 hover:bg-neutral-600",
+                ? "bg-[var(--elevated)] text-[var(--text)] hover:bg-[color-mix(in_oklab,var(--elevated)_88%,var(--accent))]"
+                : "bg-[color-mix(in_oklab,var(--elevated)_92%,var(--muted))] text-[var(--text)] hover:bg-[var(--elevated)]",
             ].join(" ")}
           >
             {test.id === "jn5-full-mock"

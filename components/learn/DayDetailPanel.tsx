@@ -60,18 +60,18 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
         aria-label="Close day detail"
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-neutral-800 bg-neutral-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-neutral-800 p-5">
+      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
-            <p className="text-xs font-medium text-neutral-500">{pickLocalized(ctx.weekTitle, locale)}</p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-neutral-100">
+            <p className="text-xs font-medium text-[var(--muted)]">{pickLocalized(ctx.weekTitle, locale)}</p>
+            <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
               {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {pickLocalized(ctx.day.title, locale)}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
             aria-label="Close"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -85,7 +85,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
             {ctx.day.tags.map((tag) => (
               <span
                 key={`${ctx.day.day}-${tag.slug}`}
-                className="rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-xs font-medium text-neutral-300"
+                className="rounded-full border border-[var(--border)] bg-[var(--elevated)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
               >
                 {pickLocalized(tag.label, locale)}
               </span>
@@ -93,10 +93,10 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               {t("jpDetail.overviewHeading")}
             </h3>
-            <div className="mt-2 space-y-3 text-sm leading-relaxed text-neutral-300">
+            <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
               {intro.map((p, i) => (
                 <p key={i}>
                   <RichText text={p} />
@@ -107,11 +107,11 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
 
           {detail.sections?.map((sec) => (
             <div key={sec.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{sec.title}</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{sec.title}</h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <DayDetailBlockRenderer blocks={sec.blocks} />
               ) : sec.items && sec.items.length > 0 ? (
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500">
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--muted)]">
                   {sec.items.map((line, i) => (
                     <li key={i} className="pl-1">
                       <RichText text={line} />
@@ -124,20 +124,20 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
 
           {faq.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 {t("backendDetail.selfCheckHeading")}
-                <span className="ml-1 font-mono text-[11px] font-normal text-neutral-600">
+                <span className="ml-1 font-mono text-[11px] font-normal text-[var(--faint)]">
                   ({faq.length})
                 </span>
               </h3>
-              <p className="mt-1 text-xs text-neutral-500">{t("backendDetail.selfCheckHint")}</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">{t("backendDetail.selfCheckHint")}</p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
                   const expanded = openFaq.has(i);
                   return (
                     <li
                       key={i}
-                      className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/25"
+                      className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_28%,transparent)]"
                     >
                       <button
                         type="button"
@@ -152,16 +152,16 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
                             return next;
                           });
                         }}
-                        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-neutral-100 transition hover:bg-neutral-800/40"
+                        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-[var(--text)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)]"
                       >
                         <span className="min-w-0 leading-snug">
-                          <span className="mr-2 font-mono text-xs text-neutral-500 tabular-nums">
+                          <span className="mr-2 font-mono text-xs text-[var(--muted)] tabular-nums">
                             {String(i + 1).padStart(2, "0")}.
                           </span>
                           <RichText text={item.question} />
                         </span>
                         <svg
-                          className={`mt-0.5 h-5 w-5 shrink-0 text-neutral-500 transition-transform ${expanded ? "rotate-180" : ""}`}
+                          className={`mt-0.5 h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
                           viewBox="0 0 20 20"
                           fill="currentColor"
                           aria-hidden
@@ -178,11 +178,11 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
                           id={`faq-a-${dayNumber}-${i}`}
                           role="region"
                           aria-labelledby={`faq-q-${dayNumber}-${i}`}
-                          className="border-t border-neutral-800 px-4 py-3 text-sm leading-relaxed text-neutral-300"
+                          className="border-t border-[var(--border)] px-4 py-3 text-sm leading-relaxed text-[var(--muted)]"
                         >
                           {item.tag ? (
                             <p className="mb-3">
-                              <span className="inline-flex rounded-full border border-neutral-700/90 bg-neutral-800/50 px-2.5 py-0.5 text-xs font-medium text-neutral-200">
+                              <span className="inline-flex rounded-full border border-[var(--border)]/90 bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] px-2.5 py-0.5 text-xs font-medium text-[var(--text)]">
                                 {item.tag}
                               </span>
                             </p>
@@ -195,7 +195,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
                             ))}
                           </div>
                           {item.callout ? (
-                            <blockquote className="mt-4 border-l-2 border-neutral-600 pl-3 text-sm text-neutral-400">
+                            <blockquote className="mt-4 border-l-2 border-[var(--border)] pl-3 text-sm text-[var(--muted)]">
                               <RichText text={item.callout} />
                             </blockquote>
                           ) : null}
@@ -210,10 +210,10 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
 
           {detail.bullets && detail.bullets.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 {t("jpDetail.practiceChecklist")}
               </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-neutral-300 marker:text-neutral-500">
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--muted)]">
                 {detail.bullets.map((line, i) => (
                   <li key={i} className="pl-1">
                     <RichText text={line} />
@@ -224,15 +224,15 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
           ) : null}
         </div>
 
-        <div className="border-t border-neutral-800 p-5">
+        <div className="border-t border-[var(--border)] p-5">
           <button
             type="button"
             onClick={() => onToggleDone(dayNumber)}
             className={[
               "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition",
               done
-                ? "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                : "bg-sky-600 text-white hover:bg-sky-500",
+                ? "bg-[var(--elevated)] text-[var(--text)] hover:bg-[color-mix(in_oklab,var(--elevated)_88%,var(--accent))]"
+                : "bg-[var(--accent)] text-[var(--accent-fg)] hover:brightness-110",
             ].join(" ")}
           >
             {done ? t("jpDetail.markDayNotDone") : t("jpDetail.markDayDone")}

@@ -1,7 +1,7 @@
 import type { RoadmapDetailDiagramId } from "@/lib/challenge-data";
 
 const fig =
-  "mt-3 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40 text-neutral-200";
+  "mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] text-[var(--text)]";
 
 const WEEK2_IDS = new Set<RoadmapDetailDiagramId>([
   "lb-round-robin",
@@ -26,7 +26,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "lb-round-robin":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             L7 load balancer — round-robin across three backend instances
           </figcaption>
           <svg viewBox="0 0 420 160" className="h-auto w-full" aria-hidden>
@@ -72,7 +72,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "lb-ha-failover":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Active health check — unhealthy backend removed from rotation
           </figcaption>
           <svg viewBox="0 0 380 148" className="h-auto w-full" aria-hidden>
@@ -108,7 +108,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "erd-one-many":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Entity-relationship — users ↔ posts (1:N) and posts ↔ tags (M:N via junction)
           </figcaption>
           <svg viewBox="0 0 440 160" className="h-auto w-full" aria-hidden>
@@ -157,7 +157,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "deadlock-cycle":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Deadlock — Tx A holds lock on Row 1, waits for Row 2; Tx B holds Row 2, waits for Row 1
           </figcaption>
           <svg viewBox="0 0 360 148" className="h-auto w-full" aria-hidden>
@@ -204,7 +204,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "cap-theorem":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             CAP theorem — distributed systems can guarantee at most 2 of 3 during a partition
           </figcaption>
           <svg viewBox="0 0 380 168" className="h-auto w-full" aria-hidden>
@@ -239,7 +239,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "primary-replica":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Primary + two read replicas — WAL streaming, writes to primary only
           </figcaption>
           <svg viewBox="0 0 420 156" className="h-auto w-full" aria-hidden>
@@ -283,7 +283,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "cqrs-sketch":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             CQRS — command side writes to OLTP; events project to read-optimised stores
           </figcaption>
           <svg viewBox="0 0 440 152" className="h-auto w-full" aria-hidden>
@@ -335,7 +335,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "inverted-index":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Inverted index — term → posting list (document IDs + positions)
           </figcaption>
           <svg viewBox="0 0 420 156" className="h-auto w-full" aria-hidden>
@@ -376,7 +376,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "queue-backpressure":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Backpressure — bounded queue signals producer to slow down when full
           </figcaption>
           <svg viewBox="0 0 400 148" className="h-auto w-full" aria-hidden>
@@ -425,7 +425,7 @@ export function Week2Diagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "producer-consumer":
       return (
         <figure className={fig}>
-          <figcaption className="border-b border-neutral-800 px-3 py-2 text-xs font-medium text-neutral-400">
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
             Message queue patterns — work queue (competing consumers) vs pub/sub fan-out
           </figcaption>
           <svg viewBox="0 0 440 156" className="h-auto w-full" aria-hidden>
