@@ -382,6 +382,91 @@ export const UI_STRINGS = {
     np: "JLPT N5 · मिन्ना नो निहोन्गो I ट्र्याक",
     jp: "JLPT N5 · 『みんなの日本語』初級Iトラック",
   },
+  "jpDetail.overviewHeading": {
+    en: "Overview",
+    np: "अवलोकन",
+    jp: "概要",
+  },
+  "jpDetail.practiceChecklist": {
+    en: "Practice checklist",
+    np: "अभ्यास सूची",
+    jp: "練習チェックリスト",
+  },
+  "jpDetail.markDayDone": {
+    en: "Mark day as done",
+    np: "दिन पूरा भएको चिनो लगाउनुहोस्",
+    jp: "この日を完了にする",
+  },
+  "jpDetail.markDayNotDone": {
+    en: "Mark as not done",
+    np: "पूरा नभएको चिनो लगाउनुहोस्",
+    jp: "完了を外す",
+  },
+  "jpDetail.mcqCorrectLabel": {
+    en: "Correct:",
+    np: "सही:",
+    jp: "正解:",
+  },
+  "jpDetail.listeningYoutubeHeading": {
+    en: "YouTube (chapter-aligned)",
+    np: "YouTube (अध्याय अनुकूल)",
+    jp: "YouTube（章に対応）",
+  },
+  "jpDetail.listeningKeyPhrases": {
+    en: "Key phrases",
+    np: "मुख्य वाक्यांशहरू",
+    jp: "重要フレーズ",
+  },
+  "jpDetail.listeningTipPrefix": {
+    en: "Tip:",
+    np: "टिप:",
+    jp: "ヒント:",
+  },
+  "jpDetail.kanjiStrokesLabel": {
+    en: "Strokes",
+    np: "रेखाहरू",
+    jp: "画数",
+  },
+  "jpDetail.kanjiOpenSvg": {
+    en: "Open stroke SVG",
+    np: "रेखा SVG खोल्नुहोस्",
+    jp: "筆順SVGを開く",
+  },
+  "jpDetail.tag.jlptN5": {
+    en: "JLPT N5",
+    np: "JLPT N5",
+    jp: "JLPT N5",
+  },
+  "jpDetail.tag.minna": {
+    en: "Minna no Nihongo I",
+    np: "मिन्ना नो निहोन्गो I",
+    jp: "みんなの日本語 初級I",
+  },
+  "jpDetail.tag.sprint": {
+    en: "Exam sprint",
+    np: "परीक्षा स्प्रिन्ट",
+    jp: "試験スプリント",
+  },
+  "jpDetail.tag.listening": {
+    en: "Listening",
+    np: "सुन्ने",
+    jp: "聴解",
+  },
+  "jpDetail.tag.grammar": {
+    en: "Grammar",
+    np: "व्याकरण",
+    jp: "文法",
+  },
+  "jpDetail.tag.particles": {
+    en: "Particles",
+    np: "जुड्ने शब्द",
+    jp: "助詞",
+  },
+  "jpDetail.tag.kanji": {
+    en: "Kanji",
+    np: "कांजी",
+    jp: "漢字",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type UiStringKey = keyof typeof UI_STRINGS;

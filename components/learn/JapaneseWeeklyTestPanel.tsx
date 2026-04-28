@@ -228,6 +228,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset panel when opening another test/week
     setActiveSubIdx(0);
     setSubmittedMap({});
     setChoicePick({});

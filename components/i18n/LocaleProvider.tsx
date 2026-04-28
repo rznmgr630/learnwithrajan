@@ -29,6 +29,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = readStoredLocale();
+    // Hydration: server rendered with default `en`; align with localStorage after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync from localStorage after mount only
     if (stored) setLocaleState(stored);
     setMounted(true);
   }, []);

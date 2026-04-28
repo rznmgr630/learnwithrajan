@@ -57,16 +57,26 @@ export const JP_N5_DAY_TITLES: string[] = [
   "Day 30 · Sprint — mock exam mindset",
 ];
 
-function jpOverview(day: number): string[] {
+function jpOverview(day: number): LocalizedString[] {
   const spec = JP_N5_LESSON_SPECS[day - 1];
-  const focus =
+  const focus: LocalizedString =
     spec.minnaLesson !== null
-      ? `Anchor today on Minna no Nihongo I Lesson ${spec.minnaLesson}: repeat the textbook dialogue until you can shadow without reading.`
-      : `Integration sprint — rotate weak skills from Lessons 1–25 before sitting a timed JLPT N5-style practice set.`;
-  return [
-    focus,
-    `Split study into three passes — input (listen/read), pattern drills (particles & grammar tables), and output (say or hand-write two fresh sentences).`,
-  ];
+      ? {
+          en: `Anchor today on Minna no Nihongo I Lesson ${spec.minnaLesson}: repeat the textbook dialogue until you can shadow without reading.`,
+          np: `आज मिन्ना नो निहोन्गो I को पाठ ${spec.minnaLesson} मा केन्द्रित हुनुहोस्: पाठ्यपुस्तकको संवाद बिना पढेर छायाँ गर्न सक्नुहुन्छ भने दोहोर्याउनुहोस्।`,
+          jp: `今日は『みんなの日本語 初級I』第${spec.minnaLesson}課に軸を置き、教科書の会話を声に出して繰り返し、読まずにシャドーイングできるまで練習してください。`,
+        }
+      : {
+          en: `Integration sprint — rotate weak skills from Lessons 1–25 before sitting a timed JLPT N5-style practice set.`,
+          np: `एकीकरण स्प्रिन्ट — समयबद्ध JLPT N5 शैलीको अभ्यास सेट बस्नु अघि पाठ १–२५ का कमजोर कौशल घुमाउनुहोस्।`,
+          jp: `統合スプリント——タイム制のJLPT N5形式の演習に取り組む前に、第1〜25課の苦手をローテーションで復習してください。`,
+        };
+  const second: LocalizedString = {
+    en: `Split study into three passes — input (listen/read), pattern drills (particles & grammar tables), and output (say or hand-write two fresh sentences).`,
+    np: `अध्ययन तीन चरणमा बाँड्नुहोस् — इनपुट (सुनाइ/पढाइ), ढाँचा अभ्यास (जुड्ने शब्द र व्याकरण तालिका), र आउटपुट (दुई नौला वाक्य बोल्न वा लेख्न)।`,
+    jp: `学習を3ラウンドに分けましょう——インプット（聞く・読む）、パターン練習（助詞・文法表）、アウトプット（新しい文を2つ声か手書きで）。`,
+  };
+  return [focus, second];
 }
 
 function tagsForDay(day: number): { label: string; slug: string }[] {
@@ -90,7 +100,7 @@ function buildDay(day: number): JapaneseRoadmapDay {
     day,
     title,
     tags: tagsForDay(day),
-    detail: buildJapaneseDayDetail(day, title, jpOverview(day), spec),
+    detail: buildJapaneseDayDetail(day, jpOverview(day), spec),
   };
 }
 
@@ -173,8 +183,30 @@ export function getJapaneseN5DayContext(
 export function resolveJapaneseN5Detail(day: JapaneseRoadmapDay): JapaneseRoadmapDayDetail {
   if (day.detail) return day.detail;
   return {
-    overview: `Study focus: ${day.title}.`,
-    bullets: ["Summarize today’s grammar in one English sentence.", "Shadow audio twice.", "Write four kanji from memory."],
+    overview: [
+      {
+        en: `Study focus: ${day.title}.`,
+        np: `अध्ययन फोकस: ${day.title}.`,
+        jp: `学習の焦点：${day.title}`,
+      },
+      {
+        en: "Summarize today’s grammar in one English sentence.",
+        np: "आजको व्याकरण एक अङ्ग्रेजी वाक्यमा सारांश गर्नुहोस्।",
+        jp: "今日の文法を英語の一文で要約してください。",
+      },
+    ],
+    bullets: [
+      {
+        en: "Shadow audio twice.",
+        np: "अडियो दुई पटक छायाँ गर्नुहोस्।",
+        jp: "音声を二度シャドーイングする。",
+      },
+      {
+        en: "Write four kanji from memory.",
+        np: "यादबाट चार कांजी लेख्नुहोस्।",
+        jp: "漢字を四つ思い出し書きする。",
+      },
+    ],
   };
 }
 
