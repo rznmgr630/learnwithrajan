@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { ROADMAP_WEEKS, TOTAL_DAYS } from "@/lib/challenge-data";
 import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
@@ -34,7 +35,7 @@ function tagClass(slug: string) {
 }
 
 export function BackendRoadmap() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useBackend30Progress();
   const [openWeekId, setOpenWeekId] = useState<string | null>("w1");
   const [detailDay, setDetailDay] = useState<number | null>(null);
@@ -98,7 +99,7 @@ export function BackendRoadmap() {
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-neutral-800/50 sm:px-5"
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
-                <span className="flex-1 font-medium text-neutral-100">{week.title}</span>
+                <span className="flex-1 font-medium text-neutral-100">{pickLocalized(week.title, locale)}</span>
                 <span className="text-sm tabular-nums text-neutral-500">
                   {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
@@ -160,20 +161,20 @@ export function BackendRoadmap() {
                           </div>
                           <button
                             type="button"
-                            aria-label={`Open details for day ${d.day}: ${d.title}`}
+                            aria-label={`Open details for day ${d.day}: ${pickLocalized(d.title, locale)}`}
                             className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-neutral-950 transition hover:bg-neutral-800/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500/60"
                             onClick={() => setDetailDay(d.day)}
                           >
                             <h3 className="text-sm font-semibold leading-snug text-neutral-100">
-                              {d.title}
+                              {pickLocalized(d.title, locale)}
                             </h3>
                             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
-                              {d.tags.map((t) => (
+                              {d.tags.map((tag) => (
                                 <span
-                                  key={`${d.day}-${t.slug}`}
-                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tagClass(t.slug)}`}
+                                  key={`${d.day}-${tag.slug}`}
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${tagClass(tag.slug)}`}
                                 >
-                                  {t.label}
+                                  {pickLocalized(tag.label, locale)}
                                 </span>
                               ))}
                             </div>

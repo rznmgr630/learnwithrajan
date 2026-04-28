@@ -1,4 +1,4 @@
-import type { RoadmapDetailBlock } from "@/lib/challenge-data";
+import type { RoadmapDetailBlockResolved } from "@/lib/challenge-data";
 import { DayDetailDiagram } from "@/components/learn/DayDetailDiagrams";
 import { RichText } from "@/components/learn/RichText";
 
@@ -60,7 +60,7 @@ function DetailCode({ title, code }: { title?: string; code: string }) {
   );
 }
 
-export function DayDetailBlockRenderer({ blocks }: { blocks: RoadmapDetailBlock[] }) {
+export function DayDetailBlockRenderer({ blocks }: { blocks: RoadmapDetailBlockResolved[] }) {
   return (
     <div className="mt-3 space-y-4">
       {blocks.map((block, i) => {

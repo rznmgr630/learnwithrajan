@@ -1,15 +1,13 @@
 "use client";
 
-import { LOCALE_LABELS, LOCALES, type Locale } from "@/lib/i18n/types";
+import { LOCALE_FLAGS, LOCALE_LABELS, LOCALES, type Locale } from "@/lib/i18n/types";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const { locale, setLocale, t } = useLocale();
 
   return (
-    <label className={`flex items-center gap-2 text-sm ${className}`}>
-      <span className="sr-only">{t("nav.language")}</span>
-      <span className="hidden text-neutral-500 sm:inline">{t("nav.language")}</span>
+    <div className={`flex items-center ${className}`}>
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value as Locale)}
@@ -18,10 +16,10 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
       >
         {LOCALES.map((loc) => (
           <option key={loc} value={loc}>
-            {LOCALE_LABELS[loc]}
+            {LOCALE_FLAGS[loc]} {LOCALE_LABELS[loc]}
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }

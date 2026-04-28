@@ -1,0 +1,802 @@
+{
+"The request/response semantics are identical across versions. What changes is the transport: latency, multiplexing, and how packet loss hurts you.": {
+"np": "अनुरोध/प्रतिक्रिया अर्थशास्त्र सबै संस्करणहरूमा समान छन् । यातायातमा के परिवर्तन हुन्छ: विलम्बता, मल्टिप्लेक्सिङ, र प्याकेट नोक्सानीले तपाईंलाई कसरी पीडा दिन्छ ।",
+"jp": "要求/応答のセマンティクスは、バージョン間で同一です。変更点はトランスポートです。レイテンシ、多重化、およびパケット損失がどのようにあなたを傷つけるかです。"
+},
+"REST is an architectural style, not a protocol. The six constraints define how a distributed system should behave to gain scalability, visibility, and simplicity.": {
+"np": "विश्राम एक वास्तुकला शैली हो, प्रोटोकल होइन । छवटा अवरोधहरूले मापन, दृश्यता र सरलता प्राप्त गर्न वितरण गरिएको प्रणालीले कसरी व्यवहार गर्नुपर्छ भनेर परिभाषित गर्दछ ।",
+"jp": "RESTはアーキテクチャスタイルであり、プロトコルではありません。6つの制約は、スケーラビリティ、可視性、およびシンプルさを得るために分散システムがどのように動作するかを定義します。"
+},
+"Memorize the Wire and HoL columns â they come up in every system-design interview.": {
+"np": "तार र HoL स्तम्भहरू याद गर्नुहोस् - तिनीहरू प्रत्येक प्रणाली - डिजाइन अन्तर्वार्तामा आउँछन् ।",
+"jp": "WireとHoLの列を暗記します。これらは、システム設計の面接のたびに表示されます。"
+},
+"Safe = must not change persisted state. Idempotent = N identical calls == 1 call for server state.": {
+"np": "Safe = स्थिर अवस्था परिवर्तन गर्नु हुँदैन । आइडम्पोटेन्ट = N समान कलहरू == सर्भर अवस्थाको लागि १ कल ।",
+"jp": "SAFE =永続状態を変更してはなりません。Idempotent = N同一コール= =サーバー状態の1コール。"
+},
+"Plural collection names; keep nesting â¤ 2 levels deep.": {
+"np": "बहुवचन सङ्कलन नामहरू; घोंसला राख्नुहोस् ¤ २ तहहरू गहिरो ।",
+"jp": "複数のコレクション名。入れ子にしてください- 2レベルの深さ。"
+},
+"HTTP versions â what changed (with diagrams)": {
+"np": "HTTP संस्करणहरू - के परिवर्तन भयो (रेखाचित्रहरूको साथ)",
+"jp": "HTTPバージョン-何が変更されましたか（ダイアグラム付き）"
+},
+"HTTP methods â table + when to use each": {
+"np": "HTTP विधिहरू - तालिका + प्रत्येक प्रयोग गर्दा",
+"jp": "HTTPメソッド-テーブル+各メソッドを使用するタイミング"
+},
+"Idempotency in practice": {
+"np": "व्यवहारमा अदृश्यता",
+"jp": "実践における等電位性"
+},
+"Status codes â essentials + 401 vs 403": {
+"np": "स्थिति कोडहरू - अनिवार्य + 401 बनाम 403",
+"jp": "ステータスコード-必需品+ 401対403"
+},
+"Consistent error shape (RFC 9457 / application/problem+json)": {
+"np": "लगातार त्रुटि आकार (RFC 9457 / application/problem+json)",
+"jp": "一貫したエラーシェイプ（ RFC 9457/application/problem + json ）"
+},
+"REST â six constraints + request/response model": {
+"np": "आराम गर्नुहोस् - छ अवरोधहरू + अनुरोध/प्रतिक्रिया मोडेल",
+"jp": "REST - 6つの制約+リクエスト/レスポンスモデル"
+},
+"Resource URLs â bad vs good": {
+"np": "स्रोत URL हरू - खराब बनाम राम्रो",
+"jp": "リソースURL -悪いものvs良いもの"
+},
+"RPC-style (avoid for REST surfaces)": {
+"np": "RPC - शैली (बाँकी सतहहरूको लागि बेवास्ता गर्नुहोस्)",
+"jp": "RPCスタイル（休憩面は避けてください）"
+},
+"REST-style â nouns + HTTP verbs": {
+"np": "REST - शैली â nouns + HTTP क्रियाहरू",
+"jp": "RESTスタイルの名詞+ HTTP動詞"
+},
+"Versioning â compare strategies": {
+"np": "संस्करण - रणनीतिहरू तुलना गर्नुहोस्",
+"jp": "バージョニング-戦略の比較"
+},
+"URI version (most common first API)": {
+"np": "URI संस्करण (सबैभन्दा सामान्य पहिलो API)",
+"jp": "URIバージョン（最も一般的な最初のAPI ）"
+},
+"Headers â request/response cheat sheet": {
+"np": "हेडरहरू - अनुरोध/प्रतिक्रिया धोखा पाना",
+"jp": "ヘッダー-要求/応答チートシート"
+},
+"Conditional GET â zero bytes on cache hit": {
+"np": "सशर्त प्राप्त गर्नुहोस् - क्यास हिटमा शून्य बाइट्स",
+"jp": "条件付きGET -キャッシュヒット時にゼロバイト"
+},
+"Lab â minimal blog API": {
+"np": "ल्याब - न्यूनतम ब्लग एपीआई",
+"jp": "ラボ-最小限のブログAPI"
+},
+"Routes and expected status codes": {
+"np": "मार्गहरू र अपेक्षित स्थिति कोडहरू",
+"jp": "ルートと予想されるステータスコード"
+},
+"What is head-of-line blocking, and how do HTTP/2 and HTTP/3 address it?": {
+"np": "हेड - अफ - लाइन ब्लकिङ के हो, र HTTP/2 र HTTP/3 ले यसलाई कसरी सम्बोधन गर्छ?",
+"jp": "ヘッドオブラインブロッキングとは何ですか？ HTTP/2とHTTP/3はどのように対処しますか？"
+},
+"Why is HTTP/2 still affected by head-of-line blocking if it multiplexes streams?": {
+"np": "यदि यसले मल्टिप्लेक्स प्रवाह गर्छ भने किन HTTP/2 अझै पनि हेड - अफ - लाइन ब्लकिङबाट प्रभावित छ?",
+"jp": "HTTP/2がストリームを多重化してもヘッドオブラインブロックの影響を受け続けるのはなぜですか？"
+},
+"Does any HTTP version eliminate head-of-line blocking completely?": {
+"np": "के कुनै HTTP संस्करणले हेड - अफ - लाइन अवरोधलाई पूर्ण रूपमा हटाउँछ?",
+"jp": "どのHTTPバージョンでも、ヘッドオブラインブロックを完全に排除できますか？"
+},
+"What is the difference between `PUT` and `PATCH`?": {
+"np": "`PUT` र `patch` मा के फरक छ?",
+"jp": "「PUT」と「PATCH」の違いは何ですか？"
+},
+"When should I use `PUT` vs `POST` for creating resources?": {
+"np": "स्रोतहरू सिर्जना गर्न मैले `PUT` बनाम `POST` कहिले प्रयोग गर्नुपर्छ?",
+"jp": "リソースの作成に「PUT」と「POST」を使用する必要があるのはどのような場合ですか？"
+},
+"What is the difference between `401 Unauthorized` and `403 Forbidden`?": {
+"np": "`401 अनधिकृत' र `403 निषेधित` बीच के भिन्नता छ?",
+"jp": "「401 Unauthorized」と「403 Forbidden」の違いは何ですか？"
+},
+"What status code should a `POST` that creates a resource return, and which header is required?": {
+"np": "रिसोर्स रिटर्न सिर्जना गर्ने `POST` कुन स्थिति कोड हुनुपर्छ, र कुन हेडर आवश्यक छ?",
+"jp": "リソースを作成する「POST」はどのステータスコードを返す必要があり、どのヘッダーが必要ですか？"
+},
+"List the six REST constraints.": {
+"np": "छ विश्राम अवरोधहरू सूचीबद्ध गर्नुहोस् ।",
+"jp": "6つのREST制約をリストアップします。"
+},
+"What is HATEOAS, and do most JSON APIs implement it fully?": {
+"np": "HATEOAS के हो, र के धेरै जसो JSON API हरुले यसलाई पूर्ण रूपमा लागू गर्छन्?",
+"jp": "HATEOASとは何ですか、そしてほとんどのJSON APIはそれを完全に実装していますか？"
+},
+"Why is `POST /deleteUser` not RESTful, and how should it be designed?": {
+"np": "`POST /deleteUser' किन RESTful छैन, र यसलाई कसरी डिजाइन गर्नुपर्छ?",
+"jp": "`POST/deleteUser`がRESTfulではないのはなぜですか？また、どのように設計する必要がありますか？"
+},
+"Why prefer noun-based URLs over verb-based RPC paths?": {
+"np": "क्रिया - आधारित RPC मार्गहरू भन्दा संज्ञा - आधारित URL हरू किन रुचाउनुहुन्छ?",
+"jp": "動詞ベースのRPCパスよりも名詞ベースのURLを好むのはなぜですか？"
+},
+"What are the three main API versioning strategies and their trade-offs?": {
+"np": "तीन मुख्य API संस्करण रणनीतिहरू र तिनीहरूको ट्रेड - अफहरू के हुन्?",
+"jp": "3つの主なAPIバージョニング戦略とそのトレードオフは何ですか？"
+},
+"How should nested resource URLs be designed, and is there a practical depth limit?": {
+"np": "नेस्टेड स्रोत URL हरू कसरी डिजाइन गर्नुपर्छ, र के त्यहाँ व्यावहारिक गहिराइ सीमा छ?",
+"jp": "ネストされたリソースURLはどのように設計されるべきですか？実用的な深さの制限はありますか？"
+},
+"How do `ETag`s and `If-None-Match` enable conditional `GET`?": {
+"np": "'ETag's र` If - No - Match`ले सशर्त' GET`कसरी सक्षम गर्छ?",
+"jp": "「ETag」と「If - None - Match」はどのようにして条件付き「取得」を有効にしますか？"
+},
+"HoL blocking": {
+"np": "HoL ब्लकिङ",
+"jp": "HoLブロッキング"
+},
+"HTTP/2 TCP limitation": {
+"np": "HTTP/2 TCP सीमा",
+"jp": "HTTP/2 TCP制限"
+},
+"HTTP/3 vs HTTP/2 HoL": {
+"np": "HTTP/3 बनाम HTTP/2 HoL",
+"jp": "HTTP/3対HTTP/2 HoL"
+},
+"Idempotency": {
+"np": "अदृश्य शक्ति",
+"jp": "Idempotency"
+},
+"Safe methods": {
+"np": "सुरक्षित विधिहरू",
+"jp": "安全な方法"
+},
+"PUT vs PATCH": {
+"np": "PUT VS PATCH",
+"jp": "PUT vs PATCH"
+},
+"PUT vs POST for creates": {
+"np": "सिर्जनाको लागि पोष्ट बनाम पोष्ट राख्नुहोस्",
+"jp": "作成のPUT vs POST"
+},
+"401 vs 403": {
+"np": "401 बनाम 403",
+"jp": "401対403"
+},
+"REST stateless constraint": {
+"np": "राज्यविहीन अवरोधमा आराम गर्नुहोस्",
+"jp": "RESTステートレス制約"
+},
+"POST 201 + Location": {
+"np": "पोस्ट 201 + स्थान",
+"jp": "POST 201 +ロケーション"
+},
+"REST constraints": {
+"np": "विश्राम प्रतिबन्धहरू",
+"jp": "REST制約"
+},
+"HATEOAS": {
+"np": "HATEOAS",
+"jp": "HATEOAS"
+},
+"RPC vs REST": {
+"np": "RPC vs REST",
+"jp": "RPCとRESTの比較"
+},
+"URL design": {
+"np": "URL डिजाइन",
+"jp": "URLデザイン"
+},
+"API versioning": {
+"np": "API संस्करण",
+"jp": "APIバージョン管理"
+},
+"Nested resources": {
+"np": "नेस्टेड स्रोतहरू",
+"jp": "ネストされたリソース"
+},
+"Conditional GET / ETags": {
+"np": "सशर्त GET / ETags",
+"jp": "条件付きGET/ETag"
+},
+"HTTP/2 fixes application-level HoL. HTTP/3 / QUIC fixes transport-level HoL.": {
+"np": "HTTP/2 अनुप्रयोग - स्तर HoL फिक्स गर्दछ । HTTP/3 /QUIC ले यातायात - स्तर HoL फिक्स गर्दछ ।",
+"jp": "HTTP/2は、アプリケーションレベルのHoLを修正します。HTTP/3/QUICは、トランスポートレベルのHoLを修正します。"
+},
+"TCP's shared byte stream is the root cause. QUIC's per-stream reliability removes it.": {
+"np": "TCP को साझा बाइट स्ट्रिम मूल कारण हो । QUIC को प्रति - प्रवाह विश्वसनीयताले यसलाई हटाउँछ ।",
+"jp": "TCPの共有バイトストリームが根本原因です。QUICのストリームごとの信頼性がそれを取り除きます。"
+},
+"Measure before assuming. On reliable links HTTP/2 is often enough.": {
+"np": "ग्रहण गर्नु अघि मापन गर्नुहोस् । भरपर्दो लिंकहरूमा HTTP/2 प्रायः पर्याप्त हुन्छ ।",
+"jp": "想定する前に測定してください。信頼性の高いリンクでは、HTTP/2で十分であることがよくあります。"
+},
+"Safe to retry without side effects = idempotent. POST is not, by default.": {
+"np": "साइड इफेक्ट बिना पुनः प्रयास गर्न सुरक्षित = idempotent । POST पूर्वनिर्धारित रूपमा होइन ।",
+"jp": "副作用なしで再試行しても安全=幂等。デフォルトでは、POSTはではありません。"
+},
+"Safe = no state change. GET, HEAD, OPTIONS. Safe â idempotent.": {
+"np": "सुरक्षित = कुनै राज्य परिवर्तन छैन । प्राप्त गर्नुहोस्, टाउको, विकल्पहरू । सुरक्षित - idempotent ।",
+"jp": "安全=状態の変更はありません。GET、HEAD、OPTIONS。SAFE - â idempotent。"
+},
+"PUT replaces the whole resource. PATCH changes a part of it.": {
+"np": "PUT ले सम्पूर्ण स्रोतलाई प्रतिस्थापन गर्दछ । प्याचले यसको एक भाग परिवर्तन गर्दछ ।",
+"jp": "PUTはリソース全体を置き換えます。パッチはその一部を変更します。"
+},
+"Server assigns the id? POST to collection. Client owns the URI? PUT.": {
+"np": "सर्भरले आईडी असाइन गर्छ? संग्रहमा पोष्ट गर्नुहोस् । ग्राहक URI को मालिक हो? राख्नुहोस् ।",
+"jp": "サーバーがIDを割り当てますか？コレクションに投稿します。クライアントはURI? PUTを所有しています。"
+},
+"401: who are you? Authenticate first. 403: I know who you are â still no.": {
+"np": "401: तपाईं को हुनुहुन्छ? पहिले प्रमाणीकरण गर्नुहोस् । 403: मलाई थाहा छ तपाईं को हुनुहुन्छ - अझै पनि छैन ।",
+"jp": "401:あなたは誰ですか?最初に認証してください。403 ：私はあなたが誰であるかを知っています-まだいいえ。"
+},
+"Stateless = every request is self-contained. Enables horizontal scaling and safe retries.": {
+"np": "Stateless = प्रत्येक अनुरोध आत्म - निहित छ । तेर्सो मापन र सुरक्षित पुनः प्रयास सक्षम गर्दछ ।",
+"jp": "ステートレス=すべてのリクエストは自己完結型です。水平スケーリングと安全な再試行を有効にします。"
+},
+"POST â 201 + Location header. Give the caller the URI of the new resource.": {
+"np": "201 + स्थान हेडर पोस्ट गर्नुहोस् । कलरलाई नयाँ स्रोतको URI दिनुहोस् ।",
+"jp": "POST â 201 + Locationヘッダー。発信者に新しいリソースのURIを指定します。"
+},
+"Stateless and uniform interface are the two that bite most in practice.": {
+"np": "स्टेटलेस र युनिफर्म इन्टरफेस ती दुई हुन् जसले व्यवहारमा सबैभन्दा बढी टोक्छन् ।",
+"jp": "ステートレスで均一なインターフェースは、実際に最も噛み付く2つのインターフェースです。"
+},
+"Most JSON APIs ship partial HATEOAS: pagination links and self/related resource URLs.": {
+"np": "धेरै जसो JSON API हरू आंशिक HATEOAS पठाउँछन्: पृष्ठ लिंकहरू र स्वयं/सम्बन्धित स्रोत URL हरू ।",
+"jp": "ほとんどのJSON APIは、部分的なHATEOAS ：ページネーションリンクと自己/関連リソースURLを出荷します。"
+},
+"HTTP already has DELETE. Use it.": {
+"np": "HTTP ले पहिले नै मेटिसकेको छ । यसलाई प्रयोग गर्नुहोस् ।",
+"jp": "HTTPには既にDELETEがあります。使用してください。"
+},
+"Nouns + HTTP verbs = REST. Path verbs duplicate what the method already says.": {
+"np": "संज्ञाहरू + HTTP क्रियाहरू = REST । मार्ग क्रियाले विधिले पहिले नै के भन्छ नक्कल गर्दछ ।",
+"jp": "名詞+ HTTP動詞=休止。パス動詞は、メソッドがすでに言っているものと重複しています。"
+},
+"URI versioning is the most pragmatic default for a first API.": {
+"np": "URI संस्करण पहिलो API को लागि सबैभन्दा व्यावहारिक पूर्वनिर्धारित हो ।",
+"jp": "URIのバージョン管理は、最初のAPIの最も実用的なデフォルトです。"
+},
+"Two levels deep max. Flatten with a query param for loose relations.": {
+"np": "दुई तहहरू गहिरो अधिकतम । ढीला सम्बन्धहरूको लागि क्वेरी प्यारामसँग फ्ल्याट गर्नुहोस् ।",
+"jp": "最大2レベルの深さ。緩い関係のクエリパラメータでフラット化します。"
+},
+"ETag + If-None-Match â 304 = zero bytes transferred for unchanged resources.": {
+"np": "ETag + If - No - Match - 304 = शून्य बाइटहरू अपरिवर्तित स्रोतहरूको लागि हस्तान्तरण गरियो ।",
+"jp": "ETag + If - None - Match - â 304 =変更されていないリソースに転送されたゼロバイト。"
+},
+"HTTP is the protocol every backend engineer lives in. Every browser fetch, mobile API call, and service-to-service request is an HTTP exchange. Day 1 builds the mental model: how versions differ at the transport layer, which method to reach for, what status code to return, and why REST's six constraints exist.": {
+"np": "HTTP प्रत्येक ब्याकइन्ड ईन्जिनियर बस्ने प्रोटोकल हो । प्रत्येक ब्राउजर फेच, मोबाइल एपीआई कल, र सेवा - देखि - सेवा अनुरोध एक HTTP एक्सचेन्ज हो । दिन 1 ले मानसिक मोडेल निर्माण गर्दछ: यातायात तहमा संस्करणहरू कसरी फरक हुन्छन्, कुन विधिमा पुग्ने, कुन स्थिति कोड फर्काउने, र किन बाँकीको छ अवरोधहरू अवस्थित छन् ।",
+"jp": "HTTPは、すべてのバックエンドエンジニアが使用するプロトコルです。すべてのブラウザフェッチ、モバイルAPI呼び出し、およびサービスツーサービスリクエストはHTTP交換です。1日目はメンタルモデルを構築します。トランスポート層でのバージョンの違い、到達するメソッド、返すステータスコード、RESTの6つの制約が存在する理由です。"
+},
+"Work through the tables, run the blog-API lab (`/api/v1/posts`), and answer the self-check questions cold before Day 2.": {
+"np": "तालिकाहरू मार्फत काम गर्नुहोस्, ब्लग - एपीआई ल्याब ('/ api/v1/posts ') चलाउनुहोस्, र दिन 2 अघि चिसो प्रश्नहरूको जवाफ दिनुहोस् ।",
+"jp": "テーブルを確認し、blog - APIラボ（'/ api/v 1/posts '）を実行し、2日目までにセルフチェックの質問に答えます。"
+},
+"Implement the blog routes; hit each with `curl` and verify the status code + Location header on POST.": {
+"np": "ब्लग मार्गहरू लागू गर्नुहोस्; प्रत्येकलाई `कर्ल` मा हिर्काउनुहोस् र स्थिति कोड + पोस्टमा स्थान हेडर प्रमाणित गर्नुहोस् ।",
+"jp": "ブログのルートを実装します。それぞれを「curl」でクリックし、ステータスコードと投稿のLocationヘッダーを確認します。"
+},
+"Add a test that asserts `401` vs `403` on the same route with two different fixtures.": {
+"np": "दुई फरक फिक्स्चरको साथ एउटै मार्गमा `401` बनाम `403` दाबी गर्ने परीक्षण थप्नुहोस् ।",
+"jp": "2つの異なるフィクスチャを持つ同じルート上の「401」と「403」をアサートするテストを追加します。"
+},
+"Before Day 2, explain `PUT` vs `POST` idempotency and TCP vs QUIC HoL in one minute each.": {
+"np": "दिन 2 अघि, `PUT` vs `POST` idempotency र TCP vs QUIC HoL प्रत्येकलाई एक मिनेटमा व्याख्या गर्नुहोस् ।",
+"jp": "2日目の前に、「PUT」と「POST」のイデポテンシーとTCPとQUIC HoLをそれぞれ1分で説明します。"
+},
+"PostgreSQL uses Multi-Version Concurrency Control (MVCC). Every row has hidden xmin (transaction that created it) and xmax (transaction that deleted/updated it) columns. A reader always sees the latest committed version as of its transaction start â no read lock needed. Writers create a new row version rather than overwriting.": {
+"np": "PostgreSQL ले बहु - संस्करण Concurrency Control (MVCC) प्रयोग गर्दछ । प्रत्येक पङ्क्तिमा xmin (लेनदेन जसले यसलाई सिर्जना गर्यो) र xmax (लेनदेन जसले यसलाई मेटायो/अद्यावधिक गर्यो) स्तम्भहरू लुकेका छन् । एक पाठकले सँधै भर्खरको प्रतिबद्ध संस्करणलाई यसको लेनदेनको सुरुवातको रूपमा देख्छ - कुनै पठन लक आवश्यक छैन । लेखकहरूले अधिलेखन गर्नुको सट्टा नयाँ पङ्क्ति संस्करण सिर्जना गर्छन् ।",
+"jp": "PostgreSQLは、Multi - Version Concurrency Control （ MVCC ）を使用します。すべての行には、xmin （それを作成したトランザクション）とxmax （それを削除/更新したトランザクション）列が隠されています。読者は常にトランザクションの開始時点で最新のコミットバージョンを確認します。読み取りロックは必要ありません。ライターは、上書きするのではなく、新しい行バージョンを作成します。"
+},
+"A deadlock occurs when two transactions each hold a lock the other needs, and both wait indefinitely. PostgreSQL detects cycles automatically and rolls back one transaction (the victim) with error code 40P01. Your application must catch this and retry.": {
+"np": "गतिरोध तब हुन्छ जब दुई लेनदेनहरू प्रत्येकले अर्को आवश्यकतालाई ताल्चा लगाउँछन्, र दुबै अनिश्चित कालसम्म पर्खन्छन् । PostgreSQL ले स्वचालित रूपमा चक्रहरू पत्ता लगाउँछ र त्रुटि कोड 40P01 को साथ एक लेनदेन (पीडित) फिर्ता रोल गर्दछ । तपाईंको आवेदनले यसलाई समात्नुपर्छ र पुन: प्रयास गर्नुपर्छ ।",
+"jp": "デッドロックは、2つのトランザクションがそれぞれ互いに必要なロックを保持し、両方が無期限に待機する場合に発生します。PostgreSQLはサイクルを自動的に検出し、エラーコード40 P 01で1つのトランザクション（被害者）をロールバックします。アプリケーションはこれをキャッチして再試行する必要があります。"
+},
+"All four must hold for a system to be considered transactionally correct.": {
+"np": "यी चारै जनाले व्यवहारिक रूपमा सही मानिने प्रणालीको लागि समात्नु पर्छ ।",
+"jp": "システムがトランザクション的に正しいと見なされるには、4つすべてが保持されている必要があります。"
+},
+"PostgreSQL default is Read Committed. MySQL InnoDB default is Repeatable Read.": {
+"np": "PostgreSQL पूर्वनिर्धारित पढ्न प्रतिबद्ध छ । MySQL InnoDB पूर्वनिर्धारित दोहोरिने योग्य पढाइ हो ।",
+"jp": "PostgreSQLのデフォルトはRead Committedです。MySQL InnoDBのデフォルトはRepeatable Readです。"
+},
+"Know the anomaly definitions â interviewers ask for them.": {
+"np": "अन्तर्वार्ताकारहरूले उनीहरूका लागि सोध्ने विसंगति परिभाषाहरू जान्नुहोस् ।",
+"jp": "面接官が求めている異常の定義を理解する。"
+},
+"ACID properties": {
+"np": "एसिड गुणहरू",
+"jp": "酸の特性"
+},
+"Isolation levels â anomalies and defences": {
+"np": "आइसोलेसन स्तर - विसंगति र सुरक्षा",
+"jp": "アイソレーションレベル-異常と防御"
+},
+"MVCC â how PostgreSQL avoids most locks": {
+"np": "MVCC - कसरी PostgreSQL ले धेरै जसो लकहरूलाई बेवास्ता गर्दछ",
+"jp": "MVCC - PostgreSQLがほとんどのロックを回避する方法"
+},
+"Locking â pessimistic vs optimistic": {
+"np": "ताल्चा लगाउनु - निराशावादी बनाम आशावादी",
+"jp": "ロック-悲観的vs楽観的"
+},
+"Pessimistic lock â SELECT FOR UPDATE": {
+"np": "निराशावादी लक - अद्यावधिकको लागि चयन गर्नुहोस्",
+"jp": "悲観的なロック-更新のために選択"
+},
+"Optimistic concurrency â version column": {
+"np": "आशावादी एकरूपता - संस्करण स्तम्भ",
+"jp": "Optimistic concurrency - versionカラム"
+},
+"Deadlocks â detection and prevention": {
+"np": "डेडलकहरू - पत्ता लगाउने र रोकथाम",
+"jp": "デッドロック-検出と防止"
+},
+"Deadlock-safe funds transfer â consistent lock order": {
+"np": "डेडलक - सुरक्षित कोष स्थानान्तरण - लगातार लक अर्डर",
+"jp": "デッドロックセーフな資金移動-一貫したロック順序"
+},
+"Transaction anti-patterns": {
+"np": "कारोबार विरोधी ढाँचाहरू",
+"jp": "トランザクションのアンチパターン"
+},
+"Savepoints â partial rollback": {
+"np": "बचत पोइन्टहरू - आंशिक रोलब्याक",
+"jp": "セーブポイント-部分的なロールバック"
+},
+"Savepoint usage (PostgreSQL)": {
+"np": "बचतपोइन्ट प्रयोग (PostgreSQL)",
+"jp": "セーブポイントの使用(PostgreSQL)"
+},
+"What does ACID mean and which property is hardest to achieve?": {
+"np": "एसिडको अर्थ के हो र कुन गुण प्राप्त गर्न गाह्रो छ?",
+"jp": "ACIDとは何を意味し、どの特性を達成するのが最も難しいですか？"
+},
+"What is a non-repeatable read and why does Read Committed allow it?": {
+"np": "दोहोर्याउन नसकिने पठन भनेको के हो र पठन प्रतिबद्धले यसलाई किन अनुमति दिन्छ?",
+"jp": "繰り返しできない読み取りとは何ですか？なぜコミットされた読み取りが許可されているのですか？"
+},
+"How does MVCC work in PostgreSQL?": {
+"np": "PostgreSQL मा MVCC ले कसरी काम गर्छ?",
+"jp": "MVCCはPostgreSQLでどのように機能しますか？"
+},
+"When should I use SELECT FOR UPDATE?": {
+"np": "मैले अद्यावधिकको लागि SELECT कहिले प्रयोग गर्नुपर्छ?",
+"jp": "更新にSELECTを使用する必要があるのはいつですか？"
+},
+"How do you prevent deadlocks in a funds transfer?": {
+"np": "तपाईं कसरी कोष स्थानान्तरणमा डेडलकहरू रोक्न सक्नुहुन्छ?",
+"jp": "資金移動のデッドロックを防ぐにはどうすればよいですか？"
+},
+"What is the difference between optimistic and pessimistic locking?": {
+"np": "आशावादी र निराशावादी ताला लगाउनुमा के फरक छ?",
+"jp": "楽観的ロックと悲観的ロックの違いは何ですか？"
+},
+"What is Serializable Snapshot Isolation (SSI)?": {
+"np": "सिरियलाइजेबल स्न्यापशट आइसोलेसन (Serializable Snapshot Isolation) (SSI) के हो?",
+"jp": "シリアライズ可能なスナップショットアイソレーション（ SSI ）とは何ですか？"
+},
+"Why should you keep transactions short?": {
+"np": "तपाईंले लेनदेन किन छोटो राख्नुपर्छ?",
+"jp": "トランザクションを短くする必要があるのはなぜですか？"
+},
+"ACID": {
+"np": "एसिड",
+"jp": "アシッド"
+},
+"Isolation anomalies": {
+"np": "आइसोलेसन विसंगतिहरू",
+"jp": "アイソレーション異常"
+},
+"MVCC": {
+"np": "MVCC",
+"jp": "MVCC"
+},
+"Locking": {
+"np": "ताल्चा गर्दै",
+"jp": "上锁中"
+},
+"Deadlocks": {
+"np": "डेडलकहरू",
+"jp": "デッドロック"
+},
+"Locking strategies": {
+"np": "लक गर्ने रणनीतिहरू",
+"jp": "ロック戦略"
+},
+"Serializability": {
+"np": "क्रमबद्धता",
+"jp": "直列化可能性"
+},
+"Transaction design": {
+"np": "कारोबार डिजाइन",
+"jp": "トランザクションデザイン"
+},
+"D is cheapest (WAL + fsync). I is most nuanced. Know all four cold.": {
+"np": "D सबैभन्दा सस्तो छ (WAL + fsync) । म सबैभन्दा सूक्ष्म छु । सबै चार चिसो थाहा छ ।",
+"jp": "Dが最も安い（ WAL + fsync ）。私は最も微妙です。4つの風邪をすべて知ってください。"
+},
+"Read-check-write sequences without FOR UPDATE are race conditions.": {
+"np": "अद्यावधिक बिना पढ्ने - जाँच - लेख्ने अनुक्रमहरू जातीय अवस्थाहरू हुन् ।",
+"jp": "更新なしの読み取り-チェック-書き込みシーケンスは競合条件です。"
+},
+"A transaction is a unit of work that is atomic — it either completes fully or not at all. ACID properties define what 'correctly' means at the database level. Isolation levels control how much work in progress one transaction can see from another. Getting these wrong causes bugs that only appear under concurrent load — the hardest class of production incident to diagnose.": {
+"np": "लेनदेन भनेको कामको एकाइ हो जुन आणविक हो — यो या त पूर्ण रूपमा पूरा हुन्छ वा हुँदैन । एसिड गुणहरूले डाटाबेस स्तरमा 'सही' को अर्थ के हो भनेर परिभाषित गर्दछ । आइसोलेसन स्तरले एक लेनदेनले अर्कोबाट कति काम प्रगतिमा देख्न सक्छ भनेर नियन्त्रण गर्दछ । यी गलत कारणहरू प्राप्त गर्नाले बगहरू मात्र समवर्ती लोड अन्तर्गत देखा पर्छन् — निदान गर्न उत्पादन घटनाको सबैभन्दा कठिन वर्ग ।",
+"jp": "トランザクションはアトミックな作業単位です。完全に完了するか、まったく完了しないかのどちらかです。ACIDプロパティは、データベースレベルで「正しく」何を意味するかを定義します。アイソレーションレベルは、あるトランザクションが別のトランザクションから表示できる進行中の作業の量を制御します。これらの誤りを犯すと、バグが発生し、同時にロードされた場合にのみ発生します。これは、診断が最も困難な本番インシデントのクラスです。"
+},
+"Day 10 builds the mental model: ACID guarantees, isolation level anomalies, locking mechanics, and deadlocks. These topics appear in every senior system-design and backend interview.": {
+"np": "दिन 10 ले मानसिक मोडेल निर्माण गर्दछ: एसिड ग्यारेन्टीहरू, अलगाव स्तर विसंगतिहरू, मेकानिक्स लक गर्ने, र डेडलकहरू । यी विषयहरू प्रत्येक वरिष्ठ प्रणाली - डिजाइन र ब्याकइन्ड अन्तर्वार्तामा देखा पर्छन् ।",
+"jp": "10日目はメンタルモデルを構築します：アシッド保証、隔離レベルの異常、ロックの仕組み、デッドロック。これらのトピックは、すべてのシニアシステムデザインとバックエンドインタビューに表示されます。"
+},
+"Write a test that demonstrates a dirty read at Read Uncommitted and shows it is prevented at Read Committed (use two concurrent connections).": {
+"np": "एक परीक्षण लेख्नुहोस् जसले Read Uncommitted मा फोहोर पठन प्रदर्शन गर्दछ र Read Committed मा यसलाई रोकिएको देखाउँछ (दुई समवर्ती जडानहरू प्रयोग गर्नुहोस्) ।",
+"jp": "Read Uncommittedでダーティーな読み取りを示し、Read Committedでダーティーな読み取りが防止されていることを示すテストを記述します（ 2つの同時接続を使用します）。"
+},
+"Implement optimistic concurrency in a REST handler: read version, update with WHERE version = ?, return 409 on conflict.": {
+"np": "रेस्ट ह्यान्डलरमा आशावादी सहमति लागू गर्नुहोस्: संस्करण पढ्नुहोस्, कहाँ संस्करण =? सँग अद्यावधिक गर्नुहोस्, द्वन्द्वमा 409 फिर्ता गर्नुहोस् ।",
+"jp": "RESTハンドラに楽観的な並行処理を実装します。バージョンを読み取り、version =?で更新し、競合が発生した場合は409を返します。"
+},
+"Create a deadlock in a local PostgreSQL instance, observe the error code 40P01, and implement the consistent-lock-order fix.": {
+"np": "स्थानीय PostgreSQL उदाहरणमा गतिरोध सिर्जना गर्नुहोस्, त्रुटि कोड 40P01 अवलोकन गर्नुहोस्, र लगातार - लक - अर्डर फिक्स लागू गर्नुहोस् ।",
+"jp": "ローカルPostgreSQLインスタンスにデッドロックを作成し、エラーコード40 P 01を観察し、一貫したロック順序の修正を実装します。"
+},
+"The CAP theorem (Brewer, 2000) states that a distributed system can guarantee at most two of three properties during a network partition: Consistency (every read sees the latest write), Availability (every request gets a response), and Partition tolerance (system continues during network splits).": {
+"np": "CAP प्रमेय (Brewer, 2000) ले भन्छ कि एक वितरण प्रणालीले नेटवर्क विभाजनको समयमा तीन मध्ये बढीमा दुई गुणहरूको ग्यारेन्टी गर्न सक्छ: स्थिरता (प्रत्येक पठनले भर्खरको लेखन देख्छ), उपलब्धता (प्रत्येक अनुरोधले प्रतिक्रिया प्राप्त गर्दछ), र विभाजन सहिष्णुता (प्रणाली नेटवर्क विभाजनको समयमा जारी रहन्छ) ।",
+"jp": "ＣＡＰ定理（ Ｂｒｕｅｒ ， ２ ０ ０ ０ ）は、分散システムが、ネットワークパーティション中に、一貫性（すべての読み取りが最新の書き込みを見る）、可用性（すべての要求が応答を得る）、及びパーティション許容度（システムがネットワーク分割中に継続する）の３つのプロパティのうちの最大２つを保証することができると述べている。"
+},
+"PACELC extends CAP: even without a partition (normal operation), there is a trade-off between latency and consistency. A system that synchronously replicates to all nodes is consistent but slower. Asynchronous replication is faster but allows momentarily stale reads.": {
+"np": "PACELC ले क्याप विस्तार गर्दछ: विभाजन (सामान्य अपरेशन) बिना पनि, विलम्बता र स्थिरता बीचको व्यापार बन्द हुन्छ । सबै नोडहरूमा सिंक्रोनाइज रूपमा दोहोरिने प्रणाली सुसंगत तर ढिलो हुन्छ । एसिन्क्रोनस प्रतिकृति छिटो छ तर क्षणिक रूपमा बासी पढ्न अनुमति दिन्छ ।",
+"jp": "PACELC extends CAP: even without a partition (normal operation), there is a trade-off between latency and consistency. A system that synchronously replicates to all nodes is consistent but slower. Asynchronous replication is faster but allows momentarily stale reads."
+},
+"BASE is not 'ACID but worse' â it is a deliberate trade-off for scale. Twitter's timeline, Amazon's shopping cart, and DNS are BASE systems. Financial ledgers are ACID. Know which your feature needs before choosing.": {
+"np": "BASE is not 'ACID but worse' â it is a deliberate trade-off for scale. Twitter's timeline, Amazon's shopping cart, and DNS are BASE systems. Financial ledgers are ACID. Know which your feature needs before choosing.",
+"jp": "BASE is not 'ACID but worse' â it is a deliberate trade-off for scale. Twitter's timeline, Amazon's shopping cart, and DNS are BASE systems. Financial ledgers are ACID. Know which your feature needs before choosing."
+},
+"Great post!": {
+"np": "Great post!",
+"jp": "Great post!"
+},
+"DynamoDB has no joins and no server-side aggregation. Every access pattern must be pre-designed into the partition key (PK) and sort key (SK). The single-table design pattern stores multiple entity types in one table, using composite keys and item type prefixes to enable rich queries with a single request.": {
+"np": "DynamoDB has no joins and no server-side aggregation. Every access pattern must be pre-designed into the partition key (PK) and sort key (SK). The single-table design pattern stores multiple entity types in one table, using composite keys and item type prefixes to enable rich queries with a single request.",
+"jp": "DynamoDB has no joins and no server-side aggregation. Every access pattern must be pre-designed into the partition key (PK) and sort key (SK). The single-table design pattern stores multiple entity types in one table, using composite keys and item type prefixes to enable rich queries with a single request."
+},
+"Great!": {
+"np": "Great!",
+"jp": "Great!"
+},
+"Eventual consistency means a write on one replica propagates to others asynchronously. During propagation, a read on another replica may return the old value. The system guarantees convergence â once writes stop, all replicas will eventually agree.": {
+"np": "Eventual consistency means a write on one replica propagates to others asynchronously. During propagation, a read on another replica may return the old value. The system guarantees convergence â once writes stop, all replicas will eventually agree.",
+"jp": "Eventual consistency means a write on one replica propagates to others asynchronously. During propagation, a read on another replica may return the old value. The system guarantees convergence â once writes stop, all replicas will eventually agree."
+},
+"Choose by access pattern, not by familiarity with the brand.": {
+"np": "Choose by access pattern, not by familiarity with the brand.",
+"jp": "Choose by access pattern, not by familiarity with the brand."
+},
+"Network partitions always happen â the real choice is C vs A during a partition.": {
+"np": "Network partitions always happen â the real choice is C vs A during a partition.",
+"jp": "Network partitions always happen â the real choice is C vs A during a partition."
+},
+"NoSQL data model shapes": {
+"np": "NoSQL data model shapes",
+"jp": "NoSQL data model shapes"
+},
+"CAP theorem": {
+"np": "CAP theorem",
+"jp": "CAP theorem"
+},
+"BASE vs ACID": {
+"np": "BASE vs ACID",
+"jp": "BASE vs ACID"
+},
+"MongoDB â document design patterns": {
+"np": "MongoDB â document design patterns",
+"jp": "MongoDB â document design patterns"
+},
+"Embed vs reference â the core design decision": {
+"np": "Embed vs reference â the core design decision",
+"jp": "Embed vs reference â the core design decision"
+},
+"CAP Theorem explained": {
+"np": "CAP Theorem explained",
+"jp": "CAP Theorem explained"
+},
+"Indexes in MongoDB": {
+"np": "Indexes in MongoDB",
+"jp": "Indexes in MongoDB"
+},
+"text": {
+"np": "text",
+"jp": "text"
+},
+"DynamoDB â single-table design": {
+"np": "DynamoDB â single-table design",
+"jp": "DynamoDB â single-table design"
+},
+"Single-table design â users + posts + comments": {
+"np": "Single-table design â users + posts + comments",
+"jp": "Single-table design â users + posts + comments"
+},
+"CAP Theorem": {
+"np": "CAP Theorem",
+"jp": "CAP Theorem"
+},
+"ACID vs BASE": {
+"np": "ACID vs BASE",
+"jp": "ACID vs BASE"
+},
+"Eventual consistency in practice": {
+"np": "Eventual consistency in practice",
+"jp": "Eventual consistency in practice"
+},
+"What does the CAP theorem actually tell you in practice?": {
+"np": "What does the CAP theorem actually tell you in practice?",
+"jp": "What does the CAP theorem actually tell you in practice?"
+},
+"When should I use a document database instead of a relational one?": {
+"np": "When should I use a document database instead of a relational one?",
+"jp": "When should I use a document database instead of a relational one?"
+},
+"What is eventual consistency and what problems can it cause?": {
+"np": "What is eventual consistency and what problems can it cause?",
+"jp": "What is eventual consistency and what problems can it cause?"
+},
+"What is the DynamoDB single-table design pattern and why use it?": {
+"np": "What is the DynamoDB single-table design pattern and why use it?",
+"jp": "What is the DynamoDB single-table design pattern and why use it?"
+},
+"What is a hot partition and how do you avoid it?": {
+"np": "What is a hot partition and how do you avoid it?",
+"jp": "What is a hot partition and how do you avoid it?"
+},
+"What is BASE and how does it differ from ACID?": {
+"np": "What is BASE and how does it differ from ACID?",
+"jp": "What is BASE and how does it differ from ACID?"
+},
+"When should I embed vs reference in MongoDB?": {
+"np": "When should I embed vs reference in MongoDB?",
+"jp": "When should I embed vs reference in MongoDB?"
+},
+"Document vs relational": {
+"np": "Document vs relational",
+"jp": "Document vs relational"
+},
+"Eventual consistency": {
+"np": "Eventual consistency",
+"jp": "Eventual consistency"
+},
+"DynamoDB": {
+"np": "DynamoDB",
+"jp": "DynamoDB"
+},
+"DynamoDB / Cassandra": {
+"np": "DynamoDB / Cassandra",
+"jp": "DynamoDB / Cassandra"
+},
+"MongoDB design": {
+"np": "MongoDB design",
+"jp": "MongoDB design"
+},
+"P is non-negotiable in distributed systems. The choice is C vs A during a partition.": {
+"np": "P is non-negotiable in distributed systems. The choice is C vs A during a partition.",
+"jp": "P is non-negotiable in distributed systems. The choice is C vs A during a partition."
+},
+"Design your DynamoDB keys around access patterns, not entity shapes.": {
+"np": "Design your DynamoDB keys around access patterns, not entity shapes.",
+"jp": "Design your DynamoDB keys around access patterns, not entity shapes."
+},
+"NoSQL is not a replacement for relational databases — it is a family of trade-offs. Document, key-value, column-family, and graph stores each optimise for a different access pattern and sacrifice different guarantees. The CAP theorem and eventual consistency are the theoretical bedrock for understanding those trade-offs.": {
+"np": "NoSQL is not a replacement for relational databases — it is a family of trade-offs. Document, key-value, column-family, and graph stores each optimise for a different access pattern and sacrifice different guarantees. The CAP theorem and eventual consistency are the theoretical bedrock for understanding those trade-offs.",
+"jp": "NoSQL is not a replacement for relational databases — it is a family of trade-offs. Document, key-value, column-family, and graph stores each optimise for a different access pattern and sacrifice different guarantees. The CAP theorem and eventual consistency are the theoretical bedrock for understanding those trade-offs."
+},
+"Day 11 maps the NoSQL landscape, explains CAP and BASE, and shows how to design MongoDB documents and DynamoDB items for real access patterns — including the common mistakes that land teams back in a relational DB six months later.": {
+"np": "Day 11 maps the NoSQL landscape, explains CAP and BASE, and shows how to design MongoDB documents and DynamoDB items for real access patterns — including the common mistakes that land teams back in a relational DB six months later.",
+"jp": "Day 11 maps the NoSQL landscape, explains CAP and BASE, and shows how to design MongoDB documents and DynamoDB items for real access patterns — including the common mistakes that land teams back in a relational DB six months later."
+},
+"Design a MongoDB schema for a social media app (users, posts, likes, comments) with correct embed vs reference decisions for each relationship.": {
+"np": "Design a MongoDB schema for a social media app (users, posts, likes, comments) with correct embed vs reference decisions for each relationship.",
+"jp": "Design a MongoDB schema for a social media app (users, posts, likes, comments) with correct embed vs reference decisions for each relationship."
+},
+"Model a DynamoDB single-table design for an e-commerce order system supporting: get order by ID, list orders by user, list items by order.": {
+"np": "Model a DynamoDB single-table design for an e-commerce order system supporting: get order by ID, list orders by user, list items by order.",
+"jp": "Model a DynamoDB single-table design for an e-commerce order system supporting: get order by ID, list orders by user, list items by order."
+},
+"Write a one-paragraph explanation of why you would choose Cassandra over PostgreSQL for a time-series IoT sensor data system.": {
+"np": "Write a one-paragraph explanation of why you would choose Cassandra over PostgreSQL for a time-series IoT sensor data system.",
+"jp": "Write a one-paragraph explanation of why you would choose Cassandra over PostgreSQL for a time-series IoT sensor data system."
+},
+"CQRS separates the write model (commands: validate, mutate, enforce invariants) from the read model (queries: optimised projections for specific views). Each model can be implemented with different storage, schema, and scaling strategy. Commands go to a normalised OLTP database; queries go to denormalised read stores tuned for specific views.": {
+"np": "CQRS separates the write model (commands: validate, mutate, enforce invariants) from the read model (queries: optimised projections for specific views). Each model can be implemented with different storage, schema, and scaling strategy. Commands go to a normalised OLTP database; queries go to denormalised read stores tuned for specific views.",
+"jp": "CQRS separates the write model (commands: validate, mutate, enforce invariants) from the read model (queries: optimised projections for specific views). Each model can be implemented with different storage, schema, and scaling strategy. Commands go to a normalised OLTP database; queries go to denormalised read stores tuned for specific views."
+},
+"Event sourcing stores every state change as an immutable event rather than the current state. The current state is derived by replaying all events. This pairs naturally with CQRS: commands append events; read-model projectors consume events to build query-optimised views.": {
+"np": "Event sourcing stores every state change as an immutable event rather than the current state. The current state is derived by replaying all events. This pairs naturally with CQRS: commands append events; read-model projectors consume events to build query-optimised views.",
+"jp": "Event sourcing stores every state change as an immutable event rather than the current state. The current state is derived by replaying all events. This pairs naturally with CQRS: commands append events; read-model projectors consume events to build query-optimised views."
+},
+"Start with a read replica for most scaling problems â it gives 80% of the benefit of CQRS with a fraction of the complexity. Add CQRS when you need different query models or when your domain has complex state machines that benefit from event sourcing.": {
+"np": "Start with a read replica for most scaling problems â it gives 80% of the benefit of CQRS with a fraction of the complexity. Add CQRS when you need different query models or when your domain has complex state machines that benefit from event sourcing.",
+"jp": "Start with a read replica for most scaling problems â it gives 80% of the benefit of CQRS with a fraction of the complexity. Add CQRS when you need different query models or when your domain has complex state machines that benefit from event sourcing."
+},
+"Primary-replica replication": {
+"np": "Primary-replica replication",
+"jp": "Primary-replica replication"
+},
+"Route reads to replica, writes to primary (Node.js / Knex)": {
+"np": "Route reads to replica, writes to primary (Node.js / Knex)",
+"jp": "Route reads to replica, writes to primary (Node.js / Knex)"
+},
+"Replication lag â causes and handling": {
+"np": "Replication lag â causes and handling",
+"jp": "Replication lag â causes and handling"
+},
+"Detect lag before routing a sensitive read": {
+"np": "Detect lag before routing a sensitive read",
+"jp": "Detect lag before routing a sensitive read"
+},
+"CQRS â Command Query Responsibility Segregation": {
+"np": "CQRS â Command Query Responsibility Segregation",
+"jp": "CQRS â Command Query Responsibility Segregation"
+},
+"CQRS routing â Express example": {
+"np": "CQRS routing â Express example",
+"jp": "CQRS routing â Express example"
+},
+"Event sourcing â persisting state as events": {
+"np": "Event sourcing â persisting state as events",
+"jp": "Event sourcing â persisting state as events"
+},
+"Event-sourced order aggregate": {
+"np": "Event-sourced order aggregate",
+"jp": "Event-sourced order aggregate"
+},
+"Materialised views â sync vs async": {
+"np": "Materialised views â sync vs async",
+"jp": "Materialised views â sync vs async"
+},
+"PostgreSQL materialised view â user post counts": {
+"np": "PostgreSQL materialised view â user post counts",
+"jp": "PostgreSQL materialised view â user post counts"
+},
+"When to use CQRS": {
+"np": "When to use CQRS",
+"jp": "When to use CQRS"
+},
+"What is replication lag and when does it cause bugs?": {
+"np": "What is replication lag and when does it cause bugs?",
+"jp": "What is replication lag and when does it cause bugs?"
+},
+"What is CQRS and when is it worth the complexity?": {
+"np": "What is CQRS and when is it worth the complexity?",
+"jp": "What is CQRS and when is it worth the complexity?"
+},
+"What is event sourcing and how does it relate to CQRS?": {
+"np": "What is event sourcing and how does it relate to CQRS?",
+"jp": "What is event sourcing and how does it relate to CQRS?"
+},
+"How do you handle read-your-own-writes with read replicas?": {
+"np": "How do you handle read-your-own-writes with read replicas?",
+"jp": "How do you handle read-your-own-writes with read replicas?"
+},
+"When should I use PostgreSQL materialised views vs event-driven projections?": {
+"np": "When should I use PostgreSQL materialised views vs event-driven projections?",
+"jp": "When should I use PostgreSQL materialised views vs event-driven projections?"
+},
+"What is the difference between synchronous and asynchronous replication?": {
+"np": "What is the difference between synchronous and asynchronous replication?",
+"jp": "What is the difference between synchronous and asynchronous replication?"
+},
+"Replication lag": {
+"np": "Replication lag",
+"jp": "Replication lag"
+},
+"CQRS": {
+"np": "CQRS",
+"jp": "CQRS"
+},
+"Event sourcing": {
+"np": "Event sourcing",
+"jp": "Event sourcing"
+},
+"Materialised views": {
+"np": "Materialised views",
+"jp": "Materialised views"
+},
+"Replication": {
+"np": "Replication",
+"jp": "Replication"
+},
+"After any write the user will read back â route that read to the primary.": {
+"np": "After any write the user will read back â route that read to the primary.",
+"jp": "After any write the user will read back â route that read to the primary."
+},
+"When a single database server cannot handle your read throughput, the first scaling lever is read replicas — copies of the primary that serve reads, offloading the primary for writes only. CQRS (Command Query Responsibility Segregation) takes this idea to the architecture level: separate models for writes and reads let each be optimised independently.": {
+"np": "When a single database server cannot handle your read throughput, the first scaling lever is read replicas — copies of the primary that serve reads, offloading the primary for writes only. CQRS (Command Query Responsibility Segregation) takes this idea to the architecture level: separate models for writes and reads let each be optimised independently.",
+"jp": "When a single database server cannot handle your read throughput, the first scaling lever is read replicas — copies of the primary that serve reads, offloading the primary for writes only. CQRS (Command Query Responsibility Segregation) takes this idea to the architecture level: separate models for writes and reads let each be optimised independently."
+},
+"Day 12 covers replica topology, replication lag mechanics, the read-replica routing pattern, CQRS as an architectural pattern, and event sourcing — the persistence model that pairs naturally with CQRS.": {
+"np": "Day 12 covers replica topology, replication lag mechanics, the read-replica routing pattern, CQRS as an architectural pattern, and event sourcing — the persistence model that pairs naturally with CQRS.",
+"jp": "Day 12 covers replica topology, replication lag mechanics, the read-replica routing pattern, CQRS as an architectural pattern, and event sourcing — the persistence model that pairs naturally with CQRS."
+},
+"Set up a PostgreSQL primary + one streaming replica locally; write to the primary and measure the replay lag with pg_stat_replication.": {
+"np": "Set up a PostgreSQL primary + one streaming replica locally; write to the primary and measure the replay lag with pg_stat_replication.",
+"jp": "Set up a PostgreSQL primary + one streaming replica locally; write to the primary and measure the replay lag with pg_stat_replication."
+},
+"Implement CQRS routing in a Node.js Express app: POST handlers write to the primary, GET handlers read from a replica.": {
+"np": "Implement CQRS routing in a Node.js Express app: POST handlers write to the primary, GET handlers read from a replica.",
+"jp": "Implement CQRS routing in a Node.js Express app: POST handlers write to the primary, GET handlers read from a replica."
+},
+"Design an event-sourced order aggregate: define 4 events, implement an applyEvent reducer, and write a function that derives current order state from a list of events.": {
+"np": "Design an event-sourced order aggregate: define 4 events, implement an applyEvent reducer, and write a function that derives current order state from a list of events.",
+"jp": "Design an event-sourced order aggregate: define 4 events, implement an applyEvent reducer, and write a function that derives current order state from a list of events."
+},
+"A B-tree (balanced tree) is the default index type in PostgreSQL and MySQL. It stores sorted key values in a tree, allowing O(log n) lookups, range scans, and ORDER BY operations. B-trees support =, <, >, <=, >=, BETWEEN, and LIKE 'prefix%' predicates.": {
+"np": "A B-tree (balanced tree) is the default index type in PostgreSQL and MySQL. It stores sorted key values in a tree, allowing O(log n) lookups, range scans, and ORDER BY operations. B-trees support =, <, >, <=, >=, BETWEEN, and LIKE 'prefix%' predicates.",
+"jp": "A B-tree (balanced tree) is the default index type in PostgreSQL and MySQL. It stores sorted key values in a tree, allowing O(log n) lookups, range scans, and ORDER BY operations. B-trees support =, <, >, <=, >=, BETWEEN, and LIKE 'prefix%' predicates."
+},
+"An inverted index maps each unique term to the list of documents containing it, plus position and frequency data. This is the data structure behind every search engine. A query for 'distributed systems' looks up both terms in O(1), intersects the document lists, and ranks by relevance â in milliseconds across billions of documents.": {
+"np": "An inverted index maps each unique term to the list of documents containing it, plus position and frequency data. This is the data structure behind every search engine. A query for 'distributed systems' looks up both terms in O(1), intersects the document lists, and ranks by relevance â in milliseconds across billions of documents.",
+"jp": "An inverted index maps each unique term to the list of documents containing it, plus position and frequency data. This is the data structure behind every search engine. A query for 'distributed systems' looks up both terms in O(1), intersects the document lists, and ranks by relevance â in milliseconds across billions of documents."
+},
+"Elasticsearch (built on Apache Lucene) is a distributed search engine designed for full-text search at scale. It shards indexes across nodes, replicates shards for availability, and provides rich query DSL, aggregations, and near-real-time search.": {
+"np": "Elasticsearch (built on Apache Lucene) is a distributed search engine designed for full-text search at scale. It shards indexes across nodes, replicates shards for availability, and provides rich query DSL, aggregations, and near-real-time search.",
+"jp": "Elasticsearch (built on Apache Lucene) is a distributed search engine designed for full-text search at scale. It shards indexes across nodes, replicates shards for availability, and provides rich query DSL, aggregations, and near-real-time search."
+},
+"text vs keyword â the most common Elasticsearch mapping mistake.": {
+"np": "text vs keyword â the most common Elasticsearch mapping mistake.",
+"jp": "text vs keyword â the most common Elasticsearch mapping mistake."
+},
+"B-tree index â the default index": {
+"np": "B-tree index â the default index",
+"jp": "B-tree index â the default index"
+},
+"Index types in PostgreSQL": {
+"np": "Index types in PostgreSQL",
+"jp": "Index types in PostgreSQL"
+},
+"Inverted index â full-text search": {
+"np": "Inverted index â full-text search",
+"jp": "Inverted index â full-text search"
+},
+"PostgreSQL full-text search": {
+"np": "PostgreSQL full-text search",
+"jp": "PostgreSQL full-text search"
+},
+"Full-text search with ranking": {
+"np": "Full-text search with ranking",
+"jp": "Full-text search with ranking"
+},
+"Elasticsearch fundamentals": {
+"np": "Elasticsearch fundamentals",
+"jp": "Elasticsearch fundamentals"
+},
+"Elasticsearch index + search (REST API)": {
+"np": "Elasticsearch index + search (REST API)",
+"jp": "Elasticsearch index + search (REST API)"
+},
+"Index strategies for production": {
+"np": "Index strategies for production",
+"jp": "Index strategies for production"
+},
+"Find slow queries and missing indexes": {
+"np": "Find slow queries and missing indexes",
+"jp": "Find slow queries and missing indexes"
+},
+"PostgreSQL vs Elasticsearch â when to add Elasticsearch": {
+"np": "PostgreSQL vs Elasticsearch â when to add Elasticsearch",
+"jp": "PostgreSQL vs Elasticsearch â when to add Elasticsearch"
+},
+"What is an inverted index and how does full-text search use it?": {
+"np": "What is an inverted index and how does full-text search use it?",
+"jp": "What is an inverted index and how does full-text search use it?"
+},
+"What is the difference between text and keyword types in Elasticsearch?": {
+"np": "What is the difference between text and keyword types in Elasticsearch?",
+"jp": "What is the difference between text and keyword types in Elasticsearch?"
+}
+}

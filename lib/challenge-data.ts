@@ -1,3 +1,5 @@
+import type { LocalizedString } from "@/lib/i18n/types";
+import { backendDayTitle, backendTags, backendWeekTitle } from "./backend-learning/backend-roadmap-i18n";
 import { DAY_1_DETAIL } from "./backend-learning/day-1-detail";
 import { DAY_2_DETAIL } from "./backend-learning/day-2-detail";
 import { DAY_3_DETAIL } from "./backend-learning/day-3-detail";
@@ -19,7 +21,7 @@ export const CURRENT_DAY = 1;
 export const TOTAL_DAYS = 30;
 
 export interface RoadmapTag {
-  label: string;
+  label: LocalizedString;
   /** Maps to pill colors in `BackendRoadmap`. */
   slug: string;
 }
@@ -61,6 +63,14 @@ export type RoadmapDetailDiagramId =
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
+  | { type: "paragraph"; text: LocalizedString }
+  | { type: "list"; items: LocalizedString[]; variant?: "bullet" | "number" }
+  | { type: "table"; caption?: LocalizedString; headers: LocalizedString[]; rows: LocalizedString[][] }
+  | { type: "code"; title?: LocalizedString; code: string }
+  | { type: "diagram"; id: RoadmapDetailDiagramId };
+
+/** Same blocks after applying UI locale (plain strings for rendering). */
+export type RoadmapDetailBlockResolved =
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[]; variant?: "bullet" | "number" }
   | { type: "table"; caption?: string; headers: string[]; rows: string[][] }
@@ -69,37 +79,37 @@ export type RoadmapDetailBlock =
 
 /** Optional subsection in a day detail (e.g. “HTTP methods”). */
 export interface RoadmapDayDetailSection {
-  title: string;
+  title: LocalizedString;
   /** Simple bullet list (use when you do not need tables/diagrams). */
-  items?: string[];
+  items?: LocalizedString[];
   /** Rich layout: tables, code samples, SVG diagrams. If set, `items` is ignored. */
   blocks?: RoadmapDetailBlock[];
 }
 
 /** One self-check question with a hidden answer (accordion). */
 export interface RoadmapDayFaqItem {
-  question: string;
-  answer: string;
+  question: LocalizedString;
+  answer: LocalizedString;
   /** Optional pill above the answer (e.g. topic label). */
-  tag?: string;
+  tag?: LocalizedString;
   /** Optional left-border quote below the main answer paragraphs. */
-  callout?: string;
+  callout?: LocalizedString;
 }
 
 /** Shown in the day detail panel when a card is opened. */
 export interface RoadmapDayDetail {
   /** One paragraph or several for longer write-ups. */
-  overview: string | string[];
+  overview: LocalizedString | LocalizedString[];
   /** Optional themed blocks rendered after the overview. */
   sections?: RoadmapDayDetailSection[];
   /** Optional FAQ; answers show in an accordion (collapsed by default). */
   faq?: RoadmapDayFaqItem[];
-  bullets?: string[];
+  bullets?: LocalizedString[];
 }
 
 export interface RoadmapDay {
   day: number;
-  title: string;
+  title: LocalizedString;
   tags: RoadmapTag[];
   /** Optional; if omitted, the UI uses a short generic template. */
   detail?: RoadmapDayDetail;
@@ -107,301 +117,83 @@ export interface RoadmapDay {
 
 export interface RoadmapWeek {
   id: string;
-  title: string;
+  title: LocalizedString;
   /** Tailwind class for the week bullet (e.g. `bg-purple-500`). */
   dotClass: string;
   days: RoadmapDay[];
 }
 
+function dayRow(day: number, tagSlugs: [string, string], detail?: RoadmapDayDetail): RoadmapDay {
+  return {
+    day,
+    title: backendDayTitle(day),
+    tags: backendTags(tagSlugs),
+    ...(detail ? { detail } : {}),
+  };
+}
+
 export const ROADMAP_WEEKS: RoadmapWeek[] = [
   {
     id: "w1",
-    title: "Week 1: Core foundations",
+    title: backendWeekTitle("w1"),
     dotClass: "bg-purple-500",
     days: [
-      {
-        day: 1,
-        title: "HTTP & REST deep dive",
-        tags: [
-          { label: "networking", slug: "networking" },
-          { label: "theory", slug: "theory" },
-        ],
-        detail: DAY_1_DETAIL,
-      },
-      {
-        day: 2,
-        title: "Node.js / Go internals",
-        tags: [
-          { label: "runtime", slug: "runtime" },
-          { label: "core", slug: "core" },
-        ],
-        detail: DAY_2_DETAIL,
-      },
-      {
-        day: 3,
-        title: "Database fundamentals",
-        tags: [
-          { label: "database", slug: "database" },
-          { label: "sql", slug: "sql" },
-        ],
-        detail: DAY_3_DETAIL,
-      },
-      {
-        day: 4,
-        title: "API design patterns",
-        tags: [
-          { label: "design", slug: "design" },
-          { label: "api", slug: "api" },
-        ],
-        detail: DAY_4_DETAIL,
-      },
-      {
-        day: 5,
-        title: "Authentication & authorisation",
-        tags: [
-          { label: "security", slug: "security" },
-          { label: "auth", slug: "auth" },
-        ],
-        detail: DAY_5_DETAIL,
-      },
-      {
-        day: 6,
-        title: "Caching strategies",
-        tags: [
-          { label: "performance", slug: "performance" },
-          { label: "cache", slug: "cache" },
-        ],
-        detail: DAY_6_DETAIL,
-      },
-      {
-        day: 7,
-        title: "Error handling & logging",
-        tags: [
-          { label: "reliability", slug: "reliability" },
-          { label: "ops", slug: "ops" },
-        ],
-        detail: DAY_7_DETAIL,
-      },
+      dayRow(1, ["networking", "theory"], DAY_1_DETAIL),
+      dayRow(2, ["runtime", "core"], DAY_2_DETAIL),
+      dayRow(3, ["database", "sql"], DAY_3_DETAIL),
+      dayRow(4, ["design", "api"], DAY_4_DETAIL),
+      dayRow(5, ["security", "auth"], DAY_5_DETAIL),
+      dayRow(6, ["performance", "cache"], DAY_6_DETAIL),
+      dayRow(7, ["reliability", "ops"], DAY_7_DETAIL),
     ],
   },
   {
     id: "w2",
-    title: "Week 2: System design & databases",
+    title: backendWeekTitle("w2"),
     dotClass: "bg-teal-500",
     days: [
-      {
-        day: 8,
-        title: "Load balancers & reverse proxies",
-        tags: [
-          { label: "networking", slug: "networking" },
-          { label: "architecture", slug: "architecture" },
-        ],
-        detail: DAY_8_DETAIL,
-      },
-      {
-        day: 9,
-        title: "Relational modeling & migrations",
-        tags: [
-          { label: "database", slug: "database" },
-          { label: "design", slug: "design" },
-        ],
-        detail: DAY_9_DETAIL,
-      },
-      {
-        day: 10,
-        title: "Transactions & isolation levels",
-        tags: [
-          { label: "database", slug: "database" },
-          { label: "theory", slug: "theory" },
-        ],
-        detail: DAY_10_DETAIL,
-      },
-      {
-        day: 11,
-        title: "NoSQL shapes & consistency",
-        tags: [
-          { label: "database", slug: "database" },
-          { label: "nosql", slug: "nosql" },
-        ],
-        detail: DAY_11_DETAIL,
-      },
-      {
-        day: 12,
-        title: "Read replicas & CQRS sketch",
-        tags: [
-          { label: "database", slug: "database" },
-          { label: "architecture", slug: "architecture" },
-        ],
-        detail: DAY_12_DETAIL,
-      },
-      {
-        day: 13,
-        title: "Search & indexing basics",
-        tags: [
-          { label: "performance", slug: "performance" },
-          { label: "database", slug: "database" },
-        ],
-        detail: DAY_13_DETAIL,
-      },
-      {
-        day: 14,
-        title: "Backpressure & queues intro",
-        tags: [
-          { label: "reliability", slug: "reliability" },
-          { label: "architecture", slug: "architecture" },
-        ],
-        detail: DAY_14_DETAIL,
-      },
+      dayRow(8, ["networking", "architecture"], DAY_8_DETAIL),
+      dayRow(9, ["database", "design"], DAY_9_DETAIL),
+      dayRow(10, ["database", "theory"], DAY_10_DETAIL),
+      dayRow(11, ["database", "nosql"], DAY_11_DETAIL),
+      dayRow(12, ["database", "architecture"], DAY_12_DETAIL),
+      dayRow(13, ["performance", "database"], DAY_13_DETAIL),
+      dayRow(14, ["reliability", "architecture"], DAY_14_DETAIL),
     ],
   },
   {
     id: "w3",
-    title: "Week 3: DevOps, CI/CD & cloud",
+    title: backendWeekTitle("w3"),
     dotClass: "bg-amber-800",
     days: [
-      {
-        day: 15,
-        title: "Linux, processes & systemd",
-        tags: [
-          { label: "ops", slug: "ops" },
-          { label: "core", slug: "core" },
-        ],
-      },
-      {
-        day: 16,
-        title: "Containers & images",
-        tags: [
-          { label: "docker", slug: "docker" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
-      {
-        day: 17,
-        title: "CI pipelines & tests in deploy",
-        tags: [
-          { label: "cicd", slug: "cicd" },
-          { label: "reliability", slug: "reliability" },
-        ],
-      },
-      {
-        day: 18,
-        title: "IaC & environments",
-        tags: [
-          { label: "cloud", slug: "cloud" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
-      {
-        day: 19,
-        title: "Kubernetes mental model",
-        tags: [
-          { label: "cloud", slug: "cloud" },
-          { label: "architecture", slug: "architecture" },
-        ],
-      },
-      {
-        day: 20,
-        title: "Secrets, config & key rotation",
-        tags: [
-          { label: "security", slug: "security" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
-      {
-        day: 21,
-        title: "Deploy strategies & rollbacks",
-        tags: [
-          { label: "cloud", slug: "cloud" },
-          { label: "reliability", slug: "reliability" },
-        ],
-      },
+      dayRow(15, ["ops", "core"]),
+      dayRow(16, ["docker", "ops"]),
+      dayRow(17, ["cicd", "reliability"]),
+      dayRow(18, ["cloud", "ops"]),
+      dayRow(19, ["cloud", "architecture"]),
+      dayRow(20, ["security", "ops"]),
+      dayRow(21, ["cloud", "reliability"]),
     ],
   },
   {
     id: "w4",
-    title: "Week 4: Observability, security & scale",
+    title: backendWeekTitle("w4"),
     dotClass: "bg-orange-500",
     days: [
-      {
-        day: 22,
-        title: "Structured logging & correlation IDs",
-        tags: [
-          { label: "ops", slug: "ops" },
-          { label: "observability", slug: "observability" },
-        ],
-      },
-      {
-        day: 23,
-        title: "Metrics, RED/USE & dashboards",
-        tags: [
-          { label: "observability", slug: "observability" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
-      {
-        day: 24,
-        title: "Distributed tracing",
-        tags: [
-          { label: "observability", slug: "observability" },
-          { label: "theory", slug: "theory" },
-        ],
-      },
-      {
-        day: 25,
-        title: "Threat modeling for APIs",
-        tags: [
-          { label: "security", slug: "security" },
-          { label: "theory", slug: "theory" },
-        ],
-      },
-      {
-        day: 26,
-        title: "AuthZ patterns & rate limits",
-        tags: [
-          { label: "security", slug: "security" },
-          { label: "api", slug: "api" },
-        ],
-      },
-      {
-        day: 27,
-        title: "Load testing & capacity",
-        tags: [
-          { label: "performance", slug: "performance" },
-          { label: "reliability", slug: "reliability" },
-        ],
-      },
-      {
-        day: 28,
-        title: "SLOs, error budgets & incidents",
-        tags: [
-          { label: "reliability", slug: "reliability" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
+      dayRow(22, ["ops", "observability"]),
+      dayRow(23, ["observability", "ops"]),
+      dayRow(24, ["observability", "theory"]),
+      dayRow(25, ["security", "theory"]),
+      dayRow(26, ["security", "api"]),
+      dayRow(27, ["performance", "reliability"]),
+      dayRow(28, ["reliability", "ops"]),
     ],
   },
   {
     id: "capstone",
-    title: "Days 29-30: Capstone & portfolio",
+    title: backendWeekTitle("capstone"),
     dotClass: "bg-neutral-500",
-    days: [
-      {
-        day: 29,
-        title: "Ship a service end-to-end",
-        tags: [
-          { label: "api", slug: "api" },
-          { label: "core", slug: "core" },
-        ],
-      },
-      {
-        day: 30,
-        title: "ADRs, docs & portfolio story",
-        tags: [
-          { label: "theory", slug: "theory" },
-          { label: "ops", slug: "ops" },
-        ],
-      },
-    ],
+    days: [dayRow(29, ["api", "core"]), dayRow(30, ["theory", "ops"])],
   },
 ];
 
@@ -411,7 +203,7 @@ export function getAllRoadmapDays(): RoadmapDay[] {
 
 export function getRoadmapDayContext(
   dayNumber: number,
-): { weekTitle: string; day: RoadmapDay } | null {
+): { weekTitle: LocalizedString; day: RoadmapDay } | null {
   for (const week of ROADMAP_WEEKS) {
     const day = week.days.find((d) => d.day === dayNumber);
     if (day) return { weekTitle: week.title, day };
@@ -419,17 +211,39 @@ export function getRoadmapDayContext(
   return null;
 }
 
-const DEFAULT_DETAIL_BULLETS = [
-  "Summarize the main idea in one sentence.",
-  "List one hands-on exercise you tried.",
-  "Note one question to revisit tomorrow.",
-] as const;
+function titleTriple(title: LocalizedString): { en: string; np: string; jp: string } {
+  if (typeof title === "string") return { en: title, np: title, jp: title };
+  return title;
+}
+
+const DEFAULT_DETAIL_BULLETS: LocalizedString[] = [
+  {
+    en: "Summarize the main idea in one sentence.",
+    np: "मुख्य विचार एक वाक्यमा सार्नुहोस्।",
+    jp: "主旨を一文でまとめましょう。",
+  },
+  {
+    en: "List one hands-on exercise you tried.",
+    np: "तपाईंले गरेको एउटा व्यावहारिक अभ्यास लेख्नुहोस्।",
+    jp: "試したハンズオンを一つ書き出しましょう。",
+  },
+  {
+    en: "Note one question to revisit tomorrow.",
+    np: "भोलि फेरि हेर्न एउटा प्रश्न टिप्नुहोस्।",
+    jp: "明日見直したい疑問を一つメモしましょう。",
+  },
+];
 
 /** Merges saved `detail` with a neutral template when a day has no custom copy yet. */
 export function resolveDayDetail(day: RoadmapDay): RoadmapDayDetail {
   if (day.detail) return day.detail;
+  const tp = titleTriple(day.title);
   return {
-    overview: `Focus for today: ${day.title}. Add a custom \`detail\` block on this day inside lib/challenge-data.ts when you are ready.`,
+    overview: {
+      en: `Focus for today: ${tp.en}. Add a custom \`detail\` block on this day inside lib/challenge-data.ts when you are ready.`,
+      np: `आजको फोकस: ${tp.np}। तयार भएपछि lib/challenge-data.ts मा यस दिनको लागि अनुकूलित \`detail\` खण्ड थप्नुहोस्।`,
+      jp: `今日の焦点：${tp.jp}。準備ができたら lib/challenge-data.ts でこの日の \`detail\` を追加してください。`,
+    },
     bullets: [...DEFAULT_DETAIL_BULLETS],
   };
 }
