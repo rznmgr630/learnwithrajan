@@ -2,15 +2,15 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
-  JP_TOTAL_DAYS,
-  JP_WEEKLY_TEST_TOTAL,
-  N5_WEEKLY_TEST_IDS,
-  seedJapaneseN5CompletedDayNumbers,
-} from "@/lib/japanese-learning/n5/japanese-n5-data";
+  JP_N4_TOTAL_DAYS,
+  JP_N4_WEEKLY_TEST_TOTAL,
+  N4_WEEKLY_TEST_IDS,
+  seedJapaneseN4CompletedDayNumbers,
+} from "@/lib/japanese-learning/n4/japanese-n4-data";
 
-const STORAGE_KEY = "learnwithrajan.japaneseN5.completed";
-const WEEKLY_STORAGE_KEY = "learnwithrajan.japaneseN5.weeklyTestsCompleted";
-const LOCAL_EVENT = "learnwithrajan.japaneseN5.changed";
+const STORAGE_KEY = "learnwithrajan.japaneseN4.completed";
+const WEEKLY_STORAGE_KEY = "learnwithrajan.japaneseN4.weeklyTestsCompleted";
+const LOCAL_EVENT = "learnwithrajan.japaneseN4.changed";
 
 function serialize(done: Set<number>): string {
   return JSON.stringify([...done].sort((a, b) => a - b));
@@ -21,14 +21,14 @@ function deserialize(raw: string): Set<number> | null {
     const arr = JSON.parse(raw) as unknown;
     if (!Array.isArray(arr)) return null;
     return new Set(
-      arr.filter((n): n is number => typeof n === "number" && n >= 1 && n <= JP_TOTAL_DAYS),
+      arr.filter((n): n is number => typeof n === "number" && n >= 1 && n <= JP_N4_TOTAL_DAYS),
     );
   } catch {
     return null;
   }
 }
 
-const ALLOWED_WEEKLY_IDS = new Set(N5_WEEKLY_TEST_IDS);
+const ALLOWED_WEEKLY_IDS = new Set(N4_WEEKLY_TEST_IDS);
 
 function serializeWeekly(done: Set<string>): string {
   return JSON.stringify([...done].sort());
@@ -45,7 +45,7 @@ function deserializeWeekly(raw: string): Set<string> | null {
 }
 
 function getServerSnapshot(): string {
-  return serialize(seedJapaneseN5CompletedDayNumbers());
+  return serialize(seedJapaneseN4CompletedDayNumbers());
 }
 
 function getClientSnapshot(): string {
@@ -96,7 +96,7 @@ function emitLocal() {
   }
 }
 
-export function useJapaneseN5Progress() {
+export function useJapaneseN4Progress() {
   const snapshot = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const weeklySnapshot = useSyncExternalStore(subscribe, getWeeklyClientSnapshot, getWeeklyServerSnapshot);
 
@@ -105,7 +105,7 @@ export function useJapaneseN5Progress() {
 
   const completedCount = completed.size;
   const percent = useMemo(
-    () => Math.round((Math.min(completedCount, JP_TOTAL_DAYS) / JP_TOTAL_DAYS) * 100),
+    () => Math.round((Math.min(completedCount, JP_N4_TOTAL_DAYS) / JP_N4_TOTAL_DAYS) * 100),
     [completedCount],
   );
 
@@ -116,8 +116,8 @@ export function useJapaneseN5Progress() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     const base =
       raw === null || raw === ""
-        ? seedJapaneseN5CompletedDayNumbers()
-        : deserialize(raw) ?? seedJapaneseN5CompletedDayNumbers();
+        ? seedJapaneseN4CompletedDayNumbers()
+        : deserialize(raw) ?? seedJapaneseN4CompletedDayNumbers();
     const next = new Set(base);
     if (next.has(day)) next.delete(day);
     else next.add(day);
@@ -147,7 +147,7 @@ export function useJapaneseN5Progress() {
     toggleDay,
     isDone,
     weeklyTestsCompletedCount,
-    weeklyTestTotal: JP_WEEKLY_TEST_TOTAL,
+    weeklyTestTotal: JP_N4_WEEKLY_TEST_TOTAL,
     toggleWeeklyTest,
     isWeeklyTestDone,
   };

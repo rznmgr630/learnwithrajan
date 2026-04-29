@@ -7,7 +7,7 @@ import {
   buildJlptFivePaperWeek,
   listeningIntroEmbedded,
   type McqPoolRow,
-} from "@/lib/japanese-learning/n5-subtest-shared";
+} from "@/lib/japanese-learning/n5/n5-subtest-shared";
 
 /** Five vocab/kanji-style questions per exam (25 unique across all tests). */
 const VOCAB_BLOCKS: McqPoolRow[][] = [

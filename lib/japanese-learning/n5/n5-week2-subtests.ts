@@ -7,7 +7,7 @@ import {
   buildJlptFivePaperWeek,
   listeningIntroEmbedded,
   type McqPoolRow,
-} from "@/lib/japanese-learning/n5-subtest-shared";
+} from "@/lib/japanese-learning/n5/n5-subtest-shared";
 
 const VOCAB_BLOCKS: McqPoolRow[][] = [
   [

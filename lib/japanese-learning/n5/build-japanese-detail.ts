@@ -1,9 +1,9 @@
-import { ensureDialogueAtLeastTwentyLines } from "@/lib/japanese-learning/n5-dialogue-expand";
-import { twentyKanjiForDay } from "@/lib/japanese-learning/n5-kanji-pool";
+import { ensureDialogueAtLeastTwentyLines } from "@/lib/japanese-learning/n5/n5-dialogue-expand";
+import { twentyKanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-pool";
 import {
   youtubeClipsForMinnaLesson,
   youtubeClipsForSprintDay,
-} from "@/lib/japanese-learning/n5-youtube-links";
+} from "@/lib/japanese-learning/n5/n5-youtube-links";
 import type {
   JapaneseDetailBlock,
   JapaneseDialogueLine,

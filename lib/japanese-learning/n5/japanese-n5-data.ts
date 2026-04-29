@@ -1,7 +1,7 @@
-import { buildJapaneseDayDetail } from "@/lib/japanese-learning/build-japanese-detail";
-import { JP_N5_LESSON_SPECS } from "@/lib/japanese-learning/n5-lessons";
-import { N5_FULL_LEVEL_MOCK_EXAM } from "@/lib/japanese-learning/n5-full-mock-exam";
-import { N5_WEEKLY_JLPT_TESTS } from "@/lib/japanese-learning/n5-weekly-tests";
+import { buildJapaneseDayDetail } from "@/lib/japanese-learning/n5/build-japanese-detail";
+import { JP_N5_LESSON_SPECS } from "@/lib/japanese-learning/n5/n5-lessons";
+import { N5_FULL_LEVEL_MOCK_EXAM } from "@/lib/japanese-learning/n5/n5-full-mock-exam";
+import { N5_WEEKLY_JLPT_TESTS } from "@/lib/japanese-learning/n5/n5-weekly-tests";
 import type {
   JapaneseRoadmapDay,
   JapaneseRoadmapDayDetail,

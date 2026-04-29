@@ -492,6 +492,121 @@ export const UI_STRINGS = {
     np: "कांजी",
     jp: "漢字",
   },
+  "jpDetail.tag.jlptN4": {
+    en: "JLPT N4",
+    np: "JLPT N4",
+    jp: "JLPT N4",
+  },
+  "jpDetail.tag.minnaII": {
+    en: "Minna no Nihongo II",
+    np: "मिन्ना नो निहोन्गो II",
+    jp: "みんなの日本語 中級I",
+  },
+  "japaneseN4Day.trackLabel": {
+    en: "JLPT N4 · Minna no Nihongo II track",
+    np: "JLPT N4 · मिन्ना नो निहोन्गो II ट्र्याक",
+    jp: "JLPT N4 · 『みんなの日本語』中級Iトラック",
+  },
+  "hub.japaneseN4.title": {
+    en: "Japanese · JLPT N4",
+    np: "जापानी · JLPT N4",
+    jp: "日本語 · JLPT N4",
+  },
+  "hub.japaneseN4.subtitle": {
+    en: "Minna no Nihongo II · 28-day syllabus · passive, causative & conditionals",
+    np: "みんなの日本語 II · २८-दिने पाठ्यक्रम · passive, causative र सर्त",
+    jp: "みんなの日本語 中級I · 28日シラバス · 受け身・使役・条件",
+  },
+  "jpN4Roadmap.title": {
+    en: "Japanese · JLPT N4 in 28 days",
+    np: "२८ दिनमा जापानी · JLPT N4",
+    jp: "28日で日本語 · JLPT N4",
+  },
+  "jpN4Roadmap.subtitle": {
+    en: "Built around Minna no Nihongo II Lessons 26–50 · passive · causative · conditionals · grammar · kanji · MCQ · listening cues",
+    np: "みんなの日本語 II को पाठ २६–५० वरिपरि · passive · causative · सर्त · व्याकरण · कांजी · बहुविकल्प · सुन्ने संकेत",
+    jp: "『みんなの日本語 中級I』第26–50課を軸に · 受け身 · 使役 · 条件 · 文法 · 漢字 · MCQ · 聴解のヒント",
+  },
+  "jpN4Roadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "jpN4Roadmap.days": {
+    en: "days",
+    np: "दिन",
+    jp: "日",
+  },
+  "jpN4Roadmap.doneSlash": {
+    en: "done",
+    np: "पूरा",
+    jp: "完了",
+  },
+  "jpN4Roadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "jpN4Roadmap.weeklyTestsProgress": {
+    en: "Weekly tests + full mock:",
+    np: "साप्ताहिक परीक्षा र पूर्ण मॉक:",
+    jp: "ウィークリーテストと総合模試:",
+  },
+  "jpN4Roadmap.markedDone": {
+    en: "marked done",
+    np: "पूरा चिनो भएको",
+    jp: "完了として記録",
+  },
+  "jpN4Roadmap.dayPrefix": {
+    en: "Day",
+    np: "दिन",
+    jp: "Day",
+  },
+  "jpN4Roadmap.weeklyRecapLabel": {
+    en: "Weekly recap · JLPT-style unit test",
+    np: "साप्ताहिक पुनरावलोकन · JLPT-शैलीको युनिट टेस्ट",
+    jp: "週の復習 · JLPT形式のユニットテスト",
+  },
+  "jpN4Roadmap.fivePapersBlurb": {
+    en: "Five papers (Test 1–5), 20 MCQs each · vocab · kanji · grammar · reading · listening (embedded clip + links) · submit to score",
+    np: "पाँच वटा पेपर (टेस्ट १–५), प्रत्येकमा २० बहुविकल्प · शब्दभण्डार · कांजी · व्याकरण · पढाइ · सुन्ने (इम्बेड क्लिप + लिंक) · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "5枚のペーパー（テスト1〜5）、各20問のMCQ · 語彙 · 漢字 · 文法 · 読解 · 聴解（埋め込み＋リンク） · 採点は提出後",
+  },
+  "jpN4Roadmap.singlePaperBlurb": {
+    en: "Covers Days {from}–{to} · vocab · grammar · reading · listening · submit to score",
+    np: "दिन {from}–{to} समेट्छ · शब्द · व्याकरण · पढाइ · सुन्ने · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "Day {from}–{to} をカバー · 語彙 · 文法 · 読解 · 聴解 · 採点は提出後",
+  },
+  "jpN4Roadmap.done": {
+    en: "Done",
+    np: "पूरा",
+    jp: "完了",
+  },
+  "jpN4Roadmap.openUnitTest": {
+    en: "Open unit test",
+    np: "युनिट टेस्ट खोल्नुहोस्",
+    jp: "ユニットテストを開く",
+  },
+  "jpN4Roadmap.courseFinale": {
+    en: "Course finale · JLPT N4 format",
+    np: "पाठ्यक्रम अन्त्य · JLPT N4 ढाँचा",
+    jp: "総仕上げ · JLPT N4形式",
+  },
+  "jpN4Roadmap.fullMockBlurb": {
+    en: "One paper covering Days {from}–{to} · language knowledge · grammar · reading · listening · embedded listening clip · submit to score",
+    np: "दिन {from}–{to} समेट्ने एक पेपर · भाषा ज्ञान · व्याकरण · पढाइ · सुन्ने · इम्बेड सुन्ने क्लिप · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "Day {from}–{to} の一枚 · 言語知識 · 文法 · 読解 · 聴解 · 埋め込み聴解 · 採点は提出後",
+  },
+  "jpN4Roadmap.openFullMock": {
+    en: "Open full mock exam",
+    np: "पूर्ण मॉक परीक्षा खोल्नुहोस्",
+    jp: "総合模試を開く",
+  },
+  "jpN4Roadmap.bottomBlurb": {
+    en: "Tick days as you finish them — progress stays in this browser. Each lesson mirrors Minna no Nihongo II chapter order with conversation, verb drills, grammar tables, kanji cards, MCQs, and listening tasks (pair with your textbook audio). After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam. Passive, causative, and causative-passive verb forms are the heart of N4 — keep a dedicated conjugation table open while studying.",
+    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक पाठले मिन्ना II को अध्याय क्रम अनुसार संवाद, क्रिया अभ्यास, व्याकरण तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट; अन्त्यमा पूर्ण मॉक। Passive, causative र causative-passive N4 को मुटु हुन् — अध्ययन गर्दा क्रिया संयोग तालिका खुला राख्नुहोस्।",
+    jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各レッスンはみんなの日本語IIの順に沿って会話・動詞ドリル・文法表・漢字カード・MCQ・聴解タスクを含みます（教科書CDとセットで）。各週末はJLPT形式のウィークリーテスト、最後は総合模試。受け身・使役・使役受け身はN4の核心なので、学習中は動詞活用表を常に開いておきましょう。",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type UiStringKey = keyof typeof UI_STRINGS;

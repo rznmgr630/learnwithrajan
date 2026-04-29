@@ -6,9 +6,9 @@ import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBl
 import { RichText } from "@/components/learn/RichText";
 import type { UiStringKey } from "@/lib/i18n/catalog";
 import {
-  getJapaneseN5DayContext,
-  resolveJapaneseN5Detail,
-} from "@/lib/japanese-learning/n5/japanese-n5-data";
+  getJapaneseN4DayContext,
+  resolveJapaneseN4Detail,
+} from "@/lib/japanese-learning/n4/japanese-n4-data";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
 
@@ -23,10 +23,10 @@ function normalizeOverview(overview: LocalizedString | LocalizedString[]): Local
   return Array.isArray(overview) ? overview : [overview];
 }
 
-function japaneseTagLabel(slug: string, translate: (key: UiStringKey) => string): string {
+function n4TagLabel(slug: string, translate: (key: UiStringKey) => string): string {
   const map: Record<string, UiStringKey> = {
-    "jlpt-n5": "jpDetail.tag.jlptN5",
-    minna: "jpDetail.tag.minna",
+    "jlpt-n4": "jpDetail.tag.jlptN4",
+    "minna-ii": "jpDetail.tag.minnaII",
     sprint: "jpDetail.tag.sprint",
     listening: "jpDetail.tag.listening",
     grammar: "jpDetail.tag.grammar",
@@ -37,11 +37,11 @@ function japaneseTagLabel(slug: string, translate: (key: UiStringKey) => string)
   return key ? translate(key) : slug;
 }
 
-export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
+export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
-  const ctx = dayNumber !== null ? getJapaneseN5DayContext(dayNumber) : null;
-  const detail = ctx ? resolveJapaneseN5Detail(ctx.day) : null;
+  const ctx = dayNumber !== null ? getJapaneseN4DayContext(dayNumber) : null;
+  const detail = ctx ? resolveJapaneseN4Detail(ctx.day) : null;
 
   useEffect(() => {
     if (!open) return;
@@ -79,10 +79,10 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           <div>
             <p className="text-xs font-medium text-[var(--accent)]">{pickLocalized(ctx.weekTitle, locale)}</p>
             <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-              {t("japaneseDay.trackLabel")}
+              {t("japaneseN4Day.trackLabel")}
             </p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
-              {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {ctx.day.title}
+              {t("jpN4Roadmap.dayPrefix")} {ctx.day.day}: {ctx.day.title}
             </h2>
           </div>
           <button
@@ -104,7 +104,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
                 key={`${ctx.day.day}-${tag.slug}`}
                 className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
               >
-                {japaneseTagLabel(tag.slug, t)}
+                {n4TagLabel(tag.slug, t)}
               </span>
             ))}
           </div>
@@ -121,7 +121,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           </div>
 
           {detail.sections?.map((sec, si) => (
-            <div key={`jp-sec-${si}`}>
+            <div key={`jn4-sec-${si}`}>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 {pickLocalized(sec.title, locale)}
               </h3>

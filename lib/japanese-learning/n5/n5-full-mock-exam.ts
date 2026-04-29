@@ -8,7 +8,7 @@ import type {
   JapaneseWeeklyTest,
   JapaneseWeeklyTestItem,
 } from "@/lib/japanese-learning/types";
-import { youtubeClipsForMinnaLesson, youtubeClipsForSprintDay } from "@/lib/japanese-learning/n5-youtube-links";
+import { youtubeClipsForMinnaLesson, youtubeClipsForSprintDay } from "@/lib/japanese-learning/n5/n5-youtube-links";
 
 const YT_EMBED_ID = "dPjxIuJZiZc";
 
