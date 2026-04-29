@@ -1,6 +1,10 @@
+import type { Locale } from "@/lib/i18n/types";
 import type { RoadmapDetailBlockResolved } from "@/lib/challenge-data";
 import { DayDetailDiagram } from "@/components/learn/DayDetailDiagrams";
+import { GitDiagram, isGitRoadmapDiagram } from "@/components/learn/GitDiagrams";
 import { RichText } from "@/components/learn/RichText";
+
+export type RoadmapDiagramTrack = "backend" | "git";
 
 function DetailTable({
   caption,
@@ -60,7 +64,15 @@ function DetailCode({ title, code }: { title?: string; code: string }) {
   );
 }
 
-export function DayDetailBlockRenderer({ blocks }: { blocks: RoadmapDetailBlockResolved[] }) {
+export function DayDetailBlockRenderer({
+  blocks,
+  locale,
+  diagramTrack = "backend",
+}: {
+  blocks: RoadmapDetailBlockResolved[];
+  locale: Locale;
+  diagramTrack?: RoadmapDiagramTrack;
+}) {
   return (
     <div className="mt-3 space-y-4">
       {blocks.map((block, i) => {
@@ -100,6 +112,9 @@ export function DayDetailBlockRenderer({ blocks }: { blocks: RoadmapDetailBlockR
           case "code":
             return <DetailCode key={key} title={block.title} code={block.code} />;
           case "diagram":
+            if (diagramTrack === "git" && isGitRoadmapDiagram(block.id)) {
+              return <GitDiagram key={key} id={block.id} locale={locale} />;
+            }
             return <DayDetailDiagram key={key} id={block.id} />;
           default:
             return null;

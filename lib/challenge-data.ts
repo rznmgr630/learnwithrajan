@@ -59,7 +59,16 @@ export type RoadmapDetailDiagramId =
   | "cqrs-sketch"
   | "inverted-index"
   | "queue-backpressure"
-  | "producer-consumer";
+  | "producer-consumer"
+  | "git-workdir-staging-repo"
+  | "git-local-remote-workflow"
+  | "git-first-commit-flow"
+  | "git-branch-merge"
+  | "git-fetch-pull-push"
+  | "git-rebase-linearize"
+  | "git-stash-pop"
+  | "git-worktree"
+  | "git-pr-review-merge";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

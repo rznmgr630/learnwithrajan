@@ -1,0 +1,206 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { pickLocalized } from "@/lib/i18n/pick";
+import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
+import { GIT_ROADMAP_WEEKS, GIT_TOTAL_DAYS } from "@/lib/git-learning/git-challenge-data";
+import { useGit7Progress } from "@/hooks/use-git-7-progress";
+import { GitRoadmapVisualCheatsheet } from "@/components/learn/GitRoadmapVisualCheatsheet";
+
+const TAG_PILL =
+  "rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]";
+
+export function GitRoadmap() {
+  const { locale, t } = useLocale();
+  const { completedCount, percent, toggleDay, isDone } = useGit7Progress();
+  const [openWeekIds, setOpenWeekIds] = useState<Set<string>>(() => new Set(GIT_ROADMAP_WEEKS.map((w) => w.id)));
+  const [detailDay, setDetailDay] = useState<number | null>(null);
+
+  const barWidth = useMemo(() => `${Math.min(100, Math.round((completedCount / GIT_TOTAL_DAYS) * 100))}%`, [completedCount]);
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+      <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">{t("gitRoadmap.title")}</h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">{t("gitRoadmap.subtitle")}</p>
+        </div>
+      </div>
+
+      <div
+        className="rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] p-4 shadow-xl sm:p-6"
+        suppressHydrationWarning
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-[var(--muted)]">{t("gitRoadmap.overallProgress")}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm tabular-nums text-[var(--text)]">
+              {completedCount}/{GIT_TOTAL_DAYS} {t("hub.backend.days")}
+            </span>
+            <button
+              type="button"
+              className="grid h-8 w-8 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+              aria-label="More options"
+            >
+              <span className="text-lg leading-none">⋯</span>
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+          <div
+            className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
+            style={{ width: barWidth }}
+          />
+        </div>
+        <p className="mt-2 text-right text-xs text-[var(--muted)]">
+          {percent}
+          {t("gitRoadmap.percentComplete")}
+        </p>
+      </div>
+
+      <div className="mt-8 space-y-2" id="git-roadmap-weeks">
+        {GIT_ROADMAP_WEEKS.map((week) => {
+          const open = openWeekIds.has(week.id);
+          const doneInWeek = week.days.filter((d) => isDone(d.day)).length;
+          const totalInWeek = week.days.length;
+
+          return (
+            <div
+              key={week.id}
+              className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)]"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenWeekIds((cur) => {
+                    const next = new Set(cur);
+                    if (next.has(week.id)) next.delete(week.id);
+                    else next.add(week.id);
+                    return next;
+                  })
+                }
+                className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
+                <span className="flex-1 font-medium text-[var(--text)]">{pickLocalized(week.title, locale)}</span>
+                <span className="text-sm tabular-nums text-[var(--muted)]">
+                  {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
+                </span>
+                <svg
+                  className={`h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6.22 5.22a.75.75 0 0 1 1.06 0L10 7.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L6.22 6.28a.75.75 0 0 1 0-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              {open ? (
+                <div className="border-t border-[var(--border)] px-4 py-5 sm:px-5">
+                  <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {week.days.map((d) => {
+                      const checked = isDone(d.day);
+                      return (
+                        <li
+                          key={d.day}
+                          className="flex flex-col rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-4 transition hover:border-[var(--accent)]"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-medium text-[var(--muted)]">
+                              {t("jpRoadmap.dayPrefix")} {d.day}
+                            </span>
+                            <button
+                              type="button"
+                              role="checkbox"
+                              aria-checked={checked}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDay(d.day);
+                              }}
+                              className={[
+                                "grid h-5 w-5 shrink-0 place-items-center rounded border transition",
+                                checked
+                                  ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                                  : "border-[var(--border)] bg-[var(--elevated)] hover:border-[var(--accent)]",
+                              ].join(" ")}
+                            >
+                              {checked ? (
+                                <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+                                  <path
+                                    d="M2.5 6L5 8.5L9.5 3.5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.6"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              ) : null}
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={`Open details for day ${d.day}: ${pickLocalized(d.title, locale)}`}
+                            className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                            onClick={() => setDetailDay(d.day)}
+                          >
+                            <h3 className="text-sm font-semibold leading-snug text-[var(--text)]">
+                              {pickLocalized(d.title, locale)}
+                            </h3>
+                            <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
+                              {d.tags.map((tag) => (
+                                <span key={`${d.day}-${tag.slug}`} className={TAG_PILL}>
+                                  {pickLocalized(tag.label, locale)}
+                                </span>
+                              ))}
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      <GitRoadmapVisualCheatsheet />
+
+      <div className="mt-14 flex flex-col items-center gap-4" id="git-roadmap-bottom">
+        <button
+          type="button"
+          className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] text-[var(--muted)] shadow-inner transition hover:border-[var(--accent)] hover:text-[var(--text)]"
+          aria-label="Scroll to description"
+          onClick={() => document.getElementById("git-roadmap-blurb")?.scrollIntoView({ behavior: "smooth" })}
+        >
+          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+            <path
+              fillRule="evenodd"
+              d="M10 3a.75.75 0 0 1 .75.75v10.19l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.22 2.22V3.75A.75.75 0 0 1 10 3Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+        <p id="git-roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-[var(--muted)]">
+          {t("gitRoadmap.bottomBlurb")}
+        </p>
+      </div>
+
+      <DayDetailPanel
+        key={detailDay === null ? "closed" : `git-day-${detailDay}`}
+        dayNumber={detailDay}
+        onClose={() => setDetailDay(null)}
+        isDone={isDone}
+        onToggleDone={(day) => toggleDay(day)}
+        track="git"
+      />
+    </div>
+  );
+}
