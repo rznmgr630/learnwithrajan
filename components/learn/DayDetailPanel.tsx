@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { DayDetailBlockRenderer } from "@/components/learn/DayDetailBlockRenderer";
+import type { RoadmapDiagramTrack } from "@/components/learn/DayDetailBlockRenderer";
 import { RichText } from "@/components/learn/RichText";
 import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadmap-detail";
+import { localizeGitRoadmapDayDetail } from "@/lib/git-learning/localize-git-roadmap-detail";
 import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
+import { getGitRoadmapDayContext, resolveGitDayDetail } from "@/lib/git-learning/git-challenge-data";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
 import { pickLocalized } from "@/lib/i18n/pick";
 
@@ -14,19 +17,40 @@ type DayDetailPanelProps = {
   onClose: () => void;
   isDone: (day: number) => boolean;
   onToggleDone: (day: number) => void;
+  /** Defaults to backend 30-day roadmap. */
+  track?: RoadmapDiagramTrack;
 };
 
 function overviewParagraphs(overview: string | string[]): string[] {
   return Array.isArray(overview) ? overview : [overview];
 }
 
-export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: DayDetailPanelProps) {
+export function DayDetailPanel({
+  dayNumber,
+  onClose,
+  isDone,
+  onToggleDone,
+  track = "backend",
+}: DayDetailPanelProps) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
-  const ctx = dayNumber !== null ? getRoadmapDayContext(dayNumber) : null;
-  const detailRaw = ctx ? resolveDayDetail(ctx.day) : null;
-  const detail = detailRaw ? localizeRoadmapDayDetail(detailRaw, locale) : null;
+  const ctx =
+    dayNumber !== null
+      ? track === "git"
+        ? getGitRoadmapDayContext(dayNumber)
+        : getRoadmapDayContext(dayNumber)
+      : null;
+  const detailRaw = ctx ? (track === "git" ? resolveGitDayDetail(ctx.day) : resolveDayDetail(ctx.day)) : null;
+  const detail = detailRaw
+    ? track === "git"
+      ? localizeGitRoadmapDayDetail(detailRaw, locale)
+      : localizeRoadmapDayDetail(detailRaw, locale)
+    : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
+
+  useEffect(() => {
+    setOpenFaq(new Set());
+  }, [dayNumber, track]);
 
   useEffect(() => {
     if (!open) return;
@@ -109,7 +133,7 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
             <div key={sec.title}>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{sec.title}</h3>
               {sec.blocks && sec.blocks.length > 0 ? (
-                <DayDetailBlockRenderer blocks={sec.blocks} />
+                <DayDetailBlockRenderer blocks={sec.blocks} locale={locale} diagramTrack={track} />
               ) : sec.items && sec.items.length > 0 ? (
                 <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--muted)]">
                   {sec.items.map((line, i) => (
@@ -130,7 +154,9 @@ export function DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Day
                   ({faq.length})
                 </span>
               </h3>
-              <p className="mt-1 text-xs text-[var(--muted)]">{t("backendDetail.selfCheckHint")}</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {track === "git" ? t("gitDetail.selfCheckHint") : t("backendDetail.selfCheckHint")}
+              </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
                   const expanded = openFaq.has(i);

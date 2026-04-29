@@ -43,9 +43,9 @@ export const UI_STRINGS = {
     jp: "学習一覧",
   },
   "learn.subtitle": {
-    en: "Pick a track to open the full syllabus. More cards will show up here as new topics go live.",
-    np: "पूरा पाठ्यक्रम खोल्न ट्र्याक छान्नुहोस्। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप कार्डहरू देखिनेछन्।",
-    jp: "トラックを選ぶと全体のシラバスが開きます。新しいトピックが増えるとカードも増えます。",
+    en: "Choose Programming or Language, then open a track for the full syllabus. More topics will appear as they go live.",
+    np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, अनि पूरा पाठ्यक्रमका लागि ट्र्याक खोल्नुहोस्। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
+    jp: "プログラミングか言語を選び、トラックで全体のシラバスを開きます。新しいトピックは順次追加します。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
@@ -72,6 +72,41 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.git.title": {
+    en: "Git in 7 days",
+    np: "७ दिनमा Git",
+    jp: "7日でGit",
+  },
+  "hub.git.subtitle": {
+    en: "Basics in 2 days · branching, remotes, worktrees & team flow · diagrams in each lesson",
+    np: "२ दिन आधार · ब्रान्च, रिमोट, worktree, टोली प्रवाह · प्रत्येक पाठमा चित्र",
+    jp: "2日で基礎 · ブランチ・リモート・worktree・チーム運用 · 各日に図解",
+  },
+  "hub.sectionProgramming": {
+    en: "Programming",
+    np: "प्रोग्रामिङ",
+    jp: "プログラミング",
+  },
+  "hub.sectionProgrammingHint": {
+    en: "Engineering roadmaps",
+    np: "इन्जिनियरिङ रोडम्याप",
+    jp: "エンジニア向けロードマップ",
+  },
+  "hub.sectionLanguage": {
+    en: "Language",
+    np: "भाषा",
+    jp: "言語",
+  },
+  "hub.sectionLanguageHint": {
+    en: "Japanese JLPT tracks",
+    np: "जापानी JLPT ट्र्याक",
+    jp: "日本語・JLPTトラック",
+  },
+  "hub.category.cta": {
+    en: "Browse →",
+    np: "हेर्नुहोस् →",
+    jp: "見る →",
+  },
   "hub.japanese.title": {
     en: "Japanese · JLPT N5",
     np: "जापानी · JLPT N5",
@@ -86,6 +121,11 @@ export const UI_STRINGS = {
     en: "← Learning hub",
     np: "← सिकाइ केन्द्र",
     jp: "← 学習ハブ",
+  },
+  "learn.backProgramming": {
+    en: "← Programming",
+    np: "← प्रोग्रामिङ",
+    jp: "← プログラミング",
   },
   "backendRoadmap.title": {
     en: "Backend in 30 days",
@@ -116,6 +156,31 @@ export const UI_STRINGS = {
     en: "done",
     np: "पूरा",
     jp: "完了",
+  },
+  "gitRoadmap.title": {
+    en: "Git in 7 days",
+    np: "७ दिनमा Git",
+    jp: "7日でGit",
+  },
+  "gitRoadmap.subtitle": {
+    en: "From first commit to pull requests — local basics, then advanced workflows",
+    np: "पहिलो commit देखि PR सम्म — स्थानिक आधार, अनि उन्नत कार्यप्रवाह",
+    jp: "最初のコミットからPRまで — ローカル基礎から応用の流れへ",
+  },
+  "gitRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "gitRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "gitRoadmap.bottomBlurb": {
+    en: "Seven focused days: days 1–2 cover the three-state model and reading history; days 3–7 add branching, remotes, rebase vs merge, stash/reset safety, `git worktree` for parallel checkouts, and team PR flow. Tick days as you finish; progress saves in this browser. Open a day card for localized notes, commands, tables, and SVG diagrams. Below the Advanced week you will find a visual cheatsheet with before/after pictures for common commands (e.g. `git init` adding `.git`). Adjust the seeded progress via GIT_CURRENT_DAY in lib/git-learning/git-challenge-data.ts.",
+    np: "सात केन्द्रित दिन: १–२ मा तीन अवस्था र इतिहास; ३–७ मा ब्रान्च, रिमोट, rebase/merge, stash/reset, `git worktree`, र PR। उन्नत हप्ता मुनि दृश्य चिटशीट छ — सामान्य आदेशका अघि/पछि चित्र (जस्तै `git init` ले `.git` थप्छ)।",
+    jp: "7日構成: 1〜2日目は3状態と履歴、3〜7日目はブランチ・リモート・rebase/merge・stash/reset・`git worktree`・PR運用。応用週の下に、よく使うコマンドの「前→後」イラスト付きビジュアルチートシートがあります（例: `git init` で `.git` ができる）。シードは lib/git-learning/git-challenge-data.ts の GIT_CURRENT_DAY で変更できます。",
   },
   "jpRoadmap.title": {
     en: "Japanese · JLPT N5 in 30 days",
@@ -406,6 +471,36 @@ export const UI_STRINGS = {
     en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once.",
     np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त छन् — जवाफ देखाउन प्रश्नमा क्लिक गर्नुहोस्; लुकाउन फेरि क्लिक गर्नुहोस्। एकैचोटि धेरै खोलिराख्न सक्नुहुन्छ।",
     jp: "初期状態ではすべて閉じています。質問をクリックすると答えが開き、もう一度クリックで閉じます。複数開いたままにできます。",
+  },
+  "gitRoadmap.cheatsheetHeading": {
+    en: "Visual cheatsheet",
+    np: "दृश्य चिटशीट",
+    jp: "ビジュアルチートシート",
+  },
+  "gitRoadmap.cheatsheetIntro": {
+    en: "Each card shows a before → after sketch for one command (for example `git init`: a normal project folder, then the same folder with a hidden `.git` directory that stores your repository). Command names stay in English; explanations follow your UI language.",
+    np: "प्रत्येक कार्डले एउटा आदेशको अघि → पछि रेखाचित्र देखाउँछ (उदाहरण `git init`: साधारण फोल्डर, अनि लुकेको `.git` सहित)। आदेश अङ्ग्रेजीमा; व्याख्या UI भाषामा।",
+    jp: "各カードは「変更前 → 変更後」のイラストです（例: `git init` は普通のフォルダの次に、隠れた `.git` が付いてリポジトリになる）。コマンド表記は英語、説明は UI 言語です。",
+  },
+  "gitRoadmap.cheatsheetLegend": {
+    en: "Figures are schematic — your real filenames, branches, and remotes will differ.",
+    np: "चित्रहरू स्किमेटिक हुन् — वास्तविक नाम फरक हुन सक्छ।",
+    jp: "図は模式図です。実際のファイル名やブランチは環境によります。",
+  },
+  "gitRoadmap.cheatsheetBefore": {
+    en: "Before",
+    np: "अघि",
+    jp: "前",
+  },
+  "gitRoadmap.cheatsheetAfter": {
+    en: "After",
+    np: "पछि",
+    jp: "後",
+  },
+  "gitDetail.selfCheckHint": {
+    en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once. Prompts match the Git day you opened (command names stay in English).",
+    np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त — प्रश्नमा क्लिक गर्दा जवाफ खुल्छ; फेरि क्लिक गर्दा बन्द हुन्छ। धेरै एकैचोटि खोल्न मिल्छ। प्रश्नहरू खुलेको Git दिनसँग मेल खान्छन् (आदेश अङ्ग्रेजीमा)।",
+    jp: "初期状態ではすべて閉じています。クリックで答えが開き、もう一度で閉じます。複数開いたままにできます。内容は開いた Git の日に対応しています（コマンド表記は英語のまま）。",
   },
   "jpDetail.overviewHeading": {
     en: "Overview",
