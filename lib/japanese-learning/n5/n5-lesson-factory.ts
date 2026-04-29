@@ -1,4 +1,4 @@
-import type { N5LessonSpec } from "@/lib/japanese-learning/build-japanese-detail";
+import type { N5LessonSpec } from "@/lib/japanese-learning/n5/build-japanese-detail";
 
 export const MINNA_BOOK = "Minna no Nihongo I";
 

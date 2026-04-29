@@ -8,7 +8,7 @@ import type { UiStringKey } from "@/lib/i18n/catalog";
 import {
   getJapaneseN5DayContext,
   resolveJapaneseN5Detail,
-} from "@/lib/japanese-learning/japanese-n5-data";
+} from "@/lib/japanese-learning/n5/japanese-n5-data";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
 

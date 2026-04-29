@@ -1,5 +1,5 @@
-import type { N5LessonSpec } from "@/lib/japanese-learning/build-japanese-detail";
-import { mkLesson as mk } from "@/lib/japanese-learning/n5-lesson-factory";
+import type { N5LessonSpec } from "@/lib/japanese-learning/n5/build-japanese-detail";
+import { mkLesson as mk } from "@/lib/japanese-learning/n5/n5-lesson-factory";
 
 /** Days 8–30 — Minna I Lessons 8–25 then JLPT N5 consolidation days. */
 export const JP_N5_PART2: N5LessonSpec[] = [

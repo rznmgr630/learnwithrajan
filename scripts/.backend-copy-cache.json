@@ -1158,5 +1158,213 @@
 "Execution priority": {
 "np": "Execution priority",
 "jp": "Execution priority"
+},
+"Timers vs check phase": {
+"np": "Timers vs check phase",
+"jp": "Timers vs check phase"
+},
+"Event loop starvation": {
+"np": "Event loop starvation",
+"jp": "Event loop starvation"
+},
+"CPU vs I/O": {
+"np": "CPU vs I/O",
+"jp": "CPU vs I/O"
+},
+"libuv internals": {
+"np": "libuv internals",
+"jp": "libuv internals"
+},
+"Node vs Go concurrency": {
+"np": "Node vs Go concurrency",
+"jp": "Node vs Go concurrency"
+},
+"Production debugging": {
+"np": "Production debugging",
+"jp": "Production debugging"
+},
+"Call stack": {
+"np": "Call stack",
+"jp": "Call stack"
+},
+"The thread is only 'busy' when running JavaScript. All waiting happens at the OS level.": {
+"np": "The thread is only 'busy' when running JavaScript. All waiting happens at the OS level.",
+"jp": "The thread is only 'busy' when running JavaScript. All waiting happens at the OS level."
+},
+"Memory trick: Timers â Pending â Idle â Poll â Check â Close. 'The Poll phase is where Node lives.'": {
+"np": "Memory trick: Timers â Pending â Idle â Poll â Check â Close. 'The Poll phase is where Node lives.'",
+"jp": "Memory trick: Timers â Pending â Idle â Poll â Check â Close. 'The Poll phase is where Node lives.'"
+},
+"This is the #1 Node.js interview question. Know it cold.": {
+"np": "This is the #1 Node.js interview question. Know it cold.",
+"jp": "This is the #1 Node.js interview question. Know it cold."
+},
+"Outside I/O: order is non-deterministic. Inside an I/O callback: setImmediate always wins.": {
+"np": "Outside I/O: order is non-deterministic. Inside an I/O callback: setImmediate always wins.",
+"jp": "Outside I/O: order is non-deterministic. Inside an I/O callback: setImmediate always wins."
+},
+"Node.js has no built-in protection against `nextTick` starvation. It's your responsibility.": {
+"np": "Node.js has no built-in protection against `nextTick` starvation. It's your responsibility.",
+"jp": "Node.js has no built-in protection against `nextTick` starvation. It's your responsibility."
+},
+"I/O suspends the callback, not the thread. CPU on the main thread blocks everyone until it finishes.": {
+"np": "I/O suspends the callback, not the thread. CPU on the main thread blocks everyone until it finishes.",
+"jp": "I/O suspends the callback, not the thread. CPU on the main thread blocks everyone until it finishes."
+},
+"libuv is the bridge between JavaScriptâs single thread and the OSâs async I/O primitives.": {
+"np": "libuv is the bridge between JavaScriptâs single thread and the OSâs async I/O primitives.",
+"jp": "libuv is the bridge between JavaScriptâs single thread and the OSâs async I/O primitives."
+},
+"Node: one JS thread, async callbacks. Go: many goroutines on a few OS threads, true parallelism.": {
+"np": "Node: one JS thread, async callbacks. Go: many goroutines on a few OS threads, true parallelism.",
+"jp": "Node: one JS thread, async callbacks. Go: many goroutines on a few OS threads, true parallelism."
+},
+"Measure with `monitorEventLoopDelay` and clinic. Fix by moving CPU off the main thread.": {
+"np": "Measure with `monitorEventLoopDelay` and clinic. Fix by moving CPU off the main thread.",
+"jp": "Measure with `monitorEventLoopDelay` and clinic. Fix by moving CPU off the main thread."
+},
+"One stack, one thread. Stack overflow = `RangeError: Maximum call stack size exceeded`.": {
+"np": "One stack, one thread. Stack overflow = `RangeError: Maximum call stack size exceeded`.",
+"jp": "One stack, one thread. Stack overflow = `RangeError: Maximum call stack size exceeded`."
+},
+"Node.js handles thousands of concurrent connections on a single JavaScript thread — not because it is fast, but because most server work is waiting. `V8` runs your code; `libuv` hands I/O off to the OS and wakes the thread only when data is ready.": {
+"np": "Node.js handles thousands of concurrent connections on a single JavaScript thread — not because it is fast, but because most server work is waiting. `V8` runs your code; `libuv` hands I/O off to the OS and wakes the thread only when data is ready.",
+"jp": "Node.js handles thousands of concurrent connections on a single JavaScript thread — not because it is fast, but because most server work is waiting. `V8` runs your code; `libuv` hands I/O off to the OS and wakes the thread only when data is ready."
+},
+"By the end of Day 2 you should: predict `nextTick` / `Promise` / `setTimeout` order from memory, explain why CPU work on the main thread is dangerous, and contrast Node’s event loop with Go goroutines in two sentences.": {
+"np": "By the end of Day 2 you should: predict `nextTick` / `Promise` / `setTimeout` order from memory, explain why CPU work on the main thread is dangerous, and contrast Node’s event loop with Go goroutines in two sentences.",
+"jp": "By the end of Day 2 you should: predict `nextTick` / `Promise` / `setTimeout` order from memory, explain why CPU work on the main thread is dangerous, and contrast Node’s event loop with Go goroutines in two sentences."
+},
+"Write the 1 → 4 → 2 → 3 → 5 trace from memory without looking.": {
+"np": "Write the 1 → 4 → 2 → 3 → 5 trace from memory without looking.",
+"jp": "Write the 1 → 4 → 2 → 3 → 5 trace from memory without looking."
+},
+"Run `clinic doctor` or `node --prof` once and name one hot function from the report.": {
+"np": "Run `clinic doctor` or `node --prof` once and name one hot function from the report.",
+"jp": "Run `clinic doctor` or `node --prof` once and name one hot function from the report."
+},
+"Be able to explain M:N scheduling in Go vs a single main-thread `Node` in two sentences.": {
+"np": "Be able to explain M:N scheduling in Go vs a single main-thread `Node` in two sentences.",
+"jp": "Be able to explain M:N scheduling in Go vs a single main-thread `Node` in two sentences."
+},
+"ACID is not four independent features â they interlock. Atomicity makes partial failures invisible; Consistency enforces your invariants; Isolation prevents concurrent transactions from corrupting each other; Durability ensures a committed write survives a crash.": {
+"np": "ACID is not four independent features â they interlock. Atomicity makes partial failures invisible; Consistency enforces your invariants; Isolation prevents concurrent transactions from corrupting each other; Durability ensures a committed write survives a crash.",
+"jp": "ACID is not four independent features â they interlock. Atomicity makes partial failures invisible; Consistency enforces your invariants; Isolation prevents concurrent transactions from corrupting each other; Durability ensures a committed write survives a crash."
+},
+"Higher isolation = fewer anomalies, more locking/MVCC overhead. PostgreSQL default is Read Committed; MySQL InnoDB default is Repeatable Read. Pick the lowest level that still prevents the anomalies that matter for your use case.": {
+"np": "Higher isolation = fewer anomalies, more locking/MVCC overhead. PostgreSQL default is Read Committed; MySQL InnoDB default is Repeatable Read. Pick the lowest level that still prevents the anomalies that matter for your use case.",
+"jp": "Higher isolation = fewer anomalies, more locking/MVCC overhead. PostgreSQL default is Read Committed; MySQL InnoDB default is Repeatable Read. Pick the lowest level that still prevents the anomalies that matter for your use case."
+},
+"An index is a separate data structure the database maintains so it can find rows without scanning every page. The cost: writes become slightly slower and disk space grows. The payoff: range scans and point lookups go from O(n) to O(log n) or O(1).": {
+"np": "An index is a separate data structure the database maintains so it can find rows without scanning every page. The cost: writes become slightly slower and disk space grows. The payoff: range scans and point lookups go from O(n) to O(log n) or O(1).",
+"jp": "An index is a separate data structure the database maintains so it can find rows without scanning every page. The cost: writes become slightly slower and disk space grows. The payoff: range scans and point lookups go from O(n) to O(log n) or O(1)."
+},
+"`EXPLAIN ANALYZE` runs the query and shows actual row counts, timing, and the chosen access method. Read it bottom-up: the innermost node executes first. Look for Seq Scan on large tables, high `rows` estimates vs actuals (stale stats â run `ANALYZE`), and nested-loop joins on unindexed columns.": {
+"np": "`EXPLAIN ANALYZE` runs the query and shows actual row counts, timing, and the chosen access method. Read it bottom-up: the innermost node executes first. Look for Seq Scan on large tables, high `rows` estimates vs actuals (stale stats â run `ANALYZE`), and nested-loop joins on unindexed columns.",
+"jp": "`EXPLAIN ANALYZE` runs the query and shows actual row counts, timing, and the chosen access method. Read it bottom-up: the innermost node executes first. Look for Seq Scan on large tables, high `rows` estimates vs actuals (stale stats â run `ANALYZE`), and nested-loop joins on unindexed columns."
+},
+"Normalisation removes redundancy and update anomalies. Denormalise deliberately â only when a join is provably too slow and you can maintain consistency in application code.": {
+"np": "Normalisation removes redundancy and update anomalies. Denormalise deliberately â only when a join is provably too slow and you can maintain consistency in application code.",
+"jp": "Normalisation removes redundancy and update anomalies. Denormalise deliberately â only when a join is provably too slow and you can maintain consistency in application code."
+},
+"NoSQL is not better or worse than SQL â it is a different set of trade-offs. Most applications start with a relational database and add a specialised store (cache, search, time-series) when a specific access pattern demands it.": {
+"np": "NoSQL is not better or worse than SQL â it is a different set of trade-offs. Most applications start with a relational database and add a specialised store (cache, search, time-series) when a specific access pattern demands it.",
+"jp": "NoSQL is not better or worse than SQL â it is a different set of trade-offs. Most applications start with a relational database and add a specialised store (cache, search, time-series) when a specific access pattern demands it."
+},
+"Being able to demo index impact live â table scan time before vs after â is a stronger interview signal than any verbal answer.": {
+"np": "Being able to demo index impact live â table scan time before vs after â is a stronger interview signal than any verbal answer.",
+"jp": "Being able to demo index impact live â table scan time before vs after â is a stronger interview signal than any verbal answer."
+},
+"Memorise the one-line definition and one concrete failure mode for each.": {
+"np": "Memorise the one-line definition and one concrete failure mode for each.",
+"jp": "Memorise the one-line definition and one concrete failure mode for each."
+},
+"Default index type in PostgreSQL and MySQL InnoDB is B-tree.": {
+"np": "Default index type in PostgreSQL and MySQL InnoDB is B-tree.",
+"jp": "Default index type in PostgreSQL and MySQL InnoDB is B-tree."
+},
+"Key EXPLAIN nodes and what they signal.": {
+"np": "Key EXPLAIN nodes and what they signal.",
+"jp": "Key EXPLAIN nodes and what they signal."
+},
+"ACID â what each guarantee actually means": {
+"np": "ACID â what each guarantee actually means",
+"jp": "ACID â what each guarantee actually means"
+},
+"Atomic transfer in PostgreSQL": {
+"np": "Atomic transfer in PostgreSQL",
+"jp": "Atomic transfer in PostgreSQL"
+},
+"Isolation levels and concurrency anomalies": {
+"np": "Isolation levels and concurrency anomalies",
+"jp": "Isolation levels and concurrency anomalies"
+},
+"SELECT FOR UPDATE â pessimistic lock to prevent lost update": {
+"np": "SELECT FOR UPDATE â pessimistic lock to prevent lost update",
+"jp": "SELECT FOR UPDATE â pessimistic lock to prevent lost update"
+},
+"Indexes â B-tree, Hash, Covering": {
+"np": "Indexes â B-tree, Hash, Covering",
+"jp": "Indexes â B-tree, Hash, Covering"
+},
+"Creating indexes in PostgreSQL": {
+"np": "Creating indexes in PostgreSQL",
+"jp": "Creating indexes in PostgreSQL"
+},
+"EXPLAIN ANALYZE â reading a query plan": {
+"np": "EXPLAIN ANALYZE â reading a query plan",
+"jp": "EXPLAIN ANALYZE â reading a query plan"
+},
+"Reading EXPLAIN ANALYZE output": {
+"np": "Reading EXPLAIN ANALYZE output",
+"jp": "Reading EXPLAIN ANALYZE output"
+},
+"Schema design and normalisation": {
+"np": "Schema design and normalisation",
+"jp": "Schema design and normalisation"
+},
+"Practical normalised schema â blog": {
+"np": "Practical normalised schema â blog",
+"jp": "Practical normalised schema â blog"
+},
+"SQL vs NoSQL â when to use what": {
+"np": "SQL vs NoSQL â when to use what",
+"jp": "SQL vs NoSQL â when to use what"
+},
+"Exercises (do all four)": {
+"np": "Exercises (do all four)",
+"jp": "Exercises (do all four)"
+},
+"What are the ACID properties and what does each guarantee?": {
+"np": "What are the ACID properties and what does each guarantee?",
+"jp": "What are the ACID properties and what does each guarantee?"
+},
+"What is the difference between a dirty read, non-repeatable read, and phantom read?": {
+"np": "What is the difference between a dirty read, non-repeatable read, and phantom read?",
+"jp": "What is the difference between a dirty read, non-repeatable read, and phantom read?"
+},
+"What are the four SQL isolation levels?": {
+"np": "What are the four SQL isolation levels?",
+"jp": "What are the four SQL isolation levels?"
+},
+"How does a B-tree index work?": {
+"np": "How does a B-tree index work?",
+"jp": "How does a B-tree index work?"
+},
+"What is the difference between a B-tree and a hash index?": {
+"np": "What is the difference between a B-tree and a hash index?",
+"jp": "What is the difference between a B-tree and a hash index?"
+},
+"What is a covering index and when does it help?": {
+"np": "What is a covering index and when does it help?",
+"jp": "What is a covering index and when does it help?"
+},
+"What is a composite index and why does column order matter?": {
+"np": "What is a composite index and why does column order matter?",
+"jp": "What is a composite index and why does column order matter?"
+},
+"How do you read a PostgreSQL EXPLAIN ANALYZE output?": {
+"np": "How do you read a PostgreSQL EXPLAIN ANALYZE output?",
+"jp": "How do you read a PostgreSQL EXPLAIN ANALYZE output?"
 }
 }

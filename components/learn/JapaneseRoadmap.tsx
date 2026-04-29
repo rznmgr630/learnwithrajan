@@ -9,7 +9,7 @@ import {
   JAPANESE_N5_WEEKS,
   JP_TOTAL_DAYS,
   resolveJapaneseWeeklyTestForRoadmap,
-} from "@/lib/japanese-learning/japanese-n5-data";
+} from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { pickLocalized } from "@/lib/i18n/pick";
 

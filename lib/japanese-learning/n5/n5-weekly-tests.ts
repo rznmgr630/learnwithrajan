@@ -1,9 +1,9 @@
 import type { JapaneseWeeklyTest } from "@/lib/japanese-learning/types";
-import { buildWeek1SubTests } from "@/lib/japanese-learning/n5-week1-subtests";
-import { buildWeek2SubTests } from "@/lib/japanese-learning/n5-week2-subtests";
-import { buildWeek3SubTests } from "@/lib/japanese-learning/n5-week3-subtests";
-import { buildWeek4SubTests } from "@/lib/japanese-learning/n5-week4-subtests";
-import { buildWeek5SubTests } from "@/lib/japanese-learning/n5-week5-subtests";
+import { buildWeek1SubTests } from "@/lib/japanese-learning/n5/n5-week1-subtests";
+import { buildWeek2SubTests } from "@/lib/japanese-learning/n5/n5-week2-subtests";
+import { buildWeek3SubTests } from "@/lib/japanese-learning/n5/n5-week3-subtests";
+import { buildWeek4SubTests } from "@/lib/japanese-learning/n5/n5-week4-subtests";
+import { buildWeek5SubTests } from "@/lib/japanese-learning/n5/n5-week5-subtests";
 
 export const N5_WEEKLY_JLPT_TESTS: JapaneseWeeklyTest[] = [
   {

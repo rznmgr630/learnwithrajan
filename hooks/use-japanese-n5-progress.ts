@@ -6,7 +6,7 @@ import {
   JP_WEEKLY_TEST_TOTAL,
   N5_WEEKLY_TEST_IDS,
   seedJapaneseN5CompletedDayNumbers,
-} from "@/lib/japanese-learning/japanese-n5-data";
+} from "@/lib/japanese-learning/n5/japanese-n5-data";
 
 const STORAGE_KEY = "learnwithrajan.japaneseN5.completed";
 const WEEKLY_STORAGE_KEY = "learnwithrajan.japaneseN5.weeklyTestsCompleted";

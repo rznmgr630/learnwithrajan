@@ -1,5 +1,5 @@
 /**
- * Shared helpers for JLPT-style weekly papers (five tests × 20 MCQs each).
+ * Shared helpers for JLPT N4-style weekly papers (five tests × 20 MCQs each).
  */
 
 import type {
@@ -7,11 +7,11 @@ import type {
   JapaneseWeeklyTestItem,
   LocalizedString,
 } from "@/lib/japanese-learning/types";
-import { youtubeClipsForMinnaLesson, youtubeClipsForSprintDay } from "@/lib/japanese-learning/n5-youtube-links";
+import { youtubeClipsForMinnaIILesson, youtubeClipsForN4SprintDay } from "@/lib/japanese-learning/n4/n4-youtube-links";
 
-export const YT_SAMPLE_CLIP_ID = "dPjxIuJZiZc";
+export const N4_YT_SAMPLE_CLIP_ID = "dPjxIuJZiZc";
 
-export function m(
+export function m4(
   id: string,
   prompt: string,
   choices: string[],
@@ -21,27 +21,26 @@ export function m(
   return { kind: "mcq", id, prompt, choices, correctIndex, explanation };
 }
 
-/** Deduped Minna lesson clip URLs for listening prep (max `limit`). */
-export function clips(...lessons: number[]): { url: string; title: string }[] {
+export function clipsN4(...lessons: number[]): { url: string; title: string }[] {
   const out: { url: string; title: string }[] = [];
   for (const n of lessons) {
-    for (const c of youtubeClipsForMinnaLesson(n)) {
+    for (const c of youtubeClipsForMinnaIILesson(n)) {
       if (!out.some((x) => x.url === c.url)) out.push(c);
     }
   }
   return out.slice(0, 4);
 }
 
-export function listeningIntroEmbedded(
+export function n4ListeningIntro(
   id: string,
   scenario: string,
   instruction: string,
   lessonNums: number[],
   sprintDay?: number,
 ): JapaneseWeeklyTestItem {
-  const base = [...clips(...lessonNums)];
+  const base = [...clipsN4(...lessonNums)];
   if (sprintDay !== undefined) {
-    for (const c of youtubeClipsForSprintDay(sprintDay)) {
+    for (const c of youtubeClipsForN4SprintDay(sprintDay)) {
       if (!base.some((x) => x.url === c.url)) base.push(c);
     }
   }
@@ -51,17 +50,17 @@ export function listeningIntroEmbedded(
     scenario,
     instruction,
     youtubeVideos: base.slice(0, 5),
-    embedVideoId: YT_SAMPLE_CLIP_ID,
+    embedVideoId: N4_YT_SAMPLE_CLIP_ID,
   };
 }
 
-/** One row: prompt, choices, correctIndex, explanation */
 export type McqPoolRow = [string, string[], number, string | undefined];
 
 /**
- * Builds five JLPT-style papers (Test 1–5) from parallel pools — each pool index is one exam variant.
+ * Builds five JLPT N4-style papers (Test 1–5) from parallel pools.
+ * Test 1 is easiest; Test 5 is hardest.
  */
-export function buildJlptFivePaperWeek(options: {
+export function buildN4FivePaperWeek(options: {
   weekPrefix: string;
   vocabBlocks: McqPoolRow[][];
   grammarBlocks: McqPoolRow[][];
@@ -87,16 +86,16 @@ export function buildJlptFivePaperWeek(options: {
     const i = testNum - 1;
 
     const vocabItems = vocabBlocks[i].map(([prompt, choices, correctIndex, explanation], j) =>
-      m(`${tid}-v-${j + 1}`, prompt, choices, correctIndex, explanation),
+      m4(`${tid}-v-${j + 1}`, prompt, choices, correctIndex, explanation),
     );
     const grammarItems = grammarBlocks[i].map(([prompt, choices, correctIndex, explanation], j) =>
-      m(`${tid}-g-${j + 1}`, prompt, choices, correctIndex, explanation),
+      m4(`${tid}-g-${j + 1}`, prompt, choices, correctIndex, explanation),
     );
     const readingItems = readingBlocks[i].map(([prompt, choices, correctIndex, explanation], j) =>
-      m(`${tid}-r-${j + 1}`, prompt, choices, correctIndex, explanation),
+      m4(`${tid}-r-${j + 1}`, prompt, choices, correctIndex, explanation),
     );
     const listeningMcqs = listeningMcqBlocks[i].map(([prompt, choices, correctIndex, explanation], j) =>
-      m(`${tid}-l-${j + 1}`, prompt, choices, correctIndex, explanation),
+      m4(`${tid}-l-${j + 1}`, prompt, choices, correctIndex, explanation),
     );
 
     return {
