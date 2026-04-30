@@ -8,20 +8,24 @@ import type {
   RoadmapDetailBlockResolved,
 } from "@/lib/challenge-data";
 import { pickLocalized } from "@/lib/i18n/pick";
-import type { ResolvedRoadmapDayDetail, ResolvedRoadmapDayDetailSection, ResolvedRoadmapDayFaqItem } from "@/lib/backend-learning/localize-roadmap-detail";
+import type {
+  ResolvedRoadmapDayDetail,
+  ResolvedRoadmapDayDetailSection,
+  ResolvedRoadmapDayFaqItem,
+} from "@/lib/backend-learning/localize-roadmap-detail";
 
 function ls(s: LocalizedString, locale: Locale): string {
   return typeof s === "string" ? s : pickLocalized(s, locale);
 }
 
-/** Resolves Git roadmap day detail copy for en / np / jp (inline triples, no copy-map). */
-export function localizeGitRoadmapDayDetail(detail: RoadmapDayDetail, locale: Locale): ResolvedRoadmapDayDetail {
+/** Resolves React roadmap day detail copy for en / np / jp. */
+export function localizeReactRoadmapDayDetail(detail: RoadmapDayDetail, locale: Locale): ResolvedRoadmapDayDetail {
   const ov = detail.overview;
   const overview =
     ov === undefined ? [] : Array.isArray(ov) ? ov.map((x) => ls(x, locale)) : [ls(ov, locale)];
 
-  const sections = detail.sections?.map((sec) => localizeGitSection(sec, locale));
-  const faq = detail.faq?.map((item) => localizeGitFaq(item, locale));
+  const sections = detail.sections?.map((sec) => localizeReactSection(sec, locale));
+  const faq = detail.faq?.map((item) => localizeReactFaq(item, locale));
   const bullets = detail.bullets?.map((b) => ls(b, locale));
 
   return {
@@ -32,16 +36,16 @@ export function localizeGitRoadmapDayDetail(detail: RoadmapDayDetail, locale: Lo
   };
 }
 
-function localizeGitSection(sec: RoadmapDayDetailSection, locale: Locale): ResolvedRoadmapDayDetailSection {
+function localizeReactSection(sec: RoadmapDayDetailSection, locale: Locale): ResolvedRoadmapDayDetailSection {
   return {
     ...sec,
     title: ls(sec.title, locale),
     items: sec.items?.map((i) => ls(i, locale)),
-    blocks: sec.blocks?.map((b) => localizeGitBlock(b, locale)),
+    blocks: sec.blocks?.map((b) => localizeReactBlock(b, locale)),
   };
 }
 
-function localizeGitBlock(block: RoadmapDetailBlock, locale: Locale): RoadmapDetailBlockResolved {
+function localizeReactBlock(block: RoadmapDetailBlock, locale: Locale): RoadmapDetailBlockResolved {
   switch (block.type) {
     case "paragraph":
       return { ...block, text: ls(block.text, locale) };
@@ -67,7 +71,7 @@ function localizeGitBlock(block: RoadmapDetailBlock, locale: Locale): RoadmapDet
   }
 }
 
-function localizeGitFaq(item: RoadmapDayFaqItem, locale: Locale): ResolvedRoadmapDayFaqItem {
+function localizeReactFaq(item: RoadmapDayFaqItem, locale: Locale): ResolvedRoadmapDayFaqItem {
   return {
     question: ls(item.question, locale),
     answer: ls(item.answer, locale),

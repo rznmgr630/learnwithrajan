@@ -82,6 +82,66 @@ export const UI_STRINGS = {
     np: "२ दिन आधार · ब्रान्च, रिमोट, worktree, टोली प्रवाह · प्रत्येक पाठमा चित्र",
     jp: "2日で基礎 · ブランチ・リモート・worktree・チーム運用 · 各日に図解",
   },
+  "hub.react.title": {
+    en: "React · full syllabus",
+    np: "React · पूरा पाठ्यक्रम",
+    jp: "React · フルシラバス",
+  },
+  "hub.react.subtitle": {
+    en: "Day cards with notes & self-check for each lesson.",
+    np: "दिन कार्ड, नोट र आत्मजाँच।",
+    jp: "日ごとのカードで解説とセルフチェック。",
+  },
+  "hub.react.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
+  "reactOutline.statsSections": {
+    en: "sections",
+    np: "खण्ड",
+    jp: "セクション",
+  },
+  "reactOutline.statsLessons": {
+    en: "lesson rows",
+    np: "पाठ पङ्क्ति",
+    jp: "レッスン項目",
+  },
+  "reactRoadmap.title": {
+    en: "React · getting started",
+    np: "React · सुरुवात",
+    jp: "React · はじめに",
+  },
+  "reactRoadmap.subtitle": {
+    en: "Days 1–8 in order. Tap a card for notes and self-check.",
+    np: "दिन १–८ क्रममा। कार्डमा नोट र आत्मजाँच।",
+    jp: "1〜8日目を順に並べています。カードで解説とセルフチェック。",
+  },
+  "reactRoadmap.daysListAria": {
+    en: "React course days 1 through 8",
+    np: "React पाठ्यक्रम दिन १ देखि ८",
+    jp: "React コース 1日目から8日目",
+  },
+  "reactRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "reactRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "reactRoadmap.bottomBlurb": {
+    en: "Tick Day 1 when you have run a dev server, edited JSX, and answered the self-check without peeking first.",
+    np: "dev server चलाउनुभयो, JSX सम्पादन गर्नुभयो, र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
+    jp: "開発サーバを動かし、JSX を編集し、セルフチェックに取り組めたら 1 日目にチェック。",
+  },
+  "reactDetail.selfCheckHint": {
+    en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once. Prompts match the day you opened (Days 1–8 each have different topics).",
+    np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त — प्रश्नमा क्लिक गर्दा जवाफ खुल्छ। खोलेको दिन (१–८) अनुसार प्रश्न फरक हुन्छ।",
+    jp: "初期状態では閉じています。開いた日（1〜8日目で内容が異なります）に合わせたセルフチェックです。",
+  },
   "hub.sectionProgramming": {
     en: "Programming",
     np: "प्रोग्रामिङ",
@@ -746,6 +806,46 @@ export const UI_STRINGS = {
     en: "Tick days as you finish them — progress stays in this browser. Each lesson mirrors Minna no Nihongo II chapter order with conversation, verb drills, grammar tables, kanji cards, MCQs, and listening tasks (pair with your textbook audio). After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam. Passive, causative, and causative-passive verb forms are the heart of N4 — keep a dedicated conjugation table open while studying.",
     np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक पाठले मिन्ना II को अध्याय क्रम अनुसार संवाद, क्रिया अभ्यास, व्याकरण तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट; अन्त्यमा पूर्ण मॉक। Passive, causative र causative-passive N4 को मुटु हुन् — अध्ययन गर्दा क्रिया संयोग तालिका खुला राख्नुहोस्।",
     jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各レッスンはみんなの日本語IIの順に沿って会話・動詞ドリル・文法表・漢字カード・MCQ・聴解タスクを含みます（教科書CDとセットで）。各週末はJLPT形式のウィークリーテスト、最後は総合模試。受け身・使役・使役受け身はN4の核心なので、学習中は動詞活用表を常に開いておきましょう。",
+  },
+  "hub.devops.title": {
+    en: "DevOps in 13 weeks",
+    np: "१३ हप्तामा DevOps",
+    jp: "13週でDevOps",
+  },
+  "hub.devops.subtitle": {
+    en: "Linux · networking · Docker · Kubernetes · CI/CD · Terraform · Prometheus",
+    np: "Linux · नेटवर्किङ · Docker · Kubernetes · CI/CD · Terraform · Prometheus",
+    jp: "Linux · ネットワーク · Docker · Kubernetes · CI/CD · Terraform · Prometheus",
+  },
+  "devopsRoadmap.title": {
+    en: "DevOps Roadmap — 13 weeks",
+    np: "DevOps रोडम्याप — १३ हप्ता",
+    jp: "DevOps ロードマップ — 13週",
+  },
+  "devopsRoadmap.subtitle": {
+    en: "91 days · Linux → Networking → Git → Python → AWS → Docker → CI/CD → K8s → Ansible → Terraform → Monitoring",
+    np: "९१ दिन · Linux → नेटवर्किङ → Git → Python → AWS → Docker → CI/CD → K8s → Ansible → Terraform → मोनिटरिङ",
+    jp: "91日 · Linux → ネットワーク → Git → Python → AWS → Docker → CI/CD → K8s → Ansible → Terraform → モニタリング",
+  },
+  "devopsRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "कुल प्रगति",
+    jp: "全体の進捗",
+  },
+  "devopsRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "devopsRoadmap.bottomBlurb": {
+    en: "Tick days as you finish them — progress is saved in this browser. Each week introduces one major DevOps tool from first principles: start with why it exists, understand how it works, then practice with hands-on exercises and self-check questions.",
+    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमा सुरक्षित हुन्छ। प्रत्येक हप्तामा एउटा प्रमुख DevOps उपकरण वा अवधारणा पहिलो सिद्धान्तबाट परिचय हुन्छ।",
+    jp: "終わった日にチェックすると進捗がブラウザに保存されます。毎週ひとつの主要 DevOps ツールを「なぜ・何を・どうやって」から学びます。",
+  },
+  "devopsDetail.selfCheckHint": {
+    en: "Tap a question to reveal the answer.",
+    np: "उत्तर हेर्न प्रश्नमा थिच्नुहोस्।",
+    jp: "質問をタップして回答を確認しましょう。",
   },
 } as const satisfies Record<string, Record<Locale, string>>;
 

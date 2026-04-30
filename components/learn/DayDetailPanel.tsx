@@ -9,8 +9,13 @@ import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadma
 import { localizeGitRoadmapDayDetail } from "@/lib/git-learning/localize-git-roadmap-detail";
 import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
 import { getGitRoadmapDayContext, resolveGitDayDetail } from "@/lib/git-learning/git-challenge-data";
+import { getReactRoadmapDayContext, resolveReactDayDetail } from "@/lib/react-learning/react-challenge-data";
+import { localizeReactRoadmapDayDetail } from "@/lib/react-learning/localize-react-roadmap-detail";
+import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
+import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
 type DayDetailPanelProps = {
   dayNumber: number | null;
@@ -22,7 +27,8 @@ type DayDetailPanelProps = {
 };
 
 function overviewParagraphs(overview: string | string[]): string[] {
-  return Array.isArray(overview) ? overview : [overview];
+  const raw = Array.isArray(overview) ? overview : [overview];
+  return raw.map((p) => p.trim()).filter((p) => p.length > 0);
 }
 
 export function DayDetailPanel({
@@ -38,13 +44,29 @@ export function DayDetailPanel({
     dayNumber !== null
       ? track === "git"
         ? getGitRoadmapDayContext(dayNumber)
-        : getRoadmapDayContext(dayNumber)
+        : track === "react"
+          ? getReactRoadmapDayContext(dayNumber)
+          : track === "devops"
+            ? getDevopsRoadmapDayContext(dayNumber)
+            : getRoadmapDayContext(dayNumber)
       : null;
-  const detailRaw = ctx ? (track === "git" ? resolveGitDayDetail(ctx.day) : resolveDayDetail(ctx.day)) : null;
+  const detailRaw = ctx
+    ? track === "git"
+      ? resolveGitDayDetail(ctx.day)
+      : track === "react"
+        ? resolveReactDayDetail(ctx.day)
+        : track === "devops"
+          ? resolveDevopsDayDetail(ctx.day)
+          : resolveDayDetail(ctx.day)
+    : null;
   const detail = detailRaw
     ? track === "git"
       ? localizeGitRoadmapDayDetail(detailRaw, locale)
-      : localizeRoadmapDayDetail(detailRaw, locale)
+      : track === "react"
+        ? localizeReactRoadmapDayDetail(detailRaw, locale)
+        : track === "devops"
+          ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
+          : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
@@ -74,6 +96,8 @@ export function DayDetailPanel({
 
   const done = isDone(dayNumber);
   const intro = overviewParagraphs(detail.overview);
+  const hideReactOverviewWithSections = track === "react" && (detail.sections?.length ?? 0) > 0;
+  const introToShow = hideReactOverviewWithSections ? [] : intro;
   const faq = detail.faq ?? [];
 
   return (
@@ -87,9 +111,12 @@ export function DayDetailPanel({
       <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
-            <p className="text-xs font-medium text-[var(--muted)]">{pickLocalized(ctx.weekTitle, locale)}</p>
+            <p className="text-xs font-medium text-[var(--muted)]">
+              {stripLessonTimingFromTitle(pickLocalized(ctx.weekTitle, locale))}
+            </p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
-              {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {pickLocalized(ctx.day.title, locale)}
+              {t("jpRoadmap.dayPrefix")} {ctx.day.day}:{" "}
+              {stripLessonTimingFromTitle(pickLocalized(ctx.day.title, locale))}
             </h2>
           </div>
           <button
@@ -116,22 +143,26 @@ export function DayDetailPanel({
             ))}
           </div>
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              {t("jpDetail.overviewHeading")}
-            </h3>
-            <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
-              {intro.map((p, i) => (
-                <p key={i}>
-                  <RichText text={p} />
-                </p>
-              ))}
+          {introToShow.length > 0 ? (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {t("jpDetail.overviewHeading")}
+              </h3>
+              <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
+                {introToShow.map((p, i) => (
+                  <p key={i}>
+                    <RichText text={p} />
+                  </p>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           {detail.sections?.map((sec) => (
             <div key={sec.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{sec.title}</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {stripLessonTimingFromTitle(sec.title)}
+              </h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <DayDetailBlockRenderer blocks={sec.blocks} locale={locale} diagramTrack={track} />
               ) : sec.items && sec.items.length > 0 ? (
@@ -155,7 +186,13 @@ export function DayDetailPanel({
                 </span>
               </h3>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                {track === "git" ? t("gitDetail.selfCheckHint") : t("backendDetail.selfCheckHint")}
+                {track === "git"
+                  ? t("gitDetail.selfCheckHint")
+                  : track === "react"
+                    ? t("reactDetail.selfCheckHint")
+                    : track === "devops"
+                      ? t("devopsDetail.selfCheckHint")
+                      : t("backendDetail.selfCheckHint")}
               </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
@@ -184,7 +221,7 @@ export function DayDetailPanel({
                           <span className="mr-2 font-mono text-xs text-[var(--muted)] tabular-nums">
                             {String(i + 1).padStart(2, "0")}.
                           </span>
-                          <RichText text={item.question} />
+                          <RichText text={stripLessonTimingFromTitle(item.question)} />
                         </span>
                         <svg
                           className={`mt-0.5 h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
