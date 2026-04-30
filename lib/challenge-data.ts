@@ -68,7 +68,18 @@ export type RoadmapDetailDiagramId =
   | "git-rebase-linearize"
   | "git-stash-pop"
   | "git-worktree"
-  | "git-pr-review-merge";
+  | "git-pr-review-merge"
+  | "react-virtual-dom"
+  | "devops-linux-hierarchy"
+  | "devops-osi-model"
+  | "devops-docker-layers"
+  | "devops-cicd-pipeline"
+  | "devops-k8s-cluster"
+  | "devops-terraform-workflow"
+  | "devops-aws-vpc"
+  | "devops-prometheus-architecture"
+  | "devops-ansible-playbook"
+  | "devops-nginx-proxy";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
@@ -107,8 +118,8 @@ export interface RoadmapDayFaqItem {
 
 /** Shown in the day detail panel when a card is opened. */
 export interface RoadmapDayDetail {
-  /** One paragraph or several for longer write-ups. */
-  overview: LocalizedString | LocalizedString[];
+  /** One paragraph or several for longer write-ups. Omit when sections (or bullets alone) carry the narrative. */
+  overview?: LocalizedString | LocalizedString[];
   /** Optional themed blocks rendered after the overview. */
   sections?: RoadmapDayDetailSection[];
   /** Optional FAQ; answers show in an accordion (collapsed by default). */
@@ -220,11 +231,6 @@ export function getRoadmapDayContext(
   return null;
 }
 
-function titleTriple(title: LocalizedString): { en: string; np: string; jp: string } {
-  if (typeof title === "string") return { en: title, np: title, jp: title };
-  return title;
-}
-
 const DEFAULT_DETAIL_BULLETS: LocalizedString[] = [
   {
     en: "Summarize the main idea in one sentence.",
@@ -246,13 +252,7 @@ const DEFAULT_DETAIL_BULLETS: LocalizedString[] = [
 /** Merges saved `detail` with a neutral template when a day has no custom copy yet. */
 export function resolveDayDetail(day: RoadmapDay): RoadmapDayDetail {
   if (day.detail) return day.detail;
-  const tp = titleTriple(day.title);
   return {
-    overview: {
-      en: `Focus for today: ${tp.en}. Add a custom \`detail\` block on this day inside lib/challenge-data.ts when you are ready.`,
-      np: `आजको फोकस: ${tp.np}। तयार भएपछि lib/challenge-data.ts मा यस दिनको लागि अनुकूलित \`detail\` खण्ड थप्नुहोस्।`,
-      jp: `今日の焦点：${tp.jp}。準備ができたら lib/challenge-data.ts でこの日の \`detail\` を追加してください。`,
-    },
     bullets: [...DEFAULT_DETAIL_BULLETS],
   };
 }

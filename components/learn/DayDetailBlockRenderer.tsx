@@ -2,9 +2,12 @@ import type { Locale } from "@/lib/i18n/types";
 import type { RoadmapDetailBlockResolved } from "@/lib/challenge-data";
 import { DayDetailDiagram } from "@/components/learn/DayDetailDiagrams";
 import { GitDiagram, isGitRoadmapDiagram } from "@/components/learn/GitDiagrams";
+import { ReactDiagram, isReactRoadmapDiagram } from "@/components/learn/ReactDiagrams";
+import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/DevopsDiagrams";
 import { RichText } from "@/components/learn/RichText";
+import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
-export type RoadmapDiagramTrack = "backend" | "git";
+export type RoadmapDiagramTrack = "backend" | "git" | "react" | "devops";
 
 function DetailTable({
   caption,
@@ -110,10 +113,25 @@ export function DayDetailBlockRenderer({
               />
             );
           case "code":
-            return <DetailCode key={key} title={block.title} code={block.code} />;
+            return (
+              <DetailCode
+                key={key}
+                title={block.title !== undefined ? stripLessonTimingFromTitle(block.title) : undefined}
+                code={block.code}
+              />
+            );
           case "diagram":
             if (diagramTrack === "git" && isGitRoadmapDiagram(block.id)) {
               return <GitDiagram key={key} id={block.id} locale={locale} />;
+            }
+            if (diagramTrack === "react" && isReactRoadmapDiagram(block.id)) {
+              return <ReactDiagram key={key} id={block.id} />;
+            }
+            if (diagramTrack === "react") {
+              return null;
+            }
+            if (diagramTrack === "devops" && isDevopsRoadmapDiagram(block.id)) {
+              return <DevopsDiagram key={key} id={block.id} />;
             }
             return <DayDetailDiagram key={key} id={block.id} />;
           default:

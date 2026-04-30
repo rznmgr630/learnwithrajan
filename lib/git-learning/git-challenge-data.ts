@@ -68,11 +68,6 @@ export function getGitRoadmapDayContext(dayNumber: number): { weekTitle: Localiz
   return null;
 }
 
-function titleTriple(title: LocalizedString): { en: string; np: string; jp: string } {
-  if (typeof title === "string") return { en: title, np: title, jp: title };
-  return title;
-}
-
 const GIT_DEFAULT_DETAIL_BULLETS: LocalizedString[] = [
   {
     en: "Summarize the day’s goal in one sentence.",
@@ -88,13 +83,7 @@ const GIT_DEFAULT_DETAIL_BULLETS: LocalizedString[] = [
 
 export function resolveGitDayDetail(day: RoadmapDay): RoadmapDayDetail {
   if (day.detail) return day.detail;
-  const tp = titleTriple(day.title);
   return {
-    overview: {
-      en: `Focus for today: ${tp.en}.`,
-      np: `आजको फोकस: ${tp.np}।`,
-      jp: `今日の焦点：${tp.jp}。`,
-    },
     bullets: [...GIT_DEFAULT_DETAIL_BULLETS],
   };
 }

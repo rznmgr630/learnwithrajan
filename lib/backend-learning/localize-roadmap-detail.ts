@@ -35,7 +35,8 @@ export function localizeRoadmapDayDetail(detail: RoadmapDayDetail, locale: Local
   const ls = (s: LocalizedString) => resolveBackendCopy(s, locale);
 
   const ov = detail.overview;
-  const overview = Array.isArray(ov) ? ov.map(ls) : ls(ov);
+  const overview =
+    ov === undefined ? [] : Array.isArray(ov) ? ov.map(ls) : [ls(ov)];
 
   const sections = detail.sections?.map((sec) => localizeSection(sec, locale));
   const faq = detail.faq?.map((item) => localizeFaq(item, locale));

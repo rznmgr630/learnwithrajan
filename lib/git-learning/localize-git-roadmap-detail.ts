@@ -17,7 +17,8 @@ function ls(s: LocalizedString, locale: Locale): string {
 /** Resolves Git roadmap day detail copy for en / np / jp (inline triples, no copy-map). */
 export function localizeGitRoadmapDayDetail(detail: RoadmapDayDetail, locale: Locale): ResolvedRoadmapDayDetail {
   const ov = detail.overview;
-  const overview = Array.isArray(ov) ? ov.map((x) => ls(x, locale)) : ls(ov, locale);
+  const overview =
+    ov === undefined ? [] : Array.isArray(ov) ? ov.map((x) => ls(x, locale)) : [ls(ov, locale)];
 
   const sections = detail.sections?.map((sec) => localizeGitSection(sec, locale));
   const faq = detail.faq?.map((item) => localizeGitFaq(item, locale));
