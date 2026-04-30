@@ -1,6 +1,7 @@
 import type { JapaneseDialogueLine } from "@/lib/japanese-learning/types";
+import { N5_MINNA_PRACTICE_TAIL, N5_SPRINT_PRACTICE_TAIL } from "@/lib/japanese-learning/n5/n5-lesson-dialogue-tails";
 
-/** Extra classroom lines to reach 20+ turns — polite textbook tone. */
+/** Extra classroom lines to reach 20+ turns — polite textbook tone (N4 / fallback only). */
 const FILLER: JapaneseDialogueLine[] = [
   {
     speaker: "先生",
@@ -134,4 +135,23 @@ export function ensureDialogueAtLeastTwentyLines(seed: JapaneseDialogueLine[]): 
   if (seed.length >= MIN_LINES) return seed;
   const need = MIN_LINES - seed.length;
   return [...seed, ...FILLER.slice(0, need)];
+}
+
+/**
+ * N5 only: append chapter-aligned practice lines (grammar / particles per Minna lesson)
+ * instead of the shared generic classroom filler.
+ */
+export function buildN5DialogueLines(
+  seed: JapaneseDialogueLine[],
+  minnaLesson: number | null,
+  courseDay: number,
+): JapaneseDialogueLine[] {
+  const tail =
+    minnaLesson !== null
+      ? (N5_MINNA_PRACTICE_TAIL[minnaLesson] ?? [])
+      : (N5_SPRINT_PRACTICE_TAIL[courseDay] ?? []);
+  const merged = [...seed, ...tail];
+  if (merged.length >= MIN_LINES) return merged;
+  const need = MIN_LINES - merged.length;
+  return [...merged, ...FILLER.slice(0, need)];
 }

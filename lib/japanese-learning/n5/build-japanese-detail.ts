@@ -1,4 +1,4 @@
-import { ensureDialogueAtLeastTwentyLines } from "@/lib/japanese-learning/n5/n5-dialogue-expand";
+import { buildN5DialogueLines } from "@/lib/japanese-learning/n5/n5-dialogue-expand";
 import { twentyKanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-pool";
 import {
   youtubeClipsForMinnaLesson,
@@ -22,7 +22,7 @@ import type {
 export type N5LessonSpec = {
   minnaLesson: number | null;
   bookRef: string;
-  dialogue: JapaneseDialogueLine[]; // padded to more than 20 lines (≥21) in the builder
+  dialogue: JapaneseDialogueLine[]; // merged with lesson-tail practice to ≥21 lines in the builder
   particles: { particle: string; note: LocalizedString }[];
   grammarBullets: LocalizedString[];
   grammarTable?: { caption?: LocalizedString; headers: LocalizedString[]; rows: LocalizedString[][] };
@@ -83,7 +83,7 @@ export function buildJapaneseDayDetail(
       ? `${spec.bookRef} · Lesson ${spec.minnaLesson}`
       : spec.bookRef;
 
-  const dialogueLines = ensureDialogueAtLeastTwentyLines(spec.dialogue);
+  const dialogueLines = buildN5DialogueLines(spec.dialogue, spec.minnaLesson, day);
 
   const youtubeVideos =
     spec.minnaLesson !== null
