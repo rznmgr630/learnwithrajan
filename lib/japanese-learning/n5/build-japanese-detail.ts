@@ -1,4 +1,10 @@
 import { buildN5DialogueLines } from "@/lib/japanese-learning/n5/n5-dialogue-expand";
+import {
+  n5VocabularySectionCaption,
+  n5VocabularySectionTitle,
+  n5VocabularyTableHeaders,
+  n5VocabularyTableRows,
+} from "@/lib/japanese-learning/n5/n5-lesson-vocabulary";
 import { twentyKanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-pool";
 import {
   youtubeClipsForMinnaLesson,
@@ -146,6 +152,17 @@ export function buildJapaneseDayDetail(
       ],
     },
     {
+      title: n5VocabularySectionTitle(),
+      blocks: [
+        {
+          type: "table",
+          caption: n5VocabularySectionCaption(ref),
+          headers: n5VocabularyTableHeaders(),
+          rows: n5VocabularyTableRows(spec.minnaLesson, day),
+        },
+      ],
+    },
+    {
       title: SECTION.grammar,
       blocks: grammarBlocks(spec),
     },
@@ -206,6 +223,11 @@ export function buildJapaneseDayDetail(
       en: `Play each listening link with captions off first; replay with textbook transcript.`,
       np: `प्रत्येक सुन्ने लिंक पहिले क्याप्सन बन्द गरेर बजाउनुहोस्; पाठ्यपुस्तकको ट्रान्स्क्रिप्टसँग दोहोर्याउनुहोस्।`,
       jp: `各聴解リンクは最初は字幕オフで再生し、教科書のスクリプトで再生し直してください。`,
+    },
+    {
+      en: `Memorize the vocabulary table aloud: cover the meaning column and recall from kana/kanji (${ref}).`,
+      np: `शब्दावली तालिका जोरले याद गर्नुहोस्: अर्थ लुकाएर काना/कांजीबाट सम्झनुहोस् (${ref})।`,
+      jp: `語彙表を声に出して暗記しましょう。意味の列を隠してかな・漢字から言い直します（${ref}）。`,
     },
   ];
 

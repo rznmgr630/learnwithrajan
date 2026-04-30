@@ -512,6 +512,46 @@ export const UI_STRINGS = {
     np: "अवलोकन",
     jp: "概要",
   },
+  "jpDetail.vocabularySection": {
+    en: "Vocabulary & meanings (chapter-style)",
+    np: "शब्दावली र अर्थ (अध्याय शैली)",
+    jp: "語彙と意味（章の一覧形式）",
+  },
+  "jpDetail.vocabularyCaption": {
+    en: "Lesson-aligned word list for shadowing and review. Open your Minna textbook audio for native pronunciation.",
+    np: "छायाँ र पुनरावलोकनका लागि पाठअनुकूल शब्दसूची। मूल उच्चारणका लागि मिन्ना पाठ्यपुस्तकको अडियो खोल्नुहोस्।",
+    jp: "シャドーイングと復習用の語彙一覧です。ネイティブの発音は教科書の音声で確認してください。",
+  },
+  "jpDetail.vocabColSn": {
+    en: "S.N.",
+    np: "क्र.सं.",
+    jp: "番号",
+  },
+  "jpDetail.vocabColRomaji": {
+    en: "Rōmaji",
+    np: "रोमाजी",
+    jp: "ローマ字",
+  },
+  "jpDetail.vocabColKana": {
+    en: "Hiragana / Katakana",
+    np: "हिरागाना / काताकाना",
+    jp: "ひらがな・カタカナ",
+  },
+  "jpDetail.vocabColKanji": {
+    en: "Kanji",
+    np: "कांजी",
+    jp: "漢字",
+  },
+  "jpDetail.vocabColMeaning": {
+    en: "Meaning",
+    np: "अर्थ",
+    jp: "意味",
+  },
+  "jpDetail.vocabColExample": {
+    en: "Example",
+    np: "उदाहरण",
+    jp: "例文",
+  },
   "jpDetail.practiceChecklist": {
     en: "Practice checklist",
     np: "अभ्यास सूची",

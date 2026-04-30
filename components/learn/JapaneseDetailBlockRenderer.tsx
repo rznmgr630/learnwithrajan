@@ -17,7 +17,7 @@ function DetailTable({
 }) {
   return (
     <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_52%,transparent)]">
-      <table className="w-full min-w-[18rem] border-collapse text-left text-xs text-[var(--muted)]">
+      <table className="w-full min-w-[min(100%,42rem)] border-collapse text-left text-xs text-[var(--muted)]">
         <thead>
           <tr className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_92%,transparent)]">
             {headers.map((h, hi) => (
