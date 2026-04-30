@@ -127,6 +127,11 @@ export const UI_STRINGS = {
     np: "← प्रोग्रामिङ",
     jp: "← プログラミング",
   },
+  "learn.backLanguage": {
+    en: "← Language",
+    np: "← भाषा",
+    jp: "← 言語",
+  },
   "backendRoadmap.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
