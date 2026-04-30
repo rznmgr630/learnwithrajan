@@ -16,6 +16,8 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-prometheus-architecture",
   "devops-ansible-playbook",
   "devops-nginx-proxy",
+  "devops-linux-os-stack",
+  "devops-linux-permissions",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -440,6 +442,124 @@ function NginxProxyDiagram() {
   );
 }
 
+function LinuxOsStackDiagram() {
+  const userLayers = [
+    { label: "Applications", sub: "nginx · docker · python · your services", color: "#10b981", y: 32 },
+    { label: "Shell  (bash / zsh / sh)", sub: "parses commands · expands variables · forks processes", color: "#06b6d4", y: 72 },
+    { label: "System Libraries  (glibc)", sub: "printf · malloc · fopen · pthread · wraps syscalls", color: "#3b82f6", y: 112 },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 268" className="h-auto w-full" aria-hidden>
+        <text x="260" y="18" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">Linux OS Stack — from hardware to your terminal</text>
+        {userLayers.map(({ label, sub, color, y }) => (
+          <g key={label}>
+            <rect x="16" y={y} width="430" height="32" rx="4" fill={`${color}1a`} stroke={`${color}66`} strokeWidth="1.2"/>
+            <text x="30" y={y + 14} fontSize="10" fontWeight="600" fill={color}>{label}</text>
+            <text x="30" y={y + 26} fontSize="8" fill="var(--muted)">{sub}</text>
+          </g>
+        ))}
+        {/* User Space bracket */}
+        <line x1="452" y1="32" x2="452" y2="144" stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="452" y1="32" x2="460" y2="32" stroke="var(--muted)" strokeWidth="1"/>
+        <line x1="452" y1="144" x2="460" y2="144" stroke="var(--muted)" strokeWidth="1"/>
+        <text x="468" y="93" fontSize="8.5" fill="var(--muted)" fontStyle="italic">User</text>
+        <text x="468" y="105" fontSize="8.5" fill="var(--muted)" fontStyle="italic">Space</text>
+        {/* Syscall boundary */}
+        <line x1="16" y1="152" x2="446" y2="152" stroke="#f59e0b88" strokeWidth="1.5" strokeDasharray="6 3"/>
+        <text x="230" y="163" textAnchor="middle" fontSize="8" fill="#fbbf24">── syscall boundary ──</text>
+        {/* Kernel layer */}
+        <rect x="16" y="170" width="430" height="54" rx="4" fill="#6366f11a" stroke="#6366f166" strokeWidth="1.5"/>
+        <text x="30" y="188" fontSize="10" fontWeight="700" fill="#818cf8">Linux Kernel</text>
+        <text x="30" y="202" fontSize="8" fill="var(--muted)">Process Scheduler · Memory Manager · Device Drivers · Networking</text>
+        <text x="30" y="214" fontSize="8" fill="var(--muted)">Virtual Filesystem (VFS) · Security (SELinux / AppArmor)</text>
+        {/* Kernel Space bracket */}
+        <line x1="452" y1="170" x2="452" y2="224" stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="452" y1="170" x2="460" y2="170" stroke="var(--muted)" strokeWidth="1"/>
+        <line x1="452" y1="224" x2="460" y2="224" stroke="var(--muted)" strokeWidth="1"/>
+        <text x="468" y="198" fontSize="8.5" fill="var(--muted)" fontStyle="italic">Kernel</text>
+        <text x="468" y="210" fontSize="8.5" fill="var(--muted)" fontStyle="italic">Space</text>
+        {/* Hardware layer */}
+        <rect x="16" y="232" width="430" height="28" rx="4" fill="#f59e0b1a" stroke="#f59e0b66" strokeWidth="1.2"/>
+        <text x="30" y="250" fontSize="10" fontWeight="600" fill="#fbbf24">Hardware</text>
+        <text x="120" y="250" fontSize="8.5" fill="var(--muted)">CPU · RAM · SSD/HDD · NIC · GPU</text>
+        {/* Hardware bracket */}
+        <line x1="452" y1="232" x2="452" y2="260" stroke="var(--muted)" strokeWidth="1" strokeDasharray="3 2"/>
+        <text x="468" y="250" fontSize="8.5" fill="var(--muted)" fontStyle="italic">Physical</text>
+        {/* Down arrows showing call direction */}
+        <text x="8" y="58" textAnchor="middle" fontSize="9" fill="var(--muted)">↓</text>
+        <text x="8" y="98" textAnchor="middle" fontSize="9" fill="var(--muted)">↓</text>
+        <text x="8" y="138" textAnchor="middle" fontSize="9" fill="var(--muted)">↓</text>
+        <text x="8" y="200" textAnchor="middle" fontSize="9" fill="var(--muted)">↓</text>
+      </svg>
+      <Caption text="No user program ever touches hardware directly — syscalls are the only crossing point between user space and the kernel" />
+    </figure>
+  );
+}
+
+function LinuxPermissionsDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 230" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">Linux permission bits — reading ls -l output</text>
+        {/* ls -l example line */}
+        <rect x="16" y="24" width="488" height="28" rx="4" fill="color-mix(in oklab, var(--elevated) 65%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="43" fontSize="10" fontFamily="monospace" fill="var(--text)">-  rwx  r-x  r--   2   alice  devs   4.2K   Jan 12  deploy.sh</text>
+        {/* Bracket annotations */}
+        {[
+          { x1: 30, x2: 38,  label: "type",  sub: "- = file", color: "#94a3b8", ly: 86 },
+          { x1: 42, x2: 66,  label: "owner", sub: "rwx",      color: "#6366f1", ly: 86 },
+          { x1: 69, x2: 93,  label: "group", sub: "r-x",      color: "#06b6d4", ly: 86 },
+          { x1: 96, x2: 120, label: "other", sub: "r--",      color: "#10b981", ly: 86 },
+          { x1: 127,x2: 134, label: "links", sub: "2",        color: "#94a3b8", ly: 86 },
+          { x1: 138,x2: 166, label: "owner", sub: "alice",    color: "#f59e0b", ly: 86 },
+          { x1: 169,x2: 193, label: "group", sub: "devs",     color: "#f59e0b", ly: 86 },
+        ].map(({ x1, x2, label, color, ly }) => {
+          const mid = (x1 + x2) / 2;
+          return (
+            <g key={label + x1}>
+              <line x1={mid} y1="52" x2={mid} y2={ly - 14} stroke={color} strokeWidth="1" strokeDasharray="3 2"/>
+              <text x={mid} y={ly} textAnchor="middle" fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            </g>
+          );
+        })}
+        {/* Permission bit breakdown */}
+        <text x="260" y="110" textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--text)">Permission bits breakdown</text>
+        {[
+          { label: "r", name: "read",    owner: true,  group: true,  other: true,  color: "#6366f1" },
+          { label: "w", name: "write",   owner: true,  group: false, other: false, color: "#f59e0b" },
+          { label: "x", name: "execute", owner: true,  group: true,  other: false, color: "#10b981" },
+        ].map(({ label, name, owner, group, other, color }, i) => {
+          const y = 120 + i * 28;
+          return (
+            <g key={label}>
+              <text x="30" y={y + 12} fontSize="11" fontFamily="monospace" fontWeight="700" fill={color}>{label}</text>
+              <text x="50" y={y + 12} fontSize="9" fill="var(--muted)">{name}</text>
+              {[
+                { cx: 150, active: owner, who: "owner" },
+                { cx: 270, active: group, who: "group" },
+                { cx: 390, active: other, who: "other" },
+              ].map(({ cx, active, who }) => (
+                <g key={who}>
+                  <rect x={cx - 28} y={y} width="56" height="22" rx="3"
+                    fill={active ? `${color}22` : "color-mix(in oklab, var(--elevated) 60%, transparent)"}
+                    stroke={active ? `${color}88` : "var(--border)"} strokeWidth="1"/>
+                  <text x={cx} y={y + 15} textAnchor="middle" fontSize="9"
+                    fill={active ? color : "var(--muted)"}>{active ? `${who}: ✓` : `${who}: –`}</text>
+                </g>
+              ))}
+            </g>
+          );
+        })}
+        {/* Octal cheatsheet */}
+        <rect x="16" y="208" width="488" height="18" rx="3" fill="color-mix(in oklab, var(--elevated) 45%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="221" fontSize="8.5" fill="var(--muted)">Octal: r=4  w=2  x=1 → rwx=7  r-x=5  r--=4 → chmod 754 means owner=rwx group=r-x other=r--</text>
+      </svg>
+      <Caption text="Each file has three permission sets (owner · group · other) × three bits (read · write · execute)" />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -452,6 +572,8 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-prometheus-architecture": return <PrometheusArchDiagram />;
     case "devops-ansible-playbook": return <AnsiblePlaybookDiagram />;
     case "devops-nginx-proxy": return <NginxProxyDiagram />;
+    case "devops-linux-os-stack": return <LinuxOsStackDiagram />;
+    case "devops-linux-permissions": return <LinuxPermissionsDiagram />;
     default: return null;
   }
 }

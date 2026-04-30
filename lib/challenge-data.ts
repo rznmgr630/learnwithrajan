@@ -79,7 +79,9 @@ export type RoadmapDetailDiagramId =
   | "devops-aws-vpc"
   | "devops-prometheus-architecture"
   | "devops-ansible-playbook"
-  | "devops-nginx-proxy";
+  | "devops-nginx-proxy"
+  | "devops-linux-os-stack"
+  | "devops-linux-permissions";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

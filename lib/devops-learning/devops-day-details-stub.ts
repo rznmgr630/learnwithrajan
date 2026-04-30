@@ -1,11 +1,12 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
+import { DEVOPS_DAY_1_DETAIL } from "./devops-week1-day1-detail";
 
 /** Placeholder detail until per-day content is split into week modules (week1-linux, …). */
 function stubDayDetail(_day: number): RoadmapDayDetail {
   return {
     bullets: [
       {
-        en: "Align today’s practice with the two tags on the roadmap card (topic + subtopic).",
+        en: "Align today's practice with the two tags on the roadmap card (topic + subtopic).",
         np: "कार्डका दुई ट्याग अनुसार अभ्यास।",
         jp: "カードの2つのタグ（トピックとサブトピック）に合わせて学習する。",
       },
@@ -21,5 +22,6 @@ function stubDayDetail(_day: number): RoadmapDayDetail {
 export const DEVOPS_DAY_DETAILS: Record<number, RoadmapDayDetail> = (() => {
   const out: Record<number, RoadmapDayDetail> = {};
   for (let d = 1; d <= 91; d += 1) out[d] = stubDayDetail(d);
+  out[1] = DEVOPS_DAY_1_DETAIL;
   return out;
 })();
