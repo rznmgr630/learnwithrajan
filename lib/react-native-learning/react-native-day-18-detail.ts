@@ -370,6 +370,342 @@ export function useApi<T>(
         },
       ],
     },
+    {
+      title: {
+        en: "Setting Up the Backend",
+        np: "ब्याकएन्ड सेटअप",
+        jp: "バックエンドのセットアップ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "This course uses a **Node.js/Express** backend — either a lightweight **JSON Server** for rapid prototyping or a real Express API for production-like practice. The base URL is configured per environment using Expo's `EXPO_PUBLIC_` prefix, which exposes variables to the JavaScript bundle at build time (Expo SDK 49+). **Never** put secrets such as API keys or private tokens in `EXPO_PUBLIC_` variables — they are baked into the client bundle and visible to anyone who extracts it.",
+            np: "यस कोर्समा Node.js/Express ब्याकएन्ड प्रयोग गरिन्छ। EXPO_PUBLIC_ prefix ले env var JS bundle मा expose गर्छ। API key जस्ता secret यहाँ नराख्नुस्।",
+            jp: "このコースでは **Node.js/Express** バックエンド（JSON Server またはリアルな Express API）を使用します。ベース URL は `EXPO_PUBLIC_` プレフィックスで環境ごとに設定します。API キーなどの秘密情報は絶対に `EXPO_PUBLIC_` に入れないでください — バンドルに焼き込まれ誰でも見られます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Configure base URL with EXPO_PUBLIC_ env var",
+            np: "EXPO_PUBLIC_ env var सँग baseURL सेट गर्नुस्",
+            jp: "EXPO_PUBLIC_ 環境変数で baseURL を設定",
+          },
+          code: `// services/client.ts
+import { create } from 'apisauce';
+
+export const client = create({
+  baseURL: process.env.EXPO_PUBLIC_API_URL ?? 'https://api.example.com',
+});
+
+// .env.local (never commit to git)
+// EXPO_PUBLIC_API_URL=http://192.168.1.10:3000
+
+// IMPORTANT: EXPO_PUBLIC_ vars are embedded in the JS bundle at build time.
+// Use them only for non-sensitive values like API base URLs.
+// Secrets (private keys, payment tokens) must stay server-side only.`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Inspecting API Calls",
+        np: "API कलहरू जाँच्ने",
+        jp: "API コールの検査",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Two main tools help you inspect network traffic during development: **Expo Dev Tools / Metro overlay** shows basic request logs in the terminal, while **Flipper** (or React Native Debugger) provides a full network panel with request/response headers and body. For a quick no-setup approach, add request and response transforms directly on your ApiSauce client. Always wrap these logs in `if (__DEV__)` so they are stripped from production builds.",
+            np: "Expo Dev Tools/Metro ले basic लग देखाउँछ। Flipper/RN Debugger ले headers र body सहित पूरा network panel दिन्छ। छिटो approach को लागि ApiSauce transforms प्रयोग गर्नुस् — तर `if (__DEV__)` मा मात्र।",
+            jp: "開発中のネットワーク検査には主に2つのツールがあります。**Expo Dev Tools / Metro オーバーレイ**は基本的なリクエストログを表示し、**Flipper**（または React Native Debugger）はヘッダーやボディを含む完全なネットワークパネルを提供します。セットアップ不要な方法として ApiSauce の transform を使う手もあります。必ず `if (__DEV__)` でガードしてください。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "ApiSauce request/response logging transforms",
+            np: "ApiSauce logging transforms",
+            jp: "ApiSauce リクエスト／レスポンスログ transform",
+          },
+          code: `client.addRequestTransform((request) => {
+  if (__DEV__) {
+    console.log(\`→ \${request.method?.toUpperCase()} \${request.url}\`, request.params ?? request.data);
+  }
+});
+
+client.addResponseTransform((response) => {
+  if (__DEV__) {
+    console.log(\`← \${response.status} \${response.config?.url}\`, response.data);
+  }
+});
+
+// Tips:
+// - Wrap in __DEV__ so logging only occurs in development builds.
+// - For deeper inspection (headers, cookies, TLS), use Flipper's Network plugin
+//   or a proxy tool like Charles Proxy / mitmproxy.`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Simulating a Slow Connection",
+        np: "ढिलो कनेक्सन सिमुलेट गर्ने",
+        jp: "低速ネットワークのシミュレーション",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Testing your loading states and retry logic requires a slow network. On the **iOS Simulator** use the **Network Link Conditioner** (available in the Additional Tools for Xcode package) to throttle bandwidth and add latency. On the **Android Emulator** go to Settings → Additional settings → Developer options → Network throttle. In development code you can also add an artificial delay directly in your API function to verify that spinners and progress bars behave correctly.",
+            np: "iOS Simulator मा Network Link Conditioner र Android Emulator मा Developer options → Network throttle प्रयोग गर्नुस्। Dev code मा कृत्रिम delay थपेर पनि loading state जाँच्न सकिन्छ। Charles Proxy र mitmproxy ले traffic inspect गर्न सकिन्छ।",
+            jp: "**iOS シミュレータ**では Network Link Conditioner（Xcode 追加ツール）を使います。**Android エミュレータ**では設定 → 開発者向けオプション → ネットワーク制限です。開発コードに人工的な遅延を入れる方法もあります。高度な検査には Charles Proxy や mitmproxy が便利です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Artificial API delay in development",
+            np: "development मा कृत्रिम API delay",
+            jp: "開発環境での人工的な API 遅延",
+          },
+          code: `// Mock slow API in development
+export async function fetchListings() {
+  if (__DEV__) await new Promise((r) => setTimeout(r, 2000)); // 2s artificial delay
+  return client.get<Listing[]>('/listings');
+}
+
+// Advanced traffic inspection tools:
+// - Charles Proxy  → SSL inspection, request rewriting, throttling profiles
+// - mitmproxy      → open-source, scriptable HTTP/HTTPS proxy
+// Both work by routing device traffic through a proxy on your dev machine.`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Building a Beautiful ActivityIndicator",
+        np: "सुन्दर ActivityIndicator बनाउने",
+        jp: "洗練された ActivityIndicator の構築",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The default platform **ActivityIndicator** works but looks generic. For a branded loading experience, swap it for a **LottieView** animation — a lightweight JSON-based vector animation that plays an After Effects export. Pair it with **`expo-splash-screen`** to hold the splash screen while your initial data loads, so the user never sees a blank flash before content appears.",
+            np: "default ActivityIndicator सामान्य देखिन्छ। LottieView ले branded JSON animation देखाउँछ। expo-splash-screen ले initial data लोड हुँदासम्म splash screen राख्न सकिन्छ।",
+            jp: "デフォルトの ActivityIndicator は汎用的に見えます。**LottieView** を使えばブランドに合った JSON アニメーションを再生できます。初期データ読み込み中はスプラッシュ画面を保持する **`expo-splash-screen`** と組み合わせると、白紙画面のちらつきを防げます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Branded LoadingScreen with LottieView",
+            np: "LottieView सँग branded LoadingScreen",
+            jp: "LottieView を使ったブランド LoadingScreen",
+          },
+          code: `import LottieView from 'lottie-react-native';
+import { View, StyleSheet } from 'react-native';
+
+export function LoadingScreen() {
+  return (
+    <View style={styles.center}>
+      <LottieView
+        source={require('../assets/animations/loading.json')}
+        autoPlay
+        loop
+        style={{ width: 150, height: 150 }}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+});
+
+// Tip: hold the splash screen while fetching initial data
+// import * as SplashScreen from 'expo-splash-screen';
+// SplashScreen.preventAutoHideAsync();
+// ... after data loads ...
+// SplashScreen.hideAsync();`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Building the Upload Screen",
+        np: "अपलोड स्क्रिन बनाउने",
+        jp: "アップロード画面の構築",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The upload screen receives an `imageUri` via route params, calls the `useUpload` hook, and shows live progress while the file transfers. While `uploading` is true the button is replaced with a percentage label — preventing double-submission. On success, the screen navigates forward, passing the result to the destination screen.",
+            np: "Upload screen ले route params बाट imageUri लिन्छ, useUpload hook call गर्छ, र uploading हुँदा progress percentage देखाउँछ। सफल भएपछि Listings स्क्रिनमा navigate गर्छ।",
+            jp: "アップロード画面は route params から `imageUri` を受け取り、`useUpload` フックを呼び出します。アップロード中はボタンをパーセント表示に切り替えて二重送信を防ぎ、成功後は次画面へナビゲートします。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "UploadScreen with live progress feedback",
+            np: "live progress सहित UploadScreen",
+            jp: "リアルタイム進捗付き UploadScreen",
+          },
+          code: `import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useUpload } from '../hooks/useUpload';
+import AppButton from '../components/AppButton';
+
+export default function UploadScreen({ navigation, route }) {
+  const { imageUri } = route.params;
+  const { upload, progress, uploading } = useUpload('/listings');
+
+  const handleUpload = async () => {
+    const result = await upload(imageUri);
+    if (result.ok) navigation.navigate('Listings');
+  };
+
+  return (
+    <View style={styles.container}>
+      {uploading ? (
+        <Text>{Math.round(progress * 100)}% uploaded</Text>
+      ) : (
+        <AppButton title="Upload" onPress={handleUpload} />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Adding a Progress Bar",
+        np: "प्रगति बार थप्ने",
+        jp: "プログレスバーの追加",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A smooth animated progress bar improves perceived performance during uploads. Use **react-native-reanimated** — specifically `useSharedValue` and `withTiming` — to animate the bar width without blocking the JS thread. The `UploadProgressBar` component accepts a `progress` prop (0.0–1.0) and a `visible` flag so it can be mounted/unmounted cleanly from the upload screen.",
+            np: "react-native-reanimated को useSharedValue र withTiming ले JS thread block नगरी smooth animation दिन्छ। UploadProgressBar ले 0–1 को progress prop लिन्छ र visible flag अनुसार देखिन्छ।",
+            jp: "**react-native-reanimated** の `useSharedValue` と `withTiming` を使うことで JS スレッドをブロックせずにスムーズなアニメーションを実現します。`UploadProgressBar` は 0.0〜1.0 の `progress` と `visible` フラグを受け取ります。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "UploadProgressBar — animated with react-native-reanimated",
+            np: "UploadProgressBar — reanimated सँग animated",
+            jp: "UploadProgressBar — react-native-reanimated でアニメーション",
+          },
+          code: `import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+
+interface Props {
+  progress: number; // 0.0 – 1.0
+  visible: boolean;
+  color?: string;
+}
+
+export function UploadProgressBar({ progress, visible, color = '#6366f1' }: Props) {
+  const width = useSharedValue(0);
+  width.value = withTiming(progress * 100, { duration: 200 });
+
+  const style = useAnimatedStyle(() => ({
+    width: \`\${width.value}%\`,
+  }));
+
+  if (!visible) return null;
+
+  return (
+    <View style={styles.track}>
+      <Animated.View style={[styles.fill, { backgroundColor: color }, style]} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  track: {
+    height: 8,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  fill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Showing the Done Animation and Resetting the Form",
+        np: "Done Animation र Form Reset",
+        jp: "完了アニメーションとフォームのリセット",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "After a successful upload you have two options: navigate immediately and let the destination screen show a success state, or briefly display a **Lottie done animation** before navigating. In **Formik**-backed forms, call `resetForm()` inside the submit handler on success to restore all fields to their `initialValues` — this prevents stale data from appearing if the user returns to the form screen.",
+            np: "Upload सफल भएपछि तुरुन्त navigate गर्न वा Lottie done animation देखाएर navigate गर्न सकिन्छ। Formik form मा resetForm() ले सबै field initialValues मा फर्काउँछ।",
+            jp: "アップロード成功後は即座にナビゲートするか、**Lottie の完了アニメーション**を短時間表示してからナビゲートするか選べます。Formik フォームでは成功時に `resetForm()` を呼び出してすべてのフィールドを `initialValues` に戻しましょう。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Post-upload navigation, Lottie done animation, and Formik reset",
+            np: "Post-upload navigation, Lottie animation, र Formik reset",
+            jp: "アップロード後ナビゲーション・Lottie アニメーション・Formik リセット",
+          },
+          code: `// After successful upload — reset form and show success feedback
+const handleSuccess = () => {
+  // Option 1: Navigate and let the destination show success
+  navigation.navigate('Listings', { uploaded: true });
+
+  // Option 2: Show a Lottie done animation, then navigate
+  setDone(true);
+  setTimeout(() => navigation.navigate('Listings'), 1500);
+};
+
+// In a Formik form — reset on success
+const handleSubmit = async (values, { resetForm }) => {
+  const result = await submitListing(values);
+  if (result.ok) {
+    resetForm(); // clears all field values back to initialValues
+    navigation.goBack();
+  }
+};
+
+// LottieView done animation (same pattern as LoadingScreen)
+// <LottieView
+//   source={require('../assets/animations/done.json')}
+//   autoPlay
+//   loop={false}
+//   style={{ width: 120, height: 120 }}
+// />`,
+        },
+      ],
+    },
   ],
   faq: [
     {

@@ -342,6 +342,615 @@ export async function checkForUpdate() {
     },
     {
       title: {
+        en: "App Icon and Splash Screen Setup",
+        np: "App Icon र Splash Screen सेटअप",
+        jp: "アプリアイコンとスプラッシュスクリーンの設定",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Your app icon and splash screen are the first things users see — they need to meet strict platform requirements. iOS requires a **1024×1024 PNG** with no transparency and no pre-rounded corners (iOS rounds them automatically). Android requires the same base size plus an **adaptive icon** (separate foreground + background layers) for devices running API 26+. Configure both in `app.json` under the `expo` key.",
+            np: "iOS: 1024×1024 PNG, transparency नहुने। Android: adaptive icon (foreground + background)। app.json मा configure गर्नुस्।",
+            jp: "iOS は 1024×1024 の PNG（透過なし）、Android は API 26 以上向けにアダプティブアイコン（前景＋背景レイヤー）が必要です。`app.json` で設定します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app.json — icon and splash screen configuration",
+            np: "app.json icon र splash config",
+            jp: "app.json アイコン・スプラッシュ設定",
+          },
+          code: `{
+  "expo": {
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6366f1"
+    },
+    "ios": {
+      "icon": "./assets/icon.png",
+      "bundleIdentifier": "com.yourcompany.yourapp"
+    },
+    "android": {
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6366f1"
+      },
+      "package": "com.yourcompany.yourapp"
+    }
+  }
+}`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**iOS icon rules**: 1024×1024 PNG, RGB colour space, no transparency (fully opaque), no pre-applied rounded corners — the OS applies them. Any transparency will be rejected at upload.",
+              np: "iOS: 1024×1024, पारदर्शिता नहुने, कुना नगोलाउनुस् — OS ले गर्छ।",
+              jp: "iOS は 1024×1024 の不透明 PNG。角丸は OS が適用するため事前に入れないこと。",
+            },
+            {
+              en: "**Android adaptive icon safe zone**: the inner **66%** of the foreground image is the guaranteed visible area across all launcher shapes (circle, squircle, rounded square). Keep critical content inside this zone to avoid clipping.",
+              np: "Android adaptive icon: भित्री 66% safe zone मा मुख्य content राख्नुस्।",
+              jp: "Android アダプティブアイコンの**セーフゾーンは内側 66%**。ランチャー形状に関わらずこの範囲は必ず表示されます。",
+            },
+            {
+              en: "**Asset compression**: use `npx expo-optimize` or squash.io before submission. Uncompressed icons add unnecessary app size. Compress PNGs to under 200 KB before building.",
+              np: "npx expo-optimize वा squash.io ले compress गर्नुस्।",
+              jp: "提出前に `npx expo-optimize` または squash.io で圧縮してください。",
+            },
+            {
+              en: "**Splash screen resizeMode**: `contain` fits the image within the background while preserving aspect ratio; `cover` fills the screen and may crop edges. Use `contain` with a solid `backgroundColor` that matches your brand colour for the cleanest result.",
+              np: "resizeMode: contain (letterbox) वा cover (crop)। contain + solid background राम्रो।",
+              jp: "`contain` はアスペクト比を保ちます。`cover` は画面を塗りつぶしますが端が切れる場合があります。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Optimizing Assets and JavaScript Bundle",
+        np: "Assets र JS Bundle अप्टिमाइज गर्ने",
+        jp: "アセットと JavaScript バンドルの最適化",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A smaller app bundle means faster downloads, quicker cold-start times, and lower memory usage. Optimization has two fronts: **asset compression** (images, fonts) and **JS bundle trimming** (Hermes, tree-shaking, lazy loading, removing dead dependencies).",
+            np: "सानो bundle → छिटो download, छिटो startup। Asset compression र JS bundle trimming दुवै गर्नुस्।",
+            jp: "バンドルを小さくするとダウンロードが速く、コールドスタートも改善します。アセット圧縮と JS バンドル削減の 2 軸で取り組みます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Asset optimization — expo-optimize and sharp CLI",
+            np: "Asset compression कमाण्डहरू",
+            jp: "アセット最適化コマンド",
+          },
+          code: `# Install expo-optimize (asset compression)
+npx expo-optimize
+
+# Or manually with sharp CLI for batch PNG/JPEG compression
+npx sharp-cli --input ./assets/**/*.png --output ./assets-optimized/`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "Use **WebP** format for Android images — WebP achieves 25–35% smaller file sizes than JPEG at equivalent quality and is natively supported on Android API 15+.",
+              np: "Android मा WebP format प्रयोग गर्नुस् — JPEG भन्दा 25–35% सानो।",
+              jp: "Android 画像は **WebP** 形式を使うと JPEG 比 25〜35% 小さくなります。",
+            },
+            {
+              en: "Use **`react-native-svg`** with SVG files instead of PNG for icons and illustrations — SVGs are resolution-independent and usually much smaller than rasterized PNGs.",
+              np: "Icon को लागि react-native-svg + SVG प्रयोग गर्नुस्।",
+              jp: "アイコンは **react-native-svg** で SVG を使うと解像度非依存でサイズも小さくなります。",
+            },
+          ],
+        },
+        {
+          type: "code",
+          title: {
+            en: "app.json — enable Hermes JS engine",
+            np: "Hermes JS engine enable गर्ने",
+            jp: "Hermes エンジンの有効化",
+          },
+          code: `// app.json — enable Hermes engine (default in Expo SDK 48+)
+{
+  "expo": {
+    "jsEngine": "hermes"
+  }
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Hermes** pre-compiles your JavaScript to bytecode at **build time** rather than parsing it at runtime. This produces faster Time-To-Interactive (TTI), lower peak memory usage, and smaller JS bundle size. Hermes is the default engine from Expo SDK 48 onwards — enable it explicitly if you're on an older SDK.",
+            np: "Hermes ले JS लाई build time मा bytecode मा compile गर्छ → छिटो startup, कम memory।",
+            jp: "**Hermes** はビルド時に JS をバイトコードへプリコンパイルし、TTI 短縮・メモリ削減・バンドル縮小を実現します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Analyze JS bundle size after export",
+            np: "Bundle size analysis",
+            jp: "バンドルサイズの分析",
+          },
+          code: `# Analyze bundle size
+npx expo export --platform android
+# View stats in dist/_expo/static/js/`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "Remove unused dependencies with **`npx depcheck`** — it lists packages that are declared in `package.json` but never imported. Removing them shrinks `node_modules` and therefore the bundle.",
+              np: "npx depcheck ले unused dependencies देखाउँछ।",
+              jp: "`npx depcheck` で未使用パッケージを特定して削除しましょう。",
+            },
+            {
+              en: "Use **dynamic imports** and **React.lazy** for heavy screens that are not needed on the initial render — e.g. a PDF viewer or a complex chart screen. This splits the bundle and defers loading until navigation.",
+              np: "भारी screen लाई dynamic import / React.lazy प्रयोग गर्नुस्।",
+              jp: "重い画面には **dynamic import / React.lazy** を使いバンドルを分割しましょう。",
+            },
+            {
+              en: "Avoid bloated libraries: replace **moment.js** (329 KB) with **date-fns** (tree-shakable, ~13 KB per used function), and replace full **lodash** with **lodash-es** so bundlers can tree-shake unused utilities.",
+              np: "moment.js → date-fns, lodash → lodash-es (tree-shaking)।",
+              jp: "moment.js → date-fns、lodash → lodash-es に置き換えてツリーシェイキングを活用しましょう。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Error Reporting with Sentry",
+        np: "Sentry सँग Error Reporting",
+        jp: "Sentry によるエラー報告",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Shipping to the store means you lose the ability to see crashes in your terminal. **Sentry** fills that gap — it captures unhandled JS exceptions, native crashes, and performance traces, then maps them back to your original TypeScript source via **source maps** uploaded during the EAS build. You get a stack trace pointing to the exact line in your `.tsx` file, not minified bytecode.",
+            np: "Production मा crash देख्न Sentry चाहिन्छ। Source map upload गरेमा original TypeScript line देखाउँछ।",
+            jp: "本番では Sentry がクラッシュを補足し、EAS ビルド時にアップロードしたソースマップで元の TypeScript の行番号を特定できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Install Sentry packages",
+            np: "Sentry install गर्ने",
+            jp: "Sentry パッケージのインストール",
+          },
+          code: `npx expo install @sentry/react-native sentry-expo`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "app.tsx — initialize Sentry and wrap root component",
+            np: "Sentry initialize र root wrap गर्ने",
+            jp: "Sentry の初期化とルートコンポーネントのラップ",
+          },
+          code: `// app.tsx — initialize Sentry
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enableInExpoDevelopment: false, // only report in production
+  debug: false,
+  tracesSampleRate: 0.2, // 20% of transactions for performance monitoring
+  profilesSampleRate: 0.1,
+});
+
+export default Sentry.wrap(App); // wrap root component for error boundaries`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "app.json — Sentry plugin for source map uploads during EAS builds",
+            np: "app.json Sentry plugin config",
+            jp: "app.json の Sentry プラグイン設定",
+          },
+          code: `{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "your-org",
+          "project": "your-project"
+        }
+      ]
+    ]
+  }
+}`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Manual error capture and user context",
+            np: "Manual error capture र user context",
+            jp: "手動エラーキャプチャとユーザーコンテキスト",
+          },
+          code: `// Capture a specific error with context
+Sentry.captureException(error, {
+  extra: { userId: user?.id, screen: 'UploadScreen' },
+  tags: { action: 'image_upload' },
+});
+
+// Capture a message (non-exception)
+Sentry.captureMessage('Payment flow reached unexpected state', 'warning');
+
+// Add user context
+Sentry.setUser({ id: user.id, email: user.email });`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "Set **`enableInExpoDevelopment: false`** so Sentry only reports errors in production builds — you don't want development noise polluting your error dashboard.",
+              np: "Development मा Sentry disable गर्नुस् — production मा मात्र report गर्नुस्।",
+              jp: "`enableInExpoDevelopment: false` で開発中の不要なノイズをダッシュボードに送らないようにします。",
+            },
+            {
+              en: "**`tracesSampleRate`** controls what fraction of transactions are sent as performance traces. `0.2` (20%) is a good production default — collecting 100% is expensive. Adjust based on your monthly event quota.",
+              np: "tracesSampleRate: 0.2 (20%) production मा राम्रो — 100% महँगो हुन्छ।",
+              jp: "`tracesSampleRate: 0.2` で 20% のトランザクションのみを送信し、コストを抑えます。",
+            },
+            {
+              en: "Use **`Sentry.setUser`** after login and **`Sentry.setUser(null)`** after logout so every error report is tied to the user who experienced it — critical for reproducing bugs.",
+              np: "Login पछि Sentry.setUser() र logout पछि null set गर्नुस्।",
+              jp: "ログイン後は `Sentry.setUser()` でユーザー情報を紐づけ、ログアウト後は `null` をセットしましょう。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Environment Management with app.config.ts",
+        np: "app.config.ts सँग Environment व्यवस्थापन",
+        jp: "app.config.ts による環境管理",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Static `app.json` cannot read environment variables. **`app.config.ts`** replaces it with a dynamic TypeScript file that runs at build time — you can read `process.env` to produce different config values for staging vs production. This lets staging and production builds have **separate bundle identifiers**, meaning they can be installed **side-by-side** on the same device for safer QA.",
+            np: "app.config.ts dynamic config दिन्छ — staging र production को bundle ID अलग राख्न सकिन्छ, दुवै एकै device मा install हुन सक्छन्।",
+            jp: "`app.config.ts` はビルド時に `process.env` を読み取り、ステージングと本番で異なる設定を生成します。バンドル ID を分けることで同一デバイスへの同時インストールが可能になります。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app.config.ts — dynamic per-environment configuration",
+            np: "app.config.ts dynamic config",
+            jp: "app.config.ts の動的設定",
+          },
+          code: `// app.config.ts — dynamic per-environment config
+import { ExpoConfig, ConfigContext } from 'expo/config';
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: process.env.APP_ENV === 'staging' ? 'MyApp (Staging)' : 'MyApp',
+  slug: 'myapp',
+  ios: {
+    bundleIdentifier:
+      process.env.APP_ENV === 'staging'
+        ? 'com.mycompany.myapp.staging'
+        : 'com.mycompany.myapp',
+  },
+  android: {
+    package:
+      process.env.APP_ENV === 'staging'
+        ? 'com.mycompany.myapp.staging'
+        : 'com.mycompany.myapp',
+  },
+  extra: {
+    apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    eas: { projectId: process.env.EAS_PROJECT_ID },
+  },
+});`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "eas.json — set APP_ENV per build profile",
+            np: "eas.json मा APP_ENV set गर्ने",
+            jp: "eas.json でビルドプロファイルごとに APP_ENV を設定",
+          },
+          code: `// eas.json — set APP_ENV per build profile
+{
+  "build": {
+    "preview": {
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_API_URL": "https://staging-api.example.com"
+      }
+    },
+    "production": {
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.example.com"
+      }
+    }
+  }
+}`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Side-by-side installation**: because staging and production have different `bundleIdentifier` / `package` values, both apps can be installed on the same device simultaneously — a QA engineer can compare them without swapping builds.",
+              np: "Staging र production को bundle ID फरक हुँदा दुवै एकै device मा राख्न सकिन्छ।",
+              jp: "バンドル ID が異なるため、ステージングと本番を同一デバイスに同時インストールして比較できます。",
+            },
+            {
+              en: "Prefix client-side env vars with **`EXPO_PUBLIC_`** — only these are inlined into the JS bundle. Never prefix secrets (API keys, signing keys) with `EXPO_PUBLIC_` or they will be visible in the bundle.",
+              np: "Client-side vars लाई EXPO_PUBLIC_ prefix लगाउनुस्। Secret vars लाई यो prefix नगर्नुस्।",
+              jp: "クライアントに渡す変数のみ **`EXPO_PUBLIC_`** プレフィックスをつけます。秘密情報にはつけないでください。",
+            },
+            {
+              en: "**`app.config.ts` takes precedence over `app.json`** — if both files exist, Expo uses `app.config.ts`. You can delete `app.json` once migrated, or keep a minimal `app.json` with just the `expo.extra.eas.projectId` for tooling compatibility.",
+              np: "app.config.ts ले app.json लाई override गर्छ।",
+              jp: "`app.config.ts` は `app.json` より優先されます。移行後は `app.json` を削除しても構いません。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Building the iOS App Step-by-Step",
+        np: "iOS App Step-by-Step Build गर्ने",
+        jp: "iOS アプリのビルド手順",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Building an iOS app for distribution requires an **Apple Developer Account** ($99/year), a **distribution certificate** (.p12), and a **provisioning profile**. EAS can manage all of these for you via `eas credentials` — it creates, signs, and stores credentials securely in Expo's secrets vault so your CI/CD pipeline never needs local Keychain access.",
+            np: "iOS build को लागि Apple Developer Account ($99/year), distribution certificate र provisioning profile चाहिन्छ। EAS ले यी सबै manage गर्न सक्छ।",
+            jp: "iOS 配布には **Apple Developer アカウント**（年 $99）、配布証明書（.p12）、プロビジョニングプロファイルが必要です。`eas credentials` で EAS が自動管理できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "iOS build walkthrough — commands",
+            np: "iOS build commands",
+            jp: "iOS ビルドのコマンド手順",
+          },
+          code: `# 1. Ensure eas.json is configured with ios credentials
+eas credentials
+
+# 2. Build for App Store (production profile)
+eas build --platform ios --profile production
+
+# 3. Monitor build at expo.dev/accounts/[username]/projects/[slug]/builds
+# Build logs show CocoaPods install, xcodebuild archive, and IPA signing
+
+# 4. Download the .ipa artifact from expo.dev (or let eas submit handle it directly)`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Apple Developer Account** ($99/year) is required to distribute outside TestFlight. Enroll at developer.apple.com. Allow up to 48 hours for account activation after enrolment.",
+              np: "Apple Developer Account ($99/year) — developer.apple.com मा enroll गर्नुस्।",
+              jp: "Apple Developer アカウント（年 $99）は developer.apple.com で登録。有効化まで最大 48 時間かかります。",
+            },
+            {
+              en: "The **`bundleIdentifier`** in `app.json` must **exactly match** the App ID registered in App Store Connect and the provisioning profile. Any mismatch causes the build to fail at signing.",
+              np: "app.json को bundleIdentifier र App Store Connect को App ID बिल्कुल मिल्नुपर्छ।",
+              jp: "`bundleIdentifier` は App Store Connect の App ID と完全一致が必要。不一致はサイニングエラーになります。",
+            },
+            {
+              en: "**`app.json` `version`** is the user-visible string (e.g. `\"2.1.0\"`). **`ios.buildNumber`** is the monotonically increasing integer the App Store checks (e.g. `\"42\"`). Both must be set before building for production.",
+              np: "version (user-visible) र ios.buildNumber (store integer) दुवै set गर्नुस्।",
+              jp: "`version` は表示用の文字列、`ios.buildNumber` はストアが管理する単調増加の整数です。",
+            },
+            {
+              en: "**App icons must have no alpha channel** — the App Store rejects uploads with transparent icon pixels. Run `file assets/icon.png` and verify `color model: RGB, no alpha` before building.",
+              np: "App icon मा alpha channel हुनु हुँदैन — App Store ले reject गर्छ।",
+              jp: "アイコンにアルファチャンネルがあると App Store アップロードが拒否されます。事前に確認してください。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Distributing to the App Store",
+        np: "App Store मा वितरण गर्ने",
+        jp: "App Store への配布",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Once your iOS build is complete on EAS, use **`eas submit`** to upload the compiled `.ipa` directly to **App Store Connect**. Submission only uploads the binary — you must complete the app record in App Store Connect (screenshots, descriptions, privacy labels, age rating) before submitting for Apple review.",
+            np: "eas submit ले .ipa App Store Connect मा upload गर्छ। Metadata भने App Store Connect मा नै भर्नुपर्छ।",
+            jp: "`eas submit` でコンパイル済みの .ipa を App Store Connect にアップロードします。スクリーンショット等のメタデータはコンソールで手入力が必要です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Submit to App Store Connect via EAS",
+            np: "App Store मा submit गर्ने",
+            jp: "EAS で App Store Connect に提出",
+          },
+          code: `# Submit the latest iOS build from EAS to App Store Connect
+eas submit --platform ios --profile production
+
+# Or specify a build ID
+eas submit --platform ios --id <build-id>`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**App Store Connect setup**: create the app record, set the category, configure the age rating questionnaire, and add your privacy policy URL before attempting submission.",
+              np: "App Store Connect मा app record, category, age rating, privacy policy URL थप्नुस्।",
+              jp: "App Store Connect でアプリレコード作成・カテゴリ・年齢制限・プライバシーポリシー URL を入力してから提出します。",
+            },
+            {
+              en: "**Screenshots**: Apple requires at minimum **iPhone 6.5 inch** (1284×2778) and **iPad 12.9 inch** (2048×2732) sizes. You can capture these from Xcode Simulator. Fastlane snapshot can automate screenshot generation.",
+              np: "Screenshot: iPhone 6.5\" र iPad 12.9\" size अनिवार्य। Simulator बाट लिन सकिन्छ।",
+              jp: "スクリーンショットは最低限 iPhone 6.5 インチと iPad 12.9 インチサイズが必要。Simulator から取得できます。",
+            },
+            {
+              en: "**Privacy nutrition label**: declare every category of data your app collects (e.g. email addresses, crash data, identifiers) and link it to a purpose. Apple enforces this strictly — omissions can cause rejection.",
+              np: "Privacy label: app ले collect गर्ने data declare गर्नुस्। नगरे reject हुन सक्छ।",
+              jp: "プライバシーラベルは収集するデータカテゴリと目的を正確に申告してください。不備は却下の原因になります。",
+            },
+            {
+              en: "**TestFlight first**: distribute your `preview` build to internal and external testers for **1–2 weeks** before submitting to the public store. This surface crashes and UX issues before they reach all users.",
+              np: "Store submit गर्नु अघि TestFlight मा 1-2 हप्ता test गर्नुस्।",
+              jp: "本番申請の前に TestFlight で 1〜2 週間テストし、クラッシュや UX 問題を事前に発見しましょう。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Building the Android App Step-by-Step",
+        np: "Android App Step-by-Step Build गर्ने",
+        jp: "Android アプリのビルド手順",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Android production builds for the Play Store must be in **AAB (Android App Bundle)** format — the Play Store handles APK splitting per device architecture. For direct device installs (internal testing outside Play Store), use **APK** format via the `preview` profile. EAS can generate and securely store your **keystore** file so your signing key is never lost.",
+            np: "Play Store मा AAB format चाहिन्छ। Direct install को लागि APK। Keystore EAS ले manage गर्न सक्छ।",
+            jp: "Play Store には **AAB 形式**が必須。デバイス直接インストールは APK。キーストアは EAS に安全に保管できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Android build walkthrough — commands",
+            np: "Android build commands",
+            jp: "Android ビルドのコマンド手順",
+          },
+          code: `# Build for Google Play (AAB format, required for Play Store)
+eas build --platform android --profile production
+
+# The output is a .aab (Android App Bundle) — Play Store handles APK splitting
+# For direct APK install use: eas build --platform android --profile preview`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Google Play Developer Account** ($25 one-time fee) at play.google.com/console. Account activation is usually instant after the fee is paid, but can take up to 3 days.",
+              np: "Google Play Developer Account: $25 one-time। play.google.com/console मा register गर्नुस्।",
+              jp: "Google Play Developer アカウントは $25 の一回払い。通常即時有効化されます。",
+            },
+            {
+              en: "**Keystore management**: run `eas credentials` to have EAS generate, sign, and store your Android keystore. Never lose the keystore — without it you cannot publish updates to an existing app on the Play Store.",
+              np: "eas credentials ले keystore manage गर्छ। Keystore नगुमाउनुस् — नभए update publish गर्न सकिँदैन।",
+              jp: "キーストアは `eas credentials` で EAS に管理させましょう。失うと既存アプリのアップデートを公開できなくなります。",
+            },
+            {
+              en: "**`versionCode`** in `app.json` must increase with every Play Store upload — use `\"autoIncrement\": true` in the production EAS profile to handle this automatically.",
+              np: "versionCode हर upload मा बढ्नुपर्छ। autoIncrement: true राख्नुस्।",
+              jp: "`versionCode` は毎回増やす必要があります。EAS プロファイルで `autoIncrement: true` を使いましょう。",
+            },
+            {
+              en: "**Target SDK**: Google requires apps to target a recent Android API level (currently API 34 / Android 14). EAS builds with the Expo SDK set the correct `compileSdkVersion` and `targetSdkVersion` automatically — check expo.dev/changelog for the current SDK's Android target.",
+              np: "Target SDK: Google API 34 (Android 14) require गर्छ। Expo SDK ले automatically set गर्छ।",
+              jp: "Google は現在 API 34 以上を要求。Expo SDK が `targetSdkVersion` を自動設定します。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Distributing to the Google Play Store",
+        np: "Google Play Store मा वितरण गर्ने",
+        jp: "Google Play Store への配布",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "**`eas submit`** uses a Google Play **service account JSON** file (created in Google Play Console → Setup → API access) to authenticate and upload your AAB to a chosen release track. The service account needs `Release Manager` permissions on your app in the Play Console.",
+            np: "eas submit ले service-account.json प्रयोग गरेर AAB upload गर्छ। Play Console मा API access setup गर्नुस्।",
+            jp: "`eas submit` は Google Play の**サービスアカウント JSON**（Play Console → API アクセスで作成）を使って AAB をアップロードします。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Submit to Google Play via EAS",
+            np: "Google Play मा submit गर्ने",
+            jp: "EAS で Google Play に提出",
+          },
+          code: `# Submit the latest Android build from EAS to Google Play (internal track)
+eas submit --platform android --profile production
+
+# service-account.json from Google Play Console (API access) must be configured in eas.json`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Internal testing track** — up to 100 testers, changes are live within seconds. Ideal for the dev team and trusted stakeholders during development.",
+              np: "Internal testing: 100 जना सम्म, तुरुन्त live। Developer team को लागि।",
+              jp: "**内部テストトラック** — 最大 100 名、数秒で公開。開発チームのテストに最適。",
+            },
+            {
+              en: "**Closed testing (alpha)** — invite specific users or Google Groups. Useful for a limited beta with select users before open beta.",
+              np: "Closed testing (alpha): specific users वा groups लाई invite।",
+              jp: "**クローズドテスト（アルファ）** — 特定ユーザーやグループを招待。限定ベータに使います。",
+            },
+            {
+              en: "**Open testing (beta)** — any user can opt in via the Play Store listing. Good for gathering broader feedback before production launch.",
+              np: "Open testing (beta): कुनै पनि user opt-in गर्न सक्छ।",
+              jp: "**オープンテスト（ベータ）** — 誰でもオプトイン可能。広範なフィードバック収集に使います。",
+            },
+            {
+              en: "**Production with staged rollout** — release to a percentage of users (e.g. 10% → 50% → 100%) over several days. Monitor **Android Vitals** (crash rate, ANR rate) between each stage and halt/rollback if metrics degrade.",
+              np: "Production staged rollout: 10% → 50% → 100%। Android Vitals (crash rate, ANR) monitor गर्नुस्।",
+              jp: "**段階的公開**で 10% → 50% → 100% と展開。各段階で Android Vitals（クラッシュ率・ANR 率）を監視し問題があればロールバック。",
+            },
+            {
+              en: "**ANRs (App Not Responding)**: triggered when the main thread is blocked for >5 seconds. Monitor ANR rate in Play Console → Android Vitals. Common causes are heavy work on the JS thread — move to background workers or async operations.",
+              np: "ANR: main thread 5 sec भन्दा बढी block भए trigger हुन्छ। Play Console Vitals मा monitor गर्नुस्।",
+              jp: "**ANR** はメインスレッドが 5 秒以上ブロックされると発生。Play Console → Android Vitals で監視し、重い処理はバックグラウンドに移しましょう。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
         en: "Course Wrap-Up — What You Can Build & Where to Go Next",
         np: "पाठ्यक्रम समाप्ति — अब के बनाउन सकिन्छ?",
         jp: "コースまとめ — 今できること・次のステップ",

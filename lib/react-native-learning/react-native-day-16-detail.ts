@@ -358,6 +358,317 @@ export async function resizeImage(uri: string): Promise<string> {
         },
       ],
     },
+    {
+      title: { en: "Building ImageInput — Layout and Touches", np: "ImageInput घटक निर्माण", jp: "ImageInput コンポーネントの構築" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The **`ImageInput`** component combines the image picker logic with an interactive display area. It uses **`TouchableWithoutFeedback`** so the entire surface — including the rendered image itself — responds to taps. When no image is selected it calls the picker; when an image is already present it prompts the user to delete it via an `Alert`. This keeps all pick/remove decisions in one self-contained component.",
+            np: "`TouchableWithoutFeedback` ले सम्पूर्ण क्षेत्रलाई ट्याप-योग्य बनाउँछ। इमेज छ भने मेट्ने विकल्प, नभए पिकर खोल्छ।",
+            jp: "**`TouchableWithoutFeedback`** で画像を含むエリア全体をタップ可能にします。画像がある場合は削除アラート、ない場合はピッカーを起動します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "ImageInput component — tap to pick, tap to remove", np: "ImageInput कोड", jp: "ImageInput の実装" },
+          code: `// components/ImageInput.tsx
+import React from 'react';
+import { View, TouchableWithoutFeedback, StyleSheet, Alert } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'react-native';
+
+interface Props {
+  imageUri?: string;
+  onChangeImage: (uri?: string) => void;
+}
+
+export function ImageInput({ imageUri, onChangeImage }: Props) {
+  const handlePress = () => {
+    if (!imageUri) return requestImage();
+    Alert.alert('Delete', 'Delete this image?', [
+      { text: 'Yes', onPress: () => onChangeImage(undefined) },
+      { text: 'No' },
+    ]);
+  };
+
+  const requestImage = async () => {
+    const uri = await pickFromLibrary();
+    if (uri) onChangeImage(uri);
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={handlePress}>
+      <View style={styles.container}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.image} />
+        ) : (
+          <MaterialCommunityIcons name="camera" size={40} color="#999" />
+        )}
+      </View>
+    </TouchableWithoutFeedback>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 15,
+    height: 100,
+    width: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  image: { width: '100%', height: '100%' },
+});`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**`TouchableWithoutFeedback`** is the right wrapper here because you want tap detection over the image without any visual ripple or opacity change on the image itself.",
+              np: "`TouchableWithoutFeedback` — छवि माथि भिजुअल इफेक्ट बिना ट्याप पत्ता लगाउँछ।",
+              jp: "**`TouchableWithoutFeedback`** は画像上でビジュアル変化なしにタップを検知するのに最適です。",
+            },
+            {
+              en: "`overflow: 'hidden'` on the container clips the image to the rounded corners without needing a separate `borderRadius` on the `<Image>` itself.",
+              np: "`overflow: 'hidden'` — गोलाई कोनामा छवि काट्छ।",
+              jp: "`overflow: 'hidden'` でコンテナの角丸に画像をクリップします。`<Image>` に個別に `borderRadius` は不要です。",
+            },
+            {
+              en: "The `onChangeImage(undefined)` call signals removal — the parent component nullifies the URI in its state.",
+              np: "`onChangeImage(undefined)` — अभिभावकलाई URI हटाउन सङ्केत गर्छ।",
+              jp: "`onChangeImage(undefined)` で親に削除を通知し、親の状態のURIをnullにします。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Building ImageInputList — Basics and Scrolling", np: "ImageInputList — क्षैतिज स्क्रोल", jp: "ImageInputList の構築とスクロール" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "**`ImageInputList`** renders a **horizontal `ScrollView`** of `ImageInput` cells — one per existing URI — plus a blank `ImageInput` at the end that acts as the add-new button. When the user removes a cell, `onRemoveImage` is called with that URI; when the blank cell is tapped, `onAddImage` receives the newly picked URI. This gives a photo-strip UX similar to iOS Messages or WhatsApp.",
+            np: "क्षैतिज ScrollView मा ImageInput सेलहरू — पछिल्लो blank ले नयाँ थप्न दिन्छ।",
+            jp: "水平 **`ScrollView`** で `ImageInput` を並べ、末尾の空セルが追加ボタンになります。iMessage 風のフォトストリップ UX です。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "ImageInputList — horizontal photo strip", np: "ImageInputList कोड", jp: "ImageInputList の実装" },
+          code: `import React from 'react';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { ImageInput } from './ImageInput';
+
+interface Props {
+  imageUris: string[];
+  onAddImage: (uri: string) => void;
+  onRemoveImage: (uri: string) => void;
+}
+
+export function ImageInputList({ imageUris, onAddImage, onRemoveImage }: Props) {
+  return (
+    <View>
+      <ScrollView horizontal>
+        {imageUris.map((uri) => (
+          <View key={uri} style={styles.item}>
+            <ImageInput
+              imageUri={uri}
+              onChangeImage={(newUri) => {
+                if (!newUri) onRemoveImage(uri);
+              }}
+            />
+          </View>
+        ))}
+        <ImageInput onChangeImage={(uri) => uri && onAddImage(uri)} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  item: { marginRight: 10 },
+});`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "Using the `uri` itself as the React `key` is convenient, but if duplicate URIs are possible (e.g. the same photo added twice) use a UUID or index instead.",
+              np: "key को रूपमा uri — डुप्लिकेट भए UUID प्रयोग गर्नुस्।",
+              jp: "`uri` を `key` にするのは便利ですが、重複がある場合は UUID やインデックスを使いましょう。",
+            },
+            {
+              en: "`horizontal` on `ScrollView` enables horizontal paging. Add `showsHorizontalScrollIndicator={false}` to hide the scroll bar for a cleaner look.",
+              np: "`horizontal` — क्षैतिज स्क्रोल; स्क्रोल बार लुकाउन `showsHorizontalScrollIndicator={false}`।",
+              jp: "`horizontal` で横スクロールになります。`showsHorizontalScrollIndicator={false}` でスクロールバーを非表示にできます。",
+            },
+            {
+              en: "The trailing `<ImageInput onChangeImage={...} />` with no `imageUri` always renders as the blank add-more slot, automatically moving to the right as items are added.",
+              np: "अन्तिम blank ImageInput सधैं नयाँ थप्ने ठाउँ हो।",
+              jp: "末尾の `imageUri` なし `<ImageInput>` が常に「追加」スロットとして右端に表示されます。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Building FormImagePicker — Wiring into Formik", np: "FormImagePicker — Formik संग जोड्ने", jp: "FormImagePicker — Formik への接続" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "**`FormImagePicker`** bridges `ImageInputList` with a Formik form by using the **`useFormikContext`** hook. The hook returns `values` and `setFieldValue` directly from the enclosing `<Formik>` context — no prop-drilling of `values` or `onChange` handlers needed. The `name` prop maps to a string-array field in the form's initial values (e.g. `images: []`).",
+            np: "`useFormikContext` ले Formik context बाट `values` र `setFieldValue` सिधा लिन्छ — prop-drilling आवश्यक छैन।",
+            jp: "**`useFormikContext`** で親の `<Formik>` から `values` と `setFieldValue` を直接取得します。prop のバケツリレーが不要になります。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "FormImagePicker — Formik-aware image list field", np: "FormImagePicker कोड", jp: "FormImagePicker の実装" },
+          code: `import React from 'react';
+import { useFormikContext } from 'formik';
+import { ImageInputList } from './ImageInputList';
+
+interface Props {
+  name: string;
+}
+
+export function FormImagePicker({ name }: Props) {
+  const { values, setFieldValue } = useFormikContext<Record<string, string[]>>();
+  const imageUris: string[] = values[name] ?? [];
+
+  return (
+    <ImageInputList
+      imageUris={imageUris}
+      onAddImage={(uri) => setFieldValue(name, [...imageUris, uri])}
+      onRemoveImage={(uri) => setFieldValue(name, imageUris.filter((i) => i !== uri))}
+    />
+  );
+}`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**`useFormikContext`** throws if called outside a `<Formik>` ancestor, providing a clear error instead of a silent bug.",
+              np: "`useFormikContext` — Formik ancestor बाहिर भए error फेंक्छ।",
+              jp: "**`useFormikContext`** は `<Formik>` の外で呼ぶとエラーを投げるため、バグが即座に発見できます。",
+            },
+            {
+              en: "The `Record<string, string[]>` generic keeps TypeScript happy when the form type is not known at compile time. Replace it with your actual form-values interface for stricter typing.",
+              np: "`Record<string, string[]>` — कम्पाइल-टाइम type थाहा नभए प्रयोग गर्नुस्।",
+              jp: "`Record<string, string[]>` はフォームの型が不定のときの汎用型。実際の型があれば差し替えると型安全になります。",
+            },
+            {
+              en: "On form submission, `values[name]` is an array of local `file://` URIs. Upload each URI to your backend before saving the form data.",
+              np: "सबमिटमा `values[name]` — local URI array। सर्भरमा अपलोड गर्नुस् पहिले।",
+              jp: "送信時の `values[name]` はローカル `file://` URI の配列。バックエンドへアップロードしてから保存します。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Building Custom Hooks — useImagePicker", np: "कस्टम हुक — useImagePicker", jp: "カスタムフック — useImagePicker" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Extracting the picker and permission logic into a **`useImagePicker`** custom hook keeps components clean and makes the behaviour testable in isolation. The hook manages its own `images` state array and exposes `pickImage` (wrapped in `useCallback` to prevent stale closures) and `removeImage`. Any component that needs a photo list just calls `const { images, pickImage, removeImage } = useImagePicker()`.",
+            np: "कस्टम हुकले picker र permission logic component बाट अलग राख्छ — test र reuse गर्न सजिलो।",
+            jp: "カスタムフックにpickerとpermissionのロジックを切り出すことで、コンポーネントをシンプルに保ちつつ、ロジックを独立してテストできます。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "useImagePicker — reusable image state hook", np: "useImagePicker कोड", jp: "useImagePicker の実装" },
+          code: `import { useState, useCallback } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+
+export function useImagePicker() {
+  const [images, setImages] = useState<string[]>([]);
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImages((prev) => [...prev, result.assets[0].uri]);
+    }
+  }, []);
+
+  const removeImage = useCallback((uri: string) => {
+    setImages((prev) => prev.filter((img) => img !== uri));
+  }, []);
+
+  return { images, pickImage, removeImage };
+}`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**`useCallback`** on `pickImage` and `removeImage` ensures the function references are stable across re-renders, so passing them as props does not cause unnecessary child re-renders.",
+              np: "`useCallback` — stable reference, अनावश्यक re-render रोक्छ।",
+              jp: "**`useCallback`** で関数参照を安定させ、子コンポーネントの不要な再レンダーを防ぎます。",
+            },
+            {
+              en: "The functional `setImages((prev) => [...prev, uri])` form prevents stale-closure bugs when `pickImage` is called rapidly in succession.",
+              np: "functional `setImages` — rapid call मा stale-closure bug रोक्छ।",
+              jp: "関数形式の `setImages((prev) => ...)` で連続呼び出し時の古いクロージャのバグを防ぎます。",
+            },
+            {
+              en: "To extend the hook, accept an optional `maxImages` parameter and guard inside `pickImage` with an early return when `images.length >= maxImages`.",
+              np: "`maxImages` parameter थपेर hook extend गर्न सकिन्छ।",
+              jp: "オプションの `maxImages` を受け取り、`images.length >= maxImages` のとき早期リターンすることでフックを拡張できます。",
+            },
+          ],
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Summary — component and hook responsibilities",
+            np: "घटक र हुक जिम्मेवारी सारांश",
+            jp: "コンポーネント・フック責務まとめ",
+          },
+          headers: [
+            { en: "Unit", np: "एकाइ", jp: "ユニット" },
+            { en: "Responsibility", np: "जिम्मेवारी", jp: "責務" },
+          ],
+          rows: [
+            [
+              { en: "ImageInput", np: "ImageInput", jp: "ImageInput" },
+              { en: "Single slot — tap to pick or delete one image", np: "एक स्लट — ट्याप गरेर एक इमेज छान्ने वा मेट्ने", jp: "1スロット — タップで1枚選択または削除" },
+            ],
+            [
+              { en: "ImageInputList", np: "ImageInputList", jp: "ImageInputList" },
+              { en: "Horizontal strip of ImageInput slots + add-new slot", np: "क्षैतिज ImageInput पट्टी + नयाँ थप्ने स्लट", jp: "ImageInputの横並びストリップ＋追加スロット" },
+            ],
+            [
+              { en: "FormImagePicker", np: "FormImagePicker", jp: "FormImagePicker" },
+              { en: "Formik field adapter — reads/writes images array in form context", np: "Formik field adapter — form context मा इमेज array पढ्ने/लेख्ने", jp: "Formikフィールドアダプタ — フォームコンテキストの画像配列を読み書き" },
+            ],
+            [
+              { en: "useImagePicker", np: "useImagePicker", jp: "useImagePicker" },
+              { en: "Stateful hook — manages images array, picker call, and remove logic", np: "Stateful hook — images array, picker call, र remove logic", jp: "ステートフルフック — 画像配列・picker呼び出し・削除ロジックを管理" },
+            ],
+          ],
+        },
+      ],
+    },
   ],
   faq: [
     {
