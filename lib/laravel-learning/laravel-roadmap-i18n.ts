@@ -19,8 +19,17 @@ const LARAVEL_TAG: Record<string, LocalizedString> = {
   session: { en: "session", np: "सत्र", jp: "セッション" },
   i18n: { en: "localization", np: "स्थानीयकरण", jp: "多言語" },
   relations: { en: "relationships", np: "सम्बन्ध", jp: "リレーション" },
-  mail: { en: "mail & HTTP", np: "मेल र HTTP", jp: "メールとHTTP" },
+  mail: { en: "mail", np: "मेल", jp: "メール" },
   advanced: { en: "extras", np: "अतिरिक्त", jp: "発展" },
+  auth: { en: "authentication", np: "प्रमाणीकरण", jp: "認証" },
+  authorization: { en: "authorization", np: "अधिकरण", jp: "認可" },
+  api: { en: "API", np: "API", jp: "API" },
+  resources: { en: "resources", np: "रिसोर्स", jp: "リソース" },
+  queues: { en: "queues", np: "कतार", jp: "キュー" },
+  events: { en: "events", np: "घटना", jp: "イベント" },
+  caching: { en: "caching", np: "क्यासिङ", jp: "キャッシュ" },
+  testing: { en: "testing", np: "परीक्षण", jp: "テスト" },
+  pest: { en: "Pest", np: "Pest", jp: "Pest" },
 };
 
 export function laravelTags(slugs: [string, string]): RoadmapTag[] {
@@ -32,54 +41,74 @@ export function laravelTags(slugs: [string, string]): RoadmapTag[] {
 
 const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
   1: {
-    en: "MVC, Composer, install & project layout",
-    np: "MVC, Composer, स्थापना र परियोजना",
-    jp: "MVC・Composer・インストールと構成",
+    en: "MVC, Composer, install, project layout & Service Container",
+    np: "MVC, Composer, स्थापना, परियोजना र Service Container",
+    jp: "MVC・Composer・インストール・構成・サービスコンテナ",
   },
   2: {
-    en: "Routes: verbs, parameters, names & groups",
-    np: "रूट: verbs, प्यारामिटर, नाम र समूह",
-    jp: "ルート（HTTP・パラメータ・名前・グループ）",
+    en: "Routes — verbs, parameters, names, groups & resource routes",
+    np: "रूट — verbs, params, नाम, समूह र resource routes",
+    jp: "ルート（HTTP・パラメータ・名前・グループ・リソース）",
   },
   3: {
-    en: "Controllers & HTTP responses",
-    np: "नियन्त्रक र HTTP प्रतिक्रिया",
-    jp: "コントローラとHTTPレスポンス",
+    en: "Controllers, Form Requests, resource controllers & HTTP responses",
+    np: "Controllers, Form Request, resource controller र responses",
+    jp: "コントローラ・Form Request・リソースコントローラ・レスポンス",
   },
   4: {
-    en: "Views, Blade, components & includes",
-    np: "दृश्य, Blade, कम्पोनेन्ट र include",
-    jp: "ビュー・Blade・コンポーネント",
+    en: "Blade — inheritance, components, directives & includes",
+    np: "Blade — inheritance, components, directive र include",
+    jp: "Blade（継承・コンポーネント・ディレクティブ・インクルード）",
   },
   5: {
-    en: "Form validation, rules & custom rules",
-    np: "फर्म प्रमाणीकरण र नियम",
-    jp: "フォーム検証・ルール・カスタムルール",
+    en: "Validation — built-in rules, custom rules & Form Request classes",
+    np: "Validation — नियम, custom rule र Form Request",
+    jp: "バリデーション（組み込みルール・カスタム・Form Request）",
   },
   6: {
-    en: "Middleware, URLs & the Request object",
-    np: "मिडलवेयर, URL र Request",
-    jp: "ミドルウェア・URL・Request",
+    en: "Middleware, Request object, responses & URL generation",
+    np: "Middleware, Request, responses र URL generation",
+    jp: "ミドルウェア・Request・レスポンス・URL 生成",
   },
   7: {
-    en: "Query Builder, models & CRUD patterns",
-    np: "Query Builder, मोडेल र CRUD",
-    jp: "クエリビルダ・モデル・CRUD",
+    en: "Migrations, Query Builder, Eloquent models & CRUD patterns",
+    np: "Migrations, Query Builder, Eloquent र CRUD",
+    jp: "マイグレーション・クエリビルダ・Eloquent・CRUD",
   },
   8: {
-    en: "Session, flash data & localization",
-    np: "सत्र, फ्ल्यास र स्थानीयकरण",
-    jp: "セッション・フラッシュ・多言語",
+    en: "Session, flash data, caching & localization",
+    np: "Session, flash, caching र localization",
+    jp: "セッション・フラッシュ・キャッシュ・多言語",
   },
   9: {
-    en: "Eloquent relationships & eager loading",
-    np: "Eloquent सम्बन्ध र eager load",
-    jp: "Eloquentリレーション・Eager load",
+    en: "Eloquent relationships, eager loading & soft deletes",
+    np: "Eloquent relationships, eager loading र soft deletes",
+    jp: "Eloquent リレーション・Eager load・ソフトデリート",
   },
   10: {
-    en: "HTTP client, mail, stubs & next steps",
-    np: "HTTP client, मेल, stub र अगाडि",
-    jp: "HTTPクライアント・メール・stub・次の一歩",
+    en: "File storage, HTTP client, mail & Notifications",
+    np: "File storage, HTTP client, mail र Notifications",
+    jp: "ファイルストレージ・HTTP クライアント・メール・通知",
+  },
+  11: {
+    en: "Authentication — Breeze, Sanctum & user registration",
+    np: "Authentication — Breeze, Sanctum र user registration",
+    jp: "認証 — Breeze・Sanctum・ユーザー登録",
+  },
+  12: {
+    en: "Authorization — Gates, Policies & API Resources",
+    np: "Authorization — Gates, Policies र API Resources",
+    jp: "認可 — Gates・Policies・API リソース",
+  },
+  13: {
+    en: "Queues, Jobs, Events, Listeners & Task Scheduling",
+    np: "Queues, Jobs, Events, Listeners र Task Scheduling",
+    jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
+  },
+  14: {
+    en: "Testing with Pest — unit, feature, HTTP & database tests",
+    np: "Pest सहित Testing — unit, feature, HTTP र database",
+    jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
 };
 
@@ -97,17 +126,22 @@ const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
   "laravel-w3": {
     en: "Validation & middleware",
     np: "प्रमाणीकरण र मिडलवेयर",
-    jp: "検証とミドルウェア",
+    jp: "バリデーションとミドルウェア",
   },
   "laravel-w4": {
-    en: "Database & session",
-    np: "डाटाबेस र सत्र",
-    jp: "DBとセッション",
+    en: "Database layer",
+    np: "डाटाबेस परत",
+    jp: "データベース層",
   },
   "laravel-w5": {
-    en: "Relations, integrations & polish",
-    np: "सम्बन्ध र एकीकरण",
-    jp: "リレーションと連携",
+    en: "Storage, mail & auth",
+    np: "Storage, mail र auth",
+    jp: "ストレージ・メール・認証",
+  },
+  "laravel-w6": {
+    en: "Production — queues, APIs & testing",
+    np: "उत्पादन — queues, APIs र testing",
+    jp: "本番 — キュー・API・テスト",
   },
 };
 
