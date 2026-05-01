@@ -353,6 +353,482 @@ export default function App() {
         },
       ],
     },
+    // ── NEW SECTIONS ──────────────────────────────────────────────────────────
+    {
+      title: {
+        en: "Installing React Navigation",
+        np: "React Navigation स्थापना",
+        jp: "React Navigation のインストール",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "React Navigation is split into small packages so you only ship what you use. The **core** package provides `NavigationContainer`, the context layer that every navigator must live inside. Two peer dependencies — **`react-native-screens`** (native screen primitives) and **`react-native-safe-area-context`** (safe-area insets) — are mandatory; Expo manages their native modules automatically via `npx expo install`.",
+            np: "React Navigation लाई सानो-सानो प्याकेजमा बाँडिएको छ। `react-native-screens` र `react-native-safe-area-context` अनिवार्य peer dependency हुन्। `npx expo install` ले आफैँ सही संस्करण छान्छ।",
+            jp: "React Navigation は小パッケージに分割されています。**コア**と2つの必須ピア依存（`react-native-screens`・`react-native-safe-area-context`）が必要です。`npx expo install` が正しいバージョンを自動選択します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Installation commands",
+            np: "स्थापना आदेशहरू",
+            jp: "インストールコマンド",
+          },
+          code: `# Core navigation library
+npx expo install @react-navigation/native
+
+# Expo-friendly peer dependencies
+npx expo install react-native-screens react-native-safe-area-context
+
+# Stack navigator
+npx expo install @react-navigation/native-stack
+
+# Bottom tab navigator
+npx expo install @react-navigation/bottom-tabs`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Wrap the app in NavigationContainer (App.tsx)",
+            np: "NavigationContainer मा App लपेट्नुस्",
+            jp: "App.tsx を NavigationContainer でラップする",
+          },
+          code: `// App.tsx
+import { NavigationContainer } from '@react-navigation/native';
+import { RootNavigator } from '@/navigation/RootNavigator';
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <RootNavigator />
+    </NavigationContainer>
+  );
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`NavigationContainer` must be the outermost navigation wrapper in your component tree. It manages the navigation state, handles deep links, and provides the context that all `useNavigation` / `useRoute` calls read from. Wrap it around the entire app in `App.tsx`, not around individual screens.",
+            np: "`NavigationContainer` सबैभन्दा बाहिरी wrapper हुनुपर्छ। यसले navigation state, deep link, र `useNavigation` को context व्यवस्थापन गर्छ।",
+            jp: "`NavigationContainer` はツリーの最外殻に置きます。ナビゲーション状態・ディープリンク・`useNavigation` コンテキストをすべて管理します。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Stack Navigator — Basics",
+        np: "Stack Navigator — आधारभूत",
+        jp: "Stack Navigator の基本",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A **native stack navigator** renders screens using the platform's native stack — `UINavigationController` on iOS and `Fragment` transactions on Android — giving you native animations and gestures for free. Call `createNativeStackNavigator()` once, then use the returned `Stack.Navigator` and `Stack.Screen` components to declare your routes.",
+            np: "**Native Stack Navigator** ले iOS मा `UINavigationController` र Android मा `Fragment` प्रयोग गर्छ, जसले native animation र gesture सित्तैमा दिन्छ।",
+            jp: "**ネイティブスタックナビゲーター**はiOSの `UINavigationController`・AndroidのFragment トランジションを使い、ネイティブアニメーションとジェスチャーを無料で提供します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Minimal stack setup with screen options",
+            np: "न्यूनतम Stack सेटअप",
+            jp: "最小限のスタック構成",
+          },
+          code: `import { createNativeStackNavigator } from '@react-navigation/native-stack';
+const Stack = createNativeStackNavigator();
+
+function AppStack() {
+  return (
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'My App' }}
+      />
+      <Stack.Screen
+        name="Details"
+        component={DetailsScreen}
+        options={({ route }) => ({ title: route.params.title })}
+      />
+    </Stack.Navigator>
+  );
+}`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**`navigation.navigate('Screen', params)`** — go to a screen. If the screen is already in the stack, React Navigation re-focuses it.",
+              np: "`navigate` — स्क्रिनमा जानुस्; पहिले नै भए त्यसैमा फोकस गर्छ।",
+              jp: "`navigate` — 既存なら再フォーカス、なければ新規追加します。",
+            },
+            {
+              en: "**`navigation.push('Screen', params)`** — always adds a new entry even if the screen exists. Use for drill-down lists.",
+              np: "`push` — सधैँ नयाँ stack entry थप्छ। drill-down सूचीका लागि प्रयोग गर्नुस्।",
+              jp: "`push` — 常に新規エントリを追加。ドリルダウンリストに最適。",
+            },
+            {
+              en: "**`navigation.goBack()`** — pops the current screen from the stack.",
+              np: "`goBack` — हालको स्क्रिन stack बाट हटाउँछ।",
+              jp: "`goBack()` — 現在の画面をスタックから取り除きます。",
+            },
+            {
+              en: "**`initialRouteName`** on `Stack.Navigator` sets which screen shows first. If omitted, the first declared `Stack.Screen` is used.",
+              np: "`initialRouteName` ले पहिलो देखाइने screen तोक्छ। नभए पहिलो `Stack.Screen` प्रयोग हुन्छ।",
+              jp: "`initialRouteName` で最初の画面を指定します。省略時は最初の `Stack.Screen` が使われます。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Passing Parameters to Routes",
+        np: "Routes मा Parameters पठाउने",
+        jp: "ルートへのパラメーター受け渡し",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Route params are the primary mechanism for passing data between screens. Pass them as the second argument to `navigation.navigate`. On the receiving end, access them via `route.params`. With TypeScript, type your param lists and use `NativeStackScreenProps` so the compiler enforces the exact shape of every param object at the call site.",
+            np: "Route params ले screen हरूबिच data पठाउँछ। TypeScript सहित `NativeStackScreenProps` प्रयोग गर्दा compiler ले params को shape जाँच गर्छ।",
+            jp: "ルートパラメーターは画面間のデータ受け渡しの主要手段です。TypeScript の `NativeStackScreenProps` を使うとコンパイル時に型チェックが働きます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Sending and receiving params safely",
+            np: "Params पठाउने र सुरक्षित रूपमा लिने",
+            jp: "パラメーターの送受信（型安全）",
+          },
+          code: `// Sending params
+navigation.navigate('Details', { itemId: 42, title: 'Listing' });
+
+// Receiving params (with TypeScript)
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+type AppStackParamList = {
+  Home: undefined;
+  Details: { itemId: number; title: string };
+};
+
+function DetailsScreen({ route }: NativeStackScreenProps<AppStackParamList, 'Details'>) {
+  const { itemId, title } = route.params;
+  return <Text>{title} — #{itemId}</Text>;
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Always declare parameterless screens as `undefined` (not `{}`) in the param list. `undefined` means 'no second argument allowed', while `{}` means 'any non-null object is fine' and silently lets callers pass arbitrary data without a type error.",
+            np: "params नभएको screen लाई `{}` होइन `undefined` राख्नुस् — TypeScript ले सही error दिन्छ।",
+            jp: "パラメーターのない画面は `{}` でなく `undefined` を指定します。`{}` だと任意のオブジェクトが渡せてしまい型安全が失われます。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Customizing Headers",
+        np: "Header अनुकूलन",
+        jp: "ヘッダーのカスタマイズ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The stack header is fully customizable through the `options` prop on `Stack.Screen` or globally via `screenOptions` on `Stack.Navigator`. Use **`headerStyle`** for background colour, **`headerTintColor`** for the back-button and title colour, and **`headerRight`** / **`headerLeft`** to insert custom React elements (icons, buttons) into the header bar.",
+            np: "`options` मा `headerStyle`, `headerTintColor`, र `headerRight`/`headerLeft` राखेर header अनुकूलन गर्न सकिन्छ। `screenOptions` ले सबै screen मा एकैपटक लागू हुन्छ।",
+            jp: "`options` の `headerStyle`・`headerTintColor`・`headerRight`/`headerLeft` でヘッダーを自由にカスタマイズできます。`screenOptions` でナビゲーター全体に一括適用できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Per-screen header customization",
+            np: "प्रति-screen header अनुकूलन",
+            jp: "画面ごとのヘッダーカスタマイズ",
+          },
+          code: `options={{
+  headerStyle: { backgroundColor: '#6366f1' },
+  headerTintColor: '#fff',
+  headerTitleStyle: { fontWeight: 'bold' },
+  headerRight: () => (
+    <Pressable onPress={() => navigation.navigate('Settings')}>
+      <Ionicons name="settings" size={24} color="#fff" />
+    </Pressable>
+  ),
+}}`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Applying header style globally via screenOptions",
+            np: "screenOptions मार्फत सबै screen मा header लागू गर्नुस्",
+            jp: "screenOptions でナビゲーター全体に適用",
+          },
+          code: `<Stack.Navigator
+  screenOptions={{
+    headerStyle: { backgroundColor: '#6366f1' },
+    headerTintColor: '#fff',
+    headerTitleStyle: { fontWeight: 'bold' },
+  }}
+>
+  <Stack.Screen name="Home" component={HomeScreen} />
+  <Stack.Screen name="Details" component={DetailsScreen} />
+</Stack.Navigator>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Per-screen `options` **override** the `screenOptions` defaults, so you can set a global brand style on the navigator and only override individual screens that need a different appearance — for example a transparent header on a media-heavy hero screen.",
+            np: "Per-screen `options` ले `screenOptions` लाई override गर्छ। global style राखेर specific screen मा मात्र बदल्न सकिन्छ।",
+            jp: "画面ごとの `options` は `screenOptions` のデフォルトを上書きします。ブランドカラーをグローバルに設定し、特定画面だけ変えることができます。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Creating a TabNavigator and Customizing Tabs",
+        np: "TabNavigator बनाउने र Tab अनुकूलन गर्ने",
+        jp: "TabNavigator の作成とタブのカスタマイズ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "**`createBottomTabNavigator`** renders a persistent bottom bar with a tab per screen. The `screenOptions` callback receives `{ route }` so you can derive the icon name from the route name instead of repeating yourself per screen. Use `tabBarActiveTintColor` / `tabBarInactiveTintColor` for colour theming, and `tabBarBadge` for notification counts.",
+            np: "`createBottomTabNavigator` ले persistent tab bar बनाउँछ। `screenOptions` मा route name बाट icon छान्न सकिन्छ। Badge र रंग पनि सजिलै राख्न सकिन्छ।",
+            jp: "`createBottomTabNavigator` で永続的な下部タブバーを作成します。`screenOptions` コールバックで route 名からアイコンを導出できます。バッジやカラーテーマも簡単に設定できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Bottom tab navigator with icons and active colour",
+            np: "आइकन र सक्रिय रंग सहितको Bottom Tab",
+            jp: "アイコンとアクティブカラー付きボトムタブ",
+          },
+          code: `import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
+const Tab = createBottomTabNavigator();
+
+function AppTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          const icons: Record<string, string> = {
+            Feed: 'home',
+            Messages: 'chatbubbles',
+            Account: 'person',
+          };
+          return <Ionicons name={icons[route.name] as any} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: '#9ca3af',
+      })}
+    >
+      <Tab.Screen name="Feed" component={FeedNavigator} options={{ headerShown: false }} />
+      <Tab.Screen name="Messages" component={MessagesScreen} />
+      <Tab.Screen name="Account" component={AccountNavigator} options={{ headerShown: false }} />
+    </Tab.Navigator>
+  );
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Screens that contain their own **Stack navigator** (like `FeedNavigator`) should have `headerShown: false` on their `Tab.Screen` so the Tab bar doesn't render a second header above the stack's own header. Screens without a nested stack (like `MessagesScreen`) can let the tab navigator render their header directly.",
+            np: "आफ्नै Stack भएका screen मा `headerShown: false` राख्नुस् — अन्यथा दोहोरो header देखिन्छ।",
+            jp: "Stack ナビゲーターを内包するタブには `headerShown: false` を設定し、二重ヘッダーを防ぎます。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Navigation Theme",
+        np: "Navigation Theme",
+        jp: "Navigation テーマ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "React Navigation ships a **`DefaultTheme`** (light) and a **`DarkTheme`**. You can spread either and override specific colour tokens to match your brand. Pass the theme object to `NavigationContainer`'s `theme` prop and every navigator automatically inherits the background, card, text, and primary colours — no per-screen configuration needed.",
+            np: "React Navigation मा `DefaultTheme` र `DarkTheme` छन्। spread गरी brand colour override गर्नुस्। `NavigationContainer` को `theme` prop मा दिँदा सबै navigator ले आफैँ पाउँछन्।",
+            jp: "React Navigation には `DefaultTheme`（ライト）と `DarkTheme` が付属しています。スプレッドしてブランドカラーを上書きし、`NavigationContainer` の `theme` prop に渡すと全ナビゲーターが自動で継承します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Custom NavigationTheme applied to the container",
+            np: "Custom Theme NavigationContainer मा लागू गर्ने",
+            jp: "カスタムテーマをコンテナに適用する",
+          },
+          code: `import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+
+const AppTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#6366f1',
+    background: '#f8fafc',
+    card: '#ffffff',
+    text: '#1e293b',
+  },
+};
+
+// Usage:
+<NavigationContainer theme={AppTheme}>
+  <RootNavigator />
+</NavigationContainer>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The **`primary`** colour token is used for active tab icons and the focused state in bottom tabs. **`background`** is the screen background, **`card`** is the header and tab bar background, and **`text`** is the default header title colour. Override only what you need — the rest falls back to the `DefaultTheme` values via the spread.",
+            np: "`primary` — active tab icon; `background` — screen; `card` — header/tab bar; `text` — header title। मात्र आवश्यक token override गर्नुस्।",
+            jp: "`primary` はアクティブタブアイコン、`background` は画面背景、`card` はヘッダー・タブバー背景、`text` はタイトル色です。必要なトークンだけ上書きすれば十分です。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Building AuthNavigator, AppNavigator and FeedNavigator",
+        np: "AuthNavigator, AppNavigator र FeedNavigator बनाउने",
+        jp: "AuthNavigator・AppNavigator・FeedNavigator の構築",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The navigator files you build during the course form a clear hierarchy: **`RootNavigator`** chooses between `AuthNavigator` (unauthenticated) and `AppNavigator` (authenticated). `AppNavigator` is a Tab navigator whose tabs embed their own Stack navigators — `FeedNavigator` and `AccountNavigator`. This structure gives each feature area an isolated navigation history and makes adding new screens straightforward.",
+            np: "कोर्समा बन्ने navigator hierarchy: `RootNavigator` → Auth वा App (Tab) → प्रत्येक tab को आफ्नै Stack। यसले प्रत्येक feature area को navigation history छुट्टाउँछ।",
+            jp: "コースで構築するナビゲーター階層：`RootNavigator` が Auth と App（タブ）を切り替え、各タブが独自のスタックを持ちます。機能エリアごとに履歴が分離されます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Full navigator structure — Auth, Feed, Account, Root",
+            np: "पूर्ण navigator संरचना",
+            jp: "ナビゲーター全体構造",
+          },
+          code: `// AuthNavigator.tsx — for unauthenticated users
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator>
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Register" component={RegisterScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+// FeedNavigator.tsx — nested in AppTabs
+function FeedNavigator() {
+  return (
+    <FeedStack.Navigator>
+      <FeedStack.Screen name="Listings" component={ListingsScreen} />
+      <FeedStack.Screen name="ListingDetail" component={ListingDetailScreen} />
+      <FeedStack.Screen name="ListingEdit" component={ListingEditScreen} />
+    </FeedStack.Navigator>
+  );
+}
+
+// AccountNavigator.tsx
+function AccountNavigator() {
+  return (
+    <AccountStack.Navigator>
+      <AccountStack.Screen name="Account" component={AccountScreen} />
+      <AccountStack.Screen name="Messages" component={MessagesScreen} />
+    </AccountStack.Navigator>
+  );
+}
+
+// RootNavigator.tsx — switches between Auth and App based on user
+function RootNavigator() {
+  const { user } = useAuth();
+  return user ? <AppNavigator /> : <AuthNavigator />;
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When `user` changes (login / logout), React re-renders `RootNavigator` and swaps the entire navigator tree. Because the navigator switch happens at the root, the stack history is automatically cleared — the user can never press Back into the login screens after authenticating.",
+            np: "`user` बदलिँदा React ले पूरै navigator tree swap गर्छ। यसले login screen को stack history आफैँ सफा हुन्छ — authenticate पछि Back थिचेर login screen आउँदैन।",
+            jp: "`user` が変わると React がナビゲーターツリー全体を入れ替えます。スタック履歴が自動的にクリアされ、ログイン後に Back でログイン画面に戻ることはありません。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Refactoring Routes — Centralized Route Names",
+        np: "Routes refactoring — केन्द्रीकृत Route नाम",
+        jp: "ルートのリファクタリング — 定数集約",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Hardcoding screen names as string literals across files is the leading cause of silent navigation bugs — a typo in one file causes a runtime crash or a no-op navigate with no compile-time warning. Centralise all route names in a **`routes.ts`** constants file and import from it everywhere. Now a rename is a single-file change, and TypeScript's `as const` ensures the values are narrow literal types rather than `string`.",
+            np: "Screen नाम string literal रूपमा छरिँदा typo बाट runtime crash हुन सक्छ। `routes.ts` मा सबै नाम केन्द्रीकृत गरी import गर्नुस् — rename एकै ठाउँमा।",
+            jp: "文字列リテラルを各ファイルにハードコードすると、タイポがランタイムクラッシュを招きます。`routes.ts` に定数を集約し、`as const` で型を絞り込むことで rename が一箇所で済みます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "routes.ts — centralized constants and refactor-safe usage",
+            np: "routes.ts — केन्द्रीकृत constants र refactor-safe प्रयोग",
+            jp: "routes.ts — 定数集約とリファクタリング安全な使用例",
+          },
+          code: `// navigation/routes.ts
+export const ROUTES = {
+  LISTINGS: 'Listings',
+  LISTING_DETAIL: 'ListingDetail',
+  LISTING_EDIT: 'ListingEdit',
+  LOGIN: 'Login',
+  REGISTER: 'Register',
+  ACCOUNT: 'Account',
+  MESSAGES: 'Messages',
+} as const;
+
+// Usage — refactor-safe
+navigation.navigate(ROUTES.LISTING_DETAIL, { id });`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**`as const`** makes each value a string literal type (e.g. `'Listings'`) rather than `string`. This lets TypeScript cross-reference the constant with your param list types and catch mismatches.",
+              np: "`as const` ले प्रत्येक value लाई literal type बनाउँछ, `string` होइन। यसले TypeScript ले param list सँग मिलाएर error देखाउँछ।",
+              jp: "`as const` で各値が `string` でなくリテラル型（例：`'Listings'`）になります。TypeScript がパラムリストと照合してミスマッチを検出します。",
+            },
+            {
+              en: "Keep `ROUTES` in one file and import it into navigators, screens, and tests. When a screen is renamed, update only `routes.ts` — TypeScript will flag every usage site that needs updating.",
+              np: "`ROUTES` एकै फाइलमा राखी navigator, screen, र test मा import गर्नुस्। rename गर्दा TypeScript ले प्रयोग भएका सबै ठाउँ देखाउँछ।",
+              jp: "`ROUTES` を一ファイルにまとめてナビゲーター・画面・テストでインポートします。リネーム時は TypeScript がすべての使用箇所を指摘します。",
+            },
+          ],
+        },
+      ],
+    },
   ],
   faq: [
     {
