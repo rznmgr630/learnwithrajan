@@ -227,6 +227,142 @@ git push origin v2.3.1`,
     },
     {
       title: {
+        en: "Fork workflow, credential storage, and GitHub collaboration",
+        np: "Fork workflow, credential storage, र GitHub collaboration",
+        jp: "フォークワークフロー・認証情報の保存・GitHub コラボレーション",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Contributing to open-source or any repo you lack push access to requires the **fork workflow**: fork the repo to your account, clone your fork, push feature branches to your fork, and open a PR to the original (upstream) repo. Keeping your fork in sync with upstream is a routine discipline every contributor must master.",
+            np: "Open-source वा push access नभएको कुनै पनि repo मा contribute गर्न **fork workflow** चाहिन्छ: आफ्नो account मा repo fork, आफ्नो fork clone, feature branch आफ्नो fork मा push, र original (upstream) repo मा PR open। Fork लाई upstream सँग sync राख्नु हरेक contributor ले master गर्नुपर्ने daily discipline हो।",
+            jp: "プッシュアクセスのないオープンソースや外部リポジトリへの貢献には**フォークワークフロー**が必要です：自分のアカウントにフォーク・クローン・フォークにプッシュ・元の（アップストリーム）リポジトリへ PR を開く。フォークをアップストリームと同期し続けることは、すべてのコントリビューターがマスターしなければならない日常的な規律です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Fork workflow — contributing to a repo you do not own",
+            np: "Fork workflow — तपाईंको नभएको repo मा contribute",
+            jp: "フォークワークフロー — 所有していないリポジトリへの貢献",
+          },
+          code: `# Fork + clone in one step (gh CLI)
+gh repo fork owner/upstream-repo --clone
+cd upstream-repo
+
+# Or manually: click Fork on GitHub, then clone YOUR fork
+git clone git@github.com:you/upstream-repo.git
+cd upstream-repo
+
+# Add the original repo as a second remote named "upstream"
+git remote add upstream git@github.com:owner/upstream-repo.git
+git remote -v
+# origin    git@github.com:you/upstream-repo.git  (your fork)
+# upstream  git@github.com:owner/upstream-repo.git (original)
+
+# Work on a branch — never commit directly to main on your fork
+git switch -c fix/broken-link-in-readme
+
+# Push to YOUR fork (origin), not upstream
+git push -u origin fix/broken-link-in-readme
+
+# Open a PR from your fork to the upstream repo
+gh pr create --repo owner/upstream-repo \
+  --title "fix: correct broken link in README" \
+  --body "The link in the Contributing section returns 404."
+
+# Keep your fork up-to-date with upstream (do this before starting new work)
+git fetch upstream
+git switch main
+git merge upstream/main    # or: git rebase upstream/main
+git push origin main       # sync your fork's main too
+
+# After the PR is merged, clean up
+git push origin --delete fix/broken-link-in-readme
+git branch -d fix/broken-link-in-readme`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Storing credentials — SSH keys and HTTPS credential helpers",
+            np: "Credential store — SSH key र HTTPS credential helper",
+            jp: "認証情報の保存 — SSH キーと HTTPS 認証情報ヘルパー",
+          },
+          code: `# Option 1: SSH keys (recommended — authenticate once, no token prompts)
+ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub     # copy this → GitHub Settings → SSH Keys → New key
+ssh -T git@github.com         # verify: "Hi username! You've successfully authenticated."
+
+# Clone with SSH (not HTTPS) to use your key automatically
+git clone git@github.com:org/repo.git
+
+# Option 2: HTTPS with credential helpers
+# macOS — system Keychain (built-in, tokens stored securely)
+git config --global credential.helper osxkeychain
+
+# Linux — libsecret / GNOME Keyring
+git config --global credential.helper /usr/lib/git-core/git-credential-libsecret
+
+# Any platform — cache in memory for N seconds (not persistent across reboots)
+git config --global credential.helper "cache --timeout=3600"
+
+# GitHub personal access tokens (PAT)
+# GitHub no longer accepts your account password over HTTPS.
+# Create a PAT: GitHub → Settings → Developer settings → Personal access tokens
+# When git prompts for a password over HTTPS, enter the PAT token instead.
+
+# GitHub CLI — stores its own token independently
+gh auth login                 # interactive, stores token securely in system keychain
+gh auth status                # verify current login
+gh auth token                 # print stored token (pipe to git if needed)`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "GitHub issues, labels, and milestones",
+            np: "GitHub issues, labels, र milestones",
+            jp: "GitHub issues・labels・milestones",
+          },
+          code: `# Create an issue
+gh issue create \
+  --title "Bug: login fails on Safari 17" \
+  --body "Steps: 1. Open Safari 2. Navigate to /login 3. Click Login → 500" \
+  --label "bug,high-priority" \
+  --assignee "@me"
+
+# List and filter issues
+gh issue list                       # all open issues
+gh issue list --label bug           # filter by label
+gh issue list --assignee "@me"      # assigned to you
+gh issue list --state closed        # closed issues
+
+# Comment on an issue
+gh issue comment 42 --body "Reproduced on Safari 17.3. Related to #38."
+
+# Close an issue (also auto-closed when a PR with "Closes #42" in body is merged)
+gh issue close 42 --comment "Fixed in PR #89"
+
+# Labels — color-coded categories for issues and PRs
+gh label create "high-priority" --color "FF0000" --description "Fix this sprint"
+gh label list
+
+# Milestones — group issues/PRs for a release or sprint
+gh api repos/:owner/:repo/milestones --method POST \
+  --field title="v2.0 Release" \
+  --field description="Features required for the 2.0 launch" \
+  --field due_on="2025-06-01T00:00:00Z"
+
+# Assign an issue to a milestone
+gh issue edit 42 --milestone "v2.0 Release"
+
+# View milestone progress
+gh api repos/:owner/:repo/milestones | jq '.[] | {title, open_issues, closed_issues}'`,
+        },
+      ],
+    },
+    {
+      title: {
         en: "Choosing a workflow — the decision framework",
         np: "Workflow छान्नु — निर्णय framework",
         jp: "ワークフローの選択 — 意思決定フレームワーク",

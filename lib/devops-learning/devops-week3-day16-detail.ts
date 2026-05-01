@@ -277,6 +277,94 @@ gh api repos/:owner/:repo/branches/main/protection \
     },
     {
       title: {
+        en: "Stashing, cherry-pick, and picking files from other branches",
+        np: "Stashing, cherry-pick, र अरू branch बाट file pick",
+        jp: "スタッシング・チェリーピック・他のブランチからのファイル取得",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`git stash` lets you shelve uncommitted changes temporarily — useful when you need to switch context (review a PR, fix a hotfix) without committing half-done work. Cherry-pick lets you apply a specific commit from one branch onto another — a surgical tool for backporting fixes without merging an entire branch.",
+            np: "`git stash` ले uncommitted change लाई अस्थायी रूपमा shelf गर्न दिन्छ — half-done काम commit नगरी context switch गर्न useful। Cherry-pick ले एउटा branch बाट specific commit अर्को branch मा apply गर्न दिन्छ — पूरा branch merge नगरी fix backport गर्ने surgical tool।",
+            jp: "`git stash` は未コミットの変更を一時的に保留できます — 半完成の作業をコミットせずにコンテキストを切り替える（PR レビュー・ホットフィックス対応）のに便利です。チェリーピックはブランチ全体をマージせずに、特定のコミットを別のブランチに適用できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "git stash — shelve and restore uncommitted work",
+            np: "git stash — uncommitted काम shelf र restore",
+            jp: "git stash — 未コミットの作業を保留・復元する",
+          },
+          code: `# Save current changes to the stash (a stack)
+git stash                                       # stash tracked changes
+git stash push -m "wip: half-done login refactor"  # with a label
+git stash push --include-untracked              # also stash new files
+git stash push -- src/auth.ts                  # stash only one file
+
+# List stashes
+git stash list
+# stash@{0}: WIP on main: abc1234 wip: half-done login refactor
+# stash@{1}: WIP on feature/x: def5678 another stash
+
+# Inspect a stash without applying it
+git stash show -p stash@{0}       # show as a diff
+
+# Apply and remove (pop = apply + drop from list)
+git stash pop                     # apply latest stash, remove from list
+git stash apply stash@{1}         # apply a specific stash, keep in list
+git stash drop stash@{1}          # remove without applying
+git stash clear                   # remove ALL stashes (irreversible)
+
+# Apply stash to a new branch (avoids conflicts if branch has diverged)
+git stash branch feature/recovered stash@{0}
+
+# Practical pattern: stash → pull → pop
+git stash push -m "pre-pull backup"
+git pull --rebase
+git stash pop`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "git cherry-pick and picking files from other branches",
+            np: "git cherry-pick र अरू branch बाट file pick",
+            jp: "git cherry-pick と他のブランチからのファイルの取得",
+          },
+          code: `# Cherry-pick: apply a specific commit from another branch
+git log --oneline feature/hotfix       # find the commit hash
+git cherry-pick abc1234                # apply that commit here
+
+# Cherry-pick a range (abc1234 excluded, def5678 included)
+git cherry-pick abc1234..def5678
+
+# Cherry-pick without committing (stage only — then review before committing)
+git cherry-pick --no-commit abc1234
+git diff --staged                      # inspect what was applied
+git commit -m "port: apply payment fix from hotfix branch"
+
+# If cherry-pick causes a conflict:
+# resolve the file, then:
+git add resolved-file.ts
+git cherry-pick --continue
+# or cancel entirely:
+git cherry-pick --abort
+
+# Pick a specific FILE from another branch (not cherry-pick — just restore the file)
+git checkout feature/new-design -- src/components/Button.tsx
+# The file is now in your working tree and staged — commit when ready
+
+# Common use cases:
+# ✅ Backport a bug fix from main to a release/* branch
+# ✅ Apply a hotfix commit to both main and develop (GitFlow)
+# ✅ Grab a utility function from a colleague's WIP branch
+# ⚠️  Avoid cherry-pick as a substitute for merging — it duplicates commits`,
+        },
+      ],
+    },
+    {
+      title: {
         en: "Hands-on: Simulate a full GitHub Flow cycle",
         np: "Hands-on: Full GitHub Flow cycle simulate गर्नुहोस्",
         jp: "ハンズオン: 完全な GitHub Flow サイクルをシミュレートする",
