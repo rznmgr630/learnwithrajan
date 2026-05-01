@@ -11,6 +11,8 @@ import {
   resolveJapaneseWeeklyTestForRoadmap,
 } from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
+import { RichText } from "@/components/learn/RichText";
+import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 
 /** Single pill style for all topic tags — color comes from theme accent only elsewhere. */
@@ -93,7 +95,9 @@ export function JapaneseRoadmap() {
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
-                <span className="flex-1 font-medium text-[var(--text)]">{pickLocalized(week.title, locale)}</span>
+                <span className="flex-1 font-medium text-[var(--text)]">
+                  <RichText text={pickLocalized(week.title, locale)} />
+                </span>
                 <span className="text-sm tabular-nums text-[var(--muted)]">
                   {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
@@ -155,11 +159,13 @@ export function JapaneseRoadmap() {
                           </div>
                           <button
                             type="button"
-                            aria-label={`Open details for day ${d.day}: ${d.title}`}
+                            aria-label={`Open details for day ${d.day}: ${stripRichMarkers(d.title)}`}
                             className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                             onClick={() => setDetailDay(d.day)}
                           >
-                            <h3 className="text-sm font-semibold leading-snug text-[var(--text)]">{d.title}</h3>
+                            <h3 className="text-sm font-semibold leading-snug text-[var(--text)]">
+                              <RichText text={d.title} />
+                            </h3>
                             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
                               {d.tags.map((tag) => (
                                 <span
@@ -184,9 +190,11 @@ export function JapaneseRoadmap() {
                             {t("jpRoadmap.weeklyRecapLabel")}
                           </p>
                           <h4 className="mt-2 text-base font-semibold leading-snug text-[var(--text)]">
-                            {pickLocalized(wt.title, locale)}
+                            <RichText text={pickLocalized(wt.title, locale)} />
                           </h4>
-                          <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">{pickLocalized(wt.subtitle, locale)}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+                            <RichText text={pickLocalized(wt.subtitle, locale)} />
+                          </p>
                           <p className="mt-2 text-[11px] text-[var(--faint)]">
                             {wt.subTests?.length
                               ? t("jpRoadmap.fivePapersBlurb")
@@ -247,10 +255,10 @@ export function JapaneseRoadmap() {
         <div className="rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] p-5 shadow-xl sm:p-6">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpRoadmap.courseFinale")}</p>
           <h3 className="mt-2 text-lg font-semibold leading-snug text-[var(--text)]">
-            {pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.title, locale)}
+            <RichText text={pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.title, locale)} />
           </h3>
           <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
-            {pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.subtitle, locale)}
+            <RichText text={pickLocalized(JAPANESE_N5_FULL_LEVEL_MOCK.subtitle, locale)} />
           </p>
           <p className="mt-3 text-[11px] leading-relaxed text-[var(--faint)]">
             {tParams("jpRoadmap.fullMockBlurb", {
