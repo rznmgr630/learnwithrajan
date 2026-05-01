@@ -23,6 +23,7 @@ export const DEVOPS_DAY_21_DETAIL: RoadmapDayDetail = {
         jp: "GitFlow — 構造化されたブランチモデル",
       },
       blocks: [
+        { type: "diagram", id: "devops-git-branching" },
         {
           type: "paragraph",
           text: {

@@ -23,6 +23,7 @@ export const DEVOPS_DAY_11_DETAIL: RoadmapDayDetail = {
         jp: "HTTP リクエスト/レスポンスモデル",
       },
       blocks: [
+        { type: "diagram", id: "devops-nginx-proxy" },
         {
           type: "paragraph",
           text: {

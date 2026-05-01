@@ -23,6 +23,7 @@ export const DEVOPS_DAY_15_DETAIL: RoadmapDayDetail = {
         jp: "Git の 3 つの領域 — すべてを説明するメンタルモデル",
       },
       blocks: [
+        { type: "diagram", id: "devops-git-three-areas" },
         {
           type: "paragraph",
           text: {

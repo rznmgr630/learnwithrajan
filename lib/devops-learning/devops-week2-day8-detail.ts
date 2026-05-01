@@ -23,6 +23,8 @@ export const DEVOPS_DAY_8_DETAIL: RoadmapDayDetail = {
         jp: "OSI モデル — 7 つの抽象化層",
       },
       blocks: [
+        { type: "diagram", id: "devops-osi-model" },
+        { type: "diagram", id: "devops-tcp-handshake" },
         {
           type: "paragraph",
           text: {

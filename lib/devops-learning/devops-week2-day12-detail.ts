@@ -23,6 +23,7 @@ export const DEVOPS_DAY_12_DETAIL: RoadmapDayDetail = {
         jp: "ファイアウォールの仕組み — ステートレスとステートフル",
       },
       blocks: [
+        { type: "diagram", id: "devops-firewall-nat" },
         {
           type: "paragraph",
           text: {

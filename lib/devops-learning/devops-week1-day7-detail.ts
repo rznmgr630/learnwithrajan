@@ -23,6 +23,7 @@ export const DEVOPS_DAY_7_DETAIL: RoadmapDayDetail = {
         jp: "SSH 鍵認証 — 仕組みとパスワードより安全な理由",
       },
       blocks: [
+        { type: "diagram", id: "devops-ssh-key-auth" },
         {
           type: "paragraph",
           text: {
