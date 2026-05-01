@@ -7,6 +7,8 @@ const NODE_IDS = new Set<RoadmapDetailDiagramId>([
   "node-one-thread-io",
   "node-event-loop-phases",
   "node-execution-priority",
+  "nodejs-require-resolution",
+  "nodejs-express-middleware-chain",
   "go-goroutine-mn",
 ]);
 
@@ -402,6 +404,180 @@ export function NodeRuntimeDiagram({ id }: { id: RoadmapDetailDiagramId }) {
             </text>
             <text x="16" y="220" className="fill-violet-400/80 text-[8px]">
               Output: 1 → 4 → 2 → 3 → 5
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "nodejs-require-resolution":
+      return (
+        <figure className={fig}>
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
+            What happens when you call{" "}
+            <code className="text-[var(--text)]">require(&apos;./file&apos;)</code>{" "}
+            — resolve → run once → cache → reuse the same exports object
+          </figcaption>
+          <svg viewBox="0 0 440 200" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="nrr-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8" />
+              </marker>
+              <marker
+                id="nrr-grn"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+              </marker>
+            </defs>
+            <text x="220" y="14" textAnchor="middle" className="fill-neutral-400 text-[10px] font-semibold">
+              CommonJS <tspan className="fill-sky-400">require</tspan> — first load vs cached load
+            </text>
+            {/* Row 1 */}
+            <rect x="12" y="28" width="96" height="36" rx="6" fill="#1e293b" stroke="#38bdf8" strokeWidth="1" />
+            <text x="60" y="48" textAnchor="middle" className="fill-sky-300 text-[9px]">
+              Your code
+            </text>
+            <text x="60" y="58" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              require(&apos;./api&apos;)
+            </text>
+            <line x1="110" y1="46" x2="132" y2="46" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nrr-arr)" />
+            <rect x="136" y="28" width="100" height="36" rx="6" fill="#1c1c1e" stroke="#71717a" strokeWidth="1" />
+            <text x="186" y="46" textAnchor="middle" className="fill-neutral-300 text-[9px]">
+              Resolve path
+            </text>
+            <text x="186" y="58" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              file · index · node_modules
+            </text>
+            <line x1="238" y1="46" x2="258" y2="46" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nrr-arr)" />
+            <polygon points="262,36 292,46 262,56" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
+            <text x="312" y="42" className="fill-amber-300 text-[9px] font-semibold">
+              In require.cache?
+            </text>
+            <text x="312" y="54" className="fill-neutral-500 text-[8px]">
+              same absolute path = hit
+            </text>
+            {/* Yes branch */}
+            <line x1="292" y1="52" x2="292" y2="72" stroke="#4ade80" strokeWidth="1.2" />
+            <text x="300" y="68" className="fill-emerald-400 text-[8px]">
+              yes →
+            </text>
+            <rect x="318" y="76" width="110" height="32" rx="6" fill="#1a2e1a" stroke="#4ade80" strokeWidth="1" />
+            <text x="373" y="94" textAnchor="middle" className="fill-emerald-300 text-[9px]">
+              Return cached exports
+            </text>
+            <line x1="373" y1="108" x2="373" y2="124" stroke="#4ade80" strokeWidth="1" markerEnd="url(#nrr-grn)" />
+            {/* No branch */}
+            <line x1="272" y1="46" x2="272" y2="112" stroke="#f87171" strokeWidth="1" strokeDasharray="4 3" />
+            <text x="228" y="100" className="fill-red-400 text-[8px]">
+              no ↓
+            </text>
+            <rect x="28" y="112" width="120" height="40" rx="6" fill="#3b0f14" stroke="#f87171" strokeWidth="1" strokeOpacity="0.6" />
+            <text x="88" y="128" textAnchor="middle" className="fill-red-300 text-[9px] font-semibold">
+              Wrap file in function
+            </text>
+            <text x="88" y="142" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              (exports, require, module, …)
+            </text>
+            <line x1="150" y1="132" x2="178" y2="132" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nrr-arr)" />
+            <rect x="182" y="112" width="96" height="40" rx="6" fill="#082f49" stroke="#0ea5e9" strokeWidth="1" />
+            <text x="230" y="130" textAnchor="middle" className="fill-sky-300 text-[9px]">
+              Run once
+            </text>
+            <text x="230" y="144" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              module.exports fills
+            </text>
+            <line x1="280" y1="132" x2="308" y2="132" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nrr-arr)" />
+            <rect x="312" y="112" width="116" height="40" rx="6" fill="#1e3a5f" stroke="#38bdf8" strokeWidth="1" />
+            <text x="370" y="130" textAnchor="middle" className="fill-sky-300 text-[9px]">
+              Store in cache
+            </text>
+            <text x="370" y="144" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              require.cache[key]
+            </text>
+            <text x="220" y="176" textAnchor="middle" className="fill-neutral-500 text-[9px]">
+              Same object returned everywhere — mutations to exports are visible to all importers.
+            </text>
+          </svg>
+        </figure>
+      );
+
+    case "nodejs-express-middleware-chain":
+      return (
+        <figure className={fig}>
+          <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
+            Express middleware — each function can modify{" "}
+            <code className="text-[var(--text)]">req</code>/<code className="text-[var(--text)]">res</code>, call{" "}
+            <code className="text-[var(--text)]">next()</code>, or send a response (stops the chain)
+          </figcaption>
+          <svg viewBox="0 0 440 168" className="h-auto w-full" aria-hidden>
+            <defs>
+              <marker
+                id="nem-arr"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
+            </defs>
+            <text x="24" y="22" className="fill-neutral-400 text-[10px] font-semibold">
+              Incoming HTTP request
+            </text>
+            <line x1="24" y1="28" x2="24" y2="140" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />
+            <line x1="416" y1="28" x2="416" y2="140" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />
+            {[
+              { x: 36, label: "① cors()", sub: "sets headers", color: "#38bdf8" },
+              { x: 134, label: "② express.json()", sub: "parses body", color: "#a78bfa" },
+              { x: 232, label: "③ auth middleware", sub: "may 401", color: "#fb923c" },
+              { x: 330, label: "④ route handler", sub: "GET /api/items", color: "#4ade80" },
+            ].map(({ x, label, sub, color }) => (
+              <g key={label}>
+                <rect
+                  x={x}
+                  y="44"
+                  width="82"
+                  height="44"
+                  rx="6"
+                  fill="#1c1c1e"
+                  stroke={color}
+                  strokeWidth="1.2"
+                  strokeOpacity="0.75"
+                />
+                <text x={x + 8} y="64" className="fill-neutral-200 text-[9px] font-semibold">
+                  {label}
+                </text>
+                <text x={x + 8} y="78" className="fill-neutral-500 text-[8px]">
+                  {sub}
+                </text>
+              </g>
+            ))}
+            {/* gaps between boxes: 118→134, 216→232, 314→330, 412→418 */}
+            <line x1="118" y1="66" x2="132" y2="66" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nem-arr)" />
+            <line x1="216" y1="66" x2="230" y2="66" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nem-arr)" />
+            <line x1="314" y1="66" x2="328" y2="66" stroke="#64748b" strokeWidth="1.5" markerEnd="url(#nem-arr)" />
+            <line x1="412" y1="66" x2="418" y2="66" stroke="#4ade80" strokeWidth="2" markerEnd="url(#nem-arr)" />
+            <text x="428" y="62" className="fill-emerald-400 text-[8px]">
+              HTTP response
+            </text>
+            <rect x="44" y="108" width="352" height="44" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="220" y="128" textAnchor="middle" className="fill-amber-400/90 text-[9px]">
+              If any step calls <tspan className="fill-orange-300">next(err)</tspan> → skips normal handlers → Express error middleware (4 args)
+            </text>
+            <text x="220" y="142" textAnchor="middle" className="fill-neutral-500 text-[8px]">
+              Order matters: put parsers and auth before routes; mount error handler last.
             </text>
           </svg>
         </figure>
