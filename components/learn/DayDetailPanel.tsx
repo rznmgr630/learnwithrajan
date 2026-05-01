@@ -15,6 +15,8 @@ import { getLaravelRoadmapDayContext, resolveLaravelDayDetail } from "@/lib/lara
 import { localizeLaravelRoadmapDayDetail } from "@/lib/laravel-learning/localize-laravel-roadmap-detail";
 import { getNextjsRoadmapDayContext, resolveNextjsDayDetail } from "@/lib/nextjs-learning/nextjs-challenge-data";
 import { localizeNextjsRoadmapDayDetail } from "@/lib/nextjs-learning/localize-nextjs-roadmap-detail";
+import { getNodejsRoadmapDayContext, resolveNodejsDayDetail } from "@/lib/nodejs-learning/nodejs-challenge-data";
+import { localizeNodejsRoadmapDayDetail } from "@/lib/nodejs-learning/localize-nodejs-roadmap-detail";
 import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
 import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
@@ -54,9 +56,11 @@ export function DayDetailPanel({
             ? getLaravelRoadmapDayContext(dayNumber)
             : track === "nextjs"
               ? getNextjsRoadmapDayContext(dayNumber)
-              : track === "devops"
-                ? getDevopsRoadmapDayContext(dayNumber)
-                : getRoadmapDayContext(dayNumber)
+              : track === "nodejs"
+                ? getNodejsRoadmapDayContext(dayNumber)
+                : track === "devops"
+                  ? getDevopsRoadmapDayContext(dayNumber)
+                  : getRoadmapDayContext(dayNumber)
       : null;
   const detailRaw = ctx
     ? track === "git"
@@ -67,9 +71,11 @@ export function DayDetailPanel({
           ? resolveLaravelDayDetail(ctx.day)
           : track === "nextjs"
             ? resolveNextjsDayDetail(ctx.day)
-            : track === "devops"
-              ? resolveDevopsDayDetail(ctx.day)
-              : resolveDayDetail(ctx.day)
+            : track === "nodejs"
+              ? resolveNodejsDayDetail(ctx.day)
+              : track === "devops"
+                ? resolveDevopsDayDetail(ctx.day)
+                : resolveDayDetail(ctx.day)
     : null;
   const detail = detailRaw
     ? track === "git"
@@ -80,9 +86,11 @@ export function DayDetailPanel({
           ? localizeLaravelRoadmapDayDetail(detailRaw, locale)
           : track === "nextjs"
             ? localizeNextjsRoadmapDayDetail(detailRaw, locale)
-            : track === "devops"
-              ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
-              : localizeRoadmapDayDetail(detailRaw, locale)
+            : track === "nodejs"
+              ? localizeNodejsRoadmapDayDetail(detailRaw, locale)
+              : track === "devops"
+                ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
+                : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
@@ -113,7 +121,8 @@ export function DayDetailPanel({
   const done = isDone(dayNumber);
   const intro = overviewParagraphs(detail.overview);
   const hideOverviewWhenSections =
-    (track === "react" || track === "laravel" || track === "nextjs") && (detail.sections?.length ?? 0) > 0;
+    (track === "react" || track === "laravel" || track === "nextjs" || track === "nodejs") &&
+    (detail.sections?.length ?? 0) > 0;
   const introToShow = hideOverviewWhenSections ? [] : intro;
   const faq = detail.faq ?? [];
 
@@ -129,11 +138,11 @@ export function DayDetailPanel({
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
             <p className="text-xs font-medium text-[var(--muted)]">
-              {stripLessonTimingFromTitle(pickLocalized(ctx.weekTitle, locale))}
+              <RichText text={stripLessonTimingFromTitle(pickLocalized(ctx.weekTitle, locale))} />
             </p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
               {t("jpRoadmap.dayPrefix")} {ctx.day.day}:{" "}
-              {stripLessonTimingFromTitle(pickLocalized(ctx.day.title, locale))}
+              <RichText text={stripLessonTimingFromTitle(pickLocalized(ctx.day.title, locale))} />
             </h2>
           </div>
           <button
@@ -155,7 +164,7 @@ export function DayDetailPanel({
                 key={`${ctx.day.day}-${tag.slug}`}
                 className="rounded-full border border-[var(--border)] bg-[var(--elevated)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
               >
-                {pickLocalized(tag.label, locale)}
+                <RichText text={pickLocalized(tag.label, locale)} />
               </span>
             ))}
           </div>
@@ -178,7 +187,7 @@ export function DayDetailPanel({
           {detail.sections?.map((sec) => (
             <div key={sec.title}>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {stripLessonTimingFromTitle(sec.title)}
+                <RichText text={stripLessonTimingFromTitle(sec.title)} />
               </h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <DayDetailBlockRenderer blocks={sec.blocks} locale={locale} diagramTrack={track} />
@@ -211,9 +220,11 @@ export function DayDetailPanel({
                       ? t("laravelDetail.selfCheckHint")
                       : track === "nextjs"
                         ? t("nextjsDetail.selfCheckHint")
-                        : track === "devops"
-                          ? t("devopsDetail.selfCheckHint")
-                          : t("backendDetail.selfCheckHint")}
+                        : track === "nodejs"
+                          ? t("nodejsDetail.selfCheckHint")
+                          : track === "devops"
+                            ? t("devopsDetail.selfCheckHint")
+                            : t("backendDetail.selfCheckHint")}
               </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
@@ -267,7 +278,7 @@ export function DayDetailPanel({
                           {item.tag ? (
                             <p className="mb-3">
                               <span className="inline-flex rounded-full border border-[var(--border)]/90 bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] px-2.5 py-0.5 text-xs font-medium text-[var(--text)]">
-                                {item.tag}
+                                <RichText text={item.tag} />
                               </span>
                             </p>
                           ) : null}
