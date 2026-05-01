@@ -161,6 +161,82 @@ git log -S "function broken"   # commits that added/removed this string (pickaxe
     },
     {
       title: {
+        en: "Status shortcuts, log formatting, and history navigation",
+        np: "Status shortcut, log formatting, र history navigation",
+        jp: "ステータスショートカット・ログのフォーマット・履歴のナビゲーション",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Short status, skip-staging commit, and log formatting",
+            np: "Short status, skip-staging commit, र log formatting",
+            jp: "短いステータス・ステージングスキップコミット・ログのフォーマット",
+          },
+          code: `# Short status — one line per file instead of verbose output
+git status -s
+# Output: XY filename (X = staging area, Y = working tree)
+# M  = modified staged  · M = modified unstaged  · ?? = untracked
+# Example:
+#  M README.md       ← working tree modified, NOT staged
+# M  src/app.ts      ← staged
+# MM deploy.sh       ← staged AND has further unstaged changes
+# ?? config.local    ← untracked
+
+# Skip the staging area for tracked files
+git commit -am "fix: correct timeout value"
+# Equivalent to: git add -u && git commit -m "..."
+# NOTE: -a does NOT include new untracked files — git add those first
+
+# Format log output
+git log --oneline --graph --all                # most common one-liner
+git log --format="%H %an %s"                  # hash, author name, subject
+git log --pretty=format:"%Cred%h%Creset %s (%ar) <%an>"  # colorized compact
+git log --since="2 weeks ago" --until="yesterday"
+
+# Persistent aliases — define once in ~/.gitconfig
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.s  "status -s"
+git config --global alias.cm "commit -m"
+# Usage: git lg   git s   git cm "message"
+
+# Show contributors ranked by commit count
+git shortlog -sn            # -s = count only, -n = sort by count
+git shortlog -sn --all      # include all branches`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Checking out a past commit (detached HEAD) and restoring deleted files",
+            np: "Past commit checkout (detached HEAD) र deleted file restore",
+            jp: "過去のコミットのチェックアウト（デタッチド HEAD）と削除ファイルの復元",
+          },
+          code: `# Detached HEAD — inspect the repo at a past point in time
+git log --oneline            # find the commit hash
+git checkout abc1234         # enter detached HEAD state
+# → HEAD no longer points to a branch — it points directly to a commit
+# You can build, test, and explore; any commits here are NOT on a branch
+
+git switch -c rescue-branch  # save any new commits: create a branch from here
+git switch main              # or just go back to main (detached commits lost)
+
+# Modern syntax (git 2.23+)
+git switch --detach abc1234  # explicit intent: I know this is detached
+
+# Restore a single file from a past commit (stays on current branch)
+git log --oneline -- deleted-file.ts          # find last commit that had it
+git checkout abc1234 -- deleted-file.ts       # restore that file to working tree
+git add deleted-file.ts && git commit -m "restore: recover deleted file"
+
+# Restore a file deleted by a previous commit
+git log --diff-filter=D --summary -- path/to/file.ts | head -5  # find deletion commit
+# The commit BEFORE the deletion has the file:
+git checkout <deletion-commit>~1 -- path/to/file.ts`,
+        },
+      ],
+    },
+    {
+      title: {
         en: ".gitignore and repository hygiene",
         np: ".gitignore र repository hygiene",
         jp: ".gitignore とリポジトリの衛生管理",

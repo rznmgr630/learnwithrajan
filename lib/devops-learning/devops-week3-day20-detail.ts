@@ -200,6 +200,135 @@ git bisect log`,
     },
     {
       title: {
+        en: "Rewriting history — revert, reflog, amend, and interactive rebase",
+        np: "History rewrite — revert, reflog, amend, र interactive rebase",
+        jp: "履歴の書き換え — revert・reflog・amend・インタラクティブリベース",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The golden rule: **never rewrite history that others have already pulled**. Rewriting rewrites commit hashes — everyone with a copy of those hashes now has a diverged history. For shared/pushed branches always prefer `git revert` (adds a new commit). For local-only work that hasn't been pushed, you have full freedom with `git reset`, `git commit --amend`, and `git rebase -i`.",
+            np: "Golden rule: **अरूले already pull गरेको history कहिल्यै rewrite नगर्नुहोस्**। Rewriting ले commit hash rewrite गर्छ — सबैलाई diverged history हुन्छ। Shared/pushed branch का लागि `git revert` prefer गर्नुहोस् (नयाँ commit थप्छ)। Push नभएको local काम का लागि `git reset`, `git commit --amend`, र `git rebase -i` मा पूर्ण स्वतन्त्रता छ।",
+            jp: "黄金律：**他の人がすでにプルした履歴を絶対に書き換えないでください**。書き換えはコミットハッシュを変え、全員が分岐した履歴を持つことになります。共有・プッシュ済みブランチには常に `git revert`（新しいコミットを追加）を優先してください。まだプッシュされていないローカル作業には `git reset`・`git commit --amend`・`git rebase -i` で完全な自由があります。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "git revert — safe undo on shared branches",
+            np: "git revert — shared branch मा safe undo",
+            jp: "git revert — 共有ブランチでの安全な取り消し",
+          },
+          code: `# git revert creates a NEW commit that reverses a past commit's changes
+# Safe on pushed/shared branches — does NOT rewrite history
+
+# Revert the most recent commit
+git revert HEAD                  # opens editor to confirm message, then commits
+
+# Revert a specific commit by hash
+git revert abc1234
+
+# Revert without auto-committing (inspect first)
+git revert --no-commit abc1234
+git status                       # review what was reversed
+git commit -m "revert: undo broken config change (abc1234)"
+
+# Revert multiple commits at once (reverses in newest-first order)
+git revert --no-commit HEAD~3..HEAD   # revert last 3 commits
+git commit -m "revert: undo last 3 commits"
+
+# Revert a MERGE COMMIT (need to specify which parent is the mainline)
+git revert -m 1 <merge-commit-hash>   # -m 1 = the branch you merged INTO
+
+# When to use what:
+# Pushed/shared → git revert     (creates new commit, safe for everyone)
+# Local only    → git reset      (rewrites history, only safe before push)`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "git reflog — recover lost commits",
+            np: "git reflog — lost commit recover गर्नुहोस्",
+            jp: "git reflog — 失われたコミットの回復",
+          },
+          code: `# reflog records EVERY movement of HEAD — resets, rebases, checkouts, etc.
+# Entries are kept ~90 days — your ultimate safety net
+
+git reflog                       # show recent HEAD positions
+# abc1234 HEAD@{0}: commit: feat: add login
+# def5678 HEAD@{1}: reset: moving to HEAD~1
+# ghi9012 HEAD@{2}: commit: wip: work in progress  ← the "lost" commit
+
+# Recover commits after accidental git reset --hard
+git reset --hard HEAD~2          # oops — lost 2 commits
+git reflog                       # find the hash before the reset
+git reset --hard ghi9012         # restore to that point
+
+# Recover a deleted branch
+git branch -D feature/experiment          # deleted by accident
+git reflog                                # find its last commit hash
+git switch -c feature/experiment abc1234  # recreate branch
+
+# Reflog for a specific branch (not just HEAD)
+git reflog show feature/payments
+
+# What reflog tracks:
+# commit    — new commits
+# reset     — HEAD moved backward
+# checkout  — branch switches
+# rebase    — shows pre-rebase state (invaluable after a bad rebase)
+# merge, cherry-pick, stash pop`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Amending and interactive rebase — rewriting local history",
+            np: "Amend र interactive rebase — local history rewrite",
+            jp: "修正とインタラクティブリベース — ローカル履歴の書き換え",
+          },
+          code: `# Amend the LAST commit (only if not yet pushed)
+git add forgotten-file.ts         # optionally stage more changes
+git commit --amend                # opens editor to also edit the message
+git commit --amend --no-edit      # amend without changing the message
+git commit --amend -m "new msg"   # change only the message
+
+# Interactive rebase — rewrite the last N commits
+git rebase -i HEAD~4              # opens editor; oldest commit listed first:
+# pick abc1234 feat: add login endpoint
+# pick def5678 fix: typo in error message
+# pick ghi9012 wip: still debugging
+# pick jkl3456 feat: complete login flow
+
+# Available actions (replace 'pick'):
+# pick     → keep as-is
+# reword   → keep but edit commit message
+# edit     → pause so you can amend or split the commit
+# squash   → combine with previous commit (merge both messages)
+# fixup    → combine with previous (discard this message)
+# drop     → delete the commit entirely
+
+# Squash WIP commits into one clean commit:
+# pick abc1234 feat: add login endpoint
+# fixup ghi9012 wip: still debugging       ← merged into above, no message
+# pick jkl3456 feat: complete login flow
+
+# Reorder commits: just move the lines in the editor
+
+# Drop a commit: change 'pick' to 'drop'
+
+# Split a commit (use 'edit', then reset and re-commit in pieces):
+# 1. In the rebase editor, mark the commit as 'edit'
+# 2. When rebase pauses at that commit:
+git reset HEAD~1                  # unstage the commit's changes
+git add part-one.ts && git commit -m "feat: first half"
+git add part-two.ts && git commit -m "feat: second half"
+git rebase --continue             # resume the rebase`,
+        },
+      ],
+    },
+    {
+      title: {
         en: "Code review — practices that high-performing teams use",
         np: "Code review — high-performing team ले प्रयोग गर्ने practice",
         jp: "コードレビュー — 高パフォーマンスチームが使う実践",
