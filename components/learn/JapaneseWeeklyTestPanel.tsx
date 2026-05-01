@@ -8,6 +8,7 @@ import type {
   JapaneseWeeklyTestSection,
 } from "@/lib/japanese-learning/types";
 import { MCQ_OPTION_TRANSLATIONS } from "@/lib/japanese-learning/mcq-option-translations";
+import { RichText } from "@/components/learn/RichText";
 import { pickLocalized } from "@/lib/i18n/pick";
 
 type Props = {
@@ -220,7 +221,7 @@ function WeeklyTestItemBlock({
           )}
           {mcq.explanation ? (
             <p className="border-t border-[var(--border)]/80 pt-2 text-xs leading-relaxed text-[var(--muted)]">
-              {pickLocalized(mcq.explanation, locale)}
+              <RichText text={pickLocalized(mcq.explanation, locale)} />
             </p>
           ) : null}
         </div>
@@ -320,13 +321,21 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
             <p className="text-xs font-medium text-[var(--accent)]">
-              {pickLocalized(test.weekLabel, locale)}
+              <RichText text={pickLocalized(test.weekLabel, locale)} />
               {test.id === "jn5-full-mock" ? t("weeklyPanel.tagFullMock") : t("weeklyPanel.tagWeekly")}
             </p>
             <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.skillsLine")}</p>
-            <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">{pickLocalized(test.title, locale)}</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">{pickLocalized(test.subtitle, locale)}</p>
-            {paperSubtitle ? <p className="mt-1 text-xs text-[var(--muted)]">{paperSubtitle}</p> : null}
+            <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
+              <RichText text={pickLocalized(test.title, locale)} />
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              <RichText text={pickLocalized(test.subtitle, locale)} />
+            </p>
+            {paperSubtitle ? (
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                <RichText text={paperSubtitle} />
+              </p>
+            ) : null}
             <p className="mt-2 text-xs text-[var(--faint)]">
               {t("weeklyPanel.daysRange")} {test.coversDayRange[0]}–{test.coversDayRange[1]}
               {hasSubTests && test.subTests ? (
@@ -386,7 +395,9 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
         ) : null}
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
-          <p className="text-sm leading-relaxed text-[var(--muted)]">{introBlurb}</p>
+          <p className="text-sm leading-relaxed text-[var(--muted)]">
+            <RichText text={introBlurb} />
+          </p>
           {!submitted ? (
             <p className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] px-3 py-2 text-xs text-[var(--muted)]">{t("weeklyPanel.introHint")}</p>
           ) : null}
@@ -424,7 +435,9 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
           {test.closingNote ? (
             <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.noteHeading")}</p>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{pickLocalized(test.closingNote, locale)}</p>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                <RichText text={pickLocalized(test.closingNote, locale)} />
+              </p>
             </div>
           ) : null}
         </div>
