@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { RichText } from "@/components/learn/RichText";
+import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { getAllLaravelRoadmapDays, LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
@@ -99,15 +101,17 @@ export function LaravelRoadmap() {
               </div>
               <button
                 type="button"
-                aria-label={`Open details for day ${d.day}: ${pickLocalized(d.title, locale)}`}
+                aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                 className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                 onClick={() => setDetailDay(d.day)}
               >
-                <span className="text-sm font-semibold leading-snug text-[var(--text)]">{pickLocalized(d.title, locale)}</span>
+                <span className="text-sm font-semibold leading-snug text-[var(--text)]">
+                  <RichText text={pickLocalized(d.title, locale)} />
+                </span>
                 <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
                   {d.tags.map((tag) => (
                     <span key={`${d.day}-${tag.slug}`} className={TAG_PILL}>
-                      {pickLocalized(tag.label, locale)}
+                      <RichText text={pickLocalized(tag.label, locale)} />
                     </span>
                   ))}
                 </div>
