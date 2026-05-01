@@ -134,9 +134,9 @@ export const GIT_ROADMAP_CHEATSHEET_ITEMS: GitRoadmapCheatsheetItem[] = [
   {
     cmd: "git reset --soft|mixed|hard",
     description: {
-      en: "Moves HEAD (and branch pointer) to a target commit. `--soft` keeps index; `--mixed` (default) unstages; `--hard` also resets the working tree — **destructive**. Recover with `git reflog`.",
-      np: "HEAD र ब्रान्च सूचक लक्षित commit मा सार्छ। `--soft` ले index जोगाउँछ; `--mixed` अनस्टेज; `--hard` **विनाशकारी**। `git reflog` ले पुनर्प्राप्ति।",
-      jp: "HEAD とブランチポインタを指定コミットへ移動。`--soft` は index 保持、`--mixed` は unstage、`--hard` は作業ツリーも巻き戻す（**破壊的**）。`git reflog` で復旧可能。",
+      en: "Moves HEAD (and branch pointer) to a target commit. `--soft` keeps index; `--mixed` (default) unstages; `--hard` also resets the working tree — destructive. Recover with `git reflog`.",
+      np: "HEAD र ब्रान्च सूचक लक्षित commit मा सार्छ। `--soft` ले index जोगाउँछ; `--mixed` अनस्टेज; `--hard` विनाशकारी। `git reflog` ले पुनर्प्राप्ति।",
+      jp: "HEAD とブランチポインタを指定コミットへ移動。`--soft` は index 保持、`--mixed` は unstage、`--hard` は作業ツリーも巻き戻す（破壊的）。`git reflog` で復旧可能。",
     },
     visual: "reset",
     hideBeforeAfterLabels: true,
