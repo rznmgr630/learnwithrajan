@@ -78,6 +78,16 @@ export type RoadmapDetailDiagramId =
   | "react-use-effect-lifecycle"
   | "react-immutable-update"
   | "react-controlled-input"
+  | "react-native-bridge-architecture"
+  | "react-native-metro-fast-refresh"
+  | "react-native-component-tree"
+  | "react-native-flexbox-mobile"
+  | "react-native-navigation-stacks"
+  | "react-native-list-windowing"
+  | "react-native-data-offline-online"
+  | "react-native-native-module-bridge"
+  | "react-native-testing-pyramid-mobile"
+  | "react-native-release-pipeline"
   | "devops-linux-hierarchy"
   | "devops-osi-model"
   | "devops-docker-layers"
@@ -105,7 +115,12 @@ export type RoadmapDetailDiagramId =
   | "devops-semver"
   | "devops-git-hooks"
   | "devops-monorepo-structure"
-  | "devops-merge-conflict";
+  | "devops-merge-conflict"
+  | "devops-log-parsing"
+  | "devops-boto3-workflow"
+  | "devops-cli-tool"
+  | "devops-cloud-models"
+  | "devops-iam-model";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

@@ -19,6 +19,11 @@ import { getNodejsRoadmapDayContext, resolveNodejsDayDetail } from "@/lib/nodejs
 import { localizeNodejsRoadmapDayDetail } from "@/lib/nodejs-learning/localize-nodejs-roadmap-detail";
 import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
 import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
+import {
+  getReactNativeRoadmapDayContext,
+  resolveReactNativeDayDetail,
+} from "@/lib/react-native-learning/react-native-challenge-data";
+import { localizeReactNativeRoadmapDayDetail } from "@/lib/react-native-learning/localize-react-native-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
@@ -58,9 +63,11 @@ export function DayDetailPanel({
               ? getNextjsRoadmapDayContext(dayNumber)
               : track === "nodejs"
                 ? getNodejsRoadmapDayContext(dayNumber)
-                : track === "devops"
-                  ? getDevopsRoadmapDayContext(dayNumber)
-                  : getRoadmapDayContext(dayNumber)
+                : track === "react-native"
+                  ? getReactNativeRoadmapDayContext(dayNumber)
+                  : track === "devops"
+                    ? getDevopsRoadmapDayContext(dayNumber)
+                    : getRoadmapDayContext(dayNumber)
       : null;
   const detailRaw = ctx
     ? track === "git"
@@ -73,9 +80,11 @@ export function DayDetailPanel({
             ? resolveNextjsDayDetail(ctx.day)
             : track === "nodejs"
               ? resolveNodejsDayDetail(ctx.day)
-              : track === "devops"
-                ? resolveDevopsDayDetail(ctx.day)
-                : resolveDayDetail(ctx.day)
+              : track === "react-native"
+                ? resolveReactNativeDayDetail(ctx.day)
+                : track === "devops"
+                  ? resolveDevopsDayDetail(ctx.day)
+                  : resolveDayDetail(ctx.day)
     : null;
   const detail = detailRaw
     ? track === "git"
@@ -88,9 +97,11 @@ export function DayDetailPanel({
             ? localizeNextjsRoadmapDayDetail(detailRaw, locale)
             : track === "nodejs"
               ? localizeNodejsRoadmapDayDetail(detailRaw, locale)
-              : track === "devops"
-                ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
-                : localizeRoadmapDayDetail(detailRaw, locale)
+              : track === "react-native"
+                ? localizeReactNativeRoadmapDayDetail(detailRaw, locale)
+                : track === "devops"
+                  ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
+                  : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
@@ -121,7 +132,11 @@ export function DayDetailPanel({
   const done = isDone(dayNumber);
   const intro = overviewParagraphs(detail.overview);
   const hideOverviewWhenSections =
-    (track === "react" || track === "laravel" || track === "nextjs" || track === "nodejs") &&
+    (track === "react" ||
+      track === "laravel" ||
+      track === "nextjs" ||
+      track === "nodejs" ||
+      track === "react-native") &&
     (detail.sections?.length ?? 0) > 0;
   const introToShow = hideOverviewWhenSections ? [] : intro;
   const faq = detail.faq ?? [];
@@ -222,9 +237,11 @@ export function DayDetailPanel({
                         ? t("nextjsDetail.selfCheckHint")
                         : track === "nodejs"
                           ? t("nodejsDetail.selfCheckHint")
-                          : track === "devops"
-                            ? t("devopsDetail.selfCheckHint")
-                            : t("backendDetail.selfCheckHint")}
+                          : track === "react-native"
+                            ? t("reactNativeDetail.selfCheckHint")
+                            : track === "devops"
+                              ? t("devopsDetail.selfCheckHint")
+                              : t("backendDetail.selfCheckHint")}
               </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {

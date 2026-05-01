@@ -8,12 +8,20 @@ import { REACT_DAY_5_DETAIL } from "@/lib/react-learning/react-day-5-detail";
 import { REACT_DAY_6_DETAIL } from "@/lib/react-learning/react-day-6-detail";
 import { REACT_DAY_7_DETAIL } from "@/lib/react-learning/react-day-7-detail";
 import { REACT_DAY_8_DETAIL } from "@/lib/react-learning/react-day-8-detail";
+import { REACT_DAY_9_DETAIL } from "@/lib/react-learning/react-day-9-detail";
+import { REACT_DAY_10_DETAIL } from "@/lib/react-learning/react-day-10-detail";
+import { REACT_DAY_11_DETAIL } from "@/lib/react-learning/react-day-11-detail";
+import { REACT_DAY_12_DETAIL } from "@/lib/react-learning/react-day-12-detail";
+import { REACT_DAY_13_DETAIL } from "@/lib/react-learning/react-day-13-detail";
+import { REACT_DAY_14_DETAIL } from "@/lib/react-learning/react-day-14-detail";
+import { REACT_DAY_15_DETAIL } from "@/lib/react-learning/react-day-15-detail";
+import { REACT_DAY_16_DETAIL } from "@/lib/react-learning/react-day-16-detail";
 import { reactDayTitle, reactTags, reactWeekTitle } from "@/lib/react-learning/react-roadmap-i18n";
 
-/** Official “current” day (1-based) for seeding local progress. */
+/** Official "current" day (1-based) for seeding local progress. */
 export const REACT_CURRENT_DAY = 1;
 
-export const REACT_TOTAL_DAYS = 8;
+export const REACT_TOTAL_DAYS = 16;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_DAY_1_DETAIL,
@@ -24,6 +32,14 @@ const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   6: REACT_DAY_6_DETAIL,
   7: REACT_DAY_7_DETAIL,
   8: REACT_DAY_8_DETAIL,
+  9: REACT_DAY_9_DETAIL,
+  10: REACT_DAY_10_DETAIL,
+  11: REACT_DAY_11_DETAIL,
+  12: REACT_DAY_12_DETAIL,
+  13: REACT_DAY_13_DETAIL,
+  14: REACT_DAY_14_DETAIL,
+  15: REACT_DAY_15_DETAIL,
+  16: REACT_DAY_16_DETAIL,
 };
 
 function reactDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -77,6 +93,45 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-connecting-backend"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_48%,#a3e635)]",
     days: [reactDayRow(8, ["effects", "api"])],
+  },
+  {
+    id: "react-advanced-hooks",
+    title: reactWeekTitle("react-advanced-hooks"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#c084fc)]",
+    days: [
+      reactDayRow(9, ["hooks", "context"]),
+      reactDayRow(10, ["performance", "optimization"]),
+    ],
+  },
+  {
+    id: "react-advanced-patterns",
+    title: reactWeekTitle("react-advanced-patterns"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_44%,#f472b6)]",
+    days: [
+      reactDayRow(11, ["patterns", "hooks"]),
+      reactDayRow(12, ["error", "suspense"]),
+    ],
+  },
+  {
+    id: "react-typescript-testing",
+    title: reactWeekTitle("react-typescript-testing"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_42%,#60a5fa)]",
+    days: [
+      reactDayRow(13, ["typescript", "types"]),
+      reactDayRow(14, ["testing", "quality"]),
+    ],
+  },
+  {
+    id: "react-routing",
+    title: reactWeekTitle("react-routing"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#818cf8)]",
+    days: [reactDayRow(15, ["routing", "navigation"])],
+  },
+  {
+    id: "react-global-state",
+    title: reactWeekTitle("react-global-state"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#2dd4bf)]",
+    days: [reactDayRow(16, ["zustand", "query"])],
   },
 ];
 

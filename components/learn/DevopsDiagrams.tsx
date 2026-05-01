@@ -34,6 +34,11 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-git-hooks",
   "devops-monorepo-structure",
   "devops-merge-conflict",
+  "devops-log-parsing",
+  "devops-boto3-workflow",
+  "devops-cli-tool",
+  "devops-cloud-models",
+  "devops-iam-model",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -1289,6 +1294,266 @@ function MergeConflictDiagram() {
   );
 }
 
+function LogParsingDiagram() {
+  const steps = [
+    { x: 30, label: "App / Service", sub: "writes stdout\nor log file", color: "#3b82f6" },
+    { x: 155, label: "Log File", sub: "app.log\naccess.log", color: "#6366f1" },
+    { x: 280, label: "Python Parser", sub: "json.loads()\nre.compile()\ncsv.DictReader()", color: "#f59e0b" },
+    { x: 405, label: "Structured\nOutput", sub: "JSON / CSV\nmetrics / alerts", color: "#10b981" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 260" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">Log Parsing Pipeline — from raw log bytes to actionable structured data</text>
+        {steps.map(({ x, label, sub, color }, i) => (
+          <g key={label}>
+            <rect x={x} y="28" width="110" height="62" rx="6" fill={`${color}1a`} stroke={`${color}66`} strokeWidth="1.5"/>
+            {label.split("\n").map((line, j) => (
+              <text key={j} x={x + 55} y={47 + j * 13} textAnchor="middle" fontSize="9" fontWeight="600" fill={color}>{line}</text>
+            ))}
+            {sub.split("\n").map((line, j) => (
+              <text key={j} x={x + 55} y={72 + j * 11} textAnchor="middle" fontSize="7.5" fontFamily="monospace" fill="var(--muted)">{line}</text>
+            ))}
+            {i < steps.length - 1 && (
+              <line x1={x + 110} y1="59" x2={x + 125} y2="59" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arrlp)"/>
+            )}
+          </g>
+        ))}
+        {/* Format examples */}
+        <rect x="16" y="108" width="488" height="130" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="124" fontSize="9" fontWeight="600" fill="var(--text)">Log formats you will encounter</text>
+        {[
+          { format: "JSON Lines  (structured — easiest to parse)", ex: '{"ts":"2024-01-01T10:00:00Z","level":"ERROR","msg":"timeout","duration_ms":3001}', color: "#10b981" },
+          { format: "nginx access log  (combined format)", ex: '192.168.1.5 - - [01/Jan/2024:10:00:00 +0000] "GET /api/health HTTP/1.1" 200 42', color: "#3b82f6" },
+          { format: "syslog", ex: "Jan  1 10:00:00 server sshd[1234]: Accepted publickey for alice from 10.0.0.5", color: "#6366f1" },
+          { format: "CSV  (export / report format)", ex: "timestamp,level,service,message\n2024-01-01,ERROR,api,connection refused", color: "#f59e0b" },
+        ].map(({ format, ex, color }, i) => (
+          <g key={format}>
+            <text x="30" y={140 + i * 26} fontSize="8" fontWeight="600" fill={color}>{format}</text>
+            <text x="30" y={152 + i * 26} fontSize="7.5" fontFamily="monospace" fill="var(--muted)">{ex}</text>
+          </g>
+        ))}
+        <defs>
+          <marker id="arrlp" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Parse logs bottom-up: detect format first, then extract fields — JSON logs require zero regex while combined format needs a single re.compile() pattern" />
+    </figure>
+  );
+}
+
+function Boto3WorkflowDiagram() {
+  const services = [
+    { label: "S3", sub: "upload/download\nlist objects\npresigned URLs", color: "#10b981", x: 340, y: 36 },
+    { label: "EC2", sub: "describe instances\nstart/stop/terminate\nfilter by tags", color: "#3b82f6", x: 340, y: 116 },
+    { label: "IAM", sub: "list users\ncreate roles\nattach policies", color: "#6366f1", x: 340, y: 196 },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 270" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">boto3 Architecture — session → client/resource → AWS service APIs</text>
+        {/* Local machine */}
+        <rect x="16" y="28" width="290" height="220" rx="8" fill="#f59e0b08" stroke="#f59e0b44" strokeWidth="1.5" strokeDasharray="5 3"/>
+        <text x="30" y="46" fontSize="8.5" fontWeight="600" fill="#fbbf24">Your Python script / Lambda / EC2</text>
+        {/* Session */}
+        <rect x="28" y="54" width="130" height="36" rx="5" fill="#f59e0b1a" stroke="#f59e0b66" strokeWidth="1.2"/>
+        <text x="93" y="69" textAnchor="middle" fontSize="9" fontWeight="600" fill="#fbbf24">boto3.Session()</text>
+        <text x="93" y="82" textAnchor="middle" fontSize="7.5" fill="var(--muted)">region · profile · role</text>
+        {/* Client */}
+        <rect x="28" y="106" width="120" height="36" rx="5" fill="#3b82f61a" stroke="#3b82f666" strokeWidth="1.2"/>
+        <text x="88" y="122" textAnchor="middle" fontSize="9" fontWeight="600" fill="#60a5fa">client('s3')</text>
+        <text x="88" y="135" textAnchor="middle" fontSize="7.5" fill="var(--muted)">low-level, 1:1 API</text>
+        {/* Resource */}
+        <rect x="162" y="106" width="120" height="36" rx="5" fill="#10b9811a" stroke="#10b98166" strokeWidth="1.2"/>
+        <text x="222" y="122" textAnchor="middle" fontSize="9" fontWeight="600" fill="#10b981">resource('ec2')</text>
+        <text x="222" y="135" textAnchor="middle" fontSize="7.5" fill="var(--muted)">OOP wrapper</text>
+        {/* Credentials note */}
+        <rect x="28" y="158" width="254" height="72" rx="4" fill="color-mix(in oklab, var(--elevated) 60%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="42" y="173" fontSize="8.5" fontWeight="600" fill="var(--text)">Credential resolution order (never hardcode!)</text>
+        {["1. Env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY", "2. ~/.aws/credentials profile", "3. EC2/ECS instance metadata (IAM role) ← best for AWS", "4. AWS SSO / web identity token"].map((line, i) => (
+          <text key={line} x="42" y={186 + i * 11} fontSize="7.5" fill="var(--muted)">{line}</text>
+        ))}
+        {/* AWS cloud */}
+        {services.map(({ label, sub, color, x, y }) => (
+          <g key={label}>
+            <rect x={x} y={y} width="164" height="68" rx="5" fill={`${color}18`} stroke={`${color}66`} strokeWidth="1.5"/>
+            <text x={x + 82} y={y + 18} textAnchor="middle" fontSize="10" fontWeight="700" fill={color}>{label}</text>
+            {sub.split("\n").map((line, j) => (
+              <text key={j} x={x + 82} y={y + 32 + j * 12} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{line}</text>
+            ))}
+          </g>
+        ))}
+        {/* Arrows */}
+        <line x1="306" y1="90" x2="338" y2="65" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 2" markerEnd="url(#arrboto)"/>
+        <line x1="306" y1="115" x2="338" y2="145" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" markerEnd="url(#arrboto)"/>
+        <line x1="282" y1="200" x2="338" y2="225" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 2" markerEnd="url(#arrboto)"/>
+        <text x="320" y="8" textAnchor="middle" fontSize="8" fill="var(--muted)">AWS Cloud</text>
+        <defs>
+          <marker id="arrboto" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="boto3 Session is the root object — create one per region/profile, derive clients and resources from it, never call boto3.client() at module level" />
+    </figure>
+  );
+}
+
+function CliToolDiagram() {
+  const frameworks = [
+    { name: "argparse", lines: "~40 lines", pro: "Zero deps, always available", con: "Verbose, boilerplate-heavy", color: "#6366f1" },
+    { name: "Click", lines: "~20 lines", pro: "Decorator-based, readable", con: "Needs install, no type hints", color: "#3b82f6" },
+    { name: "Typer", lines: "~12 lines", pro: "Type hints → CLI, best DX", con: "Newest — requires Python 3.7+", color: "#10b981" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 270" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">Python CLI Tool — from argv to production-grade command-line tool</text>
+        {/* Input → Parser → Handler → Output */}
+        {[
+          { x: 16, label: "User input", sub: "python deploy.py\nstart --env prod\n--region us-east-1", color: "#f59e0b" },
+          { x: 146, label: "Arg parser", sub: "argparse / Click\n/ Typer validates\ntypes & choices", color: "#6366f1" },
+          { x: 276, label: "Command\nhandler", sub: "business logic\nboto3 / subprocess\nlogging", color: "#3b82f6" },
+          { x: 406, label: "Output", sub: "stdout / stderr\nexit code 0 / 1\n--output json", color: "#10b981" },
+        ].map(({ x, label, sub, color }, i) => (
+          <g key={label}>
+            <rect x={x} y="26" width="114" height="72" rx="5" fill={`${color}18`} stroke={`${color}66`} strokeWidth="1.5"/>
+            {label.split("\n").map((line, j) => (
+              <text key={j} x={x + 57} y={45 + j * 13} textAnchor="middle" fontSize="9" fontWeight="600" fill={color}>{line}</text>
+            ))}
+            {sub.split("\n").map((line, j) => (
+              <text key={j} x={x + 57} y={71 + j * 11} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{line}</text>
+            ))}
+            {i < 3 && <line x1={x + 114} y1="62" x2={x + 126} y2="62" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arrcli)"/>}
+          </g>
+        ))}
+        {/* Framework comparison */}
+        <text x="260" y="118" textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--text)">Framework comparison — same deploy CLI</text>
+        {frameworks.map(({ name, lines, pro, con, color }, i) => (
+          <g key={name}>
+            <rect x="16" y={128 + i * 42} width="488" height="36" rx="4" fill={`${color}10`} stroke={`${color}44`} strokeWidth="1"/>
+            <rect x="16" y={128 + i * 42} width="72" height="36" rx="4" fill={`${color}22`} stroke={`${color}66`} strokeWidth="1"/>
+            <text x="52" y={150 + i * 42} textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>{name}</text>
+            <text x="96" y={142 + i * 42} fontSize="8" fontFamily="monospace" fill="var(--muted)">{lines}</text>
+            <text x="96" y={155 + i * 42} fontSize="8" fill="#10b981">✓ {pro}</text>
+            <text x="296" y={155 + i * 42} fontSize="8" fill="#ef4444">✗ {con}</text>
+          </g>
+        ))}
+        <defs>
+          <marker id="arrcli" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Typer generates --help, validates types, and requires 70% less boilerplate than argparse — the right default for new Python CLI tools in 2024" />
+    </figure>
+  );
+}
+
+function CloudModelsDiagram() {
+  const layers = [
+    { label: "SaaS", sub: "Software as a Service", examples: "Gmail · GitHub · Datadog · Slack", you: "just use the app", color: "#10b981" },
+    { label: "PaaS", sub: "Platform as a Service", examples: "Heroku · Elastic Beanstalk · Vercel · Cloud Run", you: "your code + config", color: "#3b82f6" },
+    { label: "IaaS", sub: "Infrastructure as a Service", examples: "EC2 · GCE · Azure VMs · DigitalOcean Droplets", you: "OS + runtime + code", color: "#6366f1" },
+    { label: "On-Prem", sub: "You manage everything", examples: "Your own data center / rack", you: "hardware → app", color: "#f59e0b" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 270" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">Cloud Service Models — what you manage vs what the provider manages</text>
+        {layers.map(({ label, sub, examples, you, color }, i) => (
+          <g key={label}>
+            <rect x="16" y={28 + i * 50} width="488" height="44" rx="5" fill={`${color}18`} stroke={`${color}66`} strokeWidth="1.5"/>
+            <rect x="16" y={28 + i * 50} width="72" height="44" rx="5" fill={`${color}28`} stroke={`${color}88`} strokeWidth="1.5"/>
+            <text x="52" y={47 + i * 50} textAnchor="middle" fontSize="10" fontWeight="700" fill={color}>{label}</text>
+            <text x="52" y={62 + i * 50} textAnchor="middle" fontSize="7" fill={color}>{sub.split(" ")[0]}</text>
+            <text x="100" y={45 + i * 50} fontSize="8.5" fontWeight="600" fill="var(--text)">{sub}</text>
+            <text x="100" y={58 + i * 50} fontSize="7.5" fill="var(--muted)">{examples}</text>
+            <text x="400" y={52 + i * 50} fontSize="8" fill={color}>You manage: {you}</text>
+          </g>
+        ))}
+        {/* Shared responsibility */}
+        <rect x="16" y="232" width="488" height="30" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="247" fontSize="8.5" fontWeight="600" fill="var(--text)">AWS Shared Responsibility Model</text>
+        <text x="200" y="247" fontSize="8" fill="#3b82f6">AWS: security OF the cloud  (hardware, AZs, hypervisor)</text>
+        <text x="30" y="258" fontSize="8" fill="#f59e0b">You: security IN the cloud  (OS patches, IAM policies, encryption, firewall rules, app security)</text>
+      </svg>
+      <Caption text="IaaS gives maximum control (you manage the OS); PaaS abstracts the runtime (you deploy code); SaaS is fully managed — pick based on the control vs effort trade-off" />
+    </figure>
+  );
+}
+
+function IamModelDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 290" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">AWS IAM — principals, policies, and the permission evaluation flow</text>
+        {/* Principals */}
+        <rect x="16" y="28" width="140" height="160" rx="6" fill="#3b82f608" stroke="#3b82f666" strokeWidth="1.5"/>
+        <text x="86" y="46" textAnchor="middle" fontSize="9" fontWeight="600" fill="#60a5fa">Principals</text>
+        {[
+          { label: "Root account", note: "god mode — MFA + lock away", color: "#ef4444" },
+          { label: "IAM User", note: "human or service, long-term creds", color: "#f59e0b" },
+          { label: "IAM Group", note: "attach policies here, not to users", color: "#6366f1" },
+          { label: "IAM Role", note: "temporary creds, assumed by anything", color: "#10b981" },
+        ].map(({ label, note, color }, i) => (
+          <g key={label}>
+            <rect x="24" y={56 + i * 32} width="124" height="26" rx="3" fill={`${color}18`} stroke={`${color}55`} strokeWidth="1"/>
+            <text x="34" y={68 + i * 32} fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            <text x="34" y={78 + i * 32} fontSize="7" fill="var(--muted)">{note}</text>
+          </g>
+        ))}
+        {/* Policies */}
+        <rect x="172" y="28" width="176" height="160" rx="6" fill="#6366f108" stroke="#6366f166" strokeWidth="1.5"/>
+        <text x="260" y="46" textAnchor="middle" fontSize="9" fontWeight="600" fill="#818cf8">IAM Policy (JSON)</text>
+        <rect x="180" y="54" width="160" height="124" rx="3" fill="color-mix(in oklab, var(--elevated) 60%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        {[
+          '{  "Version": "2012-10-17",',
+          '  "Statement": [{',
+          '    "Effect": "Allow",',
+          '    "Action": ["s3:GetObject",',
+          '               "s3:PutObject"],',
+          '    "Resource":',
+          '      "arn:aws:s3:::my-bucket/*",',
+          '    "Condition": {',
+          '      "Bool": {"aws:SecureTransport"',
+          '              : "true"} } }] }',
+        ].map((line, i) => (
+          <text key={i} x="186" y={67 + i * 11} fontSize="7" fontFamily="monospace" fill={i === 2 ? "#10b981" : i === 4 ? "#3b82f6" : "var(--muted)"}>{line}</text>
+        ))}
+        {/* Resources */}
+        <rect x="364" y="28" width="140" height="160" rx="6" fill="#10b98108" stroke="#10b98166" strokeWidth="1.5"/>
+        <text x="434" y="46" textAnchor="middle" fontSize="9" fontWeight="600" fill="#10b981">AWS Resources</text>
+        {["S3 bucket", "EC2 instance", "Lambda function", "DynamoDB table", "Secrets Manager"].map((svc, i) => (
+          <g key={svc}>
+            <rect x="372" y={56 + i * 26} width="124" height="20" rx="3" fill="#10b98115" stroke="#10b98144" strokeWidth="1"/>
+            <text x="434" y={69 + i * 26} textAnchor="middle" fontSize="8" fill="#10b981">{svc}</text>
+          </g>
+        ))}
+        {/* Arrows */}
+        <line x1="156" y1="108" x2="172" y2="108" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arriam)"/>
+        <line x1="348" y1="108" x2="364" y2="108" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arriam)"/>
+        <text x="164" y="104" textAnchor="middle" fontSize="7.5" fill="var(--muted)">attached</text>
+        <text x="356" y="104" textAnchor="middle" fontSize="7.5" fill="var(--muted)">controls</text>
+        {/* Eval order */}
+        <rect x="16" y="202" width="488" height="76" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="218" fontSize="9" fontWeight="600" fill="var(--text)">Policy evaluation order  (first match wins)</text>
+        {[
+          { label: "1. Explicit DENY", note: "anywhere in any policy → DENY immediately", color: "#ef4444" },
+          { label: "2. Explicit ALLOW", note: "identity or resource policy → ALLOW", color: "#10b981" },
+          { label: "3. Implicit DENY", note: "nothing said Allow → DENY by default", color: "#f59e0b" },
+        ].map(({ label, note, color }, i) => (
+          <g key={label}>
+            <rect x="24" y={224 + i * 18} width="112" height="14" rx="2" fill={`${color}22`} stroke={`${color}55`} strokeWidth="1"/>
+            <text x="30" y={234 + i * 18} fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            <text x="142" y={234 + i * 18} fontSize="8" fill="var(--muted)">{note}</text>
+          </g>
+        ))}
+        <defs>
+          <marker id="arriam" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="IAM roles beat long-lived access keys for anything on AWS — EC2 and Lambda assume roles automatically, so credentials rotate without any human action" />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -1319,6 +1584,11 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-git-hooks": return <GitHooksDiagram />;
     case "devops-monorepo-structure": return <MonorepoStructureDiagram />;
     case "devops-merge-conflict": return <MergeConflictDiagram />;
+    case "devops-log-parsing": return <LogParsingDiagram />;
+    case "devops-boto3-workflow": return <Boto3WorkflowDiagram />;
+    case "devops-cli-tool": return <CliToolDiagram />;
+    case "devops-cloud-models": return <CloudModelsDiagram />;
+    case "devops-iam-model": return <IamModelDiagram />;
     default: return null;
   }
 }
