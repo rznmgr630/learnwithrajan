@@ -11,6 +11,8 @@ import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
 import { getGitRoadmapDayContext, resolveGitDayDetail } from "@/lib/git-learning/git-challenge-data";
 import { getReactRoadmapDayContext, resolveReactDayDetail } from "@/lib/react-learning/react-challenge-data";
 import { localizeReactRoadmapDayDetail } from "@/lib/react-learning/localize-react-roadmap-detail";
+import { getLaravelRoadmapDayContext, resolveLaravelDayDetail } from "@/lib/laravel-learning/laravel-challenge-data";
+import { localizeLaravelRoadmapDayDetail } from "@/lib/laravel-learning/localize-laravel-roadmap-detail";
 import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
 import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
@@ -46,27 +48,33 @@ export function DayDetailPanel({
         ? getGitRoadmapDayContext(dayNumber)
         : track === "react"
           ? getReactRoadmapDayContext(dayNumber)
-          : track === "devops"
-            ? getDevopsRoadmapDayContext(dayNumber)
-            : getRoadmapDayContext(dayNumber)
+          : track === "laravel"
+            ? getLaravelRoadmapDayContext(dayNumber)
+            : track === "devops"
+              ? getDevopsRoadmapDayContext(dayNumber)
+              : getRoadmapDayContext(dayNumber)
       : null;
   const detailRaw = ctx
     ? track === "git"
       ? resolveGitDayDetail(ctx.day)
       : track === "react"
         ? resolveReactDayDetail(ctx.day)
-        : track === "devops"
-          ? resolveDevopsDayDetail(ctx.day)
-          : resolveDayDetail(ctx.day)
+        : track === "laravel"
+          ? resolveLaravelDayDetail(ctx.day)
+          : track === "devops"
+            ? resolveDevopsDayDetail(ctx.day)
+            : resolveDayDetail(ctx.day)
     : null;
   const detail = detailRaw
     ? track === "git"
       ? localizeGitRoadmapDayDetail(detailRaw, locale)
       : track === "react"
         ? localizeReactRoadmapDayDetail(detailRaw, locale)
-        : track === "devops"
-          ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
-          : localizeRoadmapDayDetail(detailRaw, locale)
+        : track === "laravel"
+          ? localizeLaravelRoadmapDayDetail(detailRaw, locale)
+          : track === "devops"
+            ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
+            : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
@@ -96,8 +104,9 @@ export function DayDetailPanel({
 
   const done = isDone(dayNumber);
   const intro = overviewParagraphs(detail.overview);
-  const hideReactOverviewWithSections = track === "react" && (detail.sections?.length ?? 0) > 0;
-  const introToShow = hideReactOverviewWithSections ? [] : intro;
+  const hideOverviewWhenSections =
+    (track === "react" || track === "laravel") && (detail.sections?.length ?? 0) > 0;
+  const introToShow = hideOverviewWhenSections ? [] : intro;
   const faq = detail.faq ?? [];
 
   return (
@@ -190,9 +199,11 @@ export function DayDetailPanel({
                   ? t("gitDetail.selfCheckHint")
                   : track === "react"
                     ? t("reactDetail.selfCheckHint")
-                    : track === "devops"
-                      ? t("devopsDetail.selfCheckHint")
-                      : t("backendDetail.selfCheckHint")}
+                    : track === "laravel"
+                      ? t("laravelDetail.selfCheckHint")
+                      : track === "devops"
+                        ? t("devopsDetail.selfCheckHint")
+                        : t("backendDetail.selfCheckHint")}
               </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {
