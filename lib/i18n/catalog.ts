@@ -43,9 +43,9 @@ export const UI_STRINGS = {
     jp: "学習一覧",
   },
   "learn.subtitle": {
-    en: "Choose Programming or Language, then open a track — each day has notes and a self-check. More topics appear as they go live.",
-    np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, ट्र्याक खोल्नुहोस् — हरेक दिन नोट र आत्मजाँच। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
-    jp: "プログラミングか言語を選びトラックを開きます。各日に解説とセルフチェックがあります。新しいトピックは順次追加します。",
+    en: "Choose Programming or Language, then open a track for the full syllabus. More topics will appear as they go live.",
+    np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, अनि पूरा पाठ्यक्रमका लागि ट्र्याक खोल्नुहोस्। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
+    jp: "プログラミングか言語を選び、トラックで全体のシラバスを開きます。新しいトピックは順次追加します。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
@@ -83,19 +83,44 @@ export const UI_STRINGS = {
     jp: "2日で基礎 · ブランチ・リモート・worktree・チーム運用 · 各日に図解",
   },
   "hub.react.title": {
-    en: "React · novice to ninja",
-    np: "React · शुरुदेखि दक्षसम्म",
-    jp: "React · 初心者から達人まで",
+    en: "React · full syllabus",
+    np: "React · पूरा पाठ्यक्रम",
+    jp: "React · フルシラバス",
   },
   "hub.react.subtitle": {
-    en: "Eight lessons from JSX & components to forms and data fetching — notes & self-check on each day.",
-    np: "JSX र कम्पोनेन्टदेखि फर्म र डाटा fetch सम्म आठ दिन — हरेक दिन नोट र आत्मजाँच।",
-    jp: "JSX・コンポーネントからフォーム・データ取得まで8日分 — 各日に解説とセルフチェック。",
+    en: "Day cards with notes & self-check for each lesson.",
+    np: "दिन कार्ड, नोट र आत्मजाँच।",
+    jp: "日ごとのカードで解説とセルフチェック。",
   },
   "hub.react.cta": {
     en: "Open roadmap →",
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
+  },
+  "hub.laravel.title": {
+    en: "Laravel 11 · novice to ninja",
+    np: "Laravel 11 · शुरुदेखि दक्षसम्म",
+    jp: "Laravel 11 · 初心者から達人まで",
+  },
+  "hub.laravel.subtitle": {
+    en: "Ten days from MVC & Composer to routing, Blade, Eloquent, mail & queues — notes & self-check each day.",
+    np: "MVC र Composerदेखि routing, Blade, Eloquent, मेल र queue सम्म दस दिन — हरेक दिन नोट र आत्मजाँच।",
+    jp: "MVC・Composerからルーティング・Blade・Eloquent・メール・キューまで10日 — 各日に解説とセルフチェック。",
+  },
+  "hub.laravel.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
+  "laravelOutline.statsSections": {
+    en: "topic areas",
+    np: "विषय क्षेत्र",
+    jp: "トピック領域",
+  },
+  "laravelOutline.statsBullets": {
+    en: "key points",
+    np: "मुख्य बुँदाहरू",
+    jp: "要点",
   },
   "reactOutline.statsSections": {
     en: "sections",
@@ -108,14 +133,14 @@ export const UI_STRINGS = {
     jp: "レッスン項目",
   },
   "reactRoadmap.title": {
-    en: "React · novice to ninja",
-    np: "React · शुरुदेखि दक्षसम्म",
-    jp: "React · 初心者から達人まで",
+    en: "React · getting started",
+    np: "React · सुरुवात",
+    jp: "React · はじめに",
   },
   "reactRoadmap.subtitle": {
-    en: "Topics track core React patterns (components, state, styling, forms, effects, data). Open a day card for notes and self-check.",
-    np: "कम्पोनेन्ट, state, शैली, फर्म, effect, डाटा — मुख्य React ढाँचा। कार्ड खोलेर नोट र आत्मजाँच।",
-    jp: "コンポーネント・state・スタイル・フォーム・副作用・データと、React の中心パターンを順に。カードで解説とセルフチェック。",
+    en: "Days 1–8 in order. Tap a card for notes and self-check.",
+    np: "दिन १–८ क्रममा। कार्डमा नोट र आत्मजाँच।",
+    jp: "1〜8日目を順に並べています。カードで解説とセルフチェック。",
   },
   "reactRoadmap.daysListAria": {
     en: "React course days 1 through 8",
@@ -137,10 +162,45 @@ export const UI_STRINGS = {
     np: "dev server चलाउनुभयो, JSX सम्पादन गर्नुभयो, र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
     jp: "開発サーバを動かし、JSX を編集し、セルフチェックに取り組めたら 1 日目にチェック。",
   },
+  "laravelRoadmap.title": {
+    en: "Laravel 11 · novice to ninja",
+    np: "Laravel 11 · शुरुदेखि दक्षसम्म",
+    jp: "Laravel 11 · 初心者から達人まで",
+  },
+  "laravelRoadmap.subtitle": {
+    en: "From installation & MVC through routing, Blade, validation, middleware, Eloquent, sessions, relationships, and integrations. Open a day card for notes and self-check.",
+    np: "स्थापना र MVC देखि routing, Blade, प्रमाणीकरण, मिडलवेयर, Eloquent, सत्र, सम्बन्ध र एकीकरण। कार्ड खोलेर नोट र आत्मजाँच।",
+    jp: "インストール・MVCからルーティング・Blade・検証・ミドルウェア・Eloquent・セッション・リレーション・連携まで。カードで解説とセルフチェック。",
+  },
+  "laravelRoadmap.daysListAria": {
+    en: "Laravel 11 course days 1 through 10",
+    np: "Laravel 11 पाठ्यक्रम दिन १ देखि १०",
+    jp: "Laravel 11 コース 1日目から10日目",
+  },
+  "laravelRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "laravelRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "laravelRoadmap.bottomBlurb": {
+    en: "Tick a day when you have tried the commands or patterns yourself (even in a throwaway project) and closed the self-check from memory.",
+    np: "आफैले आदेश वा ढाँचा प्रयोग गर्नुभयो र आत्मजाँच स्मरणमा गर्नुभयो भने दिन टिक गर्नुहोस्।",
+    jp: "手を動かした（サンプルプロジェクトでも）うえでセルフチェックを見ずに答えられたら、その日にチェック。",
+  },
   "reactDetail.selfCheckHint": {
     en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once. Prompts match the day you opened (Days 1–8 each have different topics).",
     np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त — प्रश्नमा क्लिक गर्दा जवाफ खुल्छ। खोलेको दिन (१–८) अनुसार प्रश्न फरक हुन्छ।",
     jp: "初期状態では閉じています。開いた日（1〜8日目で内容が異なります）に合わせたセルフチェックです。",
+  },
+  "laravelDetail.selfCheckHint": {
+    en: "Collapsed by default — expand each question to compare your understanding. Topics align with the day you opened (Days 1–10).",
+    np: "पूर्वनिर्धारित संक्षिप्त — खोलेको दिन (१–१०) अनुसार प्रश्न।",
+    jp: "初期は閉じています。開いた日（1〜10日目）に対応したセルフチェックです。",
   },
   "hub.sectionProgramming": {
     en: "Programming",
@@ -518,9 +578,9 @@ export const UI_STRINGS = {
     jp: "今日のテーマ",
   },
   "hero.cta": {
-    en: "Explore tracks",
-    np: "ट्र्याक हेर्नुहोस्",
-    jp: "トラックを見る",
+    en: "View the full syllabus",
+    np: "पूरा पाठ्यक्रम हेर्नुहोस्",
+    jp: "シラバス全体を見る",
   },
   "japaneseDay.trackLabel": {
     en: "JLPT N5 · Minna no Nihongo I track",

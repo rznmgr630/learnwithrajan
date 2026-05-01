@@ -7,7 +7,7 @@ import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/Devops
 import { RichText } from "@/components/learn/RichText";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
-export type RoadmapDiagramTrack = "backend" | "git" | "react" | "devops";
+export type RoadmapDiagramTrack = "backend" | "git" | "react" | "laravel" | "devops";
 
 function DetailTable({
   caption,
@@ -129,6 +129,9 @@ export function DayDetailBlockRenderer({
             }
             if (diagramTrack === "react") {
               return null;
+            }
+            if (diagramTrack === "laravel") {
+              return <DayDetailDiagram key={key} id={block.id} />;
             }
             if (diagramTrack === "devops" && isDevopsRoadmapDiagram(block.id)) {
               return <DevopsDiagram key={key} id={block.id} />;
