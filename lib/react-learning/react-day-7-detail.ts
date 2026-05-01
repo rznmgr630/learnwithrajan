@@ -106,6 +106,7 @@ export const REACT_DAY_7_DETAIL: RoadmapDayDetail = {
   onChange={(e) => setTitle(e.target.value)}
 />`,
         },
+        { type: "diagram", id: "react-controlled-input" },
       ],
     },
     {

@@ -46,6 +46,7 @@ export const REACT_DAY_3_DETAIL: RoadmapDayDetail = {
             },
           ],
         },
+        { type: "diagram", id: "react-component-tree" },
       ],
     },
     {

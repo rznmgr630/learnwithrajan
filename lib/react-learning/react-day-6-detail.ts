@@ -152,6 +152,7 @@ function renameSafe(next) {
   setUser((u) => ({ ...u, name: next }));
 }`,
         },
+        { type: "diagram", id: "react-immutable-update" },
       ],
     },
     {

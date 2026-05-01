@@ -61,6 +61,7 @@ function CounterControls({ count, onIncrement }) {
   );
 }`,
         },
+        { type: "diagram", id: "react-data-flow" },
       ],
     },
     {
