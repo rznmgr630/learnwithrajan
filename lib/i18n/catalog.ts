@@ -43,9 +43,9 @@ export const UI_STRINGS = {
     jp: "学習一覧",
   },
   "learn.subtitle": {
-    en: "Choose Programming or Language, then open a track for the full syllabus. More topics will appear as they go live.",
-    np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, अनि पूरा पाठ्यक्रमका लागि ट्र्याक खोल्नुहोस्। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
-    jp: "プログラミングか言語を選び、トラックで全体のシラバスを開きます。新しいトピックは順次追加します。",
+    en: "Choose Programming or Language, then open a track — each day has notes and a self-check. More topics appear as they go live.",
+    np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, ट्र्याक खोल्नुहोस् — हरेक दिन नोट र आत्मजाँच। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
+    jp: "プログラミングか言語を選びトラックを開きます。各日に解説とセルフチェックがあります。新しいトピックは順次追加します。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
@@ -83,14 +83,14 @@ export const UI_STRINGS = {
     jp: "2日で基礎 · ブランチ・リモート・worktree・チーム運用 · 各日に図解",
   },
   "hub.react.title": {
-    en: "React · full syllabus",
-    np: "React · पूरा पाठ्यक्रम",
-    jp: "React · フルシラバス",
+    en: "React · novice to ninja",
+    np: "React · शुरुदेखि दक्षसम्म",
+    jp: "React · 初心者から達人まで",
   },
   "hub.react.subtitle": {
-    en: "Day cards with notes & self-check for each lesson.",
-    np: "दिन कार्ड, नोट र आत्मजाँच।",
-    jp: "日ごとのカードで解説とセルフチェック。",
+    en: "Eight lessons from JSX & components to forms and data fetching — notes & self-check on each day.",
+    np: "JSX र कम्पोनेन्टदेखि फर्म र डाटा fetch सम्म आठ दिन — हरेक दिन नोट र आत्मजाँच।",
+    jp: "JSX・コンポーネントからフォーム・データ取得まで8日分 — 各日に解説とセルフチェック。",
   },
   "hub.react.cta": {
     en: "Open roadmap →",
@@ -133,14 +133,14 @@ export const UI_STRINGS = {
     jp: "レッスン項目",
   },
   "reactRoadmap.title": {
-    en: "React · getting started",
-    np: "React · सुरुवात",
-    jp: "React · はじめに",
+    en: "React · novice to ninja",
+    np: "React · शुरुदेखि दक्षसम्म",
+    jp: "React · 初心者から達人まで",
   },
   "reactRoadmap.subtitle": {
-    en: "Days 1–8 in order. Tap a card for notes and self-check.",
-    np: "दिन १–८ क्रममा। कार्डमा नोट र आत्मजाँच।",
-    jp: "1〜8日目を順に並べています。カードで解説とセルフチェック。",
+    en: "Topics track core React patterns (components, state, styling, forms, effects, data). Open a day card for notes and self-check.",
+    np: "कम्पोनेन्ट, state, शैली, फर्म, effect, डाटा — मुख्य React ढाँचा। कार्ड खोलेर नोट र आत्मजाँच।",
+    jp: "コンポーネント・state・スタイル・フォーム・副作用・データと、React の中心パターンを順に。カードで解説とセルフチェック。",
   },
   "reactRoadmap.daysListAria": {
     en: "React course days 1 through 8",
@@ -578,9 +578,9 @@ export const UI_STRINGS = {
     jp: "今日のテーマ",
   },
   "hero.cta": {
-    en: "View the full syllabus",
-    np: "पूरा पाठ्यक्रम हेर्नुहोस्",
-    jp: "シラバス全体を見る",
+    en: "Explore tracks",
+    np: "ट्र्याक हेर्नुहोस्",
+    jp: "トラックを見る",
   },
   "japaneseDay.trackLabel": {
     en: "JLPT N5 · Minna no Nihongo I track",
