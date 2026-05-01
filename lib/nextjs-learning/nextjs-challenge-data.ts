@@ -10,11 +10,12 @@ import { NEXTJS_DAY_7_DETAIL } from "@/lib/nextjs-learning/nextjs-day-7-detail";
 import { NEXTJS_DAY_8_DETAIL } from "@/lib/nextjs-learning/nextjs-day-8-detail";
 import { NEXTJS_DAY_9_DETAIL } from "@/lib/nextjs-learning/nextjs-day-9-detail";
 import { NEXTJS_DAY_10_DETAIL } from "@/lib/nextjs-learning/nextjs-day-10-detail";
+import { NEXTJS_DAY_11_DETAIL } from "@/lib/nextjs-learning/nextjs-day-11-detail";
 import { nextjsDayTitle, nextjsTags, nextjsWeekTitle } from "@/lib/nextjs-learning/nextjs-roadmap-i18n";
 
 export const NEXTJS_CURRENT_DAY = 1;
 
-export const NEXTJS_TOTAL_DAYS = 10;
+export const NEXTJS_TOTAL_DAYS = 11;
 
 const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: NEXTJS_DAY_1_DETAIL,
@@ -27,6 +28,7 @@ const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   8: NEXTJS_DAY_8_DETAIL,
   9: NEXTJS_DAY_9_DETAIL,
   10: NEXTJS_DAY_10_DETAIL,
+  11: NEXTJS_DAY_11_DETAIL,
 };
 
 function nextjsDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -40,34 +42,50 @@ function nextjsDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
 
 export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
-    id: "nextjs-w1",
-    title: nextjsWeekTitle("nextjs-w1"),
+    id: "nextjs-foundations",
+    title: nextjsWeekTitle("nextjs-foundations"),
     dotClass: "bg-[var(--accent)]",
-    days: [nextjsDayRow(1, ["intro", "appRouter"]), nextjsDayRow(2, ["routing", "appRouter"])],
+    days: [
+      nextjsDayRow(1, ["intro", "setup"]),
+      nextjsDayRow(2, ["server-components", "rendering"]),
+    ],
   },
   {
-    id: "nextjs-w2",
-    title: nextjsWeekTitle("nextjs-w2"),
+    id: "nextjs-ui-routing",
+    title: nextjsWeekTitle("nextjs-ui-routing"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_72%,#60a5fa)]",
-    days: [nextjsDayRow(3, ["conventions", "routing"]), nextjsDayRow(4, ["layouts", "metadata"])],
+    days: [
+      nextjsDayRow(3, ["styling", "tailwind"]),
+      nextjsDayRow(4, ["routing", "layouts"]),
+      nextjsDayRow(5, ["navigation", "error-handling"]),
+    ],
   },
   {
-    id: "nextjs-w3",
-    title: nextjsWeekTitle("nextjs-w3"),
+    id: "nextjs-apis-data",
+    title: nextjsWeekTitle("nextjs-apis-data"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
-    days: [nextjsDayRow(5, ["navigation", "ux"]), nextjsDayRow(6, ["ux", "appRouter"])],
+    days: [
+      nextjsDayRow(6, ["api-routes", "zod"]),
+      nextjsDayRow(7, ["prisma", "database"]),
+    ],
   },
   {
-    id: "nextjs-w4",
-    title: nextjsWeekTitle("nextjs-w4"),
+    id: "nextjs-features",
+    title: nextjsWeekTitle("nextjs-features"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_58%,#fb923c)]",
-    days: [nextjsDayRow(7, ["errors", "appRouter"]), nextjsDayRow(8, ["advanced", "routing"])],
+    days: [
+      nextjsDayRow(8, ["upload", "cloudinary"]),
+      nextjsDayRow(9, ["auth", "next-auth"]),
+    ],
   },
   {
-    id: "nextjs-w5",
-    title: nextjsWeekTitle("nextjs-w5"),
+    id: "nextjs-ship",
+    title: nextjsWeekTitle("nextjs-ship"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
-    days: [nextjsDayRow(9, ["api", "data"]), nextjsDayRow(10, ["edge", "data"])],
+    days: [
+      nextjsDayRow(10, ["email", "optimization"]),
+      nextjsDayRow(11, ["deployment", "vercel"]),
+    ],
   },
 ];
 
