@@ -4,10 +4,19 @@ import { DayDetailDiagram } from "@/components/learn/DayDetailDiagrams";
 import { GitDiagram, isGitRoadmapDiagram } from "@/components/learn/GitDiagrams";
 import { ReactDiagram, isReactRoadmapDiagram } from "@/components/learn/ReactDiagrams";
 import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/DevopsDiagrams";
+import { ReactNativeDiagram, isReactNativeRoadmapDiagram } from "@/components/learn/ReactNativeDiagrams";
 import { RichText } from "@/components/learn/RichText";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
-export type RoadmapDiagramTrack = "backend" | "git" | "react" | "laravel" | "nextjs" | "nodejs" | "devops";
+export type RoadmapDiagramTrack =
+  | "backend"
+  | "git"
+  | "react"
+  | "laravel"
+  | "nextjs"
+  | "nodejs"
+  | "devops"
+  | "react-native";
 
 function DetailTable({
   caption,
@@ -135,6 +144,9 @@ export function DayDetailBlockRenderer({
             }
             if (diagramTrack === "devops" && isDevopsRoadmapDiagram(block.id)) {
               return <DevopsDiagram key={key} id={block.id} />;
+            }
+            if (diagramTrack === "react-native" && isReactNativeRoadmapDiagram(block.id)) {
+              return <ReactNativeDiagram key={key} id={block.id} locale={locale} />;
             }
             return <DayDetailDiagram key={key} id={block.id} />;
           default:

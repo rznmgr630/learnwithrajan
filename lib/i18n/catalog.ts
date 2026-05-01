@@ -127,6 +127,67 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.reactNative.title": {
+    en: "React Native · mobile with React",
+    np: "React Native · मोबाइल React",
+    jp: "React Native · React でモバイル",
+  },
+  "hub.reactNative.subtitle": {
+    en: "Twenty syllabus-style days (Part 1 + Part 2 topics): setup through forms, then cameras, navigation, API layers, offline/auth, push, and store/EAS & OTA—with notes, code, and diagrams.",
+    np:
+      "बीस दिन: फर्मसम्म पार्ट १, पछि क्यामेरा, नेभ, API, अफलाइन/प्रवेश, पुष, र EAS/OTA — नोट्स र आरेख।",
+    jp: "20日構成（前半 UI〜フォーム・後半ネイティブ〜配布）。各日に解説・コード例・図。",
+  },
+  "hub.reactNative.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
+  "reactNativeOutline.statsSections": {
+    en: "topic areas",
+    np: "विषय क्षेत्र",
+    jp: "トピック領域",
+  },
+  "reactNativeOutline.statsBullets": {
+    en: "key points",
+    np: "मुख्य बुँदाहरू",
+    jp: "要点",
+  },
+  "reactNativeRoadmap.title": {
+    en: "React Native · mobile fundamentals to release",
+    np: "React Native · आधारदेखि रिलिजसम्म",
+    jp: "React Native · 基礎からリリースまで",
+  },
+  "reactNativeRoadmap.subtitle": {
+    en: "Mirrors Ultimate RN Part 1 + Part 2: setup → components & layout → styling & lists → forms → native APIs → navigation → networking → offline/auth → push → store/EAS & OTA. Verify against Expo and reactnative.dev.",
+    np: "आधिकारिक डकका साथ—पाठ १+२ का मुख्य शीर्षक।",
+    jp: "定番カリキュラム相当（前半＋ネイティブ後半）。詳細は **Expo** / **reactnative.dev** で都度確認してください。",
+  },
+  "reactNativeRoadmap.daysListAria": {
+    en: "React Native course days 1 through 20",
+    np: "React Native पाठ्यक्रम दिन १ देखि २०",
+    jp: "React Native コース 1日目から20日目",
+  },
+  "reactNativeRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "reactNativeRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "reactNativeRoadmap.bottomBlurb": {
+    en: "Tick a day after running the commands or emulator steps yourself and answering the FAQ from memory—not from copy-paste alone.",
+    np: "आफैले सिम/फोन चलाइ र FAQ सम्झिएपछि टिक गर्नुहोस्।",
+    jp: "シミュレータや実機で手を動かし、FAQ を見ずに答えられるようになってからチェックするのがおすすめです。",
+  },
+  "reactNativeDetail.selfCheckHint": {
+    en: "Collapsed by default — section titles mirror the Udemy-style syllabus slice you opened (Days 1–20). Prefer official Expo, React Navigation, and store docs when APIs drift.",
+    np: "दिन (१–२०) अनुसार शीर्षक — API यात्राका लागि आधिकारिक डक हेर्नुहोस्।",
+    jp: "開いた日（1〜20）のトピック。API が変わったら Expo / React Navigation / 各ストアの公式を確認してください。",
+  },
   "hub.nextjs.title": {
     en: "Next.js 15 · novice to ninja",
     np: "Next.js 15 · शुरुदेखि दक्षसम्म",

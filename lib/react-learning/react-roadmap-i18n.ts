@@ -82,6 +82,76 @@ const REACT_TAG: Record<string, LocalizedString> = {
     np: "HTTP र API",
     jp: "HTTP と API",
   },
+  context: {
+    en: "context",
+    np: "context",
+    jp: "Context",
+  },
+  performance: {
+    en: "performance",
+    np: "प्रदर्शन",
+    jp: "パフォーマンス",
+  },
+  optimization: {
+    en: "optimization",
+    np: "अनुकूलन",
+    jp: "最適化",
+  },
+  patterns: {
+    en: "patterns",
+    np: "ढाँचा",
+    jp: "パターン",
+  },
+  error: {
+    en: "error handling",
+    np: "त्रुटि ह्यान्डलिङ",
+    jp: "エラー処理",
+  },
+  suspense: {
+    en: "Suspense",
+    np: "Suspense",
+    jp: "Suspense",
+  },
+  typescript: {
+    en: "TypeScript",
+    np: "TypeScript",
+    jp: "TypeScript",
+  },
+  types: {
+    en: "types",
+    np: "types",
+    jp: "型",
+  },
+  testing: {
+    en: "testing",
+    np: "परीक्षण",
+    jp: "テスト",
+  },
+  quality: {
+    en: "code quality",
+    np: "कोड गुणस्तर",
+    jp: "コード品質",
+  },
+  routing: {
+    en: "routing",
+    np: "राउटिङ",
+    jp: "ルーティング",
+  },
+  navigation: {
+    en: "navigation",
+    np: "नेभिगेसन",
+    jp: "ナビゲーション",
+  },
+  zustand: {
+    en: "Zustand",
+    np: "Zustand",
+    jp: "Zustand",
+  },
+  query: {
+    en: "TanStack Query",
+    np: "TanStack Query",
+    jp: "TanStack Query",
+  },
 };
 
 export function reactTags(slugs: [string, string]): RoadmapTag[] {
@@ -132,6 +202,46 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
     np: "useEffect, fetch, CRUD र API परत",
     jp: "useEffect・fetch・CRUD・API の層構造",
   },
+  9: {
+    en: "useReducer, useContext & shared application state",
+    np: "useReducer, useContext र साझा application state",
+    jp: "useReducer・useContext・共有アプリ状態",
+  },
+  10: {
+    en: "Performance — memo, useCallback, useMemo & Profiler",
+    np: "Performance — memo, useCallback, useMemo र Profiler",
+    jp: "パフォーマンス — memo・useCallback・useMemo・Profiler",
+  },
+  11: {
+    en: "Custom hooks, compound components & concurrent features",
+    np: "Custom hooks, compound components र concurrent features",
+    jp: "カスタムフック・複合コンポーネント・並行機能",
+  },
+  12: {
+    en: "Error boundaries, portals & code splitting with Suspense",
+    np: "Error boundaries, portals र Suspense सहित code splitting",
+    jp: "エラー境界・ポータル・Suspense によるコード分割",
+  },
+  13: {
+    en: "TypeScript with React — props, hooks, events & generics",
+    np: "React सँग TypeScript — props, hooks, events र generics",
+    jp: "React + TypeScript — props・hooks・イベント・ジェネリクス",
+  },
+  14: {
+    en: "Testing — React Testing Library, Vitest & custom hooks",
+    np: "Testing — React Testing Library, Vitest र custom hooks",
+    jp: "テスト — React Testing Library・Vitest・カスタムフック",
+  },
+  15: {
+    en: "Routing with React Router v6 — Navigation, Parameters & Guards",
+    np: "React Router v6 — Navigation, Parameters र Guards",
+    jp: "React Router v6 によるルーティング — ナビゲーション・パラメータ・ガード",
+  },
+  16: {
+    en: "Global State — Zustand, Context Patterns & TanStack Query",
+    np: "Global State — Zustand, Context Patterns र TanStack Query",
+    jp: "グローバル状態管理 — Zustand・Context パターン・TanStack Query",
+  },
 };
 
 const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
@@ -169,6 +279,31 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
     en: "Connecting to the backend (~1h)",
     np: "ब्याकएन्ड जडान (~१ घण्टा)",
     jp: "バックエンド接続（約1時間）",
+  },
+  "react-advanced-hooks": {
+    en: "Advanced hooks & shared state",
+    np: "Advanced hooks र shared state",
+    jp: "高度なフックと共有状態",
+  },
+  "react-advanced-patterns": {
+    en: "Advanced patterns & reliability",
+    np: "Advanced patterns र reliability",
+    jp: "高度なパターンと信頼性",
+  },
+  "react-typescript-testing": {
+    en: "TypeScript & testing",
+    np: "TypeScript र testing",
+    jp: "TypeScript とテスト",
+  },
+  "react-routing": {
+    en: "Client-side routing",
+    np: "Client-side routing",
+    jp: "クライアントサイドルーティング",
+  },
+  "react-global-state": {
+    en: "Global state management",
+    np: "Global state व्यवस्थापन",
+    jp: "グローバル状態管理",
   },
 };
 
