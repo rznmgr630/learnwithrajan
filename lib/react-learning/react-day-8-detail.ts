@@ -47,6 +47,7 @@ export const REACT_DAY_8_DETAIL: RoadmapDayDetail = {
             jp: "`useEffect` は（通常）描画のあとに走ります。購読・タイマー・命令的 DOM・取得向きで、レンダー中に計算できる値は effect に書きません。",
           },
         },
+        { type: "diagram", id: "react-use-effect-lifecycle" },
       ],
     },
     {
