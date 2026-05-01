@@ -77,12 +77,14 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
       <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
-            <p className="text-xs font-medium text-[var(--accent)]">{pickLocalized(ctx.weekTitle, locale)}</p>
+            <p className="text-xs font-medium text-[var(--accent)]">
+              <RichText text={pickLocalized(ctx.weekTitle, locale)} />
+            </p>
             <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
               {t("japaneseDay.trackLabel")}
             </p>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-[var(--text)]">
-              {t("jpRoadmap.dayPrefix")} {ctx.day.day}: {ctx.day.title}
+              {t("jpRoadmap.dayPrefix")} {ctx.day.day}: <RichText text={ctx.day.title} />
             </h2>
           </div>
           <button
@@ -123,7 +125,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           {detail.sections?.map((sec, si) => (
             <div key={`jp-sec-${si}`}>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {pickLocalized(sec.title, locale)}
+                <RichText text={pickLocalized(sec.title, locale)} />
               </h3>
               {sec.blocks && sec.blocks.length > 0 ? (
                 <JapaneseDetailBlockRenderer blocks={sec.blocks} />
