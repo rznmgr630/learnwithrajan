@@ -23,6 +23,7 @@ export const DEVOPS_DAY_4_DETAIL: RoadmapDayDetail = {
         jp: "プロセス — 何が動いていて、なぜか",
       },
       blocks: [
+        { type: "diagram", id: "devops-process-lifecycle" },
         {
           type: "paragraph",
           text: {

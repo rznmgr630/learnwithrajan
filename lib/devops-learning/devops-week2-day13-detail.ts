@@ -23,6 +23,7 @@ export const DEVOPS_DAY_13_DETAIL: RoadmapDayDetail = {
         jp: "診断ラダー — 体系的なプロセス",
       },
       blocks: [
+        { type: "diagram", id: "devops-network-debug-flow" },
         {
           type: "list",
           variant: "number",

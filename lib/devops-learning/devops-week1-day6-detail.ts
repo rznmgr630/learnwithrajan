@@ -23,6 +23,7 @@ export const DEVOPS_DAY_6_DETAIL: RoadmapDayDetail = {
         jp: "スクリプトの解剖 — shebang・実行・終了コード",
       },
       blocks: [
+        { type: "diagram", id: "devops-bash-script-flow" },
         {
           type: "paragraph",
           text: {

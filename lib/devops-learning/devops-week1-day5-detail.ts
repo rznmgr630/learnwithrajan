@@ -23,6 +23,7 @@ export const DEVOPS_DAY_5_DETAIL: RoadmapDayDetail = {
         jp: "パッケージ管理の仕組み",
       },
       blocks: [
+        { type: "diagram", id: "devops-apt-workflow" },
         {
           type: "paragraph",
           text: {

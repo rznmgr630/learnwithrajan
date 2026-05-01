@@ -23,6 +23,8 @@ export const DEVOPS_DAY_9_DETAIL: RoadmapDayDetail = {
         jp: "IPv4 アドレス指定 — 32 ビットのアドレス空間",
       },
       blocks: [
+        { type: "diagram", id: "devops-subnet-cidr" },
+        { type: "diagram", id: "devops-aws-vpc" },
         {
           type: "paragraph",
           text: {

@@ -23,6 +23,7 @@ export const DEVOPS_DAY_14_DETAIL: RoadmapDayDetail = {
         jp: "VPN の仕組み — トンネリングと暗号化",
       },
       blocks: [
+        { type: "diagram", id: "devops-vpn-tunnel" },
         {
           type: "paragraph",
           text: {
