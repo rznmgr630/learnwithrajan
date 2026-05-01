@@ -140,7 +140,15 @@ export type RoadmapDetailDiagramId =
   | "nextjs-prisma-workflow"
   | "nextjs-nextauth-flow"
   | "nextjs-image-optimization"
-  | "nextjs-vercel-deploy";
+  | "nextjs-vercel-deploy"
+  | "laravel-request-lifecycle"
+  | "laravel-service-container"
+  | "laravel-eloquent-query"
+  | "laravel-eloquent-relations"
+  | "laravel-auth-guard"
+  | "laravel-queue-job"
+  | "laravel-api-resource"
+  | "laravel-test-pyramid";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

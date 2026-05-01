@@ -6,6 +6,7 @@ import { ReactDiagram, isReactRoadmapDiagram } from "@/components/learn/ReactDia
 import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/DevopsDiagrams";
 import { ReactNativeDiagram, isReactNativeRoadmapDiagram } from "@/components/learn/ReactNativeDiagrams";
 import { NextjsDiagram, isNextjsRoadmapDiagram } from "@/components/learn/NextjsDiagrams";
+import { LaravelDiagram, isLaravelRoadmapDiagram } from "@/components/learn/LaravelDiagrams";
 import { RichText } from "@/components/learn/RichText";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
@@ -142,6 +143,9 @@ export function DayDetailBlockRenderer({
             }
             if (diagramTrack === "nextjs" && isNextjsRoadmapDiagram(block.id)) {
               return <NextjsDiagram key={key} id={block.id} />;
+            }
+            if (diagramTrack === "laravel" && isLaravelRoadmapDiagram(block.id)) {
+              return <LaravelDiagram key={key} id={block.id} />;
             }
             if (diagramTrack === "laravel" || diagramTrack === "nextjs" || diagramTrack === "nodejs") {
               return <DayDetailDiagram key={key} id={block.id} />;
