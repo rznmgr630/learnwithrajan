@@ -125,7 +125,16 @@ export type RoadmapDetailDiagramId =
   | "devops-vpc-design"
   | "devops-s3-architecture"
   | "devops-rds-architecture"
-  | "devops-alb-asg";
+  | "devops-alb-asg"
+  | "nextjs-request-lifecycle"
+  | "nextjs-client-server-boundary"
+  | "nextjs-data-fetch-cache"
+  | "nextjs-render-strategies"
+  | "nextjs-api-route-flow"
+  | "nextjs-prisma-workflow"
+  | "nextjs-nextauth-flow"
+  | "nextjs-image-optimization"
+  | "nextjs-vercel-deploy";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =
