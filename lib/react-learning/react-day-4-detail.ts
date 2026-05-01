@@ -340,6 +340,18 @@ export default function App() {
     },
     {
       question: {
+        en: "How do I share data without prop drilling — what is React Context?",
+        np: "prop drilling बिना डाटा साझਾ — React Context के हो?",
+        jp: "prop drilling なしでデータを共有するには？ Context とは？",
+      },
+      answer: {
+        en: "**Context** lets a parent **provide** a value once and **any descendant** read it with **`useContext`**, skipping intermediate props. Typical steps: **`createContext(default)`**, wrap with **`<MyContext.Provider value={…}>`**, read with **`useContext(MyContext)`** in nested components. Use it for **theme, locale, auth session**, or rarely-changing global defaults — **not** as a replacement for every piece of state (too many providers hurts traceability). Official reference: React docs → **Context** / **`useContext`**.",
+        np: "**Context** — अभिभावकले **`Provider`** मार्फत मान दिन्छ, सन्तान **`useContext`** ले पढ्छ। **theme/locale/auth** जस्ता स्थिर-ish मानको लागि; हरेक state को लागि होइन। React डकुमेन्टेशन → Context।",
+        jp: "**Context** は親が **`Provider`** で値を渡し、深い子が **`useContext`** で読む仕組みです。**テーマ・ロケール・認証**など更新頻度が低い共有に向き、すべての state を Context に押し込むのは避けます。詳細は React 公式の **Context** / **`useContext`** を参照してください。",
+      },
+    },
+    {
+      question: {
         en: "Why must `type=\"button\"` be the default for reusable buttons in forms?",
         np: "फर्ममा `type=\"button\"` किन?",
         jp: "フォームで `type=\"button\"` をデフォルトにする理由は？",
