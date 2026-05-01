@@ -18,6 +18,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-nginx-proxy",
   "devops-linux-os-stack",
   "devops-linux-permissions",
+  "devops-dns-resolution",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -560,6 +561,22 @@ function LinuxPermissionsDiagram() {
   );
 }
 
+function DnsResolutionDiagram() {
+  return (
+    <figure className={figClass}>
+      <div className="flex flex-col gap-2 px-4 py-3 text-xs leading-relaxed text-[var(--muted)]">
+        <p className="text-[var(--text)]">DNS lookup path (simplified)</p>
+        <ol className="list-decimal space-y-1 pl-4 marker:text-[var(--muted)]">
+          <li>Stub resolver → recursive resolver</li>
+          <li>Recursive resolver queries root → TLD → authoritative</li>
+          <li>Answer cached along the path for TTL</li>
+        </ol>
+      </div>
+      <Caption text="Recursive DNS resolves names stepwise until an authoritative server answers." />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -574,6 +591,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-nginx-proxy": return <NginxProxyDiagram />;
     case "devops-linux-os-stack": return <LinuxOsStackDiagram />;
     case "devops-linux-permissions": return <LinuxPermissionsDiagram />;
+    case "devops-dns-resolution": return <DnsResolutionDiagram />;
     default: return null;
   }
 }
