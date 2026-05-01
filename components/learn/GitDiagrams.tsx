@@ -5,6 +5,7 @@ import type { Locale } from "@/lib/i18n/types";
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDetailDiagramId } from "@/lib/challenge-data";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { RichText } from "@/components/learn/RichText";
 
 const figClass =
   "mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] text-[var(--text)]";
@@ -83,7 +84,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 400 120" className="h-auto w-full" aria-hidden>
             <defs>
@@ -122,7 +123,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 520 218" className="h-auto w-full" aria-hidden>
             <defs>
@@ -250,7 +251,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 420 100" className="h-auto w-full" aria-hidden>
             <circle cx="60" cy="50" r="10" className="fill-[var(--elevated)] stroke-[var(--border)]" strokeWidth="1.5" />
@@ -282,7 +283,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 400 140" className="h-auto w-full" aria-hidden>
             <circle cx="60" cy="100" r="8" className="fill-[var(--accent)]" />
@@ -310,7 +311,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 420 130" className="h-auto w-full" aria-hidden>
             <rect x="20" y="24" width="120" height="44" rx="8" className="fill-[color-mix(in_oklab,var(--elevated)_65%,transparent)] stroke-[var(--border)]" strokeWidth="1.5" />
@@ -340,7 +341,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 400 110" className="h-auto w-full" aria-hidden>
             <text x="12" y="20" className="fill-[var(--muted)] text-[9px]">
@@ -370,7 +371,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 380 100" className="h-auto w-full" aria-hidden>
             <rect x="24" y="30" width="100" height="40" rx="6" className="fill-[color-mix(in_oklab,var(--elevated)_70%,transparent)] stroke-[var(--border)]" strokeWidth="1.5" />
@@ -401,7 +402,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 420 152" className="h-auto w-full" aria-hidden>
             <rect
@@ -447,7 +448,7 @@ export function GitDiagram({ id, locale }: { id: RoadmapDetailDiagramId; locale:
       return (
         <figure className={figClass}>
           <figcaption className="border-b border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted)]">
-            {caption}
+            <RichText text={caption} />
           </figcaption>
           <svg viewBox="0 0 420 118" className="h-auto w-full" aria-hidden>
             <rect x="16" y="36" width="72" height="36" rx="6" className="fill-[var(--elevated)] stroke-[var(--border)]" strokeWidth="1" />
