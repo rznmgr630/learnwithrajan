@@ -81,7 +81,8 @@ export type RoadmapDetailDiagramId =
   | "devops-ansible-playbook"
   | "devops-nginx-proxy"
   | "devops-linux-os-stack"
-  | "devops-linux-permissions";
+  | "devops-linux-permissions"
+  | "devops-dns-resolution";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

@@ -2,6 +2,19 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 import { DEVOPS_DAY_1_DETAIL } from "./devops-week1-day1-detail";
 import { DEVOPS_DAY_2_DETAIL } from "./devops-week1-day2-detail";
 import { DEVOPS_DAY_3_DETAIL } from "./devops-week1-day3-detail";
+import { DEVOPS_DAY_4_DETAIL } from "./devops-week1-day4-detail";
+import { DEVOPS_DAY_5_DETAIL } from "./devops-week1-day5-detail";
+import { DEVOPS_DAY_6_DETAIL } from "./devops-week1-day6-detail";
+import { DEVOPS_DAY_7_DETAIL } from "./devops-week1-day7-detail";
+import { DEVOPS_DAY_8_DETAIL } from "./devops-week2-day8-detail";
+import { DEVOPS_DAY_9_DETAIL } from "./devops-week2-day9-detail";
+import { DEVOPS_DAY_10_DETAIL } from "./devops-week2-day10-detail";
+import { DEVOPS_DAY_11_DETAIL } from "./devops-week2-day11-detail";
+import { DEVOPS_DAY_12_DETAIL } from "./devops-week2-day12-detail";
+import { DEVOPS_DAY_13_DETAIL } from "./devops-week2-day13-detail";
+import { DEVOPS_DAY_14_DETAIL } from "./devops-week2-day14-detail";
+import { DEVOPS_DAY_15_DETAIL } from "./devops-week3-day15-detail";
+import { DEVOPS_DAY_21_DETAIL } from "./devops-week3-day21-detail";
 
 /** Placeholder detail until per-day content is split into week modules (week1-linux, …). */
 function stubDayDetail(_day: number): RoadmapDayDetail {
@@ -27,5 +40,18 @@ export const DEVOPS_DAY_DETAILS: Record<number, RoadmapDayDetail> = (() => {
   out[1] = DEVOPS_DAY_1_DETAIL;
   out[2] = DEVOPS_DAY_2_DETAIL;
   out[3] = DEVOPS_DAY_3_DETAIL;
+  out[4] = DEVOPS_DAY_4_DETAIL;
+  out[5] = DEVOPS_DAY_5_DETAIL;
+  out[6] = DEVOPS_DAY_6_DETAIL;
+  out[7] = DEVOPS_DAY_7_DETAIL;
+  out[8] = DEVOPS_DAY_8_DETAIL;
+  out[9] = DEVOPS_DAY_9_DETAIL;
+  out[10] = DEVOPS_DAY_10_DETAIL;
+  out[11] = DEVOPS_DAY_11_DETAIL;
+  out[12] = DEVOPS_DAY_12_DETAIL;
+  out[13] = DEVOPS_DAY_13_DETAIL;
+  out[14] = DEVOPS_DAY_14_DETAIL;
+  out[15] = DEVOPS_DAY_15_DETAIL;
+  out[21] = DEVOPS_DAY_21_DETAIL;
   return out;
 })();
