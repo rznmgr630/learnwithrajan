@@ -24,9 +24,9 @@ export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "You should be comfortable in **HTML**, **CSS**, and **JavaScript (ES2015+)** — especially `let`/`const`, arrow functions, modules (`import`/`export`), and template literals. TypeScript is optional for this day but pairs well with React later.",
-            np: "**HTML**, **CSS**, र **JavaScript (ES2015+)** मा सहज हुनुहोस् — `let`/`const`, arrow, `import`/`export`, template literal। TypeScript वैकल्पिक तर पछि राम्रो जोडा।",
-            jp: "**HTML**・**CSS**・**JavaScript（ES2015+）** に慣れていること（`let`/`const`、アロー関数、`import`/`export`、テンプレートリテラル）。TypeScript は任意ですが後で相性が良いです。",
+            en: "You should be comfortable in HTML, CSS, and JavaScript (ES2015+) — especially `let`/`const`, arrow functions, modules (`import`/`export`), and template literals. TypeScript is optional for this day but pairs well with React later.",
+            np: "HTML, CSS, र JavaScript (ES2015+) मा सहज हुनुहोस् — `let`/`const`, arrow, `import`/`export`, template literal। TypeScript वैकल्पिक तर पछि राम्रो जोडा।",
+            jp: "HTML・CSS・JavaScript（ES2015+） に慣れていること（`let`/`const`、アロー関数、`import`/`export`、テンプレートリテラル）。TypeScript は任意ですが後で相性が良いです。",
           },
         },
         {
@@ -34,19 +34,19 @@ export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
           variant: "bullet",
           items: [
             {
-              en: "**Node.js (LTS)** — ships `npm` / `npx` so you can scaffold and run dev servers.",
-              np: "**Node.js (LTS)** — `npm` / `npx` सहित scaffold र dev server।",
-              jp: "**Node.js（LTS）** — `npm` / `npx` でプロジェクト作成と開発サーバー起動。",
+              en: "Node.js (LTS) — ships `npm` / `npx` so you can scaffold and run dev servers.",
+              np: "Node.js (LTS) — `npm` / `npx` सहित scaffold र dev server।",
+              jp: "Node.js（LTS） — `npm` / `npx` でプロジェクト作成と開発サーバー起動。",
             },
             {
-              en: "**A code editor** with syntax highlighting and a terminal pane (VS Code, WebStorm, etc.).",
-              np: "**सम्पादक** — syntax highlighting र टर्मिनल (VS Code, WebStorm)।",
-              jp: "**エディタ** — シンタックスハイライトとターミナル（VS Code など）。",
+              en: "A code editor with syntax highlighting and a terminal pane (VS Code, WebStorm, etc.).",
+              np: "सम्पादक — syntax highlighting र टर्मिनल (VS Code, WebStorm)।",
+              jp: "エディタ — シンタックスハイライトとターミナル（VS Code など）。",
             },
             {
-              en: "**Git basics** — clone, commit, branch — so you can save checkpoints as you experiment.",
-              np: "**Git आधार** — clone, commit, branch — प्रयोग गर्दा checkpoint।",
-              jp: "**Git の基本** — clone / commit / branch で試行のチェックポイントを残す。",
+              en: "Git basics — clone, commit, branch — so you can save checkpoints as you experiment.",
+              np: "Git आधार — clone, commit, branch — प्रयोग गर्दा checkpoint।",
+              jp: "Git の基本 — clone / commit / branch で試行のチェックポイントを残す。",
             },
           ],
         },
@@ -62,9 +62,9 @@ export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "React is a **JavaScript library for building user interfaces** from reusable pieces called **components**. You describe *what* the UI should look like for a given state; React figures out efficient updates to the real DOM.",
-            np: "React **प्रयोगकर्ता इन्टरफेस** बनाउने **JavaScript लाइब्रेरी** हो — **कम्पोनेन्ट** भनिने पुन: प्रयोग योग्य टुक्राहरूबाट। अवस्थाको लागि UI कस्तो हुनुपर्छ वर्णन गर्नुहोस्; React ले DOM अद्यावधिक कुशलतापूर्वक गर्छ।",
-            jp: "React は **コンポーネント** と呼ぶ部品から **ユーザーインターフェース** を組み立てる **JavaScript ライブラリ**です。ある状態に対して UI をどう見せるかを宣言すると、React が実 DOM への効率的な更新を担います。",
+            en: "React is a JavaScript library for building user interfaces from reusable pieces called components. You describe *what* the UI should look like for a given state; React figures out efficient updates to the real DOM.",
+            np: "React प्रयोगकर्ता इन्टरफेस बनाउने JavaScript लाइब्रेरी हो — कम्पोनेन्ट भनिने पुन: प्रयोग योग्य टुक्राहरूबाट। अवस्थाको लागि UI कस्तो हुनुपर्छ वर्णन गर्नुहोस्; React ले DOM अद्यावधिक कुशलतापूर्वक गर्छ।",
+            jp: "React は コンポーネント と呼ぶ部品から ユーザーインターフェース を組み立てる JavaScript ライブラリです。ある状態に対して UI をどう見せるかを宣言すると、React が実 DOM への効率的な更新を担います。",
           },
         },
         {
@@ -72,19 +72,19 @@ export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
           variant: "bullet",
           items: [
             {
-              en: "**Declarative** — you write UI as a function of data instead of manually mutating the DOM.",
-              np: "**घोषणात्मक** — DOM हातले मेटाउनुको सट्टा डाटाको फंक्शनको रूपमा UI।",
-              jp: "**宣言的** — DOM を直接いじるより、データの関数として UI を書く。",
+              en: "Declarative — you write UI as a function of data instead of manually mutating the DOM.",
+              np: "घोषणात्मक — DOM हातले मेटाउनुको सट्टा डाटाको फंक्शनको रूपमा UI।",
+              jp: "宣言的 — DOM を直接いじるより、データの関数として UI を書く。",
             },
             {
-              en: "**Component model** — small units compose into screens; props flow down, events bubble up.",
-              np: "**कम्पोनेन्ट मोडेल** — साना एकाइहरूले स्क्रिन बनाउँछन्; props तल, घटना माथि।",
-              jp: "**コンポーネント** — 小さな単位が画面を構成。props は下へ、イベントは上へ。",
+              en: "Component model — small units compose into screens; props flow down, events bubble up.",
+              np: "कम्पोनेन्ट मोडेल — साना एकाइहरूले स्क्रिन बनाउँछन्; props तल, घटना माथि।",
+              jp: "コンポーネント — 小さな単位が画面を構成。props は下へ、イベントは上へ。",
             },
             {
-              en: "**Ecosystem** — routing, data fetching, styling, and forms are usually solved with companion libraries (React Router, TanStack Query, etc.).",
-              np: "**इकोसिस्टम** — routing, data fetching, styling साथी लाइब्रेरीले (React Router, TanStack Query)।",
-              jp: "**エコシステム** — ルーティングや取得・スタイルは別ライブラリで補うのが一般的。",
+              en: "Ecosystem — routing, data fetching, styling, and forms are usually solved with companion libraries (React Router, TanStack Query, etc.).",
+              np: "इकोसिस्टम — routing, data fetching, styling साथी लाइब्रेरीले (React Router, TanStack Query)।",
+              jp: "エコシステム — ルーティングや取得・スタイルは別ライブラリで補うのが一般的。",
             },
           ],
         },
@@ -100,9 +100,9 @@ export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Modern apps call **`createRoot`** from `react-dom/client`, pass a DOM node, then **`render`** a React element tree. Your root component is often named `App`.",
-            np: "आधुनिक एपले **`createRoot`** (`react-dom/client`) प्रयोग गर्छ, DOM node दिन्छ, अनि **`render`** ले React element रूख। जरा कम्पोनेन्ट प्रायः `App`।",
-            jp: "最近は **`react-dom/client` の `createRoot`** に DOM ノードを渡し、**`render`** で要素ツリーを描画します。ルートは多く `App` です。",
+            en: "Modern apps call `createRoot` from `react-dom/client`, pass a DOM node, then `render` a React element tree. Your root component is often named `App`.",
+            np: "आधुनिक एपले `createRoot` (`react-dom/client`) प्रयोग गर्छ, DOM node दिन्छ, अनि `render` ले React element रूख। जरा कम्पोनेन्ट प्रायः `App`।",
+            jp: "最近は `react-dom/client` の `createRoot` に DOM ノードを渡し、`render` で要素ツリーを描画します。ルートは多く `App` です。",
           },
         },
         {
@@ -146,9 +146,9 @@ export default App;`,
         {
           type: "paragraph",
           text: {
-            en: "**JSX** looks like HTML in JavaScript but compiles to `React.createElement` calls. Curly braces `{title}` embed JavaScript expressions inside markup.",
-            np: "**JSX** JavaScript भित्र HTML जस्तो देखिन्छ तर `React.createElement` मा कम्पाइल हुन्छ। `{title}` ले अभिव्यक्ति हाल्छ।",
-            jp: "**JSX** は HTML に似た構文ですが `React.createElement` に変換されます。`{title}` で式を埋め込みます。",
+            en: "JSX looks like HTML in JavaScript but compiles to `React.createElement` calls. Curly braces `{title}` embed JavaScript expressions inside markup.",
+            np: "JSX JavaScript भित्र HTML जस्तो देखिन्छ तर `React.createElement` मा कम्पाइल हुन्छ। `{title}` ले अभिव्यक्ति हाल्छ।",
+            jp: "JSX は HTML に似た構文ですが `React.createElement` に変換されます。`{title}` で式を埋め込みます。",
           },
         },
       ],
@@ -252,9 +252,9 @@ export default App;`,
         jp: "React はフレームワーク？",
       },
       answer: {
-        en: "Officially it is a **library** focused on UI. In practice teams add routing, data, and build tooling — so it feels framework-sized. Next.js is closer to a full framework built on React.",
-        np: "आधिकारिक रूपमा **लाइब्रेरी** UI केन्द्रित। व्यवहारमा routing, data, build थपिन्छ — फ्रेमवर्क जस्तो। Next.js React माथि पूर्ण फ्रेमवर्क नजिक।",
-        jp: "公式には UI に特化した**ライブラリ**。ルーティング等を足すとフレームワーク級になります。",
+        en: "Officially it is a library focused on UI. In practice teams add routing, data, and build tooling — so it feels framework-sized. Next.js is closer to a full framework built on React.",
+        np: "आधिकारिक रूपमा लाइब्रेरी UI केन्द्रित। व्यवहारमा routing, data, build थपिन्छ — फ्रेमवर्क जस्तो। Next.js React माथि पूर्ण फ्रेमवर्क नजिक।",
+        jp: "公式には UI に特化したライブラリ。ルーティング等を足すとフレームワーク級になります。",
       },
     },
     {
@@ -264,9 +264,9 @@ export default App;`,
         jp: "props とは（次のレッスンの予告）？",
       },
       answer: {
-        en: "**Props** (short for properties) are read-only inputs passed from a parent component to a child. They let you reuse the same component with different data — think function arguments for UI.",
-        np: "**Props** अभिभावकबाट सन्तानमा पढाइ-मात्र इनपुट। फरक डाटासँग पुन: प्रयोग — UI को फंक्फन तर्क।",
-        jp: "**props** は親から子へ渡す読み取り専用の入力で、同じ部品を別データで再利用するためのものです。",
+        en: "Props (short for properties) are read-only inputs passed from a parent component to a child. They let you reuse the same component with different data — think function arguments for UI.",
+        np: "Props अभिभावकबाट सन्तानमा पढाइ-मात्र इनपुट। फरक डाटासँग पुन: प्रयोग — UI को फंक्फन तर्क।",
+        jp: "props は親から子へ渡す読み取り専用の入力で、同じ部品を別データで再利用するためのものです。",
       },
     },
     {
@@ -288,8 +288,8 @@ export default App;`,
         jp: "`fetch` やタイマーはどこに？",
       },
       answer: {
-        en: "Not inside the render body of a component — that would run unpredictably. Day 1 stops at the model; later you will use **`useEffect`** (or newer data APIs) with clear dependency lists.",
-        np: "render शरीरभित्र होइन — अनियमित चल्छ। आज मोडेल मात्र; पछि **`useEffect`** (वा नयाँ data API) निर्भरता सूचीसहित।",
+        en: "Not inside the render body of a component — that would run unpredictably. Day 1 stops at the model; later you will use `useEffect` (or newer data APIs) with clear dependency lists.",
+        np: "render शरीरभित्र होइन — अनियमित चल्छ। आज मोडेल मात्र; पछि `useEffect` (वा नयाँ data API) निर्भरता सूचीसहित।",
         jp: "レンダー関数の本体に直接書かないのが原則です。後のレッスンで `useEffect` などを学びます。",
       },
     },
