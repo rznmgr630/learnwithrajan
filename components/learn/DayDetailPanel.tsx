@@ -13,6 +13,8 @@ import { getReactRoadmapDayContext, resolveReactDayDetail } from "@/lib/react-le
 import { localizeReactRoadmapDayDetail } from "@/lib/react-learning/localize-react-roadmap-detail";
 import { getLaravelRoadmapDayContext, resolveLaravelDayDetail } from "@/lib/laravel-learning/laravel-challenge-data";
 import { localizeLaravelRoadmapDayDetail } from "@/lib/laravel-learning/localize-laravel-roadmap-detail";
+import { getNextjsRoadmapDayContext, resolveNextjsDayDetail } from "@/lib/nextjs-learning/nextjs-challenge-data";
+import { localizeNextjsRoadmapDayDetail } from "@/lib/nextjs-learning/localize-nextjs-roadmap-detail";
 import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
 import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
@@ -50,9 +52,11 @@ export function DayDetailPanel({
           ? getReactRoadmapDayContext(dayNumber)
           : track === "laravel"
             ? getLaravelRoadmapDayContext(dayNumber)
-            : track === "devops"
-              ? getDevopsRoadmapDayContext(dayNumber)
-              : getRoadmapDayContext(dayNumber)
+            : track === "nextjs"
+              ? getNextjsRoadmapDayContext(dayNumber)
+              : track === "devops"
+                ? getDevopsRoadmapDayContext(dayNumber)
+                : getRoadmapDayContext(dayNumber)
       : null;
   const detailRaw = ctx
     ? track === "git"
@@ -61,9 +65,11 @@ export function DayDetailPanel({
         ? resolveReactDayDetail(ctx.day)
         : track === "laravel"
           ? resolveLaravelDayDetail(ctx.day)
-          : track === "devops"
-            ? resolveDevopsDayDetail(ctx.day)
-            : resolveDayDetail(ctx.day)
+          : track === "nextjs"
+            ? resolveNextjsDayDetail(ctx.day)
+            : track === "devops"
+              ? resolveDevopsDayDetail(ctx.day)
+              : resolveDayDetail(ctx.day)
     : null;
   const detail = detailRaw
     ? track === "git"
@@ -72,9 +78,11 @@ export function DayDetailPanel({
         ? localizeReactRoadmapDayDetail(detailRaw, locale)
         : track === "laravel"
           ? localizeLaravelRoadmapDayDetail(detailRaw, locale)
-          : track === "devops"
-            ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
-            : localizeRoadmapDayDetail(detailRaw, locale)
+          : track === "nextjs"
+            ? localizeNextjsRoadmapDayDetail(detailRaw, locale)
+            : track === "devops"
+              ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
+              : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
   const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
 
@@ -105,7 +113,7 @@ export function DayDetailPanel({
   const done = isDone(dayNumber);
   const intro = overviewParagraphs(detail.overview);
   const hideOverviewWhenSections =
-    (track === "react" || track === "laravel") && (detail.sections?.length ?? 0) > 0;
+    (track === "react" || track === "laravel" || track === "nextjs") && (detail.sections?.length ?? 0) > 0;
   const introToShow = hideOverviewWhenSections ? [] : intro;
   const faq = detail.faq ?? [];
 
@@ -201,9 +209,11 @@ export function DayDetailPanel({
                     ? t("reactDetail.selfCheckHint")
                     : track === "laravel"
                       ? t("laravelDetail.selfCheckHint")
-                      : track === "devops"
-                        ? t("devopsDetail.selfCheckHint")
-                        : t("backendDetail.selfCheckHint")}
+                      : track === "nextjs"
+                        ? t("nextjsDetail.selfCheckHint")
+                        : track === "devops"
+                          ? t("devopsDetail.selfCheckHint")
+                          : t("backendDetail.selfCheckHint")}
               </p>
               <ul className="mt-3 space-y-2" role="list">
                 {faq.map((item, i) => {

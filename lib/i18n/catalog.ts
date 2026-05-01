@@ -112,6 +112,31 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.nextjs.title": {
+    en: "Next.js 15 · novice to ninja",
+    np: "Next.js 15 · शुरुदेखि दक्षसम्म",
+    jp: "Next.js 15 · 初心者から達人まで",
+  },
+  "hub.nextjs.subtitle": {
+    en: "Ten days on App Router: routing, layouts, metadata, loading & errors, parallel routes, handlers, middleware & caching — notes & self-check each day.",
+    np: "App Router: रूटिङ, लेआउट, metadata, लोडिङ र त्रुटि, समानान्तर रूट, handler, middleware र cache — दस दिन।",
+    jp: "App Router を10日で（ルーティング・レイアウト・メタデータ・Loading/Error・並列・ハンドラ・ミドルウェア・キャッシュ）— 各日に解説とセルフチェック。",
+  },
+  "hub.nextjs.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
+  "nextjsOutline.statsSections": {
+    en: "topic areas",
+    np: "विषय क्षेत्र",
+    jp: "トピック領域",
+  },
+  "nextjsOutline.statsBullets": {
+    en: "key points",
+    np: "मुख्य बुँदाहरू",
+    jp: "要点",
+  },
   "laravelOutline.statsSections": {
     en: "topic areas",
     np: "विषय क्षेत्र",
@@ -201,6 +226,41 @@ export const UI_STRINGS = {
     en: "Collapsed by default — expand each question to compare your understanding. Topics align with the day you opened (Days 1–10).",
     np: "पूर्वनिर्धारित संक्षिप्त — खोलेको दिन (१–१०) अनुसार प्रश्न।",
     jp: "初期は閉じています。開いた日（1〜10日目）に対応したセルフチェックです。",
+  },
+  "nextjsRoadmap.title": {
+    en: "Next.js 15 · novice to ninja",
+    np: "Next.js 15 · शुरुदेखि दक्षसम्म",
+    jp: "Next.js 15 · 初心者から達人まで",
+  },
+  "nextjsRoadmap.subtitle": {
+    en: "Aligned with current Next.js docs: App Router, Server & Client Components, Metadata API, Route Handlers, and caching. Open a day card for notes and self-check.",
+    np: "नवीनतम Next.js डक अनुसार: App Router, Server/Client, Metadata, Route Handler, cache। कार्ड खोलेर नोट र आत्मजाँच।",
+    jp: "公式ドキュメントに沿った App Router・Server/Client・Metadata・Route Handler・キャッシュなど。カードで解説とセルフチェック。",
+  },
+  "nextjsRoadmap.daysListAria": {
+    en: "Next.js 15 course days 1 through 10",
+    np: "Next.js 15 पाठ्यक्रम दिन १ देखि १०",
+    jp: "Next.js 15 コース 1日目から10日目",
+  },
+  "nextjsRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "nextjsRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "nextjsRoadmap.bottomBlurb": {
+    en: "Cross-check uncertain behavior with nextjs.org/docs—defaults for caching and async request APIs change between minors; treat this roadmap as a map, not a substitute for the release notes.",
+    np: "निश्चित नभए nextjs.org/docs हेर्नुहोस् — cache र async API नियम रिलिज अनुसार बदलिन सक्छ।",
+    jp: "挙動が不安なときは nextjs.org/docs を正とし、キャッシュや非同期 API はマイナーごとに変わり得ます。",
+  },
+  "nextjsDetail.selfCheckHint": {
+    en: "Collapsed by default — answers align with the day you opened (Days 1–10). Prefer the official Next.js docs for exact API signatures.",
+    np: "खोलेको दिन (१–१०) अनुसार — API को लागि आधिकारिक डक।",
+    jp: "開いた日（1〜10）に対応。API の正確な形は公式ドキュメントで確認してください。",
   },
   "hub.sectionProgramming": {
     en: "Programming",
