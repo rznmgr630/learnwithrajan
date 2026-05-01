@@ -112,6 +112,21 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.nodejs.title": {
+    en: "Node.js · runtime to production",
+    np: "Node.js · रनटाइमदेखि उत्पादनसम्म",
+    jp: "Node.js · ランタイムから本番まで",
+  },
+  "hub.nodejs.subtitle": {
+    en: "Fourteen steps from core modules and npm through Express, MongoDB, auth, tests, and deployment — notes & self-check each day.",
+    np: "कोर मोड्युल र npm देखि Express, MongoDB, प्रमाणीकरण, परीक्षण र डिप्लोइ — चौध दिन।",
+    jp: "コア・npm・Express・MongoDB・認証・テスト・デプロイまで14日 — 各日に解説とセルフチェック。",
+  },
+  "hub.nodejs.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
   "hub.nextjs.title": {
     en: "Next.js 15 · novice to ninja",
     np: "Next.js 15 · शुरुदेखि दक्षसम्म",
@@ -143,6 +158,16 @@ export const UI_STRINGS = {
     jp: "トピック領域",
   },
   "laravelOutline.statsBullets": {
+    en: "key points",
+    np: "मुख्य बुँदाहरू",
+    jp: "要点",
+  },
+  "nodejsOutline.statsSections": {
+    en: "topic areas",
+    np: "विषय क्षेत्र",
+    jp: "トピック領域",
+  },
+  "nodejsOutline.statsBullets": {
     en: "key points",
     np: "मुख्य बुँदाहरू",
     jp: "要点",
@@ -217,6 +242,36 @@ export const UI_STRINGS = {
     np: "आफैले आदेश वा ढाँचा प्रयोग गर्नुभयो र आत्मजाँच स्मरणमा गर्नुभयो भने दिन टिक गर्नुहोस्।",
     jp: "手を動かした（サンプルプロジェクトでも）うえでセルフチェックを見ずに答えられたら、その日にチェック。",
   },
+  "nodejsRoadmap.title": {
+    en: "Node.js · runtime to production",
+    np: "Node.js · रनटाइमदेखि उत्पादनसम्म",
+    jp: "Node.js · ランタイムから本番まで",
+  },
+  "nodejsRoadmap.subtitle": {
+    en: "Core modules → npm → Express & MongoDB → auth → testing → deploy. Cross-check runtime behavior with nodejs.org/docs.",
+    np: "कोर मोड्युलदेखि डिप्लोइ — विवरण nodejs.org/docs मा।",
+    jp: "コアからデプロイまで。挙動は nodejs.org/docs と突き合わせてください。",
+  },
+  "nodejsRoadmap.daysListAria": {
+    en: "Node.js course days 1 through 14",
+    np: "Node.js पाठ्यक्रम दिन १ देखि १४",
+    jp: "Node.js コース 1日目から14日目",
+  },
+  "nodejsRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "nodejsRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "nodejsRoadmap.bottomBlurb": {
+    en: "Tick a day after you have exercised that slice (commands, API calls, or tests) without relying on copy-paste alone.",
+    np: "आफैले आदेश वा API परीक्षण गर्नुभयो भने टिक गर्नुहोस्।",
+    jp: "コマンドやAPI・テストを手で試したらチェック。コピペだけに頼らない。",
+  },
   "reactDetail.selfCheckHint": {
     en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once. Prompts match the day you opened (Days 1–8 each have different topics).",
     np: "पूर्वनिर्धारित रूपमा सबै संक्षिप्त — प्रश्नमा क्लिक गर्दा जवाफ खुल्छ। खोलेको दिन (१–८) अनुसार प्रश्न फरक हुन्छ।",
@@ -226,6 +281,11 @@ export const UI_STRINGS = {
     en: "Collapsed by default — expand each question to compare your understanding. Topics align with the day you opened (Days 1–10).",
     np: "पूर्वनिर्धारित संक्षिप्त — खोलेको दिन (१–१०) अनुसार प्रश्न।",
     jp: "初期は閉じています。開いた日（1〜10日目）に対応したセルフチェックです。",
+  },
+  "nodejsDetail.selfCheckHint": {
+    en: "Collapsed by default — prompts match the syllabus slice you opened (Days 1–14). Prefer official Node/npm/Mongo docs for exact APIs.",
+    np: "खोलेको दिन (१–१४) अनुसार — यथार्थ API को लागि आधिकारिक डक।",
+    jp: "開いた日（1〜14）に対応。API の詳細は Node / npm / Mongo の公式を参照。",
   },
   "nextjsRoadmap.title": {
     en: "Next.js 15 · novice to ninja",
