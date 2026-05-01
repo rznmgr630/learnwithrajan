@@ -283,8 +283,8 @@ S3_CONFIG_BUCKET="acme-app-config"
 S3_CONFIG_KEY="production/nginx/nginx.conf"
 LOCAL_CONFIG_PATH="/etc/nginx/nginx.conf"
 
-aws s3 cp "s3://${S3_CONFIG_BUCKET}/${S3_CONFIG_KEY}" "$LOCAL_CONFIG_PATH"
-echo "Config downloaded from s3://${S3_CONFIG_BUCKET}/${S3_CONFIG_KEY}"
+aws s3 cp "s3://\${S3_CONFIG_BUCKET}/\${S3_CONFIG_KEY}" "$LOCAL_CONFIG_PATH"
+echo "Config downloaded from s3://\${S3_CONFIG_BUCKET}/\${S3_CONFIG_KEY}"
 
 # ---- 3. Pull a secret from SSM Parameter Store ----
 DB_PASSWORD=$(aws ssm get-parameter \\
@@ -295,7 +295,7 @@ DB_PASSWORD=$(aws ssm get-parameter \\
 
 # Write it to a secured environment file (chmod 600, owned by app user)
 cat > /etc/acme/env.conf <<EOF
-DB_PASSWORD=${DB_PASSWORD}
+DB_PASSWORD=\${DB_PASSWORD}
 EOF
 chmod 600 /etc/acme/env.conf
 chown nginx:nginx /etc/acme/env.conf

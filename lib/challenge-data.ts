@@ -120,7 +120,12 @@ export type RoadmapDetailDiagramId =
   | "devops-boto3-workflow"
   | "devops-cli-tool"
   | "devops-cloud-models"
-  | "devops-iam-model";
+  | "devops-iam-model"
+  | "devops-ec2-lifecycle"
+  | "devops-vpc-design"
+  | "devops-s3-architecture"
+  | "devops-rds-architecture"
+  | "devops-alb-asg";
 
 /** One rich block inside a section (tables, code, diagrams, or prose). */
 export type RoadmapDetailBlock =

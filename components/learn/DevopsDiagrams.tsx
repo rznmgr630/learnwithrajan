@@ -39,6 +39,11 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-cli-tool",
   "devops-cloud-models",
   "devops-iam-model",
+  "devops-ec2-lifecycle",
+  "devops-vpc-design",
+  "devops-s3-architecture",
+  "devops-rds-architecture",
+  "devops-alb-asg",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -1554,6 +1559,298 @@ function IamModelDiagram() {
   );
 }
 
+function Ec2LifecycleDiagram() {
+  const states = [
+    { label: "Pending", x: 200, y: 44, color: "#f59e0b" },
+    { label: "Running", x: 360, y: 44, color: "#10b981" },
+    { label: "Stopping", x: 360, y: 144, color: "#6366f1" },
+    { label: "Stopped", x: 200, y: 144, color: "#3b82f6" },
+    { label: "Terminated", x: 280, y: 220, color: "#ef4444" },
+  ];
+  const pricing = [
+    { model: "On-Demand", discount: "—", useCase: "dev/test, unpredictable load", risk: "highest cost" },
+    { model: "Reserved (1yr)", discount: "~40%", useCase: "steady production workloads", risk: "upfront commit" },
+    { model: "Reserved (3yr)", discount: "~60%", useCase: "long-lived databases, NAT GW", risk: "long lock-in" },
+    { model: "Spot", discount: "~80%", useCase: "CI runners, batch, ML training", risk: "2-min termination notice" },
+    { model: "Savings Plans", discount: "~50%", useCase: "flexible compute commitment", risk: "$/hr commitment" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 340" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">EC2 Instance Lifecycle & Pricing Models</text>
+        {/* State boxes */}
+        {states.map(({ label, x, y, color }) => (
+          <g key={label}>
+            <rect x={x - 50} y={y - 16} width="100" height="32" rx="5" fill={`${color}22`} stroke={color} strokeWidth="1.5"/>
+            <text x={x} y={y + 5} textAnchor="middle" fontSize="9" fontWeight="600" fill={color}>{label}</text>
+          </g>
+        ))}
+        {/* Transitions */}
+        <line x1="250" y1="44" x2="308" y2="44" stroke="#10b981" strokeWidth="1.2" markerEnd="url(#arre2l)"/>
+        <text x="279" y="38" textAnchor="middle" fontSize="7.5" fill="var(--muted)">boot</text>
+        <line x1="360" y1="60" x2="360" y2="128" stroke="#6366f1" strokeWidth="1.2" markerEnd="url(#arre2l)"/>
+        <text x="376" y="98" fontSize="7.5" fill="var(--muted)">stop</text>
+        <line x1="308" y1="144" x2="252" y2="144" stroke="#3b82f6" strokeWidth="1.2" markerEnd="url(#arre2l)"/>
+        <text x="279" y="138" textAnchor="middle" fontSize="7.5" fill="var(--muted)">stopped</text>
+        <line x1="200" y1="128" x2="200" y2="60" stroke="#f59e0b" strokeWidth="1.2" markerEnd="url(#arre2l)" strokeDasharray="4 2"/>
+        <text x="184" y="98" textAnchor="end" fontSize="7.5" fill="var(--muted)">start</text>
+        <line x1="360" y1="60" x2="318" y2="206" stroke="#ef4444" strokeWidth="1.2" markerEnd="url(#arre2l)" strokeDasharray="4 2"/>
+        <text x="362" y="140" fontSize="7.5" fill="#ef4444">terminate</text>
+        <line x1="200" y1="160" x2="260" y2="206" stroke="#ef4444" strokeWidth="1.2" markerEnd="url(#arre2l)" strokeDasharray="4 2"/>
+        {/* Note */}
+        <text x="260" y="266" textAnchor="middle" fontSize="8" fill="var(--muted)">Stopped = no compute charge (EBS still billed). Terminated = irreversible, root volume deleted.</text>
+        {/* Pricing table */}
+        <rect x="16" y="278" width="488" height="56" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="293" fontSize="8.5" fontWeight="600" fill="var(--text)">Pricing models</text>
+        {pricing.map(({ model, discount, useCase, risk }, i) => (
+          <g key={model}>
+            <text x="30" y={305 + i * 11} fontSize="7.5" fontWeight="600" fill={i === 3 ? "#10b981" : "var(--text)"}>{model}</text>
+            <text x="130" y={305 + i * 11} fontSize="7.5" fill={discount === "—" ? "var(--muted)" : "#10b981"}>{discount}</text>
+            <text x="175" y={305 + i * 11} fontSize="7.5" fill="var(--muted)">{useCase}</text>
+            <text x="380" y={305 + i * 11} fontSize="7.5" fill="#f59e0b">{risk}</text>
+          </g>
+        ))}
+        <defs>
+          <marker id="arre2l" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Stopped instances don't incur compute charges but EBS volumes do — terminate unused instances and delete orphaned volumes to avoid surprise bills" />
+    </figure>
+  );
+}
+
+function VpcDesignDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 310" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">3-Tier VPC Design — the production pattern for every AWS deployment</text>
+        {/* VPC boundary */}
+        <rect x="16" y="26" width="488" height="268" rx="8" fill="#6366f106" stroke="#6366f155" strokeWidth="1.5" strokeDasharray="6 3"/>
+        <text x="30" y="42" fontSize="8.5" fontWeight="600" fill="#818cf8">VPC  10.0.0.0/16</text>
+        {/* Internet & IGW */}
+        <rect x="210" y="24" width="100" height="22" rx="4" fill="#ef44441a" stroke="#ef444455" strokeWidth="1"/>
+        <text x="260" y="38" textAnchor="middle" fontSize="8" fill="#ef4444">Internet</text>
+        <line x1="260" y1="46" x2="260" y2="58" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arrvpc)"/>
+        <rect x="208" y="58" width="104" height="18" rx="3" fill="#f59e0b1a" stroke="#f59e0b66" strokeWidth="1"/>
+        <text x="260" y="70" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="#fbbf24">Internet Gateway</text>
+        {/* AZ-a column */}
+        <rect x="26" y="82" width="220" height="200" rx="6" fill="#3b82f608" stroke="#3b82f633" strokeWidth="1" strokeDasharray="4 2"/>
+        <text x="136" y="96" textAnchor="middle" fontSize="8" fill="#60a5fa">Availability Zone A</text>
+        {/* AZ-b column */}
+        <rect x="274" y="82" width="220" height="200" rx="6" fill="#10b98108" stroke="#10b98133" strokeWidth="1" strokeDasharray="4 2"/>
+        <text x="384" y="96" textAnchor="middle" fontSize="8" fill="#10b981">Availability Zone B</text>
+        {/* Tier rows */}
+        {[
+          { tier: "Public", y: 100, colorA: "#10b981", colorB: "#10b981", textA: "10.0.1.0/24", textB: "10.0.2.0/24", note: "ALB only — no EC2" },
+          { tier: "Private App", y: 166, colorA: "#3b82f6", colorB: "#3b82f6", textA: "10.0.10.0/24", textB: "10.0.11.0/24", note: "EC2 / ECS tasks" },
+          { tier: "Private Data", y: 232, colorA: "#6366f1", colorB: "#6366f1", textA: "10.0.20.0/24", textB: "10.0.21.0/24", note: "RDS / ElastiCache" },
+        ].map(({ tier, y, colorA, colorB, textA, textB, note }) => (
+          <g key={tier}>
+            <rect x="34" y={y} width="200" height="48" rx="4" fill={`${colorA}18`} stroke={`${colorA}66`} strokeWidth="1.2"/>
+            <text x="134" y={y + 15} textAnchor="middle" fontSize="8" fontWeight="600" fill={colorA}>{tier}  Subnet A</text>
+            <text x="134" y={y + 28} textAnchor="middle" fontSize="8" fontFamily="monospace" fill="var(--text)">{textA}</text>
+            <text x="134" y={y + 41} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{note}</text>
+            <rect x="282" y={y} width="200" height="48" rx="4" fill={`${colorB}18`} stroke={`${colorB}66`} strokeWidth="1.2"/>
+            <text x="382" y={y + 15} textAnchor="middle" fontSize="8" fontWeight="600" fill={colorB}>{tier}  Subnet B</text>
+            <text x="382" y={y + 28} textAnchor="middle" fontSize="8" fontFamily="monospace" fill="var(--text)">{textB}</text>
+            <text x="382" y={y + 41} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{note}</text>
+          </g>
+        ))}
+        {/* NAT GW indicators */}
+        <text x="134" y="156" textAnchor="middle" fontSize="7.5" fill="#f59e0b">↑ NAT Gateway (in public subnet)</text>
+        <text x="382" y="156" textAnchor="middle" fontSize="7.5" fill="#f59e0b">↑ NAT Gateway (in public subnet)</text>
+        {/* Route legend */}
+        <text x="260" y="292" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Public: 0.0.0.0/0 → IGW  ·  Private: 0.0.0.0/0 → NAT GW  ·  Local: 10.0.0.0/16 → local (auto)</text>
+        <defs>
+          <marker id="arrvpc" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Always deploy across ≥ 2 AZs — if one data center fails, the other AZ keeps serving traffic. Only the load balancer lives in the public subnet." />
+    </figure>
+  );
+}
+
+function S3ArchitectureDiagram() {
+  const classes = [
+    { label: "Standard", avail: "99.99%", retrieval: "instant", costHint: "highest", color: "#10b981" },
+    { label: "Intelligent-Tiering", avail: "99.9%", retrieval: "instant", costHint: "auto-moves data", color: "#06b6d4" },
+    { label: "Standard-IA", avail: "99.9%", retrieval: "instant", costHint: "retrieval fee", color: "#3b82f6" },
+    { label: "Glacier Instant", avail: "99.9%", retrieval: "ms", costHint: "cheap storage", color: "#6366f1" },
+    { label: "Glacier Deep Archive", avail: "99.99%", retrieval: "12 hrs", costHint: "cheapest", color: "#f59e0b" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 290" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">S3 Storage Architecture — data model, access control & storage classes</text>
+        {/* Bucket */}
+        <rect x="16" y="26" width="200" height="130" rx="6" fill="#10b98108" stroke="#10b98155" strokeWidth="1.5"/>
+        <text x="116" y="44" textAnchor="middle" fontSize="9" fontWeight="600" fill="#10b981">S3 Bucket</text>
+        <text x="116" y="58" textAnchor="middle" fontSize="8" fill="var(--muted)">globally unique name</text>
+        {/* Object anatomy */}
+        <rect x="28" y="64" width="176" height="82" rx="4" fill="color-mix(in oklab, var(--elevated) 60%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="40" y="78" fontSize="8" fontWeight="600" fill="var(--text)">Object anatomy</text>
+        <text x="40" y="92" fontSize="7.5" fontFamily="monospace" fill="#06b6d4">Key:  photos/2024/jan/img.jpg</text>
+        <text x="40" y="104" fontSize="7.5" fill="var(--muted)">  (no real folders — slash in key name)</text>
+        <text x="40" y="116" fontSize="7.5" fontFamily="monospace" fill="#3b82f6">Data: 0 B → 5 TB</text>
+        <text x="40" y="128" fontSize="7.5" fontFamily="monospace" fill="#6366f1">Metadata: content-type, custom tags</text>
+        <text x="40" y="140" fontSize="7.5" fontFamily="monospace" fill="#f59e0b">Version ID: (if versioning enabled)</text>
+        {/* Access control stack */}
+        <rect x="232" y="26" width="272" height="130" rx="6" fill="#6366f108" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="368" y="44" textAnchor="middle" fontSize="9" fontWeight="600" fill="#818cf8">Access control layers</text>
+        {[
+          { label: "Block Public Access", note: "account + bucket level safety net", color: "#ef4444" },
+          { label: "Bucket Policy (JSON)", note: "resource-based, cross-account grants", color: "#f59e0b" },
+          { label: "IAM Policy", note: "identity-based, who in your account", color: "#3b82f6" },
+          { label: "ACL (legacy)", note: "avoid for new buckets", color: "#94a3b8" },
+        ].map(({ label, note, color }, i) => (
+          <g key={label}>
+            <rect x="242" y={54 + i * 26} width="252" height="20" rx="3" fill={`${color}18`} stroke={`${color}55`} strokeWidth="1"/>
+            <text x="252" y={67 + i * 26} fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            <text x="252" y={78 + i * 26} fontSize="7" fill="var(--muted)">{note}</text>
+          </g>
+        ))}
+        {/* Storage classes */}
+        <text x="260" y="174" textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--text)">Storage classes — lifecycle rules move data automatically</text>
+        {classes.map(({ label, avail, retrieval, costHint, color }, i) => (
+          <g key={label}>
+            <rect x={16 + i * 98} y="180" width="92" height="54" rx="4" fill={`${color}18`} stroke={`${color}66`} strokeWidth="1.2"/>
+            <text x={62 + i * 98} y="196" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={color}>{label}</text>
+            <text x={62 + i * 98} y="208" textAnchor="middle" fontSize="7" fill="var(--muted)">{avail}</text>
+            <text x={62 + i * 98} y="220" textAnchor="middle" fontSize="7" fill="var(--muted)">retrieve: {retrieval}</text>
+            <text x={62 + i * 98} y="232" textAnchor="middle" fontSize="7" fill={color}>{costHint}</text>
+          </g>
+        ))}
+        {/* Lifecycle arrow */}
+        <line x1="108" y1="260" x2="498" y2="260" stroke="var(--muted)" strokeWidth="1" markerEnd="url(#arrs3)"/>
+        <text x="260" y="256" textAnchor="middle" fontSize="7.5" fill="var(--muted)">time / access frequency →</text>
+        <text x="30" y="280" fontSize="7.5" fill="var(--muted)">30 days → IA</text>
+        <text x="180" y="280" fontSize="7.5" fill="var(--muted)">90 days → Glacier Instant</text>
+        <text x="340" y="280" fontSize="7.5" fill="var(--muted)">365 days → Deep Archive or expire</text>
+        <defs>
+          <marker id="arrs3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Lifecycle rules are free money — automatically transitioning old objects to Glacier Deep Archive costs 95% less than Standard with zero application changes" />
+    </figure>
+  );
+}
+
+function RdsArchitectureDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 280" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">RDS High Availability — Multi-AZ failover & read replica scaling</text>
+        {/* App tier */}
+        <rect x="196" y="26" width="128" height="36" rx="5" fill="#3b82f61a" stroke="#3b82f666" strokeWidth="1.5"/>
+        <text x="260" y="44" textAnchor="middle" fontSize="9" fontWeight="600" fill="#60a5fa">Application tier</text>
+        <text x="260" y="56" textAnchor="middle" fontSize="7.5" fill="var(--muted)">writes to primary endpoint</text>
+        {/* RDS Proxy */}
+        <rect x="196" y="78" width="128" height="28" rx="4" fill="#f59e0b1a" stroke="#f59e0b55" strokeWidth="1"/>
+        <text x="260" y="95" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#fbbf24">RDS Proxy</text>
+        <line x1="260" y1="62" x2="260" y2="78" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arrrds)"/>
+        {/* Primary */}
+        <rect x="160" y="122" width="120" height="56" rx="5" fill="#10b9811a" stroke="#10b98166" strokeWidth="1.5"/>
+        <text x="220" y="142" textAnchor="middle" fontSize="9" fontWeight="600" fill="#10b981">Primary (AZ-a)</text>
+        <text x="220" y="155" textAnchor="middle" fontSize="8" fontFamily="monospace" fill="var(--muted)">rw.cluster.rds</text>
+        <text x="220" y="167" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Multi-AZ: sync repl.</text>
+        <line x1="240" y1="106" x2="220" y2="122" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arrrds)"/>
+        {/* Standby */}
+        <rect x="16" y="122" width="120" height="56" rx="5" fill="#6366f11a" stroke="#6366f166" strokeWidth="1.5"/>
+        <text x="76" y="142" textAnchor="middle" fontSize="9" fontWeight="600" fill="#818cf8">Standby (AZ-b)</text>
+        <text x="76" y="155" textAnchor="middle" fontSize="7.5" fill="var(--muted)">sync replica</text>
+        <text x="76" y="167" textAnchor="middle" fontSize="7.5" fill="#ef4444">NOT readable</text>
+        <line x1="160" y1="150" x2="136" y2="150" stroke="#6366f1" strokeWidth="1.2" markerEnd="url(#arrrds)"/>
+        <text x="148" y="143" textAnchor="middle" fontSize="7" fill="#818cf8">sync</text>
+        {/* Failover arrow */}
+        <path d="M76 122 Q76 96 196 96" fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="5 3" markerEnd="url(#arrrds)"/>
+        <text x="130" y="100" textAnchor="middle" fontSize="7.5" fill="#ef4444">auto failover ~60s</text>
+        {/* Read replicas */}
+        <rect x="308" y="122" width="120" height="56" rx="5" fill="#3b82f61a" stroke="#3b82f666" strokeWidth="1.5"/>
+        <text x="368" y="142" textAnchor="middle" fontSize="9" fontWeight="600" fill="#60a5fa">Read Replica 1</text>
+        <text x="368" y="155" textAnchor="middle" fontSize="8" fontFamily="monospace" fill="var(--muted)">ro.cluster.rds</text>
+        <text x="368" y="167" textAnchor="middle" fontSize="7.5" fill="var(--muted)">async repl.</text>
+        <rect x="384" y="122" width="120" height="56" rx="5" fill="#3b82f61a" stroke="#3b82f633" strokeWidth="1" strokeDasharray="3 2"/>
+        <text x="444" y="142" textAnchor="middle" fontSize="9" fontWeight="600" fill="#60a5fa">Read Replica 2</text>
+        <text x="444" y="167" textAnchor="middle" fontSize="7.5" fill="var(--muted)">up to 15 (Aurora)</text>
+        <line x1="280" y1="150" x2="308" y2="150" stroke="#3b82f6" strokeWidth="1.2" markerEnd="url(#arrrds)"/>
+        <text x="294" y="143" textAnchor="middle" fontSize="7" fill="#3b82f6">async</text>
+        {/* Security */}
+        <rect x="16" y="196" width="488" height="72" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="212" fontSize="9" fontWeight="600" fill="var(--text)">Security layers (always use all three)</text>
+        {[
+          { label: "Encryption at rest", detail: "KMS key encrypts data, WAL, snapshots, replicas — enable at creation (can't be added later)", color: "#10b981" },
+          { label: "SSL in transit", detail: "rds.force_ssl=1 in parameter group; psql sslmode=require in connection string", color: "#3b82f6" },
+          { label: "IAM auth / Secrets Manager", detail: "No plaintext passwords — use generate-db-auth-token (15 min TTL) or auto-rotate via Secrets Manager", color: "#6366f1" },
+        ].map(({ label, detail, color }, i) => (
+          <g key={label}>
+            <text x="30" y={226 + i * 16} fontSize="8" fontWeight="600" fill={color}>{label}: </text>
+            <text x="160" y={226 + i * 16} fontSize="7.5" fill="var(--muted)">{detail}</text>
+          </g>
+        ))}
+        <defs>
+          <marker id="arrrds" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Multi-AZ is for HA (automatic failover, standby not readable). Read replicas are for scale (async, readable, promote manually). Use RDS Proxy to absorb Lambda connection bursts." />
+    </figure>
+  );
+}
+
+function AlbAsgDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 290" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text)">ALB + Auto Scaling Group — horizontal scaling on AWS</text>
+        {/* Internet */}
+        <rect x="210" y="26" width="100" height="22" rx="4" fill="#ef44441a" stroke="#ef444455" strokeWidth="1"/>
+        <text x="260" y="40" textAnchor="middle" fontSize="8" fill="#ef4444">Internet traffic</text>
+        <line x1="260" y1="48" x2="260" y2="58" stroke="var(--muted)" strokeWidth="1.2" markerEnd="url(#arralb)"/>
+        {/* ALB */}
+        <rect x="130" y="58" width="260" height="34" rx="5" fill="#f59e0b1a" stroke="#f59e0b66" strokeWidth="1.5"/>
+        <text x="260" y="73" textAnchor="middle" fontSize="9" fontWeight="600" fill="#fbbf24">Application Load Balancer (Layer 7)</text>
+        <text x="260" y="85" textAnchor="middle" fontSize="7.5" fill="var(--muted)">/api/* → api-tg  ·  /* → web-tg  ·  health check /health every 30s</text>
+        {/* ASG */}
+        <rect x="16" y="108" width="488" height="112" rx="6" fill="#6366f108" stroke="#6366f155" strokeWidth="1.5" strokeDasharray="5 3"/>
+        <text x="30" y="124" fontSize="8.5" fontWeight="600" fill="#818cf8">Auto Scaling Group  (min: 2  desired: 3  max: 8)</text>
+        {/* Instances */}
+        {[
+          { x: 30, label: "EC2 :AZ-a", status: "healthy", color: "#10b981" },
+          { x: 178, label: "EC2 :AZ-b", status: "healthy", color: "#10b981" },
+          { x: 326, label: "EC2 :AZ-a", status: "healthy", color: "#10b981" },
+          { x: 400, label: "EC2 scaling…", status: "launching", color: "#f59e0b" },
+        ].map(({ x, label, status, color }) => (
+          <g key={label}>
+            <rect x={x} y="132" width="136" height="72" rx="5" fill={`${color}18`} stroke={`${color}66`} strokeWidth="1.2"/>
+            <text x={x + 68} y="150" textAnchor="middle" fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            <text x={x + 68} y="163" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Launch Template</text>
+            <text x={x + 68} y="175" textAnchor="middle" fontSize="7.5" fill="var(--muted)">AMI + user-data + SG</text>
+            <text x={x + 68} y="187" textAnchor="middle" fontSize="7.5" fill="var(--muted)">IAM role + EBS</text>
+            <text x={x + 68} y="199" textAnchor="middle" fontSize="8" fill={color}>{status}</text>
+          </g>
+        ))}
+        {/* Arrows from ALB to ASG */}
+        <line x1="200" y1="92" x2="120" y2="132" stroke="var(--muted)" strokeWidth="1" markerEnd="url(#arralb)"/>
+        <line x1="260" y1="92" x2="260" y2="132" stroke="var(--muted)" strokeWidth="1" markerEnd="url(#arralb)"/>
+        <line x1="320" y1="92" x2="380" y2="132" stroke="var(--muted)" strokeWidth="1" markerEnd="url(#arralb)"/>
+        {/* Scaling policy */}
+        <rect x="16" y="234" width="488" height="46" rx="4" fill="color-mix(in oklab, var(--elevated) 55%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="30" y="250" fontSize="8.5" fontWeight="600" fill="var(--text)">Scaling policies</text>
+        {[
+          { label: "Target Tracking", detail: "maintain CPU at 50% — AWS manages alarms automatically (recommended default)", color: "#10b981" },
+          { label: "Step Scaling", detail: "CPU 70-90% → +2 instances · CPU >90% → +4 instances (manual alarm setup)", color: "#3b82f6" },
+          { label: "Scheduled", detail: "scale to 6 at 8AM weekdays, scale to 2 at 8PM — predictable traffic patterns", color: "#6366f1" },
+        ].map(({ label, detail, color }, i) => (
+          <text key={label} x="30" y={262 + i * 11} fontSize="7.5" fill={i === 0 ? color : "var(--muted)"}><tspan fontWeight="600" fill={color}>{label}: </tspan>{detail}</text>
+        ))}
+        <defs>
+          <marker id="arralb" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/></marker>
+        </defs>
+      </svg>
+      <Caption text="Target tracking is the recommended default — set CPU target at 50% and AWS automatically adds/removes instances as needed, no manual alarm configuration required" />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -1589,6 +1886,11 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-cli-tool": return <CliToolDiagram />;
     case "devops-cloud-models": return <CloudModelsDiagram />;
     case "devops-iam-model": return <IamModelDiagram />;
+    case "devops-ec2-lifecycle": return <Ec2LifecycleDiagram />;
+    case "devops-vpc-design": return <VpcDesignDiagram />;
+    case "devops-s3-architecture": return <S3ArchitectureDiagram />;
+    case "devops-rds-architecture": return <RdsArchitectureDiagram />;
+    case "devops-alb-asg": return <AlbAsgDiagram />;
     default: return null;
   }
 }
