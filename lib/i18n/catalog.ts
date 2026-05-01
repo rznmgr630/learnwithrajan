@@ -272,6 +272,46 @@ export const UI_STRINGS = {
     np: "इन्जिनियरिङ रोडम्याप",
     jp: "エンジニア向けロードマップ",
   },
+  "hub.programming.groupFrontend": {
+    en: "Frontend",
+    np: "फ्रन्टएन्ड",
+    jp: "フロントエンド",
+  },
+  "hub.programming.groupFrontendHint": {
+    en: "Browser UI, React, and Next.js App Router.",
+    np: "ब्राउजर UI, React, र Next.js App Router।",
+    jp: "ブラウザ UI・React・Next.js App Router。",
+  },
+  "hub.programming.groupBackend": {
+    en: "Backend",
+    np: "ब्याकएन्ड",
+    jp: "バックエンド",
+  },
+  "hub.programming.groupBackendHint": {
+    en: "System design concepts and server-side frameworks.",
+    np: "प्रणाली डिजाइन र सर्भर-साइड फ्रेमवर्क।",
+    jp: "システム設計の考え方とサーバー側フレームワーク。",
+  },
+  "hub.programming.groupDevops": {
+    en: "DevOps & platforms",
+    np: "DevOps र प्लेटफर्म",
+    jp: "DevOps・プラットフォーム",
+  },
+  "hub.programming.groupDevopsHint": {
+    en: "Shipping, infrastructure, and cloud fundamentals.",
+    np: "डिप्लोइ, पूर्वाधार, र क्लाउड आधार।",
+    jp: "リリース・インフラ・クラウドの基礎。",
+  },
+  "hub.programming.groupTools": {
+    en: "Tools & workflows",
+    np: "उपकरण र कार्यप्रवाह",
+    jp: "ツールとワークフロー",
+  },
+  "hub.programming.groupToolsHint": {
+    en: "Version control and everyday engineering habits.",
+    np: "संस्करण नियन्त्रण र दैनिक इन्जिनियरिङ बानी।",
+    jp: "バージョン管理と日々の開発の型。",
+  },
   "hub.sectionLanguage": {
     en: "Language",
     np: "भाषा",
