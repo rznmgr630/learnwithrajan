@@ -4,16 +4,19 @@ import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { useJapaneseN4Progress } from "@/hooks/use-japanese-n4-progress";
+import { useJapaneseN3Progress } from "@/hooks/use-japanese-n3-progress";
 import { JP_TOTAL_DAYS } from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { JP_N4_TOTAL_DAYS } from "@/lib/japanese-learning/n4/japanese-n4-data";
+import { JP_N3_TOTAL_DAYS } from "@/lib/japanese-learning/n3/japanese-n3-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 
-const gridClass = "grid gap-4 sm:grid-cols-2";
+const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
 
 export function LanguageTracks() {
   const { t } = useLocale();
   const jp = useJapaneseN5Progress();
   const jpN4 = useJapaneseN4Progress();
+  const jpN3 = useJapaneseN3Progress();
 
   return (
     <div className={gridClass}>
@@ -77,6 +80,40 @@ export function LanguageTracks() {
             <div
               className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
               style={{ width: `${jpN4.percent}%` }}
+            />
+          </div>
+        </div>
+        <span className="mt-6 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+          {t("hub.backend.cta")}
+        </span>
+      </Link>
+
+      <Link href="/learn/japanese-n3" className={learnHubCardClass}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+              {t("hub.japaneseN3.title")}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.japaneseN3.subtitle")}</p>
+          </div>
+          <span
+            className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+            suppressHydrationWarning
+          >
+            {jpN3.percent}%
+          </span>
+        </div>
+        <div className="mt-6" suppressHydrationWarning>
+          <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+            <span>{t("hub.backend.progress")}</span>
+            <span className="tabular-nums text-[var(--muted)]">
+              {jpN3.completedCount}/{JP_N3_TOTAL_DAYS} {t("hub.backend.days")}
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
+              style={{ width: `${jpN3.percent}%` }}
             />
           </div>
         </div>
