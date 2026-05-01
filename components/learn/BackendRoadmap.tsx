@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { RichText } from "@/components/learn/RichText";
+import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { ROADMAP_WEEKS, TOTAL_DAYS } from "@/lib/challenge-data";
@@ -75,7 +77,9 @@ export function BackendRoadmap() {
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
-                <span className="flex-1 font-medium text-[var(--text)]">{pickLocalized(week.title, locale)}</span>
+                <span className="flex-1 font-medium text-[var(--text)]">
+                  <RichText text={pickLocalized(week.title, locale)} />
+                </span>
                 <span className="text-sm tabular-nums text-[var(--muted)]">
                   {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
@@ -137,12 +141,12 @@ export function BackendRoadmap() {
                           </div>
                           <button
                             type="button"
-                            aria-label={`Open details for day ${d.day}: ${pickLocalized(d.title, locale)}`}
+                            aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                             className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                             onClick={() => setDetailDay(d.day)}
                           >
                             <h3 className="text-sm font-semibold leading-snug text-[var(--text)]">
-                              {pickLocalized(d.title, locale)}
+                              <RichText text={pickLocalized(d.title, locale)} />
                             </h3>
                             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
                               {d.tags.map((tag) => (
@@ -150,7 +154,7 @@ export function BackendRoadmap() {
                                   key={`${d.day}-${tag.slug}`}
                                   className={TAG_PILL}
                                 >
-                                  {pickLocalized(tag.label, locale)}
+                                  <RichText text={pickLocalized(tag.label, locale)} />
                                 </span>
                               ))}
                             </div>
