@@ -1128,6 +1128,121 @@ export const UI_STRINGS = {
     np: "उत्तर हेर्न प्रश्नमा थिच्नुहोस्।",
     jp: "質問をタップして回答を確認しましょう。",
   },
+  "jpDetail.tag.jlptN3": {
+    en: "JLPT N3",
+    np: "JLPT N3",
+    jp: "JLPT N3",
+  },
+  "jpDetail.tag.n3Grammar": {
+    en: "N3 Grammar Guide",
+    np: "N3 व्याकरण गाइड",
+    jp: "N3文法ガイド",
+  },
+  "japaneseN3Day.trackLabel": {
+    en: "JLPT N3 · Grammar track",
+    np: "JLPT N3 · व्याकरण ट्र्याक",
+    jp: "JLPT N3 · 文法トラック",
+  },
+  "hub.japaneseN3.title": {
+    en: "Japanese · JLPT N3",
+    np: "जापानी · JLPT N3",
+    jp: "日本語 · JLPT N3",
+  },
+  "hub.japaneseN3.subtitle": {
+    en: "N3 Grammar Guide · 28-day syllabus · keigo · conditionals · cause-effect",
+    np: "N3 ग्रामर गाइड · २८-दिने पाठ्यक्रम · केइगो · सर्त · कारण-प्रभाव",
+    jp: "N3文法ガイド · 28日シラバス · 敬語 · 条件 · 因果関係",
+  },
+  "jpN3Roadmap.title": {
+    en: "Japanese · JLPT N3 in 28 days",
+    np: "२८ दिनमा जापानी · JLPT N3",
+    jp: "28日で日本語 · JLPT N3",
+  },
+  "jpN3Roadmap.subtitle": {
+    en: "N3 grammar patterns · conditionals · keigo · cause-effect · reading strategies · kanji · MCQ · listening cues",
+    np: "N3 व्याकरण ढाँचाहरू · सर्त · केइगो · कारण-प्रभाव · पढाइ रणनीति · कांजी · बहुविकल्प · सुन्ने संकेत",
+    jp: "N3文法パターン · 条件形 · 敬語 · 因果関係 · 読解戦略 · 漢字 · MCQ · 聴解のヒント",
+  },
+  "jpN3Roadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "jpN3Roadmap.days": {
+    en: "days",
+    np: "दिन",
+    jp: "日",
+  },
+  "jpN3Roadmap.doneSlash": {
+    en: "done",
+    np: "पूरा",
+    jp: "完了",
+  },
+  "jpN3Roadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "jpN3Roadmap.weeklyTestsProgress": {
+    en: "Weekly tests + full mock:",
+    np: "साप्ताहिक परीक्षा र पूर्ण मॉक:",
+    jp: "ウィークリーテストと総合模試:",
+  },
+  "jpN3Roadmap.markedDone": {
+    en: "marked done",
+    np: "पूरा चिनो भएको",
+    jp: "完了として記録",
+  },
+  "jpN3Roadmap.dayPrefix": {
+    en: "Day",
+    np: "दिन",
+    jp: "Day",
+  },
+  "jpN3Roadmap.weeklyRecapLabel": {
+    en: "Weekly recap · JLPT-style unit test",
+    np: "साप्ताहिक पुनरावलोकन · JLPT-शैलीको युनिट टेस्ट",
+    jp: "週の復習 · JLPT形式のユニットテスト",
+  },
+  "jpN3Roadmap.fivePapersBlurb": {
+    en: "Five papers (Test 1–5), 20 MCQs each · vocab · kanji · grammar · reading · listening (embedded clip + links) · submit to score",
+    np: "पाँच वटा पेपर (टेस्ट १–५), प्रत्येकमा २० बहुविकल्प · शब्दभण्डार · कांजी · व्याकरण · पढाइ · सुन्ने (इम्बेड क्लिप + लिंक) · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "5枚のペーパー（テスト1〜5）、各20問のMCQ · 語彙 · 漢字 · 文法 · 読解 · 聴解（埋め込み＋リンク） · 採点は提出後",
+  },
+  "jpN3Roadmap.singlePaperBlurb": {
+    en: "Covers Days {from}–{to} · vocab · grammar · reading · listening · submit to score",
+    np: "दिन {from}–{to} समेट्छ · शब्द · व्याकरण · पढाइ · सुन्ने · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "Day {from}–{to} をカバー · 語彙 · 文法 · 読解 · 聴解 · 採点は提出後",
+  },
+  "jpN3Roadmap.done": {
+    en: "Done",
+    np: "पूरा",
+    jp: "完了",
+  },
+  "jpN3Roadmap.openUnitTest": {
+    en: "Open unit test",
+    np: "युनिट टेस्ट खोल्नुहोस्",
+    jp: "ユニットテストを開く",
+  },
+  "jpN3Roadmap.courseFinale": {
+    en: "Course finale · JLPT N3 format",
+    np: "पाठ्यक्रम अन्त्य · JLPT N3 ढाँचा",
+    jp: "総仕上げ · JLPT N3形式",
+  },
+  "jpN3Roadmap.fullMockBlurb": {
+    en: "One paper covering Days {from}–{to} · language knowledge · grammar · reading · listening · embedded listening clip · submit to score",
+    np: "दिन {from}–{to} समेट्ने एक पेपर · भाषा ज्ञान · व्याकरण · पढाइ · सुन्ने · इम्बेड सुन्ने क्लिप · स्कोरका लागि पेश गर्नुहोस्",
+    jp: "Day {from}–{to} の一枚 · 言語知識 · 文法 · 読解 · 聴解 · 埋め込み聴解 · 採点は提出後",
+  },
+  "jpN3Roadmap.openFullMock": {
+    en: "Open full mock exam",
+    np: "पूर्ण मॉक परीक्षा खोल्नुहोस्",
+    jp: "総合模試を開く",
+  },
+  "jpN3Roadmap.bottomBlurb": {
+    en: "Tick days as you finish them — progress stays in this browser. Each topic covers an N3 grammar pattern with conversation, grammar bullets, usage tables, kanji cards, MCQs, and listening tasks. After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam. Keigo (honorific and humble forms), cause-effect expressions (おかげで/せいで/によって), and complex conditionals are the heart of N3 — keep a dedicated grammar reference open while studying.",
+    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक विषयले N3 व्याकरण ढाँचासहित संवाद, व्याकरण बुलेट, प्रयोग तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट; अन्त्यमा पूर्ण मॉक। केइगो, कारण-प्रभाव अभिव्यक्ति र जटिल सर्त N3 को मुटु हुन्।",
+    jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各トピックはN3文法パターンを中心に会話・文法ポイント・使い分け表・漢字カード・MCQ・聴解タスクを含みます。各週末はJLPT形式のウィークリーテスト、最後は総合模試。敬語（尊敬語・謙譲語）、因果表現（おかげで・せいで・によって）、複雑な条件形はN3の核心なので、学習中は文法参考書を常に開いておきましょう。",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type UiStringKey = keyof typeof UI_STRINGS;
