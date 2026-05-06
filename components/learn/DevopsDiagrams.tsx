@@ -63,6 +63,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-jenkins-pipeline",
   "devops-jenkins-triggers",
   "devops-cicd-testing",
+  "devops-deploy-strategies",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2490,6 +2491,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-jenkins-pipeline": return <JenkinsPipelineDiagram />;
     case "devops-jenkins-triggers": return <JenkinsTriggersDiagram />;
     case "devops-cicd-testing": return <CicdTestingDiagram />;
+    case "devops-deploy-strategies": return <DeployStrategiesDiagram />;
     default: return null;
   }
 }
@@ -3268,6 +3270,79 @@ function CicdTestingDiagram() {
         })}
       </svg>
       <Caption text="Write many fast unit tests, fewer integration tests, and very few E2E tests. Add a coverage gate so the build fails if coverage drops below your threshold." />
+    </figure>
+  );
+}
+
+function DeployStrategiesDiagram() {
+  const strategies = [
+    {
+      label: "Recreate",
+      color: "#f87171",
+      steps: ["stop v1", "gap ⚡", "start v2"],
+      note: "downtime",
+      cost: "1×",
+    },
+    {
+      label: "Rolling",
+      color: "#fbbf24",
+      steps: ["v1 v1 v1 v1", "v2 v1 v1 v1", "v2 v2 v2 v2"],
+      note: "zero DT",
+      cost: "1×",
+    },
+    {
+      label: "Blue / Green",
+      color: "#34d399",
+      steps: ["blue (live)", "switch LB →", "green (live)"],
+      note: "instant rb",
+      cost: "2×",
+    },
+    {
+      label: "Canary",
+      color: "#a78bfa",
+      steps: ["100% v1", "5% v2 soak", "100% v2"],
+      note: "gradual",
+      cost: "1.1×",
+    },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 500 230" className="w-full" aria-label="Deployment strategies — recreate, rolling, blue/green, canary">
+        <text x="250" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Deployment Strategies</text>
+
+        {strategies.map((s, si) => {
+          const bx = 10 + si * 122;
+          return (
+            <g key={si}>
+              {/* Strategy label */}
+              <rect x={bx} y="24" width="112" height="18" rx="4" fill={s.color} fillOpacity="0.2" stroke={s.color} strokeWidth="1" />
+              <text x={bx + 56} y="36" textAnchor="middle" fontSize="9" fontWeight="700" fill={s.color}>{s.label}</text>
+
+              {/* Steps */}
+              {s.steps.map((step, i) => (
+                <g key={i}>
+                  <rect x={bx} y={50 + i * 44} width="112" height="34" rx="5" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+                  <text x={bx + 56} y={71 + i * 44} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{step}</text>
+                  {i < s.steps.length - 1 && (
+                    <text x={bx + 56} y={90 + i * 44} textAnchor="middle" fontSize="9" fill="#475569">↓</text>
+                  )}
+                </g>
+              ))}
+
+              {/* Note + cost */}
+              <rect x={bx} y="186" width="52" height="18" rx="3" fill="#1e293b" stroke={s.color} strokeWidth="1" />
+              <text x={bx + 26} y="198" textAnchor="middle" fontSize="7" fill={s.color}>{s.note}</text>
+
+              <rect x={bx + 60} y="186" width="52" height="18" rx="3" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+              <text x={bx + 86} y="198" textAnchor="middle" fontSize="7" fill="#94a3b8">infra {s.cost}</text>
+            </g>
+          );
+        })}
+
+        {/* Legend */}
+        <text x="10" y="222" fontSize="7.5" fill="#64748b">DT = downtime  ·  rb = rollback  ·  infra cost = environment multiplier vs single deploy</text>
+      </svg>
+      <Caption text="Rolling and canary give zero downtime with 1× infra cost. Blue/green gives the fastest rollback but needs 2× capacity. Recreate is only acceptable for dev/test environments." />
     </figure>
   );
 }
