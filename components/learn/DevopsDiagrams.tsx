@@ -61,6 +61,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-cicd-concepts",
   "devops-jenkins-architecture",
   "devops-jenkins-pipeline",
+  "devops-jenkins-triggers",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2486,6 +2487,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-cicd-concepts": return <CicdConceptsDiagram />;
     case "devops-jenkins-architecture": return <JenkinsArchitectureDiagram />;
     case "devops-jenkins-pipeline": return <JenkinsPipelineDiagram />;
+    case "devops-jenkins-triggers": return <JenkinsTriggersDiagram />;
     default: return null;
   }
 }
@@ -3139,6 +3141,76 @@ function JenkinsPipelineDiagram() {
         <text x="475" y="240" textAnchor="middle" fontSize="6.5" fill="var(--muted)">timeout · retry</text>
       </svg>
       <Caption text="Declarative Jenkinsfiles define the full pipeline in a single version-controlled file — stages flow left to right, and post{} always runs for notifications and cleanup." />
+    </figure>
+  );
+}
+
+function JenkinsTriggersDiagram() {
+  const triggers = [
+    { label: "Webhook", color: "#34d399", icon: "⚡", desc: "GitHub → Jenkins HTTP push", detail: "instant · most efficient" },
+    { label: "SCM Poll", color: "#38bdf8", icon: "🔄", desc: "Jenkins polls Git repo", detail: "H/5 * * * * (cron)" },
+    { label: "Cron", color: "#fbbf24", icon: "⏰", desc: "time-based schedule", detail: "@daily · @weekly · H 2 * * *" },
+    { label: "Upstream", color: "#a78bfa", icon: "🔗", desc: "triggered by another job", detail: "build-chain · fan-out" },
+  ];
+  const flow = [
+    { label: "git push", color: "#475569" },
+    { label: "GitHub", color: "#6b7280" },
+    { label: "Webhook POST /github-webhook/", color: "#34d399" },
+    { label: "Jenkins", color: "#fbbf24" },
+    { label: "Pipeline runs", color: "#c084fc" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 255" className="w-full" aria-label="Jenkins trigger types and webhook flow">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Jenkins Build Triggers</text>
+
+        {/* Trigger cards */}
+        {triggers.map((t, i) => {
+          const x = 10 + i * 128;
+          return (
+            <g key={i}>
+              <rect x={x} y="24" width="118" height="72" rx="7" fill="#0f172a" stroke={t.color} strokeWidth="1.5" />
+              <text x={x + 59} y="42" textAnchor="middle" fontSize="13">{t.icon}</text>
+              <text x={x + 59} y="56" textAnchor="middle" fontSize="9" fontWeight="700" fill={t.color}>{t.label}</text>
+              <text x={x + 59} y="69" textAnchor="middle" fontSize="7" fill="var(--muted)">{t.desc}</text>
+              <text x={x + 59} y="82" textAnchor="middle" fontSize="7" fill="#64748b">{t.detail}</text>
+            </g>
+          );
+        })}
+
+        {/* Webhook flow */}
+        <text x="265" y="115" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--muted)">Recommended: GitHub Webhook flow</text>
+        {flow.map((f, i) => {
+          const x = 15 + i * 102;
+          return (
+            <g key={i}>
+              <rect x={x} y="120" width="92" height="18" rx="4" fill="#1e293b" stroke={f.color} strokeWidth="1" />
+              <text x={x + 46} y="132" textAnchor="middle" fontSize="7" fill={f.color}>{f.label}</text>
+              {i < flow.length - 1 && (
+                <text x={x + 96} y="132" textAnchor="middle" fontSize="9" fill="#475569">›</text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Multibranch pipeline */}
+        <rect x="30" y="152" width="230" height="48" rx="7" fill="#1e293b" stroke="#38bdf8" strokeWidth="1.5" />
+        <text x="145" y="168" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#38bdf8">Multibranch Pipeline</text>
+        <text x="145" y="181" textAnchor="middle" fontSize="7.5" fill="var(--muted)">auto-discovers branches + PRs</text>
+        <text x="145" y="192" textAnchor="middle" fontSize="7" fill="#64748b">Jenkinsfile per branch · orphan pruning</text>
+
+        {/* Branch strategy */}
+        <rect x="270" y="152" width="230" height="48" rx="7" fill="#1e293b" stroke="#a78bfa" strokeWidth="1.5" />
+        <text x="385" y="168" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#a78bfa">Branch-based when{ } logic</text>
+        <text x="385" y="181" textAnchor="middle" fontSize="7.5" fill="var(--muted)">when {'{ branch \'main\' }'} → deploy prod</text>
+        <text x="385" y="192" textAnchor="middle" fontSize="7" fill="#64748b">feature/* → test only · PR → preview</text>
+
+        {/* ngrok note */}
+        <rect x="30" y="212" width="470" height="30" rx="6" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+        <text x="265" y="225" textAnchor="middle" fontSize="8" fontWeight="600" fill="#fbbf24">Local dev: ngrok http 8080  →  expose Jenkins to GitHub webhooks</text>
+        <text x="265" y="237" textAnchor="middle" fontSize="7.5" fill="var(--muted)">copy ngrok HTTPS URL into GitHub repo Settings → Webhooks → Payload URL</text>
+      </svg>
+      <Caption text="Webhooks are the most efficient trigger — GitHub pushes directly to Jenkins. SCM polling works without inbound firewall rules. Multibranch Pipelines auto-discover all branches." />
     </figure>
   );
 }
