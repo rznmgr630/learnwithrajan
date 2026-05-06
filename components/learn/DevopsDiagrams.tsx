@@ -57,6 +57,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-docker-networking",
   "devops-docker-volumes",
   "devops-docker-compose",
+  "devops-image-registry",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2478,8 +2479,78 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-docker-networking": return <DockerNetworkingDiagram />;
     case "devops-docker-volumes": return <DockerVolumesDiagram />;
     case "devops-docker-compose": return <DockerComposeDiagram />;
+    case "devops-image-registry": return <ImageRegistryDiagram />;
     default: return null;
   }
+}
+
+function ImageRegistryDiagram() {
+  const steps = [
+    { label: "git push", color: "#94a3b8", x: 20 },
+    { label: "docker build", color: "#38bdf8", x: 120 },
+    { label: "trivy scan", color: "#f87171", x: 220 },
+    { label: "docker push", color: "#34d399", x: 320 },
+    { label: "deploy", color: "#a78bfa", x: 420 },
+  ];
+  const registries = [
+    { name: "Docker Hub", note: "public + free tier", color: "#38bdf8" },
+    { name: "Amazon ECR", note: "AWS-native, Snyk scan", color: "#f59e0b" },
+    { name: "GitHub GHCR", note: "GITHUB_TOKEN auth", color: "#818cf8" },
+    { name: "Harbor", note: "self-hosted, OIDC", color: "#34d399" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 230" className="w-full" aria-label="Container image registry push, scan and deploy pipeline">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Image Supply Chain — Build · Scan · Push · Deploy</text>
+
+        {/* Pipeline steps */}
+        {steps.map((s, i) => (
+          <g key={i}>
+            <rect x={s.x} y="26" width="90" height="30" rx="6"
+              fill={`color-mix(in oklab, ${s.color} 15%, transparent)`}
+              stroke={`${s.color}44`} strokeWidth="1.3"/>
+            <text x={s.x + 45} y="45" textAnchor="middle" fontSize="9" fontWeight="700" fill={s.color}>{s.label}</text>
+            {i < steps.length - 1 && (
+              <text x={s.x + 95} y="45" textAnchor="middle" fontSize="11" fill="#475569">→</text>
+            )}
+          </g>
+        ))}
+
+        {/* Scan gate callout */}
+        <rect x="220" y="60" width="90" height="24" rx="4" fill="color-mix(in oklab, #f87171 10%, transparent)" stroke="#f8717133" strokeWidth="1"/>
+        <text x="265" y="76" textAnchor="middle" fontSize="7.5" fill="#f87171">CRITICAL CVE → exit 1</text>
+
+        {/* Tag strategy */}
+        <rect x="16" y="92" width="498" height="28" rx="5" fill="color-mix(in oklab, #6366f1 8%, transparent)" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="105" textAnchor="middle" fontSize="8" fill="var(--muted)">
+          <tspan fontWeight="700" fill="#818cf8">Tag strategy: </tspan>
+          <tspan fill="#f87171">BAD :latest</tspan>
+          {"  "}
+          <tspan fill="#34d399">GOOD :1.4.2  :1.4.2-a3f9c2  (semver + git SHA)</tspan>
+        </text>
+        <text x="265" y="116" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Pin base images to digest · never mutate a published tag · promote SHA tag to semver on release</text>
+
+        {/* Registry options */}
+        <text x="265" y="134" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--fg)">Registry Options</text>
+        {registries.map((r, i) => (
+          <g key={i}>
+            <rect x={20 + i * 122} y="140" width="108" height="36" rx="6"
+              fill={`color-mix(in oklab, ${r.color} 10%, transparent)`}
+              stroke={`${r.color}44`} strokeWidth="1.2"/>
+            <text x={74 + i * 122} y="155" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={r.color}>{r.name}</text>
+            <text x={74 + i * 122} y="168" textAnchor="middle" fontSize="7" fill="var(--muted)">{r.note}</text>
+          </g>
+        ))}
+
+        {/* Multi-arch note */}
+        <rect x="16" y="184" width="498" height="38" rx="5" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        <text x="265" y="198" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">Multi-architecture builds</text>
+        <text x="265" y="212" textAnchor="middle" fontSize="7.5" fill="var(--muted)">docker buildx build --platform linux/amd64,linux/arm64 --push</text>
+        <text x="265" y="218" textAnchor="middle" fontSize="7" fill="var(--muted)">Creates a manifest list → Docker pulls the right arch automatically · Graviton/M1/M2 native</text>
+      </svg>
+      <Caption text="Every image pushed to production should carry an immutable semver+SHA tag, pass a Trivy CRITICAL scan gate, and be built for both amd64 and arm64 to support Graviton and Apple Silicon workers." />
+    </figure>
+  );
 }
 
 function DockerComposeDiagram() {
