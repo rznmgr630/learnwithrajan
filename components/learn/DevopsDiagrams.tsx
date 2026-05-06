@@ -59,6 +59,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-docker-compose",
   "devops-image-registry",
   "devops-cicd-concepts",
+  "devops-jenkins-architecture",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2482,6 +2483,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-docker-compose": return <DockerComposeDiagram />;
     case "devops-image-registry": return <ImageRegistryDiagram />;
     case "devops-cicd-concepts": return <CicdConceptsDiagram />;
+    case "devops-jenkins-architecture": return <JenkinsArchitectureDiagram />;
     default: return null;
   }
 }
@@ -2994,6 +2996,64 @@ function ContainerVsVmDiagram() {
         ))}
       </svg>
       <Caption text="Containers share the host kernel and add only app+libs on top — millisecond startup, MB footprint. VMs run a full guest OS per VM — stronger isolation but seconds to start and GB overhead." />
+    </figure>
+  );
+}
+
+function JenkinsArchitectureDiagram() {
+  const agents = [
+    { label: "Linux Agent", color: "#38bdf8", sub: "docker builds" },
+    { label: "Windows Agent", color: "#a78bfa", sub: "dotnet / MSBuild" },
+    { label: "macOS Agent", color: "#34d399", sub: "Xcode / iOS" },
+  ];
+  const plugins = ["Pipeline", "Git / GitHub", "Docker Pipeline", "Blue Ocean", "Credentials", "Warnings NG"];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 520 260" className="w-full" aria-label="Jenkins master/agent architecture">
+        <text x="260" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Jenkins Master / Agent Architecture</text>
+
+        {/* Master box */}
+        <rect x="170" y="28" width="180" height="64" rx="8" fill="#1e293b" stroke="#fbbf24" strokeWidth="1.5" />
+        <text x="260" y="46" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fbbf24">Jenkins Controller (Master)</text>
+        <text x="260" y="60" textAnchor="middle" fontSize="8" fill="var(--muted)">Scheduler · UI · Job Config</text>
+        <text x="260" y="72" textAnchor="middle" fontSize="8" fill="var(--muted)">REST API · Plugin Manager</text>
+        <text x="260" y="84" textAnchor="middle" fontSize="7.5" fill="#94a3b8">port 8080 (HTTP) · 50000 (JNLP)</text>
+
+        {/* Connector lines from master to agents */}
+        {agents.map((_, i) => {
+          const ax = 50 + i * 160;
+          return <line key={i} x1="260" y1="92" x2={ax + 60} y2="148" stroke="#475569" strokeWidth="1" strokeDasharray="4 2" />;
+        })}
+
+        {/* Agent boxes */}
+        {agents.map((a, i) => {
+          const ax = 20 + i * 160;
+          return (
+            <g key={i}>
+              <rect x={ax} y="148" width="120" height="52" rx="6" fill="#0f172a" stroke={a.color} strokeWidth="1.5" />
+              <text x={ax + 60} y="165" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={a.color}>{a.label}</text>
+              <text x={ax + 60} y="178" textAnchor="middle" fontSize="7.5" fill="var(--muted)">{a.sub}</text>
+              <text x={ax + 60} y="191" textAnchor="middle" fontSize="7" fill="#64748b">SSH / JNLP</text>
+            </g>
+          );
+        })}
+
+        {/* Plugin list */}
+        <text x="260" y="218" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">Essential Plugins</text>
+        {plugins.map((p, i) => {
+          const col = i % 3;
+          const row = Math.floor(i / 3);
+          const px = 90 + col * 120;
+          const py = 230 + row * 14;
+          return (
+            <g key={i}>
+              <rect x={px - 44} y={py - 9} width="88" height="12" rx="3" fill="#1e293b" />
+              <text x={px} y={py} textAnchor="middle" fontSize="7.5" fill="#94a3b8">{p}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <Caption text="The Jenkins controller orchestrates jobs and the UI; build execution runs on distributed agents connected via SSH or JNLP — keeping the controller lightweight." />
     </figure>
   );
 }
