@@ -48,6 +48,9 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-lambda",
   "devops-route53-cloudfront",
   "devops-sg-nacl-waf",
+  "devops-ecs-ecr",
+  "devops-cfn-sdk",
+  "devops-cost-management",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2199,6 +2202,223 @@ function SgNaclWafDiagram() {
   );
 }
 
+function EcsEcrDiagram() {
+  const sources = [
+    { label: "Developer", sub: "git push", color: "#6366f1", x: 30 },
+    { label: "CI/CD Pipeline", sub: "GitHub Actions / CodeBuild", color: "#3b82f6", x: 160 },
+    { label: "ECR Registry", sub: "Private Docker registry\nVuln scanning · lifecycle", color: "#f59e0b", x: 290 },
+    { label: "ECS Service", sub: "Desired count · rolling deploy\nALB · auto scaling", color: "#10b981", x: 420 },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 270" className="w-full" aria-label="ECS and ECR workflow: code to container to service">
+        <text x="265" y="15" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">ECS + ECR — Container Platform Architecture</text>
+
+        {/* Flow row */}
+        {sources.map(({ label, sub, color, x }, i) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              {i > 0 && <line x1={x - 10} y1="58" x2={x + 2} y2="58" stroke={color} strokeWidth="1.2" markerEnd="url(#arrecs)"/>}
+              <rect x={x} y="38" width="110" height={lines.length > 1 ? 44 : 34} rx="5" fill={`${color}18`} stroke={color} strokeWidth="1.2"/>
+              <text x={x + 55} y="54" textAnchor="middle" fontSize="8.5" fontWeight="600" fill={color}>{label}</text>
+              {lines.map((l, j) => <text key={j} x={x + 55} y={66 + j * 11} textAnchor="middle" fontSize="7" fill="var(--muted)">{l}</text>)}
+            </g>
+          );
+        })}
+
+        {/* ECS cluster box */}
+        <rect x="20" y="108" width="490" height="100" rx="6" fill="color-mix(in oklab, #10b981 6%, transparent)" stroke="#10b98133" strokeWidth="1.5"/>
+        <text x="265" y="122" textAnchor="middle" fontSize="9" fontWeight="700" fill="#10b981">ECS Cluster</text>
+
+        {/* Launch types */}
+        {[
+          { label: "Fargate Task", sub: "Serverless · AWS manages EC2\nPay per vCPU/mem-sec · 30s cold start", color: "#10b981", x: 35 },
+          { label: "Fargate Task", sub: "Second replica (Multi-AZ)\nALB routes between tasks", color: "#10b981", x: 185 },
+          { label: "EC2 Task", sub: "Self-managed instances\nCheaper for sustained load", color: "#3b82f6", x: 335 },
+        ].map(({ label, sub, color, x }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={`${label}-${x}`}>
+              <rect x={x} y="130" width="140" height="68" rx="4" fill={`${color}15`} stroke={color} strokeWidth="1"/>
+              <text x={x + 70} y="145" textAnchor="middle" fontSize="8" fontWeight="600" fill={color}>{label}</text>
+              {lines.map((l, i) => <text key={i} x={x + 70} y={157 + i * 11} textAnchor="middle" fontSize="7" fill="var(--muted)">{l}</text>)}
+            </g>
+          );
+        })}
+
+        {/* ALB below */}
+        <line x1="265" y1="210" x2="265" y2="224" stroke="#3b82f688" strokeWidth="1" markerEnd="url(#arrecs)"/>
+        <rect x="120" y="224" width="290" height="20" rx="4" fill="color-mix(in oklab, #3b82f6 12%, transparent)" stroke="#3b82f655" strokeWidth="1.2"/>
+        <text x="265" y="238" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#3b82f6">Application Load Balancer — distributes traffic across tasks</text>
+
+        {/* Key concepts strip */}
+        <rect x="20" y="252" width="490" height="14" rx="3" fill="#6366f10d" stroke="#6366f133" strokeWidth="1"/>
+        {[
+          { k: "Task Def", v: "blueprint (image + CPU/mem + env + role)" },
+          { k: "Service", v: "maintains desired count · rolling deploy" },
+          { k: "Target type", v: "ip (required for Fargate)" },
+        ].map(({ k, v }, i) => (
+          <text key={k} x={28 + i * 170} y="262" fontSize="7" fill="var(--muted)">
+            <tspan fontWeight="700" fill="var(--text)">{k}: </tspan>{v}
+          </text>
+        ))}
+
+        <defs>
+          <marker id="arrecs" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="Build and push to ECR in CI/CD, then ECS pulls the image and runs it as Fargate or EC2 tasks. The Service maintains desired task count and integrates with ALB. Use target type 'ip' (not 'instance') for Fargate." />
+    </figure>
+  );
+}
+
+function CfnSdkDiagram() {
+  const tools = [
+    { label: "AWS CLI", sub: "Terminal · scripts · CI/CD\n--query JMESPath · --profile", color: "#6366f1", x: 20 },
+    { label: "boto3 SDK", sub: "Python application code\nSession · Paginator · Waiter", color: "#3b82f6", x: 185 },
+    { label: "CloudFormation", sub: "IaC — YAML/JSON templates\nStack · Change Set · Drift", color: "#f59e0b", x: 350 },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 250" className="w-full" aria-label="AWS CLI, boto3 SDK, and CloudFormation — three automation tools">
+        <text x="265" y="15" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">AWS Automation Tools</text>
+
+        {tools.map(({ label, sub, color, x }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              <rect x={x} y="24" width="135" height="54" rx="6" fill={`${color}18`} stroke={color} strokeWidth="1.3"/>
+              <text x={x + 67} y="40" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={color}>{label}</text>
+              {lines.map((l, i) => <text key={i} x={x + 67} y={53 + i * 12} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{l}</text>)}
+            </g>
+          );
+        })}
+
+        {/* Arrows all → AWS APIs */}
+        {[87, 252, 417].map(x => (
+          <line key={x} x1={x} y1="79" x2={x} y2="100" stroke="var(--border)" strokeWidth="1" markerEnd="url(#arrcfn)"/>
+        ))}
+
+        <rect x="20" y="100" width="490" height="16" rx="4" fill="color-mix(in oklab, #6366f1 15%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="265" y="112" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">AWS Service APIs (same underlying APIs — different interfaces)</text>
+
+        {/* CloudFormation flow */}
+        <rect x="20" y="128" width="490" height="78" rx="6" fill="color-mix(in oklab, #f59e0b 6%, transparent)" stroke="#f59e0b33" strokeWidth="1.2"/>
+        <text x="265" y="143" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#f59e0b">CloudFormation Stack Lifecycle</text>
+        {[
+          { label: "Template\n(YAML/JSON)", color: "#f59e0b", x: 30 },
+          { label: "Change Set\n(preview diff)", color: "#3b82f6", x: 145 },
+          { label: "Stack\n(deployed)", color: "#10b981", x: 260 },
+          { label: "Drift\n(detect change)", color: "#ef4444", x: 375 },
+          { label: "Delete\n(full teardown)", color: "#6366f1", x: 455 },
+        ].map(({ label, color, x }, i) => {
+          const lines = label.split("\n");
+          return (
+            <g key={label}>
+              {i > 0 && <line x1={x - 8} y1="170" x2={x} y2="170" stroke="var(--border)" strokeWidth="1" markerEnd="url(#arrcfn)"/>}
+              <rect x={x} y="155" width="68" height="34" rx="4" fill={`${color}18`} stroke={color} strokeWidth="1"/>
+              {lines.map((l, j) => <text key={j} x={x + 34} y={168 + j * 12} textAnchor="middle" fontSize="7.5" fontWeight="600" fill={color}>{l}</text>)}
+            </g>
+          );
+        })}
+        <text x="265" y="206" textAnchor="middle" fontSize="7" fill="var(--muted)">Never edit stack resources outside CloudFormation — causes drift · Always review Change Set before execute</text>
+
+        {/* Bottom legend */}
+        <rect x="20" y="218" width="490" height="24" rx="3" fill="#6366f10d" stroke="#6366f133" strokeWidth="1"/>
+        {[
+          { k: "--query", v: "JMESPath filter on CLI output" },
+          { k: "Paginator", v: "auto-handles multi-page API responses" },
+          { k: "Waiter", v: "polls until resource reaches desired state" },
+        ].map(({ k, v }, i) => (
+          <text key={k} x={28 + i * 170} y="233" fontSize="7.5" fill="var(--muted)">
+            <tspan fontWeight="700" fill="var(--text)">{k}: </tspan>{v}
+          </text>
+        ))}
+
+        <defs>
+          <marker id="arrcfn" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="AWS CLI, boto3, and CloudFormation all call the same underlying AWS APIs. Use CLI for scripts and ad-hoc tasks, boto3 for application code, and CloudFormation for repeatable infrastructure — always review a Change Set before executing." />
+    </figure>
+  );
+}
+
+function CostManagementDiagram() {
+  const tools = [
+    { label: "Cost Explorer", sub: "Visualize by service\nregion · tag · type", color: "#6366f1", x: 20 },
+    { label: "AWS Budgets", sub: "Alert at 80%/100%\nactual & forecasted", color: "#ef4444", x: 155 },
+    { label: "Compute Optimizer", sub: "Right-size EC2/Lambda\nunder-utilized instances", color: "#10b981", x: 290 },
+    { label: "Savings Plans", sub: "1yr/3yr commit\nUp to 66–72% off", color: "#f59e0b", x: 420 },
+  ];
+
+  const options = [
+    { label: "On-Demand", pct: "0%", color: "#94a3b8" },
+    { label: "Savings Plan", pct: "Up to 66%", color: "#10b981" },
+    { label: "Reserved", pct: "Up to 72%", color: "#3b82f6" },
+    { label: "Spot", pct: "Up to 90%", color: "#f59e0b" },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 260" className="w-full" aria-label="AWS cost management tools and purchasing options">
+        <text x="265" y="15" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">AWS Cost Management</text>
+
+        {tools.map(({ label, sub, color, x }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              <rect x={x} y="24" width="125" height="48" rx="5" fill={`${color}18`} stroke={color} strokeWidth="1.3"/>
+              <text x={x + 62} y="39" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={color}>{label}</text>
+              {lines.map((l, i) => <text key={i} x={x + 62} y={51 + i * 12} textAnchor="middle" fontSize="7" fill="var(--muted)">{l}</text>)}
+            </g>
+          );
+        })}
+
+        {/* Purchasing options */}
+        <text x="265" y="90" textAnchor="middle" fontSize="8" fontWeight="600" fill="var(--muted)">EC2 PURCHASING OPTIONS — discount vs flexibility trade-off</text>
+        {options.map(({ label, pct, color }, i) => (
+          <g key={label}>
+            <rect x={20 + i * 122} y="96" width="115" height="36" rx="4" fill={`${color}18`} stroke={color} strokeWidth="1.2"/>
+            <text x={20 + i * 122 + 57} y="111" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={color}>{label}</text>
+            <text x={20 + i * 122 + 57} y="124" textAnchor="middle" fontSize="9" fontWeight="800" fill={color}>{pct}</text>
+          </g>
+        ))}
+
+        {/* Quick wins */}
+        <rect x="20" y="142" width="490" height="90" rx="6" fill="color-mix(in oklab, #10b981 6%, transparent)" stroke="#10b98133" strokeWidth="1.2"/>
+        <text x="265" y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill="#10b981">Quick-Win Cost Reduction Checklist</text>
+        {[
+          "Delete unattached EBS volumes and idle Elastic IPs",
+          "Set CloudWatch Log retention on ALL log groups (never leave 'Never Expire')",
+          "S3 lifecycle policies: IA after 30 days · Glacier after 90 days",
+          "Stop dev/staging EC2 outside business hours (pay EBS only)",
+          "Buy Compute Savings Plans for baseline (always-on) usage",
+        ].map((item, i) => (
+          <g key={i}>
+            <circle cx="30" cy={169 + i * 12} r="2.5" fill="#10b981"/>
+            <text x="38" y={173 + i * 12} fontSize="7.5" fill="var(--muted)">{item}</text>
+          </g>
+        ))}
+
+        {/* Well-Architected note */}
+        <rect x="20" y="240" width="490" height="14" rx="3" fill="#6366f10d" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="251" textAnchor="middle" fontSize="7.5" fill="var(--muted)">
+          <tspan fontWeight="700" fill="#818cf8">Well-Architected Cost Pillar: </tspan>measure everything · eliminate waste · right-size · use managed services · review monthly
+        </text>
+      </svg>
+      <Caption text="Use Cost Explorer to find top spenders, Budgets to get alerts before you overspend, and Compute Optimizer to right-size. Savings Plans cut baseline EC2/Fargate/Lambda by up to 66%; Spot cuts batch/CI workloads by up to 90%." />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -2243,6 +2463,9 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-lambda": return <LambdaDiagram />;
     case "devops-route53-cloudfront": return <Route53CloudFrontDiagram />;
     case "devops-sg-nacl-waf": return <SgNaclWafDiagram />;
+    case "devops-ecs-ecr": return <EcsEcrDiagram />;
+    case "devops-cfn-sdk": return <CfnSdkDiagram />;
+    case "devops-cost-management": return <CostManagementDiagram />;
     default: return null;
   }
 }
