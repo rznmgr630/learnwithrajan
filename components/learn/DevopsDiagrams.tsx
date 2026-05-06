@@ -45,6 +45,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-rds-architecture",
   "devops-alb-asg",
   "devops-cloudwatch",
+  "devops-lambda",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -1951,6 +1952,100 @@ function CloudWatchDiagram() {
   );
 }
 
+function LambdaDiagram() {
+  const triggers = [
+    { label: "API Gateway", sub: "HTTP sync", color: "#6366f1", x: 10 },
+    { label: "S3 Event", sub: "Async upload", color: "#f59e0b", x: 115 },
+    { label: "SQS Queue", sub: "Poll-based", color: "#10b981", x: 220 },
+    { label: "EventBridge", sub: "Schedule/rule", color: "#3b82f6", x: 325 },
+    { label: "DynamoDB", sub: "Stream CDC", color: "#8b5cf6", x: 430 },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 300" className="w-full" aria-label="Lambda execution model: triggers → execution environment → cold/warm start phases → destinations">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">Lambda Execution Model</text>
+
+        {/* Triggers row */}
+        <text x="265" y="32" textAnchor="middle" fontSize="8" fill="var(--muted)">EVENT SOURCES / TRIGGERS</text>
+        {triggers.map(({ label, sub, color, x }) => (
+          <g key={label}>
+            <rect x={x} y="38" width="95" height="28" rx="4" fill={`${color}22`} stroke={color} strokeWidth="1.2"/>
+            <text x={x + 47} y="51" textAnchor="middle" fontSize="8" fontWeight="600" fill={color}>{label}</text>
+            <text x={x + 47} y="62" textAnchor="middle" fontSize="7" fill="var(--muted)">{sub}</text>
+          </g>
+        ))}
+
+        {/* Arrows to Lambda */}
+        {triggers.map(({ x, color }) => (
+          <line key={x} x1={x + 47} y1="67" x2={x + 47} y2="88" stroke={color} strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrlambda)"/>
+        ))}
+
+        {/* Lambda service bar */}
+        <rect x="10" y="89" width="510" height="16" rx="4" fill="color-mix(in oklab, #f59e0b 18%, transparent)" stroke="#f59e0b55" strokeWidth="1.5"/>
+        <text x="265" y="101" textAnchor="middle" fontSize="9" fontWeight="700" fill="#f59e0b">AWS Lambda Service — scales 0 → 1,000+ concurrent environments automatically</text>
+
+        {/* Cold start box */}
+        <rect x="10" y="114" width="240" height="96" rx="6" fill="color-mix(in oklab, #ef4444 8%, transparent)" stroke="#ef444455" strokeWidth="1.2"/>
+        <text x="130" y="128" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#ef4444">COLD START (first invocation)</text>
+        {[
+          "1. Provision micro-VM (~50–200ms)",
+          "2. Download deployment package",
+          "3. Initialize runtime (Node/Python/Java)",
+          "4. Run your init code (DB connect, imports)",
+          "5. Run handler → response",
+        ].map((line, i) => (
+          <text key={i} x="20" y={141 + i * 12} fontSize="7.5" fill="var(--muted)">{line}</text>
+        ))}
+        <text x="130" y="206" textAnchor="middle" fontSize="7" fill="#ef4444">Total: +100ms–1s overhead</text>
+
+        {/* Warm start box */}
+        <rect x="280" y="114" width="240" height="96" rx="6" fill="color-mix(in oklab, #10b981 8%, transparent)" stroke="#10b98155" strokeWidth="1.2"/>
+        <text x="400" y="128" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#10b981">WARM START (reused environment)</text>
+        {[
+          "1. Existing micro-VM reused ✓",
+          "2. Package already loaded ✓",
+          "3. Runtime already running ✓",
+          "4. Init code already ran ✓",
+          "5. Run handler → response",
+        ].map((line, i) => (
+          <text key={i} x="290" y={141 + i * 12} fontSize="7.5" fill="var(--muted)">{line}</text>
+        ))}
+        <text x="400" y="206" textAnchor="middle" fontSize="7" fill="#10b981">Total: handler time only (~ms)</text>
+
+        {/* Arrow down */}
+        <line x1="265" y1="211" x2="265" y2="232" stroke="var(--border)" strokeWidth="1" markerEnd="url(#arrlambda)"/>
+
+        {/* Execution environment persistent state */}
+        <rect x="80" y="233" width="360" height="22" rx="4" fill="#6366f11a" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="248" textAnchor="middle" fontSize="8" fill="var(--text)">
+          <tspan fontWeight="600" fill="#818cf8">Execution Environment reuse: </tspan>/tmp (up to 10 GB) · module-level vars · DB connections persist across warm invocations
+        </text>
+
+        {/* Config strip */}
+        <rect x="10" y="264" width="510" height="28" rx="4" fill="color-mix(in oklab, var(--elevated) 50%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        {[
+          { key: "Memory", val: "128 MB – 10 GB (CPU scales with memory)" },
+          { key: "Timeout", val: "max 15 min" },
+          { key: "Concurrency", val: "Reserved + Provisioned" },
+          { key: "Layers", val: "up to 5 (250 MB total)" },
+        ].map(({ key, val }, i) => (
+          <text key={key} x={18 + i * 130} y="282" fontSize="7.5" fill="var(--muted)">
+            <tspan fontWeight="700" fill="var(--text)">{key}: </tspan>{val}
+          </text>
+        ))}
+
+        <defs>
+          <marker id="arrlambda" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="Cold starts add 100ms–1s of overhead the first time an execution environment is created. Warm starts reuse the existing environment and only run your handler. Use Provisioned Concurrency to pre-warm environments for latency-sensitive APIs." />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -1992,6 +2087,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-rds-architecture": return <RdsArchitectureDiagram />;
     case "devops-alb-asg": return <AlbAsgDiagram />;
     case "devops-cloudwatch": return <CloudWatchDiagram />;
+    case "devops-lambda": return <LambdaDiagram />;
     default: return null;
   }
 }
