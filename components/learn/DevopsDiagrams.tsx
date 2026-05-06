@@ -44,6 +44,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-s3-architecture",
   "devops-rds-architecture",
   "devops-alb-asg",
+  "devops-cloudwatch",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -1851,6 +1852,105 @@ function AlbAsgDiagram() {
   );
 }
 
+function CloudWatchDiagram() {
+  const sources = [
+    { label: "EC2 / ASG", sub: "CPU, network, status", x: 40, color: "#f59e0b" },
+    { label: "Lambda", sub: "Invocations, errors, duration", x: 160, color: "#8b5cf6" },
+    { label: "RDS / ELB", sub: "Connections, latency, 5xx", x: 280, color: "#3b82f6" },
+    { label: "Custom App", sub: "put-metric-data / CW Agent", x: 400, color: "#10b981" },
+  ];
+  const pillars = [
+    { label: "Metrics", sub: "Time-series numbers\n15-month retention", color: "#6366f1", x: 30 },
+    { label: "Logs", sub: "Log groups & streams\nLogs Insights queries", color: "#0ea5e9", x: 155 },
+    { label: "Alarms", sub: "Threshold evaluation\nComposite alarms", color: "#ef4444", x: 280 },
+    { label: "Dashboards", sub: "Widgets & graphs\nAnomaly detection", color: "#f59e0b", x: 405 },
+  ];
+  const actions = [
+    { label: "SNS / Email / PagerDuty", color: "#ef4444" },
+    { label: "EC2 Stop / Reboot / Recover", color: "#f59e0b" },
+    { label: "ASG Scale-out / Scale-in", color: "#10b981" },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 310" className="w-full" aria-label="CloudWatch architecture: data sources → Metrics, Logs, Alarms, Dashboards → actions">
+        {/* Title */}
+        <text x="260" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">CloudWatch — Unified Observability</text>
+
+        {/* Data sources row */}
+        <text x="260" y="36" textAnchor="middle" fontSize="8" fill="var(--muted)">DATA SOURCES</text>
+        {sources.map(({ label, sub, x, color }) => (
+          <g key={label}>
+            <rect x={x} y="42" width="100" height="34" rx="5" fill={`${color}22`} stroke={color} strokeWidth="1.2"/>
+            <text x={x + 50} y="57" textAnchor="middle" fontSize="8.5" fontWeight="600" fill={color}>{label}</text>
+            <text x={x + 50} y="69" textAnchor="middle" fontSize="7" fill="var(--muted)">{sub}</text>
+          </g>
+        ))}
+
+        {/* Arrows down to CloudWatch */}
+        {sources.map(({ x }) => (
+          <line key={x} x1={x + 50} y1="77" x2={x + 50} y2="102" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrcw)"/>
+        ))}
+
+        {/* CloudWatch box */}
+        <rect x="20" y="103" width="480" height="16" rx="4" fill="color-mix(in oklab, #6366f1 18%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="260" y="115" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">CloudWatch</text>
+
+        {/* Arrows down to pillars */}
+        {pillars.map(({ x }) => (
+          <line key={x} x1={x + 55} y1="119" x2={x + 55} y2="138" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrcw)"/>
+        ))}
+
+        {/* Pillars row */}
+        <text x="260" y="136" textAnchor="middle" fontSize="8" fill="var(--muted)">SERVICES</text>
+        {pillars.map(({ label, sub, color, x }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              <rect x={x} y="142" width="110" height="46" rx="5" fill={`${color}18`} stroke={color} strokeWidth="1.2"/>
+              <text x={x + 55} y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>{label}</text>
+              {lines.map((line, i) => (
+                <text key={i} x={x + 55} y={169 + i * 11} textAnchor="middle" fontSize="7" fill="var(--muted)">{line}</text>
+              ))}
+            </g>
+          );
+        })}
+
+        {/* Arrow from Alarms down to Actions */}
+        <line x1="335" y1="189" x2="335" y2="214" stroke="#ef444488" strokeWidth="1.2" markerEnd="url(#arrcw)"/>
+        <text x="260" y="212" textAnchor="middle" fontSize="8" fill="var(--muted)">ALARM ACTIONS (state transition: OK → ALARM)</text>
+
+        {/* Actions row */}
+        {actions.map(({ label, color }, i) => (
+          <g key={label}>
+            <rect x={20 + i * 165} y="218" width="155" height="22" rx="4" fill={`${color}18`} stroke={color} strokeWidth="1.2"/>
+            <text x={20 + i * 165 + 77} y="233" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={color}>{label}</text>
+          </g>
+        ))}
+
+        {/* Legend */}
+        <rect x="20" y="254" width="480" height="44" rx="4" fill="#6366f10d" stroke="#6366f133" strokeWidth="1"/>
+        {[
+          { key: "Metrics", val: "Namespace + MetricName + Dimensions → numeric time-series", color: "#6366f1" },
+          { key: "Alarms", val: "Threshold + eval periods + treat-missing-data → OK / ALARM / INSUFFICIENT_DATA", color: "#ef4444" },
+          { key: "Agent", val: "Installs on EC2 to ship memory, disk, and custom log files AWS cannot see otherwise", color: "#10b981" },
+        ].map(({ key, val, color }, i) => (
+          <text key={key} x="28" y={266 + i * 11} fontSize="7.5" fill="var(--muted)">
+            <tspan fontWeight="700" fill={color}>{key}: </tspan>{val}
+          </text>
+        ))}
+
+        <defs>
+          <marker id="arrcw" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="CloudWatch collects metrics and logs from every AWS service. The CloudWatch Agent is required for OS-level data (memory, disk). Alarms evaluate metrics and can trigger SNS notifications, EC2 actions, or ASG scaling automatically." />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -1891,6 +1991,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-s3-architecture": return <S3ArchitectureDiagram />;
     case "devops-rds-architecture": return <RdsArchitectureDiagram />;
     case "devops-alb-asg": return <AlbAsgDiagram />;
+    case "devops-cloudwatch": return <CloudWatchDiagram />;
     default: return null;
   }
 }
