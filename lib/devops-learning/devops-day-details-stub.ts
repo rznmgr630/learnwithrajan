@@ -47,6 +47,7 @@ import { DEVOPS_DAY_45_DETAIL } from "./devops-week7-day45-detail";
 import { DEVOPS_DAY_46_DETAIL } from "./devops-week7-day46-detail";
 import { DEVOPS_DAY_47_DETAIL } from "./devops-week7-day47-detail";
 import { DEVOPS_DAY_48_DETAIL } from "./devops-week7-day48-detail";
+import { DEVOPS_DAY_49_DETAIL } from "./devops-week7-day49-detail";
 
 /** Placeholder detail until per-day content is split into week modules (week1-linux, …). */
 function stubDayDetail(_day: number): RoadmapDayDetail {
@@ -117,5 +118,6 @@ export const DEVOPS_DAY_DETAILS: Record<number, RoadmapDayDetail> = (() => {
   out[46] = DEVOPS_DAY_46_DETAIL;
   out[47] = DEVOPS_DAY_47_DETAIL;
   out[48] = DEVOPS_DAY_48_DETAIL;
+  out[49] = DEVOPS_DAY_49_DETAIL;
   return out;
 })();
