@@ -53,6 +53,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-cost-management",
   "devops-container-vs-vm",
   "devops-dockerfile",
+  "devops-container-lifecycle",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2470,8 +2471,69 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-cost-management": return <CostManagementDiagram />;
     case "devops-container-vs-vm": return <ContainerVsVmDiagram />;
     case "devops-dockerfile": return <DockerfileDiagram />;
+    case "devops-container-lifecycle": return <ContainerLifecycleDiagram />;
     default: return null;
   }
+}
+
+function ContainerLifecycleDiagram() {
+  const states = [
+    { id: "created", x: 60, y: 90, color: "#94a3b8" },
+    { id: "running", x: 200, y: 90, color: "#34d399" },
+    { id: "paused", x: 340, y: 40, color: "#fbbf24" },
+    { id: "stopped", x: 340, y: 140, color: "#f87171" },
+    { id: "removed", x: 460, y: 90, color: "#64748b" },
+  ];
+  const arrows = [
+    { from: [130, 98], to: [172, 98], label: "start", ly: 88 },
+    { from: [272, 82], to: [320, 54], label: "pause", ly: 60 },
+    { from: [320, 70], to: [272, 92], label: "unpause", ly: 85 },
+    { from: [272, 104], to: [320, 136], label: "stop/kill", ly: 132 },
+    { from: [320, 148], to: [272, 108], label: "start", ly: 124 },
+    { from: [392, 90], to: [432, 90], label: "rm", ly: 84 },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 200" className="w-full" aria-label="Docker container lifecycle state machine">
+        <defs>
+          <marker id="arrowCL" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#475569"/>
+          </marker>
+        </defs>
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Container Lifecycle — State Machine</text>
+
+        {arrows.map((a, i) => (
+          <g key={i}>
+            <line x1={a.from[0]} y1={a.from[1]} x2={a.to[0]} y2={a.to[1]}
+              stroke="#475569" strokeWidth="1.4" markerEnd="url(#arrowCL)"/>
+            <text x={(a.from[0] + a.to[0]) / 2} y={a.ly} textAnchor="middle" fontSize="7" fill="var(--muted)">{a.label}</text>
+          </g>
+        ))}
+
+        {states.map((s) => (
+          <g key={s.id}>
+            <rect x={s.x} y={s.y - 14} width="68" height="26" rx="6"
+              fill={`color-mix(in oklab, ${s.color} 18%, transparent)`}
+              stroke={`${s.color}55`} strokeWidth="1.5"/>
+            <text x={s.x + 34} y={s.y + 4} textAnchor="middle" fontSize="9" fontWeight="700" fill={s.color}>{s.id}</text>
+          </g>
+        ))}
+
+        {/* Commands reference */}
+        <rect x="20" y="168" width="490" height="24" rx="5" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        {[
+          "docker create → created",
+          "docker start → running",
+          "docker pause/unpause",
+          "docker stop (SIGTERM+SIGKILL)",
+          "docker rm → removed",
+        ].map((cmd, i) => (
+          <text key={i} x={30 + i * 98} y="183" fontSize="7" fill="var(--muted)">{cmd}</text>
+        ))}
+      </svg>
+      <Caption text="A container moves through created → running → paused/stopped → removed. docker stop sends SIGTERM (graceful) then SIGKILL after timeout. Use --restart=unless-stopped for services that must survive daemon restarts." />
+    </figure>
+  );
 }
 
 function DockerfileDiagram() {
