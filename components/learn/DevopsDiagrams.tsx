@@ -56,6 +56,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-container-lifecycle",
   "devops-docker-networking",
   "devops-docker-volumes",
+  "devops-docker-compose",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2476,8 +2477,69 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-container-lifecycle": return <ContainerLifecycleDiagram />;
     case "devops-docker-networking": return <DockerNetworkingDiagram />;
     case "devops-docker-volumes": return <DockerVolumesDiagram />;
+    case "devops-docker-compose": return <DockerComposeDiagram />;
     default: return null;
   }
+}
+
+function DockerComposeDiagram() {
+  const services = [
+    { name: "proxy", color: "#38bdf8", port: "80:80", nets: ["frontend"] },
+    { name: "api", color: "#34d399", port: "3000", nets: ["frontend", "backend"] },
+    { name: "db", color: "#f472b6", port: "5432", nets: ["backend"] },
+    { name: "cache", color: "#fbbf24", port: "6379", nets: ["backend"] },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 240" className="w-full" aria-label="Docker Compose multi-service architecture">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Docker Compose — Multi-Service Application Stack</text>
+
+        {/* Internet */}
+        <rect x="220" y="24" width="90" height="20" rx="5" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="265" y="38" textAnchor="middle" fontSize="8" fill="var(--muted)">Internet / Browser</text>
+        <line x1="265" y1="44" x2="265" y2="58" stroke="#475569" strokeWidth="1.2" strokeDasharray="3,2"/>
+
+        {/* Service boxes */}
+        {services.map((s, i) => (
+          <g key={i}>
+            <rect x={20 + i * 122} y="58" width="108" height="40" rx="6"
+              fill={`color-mix(in oklab, ${s.color} 12%, transparent)`}
+              stroke={`${s.color}44`} strokeWidth="1.3"/>
+            <text x={74 + i * 122} y="73" textAnchor="middle" fontSize="9" fontWeight="700" fill={s.color}>{s.name}</text>
+            <text x={74 + i * 122} y="88" textAnchor="middle" fontSize="7" fill="var(--muted)">{s.port}</text>
+          </g>
+        ))}
+
+        {/* Network bands */}
+        <rect x="16" y="106" width="250" height="16" rx="4" fill="color-mix(in oklab, #38bdf8 8%, transparent)" stroke="#38bdf833" strokeWidth="1"/>
+        <text x="141" y="118" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="#38bdf8">frontend-net (proxy ↔ api)</text>
+        <rect x="138" y="106" width="376" height="16" rx="4" fill="color-mix(in oklab, #34d399 8%, transparent)" stroke="#34d39933" strokeWidth="1"/>
+        <text x="326" y="118" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="#34d399">backend-net (api ↔ db ↔ cache)</text>
+
+        {/* Volume row */}
+        <rect x="16" y="130" width="490" height="20" rx="4" fill="color-mix(in oklab, #f59e0b 6%, transparent)" stroke="#f59e0b33" strokeWidth="1"/>
+        <text x="265" y="144" textAnchor="middle" fontSize="8" fill="var(--muted)">
+          <tspan fontWeight="700" fill="#f59e0b">Named Volumes: </tspan>pgdata → /var/lib/postgresql/data   redisdata → /data
+        </text>
+
+        {/* Compose file anatomy */}
+        <rect x="16" y="158" width="498" height="74" rx="6" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        <text x="265" y="172" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">docker-compose.yml — top-level sections</text>
+        {[
+          { key: "services:", desc: "one entry per container — image/build, ports, env, healthcheck, depends_on, restart" },
+          { key: "networks:", desc: "named networks; default driver=bridge; containers reach each other by service name" },
+          { key: "volumes:", desc: "named volumes for persistent data; reference in services.volumes" },
+          { key: "secrets:", desc: "files mounted at /run/secrets/<name> — safer than env vars for credentials" },
+        ].map((r, i) => (
+          <g key={i}>
+            <text x="28" y={185 + i * 11} fontSize="8" fontWeight="700" fill="#818cf8">{r.key}</text>
+            <text x="100" y={185 + i * 11} fontSize="7.5" fill="var(--muted)">{r.desc}</text>
+          </g>
+        ))}
+      </svg>
+      <Caption text="Docker Compose describes your entire stack in one YAML file. Services communicate by name on user-defined networks. Named volumes persist data. Use depends_on with condition: service_healthy so services wait for dependencies to be ready." />
+    </figure>
+  );
 }
 
 function DockerVolumesDiagram() {
