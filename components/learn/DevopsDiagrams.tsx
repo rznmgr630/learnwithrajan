@@ -54,6 +54,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-container-vs-vm",
   "devops-dockerfile",
   "devops-container-lifecycle",
+  "devops-docker-networking",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2472,8 +2473,89 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-container-vs-vm": return <ContainerVsVmDiagram />;
     case "devops-dockerfile": return <DockerfileDiagram />;
     case "devops-container-lifecycle": return <ContainerLifecycleDiagram />;
+    case "devops-docker-networking": return <DockerNetworkingDiagram />;
     default: return null;
   }
+}
+
+function DockerNetworkingDiagram() {
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 270" className="w-full" aria-label="Docker networking drivers — bridge, host, overlay">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Docker Network Drivers — bridge · host · overlay</text>
+
+        {/* User-defined bridge */}
+        <rect x="16" y="26" width="160" height="120" rx="8" fill="color-mix(in oklab, #38bdf8 6%, transparent)" stroke="#38bdf833" strokeWidth="1.4"/>
+        <text x="96" y="41" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#38bdf8">User-defined bridge</text>
+        <text x="96" y="52" textAnchor="middle" fontSize="7" fill="var(--muted)">frontend-net</text>
+        {[{ n: "web", x: 30, col: "#38bdf8" }, { n: "api", x: 110, col: "#38bdf8" }].map((c) => (
+          <g key={c.n}>
+            <rect x={c.x} y="60" width="48" height="22" rx="4"
+              fill={`color-mix(in oklab, ${c.col} 15%, transparent)`}
+              stroke={`${c.col}44`} strokeWidth="1"/>
+            <text x={c.x + 24} y="75" textAnchor="middle" fontSize="8" fontWeight="600" fill={c.col}>{c.n}</text>
+          </g>
+        ))}
+        <line x1="78" y1="82" x2="110" y2="82" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="3,2"/>
+        <text x="96" y="96" textAnchor="middle" fontSize="7" fill="#38bdf8">DNS: ping api ✓</text>
+        <rect x="26" y="102" width="140" height="16" rx="3" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="96" y="114" textAnchor="middle" fontSize="7" fill="var(--muted)">docker0-like bridge (iptables NAT)</text>
+        <text x="96" y="135" textAnchor="middle" fontSize="7" fill="var(--muted)">isolated from other networks</text>
+
+        {/* Host network */}
+        <rect x="186" y="26" width="158" height="120" rx="8" fill="color-mix(in oklab, #f59e0b 6%, transparent)" stroke="#f59e0b33" strokeWidth="1.4"/>
+        <text x="265" y="41" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#f59e0b">Host network</text>
+        <rect x="200" y="52" width="130" height="22" rx="4"
+          fill="color-mix(in oklab, #f59e0b 14%, transparent)" stroke="#f59e0b44" strokeWidth="1"/>
+        <text x="265" y="67" textAnchor="middle" fontSize="8" fontWeight="600" fill="#f59e0b">container (--network host)</text>
+        <line x1="265" y1="74" x2="265" y2="90" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3,2"/>
+        <rect x="200" y="90" width="130" height="22" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="265" y="105" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="var(--fg)">Host Network Stack</text>
+        <text x="265" y="126" textAnchor="middle" fontSize="7" fill="var(--muted)">no NAT · no port mapping</text>
+        <text x="265" y="137" textAnchor="middle" fontSize="7" fill="var(--muted)">shares host eth0 / lo</text>
+
+        {/* Overlay */}
+        <rect x="354" y="26" width="160" height="120" rx="8" fill="color-mix(in oklab, #a78bfa 6%, transparent)" stroke="#a78bfa33" strokeWidth="1.4"/>
+        <text x="434" y="41" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#a78bfa">Overlay (Swarm)</text>
+        {[{ n: "svc_A\nHost 1", x: 365 }, { n: "svc_A\nHost 2", x: 430 }].map((c, i) => (
+          <g key={i}>
+            <rect x={c.x} y="50" width="54" height="28" rx="4"
+              fill="color-mix(in oklab, #a78bfa 15%, transparent)" stroke="#a78bfa44" strokeWidth="1"/>
+            <text x={c.x + 27} y="64" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="#a78bfa">{c.n.split("\n")[0]}</text>
+            <text x={c.x + 27} y="73" textAnchor="middle" fontSize="7" fill="var(--muted)">{c.n.split("\n")[1]}</text>
+          </g>
+        ))}
+        <line x1="419" y1="65" x2="430" y2="65" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="3,2"/>
+        <text x="434" y="94" textAnchor="middle" fontSize="7" fill="#a78bfa">VXLAN tunnel</text>
+        <rect x="364" y="99" width="140" height="16" rx="3" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="434" y="111" textAnchor="middle" fontSize="7" fill="var(--muted)">encrypted overlay (UDP 4789)</text>
+        <text x="434" y="134" textAnchor="middle" fontSize="7" fill="var(--muted)">DNS: by service name</text>
+
+        {/* Physical host bar */}
+        <rect x="16" y="152" width="498" height="18" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="265" y="165" textAnchor="middle" fontSize="8" fontWeight="600" fill="var(--muted)">Physical / Cloud Host — eth0 · iptables · kernel network stack</text>
+
+        {/* Reference table */}
+        <rect x="16" y="176" width="498" height="86" rx="6" fill="color-mix(in oklab, #6366f1 5%, transparent)" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="190" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">Quick Reference</text>
+        {[
+          { driver: "bridge (default)", dns: "no (IP only)", use: "legacy — avoid" },
+          { driver: "bridge (user-def)", dns: "yes (name)", use: "single-host apps ✓" },
+          { driver: "host", dns: "n/a", use: "high-throughput / proxies" },
+          { driver: "none", dns: "n/a", use: "sandboxed / offline tasks" },
+          { driver: "overlay", dns: "yes (svc name)", use: "multi-host Swarm" },
+          { driver: "macvlan", dns: "no", use: "LAN-visible containers" },
+        ].map((r, i) => (
+          <g key={i}>
+            <text x="30" y={204 + i * 10} fontSize="7.5" fill="#38bdf8">{r.driver}</text>
+            <text x="200" y={204 + i * 10} fontSize="7.5" fill="var(--muted)">{r.dns}</text>
+            <text x="320" y={204 + i * 10} fontSize="7.5" fill="var(--muted)">{r.use}</text>
+          </g>
+        ))}
+      </svg>
+      <Caption text="Always use user-defined bridge networks — Docker's embedded DNS resolves container names automatically. Use host network for latency-sensitive proxies/exporters. Overlay spans Swarm nodes via encrypted VXLAN." />
+    </figure>
+  );
 }
 
 function ContainerLifecycleDiagram() {
