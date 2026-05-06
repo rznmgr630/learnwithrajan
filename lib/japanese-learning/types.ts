@@ -39,6 +39,23 @@ export type JapaneseDetailBlock =
       youtubeVideos?: { url: string; title: string }[];
     }
   | {
+      type: "listeningQna";
+      title?: LocalizedString;
+      /** Short situational context shown above the player. */
+      situation: LocalizedString;
+      /** Japanese text spoken aloud by the browser TTS engine (ja-JP). */
+      script: string;
+      questions: {
+        question: LocalizedString;
+        choices: LocalizedString[];
+        correctIndex: number;
+        explanation?: LocalizedString;
+      }[];
+      /** Full script revealed after all questions are answered. */
+      transcript?: string;
+      youtubeVideos?: { url: string; title: string }[];
+    }
+  | {
       type: "kanjiStrokeStudy";
       caption?: LocalizedString;
       items: {
