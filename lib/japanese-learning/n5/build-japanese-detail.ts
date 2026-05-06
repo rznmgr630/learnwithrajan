@@ -43,6 +43,18 @@ export type N5LessonSpec = {
     instruction: LocalizedString;
     keyPhrases: LocalizedString[];
     studyTip?: LocalizedString;
+    /** When provided, renders an interactive TTS player + Q&A block instead of the static listening card. */
+    qna?: {
+      situation: LocalizedString;
+      script: string;
+      transcript?: string;
+      questions: {
+        question: LocalizedString;
+        choices: LocalizedString[];
+        correctIndex: number;
+        explanation?: LocalizedString;
+      }[];
+    };
   };
 };
 
@@ -194,17 +206,29 @@ export function buildJapaneseDayDetail(
     },
     {
       title: SECTION.listening,
-      blocks: [
-        {
-          type: "listening",
-          title: listeningTitle,
-          scenario: spec.listening.scenario,
-          instruction: spec.listening.instruction,
-          keyPhrases: spec.listening.keyPhrases,
-          studyTip: spec.listening.studyTip,
-          youtubeVideos,
-        },
-      ],
+      blocks: spec.listening.qna
+        ? [
+            {
+              type: "listeningQna" as const,
+              title: listeningTitle,
+              situation: spec.listening.qna.situation,
+              script: spec.listening.qna.script,
+              transcript: spec.listening.qna.transcript,
+              questions: spec.listening.qna.questions,
+              youtubeVideos,
+            },
+          ]
+        : [
+            {
+              type: "listening" as const,
+              title: listeningTitle,
+              scenario: spec.listening.scenario,
+              instruction: spec.listening.instruction,
+              keyPhrases: spec.listening.keyPhrases,
+              studyTip: spec.listening.studyTip,
+              youtubeVideos,
+            },
+          ],
     },
   ];
 

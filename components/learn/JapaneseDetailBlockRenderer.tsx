@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import type { JapaneseDetailBlock, LocalizedString } from "@/lib/japanese-learning/types";
 import { resolveDialogueGloss } from "@/lib/japanese-learning/dialogue-gloss-i18n";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -60,6 +61,184 @@ function DetailCode({ title, code }: { title?: string; code: string }) {
         </div>
       ) : null}
       <pre className="p-3 font-mono text-[11px] leading-relaxed text-zinc-100">{code}</pre>
+    </div>
+  );
+}
+
+type QnaBlock = Extract<JapaneseDetailBlock, { type: "listeningQna" }>;
+
+function ListeningQnaBlock({ block }: { block: QnaBlock }) {
+  const { locale, t } = useLocale();
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
+
+  const [playing, setPlaying] = useState(false);
+  const [rate, setRate] = useState(0.9);
+  const [answers, setAnswers] = useState<(number | null)[]>(() => block.questions.map(() => null));
+  const [showTranscript, setShowTranscript] = useState(false);
+  const uttRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  useEffect(() => {
+    return () => { window.speechSynthesis?.cancel(); };
+  }, []);
+
+  function speak() {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(block.script);
+    utt.lang = "ja-JP";
+    utt.rate = rate;
+    utt.onend = () => setPlaying(false);
+    utt.onerror = () => setPlaying(false);
+    uttRef.current = utt;
+    setPlaying(true);
+    window.speechSynthesis.speak(utt);
+  }
+
+  function stop() {
+    window.speechSynthesis?.cancel();
+    setPlaying(false);
+  }
+
+  const allAnswered = answers.every((a) => a !== null);
+  const score = answers.filter((a, i) => a === block.questions[i].correctIndex).length;
+
+  return (
+    <div className="mt-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4 space-y-4">
+      {/* Situation */}
+      <p className="text-sm text-[var(--muted)]">{ls(block.situation)}</p>
+
+      {/* TTS player */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={playing ? stop : speak}
+          className="flex items-center gap-1.5 rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110 active:brightness-95 transition-all"
+        >
+          {playing ? (
+            <>
+              <span className="inline-block h-3 w-3 rounded-sm bg-white/90" />
+              Stop
+            </>
+          ) : (
+            <>
+              <span className="inline-block border-l-[10px] border-y-[6px] border-y-transparent border-l-white/90" />
+              Play
+            </>
+          )}
+        </button>
+
+        {/* Speed selector */}
+        <div className="flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-1 py-0.5">
+          {([0.7, 0.9, 1.0] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => { setRate(r); if (playing) { stop(); } }}
+              className={`rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
+                rate === r
+                  ? "bg-[var(--accent)] text-white"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {r}×
+            </button>
+          ))}
+        </div>
+
+        {playing && (
+          <span className="text-[11px] text-[var(--muted)] animate-pulse">
+            ▶ listening…
+          </span>
+        )}
+      </div>
+
+      {/* Questions */}
+      <div className="space-y-4">
+        {block.questions.map((q, qi) => {
+          const selected = answers[qi];
+          const isCorrect = selected === q.correctIndex;
+          return (
+            <div key={qi} className="rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_65%,transparent)] p-3">
+              <p className="text-sm font-medium text-[var(--text)]">
+                <span className="mr-1.5 font-mono text-[11px] text-[var(--muted)]">Q{qi + 1}.</span>
+                <RichText text={ls(q.question)} />
+              </p>
+              <ol className="mt-2 space-y-1.5">
+                {q.choices.map((c, ci) => {
+                  let chipStyle = "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--text)]";
+                  if (selected !== null) {
+                    if (ci === q.correctIndex) chipStyle = "border-emerald-500 bg-emerald-500/10 text-emerald-400 font-semibold";
+                    else if (ci === selected) chipStyle = "border-red-500 bg-red-500/10 text-red-400 line-through";
+                    else chipStyle = "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] opacity-50";
+                  }
+                  return (
+                    <li key={ci}>
+                      <button
+                        disabled={selected !== null}
+                        onClick={() => setAnswers((prev) => prev.map((v, i) => i === qi ? ci : v))}
+                        className={`w-full rounded border px-3 py-1.5 text-left text-sm transition-colors disabled:cursor-default ${chipStyle}`}
+                      >
+                        <span className="mr-2 font-mono text-[11px] opacity-60">{ci + 1}.</span>
+                        {ls(c)}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              {selected !== null && (
+                <div className={`mt-2 flex items-start gap-1.5 rounded px-2 py-1.5 text-xs ${isCorrect ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                  <span>{isCorrect ? "✓ Correct!" : "✗ Incorrect"}</span>
+                  {q.explanation && (
+                    <span className="ml-1 text-[var(--muted)]">— <RichText text={ls(q.explanation)} /></span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Score + transcript reveal */}
+      {allAnswered && (
+        <div className="rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] px-3 py-2 text-sm">
+          <span className="font-semibold text-[var(--text)]">Score: {score}/{block.questions.length}</span>
+          {block.transcript && (
+            <button
+              onClick={() => setShowTranscript((v) => !v)}
+              className="ml-4 text-xs text-[var(--accent)] underline-offset-2 hover:underline"
+            >
+              {showTranscript ? "Hide transcript" : "Show transcript"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {showTranscript && block.transcript && (
+        <pre className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 font-mono text-xs leading-relaxed text-[var(--muted)]">
+          {block.transcript}
+        </pre>
+      )}
+
+      {/* YouTube supplementary */}
+      {block.youtubeVideos && block.youtubeVideos.length > 0 && (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            {t("jpDetail.listeningYoutubeHeading")}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {block.youtubeVideos.map((v, vi) => (
+              <li key={vi}>
+                <a
+                  href={v.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:brightness-110 hover:underline"
+                >
+                  {v.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -206,6 +385,8 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                 ) : null}
               </div>
             );
+          case "listeningQna":
+            return <ListeningQnaBlock key={key} block={block} />;
           case "kanjiStrokeStudy":
             return (
               <div key={key} className="mt-3 space-y-4">
