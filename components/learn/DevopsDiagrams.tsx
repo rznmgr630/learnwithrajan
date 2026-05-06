@@ -64,6 +64,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-jenkins-triggers",
   "devops-cicd-testing",
   "devops-deploy-strategies",
+  "devops-jenkins-advanced",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2492,6 +2493,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-jenkins-triggers": return <JenkinsTriggersDiagram />;
     case "devops-cicd-testing": return <CicdTestingDiagram />;
     case "devops-deploy-strategies": return <DeployStrategiesDiagram />;
+    case "devops-jenkins-advanced": return <JenkinsAdvancedDiagram />;
     default: return null;
   }
 }
@@ -3343,6 +3345,78 @@ function DeployStrategiesDiagram() {
         <text x="10" y="222" fontSize="7.5" fill="#64748b">DT = downtime  ·  rb = rollback  ·  infra cost = environment multiplier vs single deploy</text>
       </svg>
       <Caption text="Rolling and canary give zero downtime with 1× infra cost. Blue/green gives the fastest rollback but needs 2× capacity. Recreate is only acceptable for dev/test environments." />
+    </figure>
+  );
+}
+
+function JenkinsAdvancedDiagram() {
+  const dirs = [
+    { path: "vars/dockerBuild.groovy", color: "#34d399", note: "callable step" },
+    { path: "vars/runTests.groovy", color: "#34d399", note: "callable step" },
+    { path: "src/org/myorg/Slack.groovy", color: "#38bdf8", note: "Groovy class" },
+    { path: "resources/deploy.sh", color: "#fbbf24", note: "libraryResource()" },
+  ];
+  const agents = [
+    { label: "agent any", color: "#94a3b8", sub: "static node" },
+    { label: "agent { label }", color: "#fbbf24", sub: "named node" },
+    { label: "agent { docker }", color: "#38bdf8", sub: "per-stage ctr" },
+    { label: "agent { k8s }", color: "#a78bfa", sub: "ephemeral pod" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 510 248" className="w-full" aria-label="Jenkins shared library structure and agent types">
+        <text x="255" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Jenkins Shared Library + Agent Types</text>
+
+        {/* Shared library box */}
+        <rect x="10" y="26" width="240" height="130" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
+        <text x="130" y="42" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--muted)">myorg-pipeline-lib (Git repo)</text>
+
+        {dirs.map((d, i) => (
+          <g key={i}>
+            <rect x="20" y={50 + i * 26} width="220" height="20" rx="4" fill="#1e293b" stroke={d.color} strokeWidth="1" />
+            <text x="30" y={64 + i * 26} fontSize="7.5" fill={d.color}>{d.path}</text>
+            <text x="232" y={64 + i * 26} textAnchor="end" fontSize="7" fill="#64748b">{d.note}</text>
+          </g>
+        ))}
+
+        {/* @Library usage */}
+        <rect x="20" y="158" width="220" height="16" rx="3" fill="#1e3a2f" />
+        <text x="130" y="169" textAnchor="middle" fontSize="8" fill="#34d399">@Library('myorg-pipeline-lib@main') _</text>
+
+        {/* Arrow from library to pipeline */}
+        <line x1="250" y1="91" x2="275" y2="91" stroke="#475569" strokeWidth="1.5" markerEnd="url(#arr)" />
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#475569" />
+          </marker>
+        </defs>
+
+        {/* Jenkinsfile box */}
+        <rect x="275" y="58" width="220" height="66" rx="8" fill="#0f172a" stroke="#6366f1" strokeWidth="1.5" />
+        <text x="385" y="74" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">Jenkinsfile (consumer)</text>
+        <text x="385" y="88" textAnchor="middle" fontSize="7.5" fill="#34d399">dockerBuild image: 'api', tag: BUILD_NUMBER</text>
+        <text x="385" y="101" textAnchor="middle" fontSize="7.5" fill="#38bdf8">runTests tool: 'jest', threshold: 80</text>
+        <text x="385" y="114" textAnchor="middle" fontSize="7.5" fill="#fbbf24">new org.myorg.Slack(this).success('#ci')</text>
+
+        {/* Agent types */}
+        <text x="255" y="145" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--muted)">Agent types:</text>
+        {agents.map((a, i) => {
+          const ax = 10 + i * 122;
+          return (
+            <g key={i}>
+              <rect x={ax} y="152" width="112" height="36" rx="5" fill="#0f172a" stroke={a.color} strokeWidth="1.5" />
+              <text x={ax + 56} y="167" textAnchor="middle" fontSize="7.5" fontWeight="700" fill={a.color}>{a.label}</text>
+              <text x={ax + 56} y="180" textAnchor="middle" fontSize="7" fill="var(--muted)">{a.sub}</text>
+            </g>
+          );
+        })}
+
+        {/* Bottom note */}
+        <rect x="10" y="200" width="490" height="36" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+        <text x="255" y="214" textAnchor="middle" fontSize="8" fontWeight="600" fill="#fbbf24">Register once: Manage Jenkins → Configure System → Global Pipeline Libraries</text>
+        <text x="255" y="228" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Any Jenkinsfile can then call your shared steps as if they were built-in Jenkins steps</text>
+      </svg>
+      <Caption text="Shared libraries centralise reusable pipeline logic — fix a bug in one place and all pipelines pick it up on the next build. Docker and Kubernetes agents give per-build environment isolation." />
     </figure>
   );
 }
