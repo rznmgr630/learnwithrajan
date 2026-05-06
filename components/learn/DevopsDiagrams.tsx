@@ -58,6 +58,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-docker-volumes",
   "devops-docker-compose",
   "devops-image-registry",
+  "devops-cicd-concepts",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2480,8 +2481,76 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-docker-volumes": return <DockerVolumesDiagram />;
     case "devops-docker-compose": return <DockerComposeDiagram />;
     case "devops-image-registry": return <ImageRegistryDiagram />;
+    case "devops-cicd-concepts": return <CicdConceptsDiagram />;
     default: return null;
   }
+}
+
+function CicdConceptsDiagram() {
+  const stages = [
+    { label: "commit", color: "#94a3b8", sub: "git push / PR" },
+    { label: "lint+test", color: "#38bdf8", sub: "unit · type check" },
+    { label: "build", color: "#34d399", sub: "docker image" },
+    { label: "scan", color: "#f87171", sub: "Trivy CVEs" },
+    { label: "stage", color: "#fbbf24", sub: "integration test" },
+    { label: "prod", color: "#a78bfa", sub: "deploy + smoke" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 234" className="w-full" aria-label="CI/CD pipeline concepts — stages from commit to production">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">CI/CD Pipeline — Commit to Production</text>
+
+        {/* Pipeline stages */}
+        {stages.map((s, i) => (
+          <g key={i}>
+            <rect x={16 + i * 83} y="26" width="74" height="44" rx="7"
+              fill={`color-mix(in oklab, ${s.color} 14%, transparent)`}
+              stroke={`${s.color}44`} strokeWidth="1.3"/>
+            <text x={53 + i * 83} y="46" textAnchor="middle" fontSize="9" fontWeight="700" fill={s.color}>{s.label}</text>
+            <text x={53 + i * 83} y="60" textAnchor="middle" fontSize="7" fill="var(--muted)">{s.sub}</text>
+            {i < stages.length - 1 && (
+              <text x={94 + i * 83} y="51" textAnchor="middle" fontSize="12" fill="#475569">→</text>
+            )}
+          </g>
+        ))}
+
+        {/* Human gate on prod (CD Delivery) */}
+        <rect x="430" y="72" width="84" height="18" rx="4" fill="color-mix(in oklab, #f59e0b 10%, transparent)" stroke="#f59e0b33" strokeWidth="1"/>
+        <text x="472" y="85" textAnchor="middle" fontSize="7.5" fill="#f59e0b">▲ CD Delivery: human gate</text>
+
+        {/* Three pillars */}
+        <rect x="16" y="98" width="498" height="52" rx="6" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        <text x="265" y="112" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">The Three Pillars</text>
+        {[
+          { title: "CI", desc: "build+test every commit · fast feedback · merge only green", color: "#38bdf8" },
+          { title: "CD Delivery", desc: "artefact ready to deploy · human approves prod", color: "#34d399" },
+          { title: "CD Deployment", desc: "every green build auto-deploys · no human gate", color: "#a78bfa" },
+        ].map((p, i) => (
+          <g key={i}>
+            <text x={38 + i * 160} y="126" fontSize="9" fontWeight="700" fill={p.color}>{p.title}</text>
+            <text x={38 + i * 160} y="138" fontSize="7" fill="var(--muted)" style={{ maxWidth: 120 }}>{p.desc}</text>
+          </g>
+        ))}
+
+        {/* DORA metrics */}
+        <rect x="16" y="158" width="498" height="68" rx="6" fill="color-mix(in oklab, #6366f1 5%, transparent)" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="172" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">DORA Metrics — Elite vs Low Performers</text>
+        {[
+          { m: "Deploy Frequency", e: "multiple/day", l: "every 6+ months" },
+          { m: "Lead Time", e: "< 1 hour", l: "1–6 months" },
+          { m: "MTTR", e: "< 1 hour", l: "1–6 months" },
+          { m: "Change Fail Rate", e: "0–15%", l: "46–60%" },
+        ].map((r, i) => (
+          <g key={i}>
+            <text x={28 + (i % 2) * 248} y={186 + Math.floor(i / 2) * 18} fontSize="7.5" fontWeight="700" fill="var(--muted)">{r.m}</text>
+            <text x={28 + (i % 2) * 248} y={196 + Math.floor(i / 2) * 18} fontSize="7" fill="#34d399">Elite: {r.e}</text>
+            <text x={130 + (i % 2) * 248} y={196 + Math.floor(i / 2) * 18} fontSize="7" fill="#f87171">Low: {r.l}</text>
+          </g>
+        ))}
+      </svg>
+      <Caption text="CI validates every commit in minutes. CD Delivery keeps a deployable artefact always ready. CD Deployment removes the human gate entirely. DORA metrics measure pipeline maturity — elite teams deploy multiple times per day with < 1h MTTR." />
+    </figure>
+  );
 }
 
 function ImageRegistryDiagram() {
