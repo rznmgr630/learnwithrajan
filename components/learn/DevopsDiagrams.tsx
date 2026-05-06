@@ -60,6 +60,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-image-registry",
   "devops-cicd-concepts",
   "devops-jenkins-architecture",
+  "devops-jenkins-pipeline",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2484,6 +2485,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-image-registry": return <ImageRegistryDiagram />;
     case "devops-cicd-concepts": return <CicdConceptsDiagram />;
     case "devops-jenkins-architecture": return <JenkinsArchitectureDiagram />;
+    case "devops-jenkins-pipeline": return <JenkinsPipelineDiagram />;
     default: return null;
   }
 }
@@ -3054,6 +3056,89 @@ function JenkinsArchitectureDiagram() {
         })}
       </svg>
       <Caption text="The Jenkins controller orchestrates jobs and the UI; build execution runs on distributed agents connected via SSH or JNLP — keeping the controller lightweight." />
+    </figure>
+  );
+}
+
+function JenkinsPipelineDiagram() {
+  const stages = [
+    { label: "Checkout", color: "#38bdf8", detail: "git clone" },
+    { label: "Lint", color: "#a78bfa", detail: "eslint / flake8" },
+    { label: "Test", color: "#34d399", detail: "unit + coverage" },
+    { label: "Build", color: "#fbbf24", detail: "docker build" },
+    { label: "Scan", color: "#f87171", detail: "Trivy CVE" },
+    { label: "Push", color: "#fb923c", detail: "ECR / GHCR" },
+    { label: "Deploy", color: "#c084fc", detail: "staging env" },
+  ];
+  const blocks = [
+    { label: "pipeline", color: "#1e40af" },
+    { label: "agent", color: "#065f46" },
+    { label: "environment", color: "#7c3aed" },
+    { label: "stages", color: "#92400e" },
+    { label: "post", color: "#881337" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 540 250" className="w-full" aria-label="Jenkins declarative pipeline stages">
+        <text x="270" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Jenkins Declarative Pipeline</text>
+
+        {/* Jenkinsfile blocks */}
+        <text x="10" y="34" fontSize="8.5" fontWeight="700" fill="var(--muted)">Jenkinsfile blocks:</text>
+        {blocks.map((b, i) => (
+          <g key={i}>
+            <rect x={10 + i * 100} y="38" width="88" height="16" rx="4" fill={b.color} fillOpacity="0.3" stroke={b.color} strokeWidth="1" />
+            <text x={54 + i * 100} y="49" textAnchor="middle" fontSize="8" fontWeight="600" fill={b.color}>{b.label}</text>
+          </g>
+        ))}
+
+        {/* Stage pipeline */}
+        <text x="270" y="76" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--muted)">Pipeline execution flow:</text>
+        {stages.map((s, i) => {
+          const x = 12 + i * 74;
+          return (
+            <g key={i}>
+              <rect x={x} y="82" width="66" height="48" rx="6" fill="#0f172a" stroke={s.color} strokeWidth="1.5" />
+              <text x={x + 33} y="101" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={s.color}>{s.label}</text>
+              <text x={x + 33} y="115" textAnchor="middle" fontSize="7" fill="var(--muted)">{s.detail}</text>
+              {i < stages.length - 1 && (
+                <text x={x + 70} y="107" textAnchor="middle" fontSize="10" fill="#475569">›</text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Post actions */}
+        <text x="270" y="152" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--muted)">post { } actions:</text>
+        {["always: junit, cleanWs()", "success: notify Slack ✓", "failure: notify Slack ✗ + email"].map((t, i) => (
+          <g key={i}>
+            <rect x={60 + i * 145} y="158" width="135" height="14" rx="3" fill="#1e293b" />
+            <text x={127 + i * 145} y="168" textAnchor="middle" fontSize="7.5" fill="#94a3b8">{t}</text>
+          </g>
+        ))}
+
+        {/* Shared library note */}
+        <rect x="140" y="184" width="260" height="26" rx="6" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+        <text x="270" y="197" textAnchor="middle" fontSize="8" fontWeight="600" fill="#fbbf24">@Library('shared-lib') _</text>
+        <text x="270" y="207" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Shared Libraries — reusable pipeline steps across repos</text>
+
+        {/* when clause note */}
+        <rect x="20" y="222" width="120" height="20" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1" />
+        <text x="80" y="232" textAnchor="middle" fontSize="7.5" fill="#38bdf8">when {'{ branch \'main\' }'}</text>
+        <text x="80" y="240" textAnchor="middle" fontSize="6.5" fill="var(--muted)">conditional stage exec</text>
+
+        <rect x="160" y="222" width="120" height="20" rx="4" fill="#0f172a" stroke="#a78bfa" strokeWidth="1" />
+        <text x="220" y="232" textAnchor="middle" fontSize="7.5" fill="#a78bfa">withCredentials([...])</text>
+        <text x="220" y="240" textAnchor="middle" fontSize="6.5" fill="var(--muted)">secret injection</text>
+
+        <rect x="300" y="222" width="120" height="20" rx="4" fill="#0f172a" stroke="#34d399" strokeWidth="1" />
+        <text x="360" y="232" textAnchor="middle" fontSize="7.5" fill="#34d399">agent {'{ docker {...} }'}</text>
+        <text x="360" y="240" textAnchor="middle" fontSize="6.5" fill="var(--muted)">per-stage container</text>
+
+        <rect x="430" y="222" width="90" height="20" rx="4" fill="#0f172a" stroke="#f87171" strokeWidth="1" />
+        <text x="475" y="232" textAnchor="middle" fontSize="7.5" fill="#f87171">options {'{ ... }'}</text>
+        <text x="475" y="240" textAnchor="middle" fontSize="6.5" fill="var(--muted)">timeout · retry</text>
+      </svg>
+      <Caption text="Declarative Jenkinsfiles define the full pipeline in a single version-controlled file — stages flow left to right, and post{} always runs for notifications and cleanup." />
     </figure>
   );
 }
