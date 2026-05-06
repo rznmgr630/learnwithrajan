@@ -134,6 +134,8 @@ export type RoadmapDetailDiagramId =
   | "devops-alb-asg"
   | "devops-cloudwatch"
   | "devops-lambda"
+  | "devops-route53-cloudfront"
+  | "devops-sg-nacl-waf"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"

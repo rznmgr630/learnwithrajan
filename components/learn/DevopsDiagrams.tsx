@@ -46,6 +46,8 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-alb-asg",
   "devops-cloudwatch",
   "devops-lambda",
+  "devops-route53-cloudfront",
+  "devops-sg-nacl-waf",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2046,6 +2048,157 @@ function LambdaDiagram() {
   );
 }
 
+function Route53CloudFrontDiagram() {
+  const policies = [
+    { label: "Simple", color: "#6366f1" },
+    { label: "Weighted", color: "#3b82f6" },
+    { label: "Latency", color: "#10b981" },
+    { label: "Failover", color: "#ef4444" },
+    { label: "Geolocation", color: "#f59e0b" },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 290" className="w-full" aria-label="Route 53 and CloudFront: DNS resolution flow and CDN caching architecture">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">Route 53 + CloudFront — DNS & CDN Architecture</text>
+
+        {/* User */}
+        <rect x="220" y="24" width="90" height="24" rx="5" fill="color-mix(in oklab, #6366f1 15%, transparent)" stroke="#6366f155" strokeWidth="1.2"/>
+        <text x="265" y="40" textAnchor="middle" fontSize="9" fontWeight="600" fill="#818cf8">User Browser</text>
+
+        {/* Arrow to Route 53 */}
+        <line x1="265" y1="48" x2="180" y2="72" stroke="#6366f188" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrr53)"/>
+        <text x="190" y="65" fontSize="7" fill="var(--muted)">1. DNS query</text>
+
+        {/* Route 53 box */}
+        <rect x="20" y="72" width="145" height="56" rx="6" fill="color-mix(in oklab, #6366f1 10%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="92" y="88" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">Route 53</text>
+        <text x="92" y="100" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Hosted Zone</text>
+        <text x="92" y="112" textAnchor="middle" fontSize="7" fill="var(--muted)">A / AAAA / CNAME / Alias / MX</text>
+        <text x="92" y="122" textAnchor="middle" fontSize="7" fill="var(--muted)">Health checks · Routing policies</text>
+
+        {/* Routing policies pills */}
+        {policies.map(({ label, color }, i) => (
+          <g key={label}>
+            <rect x={20 + i * 30} y="136" width="28" height="13" rx="3" fill={`${color}22`} stroke={color} strokeWidth="0.8"/>
+            <text x={20 + i * 30 + 14} y="146" textAnchor="middle" fontSize="6.5" fontWeight="600" fill={color}>{label}</text>
+          </g>
+        ))}
+
+        {/* Arrow from Route53 → user (returns CF domain) */}
+        <line x1="165" y1="100" x2="220" y2="74" stroke="#6366f188" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrr53)"/>
+        <text x="176" y="82" fontSize="7" fill="var(--muted)">2. returns CF domain</text>
+
+        {/* Arrow user → CloudFront edge */}
+        <line x1="310" y1="36" x2="380" y2="60" stroke="#f59e0b88" strokeWidth="1" markerEnd="url(#arrr53)"/>
+        <text x="330" y="53" fontSize="7" fill="var(--muted)">3. HTTPS request</text>
+
+        {/* CloudFront edge box */}
+        <rect x="365" y="60" width="150" height="68" rx="6" fill="color-mix(in oklab, #f59e0b 10%, transparent)" stroke="#f59e0b55" strokeWidth="1.5"/>
+        <text x="440" y="76" textAnchor="middle" fontSize="9" fontWeight="700" fill="#f59e0b">CloudFront Edge</text>
+        <text x="440" y="88" textAnchor="middle" fontSize="7.5" fill="var(--muted)">450+ PoPs worldwide</text>
+        <text x="440" y="100" textAnchor="middle" fontSize="7" fill="var(--muted)">Cache hit → serve locally</text>
+        <text x="440" y="111" textAnchor="middle" fontSize="7" fill="var(--muted)">Cache miss → forward to origin</text>
+        <text x="440" y="122" textAnchor="middle" fontSize="7" fill="var(--muted)">TLS termination · HTTP/3 · gzip</text>
+
+        {/* Arrow user ← CloudFront (cached) */}
+        <line x1="365" y1="82" x2="310" y2="48" stroke="#10b98188" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrr53)"/>
+        <text x="312" y="76" fontSize="7" fill="#10b981">4. cached response</text>
+
+        {/* Origins row */}
+        <text x="265" y="162" textAnchor="middle" fontSize="8" fill="var(--muted)">ORIGINS (on cache miss)</text>
+        {[
+          { label: "S3 Bucket", sub: "Static assets\n(OAC)", color: "#f59e0b", x: 30 },
+          { label: "ALB", sub: "Dynamic app\n/api/*", color: "#3b82f6", x: 160 },
+          { label: "API Gateway", sub: "REST/HTTP\nAPI", color: "#8b5cf6", x: 290 },
+          { label: "Custom HTTP", sub: "On-premise\nor EC2", color: "#10b981", x: 420 },
+        ].map(({ label, sub, color, x }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              <rect x={x} y="168" width="110" height="38" rx="5" fill={`${color}18`} stroke={color} strokeWidth="1.2"/>
+              <text x={x + 55} y="181" textAnchor="middle" fontSize="8.5" fontWeight="600" fill={color}>{label}</text>
+              {lines.map((l, i) => <text key={i} x={x + 55} y={192 + i * 9} textAnchor="middle" fontSize="7" fill="var(--muted)">{l}</text>)}
+            </g>
+          );
+        })}
+
+        {/* Arrows CF → origins */}
+        {[85, 215, 345, 475].map((x, i) => (
+          <line key={i} x1={440} y1={128} x2={x} y2={168} stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2" markerEnd="url(#arrr53)"/>
+        ))}
+
+        {/* Security note */}
+        <rect x="20" y="218" width="490" height="30" rx="4" fill="#6366f10d" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="230" textAnchor="middle" fontSize="8" fontWeight="700" fill="#818cf8">Security layers on CloudFront</text>
+        <text x="265" y="242" textAnchor="middle" fontSize="7.5" fill="var(--muted)">HTTPS enforced (redirect-to-https) · TLSv1.2_2021 min · OAC locks S3 · WAF WebACL blocks SQLi/XSS · Signed URLs for private content</text>
+
+        {/* Alias note */}
+        <rect x="20" y="256" width="490" height="24" rx="4" fill="#10b9810d" stroke="#10b98133" strokeWidth="1"/>
+        <text x="265" y="272" textAnchor="middle" fontSize="7.5" fill="var(--muted)">
+          <tspan fontWeight="700" fill="#10b981">Alias vs CNAME: </tspan>Always use Alias for AWS resources — works at zone apex, free, no extra DNS lookup · CloudFront hosted zone ID is always Z2FDTNDATAQYW2
+        </text>
+
+        <defs>
+          <marker id="arrr53" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="Route 53 resolves DNS using routing policies (latency, weighted, failover, geolocation). CloudFront serves cached content from 450+ edge locations and forwards cache misses to the origin. Always use Alias records for AWS resources — they work at the zone apex and are free." />
+    </figure>
+  );
+}
+
+function SgNaclWafDiagram() {
+  const layers = [
+    { label: "AWS WAF", sub: "Layer 7 — inspects HTTP payload\nSQLi · XSS · Rate limit · IP block", color: "#ef4444", y: 44 },
+    { label: "ALB Security Group", sub: "Allow TCP 443/80 from 0.0.0.0/0\nStateful — return traffic auto-allowed", color: "#f59e0b", y: 106 },
+    { label: "NACL (Public Subnet)", sub: "Stateless — rule 50: DENY bad CIDRs · rule 100: ALLOW 443 · rule 110: ALLOW 1024-65535\nBoth inbound AND outbound rules required", color: "#3b82f6", y: 168 },
+    { label: "App Security Group", sub: "Allow TCP 8080 from ALB-SG only — not from 0.0.0.0/0\nStateful — reference SG ID, not CIDR", color: "#10b981", y: 230 },
+  ];
+
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 530 330" className="w-full" aria-label="Defence in depth: WAF, Security Groups, and NACLs layered in a production VPC">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--text)">Defence-in-Depth — WAF · SG · NACL</text>
+
+        {/* Internet user */}
+        <rect x="215" y="20" width="100" height="18" rx="4" fill="color-mix(in oklab, #6366f1 12%, transparent)" stroke="#6366f155" strokeWidth="1"/>
+        <text x="265" y="33" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#818cf8">Internet Traffic</text>
+
+        {layers.map(({ label, sub, color, y }) => {
+          const lines = sub.split("\n");
+          return (
+            <g key={label}>
+              <line x1="265" y1={y - 6} x2="265" y2={y} stroke={color} strokeWidth="1.2" markerEnd="url(#arrsec)"/>
+              <rect x="20" y={y} width="490" height="52" rx="5" fill={`${color}12`} stroke={color} strokeWidth="1.3"/>
+              <text x="265" y={y + 15} textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>{label}</text>
+              {lines.map((l, i) => (
+                <text key={i} x="265" y={y + 27 + i * 12} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{l}</text>
+              ))}
+            </g>
+          );
+        })}
+
+        {/* Arrow down to RDS */}
+        <line x1="265" y1="282" x2="265" y2="296" stroke="#8b5cf688" strokeWidth="1.2" markerEnd="url(#arrsec)"/>
+
+        {/* RDS */}
+        <rect x="160" y="296" width="210" height="24" rx="5" fill="color-mix(in oklab, #8b5cf6 12%, transparent)" stroke="#8b5cf655" strokeWidth="1.2"/>
+        <text x="265" y="312" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#8b5cf6">RDS Security Group — TCP 5432 from App-SG only</text>
+
+        <defs>
+          <marker id="arrsec" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="var(--muted)"/>
+          </marker>
+        </defs>
+      </svg>
+      <Caption text="Security Groups are stateful and are the primary control — always configure them first. NACLs are stateless subnet barriers; remember to allow ephemeral ports 1024–65535 outbound. WAF inspects the HTTP payload before traffic hits your compute layer." />
+    </figure>
+  );
+}
+
 export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
   switch (id) {
     case "devops-linux-hierarchy": return <LinuxHierarchyDiagram />;
@@ -2088,6 +2241,8 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-alb-asg": return <AlbAsgDiagram />;
     case "devops-cloudwatch": return <CloudWatchDiagram />;
     case "devops-lambda": return <LambdaDiagram />;
+    case "devops-route53-cloudfront": return <Route53CloudFrontDiagram />;
+    case "devops-sg-nacl-waf": return <SgNaclWafDiagram />;
     default: return null;
   }
 }
