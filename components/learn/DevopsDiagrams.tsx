@@ -62,6 +62,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-jenkins-architecture",
   "devops-jenkins-pipeline",
   "devops-jenkins-triggers",
+  "devops-cicd-testing",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2488,6 +2489,7 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-jenkins-architecture": return <JenkinsArchitectureDiagram />;
     case "devops-jenkins-pipeline": return <JenkinsPipelineDiagram />;
     case "devops-jenkins-triggers": return <JenkinsTriggersDiagram />;
+    case "devops-cicd-testing": return <CicdTestingDiagram />;
     default: return null;
   }
 }
@@ -3211,6 +3213,61 @@ function JenkinsTriggersDiagram() {
         <text x="265" y="237" textAnchor="middle" fontSize="7.5" fill="var(--muted)">copy ngrok HTTPS URL into GitHub repo Settings → Webhooks → Payload URL</text>
       </svg>
       <Caption text="Webhooks are the most efficient trigger — GitHub pushes directly to Jenkins. SCM polling works without inbound firewall rules. Multibranch Pipelines auto-discover all branches." />
+    </figure>
+  );
+}
+
+function CicdTestingDiagram() {
+  const layers = [
+    { label: "E2E / Smoke", color: "#f87171", count: "few", time: "10–30 min", desc: "Real browser · staging env", width: 160 },
+    { label: "Integration", color: "#fbbf24", count: "moderate", time: "2–8 min", desc: "Real DB via Testcontainers", width: 260 },
+    { label: "Unit", color: "#34d399", count: "many", time: "< 2 min", desc: "Isolated · mocked deps", width: 380 },
+  ];
+  const gates = [
+    { label: "Coverage gate", color: "#a78bfa", desc: "≥ 80% lines/branches" },
+    { label: "JUnit report", color: "#38bdf8", desc: "trend graph on pipeline" },
+    { label: "Parallel stages", color: "#fb923c", desc: "unit ∥ integration" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 480 250" className="w-full" aria-label="CI test pyramid — unit, integration, E2E layers with coverage gate">
+        <text x="240" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">CI Test Pyramid</text>
+
+        {/* Pyramid layers (bottom to top = unit → e2e) */}
+        {layers.map((l, i) => {
+          const y = 140 - i * 48;
+          const x = (480 - l.width) / 2;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={l.width} height={38} rx="5" fill="#0f172a" stroke={l.color} strokeWidth="1.5" />
+              <text x="240" y={y + 14} textAnchor="middle" fontSize="9" fontWeight="700" fill={l.color}>{l.label}</text>
+              <text x="240" y={y + 25} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{l.desc}</text>
+              <text x="240" y={y + 35} textAnchor="middle" fontSize="7" fill="#64748b">{l.count} · {l.time}</text>
+            </g>
+          );
+        })}
+
+        {/* Arrow tip */}
+        <polygon points="240,26 228,44 252,44" fill="#f87171" opacity="0.6" />
+
+        {/* Labels on sides */}
+        <text x="52" y="155" textAnchor="middle" fontSize="8" fill="#94a3b8" transform="rotate(-90,52,155)">Every commit</text>
+        <text x="428" y="120" textAnchor="middle" fontSize="8" fill="#94a3b8" transform="rotate(90,428,120)">Before production</text>
+
+        {/* Gates row */}
+        <text x="240" y="202" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--muted)">Quality gates wired into Jenkins:</text>
+        {gates.map((g, i) => {
+          const gx = 30 + i * 145;
+          return (
+            <g key={i}>
+              <rect x={gx} y="208" width="135" height="30" rx="5" fill="#1e293b" stroke={g.color} strokeWidth="1" />
+              <text x={gx + 67} y="222" textAnchor="middle" fontSize="8" fontWeight="600" fill={g.color}>{g.label}</text>
+              <text x={gx + 67} y="233" textAnchor="middle" fontSize="7" fill="var(--muted)">{g.desc}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <Caption text="Write many fast unit tests, fewer integration tests, and very few E2E tests. Add a coverage gate so the build fails if coverage drops below your threshold." />
     </figure>
   );
 }
