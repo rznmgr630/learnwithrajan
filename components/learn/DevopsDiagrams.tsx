@@ -55,6 +55,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-dockerfile",
   "devops-container-lifecycle",
   "devops-docker-networking",
+  "devops-docker-volumes",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2474,8 +2475,66 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-dockerfile": return <DockerfileDiagram />;
     case "devops-container-lifecycle": return <ContainerLifecycleDiagram />;
     case "devops-docker-networking": return <DockerNetworkingDiagram />;
+    case "devops-docker-volumes": return <DockerVolumesDiagram />;
     default: return null;
   }
+}
+
+function DockerVolumesDiagram() {
+  const types = [
+    { label: "Named Volume", color: "#34d399", loc: "/var/lib/docker/volumes/", note: "Docker-managed · survives rm" },
+    { label: "Bind Mount", color: "#38bdf8", loc: "/host/absolute/path", note: "Host-owned · dev live-reload" },
+    { label: "tmpfs Mount", color: "#f472b6", loc: "Host RAM only", note: "Never hits disk · secrets/tmp" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 230" className="w-full" aria-label="Docker storage types — named volume, bind mount, tmpfs">
+        <text x="265" y="16" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Docker Storage Types — Named Volume · Bind Mount · tmpfs</text>
+
+        {/* Container box */}
+        <rect x="190" y="26" width="150" height="60" rx="8" fill="color-mix(in oklab, #6366f1 10%, transparent)" stroke="#6366f133" strokeWidth="1.4"/>
+        <text x="265" y="46" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">Container</text>
+        {types.map((t, i) => (
+          <text key={i} x={210 + i * 44} y="68" textAnchor="middle" fontSize="7" fill={t.color}>/data{i + 1}</text>
+        ))}
+
+        {/* Lines to storage types */}
+        {types.map((t, i) => (
+          <line key={i} x1={210 + i * 44} y1="86" x2={80 + i * 185} y2="116"
+            stroke={t.color} strokeWidth="1.4" strokeDasharray="4,3"/>
+        ))}
+
+        {/* Storage type boxes */}
+        {types.map((t, i) => (
+          <g key={i}>
+            <rect x={20 + i * 165} y="116" width="140" height="52" rx="7"
+              fill={`color-mix(in oklab, ${t.color} 10%, transparent)`}
+              stroke={`${t.color}44`} strokeWidth="1.3"/>
+            <text x={90 + i * 165} y="132" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={t.color}>{t.label}</text>
+            <text x={90 + i * 165} y="145" textAnchor="middle" fontSize="7" fill="var(--muted)">{t.loc}</text>
+            <text x={90 + i * 165} y="158" textAnchor="middle" fontSize="7" fill="var(--muted)">{t.note}</text>
+          </g>
+        ))}
+
+        {/* Summary table */}
+        <rect x="20" y="178" width="490" height="44" rx="5" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        {[
+          { h: "Type", vals: ["Named Volume", "Bind Mount", "tmpfs"] },
+          { h: "Survives rm?", vals: ["yes", "yes (host owns)", "no"] },
+          { h: "Docker manages?", vals: ["yes", "no", "yes (RAM)"] },
+          { h: "Use in prod?", vals: ["✓ databases", "✓ dev only", "✓ secrets"] },
+        ].map((row, ri) => (
+          <g key={ri}>
+            <text x={30 + ri * 120} y="192" fontSize="7.5" fontWeight="700" fill="var(--muted)">{row.h}</text>
+            {row.vals.map((v, vi) => (
+              <text key={vi} x={30 + ri * 120} y={202 + vi * 9} fontSize="7" fill={types[vi].color}>{v}</text>
+            ))}
+          </g>
+        ))}
+      </svg>
+      <Caption text="Use named volumes for production databases and stateful services — Docker manages the path and they survive container removal. Use bind mounts only in development for live-reload. Use tmpfs for secrets and tmp data that must never touch disk." />
+    </figure>
+  );
 }
 
 function DockerNetworkingDiagram() {
