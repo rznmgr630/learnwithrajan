@@ -52,6 +52,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-cfn-sdk",
   "devops-cost-management",
   "devops-container-vs-vm",
+  "devops-dockerfile",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2468,8 +2469,62 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-cfn-sdk": return <CfnSdkDiagram />;
     case "devops-cost-management": return <CostManagementDiagram />;
     case "devops-container-vs-vm": return <ContainerVsVmDiagram />;
+    case "devops-dockerfile": return <DockerfileDiagram />;
     default: return null;
   }
+}
+
+function DockerfileDiagram() {
+  const layers = [
+    { label: "ENTRYPOINT/CMD", color: "#f472b6", desc: "container start command" },
+    { label: "USER appuser", color: "#a78bfa", desc: "drop root privilege" },
+    { label: "HEALTHCHECK", color: "#818cf8", desc: "orchestrator readiness" },
+    { label: "EXPOSE 3000", color: "#38bdf8", desc: "document port" },
+    { label: "COPY dist/ ./dist/", color: "#34d399", desc: "app build output" },
+    { label: "RUN npm ci --omit=dev", color: "#34d399", desc: "prod dependencies" },
+    { label: "WORKDIR /app", color: "#fbbf24", desc: "set working dir" },
+    { label: "FROM node:20-alpine", color: "#f97316", desc: "base OS + runtime" },
+  ];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 250" className="w-full" aria-label="Dockerfile layer anatomy">
+        <text x="265" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Dockerfile Layer Anatomy — Each Instruction = One Layer</text>
+
+        {layers.map((layer, i) => {
+          const y = 28 + (layers.length - 1 - i) * 24;
+          return (
+            <g key={i}>
+              <rect x="60" y={y} width="300" height="20" rx="4"
+                fill={`color-mix(in oklab, ${layer.color} 15%, transparent)`}
+                stroke={`${layer.color}44`} strokeWidth="1.2"/>
+              <text x="70" y={y + 13} fontSize="8.5" fontWeight="600" fill={layer.color}>{layer.label}</text>
+              <text x="370" y={y + 13} fontSize="7.5" fill="var(--muted)">{layer.desc}</text>
+              {i < layers.length - 1 && (
+                <text x="205" y={y - 2} textAnchor="middle" fontSize="9" fill="#475569">▲</text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Cache hit/miss annotation */}
+        <rect x="380" y="50" width="140" height="80" rx="6" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        <text x="450" y="65" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="var(--fg)">Layer Cache</text>
+        <text x="450" y="80" textAnchor="middle" fontSize="7.5" fill="#34d399">✓ CACHED</text>
+        <text x="450" y="92" textAnchor="middle" fontSize="7" fill="var(--muted)">if instruction + context</text>
+        <text x="450" y="103" textAnchor="middle" fontSize="7" fill="var(--muted)">hash unchanged</text>
+        <text x="450" y="115" textAnchor="middle" fontSize="7.5" fill="#f87171">✗ INVALIDATED</text>
+        <text x="450" y="126" textAnchor="middle" fontSize="7" fill="var(--muted)">cascades to all</text>
+        <text x="450" y="137" textAnchor="middle" fontSize="7" fill="var(--muted)">layers above it</text>
+
+        {/* Multi-stage callout */}
+        <rect x="20" y="220" width="490" height="22" rx="4" fill="color-mix(in oklab, #6366f1 8%, transparent)" stroke="#6366f133" strokeWidth="1"/>
+        <text x="265" y="235" textAnchor="middle" fontSize="8" fill="var(--muted)">
+          <tspan fontWeight="700" fill="#818cf8">Multi-stage: </tspan>build stage compiles → runtime stage copies only artefacts → builder layers never ship
+        </text>
+      </svg>
+      <Caption text="Put rarely-changing instructions (FROM, package manifests, npm install) near the bottom to maximise cache hits. Put frequently-changing instructions (COPY src) near the top to minimise rebuild cost." />
+    </figure>
+  );
 }
 
 function ContainerVsVmDiagram() {
