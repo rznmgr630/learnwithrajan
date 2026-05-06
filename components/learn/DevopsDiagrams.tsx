@@ -51,6 +51,7 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-ecs-ecr",
   "devops-cfn-sdk",
   "devops-cost-management",
+  "devops-container-vs-vm",
 ]);
 
 export function isDevopsRoadmapDiagram(id: RoadmapDetailDiagramId): boolean {
@@ -2466,6 +2467,73 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-ecs-ecr": return <EcsEcrDiagram />;
     case "devops-cfn-sdk": return <CfnSdkDiagram />;
     case "devops-cost-management": return <CostManagementDiagram />;
+    case "devops-container-vs-vm": return <ContainerVsVmDiagram />;
     default: return null;
   }
+}
+
+function ContainerVsVmDiagram() {
+  const containerItems = ["App A", "App B", "App C"];
+  const vmItems = ["App A", "App B"];
+  return (
+    <figure className="not-prose overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+      <svg viewBox="0 0 530 260" className="w-full" aria-label="Container vs VM architecture comparison">
+        <text x="265" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--fg)">Container vs Virtual Machine — Architecture Comparison</text>
+
+        {/* Container side */}
+        <text x="130" y="36" textAnchor="middle" fontSize="10" fontWeight="700" fill="#38bdf8">Containers</text>
+        {containerItems.map((app, i) => (
+          <g key={i}>
+            <rect x={20 + i * 80} y="44" width="70" height="36" rx="5" fill="color-mix(in oklab, #38bdf8 12%, transparent)" stroke="#38bdf833" strokeWidth="1.2"/>
+            <text x={55 + i * 80} y="58" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#38bdf8">{app}</text>
+            <text x={55 + i * 80} y="72" textAnchor="middle" fontSize="7.5" fill="var(--muted)">libs+deps</text>
+          </g>
+        ))}
+        <rect x="20" y="86" width="230" height="20" rx="4" fill="color-mix(in oklab, #6366f1 10%, transparent)" stroke="#6366f133" strokeWidth="1"/>
+        <text x="135" y="100" textAnchor="middle" fontSize="8" fontWeight="600" fill="#818cf8">Container Runtime (Docker)</text>
+        <rect x="20" y="112" width="230" height="20" rx="4" fill="color-mix(in oklab, #10b981 10%, transparent)" stroke="#10b98133" strokeWidth="1"/>
+        <text x="135" y="126" textAnchor="middle" fontSize="8" fontWeight="600" fill="#10b981">Host OS Kernel (shared)</text>
+        <rect x="20" y="138" width="230" height="20" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="135" y="152" textAnchor="middle" fontSize="8" fill="var(--muted)">Physical Hardware</text>
+
+        {/* VM side */}
+        <text x="400" y="36" textAnchor="middle" fontSize="10" fontWeight="700" fill="#f472b6">Virtual Machines</text>
+        {vmItems.map((app, i) => (
+          <g key={i}>
+            <rect x={290 + i * 120} y="44" width="108" height="78" rx="5" fill="color-mix(in oklab, #f472b6 8%, transparent)" stroke="#f472b633" strokeWidth="1.2"/>
+            <text x={344 + i * 120} y="60" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#f472b6">{app}</text>
+            <text x={344 + i * 120} y="74" textAnchor="middle" fontSize="7.5" fill="var(--muted)">libs+deps</text>
+            <rect x={298 + i * 120} y="80" width="92" height="16" rx="3" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+            <text x={344 + i * 120} y="92" textAnchor="middle" fontSize="7" fill="#94a3b8">Guest OS kernel</text>
+          </g>
+        ))}
+        <rect x="290" y="128" width="230" height="20" rx="4" fill="color-mix(in oklab, #f59e0b 10%, transparent)" stroke="#f59e0b33" strokeWidth="1"/>
+        <text x="405" y="142" textAnchor="middle" fontSize="8" fontWeight="600" fill="#f59e0b">Hypervisor (KVM / VMware)</text>
+        <rect x="290" y="154" width="230" height="20" rx="4" fill="color-mix(in oklab, #10b981 10%, transparent)" stroke="#10b98133" strokeWidth="1"/>
+        <text x="405" y="168" textAnchor="middle" fontSize="8" fontWeight="600" fill="#10b981">Host OS</text>
+        <rect x="290" y="180" width="230" height="20" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1"/>
+        <text x="405" y="194" textAnchor="middle" fontSize="8" fill="var(--muted)">Physical Hardware</text>
+
+        {/* Divider */}
+        <line x1="263" y1="32" x2="263" y2="210" stroke="#334155" strokeWidth="1" strokeDasharray="4,3"/>
+
+        {/* Key differences */}
+        <rect x="20" y="212" width="490" height="40" rx="5" fill="#0f172a" stroke="#1e293b" strokeWidth="1"/>
+        {[
+          { label: "Startup", c: "~ms", v: "~30–90s" },
+          { label: "Size", c: "MBs", v: "GBs" },
+          { label: "Isolation", c: "namespace", v: "full OS" },
+          { label: "Overhead", c: "minimal", v: "high" },
+        ].map((item, i) => (
+          <g key={i}>
+            <text x={40 + i * 120} y="228" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="var(--muted)">{item.label}</text>
+            <text x={40 + i * 120} y="242" textAnchor="middle" fontSize="8" fill="#38bdf8">{item.c}</text>
+            <text x={40 + i * 120} y="246" textAnchor="middle" fontSize="6" fill="var(--muted)">vs</text>
+            <text x={40 + i * 120} y="248" textAnchor="middle" fontSize="8" fill="#f472b6">{item.v}</text>
+          </g>
+        ))}
+      </svg>
+      <Caption text="Containers share the host kernel and add only app+libs on top — millisecond startup, MB footprint. VMs run a full guest OS per VM — stronger isolation but seconds to start and GB overhead." />
+    </figure>
+  );
 }
