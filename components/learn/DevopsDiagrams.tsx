@@ -14,6 +14,10 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-k8s-workloads",
   "devops-k8s-config",
   "devops-k8s-networking",
+  "devops-helm-workflow",
+  "devops-k8s-hpa",
+  "devops-k8s-rbac",
+  "devops-proxy-cache",
   "devops-terraform-workflow",
   "devops-aws-vpc",
   "devops-prometheus-architecture",
@@ -437,6 +441,184 @@ function K8sNetworkingDiagram() {
         <text x="256" y="199" textAnchor="middle" fontSize="7.5" fill="#f87171">NetworkPolicy: isolate DB pods</text>
       </svg>
       <Caption text="One Ingress Controller handles all HTTP/HTTPS routing — path rules route to different Services which load-balance to Pods. NetworkPolicy restricts which Pods can talk to each other." />
+    </figure>
+  );
+}
+
+function HelmWorkflowDiagram() {
+  const steps = [
+    { label: "Chart", sub: "templates/\nvalues.yaml\nChart.yaml", color: "#6366f1" },
+    { label: "helm install", sub: "render templates\nwith values", color: "#3b82f6" },
+    { label: "K8s Manifests", sub: "Deployment\nService\nIngress", color: "#06b6d4" },
+    { label: "Release", sub: "revision 1\nstored as Secret", color: "#10b981" },
+    { label: "helm upgrade", sub: "revision 2\nrollback available", color: "#f59e0b" },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 160" className="h-auto w-full" aria-hidden>
+        <text x="260" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Helm workflow — Chart → Render → Release → Upgrade → Rollback</text>
+        {steps.map(({ label, sub, color }, i) => {
+          const x = 20 + i * 96;
+          const lines = sub.split("\n");
+          return (
+            <g key={i}>
+              {i > 0 && (
+                <line x1={x - 4} y1="72" x2={x} y2="72" stroke="var(--border)" strokeWidth="1.5"/>
+              )}
+              <rect x={x} y="36" width="86" height="60" rx="7" fill={`color-mix(in oklab, ${color} 14%, transparent)`} stroke={`${color}55`} strokeWidth="1.5"/>
+              <text x={x + 43} y="54" textAnchor="middle" fontSize="10" fontWeight="700" fill={color}>{label}</text>
+              {lines.map((line, li) => (
+                <text key={li} x={x + 43} y={68 + li * 12} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{line}</text>
+              ))}
+            </g>
+          );
+        })}
+        <text x="260" y="118" textAnchor="middle" fontSize="8" fill="var(--muted)">helm rollback myapp 1  — replay exact manifests from any previous revision</text>
+        <text x="260" y="130" textAnchor="middle" fontSize="8" fill="var(--muted)">helm repo add + helm install — community charts from Artifact Hub in one command</text>
+      </svg>
+      <Caption text="Helm renders Go templates with values.yaml into K8s manifests. Every helm upgrade creates a new revision stored as a Secret — rollback is instant." />
+    </figure>
+  );
+}
+
+function K8sHpaDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 500 200" className="h-auto w-full" aria-hidden>
+        <text x="250" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">HPA control loop — Metrics Server → HPA → Deployment scale</text>
+        {/* Metrics Server */}
+        <rect x="20" y="28" width="110" height="36" rx="6" fill="color-mix(in oklab, #94a3b8 14%, transparent)" stroke="#94a3b855" strokeWidth="1.5"/>
+        <text x="75" y="44" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--muted)">Metrics Server</text>
+        <text x="75" y="56" textAnchor="middle" fontSize="7.5" fill="var(--muted)">scrapes kubelets</text>
+        {/* arrow */}
+        <line x1="130" y1="46" x2="168" y2="46" stroke="var(--border)" strokeWidth="1.5"/>
+        {/* HPA */}
+        <rect x="168" y="28" width="130" height="36" rx="6" fill="color-mix(in oklab, #6366f1 14%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="233" y="44" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">HPA Controller</text>
+        <text x="233" y="56" textAnchor="middle" fontSize="7.5" fill="var(--muted)">checks every 15s</text>
+        {/* arrow */}
+        <line x1="298" y1="46" x2="336" y2="46" stroke="var(--border)" strokeWidth="1.5"/>
+        {/* Deployment */}
+        <rect x="336" y="28" width="130" height="36" rx="6" fill="color-mix(in oklab, #10b981 14%, transparent)" stroke="#10b98155" strokeWidth="1.5"/>
+        <text x="401" y="44" textAnchor="middle" fontSize="9" fontWeight="700" fill="#34d399">Deployment</text>
+        <text x="401" y="56" textAnchor="middle" fontSize="7.5" fill="var(--muted)">replicas: 1 → 5</text>
+        {/* Scale up/down indicators */}
+        {[
+          { x: 80, label: "CPU: 0%/50%", color: "#94a3b8", y: 88 },
+          { x: 80, label: "CPU: 85%/50%", color: "#ef4444", y: 108 },
+          { x: 80, label: "CPU: 42%/50%", color: "#10b981", y: 128 },
+        ].map(({ x, label, color, y }) => (
+          <g key={label}>
+            <circle cx={x} cy={y} r="4" fill={color}/>
+            <text x={x + 10} y={y + 4} fontSize="8" fill="var(--muted)">{label}</text>
+          </g>
+        ))}
+        <text x="80" y="80" fontSize="8" fontWeight="600" fill="var(--text)">metric sample:</text>
+        {/* Scale decisions */}
+        <text x="270" y="88" fontSize="8" fontWeight="600" fill="var(--text)">HPA decision:</text>
+        {[
+          { label: "→ no change (below threshold)", color: "#94a3b8", y: 102 },
+          { label: "→ scale up: replicas = ceil(4 × 85/50) = 7", color: "#ef4444", y: 116 },
+          { label: "→ scale down after stabilizationWindow", color: "#10b981", y: 130 },
+        ].map(({ label, color, y }) => (
+          <text key={label} x="270" y={y} fontSize="7.5" fill={color}>{label}</text>
+        ))}
+        <text x="250" y="158" textAnchor="middle" fontSize="7.5" fill="var(--muted)">Formula: desiredReplicas = ceil(currentReplicas × currentMetric / desiredMetric)</text>
+        <text x="250" y="170" textAnchor="middle" fontSize="7.5" fill="var(--muted)">minReplicas ≤ desiredReplicas ≤ maxReplicas</text>
+      </svg>
+      <Caption text="HPA reads CPU/memory from Metrics Server every 15s and adjusts replica count. Scale-up is fast; scale-down waits for stabilizationWindowSeconds to prevent flapping." />
+    </figure>
+  );
+}
+
+function K8sRbacDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 200" className="h-auto w-full" aria-hidden>
+        <text x="260" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Kubernetes RBAC — Subject → Binding → Role → Resources</text>
+        {/* Subjects */}
+        <rect x="16" y="26" width="100" height="130" rx="8" fill="color-mix(in oklab, #94a3b8 10%, transparent)" stroke="#94a3b844" strokeWidth="1.5"/>
+        <text x="66" y="42" textAnchor="middle" fontSize="8" fontWeight="700" fill="var(--muted)">Subject</text>
+        {[{ label: "User", color: "#3b82f6" }, { label: "Group", color: "#6366f1" }, { label: "Service\nAccount", color: "#10b981" }].map(({ label, color }, i) => (
+          <g key={label}>
+            <rect x="26" y={52 + i * 36} width="80" height="28" rx="5" fill={`color-mix(in oklab, ${color} 16%, transparent)`} stroke={`${color}44`} strokeWidth="1"/>
+            {label.split("\n").map((l, li) => (
+              <text key={li} x="66" y={65 + i * 36 + li * 12} textAnchor="middle" fontSize="8" fill={color}>{l}</text>
+            ))}
+          </g>
+        ))}
+        {/* Binding */}
+        <rect x="146" y="60" width="110" height="68" rx="8" fill="color-mix(in oklab, #f59e0b 12%, transparent)" stroke="#f59e0b44" strokeWidth="1.5"/>
+        <text x="201" y="76" textAnchor="middle" fontSize="8" fontWeight="700" fill="#fbbf24">RoleBinding</text>
+        <text x="201" y="90" textAnchor="middle" fontSize="7.5" fill="var(--muted)">or</text>
+        <text x="201" y="104" textAnchor="middle" fontSize="8" fontWeight="700" fill="#fbbf24">ClusterRole</text>
+        <text x="201" y="116" textAnchor="middle" fontSize="8" fontWeight="700" fill="#fbbf24">Binding</text>
+        {/* arrows */}
+        <line x1="116" y1="91" x2="146" y2="91" stroke="var(--border)" strokeWidth="1.5"/>
+        <line x1="256" y1="91" x2="286" y2="91" stroke="var(--border)" strokeWidth="1.5"/>
+        {/* Role */}
+        <rect x="286" y="50" width="100" height="82" rx="8" fill="color-mix(in oklab, #6366f1 12%, transparent)" stroke="#6366f144" strokeWidth="1.5"/>
+        <text x="336" y="66" textAnchor="middle" fontSize="8" fontWeight="700" fill="#818cf8">Role</text>
+        <text x="336" y="80" textAnchor="middle" fontSize="7.5" fill="var(--muted)">verbs:</text>
+        {["get", "list", "create", "delete"].map((v, i) => (
+          <text key={v} x="336" y={92 + i * 11} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{v}</text>
+        ))}
+        {/* arrow */}
+        <line x1="386" y1="91" x2="416" y2="91" stroke="var(--border)" strokeWidth="1.5"/>
+        {/* Resources */}
+        <rect x="416" y="28" width="88" height="130" rx="8" fill="color-mix(in oklab, #10b981 10%, transparent)" stroke="#10b98144" strokeWidth="1.5"/>
+        <text x="460" y="44" textAnchor="middle" fontSize="8" fontWeight="700" fill="#34d399">Resources</text>
+        {["pods", "deployments", "services", "secrets", "nodes"].map((r, i) => (
+          <text key={r} x="460" y={58 + i * 18} textAnchor="middle" fontSize="8" fill="var(--muted)">{r}</text>
+        ))}
+        <text x="260" y="174" textAnchor="middle" fontSize="7.5" fill="var(--muted)">kubectl auth can-i get pods --as=alice -n staging  →  yes / no</text>
+        <text x="260" y="186" textAnchor="middle" fontSize="7.5" fill="var(--muted)">ClusterRole = cluster-wide | Role = namespace-scoped</text>
+      </svg>
+      <Caption text="RBAC: a Subject (user/ServiceAccount) gains permissions via a Binding that links them to a Role (verbs on resources). `kubectl auth can-i` audits any subject's permissions." />
+    </figure>
+  );
+}
+
+function ProxyCacheDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 190" className="h-auto w-full" aria-hidden>
+        <text x="260" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Nginx proxy cache — HIT vs MISS flow</text>
+        {/* Client */}
+        <rect x="20" y="30" width="70" height="30" rx="6" fill="color-mix(in oklab, #94a3b8 14%, transparent)" stroke="#94a3b855" strokeWidth="1.5"/>
+        <text x="55" y="49" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--muted)">Client</text>
+        {/* Nginx */}
+        <rect x="200" y="24" width="120" height="42" rx="7" fill="color-mix(in oklab, #f59e0b 14%, transparent)" stroke="#f59e0b55" strokeWidth="1.5"/>
+        <text x="260" y="40" textAnchor="middle" fontSize="9" fontWeight="700" fill="#fbbf24">Nginx</text>
+        <text x="260" y="55" textAnchor="middle" fontSize="7.5" fill="var(--muted)">reverse proxy + cache</text>
+        {/* Backend */}
+        <rect x="420" y="30" width="80" height="30" rx="6" fill="color-mix(in oklab, #6366f1 14%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="460" y="49" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">Backend</text>
+        {/* Cache store */}
+        <rect x="200" y="90" width="120" height="30" rx="6" fill="color-mix(in oklab, #10b981 14%, transparent)" stroke="#10b98155" strokeWidth="1.5"/>
+        <text x="260" y="108" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#34d399">Cache Store (disk)</text>
+        {/* HIT path */}
+        <line x1="90" y1="45" x2="200" y2="45" stroke="#10b981" strokeWidth="1.5"/>
+        <text x="145" y="40" textAnchor="middle" fontSize="7.5" fill="#10b981">request</text>
+        <line x1="260" y1="66" x2="260" y2="90" stroke="#10b981" strokeWidth="1.5" strokeDasharray="3 2"/>
+        <text x="280" y="82" fontSize="7.5" fill="#10b981">check cache</text>
+        <line x1="200" y1="45" x2="90" y2="55" stroke="#10b981" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <text x="130" y="66" textAnchor="middle" fontSize="7.5" fill="#10b981">HIT: serve cached</text>
+        {/* MISS path */}
+        <line x1="320" y1="45" x2="420" y2="45" stroke="#ef4444" strokeWidth="1.5"/>
+        <text x="370" y="40" textAnchor="middle" fontSize="7.5" fill="#ef4444">MISS: fetch</text>
+        <line x1="420" y1="55" x2="320" y2="66" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <text x="370" y="72" textAnchor="middle" fontSize="7.5" fill="#ef4444">200 + body</text>
+        <line x1="260" y1="90" x2="260" y2="120" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 2"/>
+        <text x="278" y="115" fontSize="7.5" fill="#ef4444">store + TTL</text>
+        {/* Legend */}
+        <circle cx="30" cy="148" r="4" fill="#10b981"/>
+        <text x="40" y="152" fontSize="8" fill="var(--muted)">Cache HIT — served from memory/disk, backend not called</text>
+        <circle cx="30" cy="166" r="4" fill="#ef4444"/>
+        <text x="40" y="170" fontSize="8" fill="var(--muted)">Cache MISS — backend called, response stored with TTL</text>
+        <text x="30" y="186" fontSize="7.5" fill="var(--muted)">X-Cache-Status header: HIT | MISS | BYPASS | EXPIRED | STALE</text>
+      </svg>
+      <Caption text="On a cache HIT Nginx serves from disk without touching the backend. On a MISS it fetches from the backend, stores the response, and serves it — subsequent requests are HITs." />
     </figure>
   );
 }
@@ -2597,6 +2779,10 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-k8s-workloads": return <K8sWorkloadsDiagram />;
     case "devops-k8s-config": return <K8sConfigDiagram />;
     case "devops-k8s-networking": return <K8sNetworkingDiagram />;
+    case "devops-helm-workflow": return <HelmWorkflowDiagram />;
+    case "devops-k8s-hpa": return <K8sHpaDiagram />;
+    case "devops-k8s-rbac": return <K8sRbacDiagram />;
+    case "devops-proxy-cache": return <ProxyCacheDiagram />;
     case "devops-terraform-workflow": return <TerraformWorkflowDiagram />;
     case "devops-aws-vpc": return <AwsVpcDiagram />;
     case "devops-prometheus-architecture": return <PrometheusArchDiagram />;
