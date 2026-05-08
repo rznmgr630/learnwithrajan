@@ -11,6 +11,9 @@ const DEVOPS_IDS = new Set<RoadmapDetailDiagramId>([
   "devops-docker-layers",
   "devops-cicd-pipeline",
   "devops-k8s-cluster",
+  "devops-k8s-workloads",
+  "devops-k8s-config",
+  "devops-k8s-networking",
   "devops-terraform-workflow",
   "devops-aws-vpc",
   "devops-prometheus-architecture",
@@ -283,6 +286,157 @@ function K8sClusterDiagram() {
         ))}
       </svg>
       <Caption text="Kubernetes cluster — control plane manages state; worker nodes run the Pods (containers)" />
+    </figure>
+  );
+}
+
+function K8sWorkloadsDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 220" className="h-auto w-full" aria-hidden>
+        <text x="260" y="16" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Deployment → ReplicaSet → Pods — ownership chain</text>
+        {/* Deployment */}
+        <rect x="180" y="24" width="160" height="40" rx="7" fill="color-mix(in oklab, #6366f1 14%, transparent)" stroke="#6366f155" strokeWidth="1.5"/>
+        <text x="260" y="40" textAnchor="middle" fontSize="10" fontWeight="700" fill="#818cf8">Deployment</text>
+        <text x="260" y="54" textAnchor="middle" fontSize="8" fill="var(--muted)">rolling update · rollback history</text>
+        {/* arrow */}
+        <line x1="260" y1="64" x2="260" y2="78" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="3 2"/>
+        {/* ReplicaSet */}
+        <rect x="180" y="78" width="160" height="40" rx="7" fill="color-mix(in oklab, #3b82f6 12%, transparent)" stroke="#3b82f655" strokeWidth="1.5"/>
+        <text x="260" y="94" textAnchor="middle" fontSize="10" fontWeight="700" fill="#60a5fa">ReplicaSet</text>
+        <text x="260" y="108" textAnchor="middle" fontSize="8" fill="var(--muted)">ensures N replicas always running</text>
+        {/* arrow to 3 pods */}
+        {[90, 260, 430].map((x) => (
+          <line key={x} x1="260" y1="118" x2={x} y2="140" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"/>
+        ))}
+        {/* Pods */}
+        {[
+          { x: 30, label: "Pod 1", color: "#10b981" },
+          { x: 200, label: "Pod 2", color: "#10b981" },
+          { x: 370, label: "Pod 3", color: "#10b981" },
+        ].map(({ x, label, color }) => (
+          <g key={label}>
+            <rect x={x} y="140" width="120" height="52" rx="7" fill={`color-mix(in oklab, ${color} 10%, transparent)`} stroke={`${color}44`} strokeWidth="1.5"/>
+            <text x={x + 60} y="157" textAnchor="middle" fontSize="9" fontWeight="600" fill={color}>{label}</text>
+            <rect x={x + 12} y="163" width="42" height="16" rx="3" fill="color-mix(in oklab, var(--elevated) 70%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+            <text x={x + 33} y="175" textAnchor="middle" fontSize="7.5" fill="var(--text)">container</text>
+            <rect x={x + 62} y="163" width="46" height="16" rx="3" fill="color-mix(in oklab, var(--elevated) 70%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+            <text x={x + 85} y="175" textAnchor="middle" fontSize="7.5" fill="var(--muted)">shared net</text>
+          </g>
+        ))}
+        {/* Service */}
+        <rect x="140" y="206" width="240" height="10" rx="4" fill="color-mix(in oklab, #f59e0b 12%, transparent)" stroke="#f59e0b44" strokeWidth="1"/>
+        <text x="260" y="215" textAnchor="middle" fontSize="7.5" fontWeight="600" fill="#fbbf24">Service (ClusterIP) — stable IP + DNS routes to matching pods via label selector</text>
+      </svg>
+      <Caption text="A Deployment owns a ReplicaSet which owns Pods. The Service front-ends all Pods via label selector — Pods can be replaced without changing the Service IP." />
+    </figure>
+  );
+}
+
+function K8sConfigDiagram() {
+  const items = [
+    { label: "ConfigMap", color: "#3b82f6", sub: "non-sensitive config", y: 30 },
+    { label: "Secret", color: "#ef4444", sub: "base64 sensitive data", y: 90 },
+    { label: "PVC", color: "#10b981", sub: "storage request", y: 150 },
+  ];
+  const mounts = [
+    { label: "env vars", y: 30 },
+    { label: "file mount", y: 65 },
+    { label: "env vars", y: 110 },
+    { label: "file mount (safer)", y: 145 },
+    { label: "volume mount", y: 180 },
+  ];
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 480 200" className="h-auto w-full" aria-hidden>
+        <text x="240" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Config, Secrets &amp; Storage injection into Pods</text>
+        {/* Resources */}
+        {items.map(({ label, color, sub, y }) => (
+          <g key={label}>
+            <rect x="16" y={y} width="130" height="36" rx="6" fill={`color-mix(in oklab, ${color} 14%, transparent)`} stroke={`${color}55`} strokeWidth="1.5"/>
+            <text x="81" y={y + 14} textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>{label}</text>
+            <text x="81" y={y + 26} textAnchor="middle" fontSize="7.5" fill="var(--muted)">{sub}</text>
+          </g>
+        ))}
+        {/* Pod */}
+        <rect x="300" y="20" width="160" height="160" rx="8" fill="color-mix(in oklab, #6366f1 10%, transparent)" stroke="#6366f144" strokeWidth="1.5"/>
+        <text x="380" y="38" textAnchor="middle" fontSize="9" fontWeight="700" fill="#818cf8">Pod</text>
+        <rect x="316" y="44" width="128" height="124" rx="5" fill="color-mix(in oklab, var(--elevated) 60%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+        <text x="380" y="58" textAnchor="middle" fontSize="8" fontWeight="600" fill="var(--text)">container</text>
+        {mounts.map(({ label, y: my }) => (
+          <g key={label + my}>
+            <rect x="322" y={my + 34} width="116" height="14" rx="3" fill="color-mix(in oklab, var(--elevated) 80%, transparent)" stroke="var(--border)" strokeWidth="1"/>
+            <text x="380" y={my + 45} textAnchor="middle" fontSize="7" fill="var(--muted)">{label}</text>
+          </g>
+        ))}
+        {/* PV below */}
+        <rect x="16" y="162" width="130" height="20" rx="5" fill="color-mix(in oklab, #8b5cf6 12%, transparent)" stroke="#8b5cf644" strokeWidth="1"/>
+        <text x="81" y="176" textAnchor="middle" fontSize="8" fill="#a78bfa">PV (provisioned storage)</text>
+        {/* Arrows */}
+        <line x1="146" y1="48" x2="300" y2="68" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="146" y1="48" x2="300" y2="102" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="146" y1="108" x2="300" y2="128" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="146" y1="108" x2="300" y2="162" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="146" y1="168" x2="300" y2="196" stroke="#10b981" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="81" y1="162" x2="81" y2="182" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3 2"/>
+      </svg>
+      <Caption text="ConfigMaps and Secrets can be consumed as environment variables or file mounts. PVCs bind to PVs and provide durable storage that survives Pod restarts." />
+    </figure>
+  );
+}
+
+function K8sNetworkingDiagram() {
+  return (
+    <figure className={figClass}>
+      <svg viewBox="0 0 520 230" className="h-auto w-full" aria-hidden>
+        <text x="260" y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--text)">Kubernetes networking — Internet → Ingress → Service → Pod</text>
+        {/* Internet */}
+        <rect x="210" y="22" width="100" height="28" rx="6" fill="color-mix(in oklab, #94a3b8 14%, transparent)" stroke="#94a3b855" strokeWidth="1.5"/>
+        <text x="260" y="40" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--muted)">Internet</text>
+        {/* arrow */}
+        <line x1="260" y1="50" x2="260" y2="66" stroke="var(--border)" strokeWidth="1.5"/>
+        {/* Ingress Controller */}
+        <rect x="160" y="66" width="200" height="36" rx="7" fill="color-mix(in oklab, #f59e0b 14%, transparent)" stroke="#f59e0b55" strokeWidth="1.5"/>
+        <text x="260" y="81" textAnchor="middle" fontSize="9" fontWeight="700" fill="#fbbf24">Ingress Controller</text>
+        <text x="260" y="94" textAnchor="middle" fontSize="7.5" fill="var(--muted)">/api → api-svc   /app → frontend-svc</text>
+        {/* arrows to services */}
+        <line x1="210" y1="102" x2="130" y2="124" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="310" y1="102" x2="390" y2="124" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"/>
+        {/* Services */}
+        {[
+          { x: 40, label: "api-svc", color: "#6366f1", sub: "ClusterIP" },
+          { x: 300, label: "frontend-svc", color: "#10b981", sub: "ClusterIP" },
+        ].map(({ x, label, color, sub }) => (
+          <g key={label}>
+            <rect x={x} y="124" width="140" height="34" rx="6" fill={`color-mix(in oklab, ${color} 14%, transparent)`} stroke={`${color}55`} strokeWidth="1.5"/>
+            <text x={x + 70} y="138" textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>{label}</text>
+            <text x={x + 70} y="150" textAnchor="middle" fontSize="7.5" fill="var(--muted)">{sub}</text>
+          </g>
+        ))}
+        {/* arrows to pods */}
+        {[75, 145].map((x) => (
+          <line key={x} x1={x} y1="158" x2={x} y2="178" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"/>
+        ))}
+        {[335, 405].map((x) => (
+          <line key={x} x1={x} y1="158" x2={x} y2="178" stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"/>
+        ))}
+        {/* Pods */}
+        {[
+          { x: 30, color: "#6366f1", label: "api pod" },
+          { x: 100, color: "#6366f1", label: "api pod" },
+          { x: 290, color: "#10b981", label: "fe pod" },
+          { x: 360, color: "#10b981", label: "fe pod" },
+        ].map(({ x, color, label }, i) => (
+          <g key={i}>
+            <rect x={x} y="178" width="66" height="28" rx="5" fill={`color-mix(in oklab, ${color} 12%, transparent)`} stroke={`${color}44`} strokeWidth="1"/>
+            <text x={x + 33} y="196" textAnchor="middle" fontSize="8" fill={color}>{label}</text>
+          </g>
+        ))}
+        {/* NetworkPolicy badge */}
+        <rect x="186" y="186" width="140" height="18" rx="4" fill="color-mix(in oklab, #ef4444 12%, transparent)" stroke="#ef444444" strokeWidth="1"/>
+        <text x="256" y="199" textAnchor="middle" fontSize="7.5" fill="#f87171">NetworkPolicy: isolate DB pods</text>
+      </svg>
+      <Caption text="One Ingress Controller handles all HTTP/HTTPS routing — path rules route to different Services which load-balance to Pods. NetworkPolicy restricts which Pods can talk to each other." />
     </figure>
   );
 }
@@ -2440,6 +2594,9 @@ export function DevopsDiagram({ id }: { id: RoadmapDetailDiagramId }) {
     case "devops-docker-layers": return <DockerLayersDiagram />;
     case "devops-cicd-pipeline": return <CicdPipelineDiagram />;
     case "devops-k8s-cluster": return <K8sClusterDiagram />;
+    case "devops-k8s-workloads": return <K8sWorkloadsDiagram />;
+    case "devops-k8s-config": return <K8sConfigDiagram />;
+    case "devops-k8s-networking": return <K8sNetworkingDiagram />;
     case "devops-terraform-workflow": return <TerraformWorkflowDiagram />;
     case "devops-aws-vpc": return <AwsVpcDiagram />;
     case "devops-prometheus-architecture": return <PrometheusArchDiagram />;
