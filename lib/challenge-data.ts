@@ -163,6 +163,7 @@ export type RoadmapDetailDiagramId =
   | "devops-nginx-config"
   | "devops-load-balancing"
   | "devops-iptables"
+  | "devops-ssl-termination"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
