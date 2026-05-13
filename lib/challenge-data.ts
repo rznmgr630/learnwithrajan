@@ -166,6 +166,7 @@ export type RoadmapDetailDiagramId =
   | "devops-ssl-termination"
   | "devops-ha-patterns"
   | "devops-ansible-arch"
+  | "devops-ansible-inventory"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
