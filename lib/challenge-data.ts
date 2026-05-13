@@ -160,6 +160,7 @@ export type RoadmapDetailDiagramId =
   | "devops-k8s-hpa"
   | "devops-k8s-rbac"
   | "devops-proxy-cache"
+  | "devops-nginx-config"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
