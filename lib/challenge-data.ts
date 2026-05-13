@@ -168,6 +168,7 @@ export type RoadmapDetailDiagramId =
   | "devops-ansible-arch"
   | "devops-ansible-inventory"
   | "devops-ansible-adhoc"
+  | "devops-ansible-playbook"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
