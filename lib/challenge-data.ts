@@ -172,6 +172,7 @@ export type RoadmapDetailDiagramId =
   | "devops-ansible-templates"
   | "devops-ansible-roles"
   | "devops-ansible-vault"
+  | "devops-terraform-overview"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
