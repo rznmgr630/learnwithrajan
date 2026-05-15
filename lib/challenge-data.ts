@@ -174,6 +174,7 @@ export type RoadmapDetailDiagramId =
   | "devops-ansible-vault"
   | "devops-terraform-overview"
   | "devops-terraform-hcl"
+  | "devops-terraform-state"
   | "nextjs-request-lifecycle"
   | "nextjs-client-server-boundary"
   | "nextjs-data-fetch-cache"
