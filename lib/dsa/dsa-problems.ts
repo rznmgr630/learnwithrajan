@@ -200,4 +200,289 @@ print(two_sum([3, 2, 4], 6))       # [1, 2]`,
       },
     ],
   },
+  {
+    id: 2,
+    slug: "valid-parentheses",
+    title: "Valid Parentheses",
+    difficulty: "basic",
+    tags: ["Stack", "String"],
+    description:
+      "Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is **valid**.\n\nAn input string is valid if:\n\n- Open brackets must be closed by the **same type** of brackets.\n- Open brackets must be closed in the **correct order**.\n- Every close bracket has a corresponding open bracket of the **same type**.",
+    constraints: [
+      "1 ≤ s.length ≤ 10⁴",
+      "s consists of parentheses only '()[]{}'",
+    ],
+    examples: [
+      {
+        input: 's = "()"',
+        output: "true",
+      },
+      {
+        input: 's = "()[]{}"',
+        output: "true",
+      },
+      {
+        input: 's = "(]"',
+        output: "false",
+        explanation: "The bracket types don't match.",
+      },
+      {
+        input: 's = "([)]"',
+        output: "false",
+        explanation: "Brackets are not closed in the correct order.",
+      },
+    ],
+    solutions: [
+      {
+        language: "javascript",
+        code: `/**
+ * @param {string} s
+ * @return {boolean}
+ */
+function isValid(s) {
+  const stack = [];
+  const pairs = { ')': '(', '}': '{', ']': '[' };
+
+  for (const ch of s) {
+    if (ch in pairs) {
+      // Closing bracket — top of stack must match
+      if (stack.pop() !== pairs[ch]) return false;
+    } else {
+      // Opening bracket — push onto stack
+      stack.push(ch);
+    }
+  }
+
+  return stack.length === 0;
+}
+
+// Example usage
+console.log(isValid("()[]{}"));  // true
+console.log(isValid("(]"));      // false
+console.log(isValid("([)]"));    // false`,
+      },
+      {
+        language: "typescript",
+        code: `function isValid(s: string): boolean {
+  const stack: string[] = [];
+  const pairs: Record<string, string> = { ')': '(', '}': '{', ']': '[' };
+
+  for (const ch of s) {
+    if (ch in pairs) {
+      if (stack.pop() !== pairs[ch]) return false;
+    } else {
+      stack.push(ch);
+    }
+  }
+
+  return stack.length === 0;
+}
+
+// Example usage
+console.log(isValid("()[]{}"));  // true
+console.log(isValid("(]"));      // false`,
+      },
+      {
+        language: "php",
+        code: `<?php
+
+function isValid(string $s): bool {
+    $stack = [];
+    $pairs = [')' => '(', '}' => '{', ']' => '['];
+
+    foreach (str_split($s) as $ch) {
+        if (isset($pairs[$ch])) {
+            if (array_pop($stack) !== $pairs[$ch]) return false;
+        } else {
+            $stack[] = $ch;
+        }
+    }
+
+    return empty($stack);
+}
+
+// Example usage
+var_dump(isValid("()[]{}"));  // true
+var_dump(isValid("(]"));      // false`,
+      },
+      {
+        language: "java",
+        code: `import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+
+class Solution {
+    public boolean isValid(String s) {
+        Deque<Character> stack = new ArrayDeque<>();
+        Map<Character, Character> pairs = Map.of(')', '(', '}', '{', ']', '[');
+
+        for (char ch : s.toCharArray()) {
+            if (pairs.containsKey(ch)) {
+                if (stack.isEmpty() || stack.pop() != pairs.get(ch)) {
+                    return false;
+                }
+            } else {
+                stack.push(ch);
+            }
+        }
+
+        return stack.isEmpty();
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.isValid("()[]{}")); // true
+        System.out.println(sol.isValid("(]"));     // false
+    }
+}`,
+      },
+      {
+        language: "python",
+        code: `def is_valid(s: str) -> bool:
+    stack: list[str] = []
+    pairs = {')': '(', '}': '{', ']': '['}
+
+    for ch in s:
+        if ch in pairs:
+            if not stack or stack.pop() != pairs[ch]:
+                return False
+        else:
+            stack.append(ch)
+
+    return len(stack) == 0
+
+
+# Example usage
+print(is_valid("()[]{}"))  # True
+print(is_valid("(]"))      # False
+print(is_valid("([)]"))    # False`,
+      },
+    ],
+  },
+  {
+    id: 3,
+    slug: "best-time-to-buy-and-sell-stock",
+    title: "Best Time to Buy and Sell Stock",
+    difficulty: "basic",
+    tags: ["Array", "Greedy"],
+    description:
+      "You are given an array `prices` where `prices[i]` is the price of a given stock on the `i`-th day.\n\nYou want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock.\n\nReturn the **maximum profit** you can achieve from this transaction. If you cannot achieve any profit, return `0`.",
+    constraints: [
+      "1 ≤ prices.length ≤ 10⁵",
+      "0 ≤ prices[i] ≤ 10⁴",
+    ],
+    examples: [
+      {
+        input: "prices = [7, 1, 5, 3, 6, 4]",
+        output: "5",
+        explanation: "Buy on day 2 (price = 1), sell on day 5 (price = 6). Profit = 6 − 1 = 5.",
+      },
+      {
+        input: "prices = [7, 6, 4, 3, 1]",
+        output: "0",
+        explanation: "Prices only decrease — no profitable transaction is possible.",
+      },
+    ],
+    solutions: [
+      {
+        language: "javascript",
+        code: `/**
+ * @param {number[]} prices
+ * @return {number}
+ */
+function maxProfit(prices) {
+  let minPrice = Infinity;
+  let maxProfit = 0;
+
+  for (const price of prices) {
+    minPrice = Math.min(minPrice, price);
+    maxProfit = Math.max(maxProfit, price - minPrice);
+  }
+
+  return maxProfit;
+}
+
+// Example usage
+console.log(maxProfit([7, 1, 5, 3, 6, 4])); // 5
+console.log(maxProfit([7, 6, 4, 3, 1]));     // 0`,
+      },
+      {
+        language: "typescript",
+        code: `function maxProfit(prices: number[]): number {
+  let minPrice = Infinity;
+  let maxProfit = 0;
+
+  for (const price of prices) {
+    minPrice = Math.min(minPrice, price);
+    maxProfit = Math.max(maxProfit, price - minPrice);
+  }
+
+  return maxProfit;
+}
+
+// Example usage
+console.log(maxProfit([7, 1, 5, 3, 6, 4])); // 5
+console.log(maxProfit([7, 6, 4, 3, 1]));     // 0`,
+      },
+      {
+        language: "php",
+        code: `<?php
+
+function maxProfit(array $prices): int {
+    $minPrice = PHP_INT_MAX;
+    $maxProfit = 0;
+
+    foreach ($prices as $price) {
+        $minPrice = min($minPrice, $price);
+        $maxProfit = max($maxProfit, $price - $minPrice);
+    }
+
+    return $maxProfit;
+}
+
+// Example usage
+echo maxProfit([7, 1, 5, 3, 6, 4]); // 5
+echo maxProfit([7, 6, 4, 3, 1]);     // 0`,
+      },
+      {
+        language: "java",
+        code: `class Solution {
+    public int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE;
+        int maxProfit = 0;
+
+        for (int price : prices) {
+            minPrice = Math.min(minPrice, price);
+            maxProfit = Math.max(maxProfit, price - minPrice);
+        }
+
+        return maxProfit;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.maxProfit(new int[]{7, 1, 5, 3, 6, 4})); // 5
+        System.out.println(sol.maxProfit(new int[]{7, 6, 4, 3, 1}));     // 0
+    }
+}`,
+      },
+      {
+        language: "python",
+        code: `def max_profit(prices: list[int]) -> int:
+    min_price = float('inf')
+    max_profit = 0
+
+    for price in prices:
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
+
+    return max_profit
+
+
+# Example usage
+print(max_profit([7, 1, 5, 3, 6, 4]))  # 5
+print(max_profit([7, 6, 4, 3, 1]))      # 0`,
+      },
+    ],
+  },
 ];
