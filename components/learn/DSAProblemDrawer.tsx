@@ -20,11 +20,25 @@ const LANG_DOT: Record<SolutionLanguage, string> = {
 };
 
 const COMPLEXITY_META: Record<string, { approach: string; time: string; space: string }> = {
-  "two-sum":                          { approach: "Hash map",       time: "O(n)", space: "O(n)" },
-  "valid-parentheses":                { approach: "Stack",          time: "O(n)", space: "O(n)" },
-  "best-time-to-buy-and-sell-stock":  { approach: "Greedy",         time: "O(n)", space: "O(1)" },
-  "contains-duplicate":               { approach: "Hash set",       time: "O(n)", space: "O(n)" },
-  "maximum-subarray":                 { approach: "Kadane's",       time: "O(n)", space: "O(1)" },
+  "two-sum":                                  { approach: "Hash map",          time: "O(n)",     space: "O(n)"    },
+  "valid-parentheses":                        { approach: "Stack",             time: "O(n)",     space: "O(n)"    },
+  "best-time-to-buy-and-sell-stock":          { approach: "Greedy",            time: "O(n)",     space: "O(1)"    },
+  "contains-duplicate":                       { approach: "Hash set",          time: "O(n)",     space: "O(n)"    },
+  "maximum-subarray":                         { approach: "Kadane's",          time: "O(n)",     space: "O(1)"    },
+  "product-of-array-except-self":             { approach: "Prefix/suffix",     time: "O(n)",     space: "O(1)"    },
+  "move-zeroes":                              { approach: "Two pointers",      time: "O(n)",     space: "O(1)"    },
+  "remove-duplicates-from-sorted-array":      { approach: "Two pointers",      time: "O(n)",     space: "O(1)"    },
+  "container-with-most-water":                { approach: "Two pointers",      time: "O(n)",     space: "O(1)"    },
+  "three-sum":                                { approach: "Sort + two ptrs",   time: "O(n²)",    space: "O(1)"    },
+  "sort-colors":                              { approach: "Dutch Natl Flag",   time: "O(n)",     space: "O(1)"    },
+  "rotate-array":                             { approach: "Triple reverse",    time: "O(n)",     space: "O(1)"    },
+  "majority-element":                         { approach: "Boyer-Moore",       time: "O(n)",     space: "O(1)"    },
+  "missing-number":                           { approach: "Gauss formula",     time: "O(n)",     space: "O(1)"    },
+  "maximum-product-subarray":                 { approach: "DP min/max",        time: "O(n)",     space: "O(1)"    },
+  "find-minimum-in-rotated-sorted-array":     { approach: "Binary search",     time: "O(log n)", space: "O(1)"    },
+  "merge-sorted-array":                       { approach: "Two pointers",      time: "O(m+n)",   space: "O(1)"    },
+  "two-sum-ii-input-array-is-sorted":         { approach: "Two pointers",      time: "O(n)",     space: "O(1)"    },
+  "merge-intervals":                          { approach: "Sort + scan",       time: "O(n log n)", space: "O(n)"  },
 };
 
 function CodeBlock({ code, language }: { code: string; language: SolutionLanguage }) {
