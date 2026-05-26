@@ -433,6 +433,31 @@ export const UI_STRINGS = {
     np: "संस्करण नियन्त्रण र दैनिक इन्जिनियरिङ बानी।",
     jp: "バージョン管理と日々の開発の型。",
   },
+  "hub.programming.groupDsa": {
+    en: "DSA Challenges",
+    np: "DSA चुनौतीहरू",
+    jp: "DSAチャレンジ",
+  },
+  "hub.programming.groupDsaHint": {
+    en: "LeetCode-style problems from basic to advanced.",
+    np: "आधारभूत देखि उन्नत सम्म LeetCode-शैलीका समस्याहरू।",
+    jp: "基礎から応用まで LeetCode スタイルの問題集。",
+  },
+  "hub.dsa.title": {
+    en: "DSA Problems",
+    np: "DSA समस्याहरू",
+    jp: "DSA 問題集",
+  },
+  "hub.dsa.subtitle": {
+    en: "Data structures & algorithms — multi-language solutions",
+    np: "डेटा संरचना र एल्गोरिदम — बहु-भाषा समाधान",
+    jp: "データ構造とアルゴリズム — 多言語ソリューション",
+  },
+  "hub.dsa.cta": {
+    en: "Start practicing",
+    np: "अभ्यास सुरु गर्नुहोस्",
+    jp: "練習を始める",
+  },
   "hub.sectionLanguage": {
     en: "Language",
     np: "भाषा",

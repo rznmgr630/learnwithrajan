@@ -379,6 +379,43 @@ export function ProgrammingTracks() {
       </ProgrammingAccordionSection>
 
       <ProgrammingAccordionSection
+        sectionId={`${baseId}-dsa`}
+        titleKey="hub.programming.groupDsa"
+        hintKey="hub.programming.groupDsaHint"
+        defaultOpen
+      >
+        <Link href="/learn/dsa" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.dsa.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.dsa.subtitle")}</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {(["Basic", "Medium", "Advanced"] as const).map((level) => (
+              <span
+                key={level}
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  level === "Basic"
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : level === "Medium"
+                      ? "bg-amber-500/10 text-amber-500"
+                      : "bg-rose-500/10 text-rose-500"
+                }`}
+              >
+                {level}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.dsa.cta")}
+          </span>
+        </Link>
+      </ProgrammingAccordionSection>
+
+      <ProgrammingAccordionSection
         sectionId={`${baseId}-tools`}
         titleKey="hub.programming.groupTools"
         hintKey="hub.programming.groupToolsHint"
