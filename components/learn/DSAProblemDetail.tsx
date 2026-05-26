@@ -6,6 +6,8 @@ import { LANGUAGE_LABELS, DIFFICULTY_COLOR, DIFFICULTY_LABEL } from "@/lib/dsa/d
 import { DSATwoSumDiagram } from "@/components/learn/DSATwoSumDiagram";
 import { DSAValidParenthesesDiagram } from "@/components/learn/DSAValidParenthesesDiagram";
 import { DSAStockProfitDiagram } from "@/components/learn/DSAStockProfitDiagram";
+import { DSAContainsDuplicateDiagram } from "@/components/learn/DSAContainsDuplicateDiagram";
+import { DSAMaxSubarrayDiagram } from "@/components/learn/DSAMaxSubarrayDiagram";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 
 const LANGUAGE_ORDER: SolutionLanguage[] = ["javascript", "typescript", "php", "java", "python"];
@@ -198,13 +200,17 @@ export function DSAProblemDetail({ problem, backHref }: { problem: DsaProblem; b
           {/* Diagram */}
           {(problem.slug === "two-sum" ||
             problem.slug === "valid-parentheses" ||
-            problem.slug === "best-time-to-buy-and-sell-stock") && (
+            problem.slug === "best-time-to-buy-and-sell-stock" ||
+            problem.slug === "contains-duplicate" ||
+            problem.slug === "maximum-subarray") && (
             <section>
               <SectionHeading>Visual Diagram</SectionHeading>
               <div className="mt-3">
                 {problem.slug === "two-sum" && <DSATwoSumDiagram />}
                 {problem.slug === "valid-parentheses" && <DSAValidParenthesesDiagram />}
                 {problem.slug === "best-time-to-buy-and-sell-stock" && <DSAStockProfitDiagram />}
+                {problem.slug === "contains-duplicate" && <DSAContainsDuplicateDiagram />}
+                {problem.slug === "maximum-subarray" && <DSAMaxSubarrayDiagram />}
               </div>
             </section>
           )}
@@ -216,6 +222,8 @@ export function DSAProblemDetail({ problem, backHref }: { problem: DsaProblem; b
                 "two-sum": { approach: "Hash map", time: "O(n)", space: "O(n)" },
                 "valid-parentheses": { approach: "Stack", time: "O(n)", space: "O(n)" },
                 "best-time-to-buy-and-sell-stock": { approach: "Greedy one-pass", time: "O(n)", space: "O(1)" },
+                "contains-duplicate": { approach: "Hash set", time: "O(n)", space: "O(n)" },
+                "maximum-subarray": { approach: "Kadane's algorithm", time: "O(n)", space: "O(1)" },
               };
               const m = meta[problem.slug] ?? { approach: "Optimal", time: "O(n)", space: "O(n)" };
               return (

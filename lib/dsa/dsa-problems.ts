@@ -485,4 +485,263 @@ print(max_profit([7, 6, 4, 3, 1]))      # 0`,
       },
     ],
   },
+  {
+    id: 4,
+    slug: "contains-duplicate",
+    title: "Contains Duplicate",
+    difficulty: "basic",
+    tags: ["Array", "Hash Set"],
+    description:
+      "Given an integer array `nums`, return `true` if any value appears **at least twice** in the array, and return `false` if every element is **distinct**.",
+    constraints: [
+      "1 ≤ nums.length ≤ 10⁵",
+      "-10⁹ ≤ nums[i] ≤ 10⁹",
+    ],
+    examples: [
+      {
+        input: "nums = [1, 2, 3, 1]",
+        output: "true",
+        explanation: "1 appears at index 0 and index 3.",
+      },
+      {
+        input: "nums = [1, 2, 3, 4]",
+        output: "false",
+        explanation: "All elements are distinct.",
+      },
+      {
+        input: "nums = [1, 1, 1, 3, 3, 4, 3, 2, 4, 2]",
+        output: "true",
+      },
+    ],
+    solutions: [
+      {
+        language: "javascript",
+        code: `/**
+ * @param {number[]} nums
+ * @return {boolean}
+ */
+function containsDuplicate(nums) {
+  const seen = new Set();
+
+  for (const num of nums) {
+    if (seen.has(num)) return true;
+    seen.add(num);
+  }
+
+  return false;
+}
+
+// Example usage
+console.log(containsDuplicate([1, 2, 3, 1])); // true
+console.log(containsDuplicate([1, 2, 3, 4])); // false`,
+      },
+      {
+        language: "typescript",
+        code: `function containsDuplicate(nums: number[]): boolean {
+  const seen = new Set<number>();
+
+  for (const num of nums) {
+    if (seen.has(num)) return true;
+    seen.add(num);
+  }
+
+  return false;
+}
+
+// Example usage
+console.log(containsDuplicate([1, 2, 3, 1])); // true
+console.log(containsDuplicate([1, 2, 3, 4])); // false`,
+      },
+      {
+        language: "php",
+        code: `<?php
+
+function containsDuplicate(array $nums): bool {
+    $seen = [];
+
+    foreach ($nums as $num) {
+        if (isset($seen[$num])) return true;
+        $seen[$num] = true;
+    }
+
+    return false;
+}
+
+// Example usage
+var_dump(containsDuplicate([1, 2, 3, 1])); // true
+var_dump(containsDuplicate([1, 2, 3, 4])); // false`,
+      },
+      {
+        language: "java",
+        code: `import java.util.HashSet;
+import java.util.Set;
+
+class Solution {
+    public boolean containsDuplicate(int[] nums) {
+        Set<Integer> seen = new HashSet<>();
+
+        for (int num : nums) {
+            if (!seen.add(num)) return true;
+        }
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.containsDuplicate(new int[]{1, 2, 3, 1})); // true
+        System.out.println(sol.containsDuplicate(new int[]{1, 2, 3, 4})); // false
+    }
+}`,
+      },
+      {
+        language: "python",
+        code: `def contains_duplicate(nums: list[int]) -> bool:
+    seen: set[int] = set()
+
+    for num in nums:
+        if num in seen:
+            return True
+        seen.add(num)
+
+    return False
+
+
+# Example usage
+print(contains_duplicate([1, 2, 3, 1]))  # True
+print(contains_duplicate([1, 2, 3, 4]))  # False`,
+      },
+    ],
+  },
+  {
+    id: 5,
+    slug: "maximum-subarray",
+    title: "Maximum Subarray",
+    difficulty: "basic",
+    tags: ["Array", "Dynamic Programming"],
+    description:
+      "Given an integer array `nums`, find the **subarray** with the largest sum, and return its sum.\n\nA **subarray** is a contiguous non-empty sequence of elements within an array.",
+    constraints: [
+      "1 ≤ nums.length ≤ 10⁵",
+      "-10⁴ ≤ nums[i] ≤ 10⁴",
+    ],
+    examples: [
+      {
+        input: "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]",
+        output: "6",
+        explanation: "The subarray [4, -1, 2, 1] has the largest sum = 6.",
+      },
+      {
+        input: "nums = [1]",
+        output: "1",
+      },
+      {
+        input: "nums = [5, 4, -1, 7, 8]",
+        output: "23",
+        explanation: "The entire array is the subarray.",
+      },
+    ],
+    solutions: [
+      {
+        language: "javascript",
+        code: `/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+function maxSubArray(nums) {
+  let current = nums[0];
+  let maxSum = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    // Either extend the current subarray or start fresh
+    current = Math.max(nums[i], current + nums[i]);
+    maxSum = Math.max(maxSum, current);
+  }
+
+  return maxSum;
+}
+
+// Example usage
+console.log(maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4])); // 6
+console.log(maxSubArray([5, 4, -1, 7, 8]));                 // 23`,
+      },
+      {
+        language: "typescript",
+        code: `function maxSubArray(nums: number[]): number {
+  let current = nums[0];
+  let maxSum = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    current = Math.max(nums[i], current + nums[i]);
+    maxSum = Math.max(maxSum, current);
+  }
+
+  return maxSum;
+}
+
+// Example usage
+console.log(maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4])); // 6
+console.log(maxSubArray([5, 4, -1, 7, 8]));                 // 23`,
+      },
+      {
+        language: "php",
+        code: `<?php
+
+function maxSubArray(array $nums): int {
+    $current = $nums[0];
+    $maxSum = $nums[0];
+
+    for ($i = 1; $i < count($nums); $i++) {
+        $current = max($nums[$i], $current + $nums[$i]);
+        $maxSum = max($maxSum, $current);
+    }
+
+    return $maxSum;
+}
+
+// Example usage
+echo maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4]); // 6
+echo maxSubArray([5, 4, -1, 7, 8]);                  // 23`,
+      },
+      {
+        language: "java",
+        code: `class Solution {
+    public int maxSubArray(int[] nums) {
+        int current = nums[0];
+        int maxSum = nums[0];
+
+        for (int i = 1; i < nums.length; i++) {
+            current = Math.max(nums[i], current + nums[i]);
+            maxSum = Math.max(maxSum, current);
+        }
+
+        return maxSum;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.maxSubArray(new int[]{-2, 1, -3, 4, -1, 2, 1, -5, 4})); // 6
+        System.out.println(sol.maxSubArray(new int[]{5, 4, -1, 7, 8}));                 // 23
+    }
+}`,
+      },
+      {
+        language: "python",
+        code: `def max_sub_array(nums: list[int]) -> int:
+    current = nums[0]
+    max_sum = nums[0]
+
+    for num in nums[1:]:
+        current = max(num, current + num)
+        max_sum = max(max_sum, current)
+
+    return max_sum
+
+
+# Example usage
+print(max_sub_array([-2, 1, -3, 4, -1, 2, 1, -5, 4]))  # 6
+print(max_sub_array([5, 4, -1, 7, 8]))                   # 23`,
+      },
+    ],
+  },
 ];
