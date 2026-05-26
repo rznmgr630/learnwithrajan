@@ -8,6 +8,14 @@ import { LearnBackNav } from "@/components/learn/LearnBackNav";
 
 const LANGUAGE_ORDER: SolutionLanguage[] = ["javascript", "typescript", "php", "java", "python"];
 
+const LANG_DOT: Record<SolutionLanguage, string> = {
+  javascript: "bg-yellow-400",
+  typescript: "bg-blue-400",
+  php: "bg-indigo-400",
+  java: "bg-orange-400",
+  python: "bg-sky-400",
+};
+
 function CodeBlock({ code, language }: { code: string; language: SolutionLanguage }) {
   const [copied, setCopied] = useState(false);
 
@@ -19,14 +27,40 @@ function CodeBlock({ code, language }: { code: string; language: SolutionLanguag
   }
 
   return (
-    <div className="relative">
-      <button
-        onClick={handleCopy}
-        className="absolute right-3 top-3 z-10 rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
-      >
-        {copied ? "Copied!" : "Copy"}
-      </button>
-      <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-5 pt-10 font-mono text-sm leading-relaxed text-[var(--text)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+      {/* Code block header */}
+      <div className="flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_80%,transparent)] px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className={`h-2.5 w-2.5 rounded-full ${LANG_DOT[language]}`} />
+          <span className="text-xs font-medium text-[var(--muted)]">{LANGUAGE_LABELS[language]}</span>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-[var(--muted)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:text-[var(--text)]"
+        >
+          {copied ? (
+            <>
+              <svg className="h-3.5 w-3.5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-emerald-400">Copied!</span>
+            </>
+          ) : (
+            <>
+              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.12A1.5 1.5 0 0117 6.622V12.5a1.5 1.5 0 01-1.5 1.5h-1v-3.379a3 3 0 00-.879-2.121L10.5 5.379A3 3 0 008.379 4.5H7v-1z" />
+                <path d="M4.5 6A1.5 1.5 0 003 7.5v9A1.5 1.5 0 004.5 18h7a1.5 1.5 0 001.5-1.5v-5.879a1.5 1.5 0 00-.44-1.06L9.44 6.439A1.5 1.5 0 008.378 6H4.5z" />
+              </svg>
+              Copy
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="overflow-x-auto bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-5 font-mono text-sm leading-relaxed text-[var(--text)]">
         <code>{code}</code>
       </pre>
     </div>
@@ -35,9 +69,18 @@ function CodeBlock({ code, language }: { code: string; language: SolutionLanguag
 
 function InlineCode({ children }: { children: string }) {
   return (
-    <code className="rounded bg-[color-mix(in_oklab,var(--elevated)_70%,transparent)] px-1.5 py-0.5 font-mono text-sm text-[var(--accent)]">
+    <code className="rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_70%,transparent)] px-1.5 py-0.5 font-mono text-sm text-[var(--accent)]">
       {children}
     </code>
+  );
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-5 w-0.5 rounded-full bg-[var(--accent)] opacity-70" />
+      <h2 className="text-base font-semibold text-[var(--text)]">{children}</h2>
+    </div>
   );
 }
 
@@ -45,7 +88,7 @@ function renderDescription(text: string) {
   return text.split("\n").map((line, i) => {
     const parts = line.split(/(`[^`]+`)/g);
     return (
-      <p key={i} className="mt-2 text-[var(--text)] leading-relaxed">
+      <p key={i} className="mt-2 leading-relaxed text-[var(--text)]">
         {parts.map((part, j) =>
           part.startsWith("`") && part.endsWith("`") ? (
             <InlineCode key={j}>{part.slice(1, -1)}</InlineCode>
@@ -65,125 +108,144 @@ export function DSAProblemDetail({ problem, backHref }: { problem: DsaProblem; b
   const activeSolution = problem.solutions.find((s) => s.language === activeLang);
 
   return (
-    <div>
-      {/* Top bar */}
-      <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-4 sm:px-6">
+    <div className="min-h-screen">
+      {/* Sticky top nav */}
+      <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3 sm:px-6">
           <LearnBackNav href={backHref} />
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12">
-        {/* Header */}
-        <div className="flex flex-wrap items-start gap-3">
-          <span className="rounded-full bg-[var(--elevated)] px-2.5 py-1 font-mono text-xs text-[var(--muted)]">
-            #{problem.id}
-          </span>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${DIFFICULTY_COLOR[problem.difficulty]}`}>
-            {DIFFICULTY_LABEL[problem.difficulty]}
-          </span>
-          {problem.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
-            >
-              {tag}
-            </span>
-          ))}
+      <div className="mx-auto max-w-4xl px-4 pb-20 pt-10 sm:px-6">
+        {/* Problem header */}
+        <div className="relative mb-8 overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_90%,transparent)] p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 via-transparent to-transparent" />
+          <div className="relative">
+            {/* Meta row */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs text-[var(--faint)]">#{problem.id}</span>
+              <span className="text-[var(--faint)]">·</span>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${DIFFICULTY_COLOR[problem.difficulty]}`}>
+                {DIFFICULTY_LABEL[problem.difficulty]}
+              </span>
+              {problem.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">{problem.title}</h1>
+          </div>
         </div>
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">{problem.title}</h1>
+        <div className="flex flex-col gap-10">
+          {/* Description */}
+          <section>
+            <SectionHeading>Problem</SectionHeading>
+            <div className="mt-3">{renderDescription(problem.description)}</div>
+          </section>
 
-        {/* Description */}
-        <section className="mt-6">{renderDescription(problem.description)}</section>
+          {/* Examples */}
+          <section>
+            <SectionHeading>Examples</SectionHeading>
+            <div className="mt-3 flex flex-col gap-3">
+              {problem.examples.map((ex, i) => (
+                <div
+                  key={i}
+                  className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)]"
+                >
+                  <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] px-4 py-2">
+                    <span className="text-xs font-medium text-[var(--muted)]">Example {i + 1}</span>
+                  </div>
+                  <div className="space-y-2 p-4 font-mono text-sm">
+                    <div className="flex gap-3">
+                      <span className="shrink-0 text-[var(--faint)]">Input</span>
+                      <span className="text-[var(--text)]">{ex.input}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="shrink-0 text-[var(--faint)]">Output</span>
+                      <span className="font-bold text-[var(--accent)]">{ex.output}</span>
+                    </div>
+                    {ex.explanation && (
+                      <p className="border-t border-[var(--border)] pt-2 font-sans text-xs text-[var(--muted)]">
+                        {ex.explanation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* Examples */}
-        <section className="mt-8">
-          <h2 className="text-base font-semibold text-[var(--text)]">Examples</h2>
-          <div className="mt-3 flex flex-col gap-4">
-            {problem.examples.map((ex, i) => (
-              <div key={i} className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-widest text-[var(--muted)]">Example {i + 1}</p>
-                <div className="space-y-1 font-mono text-sm">
-                  <p>
-                    <span className="text-[var(--muted)]">Input: </span>
-                    <span className="text-[var(--text)]">{ex.input}</span>
-                  </p>
-                  <p>
-                    <span className="text-[var(--muted)]">Output: </span>
-                    <span className="font-semibold text-[var(--accent)]">{ex.output}</span>
-                  </p>
-                  {ex.explanation && (
-                    <p className="mt-2 font-sans text-xs text-[var(--muted)]">
-                      <span className="font-semibold">Explanation: </span>
-                      {ex.explanation}
-                    </p>
-                  )}
+          {/* Constraints */}
+          <section>
+            <SectionHeading>Constraints</SectionHeading>
+            <ul className="mt-3 space-y-2">
+              {problem.constraints.map((c, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)] opacity-50" />
+                  <span className="font-mono text-sm text-[var(--muted)]">{c}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Diagram */}
+          {problem.slug === "two-sum" && (
+            <section>
+              <SectionHeading>Visual Diagram</SectionHeading>
+              <div className="mt-3">
+                <DSATwoSumDiagram />
+              </div>
+            </section>
+          )}
+
+          {/* Solutions */}
+          <section>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <SectionHeading>Solutions</SectionHeading>
+                <p className="mt-1 pl-3.5 text-sm text-[var(--muted)]">Hash map approach</p>
+              </div>
+              {/* Complexity badges */}
+              <div className="flex gap-2">
+                <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Time</p>
+                  <p className="font-mono text-sm font-bold text-[var(--accent)]">O(n)</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
+                  <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Space</p>
+                  <p className="font-mono text-sm font-bold text-[var(--accent)]">O(n)</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
-        {/* Constraints */}
-        <section className="mt-8">
-          <h2 className="text-base font-semibold text-[var(--text)]">Constraints</h2>
-          <ul className="mt-3 flex flex-col gap-1.5">
-            {problem.constraints.map((c, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-[var(--muted)]">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)] opacity-60" />
-                <span className="font-mono">{c}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+            {/* Language pill tabs */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {availableLangs.map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setActiveLang(lang)}
+                  className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                    activeLang === lang
+                      ? "bg-[var(--accent)] text-[var(--accent-fg)] shadow-[0_0_16px_-2px_var(--glow)]"
+                      : "border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:bg-[color-mix(in_oklab,var(--elevated)_80%,transparent)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${activeLang === lang ? "bg-current opacity-70" : LANG_DOT[lang]}`} />
+                  {LANGUAGE_LABELS[lang]}
+                </button>
+              ))}
+            </div>
 
-        {/* Diagram */}
-        {problem.slug === "two-sum" && (
-          <section className="mt-8">
-            <h2 className="text-base font-semibold text-[var(--text)]">Diagram</h2>
-            <DSATwoSumDiagram />
+            <div className="mt-4">
+              {activeSolution && <CodeBlock code={activeSolution.code} language={activeLang} />}
+            </div>
           </section>
-        )}
-
-        {/* Solutions */}
-        <section className="mt-10">
-          <h2 className="text-base font-semibold text-[var(--text)]">Solutions</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">Hash map approach — O(n) time, O(n) space</p>
-
-          {/* Language tabs */}
-          <div className="mt-4 flex flex-wrap gap-2 border-b border-[var(--border)] pb-0">
-            {availableLangs.map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setActiveLang(lang)}
-                className={`rounded-t-lg border border-b-0 border-[var(--border)] px-4 py-2 text-sm font-medium transition ${
-                  activeLang === lang
-                    ? "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)]"
-                    : "bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"
-                }`}
-              >
-                {LANGUAGE_LABELS[lang]}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4">
-            {activeSolution && <CodeBlock code={activeSolution.code} language={activeLang} />}
-          </div>
-
-          {/* Complexity */}
-          <div className="mt-4 flex flex-wrap gap-3">
-            <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-4 py-3">
-              <p className="text-xs text-[var(--muted)]">Time Complexity</p>
-              <p className="mt-0.5 font-mono text-sm font-semibold text-[var(--accent)]">O(n)</p>
-            </div>
-            <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-4 py-3">
-              <p className="text-xs text-[var(--muted)]">Space Complexity</p>
-              <p className="mt-0.5 font-mono text-sm font-semibold text-[var(--accent)]">O(n)</p>
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );
