@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import type { DsaProblem } from "@/lib/dsa/dsa-problems";
 import { DIFFICULTY_COLOR, DIFFICULTY_LABEL } from "@/lib/dsa/dsa-problems";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { DSAProblemDrawer } from "@/components/learn/DSAProblemDrawer";
 
 const DIFF_BORDER: Record<string, string> = {
   basic: "border-l-emerald-500",
@@ -20,6 +21,8 @@ export function DSAProblemList({
   difficulty: string;
   backHref: string;
 }) {
+  const [openProblem, setOpenProblem] = useState<DsaProblem | null>(null);
+
   return (
     <div className="min-h-screen">
       {/* Sticky top nav */}
@@ -65,22 +68,17 @@ export function DSAProblemList({
         {/* Problem list */}
         <div className="flex flex-col gap-2">
           {problems.map((problem) => (
-            <Link
+            <button
               key={problem.slug}
-              href={`/learn/dsa/${problem.difficulty}/${problem.slug}`}
-              className={`group relative flex items-center gap-4 overflow-hidden rounded-xl border border-[var(--border)] border-l-2 bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] px-5 py-4 transition-all hover:border-[var(--accent)]/40 hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--accent)_25%,transparent)] ${DIFF_BORDER[problem.difficulty]}`}
+              onClick={() => setOpenProblem(problem)}
+              className={`group relative flex w-full items-center gap-4 overflow-hidden rounded-xl border border-[var(--border)] border-l-2 bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] px-5 py-4 text-left transition-all hover:border-[var(--accent)]/40 hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:shadow-[0_0_24px_-6px_color-mix(in_oklab,var(--accent)_25%,transparent)] ${DIFF_BORDER[problem.difficulty]}`}
             >
-              {/* Number */}
               <span className="w-8 shrink-0 font-mono text-sm font-semibold tabular-nums text-[var(--faint)]">
                 {String(problem.id).padStart(2, "0")}
               </span>
-
-              {/* Title */}
               <span className="flex-1 font-medium text-[var(--text)] transition group-hover:text-[var(--accent)]">
                 {problem.title}
               </span>
-
-              {/* Tags */}
               <div className="hidden flex-wrap gap-1.5 sm:flex">
                 {problem.tags.map((tag) => (
                   <span
@@ -91,28 +89,22 @@ export function DSAProblemList({
                   </span>
                 ))}
               </div>
-
-              {/* Difficulty */}
               <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${DIFFICULTY_COLOR[problem.difficulty]}`}>
                 {DIFFICULTY_LABEL[problem.difficulty]}
               </span>
-
-              {/* Arrow */}
               <svg
                 className="h-4 w-4 shrink-0 text-[var(--faint)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--accent)]"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
               </svg>
-            </Link>
+            </button>
           ))}
         </div>
       </div>
+
+      <DSAProblemDrawer problem={openProblem} onClose={() => setOpenProblem(null)} />
     </div>
   );
 }
