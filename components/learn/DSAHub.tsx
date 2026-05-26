@@ -1,8 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSA_BASIC_PROBLEMS } from "@/lib/dsa/dsa-problems";
+import { DSAFundamentalsDrawer, type FundamentalTopicId } from "@/components/learn/DSAFundamentalsDrawer";
+
+const FUNDAMENTALS = [
+  {
+    id: "big-o" as FundamentalTopicId,
+    title: "Big O Notation & Time Complexity",
+    subtitle: "How to evaluate code efficiency",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+        <path fillRule="evenodd" d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    id: "space-complexity" as FundamentalTopicId,
+    title: "Space Complexity",
+    subtitle: "Applying complexity analysis to memory usage",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+        <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+        <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+        <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+      </svg>
+    ),
+  },
+] as const;
 
 const LEVELS = [
   {
@@ -80,6 +107,8 @@ const LEVELS = [
 ] as const;
 
 export function DSAHub() {
+  const [openTopic, setOpenTopic] = useState<FundamentalTopicId | null>(null);
+
   return (
     <div className="min-h-screen">
       {/* Top nav */}
@@ -125,6 +154,42 @@ export function DSAHub() {
               <p className="text-xs text-[var(--muted)]">{stat.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Fundamentals section */}
+        <div className="mb-10">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-4 w-0.5 rounded-full bg-[var(--accent)] opacity-60" />
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-[var(--muted)]">
+              Fundamentals — Analysis
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {FUNDAMENTALS.map((topic) => (
+              <button
+                key={topic.id}
+                onClick={() => setOpenTopic(topic.id)}
+                className="group flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] px-5 py-4 text-left transition hover:border-[var(--accent)]/40 hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:shadow-[0_0_20px_-6px_color-mix(in_oklab,var(--accent)_20%,transparent)]"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/8 text-[var(--accent)]">
+                  {topic.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-[var(--text)] group-hover:text-[var(--accent)] transition truncate">
+                    {topic.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--muted)] truncate">{topic.subtitle}</p>
+                </div>
+                <svg
+                  className="h-4 w-4 shrink-0 text-[var(--faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent)]"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                </svg>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Level cards */}
@@ -204,6 +269,8 @@ export function DSAHub() {
           ))}
         </div>
       </div>
+
+      <DSAFundamentalsDrawer topicId={openTopic} onClose={() => setOpenTopic(null)} />
     </div>
   );
 }
