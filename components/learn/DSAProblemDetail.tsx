@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { DsaProblem, SolutionLanguage } from "@/lib/dsa/dsa-problems";
 import { LANGUAGE_LABELS, DIFFICULTY_COLOR, DIFFICULTY_LABEL } from "@/lib/dsa/dsa-problems";
 import { DSATwoSumDiagram } from "@/components/learn/DSATwoSumDiagram";
+import { DSAValidParenthesesDiagram } from "@/components/learn/DSAValidParenthesesDiagram";
+import { DSAStockProfitDiagram } from "@/components/learn/DSAStockProfitDiagram";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 
 const LANGUAGE_ORDER: SolutionLanguage[] = ["javascript", "typescript", "php", "java", "python"];
@@ -194,34 +196,47 @@ export function DSAProblemDetail({ problem, backHref }: { problem: DsaProblem; b
           </section>
 
           {/* Diagram */}
-          {problem.slug === "two-sum" && (
+          {(problem.slug === "two-sum" ||
+            problem.slug === "valid-parentheses" ||
+            problem.slug === "best-time-to-buy-and-sell-stock") && (
             <section>
               <SectionHeading>Visual Diagram</SectionHeading>
               <div className="mt-3">
-                <DSATwoSumDiagram />
+                {problem.slug === "two-sum" && <DSATwoSumDiagram />}
+                {problem.slug === "valid-parentheses" && <DSAValidParenthesesDiagram />}
+                {problem.slug === "best-time-to-buy-and-sell-stock" && <DSAStockProfitDiagram />}
               </div>
             </section>
           )}
 
           {/* Solutions */}
           <section>
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <SectionHeading>Solutions</SectionHeading>
-                <p className="mt-1 pl-3.5 text-sm text-[var(--muted)]">Hash map approach</p>
-              </div>
-              {/* Complexity badges */}
-              <div className="flex gap-2">
-                <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Time</p>
-                  <p className="font-mono text-sm font-bold text-[var(--accent)]">O(n)</p>
+            {(() => {
+              const meta: Record<string, { approach: string; time: string; space: string }> = {
+                "two-sum": { approach: "Hash map", time: "O(n)", space: "O(n)" },
+                "valid-parentheses": { approach: "Stack", time: "O(n)", space: "O(n)" },
+                "best-time-to-buy-and-sell-stock": { approach: "Greedy one-pass", time: "O(n)", space: "O(1)" },
+              };
+              const m = meta[problem.slug] ?? { approach: "Optimal", time: "O(n)", space: "O(n)" };
+              return (
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <SectionHeading>Solutions</SectionHeading>
+                    <p className="mt-1 pl-3.5 text-sm text-[var(--muted)]">{m.approach} approach</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
+                      <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Time</p>
+                      <p className="font-mono text-sm font-bold text-[var(--accent)]">{m.time}</p>
+                    </div>
+                    <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
+                      <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Space</p>
+                      <p className="font-mono text-sm font-bold text-[var(--accent)]">{m.space}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] px-3 py-2 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-[var(--faint)]">Space</p>
-                  <p className="font-mono text-sm font-bold text-[var(--accent)]">O(n)</p>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Language pill tabs */}
             <div className="mt-4 flex flex-wrap gap-2">
