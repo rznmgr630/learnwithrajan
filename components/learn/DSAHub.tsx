@@ -5,8 +5,6 @@ import Link from "next/link";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSA_BASIC_PROBLEMS } from "@/lib/dsa/dsa-problems";
 import { DSAFundamentalsDrawer, type FundamentalTopicId } from "@/components/learn/DSAFundamentalsDrawer";
-import { DSAProblemDrawer } from "@/components/learn/DSAProblemDrawer";
-import type { DsaProblem } from "@/lib/dsa/dsa-problems";
 
 const FUNDAMENTAL_TOPICS: { id: FundamentalTopicId; title: string; subtitle: string }[] = [
   {
@@ -78,7 +76,6 @@ const LEVELS = [
 
 export function DSAHub() {
   const [openTopic, setOpenTopic] = useState<FundamentalTopicId | null>(null);
-  const [openProblem, setOpenProblem] = useState<DsaProblem | null>(null);
 
   return (
     <div className="min-h-screen">
@@ -152,24 +149,18 @@ export function DSAHub() {
                 <span className="font-mono text-2xl font-bold text-[var(--text)]">2</span>
                 <span className="text-sm text-[var(--muted)]">topics</span>
               </div>
-            </div>
 
-            {/* Topic list */}
-            <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
-              <p className="mb-2 text-xs text-[var(--faint)]">Topics</p>
-              {FUNDAMENTAL_TOPICS.map((topic) => (
-                <button
-                  key={topic.id}
-                  onClick={() => setOpenTopic(topic.id)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[var(--muted)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:text-[var(--text)]"
-                >
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-violet-400 opacity-70" />
-                  <span className="flex-1 truncate text-xs">{topic.title}</span>
-                  <svg className="h-3 w-3 shrink-0 opacity-40" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              ))}
+              <div className="mt-5 flex flex-wrap gap-2">
+                {FUNDAMENTAL_TOPICS.map((topic) => (
+                  <button
+                    key={topic.id}
+                    onClick={() => setOpenTopic(topic.id)}
+                    className="rounded-full border border-violet-500/20 bg-violet-500/8 px-3 py-1 text-xs font-medium text-violet-400 transition hover:border-violet-500/40 hover:bg-violet-500/15"
+                  >
+                    {topic.id === "big-o" ? "Big O Notation" : "Space Complexity"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -221,29 +212,12 @@ export function DSAHub() {
                 </div>
               </div>
 
-              {/* Problem preview */}
-              {level.active && level.problems.length > 0 && (
-                <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
-                  <p className="mb-2 text-xs text-[var(--faint)]">Recent</p>
-                  {level.problems.slice(0, 3).map((p) => (
-                    <button
-                      key={p.slug}
-                      onClick={() => setOpenProblem(p)}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[var(--muted)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:text-[var(--text)]"
-                    >
-                      <span className="font-mono text-xs text-[var(--faint)]">#{p.id}</span>
-                      <span className="flex-1 truncate text-xs">{p.title}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </div>
       </div>
 
       <DSAFundamentalsDrawer topicId={openTopic} onClose={() => setOpenTopic(null)} />
-      <DSAProblemDrawer problem={openProblem} onClose={() => setOpenProblem(null)} />
     </div>
   );
 }
