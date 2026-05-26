@@ -1,5 +1,17 @@
 export type Difficulty = "basic" | "medium" | "advanced";
 export type SolutionLanguage = "javascript" | "typescript" | "php" | "java" | "python";
+export type BasicCategory = "arrays" | "linked-lists" | "stacks-queues" | "trees" | "bst" | "heaps" | "graphs" | "hashing";
+
+export const DSA_BASIC_CATEGORIES: { id: BasicCategory; label: string; hint: string }[] = [
+  { id: "arrays",        label: "Arrays",              hint: "Fixed vs. dynamic arrays and basic operations" },
+  { id: "linked-lists",  label: "Linked Lists",        hint: "Singly and doubly linked lists" },
+  { id: "stacks-queues", label: "Stacks & Queues",     hint: "LIFO and FIFO structures" },
+  { id: "trees",         label: "Trees",               hint: "Binary trees, traversals (pre/in/post-order)" },
+  { id: "bst",           label: "Binary Search Trees", hint: "Efficient searching and sorted data management" },
+  { id: "heaps",         label: "Heaps",               hint: "Min/Max heaps and Priority Queues" },
+  { id: "graphs",        label: "Graphs",              hint: "Adjacency lists/matrices and basic terminology" },
+  { id: "hashing",       label: "Hashing",             hint: "Understanding hash maps and internal operations" },
+];
 
 export const LANGUAGE_LABELS: Record<SolutionLanguage, string> = {
   javascript: "JavaScript",
@@ -25,6 +37,7 @@ export interface DsaProblem {
   slug: string;
   title: string;
   difficulty: Difficulty;
+  category: BasicCategory;
   tags: string[];
   description: string;
   constraints: string[];
@@ -50,6 +63,7 @@ export const DSA_BASIC_PROBLEMS: DsaProblem[] = [
     slug: "two-sum",
     title: "Two Sum",
     difficulty: "basic",
+    category: "hashing",
     tags: ["Array", "Hash Map"],
     description:
       "Given an array of integers `nums` and an integer `target`, return the **indices** of the two numbers that add up to `target`.\n\nYou may assume that each input has **exactly one solution**, and you may not use the same element twice.\n\nYou can return the answer in any order.",
@@ -205,6 +219,7 @@ print(two_sum([3, 2, 4], 6))       # [1, 2]`,
     slug: "valid-parentheses",
     title: "Valid Parentheses",
     difficulty: "basic",
+    category: "stacks-queues",
     tags: ["Stack", "String"],
     description:
       "Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is **valid**.\n\nAn input string is valid if:\n\n- Open brackets must be closed by the **same type** of brackets.\n- Open brackets must be closed in the **correct order**.\n- Every close bracket has a corresponding open bracket of the **same type**.",
@@ -364,6 +379,7 @@ print(is_valid("([)]"))    # False`,
     slug: "best-time-to-buy-and-sell-stock",
     title: "Best Time to Buy and Sell Stock",
     difficulty: "basic",
+    category: "arrays",
     tags: ["Array", "Greedy"],
     description:
       "You are given an array `prices` where `prices[i]` is the price of a given stock on the `i`-th day.\n\nYou want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock.\n\nReturn the **maximum profit** you can achieve from this transaction. If you cannot achieve any profit, return `0`.",
@@ -490,6 +506,7 @@ print(max_profit([7, 6, 4, 3, 1]))      # 0`,
     slug: "contains-duplicate",
     title: "Contains Duplicate",
     difficulty: "basic",
+    category: "hashing",
     tags: ["Array", "Hash Set"],
     description:
       "Given an integer array `nums`, return `true` if any value appears **at least twice** in the array, and return `false` if every element is **distinct**.",
@@ -618,6 +635,7 @@ print(contains_duplicate([1, 2, 3, 4]))  # False`,
     slug: "maximum-subarray",
     title: "Maximum Subarray",
     difficulty: "basic",
+    category: "arrays",
     tags: ["Array", "Dynamic Programming"],
     description:
       "Given an integer array `nums`, find the **subarray** with the largest sum, and return its sum.\n\nA **subarray** is a contiguous non-empty sequence of elements within an array.",
