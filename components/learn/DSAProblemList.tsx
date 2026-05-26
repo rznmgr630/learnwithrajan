@@ -100,14 +100,14 @@ function CategorySection({
         <div className="border-t border-[var(--border)]">
           {hasProblems ? (
             <div className="flex flex-col gap-1 p-2">
-              {problems.map((problem) => (
+              {problems.map((problem, idx) => (
                 <button
                   key={problem.slug}
                   onClick={() => onSelectProblem(problem)}
                   className="group flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-left transition-all hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] hover:shadow-[0_0_16px_-6px_color-mix(in_oklab,var(--accent)_20%,transparent)]"
                 >
                   <span className="w-7 shrink-0 font-mono text-xs font-semibold tabular-nums text-[var(--faint)]">
-                    {String(problem.id).padStart(2, "0")}
+                    {String(idx + 1).padStart(2, "0")}
                   </span>
                   <span className="flex-1 text-sm font-medium text-[var(--text)] transition group-hover:text-[var(--accent)]">
                     {problem.title}
