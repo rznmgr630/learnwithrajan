@@ -168,7 +168,7 @@ export function DSAProblemList({
       {/* Sticky top nav */}
       <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3 sm:px-6">
-          <LearnBackNav href={backHref} />
+          <LearnBackNav href={backHref} labelKey="learn.backProgramming" />
         </div>
       </div>
 
