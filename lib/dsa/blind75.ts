@@ -851,12 +851,971 @@ print(max_sub_array([5, 4, -1, 7, 8]))                   # 23`,
         ],
       },
 
-      // ── 6–10: pattern + visual only (detail coming soon) ─────────────────
-      { num: 6,  title: "Maximum Product Subarray",             leetcodeNum: 152, slug: "maximum-product-subarray",                   pattern: "Track min & max",             visual: "Negative flips min ↔ max" },
-      { num: 7,  title: "Find Minimum in Rotated Sorted Array", leetcodeNum: 153, slug: "find-minimum-in-rotated-sorted-array",       pattern: "Binary search",               visual: "Compare mid vs right to pick half" },
-      { num: 8,  title: "Search in Rotated Sorted Array",       leetcodeNum: 33,  slug: "search-in-rotated-sorted-array",             pattern: "BS with rotation",            visual: "One half is always sorted" },
-      { num: 9,  title: "3Sum",                                 leetcodeNum: 15,  slug: "3sum",                                       pattern: "Sort + two pointers",         visual: "Fix i, shrink window for pair sum" },
-      { num: 10, title: "Container With Most Water",            leetcodeNum: 11,  slug: "container-with-most-water",                  pattern: "Two pointers",                visual: "Move shorter wall inward" },
+      // ── 6. Maximum Product Subarray ───────────────────────────────────────
+      {
+        num: 6,
+        title: "Maximum Product Subarray",
+        leetcodeNum: 152,
+        slug: "maximum-product-subarray",
+        pattern: "Track min & max",
+        visual: "Negative flips min ↔ max",
+        difficulty: "medium",
+        tags: ["Array", "Dynamic Programming"],
+        description:
+          "Given an integer array `nums`, find a **subarray** that has the largest product, and return the **product**.\n\nThe test cases are generated so that the answer will fit in a **32-bit** integer.\n\nA **subarray** is a contiguous non-empty sequence of elements within an array.",
+        examples: [
+          {
+            input: "nums = [2, 3, -2, 4]",
+            output: "6",
+            explanation: "The subarray [2, 3] has the largest product = 6.",
+          },
+          {
+            input: "nums = [-2, 0, -1]",
+            output: "0",
+            explanation: "The result cannot be 2 because [-2, -1] is not a subarray.",
+          },
+          {
+            input: "nums = [-2, 3, -4]",
+            output: "24",
+            explanation: "The entire array [-2, 3, -4] has product = 24.",
+          },
+        ],
+        constraints: [
+          "1 ≤ nums.length ≤ 2 × 10⁴",
+          "-10 ≤ nums[i] ≤ 10",
+          "The product of any subarray of nums is guaranteed to fit in a 32-bit integer.",
+        ],
+        approach: "Track running max AND min — a negative × negative becomes the new max",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+function maxProduct(nums) {
+  let curMax = nums[0];
+  let curMin = nums[0];
+  let result = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    const num = nums[i];
+
+    // A negative number swaps max and min, so compute both candidates first
+    const tempMax = Math.max(num, curMax * num, curMin * num);
+    const tempMin = Math.min(num, curMax * num, curMin * num);
+
+    curMax = tempMax;
+    curMin = tempMin;
+    result = Math.max(result, curMax);
+  }
+
+  return result;
+}
+
+// Example usage
+console.log(maxProduct([2, 3, -2, 4]));  // 6
+console.log(maxProduct([-2, 3, -4]));    // 24`,
+          },
+          {
+            language: "typescript",
+            code: `function maxProduct(nums: number[]): number {
+  let curMax = nums[0];
+  let curMin = nums[0];
+  let result = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    const num = nums[i];
+    const tempMax = Math.max(num, curMax * num, curMin * num);
+    const tempMin = Math.min(num, curMax * num, curMin * num);
+    curMax = tempMax;
+    curMin = tempMin;
+    result = Math.max(result, curMax);
+  }
+
+  return result;
+}
+
+// Example usage
+console.log(maxProduct([2, 3, -2, 4])); // 6
+console.log(maxProduct([-2, 3, -4]));   // 24`,
+          },
+          {
+            language: "php",
+            code: `<?php
+
+function maxProduct(array $nums): int {
+    $curMax = $nums[0];
+    $curMin = $nums[0];
+    $result = $nums[0];
+
+    for ($i = 1; $i < count($nums); $i++) {
+        $num    = $nums[$i];
+        $tempMax = max($num, $curMax * $num, $curMin * $num);
+        $tempMin = min($num, $curMax * $num, $curMin * $num);
+        $curMax  = $tempMax;
+        $curMin  = $tempMin;
+        $result  = max($result, $curMax);
+    }
+
+    return $result;
+}
+
+// Example usage
+echo maxProduct([2, 3, -2, 4]) . PHP_EOL; // 6
+echo maxProduct([-2, 3, -4])   . PHP_EOL; // 24`,
+          },
+          {
+            language: "java",
+            code: `class Solution {
+    public int maxProduct(int[] nums) {
+        int curMax = nums[0];
+        int curMin = nums[0];
+        int result = nums[0];
+
+        for (int i = 1; i < nums.length; i++) {
+            int num     = nums[i];
+            int tempMax = Math.max(num, Math.max(curMax * num, curMin * num));
+            int tempMin = Math.min(num, Math.min(curMax * num, curMin * num));
+            curMax = tempMax;
+            curMin = tempMin;
+            result = Math.max(result, curMax);
+        }
+
+        return result;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.maxProduct(new int[]{2, 3, -2, 4})); // 6
+        System.out.println(sol.maxProduct(new int[]{-2, 3, -4}));   // 24
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def max_product(nums: list[int]) -> int:
+    cur_max = nums[0]
+    cur_min = nums[0]
+    result  = nums[0]
+
+    for num in nums[1:]:
+        candidates = (num, cur_max * num, cur_min * num)
+        cur_max, cur_min = max(candidates), min(candidates)
+        result = max(result, cur_max)
+
+    return result
+
+
+# Example usage
+print(max_product([2, 3, -2, 4]))  # 6
+print(max_product([-2, 3, -4]))    # 24`,
+          },
+        ],
+      },
+
+      // ── 7. Find Minimum in Rotated Sorted Array ───────────────────────────
+      {
+        num: 7,
+        title: "Find Minimum in Rotated Sorted Array",
+        leetcodeNum: 153,
+        slug: "find-minimum-in-rotated-sorted-array",
+        pattern: "Binary search",
+        visual: "Compare mid vs right to pick half",
+        difficulty: "medium",
+        tags: ["Array", "Binary Search"],
+        description:
+          "Suppose an array of length `n` sorted in ascending order is **rotated** between `1` and `n` times.\n\nGiven the sorted rotated array `nums` of **unique** elements, return the **minimum element** of this array.\n\nYou must write an algorithm that runs in `O(log n)` time.",
+        examples: [
+          {
+            input: "nums = [3, 4, 5, 1, 2]",
+            output: "1",
+            explanation: "The original array was [1, 2, 3, 4, 5] and it was rotated 3 times.",
+          },
+          {
+            input: "nums = [4, 5, 6, 7, 0, 1, 2]",
+            output: "0",
+            explanation: "The original array was [0, 1, 2, 4, 5, 6, 7] and it was rotated 4 times.",
+          },
+          {
+            input: "nums = [11, 13, 15, 17]",
+            output: "11",
+            explanation: "The array was rotated 0 times — it remains sorted.",
+          },
+        ],
+        constraints: [
+          "n == nums.length",
+          "1 ≤ n ≤ 5000",
+          "-5000 ≤ nums[i] ≤ 5000",
+          "All the integers of nums are unique.",
+          "nums is sorted and rotated between 1 and n times.",
+        ],
+        approach: "Binary search — if nums[mid] > nums[right], minimum is in the right half; otherwise left half (including mid)",
+        timeComplexity: "O(log n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+function findMin(nums) {
+  let left = 0;
+  let right = nums.length - 1;
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (nums[mid] > nums[right]) {
+      // Minimum must be in the right half
+      left = mid + 1;
+    } else {
+      // Minimum is in the left half (mid could be the answer)
+      right = mid;
+    }
+  }
+
+  return nums[left];
+}
+
+// Example usage
+console.log(findMin([3, 4, 5, 1, 2]));       // 1
+console.log(findMin([4, 5, 6, 7, 0, 1, 2])); // 0`,
+          },
+          {
+            language: "typescript",
+            code: `function findMin(nums: number[]): number {
+  let left = 0;
+  let right = nums.length - 1;
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (nums[mid] > nums[right]) {
+      left = mid + 1;
+    } else {
+      right = mid;
+    }
+  }
+
+  return nums[left];
+}
+
+// Example usage
+console.log(findMin([3, 4, 5, 1, 2]));       // 1
+console.log(findMin([4, 5, 6, 7, 0, 1, 2])); // 0`,
+          },
+          {
+            language: "php",
+            code: `<?php
+
+function findMin(array $nums): int {
+    $left  = 0;
+    $right = count($nums) - 1;
+
+    while ($left < $right) {
+        $mid = intdiv($left + $right, 2);
+
+        if ($nums[$mid] > $nums[$right]) {
+            $left = $mid + 1;
+        } else {
+            $right = $mid;
+        }
+    }
+
+    return $nums[$left];
+}
+
+// Example usage
+echo findMin([3, 4, 5, 1, 2])       . PHP_EOL; // 1
+echo findMin([4, 5, 6, 7, 0, 1, 2]) . PHP_EOL; // 0`,
+          },
+          {
+            language: "java",
+            code: `class Solution {
+    public int findMin(int[] nums) {
+        int left  = 0;
+        int right = nums.length - 1;
+
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+
+            if (nums[mid] > nums[right]) {
+                left = mid + 1;
+            } else {
+                right = mid;
+            }
+        }
+
+        return nums[left];
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.findMin(new int[]{3, 4, 5, 1, 2}));       // 1
+        System.out.println(sol.findMin(new int[]{4, 5, 6, 7, 0, 1, 2})); // 0
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def find_min(nums: list[int]) -> int:
+    left, right = 0, len(nums) - 1
+
+    while left < right:
+        mid = (left + right) // 2
+
+        if nums[mid] > nums[right]:
+            left = mid + 1   # minimum is in right half
+        else:
+            right = mid      # mid could be the minimum
+
+    return nums[left]
+
+
+# Example usage
+print(find_min([3, 4, 5, 1, 2]))       # 1
+print(find_min([4, 5, 6, 7, 0, 1, 2])) # 0`,
+          },
+        ],
+      },
+
+      // ── 8. Search in Rotated Sorted Array ────────────────────────────────
+      {
+        num: 8,
+        title: "Search in Rotated Sorted Array",
+        leetcodeNum: 33,
+        slug: "search-in-rotated-sorted-array",
+        pattern: "BS with rotation",
+        visual: "One half is always sorted",
+        difficulty: "medium",
+        tags: ["Array", "Binary Search"],
+        description:
+          "There is an integer array `nums` sorted in ascending order (with **distinct** values) that has been possibly rotated at an unknown pivot index.\n\nGiven the array `nums` and an integer `target`, return the **index** of `target` if it is in `nums`, or `-1` if it is not in `nums`.\n\nYou must write an algorithm with `O(log n)` runtime complexity.",
+        examples: [
+          {
+            input: "nums = [4, 5, 6, 7, 0, 1, 2], target = 0",
+            output: "4",
+          },
+          {
+            input: "nums = [4, 5, 6, 7, 0, 1, 2], target = 3",
+            output: "-1",
+          },
+          {
+            input: "nums = [1], target = 0",
+            output: "-1",
+          },
+        ],
+        constraints: [
+          "1 ≤ nums.length ≤ 5000",
+          "-10⁴ ≤ nums[i] ≤ 10⁴",
+          "All values in nums are unique.",
+          "nums is an ascending array that is possibly rotated.",
+          "-10⁴ ≤ target ≤ 10⁴",
+        ],
+        approach: "Binary search — at every step one half is guaranteed to be sorted; check if target falls in that sorted half",
+        timeComplexity: "O(log n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number}
+ */
+function search(nums, target) {
+  let left = 0;
+  let right = nums.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (nums[mid] === target) return mid;
+
+    // Left half is sorted
+    if (nums[left] <= nums[mid]) {
+      if (target >= nums[left] && target < nums[mid]) {
+        right = mid - 1; // target is in sorted left half
+      } else {
+        left = mid + 1;  // target must be in right half
+      }
+    } else {
+      // Right half is sorted
+      if (target > nums[mid] && target <= nums[right]) {
+        left = mid + 1;  // target is in sorted right half
+      } else {
+        right = mid - 1; // target must be in left half
+      }
+    }
+  }
+
+  return -1;
+}
+
+// Example usage
+console.log(search([4, 5, 6, 7, 0, 1, 2], 0)); // 4
+console.log(search([4, 5, 6, 7, 0, 1, 2], 3)); // -1`,
+          },
+          {
+            language: "typescript",
+            code: `function search(nums: number[], target: number): number {
+  let left = 0;
+  let right = nums.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (nums[mid] === target) return mid;
+
+    if (nums[left] <= nums[mid]) {
+      if (target >= nums[left] && target < nums[mid]) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    } else {
+      if (target > nums[mid] && target <= nums[right]) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+  }
+
+  return -1;
+}
+
+// Example usage
+console.log(search([4, 5, 6, 7, 0, 1, 2], 0)); // 4
+console.log(search([4, 5, 6, 7, 0, 1, 2], 3)); // -1`,
+          },
+          {
+            language: "php",
+            code: `<?php
+
+function search(array $nums, int $target): int {
+    $left  = 0;
+    $right = count($nums) - 1;
+
+    while ($left <= $right) {
+        $mid = intdiv($left + $right, 2);
+
+        if ($nums[$mid] === $target) return $mid;
+
+        if ($nums[$left] <= $nums[$mid]) {
+            // Left half sorted
+            if ($target >= $nums[$left] && $target < $nums[$mid]) {
+                $right = $mid - 1;
+            } else {
+                $left = $mid + 1;
+            }
+        } else {
+            // Right half sorted
+            if ($target > $nums[$mid] && $target <= $nums[$right]) {
+                $left = $mid + 1;
+            } else {
+                $right = $mid - 1;
+            }
+        }
+    }
+
+    return -1;
+}
+
+// Example usage
+echo search([4, 5, 6, 7, 0, 1, 2], 0) . PHP_EOL; // 4
+echo search([4, 5, 6, 7, 0, 1, 2], 3) . PHP_EOL; // -1`,
+          },
+          {
+            language: "java",
+            code: `class Solution {
+    public int search(int[] nums, int target) {
+        int left  = 0;
+        int right = nums.length - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            if (nums[mid] == target) return mid;
+
+            if (nums[left] <= nums[mid]) {
+                // Left half is sorted
+                if (target >= nums[left] && target < nums[mid]) {
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            } else {
+                // Right half is sorted
+                if (target > nums[mid] && target <= nums[right]) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.search(new int[]{4, 5, 6, 7, 0, 1, 2}, 0)); // 4
+        System.out.println(sol.search(new int[]{4, 5, 6, 7, 0, 1, 2}, 3)); // -1
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def search(nums: list[int], target: int) -> int:
+    left, right = 0, len(nums) - 1
+
+    while left <= right:
+        mid = (left + right) // 2
+
+        if nums[mid] == target:
+            return mid
+
+        # Left half is sorted
+        if nums[left] <= nums[mid]:
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        else:
+            # Right half is sorted
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+
+    return -1
+
+
+# Example usage
+print(search([4, 5, 6, 7, 0, 1, 2], 0))  # 4
+print(search([4, 5, 6, 7, 0, 1, 2], 3))  # -1`,
+          },
+        ],
+      },
+
+      // ── 9. 3Sum ───────────────────────────────────────────────────────────
+      {
+        num: 9,
+        title: "3Sum",
+        leetcodeNum: 15,
+        slug: "3sum",
+        pattern: "Sort + two pointers",
+        visual: "Fix i, shrink window for pair sum",
+        difficulty: "medium",
+        tags: ["Array", "Two Pointers", "Sorting"],
+        description:
+          "Given an integer array `nums`, return all the triplets `[nums[i], nums[j], nums[k]]` such that `i != j`, `i != k`, `j != k`, and `nums[i] + nums[j] + nums[k] == 0`.\n\nNotice that the solution set **must not contain duplicate triplets**.",
+        examples: [
+          {
+            input: "nums = [-1, 0, 1, 2, -1, -4]",
+            output: "[[-1, -1, 2], [-1, 0, 1]]",
+            explanation:
+              "nums[0] + nums[1] + nums[2] = -1 + 0 + 1 = 0. nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0. The distinct triplets are [-1,-1,2] and [-1,0,1].",
+          },
+          {
+            input: "nums = [0, 1, 1]",
+            output: "[]",
+            explanation: "The only possible triplet does not sum up to 0.",
+          },
+          {
+            input: "nums = [0, 0, 0]",
+            output: "[[0, 0, 0]]",
+          },
+        ],
+        constraints: [
+          "3 ≤ nums.length ≤ 3000",
+          "-10⁵ ≤ nums[i] ≤ 10⁵",
+        ],
+        approach: "Sort array, fix one element, use two pointers for the remaining pair — skip duplicates at each step",
+        timeComplexity: "O(n²)",
+        spaceComplexity: "O(1) extra (output not counted)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+function threeSum(nums) {
+  nums.sort((a, b) => a - b);
+  const result = [];
+
+  for (let i = 0; i < nums.length - 2; i++) {
+    // Skip duplicate values for the fixed element
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    // Early exit: smallest possible sum is already > 0
+    if (nums[i] > 0) break;
+
+    let left = i + 1;
+    let right = nums.length - 1;
+
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+
+      if (sum === 0) {
+        result.push([nums[i], nums[left], nums[right]]);
+        // Skip duplicates for left and right pointers
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+        left++;
+        right--;
+      } else if (sum < 0) {
+        left++;
+      } else {
+        right--;
+      }
+    }
+  }
+
+  return result;
+}
+
+// Example usage
+console.log(threeSum([-1, 0, 1, 2, -1, -4])); // [[-1,-1,2],[-1,0,1]]
+console.log(threeSum([0, 0, 0]));              // [[0,0,0]]`,
+          },
+          {
+            language: "typescript",
+            code: `function threeSum(nums: number[]): number[][] {
+  nums.sort((a, b) => a - b);
+  const result: number[][] = [];
+
+  for (let i = 0; i < nums.length - 2; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+    if (nums[i] > 0) break;
+
+    let left = i + 1;
+    let right = nums.length - 1;
+
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+
+      if (sum === 0) {
+        result.push([nums[i], nums[left], nums[right]]);
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+        left++;
+        right--;
+      } else if (sum < 0) {
+        left++;
+      } else {
+        right--;
+      }
+    }
+  }
+
+  return result;
+}
+
+// Example usage
+console.log(threeSum([-1, 0, 1, 2, -1, -4])); // [[-1,-1,2],[-1,0,1]]`,
+          },
+          {
+            language: "php",
+            code: `<?php
+
+function threeSum(array $nums): array {
+    sort($nums);
+    $result = [];
+    $n      = count($nums);
+
+    for ($i = 0; $i < $n - 2; $i++) {
+        if ($i > 0 && $nums[$i] === $nums[$i - 1]) continue;
+        if ($nums[$i] > 0) break;
+
+        $left  = $i + 1;
+        $right = $n - 1;
+
+        while ($left < $right) {
+            $sum = $nums[$i] + $nums[$left] + $nums[$right];
+
+            if ($sum === 0) {
+                $result[] = [$nums[$i], $nums[$left], $nums[$right]];
+                while ($left < $right && $nums[$left]  === $nums[$left + 1])  $left++;
+                while ($left < $right && $nums[$right] === $nums[$right - 1]) $right--;
+                $left++;
+                $right--;
+            } elseif ($sum < 0) {
+                $left++;
+            } else {
+                $right--;
+            }
+        }
+    }
+
+    return $result;
+}
+
+// Example usage
+print_r(threeSum([-1, 0, 1, 2, -1, -4])); // [[-1,-1,2],[-1,0,1]]`,
+          },
+          {
+            language: "java",
+            code: `import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+class Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        Arrays.sort(nums);
+        List<List<Integer>> result = new ArrayList<>();
+
+        for (int i = 0; i < nums.length - 2; i++) {
+            if (i > 0 && nums[i] == nums[i - 1]) continue;
+            if (nums[i] > 0) break;
+
+            int left  = i + 1;
+            int right = nums.length - 1;
+
+            while (left < right) {
+                int sum = nums[i] + nums[left] + nums[right];
+
+                if (sum == 0) {
+                    result.add(Arrays.asList(nums[i], nums[left], nums[right]));
+                    while (left < right && nums[left]  == nums[left + 1])  left++;
+                    while (left < right && nums[right] == nums[right - 1]) right--;
+                    left++;
+                    right--;
+                } else if (sum < 0) {
+                    left++;
+                } else {
+                    right--;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.threeSum(new int[]{-1, 0, 1, 2, -1, -4}));
+        // [[-1, -1, 2], [-1, 0, 1]]
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def three_sum(nums: list[int]) -> list[list[int]]:
+    nums.sort()
+    result: list[list[int]] = []
+
+    for i in range(len(nums) - 2):
+        if i > 0 and nums[i] == nums[i - 1]:
+            continue  # skip duplicate fixed element
+        if nums[i] > 0:
+            break     # smallest element is positive — no zero sum possible
+
+        left, right = i + 1, len(nums) - 1
+
+        while left < right:
+            total = nums[i] + nums[left] + nums[right]
+
+            if total == 0:
+                result.append([nums[i], nums[left], nums[right]])
+                while left < right and nums[left]  == nums[left + 1]:  left  += 1
+                while left < right and nums[right] == nums[right - 1]: right -= 1
+                left  += 1
+                right -= 1
+            elif total < 0:
+                left += 1
+            else:
+                right -= 1
+
+    return result
+
+
+# Example usage
+print(three_sum([-1, 0, 1, 2, -1, -4]))  # [[-1, -1, 2], [-1, 0, 1]]
+print(three_sum([0, 0, 0]))              # [[0, 0, 0]]`,
+          },
+        ],
+      },
+
+      // ── 10. Container With Most Water ─────────────────────────────────────
+      {
+        num: 10,
+        title: "Container With Most Water",
+        leetcodeNum: 11,
+        slug: "container-with-most-water",
+        pattern: "Two pointers",
+        visual: "Move shorter wall inward",
+        difficulty: "medium",
+        tags: ["Array", "Two Pointers", "Greedy"],
+        description:
+          "You are given an integer array `height` of length `n`. There are `n` vertical lines drawn such that the two endpoints of the `i`-th line are `(i, 0)` and `(i, height[i])`.\n\nFind two lines that together with the x-axis form a container, such that the container contains the **most water**.\n\nReturn the **maximum amount of water** a container can store.\n\n**Notice** that you may not slant the container.",
+        examples: [
+          {
+            input: "height = [1, 8, 6, 2, 5, 4, 8, 3, 7]",
+            output: "49",
+            explanation:
+              "The vertical lines at index 1 (height=8) and index 8 (height=7) form a container. Water = min(8,7) × (8-1) = 7 × 7 = 49.",
+          },
+          {
+            input: "height = [1, 1]",
+            output: "1",
+          },
+        ],
+        constraints: [
+          "n == height.length",
+          "2 ≤ n ≤ 10⁵",
+          "0 ≤ height[i] ≤ 10⁴",
+        ],
+        approach: "Two pointers — always move the pointer with the shorter height inward (moving the taller one can only decrease area)",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `/**
+ * @param {number[]} height
+ * @return {number}
+ */
+function maxArea(height) {
+  let left = 0;
+  let right = height.length - 1;
+  let maxWater = 0;
+
+  while (left < right) {
+    const h = Math.min(height[left], height[right]);
+    const w = right - left;
+    maxWater = Math.max(maxWater, h * w);
+
+    // Move the shorter wall — moving the taller one can never increase area
+    if (height[left] < height[right]) {
+      left++;
+    } else {
+      right--;
+    }
+  }
+
+  return maxWater;
+}
+
+// Example usage
+console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7])); // 49
+console.log(maxArea([1, 1]));                        // 1`,
+          },
+          {
+            language: "typescript",
+            code: `function maxArea(height: number[]): number {
+  let left = 0;
+  let right = height.length - 1;
+  let maxWater = 0;
+
+  while (left < right) {
+    const h = Math.min(height[left], height[right]);
+    const w = right - left;
+    maxWater = Math.max(maxWater, h * w);
+
+    if (height[left] < height[right]) {
+      left++;
+    } else {
+      right--;
+    }
+  }
+
+  return maxWater;
+}
+
+// Example usage
+console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7])); // 49
+console.log(maxArea([1, 1]));                        // 1`,
+          },
+          {
+            language: "php",
+            code: `<?php
+
+function maxArea(array $height): int {
+    $left     = 0;
+    $right    = count($height) - 1;
+    $maxWater = 0;
+
+    while ($left < $right) {
+        $h        = min($height[$left], $height[$right]);
+        $w        = $right - $left;
+        $maxWater = max($maxWater, $h * $w);
+
+        if ($height[$left] < $height[$right]) {
+            $left++;
+        } else {
+            $right--;
+        }
+    }
+
+    return $maxWater;
+}
+
+// Example usage
+echo maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]) . PHP_EOL; // 49
+echo maxArea([1, 1])                        . PHP_EOL; // 1`,
+          },
+          {
+            language: "java",
+            code: `class Solution {
+    public int maxArea(int[] height) {
+        int left     = 0;
+        int right    = height.length - 1;
+        int maxWater = 0;
+
+        while (left < right) {
+            int h = Math.min(height[left], height[right]);
+            int w = right - left;
+            maxWater = Math.max(maxWater, h * w);
+
+            if (height[left] < height[right]) {
+                left++;
+            } else {
+                right--;
+            }
+        }
+
+        return maxWater;
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        System.out.println(sol.maxArea(new int[]{1, 8, 6, 2, 5, 4, 8, 3, 7})); // 49
+        System.out.println(sol.maxArea(new int[]{1, 1}));                        // 1
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def max_area(height: list[int]) -> int:
+    left, right = 0, len(height) - 1
+    max_water   = 0
+
+    while left < right:
+        h = min(height[left], height[right])
+        w = right - left
+        max_water = max(max_water, h * w)
+
+        # Move the shorter wall inward
+        if height[left] < height[right]:
+            left  += 1
+        else:
+            right -= 1
+
+    return max_water
+
+
+# Example usage
+print(max_area([1, 8, 6, 2, 5, 4, 8, 3, 7]))  # 49
+print(max_area([1, 1]))                          # 1`,
+          },
+        ],
+      },
     ],
   },
   {
