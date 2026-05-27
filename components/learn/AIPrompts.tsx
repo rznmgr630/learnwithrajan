@@ -70,6 +70,78 @@ const PROMPTS: PromptItem[] = [
       "Ultra-high-resolution 4K enhancement based strictly on the provided reference image. Absolute fidelity to original facial anatomy, proportions, and identity. Preserve expression, gaze, pose, camera angle, framing, and perspective with zero deviation. Clothing, hair, skin, and background elements must remain unchanged in structure, placement, and design. Recover fine-grain detail with natural realism. Enhance pores, fine lines, hair strands, eyelashes, fabric weave, seams, and material edges without introducing stylization. Maintain original color science, white balance, and tonal relationships exactly as captured. Lighting direction, intensity, contrast, and shadow behavior must match the source image precisely, with only improved clarity and expanded dynamic range. No relighting, no reshaping. Remove any grain. Apply controlled sharpening and high-frequency detail reconstruction. Remove compression artifacts and noise while retaining authentic texture. No smoothing, no plastic skin, no artificial gloss. Facial features must remain consistent across the entire image with coherent anatomy and clean, stable edges. Negative constraints: no warping, no facial drift, no added or missing anatomy, no altered hands, no distortions, no perspective shift, no text or graphics, no hallucinated detail, no stylized rendering. Output must read as a true-to-life, photorealistic upscale that matches the reference exactly, only clearer, sharper, and higher resolution.",
   },
 
+  // ── Software Development ──────────────────────────────────────────────────
+  {
+    id: 13,
+    category: "Software Development",
+    title: "TURN CLAUDE INTO A FULL STARTUP ENGINEERING TEAM",
+    prompt:
+      "Act like a senior full-stack engineer building a production-ready startup MVP from scratch. First design the complete system architecture, then build the most minimal but scalable version possible. Include: System architecture, File structure, Database schema, API endpoints, UI architecture, Production-ready code. Build it like a real startup that could scale to millions of users.",
+  },
+  {
+    id: 14,
+    category: "Software Development",
+    title: "TURN CLAUDE INTO A PRODUCTION-LEVEL DEBUGGING MONSTER",
+    prompt:
+      "Act like a senior debugging engineer investigating a live production issue. Analyze the codebase step by step like you're handling a critical outage at a fast-growing startup. Your job: Understand what the code actually does, Trace the real root cause, Explain why the failure happens, Identify hidden edge cases, Propose the most robust fix possible. Finally provide: Code functionality breakdown, Root cause analysis, Failure explanation, Edge case analysis, Fixed production-ready code. Do not guess. Think deeply before making changes.",
+  },
+  {
+    id: 15,
+    category: "Software Development",
+    title: "TURN CLAUDE INTO A PERFORMANCE OPTIMIZATION ENGINEER",
+    prompt:
+      "Act like a senior performance engineer optimizing a production application used by millions of users. Your goals: Maximum speed, Lower memory usage, Better scalability, Faster rendering, Cleaner execution. Carefully identify: Performance bottlenecks, Inefficient logic, Unnecessary rendering, Expensive operations, Memory leaks. Then provide: Performance issue breakdown, Optimization strategies, Improved production-ready code, Scalability recommendations. Optimize the code like you're preparing it for massive traffic.",
+  },
+  {
+    id: 16,
+    category: "Software Development",
+    title: "MAKE CLAUDE REBUILD MESSY CODE INTO CLEAN SCALABLE ARCHITECTURE",
+    prompt:
+      "Act like a senior software architect rebuilding a messy production codebase using clean architecture principles. Your mission: Separate concerns properly, Increase modularity, Reduce tight coupling, Improve scalability, Make the codebase easier to maintain long term. Do NOT change the product behavior. Only improve the architecture and code quality. Finally provide: New folder structure, Clean architecture breakdown, Refactored production-grade code, Explanation of architectural improvements. Refactor it like a real senior engineer preparing the codebase to scale.",
+  },
+  {
+    id: 17,
+    category: "Software Development",
+    title: "MAKE CLAUDE ARCHITECT YOUR ENTIRE STARTUP BACKEND",
+    prompt:
+      "Act like a senior systems architect designing infrastructure for a high-growth startup. First design a scalable production-grade system architecture. Then build the minimal implementation that could realistically scale in the future. Include: System architecture, Component structure, Data flow, API design, Database schema, Caching strategy, Production-ready implementation code. Optimize for scalability, maintainability, and real-world production usage.",
+  },
+  {
+    id: 18,
+    category: "Software Development",
+    title: "TURN CLAUDE INTO AN ENTIRE AI ENGINEERING TEAM",
+    prompt:
+      "You are now 4 elite AI agents working together on the same project: Architect, Engineer, Reviewer, Optimizer. Each agent has a specific role: Architect → Design scalable system architecture, Engineer → Build the implementation, Reviewer → Perform senior-level code review, Optimizer → Improve performance and scalability. Workflow: Architect designs the system. Engineer builds it. Reviewer critiques and improves it. Optimizer makes it production-grade. Finally provide: Complete architecture, Full implementation, Review feedback, Final optimized version. Think and collaborate like a world-class engineering team building a real startup product.",
+  },
+  {
+    id: 19,
+    category: "Software Development",
+    title: "TURN CLAUDE INTO A SENIOR FRONTEND ENGINEER",
+    prompt:
+      "Act like a senior frontend engineer building production-grade UI systems for a modern startup. Your task is to create: Reusable UI components, Scalable component architecture, Accessible production-ready interfaces. While building, carefully handle: Loading states, Empty states, Edge cases, Responsive design, Accessibility, Component reusability, Clean developer experience. Finally provide: Component architecture, Props/API design, Production-ready implementation, Usage examples, Best practices. Build it like it's going into a real production app used by millions.",
+  },
+  {
+    id: 20,
+    category: "Software Development",
+    title: "AI TECHNICAL LEAD MODE",
+    prompt:
+      "Act like a senior technical lead managing a real engineering team. Before writing code: Ask clarifying questions, Challenge bad decisions, Identify scaling risks, Suggest better approaches, Prioritize simplicity. Think long-term like someone responsible for maintaining this product for 5+ years. Then provide: Technical decisions, Tradeoff analysis, Recommended architecture, Implementation plan, Production-ready solution. This makes Claude stop behaving like a code generator and start thinking like an actual tech lead.",
+  },
+  {
+    id: 21,
+    category: "Software Development",
+    title: "PRODUCTION SECURITY AUDIT",
+    prompt:
+      "Act like a senior security engineer auditing a production application. Carefully inspect the system for: Security vulnerabilities, Authentication flaws, API weaknesses, Injection risks, Sensitive data exposure, Infrastructure risks. Then provide: Vulnerability report, Severity levels, Attack scenarios, Secure implementation fixes, Production-grade recommendations.",
+  },
+  {
+    id: 22,
+    category: "Software Development",
+    title: "SENIOR DEVOPS + DEPLOYMENT ENGINEER",
+    prompt:
+      "Act like a senior DevOps engineer preparing this application for real production deployment. Your job: Design deployment architecture, Configure CI/CD, Setup monitoring/logging, Improve reliability, Reduce downtime risks, Optimize scaling. Provide: Infrastructure architecture, Deployment workflow, CI/CD pipeline, Docker/Kubernetes setup, Monitoring strategy, Production deployment checklist.",
+  },
+
   // ── Learning ───────────────────────────────────────────────────────────────
   {
     id: 7,
@@ -118,6 +190,128 @@ const PROMPTS: PromptItem[] = [
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
 
 const PROMPT_VISUALS: Record<string, { gradient: string; icon: React.ReactNode }> = {
+  "TURN CLAUDE INTO A FULL STARTUP ENGINEERING TEAM": {
+    gradient: "from-cyan-500 to-blue-600",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M24 6l4 10h10l-8 6 3 10-9-6-9 6 3-10-8-6h10z" />
+        <line x1="24" y1="32" x2="24" y2="42" />
+        <line x1="18" y1="42" x2="30" y2="42" />
+      </svg>
+    ),
+  },
+  "TURN CLAUDE INTO A PRODUCTION-LEVEL DEBUGGING MONSTER": {
+    gradient: "from-red-500 to-rose-600",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="24" cy="26" rx="9" ry="11" />
+        <path d="M18 16c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+        <line x1="15" y1="22" x2="9" y2="18" />
+        <line x1="15" y1="30" x2="9" y2="30" />
+        <line x1="15" y1="36" x2="9" y2="40" />
+        <line x1="33" y1="22" x2="39" y2="18" />
+        <line x1="33" y1="30" x2="39" y2="30" />
+        <line x1="33" y1="36" x2="39" y2="40" />
+        <circle cx="21" cy="24" r="1.5" fill="white" stroke="none" />
+        <circle cx="27" cy="24" r="1.5" fill="white" stroke="none" />
+      </svg>
+    ),
+  },
+  "TURN CLAUDE INTO A PERFORMANCE OPTIMIZATION ENGINEER": {
+    gradient: "from-yellow-500 to-orange-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 36a20 20 0 0 1 32 0" />
+        <line x1="24" y1="36" x2="24" y2="20" />
+        <line x1="24" y1="36" x2="34" y2="26" />
+        <circle cx="24" cy="36" r="3" fill="white" stroke="none" opacity="0.5" />
+        <line x1="8" y1="36" x2="6" y2="36" />
+        <line x1="40" y1="36" x2="42" y2="36" />
+        <line x1="24" y1="16" x2="24" y2="14" />
+        <line x1="14" y1="19" x2="13" y2="17.4" />
+        <line x1="34" y1="19" x2="35" y2="17.4" />
+      </svg>
+    ),
+  },
+  "MAKE CLAUDE REBUILD MESSY CODE INTO CLEAN SCALABLE ARCHITECTURE": {
+    gradient: "from-teal-500 to-cyan-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="8" width="14" height="10" rx="2" />
+        <rect x="26" y="8" width="14" height="10" rx="2" />
+        <rect x="17" y="30" width="14" height="10" rx="2" />
+        <line x1="15" y1="18" x2="24" y2="30" />
+        <line x1="33" y1="18" x2="24" y2="30" />
+      </svg>
+    ),
+  },
+  "MAKE CLAUDE ARCHITECT YOUR ENTIRE STARTUP BACKEND": {
+    gradient: "from-blue-600 to-indigo-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="24" cy="12" rx="14" ry="5" />
+        <path d="M10 12v8c0 2.8 6.3 5 14 5s14-2.2 14-5v-8" />
+        <path d="M10 20v8c0 2.8 6.3 5 14 5s14-2.2 14-5v-8" />
+        <path d="M10 28v8c0 2.8 6.3 5 14 5s14-2.2 14-5v-8" />
+      </svg>
+    ),
+  },
+  "TURN CLAUDE INTO AN ENTIRE AI ENGINEERING TEAM": {
+    gradient: "from-purple-500 to-violet-600",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="12" r="5" />
+        <circle cx="10" cy="34" r="5" />
+        <circle cx="38" cy="34" r="5" />
+        <line x1="24" y1="17" x2="24" y2="26" />
+        <line x1="24" y1="26" x2="10" y2="29" />
+        <line x1="24" y1="26" x2="38" y2="29" />
+        <circle cx="24" cy="26" r="3" fill="white" stroke="none" opacity="0.3" />
+      </svg>
+    ),
+  },
+  "TURN CLAUDE INTO A SENIOR FRONTEND ENGINEER": {
+    gradient: "from-sky-500 to-cyan-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="6" y="10" width="36" height="24" rx="3" />
+        <line x1="18" y1="38" x2="30" y2="38" />
+        <line x1="24" y1="34" x2="24" y2="38" />
+        <polyline points="14,22 20,28 28,18" />
+        <line x1="30" y1="22" x2="36" y2="22" />
+        <line x1="30" y1="26" x2="34" y2="26" />
+      </svg>
+    ),
+  },
+  "AI TECHNICAL LEAD MODE": {
+    gradient: "from-amber-500 to-yellow-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="16" r="7" />
+        <path d="M10 42c0-7.7 6.3-14 14-14s14 6.3 14 14" />
+        <polyline points="30,10 34,14 38,8" />
+      </svg>
+    ),
+  },
+  "PRODUCTION SECURITY AUDIT": {
+    gradient: "from-slate-600 to-gray-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M24 6l14 5v10c0 9-6 17-14 21C16 38 10 30 10 21V11z" />
+        <polyline points="18,24 22,28 30,18" />
+      </svg>
+    ),
+  },
+  "SENIOR DEVOPS + DEPLOYMENT ENGINEER": {
+    gradient: "from-green-500 to-emerald-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M32 20c0-4.4-3.6-8-8-8s-8 3.6-8 8c-4 0-7 3-7 7s3 7 7 7h16c4 0 7-3 7-7s-3-7-7-7z" />
+        <line x1="24" y1="28" x2="24" y2="38" />
+        <polyline points="20,34 24,38 28,34" />
+      </svg>
+    ),
+  },
   "LEARN ANYTHING IN 20 HOURS": {
     gradient: "from-violet-600 to-indigo-500",
     icon: (
