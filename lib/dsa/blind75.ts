@@ -1816,6 +1816,540 @@ print(max_area([1, 1]))                          # 1`,
           },
         ],
       },
+      {
+        num: 76, title: "Move Zeroes", leetcodeNum: 283, slug: "move-zeroes",
+        pattern: "Two pointers / write pointer", visual: "writeIdx fills non-zeros, then zeros",
+        difficulty: "easy",
+        tags: ["Array", "Two Pointers"],
+        description: "Given an integer array `nums`, move all `0`s to the **end** while maintaining the **relative order** of the non-zero elements. Do this **in-place** without making a copy.\n\nUse a `writeIdx` pointer. Scan through: whenever a non-zero is found, write it at `writeIdx` and advance. Then fill the rest with zeros.",
+        examples: [
+          { input: "nums = [0,1,0,3,12]", output: "[1,3,12,0,0]", explanation: "Non-zero values keep their order; zeroes shift to the end." },
+          { input: "nums = [0]", output: "[0]" },
+        ],
+        constraints: ["1 <= nums.length <= 10^4", "-2^31 <= nums[i] <= 2^31 - 1"],
+        approach: "writeIdx pointer: copy non-zeros forward in one pass, then fill remaining positions with 0.",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function moveZeroes(nums) {
+  let writeIdx = 0;
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] !== 0) nums[writeIdx++] = nums[i];
+  }
+  while (writeIdx < nums.length) nums[writeIdx++] = 0;
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function moveZeroes(nums: number[]): void {
+  let writeIdx = 0;
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] !== 0) nums[writeIdx++] = nums[i];
+  }
+  while (writeIdx < nums.length) nums[writeIdx++] = 0;
+}`,
+          },
+          {
+            language: "php",
+            code: `function moveZeroes(array &$nums): void {
+    $writeIdx = 0;
+    foreach ($nums as $num) {
+        if ($num !== 0) $nums[$writeIdx++] = $num;
+    }
+    while ($writeIdx < count($nums)) $nums[$writeIdx++] = 0;
+}`,
+          },
+          {
+            language: "java",
+            code: `public void moveZeroes(int[] nums) {
+    int writeIdx = 0;
+    for (int num : nums) {
+        if (num != 0) nums[writeIdx++] = num;
+    }
+    while (writeIdx < nums.length) nums[writeIdx++] = 0;
+}`,
+          },
+          {
+            language: "python",
+            code: `def moveZeroes(nums: list[int]) -> None:
+    write_idx = 0
+    for num in nums:
+        if num != 0:
+            nums[write_idx] = num
+            write_idx += 1
+    while write_idx < len(nums):
+        nums[write_idx] = 0
+        write_idx += 1`,
+          },
+        ],
+      },
+      {
+        num: 77, title: "Remove Duplicates from Sorted Array", leetcodeNum: 26, slug: "remove-duplicates-from-sorted-array",
+        pattern: "Slow / fast pointer", visual: "k tracks unique write position",
+        difficulty: "easy",
+        tags: ["Array", "Two Pointers"],
+        description: "Given a sorted array `nums`, remove the duplicates **in-place** so each unique element appears only once. Return `k` — the number of unique elements. The first `k` elements of `nums` must hold the unique values in order.\n\nUse a slow pointer `k` tracking where to write next. Whenever the current element differs from the previous, write it at `k` and advance.",
+        examples: [
+          { input: "nums = [1,1,2]", output: "2, nums = [1,2,_]", explanation: "Two unique elements in first two positions." },
+          { input: "nums = [0,0,1,1,1,2,2,3,3,4]", output: "5, nums = [0,1,2,3,4,_,_,_,_,_]" },
+        ],
+        constraints: ["1 <= nums.length <= 3 × 10^4", "-100 <= nums[i] <= 100", "nums is sorted in non-decreasing order"],
+        approach: "k=1 (first element always kept). For i from 1: if nums[i] != nums[i-1], copy to nums[k++].",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function removeDuplicates(nums) {
+  let k = 1;
+  for (let i = 1; i < nums.length; i++) {
+    if (nums[i] !== nums[i - 1]) nums[k++] = nums[i];
+  }
+  return k;
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function removeDuplicates(nums: number[]): number {
+  let k = 1;
+  for (let i = 1; i < nums.length; i++) {
+    if (nums[i] !== nums[i - 1]) nums[k++] = nums[i];
+  }
+  return k;
+}`,
+          },
+          {
+            language: "php",
+            code: `function removeDuplicates(array &$nums): int {
+    $k = 1;
+    for ($i = 1; $i < count($nums); $i++) {
+        if ($nums[$i] !== $nums[$i - 1]) $nums[$k++] = $nums[$i];
+    }
+    return $k;
+}`,
+          },
+          {
+            language: "java",
+            code: `public int removeDuplicates(int[] nums) {
+    int k = 1;
+    for (int i = 1; i < nums.length; i++) {
+        if (nums[i] != nums[i - 1]) nums[k++] = nums[i];
+    }
+    return k;
+}`,
+          },
+          {
+            language: "python",
+            code: `def removeDuplicates(nums: list[int]) -> int:
+    k = 1
+    for i in range(1, len(nums)):
+        if nums[i] != nums[i - 1]:
+            nums[k] = nums[i]
+            k += 1
+    return k`,
+          },
+        ],
+      },
+      {
+        num: 78, title: "Sort Colors", leetcodeNum: 75, slug: "sort-colors",
+        pattern: "Dutch National Flag", visual: "low/mid/high 3-way partition",
+        difficulty: "medium",
+        tags: ["Array", "Two Pointers", "Sorting"],
+        description: "Given an array `nums` with `n` objects colored `0` (red), `1` (white), or `2` (blue), sort them **in-place** in one pass with constant extra space.\n\n**Dutch National Flag algorithm:** Three pointers — `low`, `mid`, `high`. `mid` scans forward:\n- `nums[mid] == 0` → swap with low, advance both\n- `nums[mid] == 1` → advance mid\n- `nums[mid] == 2` → swap with high, retreat high",
+        examples: [
+          { input: "nums = [2,0,2,1,1,0]", output: "[0,0,1,1,2,2]" },
+          { input: "nums = [2,0,1]", output: "[0,1,2]" },
+        ],
+        constraints: ["n == nums.length", "1 <= n <= 300", "nums[i] is 0, 1, or 2"],
+        approach: "Dutch National Flag: low tracks end of 0s, high tracks start of 2s, mid scans. One pass.",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function sortColors(nums) {
+  let low = 0, mid = 0, high = nums.length - 1;
+  while (mid <= high) {
+    if (nums[mid] === 0) {
+      [nums[low], nums[mid]] = [nums[mid], nums[low]];
+      low++; mid++;
+    } else if (nums[mid] === 1) {
+      mid++;
+    } else {
+      [nums[mid], nums[high]] = [nums[high], nums[mid]];
+      high--;
+    }
+  }
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function sortColors(nums: number[]): void {
+  let low = 0, mid = 0, high = nums.length - 1;
+  while (mid <= high) {
+    if (nums[mid] === 0) {
+      [nums[low], nums[mid]] = [nums[mid], nums[low]];
+      low++; mid++;
+    } else if (nums[mid] === 1) {
+      mid++;
+    } else {
+      [nums[mid], nums[high]] = [nums[high], nums[mid]];
+      high--;
+    }
+  }
+}`,
+          },
+          {
+            language: "php",
+            code: `function sortColors(array &$nums): void {
+    $low = 0; $mid = 0; $high = count($nums) - 1;
+    while ($mid <= $high) {
+        if ($nums[$mid] === 0) {
+            [$nums[$low], $nums[$mid]] = [$nums[$mid], $nums[$low]];
+            $low++; $mid++;
+        } elseif ($nums[$mid] === 1) {
+            $mid++;
+        } else {
+            [$nums[$mid], $nums[$high]] = [$nums[$high], $nums[$mid]];
+            $high--;
+        }
+    }
+}`,
+          },
+          {
+            language: "java",
+            code: `public void sortColors(int[] nums) {
+    int low = 0, mid = 0, high = nums.length - 1;
+    while (mid <= high) {
+        if (nums[mid] == 0) {
+            int tmp = nums[low]; nums[low++] = nums[mid]; nums[mid++] = tmp;
+        } else if (nums[mid] == 1) {
+            mid++;
+        } else {
+            int tmp = nums[mid]; nums[mid] = nums[high]; nums[high--] = tmp;
+        }
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def sortColors(nums: list[int]) -> None:
+    low = mid = 0
+    high = len(nums) - 1
+    while mid <= high:
+        if nums[mid] == 0:
+            nums[low], nums[mid] = nums[mid], nums[low]
+            low += 1; mid += 1
+        elif nums[mid] == 1:
+            mid += 1
+        else:
+            nums[mid], nums[high] = nums[high], nums[mid]
+            high -= 1`,
+          },
+        ],
+      },
+      {
+        num: 79, title: "Rotate Array", leetcodeNum: 189, slug: "rotate-array",
+        pattern: "Triple reverse", visual: "Reverse all → reverse [0..k-1] → reverse [k..n-1]",
+        difficulty: "medium",
+        tags: ["Array", "Math", "Two Pointers"],
+        description: "Given an integer array `nums`, rotate it to the **right** by `k` steps in-place with O(1) extra space.\n\n**Triple reverse trick:**\n1. Reverse the entire array\n2. Reverse the first `k` elements\n3. Reverse the remaining `n-k` elements\n\nThis works because rotating right by `k` is equivalent to bringing the last `k` elements to the front.",
+        examples: [
+          { input: "nums = [1,2,3,4,5,6,7], k = 3", output: "[5,6,7,1,2,3,4]" },
+          { input: "nums = [-1,-100,3,99], k = 2", output: "[3,99,-1,-100]" },
+        ],
+        constraints: ["1 <= nums.length <= 10^5", "0 <= k <= 10^5"],
+        approach: "k = k % n. Reverse whole array, then reverse [0..k-1], then reverse [k..n-1].",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function rotate(nums, k) {
+  k = k % nums.length;
+  const rev = (lo, hi) => { while (lo < hi) { [nums[lo], nums[hi]] = [nums[hi], nums[lo]]; lo++; hi--; } };
+  rev(0, nums.length - 1);
+  rev(0, k - 1);
+  rev(k, nums.length - 1);
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function rotate(nums: number[], k: number): void {
+  k = k % nums.length;
+  const rev = (lo: number, hi: number) => { while (lo < hi) { [nums[lo], nums[hi]] = [nums[hi], nums[lo]]; lo++; hi--; } };
+  rev(0, nums.length - 1);
+  rev(0, k - 1);
+  rev(k, nums.length - 1);
+}`,
+          },
+          {
+            language: "php",
+            code: `function rotate(array &$nums, int $k): void {
+    $n = count($nums); $k %= $n;
+    function revArr(array &$arr, int $lo, int $hi): void {
+        while ($lo < $hi) { [$arr[$lo], $arr[$hi]] = [$arr[$hi], $arr[$lo]]; $lo++; $hi--; }
+    }
+    revArr($nums, 0, $n - 1);
+    revArr($nums, 0, $k - 1);
+    revArr($nums, $k, $n - 1);
+}`,
+          },
+          {
+            language: "java",
+            code: `public void rotate(int[] nums, int k) {
+    k %= nums.length;
+    reverse(nums, 0, nums.length - 1);
+    reverse(nums, 0, k - 1);
+    reverse(nums, k, nums.length - 1);
+}
+private void reverse(int[] nums, int lo, int hi) {
+    while (lo < hi) { int t = nums[lo]; nums[lo++] = nums[hi]; nums[hi--] = t; }
+}`,
+          },
+          {
+            language: "python",
+            code: `def rotate(nums: list[int], k: int) -> None:
+    n = len(nums)
+    k %= n
+    def rev(lo, hi):
+        while lo < hi:
+            nums[lo], nums[hi] = nums[hi], nums[lo]
+            lo += 1; hi -= 1
+    rev(0, n - 1)
+    rev(0, k - 1)
+    rev(k, n - 1)`,
+          },
+        ],
+      },
+      {
+        num: 80, title: "Majority Element", leetcodeNum: 169, slug: "majority-element",
+        pattern: "Boyer-Moore voting", visual: "candidate survives net cancellation",
+        difficulty: "easy",
+        tags: ["Array", "Divide and Conquer", "Sorting"],
+        description: "Given an array `nums` of size `n`, return the **majority element** — the one appearing more than ⌊n/2⌋ times. It always exists.\n\n**Boyer-Moore Voting:** maintain a `candidate` and a `count`. When count drops to 0, pick the current element as new candidate. Pairs of different elements cancel each other out — the majority element survives.",
+        examples: [
+          { input: "nums = [3,2,3]", output: "3" },
+          { input: "nums = [2,2,1,1,1,2,2]", output: "2" },
+        ],
+        constraints: ["n == nums.length", "1 <= n <= 5 × 10^4", "-10^9 <= nums[i] <= 10^9", "Majority element always exists"],
+        approach: "Boyer-Moore: candidate / count pair. count=0 → new candidate. Same → count++. Diff → count--.",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function majorityElement(nums) {
+  let candidate = nums[0], count = 1;
+  for (let i = 1; i < nums.length; i++) {
+    if (count === 0) { candidate = nums[i]; count = 1; }
+    else if (nums[i] === candidate) count++;
+    else count--;
+  }
+  return candidate;
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function majorityElement(nums: number[]): number {
+  let candidate = nums[0], count = 1;
+  for (let i = 1; i < nums.length; i++) {
+    if (count === 0) { candidate = nums[i]; count = 1; }
+    else if (nums[i] === candidate) count++;
+    else count--;
+  }
+  return candidate;
+}`,
+          },
+          {
+            language: "php",
+            code: `function majorityElement(array $nums): int {
+    $candidate = $nums[0]; $count = 1;
+    for ($i = 1; $i < count($nums); $i++) {
+        if ($count === 0) { $candidate = $nums[$i]; $count = 1; }
+        elseif ($nums[$i] === $candidate) $count++;
+        else $count--;
+    }
+    return $candidate;
+}`,
+          },
+          {
+            language: "java",
+            code: `public int majorityElement(int[] nums) {
+    int candidate = nums[0], count = 1;
+    for (int i = 1; i < nums.length; i++) {
+        if (count == 0) { candidate = nums[i]; count = 1; }
+        else if (nums[i] == candidate) count++;
+        else count--;
+    }
+    return candidate;
+}`,
+          },
+          {
+            language: "python",
+            code: `def majorityElement(nums: list[int]) -> int:
+    candidate, count = nums[0], 1
+    for num in nums[1:]:
+        if count == 0:
+            candidate, count = num, 1
+        elif num == candidate:
+            count += 1
+        else:
+            count -= 1
+    return candidate`,
+          },
+        ],
+      },
+      {
+        num: 81, title: "Merge Sorted Array", leetcodeNum: 88, slug: "merge-sorted-array",
+        pattern: "Fill from the back", visual: "Three pointers i, j, k starting at ends",
+        difficulty: "easy",
+        tags: ["Array", "Two Pointers", "Sorting"],
+        description: "Given two sorted arrays `nums1` (size `m+n`, last `n` slots are 0) and `nums2` (size `n`), merge `nums2` into `nums1` **in-place** in sorted order.\n\n**Fill from the back:** compare from the ends of both arrays and write the larger value at position `k = m+n-1`. This avoids overwriting unprocessed elements in `nums1`.",
+        examples: [
+          { input: "nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3", output: "[1,2,2,3,5,6]" },
+          { input: "nums1 = [1], m = 1, nums2 = [], n = 0", output: "[1]" },
+        ],
+        constraints: ["nums1.length == m + n", "nums2.length == n", "0 <= m, n <= 200"],
+        approach: "i = m-1, j = n-1, k = m+n-1. Compare nums1[i] and nums2[j], place larger at k. Continue until j < 0.",
+        timeComplexity: "O(m + n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function merge(nums1, m, nums2, n) {
+  let i = m - 1, j = n - 1, k = m + n - 1;
+  while (j >= 0) {
+    if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];
+    else nums1[k--] = nums2[j--];
+  }
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function merge(nums1: number[], m: number, nums2: number[], n: number): void {
+  let i = m - 1, j = n - 1, k = m + n - 1;
+  while (j >= 0) {
+    if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];
+    else nums1[k--] = nums2[j--];
+  }
+}`,
+          },
+          {
+            language: "php",
+            code: `function merge(array &$nums1, int $m, array $nums2, int $n): void {
+    $i = $m - 1; $j = $n - 1; $k = $m + $n - 1;
+    while ($j >= 0) {
+        if ($i >= 0 && $nums1[$i] > $nums2[$j]) $nums1[$k--] = $nums1[$i--];
+        else $nums1[$k--] = $nums2[$j--];
+    }
+}`,
+          },
+          {
+            language: "java",
+            code: `public void merge(int[] nums1, int m, int[] nums2, int n) {
+    int i = m - 1, j = n - 1, k = m + n - 1;
+    while (j >= 0) {
+        if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];
+        else nums1[k--] = nums2[j--];
+    }
+}`,
+          },
+          {
+            language: "python",
+            code: `def merge(nums1: list[int], m: int, nums2: list[int], n: int) -> None:
+    i, j, k = m - 1, n - 1, m + n - 1
+    while j >= 0:
+        if i >= 0 and nums1[i] > nums2[j]:
+            nums1[k] = nums1[i]; i -= 1
+        else:
+            nums1[k] = nums2[j]; j -= 1
+        k -= 1`,
+          },
+        ],
+      },
+      {
+        num: 82, title: "Two Sum II — Input Array Is Sorted", leetcodeNum: 167, slug: "two-sum-ii-input-array-is-sorted",
+        pattern: "Two pointers on sorted array", visual: "Move left up or right down based on sum",
+        difficulty: "medium",
+        tags: ["Array", "Two Pointers", "Binary Search"],
+        description: "Given a **1-indexed** sorted array `numbers`, find two numbers that add up to `target`. Return their 1-indexed positions. Use only **constant extra space**.\n\nSince the array is sorted, use two pointers from both ends. If `sum < target` → move left pointer right (increase sum). If `sum > target` → move right pointer left (decrease sum). Guaranteed exactly one solution.",
+        examples: [
+          { input: "numbers = [2,7,11,15], target = 9", output: "[1,2]", explanation: "numbers[0] + numbers[1] = 2 + 7 = 9." },
+          { input: "numbers = [2,3,4], target = 6", output: "[1,3]" },
+          { input: "numbers = [-1,0], target = -1", output: "[1,2]" },
+        ],
+        constraints: ["2 <= numbers.length <= 3 × 10^4", "-1000 <= numbers[i] <= 1000", "Exactly one solution exists"],
+        approach: "left=0, right=n-1. If sum < target → left++. If sum > target → right--. If equal → return [left+1, right+1].",
+        timeComplexity: "O(n)",
+        spaceComplexity: "O(1)",
+        solutions: [
+          {
+            language: "javascript",
+            code: `function twoSum(numbers, target) {
+  let left = 0, right = numbers.length - 1;
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) return [left + 1, right + 1];
+    else if (sum < target) left++;
+    else right--;
+  }
+}`,
+          },
+          {
+            language: "typescript",
+            code: `function twoSum(numbers: number[], target: number): number[] {
+  let left = 0, right = numbers.length - 1;
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) return [left + 1, right + 1];
+    else if (sum < target) left++;
+    else right--;
+  }
+  return [];
+}`,
+          },
+          {
+            language: "php",
+            code: `function twoSum(array $numbers, int $target): array {
+    $left = 0; $right = count($numbers) - 1;
+    while ($left < $right) {
+        $sum = $numbers[$left] + $numbers[$right];
+        if ($sum === $target) return [$left + 1, $right + 1];
+        elseif ($sum < $target) $left++;
+        else $right--;
+    }
+    return [];
+}`,
+          },
+          {
+            language: "java",
+            code: `public int[] twoSum(int[] numbers, int target) {
+    int left = 0, right = numbers.length - 1;
+    while (left < right) {
+        int sum = numbers[left] + numbers[right];
+        if (sum == target) return new int[]{left + 1, right + 1};
+        else if (sum < target) left++;
+        else right--;
+    }
+    return new int[]{};
+}`,
+          },
+          {
+            language: "python",
+            code: `def twoSum(numbers: list[int], target: int) -> list[int]:
+    left, right = 0, len(numbers) - 1
+    while left < right:
+        s = numbers[left] + numbers[right]
+        if s == target: return [left + 1, right + 1]
+        elif s < target: left += 1
+        else: right -= 1
+    return []`,
+          },
+        ],
+      },
     ],
   },
   {
