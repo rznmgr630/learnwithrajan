@@ -74,8 +74,6 @@ const PROMPTS: PromptItem[] = [
     id: 7,
     category: "Learning",
     title: "LEARN ANYTHING IN 20 HOURS",
-    image: "/prompts/genius.png",
-    imageAlt: "Learn anything in 20 hours prompt",
     prompt:
       "I need to learn [topic] fast. Build me a 20-hour plan focused on the 20% that drives 80% of results. Break it into 10 two-hour sessions with the best resources and a 15-minute review at the end of each.",
   },
@@ -83,8 +81,6 @@ const PROMPTS: PromptItem[] = [
     id: 8,
     category: "Learning",
     title: "CREATE A ONE-PAGE CHEAT SHEET",
-    image: "/prompts/genius.png",
-    imageAlt: "Create a one-page cheat sheet prompt",
     prompt:
       "Summarize the key concepts of [topic] on a single page. Use bullet points, diagrams, and examples so I can review it in 5 minutes.",
   },
@@ -92,8 +88,6 @@ const PROMPTS: PromptItem[] = [
     id: 9,
     category: "Learning",
     title: "QUIZ ME UNTIL I BREAK",
-    image: "/prompts/genius.png",
-    imageAlt: "Quiz me until I break prompt",
     prompt:
       "I just studied [topic]. Give me 10 progressively harder questions to test my understanding. After each answer, grade me and explain what I missed.",
   },
@@ -101,8 +95,6 @@ const PROMPTS: PromptItem[] = [
     id: 10,
     category: "Learning",
     title: "BUILD A LEARNING LADDER",
-    image: "/prompts/genius.png",
-    imageAlt: "Build a learning ladder prompt",
     prompt:
       "Break [topic] into 5 levels of difficulty. Show me how to go from Level 1 (beginner) to Level 5 (advanced) with a clear milestone at each step.",
   },
@@ -110,8 +102,6 @@ const PROMPTS: PromptItem[] = [
     id: 11,
     category: "Learning",
     title: "FIND THE BEST LEARNING RESOURCES",
-    image: "/prompts/genius.png",
-    imageAlt: "Find the best learning resources prompt",
     prompt:
       "List the top 5 resources (books, videos, courses, or people) for learning [topic] fast, and explain why each is worth my time.",
   },
@@ -119,8 +109,6 @@ const PROMPTS: PromptItem[] = [
     id: 12,
     category: "Learning",
     title: "USE THE FEYNMAN TECHNIQUE",
-    image: "/prompts/genius.png",
-    imageAlt: "Use the Feynman technique prompt",
     prompt:
       "Explain [topic] to me in the simplest terms. Then have me re-explain it back. Point out gaps, re-teach what I miss, and repeat until I can explain it clearly on my own.",
   },
@@ -215,7 +203,7 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
       onClick={onClick}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]"
     >
-      {item.image ? (
+      {item.image && (
         <div className="overflow-hidden">
           <Image
             src={item.image}
@@ -225,12 +213,8 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
             className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </div>
-      ) : (
-        <div className="flex h-44 items-center justify-center bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]">
-          <span className="text-xs text-[var(--muted)]">BEFORE / AFTER</span>
-        </div>
       )}
-      <div className="px-4 py-3">
+      <div className="flex flex-1 items-center px-4 py-4">
         <span className="text-sm font-semibold tracking-wide text-[var(--text)] group-hover:text-[var(--accent)]">
           {item.title}
         </span>
