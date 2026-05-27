@@ -70,6 +70,43 @@ const PROMPTS: PromptItem[] = [
       "Ultra-high-resolution 4K enhancement based strictly on the provided reference image. Absolute fidelity to original facial anatomy, proportions, and identity. Preserve expression, gaze, pose, camera angle, framing, and perspective with zero deviation. Clothing, hair, skin, and background elements must remain unchanged in structure, placement, and design. Recover fine-grain detail with natural realism. Enhance pores, fine lines, hair strands, eyelashes, fabric weave, seams, and material edges without introducing stylization. Maintain original color science, white balance, and tonal relationships exactly as captured. Lighting direction, intensity, contrast, and shadow behavior must match the source image precisely, with only improved clarity and expanded dynamic range. No relighting, no reshaping. Remove any grain. Apply controlled sharpening and high-frequency detail reconstruction. Remove compression artifacts and noise while retaining authentic texture. No smoothing, no plastic skin, no artificial gloss. Facial features must remain consistent across the entire image with coherent anatomy and clean, stable edges. Negative constraints: no warping, no facial drift, no added or missing anatomy, no altered hands, no distortions, no perspective shift, no text or graphics, no hallucinated detail, no stylized rendering. Output must read as a true-to-life, photorealistic upscale that matches the reference exactly, only clearer, sharper, and higher resolution.",
   },
 
+  {
+    id: 23,
+    category: "Image Effects",
+    title: "HAIRLINE RESTORATION",
+    image: "/prompts/hairline_restoration.png",
+    imageAlt: "Hairline restoration before and after result",
+    prompt:
+      "Natural and subtle hair restoration from the base photo. Fill in temples and frontal hairline with identical color, texture, and density. Lower the hairline by 5-15mm to a natural M-shaped or rounded position. Preserve original hairstyle, facial features, and expression. Final image: exact photo, hair subtly denser and more youthful, undetectable editing.",
+  },
+  {
+    id: 24,
+    category: "Image Effects",
+    title: "CHANGE POSE",
+    image: "/prompts/change_pose.png",
+    imageAlt: "Change pose before and after result",
+    prompt:
+      "Change the person's pose in this photo to [DESIRED POSE, SUCH AS SITTING CROSS-LEGGED, ARMS CROSSED, WALKING FORWARD, JUMPING MID-AIR, LEANING AGAINST A WALL, LOOKING OVER THE SHOULDER, HANDS IN POCKETS, OR HOLDING AN OBJECT]. Keep the person's face, identity, facial features, expression, body proportions, clothing, skin texture, hairstyle, lighting, shadows, camera angle, background, and overall photo style as consistent as possible. Make the new pose look natural, balanced, and anatomically realistic, with believable limb placement, body weight, posture, clothing folds, contact points, and shadows that match the original scene. Do not distort the face, warp the body, create extra fingers or limbs, change the person's identity, alter the background, or make the pose look stiff or artificial. The final image should look like a seamless, photo-realistic image of the same person naturally captured in the requested pose.",
+  },
+  {
+    id: 25,
+    category: "Image Effects",
+    title: "REMOVE DARK CIRCLES",
+    image: "/prompts/dark_spot.png",
+    imageAlt: "Remove dark circles before and after result",
+    prompt:
+      "Subtle reduction of dark circles and eye bags from the base photo. Lighten pigmentation, soften slight puffiness, and dim shadows. Naturally blend the tone of the dark circles with the cheeks. Maintain the natural eye crease, bone structure, and expression lines. Correct only darkness and inflammation. No general beauty filters. Result: bright, rested, and natural eyes.",
+  },
+  {
+    id: 26,
+    category: "Image Effects",
+    title: "EDIT TEXT IN IMAGE",
+    image: "/prompts/edit_text.png",
+    imageAlt: "Edit text in image before and after result",
+    prompt:
+      "Edit only the text in this image by replacing [EXISTING TEXT TO REPLACE] with [NEW TEXT]. Keep the original design, layout, font style, font size, letter spacing, color, alignment, perspective, shadows, texture, and placement consistent with the surrounding text and overall image. Make the new text blend naturally into the image as if it was part of the original design. Do not change any other text, objects, people, background elements, colors, lighting, or composition. Preserve the original image style and make the edit clean, realistic, and seamless.",
+  },
+
   // ── Software Development ──────────────────────────────────────────────────
   {
     id: 13,
