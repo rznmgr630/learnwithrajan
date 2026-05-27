@@ -67,7 +67,13 @@ export function DSABlind75() {
 
           {/* Category accordions */}
           <div className="flex flex-col gap-4">
-            {BLIND75_CATEGORIES.map((cat, catIndex) => {
+            {(() => {
+              // Precompute cumulative offsets so every problem gets a clean sequential number
+              const offsets = BLIND75_CATEGORIES.reduce<number[]>((acc, cat, i) => {
+                acc.push(i === 0 ? 0 : acc[i - 1] + BLIND75_CATEGORIES[i - 1].problems.length);
+                return acc;
+              }, []);
+              return BLIND75_CATEGORIES.map((cat, catIndex) => {
               const colors = CATEGORY_COLORS[cat.id] ?? CATEGORY_COLORS["array"];
               return (
                 <details
@@ -106,6 +112,7 @@ export function DSABlind75() {
                     {/* Rows */}
                     {cat.problems.map((p, i) => {
                       const hasDetail = !!p.solutions?.length;
+                      const displayNum = offsets[catIndex] + i + 1;
                       return (
                         <button
                           key={p.num}
@@ -113,11 +120,11 @@ export function DSABlind75() {
                           className={`grid w-full grid-cols-[2.5rem_1fr_1fr_1fr] gap-x-4 px-4 py-3 text-left text-sm transition hover:bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] ${i < cat.problems.length - 1 ? "border-b border-[var(--border)]" : ""}`}
                         >
                           {/* # */}
-                          <span className="font-mono text-xs text-[var(--muted)] pt-0.5">{p.num}</span>
+                          <span className="font-mono text-xs text-[var(--muted)] pt-0.5">{displayNum}</span>
 
                           {/* Problem name */}
                           <div className="flex items-start gap-1.5 min-w-0">
-                            <span className={`font-medium leading-snug ${hasDetail ? "text-[var(--accent)]" : "text-[var(--text)]"}`}>
+                            <span className={`cursor-pointer font-medium leading-snug ${hasDetail ? "text-[var(--accent)]" : "text-[var(--text)]"}`}>
                               {p.title}
                             </span>
                             {p.premium && <span className="mt-0.5 shrink-0 text-amber-400" title="Premium">🔒</span>}
@@ -139,7 +146,8 @@ export function DSABlind75() {
                   </div>
                 </details>
               );
-            })}
+            });
+            })()}
           </div>
 
           <p className="mt-8 text-center text-xs text-[var(--faint)]">
