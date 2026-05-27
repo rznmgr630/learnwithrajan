@@ -443,6 +443,31 @@ export const UI_STRINGS = {
     np: "आधारभूत देखि उन्नत सम्म LeetCode-शैलीका समस्याहरू।",
     jp: "基礎から応用まで LeetCode スタイルの問題集。",
   },
+  "hub.programming.groupInterview": {
+    en: "Interview Prep",
+    np: "अन्तर्वार्ता तयारी",
+    jp: "面接対策",
+  },
+  "hub.programming.groupInterviewHint": {
+    en: "System design, behavioural, and technical interview resources.",
+    np: "सिस्टम डिजाइन, व्यावहारिक, र प्राविधिक अन्तर्वार्ता स्रोतहरू।",
+    jp: "システム設計・行動・技術面接リソース。",
+  },
+  "hub.systemDesign.title": {
+    en: "System Design",
+    np: "सिस्टम डिजाइन",
+    jp: "システム設計",
+  },
+  "hub.systemDesign.subtitle": {
+    en: "21 core concepts every engineer needs for the interview",
+    np: "अन्तर्वार्ताका लागि हरेक इन्जिनियरलाई चाहिने २१ मुख्य अवधारणाहरू",
+    jp: "面接で必要な21のコアコンセプト",
+  },
+  "hub.systemDesign.cta": {
+    en: "Study concepts →",
+    np: "अवधारणाहरू अध्ययन गर्नुहोस् →",
+    jp: "コンセプトを学ぶ →",
+  },
   "hub.dsa.title": {
     en: "DSA Problems",
     np: "DSA समस्याहरू",
