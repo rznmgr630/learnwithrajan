@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSA_BASIC_PROBLEMS } from "@/lib/dsa/dsa-problems";
+import { BLIND75_TOTAL } from "@/lib/dsa/blind75";
 import { DSAFundamentalsDrawer, type FundamentalTopicId } from "@/components/learn/DSAFundamentalsDrawer";
 
 const FUNDAMENTAL_TOPICS: { id: FundamentalTopicId; title: string; subtitle: string }[] = [
@@ -126,6 +127,39 @@ export function DSAHub() {
 
         {/* Cards grid — Fundamentals first, then difficulty levels */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* ── Blind 75 card ── */}
+          <Link
+            href="/learn/dsa/blind75"
+            className="group relative overflow-hidden rounded-2xl border border-orange-500/30 bg-[color-mix(in_oklab,var(--surface)_90%,transparent)] transition-all duration-300 hover:border-orange-500/60 hover:shadow-[0_0_32px_-4px_rgba(249,115,22,0.18)]"
+          >
+            <div className="h-1 w-full bg-gradient-to-r from-orange-500/20 to-orange-500/0 opacity-80" />
+            <div className="p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="rounded-xl p-2 text-orange-400 bg-orange-500/10 ring-1 ring-orange-500/30">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span className="rounded-full px-2.5 py-1 text-xs font-semibold text-orange-400 bg-orange-500/10 ring-1 ring-orange-500/30">
+                  Must-Know
+                </span>
+              </div>
+              <h2 className="text-base font-semibold text-[var(--text)]">Blind 75</h2>
+              <p className="mt-1 text-xs text-[var(--muted)]">Top interview patterns & visual hints</p>
+              <div className="mt-4 flex items-center gap-2">
+                <span className="font-mono text-2xl font-bold text-[var(--text)]">{BLIND75_TOTAL}</span>
+                <span className="text-sm text-[var(--muted)]">problems</span>
+              </div>
+              <div className="mt-4">
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-400 transition group-hover:text-orange-300">
+                  View list
+                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </Link>
           {/* ── Fundamentals card ── */}
           <div className="group relative overflow-hidden rounded-2xl border border-violet-500/30 bg-[color-mix(in_oklab,var(--surface)_90%,transparent)] transition-all duration-300 hover:border-violet-500/60 hover:shadow-[0_0_32px_-4px_rgba(139,92,246,0.18)]">
             <div className="h-1 w-full bg-gradient-to-r from-violet-500/20 to-violet-500/0 opacity-80" />
