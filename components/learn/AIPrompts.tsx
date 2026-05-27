@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import type React from "react";
 
 interface PromptItem {
   id: number;
@@ -116,6 +117,81 @@ const PROMPTS: PromptItem[] = [
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
 
+const PROMPT_VISUALS: Record<string, { gradient: string; icon: React.ReactNode }> = {
+  "LEARN ANYTHING IN 20 HOURS": {
+    gradient: "from-violet-600 to-indigo-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="24" r="18" />
+        <polyline points="24,12 24,24 32,28" />
+        <path d="M16 6.5 Q24 2 32 6.5" strokeDasharray="2 2" />
+      </svg>
+    ),
+  },
+  "CREATE A ONE-PAGE CHEAT SHEET": {
+    gradient: "from-emerald-500 to-teal-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="10" y="6" width="28" height="36" rx="3" />
+        <line x1="16" y1="16" x2="32" y2="16" />
+        <line x1="16" y1="22" x2="32" y2="22" />
+        <line x1="16" y1="28" x2="26" y2="28" />
+        <circle cx="33" cy="35" r="5" fill="white" stroke="none" opacity="0.25" />
+        <path d="M30 35l2 2 4-4" stroke="white" strokeWidth="1.5" />
+      </svg>
+    ),
+  },
+  "QUIZ ME UNTIL I BREAK": {
+    gradient: "from-rose-500 to-orange-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="20" r="12" />
+        <path d="M20 17c0-2.2 1.8-4 4-4s4 1.8 4 4c0 2-2 3-2 5h-4" />
+        <circle cx="24" cy="25" r="1" fill="white" stroke="none" />
+        <path d="M17 36l7-8 7 8" />
+        <line x1="24" y1="36" x2="24" y2="42" />
+      </svg>
+    ),
+  },
+  "BUILD A LEARNING LADDER": {
+    gradient: "from-amber-500 to-yellow-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="14" y1="8" x2="14" y2="42" />
+        <line x1="34" y1="8" x2="34" y2="42" />
+        <line x1="14" y1="16" x2="34" y2="16" />
+        <line x1="14" y1="24" x2="34" y2="24" />
+        <line x1="14" y1="32" x2="34" y2="32" />
+        <line x1="14" y1="40" x2="34" y2="40" />
+        <circle cx="34" cy="8" r="4" fill="white" stroke="none" opacity="0.3" />
+        <path d="M32 8l1.5 1.5L36 7" stroke="white" strokeWidth="1.5" />
+      </svg>
+    ),
+  },
+  "FIND THE BEST LEARNING RESOURCES": {
+    gradient: "from-sky-500 to-blue-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="21" cy="20" r="11" />
+        <line x1="29" y1="29" x2="40" y2="40" />
+        <line x1="16" y1="20" x2="26" y2="20" />
+        <line x1="21" y1="15" x2="21" y2="25" />
+      </svg>
+    ),
+  },
+  "USE THE FEYNMAN TECHNIQUE": {
+    gradient: "from-fuchsia-500 to-pink-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M24 6c-7 0-12 5-12 11 0 4 2 7.5 5 9.5V30l4-2h3c7 0 12-5 12-11S31 6 24 6z" />
+        <line x1="24" y1="34" x2="24" y2="42" />
+        <line x1="20" y1="42" x2="28" y2="42" />
+        <circle cx="24" cy="18" r="2" fill="white" stroke="none" opacity="0.6" />
+      </svg>
+    ),
+  },
+};
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -178,10 +254,14 @@ function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () 
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
-          {item.image && (
+          {item.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.image} alt={item.imageAlt ?? item.title} className="h-auto w-full rounded-xl border border-[var(--border)]" />
-          )}
+          ) : PROMPT_VISUALS[item.title] ? (
+            <div className={`flex h-48 items-center justify-center rounded-xl bg-gradient-to-br ${PROMPT_VISUALS[item.title].gradient}`}>
+              {PROMPT_VISUALS[item.title].icon}
+            </div>
+          ) : null}
           <div>
             <div className="flex items-center justify-between gap-3 mb-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">Prompt</span>
@@ -203,7 +283,7 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
       onClick={onClick}
       className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]"
     >
-      {item.image && (
+      {item.image ? (
         <div className="overflow-hidden">
           <Image
             src={item.image}
@@ -213,7 +293,11 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
             className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </div>
-      )}
+      ) : PROMPT_VISUALS[item.title] ? (
+        <div className={`flex h-44 items-center justify-center bg-gradient-to-br ${PROMPT_VISUALS[item.title].gradient} transition duration-300 group-hover:brightness-110`}>
+          {PROMPT_VISUALS[item.title].icon}
+        </div>
+      ) : null}
       <div className="flex flex-1 items-center px-4 py-4">
         <span className="text-sm font-semibold tracking-wide text-[var(--text)] group-hover:text-[var(--accent)]">
           {item.title}
