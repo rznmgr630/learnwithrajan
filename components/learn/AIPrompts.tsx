@@ -71,6 +71,79 @@ const PROMPTS: PromptItem[] = [
   },
 
   {
+    id: 27,
+    category: "Image Effects",
+    title: "CHANGE HAIRSTYLE",
+    image: "/prompts/change_hairstyle.png",
+    imageAlt: "Change hairstyle before and after result",
+    prompt:
+      "Change the person's hairstyle in this photo to [DESIRED HAIRSTYLE, SUCH AS LONG WAVY HAIR, SHORT BOB, CURLY HAIR, STRAIGHT HAIR, PONYTAIL, BANGS, BUZZ CUT, LAYERED HAIR, SLICKED-BACK HAIR, OR SHOULDER-LENGTH HAIR]. Keep the person's face, identity, facial features, expression, pose, clothing, skin texture, lighting, shadows, camera angle, and background the same. Make the new hairstyle look natural, with realistic texture, volume, hairline, parting, flyaways, highlights, and shadows that match the original photo. Do not change the face, alter facial proportions, distort the head or ears, over-smooth the skin, or make the hair look fake. The final image should look like a seamless, photo-realistic image of the same person with the requested hairstyle.",
+  },
+  {
+    id: 28,
+    category: "Image Effects",
+    title: "FASHION VISUALIZATION",
+    image: "/prompts/fashion_visualizer.png",
+    imageAlt: "Fashion visualization before and after result",
+    prompt:
+      "Dress the person in the first image with the clothing from the second image. Keep the person's face, identity, expression, pose, body proportions, skin texture, hairstyle, lighting, shadows, camera angle, background, and overall photo style the same. Preserve the design, color, material, fit, and style of the clothing from the second image as accurately as possible. Make the clothing look naturally worn on the person's body, with realistic fabric draping, folds, seams, wrinkles, texture, colors, and shadows that match the pose and lighting of the first image. Do not change the face, reshape the body, alter the pose, distort hands or limbs, warp the background, or make the clothing look fake or pasted on. The final image should look like a seamless, photo-realistic image of the same person naturally wearing the clothing from the second image.",
+  },
+  {
+    id: 29,
+    category: "Image Effects",
+    title: "CORRECT POSTURE",
+    image: "/prompts/correct_posture.png",
+    imageAlt: "Correct posture before and after result",
+    prompt:
+      "Subtle correction of body posture. Shoulders back and down, chest slightly elevated, head naturally aligned over the shoulders. Aligned spine. Maintain natural, confident, and relaxed body language. Clothing: realistic fabric drape adjusted to the new posture. Preserve original face, identity, background, and lighting. Final result: identical photo with improved and natural posture.",
+  },
+  {
+    id: 30,
+    category: "Image Effects",
+    title: "CHANGE EXPRESSION",
+    image: "/prompts/change_expression.png",
+    imageAlt: "Change expression before and after result",
+    prompt:
+      "Change the facial expression of the person in this photo to [DESIRED EXPRESSION — E.G., SMILING, SURPRISED, LAUGHING, ETC.]. Keep the person's identity, facial features, and overall lighting intact while making the expression look natural and realistic. Ensure the adjustment blends seamlessly with the original image.",
+  },
+  {
+    id: 31,
+    category: "Image Effects",
+    title: "CLOTHING COLOR CHANGE",
+    image: "/prompts/clothing_change.png",
+    imageAlt: "Clothing color change before and after result",
+    prompt:
+      "Change the color of the outfit from [CURRENT] to [TARGET]. 100% preservation of non-clothing elements: face, skin, hair, accessories, and environment. Precise identification of fabric edges. Light interaction: maintain tonal range, highlights, shadows, and texture (denim, silk, cotton). Wrinkles and drape remain unchanged. No color bleeding onto the skin. Result: photorealistic and undetectable.",
+  },
+  {
+    id: 32,
+    category: "Image Effects",
+    title: "ANIME EFFECT",
+    image: "/prompts/anime_effect.png",
+    imageAlt: "Anime effect before and after result",
+    prompt:
+      "Anime style transformation, convert the reference image into detailed hand-drawn anime while preserving exact composition, same camera angle, framing, pose, and character proportions unchanged, maintain identical facial structure and expression translated into anime aesthetics, clean linework with controlled variation in line weight, large expressive eyes styled naturally to match original gaze direction, simplified but accurate nose and mouth, hair reinterpreted into defined anime strands while keeping original shape and flow, skin rendered with smooth tonal shading and soft gradients, lighting direction and intensity preserved from original image, colors slightly stylized but faithful to source palette, background converted into anime environment matching original depth and perspective, subtle cel shading with gentle highlights, no distortion of anatomy or perspective, no change in crop or zoom, high fidelity adaptation rather than reinterpretation.",
+  },
+  {
+    id: 33,
+    category: "Image Effects",
+    title: "PRODUCT AD",
+    image: "/prompts/product_ad.png",
+    imageAlt: "Product ad transformation result",
+    prompt:
+      "Product studio transformation, isolate the product from the reference image and rebuild as a premium ad composition, hero product centered and sharply in focus, surrounded by its key ingredients arranged with intention and depth, ingredients fresh and tactile, sliced, crushed, or whole depending on context, composition balanced but not perfectly symmetrical, clean surface with subtle reflections, background designed to match the product's color palette and mood, soft gradients or tonal transitions, high-end studio lighting with controlled highlights and gentle shadow falloff, crisp edges with slight natural shadow grounding the product, micro-details visible like condensation, texture on ingredients, and line surface imperfections, minimal but intentional negative space, no clutter beyond ingredients, polished commercial finish without looking artificial, accurate color rendering and realistic material response.",
+  },
+  {
+    id: 34,
+    category: "Image Effects",
+    title: "GTA EFFECT",
+    image: "/prompts/gta_effect.png",
+    imageAlt: "GTA V effect before and after result",
+    prompt:
+      "Rebuild the entire scene from the reference image as a real-time 3D render inside the GTA V Rage engine. Do not apply a filter. Fully reconstruct all people, vehicles, architecture, terrain, and props as polygonal 3D assets native to GTA V. The result should look like an authentic in-game screenshot captured on a high-end PC, ultra settings enabled. All subjects must be converted into clearly modeled geometry with visible polygon structure, baked normal maps, and game-accurate textures. Faces, bodies, and clothing should follow GTA V character proportions and anatomy, slightly exaggerated, rigid, and digitally sculpted. Skin is matte and textured, no photographic pores. Hair is clumped, card-based, slightly stiff. Clothing uses flat fabric shaders with visible seams and texture repetition. Environment must feel like Los Santos or Blaine County logic. Buildings are modular, edges slightly sharp, surfaces tiled and optimized. Roads, sidewalks, vegetation, street props, and background elements are simplified but dense, clearly game-built constructed. No real-world photographic depth or lens artifacts. Lighting follows GTA V real-time lighting behavior. Strong directional sunlight or overcast skylight depending on scene. Hard shadows with defined edges, subtle ambient occlusion in corners. Reflections are screen-space and imperfect. Colors are slightly saturated with the recognizable GTA V color grading. Contrast is controlled but punchy. Materials must read as video game assets. Asphalt is flat and grainy. Metal has simple specular highlights. Glass is clean with limited reflection depth. Vegetation is slightly stiff and stylized. Nothing should appear physically accurate or cinematic-render realistic. Camera should feel like a gameplay or Rockstar Editor capture. Third-person or free camera perspective. Slight wide-angle distortion. Stable framing. No depth of field blur. No motion blur unless minimal and engine-based. Overall look is unmistakably GTA V. Real-time 3D. Polygon. Textured. Optimized. Stylized realism. Clearly not a photograph.",
+  },
+
+  {
     id: 23,
     category: "Image Effects",
     title: "HAIRLINE RESTORATION",
