@@ -134,14 +134,12 @@ function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () 
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
           {/* Image */}
           {item.image && (
-            <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.image}
-                alt={item.imageAlt ?? item.title}
-                className="h-auto w-full"
-              />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.image}
+              alt={item.imageAlt ?? item.title}
+              className="h-auto w-full rounded-xl border border-[var(--border)]"
+            />
           )}
 
           {/* Prompt */}
