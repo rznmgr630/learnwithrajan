@@ -468,6 +468,16 @@ export const UI_STRINGS = {
     np: "जापानी JLPT ट्र्याक",
     jp: "日本語・JLPTトラック",
   },
+  "hub.sectionAiPrompts": {
+    en: "AI Prompts",
+    np: "AI प्रम्प्ट",
+    jp: "AIプロンプト",
+  },
+  "hub.sectionAiPromptsHint": {
+    en: "Best prompts from the internet",
+    np: "इन्टरनेटबाट उत्तम प्रम्प्टहरू",
+    jp: "ネットで見つけた最高のプロンプト集",
+  },
   "hub.category.cta": {
     en: "Browse →",
     np: "हेर्नुहोस् →",
