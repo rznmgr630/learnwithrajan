@@ -312,24 +312,39 @@ export function AIPrompts() {
 
   return (
     <>
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-4">
         {CATEGORIES.map((category) => {
           const items = PROMPTS.filter((p) => p.category === category);
           return (
-            <section key={category}>
-              <div className="mb-4 flex items-center gap-3">
-                <h2 className="text-base font-semibold text-[var(--text)]">{category}</h2>
-                <span className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--muted)]">
-                  {items.length}
-                </span>
-                <div className="h-px flex-1 bg-[var(--border)]" />
+            <details
+              key={category}
+              className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm open:[&_.cat-chevron]:rotate-180"
+              open
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-base font-semibold tracking-tight text-[var(--text)]">{category}</h2>
+                  <span className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--muted)]">
+                    {items.length}
+                  </span>
+                </div>
+                <svg
+                  className="cat-chevron h-5 w-5 shrink-0 text-[var(--muted)] transition-transform duration-200"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </summary>
+              <div className="border-t border-[var(--border)] px-4 pb-4 pt-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((item) => (
+                    <PromptCard key={item.id} item={item} onClick={() => setActive(item)} />
+                  ))}
+                </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((item) => (
-                  <PromptCard key={item.id} item={item} onClick={() => setActive(item)} />
-                ))}
-              </div>
-            </section>
+            </details>
           );
         })}
       </div>
