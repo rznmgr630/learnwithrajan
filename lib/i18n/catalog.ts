@@ -474,9 +474,9 @@ export const UI_STRINGS = {
     jp: "AIプロンプト",
   },
   "hub.sectionAiPromptsHint": {
-    en: "Best prompts from the internet",
-    np: "इन्टरनेटबाट उत्तम प्रम्प्टहरू",
-    jp: "ネットで見つけた最高のプロンプト集",
+    en: "Image effects · Learning prompts",
+    np: "इमेज इफेक्ट · सिकाइ प्रम्प्टहरू",
+    jp: "画像エフェクト・学習プロンプト集",
   },
   "hub.category.cta": {
     en: "Browse →",
