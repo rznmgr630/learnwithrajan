@@ -503,6 +503,11 @@ export const UI_STRINGS = {
     np: "← प्रोग्रामिङ",
     jp: "← プログラミング",
   },
+  "learn.backDsa": {
+    en: "← DSA",
+    np: "← DSA",
+    jp: "← DSA",
+  },
   "learn.backLanguage": {
     en: "← Language",
     np: "← भाषा",
