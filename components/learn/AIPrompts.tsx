@@ -424,6 +424,170 @@ Provide:
 • Production deployment checklist`,
   },
 
+  // ── System Design ─────────────────────────────────────────────────────────
+  {
+    id: 35,
+    category: "Software Development",
+    title: "SYSTEM DESIGN CONCEPTS CRASH COURSE",
+    prompt:
+`Act like a senior software engineer teaching system design for interviews. Explain each of the following 21 core concepts with a simple definition, when you'd use it in a real system, and a concrete real-world example:
+
+1. API — How services communicate
+2. Load Balancer — Distributes traffic across servers
+3. Caching — Stores frequently used data for speed
+4. CDN — Serves content from nearby locations
+5. Database Indexing — Makes queries faster
+6. Pagination — Loads data in small chunks
+7. Rate Limiting — Prevents API abuse
+8. Idempotency — Same request shouldn't create duplicate effects
+9. Replication — Copies data across servers
+10. Sharding — Splits large databases into smaller parts
+11. Message Queues — Async communication between services
+12. Kafka — High-throughput event streaming system
+13. Microservices — Break application into independent services
+14. Distributed Locking — Prevents concurrent conflicts across servers
+15. Consistency vs Availability — Core distributed system trade-off
+16. WebSockets — Real-time two-way communication
+17. Circuit Breaker — Stops cascading failures
+18. Retry & Backoff — Handles temporary failures safely
+19. CAP Theorem — Trade-off in distributed databases
+20. Horizontal Scaling — Add more servers to handle load
+21. Observability — Logs, metrics, tracing for debugging
+
+Format each as: **Concept** — one-line definition. When to use it. Real-world example.`,
+  },
+  {
+    id: 36,
+    category: "Software Development",
+    title: "MOCK SYSTEM DESIGN INTERVIEW",
+    prompt:
+`Act like a senior system design interviewer at a top tech company (Google, Meta, Amazon). Give me a real system to design (e.g., URL shortener, Twitter feed, ride-sharing app, video streaming platform, chat system).
+
+Then guide me through the ideal solution covering:
+• Requirements clarification (functional + non-functional)
+• High-level architecture diagram
+• API design
+• Database schema and technology choice
+• Scalability bottlenecks
+• Caching strategy
+• Trade-offs and alternatives
+
+After each section I answer, give honest feedback and fill in what I missed. Make it feel like a real 45-minute interview.`,
+  },
+  {
+    id: 37,
+    category: "Software Development",
+    title: "DEEP DIVE ANY SYSTEM DESIGN CONCEPT",
+    prompt:
+`Act like a staff engineer explaining [SYSTEM DESIGN CONCEPT, e.g., Kafka, Sharding, CAP Theorem, Circuit Breaker, Rate Limiting] in complete depth.
+
+Cover:
+• What it is and why it exists
+• How it works internally step by step
+• When to use it vs alternatives
+• Real-world implementation examples
+• Common pitfalls and gotchas
+• How it fits into a larger distributed system
+
+Explain it at the level that would impress a senior engineer at a top tech company.`,
+  },
+
+  // ── Interview Questions ────────────────────────────────────────────────────
+  {
+    id: 38,
+    category: "Interview Questions",
+    title: "GENERATE INTERVIEW QUESTIONS FOR ANY ROLE",
+    prompt:
+`Act like a senior hiring manager at a top tech company. Generate 20 interview questions for a [JOB TITLE/ROLE] position.
+
+Include:
+• 5 technical/hard skills questions
+• 5 system design or architecture questions
+• 5 behavioral questions (STAR format)
+• 5 situational/problem-solving questions
+
+For each question, explain what the interviewer is really trying to assess and what a strong answer looks like.`,
+  },
+  {
+    id: 39,
+    category: "Interview Questions",
+    title: "MOCK TECHNICAL INTERVIEW",
+    prompt:
+`Act like a senior engineer conducting a real technical interview at a top tech company. Give me a coding problem suited for [JUNIOR / MID / SENIOR] level.
+
+Walk me through it step by step:
+• Understand the problem and clarify edge cases
+• Think through the brute force first
+• Optimize the approach
+• Write clean, working code
+• Analyze time and space complexity
+• Suggest further optimizations
+
+After I submit my solution, give honest feedback like a real interviewer would — what I got right, what I missed, and what would have impressed them.`,
+  },
+  {
+    id: 40,
+    category: "Interview Questions",
+    title: "PERFECT BEHAVIORAL INTERVIEW ANSWERS",
+    prompt:
+`Act like an interview coach who has helped hundreds of engineers land offers at top tech companies. Help me craft a perfect STAR-format answer to this behavioral question: [QUESTION, E.G., "Tell me about a time you failed", "Describe a conflict with a teammate", "Tell me about a project you're most proud of"].
+
+Make the answer:
+• Specific and concrete with real details
+• Results-focused with measurable outcomes
+• Authentic and not over-polished
+• Under 2 minutes when spoken aloud
+
+Then give me feedback on how to improve it further.`,
+  },
+  {
+    id: 41,
+    category: "Interview Questions",
+    title: "EXPLAIN HOW TO ANSWER ANY INTERVIEW QUESTION",
+    prompt:
+`I have an upcoming interview for [ROLE]. Break down exactly how to answer this question perfectly: [INTERVIEW QUESTION].
+
+Cover:
+• What the interviewer is really testing
+• The ideal answer structure
+• Key points and keywords to include
+• Common mistakes candidates make
+• A sample strong answer I can adapt
+
+Make the advice specific and actionable — not generic career advice.`,
+  },
+  {
+    id: 42,
+    category: "Interview Questions",
+    title: "CRACK THE SALARY NEGOTIATION",
+    prompt:
+`Act like a career coach who has helped hundreds of engineers negotiate salaries at top tech companies. I just received an offer for [ROLE] at [COMPANY] offering [SALARY + EQUITY].
+
+Help me:
+• Evaluate if this offer is competitive for the market
+• Build a counter-offer negotiation strategy
+• Write the exact email or script to counter
+• Handle common pushback responses word-for-word
+• Know when to push harder vs when to accept
+
+Give me word-for-word scripts I can actually use in the conversation.`,
+  },
+  {
+    id: 43,
+    category: "Interview Questions",
+    title: "BUILD A 30-DAY INTERVIEW PREP PLAN",
+    prompt:
+`Act like a senior engineering manager who has interviewed 500+ candidates. Build me a complete 30-day interview prep plan for a [ROLE] interview at [TARGET COMPANY, e.g., Google, Meta, startup].
+
+Break it into 4 weekly phases:
+• Week 1: Foundation (data structures, algorithms basics)
+• Week 2: Intermediate patterns (dynamic programming, graphs)
+• Week 3: System design + behavioral stories
+• Week 4: Mock interviews + weak area drilling
+
+For each day include: what to study, specific resources, and a practice problem or exercise. Focus on the 20% of topics that appear in 80% of real interviews.`,
+  },
+
   // ── Learning ───────────────────────────────────────────────────────────────
   {
     id: 7,
@@ -591,6 +755,122 @@ const PROMPT_VISUALS: Record<string, { gradient: string; icon: React.ReactNode }
         <path d="M32 20c0-4.4-3.6-8-8-8s-8 3.6-8 8c-4 0-7 3-7 7s3 7 7 7h16c4 0 7-3 7-7s-3-7-7-7z" />
         <line x1="24" y1="28" x2="24" y2="38" />
         <polyline points="20,34 24,38 28,34" />
+      </svg>
+    ),
+  },
+  "SYSTEM DESIGN CONCEPTS CRASH COURSE": {
+    gradient: "from-cyan-600 to-blue-700",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="6" y="8" width="12" height="8" rx="2" />
+        <rect x="30" y="8" width="12" height="8" rx="2" />
+        <rect x="18" y="32" width="12" height="8" rx="2" />
+        <line x1="12" y1="16" x2="12" y2="24" />
+        <line x1="36" y1="16" x2="36" y2="24" />
+        <line x1="12" y1="24" x2="24" y2="32" />
+        <line x1="36" y1="24" x2="24" y2="32" />
+      </svg>
+    ),
+  },
+  "MOCK SYSTEM DESIGN INTERVIEW": {
+    gradient: "from-indigo-600 to-violet-600",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="8" width="32" height="22" rx="3" />
+        <line x1="8" y1="34" x2="40" y2="34" />
+        <line x1="16" y1="40" x2="32" y2="40" />
+        <line x1="24" y1="34" x2="24" y2="40" />
+        <line x1="14" y1="16" x2="20" y2="16" />
+        <line x1="14" y1="21" x2="28" y2="21" />
+        <circle cx="34" cy="18" r="4" />
+        <line x1="37" y1="21" x2="40" y2="24" />
+      </svg>
+    ),
+  },
+  "DEEP DIVE ANY SYSTEM DESIGN CONCEPT": {
+    gradient: "from-blue-700 to-cyan-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="24" r="14" />
+        <circle cx="24" cy="24" r="6" />
+        <line x1="24" y1="6" x2="24" y2="10" />
+        <line x1="24" y1="38" x2="24" y2="42" />
+        <line x1="6" y1="24" x2="10" y2="24" />
+        <line x1="38" y1="24" x2="42" y2="24" />
+      </svg>
+    ),
+  },
+  "GENERATE INTERVIEW QUESTIONS FOR ANY ROLE": {
+    gradient: "from-emerald-600 to-teal-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="10" y="6" width="28" height="36" rx="3" />
+        <line x1="16" y1="14" x2="32" y2="14" />
+        <line x1="16" y1="20" x2="32" y2="20" />
+        <line x1="16" y1="26" x2="24" y2="26" />
+        <circle cx="30" cy="32" r="5" />
+        <line x1="34" y1="36" x2="37" y2="39" />
+      </svg>
+    ),
+  },
+  "MOCK TECHNICAL INTERVIEW": {
+    gradient: "from-orange-500 to-red-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="10" width="32" height="26" rx="3" />
+        <polyline points="16,22 20,26 28,18" />
+        <line x1="32" y1="20" x2="36" y2="20" />
+        <line x1="32" y1="25" x2="36" y2="25" />
+        <line x1="16" y1="40" x2="32" y2="40" />
+        <line x1="24" y1="36" x2="24" y2="40" />
+      </svg>
+    ),
+  },
+  "PERFECT BEHAVIORAL INTERVIEW ANSWERS": {
+    gradient: "from-pink-500 to-rose-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M24 6c-7 0-12 4.5-12 10 0 3.5 2 6.5 5 8.5V28l5-3h2c7 0 12-4.5 12-10S31 6 24 6z" />
+        <line x1="20" y1="14" x2="20" y2="18" />
+        <line x1="24" y1="12" x2="24" y2="18" />
+        <line x1="28" y1="14" x2="28" y2="18" />
+        <path d="M18 34c0 4 2.7 8 6 8s6-4 6-8" />
+      </svg>
+    ),
+  },
+  "EXPLAIN HOW TO ANSWER ANY INTERVIEW QUESTION": {
+    gradient: "from-violet-600 to-purple-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="18" r="10" />
+        <path d="M21 15c0-1.7 1.3-3 3-3s3 1.3 3 3c0 1.5-1.5 2.5-2 4h-2" />
+        <circle cx="24" cy="22" r="1" fill="white" stroke="none" />
+        <path d="M14 32h20M14 38h14" />
+      </svg>
+    ),
+  },
+  "CRACK THE SALARY NEGOTIATION": {
+    gradient: "from-yellow-500 to-amber-400",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="24" cy="24" r="16" />
+        <path d="M24 12v2M24 34v2M18 16.5l1 1.7M29 29.8l1 1.7M12 24h2M34 24h2M18 31.5l1-1.7M29 18.2l1-1.7" />
+        <text x="24" y="28" textAnchor="middle" fontSize="12" fill="white" stroke="none" fontWeight="bold">$</text>
+      </svg>
+    ),
+  },
+  "BUILD A 30-DAY INTERVIEW PREP PLAN": {
+    gradient: "from-teal-600 to-emerald-500",
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" className="h-14 w-14 opacity-90" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="10" width="32" height="32" rx="3" />
+        <line x1="8" y1="18" x2="40" y2="18" />
+        <line x1="16" y1="8" x2="16" y2="14" />
+        <line x1="32" y1="8" x2="32" y2="14" />
+        <line x1="14" y1="25" x2="22" y2="25" />
+        <line x1="14" y1="31" x2="22" y2="31" />
+        <line x1="14" y1="37" x2="22" y2="37" />
+        <polyline points="27,28 30,31 36,25" />
       </svg>
     ),
   },
