@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSABlind75Detail } from "@/components/learn/DSABlind75Detail";
+import { DSAFundamentalsDrawer, type FundamentalTopicId } from "@/components/learn/DSAFundamentalsDrawer";
 import { BLIND75_CATEGORIES, BLIND75_TOTAL, type Blind75Problem } from "@/lib/dsa/blind75";
 
 const CATEGORY_COLORS: Record<string, { badge: string; dot: string; border: string }> = {
@@ -18,8 +19,14 @@ const CATEGORY_COLORS: Record<string, { badge: string; dot: string; border: stri
   heap:                 { badge: "text-indigo-400  bg-indigo-500/10  ring-1 ring-indigo-500/25",  dot: "bg-indigo-400",  border: "border-indigo-500/20" },
 };
 
+const FUNDAMENTAL_TOPICS = [
+  { id: "big-o" as FundamentalTopicId, label: "Big O Notation", subtitle: "Time complexity analysis" },
+  { id: "space-complexity" as FundamentalTopicId, label: "Space Complexity", subtitle: "Memory usage analysis" },
+];
+
 export function DSABlind75() {
   const [active, setActive] = useState<Blind75Problem | null>(null);
+  const [openTopic, setOpenTopic] = useState<FundamentalTopicId | null>(null);
 
   return (
     <>
@@ -27,7 +34,7 @@ export function DSABlind75() {
         {/* Sticky nav */}
         <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] backdrop-blur-md">
           <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3 sm:px-6">
-            <LearnBackNav href="/learn/dsa" labelKey="learn.backDsa" />
+            <LearnBackNav href="/learn/programming" labelKey="learn.backProgramming" />
           </div>
         </div>
 
@@ -48,6 +55,36 @@ export function DSABlind75() {
                 The most frequently asked LeetCode problems in technical interviews. Click any problem to
                 see the description, examples, and solutions in 5 languages.
               </p>
+            </div>
+          </div>
+
+          {/* Fundamentals */}
+          <div className="mb-10">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="h-5 w-0.5 rounded-full bg-violet-400 opacity-70" />
+              <h2 className="text-base font-semibold text-[var(--text)]">Fundamentals</h2>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {FUNDAMENTAL_TOPICS.map((topic) => (
+                <button
+                  key={topic.id}
+                  onClick={() => setOpenTopic(topic.id)}
+                  className="group flex items-center gap-3 rounded-xl border border-violet-500/20 bg-[color-mix(in_oklab,var(--surface)_90%,transparent)] px-4 py-3 text-left transition hover:border-violet-500/50 hover:bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)]"
+                >
+                  <span className="rounded-lg bg-violet-500/10 p-2 text-violet-400 ring-1 ring-violet-500/20">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path fillRule="evenodd" d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text)]">{topic.label}</p>
+                    <p className="text-xs text-[var(--muted)]">{topic.subtitle}</p>
+                  </div>
+                  <svg className="ml-1 h-4 w-4 shrink-0 text-[var(--faint)] transition group-hover:text-violet-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -159,6 +196,7 @@ export function DSABlind75() {
       </div>
 
       <DSABlind75Detail problem={active} onClose={() => setActive(null)} />
+      <DSAFundamentalsDrawer topicId={openTopic} onClose={() => setOpenTopic(null)} />
     </>
   );
 }
