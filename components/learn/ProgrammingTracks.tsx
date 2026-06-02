@@ -106,7 +106,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-frontend`}
         titleKey="hub.programming.groupFrontend"
         hintKey="hub.programming.groupFrontendHint"
-        defaultOpen
       >
         <Link href="/learn/react" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
@@ -226,7 +225,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-backend`}
         titleKey="hub.programming.groupBackend"
         hintKey="hub.programming.groupBackendHint"
-        defaultOpen
       >
         <Link href="/learn/backend-30-days" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
@@ -341,7 +339,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-devops`}
         titleKey="hub.programming.groupDevops"
         hintKey="hub.programming.groupDevopsHint"
-        defaultOpen
       >
         <Link href="/learn/devops" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
@@ -382,7 +379,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-dsa`}
         titleKey="hub.programming.groupDsa"
         hintKey="hub.programming.groupDsaHint"
-        defaultOpen
       >
         <Link href="/learn/dsa" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
@@ -419,7 +415,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-tools`}
         titleKey="hub.programming.groupTools"
         hintKey="hub.programming.groupToolsHint"
-        defaultOpen
       >
         <Link href="/learn/git-7-days" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
@@ -460,7 +455,6 @@ export function ProgrammingTracks() {
         sectionId={`${baseId}-interview`}
         titleKey="hub.programming.groupInterview"
         hintKey="hub.programming.groupInterviewHint"
-        defaultOpen
       >
         <Link href="/learn/system-design" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
