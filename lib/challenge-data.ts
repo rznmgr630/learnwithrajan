@@ -14,6 +14,13 @@ import { DAY_11_DETAIL } from "./backend-learning/day-11-detail";
 import { DAY_12_DETAIL } from "./backend-learning/day-12-detail";
 import { DAY_13_DETAIL } from "./backend-learning/day-13-detail";
 import { DAY_14_DETAIL } from "./backend-learning/day-14-detail";
+import { DAY_15_DETAIL } from "./backend-learning/day-15-detail";
+import { DAY_16_DETAIL } from "./backend-learning/day-16-detail";
+import { DAY_17_DETAIL } from "./backend-learning/day-17-detail";
+import { DAY_18_DETAIL } from "./backend-learning/day-18-detail";
+import { DAY_19_DETAIL } from "./backend-learning/day-19-detail";
+import { DAY_20_DETAIL } from "./backend-learning/day-20-detail";
+import { DAY_21_DETAIL } from "./backend-learning/day-21-detail";
 
 /** Official “current” day (1-based). Days before this count as done when seeding local progress. */
 export const CURRENT_DAY = 1;
@@ -308,13 +315,13 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
     title: backendWeekTitle("w3"),
     dotClass: "bg-[var(--accent)]",
     days: [
-      dayRow(15, ["ops", "core"]),
-      dayRow(16, ["docker", "ops"]),
-      dayRow(17, ["cicd", "reliability"]),
-      dayRow(18, ["cloud", "ops"]),
-      dayRow(19, ["cloud", "architecture"]),
-      dayRow(20, ["security", "ops"]),
-      dayRow(21, ["cloud", "reliability"]),
+      dayRow(15, ["ops", "core"], DAY_15_DETAIL),
+      dayRow(16, ["docker", "ops"], DAY_16_DETAIL),
+      dayRow(17, ["cicd", "reliability"], DAY_17_DETAIL),
+      dayRow(18, ["cloud", "ops"], DAY_18_DETAIL),
+      dayRow(19, ["cloud", "architecture"], DAY_19_DETAIL),
+      dayRow(20, ["security", "ops"], DAY_20_DETAIL),
+      dayRow(21, ["cloud", "reliability"], DAY_21_DETAIL),
     ],
   },
   {
