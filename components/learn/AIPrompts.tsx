@@ -635,6 +635,120 @@ For each day include: what to study, specific resources, and a practice problem 
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
 
+interface SlashCommand {
+  cmd: string;
+  desc: string;
+}
+interface SlashCategory {
+  title: string;
+  commands: SlashCommand[];
+}
+
+const SLASH_CATEGORIES: SlashCategory[] = [
+  {
+    title: "Learning",
+    commands: [
+      { cmd: "/learn", desc: "learn any topic" },
+      { cmd: "/roadmap", desc: "learning roadmap" },
+      { cmd: "/resources", desc: "best resources" },
+      { cmd: "/books", desc: "recommended books" },
+      { cmd: "/courses", desc: "top courses" },
+      { cmd: "/practice", desc: "practice plan" },
+      { cmd: "/explain", desc: "simplify topic" },
+      { cmd: "/quiz", desc: "test your knowledge" },
+      { cmd: "/flashcards", desc: "memory cards" },
+      { cmd: "/summary", desc: "summarize topic" },
+      { cmd: "/teach", desc: "teach back method" },
+      { cmd: "/revision", desc: "revision system" },
+    ],
+  },
+  {
+    title: "Advanced Prompt Control",
+    commands: [
+      { cmd: "/role", desc: "assign role" },
+      { cmd: "/context", desc: "give context" },
+      { cmd: "/constraints", desc: "set limits" },
+      { cmd: "/format", desc: "define format" },
+      { cmd: "/tone", desc: "choose tone" },
+      { cmd: "/style", desc: "writing style" },
+      { cmd: "/examples", desc: "provide examples" },
+      { cmd: "/step", desc: "force step thinking" },
+      { cmd: "/iterate", desc: "improve response" },
+      { cmd: "/critic", desc: "self critique" },
+      { cmd: "/refine", desc: "refine output" },
+      { cmd: "/retry", desc: "regenerate response" },
+    ],
+  },
+  {
+    title: "Personal Branding",
+    commands: [
+      { cmd: "/niche", desc: "define niche" },
+      { cmd: "/audience", desc: "target audience" },
+      { cmd: "/bio", desc: "optimize bio" },
+      { cmd: "/positioning", desc: "brand positioning" },
+      { cmd: "/contentplan", desc: "content strategy" },
+      { cmd: "/voice", desc: "brand voice" },
+      { cmd: "/story", desc: "personal story" },
+      { cmd: "/authority", desc: "build authority" },
+      { cmd: "/consistency", desc: "posting system" },
+      { cmd: "/monetize", desc: "monetization ideas" },
+      { cmd: "/network", desc: "networking strategy" },
+      { cmd: "/growth", desc: "personal growth plan" },
+    ],
+  },
+  {
+    title: "Business / Strategy",
+    commands: [
+      { cmd: "/idea", desc: "generate business ideas" },
+      { cmd: "/validate", desc: "validate idea" },
+      { cmd: "/businessplan", desc: "full business plan" },
+      { cmd: "/gtm", desc: "go to market strategy" },
+      { cmd: "/pricing", desc: "pricing strategy" },
+      { cmd: "/revenue", desc: "revenue streams" },
+      { cmd: "/costcut", desc: "reduce costs" },
+      { cmd: "/growth", desc: "growth strategy" },
+      { cmd: "/scaling", desc: "scale business" },
+      { cmd: "/positioning", desc: "brand positioning" },
+      { cmd: "/usp", desc: "unique selling point" },
+      { cmd: "/competition", desc: "competitor analysis" },
+    ],
+  },
+  {
+    title: "Execution / Output Modes",
+    commands: [
+      { cmd: "/ghost", desc: "final answer only, no explanation" },
+      { cmd: "/minimal", desc: "shortest possible response" },
+      { cmd: "/brief", desc: "3 to 5 lines max" },
+      { cmd: "/expand", desc: "detailed explanation" },
+      { cmd: "/stepbystep", desc: "clear steps" },
+      { cmd: "/checklist", desc: "actionable checklist" },
+      { cmd: "/framework", desc: "structured framework" },
+      { cmd: "/blueprint", desc: "implementation plan" },
+      { cmd: "/playbook", desc: "repeatable system" },
+      { cmd: "/roadmap", desc: "timeline based steps" },
+      { cmd: "/draft", desc: "rough first version" },
+      { cmd: "/polish", desc: "clean and refine output" },
+    ],
+  },
+  {
+    title: "Coding / Tech",
+    commands: [
+      { cmd: "/debug", desc: "find bugs" },
+      { cmd: "/refactor", desc: "clean code" },
+      { cmd: "/optimizecode", desc: "improve performance" },
+      { cmd: "/systemdesign", desc: "architecture design" },
+      { cmd: "/api", desc: "API structure" },
+      { cmd: "/database", desc: "DB design" },
+      { cmd: "/scalability", desc: "scaling approach" },
+      { cmd: "/security", desc: "security checks" },
+      { cmd: "/testcases", desc: "generate tests" },
+      { cmd: "/pseudocode", desc: "logic only" },
+      { cmd: "/explain", desc: "explain code simply" },
+      { cmd: "/review", desc: "full code review" },
+    ],
+  },
+];
+
 const PROMPT_VISUALS: Record<string, { gradient: string; icon: React.ReactNode }> = {
   "TURN CLAUDE INTO A FULL STARTUP ENGINEERING TEAM": {
     gradient: "from-cyan-500 to-blue-600",
@@ -1103,6 +1217,37 @@ export function AIPrompts() {
             </details>
           );
         })}
+
+        {/* Slash command cheat sheets */}
+        <div className="mt-2 flex flex-col gap-4">
+          <h2 className="text-base font-semibold tracking-tight text-[var(--text)]">
+            AI Slash Commands
+            <span className="ml-2 text-xs font-normal text-[var(--muted)]">— paste into any AI chat</span>
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {SLASH_CATEGORIES.map((cat) => (
+              <div
+                key={cat.title}
+                className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] overflow-hidden"
+              >
+                <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-4 py-2.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
+                  <span className="ml-2 text-xs font-semibold text-[var(--text)]">{cat.title}</span>
+                </div>
+                <ul className="px-4 py-3 flex flex-col gap-1.5">
+                  {cat.commands.map((c) => (
+                    <li key={c.cmd} className="flex items-baseline gap-2 text-sm">
+                      <span className="font-mono text-[var(--accent)] shrink-0">{c.cmd}</span>
+                      <span className="text-[var(--muted)] text-xs">— {c.desc}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <PromptDrawer item={active} onClose={() => setActive(null)} />
