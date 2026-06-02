@@ -468,6 +468,21 @@ export const UI_STRINGS = {
     np: "अवधारणाहरू अध्ययन गर्नुहोस् →",
     jp: "コンセプトを学ぶ →",
   },
+  "hub.backendEngineering.title": {
+    en: "Backend Engineering",
+    np: "ब्याकएन्ड इन्जिनियरिङ",
+    jp: "バックエンドエンジニアリング",
+  },
+  "hub.backendEngineering.subtitle": {
+    en: "40 concepts — APIs, DBs, caching, distributed systems & reliability",
+    np: "४० अवधारणाहरू — API, DB, क्याचिङ, वितरित प्रणाली र विश्वसनीयता",
+    jp: "40のコンセプト — API、DB、キャッシュ、分散システムと信頼性",
+  },
+  "hub.backendEngineering.cta": {
+    en: "Study concepts →",
+    np: "अवधारणाहरू अध्ययन गर्नुहोस् →",
+    jp: "コンセプトを学ぶ →",
+  },
   "hub.dsa.title": {
     en: "DSA Problems",
     np: "DSA समस्याहरू",
