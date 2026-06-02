@@ -379,37 +379,6 @@ export function ProgrammingTracks() {
       </ProgrammingAccordionSection>
 
       <ProgrammingAccordionSection
-        sectionId={`${baseId}-interview`}
-        titleKey="hub.programming.groupInterview"
-        hintKey="hub.programming.groupInterviewHint"
-        defaultOpen
-      >
-        <Link href="/learn/system-design" className={learnHubCardClass}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
-                {t("hub.systemDesign.title")}
-              </h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.systemDesign.subtitle")}</p>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {["API", "Caching", "Sharding", "Kafka", "CAP Theorem"].map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
-            {t("hub.systemDesign.cta")}
-          </span>
-        </Link>
-      </ProgrammingAccordionSection>
-
-      <ProgrammingAccordionSection
         sectionId={`${baseId}-dsa`}
         titleKey="hub.programming.groupDsa"
         hintKey="hub.programming.groupDsaHint"
@@ -483,6 +452,61 @@ export function ProgrammingTracks() {
           </div>
           <span className="mt-6 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.backend.cta")}
+          </span>
+        </Link>
+      </ProgrammingAccordionSection>
+
+      <ProgrammingAccordionSection
+        sectionId={`${baseId}-interview`}
+        titleKey="hub.programming.groupInterview"
+        hintKey="hub.programming.groupInterviewHint"
+        defaultOpen
+      >
+        <Link href="/learn/system-design" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.systemDesign.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.systemDesign.subtitle")}</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["API", "Caching", "Sharding", "Kafka", "CAP Theorem"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.systemDesign.cta")}
+          </span>
+        </Link>
+
+        <Link href="/learn/backend-engineering" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.backendEngineering.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.backendEngineering.subtitle")}</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["APIs", "Databases", "Caching", "Kafka", "Reliability"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.backendEngineering.cta")}
           </span>
         </Link>
       </ProgrammingAccordionSection>
