@@ -7,6 +7,12 @@ export const DAY_3_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "arnFhklHsuE", title: "Database Fundamentals — SQL vs NoSQL, ACID Properties & Transactions" },
+      ],
+    },
+    {
       title: "ACID — what each guarantee actually means",
       blocks: [
         {

@@ -207,7 +207,8 @@ export type RoadmapDetailBlock =
   | { type: "list"; items: LocalizedString[]; variant?: "bullet" | "number" }
   | { type: "table"; caption?: LocalizedString; headers: LocalizedString[]; rows: LocalizedString[][] }
   | { type: "code"; title?: LocalizedString; code: string }
-  | { type: "diagram"; id: RoadmapDetailDiagramId };
+  | { type: "diagram"; id: RoadmapDetailDiagramId }
+  | { type: "youtube"; videoId: string; title?: string };
 
 /** Same blocks after applying UI locale (plain strings for rendering). */
 export type RoadmapDetailBlockResolved =
@@ -215,7 +216,8 @@ export type RoadmapDetailBlockResolved =
   | { type: "list"; items: string[]; variant?: "bullet" | "number" }
   | { type: "table"; caption?: string; headers: string[]; rows: string[][] }
   | { type: "code"; title?: string; code: string }
-  | { type: "diagram"; id: RoadmapDetailDiagramId };
+  | { type: "diagram"; id: RoadmapDetailDiagramId }
+  | { type: "youtube"; videoId: string; title?: string };
 
 /** Optional subsection in a day detail (e.g. “HTTP methods”). */
 export interface RoadmapDayDetailSection {

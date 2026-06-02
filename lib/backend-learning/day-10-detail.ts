@@ -7,6 +7,12 @@ export const DAY_10_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "LoxO-P7hhUQ", title: "SQL Transactions and ACID Properties" },
+      ],
+    },
+    {
       title: "ACID properties",
       blocks: [
         {

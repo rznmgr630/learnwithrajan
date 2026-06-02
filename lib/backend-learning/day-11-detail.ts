@@ -7,6 +7,12 @@ export const DAY_11_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "GV9VBwH_h1U", title: "MongoDB Explained in 10 Minutes — SQL vs NoSQL" },
+      ],
+    },
+    {
       title: "NoSQL data model shapes",
       blocks: [
         {

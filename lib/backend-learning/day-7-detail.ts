@@ -7,6 +7,12 @@ export const DAY_7_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "uKsqVTd5H1k", title: "Error Handling and Logging in Backend Development" },
+      ],
+    },
+    {
       title: "Raw logs vs structured logs",
       blocks: [
         {

@@ -7,6 +7,12 @@ export const DAY_13_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "wHZ3JsRzukI", title: "How Elasticsearch Works: Documents, JSON & Index Explained" },
+      ],
+    },
+    {
       title: "B-tree index — the default index",
       blocks: [
         {

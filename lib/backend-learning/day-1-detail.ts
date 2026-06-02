@@ -7,6 +7,12 @@ export const DAY_1_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "k6fy7mvNSnY", title: "Introduction to HTTP — Hypertext Transfer Protocol" },
+      ],
+    },
+    {
       title: "HTTP versions — what changed (with diagrams)",
       blocks: [
         {
