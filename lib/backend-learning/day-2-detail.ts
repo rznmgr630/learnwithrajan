@@ -7,6 +7,12 @@ export const DAY_2_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "8aGhZQkoFbQ", title: "What the heck is the event loop anyway? — Philip Roberts / JSConf EU" },
+      ],
+    },
+    {
       title: "The big picture: one thread, many waiting connections",
       blocks: [
         { type: "diagram", id: "node-one-thread-io" },

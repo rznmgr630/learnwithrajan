@@ -7,6 +7,12 @@ export const DAY_5_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "GcVtElYa17s", title: "API Authentication Explained — OAuth vs JWT vs API Keys" },
+      ],
+    },
+    {
       title: "AuthN vs AuthZ",
       blocks: [
         {

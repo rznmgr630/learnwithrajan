@@ -157,6 +157,28 @@ export function DayDetailBlockRenderer({
               return <ReactNativeDiagram key={key} id={block.id} locale={locale} />;
             }
             return <DayDetailDiagram key={key} id={block.id} />;
+          case "youtube":
+            return (
+              <div key={key} className="mt-3 overflow-hidden rounded-xl border border-[var(--border)]">
+                {block.title && (
+                  <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] px-3 py-2">
+                    <svg className="h-4 w-4 shrink-0 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.8zM9.75 15.5V8.5l6.25 3.5-6.25 3.5z" />
+                    </svg>
+                    <span className="text-xs font-medium text-[var(--text)]">{block.title}</span>
+                  </div>
+                )}
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${block.videoId}`}
+                    title={block.title ?? "Video"}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              </div>
+            );
           default:
             return null;
         }

@@ -7,6 +7,12 @@ export const DAY_4_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "7iHl71nt49o", title: "How to Design APIs Like a Senior Engineer" },
+      ],
+    },
+    {
       title: "REST vs GraphQL vs gRPC — picking the right tool",
       blocks: [
         {

@@ -7,6 +7,12 @@ export const DAY_14_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "W4_aGb_MOls", title: "What is a Message Queue and When to Use RabbitMQ / Kafka" },
+      ],
+    },
+    {
       title: "Backpressure — why it matters",
       blocks: [
         {

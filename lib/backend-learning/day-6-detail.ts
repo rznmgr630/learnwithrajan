@@ -7,6 +7,12 @@ export const DAY_6_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "jgpVdJB2sKQ", title: "Redis Crash Course" },
+      ],
+    },
+    {
       title: "The cache hierarchy",
       blocks: [
         {

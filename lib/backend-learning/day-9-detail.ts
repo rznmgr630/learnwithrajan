@@ -7,6 +7,12 @@ export const DAY_9_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "tZsM9nN0SVQ", title: "How To Design A Relational Database Schema" },
+      ],
+    },
+    {
       title: "Entity-relationship modeling",
       blocks: [
         {

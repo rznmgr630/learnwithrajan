@@ -7,6 +7,12 @@ export const DAY_8_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "gMIslJN44P0", title: "System Design: What is Load Balancing?" },
+      ],
+    },
+    {
       title: "Layer 4 vs Layer 7 load balancing",
       blocks: [
         {

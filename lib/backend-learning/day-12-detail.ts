@@ -7,6 +7,12 @@ export const DAY_12_DETAIL = {
   ],
   sections: [
     {
+      title: "Watch",
+      blocks: [
+        { type: "youtube", videoId: "cfUS6NNZ77I", title: "Database Scaling: Read Replicas & Write Sharding Explained" },
+      ],
+    },
+    {
       title: "Primary-replica replication",
       blocks: [
         {
