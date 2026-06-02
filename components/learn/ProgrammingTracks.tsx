@@ -37,7 +37,7 @@ function ProgrammingAccordionSection({
   sectionId,
   titleKey,
   hintKey,
-  defaultOpen = true,
+  defaultOpen = false,
   children,
 }: {
   sectionId: string;
