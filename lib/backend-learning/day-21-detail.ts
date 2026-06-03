@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_21_DETAIL = {
   overview: [
-    "How you deploy matters as much as what you deploy. A naive 'take everything down, put new version up' approach — Recreate — gives you guaranteed downtime on every release. The three production-grade alternatives (Rolling, Blue-Green, Canary) each make different trade-offs between infrastructure cost, deployment speed, rollback speed, and risk surface. Choosing the wrong one for your context is a reliability incident waiting to happen.",
-    "Day 21 covers the theory and the mechanics: how each strategy works at the infrastructure level, how to implement blue-green with nginx and canary with GitHub Actions, what to monitor during a canary release, and how to roll back fast when something goes wrong. Work through the workflow YAML and the kubectl rollout commands before Day 22.",
+    "How you deploy is just as important as what you deploy. Taking everything down and replacing it with the new version guarantees downtime. The three production alternatives — Rolling, Blue-Green, and Canary — each make different trade-offs between cost, speed, risk, and rollback time. Understanding those trade-offs is what lets you pick the right one for your situation.",
+    "Today you will learn how each deployment strategy works at the infrastructure level, how to implement blue-green with nginx and canary releases with GitHub Actions, what to watch during a canary rollout, and how to roll back quickly when something goes wrong.",
   ],
   sections: [
     {
@@ -18,7 +18,7 @@ export const DAY_21_DETAIL = {
         { type: "diagram", id: "devops-deploy-strategies" },
         {
           type: "paragraph",
-          text: "Every deployment strategy is a different answer to the same trade-off: how much risk do you take on, how fast can you recover, and how much does it cost to maintain the infrastructure? There is no universally correct answer — the right choice depends on your traffic volume, team maturity, infrastructure cost tolerance, and how much confidence you have in your test suite.",
+          text: "Every deployment strategy is a different answer to the same question: how much risk do you take on, how fast can you recover, and how much does it cost? There is no universally correct choice — pick the one that fits your traffic volume, team size, infrastructure budget, and test confidence.",
         },
         {
           type: "table",
@@ -37,7 +37,7 @@ export const DAY_21_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "Blue-green works by keeping two complete, production-equivalent environments. 'Blue' is currently live. 'Green' is where you deploy the new version. Once green is fully deployed, tested, and warmed up, you point the load balancer at green. Blue stays running as a warm standby. If anything goes wrong, you flip back to blue in seconds — no redeployment needed. After enough confidence, you decommission blue or repurpose it as the next green.",
+          text: "Blue-green keeps two full production environments running at all times. Blue is live. Green is where you deploy the new version. Once green is fully deployed and smoke-tested, you point the load balancer at green. Blue stays warm in the background. If anything breaks, you switch back to blue in seconds — no redeployment needed. Once you are confident in green, you decommission blue or make it the next staging environment.",
         },
         {
           type: "code",
@@ -92,7 +92,7 @@ server {
         },
         {
           type: "paragraph",
-          text: "Database migrations are the hardest part of blue-green. During the switch, blue and green run simultaneously against the same database. Any schema change must be backward-compatible with the old application code. The expand/contract pattern solves this: in release N, add the new column (expand) but do not remove the old one. Both old and new code can run. In release N+1 (after blue is fully decommissioned), remove the old column (contract). Never rename a column in a single blue-green deploy — add new, backfill, switch code, then drop old.",
+          text: "Database migrations are the hardest part of blue-green deployments. While you are switching, both old and new code run against the same database simultaneously. A schema change that works for the new code might break the old code. The expand/contract pattern handles this: in release N, add the new column alongside the old — both versions work. In release N+1, after the old version is fully gone, drop the old column. Never rename a column in a single deploy.",
         },
       ],
     },
@@ -101,11 +101,11 @@ server {
       blocks: [
         {
           type: "paragraph",
-          text: "A canary release routes a small percentage of production traffic to the new version before committing to a full rollout. The term comes from coal miners who brought canaries into mines to detect toxic gases — if the canary died, you had time to escape. In software, if the canary version misbehaves (high error rate, latency spike, business metric drop), you route 0% to it and investigate before any significant user impact.",
+          text: "A canary release sends a small slice of real production traffic to the new version before rolling it out fully. The name comes from the coal mine practice of bringing a canary to detect toxic gases — if it died, you had time to escape. In software, if the canary version misbehaves, you cut it to 0% traffic and investigate before many users are affected.",
         },
         {
           type: "paragraph",
-          text: "Traffic splitting approaches differ in granularity: weighted routing (10% of all requests to new) is the simplest but exposes a random 10% of users; header-based routing (X-Canary: true directs specific users) lets you test with internal users first; user-percentage routing (consistent hash on user ID so the same user always hits the same version) gives a coherent experience and is the most production-grade approach for features that modify state.",
+          text: "There are a few ways to split traffic: weighted routing (10% of all requests go to the new version) is the simplest; header-based routing (X-Canary: true) lets you target internal users first; user-percentage routing (consistent hash on user ID, so the same user always hits the same version) gives a coherent experience and works best for features that modify state.",
         },
         {
           type: "code",
@@ -204,7 +204,7 @@ jobs:
       blocks: [
         {
           type: "paragraph",
-          text: "The goal of a rollback strategy is to return to a known-good state as fast as possible while minimising data loss and user impact. Automated rollback triggers — error rate spike, failed health checks, SLO breach — are preferable to manual processes because they do not require a human to be awake and watching at 3 AM.",
+          text: "A good rollback strategy gets you back to a known-good state as fast as possible. Automated triggers — error rate spike, health check failure, SLO breach — are better than relying on a human to notice and act, because incidents do not wait for business hours.",
         },
         {
           type: "code",
@@ -247,23 +247,23 @@ kubectl get deployment node-api -o jsonpath='{.spec.template.spec.containers[0].
   faq: [
     {
       question: "What makes blue-green different from canary?",
-      answer: "Blue-green is a binary switch: 100% of traffic goes to old (blue) or 100% goes to new (green). The switch is atomic. The advantage is simplicity and instant rollback. The disadvantage is that if green has a bug, 100% of your users hit it — you find out fast but the blast radius is maximum. Canary is a gradual exposure: you start at 1-10% of traffic on the new version and only promote to 100% after metrics confirm it is healthy. The blast radius of a canary bug is small (only the percentage receiving canary traffic). Canary is more complex to implement (requires traffic splitting infrastructure) but is the correct choice for high-risk changes or when you want to validate real-world behaviour before full exposure.",
+      answer: "Blue-green is a binary switch: 100% of traffic goes to old (blue) or 100% goes to new (green). The switch is instant. If green has a bug, 100% of your users hit it immediately — you find out fast but the blast radius is maximum. Canary is gradual: you start at 1-10% of traffic on the new version and only promote to 100% once metrics confirm it is healthy. The blast radius of a canary bug is limited to the percentage receiving it. Canary is more complex to set up but is the right choice for high-risk changes or when you want to validate real-world behavior before full exposure.",
     },
     {
       question: "Why is database migration the hardest part of zero-downtime deploys?",
-      answer: "During a rolling, blue-green, or canary deploy, both the old and new versions of your application code run simultaneously against the same database. A schema change that is safe for the new code may break the old code. For example, renaming a column in a single deploy causes the old application to fail on every query that references the old name. The expand/contract pattern solves this: in release N, add the new column alongside the old (expand phase) — both versions can run. Backfill data. In release N+1, after the old version is fully decommissioned, drop the old column (contract phase). This means schema changes that look like one step actually take two releases. Teams that skip this step get production outages during deploys.",
+      answer: "During a rolling, blue-green, or canary deploy, both old and new versions of your code run against the same database simultaneously. A schema change that is safe for the new code may break the old code. Renaming a column in one deploy will cause every query from the old code that references the old name to fail. The expand/contract pattern solves this: in release N, add the new column alongside the old — both versions can run. In release N+1, after the old version is fully gone, drop the old column. Schema changes that look like one step actually take two releases.",
     },
     {
       question: "When would you choose a rolling update over blue-green?",
-      answer: "Rolling updates are the right default for most Kubernetes Deployments because they require no extra infrastructure cost (no second fleet) and are built into Kubernetes natively. Choose rolling when: your changes are backward-compatible with in-flight requests, your readiness probes reliably detect unhealthy new Pods before they receive traffic, and your rollback time is acceptable (a rolling rollback takes as long as the original rollout). Choose blue-green instead when you need instant rollback (critical payment or checkout flows), when you have a complex database migration that must be validated against a full production traffic clone before exposure, or when compliance requires that the new version is smoke-tested on production infrastructure before any user hits it.",
+      answer: "Rolling updates are the right default for most Kubernetes Deployments — no extra infrastructure cost and natively built in. Choose rolling when your changes are backward-compatible with in-flight requests, your readiness probes reliably detect unhealthy new Pods before they receive traffic, and rollback time is acceptable (a rolling rollback takes as long as the original rollout). Choose blue-green when you need instant rollback for critical payment or checkout flows, when you have a complex database migration that needs to be validated against real traffic before exposure, or when compliance requires the new version to be fully smoke-tested on production infrastructure before any user sees it.",
     },
     {
       question: "What is a feature flag and how does it relate to deployment?",
-      answer: "A feature flag (also called a feature toggle) is a conditional in your code that enables or disables a code path based on a runtime configuration value rather than a code deployment. This decouples deployment from release: you can deploy new code to production with the flag off (dark launch), validate it is not causing errors, then enable it for 1% of users, then 10%, then 100% — all without redeploying. Feature flags are the logical evolution of canary releases for feature-level control. They are also the fastest rollback mechanism: disabling a flag takes milliseconds and requires no new deployment. The trade-off is flag debt — old flags that should have been removed accumulate and make the code harder to reason about.",
+      answer: "A feature flag is a conditional in your code that enables or disables a code path based on a runtime config value rather than a code deployment. This decouples deployment from release: you can deploy new code to production with the flag off (dark launch), confirm it is not causing errors, then enable it for 1% of users, then 10%, then 100% — all without redeploying. Feature flags are also the fastest rollback mechanism: disabling one takes milliseconds and requires no deployment at all. The trade-off is technical debt — old flags that should have been removed accumulate and make the code harder to reason about.",
     },
     {
       question: "What automated triggers should cause an automatic rollback?",
-      answer: "The most reliable automated rollback triggers are: (1) HTTP 5xx error rate exceeds a threshold relative to baseline — e.g. error rate > 2% for 2 consecutive minutes; (2) readiness probe failure rate on new Pods exceeds a threshold during the rollout — Kubernetes stops the rolling update but does not undo it automatically, so you need a separate controller or pipeline step; (3) p99 latency spikes beyond a threshold — catching performance regressions before they cascade; (4) business metric drop — conversion rate, add-to-cart rate, or revenue-per-minute drops significantly relative to the control group. Automated rollbacks require your observability stack (Prometheus, Datadog, CloudWatch) to be reliably instrumented before you begin the canary. If your metrics are unreliable, automated rollbacks fire on noise.",
+      answer: "The most reliable automated rollback triggers are: HTTP 5xx error rate above a threshold relative to baseline for two consecutive minutes; readiness probe failures on new Pods during rollout; p99 latency spikes beyond a threshold; and business metric drops (conversion rate, revenue per minute). Automated rollbacks require your observability stack to be reliably instrumented before you start the canary. If your metrics are noisy or unreliable, automated rollbacks will fire on false alarms and erode confidence in the system.",
     },
   ],
 } satisfies RoadmapDayDetail;

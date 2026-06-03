@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_16_DETAIL = {
   overview: [
-    "Containers changed how software is packaged and deployed by bundling an application with its exact runtime dependencies into a portable, reproducible unit. Unlike virtual machines, containers share the host kernel — they achieve isolation through Linux namespaces (process, network, mount, UTS, IPC) and resource limits through cgroups. The result is near-native performance with startup times measured in milliseconds.",
-    "Day 16 covers how container images are built from layered Dockerfiles, how containers are run and networked, and the production best practices that separate a throwaway demo from a hardened, minimal, secure container. You will write a production-quality multi-stage Dockerfile and a Docker Compose stack for a Node.js application backed by PostgreSQL.",
+    "Containers bundle your application with its exact runtime dependencies into one portable, reproducible unit. Unlike virtual machines, containers share the host kernel — they achieve isolation through Linux namespaces and resource limits through cgroups. The result is near-native performance with startup times measured in milliseconds.",
+    "Today you will learn how Docker images are built layer by layer, how to run and network containers, and the production practices that make the difference between a demo container and a secure, production-ready one. You will write a multi-stage Dockerfile and a Docker Compose stack for a Node.js app backed by PostgreSQL.",
   ],
   sections: [
     {
@@ -17,7 +17,7 @@ export const DAY_16_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "A virtual machine runs a complete guest OS on top of a hypervisor — each VM has its own kernel, device drivers, and full OS user space. A container runs as a process on the host kernel, isolated by namespaces. Namespaces give each container its own view of the filesystem (mount namespace), network stack (net namespace), process tree (pid namespace), hostname (uts namespace), and IPC resources. cgroups limit how much CPU, memory, and I/O the container can consume. The host kernel is shared — there is no guest kernel — which is why containers start in milliseconds and consume megabytes rather than gigabytes.",
+          text: "A virtual machine runs a full operating system — its own kernel, drivers, and everything — on top of a hypervisor. A container runs as a process on the host kernel, isolated using Linux namespaces. Each container gets its own view of the filesystem, network stack, process tree, and hostname. cgroups limit how much CPU and memory the container can use. Since containers share the host kernel, there is nothing to boot — they start in milliseconds and use megabytes instead of gigabytes.",
         },
         {
           type: "table",
@@ -71,7 +71,7 @@ export const DAY_16_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "A Docker image is a stack of read-only layers. Each instruction in a Dockerfile that modifies the filesystem — FROM, RUN, COPY, ADD — creates a new layer. Docker caches each layer by its content hash; if the instruction and all preceding layers are unchanged, the layer is reused from cache. This is why instruction order matters: put frequently changing instructions (COPY app source) after infrequently changing ones (RUN npm install) to maximise cache hits. At runtime, Docker adds a thin writable layer on top of the read-only image layers — the container layer.",
+          text: "A Docker image is a stack of read-only layers. Each Dockerfile instruction that changes the filesystem creates a new layer. Docker caches each layer by its content — if nothing changed in that instruction or any instruction before it, the cached layer is reused. This is why instruction order matters: put things that change rarely (like installing dependencies) before things that change often (like copying your source code). At runtime, Docker adds a thin writable layer on top for the running container.",
         },
         {
           type: "table",
@@ -153,7 +153,7 @@ CMD ["node", "dist/server.js"]`,
       blocks: [
         {
           type: "paragraph",
-          text: "Containers on the same Docker bridge network can reach each other by service name — Docker's embedded DNS resolves container names to their IP addresses. Port publishing (-p hostPort:containerPort) maps a port on the host into the container's network namespace. Volumes (-v) mount host paths or named volumes into the container for persistent data. Environment variables (-e) inject configuration without baking secrets into the image.",
+          text: "Containers on the same Docker network can talk to each other using their service names as hostnames — Docker's built-in DNS resolves those names to container IPs. Port publishing (-p) maps a port on your host to a port inside the container. Volumes (-v) mount directories into the container for data that needs to survive restarts. Environment variables (-e) inject configuration at runtime without hardcoding it into the image.",
         },
         {
           type: "code",
@@ -282,11 +282,11 @@ networks:
           rows: [
             [
               "Run as a non-root user",
-              "A process running as root inside a container is root on the host if it escapes the namespace. Non-root limits blast radius of a container escape.",
+              "A process running as root inside a container is root on the host if it escapes the namespace. Non-root limits the blast radius of a container escape.",
             ],
             [
               "Use a .dockerignore file",
-              "Prevents sending node_modules, .git, .env, and build artefacts to the Docker build context. Smaller context = faster builds and no accidental secret leaks.",
+              "Prevents sending node_modules, .git, .env, and build artefacts to the Docker build context. Smaller context means faster builds and no accidental secret leaks.",
             ],
             [
               "Multi-stage builds",
@@ -306,11 +306,11 @@ networks:
             ],
             [
               "One process per container",
-              "Containers should run a single main process so the init system (PID 1) maps directly to your application. Multiple processes require a process supervisor (tini, s6) which adds complexity without benefit over separate services.",
+              "Containers should run a single main process so PID 1 maps directly to your application. Multiple processes require a process supervisor (tini, s6) which adds complexity without benefit over separate services.",
             ],
             [
               "Use exec form CMD / ENTRYPOINT",
-              'CMD ["node", "dist/server.js"] (exec form) replaces the shell as PID 1, so signals like SIGTERM reach your process directly. CMD node dist/server.js (shell form) spawns a shell as PID 1 that does not forward signals.',
+              'CMD ["node", "dist/server.js"] (exec form) replaces the shell as PID 1 so signals like SIGTERM reach your process directly. CMD node dist/server.js (shell form) spawns a shell as PID 1 that does not forward signals.',
             ],
           ],
         },
@@ -320,19 +320,19 @@ networks:
   faq: [
     {
       question: "What is the difference between CMD and ENTRYPOINT?",
-      answer: 'ENTRYPOINT sets the executable that always runs when the container starts. CMD provides its default arguments. When both are set, Docker executes ENTRYPOINT with CMD as its argument list. At runtime, you can override CMD by appending arguments to docker run, but overriding ENTRYPOINT requires --entrypoint.\n\nCommon pattern: ENTRYPOINT ["node"] and CMD ["dist/server.js"]. Running docker run myapp dist/worker.js overrides CMD only — ENTRYPOINT stays as node. This makes the container behave like a command with a configurable default subcommand.\n\nIf you only define CMD, Docker uses /bin/sh -c as the implicit entrypoint (shell form) or runs CMD directly (exec form). For a single-purpose container with no argument variability, CMD alone is simpler.',
+      answer: 'ENTRYPOINT sets the executable that always runs when the container starts. CMD provides its default arguments. When both are set, Docker runs ENTRYPOINT with CMD as arguments. At runtime, you can override CMD by appending to docker run, but overriding ENTRYPOINT requires the --entrypoint flag.\n\nA common pattern: ENTRYPOINT ["node"] and CMD ["dist/server.js"]. Running docker run myapp dist/worker.js overrides only CMD — node stays as the entrypoint. For a single-purpose container with no argument variation, CMD alone is simpler.',
     },
     {
       question: "Why use multi-stage builds?",
-      answer: "Multi-stage builds solve the fundamental tension between build-time dependencies and runtime security. Compiling a TypeScript application requires the TypeScript compiler, ts-node, and all devDependencies — none of which should be in a production image.\n\nWith multi-stage builds, an early stage installs everything and runs the build. The final stage starts from a clean base image and copies only the compiled output and production node_modules. The build tools never enter the final image — the result is an image that may be 300 MB instead of 800 MB, with a dramatically smaller attack surface. Every package not in the image is a vulnerability that cannot be exploited.",
+      answer: "Multi-stage builds solve the tension between build-time dependencies and production security. Compiling TypeScript needs the TypeScript compiler, ts-node, and all dev dependencies — none of which should be in a production image.\n\nWith multi-stage builds, an early stage installs everything and runs the build. The final stage starts from a clean base image and copies only the compiled output and production dependencies. Build tools never enter the final image — the result might be 300 MB instead of 800 MB, with a much smaller attack surface. Every package not in the image is one less vulnerability that can be exploited.",
     },
     {
       question: "What is the difference between docker stop and docker kill?",
-      answer: "docker stop sends SIGTERM to the container's PID 1 and waits up to the timeout (default 10 seconds) for the process to exit gracefully. If the process is still running after the timeout, Docker sends SIGKILL. This allows your application to finish in-flight requests, close database connections, and flush buffers.\n\ndocker kill sends SIGKILL immediately by default (or a specified signal with --signal). The process gets no opportunity to clean up. Use docker kill only when docker stop has hung and you need immediate termination, or when sending a specific signal like SIGHUP to trigger a config reload in a service that handles it.",
+      answer: "docker stop sends SIGTERM to the container's PID 1 and waits up to the timeout (10 seconds by default) for the process to exit gracefully. If it is still running after the timeout, Docker sends SIGKILL. This gives your app time to finish in-flight requests, close database connections, and flush buffers.\n\ndocker kill sends SIGKILL immediately by default (or a specified signal with --signal). The process gets no chance to clean up. Use docker kill only when docker stop has hung and you need to force termination, or when sending a specific signal like SIGHUP to trigger a config reload.",
     },
     {
       question: "How do containers communicate with each other?",
-      answer: "Containers on the same Docker network communicate using their container name or service name as a hostname — Docker's embedded DNS server resolves these names to container IP addresses. This is why in a Docker Compose file you can set DATABASE_URL to postgres://postgres:5432/myapp and the app container resolves postgres to the postgres container's IP.\n\nContainers on different networks cannot reach each other by default — you must connect them to a shared network. For external access, you publish ports with -p, which maps a host port to a container port via iptables NAT rules. Container-to-container traffic on the same network stays inside Docker's bridge and never touches the host network stack.",
+      answer: "Containers on the same Docker network communicate using their container name or service name as a hostname — Docker's embedded DNS resolves these to container IP addresses. This is why in a Docker Compose file you can set DATABASE_URL to postgres://postgres:5432/myapp and the app container resolves 'postgres' to the right IP.\n\nContainers on different networks cannot reach each other by default — you must connect them to a shared network. For external access, you publish ports with -p, which maps a host port to a container port through NAT rules. Container-to-container traffic on the same network stays inside Docker's bridge and never touches the host network stack.",
     },
   ],
 } satisfies RoadmapDayDetail;

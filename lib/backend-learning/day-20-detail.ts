@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_20_DETAIL = {
   overview: [
-    "Every engineering team eventually has a `.env` file checked into git, a Slack message with a database password, or a staging secret copy-pasted into production. These are not edge cases — they are the default outcome when secrets are treated as config files. Day 20 fixes that mental model: secrets have a separate lifecycle from code, require audit trails, need rotation, and must be access-controlled.",
-    "Work through the secret manager comparison, implement the AWS Secrets Manager fetch pattern, and build the fail-fast config module. By Day 21 you should be able to articulate exactly why `.env` files fail at scale and what you would use instead in a production system.",
+    "Most teams eventually end up with a .env file in git, a database password sent over Slack, or a staging secret copy-pasted into production. These are not edge cases — they happen by default when secrets are treated like ordinary config. Secrets have a different lifecycle from code: they need encryption, access control, audit trails, and rotation.",
+    "Work through the secret manager comparison, implement the AWS Secrets Manager fetch pattern, and build a fail-fast config validation module. By the end you should be able to explain exactly why .env files fail at scale and what you would use instead in a production system.",
   ],
   sections: [
     {
@@ -17,11 +17,11 @@ export const DAY_20_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: ".env files were designed as a local developer convenience: drop a file in the project root and libraries like dotenv load the values into process.env. That works fine for a single developer on a single machine. It breaks down the moment more than one person or environment is involved — which is always the case in production.",
+          text: ".env files were created as a convenience for local development — drop a file in the project root and dotenv loads it into process.env. This works fine for one developer on one machine. It breaks down as soon as more than one person or environment is involved, which is always the case in production.",
         },
         {
           type: "paragraph",
-          text: "The 12-Factor App methodology (factor III: Config) says configuration that varies between deployments must be stored in the environment, not in the code repository. A .env file committed to git violates this: the config is in the repo, travels with every clone, and is visible to anyone with repository access — now and in git history forever, even if you delete the file later.",
+          text: "The 12-Factor App methodology says configuration that differs between environments should be in the environment — not in the code repository. A .env file committed to git violates this: the values are permanently in git history. Even if you delete the file later, anyone with repo access can still find those values in the history.",
         },
         {
           type: "table",
@@ -41,7 +41,7 @@ export const DAY_20_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "A secret manager is a centralised, encrypted store with access control, versioning, audit logging, and rotation. Applications fetch secrets at startup (or on-demand) via an API instead of reading a file. This separates the secret's lifecycle from the code's lifecycle.",
+          text: "A secret manager is a centralized, encrypted store that provides access control, versioning, audit logging, and rotation support. Applications fetch secrets at startup via an API instead of reading a file. This keeps the secret's lifecycle completely separate from the code's lifecycle.",
         },
         {
           type: "table",
@@ -97,7 +97,7 @@ async function bootstrap() {
       blocks: [
         {
           type: "paragraph",
-          text: "Rotation limits the blast radius of a leaked credential: a key that rotates every 30 days is only useful to an attacker for at most 30 days after exfiltration. It is also a compliance requirement in many frameworks (SOC 2, PCI-DSS, HIPAA). The challenge is rotating without downtime — which requires a dual-active window where both the old and new key are valid simultaneously.",
+          text: "Rotating a secret limits the damage of a leak — a key that rotates every 30 days is only usable by an attacker for at most 30 days after it was stolen. Rotation is also required by compliance frameworks like SOC 2, PCI-DSS, and HIPAA. The tricky part is rotating without downtime, which requires a dual-active window where both the old and new key are valid at the same time.",
         },
         {
           type: "code",
@@ -160,7 +160,7 @@ export function verifyToken(token: string): object {
       blocks: [
         {
           type: "paragraph",
-          text: "Configuration management is broader than secrets: it includes feature flags, service URLs, log levels, timeout values, and behaviour toggles. Choosing the right pattern for each category reduces operational incidents caused by misconfiguration.",
+          text: "Configuration is broader than just secrets. It includes feature flags, service URLs, log levels, timeout values, and behavior toggles. Using the right tool for each type of configuration reduces incidents caused by misconfiguration.",
         },
         {
           type: "table",
@@ -214,27 +214,27 @@ export const config = parsed.data;
   faq: [
     {
       question: "Why should you never commit .env files to git?",
-      answer: "Once a secret is in git history it is effectively public to anyone who can clone the repository — now or in the future. Even if you delete the file and force-push, the commit remains reachable via reflog and any existing clones. GitHub's secret scanning and tools like truffleHog can find secrets committed years ago in seconds. The correct pattern is: add .env to .gitignore before the first commit, store the actual values in a secret manager, and commit only a .env.example file with placeholder values describing what is needed.",
+      answer: "Once a secret is in git history it is effectively visible to anyone who can clone the repository — now or in the future. Deleting the file does not remove it from history; tools like truffleHog can find secrets committed years ago in seconds. The correct pattern: add .env to .gitignore before the first commit, store the real values in a secret manager, and commit only a .env.example file with placeholder values describing what is needed.",
     },
     {
       question: "What is the difference between a secret and a config value?",
-      answer: "A config value is any non-sensitive setting that varies between environments: PORT, LOG_LEVEL, FEATURE_FLAGS, API_BASE_URL, TIMEOUT_MS. It can be committed to a repository in a .env.example or config file without risk. A secret is a value whose exposure grants unauthorised access or violates compliance: database passwords, JWT signing keys, OAuth client secrets, TLS private keys, third-party API keys. The practical test: if a stranger read this value, could they access your systems, exfiltrate data, or impersonate your service? If yes, it is a secret and belongs in a secret manager, not an environment variable file.",
+      answer: "A config value is any non-sensitive setting that can vary between environments: PORT, LOG_LEVEL, API_BASE_URL, TIMEOUT_MS. It is safe to commit to a repository in a .env.example or config file. A secret is a value whose exposure grants unauthorized access: database passwords, JWT signing keys, OAuth client secrets, TLS private keys, third-party API keys. The practical test: if a stranger read this value, could they access your systems or data? If yes, it is a secret — it belongs in a secret manager.",
     },
     {
       question: "How do you rotate a secret without downtime?",
-      answer: "The key insight is the dual-active window. Step 1: generate the new secret and publish it as 'current' while keeping the old as 'previous' — both are valid simultaneously. Step 2: deploy the new secret to all application instances (rolling restart or live refresh). Step 3: wait for all sessions, tokens, or connections created with the old secret to expire — this window must cover the longest-lived artefact (e.g. if JWT TTL is 15 minutes, wait at least 15 minutes). Step 4: remove the old secret. For database credentials, Vault's dynamic secrets approach is cleaner: each instance gets a unique short-lived credential that Vault auto-revokes, so there is no explicit rotation step.",
+      answer: "The key is a dual-active window. Step 1: generate the new secret and publish it as 'current' while keeping the old as 'previous' — both work at the same time. Step 2: deploy the new key set to all instances. Step 3: wait for all tokens, sessions, or connections made with the old key to expire — at least as long as the longest-lived artifact (e.g. 15 minutes for JWT tokens). Step 4: remove the old key. For database credentials, Vault's dynamic secrets approach is cleaner: each instance gets a unique short-lived credential that expires automatically, so there is no explicit rotation step.",
     },
     {
       question: "What is the principle of least privilege for secrets?",
-      answer: "Each service or application should have access to exactly the secrets it needs and nothing more. A user-facing API service should be able to read the database URL and JWT secret for that service, but not the payment processor API key used only by the billing service. This is implemented via IAM policies (AWS), Vault policies, or Kubernetes RBAC. The benefits compound: if the API service is compromised, the attacker can only access the secrets that service was granted — they cannot pivot to billing, admin, or infrastructure credentials. Audit logs then show exactly which identity accessed which secret and when, making incident response dramatically faster.",
+      answer: "Each service should have access to only the secrets it needs and nothing more. A user-facing API service should be able to read its own database URL and JWT secret, but not the payment processor key used by the billing service. This is implemented via IAM policies (AWS), Vault policies, or Kubernetes RBAC. The benefit: if one service is compromised, the attacker can only access what that service was granted. Audit logs then show exactly which identity accessed which secret and when, making incident response much faster.",
     },
     {
       question: "What is the fail-fast pattern for configuration and why does it matter?",
-      answer: "The fail-fast pattern means the application validates that all required configuration is present and valid at startup, before accepting any traffic, and exits immediately with a clear error message if anything is wrong. Without this, a misconfigured deployment might start successfully, serve partial traffic, and then crash hours later when the code path that reads the missing variable is first executed — often during a high-traffic event. With fail-fast, the deployment fails immediately and the old version continues serving traffic. Zod is ideal for this in TypeScript because it produces typed, human-readable error messages for every violation simultaneously.",
+      answer: "The fail-fast pattern means the app validates that all required configuration is present and valid at startup, before accepting any traffic, and exits immediately with a clear error if anything is wrong. Without this, a misconfigured deployment might start successfully and crash hours later when the code path that reads the missing variable is finally hit — often during high traffic. With fail-fast, the deployment fails immediately and the previous version continues serving. Zod is ideal for this in TypeScript because it produces typed, readable error messages for every violation at once.",
     },
     {
       question: "Can Kubernetes Secrets be used safely in production?",
-      answer: "Kubernetes Secrets are base64-encoded, not encrypted, by default. Anyone with RBAC read access to Secrets in a namespace can decode them trivially. To use them safely you need at minimum: enable Secrets encryption at rest in the kube-apiserver config (EncryptionConfiguration with AES-GCM or KMS provider), restrict access with fine-grained RBAC (avoid wildcard rules like secrets/*), and use the External Secrets Operator to sync from AWS Secrets Manager or Vault rather than storing raw values in the cluster. The External Secrets Operator gives you the best of both worlds: secrets live in a proper secret manager with rotation and audit, and are automatically synced into Kubernetes Secrets that Pods can consume as usual.",
+      answer: "Kubernetes Secrets are base64-encoded by default, not encrypted. Anyone with RBAC read access to Secrets in a namespace can decode them instantly. To use them safely you need at minimum: Secrets encryption at rest enabled in the kube-apiserver config (EncryptionConfiguration), fine-grained RBAC that avoids wildcard rules, and ideally the External Secrets Operator to sync from a real secret manager like AWS Secrets Manager or Vault. This gives you the best of both: secrets live in a proper store with rotation and audit, automatically synced into Kubernetes Secrets that Pods can consume normally.",
     },
   ],
 } satisfies RoadmapDayDetail;

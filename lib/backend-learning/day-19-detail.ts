@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_19_DETAIL = {
   overview: [
-    "Kubernetes is the de-facto standard for running containerised workloads in production. Rather than thinking of it as 'Docker but bigger,' the correct mental model is a distributed operating system: it schedules work across a pool of machines, reconciles actual state toward desired state, and self-heals without operator intervention.",
-    "Day 19 builds that mental model from the ground up — control-plane vs worker anatomy, every core workload object and when to reach for each, how cluster networking and DNS work, and how ConfigMaps, Secrets, and namespaces keep configuration clean. Work through the tables and YAML examples before Day 20.",
+    "Kubernetes is the standard platform for running containers in production. Think of it as a distributed operating system: it schedules your containers across a pool of machines, keeps actual state matching desired state, and recovers from failures automatically without you doing anything.",
+    "Today you will learn how the control plane and worker nodes work together, which workload object to use for each type of job, how cluster networking and DNS work, and how ConfigMaps, Secrets, and namespaces keep configuration organized.",
   ],
   sections: [
     {
@@ -18,7 +18,7 @@ export const DAY_19_DETAIL = {
         { type: "diagram", id: "devops-k8s-cluster" },
         {
           type: "paragraph",
-          text: "A Kubernetes cluster is divided into a control plane (the brain) and worker nodes (the muscle). The control plane makes scheduling decisions and drives reconciliation loops. Worker nodes run the actual Pod workloads. Every component communicates only through the API server — nothing talks directly to etcd except the API server itself.",
+          text: "A Kubernetes cluster has two parts: the control plane (which makes decisions) and the worker nodes (which run your actual workloads). The control plane figures out where Pods should run and keeps everything in the desired state. Worker nodes run the Pods. All communication goes through the API server — nothing talks directly to etcd except the API server itself.",
         },
         {
           type: "table",
@@ -40,7 +40,7 @@ export const DAY_19_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "Kubernetes exposes several abstractions for running work. Choosing the wrong one is the most common beginner mistake — reach for the most appropriate primitive, not always Deployment.",
+          text: "Kubernetes gives you several different objects for running workloads. The most common mistake is using a Deployment for everything — pick the one that matches what you actually need.",
         },
         {
           type: "table",
@@ -121,7 +121,7 @@ spec:
       blocks: [
         {
           type: "paragraph",
-          text: "Pods are ephemeral — their IPs change on every restart. A Service provides a stable virtual IP (ClusterIP) and DNS name that load-balances across a set of Pods selected by a label selector. kube-proxy translates the ClusterIP to a real Pod IP using iptables or IPVS rules on every node.",
+          text: "Pod IPs change every time a Pod restarts. A Service gives you a stable IP and DNS name that always routes to the right Pods, no matter how many times they have restarted or been replaced. kube-proxy on each node maintains the rules that translate the Service's virtual IP to actual Pod IPs.",
         },
         {
           type: "table",
@@ -191,7 +191,7 @@ spec:
         },
         {
           type: "paragraph",
-          text: "Kubernetes runs a built-in DNS server (CoreDNS) in the cluster. Every Service automatically gets a DNS record in the form: <service>.<namespace>.svc.cluster.local. So a Pod in namespace 'production' can call http://node-api (short form within same namespace), http://node-api.production (cross-namespace), or the full FQDN http://node-api.production.svc.cluster.local. Use the short form for same-namespace calls and the namespace-qualified form for cross-namespace calls — never hard-code Pod IPs.",
+          text: "Kubernetes runs CoreDNS inside the cluster. Every Service gets a DNS name automatically in the format: service.namespace.svc.cluster.local. Within the same namespace you can just use the service name (http://node-api). For cross-namespace calls, use the namespace-qualified form (http://node-api.production). Never hard-code Pod IPs — they change constantly.",
         },
       ],
     },
@@ -200,7 +200,7 @@ spec:
       blocks: [
         {
           type: "paragraph",
-          text: "ConfigMaps hold non-sensitive configuration (feature flags, URLs, log levels). Secrets hold sensitive data (passwords, API keys, TLS certs) and are base64-encoded at rest — that is not encryption; enable Secrets encryption at rest in the API server config and use RBAC to restrict access. Both can be injected as environment variables or mounted as files.",
+          text: "ConfigMaps store non-sensitive configuration — feature flags, log levels, URLs. Secrets store sensitive data — passwords, API keys, TLS certificates. Important: Secrets are only base64-encoded by default, not encrypted. Enable Secrets encryption at rest in the API server config and use RBAC to limit who can read them. Both can be injected as environment variables or mounted as files inside your containers.",
         },
         {
           type: "code",
@@ -268,7 +268,7 @@ spec:
         },
         {
           type: "paragraph",
-          text: "Namespaces provide soft multi-tenancy within a cluster. They scope names (two Deployments named 'api' can coexist in different namespaces), enable resource quotas (limit total CPU/memory per team), and allow RBAC policies scoped to a team or environment. Common patterns: one namespace per environment (dev, staging, production), one per team, or one per application. Network policies can restrict traffic between namespaces — without them, all Pods in the cluster can reach each other regardless of namespace.",
+          text: "Namespaces let you divide a cluster into separate zones. Two Deployments named 'api' can coexist in different namespaces without conflict. You can apply resource quotas to limit how much CPU or memory a namespace can use, and scope RBAC rules to a specific team or environment. Without network policies, every Pod in the cluster can reach every other Pod — use network policies to restrict which namespaces can communicate with each other.",
         },
       ],
     },
@@ -276,27 +276,27 @@ spec:
   faq: [
     {
       question: "What is the difference between a Pod and a Deployment?",
-      answer: "A Pod is the smallest schedulable unit — one or more containers that share a network and storage context. If a raw Pod's node dies, the Pod is gone; Kubernetes does not reschedule it. A Deployment is a controller that declares desired state ('I want 3 replicas of this Pod template running') and continuously reconciles actual state toward it. When a Pod dies or a node fails, the Deployment controller notices the replica count dropped and creates a replacement. In practice you always create a Deployment (or StatefulSet, DaemonSet, Job) rather than a bare Pod.",
+      answer: "A Pod is the smallest schedulable unit — one or more containers that share a network and storage context. If a Pod's node dies, the Pod is gone and Kubernetes does not reschedule it on its own. A Deployment is a controller that declares 'I want 3 replicas of this Pod template running at all times' and continuously makes that true. When a Pod dies, the Deployment controller creates a replacement. In practice, always use a Deployment (or StatefulSet, DaemonSet, Job) instead of a bare Pod.",
     },
     {
       question: "Why does Kubernetes need etcd?",
-      answer: "etcd is the single source of truth for all cluster state: what Deployments exist, which Pods are scheduled on which nodes, what Service endpoints look like, every Secret and ConfigMap. The API server is the only component that reads from and writes to etcd directly. Every other component (scheduler, controllers, kubelet) watches the API server for changes. If etcd is lost without a backup, the cluster's entire desired state is gone — you would have to recreate every object from scratch. This is why etcd should always run as a three-node or five-node cluster (requiring a quorum majority to elect a leader) and be backed up regularly.",
+      answer: "etcd is the single source of truth for all cluster state: what Deployments exist, which Pods are scheduled where, what Services look like, every Secret and ConfigMap. The API server is the only component that reads and writes to etcd directly. If etcd is lost without a backup, the cluster's entire desired state is gone — you would need to recreate every object from scratch. Always run etcd as a three or five node cluster (requiring a quorum majority to elect a leader) and back it up regularly.",
     },
     {
       question: "What happens when a node goes down?",
-      answer: "The Node controller in the controller manager detects that the node stopped sending heartbeats to the API server. After a configurable grace period (default ~5 minutes), it marks the node NotReady and evicts the Pods. The Deployment controller then sees the actual replica count is below desired and schedules replacement Pods on healthy nodes. StatefulSet Pods are also rescheduled, preserving their stable identity (pod-0 stays pod-0) and reattaching their PersistentVolumeClaims. DaemonSet Pods on the failed node are simply gone — the DaemonSet does not create extras on other nodes, since by definition one-per-node is correct.",
+      answer: "The Node controller detects that the node stopped sending heartbeats to the API server. After a grace period (around 5 minutes by default), it marks the node NotReady and evicts the Pods. The Deployment controller then sees the replica count dropped and schedules replacement Pods on healthy nodes. StatefulSet Pods are rescheduled with their stable identity (pod-0 stays pod-0) and get their PersistentVolumeClaims reattached. DaemonSet Pods on the failed node are just gone — the DaemonSet does not create extra Pods on other nodes.",
     },
     {
       question: "What is the difference between liveness and readiness probes?",
-      answer: "A liveness probe answers 'Is this container still alive and worth keeping?' — if it fails repeatedly, Kubernetes restarts the container. Use it to detect deadlocks or unrecoverable crashes. A readiness probe answers 'Is this container ready to serve traffic right now?' — if it fails, Kubernetes removes the Pod from the Service's endpoint list so no new requests are routed to it, but the container is not restarted. Use readiness probes to handle startup time (warm-up, migrations), dependency unavailability (database down), or temporary overload. A container can be live but not ready; during a rolling update, new Pods must pass readiness before old Pods are removed, ensuring zero traffic drop.",
+      answer: "A liveness probe answers 'Is this container still alive?' — if it fails repeatedly, Kubernetes restarts the container. Use it to detect deadlocks or unrecoverable crashes. A readiness probe answers 'Is this container ready to serve traffic right now?' — if it fails, Kubernetes removes the Pod from the Service's endpoint list so no new requests go to it, but the container is not restarted. During a rolling update, new Pods must pass readiness before old ones are removed, ensuring no traffic is dropped.",
     },
     {
       question: "What are resource requests vs limits and why do both matter?",
-      answer: "Requests are what the scheduler uses for bin-packing: it only places a Pod on a node that has at least that much free capacity. Limits are hard runtime caps enforced by the Linux kernel's cgroups. CPU beyond the limit is throttled; memory beyond the limit triggers an OOMKill and the container is restarted. If you set no requests, the scheduler places Pods with no consideration for available headroom and nodes become overloaded. If you set no limits, one runaway Pod can consume all memory on a node and starve other Pods. Always set both; set requests to the typical sustained usage and limits to the maximum safe usage.",
+      answer: "Requests are what the scheduler uses to decide where to place a Pod — it only places the Pod on a node that has at least that much free capacity. Limits are enforced at runtime by the kernel. CPU beyond the limit is throttled; memory beyond the limit triggers an OOMKill and the container restarts. Without requests, the scheduler places Pods without knowing how much they need and nodes get overloaded. Without limits, one runaway Pod can consume all memory on a node and starve everything else.",
     },
     {
       question: "What is a Kubernetes Ingress and when do you need one?",
-      answer: "An Ingress is a cluster-wide L7 routing rule that maps incoming HTTP/HTTPS requests to backend Services based on hostname and path, using a single external load balancer. Without an Ingress, each Service of type LoadBalancer provisions its own cloud load balancer — which is expensive and operationally messy at scale. With an Ingress controller (nginx-ingress, Traefik, AWS ALB Ingress Controller), you have one external entry point and route to many Services by host or path. Ingress also handles TLS termination, often integrated with cert-manager for automatic Let's Encrypt certificates.",
+      answer: "An Ingress is a cluster-wide routing rule that maps incoming HTTP/HTTPS requests to backend Services based on hostname and path, using a single external load balancer. Without an Ingress, each Service of type LoadBalancer creates its own cloud load balancer — expensive and messy at scale. With an Ingress controller (nginx, Traefik, AWS ALB), you have one external entry point and route to many Services by host or path. Ingress also handles TLS termination, often automated with cert-manager for free Let's Encrypt certificates.",
     },
   ],
 } satisfies RoadmapDayDetail;
