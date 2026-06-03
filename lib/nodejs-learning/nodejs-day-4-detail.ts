@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**npm** (Node Package Manager) is how almost everyone installs libraries and tools: your **`package.json`** is the contract (“these packages at these version ranges”), and the **lockfile** makes installs repeatable on every laptop and CI machine.",
+      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
       np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
       jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
     },
     {
-      en: "Think of **semver** as traffic lights for upgrades: patch vs minor vs major tells you how risky an automatic update might be—combined with **`npm audit`**, you balance freshness against supply-chain safety.",
+      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
       np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
       jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
     },
@@ -17,6 +17,11 @@ export const NODEJS_DAY_4_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "jHDhaSSKmB0",
+          title: "npm Crash Course",
+        },
         {
           type: "code",
           title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
@@ -40,7 +45,7 @@ export const NODEJS_DAY_4_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "**`npm install lodash`** downloads the package into **`node_modules/`** and records it in **`package.json`** + **`package-lock.json`** (default npm behavior). **`npx`** runs a package binary without installing it globally—ideal for one-off CLIs (`npx create-next-app`). Commit **`package-lock.json`** so teammates and CI install the **exact** same tree.",
+            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
             np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
             jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
           },
@@ -50,7 +55,7 @@ export const NODEJS_DAY_4_DETAIL: RoadmapDayDetail = {
           variant: "bullet",
           items: [
             {
-              en: "**Scripts** — add a **start** command (for example running **`node index.js`**) so **`npm start`** works everywhere. Put lint/test/build commands there so CI and humans share one vocabulary.",
+              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
               np: "`npm run` ले टोलीको एउटै शब्दकोश।",
               jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
             },
@@ -80,7 +85,7 @@ const express = require('express');`,
         {
           type: "paragraph",
           text: {
-            en: "**`npm install pkg --save-dev`** (or `-D`) puts tools like ESLint and Jest under **`devDependencies`**—production installs can skip them with **`npm install --omit=dev`** to shrink deploy images. Never commit **`node_modules/`**; it is huge and reproducible from the lockfile.",
+            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
             np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
             jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
           },
@@ -90,17 +95,17 @@ const express = require('express');`,
           variant: "bullet",
           items: [
             {
-              en: "**Using a package** — `const pkg = require('name')` or ESM `import`. Read the package **`exports`** field in **npm**—modern packages expose subpaths (`pkg/sub`) intentionally.",
+              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
               np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
               jp: "**利用** — README と `exports` でエントリを確認。",
             },
             {
-              en: "**Transitive dependencies** — when you install `express`, you pull dozens of indirect packages. That is why audits and lockfiles matter—your code might not mention a vulnerable package directly.",
+              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
               np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
               jp: "**間接依存** — 見えないパッケージまでついてくる。",
             },
             {
-              en: "**Secrets** — never put API keys in `package.json` or committed `.env`. Use environment variables and your host’s secret manager.",
+              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
               np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
               jp: "**秘密情報** — package.json に書かない。",
             },
@@ -111,6 +116,11 @@ const express = require('express');`,
     {
       title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "jHDhaSSKmB0",
+          title: "Semantic Versioning Explained",
+        },
         {
           type: "code",
           title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
@@ -153,7 +163,7 @@ npm uninstall lodash`,
         {
           type: "paragraph",
           text: {
-            en: "**`npm list`** shows what is installed; **`npm list --depth=0`** lists only top-level packages. **`npm view lodash version`** queries the registry without installing. **`npm install pkg@1.2.3`** pins an exact release; **`npm update`** bumps within the ranges written in **package.json**. **`npm uninstall pkg`** removes dependency entries cleanly.",
+            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
             np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
             jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
           },
@@ -165,7 +175,7 @@ npm uninstall lodash`,
         {
           type: "paragraph",
           text: {
-            en: "The diagram illustrates **backpressure**—when installs or builds fetch many packages, slow disk or network must not overwhelm memory; npm and Node streams use similar ideas. Practically: run **`npm ci`** in CI (clean install from lockfile) instead of **`npm install`** so builds stay deterministic.",
+            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
             np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
             jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
           },
@@ -177,7 +187,7 @@ npm uninstall lodash`,
     {
       question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
       answer: {
-        en: "Without it, two developers—or dev vs CI—might resolve different transitive versions from the same **package.json** ranges, causing “works on my machine” bugs. The lockfile pins the **resolved graph**.",
+        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
         np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
         jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
       },

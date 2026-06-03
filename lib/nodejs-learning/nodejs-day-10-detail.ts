@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_10_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Real APIs relate **customers** to **movies** to **rentals**—in MongoDB you choose **embedding** (nested documents) vs **referencing** (`ObjectId` pointers) vs **hybrids**. Wrong choices mean giant documents, slow queries, or stale duplicated data.",
+      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
       np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
       jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
     },
     {
-      en: "**Population** (`populate`) feels like a SQL join—it pulls related documents after the first query—watch for **N+1** patterns where one list endpoint accidentally triggers one database round-trip **per row**.",
+      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
       np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
       jp: "**populate** は便利だが **N+1** に注意。",
     },
@@ -17,6 +17,11 @@ export const NODEJS_DAY_10_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
+        },
         {
           type: "code",
           title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
@@ -38,7 +43,7 @@ const orderSchema = new mongoose.Schema({
         {
           type: "paragraph",
           text: {
-            en: "**Embed** children when they **always** belong to one parent and you fetch them together—comments on a blog post is classic. **Reference** separate collections when documents grow large or update independently—users vs orders. Arrays of subdocuments suit ordered line items with their **own `_id`** for targeted updates.",
+            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
             np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
             jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
           },
@@ -62,7 +67,7 @@ const orderSchema = new mongoose.Schema({
         {
           type: "paragraph",
           text: {
-            en: "**Movies** relate to **Genres**—store **`genreId`** references and validate the genre exists **before** insert/update. **Rentals** tie customers and movies together—think about **inventory**: decrement stock and record rental rows **consistently** or users see phantom availability.",
+            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
             np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
             jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
           },
@@ -76,6 +81,11 @@ const orderSchema = new mongoose.Schema({
         jp: "トランザクションと ObjectId",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Transactions Explained",
+        },
         {
           type: "code",
           title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
@@ -99,7 +109,7 @@ try {
         {
           type: "paragraph",
           text: {
-            en: "**Multi-document transactions** (`session.withTransaction`) commit or roll back **together**—essential when money or inventory moves between collections. **`mongoose.Types.ObjectId.isValid`** only checks hex shape—a string can be “valid” yet **not exist**; pair with **`exists`** queries when correctness matters.",
+            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
             np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
             jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
           },
@@ -115,7 +125,7 @@ try {
         jp: "埋め込みはいつ？",
       },
       answer: {
-        en: "Embed when the nested data is **small**, **fetched with** the parent every time, and **updated together**. Reference when documents are **large**, **shared** across parents, or change **independently**—normalize like you would in SQL when duplication would drift.",
+        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
         np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
         jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
       },

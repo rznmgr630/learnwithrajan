@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_8_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**MongoDB** stores **documents** (JSON-like BSON) in **collections** instead of rigid tables—great when schemas evolve. **Mongoose** adds **schemas**, **validation**, and a fluent query API on top so Node apps stay type-aware without switching languages.",
+      en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
       np: "Mongo दस्तावेज; Mongoose ले आकार र प्रश्न सजिलो बनाउँछ।",
       jp: "**MongoDB** はドキュメント指向。**Mongoose** がスキーマとクエリを整える。",
     },
     {
-      en: "Install MongoDB locally via **official installer** or **Docker**—keep **data directories** outside your git repo. **`mongosh`** connects from the terminal so you can **`find`** documents before trusting only application logs.",
+      en: "You can install MongoDB using the **official installer** or run it with **Docker** — just make sure your data folder is not inside your git repo. The **`mongosh`** shell lets you connect from your terminal and check what is actually in your database, which is more reliable than only reading your app logs.",
       np: "स्थापना पछि `mongosh` ले जाँच गर्नुहोस्।",
       jp: "ローカルは公式インストーラか Docker。**mongosh** で直接確認できると強い。",
     },
@@ -17,6 +17,11 @@ export const NODEJS_DAY_8_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "MongoDB basics & local setup", np: "MongoDB र स्थापना", jp: "MongoDB とセットアップ" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "-bt_y4Loofg",
+          title: "MongoDB in 100 Seconds",
+        },
         {
           type: "code",
           title: { en: "mongosh after mongod is running", np: "mongosh", jp: "mongosh で確認" },
@@ -30,7 +35,7 @@ db.genres.find().pretty()`,
         {
           type: "paragraph",
           text: {
-            en: "Unlike SQL rows, documents can embed nested objects—flexibility trades off with discipline: you still design **indexes** and **query patterns** intentionally. For learning, run **`mongod`** locally or use **MongoDB Atlas** free tier later—connection strings always belong in **environment variables**.",
+            en: "MongoDB lets you embed nested objects inside a document, unlike SQL which splits data across multiple tables. That flexibility is powerful, but you still need to plan your **indexes** and how you will query the data. For now, run **`mongod`** locally. When you are ready to host your database online, use the **MongoDB Atlas** free tier — and always store your connection string in an **environment variable**, never in your code.",
             np: "लचिलोपनका लागि इन्डेक्स र प्रश्न योजना चाहिन्छ।",
             jp: "柔軟だからこそインデックス設計が重要。接続 URI は環境変数へ。",
           },
@@ -65,7 +70,7 @@ const Genre = mongoose.model('Genre', genreSchema);
         {
           type: "paragraph",
           text: {
-            en: "Production MongoDB often runs as a **replica set** (diagram above)—multiple nodes for availability. **`mongoose.connect(uri)`** opens a pool; listen for **`disconnected`** / **`reconnected`** events and fail fast if the URI is wrong. **Schemas** define fields, defaults, and indexes; **Models** bind a schema to a **collection name**.",
+            en: "In production, MongoDB usually runs as a **replica set** — multiple copies of your database for reliability (shown in the diagram above). **`mongoose.connect(uri)`** opens a connection pool automatically. It is good practice to listen for **`disconnected`** and **`reconnected`** events so you know when the database goes down. **Schemas** describe what fields a document has and what values are valid; **Models** connect a schema to the actual MongoDB collection.",
             np: "उत्पादनमा प्रायः replica — जडान घटनाहरू सुन्नुहोस्।",
             jp: "本番はレプリカ構成が一般的。**mongoose.connect** とプールを理解する。",
           },
@@ -79,6 +84,11 @@ const Genre = mongoose.model('Genre', genreSchema);
         jp: "クエリ・インデックス・ページング",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
+        },
         {
           type: "code",
           title: { en: "Filter + page in the database", np: "प्रश्न उदाहरण", jp: "クエリ例" },
@@ -95,7 +105,7 @@ const Genre = mongoose.model('Genre', genreSchema);
         {
           type: "paragraph",
           text: {
-            en: "**Comparison operators** (`$gt`, `$in`, …) and **logical** (`$and`, `$or`) filter documents **inside** the database—better than fetching everything into Node. **Regex** searches can be slow without indexes—profile queries during development.",
+            en: "Operators like **`$gt`**, **`$in`**, **`$and`**, and **`$or`** let you filter data inside the database — so only the matching documents come back to your app. This is much faster than loading everything and filtering in JavaScript. Be careful with **regex searches** though — without an index, they scan every document and can slow your app down.",
             np: "फिल्टर DB भित्र — पूरै लोड गर्नु हुँदैन।",
             jp: "**演算子**で DB 側にフィルタ。正規表現はインデックスと相談。",
           },
@@ -107,7 +117,7 @@ const Genre = mongoose.model('Genre', genreSchema);
         {
           type: "paragraph",
           text: {
-            en: "**Pagination** — **`skip`/`limit`** is simple but slows down on deep pages; **cursor-based** pagination (sort by `_id` or timestamp, pass last seen value) scales better for feeds—matches the diagram’s stable cursor idea.",
+            en: "For **pagination**, `skip` and `limit` are the easiest to start with — but they get slow when users navigate to later pages because MongoDB still has to scan all the skipped documents. **Cursor-based pagination** (sorting by `_id` or a timestamp and passing the last value you saw) is faster and works much better for long lists or feeds.",
             np: "गहिरो पृष्ठमा कर्सर राम्रो — skip भारी हुन सक्छ।",
             jp: "**ページング** — 深いページはカーソル方式が安定（図参照）。",
           },
@@ -123,7 +133,7 @@ const Genre = mongoose.model('Genre', genreSchema);
         jp: "原子更新を使う理由？",
       },
       answer: {
-        en: "Two requests reading the same document and saving blindly can **overwrite** each other—**`findOneAndUpdate`** with operators (`$inc`, `$set`) applies changes **atomically** at the document level.",
+        en: "If two requests both read the same document and then save it, one will overwrite the other's changes. **`findOneAndUpdate`** with operators like **`$inc`** and **`$set`** avoids this by making the change directly in the database in one step — no read-then-write race condition.",
         np: "दुई लेखकले पढेर बचत गर्दा रेस — अणु अद्यावधिक सुरक्षित।",
         jp: "読んで書くと競合しやすい。**findOneAndUpdate** と演算子で原子更新。",
       },

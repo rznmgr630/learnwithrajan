@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_11_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Authentication** answers “who are you?”—usually email/password or OAuth—while **authorization** answers “what may you do?”—roles or permissions on resources. Node APIs commonly issue **JWTs** after login so subsequent requests carry proof **without** server-side sessions stored for every user (trade-offs exist—refresh tokens matter).",
+      en: "**Authentication** is about proving who you are — usually with an email and password. **Authorization** is about what you are allowed to do once you are logged in — things like admin-only routes. Node APIs often use **JWTs** (JSON Web Tokens) after login so the server does not need to store session data for every user. The token travels with each request and the server just verifies it.",
       np: "प्रमाणीकरण पहिचान; प्राधिकरण अनुमति — JWT सामान्य।",
       jp: "**認証**と**認可**を分ける。JWT はステートレスな証明に便利。",
     },
     {
-      en: "**Never store plaintext passwords**—hash with **`bcrypt`** (or Argon2) and compare with timing-safe APIs. Put **`JWT_SECRET`** and DB URIs only in environment variables—never in Git.",
+      en: "Passwords must never be stored as plain text — always hash them with **`bcrypt`** before saving, and use bcrypt's compare function when logging in. Keep your **`JWT_SECRET`** and database connection string in environment variables only, never in your code or git history.",
       np: "पासवर्ड ह्यास — गोप्य कुञ्जी env मा मात्र।",
       jp: "パスワードは平文禁止。**JWT_SECRET** は環境変数のみ。",
     },
@@ -17,6 +17,11 @@ export const NODEJS_DAY_11_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Users, registration & hashing", np: "प्रयोगकर्ता र ह्यासिङ", jp: "ユーザーとハッシュ" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "7Q17ubqLfaM",
+          title: "Node.js JWT Authentication Tutorial",
+        },
         {
           type: "code",
           title: { en: "Hash then store — never plaintext", np: "ह्यास गर्नु", jp: "ハッシュして保存" },
@@ -31,7 +36,7 @@ async function registerUser({ email, password }) {
         {
           type: "paragraph",
           text: {
-            en: "Registration endpoint validates input, checks duplicates, **hashes** password, persists user without echoing hash back to clients. Login compares supplied password to stored hash—if match, issue **JWT** with **`sub`** (user id) and **`exp`** (expiry). Libraries like **`lodash`** help trim/pick fields—avoid leaking internal keys in responses.",
+            en: "When a user registers, validate their input, check for duplicate emails, hash the password, and save the user. Never send the hash back in the response. When they log in, compare the password they sent against the stored hash using bcrypt's `compare` function. If it matches, issue a **JWT** that includes the user's ID (`sub`) and an expiry time (`exp`). Strip out internal fields like the password hash before sending the user object back.",
             np: "दर्ता — दोहोरो जाँच, ह्यास, जवाफमा गोप्य नदेखाउनु।",
             jp: "登録は検証・重複チェック・ハッシュ保存。レスでハッシュを返さない。",
           },
@@ -41,6 +46,11 @@ async function registerUser({ email, password }) {
     {
       title: { en: "JWT flow & protecting routes", np: "JWT र सुरक्षित रूट", jp: "JWT とルート保護" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "7Q17ubqLfaM",
+          title: "JWT Authentication in Node.js",
+        },
         {
           type: "code",
           title: { en: "Issue on login, verify in middleware", np: "जारी र जाँच", jp: "発行と検証" },
@@ -69,7 +79,7 @@ function authMiddleware(req, res, next) {
         {
           type: "paragraph",
           text: {
-            en: "**401 Unauthorized** — missing/invalid/expired token (**identity** problem). **403 Forbidden** — token is valid but user **lacks permission** for this resource. Middleware reads **`Authorization: Bearer …`**, verifies signature with **`JWT_SECRET`**, attaches **`req.user`**, and calls **`next()`**—centralize so every protected route stays one line.",
+            en: "**401** means the request does not have a valid identity — the token is missing, expired, or wrong. **403** means the user is identified but does not have permission for that action. Your auth middleware reads the `Authorization: Bearer ...` header, verifies the token using your secret, then attaches the decoded user to `req.user` and calls `next()`. Centralizing this in one middleware means every protected route is just one line.",
             np: "401 पहिचान; 403 अनुमति — मिडलवेयरले JWT जाँच।",
             jp: "**401 vs 403** を図の通り区別。ミドルウェアで検証を一元化。",
           },
@@ -99,7 +109,7 @@ app.delete('/api/movies/:id', authMiddleware, requireRole('admin'), handler);`,
         {
           type: "paragraph",
           text: {
-            en: "**Role-based access** maps users → roles → permissions on routes (`admin` may delete, `viewer` cannot). Implement as **small middleware factories** (`requireRole('admin')`) so tests can exercise denial paths. **Logout** for JWT APIs often means **client discards tokens** plus server-side blocklists if tokens must be revoked early.",
+            en: "**Role-based access** lets you say which roles can access which routes — `admin` can delete, `viewer` can only read. Writing it as a small middleware factory (`requireRole('admin')`) keeps your route definitions clean and makes it easy to test that denied users get a 403. For logout with JWTs, the simplest approach is having the client delete the token. If you need to revoke tokens before they expire (like after a password change), you will need a server-side token blocklist.",
             np: "भूमिका मिडलवेयर — JWT लगआउट प्रायः क्लाइन्टले टोकन हटाउँछ।",
             jp: "**RBAC** をミドルウェア化。JWT のログアウトはクライアント破棄が基本。",
           },
@@ -115,7 +125,7 @@ app.delete('/api/movies/:id', authMiddleware, requireRole('admin'), handler);`,
         jp: "JWT は localStorage？",
       },
       answer: {
-        en: "**localStorage** is vulnerable to XSS stealing tokens—many teams prefer **httpOnly cookies** for refresh/access tokens paired with CSRF protections for cookie-based flows. Understand the threat model of your frontend.",
+        en: "Storing JWTs in `localStorage` means any injected script (XSS attack) can steal them. Many teams prefer **httpOnly cookies** instead — JavaScript cannot access them, but you need CSRF protection since cookies are automatically sent with requests. The right choice depends on your frontend and your threat model, so understand the trade-off before deciding.",
         np: "XSS जोखिम — httpOnly कुकी वा शून्य विश्वास नमूना।",
         jp: "XSS 対策では **httpOnly** の検討。フロントの脅威モデルを決める。",
       },

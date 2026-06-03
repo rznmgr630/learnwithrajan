@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_13_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Testing is how you **ship confidently**. **Unit tests** run in milliseconds by mocking all I/O — they lock down pure logic. **Integration tests** spin a real Express app against a test database and verify that routes, middleware, validators, and DB queries all wire together correctly.",
+      en: "Testing is how you catch bugs before users do — and how you change code without worrying you broke something. **Unit tests** are fast because they mock all the external stuff (database, network) and test one function at a time. **Integration tests** run your actual Express app against a real test database to check that everything works together.",
       np: "Unit test — I/O mock, milliseconds; Integration test — वास्तविक DB, wiring परीक्षण।",
       jp: "**単体テスト**は I/O をモックして高速に。**結合テスト**は実際の DB でワイヤリングを確認。",
     },
     {
-      en: "**Test-driven development (TDD)** writes the assertion first, watches it fail, then implements minimum code to pass. Even without strict TDD, writing tests alongside code (not six months later) keeps coverage meaningful.",
+      en: "**Test-driven development (TDD)** means writing your test before writing the code — you describe what the function should do, watch the test fail, then write just enough code to make it pass. Even if you do not follow strict TDD, writing tests alongside your code (not weeks later when you have forgotten the edge cases) produces much better coverage.",
       np: "TDD — पहिले fail गर्ने test, अनि minimum code। कोडसँगै लेख्नु राम्रो।",
       jp: "**TDD** は失敗するテストから始める。コードと並行してテストを書くと品質が保たれる。",
     },
@@ -21,6 +21,11 @@ export const NODEJS_DAY_13_DETAIL: RoadmapDayDetail = {
         jp: "Jest の基本",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "7r4xVDI2vho",
+          title: "Jest Crash Course",
+        },
         {
           type: "code",
           title: {
@@ -63,7 +68,7 @@ describe('calculateLateFee', () => {
         {
           type: "paragraph",
           text: {
-            en: "The **test pyramid** favors many fast unit tests at the base, fewer integration tests in the middle, and minimal end-to-end tests at the tip. Run **`jest --watch`** during development for instant feedback. Set up scripts: `\"test\": \"jest\"` and `\"test:coverage\": \"jest --coverage\"` in `package.json`.",
+            en: "The **test pyramid** says: lots of fast unit tests at the bottom, some integration tests in the middle, and a few end-to-end tests at the top. This keeps your test suite fast while still covering important paths. Run **`jest --watch`** while developing so tests re-run automatically every time you save. Add `\"test\": \"jest\"` and `\"test:coverage\": \"jest --coverage\"` to your `package.json` scripts.",
             np: "pyramid — धेरै unit, कम integration, थोरै e2e। `jest --watch` development मा।",
             jp: "**テストピラミッド** — 下段を厚く。`jest --watch` で開発中に即時フィードバック。",
           },
@@ -120,7 +125,7 @@ describe('createUser', () => {
         {
           type: "paragraph",
           text: {
-            en: "**Mocking helps** because it isolates the unit under test from real I/O — tests run fast and deterministically. **Mocking can hide bugs**: if you mock Mongoose's `.save()` to always succeed, you will never discover that your validation schema rejects a field your code relies on. Reserve real DB calls for integration tests where discovering wiring errors is the whole point.",
+            en: "**Mocking** lets you test one piece of code without needing a real database or network connection — tests run fast and give the same result every time. But over-mocking can hide real bugs: if you always mock `.save()` to succeed, you will never catch a Mongoose validation schema that rejects a field your code depends on. Save real database calls for integration tests, where checking that everything works together is the whole point.",
             np: "mock ले isolation — तर Mongoose mock गर्दा schema bug छुटन सक्छ। integration test मा real DB।",
             jp: "モックは高速・確定的。しかし Mongoose をモックしすぎるとスキーマバグを見落とす。結合テストでは実 DB を使う。",
           },
@@ -134,6 +139,11 @@ describe('createUser', () => {
         jp: "supertest を使った結合テスト",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "FKnzS_icp20",
+          title: "Supertest Integration Testing in Node.js",
+        },
         {
           type: "code",
           title: {
@@ -191,7 +201,7 @@ describe('POST /api/users', () => {
         {
           type: "paragraph",
           text: {
-            en: "**`supertest`** fires real HTTP requests against your Express app without binding a network port — fast and reliable. Always use a **separate test database URI** (e.g. `myapp_test`) — never point tests at production data. Seed fixtures in `beforeAll` or `beforeEach`, then drop the database in `afterAll` to leave a clean state.",
+            en: "**`supertest`** sends real HTTP requests to your Express app without needing to actually start a server on a port — this makes tests fast and easy to run anywhere. Always use a separate test database (like `myapp_test`) that you can freely wipe. Drop the database in `afterAll` so each test run starts clean, and set up any required data in `beforeEach` so tests do not depend on each other.",
             np: "supertest — port bind नगरी real HTTP। test DB अलग URI — production मा कहिल्यै होइन।",
             jp: "**supertest** はポートなしで実 HTTP を発火。**テスト用 DB** を別 URI に。本番データは絶対に使わない。",
           },
@@ -240,7 +250,7 @@ describe('POST /api/users', () => {
             [
               { en: "**Statement**", np: "Statement", jp: "**ステートメント**" },
               { en: "Every executable statement reached", np: "हरेक statement", jp: "実行された文" },
-              { en: "Doesn't check boolean branches", np: "branch जाँच गर्दैन", jp: "分岐を区別しない" },
+              { en: "Does not check boolean branches", np: "branch जाँच गर्दैन", jp: "分岐を区別しない" },
             ],
             [
               { en: "**Branch**", np: "Branch", jp: "**ブランチ**" },
@@ -262,7 +272,7 @@ describe('POST /api/users', () => {
         {
           type: "paragraph",
           text: {
-            en: "**80% coverage is a floor, not a ceiling.** 100% coverage can still miss logic errors — a test that calls every line but only asserts `expect(true).toBe(true)` is worthless. Focus meaningful tests on **auth flows, pricing calculations, and error paths** rather than chasing a number. Delete tests that only exist to inflate coverage.",
+            en: "**80% test coverage is a reasonable minimum**, not a goal to celebrate hitting. 100% coverage does not mean your code is correct — a test that touches every line but makes no real assertions is useless. Spend your testing effort on the things that matter most: auth flows, pricing logic, and error handling. If a test only exists to bump a number, delete it.",
             np: "80% coverage न्यूनतम — 100% भएर पनि logic error हुन सक्छ। auth र pricing मा ध्यान दिनुहोस्।",
             jp: "**80% はフロア**。100% でもロジックエラーを見逃す。認証・課金・エラーパスに意味のあるテストを集中。",
           },
@@ -278,7 +288,7 @@ describe('POST /api/users', () => {
         jp: "単体テストと結合テストの違いは？",
       },
       answer: {
-        en: "**Unit tests** isolate a single function or module by mocking all external dependencies (DB, network, file system). They run in milliseconds. **Integration tests** wire real components together — a real DB, real Express middleware, real routes — and verify the system behaves correctly end-to-end. They are slower but catch wiring bugs that unit tests cannot.",
+        en: "**Unit tests** test one function in isolation by replacing external dependencies (database, network) with mocks. They run in milliseconds and are great for testing logic. **Integration tests** connect real components — actual database, actual Express routes, actual middleware — and check that everything works together. They are slower but catch bugs that unit tests cannot, like a misconfigured route or a missing database index.",
         np: "Unit — mock सँग isolated, fast; Integration — real DB, real Express, slow तर wiring bugs देखाउँछ।",
         jp: "**単体**はモックで隔離して高速。**結合**は実コンポーネントを繋いで遅いがワイヤリングバグを発見。",
       },
@@ -290,7 +300,7 @@ describe('POST /api/users', () => {
         jp: "テストはコードの前か後か？",
       },
       answer: {
-        en: "**TDD (test first)** forces you to think about the interface before implementation — great for business logic with clear rules (pricing, validation). **Test-after** is more practical when you are exploring an API design or building UI. The pragmatic rule: always write tests before you mark a PR ready — never ship untested code to production.",
+        en: "**Writing tests first (TDD)** makes you think about how a function should behave before you write it, which often leads to better-designed interfaces — especially for business logic with clear rules. **Testing after** is fine when you are exploring or prototyping. Either way, the rule is: never mark a PR ready without tests. Untested code in production is a liability.",
         np: "TDD ले interface पहिले सोच्न बाध्य गर्छ — business logic मा राम्रो। PR ready गर्न अघि test लेख्नुहोस्।",
         jp: "**TDD** はインターフェースを先に考えさせる。探索的開発にはテスト後が現実的。PR 前には必ずテストを書く。",
       },

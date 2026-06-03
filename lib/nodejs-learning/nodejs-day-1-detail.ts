@@ -18,6 +18,11 @@ export const NODEJS_DAY_1_DETAIL: RoadmapDayDetail = {
       title: { en: "Welcome — what Node is (in plain language)", np: "स्वागत — Node के हो", jp: "ようこそ・Node とは" },
       blocks: [
         {
+          type: "youtube",
+          videoId: "yxJG-edtgPM",
+          title: "Node.js in 100 Seconds",
+        },
+        {
           type: "code",
           title: { en: "Node vs browser globals", np: "Node बनाम ब्राउजर", jp: "Node とブラウザ" },
           code: `// In Node there is no window/document — you get process, module, require, …
@@ -54,6 +59,11 @@ console.log(process.version); // e.g. v20.x.x`,
       title: { en: "Architecture — how the pieces fit together", np: "आर्किटेक्चर", jp: "アーキテクチャ" },
       blocks: [
         {
+          type: "youtube",
+          videoId: "fBNz5xF-Kx4",
+          title: "Node.js Crash Course",
+        },
+        {
           type: "code",
           title: { en: "Peek at the OS layer Node talks to", np: "OS जाँच", jp: "OS を覗く" },
           code: `const os = require('os');
@@ -87,6 +97,11 @@ console.log('CPU cores:', os.cpus().length);
     {
       title: { en: "How Node runs code — event loop (big picture)", np: "इभेन्ट लूप", jp: "イベントループの見取り図" },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "8aGhZQkoFbQ",
+          title: "What the heck is the event loop anyway?",
+        },
         {
           type: "code",
           title: { en: "Order of execution (run and watch the console)", np: "चलाउने क्रम", jp: "実行順の例" },
