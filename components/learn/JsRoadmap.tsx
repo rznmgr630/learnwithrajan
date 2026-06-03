@@ -125,7 +125,7 @@ export function JsRoadmap() {
         onClose={() => setDetailDay(null)}
         isDone={isDone}
         onToggleDone={(day) => toggleDay(day)}
-        track="nodejs"
+        track="js"
       />
     </div>
   );
