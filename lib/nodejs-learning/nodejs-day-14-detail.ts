@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Deploying** means your API runs on someone else's Linux container with **environment variables**, **HTTPS termination**, and **managed MongoDB**. Understanding the pipeline from `git push` to live traffic helps you debug failed deploys and reason about cold-start latency.",
+      en: "**Deploying** means running your API on a remote server (usually a Linux container) managed by a cloud platform. The platform handles HTTPS, process restarts, and scaling. Understanding how code goes from your machine to live users — the git push, CI tests, Docker build, and cloud deployment — helps you debug when something goes wrong.",
       np: "Deploy — अरूको Linux container मा env, HTTPS, managed Mongo सँग।",
       jp: "**デプロイ**は env・HTTPS・マネージド Mongo を揃えて他人の Linux コンテナで動かすこと。",
     },
     {
-      en: "Before any push, run `NODE_ENV=production node index.js` locally — platforms restart crashed processes, but they cannot fix a misconfigured `PORT` or a missing environment variable. Ship only after `npm start` boots without errors.",
+      en: "Before you push to deploy, test your app locally with `NODE_ENV=production node index.js`. Cloud platforms will restart a crashed process, but they cannot fix a missing environment variable or a wrong `PORT`. Make sure `npm start` runs cleanly before you ship.",
       np: "`NODE_ENV=production` स्थानीयमा test गर्नुहोस् — platform PORT ठीक गर्न सक्दैन।",
       jp: "push 前にローカルで `NODE_ENV=production` でテスト。`PORT` ミスはプラットフォームが直してくれない。",
     },
@@ -21,6 +21,11 @@ export const NODEJS_DAY_14_DETAIL: RoadmapDayDetail = {
         jp: "本番環境の準備",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "Gjnup-PuquQ",
+          title: "Docker in 100 Seconds",
+        },
         {
           type: "code",
           title: {
@@ -61,17 +66,17 @@ process.on('SIGTERM', () => {
           variant: "bullet",
           items: [
             {
-              en: "**Environment variables** — store `JWT_SECRET`, `MONGODB_URI`, `PORT` in the host dashboard (Heroku Config Vars, Railway Variables, `.env` locally). **Never commit `.env`** — add it to `.gitignore` immediately.",
+              en: "**Environment variables** — put secrets like `JWT_SECRET`, `MONGODB_URI`, and `PORT` in your platform's dashboard (Heroku Config Vars, Railway Variables, etc.). Locally, use a `.env` file. Never commit that file to git — add it to `.gitignore` from day one.",
               np: "env vars — dashboard मा राख्नुहोस्। `.env` commit नगर्नुहोस्।",
               jp: "**環境変数**はホストのダッシュボードへ。`.env` は必ず `.gitignore` に追加。",
             },
             {
-              en: "**Dotenv locally** — `require('dotenv').config()` at the top of `index.js` loads `.env` in development. In production the platform injects env vars directly — do not call `dotenv.config()` based on `NODE_ENV`; it simply does nothing if the file is absent.",
+              en: "**dotenv** — calling `require('dotenv').config()` at the top of your `index.js` loads your `.env` file in development. In production, the platform injects the variables directly, so you do not need any extra logic. If the `.env` file is absent, `dotenv` does nothing — so it is safe to call it unconditionally.",
               np: "dotenv — development मा `.env` लोड; production मा platform ले inject गर्छ।",
               jp: "**dotenv** は開発用。本番はプラットフォームが直接 env を注入。ファイルがなければ何もしない。",
             },
             {
-              en: "**Debug output off** — in production, remove `console.log` of secrets, keep structured error logs. Use a logger like `pino` that writes JSON — pipe to your cloud log viewer.",
+              en: "**Remove debug logs** from production — especially anything that might print a secret or user data. Replace ad-hoc `console.log` calls with a structured logger like **`pino`** that outputs JSON. Cloud platforms can ingest JSON logs directly into their log viewer, making it easy to search and filter.",
               np: "production मा secrets को `console.log` हटाउनुहोस् — pino जस्ता logger प्रयोग गर्नुहोस्।",
               jp: "本番では秘密情報の `console.log` を削除。`pino` 等の構造化ロガーを使う。",
             },
@@ -87,13 +92,18 @@ process.on('SIGTERM', () => {
       },
       blocks: [
         {
+          type: "youtube",
+          videoId: "Gjnup-PuquQ",
+          title: "GitHub Actions CI/CD for Node.js",
+        },
+        {
           type: "diagram",
           id: "nodejs-deploy-pipeline",
         },
         {
           type: "paragraph",
           text: {
-            en: "A typical pipeline: **Git push** triggers **CI** (GitHub Actions) which runs `npm test` and `npm run build`. Only if all tests pass does CI build a **Docker image** (`FROM node:20-alpine`, `COPY`, `npm ci --production`) and push it to a **container registry** (e.g. `ghcr.io/your-app:sha`). The deploy step tells your cloud platform to pull and run the new image — **Cloud Run**, **ECS**, **Railway**, or **Fly.io** all follow this pattern. The platform sends a `SIGTERM` to the old container and starts the new one, doing a rolling deploy with zero downtime.",
+            en: "A typical deploy pipeline works like this: you **push to git**, which triggers **CI** (like GitHub Actions) to run your tests. If tests pass, CI builds a **Docker image** and pushes it to a registry. The cloud platform then pulls the new image and starts it up — **Cloud Run**, **Railway**, **Fly.io**, and **ECS** all work this way. The platform sends `SIGTERM` to the old container so it can finish in-flight requests before shutting down, then the new container takes over with no downtime.",
             np: "Git push → CI (npm test) → Docker build → registry → cloud deploy। SIGTERM ले rolling deploy।",
             jp: "push → CI (テスト) → Docker ビルド → レジストリ → クラウドデプロイ。SIGTERM でローリング更新。",
           },
@@ -164,7 +174,7 @@ mongoose.connect(process.env.MONGODB_URI)
         {
           type: "paragraph",
           text: {
-            en: "**Atlas** provisions a replica set by default — your data is automatically replicated to secondary members. The **`w=majority`** write concern in the connection string ensures a write is acknowledged only after it reaches a majority of replica set members, protecting against data loss on primary failover.",
+            en: "**MongoDB Atlas** sets up a replica set automatically — your data is copied to multiple servers so if one goes down, the others keep serving. The **`w=majority`** write concern in your connection string means a write is only confirmed once the majority of replica set members have it, protecting you from data loss if the primary server crashes right after a write.",
             np: "Atlas — replica set, TLS, backup। `w=majority` ले primary failover मा data loss बाट जोगाउँछ।",
             jp: "**Atlas** はデフォルトでレプリカセットを構成。`w=majority` でプライマリ障害時のデータ損失を防ぐ。",
           },
@@ -229,7 +239,7 @@ mongoose.connect(process.env.MONGODB_URI)
         jp: "なぜプラットフォームは PORT を注入するのか？",
       },
       answer: {
-        en: "Shared platforms route external HTTPS traffic through a **reverse proxy** to your process's assigned port. Hardcoding `3000` breaks because only their internal routing table knows the mapping. Always read from `process.env.PORT ?? 3000` — the fallback keeps local dev working without setting the variable.",
+        en: "Cloud platforms use a **reverse proxy** that routes incoming HTTPS traffic to your process on a dynamically assigned port. If you hardcode port `3000`, the proxy cannot reach your app. Always read the port from `process.env.PORT` — the `?? 3000` fallback means local development still works without setting the variable.",
         np: "proxy ले PORT assign गर्छ — hardcode गर्दा break हुन्छ। `process.env.PORT ?? 3000` प्रयोग गर्नुहोस्।",
         jp: "**リバースプロキシ**が PORT を割り当てる。ハードコードすると壊れる。`process.env.PORT ?? 3000` を使う。",
       },

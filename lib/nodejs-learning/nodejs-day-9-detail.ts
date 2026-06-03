@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_9_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Validation** is the gate between messy HTTP JSON and trustworthy database documents. Mongoose validators run **before writes** and enforce DB-level invariants (required fields, enums, min/max). Middleware validators like **Joi** or **zod** run at the **route level**, giving you nicer HTTP 400 errors before expensive business logic even starts.",
+      en: "**Validation** is how you stop bad data from ever reaching your database. Mongoose validators check your data right before it gets saved. Libraries like **Joi** or **Zod** check it even earlier — at the route level — so you can send a clear 400 error back to the client without touching any business logic.",
       np: "Mongoose — DB write अघि; Joi — route मा। दुवै तह मिलाएर राम्रो।",
       jp: "Mongoose は DB 書き込み前、Joi はルートレベルで検証。二段で守る。",
     },
     {
-      en: "Think of validation as two separate rings of defense: the **route ring** catches bad client payloads early and returns friendly 400 errors; the **schema ring** is the last line — it prevents garbage reaching your MongoDB collections even if a bug bypasses your route middleware.",
+      en: "Think of validation as two layers of protection. The **route layer** catches problems in the incoming request and returns friendly error messages. The **schema layer** is your backup — it stops bad data from getting into MongoDB even if something slips past the route check.",
       np: "रूट — पहिलो रिंग (400); Schema — अन्तिम रिंग (DB protection)।",
       jp: "**ルート検証**は早期の 400 返却。**スキーマ検証**は DB へのゴミを防ぐ最後の砦。",
     },
@@ -21,6 +21,11 @@ export const NODEJS_DAY_9_DETAIL: RoadmapDayDetail = {
         jp: "Mongoose スキーマバリデータ",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "Mongoose Crash Course",
+        },
         {
           type: "code",
           title: {
@@ -128,6 +133,11 @@ const User = mongoose.model('User', userSchema);`,
       },
       blocks: [
         {
+          type: "youtube",
+          videoId: "L72fhGm1tfE",
+          title: "Express Validation with Joi",
+        },
+        {
           type: "code",
           title: {
             en: "Reusable validation middleware with Joi",
@@ -179,7 +189,7 @@ router.post('/users', validate(createUserSchema), async (req, res) => {
         {
           type: "paragraph",
           text: {
-            en: "Place validation middleware **between the route declaration and the handler** — the handler only runs when the body is clean. Setting `abortEarly: false` collects all validation errors in one pass so the client can fix everything at once. Setting `stripUnknown: true` removes extra fields the client sent.",
+            en: "Put your validation middleware between the route and the handler — the handler only runs if the data passes. Set `abortEarly: false` so all errors are collected in one go, meaning the client can see and fix everything at once rather than fixing one error at a time. Set `stripUnknown: true` to automatically drop any extra fields the client sent.",
             np: "validation middleware route र handler बीच — `abortEarly: false` ले सबै त्रुटि एकैपटक।",
             jp: "バリデーションはルートとハンドラの間に挟む。`abortEarly: false` で全エラーをまとめて返す。",
           },
@@ -218,12 +228,12 @@ const userSchema = new mongoose.Schema({ name: String }, { strict: true });`,
           variant: "bullet",
           items: [
             {
-              en: "**Mass-assignment bug** — a client sends `{ role: 'admin' }` and your code does `User.create(req.body)` without filtering. Whitelist inputs explicitly or use `stripUnknown`.",
+              en: "**Mass-assignment** — if a client sends `{ role: 'admin' }` in the request body and your code does `User.create(req.body)` directly, they can give themselves admin privileges. Always whitelist the fields you accept, or use `stripUnknown` to remove anything you did not define.",
               np: "mass-assignment — `role: 'admin'` पठाएर privilege escalate गर्न सकिन्छ।",
               jp: "**マスアサインメント** — 不正なフィールドで権限昇格が起きる。ホワイトリスト化が必要。",
             },
             {
-              en: "**Keep DB clean** — unknown fields create inconsistent documents that break future schema migrations and analytics queries.",
+              en: "**Keep your database clean** — extra unknown fields in your documents make future schema changes harder and can break analytics queries that assume a consistent shape.",
               np: "DB सफा राख्नुहोस् — अज्ञात fields ले schema migration कठिन बन्छ।",
               jp: "**DB をきれいに保つ** — 未知フィールドはスキーママイグレーションを壊す。",
             },
@@ -250,8 +260,8 @@ const userSchema = new mongoose.Schema({ name: String }, { strict: true });`,
   "status": 400,
   "error": "Validation failed",
   "details": [
-    { "field": "email",  "message": "\"email\" must be a valid email" },
-    { "field": "name",   "message": "\"name\" is not allowed to be empty" }
+    { "field": "email",  "message": "\\"email\\" must be a valid email" },
+    { "field": "name",   "message": "\\"name\\" is not allowed to be empty" }
   ]
 }
 
@@ -311,7 +321,7 @@ app.use((err, req, res, next) => {
         jp: "スキーマとルートどちらで検証すべきか？",
       },
       answer: {
-        en: "**Both** — they serve different purposes. Route middleware (Joi/zod) catches bad payloads at the HTTP boundary and returns friendly 400 errors before any business logic runs. Mongoose schema validators are the last line of defense: they run at the DB layer, catching bugs in your own code (e.g., a missing field in a service function that bypasses route validation). Together they give you defense-in-depth.",
+        en: "**Both** — they do different things. Route middleware (Joi/Zod) stops bad requests at the door and sends a clear 400 error before any of your logic runs. Mongoose schema validators catch anything that slips through — including bugs in your own code, like a service function that skips the route validation. Using both gives you layered protection.",
         np: "दुवै — route middleware ले HTTP boundary मा 400 दिन्छ; Mongoose ले DB अघि अन्तिम जाँच।",
         jp: "**両方**。ルート検証は HTTP 境界で 400 を返す。Mongoose 検証はコードバグへの最後の砦。",
       },

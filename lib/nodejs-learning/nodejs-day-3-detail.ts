@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_3_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "The **`fs`** module is Node's gateway to the file system — every method has a synchronous variant (`readFileSync`) and an async variant (`readFile` callback or `fs.promises.readFile`). On a server, the async variants keep the event loop free so concurrent requests never stall waiting for disk.",
+      en: "The **`fs`** module is how Node reads and writes files. Every operation comes in two versions: a synchronous one that blocks everything while it works, and an async one that lets your server keep handling other requests while it waits. On a server, always use the async version.",
       np: "`fs` — फाइल प्रणालीको प्रवेशद्वार। सर्भरमा सधैँ async variant प्रयोग गर्नुहोस्।",
       jp: "**`fs`** はファイルシステムへの入口。サーバでは常に非同期版を使い、イベントループを解放する。",
     },
     {
-      en: "**EventEmitter** is Node's built-in pub/sub primitive — HTTP servers, streams, and timers all inherit from it. The **`http`** module builds on EventEmitter directly, letting you create a raw server before you ever install Express.",
+      en: "**EventEmitter** is Node's built-in way to broadcast events and react to them — like a simple publish/subscribe system. HTTP servers, streams, and timers are all built on top of it. The **`http`** module uses it too, which means you can build a basic server without installing any extra packages.",
       np: "EventEmitter — Node को प्रकाशन/सदस्यता आधार। http सर्भर यसैमा बनेको छ।",
       jp: "**EventEmitter** は Node 内蔵の pub/sub 基盤。http モジュールはこれを継承したサーバを提供する。",
     },
@@ -21,6 +21,11 @@ export const NODEJS_DAY_3_DETAIL: RoadmapDayDetail = {
         jp: "fs — ファイルの読み書き",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "Z_p1yFGS0Ak",
+          title: "Node.js fs Module - Reading & Writing Files",
+        },
         {
           type: "code",
           title: {
@@ -52,7 +57,7 @@ await fsp.writeFile('./output.json', JSON.stringify({ ok: true }, null, 2));`,
         {
           type: "paragraph",
           text: {
-            en: "Synchronous reads are acceptable at **startup** — no traffic yet, so blocking is harmless. Inside **request handlers** always use the async form (`fs.promises.*` or callbacks) so thousands of concurrent requests can proceed while one waits for disk.",
+            en: "Reading files synchronously is fine at **startup** — your app hasn't received any traffic yet, so blocking doesn't matter. But inside a **request handler**, always use the async version so other requests don't have to wait for one request's file read to finish.",
             np: "सुरुवातमा sync ठीक; अनुरोध handler मा async चाहिन्छ ताकि अन्य अनुरोधहरू पर्खनु नपरोस्।",
             jp: "起動時は同期も可。**リクエスト処理内**では必ず非同期を使い、他のリクエストをブロックしない。",
           },
@@ -97,6 +102,11 @@ await fsp.writeFile('./output.json', JSON.stringify({ ok: true }, null, 2));`,
       },
       blocks: [
         {
+          type: "youtube",
+          videoId: "EcznOgzOdxI",
+          title: "Node.js Streams Explained",
+        },
+        {
           type: "code",
           title: {
             en: "Stream a file directly to an HTTP response",
@@ -125,7 +135,7 @@ server.listen(3000);`,
         {
           type: "paragraph",
           text: {
-            en: "When you call **`.pipe(destination)`**, Node connects the readable's `data` events to the writable's `write` calls automatically. **Backpressure** is built in: if `res` (the writable) is slower than the disk read, the readable pauses until the buffer drains — preventing your process from buffering gigabytes in RAM.",
+            en: "When you call **`.pipe(destination)`**, Node automatically connects a readable source to a writable destination and handles the flow between them. **Backpressure** is built in — if the destination (like an HTTP response) can't keep up with the incoming data, Node pauses the source automatically so your app doesn't run out of memory trying to buffer everything.",
             np: "`.pipe()` ले backpressure स्वतः सम्हाल्छ — RAM मा सम्पूर्ण फाइल लोड हुँदैन।",
             jp: "**`.pipe()`** はバックプレッシャを自動処理。書き込み側が遅くても RAM に全データを溜めない。",
           },
@@ -177,7 +187,7 @@ processor.process({ id: 'ORD-99' });
         {
           type: "paragraph",
           text: {
-            en: "Listeners registered with **`.on()`** are called **synchronously** in the order they were registered every time `.emit()` is called. Use **`.once()`** when you only need to react to the first occurrence. **`.removeListener(event, fn)`** (or `.off()`) removes a specific handler — important to avoid memory leaks in long-running processes.",
+            en: "Every time you call `.emit()`, all listeners registered with **`.on()`** run immediately in the order you added them. Use **`.once()`** when you only need to react to something the first time it happens — it removes itself automatically after that. Use **`.off()`** to manually remove a listener you no longer need, especially in long-running apps where forgotten listeners can slowly leak memory.",
             np: "`.on()` listener क्रममा synchronous — `.once()` पहिलो पटक मात्र — `.off()` हटाउन।",
             jp: "**`.on()`** は登録順に同期実行。**`.once()`** は初回のみ。**`.off()`** でリスナーを解除しリーク防止。",
           },
@@ -229,7 +239,7 @@ server.listen(3000, () => console.log('http://localhost:3000'));`,
         {
           type: "paragraph",
           text: {
-            en: "**`req`** (`IncomingMessage`) and **`res`** (`ServerResponse`) both extend EventEmitter. `req` is a Readable stream — you read its body by listening for `'data'` and `'end'` events. **Express exists** because doing this manually for every route (parsing JSON, routing, error handling) becomes tedious fast. Express is 100 lines of glue over exactly this API.",
+            en: "`req` and `res` are both EventEmitters under the hood. The request body comes in as chunks through `'data'` events and finishes with `'end'`. That is why **Express exists** — doing all of this by hand for every route (parsing JSON, matching URLs, handling errors) gets repetitive very quickly. Express is essentially a thin layer that handles all of that for you.",
             np: "`req` र `res` EventEmitter — Express यहीँ माथि routing र parsing थप्छ।",
             jp: "`req`/`res` は EventEmitter。Express はこの API にルーティングと JSON 解析を追加したラッパー。",
           },
@@ -245,7 +255,7 @@ server.listen(3000, () => console.log('http://localhost:3000'));`,
         jp: "ストリームをいつ使うべきか？",
       },
       answer: {
-        en: "Use streams for files **larger than a few MB** or whenever you are piping data to an HTTP response. `fs.readFile` loads the entire file into a `Buffer` in memory — fine for a 10 KB config, dangerous for a 500 MB CSV that 100 concurrent users might request simultaneously. Streams keep memory flat by processing one chunk at a time.",
+        en: "Use streams when files are **larger than a few MB** or when you are sending a file directly to an HTTP response. `fs.readFile` loads the whole file into memory at once — fine for a small config file, but if 100 users each request a 500 MB file at the same time, your server runs out of RAM fast. Streams avoid this by processing the data one small chunk at a time.",
         np: "कुछ MB भन्दा ठूला फाइल वा HTTP response मा pipe गर्दा stream — readFile ले सम्पूर्ण RAM मा राख्छ।",
         jp: "数 MB 以上のファイルや HTTP にパイプする場合はストリーム。readFile は全データを RAM に展開するため大ファイルに危険。",
       },
@@ -257,7 +267,7 @@ server.listen(3000, () => console.log('http://localhost:3000'));`,
         jp: "EventEmitter をステート管理に使えるか？",
       },
       answer: {
-        en: "It works for **simple in-process pub/sub** — e.g., a download progress tracker or order status notifier within one service. For **complex shared state** (multiple consumers, replay, persistence), dedicated libraries like **RxJS**, **Redis pub/sub**, or a proper message broker scale better and avoid hard-to-debug listener ordering issues.",
+        en: "It works fine for **simple internal events** — like tracking download progress or notifying parts of your app when an order ships. But if you need multiple consumers, event replay, or persistence across restarts, something like **RxJS**, **Redis pub/sub**, or a message broker is a better fit. EventEmitter does not scale well across services or complex listener setups.",
         np: "साधारण in-process pub/sub मा ठीक — जटिल state का लागि RxJS वा Redis pub/sub।",
         jp: "シンプルな in-process pub/sub には有効。複雑な状態管理には RxJS や Redis pub/sub の方が拡張しやすい。",
       },

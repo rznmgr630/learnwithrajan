@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_7_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Almost everything in Node I/O is **asynchronous**: instead of waiting idle, you schedule **continuations** — first as **callbacks**, then **Promises**, then **`async`/`await`** syntax that reads top-to-bottom like sync code but still yields the thread while waiting.",
+      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
       np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
       jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
     },
     {
-      en: "Your goal is **predictable error handling**: every Promise rejection must reach a **`catch`** or a **`try/catch`** block, or Node may crash on **unhandled rejection** depending on version and flags.",
+      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
       np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
       jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
     },
@@ -21,6 +21,11 @@ export const NODEJS_DAY_7_DETAIL: RoadmapDayDetail = {
         jp: "非同期パターンの進化",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "DHvZLI7Db8E",
+          title: "JavaScript Promises in 10 Minutes",
+        },
         {
           type: "diagram",
           id: "nodejs-async-evolution",
@@ -70,7 +75,7 @@ try {
         {
           type: "paragraph",
           text: {
-            en: "All three styles compile to the same event-loop scheduling. **`await`** is syntactic sugar: `const x = await p` desugars to `p.then(x => …)` and `try/catch` becomes `.catch(…)`. The practical advantage of async/await is that error handling is colocated with the call site, and the code reads top-to-bottom.",
+            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
             np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
             jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
           },
@@ -105,7 +110,7 @@ fs.readFile('./big.json', 'utf8', (err, data) => {
         {
           type: "paragraph",
           text: {
-            en: "**Synchronous** code runs start-to-finish on the main thread — fine for tiny work, dangerous for disk/network in servers because **everyone waits**. **Asynchronous** APIs return immediately and call you back later (or resolve a Promise). That keeps throughput high but forces you to think in **completion order**, not line order.",
+            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
             np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
             jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
           },
@@ -123,6 +128,11 @@ fs.readFile('./big.json', 'utf8', (err, data) => {
         jp: "Promise ユーティリティ",
       },
       blocks: [
+        {
+          type: "youtube",
+          videoId: "DHvZLI7Db8E",
+          title: "Promise.all, allSettled, race Explained",
+        },
         {
           type: "code",
           title: {
@@ -156,7 +166,7 @@ const withTimeout = Promise.race([
         {
           type: "paragraph",
           text: {
-            en: "Use **`Promise.all`** when tasks are independent and you need **all results** — it rejects immediately if any promise rejects. Use **`Promise.allSettled`** when you want **all results regardless** of failures (e.g., sending three notifications where partial success is acceptable). Use **`Promise.race`** for timeout patterns or first-response-wins scenarios.",
+            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
             np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
             jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
           },
@@ -208,17 +218,17 @@ process.on('unhandledRejection', (reason, promise) => {
           variant: "bullet",
           items: [
             {
-              en: "**Forgetting `await`** — `const user = getUser(id)` gives you a Promise object, not a user. `user.name` will be `undefined`. TypeScript with `strict` mode catches this.",
+              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
               np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
               jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
             },
             {
-              en: "**Catching then re-throwing as `new Error`** — `throw new Error(err.message)` loses the original stack trace. Prefer `throw err` to preserve the full trace for debugging.",
+              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
               np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
               jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
             },
             {
-              en: "**Mixing callbacks and promises** — wrapping a promise inside a callback API (or vice versa) causes double-error scenarios. Use `util.promisify` to bridge callback APIs cleanly.",
+              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
               np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
               jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
             },
@@ -235,7 +245,7 @@ process.on('unhandledRejection', (reason, promise) => {
         jp: "all と順番 await？",
       },
       answer: {
-        en: "Use **`Promise.all`** when tasks do not depend on each other's outputs — wall-clock time drops to the slowest task instead of their sum. Use **sequential `await`** when step B needs step A's result, or when ordering must be preserved (e.g., writing records in a specific order to preserve foreign key relationships).",
+        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
         np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
         jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
       },
