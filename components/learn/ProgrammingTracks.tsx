@@ -9,6 +9,7 @@ import { useReactProgress } from "@/hooks/use-react-progress";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 import { useNextjsProgress } from "@/hooks/use-nextjs-progress";
 import { useNodejsProgress } from "@/hooks/use-nodejs-progress";
+import { useJsProgress } from "@/hooks/use-js-progress";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 import { useDevopsProgress } from "@/hooks/use-devops-progress";
 import type { UiStringKey } from "@/lib/i18n/catalog";
@@ -24,6 +25,8 @@ import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/rea
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
 import { NODEJS_TOPIC_OUTLINE, nodejsOutlineBulletCount, nodejsOutlineTopicCount } from "@/lib/nodejs-learning/nodejs-curriculum";
+import { JS_TOPIC_OUTLINE, jsOutlineBulletCount, jsOutlineTopicCount } from "@/lib/js-learning/js-curriculum";
+import { JS_TOTAL_DAYS } from "@/lib/js-learning/js-challenge-data";
 import {
   REACT_NATIVE_TOPIC_OUTLINE,
   reactNativeOutlineBulletCount,
@@ -88,6 +91,7 @@ export function ProgrammingTracks() {
   const laravel = useLaravelProgress();
   const nextjs = useNextjsProgress();
   const nodejs = useNodejsProgress();
+  const js = useJsProgress();
   const reactNative = useReactNativeProgress();
   const devops = useDevopsProgress();
   const reactLessons = reactCurriculumLessonCount(REACT_PROGRAMMING_OUTLINE);
@@ -97,6 +101,8 @@ export function ProgrammingTracks() {
   const nextjsBullets = nextjsOutlineBulletCount(NEXTJS_TOPIC_OUTLINE);
   const nodejsTopics = nodejsOutlineTopicCount(NODEJS_TOPIC_OUTLINE);
   const nodejsBullets = nodejsOutlineBulletCount(NODEJS_TOPIC_OUTLINE);
+  const jsTopics = jsOutlineTopicCount(JS_TOPIC_OUTLINE);
+  const jsBullets = jsOutlineBulletCount(JS_TOPIC_OUTLINE);
   const rnTopics = reactNativeOutlineTopicCount(REACT_NATIVE_TOPIC_OUTLINE);
   const rnBullets = reactNativeOutlineBulletCount(REACT_NATIVE_TOPIC_OUTLINE);
 
@@ -142,6 +148,43 @@ export function ProgrammingTracks() {
           </p>
           <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.react.cta")}
+          </span>
+        </Link>
+
+        <Link href="/learn/javascript" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.js.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.js.subtitle")}</p>
+            </div>
+            <span
+              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+              suppressHydrationWarning
+            >
+              {js.percent}%
+            </span>
+          </div>
+          <div className="mt-6" suppressHydrationWarning>
+            <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+              <span>{t("hub.backend.progress")}</span>
+              <span className="tabular-nums text-[var(--muted)]">
+                {js.completedCount}/{JS_TOTAL_DAYS} {t("hub.backend.days")}
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
+                style={{ width: `${js.percent}%` }}
+              />
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-[var(--muted)]">
+            {jsTopics} {t("jsOutline.statsSections")} · {jsBullets} {t("jsOutline.statsBullets")}
+          </p>
+          <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.js.cta")}
           </span>
         </Link>
 

@@ -127,6 +127,31 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.js.title": {
+    en: "JavaScript · Fundamentals to Senior",
+    np: "JavaScript · Fundamentals देखि Senior सम्म",
+    jp: "JavaScript · 基礎から上級まで",
+  },
+  "hub.js.subtitle": {
+    en: "25 days covering variables, closures, prototypes, classes, async, event loop, TypeScript, and senior internals — with plain-English explanations and code examples.",
+    np: "२५ दिन: variables, closures, prototypes, async, event loop, TypeScript — plain English मा।",
+    jp: "25日：変数・クロージャ・プロトタイプ・async・イベントループ・TypeScriptなど — わかりやすい解説とコード例。",
+  },
+  "hub.js.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
+  "jsOutline.statsSections": {
+    en: "topic areas",
+    np: "विषय क्षेत्र",
+    jp: "トピック領域",
+  },
+  "jsOutline.statsBullets": {
+    en: "key concepts",
+    np: "मुख्य अवधारणा",
+    jp: "重要概念",
+  },
   "hub.reactNative.title": {
     en: "React Native · mobile with React",
     np: "React Native · मोबाइल React",
