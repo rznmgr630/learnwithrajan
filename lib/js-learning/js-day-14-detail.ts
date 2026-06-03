@@ -17,7 +17,7 @@ export const JS_DAY_14_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "PNa9OMajl9s", title: "Node.js Event Loop Explained" },
+        { type: "youtube", videoId: "8aGhZQkoFbQ", title: "What the heck is the event loop anyway? — Philip Roberts, JSConf" },
       ],
     },
     {

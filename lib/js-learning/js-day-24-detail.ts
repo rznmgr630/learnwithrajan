@@ -12,7 +12,7 @@ export const JS_DAY_24_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "zBhM7oBuXik", title: "Node.js Streams — Everything You Need to Know" },
+        { type: "youtube", videoId: "GlybFFMXXmQ", title: "Node.js Streams and Buffers — Net Ninja" },
       ],
     },
     {

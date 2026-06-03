@@ -12,7 +12,7 @@ export const JS_DAY_10_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "blBoIyNhGhA", title: "JavaScript Error Handling — try, catch, throw" },
+        { type: "youtube", videoId: "cFTFtuEQ-10", title: "JavaScript Error Handling — try, catch, throw, finally" },
       ],
     },
     {
