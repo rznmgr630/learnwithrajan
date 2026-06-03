@@ -12,7 +12,7 @@ export const JS_DAY_3_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "uH-tVapollo8", title: "JavaScript Scope Explained" },
+        { type: "youtube", videoId: "EvfRXyKa_GI", title: "Learn JavaScript Hoisting In 5 Minutes" },
       ],
     },
     {
