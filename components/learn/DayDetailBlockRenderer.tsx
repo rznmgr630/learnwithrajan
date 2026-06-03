@@ -17,6 +17,7 @@ export type RoadmapDiagramTrack =
   | "laravel"
   | "nextjs"
   | "nodejs"
+  | "js"
   | "devops"
   | "react-native";
 

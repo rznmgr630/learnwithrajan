@@ -17,6 +17,8 @@ import { getNextjsRoadmapDayContext, resolveNextjsDayDetail } from "@/lib/nextjs
 import { localizeNextjsRoadmapDayDetail } from "@/lib/nextjs-learning/localize-nextjs-roadmap-detail";
 import { getNodejsRoadmapDayContext, resolveNodejsDayDetail } from "@/lib/nodejs-learning/nodejs-challenge-data";
 import { localizeNodejsRoadmapDayDetail } from "@/lib/nodejs-learning/localize-nodejs-roadmap-detail";
+import { getJsRoadmapDayContext, resolveJsDayDetail } from "@/lib/js-learning/js-challenge-data";
+import { localizeJsRoadmapDayDetail } from "@/lib/js-learning/localize-js-roadmap-detail";
 import { getDevopsRoadmapDayContext, resolveDevopsDayDetail } from "@/lib/devops-learning/devops-challenge-data";
 import { localizeDevopsRoadmapDayDetail } from "@/lib/devops-learning/localize-devops-roadmap-detail";
 import {
@@ -63,7 +65,9 @@ export function DayDetailPanel({
               ? getNextjsRoadmapDayContext(dayNumber)
               : track === "nodejs"
                 ? getNodejsRoadmapDayContext(dayNumber)
-                : track === "react-native"
+                : track === "js"
+                  ? getJsRoadmapDayContext(dayNumber)
+                  : track === "react-native"
                   ? getReactNativeRoadmapDayContext(dayNumber)
                   : track === "devops"
                     ? getDevopsRoadmapDayContext(dayNumber)
@@ -80,7 +84,9 @@ export function DayDetailPanel({
             ? resolveNextjsDayDetail(ctx.day)
             : track === "nodejs"
               ? resolveNodejsDayDetail(ctx.day)
-              : track === "react-native"
+              : track === "js"
+                ? resolveJsDayDetail(ctx.day)
+                : track === "react-native"
                 ? resolveReactNativeDayDetail(ctx.day)
                 : track === "devops"
                   ? resolveDevopsDayDetail(ctx.day)
@@ -97,7 +103,9 @@ export function DayDetailPanel({
             ? localizeNextjsRoadmapDayDetail(detailRaw, locale)
             : track === "nodejs"
               ? localizeNodejsRoadmapDayDetail(detailRaw, locale)
-              : track === "react-native"
+              : track === "js"
+                ? localizeJsRoadmapDayDetail(detailRaw, locale)
+                : track === "react-native"
                 ? localizeReactNativeRoadmapDayDetail(detailRaw, locale)
                 : track === "devops"
                   ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
@@ -136,6 +144,7 @@ export function DayDetailPanel({
       track === "laravel" ||
       track === "nextjs" ||
       track === "nodejs" ||
+      track === "js" ||
       track === "react-native") &&
     (detail.sections?.length ?? 0) > 0;
   const introToShow = hideOverviewWhenSections ? [] : intro;
