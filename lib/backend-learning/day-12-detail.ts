@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_12_DETAIL = {
   overview: [
-    "When a single database server cannot handle your read throughput, the first scaling lever is read replicas — copies of the primary that serve reads, offloading the primary for writes only. CQRS (Command Query Responsibility Segregation) takes this idea to the architecture level: separate models for writes and reads let each be optimised independently.",
-    "Day 12 covers replica topology, replication lag mechanics, the read-replica routing pattern, CQRS as an architectural pattern, and event sourcing — the persistence model that pairs naturally with CQRS.",
+    "When one database server cannot keep up with your read traffic, the simplest solution is read replicas — copies of the primary that serve reads while the primary handles all writes. CQRS takes this idea to the architecture level: separate write and read models let you optimize each one independently.",
+    "Today covers replica topology, how replication lag works and when it causes bugs, routing reads vs writes in code, CQRS as an architectural pattern, and event sourcing — the persistence model that pairs naturally with CQRS.",
   ],
   sections: [
     {
@@ -78,10 +78,10 @@ async function updateAndReturn(id: number, patch: Partial<Post>) {
           type: "list",
           variant: "bullet",
           items: [
-            "Read-your-own-writes: after a user writes, route their next reads to the primary (or wait for replica to catch up) to avoid showing stale data to the author.",
+            "Read-your-own-writes: after a user writes, route their next reads to the primary (or wait for the replica to catch up) so they do not see their own stale data.",
             "Monotonic reads: use session affinity — route a user to the same replica so they never see data go backwards.",
-            "Lag monitoring: alert if replica lag exceeds your SLO (e.g. > 5 seconds). AWS RDS CloudWatch: ReplicaLag metric. PostgreSQL: pg_stat_replication.",
-            "High-write bursts: a sudden spike in writes creates a queue on the replica's apply thread. Scale writes horizontally (sharding) if this is chronic.",
+            "Lag monitoring: alert when replica lag exceeds your SLO (for example more than 5 seconds). AWS RDS CloudWatch: ReplicaLag metric. PostgreSQL: pg_stat_replication.",
+            "High-write bursts: a sudden write spike creates a backlog on the replica's apply thread. Scale writes horizontally with sharding if this is a recurring problem.",
           ],
         },
         {
@@ -112,7 +112,7 @@ async function updateAndReturn(id: number, patch: Partial<Post>) {
         },
         {
           type: "paragraph",
-          text: "CQRS separates the write model (commands: validate, mutate, enforce invariants) from the read model (queries: optimised projections for specific views). Each model can be implemented with different storage, schema, and scaling strategy. Commands go to a normalised OLTP database; queries go to denormalised read stores tuned for specific views.",
+          text: "CQRS separates the model for handling writes (commands) from the model for handling reads (queries). Each side can have its own schema, storage engine, and scaling strategy. Write commands go to a normalized OLTP database that enforces business rules. Read queries go to a denormalized store built for the specific views your UI needs.",
         },
         {
           type: "table",
@@ -155,7 +155,7 @@ router.get("/posts", async (req, res) => {
       blocks: [
         {
           type: "paragraph",
-          text: "Event sourcing stores every state change as an immutable event rather than the current state. The current state is derived by replaying all events. This pairs naturally with CQRS: commands append events; read-model projectors consume events to build query-optimised views.",
+          text: "Event sourcing stores every state change as an immutable event rather than overwriting the current state. You rebuild the current state by replaying all events. This pairs naturally with CQRS: commands append events, and read model projectors consume those events to build query-optimized views.",
         },
         {
           type: "code",
@@ -183,7 +183,7 @@ const currentState = events.reduce(applyEvent, EMPTY_ORDER);`,
           type: "table",
           headers: ["Benefit", "Cost"],
           rows: [
-            ["Complete audit log — every change is recorded with who/when/why", "Event schema evolution requires care — old events must still replay"],
+            ["Complete audit log — every change is recorded with who/when/why", "Event schema evolution requires care — old events must still replay correctly"],
             ["Time travel — replay to any point-in-time state", "Read queries need projections (materialised views) — adds infrastructure"],
             ["Easy event-driven integration — emit events to other services", "Higher complexity than CRUD — only justified for domains with complex state machines"],
           ],
@@ -253,7 +253,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY user_post_counts;`,
         },
         {
           type: "paragraph",
-          text: "Start with a read replica for most scaling problems — it gives 80% of the benefit of CQRS with a fraction of the complexity. Add CQRS when you need different query models or when your domain has complex state machines that benefit from event sourcing.",
+          text: "Start with a read replica for most scaling problems — it gives most of the benefit with a fraction of the complexity. Add CQRS when you need fundamentally different query models for different views, or when your domain has complex state machines that benefit from event sourcing.",
         },
       ],
     },
@@ -263,8 +263,8 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY user_post_counts;`,
       question: "What is replication lag and when does it cause bugs?",
       tag: "Replication lag",
       answer: [
-        "Replication lag is the delay between a write committing on the primary and that write becoming visible on a replica. During this window, reads from the replica return the old value.",
-        "It causes bugs when: a user updates their profile and the next page load (from a replica) shows the old value; an inventory item is decremented but the replica still shows the old quantity; a session is created on the primary but the replica is queried for session validation before the row propagates.",
+        "Replication lag is the delay between a write committing on the primary and that write appearing on a replica. During that window, reads from the replica return the old value.",
+        "It causes bugs when: a user updates their profile and the next page load (served by a replica) shows the old version; inventory is decremented but the replica still shows the old count; a session is created on the primary but the replica is checked for validation before the row has propagated.",
       ].join("\n\n"),
       callout: "After any write the user will read back — route that read to the primary.",
     },
@@ -272,46 +272,46 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY user_post_counts;`,
       question: "What is CQRS and when is it worth the complexity?",
       tag: "CQRS",
       answer: [
-        "CQRS separates the model for handling writes (commands) from the model for handling reads (queries). Each side can have its own schema, storage engine, and scaling strategy. A blog platform might write to a normalised PostgreSQL schema and read from a denormalised Elasticsearch index optimised for full-text search.",
-        "It is worth the complexity when: read and write patterns are radically different; multiple read models are needed for different views; you need an event stream for downstream consumers. It is overkill for a simple CRUD API with a balanced read/write ratio.",
+        "CQRS means you have separate models for writes and reads. The write side validates business rules and mutates state. The read side serves optimized projections for specific views. A blog platform might write to a normalized PostgreSQL schema and read from a denormalized Elasticsearch index built for full-text search.",
+        "It is worth the added complexity when read and write patterns are very different, you need multiple read models for different views, or you need an event stream for downstream services. It is overkill for a simple CRUD API with a balanced read/write ratio.",
       ].join("\n\n"),
     },
     {
       question: "What is event sourcing and how does it relate to CQRS?",
       tag: "Event sourcing",
       answer: [
-        "Event sourcing stores state as a sequence of immutable events rather than the current state. Current state is derived by replaying events. It provides a complete audit trail, time-travel queries, and natural event streams for downstream consumers.",
-        "CQRS and event sourcing are complementary but independent. CQRS separates read and write models; event sourcing defines how the write model persists state. You can use CQRS without event sourcing (just separate your read DB) or event sourcing without CQRS (replay events to produce state but keep a single model).",
+        "Event sourcing stores state as a sequence of immutable events instead of the current value. You replay those events to get the current state. It gives you a complete audit log, the ability to rebuild state at any point in time, and a natural event stream for downstream consumers.",
+        "CQRS and event sourcing work well together but are independent. You can use CQRS without event sourcing (just separate your read and write databases), or event sourcing without CQRS.",
       ].join("\n\n"),
     },
     {
       question: "How do you handle read-your-own-writes with read replicas?",
       tag: "Replication lag",
       answer: [
-        "Option 1: Route all reads for the same user to the primary for a short window after a write (e.g. 1–5 seconds, stored in a cookie or session). After the window, route back to replicas.",
-        "Option 2: After a write, check the replica's replay lag and fall back to the primary if it exceeds a threshold. Option 3: Use synchronous replication so the replica is always up to date — only viable if write latency can absorb the extra round trip.",
+        "Option 1: Route all reads for the same user to the primary for a short window after a write — store that flag in a cookie or session and fall back to replicas after a few seconds.",
+        "Option 2: Before reading from a replica, check the replica's lag and fall back to the primary if it exceeds a threshold. Option 3: Use synchronous replication so the replica is always up to date — only viable if write latency can absorb the extra network round trip.",
       ].join("\n\n"),
     },
     {
       question: "When should I use PostgreSQL materialised views vs event-driven projections?",
       tag: "Materialised views",
       answer: [
-        "Use a PostgreSQL materialised view when the query is expensive and the data can be slightly stale — refresh it on a schedule or after batch updates. Simple, no extra infrastructure, adequate for dashboards and reporting.",
-        "Use event-driven projections (consume domain events, update a read store) when you need near-real-time updates, when the read store is a different system (Elasticsearch, Redis), or when multiple downstream consumers need the same events for different purposes.",
+        "Use a PostgreSQL materialized view when the query is expensive and the data can be slightly stale — refresh it on a schedule. Simple, no extra infrastructure, and adequate for dashboards and reporting.",
+        "Use event-driven projections (consuming domain events to update a read store) when you need near-real-time updates, when the read store is a different system like Elasticsearch or Redis, or when multiple services need the same events for different purposes.",
       ].join("\n\n"),
     },
     {
       question: "What is the difference between synchronous and asynchronous replication?",
       tag: "Replication",
       answer: [
-        "Synchronous: the primary waits for at least one replica to confirm it has written the WAL before acknowledging the commit to the client. Zero data loss on primary failure; write latency increases by one network round trip to the replica.",
-        "Asynchronous (default in PostgreSQL streaming replication): the primary ACKs commits without waiting for replicas. Lowest write latency; if the primary fails before replicas catch up, recent commits may be lost (RPO > 0). Most production setups use asynchronous replication with a short RPO tolerance.",
+        "Synchronous: the primary waits for at least one replica to confirm the write before telling the client it succeeded. Zero data loss on primary failure, but write latency goes up by one network round trip to the replica.",
+        "Asynchronous (default in PostgreSQL streaming replication): the primary confirms the commit without waiting for replicas. Lowest write latency, but if the primary fails before the replica catches up, recent commits can be lost. Most production setups use asynchronous replication and accept a small risk of data loss.",
       ].join("\n\n"),
     },
   ],
   bullets: [
-    "Set up a PostgreSQL primary + one streaming replica locally; write to the primary and measure the replay lag with pg_stat_replication.",
-    "Implement CQRS routing in a Node.js Express app: POST handlers write to the primary, GET handlers read from a replica.",
-    "Design an event-sourced order aggregate: define 4 events, implement an applyEvent reducer, and write a function that derives current order state from a list of events.",
+    "Set up a PostgreSQL primary and one streaming replica locally. Write to the primary and measure replica lag using pg_stat_replication.",
+    "Implement CQRS routing in Express: POST handlers write to the primary, GET handlers read from a replica.",
+    "Design an event-sourced order aggregate with 4 events, implement an applyEvent reducer, and write a function that derives current order state from a list of events.",
   ],
 } satisfies RoadmapDayDetail;

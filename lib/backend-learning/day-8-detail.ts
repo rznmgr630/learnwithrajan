@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_8_DETAIL = {
   overview: [
-    "A load balancer sits in front of your fleet and distributes incoming connections across healthy instances. A reverse proxy sits in front of a single origin and adds TLS termination, compression, caching, and routing. In practice they often live in the same box (nginx, HAProxy, AWS ALB), but the concepts are distinct and each has different failure modes.",
-    "Day 8 builds the mental model: algorithms, health-check mechanics, sticky sessions, Layer 4 vs Layer 7 differences, and when to reach for which tool. These concepts appear in every distributed system design interview.",
+    "A load balancer spreads incoming requests across multiple servers so no single server gets overwhelmed. A reverse proxy sits between the internet and your servers and handles things like HTTPS, compression, and routing. In practice the same tool — nginx, HAProxy, or AWS ALB — often does both jobs at once.",
+    "Today you will learn how load balancers decide where to send each request, how they detect failing servers, what sticky sessions are and why they cause problems, and the difference between Layer 4 and Layer 7 load balancing.",
   ],
   sections: [
     {
@@ -22,7 +22,7 @@ export const DAY_8_DETAIL = {
         {
           type: "table",
           caption:
-            "L4 is faster (no HTTP parsing); L7 is smarter (route by path, header, cookie).",
+            "L4 is faster because it skips HTTP parsing. L7 is smarter because it can route by URL path, header, or cookie.",
           headers: ["Dimension", "L4 (TCP/UDP)", "L7 (HTTP/HTTPS)"],
           rows: [
             [
@@ -156,9 +156,9 @@ app.get("/ready", async (_req, res) => {
           type: "list",
           variant: "bullet",
           items: [
-            "Kubernetes uses /health for liveness and /ready for readiness — the distinction matters for rolling deploys.",
-            "A liveness failure restarts the pod; a readiness failure just removes it from the load balancer until it recovers.",
-            "Keep /health < 50 ms. Never wait on a DB in a liveness probe.",
+            "Kubernetes uses /health to check if the server is alive and /ready to check if it can take traffic. The difference matters during rolling deploys.",
+            "A failed liveness check restarts the pod. A failed readiness check just stops routing traffic to that pod until it recovers.",
+            "Keep /health fast — under 50ms. Never make it wait on a database query.",
           ],
         },
       ],
@@ -203,7 +203,7 @@ app.get("/ready", async (_req, res) => {
       blocks: [
         {
           type: "paragraph",
-          text: "Sticky sessions (affinity) route a user's requests to the same server every time. This is necessary when in-process state is not shared (e.g. WebSocket state, file upload buffers). But it breaks even load distribution and makes rolling deploys harder.",
+          text: "Sticky sessions mean every request from the same user always goes to the same server. You need this when a server holds state locally — like a WebSocket connection or an in-progress file upload. The downside is that load becomes uneven and deployments get more complicated.",
         },
         {
           type: "table",
@@ -228,7 +228,7 @@ app.get("/ready", async (_req, res) => {
         },
         {
           type: "paragraph",
-          text: "The senior engineer default: eliminate the need for sticky sessions by externalising state to Redis or a DB. Sticky sessions are a band-aid over stateful servers — fix the root cause.",
+          text: "The right fix is to move that state somewhere shared — like Redis — so any server can handle any request. Sticky sessions are a workaround, not a solution.",
         },
       ],
     },
@@ -239,10 +239,10 @@ app.get("/ready", async (_req, res) => {
           type: "list",
           variant: "number",
           items: [
-            "LB stops sending new requests to the draining instance (deregisters it).",
-            "In-flight requests are allowed to complete — typically a 30-second drain window.",
-            "After drain timeout, the instance is terminated and a new one starts.",
-            "In Kubernetes: preStop hook + terminationGracePeriodSeconds control this window.",
+            "The load balancer stops sending new requests to the server being taken out of rotation.",
+            "Requests already in progress are allowed to finish — usually within a 30-second window.",
+            "Once the drain window closes, the old server shuts down and a new one starts.",
+            "In Kubernetes, the preStop hook and terminationGracePeriodSeconds settings control how long this window lasts.",
           ],
         },
         {
@@ -299,8 +299,8 @@ process.on("SIGTERM", () => {
       question: "What is the difference between a load balancer and a reverse proxy?",
       tag: "LB vs reverse proxy",
       answer: [
-        "A load balancer distributes requests across a pool of backend servers to spread load and handle failures. A reverse proxy is an intermediary for a client making requests to one or more servers — it can add TLS termination, caching, compression, and request routing without necessarily routing across many backends.",
-        "In practice the same software (nginx, HAProxy, Envoy) does both jobs simultaneously. The distinction matters when reasoning about responsibilities: if you're thinking about traffic distribution and failover, think load balancer; if you're thinking about protocol termination and header rewriting, think reverse proxy.",
+        "A load balancer spreads traffic across a group of servers to balance the load and handle failures. A reverse proxy sits between clients and your servers, adding features like HTTPS termination, caching, and compression — not necessarily across many backends.",
+        "The same software (nginx, HAProxy, Envoy) usually does both at once. The distinction helps when you're thinking through responsibilities: if you're debugging traffic distribution or failover, think load balancer. If headers are missing or HTTPS is broken, think reverse proxy.",
       ].join("\n\n"),
       callout: "Same box, different concerns. Understand both hats it wears.",
     },
@@ -308,16 +308,16 @@ process.on("SIGTERM", () => {
       question: "When should I use least-connections vs round-robin?",
       tag: "LB algorithms",
       answer: [
-        "Round-robin works well when every request takes roughly the same time — short, stateless HTTP calls to a homogeneous fleet. Each server gets the same count of requests.",
-        "Least-connections is better when request durations vary significantly (long-polling, file uploads, WebSocket connections). A round-robin LB could pile 50 slow connections onto one server while another is idle. Least-connections continuously routes to whoever has the most capacity right now.",
+        "Round-robin works well when all your requests take a similar amount of time and your servers are identical. Each server gets the same number of requests.",
+        "Least-connections is better when request times vary a lot — like file uploads, long-polling, or WebSocket connections. With round-robin, a server can end up holding 50 slow connections while another is sitting idle.",
       ].join("\n\n"),
     },
     {
       question: "What is connection draining and why is it critical for zero-downtime deploys?",
       tag: "Connection draining",
       answer: [
-        "Connection draining (or deregistration delay) is the window where a backend is removed from rotation but existing in-flight requests are allowed to complete. Without it, a deploy that terminates the process immediately would drop active requests mid-flight — users see errors.",
-        "AWS ALB default drain window is 300 seconds. For fast-response APIs, 30 seconds is usually enough. Set your app's SIGTERM handler to stop accepting new connections and finish existing ones before exiting.",
+        "When you shut down a server during a deploy, connection draining gives it time to finish any requests it is already handling before it stops. Without draining, the server shuts down mid-request and users see errors.",
+        "AWS ALB gives you 300 seconds by default — for most APIs, 30 seconds is plenty. Have your app listen for SIGTERM, stop accepting new connections, and finish the ones already in progress.",
       ].join("\n\n"),
       callout: "No drain window = dropped requests on every deploy. Set it.",
     },
@@ -325,46 +325,46 @@ process.on("SIGTERM", () => {
       question: "What is the difference between L4 and L7 load balancing?",
       tag: "L4 vs L7",
       answer: [
-        "L4 (transport layer) sees only TCP/UDP packets — it routes by IP and port without inspecting the HTTP payload. Very fast, no parsing overhead. Use for non-HTTP protocols or when you don't need content-based routing.",
-        "L7 (application layer) parses the full HTTP request and can route by URL path, headers, cookies, or JWT claims. Enables path-based microservice routing (/api → service-a, /static → CDN), canary releases, and A/B testing. The cost is a small CPU overhead per request.",
+        "L4 load balancers work at the TCP level — they see the IP address and port but not the HTTP content. They are very fast because there is no parsing overhead. Use them for non-HTTP protocols like raw gRPC, Kafka, or database traffic.",
+        "L7 load balancers parse the full HTTP request, so they can route by URL path, headers, cookies, or JWT claims. This enables path-based microservice routing, canary releases, and A/B testing. The cost is a small amount of extra CPU per request.",
       ].join("\n\n"),
     },
     {
       question: "Why are sticky sessions considered an anti-pattern?",
       tag: "Sticky sessions",
       answer: [
-        "Sticky sessions couple a user to a specific server. If that server crashes, the user's session is lost. Scale-in events break affinity. And uneven session counts mean some servers are much busier than others — you lose the 'balanced' part of load balancing.",
-        "The fix is to externalise session state to a shared store (Redis, DynamoDB). Now any server can serve any user and the fleet scales freely. Sticky sessions are a pragmatic shortcut, not an architecture to build on.",
+        "Sticky sessions tie a user to one specific server. If that server crashes, the session is lost. Scale-in events break affinity. And uneven session counts mean some servers handle far more load than others — you lose the whole point of load balancing.",
+        "The fix is to put session state in a shared store like Redis or DynamoDB. Then any server can handle any user and the fleet scales freely. Sticky sessions are a shortcut, not something to build on.",
       ].join("\n\n"),
     },
     {
       question: "How does an active health check work and what should /health return?",
       tag: "Health checks",
       answer: [
-        "The LB periodically sends a request (typically GET /health) to each backend. If the response is not 2xx within a timeout window, the backend is marked unhealthy and removed from rotation. After a configurable number of consecutive successful checks it is re-added.",
-        "A liveness /health endpoint should be fast (<50 ms) and only prove the process is running — no DB calls. A readiness /ready endpoint proves dependencies are reachable and is used by Kubernetes to gate traffic during startup and rolling deploys.",
+        "The load balancer periodically sends a request (usually GET /health) to each backend. If the response is not a 2xx status within a timeout, that backend is marked unhealthy and pulled from rotation. After a few consecutive successful checks, it comes back.",
+        "A liveness /health endpoint should be fast (under 50ms) and just prove the process is running — no database calls. A readiness /ready endpoint proves dependencies are reachable and is used by Kubernetes to gate traffic during startup and rolling deploys.",
       ].join("\n\n"),
     },
     {
       question: "What causes a 504 Gateway Timeout and how do you fix it?",
       tag: "504 errors",
       answer: [
-        "504 means the LB (or reverse proxy) did not receive a response from the upstream backend within its read timeout. Common causes: slow DB query, blocking synchronous work on the Node.js event loop, downstream service unavailable.",
-        "Fixes: (1) increase proxy_read_timeout only if the work genuinely takes longer; (2) move slow work to an async job queue and return 202 Accepted immediately; (3) add a circuit breaker so the LB stops routing to degraded upstreams rather than waiting for each timeout.",
+        "A 504 means the load balancer waited too long for your server to reply. Common causes: a slow database query, a blocking operation on the Node.js main thread, or a downstream service that is down.",
+        "Fixes: only raise the timeout if the work genuinely takes longer; move slow work to a background queue and return 202 immediately; or add a circuit breaker so the load balancer stops sending to a server that is already struggling.",
       ].join("\n\n"),
     },
     {
       question: "How does TLS termination at the LB affect internal traffic?",
       tag: "TLS termination",
       answer: [
-        "The LB handles the TLS handshake with the client and forwards plaintext HTTP to backends on the internal network. This simplifies certificate management (one cert at the edge, not on every service) and reduces CPU load on app servers.",
-        "The tradeoff is that internal traffic is unencrypted. If your threat model includes a compromised internal node or compliance requires end-to-end encryption, use mTLS between services (service mesh like Istio / Linkerd handles this). For most internal networks, termination at the LB is acceptable.",
+        "The load balancer handles the HTTPS handshake with the client and passes plain HTTP to your servers on the internal network. This simplifies certificate management — one certificate at the edge instead of on every service — and takes the HTTPS processing load off your app servers.",
+        "The tradeoff is that traffic inside your network is unencrypted. For most setups this is fine. If you need end-to-end encryption because of compliance requirements, use mTLS between services — a service mesh like Istio or Linkerd handles this automatically.",
       ].join("\n\n"),
     },
   ],
   bullets: [
-    "Deploy nginx locally, create two node servers on different ports, and configure upstream with round-robin and a /health probe.",
-    "Test connection draining: send a slow request, then stop one upstream — verify the request completes without a 502.",
-    "Explain in one sentence why least-connections beats round-robin for a WebSocket server.",
+    "Run nginx locally, start two Node.js servers on different ports, and configure nginx to split traffic between them using round-robin with a /health probe.",
+    "Test connection draining: send a slow request, then stop one of the servers and confirm the request completes without a 502 error.",
+    "Write one sentence explaining why least-connections is a better choice than round-robin for a server handling WebSocket connections.",
   ],
 } satisfies RoadmapDayDetail;

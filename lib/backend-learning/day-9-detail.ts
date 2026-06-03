@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_9_DETAIL = {
   overview: [
-    "Relational modeling is the skill of translating a domain into tables, keys, and constraints that make invalid states impossible to represent. Done well, the schema enforces correctness so your application code does not have to. Done poorly, you spend the next two years patching data corruption.",
-    "Day 9 covers entity-relationship modeling, normalization through 3NF, foreign-key and constraint design, and the migration workflow that lets you change a production schema without downtime.",
+    "Database schema design is the skill of turning your domain into tables and constraints that make bad data impossible to store. A well-designed schema enforces correctness so your application code does not have to. A poorly designed one means years of data corruption patches.",
+    "Today covers entity-relationship modeling, normalization up to 3NF, how to use foreign keys and constraints properly, and how to change a live production schema without downtime.",
   ],
   sections: [
     {
@@ -21,7 +21,7 @@ export const DAY_9_DETAIL = {
         },
         {
           type: "table",
-          caption: "Model relationships by cardinality first — the table structure follows.",
+          caption: "Figure out the cardinality of each relationship first — the table structure follows from that.",
           headers: ["Cardinality", "Example", "Implementation"],
           rows: [
             [
@@ -67,7 +67,7 @@ CREATE INDEX idx_posts_user_id ON posts(user_id);`,
       blocks: [
         {
           type: "table",
-          caption: "Stop at 3NF for most OLTP schemas; denormalize deliberately for read-heavy paths.",
+          caption: "Stop at 3NF for most OLTP schemas. Only denormalize when you have measured a real read bottleneck.",
           headers: ["Normal Form", "Rule", "Violation example → fix"],
           rows: [
             [
@@ -89,7 +89,7 @@ CREATE INDEX idx_posts_user_id ON posts(user_id);`,
         },
         {
           type: "paragraph",
-          text: "Normalization reduces redundancy and makes writes consistent — update dept_name in one place, not every employee row. Denormalize when you measure a real read bottleneck, not speculatively.",
+          text: "Normalization cuts down on duplicate data and keeps writes consistent — update a department name in one place and it updates everywhere. Only denormalize when you have measured a real read performance problem, not because you think it might be slow.",
         },
       ],
     },
@@ -130,7 +130,7 @@ CREATE INDEX idx_posts_user_id ON posts(user_id);`,
         },
         {
           type: "paragraph",
-          text: "ON DELETE behaviour: CASCADE removes child rows automatically. RESTRICT blocks the parent delete if children exist. SET NULL nullifies the FK. Choose based on your domain — cascade is convenient but can surprise you.",
+          text: "ON DELETE CASCADE removes child rows automatically when the parent is deleted — convenient but can surprise you if you accidentally delete a parent with thousands of children. RESTRICT blocks the deletion and forces you to clean up children yourself. SET NULL leaves the child rows but clears the foreign key column. Choose based on what your domain actually requires.",
         },
       ],
     },
@@ -141,10 +141,10 @@ CREATE INDEX idx_posts_user_id ON posts(user_id);`,
           type: "list",
           variant: "number",
           items: [
-            "Expand: add the new column as nullable (no lock on the table, existing rows keep NULL).",
-            "Backfill: UPDATE rows in batches to populate the new column. Use a loop with LIMIT to avoid long-running transactions.",
-            "Constrain: add NOT NULL / DEFAULT once all rows are populated. In PostgreSQL 11+, adding DEFAULT with a constant does not rewrite the table.",
-            "Contract: remove the old column in a later deploy after all code paths use the new one.",
+            "Add the new column as nullable — this is instant and does not lock the table. Existing rows keep NULL.",
+            "Backfill the data in batches using LIMIT to avoid one giant long-running transaction.",
+            "Add NOT NULL or a DEFAULT once all rows have the new value. In PostgreSQL 11+, adding a constant DEFAULT does not rewrite the table.",
+            "Drop the old column in a later deploy once all code is using the new one.",
           ],
         },
         {
@@ -183,11 +183,11 @@ ALTER TABLE users DROP COLUMN name;`,
           type: "list",
           variant: "bullet",
           items: [
-            "Create an index on every foreign key column — without it, ON DELETE CASCADE scans the child table.",
-            "Composite indexes: column order matters. An index on (user_id, created_at) serves queries filtering by user_id alone or user_id + created_at; it does not serve created_at alone.",
-            "Partial index: CREATE INDEX idx_active ON posts(user_id) WHERE status = 'published' — smaller, faster for the common query.",
-            "Covering index: include all columns the query needs so the engine never touches the table heap (PostgreSQL INCLUDE clause).",
-            "Every index adds write overhead and storage — index for your actual query patterns, not defensively.",
+            "Add an index on every foreign key column. Without one, ON DELETE CASCADE has to scan the entire child table.",
+            "Column order matters in composite indexes. An index on (user_id, created_at) works for queries filtering on user_id alone or user_id + created_at. It won't help for created_at alone.",
+            "Partial index: CREATE INDEX idx_active ON posts(user_id) WHERE status = 'published' — smaller index, faster for the query you actually run.",
+            "Covering index: add all the columns a query needs into the index using the INCLUDE clause so the database never has to touch the main table rows.",
+            "Every index adds write overhead and takes up space. Only index columns you actually query — not speculatively.",
           ],
         },
         {
@@ -250,8 +250,8 @@ LIMIT 20;
       question: "What is database normalization and why does it matter?",
       tag: "Normalization",
       answer: [
-        "Normalization is a process of organizing a schema to reduce data redundancy and ensure data integrity. Each normal form removes a class of anomaly: 1NF removes multi-valued cells, 2NF removes partial dependencies on composite keys, 3NF removes transitive dependencies.",
-        "It matters because redundant data creates update anomalies: you update a department name in one employee row but not others, and now your data is inconsistent. Normalized schemas make writes correct by construction.",
+        "Normalization is the process of organizing your schema to remove duplicate data and prevent inconsistencies. 1NF removes cells with multiple values, 2NF removes partial dependencies on composite keys, 3NF removes dependencies between non-key columns.",
+        "It matters because duplicate data causes update problems: if you store a department name in every employee row and then rename the department, some rows get updated and some do not — now your data is wrong. A normalized schema makes writes correct by design.",
       ].join("\n\n"),
       callout: "Normalize for correctness, denormalize for measured read performance.",
     },
@@ -259,33 +259,32 @@ LIMIT 20;
       question: "What is the expand-contract pattern for zero-downtime migrations?",
       tag: "Migrations",
       answer: [
-        "Expand-contract is a technique for schema changes that avoids locking or downtime. The expand phase adds new structures (columns, tables) alongside the old ones. The application is updated to write to both. A backfill populates historical data. The contract phase removes the old structures once all code uses the new ones.",
-        "This works because each individual migration step is safe: adding a nullable column is instant in PostgreSQL, adding a NOT NULL constraint after backfill takes a short lock, and dropping an unused column is fast. The dangerous all-at-once migration (rename + backfill + drop in one step) is replaced by a sequence of safe steps deployed over time.",
+        "Expand-contract is a way to change your schema in small, safe steps that don't require locking or downtime. The expand phase adds new structures (columns, tables) alongside the old ones. The app is updated to write to both. A backfill fills in historical data. The contract phase removes the old structures once all code uses the new ones.",
+        "Each individual step is safe: adding a nullable column is instant in PostgreSQL, adding NOT NULL after a backfill takes a short lock, and dropping an unused column is fast. This replaces the dangerous all-at-once migration (rename + backfill + drop in one step) with a safe sequence deployed over time.",
       ].join("\n\n"),
     },
     {
       question: "When should I use UUID vs BIGSERIAL as a primary key?",
       tag: "Primary keys",
       answer: [
-        "Use BIGSERIAL (or BIGINT auto-increment) for most tables: it is 8 bytes, sequential, and causes no index fragmentation. The sequence is generated by the DB so there is no coordination needed.",
-        "Use UUID v7 (time-ordered) when: (a) you need to generate the ID before inserting (distribute ID generation), (b) you have multiple writers and want globally unique IDs without coordination, or (c) you are building a multi-tenant system where IDs must be globally unique across shards. Avoid UUID v4 for large tables — random insertion order fragments the B-tree index.",
+        "Use BIGSERIAL (auto-increment) for most tables — it is 8 bytes, sequential, and the database generates it for you with no coordination needed.",
+        "Use UUID v7 (time-ordered) when: you need to generate the ID before inserting it; you have multiple writers and need globally unique IDs without coordination; or you are building a multi-tenant system where IDs must be unique across shards. Avoid UUID v4 for large tables — random IDs scatter inserts across the B-tree index and cause fragmentation.",
       ].join("\n\n"),
     },
     {
       question: "How do foreign key constraints affect performance?",
       tag: "Foreign keys",
       answer: [
-        "On INSERT/UPDATE of the child: the DB must verify the referenced parent row exists — a lookup on the parent's primary key (fast if indexed, which it always is as a PK).",
-        "On DELETE of the parent: if ON DELETE CASCADE, the DB must find and delete all child rows — without an index on the FK column in the child table this is a sequential scan. Always index FK columns on the child side.",
-        "The overhead is small for OLTP write rates. The benefit — guaranteed referential integrity — is worth it. Only skip FKs in bulk-load pipelines where you verify integrity externally.",
+        "When you insert or update a child row, the database checks that the referenced parent exists — a lookup on the parent's primary key, which is always indexed and fast.",
+        "When you delete a parent with ON DELETE CASCADE, the database finds and deletes all child rows. Without an index on the FK column in the child table, that is a full table scan. Always index FK columns on the child side. The overhead is small for normal OLTP write rates and the benefit — guaranteed referential integrity — is worth it.",
       ].join("\n\n"),
     },
     {
       question: "What is a junction table and when do you need one?",
       tag: "Many-to-many",
       answer: [
-        "A junction (or join) table resolves a many-to-many relationship. If posts can have multiple tags and tags can belong to multiple posts, a post_tags(post_id, tag_id) table with a composite primary key and two foreign keys models this correctly.",
-        "Never store multi-valued data in a single column (comma-separated IDs) — this violates 1NF and makes querying and joins painful. The junction table is the correct relational model.",
+        "A junction table resolves a many-to-many relationship. If posts can have multiple tags and tags can belong to multiple posts, a post_tags(post_id, tag_id) table with a composite primary key and two foreign keys models this correctly.",
+        "Never store multiple IDs in one column as a comma-separated list — this violates 1NF and makes every query painful. The junction table is the right relational model.",
       ].join("\n\n"),
       callout: "Comma-separated IDs in a column is always wrong. Use a junction table.",
     },
@@ -293,25 +292,25 @@ LIMIT 20;
       question: "What does ON DELETE CASCADE vs ON DELETE RESTRICT do?",
       tag: "FK behavior",
       answer: [
-        "ON DELETE CASCADE: when a parent row is deleted, all child rows referencing it are automatically deleted. Convenient but dangerous if accidental parent deletion cascades through thousands of rows.",
-        "ON DELETE RESTRICT (default): the delete is blocked if child rows exist. Safer — forces the application to explicitly clean up children before removing the parent.",
-        "SET NULL: the FK column in children is set to NULL rather than deleting the rows. Use when the child can exist without a parent.",
+        "ON DELETE CASCADE: when a parent row is deleted, all child rows referencing it are automatically deleted. Convenient but dangerous if you accidentally delete a parent that has thousands of children.",
+        "ON DELETE RESTRICT (default): the delete is blocked if any child rows exist. Safer — forces the application to explicitly clean up children before removing the parent.",
+        "SET NULL: the FK column in the children is cleared rather than deleting the rows. Useful when a child can exist without a parent.",
       ].join("\n\n"),
     },
     {
       question: "How should I handle long-running migrations on a live database?",
       tag: "Migrations",
       answer: [
-        "Long ALTER TABLE statements take a lock that blocks reads and writes. For large tables: (1) add columns as nullable with no default — fast, no rewrite; (2) backfill in batches with LIMIT + WHERE to avoid one giant transaction; (3) add constraints in a separate step after backfill.",
-        "For index creation, use CREATE INDEX CONCURRENTLY — it builds without locking the table, just takes longer. Use tools like pg_repack or Percona Online Schema Change for MySQL to perform table rewrites without downtime.",
+        "Long ALTER TABLE statements take a lock that blocks reads and writes. For large tables: add columns as nullable with no default (instant, no rewrite); backfill in small batches with LIMIT + WHERE to avoid one giant transaction; add constraints in a separate step after the backfill.",
+        "For index creation, use CREATE INDEX CONCURRENTLY — it builds without locking the table, just takes longer. Use pg_repack or Percona Online Schema Change for MySQL to perform table rewrites without downtime.",
       ].join("\n\n"),
     },
     {
       question: "What is a composite index and how do you decide column order?",
       tag: "Indexes",
       answer: [
-        "A composite index covers multiple columns. Column order determines which query patterns it can serve. An index on (a, b, c) can serve queries filtering on: a alone, a + b, or a + b + c. It cannot efficiently serve b alone or c alone.",
-        "The general rule: put the most selective column (highest cardinality, most unique values) first, then the column used in ORDER BY or range filters second. The leading column must be present in the WHERE clause for the index to be used.",
+        "A composite index covers multiple columns. Column order determines which query patterns it can serve. An index on (a, b, c) helps queries filtering on: a alone, a + b, or a + b + c. It will not efficiently help b alone or c alone.",
+        "General rule: put the most selective column first (the one with the most unique values), then the column used in ORDER BY or range filters. The leading column must appear in the WHERE clause for the index to be used.",
       ].join("\n\n"),
     },
   ],
