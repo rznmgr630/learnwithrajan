@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_14_DETAIL = {
   overview: [
-    "Backpressure is the mechanism by which a slow consumer signals a fast producer to slow down — without it, the consumer's buffer fills, memory exhausts, and the system crashes. Message queues are the most common implementation: they decouple producers from consumers and absorb traffic spikes by buffering work.",
-    "Day 14 covers backpressure mechanics, the major queue patterns (work queue, pub/sub, fan-out), reliability guarantees (at-least-once vs exactly-once), and practical queue design with Redis Streams, RabbitMQ, and AWS SQS.",
+    "Backpressure is how a slow consumer tells a fast producer to slow down. Without it, the consumer's buffer fills up, memory runs out, and the system crashes. Message queues are the most common solution: they decouple producers from consumers and absorb traffic spikes by buffering work.",
+    "Today covers how backpressure works, the main queue patterns (work queue, pub/sub, fan-out), delivery guarantees (at-least-once vs exactly-once), and how to design reliable queues with Redis Streams, RabbitMQ, and AWS SQS.",
   ],
   sections: [
     {
@@ -21,7 +21,7 @@ export const DAY_14_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "Without backpressure, a fast producer sending to a slow consumer causes unbounded buffer growth. Eventually memory runs out — the classic out-of-memory crash under load. Backpressure propagates the slowness upstream: 'I'm full, stop sending for now.'",
+          text: "Without backpressure, a fast producer sending to a slow consumer causes the consumer's buffer to grow without bound. Eventually memory runs out — the classic out-of-memory crash under load. Backpressure propagates the slowness back upstream: 'I'm full, stop sending for now.'",
         },
         {
           type: "table",
@@ -92,7 +92,7 @@ export const DAY_14_DETAIL = {
       blocks: [
         {
           type: "table",
-          caption: "Exactly-once is expensive — design for at-least-once + idempotent consumers.",
+          caption: "Exactly-once is expensive — design for at-least-once delivery with idempotent consumers.",
           headers: ["Guarantee", "Meaning", "Cost"],
           rows: [
             [
@@ -120,7 +120,7 @@ export const DAY_14_DETAIL = {
 
   // Check if already processed
   const already = await redis.set(
-    \`processed:\${messageId\}\`,
+    \`processed:\${messageId}\`,
     "1",
     "NX",   // only set if not exists
     "EX",   // expire
@@ -180,10 +180,10 @@ while (true) {
           type: "list",
           variant: "bullet",
           items: [
-            "XPENDING: inspect messages claimed by a worker but not yet ACKed — use to detect stalled workers.",
-            "XCLAIM: reassign a pending message to a different worker after a timeout (dead worker recovery).",
-            "XLEN: queue depth — alert when backlog grows beyond expected levels.",
-            "Consumer group allows multiple workers to share the stream; each message is delivered to exactly one worker in the group.",
+            "XPENDING: see messages that a worker has claimed but not yet acknowledged — use this to detect stalled workers.",
+            "XCLAIM: reassign a pending message to a different worker after a timeout (handles crashed worker recovery).",
+            "XLEN: check the queue depth — alert when the backlog grows beyond expected levels.",
+            "Consumer groups allow multiple workers to share the stream. Each message is delivered to exactly one worker in the group.",
           ],
         },
       ],
@@ -242,7 +242,7 @@ async function pollQueue() {
           rows: [
             [
               "Dead letter queue",
-              "Route messages that fail N times to a DLQ for inspection. Never let poison messages block the queue indefinitely.",
+              "Route messages that fail N times to a DLQ for inspection. Never let a bad message block the queue indefinitely.",
             ],
             [
               "Visibility timeout",
@@ -250,15 +250,15 @@ async function pollQueue() {
             ],
             [
               "Retry with exponential backoff",
-              "Retry after 1s, 2s, 4s, 8s... with jitter. Avoid stampeding all workers retrying simultaneously.",
+              "Retry after 1s, 2s, 4s, 8s... with jitter. Avoid all workers retrying at the same time.",
             ],
             [
               "Queue depth alerting",
-              "Alert when ApproximateNumberOfMessages exceeds a threshold — indicates consumers are falling behind.",
+              "Alert when ApproximateNumberOfMessages exceeds a threshold — means consumers are falling behind.",
             ],
             [
               "Message size",
-              "Keep payloads small — store large data in S3/blob storage, put the reference (key) in the message.",
+              "Keep payloads small — store large data in S3/blob storage and put just the reference key in the message.",
             ],
             [
               "Idempotency",
@@ -273,7 +273,7 @@ async function pollQueue() {
       blocks: [
         {
           type: "paragraph",
-          text: "Node.js Readable and Writable streams implement backpressure natively. When a Writable's internal buffer exceeds highWaterMark, write() returns false — the signal to pause the upstream source. Resume is signalled via the drain event.",
+          text: "Node.js Readable and Writable streams handle backpressure natively. When a Writable's internal buffer fills up past its highWaterMark, write() returns false — that is the signal to stop reading from the source. When the buffer drains, the drain event fires and the source can resume.",
         },
         {
           type: "code",
@@ -307,8 +307,8 @@ writable.on("drain", () => readable.resume()); // buffer cleared, resume`,
       question: "What is backpressure and why does it matter in distributed systems?",
       tag: "Backpressure",
       answer: [
-        "Backpressure is the mechanism by which a slow consumer signals a fast producer to reduce its sending rate. Without it, the consumer's in-memory buffer grows without bound — eventually causing an out-of-memory crash or dropped messages.",
-        "In distributed systems, backpressure appears at every layer: TCP send buffers, HTTP request queues, message queue depth, and database connection pool exhaustion. Designing for backpressure means every ingestion point has a finite capacity and a defined behaviour when full (reject, drop, or block the caller).",
+        "Backpressure is how a slow consumer signals a fast producer to stop sending so much. Without it, the consumer's in-memory buffer grows without bound — eventually causing an out-of-memory crash or dropped messages.",
+        "Backpressure shows up at every layer in a distributed system: TCP send buffers, HTTP request queues, message queue depth, database connection pool limits. Designing for it means every ingestion point has a finite capacity and a defined behavior when full — reject, drop, or block the caller.",
       ].join("\n\n"),
       callout: "No backpressure = the fastest producer always wins, eventually crashing the consumer.",
     },
@@ -316,16 +316,16 @@ writable.on("drain", () => readable.resume()); // buffer cleared, resume`,
       question: "What is the difference between at-least-once and exactly-once delivery?",
       tag: "Delivery guarantees",
       answer: [
-        "At-least-once: the queue retries delivery until the consumer acknowledges the message. On a consumer crash before ACK, the message reappears. The consumer must be idempotent — processing the same message twice must produce the same result.",
-        "Exactly-once: the queue guarantees the message is delivered and processed exactly once. This requires coordinated state between the queue and the consumer — typically a transactional outbox pattern or a dedup store. Expensive and complex. Most production systems use at-least-once + idempotent consumers.",
+        "At-least-once: the queue retries delivery until the consumer acknowledges it. If the consumer crashes before ACKing, the message comes back. The consumer must handle duplicates safely — processing the same message twice should produce the same result.",
+        "Exactly-once: the queue guarantees the message is processed exactly once even on failure. This requires coordinated state between the queue and the consumer. It is expensive and complex. Most production systems use at-least-once delivery with idempotent consumers.",
       ].join("\n\n"),
     },
     {
       question: "What is a dead letter queue and when should messages go there?",
       tag: "Dead letter queue",
       answer: [
-        "A DLQ is a separate queue where messages are moved after failing to process N times (configurable maxReceiveCount in SQS, x-dead-letter-exchange in RabbitMQ). It prevents a poison message — one that always fails due to a bug or bad data — from blocking the main queue indefinitely.",
-        "Always attach a DLQ to production queues. Alert when DLQ depth grows — it means consumers are encountering errors the retry policy cannot recover from. Inspect the DLQ messages to identify the root cause.",
+        "A DLQ is a separate queue where messages go after failing to process N times. This prevents a single bad message — one that always fails because of a bug or bad data — from blocking your main queue forever.",
+        "Always attach a DLQ to production queues and alert when its depth grows. A growing DLQ means consumers are hitting errors the retry policy cannot recover from — inspect the messages to find the root cause.",
       ].join("\n\n"),
       callout: "No DLQ = one bad message blocks your entire queue. Always configure one.",
     },
@@ -333,46 +333,46 @@ writable.on("drain", () => readable.resume()); // buffer cleared, resume`,
       question: "What is the visibility timeout in SQS and how should you set it?",
       tag: "SQS",
       answer: [
-        "When an SQS consumer receives a message, it becomes invisible to other workers for the visibility timeout duration. If the consumer ACKs (deletes) the message before the timeout, the message is gone. If the consumer crashes, the timeout expires and the message reappears for retry.",
-        "Set the visibility timeout to 2–3× your expected processing time. Too short: if a job takes 30s but the timeout is 10s, the message reappears mid-process and two workers process it simultaneously. Too long: if a worker crashes, messages are unavailable to other workers for a long time.",
+        "When an SQS consumer receives a message, that message becomes invisible to other workers for the visibility timeout duration. If the consumer deletes the message before the timeout expires, it is gone. If the consumer crashes, the timeout expires and the message reappears for another worker.",
+        "Set the timeout to 2–3x your expected processing time. Too short and the message reappears while it is still being processed — two workers end up handling it at the same time. Too long and a crashed worker's messages are stuck unavailable for too long.",
       ].join("\n\n"),
     },
     {
       question: "What is long polling in SQS and why does it matter for cost?",
       tag: "SQS",
       answer: [
-        "By default, SQS ReceiveMessage returns immediately even if no messages are available (short polling) — wasting API calls and cost. Long polling (WaitTimeSeconds=20) holds the connection open for up to 20 seconds, returning as soon as a message arrives.",
-        "Long polling reduces empty receive calls by up to 20×, directly cutting SQS API costs and CPU usage in polling workers. Always use WaitTimeSeconds > 0 in production.",
+        "By default, SQS ReceiveMessage returns immediately even if there are no messages (short polling) — wasting API calls and money. Long polling (WaitTimeSeconds=20) holds the connection open for up to 20 seconds and returns as soon as a message arrives.",
+        "Always use long polling in production — it can reduce empty receive calls by up to 20x, cutting both SQS API costs and CPU usage in your polling workers.",
       ].join("\n\n"),
     },
     {
       question: "How does an idempotent consumer handle duplicate messages?",
       tag: "Idempotency",
       answer: [
-        "An idempotent consumer records a unique message ID after successful processing (in Redis, DynamoDB, or a DB table). Before processing, it checks if the ID has been seen. If yes, it acknowledges the message without reprocessing.",
-        "The dedup record's TTL should equal or exceed the queue's message retention period. Common implementation: Redis SET messageId 1 NX EX 86400 — only sets if not exists, expires in 24h. If SET returns nil, the message was already processed.",
+        "An idempotent consumer records a unique message ID after successfully processing each message — usually in Redis or a database. Before processing, it checks if the ID has already been seen. If it has, the message is acknowledged and skipped without reprocessing.",
+        "The dedup record's TTL should be at least as long as the queue's message retention period. A common pattern: Redis SET messageId 1 NX EX 86400 — only sets if not already present, expires in 24 hours.",
       ].join("\n\n"),
     },
     {
       question: "When should I use SNS + SQS fan-out vs a direct SQS queue?",
       tag: "Queue patterns",
       answer: [
-        "Use a direct SQS queue when there is exactly one consumer type. Use SNS + SQS fan-out when multiple independent services need to react to the same event: an order.created SNS topic fans out to a fulfilment queue, a notification queue, and an analytics queue — each service processes independently at its own pace.",
-        "The fan-out pattern decouples producers from consumers. The producer publishes one event; SNS handles delivery to all subscribed queues. Adding a new consumer requires only subscribing a new SQS queue to the SNS topic — no producer change.",
+        "Use a direct SQS queue when there is exactly one type of consumer for an event. Use SNS + SQS fan-out when multiple independent services need to react to the same event — an order.created SNS topic can fan out to a fulfillment queue, a notification queue, and an analytics queue, each processing at its own pace.",
+        "The fan-out pattern decouples producers from consumers. Adding a new consumer means subscribing a new SQS queue to the SNS topic — no changes needed on the producer side.",
       ].join("\n\n"),
     },
     {
       question: "How does Node.js backpressure work with streams?",
       tag: "Node.js streams",
       answer: [
-        "Node.js Writable streams have an internal buffer with a highWaterMark (default 16 KB for byte streams). When write() returns false, the buffer is full — the producer must pause. When the buffer drains, the drain event fires — the producer resumes.",
-        "The pipe() and pipeline() APIs handle this automatically. When writing manual stream code, always check write() return value and listen for drain — ignoring backpressure causes unbounded memory growth and eventual crash.",
+        "Node.js Writable streams have an internal buffer with a highWaterMark (16KB by default for byte streams). When write() returns false, the buffer is full and the producer should pause. When the buffer drains, the drain event fires and the producer can resume.",
+        "The pipe() and pipeline() APIs handle this automatically. If you are writing manual stream code, always check the return value of write() and listen for the drain event — ignoring backpressure causes unbounded memory growth and eventual crashes.",
       ].join("\n\n"),
     },
   ],
   bullets: [
-    "Implement a Redis Streams producer that enqueues jobs and a worker that processes them with consumer groups — test what happens when a worker crashes mid-job.",
-    "Add a dead letter queue to an SQS setup: configure maxReceiveCount=3, attach a DLQ, and write a monitor that alerts when DLQ depth > 0.",
-    "Demonstrate backpressure in a Node.js Readable → Transform → Writable pipeline: throttle the writable and observe the readable pausing.",
+    "Implement a Redis Streams producer and a worker that processes jobs with consumer groups. Test what happens when a worker crashes mid-job.",
+    "Add a dead letter queue to an SQS setup: configure maxReceiveCount=3, attach a DLQ, and write a monitor that alerts when DLQ depth is greater than 0.",
+    "Demonstrate backpressure in a Node.js Readable → Transform → Writable pipeline: throttle the writable and observe the readable pausing automatically.",
   ],
 } satisfies RoadmapDayDetail;

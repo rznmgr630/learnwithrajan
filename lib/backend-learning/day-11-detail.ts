@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_11_DETAIL = {
   overview: [
-    "NoSQL is not a replacement for relational databases — it is a family of trade-offs. Document, key-value, column-family, and graph stores each optimise for a different access pattern and sacrifice different guarantees. The CAP theorem and eventual consistency are the theoretical bedrock for understanding those trade-offs.",
-    "Day 11 maps the NoSQL landscape, explains CAP and BASE, and shows how to design MongoDB documents and DynamoDB items for real access patterns — including the common mistakes that land teams back in a relational DB six months later.",
+    "NoSQL databases are not a replacement for relational databases — they are a set of trade-offs. Document, key-value, column-family, and graph stores are each built for a different kind of query and give up different guarantees in return. CAP theorem and eventual consistency explain those trade-offs at a theoretical level.",
+    "Today you will map the NoSQL landscape, understand CAP and BASE, and learn how to design MongoDB documents and DynamoDB items for real access patterns — including the common mistakes that send teams back to a relational database six months later.",
   ],
   sections: [
     {
@@ -63,11 +63,11 @@ export const DAY_11_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "The CAP theorem (Brewer, 2000) states that a distributed system can guarantee at most two of three properties during a network partition: Consistency (every read sees the latest write), Availability (every request gets a response), and Partition tolerance (system continues during network splits).",
+          text: "The CAP theorem says a distributed system can only guarantee two out of three properties when the network is unreliable: Consistency (every read sees the latest write), Availability (every request gets a response), and Partition tolerance (the system keeps working during network failures).",
         },
         {
           type: "table",
-          caption: "Network partitions always happen — the real choice is C vs A during a partition.",
+          caption: "Network partitions always happen — the real choice is consistency vs availability during a partition.",
           headers: ["Trade-off", "Systems", "Behaviour during partition"],
           rows: [
             [
@@ -89,7 +89,7 @@ export const DAY_11_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "PACELC extends CAP: even without a partition (normal operation), there is a trade-off between latency and consistency. A system that synchronously replicates to all nodes is consistent but slower. Asynchronous replication is faster but allows momentarily stale reads.",
+          text: "PACELC extends CAP: even when the network is healthy, there is a trade-off between latency and consistency. Synchronously writing to all nodes is consistent but slow. Asynchronous replication is faster but allows stale reads briefly.",
         },
       ],
     },
@@ -124,7 +124,7 @@ export const DAY_11_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "BASE is not 'ACID but worse' — it is a deliberate trade-off for scale. Twitter's timeline, Amazon's shopping cart, and DNS are BASE systems. Financial ledgers are ACID. Know which your feature needs before choosing.",
+          text: "BASE is not 'ACID but worse' — it is a deliberate trade-off for scale. Twitter's timeline, Amazon's shopping cart, and DNS are all BASE systems. Financial ledgers are ACID. Know what your feature actually needs before choosing.",
         },
       ],
     },
@@ -196,7 +196,7 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
       blocks: [
         {
           type: "paragraph",
-          text: "DynamoDB has no joins and no server-side aggregation. Every access pattern must be pre-designed into the partition key (PK) and sort key (SK). The single-table design pattern stores multiple entity types in one table, using composite keys and item type prefixes to enable rich queries with a single request.",
+          text: "DynamoDB has no joins and no server-side aggregation. Every access pattern must be built into the partition key and sort key when you design the table. The single-table design pattern stores multiple entity types in one table, using composite keys and type prefixes to support rich queries with a single request.",
         },
         {
           type: "code",
@@ -224,9 +224,9 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
           type: "list",
           variant: "bullet",
           items: [
-            "GSI (Global Secondary Index): project a different PK/SK pattern for alternate access patterns without duplicating the table.",
-            "Avoid hot partitions: if millions of users query the same PK, that partition's throughput becomes the bottleneck. Add a shard suffix to high-traffic PKs.",
-            "DynamoDB Streams: triggers on item changes, used to propagate to Elasticsearch for search or to aggregate into analytics stores.",
+            "GSI (Global Secondary Index): lets you query by a different partition key pattern for access patterns the main key does not support — without duplicating the table.",
+            "Avoid hot partitions: if millions of requests target the same partition key, that partition's throughput becomes the bottleneck. Add a random shard suffix to high-traffic partition keys.",
+            "DynamoDB Streams: triggers on item changes — use to sync to Elasticsearch for search or to push data into analytics pipelines.",
           ],
         },
       ],
@@ -236,7 +236,7 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
       blocks: [
         {
           type: "paragraph",
-          text: "Eventual consistency means a write on one replica propagates to others asynchronously. During propagation, a read on another replica may return the old value. The system guarantees convergence — once writes stop, all replicas will eventually agree.",
+          text: "Eventual consistency means a write on one server propagates to other servers asynchronously. During propagation, a read from another server may return the old value. Once writes stop and propagation finishes, all servers will eventually agree.",
         },
         {
           type: "table",
@@ -267,8 +267,8 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
       question: "What does the CAP theorem actually tell you in practice?",
       tag: "CAP theorem",
       answer: [
-        "CAP says: during a network partition, choose between consistency (refuse to answer with stale data) or availability (answer even if potentially stale). You cannot have both at the same time.",
-        "In practice, partitions are rare but unavoidable in any distributed system. The real design question is: when a node is isolated or lagging, should it serve requests with potentially stale data (AP) or refuse to serve until it syncs (CP)? The answer depends on your domain — financial systems should refuse; social feeds can show stale data.",
+        "CAP says: when the network is split, you have to choose between returning an error (consistency — refuse to serve stale data) or serving a response that might be stale (availability). You cannot have both at the same time.",
+        "In practice, network partitions are rare but inevitable in any distributed system. The real question is: when a node is lagging or isolated, should it serve requests with potentially old data, or refuse until it syncs? For financial systems, refuse. For social feeds, stale is usually fine.",
       ].join("\n\n"),
       callout: "P is non-negotiable in distributed systems. The choice is C vs A during a partition.",
     },
@@ -276,24 +276,24 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
       question: "When should I use a document database instead of a relational one?",
       tag: "Document vs relational",
       answer: [
-        "Use a document database when: (1) your data is naturally hierarchical and read as a unit (a product catalog item with nested specs and images); (2) your schema evolves rapidly across tenants or versions; (3) you need to scale horizontally across many shards without complex cross-shard joins.",
-        "Stay with relational when: you have complex relationships requiring joins, strong ACID transactions across multiple entities, or complex aggregations. Many teams choose MongoDB for the wrong reasons and end up reimplementing joins in application code — often worse than using PostgreSQL from the start.",
+        "Use a document database when: your data is naturally hierarchical and always read as a unit (a product catalog entry with nested specs and images); your schema changes rapidly across tenants or versions; or you need to scale horizontally across many shards without complex cross-shard joins.",
+        "Stick with a relational database when you need complex joins, strong ACID transactions across multiple entities, or complex aggregations. Many teams choose MongoDB thinking it is simpler and end up rebuilding SQL joins in application code — often worse than just using PostgreSQL from the start.",
       ].join("\n\n"),
     },
     {
       question: "What is eventual consistency and what problems can it cause?",
       tag: "Eventual consistency",
       answer: [
-        "Eventual consistency means a write to one node propagates to replicas asynchronously. During propagation, reads on lagging replicas return stale data. Eventually (once writes stop and propagation completes) all nodes agree.",
-        "Problems: (1) a user updates their profile and immediately reads back the old value; (2) a product quantity reaches 0 but multiple orders are still accepted because replicas haven't caught up; (3) two nodes accept conflicting writes and must resolve them — LWW silently drops one. Design your system to tolerate or detect these scenarios.",
+        "Eventual consistency means a write to one node reaches other nodes asynchronously. During propagation, reads from a lagging node return stale data. Once writes stop and propagation finishes, all nodes agree.",
+        "Real problems: a user updates their profile and immediately sees the old one; a product hits zero stock but orders still go through because some replicas have not caught up; two nodes accept conflicting writes and one gets silently dropped. Design your system knowing these things can and will happen.",
       ].join("\n\n"),
     },
     {
       question: "What is the DynamoDB single-table design pattern and why use it?",
       tag: "DynamoDB",
       answer: [
-        "Single-table design stores multiple entity types in one DynamoDB table, using composite partition keys and sort keys (e.g. PK=USER#123, SK=POST#2024-01-15) to co-locate related data. Since DynamoDB cannot join across tables, all data for a request must be retrievable with a single query.",
-        "The benefit: one request fetches everything (e.g. a user + their posts + metadata) using a begins_with query on the sort key. The cost: schema design is complex, and adding a new access pattern may require a new GSI or data restructuring.",
+        "Single-table design stores multiple entity types in one DynamoDB table using composite partition and sort keys — for example PK=USER#123, SK=POST#2024-01-15 — to group related data together. Since DynamoDB cannot join tables, everything needed for one request must come back from one query.",
+        "The benefit: one query fetches a user and all their posts using a begins_with filter on the sort key. The cost: the key design is complex, and adding a new access pattern may require a new Global Secondary Index or data restructuring.",
       ].join("\n\n"),
       callout: "Design your DynamoDB keys around access patterns, not entity shapes.",
     },
@@ -301,30 +301,30 @@ db.posts.find({ author_id: ObjectId("..."), status: "published" }).explain("exec
       question: "What is a hot partition and how do you avoid it?",
       tag: "DynamoDB / Cassandra",
       answer: [
-        "A hot partition occurs when many requests target the same partition key, overloading that partition's provisioned throughput while others sit idle. In DynamoDB, one partition handles ~3000 RCU or 1000 WCU. A viral post receiving millions of reads will blast through that limit.",
-        "Fixes: (1) add a random shard suffix to the PK (PK = POST#p_456#shard_3) and query all shards in parallel; (2) cache hot items in ElastiCache; (3) use DynamoDB Accelerator (DAX) for microsecond caching of hot reads.",
+        "A hot partition happens when too many requests target the same partition key, overloading that partition while others sit idle. In DynamoDB, one partition handles around 3000 reads or 1000 writes per second. A viral post getting millions of reads will blast right through that limit.",
+        "Fixes: add a random shard suffix to the partition key (PK = POST#p_456#shard_3) and query all shards in parallel; cache hot items in ElastiCache; or use DynamoDB Accelerator (DAX) for microsecond caching of hot reads.",
       ].join("\n\n"),
     },
     {
       question: "What is BASE and how does it differ from ACID?",
       tag: "BASE vs ACID",
       answer: [
-        "BASE (Basically Available, Soft state, Eventually consistent) describes the consistency model of many distributed NoSQL systems. Basically Available means the system responds to requests even during partial failures. Soft state means the system's state may change over time as data propagates. Eventually consistent means all replicas will converge given time.",
-        "ACID systems provide strong consistency with synchronous writes — every read sees the latest committed write. BASE systems trade strong consistency for higher availability and write throughput. Neither is universally better; the choice is domain-driven.",
+        "BASE stands for Basically Available, Soft state, Eventually consistent. The system responds to requests even during partial failures (basically available). The state may change over time as data propagates (soft state). All nodes will eventually agree (eventually consistent).",
+        "ACID gives you strong consistency — every read sees the latest committed write. BASE trades strong consistency for higher availability and write throughput. Neither is universally better; the right choice depends on what your feature actually needs.",
       ].join("\n\n"),
     },
     {
       question: "When should I embed vs reference in MongoDB?",
       tag: "MongoDB design",
       answer: [
-        "Embed when the subdocument is always read with its parent, is bounded in size (not growing to thousands of items), and has no lifecycle independent of the parent. Comments on a blog post are a classic embed — you always load them with the post.",
-        "Reference (store the ID) when the subdocument is large, grows unbounded, is queried independently, or is shared across multiple parent documents. A product in an order should be referenced — the product has its own lifecycle and is shared across many orders.",
+        "Embed when the subdocument is always read with its parent, is small and bounded in size, and has no lifecycle independent of the parent. Comments on a blog post are a classic embed — you always load them with the post.",
+        "Reference (store just the ID) when the subdocument is large, can grow to thousands of items, is queried on its own, or is shared across multiple parent documents. A product in an order should be referenced — the product exists independently and is linked to many orders.",
       ].join("\n\n"),
     },
   ],
   bullets: [
-    "Design a MongoDB schema for a social media app (users, posts, likes, comments) with correct embed vs reference decisions for each relationship.",
-    "Model a DynamoDB single-table design for an e-commerce order system supporting: get order by ID, list orders by user, list items by order.",
-    "Write a one-paragraph explanation of why you would choose Cassandra over PostgreSQL for a time-series IoT sensor data system.",
+    "Design a MongoDB schema for a social media app (users, posts, likes, comments) with the right embed vs reference decision for each relationship.",
+    "Model a DynamoDB single-table design for an e-commerce order system that supports: get order by ID, list orders by user, list items by order.",
+    "Write a paragraph explaining why you would choose Cassandra over PostgreSQL for a time-series IoT sensor data system.",
   ],
 } satisfies RoadmapDayDetail;
