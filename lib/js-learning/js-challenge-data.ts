@@ -16,6 +16,11 @@ import { JS_DAY_12_DETAIL } from "@/lib/js-learning/js-day-12-detail";
 import { JS_DAY_13_DETAIL } from "@/lib/js-learning/js-day-13-detail";
 import { JS_DAY_14_DETAIL } from "@/lib/js-learning/js-day-14-detail";
 import { JS_DAY_15_DETAIL } from "@/lib/js-learning/js-day-15-detail";
+import { JS_DAY_16_DETAIL } from "@/lib/js-learning/js-day-16-detail";
+import { JS_DAY_17_DETAIL } from "@/lib/js-learning/js-day-17-detail";
+import { JS_DAY_18_DETAIL } from "@/lib/js-learning/js-day-18-detail";
+import { JS_DAY_19_DETAIL } from "@/lib/js-learning/js-day-19-detail";
+import { JS_DAY_20_DETAIL } from "@/lib/js-learning/js-day-20-detail";
 
 export const JS_CURRENT_DAY = 1;
 export const JS_TOTAL_DAYS = 25;
@@ -36,6 +41,11 @@ const JS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   13: JS_DAY_13_DETAIL,
   14: JS_DAY_14_DETAIL,
   15: JS_DAY_15_DETAIL,
+  16: JS_DAY_16_DETAIL,
+  17: JS_DAY_17_DETAIL,
+  18: JS_DAY_18_DETAIL,
+  19: JS_DAY_19_DETAIL,
+  20: JS_DAY_20_DETAIL,
 };
 
 const DOT: Record<string, string> = {
