@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_15_DETAIL = {
   overview: [
-    "Linux process management is the bedrock of every production server. Every running program is a process with a unique PID, a parent, resource limits, and a lifecycle controlled by signals. Understanding how the kernel schedules processes, how fork/exec work, and what zombie processes are is essential for debugging hangs, runaway memory, and orphaned workers.",
-    "Day 15 covers the Linux process model from fork/exec to zombie reaping, the full signal table, and systemd — the init system that manages service dependencies, restarts, and logging on every major Linux distribution. You will write a real .service unit file and learn the systemctl commands needed to operate services in production.",
+    "Every program running on a Linux server is a process. Each one has a unique ID, a parent process, and a lifecycle controlled by signals. Knowing how processes start, stop, and interact is essential for debugging hangs, runaway memory usage, and orphaned workers.",
+    "Today you will learn how processes are created and destroyed, what signals are and when to use each one, and how to use systemd to manage services in production — including writing your own .service unit file and using the essential systemctl commands.",
   ],
   sections: [
     {
@@ -21,7 +21,7 @@ export const DAY_15_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "Every process is created via fork() — a clone of the parent — followed by exec() to replace the process image with a new program. The cloned child inherits the parent's file descriptors, environment, and signal handlers. PID 1 (systemd) is the ancestor of all user-space processes; it is the only process that is never forked from another user process. When a process exits, it stays in the process table as a zombie until its parent calls wait() to collect the exit status — failing to do so leaks PIDs indefinitely.",
+          text: "Every process starts by being cloned from its parent (fork), then replaced with a new program (exec). The child inherits file descriptors and environment variables from the parent. PID 1 (systemd) is the root of all user-space processes. When a process finishes, it stays in the process table as a zombie until the parent collects its exit code by calling wait(). If the parent never does this, zombie entries accumulate and eventually use up all available PIDs.",
         },
         {
           type: "table",
@@ -86,7 +86,7 @@ kill -SIGCHLD <parent_pid>`,
       blocks: [
         {
           type: "paragraph",
-          text: "Signals are asynchronous notifications sent to a process by the kernel, another process, or the user. A process can register a custom handler, ignore the signal, or let the default action apply. Two signals cannot be caught or ignored: SIGKILL (9) and SIGSTOP (19) — they are enforced directly by the kernel, bypassing the process entirely.",
+          text: "Signals are messages the kernel or another process can send to a running process. The receiving process can handle a signal with custom code, ignore it, or let the default action happen. Two signals are special — SIGKILL (9) and SIGSTOP (19) — the process cannot intercept or ignore them. The kernel enforces them directly.",
         },
         {
           type: "table",
@@ -135,7 +135,7 @@ cat /proc/<pid>/status | grep -E "Sig(Cgt|Ign|Blk)"`,
       blocks: [
         {
           type: "paragraph",
-          text: "systemd is the init system and service manager on virtually every modern Linux distribution. It replaces SysV init scripts with declarative unit files. A .service unit file has three sections: [Unit] for metadata and dependency ordering, [Service] for process configuration, and [Install] for the WantedBy target that determines when the service starts during boot. Unit files live in /etc/systemd/system/ (admin-managed) or /lib/systemd/system/ (package-managed).",
+          text: "systemd is the standard service manager on almost every modern Linux distribution. Instead of shell scripts, you write declarative unit files that describe how a service should run. A .service file has three sections: [Unit] for metadata and dependencies, [Service] for how to run the process, and [Install] for when it should start at boot. Unit files live in /etc/systemd/system/ (admin-managed) or /lib/systemd/system/ (package-managed).",
         },
         {
           type: "code",
@@ -242,19 +242,19 @@ WantedBy=multi-user.target`,
   faq: [
     {
       question: "What is the difference between SIGTERM and SIGKILL?",
-      answer: "SIGTERM (15) is a polite request to terminate. The process receives it and can run cleanup code — closing connections, flushing buffers, finishing in-flight requests — before calling exit(). A well-written service catches SIGTERM and shuts down gracefully within a bounded time window.\n\nSIGKILL (9) is enforced directly by the kernel. The process never receives it and cannot catch, block, or ignore it. The kernel immediately reclaims all resources. No cleanup runs. Use SIGKILL only as a last resort after SIGTERM has been sent and the grace period (TimeoutStopSec in systemd) has expired. Jumping straight to SIGKILL causes connection leaks, data corruption, and lost in-flight work.",
+      answer: "SIGTERM (15) is a polite request to stop. The process receives it and can run cleanup — closing connections, flushing data, finishing in-flight requests — before exiting. A well-written service catches SIGTERM and shuts down cleanly within a set time limit.\n\nSIGKILL (9) is enforced by the kernel, not the process. The process never receives it and gets no chance to clean up. The kernel immediately reclaims all resources. Only use SIGKILL after SIGTERM has been sent and the grace period has run out. Jumping straight to SIGKILL causes connection leaks, data corruption, and lost in-progress work.",
     },
     {
       question: "What happens to child processes when a parent dies?",
-      answer: "When a parent process exits, its children become orphans. The kernel automatically re-parents them to PID 1 (systemd on modern Linux). systemd then becomes responsible for collecting their exit status when they eventually finish — preventing them from becoming zombies.\n\nThis re-parenting behaviour is why daemonisation historically involved double-forking: the intermediate parent exits immediately, making the daemon a grandchild that gets adopted by init. With systemd, this is no longer necessary — Type=forking or Type=simple handle the lifecycle correctly.",
+      answer: "When a parent process exits, its children become orphans. The kernel automatically reassigns them to PID 1 (systemd), which then takes responsibility for collecting their exit status — preventing them from becoming zombies.\n\nThis is why daemons historically used a double-fork: the intermediate parent exits immediately, making the daemon a grandchild that gets adopted by init. With systemd, you no longer need to do this — Type=forking or Type=simple handle the lifecycle correctly.",
     },
     {
       question: "How does systemd decide service restart order?",
-      answer: "systemd resolves service ordering using the After= and Before= directives in [Unit]. After=postgresql.service means systemd will not start this service until postgresql.service has finished starting. This is purely ordering — it does not create a dependency. To also require the dependency to succeed, combine After= with Wants= (soft) or Requires= (hard).\n\nAt boot, systemd builds a dependency graph from all unit files and starts as many services in parallel as ordering constraints allow. The WantedBy=multi-user.target directive in [Install] hooks the service into the graph when it is enabled — systemctl enable creates a symlink from /etc/systemd/system/multi-user.target.wants/myapp.service to the unit file.",
+      answer: "systemd uses After= and Before= in [Unit] to control startup order. After=postgresql.service means systemd will not start your service until PostgreSQL has started. This is ordering only — it does not create a hard dependency. To also require the dependency to succeed, combine After= with Wants= (soft — failure is tolerated) or Requires= (hard — failure stops your service too).\n\nAt boot, systemd builds a dependency graph from all unit files and starts as many services in parallel as the ordering constraints allow. The WantedBy=multi-user.target directive in [Install] hooks the service into the graph when enabled — systemctl enable creates a symlink from the target's wants directory to your unit file.",
     },
     {
       question: "What is a zombie process and how do you remove it?",
-      answer: "A zombie (state Z) is a process that has finished execution but whose entry remains in the process table because its parent has not yet called wait() or waitpid() to collect its exit status. The kernel preserves the entry so the exit code is available to the parent. Zombies consume a PID and a process table slot but no CPU or memory.\n\nYou cannot kill a zombie — it is already dead. The fix is to fix the parent: send SIGCHLD to the parent process (kill -SIGCHLD <ppid>) to prompt it to call wait(). If the parent itself is buggy and never reaps children, you must kill the parent — its zombie children are then re-parented to init (systemd), which immediately reaps them. A persistent accumulation of zombies indicates a bug in the parent's signal handling.",
+      answer: "A zombie (state Z) is a process that has finished but whose entry stays in the process table because the parent has not called wait() to collect its exit code. Zombies consume a PID and a process table slot but no CPU or memory.\n\nYou cannot kill a zombie — it is already dead. The fix is in the parent: send SIGCHLD to prompt it to call wait(). If the parent is buggy and never reaps its children, kill the parent — its zombies will be re-adopted by init (systemd), which reaps them immediately. A steady accumulation of zombies means there is a bug in the parent's signal handling.",
     },
   ],
 } satisfies RoadmapDayDetail;

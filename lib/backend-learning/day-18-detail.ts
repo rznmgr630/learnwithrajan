@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_18_DETAIL = {
   overview: [
-    "Infrastructure as Code (IaC) treats servers, networks, databases, and every cloud resource as source code — versioned, reviewed, and applied automatically. Instead of clicking through a cloud console, you write declarative configuration files and let a tool like Terraform calculate the diff between what exists and what you want, then apply only the changes needed.",
-    "Day 18 covers why IaC matters, Terraform's core primitives (providers, resources, state, modules), how to manage dev/staging/production as separate environments, and the operational discipline around state locking and secret management that separates production-grade infrastructure from a weekend experiment.",
+    "Infrastructure as Code means defining your servers, networks, and databases in configuration files rather than clicking through a cloud console. You check those files into git, review them in PRs, and let a tool like Terraform calculate what needs to change and apply only those changes automatically.",
+    "Today covers why IaC matters, Terraform's core building blocks (providers, resources, state, modules), how to manage separate dev/staging/production environments, and the operational practices around state locking and secret management that make the difference between a prototype and production-ready infrastructure.",
   ],
   sections: [
     {
@@ -21,11 +21,11 @@ export const DAY_18_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "Without IaC, infrastructure is created manually through a cloud console or ad-hoc scripts. Two engineers following the same runbook produce subtly different environments. A server gets patched in production but not staging. Nobody knows who changed the security group last Tuesday. IaC fixes all of this by making infrastructure a first-class artifact in your version control system.",
+          text: "Without IaC, infrastructure is created by hand — through a console or one-off scripts. Two engineers following the same steps end up with different results. Servers get patched in production but not staging. Nobody can say who changed a security rule or when. IaC fixes all of this: every change goes through version control, code review, and an automated apply step.",
         },
         {
           type: "table",
-          caption: "IaC is not just automation — it is a discipline for making infrastructure auditable and reproducible.",
+          caption: "IaC is not just automation — it makes infrastructure auditable and reproducible.",
           headers: ["Concern", "Manual approach", "IaC approach"],
           rows: [
             [
@@ -57,7 +57,7 @@ export const DAY_18_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "Terraform (HashiCorp, now BSL licensed) is the most widely adopted IaC tool: declarative HCL syntax, 3000+ providers, and a large ecosystem. Pulumi lets you write infrastructure in TypeScript/Python/Go — better DX for teams already in those languages but smaller ecosystem. AWS CDK is Pulumi's equivalent for AWS-only shops and outputs CloudFormation. Ansible is procedural (not declarative) and better suited for configuration management (OS-level setup, package install) than cloud resource provisioning.",
+          text: "Terraform is the most widely used IaC tool — declarative HCL syntax, 3000+ providers, and a large community. Pulumi lets you write infrastructure in TypeScript, Python, or Go, which some teams prefer, but has a smaller ecosystem. AWS CDK is similar to Pulumi but AWS-only and generates CloudFormation under the hood. Ansible is procedural rather than declarative — it is better for configuring OS-level things (installing packages, setting up users) than for provisioning cloud resources.",
         },
       ],
     },
@@ -183,7 +183,7 @@ output "public_ip" {
       blocks: [
         {
           type: "paragraph",
-          text: "Every real project needs at least three environments: dev (fast iteration, cheap resources), staging (production-like, used for QA and load testing), and prod (the real thing). Terraform offers two approaches: workspaces (one codebase, multiple state files) and directory-per-environment (duplicated directory structure, separate state). Both have trade-offs.",
+          text: "Most projects need at least three environments: dev for fast iteration with cheap resources, staging that mirrors production closely for QA and load testing, and prod — the real thing. Terraform gives you two ways to manage them: workspaces (one codebase, separate state per workspace) or a separate directory per environment (completely separate state and configuration). Both work — but for teams with more than a couple of engineers, the directory approach is safer and more explicit.",
         },
         {
           type: "table",
@@ -260,7 +260,7 @@ terraform apply -var-file="prod.tfvars"`,
       blocks: [
         {
           type: "paragraph",
-          text: "The Terraform workflow is three commands: init (download providers and configure backend), plan (diff current state against desired config — read-only, safe to run anytime), and apply (execute the plan). State is the single source of truth: it maps your HCL resources to real cloud resource IDs. Without state, Terraform cannot know what already exists. Corrupted or lost state is catastrophic — always store it remotely with locking enabled.",
+          text: "The Terraform workflow is three commands: init downloads providers and sets up the backend; plan shows what would change without actually doing it; apply executes the plan. State is what ties your configuration to real cloud resources — it records which Terraform resource corresponds to which actual EC2 instance, S3 bucket, etc. Without state, Terraform cannot compute a diff. Always store state in a remote backend (S3, Terraform Cloud) with locking enabled — lost or corrupted state is one of the most painful incidents in Terraform.",
         },
         {
           type: "code",
@@ -335,8 +335,8 @@ terraform apply -var-file="prod.tfvars"`,
       question: "What is Terraform state and why does it matter?",
       tag: "State",
       answer: [
-        "Terraform state (terraform.tfstate) is a JSON file that maps every resource in your configuration to its real cloud identifier. For example, it records that resource.aws_instance.app corresponds to EC2 instance i-0abc123def. Without this mapping, Terraform cannot compute a diff — it would try to create everything from scratch on every apply.",
-        "This is why state is critical: lose it, and Terraform thinks nothing exists. Corrupt it, and apply produces unpredictable changes. Always store state in a remote backend (S3, Terraform Cloud, GCS) with encryption enabled, and never commit terraform.tfstate to git — it frequently contains plaintext secrets.",
+        "Terraform state (terraform.tfstate) is a JSON file that maps every resource in your configuration to its real cloud identifier. For example, it records that resource.aws_instance.app is EC2 instance i-0abc123def. Without this mapping, Terraform cannot compute a diff — it would try to create everything from scratch on every apply.",
+        "This is why state is critical: lose it, and Terraform thinks nothing exists. Corrupt it, and apply makes unpredictable changes. Always store state in a remote backend (S3, Terraform Cloud, GCS) with encryption enabled, and never commit terraform.tfstate to git — it often contains plaintext secrets.",
       ].join("\n\n"),
       callout: "Lost state does not mean lost infrastructure — you can use terraform import to re-associate resources. But it is painful. Protect state like a production database.",
     },
@@ -344,16 +344,16 @@ terraform apply -var-file="prod.tfvars"`,
       question: "What is the difference between terraform plan and terraform apply?",
       tag: "Workflow",
       answer: [
-        "terraform plan is a read-only operation. It reads the current state, calls cloud APIs to inspect real resource attributes, compares against your configuration, and prints a human-readable diff of what would change. It makes no changes to your infrastructure. Run plan as often as you like — in PRs, in CI checks, before any apply.",
-        "terraform apply executes the plan. By default it re-runs the planning phase and prompts for confirmation. In CI, use 'terraform plan -out=tfplan' to save the exact plan, then 'terraform apply tfplan' to apply that specific plan without re-planning — this prevents a race condition where the environment changes between plan and apply.",
+        "terraform plan is read-only. It reads the current state, checks real cloud resource attributes, compares against your configuration, and prints a diff of what would change. It makes no changes to your infrastructure. Run plan as often as you like — in PRs, in CI, before any apply.",
+        "terraform apply executes the plan. By default it re-runs the planning phase and asks for confirmation. In CI, use 'terraform plan -out=tfplan' to save the exact plan, then 'terraform apply tfplan' to apply that specific plan — this prevents a race condition where the environment changes between plan and apply.",
       ].join("\n\n"),
     },
     {
       question: "How do you handle secrets in Terraform?",
       tag: "Security",
       answer: [
-        "Never hardcode secrets in .tf files or tfvars files. Secrets end up in terraform.tfstate in plaintext regardless. The correct pattern is to store secrets in AWS Secrets Manager, HashiCorp Vault, or SSM Parameter Store, then reference them via a data source: 'data.aws_secretsmanager_secret_version.db_password.secret_string'.",
-        "For secrets that Terraform itself needs to create (e.g., an RDS password), use the 'random_password' resource and store the result in Secrets Manager immediately. Mark sensitive output values with 'sensitive = true' to suppress them from plan output. Restrict access to the S3 state bucket to only the CI role and senior engineers.",
+        "Never hardcode secrets in .tf files or tfvars files — they end up in terraform.tfstate in plaintext regardless. The right approach is to store secrets in AWS Secrets Manager, HashiCorp Vault, or SSM Parameter Store, then reference them via a data source.",
+        "For secrets Terraform itself creates (like an RDS password), use the random_password resource and immediately store the result in Secrets Manager. Mark sensitive output values with 'sensitive = true' to keep them out of plan output. Restrict access to the S3 state bucket to only the CI role and senior engineers.",
       ].join("\n\n"),
       callout: "terraform.tfstate contains plaintext resource attributes including passwords. Encrypt it at rest (S3 SSE), restrict access via IAM, and never commit it to version control.",
     },
@@ -361,29 +361,29 @@ terraform apply -var-file="prod.tfvars"`,
       question: "What is a Terraform module and when should I write one?",
       tag: "Modules",
       answer: [
-        "A module is a directory of .tf files that accepts input variables and produces output values — it is Terraform's unit of reuse. The root module is your top-level configuration. Child modules are invoked with a 'module' block and a source path (local directory, git URL, or Terraform Registry URL).",
-        "Write a module when the same group of resources appears in multiple places: a 'vpc' module used by dev, staging, and prod; an 'ecs-service' module called once per microservice. Modules enforce consistency and let you update infrastructure patterns in one place. The Terraform Registry hosts thousands of community modules — always prefer a well-maintained registry module over writing from scratch for generic infrastructure like VPCs and EKS clusters.",
+        "A module is a directory of .tf files that accepts input variables and exports output values — it is Terraform's unit of reuse. Your top-level configuration is the root module. You call child modules with a module block and a source path (local path, git URL, or Terraform Registry).",
+        "Write a module when the same group of resources appears in multiple places — a VPC module used by dev, staging, and prod; an ECS service module called once per microservice. The Terraform Registry has thousands of community modules — prefer a well-maintained registry module over writing from scratch for common infrastructure like VPCs and EKS clusters.",
       ].join("\n\n"),
     },
     {
       question: "What is the difference between Terraform workspaces and directories for environments?",
       tag: "Environments",
       answer: [
-        "Workspaces share a single configuration directory but maintain a separate state file per workspace. They are convenient for small teams and simple projects but dangerous at scale: it is easy to run 'terraform apply' in the wrong workspace and modify production when you meant staging.",
-        "Directory-per-environment duplicates the directory structure but provides complete isolation: separate state backends, separate IAM roles in CI, separate tfvars files, and no shared context between environments. The duplication is manageable with shared modules. For any production system with more than one engineer, directory-per-environment is the safer default.",
+        "Workspaces share a single configuration directory but maintain a separate state file per workspace. They are convenient for small, simple projects but dangerous at scale — it is easy to run apply in the wrong workspace and accidentally modify production.",
+        "Directory-per-environment gives complete isolation: separate state backends, separate IAM roles in CI, separate tfvars files, and no shared context between environments. The duplication is manageable with shared modules. For any production system with more than one engineer, directory-per-environment is the safer default.",
       ].join("\n\n"),
     },
     {
       question: "How does state locking prevent corruption and how do I set it up?",
       tag: "State locking",
       answer: [
-        "When terraform apply starts, it writes a lock entry to the DynamoDB table (for S3 backends). Any concurrent apply that reads that lock entry immediately fails with an error. When apply finishes (success or failure), the lock is released. This prevents two concurrent applies from both reading the same state, making different changes, and then each overwriting the other's state file.",
-        "Setup requires one DynamoDB table (PAY_PER_REQUEST billing, LockID as hash key) shared across all environments. Add 'dynamodb_table = your-table-name' to every backend block. If an apply crashes mid-run, the lock may remain — use 'terraform force-unlock LOCK_ID' after confirming no apply is actually running.",
+        "When terraform apply starts, it writes a lock entry to the DynamoDB table. Any concurrent apply that reads that lock fails immediately with an error. When apply finishes — success or failure — the lock is released. This prevents two concurrent applies from both reading the same state, making different changes, and then each overwriting the other's state file.",
+        "Setup requires one DynamoDB table (PAY_PER_REQUEST billing, LockID as hash key) and a dynamodb_table entry in every backend block. If an apply crashes mid-run, the lock may remain — use 'terraform force-unlock LOCK_ID' after confirming no apply is actually running.",
       ].join("\n\n"),
     },
   ],
   bullets: [
-    "Write a main.tf that provisions an S3 bucket and an EC2 instance using variables for environment and instance type; apply it to a dev workspace and verify resources appear in the AWS console.",
+    "Write a main.tf that provisions an S3 bucket and an EC2 instance using variables for environment and instance type; apply it to a dev workspace and verify the resources appear in the AWS console.",
     "Add an S3 + DynamoDB backend to your config, run terraform init to migrate local state to remote, then simulate concurrent apply by opening two terminals and verify the second is rejected by the lock.",
     "Create a modules/webserver directory, move the EC2 resource into it, and call it from both an environments/dev and environments/staging directory with different instance types via tfvars — confirm both apply independently without touching each other's state.",
   ],

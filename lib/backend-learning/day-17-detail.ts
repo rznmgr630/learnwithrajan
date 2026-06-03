@@ -2,8 +2,8 @@ import type { RoadmapDayDetail } from "../challenge-data";
 
 export const DAY_17_DETAIL = {
   overview: [
-    "A CI/CD pipeline is the automated assembly line that turns a git push into a production deployment. Continuous Integration runs your test suite on every change so bugs never accumulate; Continuous Delivery packages a release-ready artifact; Continuous Deployment pushes that artifact to production without a human gate. Mastering this pipeline means you ship faster, break less, and sleep better.",
-    "Day 17 covers the GitHub Actions workflow syntax, how to structure multi-stage pipelines (lint → unit tests → integration tests → build → deploy), how to enforce coverage thresholds, and how to manage environment secrets and deployment gates safely.",
+    "A CI/CD pipeline is the automated process that takes a git push all the way to a production deployment. Continuous Integration runs your tests on every commit so bugs do not pile up. Continuous Delivery packages a ready-to-deploy artifact from every passing build. Continuous Deployment takes it one step further and deploys automatically without a human gate.",
+    "Today you will learn the GitHub Actions workflow syntax, how to structure a multi-stage pipeline from lint all the way to deploy, how to enforce test coverage thresholds, and how to manage secrets and deployment gates safely.",
   ],
   sections: [
     {
@@ -25,7 +25,7 @@ export const DAY_17_DETAIL = {
         },
         {
           type: "paragraph",
-          text: "The three terms are often conflated. Continuous Integration (CI) is about merging code frequently and validating each merge automatically. Continuous Delivery (CD) extends CI by producing a deployable artifact on every successful build — a human still clicks 'deploy'. Continuous Deployment removes that human gate entirely: if tests pass, the code ships. Most teams start with CI + Continuous Delivery and graduate to full Continuous Deployment as test confidence grows.",
+          text: "These three terms are often used interchangeably but they mean different things. CI is about running tests on every change so the main branch stays healthy. Continuous Delivery means every passing build produces an artifact that is ready to deploy — but a human still decides when. Continuous Deployment removes that last human step — if all checks pass, the code goes live automatically. Most teams start with CI plus Continuous Delivery and graduate to full Continuous Deployment as their test suite matures.",
         },
         {
           type: "table",
@@ -62,7 +62,7 @@ export const DAY_17_DETAIL = {
       blocks: [
         {
           type: "paragraph",
-          text: "A GitHub Actions workflow is a YAML file under .github/workflows/. It defines when the workflow runs (triggers), what machines run it (runners), and a directed acyclic graph of jobs — each job is a sequence of steps. Steps can run shell commands or reusable Actions from the Marketplace. Jobs run in parallel by default; use 'needs' to serialize them.",
+          text: "A GitHub Actions workflow is a YAML file in the .github/workflows/ folder. It defines what triggers the workflow, what machines run it, and a set of jobs — each job is a sequence of steps. Steps run shell commands or pre-built Actions from the Marketplace. Jobs run in parallel by default; add a needs: field to make one wait for another.",
         },
         {
           type: "table",
@@ -173,7 +173,7 @@ jobs:
       blocks: [
         {
           type: "paragraph",
-          text: "A mature pipeline runs multiple test layers at different points. Fast tests (unit) run first to give developers sub-minute feedback. Slower tests (integration, e2e) run after the build or in parallel but are not blocking the PR preview. Smoke tests run post-deploy against the real environment to verify the release is live and functional.",
+          text: "A good pipeline runs different types of tests at different stages. Unit tests run first — they are fast and give quick feedback. Integration and end-to-end tests run later in the pipeline. Smoke tests run after the deployment itself to confirm the new version is actually serving traffic correctly.",
         },
         {
           type: "table",
@@ -256,7 +256,7 @@ jobs:
       blocks: [
         {
           type: "paragraph",
-          text: "The deploy job runs only after all test jobs have passed and only on the main branch. GitHub Environments let you attach required reviewers, protection rules, and scoped secrets to a named target (staging, production). Secrets are masked in logs automatically — they never appear in plain text in the workflow output.",
+          text: "The deploy job only runs after all tests pass and only when merging to the main branch. GitHub Environments let you attach required reviewers, protection rules, and scoped secrets to each target environment (staging, production). Any secret value stored in GitHub Secrets is automatically masked in workflow logs — it never appears in plain text.",
         },
         {
           type: "code",
@@ -340,8 +340,8 @@ jobs:
       question: "What is the difference between Continuous Delivery and Continuous Deployment?",
       tag: "CI/CD concepts",
       answer: [
-        "Continuous Delivery means every passing build produces a deployable artifact and the pipeline is capable of releasing it — but a human still decides when to push the button. The system is always ready to ship; the release cadence is a business decision.",
-        "Continuous Deployment removes that human gate entirely. As soon as all automated checks pass, the code ships to production automatically. This requires extremely high test confidence and fast rollback capability. Most teams run Continuous Delivery for production and Continuous Deployment for staging.",
+        "Continuous Delivery means every passing build produces a deployable artifact and the pipeline is ready to release it — but a human still decides when to push the button. The system is always ready to ship; the timing is a business decision.",
+        "Continuous Deployment removes that human decision entirely. As soon as all checks pass, the code ships automatically. This requires very high test confidence and a fast rollback mechanism. Most teams run Continuous Delivery for production and Continuous Deployment for staging.",
       ].join("\n\n"),
       callout: "Continuous Delivery = 'we can deploy anytime'. Continuous Deployment = 'we deploy every time'.",
     },
@@ -349,24 +349,24 @@ jobs:
       question: "Why should tests run before the build step?",
       tag: "Pipeline design",
       answer: [
-        "Running tests before build enforces fast feedback: if tests fail, the build never starts, so you don't waste minutes compiling or bundling code that is already broken. Failing fast also means the error signal is cleaner — you know the issue is in the code, not in the build tooling.",
-        "Additionally, the build artifact should be a proven artifact. Separating test and build ensures that the artifact you upload and eventually deploy is the direct output of passing tests — not a speculative build that might be paired with failing tests.",
+        "Running tests before the build step means you fail fast: if tests fail, the build never starts, so you do not waste time compiling broken code. The error is also cleaner — you know the problem is in the code, not the build tooling.",
+        "The build artifact should be a proven artifact. Separating test and build ensures that what you upload and eventually deploy is the direct output of passing tests — not a speculative build that might be paired with failing tests.",
       ].join("\n\n"),
     },
     {
       question: "What is a matrix build and when should I use one?",
       tag: "GitHub Actions",
       answer: [
-        "A matrix build runs the same job multiple times across a combination of variables — for example, Node.js versions [18, 20, 22] or operating systems [ubuntu, windows]. GitHub Actions creates one job instance per combination and runs them in parallel.",
-        "Use matrix builds when your library or CLI must support multiple environments and you want to catch version-specific breakage before users do. For application servers (not libraries), a matrix is usually overkill — just pin a single LTS version and move on.",
+        "A matrix build runs the same job multiple times across a combination of variables — for example Node.js versions [18, 20, 22] or operating systems [ubuntu, windows]. GitHub Actions creates one job per combination and runs them in parallel.",
+        "Use matrix builds when your library or CLI must support multiple environments and you want to catch version-specific breakage early. For application servers (not libraries), a matrix is usually overkill — just pin a single LTS version and move on.",
       ].join("\n\n"),
     },
     {
       question: "How do you prevent secrets from being exposed in logs?",
       tag: "Security",
       answer: [
-        "GitHub Actions automatically masks any value stored in a Secret — if it appears in stdout or stderr, it is replaced with '***'. Never echo a secret directly; never construct it into a URL that gets printed; never store it in an environment variable that a debug step might dump.",
-        "For added safety: use environment-scoped secrets so only the deploy job can read production credentials; set 'if: github.ref == refs/heads/main' on deploy jobs so fork PRs cannot trigger them; and audit third-party Actions before using them (prefer pinning to a commit SHA rather than a mutable tag like @v4).",
+        "GitHub Actions automatically masks any value stored as a Secret — if it appears in stdout or stderr, it is replaced with '***'. Never echo a secret directly or build it into a URL that gets logged. Never store it in an environment variable that a debug step might dump.",
+        "For extra safety: use environment-scoped secrets so only the deploy job can read production credentials; set 'if: github.ref == refs/heads/main' on deploy jobs so fork PRs cannot trigger them; and prefer pinning third-party Actions to a commit SHA rather than a mutable tag like @v4.",
       ].join("\n\n"),
       callout: "Never construct a secret into a string that gets logged — even masked secrets can be reconstructed character by character from error messages.",
     },
@@ -374,22 +374,22 @@ jobs:
       question: "What happens if my coverage threshold is not met?",
       tag: "Testing",
       answer: [
-        "Jest exits with a non-zero exit code when any coverage threshold defined in 'coverageThreshold' is not met. GitHub Actions treats any non-zero exit code as a step failure, which fails the job and, if that job is a required status check, blocks the pull request merge.",
-        "Start with conservative thresholds (lines: 70, branches: 65) and raise them incrementally as you add tests. Setting the bar unrealistically high initially leads to developers skipping tests to make the number rather than writing meaningful coverage.",
+        "Jest exits with a non-zero exit code when any coverage threshold in coverageThreshold is not met. GitHub Actions treats any non-zero exit code as a failure, which fails the job and — if that job is a required status check — blocks the PR merge.",
+        "Start with conservative thresholds (lines: 70, branches: 65) and raise them as you add tests. Setting the bar too high from the start leads to developers writing pointless tests to hit a number instead of writing meaningful coverage.",
       ].join("\n\n"),
     },
     {
       question: "How do I roll back a bad deployment in a GitHub Actions pipeline?",
       tag: "Deployment",
       answer: [
-        "The safest rollback strategy is to re-run the previous successful workflow run's deploy job from the GitHub Actions UI — it will re-download the previously tested artifact and redeploy it without any code changes. This avoids creating a 'revert commit' under pressure.",
-        "For more robust rollback, upload each build artifact with a versioned tag (e.g., the git SHA) and keep artifacts for at least 30 days. Your deploy script can accept a version parameter so you can deploy any historical build on demand. Blue-green or canary deployments make this even safer by keeping the previous version running until the new one is validated.",
+        "The safest rollback is to re-run the previous successful workflow's deploy job from the GitHub Actions UI — it re-downloads the previously tested artifact and redeploys it without any code changes. This avoids writing a revert commit under pressure.",
+        "For more robust rollback, tag each build artifact with the git SHA and keep artifacts for at least 30 days. Your deploy script can accept a version parameter so you can deploy any historical build on demand. Blue-green or canary deployments make this even safer by keeping the previous version running until the new one is validated.",
       ].join("\n\n"),
     },
   ],
   bullets: [
     "Create a .github/workflows/ci.yml that runs ESLint, TypeScript type-check, Jest with 80% line coverage threshold, and npm run build — confirm the pipeline fails when you break a test.",
-    "Add a matrix build over Node.js 20 and 22 and observe both jobs running in parallel in the Actions tab.",
+    "Add a matrix build over Node.js 20 and 22 and watch both jobs run in parallel in the Actions tab.",
     "Create a 'staging' GitHub Environment with a required reviewer, add a deploy job that only runs on main after tests pass, and verify the approval gate appears in the UI.",
   ],
 } satisfies RoadmapDayDetail;
