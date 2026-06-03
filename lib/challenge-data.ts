@@ -28,6 +28,8 @@ import { DAY_25_DETAIL } from "./backend-learning/day-25-detail";
 import { DAY_26_DETAIL } from "./backend-learning/day-26-detail";
 import { DAY_27_DETAIL } from "./backend-learning/day-27-detail";
 import { DAY_28_DETAIL } from "./backend-learning/day-28-detail";
+import { DAY_29_DETAIL } from "./backend-learning/day-29-detail";
+import { DAY_30_DETAIL } from "./backend-learning/day-30-detail";
 
 /** Official “current” day (1-based). Days before this count as done when seeding local progress. */
 export const CURRENT_DAY = 1;
@@ -349,7 +351,7 @@ export const ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "capstone",
     title: backendWeekTitle("capstone"),
     dotClass: "bg-[var(--accent)]",
-    days: [dayRow(29, ["api", "core"]), dayRow(30, ["theory", "ops"])],
+    days: [dayRow(29, ["api", "core"], DAY_29_DETAIL), dayRow(30, ["theory", "ops"], DAY_30_DETAIL)],
   },
 ];
 
