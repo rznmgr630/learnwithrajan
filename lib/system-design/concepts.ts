@@ -615,6 +615,167 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
       "Always pair retry with idempotency — retrying a non-idempotent operation creates duplicate side effects (double charge, double email). Mention retry budgets to prevent tail latency from compounding across multiple service calls. Combine with circuit breakers: stop retrying when the circuit is open (downstream is clearly down, not just hiccuping).",
     tags: ["Exponential Backoff", "Jitter", "Thundering Herd", "Retry Budget", "Transient Failure", "Resilience"],
   },
+
+  // ─── FOUNDATION GAPS ──────────────────────────────────────────
+  {
+    id: 34,
+    section: "Foundation",
+    title: "Latency & Throughput",
+    tagline: "The two core performance metrics every engineer must know",
+    description:
+      "Latency = time to complete one request (milliseconds). Throughput = number of requests completed per second (req/s). They are related but distinct. A batch pipeline can have high throughput (10,000 items/sec) but also high latency (each item takes 2 seconds). A real-time API has low latency (50ms per call) but may have lower throughput if not scaled. Key insight: as load increases, throughput rises until the system saturates — at that point, latency starts climbing rapidly. That inflection point is your system's capacity limit. Always measure P99 latency (99th percentile) not average — averages hide tail latency where real users suffer. If P50 = 50ms but P99 = 8 seconds, 1 in 100 users waits 160× longer. The average (~100ms) completely hides the problem. Target numbers: CDN edge < 10ms, cache hit < 1ms, web API < 200ms, DB query < 50ms.",
+    whyItMatters:
+      "Every performance conversation in interviews uses these two terms. Knowing the difference tells you which problem you're solving: 'system is slow for each user' (latency) vs 'system can't handle enough users at once' (throughput). They require different fixes.",
+    diagramNote:
+      "Draw two separate gauges side by side. Left — Latency: a stopwatch labeled 'time for ONE request to complete' with examples: cache 1ms, API 200ms, DB 50ms. Right — Throughput: a flow pipe labeled 'requests completed PER SECOND' with examples: 100 req/s (small app), 100K req/s (Google). Below both: a graph showing load on the x-axis — throughput rises then flattens, latency stays flat then spikes. The spike point = system capacity limit.",
+    example:
+      "Google Search: P99 latency < 200ms while handling ~99,000 req/s throughput. Redis: < 1ms latency at 1M+ ops/sec throughput because everything stays in RAM. A slow DB query (high latency) doesn't necessarily mean low throughput — if you run 1,000 queries in parallel, throughput stays high even though each individual query is slow.",
+    interviewTip:
+      "State both metrics when asked about performance targets: 'I'll target P99 latency under 200ms at 10,000 req/s throughput.' Always say P99, never average. When a system is 'slow', ask yourself: is every request slow (latency problem → check DB query, add index, add cache)? Or is it fine for one user but breaks under load (throughput problem → add servers, load balancer, scale horizontally)?",
+    tags: ["Latency", "Throughput", "P99", "P50", "Performance", "Capacity", "Tail Latency"],
+  },
+  {
+    id: 35,
+    section: "Foundation",
+    title: "Capacity Estimation",
+    tagline: "Back-of-envelope math that every interview requires",
+    description:
+      "Every system design interview starts with estimating scale. The chain: Daily Active Users (DAU) → requests per day → requests per second (RPS) → storage per day → bandwidth. Key formula: RPS = requests per day ÷ 86,400 (seconds in a day). Numbers to memorize: 1M DAU × 10 requests/day = 10M req/day ≈ 116 req/s. 100M DAU × 10 req/day = 1B req/day ≈ 12,000 req/s. Storage: 1M users × 1KB profile = 1GB. 1M photos/day × 200KB = 200GB/day. Peak traffic = average × 3 (Black Friday, viral moments). Cache memory needed ≈ 20% of daily data (only the hot 20% gets hit 80% of time). Servers needed = peak RPS ÷ single-server capacity (typically 1,000–5,000 req/s depending on work). Always round aggressively — this is estimation not calculation. State your assumptions out loud.",
+    whyItMatters:
+      "Capacity estimation drives every architecture decision. '12,000 req/s means one server is not enough — I need a load balancer and at least 6 servers.' Without estimation, your design has no foundation. Interviewers use it to see if you think at production scale.",
+    diagramNote:
+      "Draw a vertical estimation chain with formulas: DAU (e.g. 10M) → × 10 requests/user/day = 100M req/day → ÷ 86,400 = 1,160 req/s → × 3 peak = 3,500 peak req/s → ÷ 1,000 per server = 4 servers needed. Second chain for storage: 1,160 req/s × 1KB data = 1.1MB/s → × 86,400 = ~100GB/day → × 365 days = ~36TB/year.",
+    example:
+      "Twitter estimation: 300M DAU × 20 tweet-reads/day = 6B reads/day = 70,000 read req/s. Writes: 100M tweets/day × 280 bytes = 28GB text/day. Images: 10% of tweets have images × 200KB = 2TB/day image storage. Conclusion: read replicas are essential (70K read req/s), separate object storage for images (2TB/day can't go in SQL), cache the timeline heavily (same tweets read by millions).",
+    interviewTip:
+      "Use these 5 steps every interview: (1) State DAU. (2) Calculate req/s = DAU × requests per user ÷ 86,400. (3) Storage/day = req/s × data per request × 86,400. (4) Peak = average × 3. (5) Servers = peak req/s ÷ 1,000. Say all math out loud: 'If 1M DAU each make 10 requests, that's 10M per day, divide by 86,400 seconds, roughly 116 req/s, peak of about 350.' Rounding to nice numbers shows comfort with estimation.",
+    tags: ["Capacity Estimation", "DAU", "RPS", "Back-of-Envelope", "Storage", "Throughput", "Scalability"],
+  },
+
+  // ─── DATA LAYER GAP ───────────────────────────────────────────
+  {
+    id: 36,
+    section: "Data Layer",
+    title: "Cache-aside Pattern",
+    tagline: "The most common cache pattern — the app controls the cache",
+    description:
+      "In cache-aside (also called lazy loading), the application manages all cache interactions directly — the cache is not automatically in the data path. Read flow: (1) App checks cache. (2) Cache HIT → return immediately, done. (3) Cache MISS → app queries database. (4) App writes result into cache with a TTL. (5) Return result to caller. Write flow: app writes to database, then deletes (invalidates) the cache key — next read will re-populate. The cache only holds data that has actually been requested, so cold data never fills it. This is different from Read-Through (the cache layer itself fetches from DB on miss — app only talks to cache) and Write-Through (every write goes to cache and DB together). Cache-aside is more flexible: you can cache any computed result, combine multiple DB queries into one cache entry, and invalidate precisely on writes.",
+    whyItMatters:
+      "Cache-aside is the most widely used caching pattern in production. It's simple, explicit, and puts the app in control. It's what most engineers mean when they say 'add Redis caching.' The curriculum names it specifically because interviewers ask for it by name.",
+    diagramNote:
+      "Draw the read path: App → Cache → (HIT) return value. App → Cache → (MISS) → Database → App stores result in Cache with TTL → return value. Draw the write path: App → Database (write) → App deletes cache key. Label the HIT path 'fast path < 1ms' and the MISS path 'slow path, happens once then cached'. Annotate: 'only requested data gets cached — cold data stays out'.",
+    example:
+      "A product page: first user requests product #42 — cache miss, app fetches from DB, stores in Redis with 5-min TTL. Next 10,000 users hit Redis — zero DB queries. When product price changes, app updates DB then deletes the Redis key. Next request re-fetches fresh price from DB and re-populates cache. This delete-on-write approach is simpler than update-on-write and avoids stale data.",
+    interviewTip:
+      "Cache-aside is your default answer when asked about caching strategy. Say: 'I'd use cache-aside — on miss, the application fetches from DB and populates Redis with a TTL. On writes, I'd invalidate the cache key so the next read gets fresh data.' Distinguish it from read-through by saying the app (not the cache infrastructure) is responsible for loading data. This distinction matters for systems where cache and DB can't be directly connected.",
+    tags: ["Cache-aside", "Lazy Loading", "Cache Invalidation", "Redis", "Cache Strategy", "Read-Through"],
+  },
+
+  // ─── ADVANCED TOPICS GAPS ─────────────────────────────────────
+  {
+    id: 37,
+    section: "Advanced Topics",
+    title: "Reverse Proxy",
+    tagline: "The gatekeeper that sits in front of your backend",
+    description:
+      "A reverse proxy is a server that accepts all client requests and forwards them to backend servers, then returns the backend response to the client. The client never talks directly to a backend — it only ever sees the reverse proxy. What it handles: SSL/TLS termination (reverse proxy manages HTTPS so backend servers run plain HTTP internally, no certificate management per server), request routing (send /api/* to app servers, /static/* to object storage), response compression (gzip before sending to client), caching (serve cached responses without hitting backend), rate limiting, and authentication. Difference from load balancer: a load balancer is a specialized reverse proxy focused on distributing traffic across identical servers. A reverse proxy has broader responsibilities. NGINX and HAProxy are the most common reverse proxy tools. In microservices, the API Gateway is the reverse proxy that routes requests to specific services.",
+    whyItMatters:
+      "A reverse proxy is the single entry point to your system. Without it, backend servers are exposed directly to the internet, each client must know which server to hit, SSL must be handled on every server, and you have no central place for auth, rate limiting, or caching.",
+    diagramNote:
+      "Draw: Internet → [Reverse Proxy: NGINX] → Backend Server 1, Backend Server 2. Label the reverse proxy box with its jobs: SSL termination, routing /api → servers, /static → CDN, compression, rate limiting. Show that the internet sees HTTPS but the internal network between proxy and backends uses plain HTTP. Add a comparison inset: 'Forward Proxy' = Client → Proxy → Internet (client-side, for VPN/anonymity). 'Reverse Proxy' = Internet → Proxy → Servers (server-side, for protection).",
+    example:
+      "NGINX as reverse proxy: all traffic hits NGINX on port 443 (HTTPS). NGINX terminates SSL, strips certificate overhead, and forwards plain HTTP to backend servers on port 8080 internally. Backend servers never touch the public internet. NGINX also caches static assets, applies rate limits per IP, and routes /api/* to Node.js servers while serving /static/* from disk.",
+    interviewTip:
+      "Distinguish from load balancer in interviews: 'A load balancer is a reverse proxy specialized for traffic distribution. A reverse proxy has additional responsibilities: SSL termination, routing, caching, auth.' In microservices, call it an API Gateway — same concept, named for the microservices context. When designing any system, add a reverse proxy/API Gateway as the first layer clients hit.",
+    tags: ["Reverse Proxy", "NGINX", "SSL Termination", "API Gateway", "HAProxy", "Load Balancer"],
+  },
+  {
+    id: 38,
+    section: "Advanced Topics",
+    title: "Object Storage",
+    tagline: "Where files, images, and videos actually live at scale",
+    description:
+      "Object storage (Amazon S3, Google Cloud Storage, Azure Blob) stores binary data as objects — each object has a key (path/filename), the data (raw bytes), and metadata. Unlike a relational database (structured queries) or a file system (folder hierarchy), object storage is a flat key-value store for binary blobs, massively scalable to trillions of objects. The standard architecture: your application stores the object URL in your database (column: photo_url TEXT) and stores the actual bytes in S3 — never binary blobs in SQL. Access pattern: upload goes App → S3 directly. Reads go through CDN → S3 origin on cache miss. Pre-signed URLs generate temporary access links for private files without making the S3 bucket public — the URL is signed with your credentials and expires after N minutes. Never store video, images, audio, or large documents in a SQL database — it makes the DB huge, slows every query that scans tables, and prevents efficient serving via CDN.",
+    whyItMatters:
+      "Any system with user-uploaded content (photos, videos, documents, backups) requires object storage. Saying 'store images in the database' in an interview is the most common red flag for senior roles. Object storage is the correct answer whenever binary data appears in a design.",
+    diagramNote:
+      "Draw upload path: User → App Server (generates unique key: users/123/photo-456.jpg) → S3 Bucket (stores bytes) → App stores URL in PostgreSQL. Draw read path: User requests image → CDN Edge (cache hit → serve directly). CDN cache miss → CDN fetches from S3 → CDN caches at edge → serves user. Label: 'DB stores only the URL string (tiny). S3 stores the actual bytes (large). CDN serves bytes fast from the edge.'",
+    example:
+      "Instagram upload: user posts a photo → upload service generates a unique ID → image bytes go to S3 at path users/{user_id}/{photo_id}.jpg → the S3 URL is stored in PostgreSQL next to post metadata → CloudFront CDN caches the image at 200+ edge locations worldwide. The database row is 200 bytes. The image file is 2MB. Storing the image in the DB would make it 10,000× larger.",
+    interviewTip:
+      "Whenever any design involves user uploads, immediately say: 'I'd use object storage like S3 for the actual file bytes, store just the URL in the database, and put a CDN in front of S3 for fast global reads.' For private content (medical records, private DMs with attachments), say 'pre-signed URLs that expire after 15 minutes — never make the bucket public.' This answer alone separates candidates who have built real systems from those who haven't.",
+    tags: ["S3", "Object Storage", "Blob Storage", "GCS", "CDN", "Pre-signed URL", "Binary Data", "Media Storage"],
+  },
+  {
+    id: 39,
+    section: "Advanced Topics",
+    title: "Authentication",
+    tagline: "Who are you — JWT, OAuth, and sessions explained",
+    description:
+      "Authentication (authn) = verifying who the user is. Authorization (authz) = what they are allowed to do. Three approaches: Session-based — server stores session data in Redis, client sends a session ID cookie on every request. Stateful: every request hits the session store. Simple for monoliths. JWT (JSON Web Token) — server signs a token with a secret key and sends it to the client. Client sends the token in every request (Authorization: Bearer <token>). Server verifies the signature locally — no database lookup. Stateless, scales horizontally, ideal for microservices. JWT payload contains user_id, roles, and expiry — base64 encoded (not encrypted, so never store secrets in it). Access tokens: short-lived (15 min). Refresh tokens: long-lived (7 days), used to silently get a new access token when it expires. OAuth 2.0 — delegated authorization. 'Login with Google' lets users authenticate via Google; Google gives your app a token proving identity without your app ever seeing the user's Google password.",
+    whyItMatters:
+      "Every API has authentication. Getting it wrong means any user can access any other user's data. JWT is the standard for stateless, horizontally-scalable auth. OAuth is the standard for third-party identity. These come up in almost every API design question.",
+    diagramNote:
+      "Draw JWT flow: User sends credentials → Server validates → Server signs JWT (header.payload.signature) with secret key → Returns JWT to client → Client stores JWT → Every request: Client sends JWT in Authorization header → API Gateway verifies signature (no DB call) → extracts user_id → routes to service. Label the three JWT parts separately: header (algorithm), payload (user_id, role, exp), signature (HMAC of header+payload with secret).",
+    example:
+      "A typical mobile app: login returns a JWT (expires 15 min) + refresh token (expires 7 days). The app stores both. Every API call sends the JWT. After 15 min, the app silently calls POST /auth/refresh with the refresh token to get a new JWT — user never sees a re-login prompt. When the user logs out, the refresh token is deleted from the DB (revoked). The old JWT still works for up to 15 min — that's the trade-off of stateless tokens.",
+    interviewTip:
+      "In any API design, add auth immediately: 'Every endpoint requires a JWT in the Authorization: Bearer header. The API gateway validates the JWT signature before routing to any service — individual services never handle auth.' Mention the JWT revocation problem: since JWTs are stateless, you can't invalidate them before expiry. Solution: maintain a small token blacklist in Redis. Short TTL (15 min) limits the blast radius.",
+    tags: ["JWT", "OAuth", "Authentication", "Authorization", "Session", "Refresh Token", "Bearer Token", "Stateless"],
+  },
+
+  // ─── CASE STUDY ADDITIONS ─────────────────────────────────────
+  {
+    id: 40,
+    section: "Case Study",
+    title: "URL Shortener Design",
+    tagline: "Design bit.ly — hashing, redirection, and scale",
+    description:
+      "Functional requirements: given a long URL, generate a unique short code (bit.ly/abc123). Given a short code, redirect to the original URL. Optionally: analytics (click count, location). Capacity: 100M shortening requests/day = ~1,200 write req/s. 10B redirections/day = ~116,000 read req/s. Heavily read-skewed. Key design choice — generating the short code: (1) Hash the URL (MD5, take 7 chars) — risk of collision. (2) Base62-encode an auto-incremented ID — 62 characters (a–z, A–Z, 0–9), 7 chars = 62^7 = 3.5 trillion unique codes, no collision. Option 2 is preferred. Redirect: 301 (permanent, browser caches — fewer server calls but no analytics after first visit) vs 302 (temporary, every click hits server — accurate analytics). Database: a simple key-value table: short_code → {long_url, user_id, created_at, click_count}. Read path: short code lookup → cache first → DB on miss → return 301/302 redirect. Cache: 80% of traffic goes to 20% of URLs — LRU cache of popular short codes in Redis.",
+    whyItMatters:
+      "URL shortener is the most common starter system design question. It tests: unique ID generation, read-heavy scaling, caching, and database choice. The patterns (ID generation, redirect strategy, cache-aside) reuse in dozens of other designs.",
+    diagramNote:
+      "Draw two flows. Write path: Client → POST /shorten (long_url) → App generates Base62 ID (e.g. 'abc123') → Store in DB: abc123 → long_url → Return short URL. Read/redirect path: Client → GET /abc123 → App checks Redis cache → HIT: 302 redirect to long_url. Cache MISS: App queries DB → stores in Redis → 302 redirect. Label the short_code column as the primary key and add the click_count increment step for analytics.",
+    example:
+      "bit.ly serves 10B+ clicks/month. They use Base62 encoding with a distributed ID generator (like Snowflake) to avoid collisions. Popular links like a viral tweet's shortened URL might get 10M clicks in an hour — pure cache hits in Redis, the database is rarely touched for those. Analytics are batched: click counts are incremented in Redis and flushed to DB periodically to avoid write storms.",
+    interviewTip:
+      "Hit these points in order: (1) Clarify requirements — custom aliases? expiry? analytics? (2) Capacity — 1200 write req/s, 116K read req/s, read-heavy. (3) Short code generation — Base62 of auto-incremented ID, 7 chars = 3.5T URLs. (4) Database — single table: short_code PK, long_url, created_at. (5) Cache — Redis with LRU, cache the hot 20%. (6) Redirect — 302 for analytics, 301 for performance. (7) Scale reads with read replicas and cache.",
+    tags: ["URL Shortener", "Base62", "Hashing", "Redirect", "Cache-aside", "Read-heavy", "Case Study"],
+  },
+  {
+    id: 41,
+    section: "Case Study",
+    title: "News Feed Design",
+    tagline: "Design Twitter/Instagram feed — fan-out and ranking",
+    description:
+      "Functional requirements: user sees a personalized feed of posts from people they follow, sorted by time or relevance. Two core approaches for feed generation: Fan-out on write (push model) — when user A posts, immediately write the post ID to all followers' feed lists. Feed reads are instant (pre-computed list). Problem: if a celebrity has 10M followers, one post triggers 10M writes. Fan-out on read (pull model) — when a user opens their feed, fetch recent posts from all followees and merge. No pre-computation, always fresh. Problem: reading from 1,000 followees on every page load is slow. Hybrid (production approach): push for normal users (< 10K followers), pull for celebrities (> 10K followers). Feed storage: per-user feed stored in Redis as a sorted set (score = timestamp), containing post IDs (not full post data). Post content fetched separately by ID. Database: posts in PostgreSQL, follow relationships in a graph or SQL table, full post content in a post store.",
+    whyItMatters:
+      "News feed is one of the five canonical system design questions. It tests fan-out strategies, the tradeoff between read and write amplification, caching, and real-time delivery. The push-vs-pull pattern appears in notifications, activity streams, and recommendation feeds.",
+    diagramNote:
+      "Draw two paths: Push (fan-out on write): User posts → Post Service → Message Queue → Fan-out Service → writes post_id to Feed Cache (Redis sorted set) for each follower. Read: User opens feed → fetch post IDs from Redis → batch-fetch post content. Pull (fan-out on read): User opens feed → fetch last 20 posts from each followee → merge + sort → return. Label: push is fast to read, expensive to write. Pull is always fresh, slow to read. Show the hybrid: push for normal users, pull for celebrities merged at read time.",
+    example:
+      "Twitter uses a hybrid approach: when you tweet, your post is pushed to the Redis feed cache of your followers instantly (if they have < 10K followers). When a celebrity (10M followers) tweets, their posts are NOT pushed — instead, when you open your timeline, Twitter pulls the celebrity's recent tweets and merges them with your pre-computed feed in real time. This keeps write fanout manageable.",
+    interviewTip:
+      "Start with requirements: 'Does the feed need to be real-time? Can it be slightly stale?' Then state the tradeoff clearly: 'Fan-out on write gives fast reads but expensive writes — problem for celebrities. Fan-out on read gives fresh data but slow reads at scale. I'd use hybrid: push for < 10K followers, pull for celebrities.' Store only post IDs in the feed cache, not full content — content fetched by ID separately for storage efficiency.",
+    tags: ["News Feed", "Fan-out", "Push Model", "Pull Model", "Redis", "Timeline", "Celebrity Problem", "Case Study"],
+  },
+  {
+    id: 42,
+    section: "Case Study",
+    title: "Messaging App Design",
+    tagline: "Design WhatsApp — real-time delivery, storage, and receipts",
+    description:
+      "Functional requirements: send a message to a user, receive messages in real-time, delivery receipts (sent / delivered / read), group chats, offline message handling. Real-time delivery: each client maintains a persistent WebSocket connection to a chat server. When sender sends a message → chat server stores it in DB → delivers to recipient via their WebSocket connection. If recipient is offline, message is stored and pushed when they reconnect via push notification (APNs/FCM). Message storage: Cassandra is ideal — high write throughput, time-series data, scales horizontally. Schema: (conversation_id, message_id, sender_id, content, timestamp, status). message_id uses a time-sortable unique ID (Snowflake) so messages are stored in chronological order. Group messages: sender → message service → fan-out to all group members' active connections + store for offline members. Media: images/videos go to object storage (S3), message stores the S3 URL. End-to-end encryption: keys are stored on devices only, server stores only ciphertext.",
+    whyItMatters:
+      "Messaging app design is one of the most common senior-level interview questions. It tests WebSocket connection management at scale, offline message queuing, database choice for high-write time-series data, and real-time fan-out for groups.",
+    diagramNote:
+      "Draw: Sender Client → WebSocket → Chat Server → Cassandra DB (store message) → Chat Server checks recipient connection → Recipient Online: deliver via WebSocket. Recipient Offline: push notification via APNs/FCM → recipient opens app → fetches unread messages from DB. For groups: Chat Server → Fan-out Service → delivers to each group member's chat server via pub/sub. Label connections: 'Each server handles ~50K concurrent WebSocket connections. Connection is maintained by heartbeat ping every 30s.'",
+    example:
+      "WhatsApp handles 2 billion users with roughly 100 billion messages/day. They use Erlang for chat servers (designed for massive concurrent connections), Mnesia/custom storage for message queues, and store media in object storage. The three delivery receipts (single grey tick = sent to server, double grey tick = delivered to device, double blue tick = read by recipient) are implemented via acknowledgement messages sent back through the WebSocket channel.",
+    interviewTip:
+      "Cover these five areas: (1) Real-time: WebSocket connections, each server handles 50K connections, users route to same server via consistent hashing on user_id. (2) Storage: Cassandra for messages (high write, time-series), partitioned by conversation_id. (3) Offline: store messages in DB, push notification to wake up client. (4) Groups: fan-out to all members, cap group size to limit fan-out cost. (5) Media: S3 for files, store URL in message. The delivery receipt flow is a common follow-up — trace the ACK messages explicitly.",
+    tags: ["Messaging", "WhatsApp", "WebSockets", "Cassandra", "Real-time", "Fan-out", "Offline Queue", "Case Study"],
+  },
 ];
 
 export const CONCEPT_COUNT = SYSTEM_DESIGN_CONCEPTS.length;
