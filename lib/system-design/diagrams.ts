@@ -242,23 +242,29 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
   // ── 13. Load Balancer ─────────────────────────────────────────
   13: {
     nodes: [
-      { id: "client", label: "Client",       shape: "rounded", color: "green" },
-      { id: "lb",     label: "Load Balancer", shape: "diamond", color: "accent" },
-      { id: "s1",     label: "Server 1" },
-      { id: "s2",     label: "Server 2" },
-      { id: "s3",     label: "Server 3" },
-      { id: "db",     label: "Database",     shape: "db",      color: "accent" },
+      { id: "client",  label: "Client",          shape: "rounded", color: "green" },
+      { id: "active",  label: "Active LB",        sub: "holds VIP, handles traffic", color: "accent" },
+      { id: "passive", label: "Passive LB",       sub: "standby, heartbeat monitor",  color: "muted" },
+      { id: "l4",      label: "L4 (Transport)",   sub: "routes by IP + port" },
+      { id: "l7",      label: "L7 (Application)", sub: "routes by URL, headers, cookies", color: "orange" },
+      { id: "s1",      label: "Server 1" },
+      { id: "s2",      label: "Server 2" },
+      { id: "s3",      label: "Server 3" },
+      { id: "db",      label: "Database",         shape: "db", color: "accent" },
     ],
     edges: [
-      { from: "client", to: "lb" },
-      { from: "lb", to: "s1" },
-      { from: "lb", to: "s2" },
-      { from: "lb", to: "s3" },
-      { from: "s1", to: "db" },
-      { from: "s2", to: "db" },
-      { from: "s3", to: "db" },
+      { from: "client",  to: "active" },
+      { from: "active",  to: "passive", label: "heartbeat", dashed: true },
+      { from: "active",  to: "l4" },
+      { from: "active",  to: "l7" },
+      { from: "l7",      to: "s1" },
+      { from: "l7",      to: "s2" },
+      { from: "l7",      to: "s3" },
+      { from: "s1",      to: "db" },
+      { from: "s2",      to: "db" },
+      { from: "s3",      to: "db" },
     ],
-    rows: [["client"], ["lb"], ["s1", "s2", "s3"], ["db"]],
+    rows: [["client"], ["active", "passive"], ["l4", "l7"], ["s1", "s2", "s3"], ["db"]],
   },
 
   // ── 14. Horizontal & Vertical Scaling ────────────────────────
@@ -895,5 +901,96 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
       { from: "offline", to: "ack",    label: "on reconnect" },
     ],
     rows: [["sender"], ["ws_in"], ["db"], ["online", "offline"], ["ack"]],
+  },
+
+  // ── 43. Distributed Unique ID Generation ──────────────────────
+  43: {
+    nodes: [
+      { id: "snowflake", label: "Snowflake ID",    sub: "64-bit integer",          color: "accent" },
+      { id: "ts",        label: "41 bits",         sub: "timestamp (ms)",          color: "green" },
+      { id: "machine",   label: "10 bits",         sub: "machine/worker ID" },
+      { id: "seq",       label: "12 bits",         sub: "sequence per ms" },
+      { id: "uuid",      label: "UUID v4",         sub: "128-bit random, not sortable", color: "muted" },
+      { id: "auto",      label: "Auto-increment",  sub: "simple, DB bottleneck",   color: "red" },
+      { id: "result",    label: "4M IDs/ms/worker", sub: "sortable, no coordinator", color: "green" },
+    ],
+    edges: [
+      { from: "snowflake", to: "ts" },
+      { from: "snowflake", to: "machine" },
+      { from: "snowflake", to: "seq" },
+      { from: "ts",        to: "result" },
+      { from: "machine",   to: "result" },
+      { from: "seq",       to: "result" },
+      { from: "uuid",      to: "auto", dashed: true },
+    ],
+    rows: [["auto", "uuid", "snowflake"], ["ts", "machine", "seq"], ["result"]],
+  },
+
+  // ── 44. Web Crawler Design ────────────────────────────────────
+  44: {
+    nodes: [
+      { id: "frontier",  label: "URL Frontier",    sub: "priority queue",         color: "accent" },
+      { id: "fetcher",   label: "Fetcher Workers", sub: "download HTML" },
+      { id: "parser",    label: "Link Parser",     sub: "extract URLs" },
+      { id: "dedup",     label: "Deduplicator",    sub: "Bloom filter + hash set", color: "orange" },
+      { id: "store",     label: "Content Store",   sub: "save for indexing",       shape: "db" },
+      { id: "polite",    label: "Politeness Layer", sub: "robots.txt + rate limit", color: "green" },
+      { id: "seen",      label: "Skip (seen)",     sub: "already crawled",         color: "muted" },
+    ],
+    edges: [
+      { from: "frontier", to: "polite" },
+      { from: "polite",   to: "fetcher" },
+      { from: "fetcher",  to: "parser" },
+      { from: "fetcher",  to: "store" },
+      { from: "parser",   to: "dedup",   label: "new URLs" },
+      { from: "dedup",    to: "frontier", label: "not seen" },
+      { from: "dedup",    to: "seen",     label: "already seen", dashed: true },
+    ],
+    rows: [["frontier"], ["polite"], ["fetcher"], ["parser", "store"], ["dedup"], ["frontier", "seen"]],
+  },
+
+  // ── 45. Notification System Design ────────────────────────────
+  45: {
+    nodes: [
+      { id: "api",    label: "Notification API",  sub: "POST /notify",            color: "accent" },
+      { id: "prefs",  label: "User Preferences",  sub: "opt-in/out per channel",  shape: "db" },
+      { id: "queue",  label: "Message Queue",     color: "orange" },
+      { id: "push",   label: "Push Worker",       sub: "APNs + FCM" },
+      { id: "email",  label: "Email Worker",      sub: "SendGrid / SMTP" },
+      { id: "sms",    label: "SMS Worker",        sub: "Twilio" },
+      { id: "dlq",    label: "DLQ + Retry",       sub: "failed after 3 attempts",  color: "red" },
+    ],
+    edges: [
+      { from: "api",   to: "prefs",  label: "check opt-out", dashed: true },
+      { from: "api",   to: "queue" },
+      { from: "queue", to: "push" },
+      { from: "queue", to: "email" },
+      { from: "queue", to: "sms" },
+      { from: "push",  to: "dlq",   label: "failed", dashed: true },
+      { from: "email", to: "dlq",   label: "failed", dashed: true },
+    ],
+    rows: [["api"], ["prefs", "queue"], ["push", "email", "sms"], ["dlq"]],
+  },
+
+  // ── 46. System Design Interview Framework ─────────────────────
+  46: {
+    nodes: [
+      { id: "s1",  label: "Step 1: Clarify",      sub: "5-10 min — ask scale, features, constraints", color: "accent" },
+      { id: "s2",  label: "Step 2: High-level",   sub: "10-15 min — draw core boxes", color: "green" },
+      { id: "s3",  label: "Step 3: Deep Dive",    sub: "15-20 min — bottlenecks, DB, cache", color: "orange" },
+      { id: "s4",  label: "Step 4: Wrap Up",      sub: "5 min — trade-offs, failure modes", color: "accent" },
+      { id: "e1",  label: "Don't: jump to drawing",  color: "red" },
+      { id: "e2",  label: "Don't: over-engineer",    color: "red" },
+      { id: "e3",  label: "Don't: stay generic",     color: "red" },
+    ],
+    edges: [
+      { from: "s1", to: "s2" },
+      { from: "s2", to: "s3" },
+      { from: "s3", to: "s4" },
+      { from: "s1", to: "e1", dashed: true },
+      { from: "s2", to: "e2", dashed: true },
+      { from: "s3", to: "e3", dashed: true },
+    ],
+    rows: [["s1"], ["s2"], ["s3"], ["s4"], ["e1", "e2", "e3"]],
   },
 };
