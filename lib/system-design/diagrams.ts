@@ -606,4 +606,90 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
     ],
     rows: [["client"], ["gw"], ["auth", "orders", "notify"], ["db_a", "db_o", "mq"]],
   },
+
+  // ── 30. Pagination ────────────────────────────────────────────
+  30: {
+    nodes: [
+      { id: "all",    label: "All Records",        sub: "millions of rows",      shape: "db", color: "accent" },
+      { id: "offset", label: "Offset Pagination",  sub: "LIMIT 20 OFFSET 100" },
+      { id: "cursor", label: "Cursor Pagination",  sub: "WHERE id > last_id",    color: "green" },
+      { id: "slow",   label: "Slow at depth",      sub: "scans rows to skip",    color: "red" },
+      { id: "fast",   label: "O(1) always fast",   sub: "index jump, no scan",   color: "green" },
+      { id: "token",  label: "next_cursor token",  sub: "returned in response",  shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "all",    to: "offset" },
+      { from: "all",    to: "cursor" },
+      { from: "offset", to: "slow" },
+      { from: "cursor", to: "fast" },
+      { from: "fast",   to: "token" },
+    ],
+    rows: [["all"], ["offset", "cursor"], ["slow", "fast"], ["token"]],
+  },
+
+  // ── 31. Distributed Locking ───────────────────────────────────
+  31: {
+    nodes: [
+      { id: "s1",      label: "Server 1",       shape: "rounded" },
+      { id: "s2",      label: "Server 2",       shape: "rounded" },
+      { id: "redis",   label: "Redis Lock",     sub: "SETNX lock:item PX 5000", shape: "db", color: "orange" },
+      { id: "got",     label: "Lock Acquired",  sub: "process the operation",   color: "green" },
+      { id: "wait",    label: "Lock Denied",    sub: "key exists — retry later", color: "red" },
+      { id: "release", label: "Release Lock",   sub: "DEL key when done",       color: "green" },
+    ],
+    edges: [
+      { from: "s1",    to: "redis",   label: "SETNX" },
+      { from: "s2",    to: "redis",   label: "SETNX" },
+      { from: "redis", to: "got",     label: "key was free" },
+      { from: "redis", to: "wait",    label: "key taken" },
+      { from: "got",   to: "release" },
+    ],
+    rows: [["s1", "s2"], ["redis"], ["got", "wait"], ["release"]],
+  },
+
+  // ── 32. Consistency vs Availability ──────────────────────────
+  32: {
+    nodes: [
+      { id: "part",  label: "Network Partition", shape: "diamond", color: "red" },
+      { id: "c",     label: "Choose Consistency", sub: "block or error" },
+      { id: "a",     label: "Choose Availability", sub: "serve stale data" },
+      { id: "cp",    label: "CP Systems",         sub: "ZooKeeper, HBase",      color: "orange" },
+      { id: "ap",    label: "AP Systems",         sub: "Cassandra, DynamoDB",   color: "green" },
+      { id: "bank",  label: "Use: Banking",       sub: "consistency required",  color: "orange" },
+      { id: "feed",  label: "Use: Social Feed",   sub: "availability preferred", color: "green" },
+    ],
+    edges: [
+      { from: "part", to: "c" },
+      { from: "part", to: "a" },
+      { from: "c",    to: "cp" },
+      { from: "a",    to: "ap" },
+      { from: "cp",   to: "bank" },
+      { from: "ap",   to: "feed" },
+    ],
+    rows: [["part"], ["c", "a"], ["cp", "ap"], ["bank", "feed"]],
+  },
+
+  // ── 33. Retry & Backoff ───────────────────────────────────────
+  33: {
+    nodes: [
+      { id: "fail",    label: "Request Failed",   shape: "rounded", color: "red" },
+      { id: "check",   label: "Transient error?", shape: "diamond" },
+      { id: "perm",    label: "Permanent (400/404)", sub: "don't retry",        color: "red" },
+      { id: "w1",      label: "Wait 1s",          sub: "attempt 1" },
+      { id: "w2",      label: "Wait 2s",          sub: "attempt 2" },
+      { id: "w4",      label: "Wait 4s + jitter", sub: "attempt 3",            color: "orange" },
+      { id: "ok",      label: "Success",          shape: "rounded",             color: "green" },
+      { id: "giveup",  label: "Give Up",          sub: "max retries hit",       color: "red" },
+    ],
+    edges: [
+      { from: "fail",   to: "check" },
+      { from: "check",  to: "perm",   label: "no" },
+      { from: "check",  to: "w1",     label: "yes" },
+      { from: "w1",     to: "w2" },
+      { from: "w2",     to: "w4" },
+      { from: "w4",     to: "ok",     label: "succeeds" },
+      { from: "w4",     to: "giveup", label: "still fails" },
+    ],
+    rows: [["fail"], ["check"], ["perm", "w1"], ["w2"], ["w4"], ["ok", "giveup"]],
+  },
 };
