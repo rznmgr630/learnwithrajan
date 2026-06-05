@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, type SystemDesignConcept } from "@/lib/system-design/concepts";
+import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, SYSTEM_DESIGN_SECTIONS, type SystemDesignConcept } from "@/lib/system-design/concepts";
+import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
+import { SdDiagram } from "@/components/learn/SdDiagram";
 
 function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!concept) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [concept]);
+
   if (!concept) return null;
 
   return (
@@ -20,7 +29,7 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] p-5">
           <div className="min-w-0">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-              Concept #{concept.id}
+              {concept.section} · #{concept.id}
             </span>
             <h2 className="text-xl font-bold leading-snug text-[var(--text)]">{concept.title}</h2>
             <p className="text-sm text-[var(--muted)]">{concept.tagline}</p>
@@ -38,7 +47,7 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain p-5 flex flex-col gap-6">
           {/* Tags */}
           <div className="flex flex-wrap gap-2">
             {concept.tags.map((tag) => (
@@ -62,6 +71,22 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-400">Why it matters</h3>
             <p className="text-sm leading-relaxed text-[var(--text)]">{concept.whyItMatters}</p>
           </section>
+
+          {/* Diagram */}
+          {SYSTEM_DESIGN_DIAGRAMS[concept.id] && (
+            <section>
+              <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793 3 14.172V17h2.828l8.38-8.379-2.83-2.828Z" />
+                </svg>
+                Diagram
+              </h3>
+              <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-3">
+                <SdDiagram config={SYSTEM_DESIGN_DIAGRAMS[concept.id]} uid={`sd-${concept.id}`} />
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-[var(--faint)]">{concept.diagramNote}</p>
+            </section>
+          )}
 
           {/* Real-world example */}
           <section>
@@ -169,11 +194,26 @@ export function SystemDesign() {
             ))}
           </div>
 
-          {/* Concept list */}
-          <div className="flex flex-col gap-3">
-            {SYSTEM_DESIGN_CONCEPTS.map((concept) => (
-              <ConceptCard key={concept.id} concept={concept} onClick={() => setActive(concept)} />
-            ))}
+          {/* Concept list grouped by section */}
+          <div className="flex flex-col gap-8">
+            {SYSTEM_DESIGN_SECTIONS.map((section) => {
+              const sectionConcepts = SYSTEM_DESIGN_CONCEPTS.filter((c) => c.section === section);
+              if (sectionConcepts.length === 0) return null;
+              return (
+                <div key={section}>
+                  <div className="mb-3 flex items-center gap-3">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">{section}</h2>
+                    <div className="flex-1 border-t border-[var(--border)]" />
+                    <span className="text-[10px] text-[var(--faint)]">{sectionConcepts.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {sectionConcepts.map((concept) => (
+                      <ConceptCard key={concept.id} concept={concept} onClick={() => setActive(concept)} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
