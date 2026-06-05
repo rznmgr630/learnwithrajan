@@ -547,6 +547,74 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
       "Don't over-engineer early — a well-structured monolith is simpler to operate and debug. Extract services when you have: clear domain boundaries, independent scaling needs, or separate team ownership. Discuss distributed tracing (Jaeger/Zipkin) as essential for debugging in a microservices architecture.",
     tags: ["Microservices", "API Gateway", "Service Mesh", "gRPC", "Domain-Driven Design", "Distributed Tracing"],
   },
+  {
+    id: 30,
+    section: "Advanced Topics",
+    title: "Pagination",
+    tagline: "Loads large result sets in small chunks",
+    description:
+      "Pagination splits large result sets into pages so the server never has to load millions of rows at once. Offset pagination (LIMIT 20 OFFSET 100): simple — the DB skips the first 100 rows and returns the next 20. But at large depth (page 5000) the DB still scans and discards all 100,000 preceding rows — O(n) and slow. Cursor-based pagination uses a pointer to the last seen item (WHERE id > last_seen_id LIMIT 20) — O(1) regardless of page depth because the DB jumps directly to the cursor position using an index. For infinite scroll (Twitter, Instagram, TikTok), cursor-based is the standard. For page-number UIs (page 1, 2, 3) with small datasets, offset is fine. Always define a maximum page size to prevent clients requesting 1M rows in one call.",
+    whyItMatters:
+      "Returning all records in a single response is a common anti-pattern that causes out-of-memory crashes, slow responses, and wasted bandwidth. Every API that returns a list needs a pagination strategy from day one — retrofitting it later is painful.",
+    diagramNote:
+      "Draw two paths from a 'All Records (10M rows)' box. Left path: Offset — DB scans rows 1 to 100,000 then returns rows 100,001–100,020 (label: slow at depth, O(n)). Right path: Cursor — index lookup jumps directly to last_seen_id, returns next 20 (label: O(1) always fast). Arrow from the cursor path to 'next_cursor token returned in response'.",
+    example:
+      "Twitter's timeline API returns 20 tweets with a next_cursor token. Passing that token to the next call returns the following 20 without overlap or gap — and it's instant regardless of how far back in the timeline you are. GitHub's API uses Link headers with cursor tokens for repository list pagination.",
+    interviewTip:
+      "Default to cursor-based for feeds and time-ordered data. Use offset only for admin dashboards with small datasets where users need to jump to page N. Always state your max page size. Mention that cursors must be opaque to clients (base64 encoded) so the server can change the internal implementation without breaking clients.",
+    tags: ["Cursor", "Offset", "Infinite Scroll", "API Design", "Keyset Pagination"],
+  },
+  {
+    id: 31,
+    section: "Advanced Topics",
+    title: "Distributed Locking",
+    tagline: "Prevents concurrent conflicts across servers",
+    description:
+      "When multiple servers need to ensure only one can perform an operation at a time (inventory decrement, cron job, auction bid), a distributed lock coordinates access. Redis SETNX (SET if Not eXists) with an expiry implements a simple lock: acquire by setting a key with a TTL, release by deleting it. Only the server that successfully sets the key gets the lock — all others see the key already exists and must wait or retry. Redlock algorithm uses multiple Redis nodes for fault tolerance — acquire from majority of N nodes, so a single Redis node failure doesn't break locking. ZooKeeper and etcd provide stronger consistency guarantees. Locks must always have TTLs to prevent deadlocks if the lock-holding server crashes before releasing. Fencing tokens (monotonically increasing version numbers) prevent stale lock holders from making changes after their lock has expired.",
+    whyItMatters:
+      "In a distributed system, race conditions are subtle and dangerous. Without distributed locking, two servers can simultaneously think they won an auction, oversell inventory by 1, or run the same daily cron job twice — all silent bugs that only appear under concurrent load.",
+    diagramNote:
+      "Draw: Server 1 and Server 2 both sending 'SETNX lock:item:42' to Redis. Server 1 arrow lands first — Redis box shows lock granted (green). Server 2 arrow reaches Redis — box shows 'key exists, denied' (red). Server 1 processes the operation, then sends 'DEL lock:item:42' to release. Server 2 retries and now acquires the lock.",
+    example:
+      "An e-commerce site uses Redis distributed lock when decrementing inventory: SETNX lock:item:42 server1 PX 5000. Only the server that acquired the lock can decrement. When it's done, DEL lock:item:42. If server1 crashes mid-operation, the PX 5000 TTL ensures the lock auto-expires in 5 seconds so no deadlock.",
+    interviewTip:
+      "Discuss three things: (1) TTL — long enough for the operation, short enough to auto-recover from crashes. (2) Fencing tokens — pass an incrementing version to the downstream system so stale lock holders can't write after their lock expired. (3) Alternatives — sometimes optimistic concurrency (compare-and-swap) is simpler than locks and avoids the lock-holder-crash problem entirely.",
+    tags: ["Redis", "SETNX", "Redlock", "Race Condition", "Fencing Token", "Deadlock", "TTL"],
+  },
+  {
+    id: 32,
+    section: "Advanced Topics",
+    title: "Consistency vs Availability",
+    tagline: "The core trade-off in every distributed system",
+    description:
+      "When a network partition occurs in a distributed system, you must choose one of two behaviors. Consistency: every read returns the most recent write, or returns an error — the system refuses to serve stale data. Availability: every request gets a response (possibly stale) — the system never errors out, even if it can't guarantee freshness. This is the practical meaning of CAP theorem. CP systems (ZooKeeper, etcd, HBase): block or error during a partition to preserve consistency. AP systems (Cassandra, DynamoDB, CouchDB): keep serving during a partition, accepting eventual consistency. Most real systems make this decision per feature: banking and inventory require consistency; social feeds, analytics, and notifications tolerate eventual consistency. The key insight: you can tune this per operation, not just per database.",
+    whyItMatters:
+      "Understanding this trade-off prevents two expensive mistakes: choosing 'strong consistency everywhere' makes your system unavailable under network issues; choosing 'eventual consistency everywhere' causes subtle data correctness bugs in financial flows.",
+    diagramNote:
+      "Draw a network partition splitting two data center boxes. Left path: 'Choose Consistency' — both nodes stop responding until sync is restored (label: blocks requests, no stale data). Right path: 'Choose Availability' — both nodes keep serving but may return different values (label: serves stale data, always up). Below each path: real examples. Consistency: banking, inventory. Availability: social feed, analytics.",
+    example:
+      "When you post a tweet, it is fine if followers see it 200ms later — eventual consistency, AP. When you transfer money, the balance must be immediately correct on all nodes — strong consistency, CP. Both happen in the same company (Twitter, then Twitter Payments), choosing differently per feature.",
+    interviewTip:
+      "Frame every database choice around this trade-off explicitly: 'I'll use PostgreSQL here because transfers require strong consistency — I need CP guarantees.' Or: 'I'll use Cassandra for the activity feed because availability matters more than perfect freshness — AP is acceptable.' This framing shows architectural reasoning over tool preference.",
+    tags: ["CAP Theorem", "Eventual Consistency", "Strong Consistency", "PACELC", "CP", "AP"],
+  },
+  {
+    id: 33,
+    section: "Advanced Topics",
+    title: "Retry & Backoff",
+    tagline: "Handles transient failures without creating retry storms",
+    description:
+      "Retries automatically re-attempt failed requests to recover from transient failures (network hiccup, brief overload, 503). Without backoff, immediate retries under load create a thundering herd — thousands of clients simultaneously hammering a recovering service, preventing it from recovering. Exponential backoff: wait = base × 2^attempt (1s, 2s, 4s, 8s, 16s). Jitter adds randomness to desync clients from retrying at exactly the same moment — without jitter, all clients wake up simultaneously and create spikes. Max retries cap the total attempts to avoid infinite loops. Only retry transient failures (503, 429, network timeout) — never retry permanent failures (400 Bad Request, 404 Not Found) since they won't succeed regardless. Retry budget: limit the total time spent retrying across an entire request chain to prevent cascading delays.",
+    whyItMatters:
+      "Without retries, any transient network hiccup causes a user-visible error. Without backoff, retries make failures worse — the recovering service gets hammered before it can stabilize. Exponential backoff with jitter is the standard solution used by every major cloud SDK.",
+    diagramNote:
+      "Draw a timeline: Request fails at T=0. Wait 1s → retry fails. Wait 2s → retry fails. Wait 4s + small jitter (4.3s actual) → success. Label each wait interval showing the exponential growth. Below, show two clients with and without jitter: without jitter both retry at exactly T=1, T=3, T=7 (synchronized spike); with jitter they retry at T=1.1, T=3.4, T=7.8 (spread out, no spike).",
+    example:
+      "AWS SDK retries with exponential backoff + jitter by default — DynamoDB throttled requests get retried after 1s, 2s, 4s with random jitter. Without jitter, a DynamoDB table going over capacity would cause all Lambda functions to retry simultaneously, creating a retry spike that makes recovery worse.",
+    interviewTip:
+      "Always pair retry with idempotency — retrying a non-idempotent operation creates duplicate side effects (double charge, double email). Mention retry budgets to prevent tail latency from compounding across multiple service calls. Combine with circuit breakers: stop retrying when the circuit is open (downstream is clearly down, not just hiccuping).",
+    tags: ["Exponential Backoff", "Jitter", "Thundering Herd", "Retry Budget", "Transient Failure", "Resilience"],
+  },
 ];
 
 export const CONCEPT_COUNT = SYSTEM_DESIGN_CONCEPTS.length;
