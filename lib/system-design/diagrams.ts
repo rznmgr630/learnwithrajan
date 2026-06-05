@@ -669,7 +669,7 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
     rows: [["part"], ["c", "a"], ["cp", "ap"], ["bank", "feed"]],
   },
 
-  // ── 33. Retry & Backoff ───────────────────────────────────────
+  // ── 33. Retry & Backoff ──────────────────────────────────────
   33: {
     nodes: [
       { id: "fail",    label: "Request Failed",   shape: "rounded", color: "red" },
@@ -691,5 +691,209 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
       { from: "w4",     to: "giveup", label: "still fails" },
     ],
     rows: [["fail"], ["check"], ["perm", "w1"], ["w2"], ["w4"], ["ok", "giveup"]],
+  },
+
+  // ── 34. Latency & Throughput ──────────────────────────────────
+  34: {
+    nodes: [
+      { id: "req",    label: "One Request",      shape: "rounded", color: "green" },
+      { id: "lat",    label: "Latency",          sub: "time to complete 1 req", color: "accent" },
+      { id: "tput",   label: "Throughput",       sub: "requests per second",    color: "orange" },
+      { id: "cache",  label: "Cache < 1ms",      color: "green" },
+      { id: "api",    label: "API < 200ms",      color: "green" },
+      { id: "db",     label: "DB < 50ms",        color: "green" },
+      { id: "small",  label: "Small App",        sub: "100 req/s" },
+      { id: "large",  label: "Google Scale",     sub: "99,000 req/s" },
+      { id: "limit",  label: "Capacity Limit",   sub: "latency spikes here",    color: "red" },
+    ],
+    edges: [
+      { from: "req",   to: "lat" },
+      { from: "req",   to: "tput" },
+      { from: "lat",   to: "cache" },
+      { from: "lat",   to: "api" },
+      { from: "lat",   to: "db" },
+      { from: "tput",  to: "small" },
+      { from: "tput",  to: "large" },
+      { from: "large", to: "limit" },
+    ],
+    rows: [["req"], ["lat", "tput"], ["cache", "api", "db", "small", "large"], ["limit"]],
+  },
+
+  // ── 35. Capacity Estimation ───────────────────────────────────
+  35: {
+    nodes: [
+      { id: "dau",     label: "DAU",             sub: "e.g. 10M users",         color: "accent" },
+      { id: "rpd",     label: "Requests / Day",  sub: "DAU × 10 = 100M/day" },
+      { id: "rps",     label: "Req / Second",    sub: "÷ 86,400 = 1,160 req/s", color: "orange" },
+      { id: "peak",    label: "Peak RPS",        sub: "× 3 = 3,500 req/s",      color: "red" },
+      { id: "servers", label: "Servers Needed",  sub: "÷ 1000 per server = 4",  color: "green" },
+      { id: "store",   label: "Storage / Day",   sub: "1,160 × 1KB = ~100GB",   color: "accent" },
+      { id: "cache",   label: "Cache Memory",    sub: "20% hot data = ~20GB",   color: "orange" },
+    ],
+    edges: [
+      { from: "dau",  to: "rpd" },
+      { from: "rpd",  to: "rps" },
+      { from: "rps",  to: "peak" },
+      { from: "peak", to: "servers" },
+      { from: "rps",  to: "store" },
+      { from: "store", to: "cache" },
+    ],
+    rows: [["dau"], ["rpd"], ["rps"], ["peak", "store"], ["servers", "cache"]],
+  },
+
+  // ── 36. Cache-aside Pattern ───────────────────────────────────
+  36: {
+    nodes: [
+      { id: "app",    label: "Application",      shape: "rounded" },
+      { id: "cache",  label: "Cache (Redis)",    color: "orange" },
+      { id: "hit",    label: "Cache HIT",        sub: "return instantly < 1ms", color: "green" },
+      { id: "miss",   label: "Cache MISS",       sub: "go to database",         color: "red" },
+      { id: "db",     label: "Database",         shape: "db",                   color: "accent" },
+      { id: "store",  label: "Store in Cache",   sub: "with TTL, for next time", color: "green" },
+      { id: "write",  label: "On Write",         sub: "update DB + delete key",  color: "orange" },
+    ],
+    edges: [
+      { from: "app",   to: "cache",  label: "check" },
+      { from: "cache", to: "hit",    label: "found" },
+      { from: "cache", to: "miss",   label: "not found" },
+      { from: "miss",  to: "db" },
+      { from: "db",    to: "store" },
+      { from: "write", to: "db",    label: "write" },
+      { from: "write", to: "cache", label: "invalidate key", dashed: true },
+    ],
+    rows: [["app"], ["cache"], ["hit", "miss"], ["db", "write"], ["store"]],
+  },
+
+  // ── 37. Reverse Proxy ─────────────────────────────────────────
+  37: {
+    nodes: [
+      { id: "internet", label: "Internet (HTTPS)", shape: "rounded", color: "green" },
+      { id: "proxy",    label: "Reverse Proxy",    sub: "NGINX / API Gateway",  color: "accent" },
+      { id: "ssl",      label: "SSL Termination",  sub: "converts to HTTP" },
+      { id: "route",    label: "Routing",          sub: "/api → servers, /static → CDN" },
+      { id: "s1",       label: "Backend Server 1", sub: "plain HTTP internally" },
+      { id: "s2",       label: "Backend Server 2", sub: "plain HTTP internally" },
+      { id: "cdn",      label: "CDN / Static",     color: "orange" },
+    ],
+    edges: [
+      { from: "internet", to: "proxy" },
+      { from: "proxy",    to: "ssl" },
+      { from: "proxy",    to: "route" },
+      { from: "route",    to: "s1" },
+      { from: "route",    to: "s2" },
+      { from: "route",    to: "cdn" },
+    ],
+    rows: [["internet"], ["proxy"], ["ssl", "route"], ["s1", "s2", "cdn"]],
+  },
+
+  // ── 38. Object Storage ────────────────────────────────────────
+  38: {
+    nodes: [
+      { id: "user",    label: "User",            shape: "rounded", color: "green" },
+      { id: "app",     label: "App Server",      sub: "generates unique key" },
+      { id: "s3",      label: "S3 / GCS",        sub: "stores raw bytes",       shape: "db", color: "accent" },
+      { id: "db",      label: "Database",        sub: "stores URL string only", shape: "db" },
+      { id: "cdn",     label: "CDN Edge",        sub: "caches files globally",  color: "orange" },
+      { id: "read",    label: "Read Request",    shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "user",  to: "app",  label: "upload file" },
+      { from: "app",   to: "s3",   label: "store bytes" },
+      { from: "app",   to: "db",   label: "store URL" },
+      { from: "s3",    to: "cdn",  label: "origin pull" },
+      { from: "read",  to: "cdn",  label: "fetch file" },
+    ],
+    rows: [["user", "read"], ["app", "cdn"], ["s3", "db"]],
+  },
+
+  // ── 39. Authentication ────────────────────────────────────────
+  39: {
+    nodes: [
+      { id: "client",  label: "Client",          shape: "rounded", color: "green" },
+      { id: "login",   label: "POST /login",     sub: "username + password" },
+      { id: "server",  label: "Auth Server" },
+      { id: "jwt",     label: "JWT Token",       sub: "header.payload.signature", color: "accent" },
+      { id: "api",     label: "API Request",     sub: "Authorization: Bearer <token>" },
+      { id: "verify",  label: "Verify Signature", sub: "no DB lookup needed",    color: "green" },
+      { id: "access",  label: "Access Granted",  shape: "rounded",               color: "green" },
+    ],
+    edges: [
+      { from: "client", to: "login" },
+      { from: "login",  to: "server" },
+      { from: "server", to: "jwt",    label: "sign + return" },
+      { from: "jwt",    to: "api",    label: "client stores + sends" },
+      { from: "api",    to: "verify" },
+      { from: "verify", to: "access", label: "valid" },
+    ],
+    rows: [["client"], ["login"], ["server"], ["jwt"], ["api"], ["verify"], ["access"]],
+  },
+
+  // ── 40. URL Shortener ─────────────────────────────────────────
+  40: {
+    nodes: [
+      { id: "client",  label: "Client",          shape: "rounded", color: "green" },
+      { id: "write",   label: "POST /shorten",   sub: "long URL in body" },
+      { id: "gen",     label: "Base62 ID Gen",   sub: "e.g. abc123",            color: "accent" },
+      { id: "db",      label: "Database",        sub: "abc123 → long_url",      shape: "db" },
+      { id: "short",   label: "Short URL",       sub: "bit.ly/abc123",          color: "green" },
+      { id: "read",    label: "GET /abc123",     sub: "redirect request" },
+      { id: "cache",   label: "Redis Cache",     sub: "hot short codes",        color: "orange" },
+      { id: "redir",   label: "302 Redirect",    sub: "to original long URL",   color: "green" },
+    ],
+    edges: [
+      { from: "client", to: "write" },
+      { from: "write",  to: "gen" },
+      { from: "gen",    to: "db" },
+      { from: "db",     to: "short" },
+      { from: "client", to: "read" },
+      { from: "read",   to: "cache",  label: "check first" },
+      { from: "cache",  to: "redir",  label: "HIT" },
+      { from: "cache",  to: "db",     label: "MISS" },
+      { from: "db",     to: "redir" },
+    ],
+    rows: [["client"], ["write", "read"], ["gen", "cache"], ["db"], ["short", "redir"]],
+  },
+
+  // ── 41. News Feed Design ──────────────────────────────────────
+  41: {
+    nodes: [
+      { id: "user",    label: "User Posts",      shape: "rounded", color: "green" },
+      { id: "post_svc", label: "Post Service" },
+      { id: "mq",      label: "Message Queue",  color: "accent" },
+      { id: "fanout",  label: "Fan-out Service", sub: "push to each follower" },
+      { id: "feed",    label: "Feed Cache",      sub: "Redis sorted set per user", color: "orange" },
+      { id: "reader",  label: "Reader Opens Feed", shape: "rounded", color: "green" },
+      { id: "fetch",   label: "Fetch Post Content", sub: "by ID from post store" },
+    ],
+    edges: [
+      { from: "user",   to: "post_svc" },
+      { from: "post_svc", to: "mq" },
+      { from: "mq",    to: "fanout" },
+      { from: "fanout", to: "feed",   label: "write post_id to each follower" },
+      { from: "reader", to: "feed",   label: "read post IDs" },
+      { from: "feed",   to: "fetch" },
+    ],
+    rows: [["user", "reader"], ["post_svc", "feed"], ["mq", "fetch"], ["fanout"]],
+  },
+
+  // ── 42. Messaging App Design ──────────────────────────────────
+  42: {
+    nodes: [
+      { id: "sender",  label: "Sender",          shape: "rounded", color: "green" },
+      { id: "ws_in",   label: "WebSocket Server", sub: "persistent connection" },
+      { id: "db",      label: "Cassandra DB",     sub: "store message",          shape: "db", color: "accent" },
+      { id: "online",  label: "Recipient Online", sub: "deliver via WebSocket",  color: "green" },
+      { id: "offline", label: "Recipient Offline", sub: "push notification",     color: "orange" },
+      { id: "ack",     label: "Delivery Receipt", sub: "sent → delivered → read", color: "green" },
+    ],
+    edges: [
+      { from: "sender",  to: "ws_in",  label: "send message" },
+      { from: "ws_in",   to: "db",     label: "store" },
+      { from: "ws_in",   to: "online", label: "deliver" },
+      { from: "ws_in",   to: "offline", label: "queue + push" },
+      { from: "online",  to: "ack" },
+      { from: "offline", to: "ack",    label: "on reconnect" },
+    ],
+    rows: [["sender"], ["ws_in"], ["db"], ["online", "offline"], ["ack"]],
   },
 };
