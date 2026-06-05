@@ -252,16 +252,16 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     title: "Load Balancer",
     tagline: "Routes traffic across servers and monitors health",
     description:
-      "A load balancer has two jobs: route requests to the right server, and monitor server health. Routing algorithms: Round Robin (request 1→S1, 2→S2, 3→S3, 4→S1... — equal distribution, ignores server capacity, simple), Geo-Based (route to nearest server by user IP location — reduces latency; breaks when users use VPN), Least Connections (route to server with fewest active connections — good for WebSocket/sticky sessions; ignores server config differences), Least Time (route to server with lowest average response time — best for trading apps / real-time systems; most complex to implement), IP Hash (hash of client IP always routes to same server — helps session affinity; hard to scale since adding servers reshuffles hashes), Weighted Round Robin (servers with more RAM/CPU get proportionally more requests — fixes Round Robin's equal-distribution problem on mixed configs). Health checks: Passive (observe real traffic response times/errors), Active (send synthetic test requests). Parameters: interval (how often to check), timeout (max wait per check), unhealthy threshold (consecutive failures before marking down), healthy threshold (consecutive successes before marking up).",
+      "A load balancer sits in front of servers and does two jobs: route requests and monitor server health. L4 vs L7: Layer 4 (transport layer) load balancers route based on IP address and TCP/UDP port — fast and simple, cannot inspect request content. Layer 7 (application layer) load balancers inspect HTTP headers, URL paths, and cookies — can route /api/* to app servers and /static/* to a CDN origin, enabling smarter routing decisions. AWS NLB is L4; AWS ALB is L7. Routing algorithms: Round Robin (sequential), Geo-Based (nearest server), Least Connections (fewest active), Least Time (fastest response), IP Hash (same client → same server), Weighted Round Robin (proportional by server capacity). Health checks: Passive (observe real traffic) or Active (send synthetic pings). Parameters: interval, timeout, unhealthy/healthy threshold. SPOF risk: the load balancer itself is a single point of failure. Fix with Active-Passive: two load balancers share a virtual IP (VIP). The active one handles all traffic; the passive one monitors it via heartbeat. If active fails, passive takes over the VIP in seconds (failover). Active-Active: both handle traffic simultaneously using DNS or anycast — higher throughput but more complex state sync.",
     whyItMatters:
-      "Without a load balancer, adding servers does nothing — clients still only know one IP. The load balancer is the single entry point that makes horizontal scaling visible and usable.",
+      "Without a load balancer, adding servers does nothing — clients only know one IP. L7 enables intelligent routing; L4 gives raw speed. The SPOF question is one of the most common load balancer follow-ups in interviews.",
     diagramNote:
-      "Draw: Client → [Load Balancer box] → three arrows to Server 1, Server 2, Server 3. All three servers point down to a shared Database. Add a 'health check loop' icon on the load balancer with arrows to each server labeled 'active ping every 5s'. Mark Server 2 as red/down — show traffic only flowing to S1 and S3. Add a small table on the side: algorithm name → use case.",
+      "Draw: Client → [Active LB] ←heartbeat→ [Passive LB]. Active LB routes to Server 1, Server 2, Server 3. All servers → shared Database. Mark Active LB as the VIP holder. When Active fails, show Passive taking the VIP. Below: L4 vs L7 comparison box — L4: routes by IP/port only; L7: reads HTTP headers, URL, cookies to route intelligently.",
     example:
-      "AWS ALB routes 10M daily requests across 50 EC2 instances. Weighted Round Robin assigns more traffic to high-memory instances. If a server's health check fails 3 times, it's removed from the pool. Auto Scaling adds servers when average CPU exceeds 70%.",
+      "AWS ALB (L7) routes /api/* to ECS containers and /images/* to S3. AWS NLB (L4) handles raw TCP for game servers needing microsecond latency. Both are deployed across two AZs in active-active mode — if one AZ fails, the other takes all traffic with no manual intervention.",
     interviewTip:
-      "For mixed server configurations, use Weighted Round Robin. For low-latency financial apps, use Least Time. Avoid IP Hash for modern stateless services — use Redis for sessions instead so any server can handle any request. Always mention health checks — a load balancer without them is just a router that sends traffic to dead servers.",
-    tags: ["Round Robin", "Least Connections", "Least Time", "IP Hash", "Geo-based", "Health Check", "Weighted"],
+      "Always distinguish L4 vs L7 when asked about load balancers. Say: 'I'd use an L7 load balancer here because I need to route by URL path.' For the SPOF question: 'The load balancer itself would be a SPOF — I'd fix this with an active-passive pair sharing a virtual IP, with automatic failover via heartbeat.' This answer specifically is asked in the Session 1 review of many courses.",
+    tags: ["Round Robin", "Least Connections", "L4", "L7", "Health Check", "SPOF", "Active-Passive", "ALB", "NLB"],
   },
   {
     id: 14,
@@ -451,16 +451,16 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     title: "Rate Limiting",
     tagline: "Prevents API abuse by capping request rates",
     description:
-      "Rate limiting caps how many requests a client can make in a time window. Algorithms: Fixed Window (reset counter every minute — simple but allows bursting at window boundaries), Sliding Window Log (track timestamp of each request in a list — precise but memory-heavy), Token Bucket (tokens added at a constant rate; burst allowed up to bucket size; excess requests dropped — most common), Leaky Bucket (requests processed at a fixed rate regardless of arrival rate — smooths traffic). State stored in Redis: atomic INCR + EXPIRE handles counters without race conditions. Apply limits per: IP address, user ID, API key, or endpoint. Return HTTP 429 Too Many Requests with a Retry-After header indicating when to retry.",
+      "Rate limiting caps how many requests a client can make in a time window. Four algorithms: Fixed Window — counter resets every minute. Simple but allows doubling at window boundaries (100 req in last second of minute 1 + 100 req in first second of minute 2 = 200 in 2 seconds). Sliding Window Log — store timestamp of every request in a list; count entries in the last 60 seconds. Precise but memory-heavy. Token Bucket — tokens refill at a constant rate (e.g. 10/sec), max bucket size 100. Each request consumes 1 token. If bucket is empty, reject. Allows bursting up to bucket size. Most common. Leaky Bucket — requests enter a fixed-size queue (the bucket). They are processed at a constant output rate regardless of how fast they arrive (like water leaking from a hole at the bottom). If the bucket is full, new requests are dropped. Key difference from Token Bucket: Token Bucket allows bursts; Leaky Bucket enforces a strictly constant output rate, smoothing all traffic spikes. Good for rate-limiting outbound calls to third-party APIs. State stored in Redis with atomic INCR + EXPIRE. Return HTTP 429 with Retry-After header.",
     whyItMatters:
-      "Without rate limiting, one bad actor (or runaway client) can exhaust server resources and starve legitimate users. Rate limiting protects system stability and enables fair usage.",
+      "Without rate limiting, one bad actor exhausts server resources and starves legitimate users. Leaky Bucket is specifically important for smoothing bursty traffic before it hits a downstream service that cannot handle spikes.",
     diagramNote:
-      "Draw: Client → [Rate Limiter box] → API Server. Inside rate limiter: Redis key 'rate:user:42 = 47' with expiry '13s'. Arrow: if count < 100 → pass through. If count = 100 → return 429 with Retry-After header. Token bucket variant: show a bucket with tokens refilling at 10/sec, max 100 tokens. Each request consumes 1 token. Burst allowed up to 100.",
+      "Draw Token Bucket: a bucket with tokens filling from top (10/sec), requests consuming from bottom. Bucket full = burst up to 100. Draw Leaky Bucket side by side: requests queue in the top of a bucket, a fixed-size hole at bottom drains at constant rate (10/sec). Bucket overflows = requests dropped. Label: Token Bucket allows bursts, Leaky Bucket enforces constant rate.",
     example:
-      "GitHub API: 5,000 requests/hour per authenticated user. Twitter: 15 timeline requests per 15-minute window. Redis implementation: MULTI; INCR rate:user:42; EXPIRE rate:user:42 60; EXEC — atomic, works across multiple API gateway instances.",
+      "Stripe uses Token Bucket for their API — allows short bursts for legitimate use cases like batch operations. An API gateway calling a third-party payment provider uses Leaky Bucket — no matter how many orders arrive simultaneously, calls to the payment API go out at a steady 50/sec to avoid overwhelming the vendor.",
     interviewTip:
-      "Token bucket is the most flexible — it allows burst traffic up to the bucket size. Describe Redis storage, the response format (429 + Retry-After), and distributed challenges: with multiple API gateway instances, all must share the same Redis counter. Mention sliding window for strict accuracy at the cost of more memory.",
-    tags: ["Token Bucket", "Sliding Window", "Fixed Window", "Redis", "HTTP 429", "Throttling"],
+      "Walk through Leaky Bucket step by step in interviews: 'Requests enter a queue. A worker drains the queue at a fixed rate — say 10 requests per second. If the queue is full, new requests are dropped or rejected with 429. This smooths any traffic spike into a constant stream.' Use Token Bucket when clients need burst capacity; use Leaky Bucket when downstream systems need protection from bursts.",
+    tags: ["Token Bucket", "Leaky Bucket", "Sliding Window", "Fixed Window", "Redis", "HTTP 429", "Throttling"],
   },
   {
     id: 25,
@@ -614,6 +614,23 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     interviewTip:
       "Always pair retry with idempotency — retrying a non-idempotent operation creates duplicate side effects (double charge, double email). Mention retry budgets to prevent tail latency from compounding across multiple service calls. Combine with circuit breakers: stop retrying when the circuit is open (downstream is clearly down, not just hiccuping).",
     tags: ["Exponential Backoff", "Jitter", "Thundering Herd", "Retry Budget", "Transient Failure", "Resilience"],
+  },
+  {
+    id: 43,
+    section: "Advanced Topics",
+    title: "Distributed Unique ID Generation",
+    tagline: "Generating unique IDs at scale without a central bottleneck",
+    description:
+      "Every distributed system needs unique IDs for records, events, and messages. Three main approaches: Auto-increment (simple, sequential, but a single database bottleneck — hard to scale across machines). UUID v4 (128-bit random — globally unique, no coordination needed, but NOT sortable and performs poorly as a clustered index primary key because random insertions fragment the B-tree). Snowflake (Twitter's solution — a 64-bit integer composed of: 41 bits for timestamp in milliseconds since a custom epoch, 10 bits for machine/worker ID, 12 bits for a per-machine sequence number. Total: ~4 million unique IDs per millisecond per machine. Chronologically sortable because the timestamp is the most significant bits — newer IDs are always numerically larger). Snowflake ID structure: [sign 1 bit][timestamp 41 bits][machine ID 10 bits][sequence 12 bits]. Machine ID is assigned at worker startup (from ZooKeeper or a config). Sequence resets to 0 each millisecond. ULID (Universally Unique Lexicographically Sortable Identifier) is a more modern alternative — 128-bit, URL-safe, sortable.",
+    whyItMatters:
+      "ID generation is a hidden bottleneck in distributed systems. Using a database auto-increment as ID source becomes a write bottleneck at scale. Snowflake IDs are the standard answer — they're fast, unique, sortable, and require no central coordinator after machine IDs are assigned.",
+    diagramNote:
+      "Draw a Snowflake ID as a 64-bit bar divided into sections: [1 bit: sign, always 0] [41 bits: timestamp ms] [10 bits: machine ID] [12 bits: sequence]. Label: 41-bit timestamp supports ~69 years from custom epoch. 10-bit machine ID supports 1024 workers. 12-bit sequence = 4096 IDs per millisecond per worker. Arrow showing: same machine, same millisecond → sequence increments. Next millisecond → sequence resets to 0.",
+    example:
+      "Twitter originally used MySQL auto-increment for tweet IDs, which became a write bottleneck at scale. They built Snowflake — a service that generates 64-bit IDs distributed across machines, each machine assigned a unique 10-bit ID. Discord uses a Snowflake variant for message IDs — you can extract the exact creation timestamp of any Discord message from its ID by reading the timestamp bits.",
+    interviewTip:
+      "When a design needs IDs, say: 'I'd use a Snowflake-style ID — 41-bit timestamp, 10-bit machine ID, 12-bit sequence. This gives me sortable IDs, 4M/ms throughput, and no central coordinator bottleneck.' Walk through the bit breakdown — interviewers specifically ask 'why is it chronologically sortable?' The answer: timestamp occupies the most significant bits, so higher IDs always represent later events.",
+    tags: ["Snowflake", "UUID", "Distributed ID", "ULID", "Auto-increment", "Twitter", "Timestamp", "Unique ID"],
   },
 
   // ─── FOUNDATION GAPS ──────────────────────────────────────────
@@ -775,6 +792,57 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     interviewTip:
       "Cover these five areas: (1) Real-time: WebSocket connections, each server handles 50K connections, users route to same server via consistent hashing on user_id. (2) Storage: Cassandra for messages (high write, time-series), partitioned by conversation_id. (3) Offline: store messages in DB, push notification to wake up client. (4) Groups: fan-out to all members, cap group size to limit fan-out cost. (5) Media: S3 for files, store URL in message. The delivery receipt flow is a common follow-up — trace the ACK messages explicitly.",
     tags: ["Messaging", "WhatsApp", "WebSockets", "Cassandra", "Real-time", "Fan-out", "Offline Queue", "Case Study"],
+  },
+  {
+    id: 44,
+    section: "Case Study",
+    title: "Web Crawler Design",
+    tagline: "Design a Google-scale web crawler — queues, deduplication, and politeness",
+    description:
+      "A web crawler systematically downloads and indexes web pages. Core components: URL Frontier (priority queue of URLs to visit — breadth-first for general crawling, priority-weighted for important pages), Fetcher (downloads HTML from URLs), Link Extractor / Parser (pulls all links from downloaded HTML), Deduplicator (prevents re-crawling the same URL — use a Bloom filter for fast membership checks, or a hash set of seen URL fingerprints), Content Store (saves crawled HTML for indexing). Key challenges: Deduplication — the same page can be reached from thousands of links. Normalize URLs (lowercase, remove trailing slash, sort query params) before hashing. Use a Bloom filter (space-efficient probabilistic structure) for fast near-duplicate detection. Politeness — don't hammer one server. Respect robots.txt. Rate-limit crawls per domain using a per-domain queue and delay timer. Scale — distribute crawl workers; partition URL frontier by domain hash so each worker owns a set of domains. DNS caching — crawlers cache DNS results to avoid a lookup per URL.",
+    whyItMatters:
+      "Web crawler design tests queue management, deduplication, distributed architecture, and politeness policies — skills that apply to any large-scale data ingestion system, not just crawlers.",
+    diagramNote:
+      "Draw the crawl loop: URL Frontier (priority queue) → Fetcher Worker → HTML downloaded → Parser (extract links) → Deduplicator (Bloom filter: seen before? skip. No? add to frontier) → Content Store. Add a Politeness layer between Frontier and Fetcher: per-domain delay queue ensures one domain isn't hit more than once per second. Label the robots.txt check before each fetch.",
+    example:
+      "Googlebot crawls billions of pages. It uses a distributed URL frontier sharded by domain, respects crawl-delay in robots.txt, caches DNS lookups per domain for efficiency, and uses a distributed content-addressable hash to detect near-duplicate pages (e.g., a page with and without www). Crawl budget is allocated per domain — important sites are crawled daily, low-quality sites monthly.",
+    interviewTip:
+      "Hit four points: (1) URL Frontier — priority queue, not just FIFO. Rank by PageRank or last-modified header. (2) Deduplication — Bloom filter for URL seen-check, MD5 hash of content for duplicate page detection. (3) Politeness — per-domain rate limiting, robots.txt, crawl-delay header. (4) Scale — partition frontier by domain hash, each worker owns a shard. The deduplication strategy is the most common deep-dive question.",
+    tags: ["Web Crawler", "Bloom Filter", "Deduplication", "URL Frontier", "robots.txt", "Politeness", "Case Study"],
+  },
+  {
+    id: 45,
+    section: "Case Study",
+    title: "Notification System Design",
+    tagline: "Design push, email, and SMS notifications at scale",
+    description:
+      "A notification system delivers messages across multiple channels: push notifications (iOS via APNs, Android via FCM), email (SMTP / SendGrid), and SMS (Twilio). Core architecture: Notification Service (API endpoint: POST /notify) → Message Queue → Channel Workers (one per channel type). This decoupling ensures a slow email provider doesn't block push notifications. User preferences: a settings table lets users opt out per channel or notification type — check this before sending. Deduplication: assign each notification an idempotency key. Workers check this key before sending — retry-safe, no duplicate emails. High-volume handling: batch notifications (send digest instead of 100 individual emails), rate-limit per user (max 3 push/hour), and throttle bursts through the queue. Delivery tracking: store notification status (queued → sending → delivered / failed) in a status table. Retry failed notifications with exponential backoff. Real-time in-app alerts: use WebSockets or SSE — when a notification is created, push the badge count update instantly to connected clients.",
+    whyItMatters:
+      "Notification systems appear in almost every design — social apps, e-commerce, SaaS. The architecture pattern (API → queue → per-channel workers) is reusable for any async multi-provider delivery system.",
+    diagramNote:
+      "Draw: Client → POST /notify → Notification Service → Message Queue → three parallel workers: Push Worker (→ APNs / FCM), Email Worker (→ SendGrid / SMTP), SMS Worker (→ Twilio). Each worker checks User Preferences DB before sending. Failed delivery → DLQ → retry with backoff. Add User Preferences DB with columns: user_id, email_enabled, push_enabled, sms_enabled.",
+    example:
+      "When you like someone's Instagram post, a notification is created: Notification Service publishes to a queue → Push Worker calls APNs with the device token → the like notification appears on the recipient's phone. If the user has push disabled in preferences, the worker skips the APNs call. Instagram sends billions of push notifications per day across iOS and Android simultaneously using this fan-out pattern.",
+    interviewTip:
+      "Structure the answer around: (1) Channels — push (APNs/FCM), email, SMS. (2) Queue per channel — so slow providers don't block fast ones. (3) User preferences — always check opt-out before sending. (4) Deduplication — idempotency key per notification prevents duplicate sends on retry. (5) Rate limiting — max N notifications per user per hour. The interviewer often asks: 'What if APNs is down?' Answer: messages sit in queue, retry with backoff, DLQ after N failures.",
+    tags: ["Notifications", "Push Notifications", "APNs", "FCM", "Email", "SMS", "Fan-out", "Idempotency", "Case Study"],
+  },
+  {
+    id: 46,
+    section: "Foundation",
+    title: "System Design Interview Framework",
+    tagline: "The 4-step structure that turns knowledge into a passing interview",
+    description:
+      "A system design interview is 45 minutes of structured problem-solving. Without a framework, candidates jump to drawing boxes before understanding the problem — the #1 mistake. The 4-step framework: Step 1 — Understand the Problem (5–10 min): Ask clarifying questions before drawing anything. 'Who are the users? What scale — 1M or 100M DAU? Which features are in scope?' List functional requirements (what it does) and non-functional requirements (scale, latency target, availability). Step 2 — High-Level Design (10–15 min): Draw the core components — clients, API, servers, database, cache. Show the happy path for 1–2 key features. Don't over-engineer yet. Step 3 — Deep Dive (15–20 min): Pick the hardest bottleneck and go deep. 'The database will be the bottleneck at this scale — I'd add read replicas and shard by user_id.' Cover caching strategy, DB choice, failure handling. Step 4 — Wrap Up (5 min): State trade-offs. 'This design favors availability over consistency.' Mention failure modes. Suggest what you'd improve with more time.",
+    whyItMatters:
+      "Interviewers don't grade on whether you design the perfect system — they grade on whether you think like a senior engineer. The framework shows structured thinking, asking the right questions, and knowing where to go deep vs. stay high-level.",
+    diagramNote:
+      "Draw a timeline bar: [0–10 min: Clarify requirements] [10–25 min: High-level design] [25–40 min: Deep dive on bottlenecks] [40–45 min: Trade-offs + wrap up]. Below the timeline, list the common mistakes at each phase: Phase 1 — jumping straight to drawing. Phase 2 — over-engineering. Phase 3 — staying too generic. Phase 4 — running out of time before mentioning trade-offs.",
+    example:
+      "Given 'Design WhatsApp': Step 1 — ask about scale (2B users), features (text/media/groups), latency target (<1s delivery). Step 2 — draw: client → WebSocket server → message DB → push notification service. Step 3 — deep dive on message storage: 'At 100B messages/day, SQL won't scale — I'd use Cassandra partitioned by conversation_id.' Step 4 — trade-off: 'This design delivers at-least-once — duplicates are possible, but handled by message deduplication on the client.'",
+    interviewTip:
+      "Practice saying 'Before I start drawing, let me clarify a few things' — this single sentence signals seniority. Never assume scale. Never assume features. Ask: users, scale, read/write ratio, latency requirements. Then restate: 'So I'm designing for 10M DAU, read-heavy, with < 200ms latency for the feed.' This confirmation prevents 30 minutes of work in the wrong direction.",
+    tags: ["Interview Framework", "System Design", "Requirements", "High-level Design", "Trade-offs", "Bottlenecks"],
   },
 ];
 
