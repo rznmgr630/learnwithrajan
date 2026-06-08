@@ -508,6 +508,31 @@ export const UI_STRINGS = {
     np: "अवधारणाहरू अध्ययन गर्नुहोस् →",
     jp: "コンセプトを学ぶ →",
   },
+  "hub.programming.groupDatabase": {
+    en: "Databases",
+    np: "डाटाबेस",
+    jp: "データベース",
+  },
+  "hub.programming.groupDatabaseHint": {
+    en: "Relational databases, SQL, and data modeling from scratch.",
+    np: "सम्बन्धात्मक डाटाबेस, SQL र डेटा मोडेलिङ।",
+    jp: "リレーショナルDB・SQL・データモデリング。",
+  },
+  "hub.sql.title": {
+    en: "Relational Database",
+    np: "सम्बन्धात्मक डाटाबेस",
+    jp: "リレーショナルDB",
+  },
+  "hub.sql.subtitle": {
+    en: "SQL fundamentals — tables, joins, indexes, and transactions",
+    np: "SQL आधारभूत — टेबल, JOIN, इन्डेक्स र ट्रान्जेक्सन",
+    jp: "SQLの基礎 — テーブル・JOIN・インデックス・トランザクション",
+  },
+  "hub.sql.cta": {
+    en: "Start learning →",
+    np: "सिक्न सुरु गर्नुहोस् →",
+    jp: "学習を始める →",
+  },
   "hub.dsa.title": {
     en: "DSA Problems",
     np: "DSA समस्याहरू",
