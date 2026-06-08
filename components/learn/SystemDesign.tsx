@@ -63,7 +63,11 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
           {/* What it is */}
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What it is</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.description}</p>
+            <div className="space-y-3">
+              {concept.description.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">{para}</p>
+              ))}
+            </div>
           </section>
 
           {/* Why it matters */}

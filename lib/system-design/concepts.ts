@@ -32,11 +32,11 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     title: "What is System Design",
     tagline: "Building systems that work at scale",
     description:
-      "System = components + a common goal. System design is the process of choosing those components and defining how they connect to solve a problem reliably at scale. The bank analogy makes this concrete: start with one cashier (single server). Bottleneck? Train the cashier to work faster (optimize code / DSA). Still slow? Upgrade the desk with tools like a cash counter machine (vertical scaling — more RAM/CPU). Customers still waiting? Add more counters (horizontal scaling). But now two counters have separate vaults — data mismatch. Fix it by sharing one central vault (centralized database). Finally, customers crowd one counter — add a guard at the door who directs each person to the least-busy counter (load balancer). Each solution introduced a new system design concept.",
+      "A system is a group of components working together to achieve a common goal. System design is the process of deciding what those components should be and how they should interact to solve a problem reliably and at scale.\n\nThink of a bank. At first, there's only one cashier serving customers (a single server). When the line gets long, the first step is to make the cashier work faster (optimize the code and algorithms). If that's not enough, you give the cashier better tools, like a cash-counting machine (vertical scaling — adding more CPU or RAM).\n\nWhen customers keep increasing, you open more counters (horizontal scaling). But now each counter has its own vault, which can lead to inconsistent data. To solve this, all counters share a single central vault (a centralized database).\n\nAs the bank grows, customers may crowd around one counter while others sit idle. To distribute traffic evenly, a guard at the entrance directs each customer to the least busy counter (a load balancer).\n\nEach time a new problem appeared, a new system design concept was introduced to solve it. That's the essence of system design: identifying bottlenecks and choosing the right solutions as the system grows.",
     whyItMatters:
       "Anyone can write code that works for 10 users. System design is what makes it work for 10 million at once. Interviews test whether you can evolve a simple design as constraints change — exactly what the bank story demonstrates.",
     diagramNote:
-      "Draw a bank evolving across 5 steps: Step 1 — one cashier (server) behind a counter. Step 2 — same cashier, bigger desk + cash machine (upgraded server). Step 3 — two counters side by side (two servers). Step 4 — both counters share one vault at the back (centralized database). Step 5 — a guard at the entrance routes customers to whichever counter is free (load balancer in front of both servers).",
+      "Fig. 1.1 — Each problem at the bank introduced a new system design concept. The five-step evolution mirrors how every real system grows.",
     example:
       "WhatsApp handles 2–10 million messages per day using distributed servers, a centralized database, and load balancers — the exact same evolution as the alien bank, just at internet scale.",
     interviewTip:
@@ -53,7 +53,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Throwing GPU at a database bottleneck wastes money. Throwing more databases at a CPU bottleneck also wastes money. Identifying the bottleneck type first saves engineering time and cost by pointing you at the right layer to fix.",
     diagramNote:
-      "Draw two columns. Left — 'Data Intensive': thick arrow from Database to App Server, thin arrow to CPU. Below it, fixes: cache, replication, sharding, better queries. Right — 'Compute Intensive': thick arrow at CPU/GPU block, thin arrow from Database. Below it, fixes: parallel workers, GPU clusters, better algorithms.",
+      "Fig. 2.1 — Data-intensive systems bottleneck at the database; compute-intensive systems bottleneck at the CPU/GPU.",
     example:
       "Instagram is data-intensive: millions of images/videos moving from CDN to users. The bottleneck is data movement, so they use aggressive caching and distributed CDN — not more CPU. ML recommendation features on the same platform are compute-intensive — they run on GPU farms doing matrix math, not on extra databases.",
     interviewTip:
@@ -74,7 +74,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "You can't design what you haven't defined. Functional requirements prevent scope creep, keep the interview structured, and ensure every architectural decision traces back to a real user need.",
     diagramNote:
-      "Draw a vertical checklist of user actions: Register → Login → Browse Products → Search / Filter → Add to Cart → Apply Coupon → Checkout → Payment → Track Order. This becomes the feature map — each row will eventually map to an API endpoint or a service in your architecture.",
+      "Fig. 3.1 — Functional requirements mapped as a sequential user journey, from registration to order tracking.",
     example:
       "Amazon's functional requirements include product catalog browsing, search with filters, cart management, order placement, payment processing, and delivery tracking. Each maps to a dedicated microservice in their actual architecture.",
     interviewTip:
@@ -91,7 +91,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "A feature-complete app that crashes under load, leaks user data, or takes 10 seconds to respond fails in production. NFRs define the quality bar the system must meet — and they directly drive architectural decisions.",
     diagramNote:
-      "Draw a system diagram box with a checklist overlaid on the side: ☑ Response < 200ms (P99) ☑ 99.9% uptime ☑ 1M daily active users ☑ Encrypted data ☑ Auto-scale on traffic spike ☑ Alerts and monitoring. Every component you add to the architecture should be traceable to one of these requirements.",
+      "Fig. 4.1 — Non-functional requirements define the quality constraints every architecture component must satisfy.",
     example:
       "Amazon's NFRs drive their entire architecture: < 200ms p99 latency → CDN + cache. 99.999% uptime → multi-region with automatic failover. 10× traffic on Black Friday → auto-scaling groups. Each NFR is a SLA commitment backed by engineering design.",
     interviewTip:
@@ -112,7 +112,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Every web request starts with a DNS lookup. Understanding DNS explains geo-routing (send Indian users to Indian servers via DNS), CDN edge selection, failover, and why domain changes can take hours to propagate (TTL).",
     diagramNote:
-      "Draw left to right: Browser → DNS Resolver (box at ISP) → Root Server (says 'ask .com TLD') → TLD Server (.com handler, says 'ask NS at 10.0.0.1') → Authoritative Name Server (returns '19.28.38.41') → Browser connects to that IP. Add cache bubbles at Browser, OS, and DNS Resolver showing where subsequent lookups short-circuit the chain.",
+      "Fig. 5.1 — A DNS lookup walks four servers in sequence; subsequent lookups short-circuit via cache at each layer.",
     example:
       "When you type google.com, your browser checks its own cache first. On miss, asks the OS. On miss, asks your ISP's DNS resolver. On miss, the resolver walks the full tree: root → .com TLD → google's authoritative NS → gets 216.58.x.x. This entire process completes in ~50ms and is then cached.",
     interviewTip:
@@ -129,7 +129,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Choosing the wrong API type adds unnecessary latency or complexity. gRPC is 3–10× faster than REST for internal calls. WebSockets eliminate wasteful polling for real-time features. Knowing when to use each separates junior from senior engineers.",
     diagramNote:
-      "Draw five labeled boxes in a row: REST (↔ JSON over HTTP, stateless), SOAP (↔ XML, envelope format), GraphQL (one endpoint ↔, client sends custom query), gRPC (↔ binary protobuf, fast wire), WebSockets (↔↔ persistent arrow both directions, server can initiate). Highlight gRPC as 'internal services' and WebSockets as 'real-time push'.",
+      "Fig. 6.1 — Five API protocols compared by communication style, payload format, and primary use case.",
     example:
       "Uber: REST for the public mobile app API. gRPC between internal microservices (driver matching, surge pricing engine). WebSockets to push live driver location to the rider's app every second without the app asking repeatedly.",
     interviewTip:
@@ -146,7 +146,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "REST is the dominant API style you'll build and consume throughout your career. Getting methods, status codes, and response format right from the start prevents breaking changes and client bugs at scale.",
     diagramNote:
-      "Draw a two-column table: Method | URL → Use Case. GET /users → list all. GET /users/1 → single user. POST /users + body → create user. PUT /users/1 + full body → replace. PATCH /users/1 + partial body → update one field. DELETE /users/1 → remove. Below the table: response shape — always { users: [...] } not bare [...].",
+      "Fig. 7.1 — REST API design: standard HTTP methods mapped to resource URLs and their expected behavior.",
     example:
       "GitHub API: GET /repos/{owner}/{repo} returns repo data (200). POST /repos/{owner}/{repo}/issues creates issue (201). PATCH /repos/{owner}/{repo} updates repo settings (200). All responses are objects with nested fields — never bare arrays. Invalid auth returns 401, missing repo returns 404.",
     interviewTip:
@@ -167,7 +167,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Most business data has natural relationships. SQL enforces those at the database level — preventing orphaned records, duplicate usernames, and corrupted data. ACID guarantees mean money never disappears mid-transaction.",
     diagramNote:
-      "Draw two boxes: users(id PK, name, username UNIQUE, email NOT NULL) and posts(id PK, content, author_id FK). Draw an arrow from posts.author_id → users.id labeled 'one-to-many (one user, many posts)'. For many-to-many, add three boxes: students ← students_courses(student_id FK, course_id FK) → courses. The middle junction table is the key insight.",
+      "Fig. 8.1 — Relational data modeling: one-to-many (FK column) and many-to-many (junction table) patterns.",
     example:
       "A bank uses PostgreSQL: accounts table has PRIMARY KEY on account_id, NOT NULL and CHECK (balance >= 0) on balance. transactions table has two FOREIGN KEYs referencing accounts. ACID ensures that a transfer debits one account and credits another atomically — either both happen or neither does.",
     interviewTip:
@@ -184,7 +184,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "SQL schema rigidity becomes a bottleneck at scale — adding a column to a 500M-row table takes hours. NoSQL's flexibility and horizontal scalability are why every major tech company uses it for at least one service.",
     diagramNote:
-      "Draw four labeled boxes: Key-Value (key → value, like a giant dictionary). Columnar (table turned 90° — vertical arrows reading down columns, not across rows; highlights analytics use case). Graph (circles as nodes with property labels, lines as edges also with property labels). Document (nested JSON object where different documents have different fields — no fixed schema).",
+      "Fig. 9.1 — The four NoSQL data models, each optimized for a different access pattern.",
     example:
       "Instagram stores user account data in PostgreSQL (relational, consistent), activity feed in Cassandra (high write throughput, horizontally scalable), and hot timeline data in Redis (key-value, microsecond reads). Three different NoSQL types for three different access patterns.",
     interviewTip:
@@ -201,7 +201,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "A DB query taking 100ms costs 100ms every time without cache. The same query served from Redis takes < 1ms. Caching is typically the first optimization that multiplies system capacity by 10–100× with minimal infrastructure change.",
     diagramNote:
-      "Draw: Client → App Server → [Cache (Redis) box]. Two paths from cache: 'Hit' arrow going straight back to App Server (fast). 'Miss' arrow going down to Database, then back up through Cache (populates it), then to App Server (slow, but only happens once). Label the cache box 'small + fast', the DB box 'large + slow'.",
+      "Fig. 10.1 — Cache hit vs. miss paths: a hit returns instantly from memory; a miss fetches from the DB and populates the cache.",
     example:
       "telesco.com homepage shows 6 featured courses, each requiring 4 database table joins. Without cache: 24 DB queries per page load × 10,000 daily users = 240,000 DB queries. With Redis cache + 10-min TTL: 24 queries total per cache window, regardless of user count.",
     interviewTip:
@@ -218,7 +218,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "The wrong strategy either makes your cache stale (users see old data) or makes writes a bottleneck (defeats the performance purpose). Matching strategy to access pattern is key.",
     diagramNote:
-      "Draw four small flow diagrams side by side: RTC (Read→Cache→if miss→DB→Cache). WTC (Write→Cache+DB simultaneously→confirm). WAC (Write→DB directly; Read→Cache→if miss→DB→Cache). WBC (Write→Cache only→immediate confirm; async arrow from Cache→DB in background with 'may fail' warning).",
+      "Fig. 11.1 — Four caching strategies: read-through, write-through, write-around, and write-behind differ in when the DB is updated.",
     example:
       "Swiggy order status changes rapidly (confirmed → packed → picked up → out for delivery → delivered). They use WBC — write status to cache instantly (user sees fast updates), flush to database asynchronously. Speed matters more than strict consistency here. If cache crashes, the last N status updates might be lost, but the order itself is safe in DB.",
     interviewTip:
@@ -235,7 +235,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "The wrong eviction policy keeps cold data and evicts hot data — a cache full of stale entries is worse than no cache. LRU is the safe default but each policy fits specific patterns.",
     diagramNote:
-      "Draw five diagrams: LRU — a timeline bar, evict the leftmost entry (oldest access time). MRU — same bar, evict the rightmost entry (most recently accessed). LFU — a bar chart of access counts, evict the shortest bar. FIFO — a queue, evict the front item (oldest added, regardless of access). LIFO — a stack, evict the top item (most recently added).",
+      "Fig. 12.1 — Five cache eviction policies: each defines a different rule for which entry to remove when the cache is full.",
     example:
       "Redis defaults to LRU. A social feed cache fits LRU perfectly — yesterday's viral post gradually cools and gets evicted. A video streaming buffer fits MRU — segments you've already played won't be replayed. An e-commerce product cache fits LFU — products viewed once during a random browse are less valuable than daily bestsellers.",
     interviewTip:
@@ -256,7 +256,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Without a load balancer, adding servers does nothing — clients only know one IP. L7 enables intelligent routing; L4 gives raw speed. The SPOF question is one of the most common load balancer follow-ups in interviews.",
     diagramNote:
-      "Draw: Client → [Active LB] ←heartbeat→ [Passive LB]. Active LB routes to Server 1, Server 2, Server 3. All servers → shared Database. Mark Active LB as the VIP holder. When Active fails, show Passive taking the VIP. Below: L4 vs L7 comparison box — L4: routes by IP/port only; L7: reads HTTP headers, URL, cookies to route intelligently.",
+      "Fig. 13.1 — Active/passive load balancer failover with VIP handoff; L4 routes by IP/port, L7 routes by request content.",
     example:
       "AWS ALB (L7) routes /api/* to ECS containers and /images/* to S3. AWS NLB (L4) handles raw TCP for game servers needing microsecond latency. Both are deployed across two AZs in active-active mode — if one AZ fails, the other takes all traffic with no manual intervention.",
     interviewTip:
@@ -273,7 +273,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Vertical scaling has hard limits and creates a single point of failure. Horizontal scaling is the foundation of every internet-scale system. But it requires stateless service design from the start.",
     diagramNote:
-      "Draw two scenarios: Left — 'Vertical': one server box that gets larger (RAM 4GB → 8GB → 16GB) with a ceiling line labeled 'physical limit'. Right — 'Horizontal': one server box that multiplies into three, behind a load balancer, all talking to a shared database. Label the horizontal side: 'stateless services required'.",
+      "Fig. 14.1 — Vertical scaling grows one machine until it hits a hardware ceiling; horizontal scaling adds stateless machines behind a load balancer.",
     example:
       "Netflix autoscales from 1,000 to 10,000 EC2 instances during peak hours. Each instance is stateless — user session and preferences are stored in ElastiCache (Redis), not in the server's memory. Any instance can handle any user.",
     interviewTip:
@@ -290,7 +290,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "A single database node is a single point of failure and a read bottleneck. Replication is the foundation of high availability (failover if primary dies) and read scaling (route reads to replicas).",
     diagramNote:
-      "Draw three diagrams: Single Leader — Leader box at top, two Follower boxes below with downward arrows labeled 'async replication'. Multi-Leader — two Leader boxes side by side with bidirectional arrows, each with followers below. Leaderless — client writes simultaneously to three node boxes, gets 2/3 acknowledgements (quorum met), third node updates eventually.",
+      "Fig. 15.1 — Three replication models: single-leader (one writer), multi-leader (multiple writers), and leaderless (quorum-based writes).",
     example:
       "PostgreSQL streaming replication: primary streams WAL (write-ahead log) to standbys. Instagram routes all SELECT queries to read replicas and writes to the primary — 3 replicas = 4× total read throughput. If primary dies, promotion of a replica takes < 30 seconds.",
     interviewTip:
@@ -307,7 +307,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "When data grows beyond a single machine, you must partition. Sharding is how every database at scale works — Cassandra, DynamoDB, Instagram, YouTube all use it.",
     diagramNote:
-      "Draw one large Database box at top → splits with arrows into Partition 1, Partition 2, Partition 3. Label shard key on the split arrow. Show one partition much larger than others labeled 'hotspot — bad!'. For secondary indexes: draw a separate 'Global Index' box pointing to specific partitions for a color query, bypassing the need to scatter-gather all three.",
+      "Fig. 16.1 — Database sharding splits data by shard key; a hotspot forms when one partition receives disproportionate traffic.",
     example:
       "Cassandra uses consistent hashing — each node owns a range on a hash ring. Adding a new node takes half the range from one existing node, moving only ~1/N of data. Instagram shards users by user_id hash across 50 shards — any user's data lives entirely on one shard for fast lookups.",
     interviewTip:
@@ -324,7 +324,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Database choice is fundamentally a CAP choice. Saying 'I'll use Cassandra because it gives AP — eventual consistency is acceptable for social feeds' shows architectural reasoning, not just tool knowledge.",
     diagramNote:
-      "Draw a triangle with C, A, P at each corner. Shade CP region (ZooKeeper, HBase) on the C-P side. Shade AP region (Cassandra, CouchDB, DynamoDB) on the A-P side. Label the C-A region 'single node only — not truly distributed'. Draw a network partition between two nodes, with arrows: CP → blocks traffic, AP → serves stale data. Both are valid depending on the use case.",
+      "Fig. 17.1 — CAP theorem triangle: since partitions are inevitable in distributed systems, the real trade-off is always CP vs AP.",
     example:
       "Payment system: CP. During a network split between two data centers, block the transaction rather than risk processing it twice (double-charge). Social feed: AP. During a split, show posts from 200ms ago rather than show an error page. The financial cost of inconsistency is high for payments; the social cost of momentary staleness is low for feeds.",
     interviewTip:
@@ -345,7 +345,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Without queues, a slow email service blocks your entire order flow. Queues let services scale independently, survive each other's failures, and handle traffic spikes by buffering work.",
     diagramNote:
-      "Draw: Producer → [Message Queue: envelope icons in a line] → Consumer. Add a side box labeled 'DLQ' connected to the queue with arrow 'failed after 3 retries → parked here'. For Pub/Sub: one Publisher → Topic box → three independent Subscriber boxes, each pulling separately. Add 'Priority' labels on some envelopes in the queue to show priority ordering.",
+      "Fig. 18.1 — Message queue (point-to-point with DLQ) vs. pub/sub (one publisher, many independent subscribers).",
     example:
       "Amazon order: place order (sync: inventory check, must succeed immediately) → then three async messages pushed to queue: (1) email service sends confirmation, (2) delivery partner notified, (3) analytics updated. If email service is down, the message sits in queue. When it recovers, it processes the backlog — the order is already confirmed.",
     interviewTip:
@@ -362,7 +362,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "No system is 100% reliable. Hardware breaks. Deployments go wrong. Engineers make mistakes. A fault-tolerant system handles each failure category with a different strategy — redundancy for hardware, process for humans, testing for software.",
     diagramNote:
-      "Draw three columns: Hardware (server/disk/network icons with X marks) → Solution: redundancy, replication, multiple AZs. Software (bug icon, config file with warning) → Solution: testing, staged rollout, error handling. Human (person icon with mistake arrow) → Solution: review process, staging env, audit logs. Below all three: system continues running despite any single column failing.",
+      "Fig. 19.1 — Three fault categories — hardware, software, and human — each requiring a different class of mitigation.",
     example:
       "AWS designs for hardware failure as the default assumption — every EC2 instance is expected to eventually fail. Auto Scaling Groups automatically replace failed instances. Multi-AZ deployments mean a data center fire doesn't cause downtime. Software failures are caught by canary deployments (route 1% of traffic to new version first).",
     interviewTip:
@@ -379,7 +379,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Averages hide tail latency — where real user pain lives. P99 at 8 seconds means 1 in 100 requests fails badly. Without percentile monitoring, you'd see a fine average and miss it entirely until users start complaining.",
     diagramNote:
-      "Draw two dashboards side by side. Left — API Dashboard: a line graph (requests/sec), an error rate % gauge, and a grouped bar chart showing P50 / P90 / P99 latency bars with a threshold line at 500ms. Right — Machine Dashboard: four gauges for CPU %, Memory %, Disk I/O %, Network %. Red alert icons appear when bars cross the threshold.",
+      "Fig. 20.1 — Observability dashboards: API metrics (latency percentiles, error rate, throughput) alongside machine metrics (CPU, memory, disk, network).",
     example:
       "P50 = 50ms, P90 = 150ms, P99 = 8 seconds. The average is ~100ms — looks fine. But that P99 trace reveals a DB query with no index running across 100M rows. Add the index; P99 drops to 80ms. Percentile monitoring found a problem averages completely masked.",
     interviewTip:
@@ -400,7 +400,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Video streaming is one of the most data-intensive architectures. It touches CDN, message queues, parallel encoding pipelines, and adaptive algorithms simultaneously — a rich system design question that tests multiple concepts at once.",
     diagramNote:
-      "Draw a horizontal pipeline: [Upload Server] → [Message Queue] → parallel branches: Worker(4K), Worker(1080p), Worker(720p), Worker(480p) → all → [CDN: US edge + India edge + EU edge] → [Client]. Below the client, draw a network bandwidth gauge that falls mid-video and shows the quality dropping from '4K' to '480p' and recovering back to '1080p'. Label each worker with its resolution and encode time.",
+      "Fig. 21.1 — Video pipeline: upload triggers parallel encoding workers per resolution; outputs are distributed via a multi-region CDN with adaptive bitrate switching.",
     example:
       "YouTube processes 500 hours of video uploaded every minute. Each video is split, encoded at 6+ quality levels in parallel workers, distributed to edge CDN servers globally, and served to 2 billion users who all get a different quality based on their current connection speed — all automatically.",
     interviewTip:
@@ -421,7 +421,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "CDNs offload 80–95% of traffic from origin servers and reduce latency for global users. Without a CDN, every static file request travels to origin — wasteful and slow at scale.",
     diagramNote:
-      "Draw: Origin Server (center) → surrounded by edge servers in US, EU, India, Southeast Asia, South America. User in India hits nearby India edge server (fast path). On edge miss, edge fetches from origin (slow path, happens once). Subsequent users in India hit edge cache. Show cache hit ratios on each edge: '95% hit rate'.",
+      "Fig. 22.1 — CDN topology: users hit the nearest edge server; on a cache miss the edge fetches once from origin and caches locally for all subsequent requests.",
     example:
       "Netflix built Open Connect — their own CDN with appliances inside ISPs. Netflix video bytes never leave the local network. Cache hit rate > 95%. YouTube uses Google's global edge network to serve 1B hours of video daily with < 50ms start time for most users.",
     interviewTip:
@@ -438,7 +438,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "An unindexed query on a 100M-row table can take minutes. With a proper index, the same query takes milliseconds. Missing indexes are the most common cause of database performance problems at scale.",
     diagramNote:
-      "Draw a table on the left (100M rows, scrolling arrow labeled 'O(n) full scan'). On the right, draw a B-tree index: root node → branch nodes → leaf nodes pointing to specific rows. Arrow from leaf → directly to relevant row labeled 'O(log n)'. Below: composite index (user_id, status) as a two-level tree — user_id first, status second within each branch.",
+      "Fig. 23.1 — B-tree index turns an O(n) full table scan into an O(log n) lookup; composite indexes add a second level to the tree.",
     example:
       "SELECT * FROM orders WHERE user_id = 123 AND status = 'pending' without index: full scan of 100M rows, ~2 minutes. With composite index on (user_id, status): direct lookup, ~1ms. EXPLAIN ANALYZE shows the difference: 'Seq Scan' vs 'Index Scan'.",
     interviewTip:
@@ -455,7 +455,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Without rate limiting, one bad actor exhausts server resources and starves legitimate users. Leaky Bucket is specifically important for smoothing bursty traffic before it hits a downstream service that cannot handle spikes.",
     diagramNote:
-      "Draw Token Bucket: a bucket with tokens filling from top (10/sec), requests consuming from bottom. Bucket full = burst up to 100. Draw Leaky Bucket side by side: requests queue in the top of a bucket, a fixed-size hole at bottom drains at constant rate (10/sec). Bucket overflows = requests dropped. Label: Token Bucket allows bursts, Leaky Bucket enforces constant rate.",
+      "Fig. 24.1 — Token bucket allows controlled bursts by accumulating tokens; leaky bucket enforces a strict constant output rate regardless of incoming traffic.",
     example:
       "Stripe uses Token Bucket for their API — allows short bursts for legitimate use cases like batch operations. An API gateway calling a third-party payment provider uses Leaky Bucket — no matter how many orders arrive simultaneously, calls to the payment API go out at a steady 50/sec to avoid overwhelming the vendor.",
     interviewTip:
@@ -472,7 +472,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Polling wastes bandwidth and adds latency. WebSockets enable sub-100ms real-time updates without wasted requests. For chat and live collaboration, polling is simply too slow and too expensive.",
     diagramNote:
-      "Draw: Client ↔ Server with a persistent double-headed arrow labeled 'WebSocket connection (open)'. Show messages flowing both ways: Client sends 'user typing', Server sends 'new message from Alice'. Below, compare: HTTP (three separate request-response pairs, connection closes each time) vs WebSocket (one connection, multiple messages). SSE: one-way arrow from Server → Client only.",
+      "Fig. 25.1 — WebSockets maintain a persistent full-duplex connection; HTTP closes after each response; SSE is server-to-client push only.",
     example:
       "Slack uses WebSockets for real-time message delivery. Figma uses them for collaborative design — move a shape and all 10 co-editors see it move in < 50ms. telesco.com quiz channels also use WebSockets to push real-time score updates as students submit answers.",
     interviewTip:
@@ -489,7 +489,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Networks are unreliable. Clients retry on timeout. Without idempotency, every retry is a potential duplicate side effect. For payments, this means double-charging. For emails, this means spamming. At-least-once delivery + idempotent consumers = exactly-once semantics.",
     diagramNote:
-      "Draw: Client sends POST /payments with Idempotency-Key: abc-123. Server processes → stores result keyed by abc-123 → returns 200. Network fails on the response. Client retries with same key. Server sees abc-123 already processed → returns cached result immediately, no re-processing. Show the key-value store (Redis) holding: 'abc-123 → {charge_id: ch_x, amount: 100, status: success}'.",
+      "Fig. 26.1 — Idempotency key flow: the server stores the result of the first request so any retry returns the same response without re-processing.",
     example:
       "Stripe's API accepts an Idempotency-Key header on all charge creation requests. If your server retries a failed HTTP call to Stripe, Stripe returns the original charge object instead of creating a second charge. This makes payment systems safe to retry without risk of double-billing.",
     interviewTip:
@@ -506,7 +506,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "At massive scale, traditional queues become bottlenecks. Kafka's log-based architecture enables real-time analytics, event sourcing, CDC (change data capture), and feeding multiple downstream systems from a single event stream without duplication.",
     diagramNote:
-      "Draw: Producers on the left → Topic box divided into 3 partitions (each partition is a numbered log: 0, 1, 2, 3...). Three Consumer Group boxes on the right, each with arrows reading from different offsets — Consumer A at offset 100, Consumer B at offset 50 (replaying). Arrow labeled 'Broker replication' connects partition copies on multiple broker boxes.",
+      "Fig. 27.1 — Kafka topics are partitioned logs; each consumer group tracks its own offset, enabling independent replay and parallel consumption.",
     example:
       "LinkedIn (Kafka's creator) processes 7 trillion messages per day — activity tracking, metrics pipeline, recommendation model updates. Uber uses Kafka for real-time trip matching, surge pricing calculation, and driver analytics — all reading from the same stream of trip events independently.",
     interviewTip:
@@ -523,7 +523,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "In microservices, a slow database or downstream API can hold connections, exhaust thread pools, and take down unrelated services. Circuit breakers contain failures. Backoff prevents retry storms. Together they make systems self-healing.",
     diagramNote:
-      "Draw: Service A → [Circuit Breaker box: state machine] → Service B. Show three states in the box: 'Closed (normal)' → 'Open (blocked, after 5 failures in 10s)' → 'Half-Open (probe request)' → back to 'Closed'. For Retry+Backoff: a timeline showing attempts: T=0 (fail), T=1s (fail), T=2s (fail), T=4s (success). Each retry waits exponentially longer. Jitter: show retry times slightly varied per client to desync.",
+      "Fig. 28.1 — Circuit breaker state machine: trips open after repeated failures, probes with half-open, and recovers to closed on success.",
     example:
       "Netflix resilience4j wraps every inter-service call. If the recommendation service fails 50% of requests in 10 seconds, the circuit opens and returns cached recommendations instead of calling a struggling service. AWS SDK retries with exponential backoff + jitter by default — DynamoDB throttled requests get retried after 1s, 2s, 4s delays.",
     interviewTip:
@@ -540,7 +540,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Monoliths become hard to scale and deploy at a certain size — a bug in the payments module forces redeploying the entire app. Microservices let teams move independently and scale only what needs scaling.",
     diagramNote:
-      "Draw: Client → [API Gateway] → three service boxes: Auth Service, Order Service, Notification Service. Each service has its own database below it. Between services, bidirectional arrows (sync: gRPC) and event arrows (async: Kafka topic). Add an 'API Gateway' box listing: auth, routing, rate limiting. Note: no shared database between services.",
+      "Fig. 29.1 — Microservices communicate synchronously via gRPC and asynchronously via Kafka; each service owns its own database.",
     example:
       "Netflix has 700+ microservices: separate services for search, recommendations, billing, streaming, and device management. Each team owns their service end-to-end and deploys dozens of times per day without coordinating with other teams.",
     interviewTip:
@@ -557,7 +557,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Returning all records in a single response is a common anti-pattern that causes out-of-memory crashes, slow responses, and wasted bandwidth. Every API that returns a list needs a pagination strategy from day one — retrofitting it later is painful.",
     diagramNote:
-      "Draw two paths from a 'All Records (10M rows)' box. Left path: Offset — DB scans rows 1 to 100,000 then returns rows 100,001–100,020 (label: slow at depth, O(n)). Right path: Cursor — index lookup jumps directly to last_seen_id, returns next 20 (label: O(1) always fast). Arrow from the cursor path to 'next_cursor token returned in response'.",
+      "Fig. 30.1 — Offset pagination scans to the page boundary on every request; cursor pagination jumps directly to the last seen ID.",
     example:
       "Twitter's timeline API returns 20 tweets with a next_cursor token. Passing that token to the next call returns the following 20 without overlap or gap — and it's instant regardless of how far back in the timeline you are. GitHub's API uses Link headers with cursor tokens for repository list pagination.",
     interviewTip:
@@ -574,7 +574,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "In a distributed system, race conditions are subtle and dangerous. Without distributed locking, two servers can simultaneously think they won an auction, oversell inventory by 1, or run the same daily cron job twice — all silent bugs that only appear under concurrent load.",
     diagramNote:
-      "Draw: Server 1 and Server 2 both sending 'SETNX lock:item:42' to Redis. Server 1 arrow lands first — Redis box shows lock granted (green). Server 2 arrow reaches Redis — box shows 'key exists, denied' (red). Server 1 processes the operation, then sends 'DEL lock:item:42' to release. Server 2 retries and now acquires the lock.",
+      "Fig. 31.1 — Redis distributed lock: SETNX grants the lock to the first requester; all others are denied until the key is deleted or its TTL expires.",
     example:
       "An e-commerce site uses Redis distributed lock when decrementing inventory: SETNX lock:item:42 server1 PX 5000. Only the server that acquired the lock can decrement. When it's done, DEL lock:item:42. If server1 crashes mid-operation, the PX 5000 TTL ensures the lock auto-expires in 5 seconds so no deadlock.",
     interviewTip:
@@ -591,7 +591,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Understanding this trade-off prevents two expensive mistakes: choosing 'strong consistency everywhere' makes your system unavailable under network issues; choosing 'eventual consistency everywhere' causes subtle data correctness bugs in financial flows.",
     diagramNote:
-      "Draw a network partition splitting two data center boxes. Left path: 'Choose Consistency' — both nodes stop responding until sync is restored (label: blocks requests, no stale data). Right path: 'Choose Availability' — both nodes keep serving but may return different values (label: serves stale data, always up). Below each path: real examples. Consistency: banking, inventory. Availability: social feed, analytics.",
+      "Fig. 32.1 — During a network partition, CP systems block to preserve consistency while AP systems serve potentially stale data.",
     example:
       "When you post a tweet, it is fine if followers see it 200ms later — eventual consistency, AP. When you transfer money, the balance must be immediately correct on all nodes — strong consistency, CP. Both happen in the same company (Twitter, then Twitter Payments), choosing differently per feature.",
     interviewTip:
@@ -608,7 +608,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Without retries, any transient network hiccup causes a user-visible error. Without backoff, retries make failures worse — the recovering service gets hammered before it can stabilize. Exponential backoff with jitter is the standard solution used by every major cloud SDK.",
     diagramNote:
-      "Draw a timeline: Request fails at T=0. Wait 1s → retry fails. Wait 2s → retry fails. Wait 4s + small jitter (4.3s actual) → success. Label each wait interval showing the exponential growth. Below, show two clients with and without jitter: without jitter both retry at exactly T=1, T=3, T=7 (synchronized spike); with jitter they retry at T=1.1, T=3.4, T=7.8 (spread out, no spike).",
+      "Fig. 33.1 — Exponential backoff doubles the wait time between retries; jitter staggers client retry times to prevent a synchronized thundering herd.",
     example:
       "AWS SDK retries with exponential backoff + jitter by default — DynamoDB throttled requests get retried after 1s, 2s, 4s with random jitter. Without jitter, a DynamoDB table going over capacity would cause all Lambda functions to retry simultaneously, creating a retry spike that makes recovery worse.",
     interviewTip:
@@ -625,7 +625,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "ID generation is a hidden bottleneck in distributed systems. Using a database auto-increment as ID source becomes a write bottleneck at scale. Snowflake IDs are the standard answer — they're fast, unique, sortable, and require no central coordinator after machine IDs are assigned.",
     diagramNote:
-      "Draw a Snowflake ID as a 64-bit bar divided into sections: [1 bit: sign, always 0] [41 bits: timestamp ms] [10 bits: machine ID] [12 bits: sequence]. Label: 41-bit timestamp supports ~69 years from custom epoch. 10-bit machine ID supports 1024 workers. 12-bit sequence = 4096 IDs per millisecond per worker. Arrow showing: same machine, same millisecond → sequence increments. Next millisecond → sequence resets to 0.",
+      "Fig. 43.1 — Snowflake ID structure: 41-bit timestamp prefix ensures chronological sort order across 4,096 IDs per millisecond per worker.",
     example:
       "Twitter originally used MySQL auto-increment for tweet IDs, which became a write bottleneck at scale. They built Snowflake — a service that generates 64-bit IDs distributed across machines, each machine assigned a unique 10-bit ID. Discord uses a Snowflake variant for message IDs — you can extract the exact creation timestamp of any Discord message from its ID by reading the timestamp bits.",
     interviewTip:
@@ -644,7 +644,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Every performance conversation in interviews uses these two terms. Knowing the difference tells you which problem you're solving: 'system is slow for each user' (latency) vs 'system can't handle enough users at once' (throughput). They require different fixes.",
     diagramNote:
-      "Draw two separate gauges side by side. Left — Latency: a stopwatch labeled 'time for ONE request to complete' with examples: cache 1ms, API 200ms, DB 50ms. Right — Throughput: a flow pipe labeled 'requests completed PER SECOND' with examples: 100 req/s (small app), 100K req/s (Google). Below both: a graph showing load on the x-axis — throughput rises then flattens, latency stays flat then spikes. The spike point = system capacity limit.",
+      "Fig. 34.1 — Latency and throughput diverge under load: throughput plateaus at capacity while latency spikes as the queue grows.",
     example:
       "Google Search: P99 latency < 200ms while handling ~99,000 req/s throughput. Redis: < 1ms latency at 1M+ ops/sec throughput because everything stays in RAM. A slow DB query (high latency) doesn't necessarily mean low throughput — if you run 1,000 queries in parallel, throughput stays high even though each individual query is slow.",
     interviewTip:
@@ -661,7 +661,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Capacity estimation drives every architecture decision. '12,000 req/s means one server is not enough — I need a load balancer and at least 6 servers.' Without estimation, your design has no foundation. Interviewers use it to see if you think at production scale.",
     diagramNote:
-      "Draw a vertical estimation chain with formulas: DAU (e.g. 10M) → × 10 requests/user/day = 100M req/day → ÷ 86,400 = 1,160 req/s → × 3 peak = 3,500 peak req/s → ÷ 1,000 per server = 4 servers needed. Second chain for storage: 1,160 req/s × 1KB data = 1.1MB/s → × 86,400 = ~100GB/day → × 365 days = ~36TB/year.",
+      "Fig. 35.1 — Back-of-envelope estimation: chain DAU through request rate to server count, then independently estimate daily and yearly storage.",
     example:
       "Twitter estimation: 300M DAU × 20 tweet-reads/day = 6B reads/day = 70,000 read req/s. Writes: 100M tweets/day × 280 bytes = 28GB text/day. Images: 10% of tweets have images × 200KB = 2TB/day image storage. Conclusion: read replicas are essential (70K read req/s), separate object storage for images (2TB/day can't go in SQL), cache the timeline heavily (same tweets read by millions).",
     interviewTip:
@@ -680,7 +680,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Cache-aside is the most widely used caching pattern in production. It's simple, explicit, and puts the app in control. It's what most engineers mean when they say 'add Redis caching.' The curriculum names it specifically because interviewers ask for it by name.",
     diagramNote:
-      "Draw the read path: App → Cache → (HIT) return value. App → Cache → (MISS) → Database → App stores result in Cache with TTL → return value. Draw the write path: App → Database (write) → App deletes cache key. Label the HIT path 'fast path < 1ms' and the MISS path 'slow path, happens once then cached'. Annotate: 'only requested data gets cached — cold data stays out'.",
+      "Fig. 36.1 — Cache-aside read path: check cache first, fall back to DB on miss, populate cache; write path updates DB and invalidates the cache key.",
     example:
       "A product page: first user requests product #42 — cache miss, app fetches from DB, stores in Redis with 5-min TTL. Next 10,000 users hit Redis — zero DB queries. When product price changes, app updates DB then deletes the Redis key. Next request re-fetches fresh price from DB and re-populates cache. This delete-on-write approach is simpler than update-on-write and avoids stale data.",
     interviewTip:
@@ -699,7 +699,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "A reverse proxy is the single entry point to your system. Without it, backend servers are exposed directly to the internet, each client must know which server to hit, SSL must be handled on every server, and you have no central place for auth, rate limiting, or caching.",
     diagramNote:
-      "Draw: Internet → [Reverse Proxy: NGINX] → Backend Server 1, Backend Server 2. Label the reverse proxy box with its jobs: SSL termination, routing /api → servers, /static → CDN, compression, rate limiting. Show that the internet sees HTTPS but the internal network between proxy and backends uses plain HTTP. Add a comparison inset: 'Forward Proxy' = Client → Proxy → Internet (client-side, for VPN/anonymity). 'Reverse Proxy' = Internet → Proxy → Servers (server-side, for protection).",
+      "Fig. 37.1 — Reverse proxy sits in front of servers (SSL termination, routing, rate limiting); forward proxy sits in front of clients (VPN, anonymity).",
     example:
       "NGINX as reverse proxy: all traffic hits NGINX on port 443 (HTTPS). NGINX terminates SSL, strips certificate overhead, and forwards plain HTTP to backend servers on port 8080 internally. Backend servers never touch the public internet. NGINX also caches static assets, applies rate limits per IP, and routes /api/* to Node.js servers while serving /static/* from disk.",
     interviewTip:
@@ -716,7 +716,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Any system with user-uploaded content (photos, videos, documents, backups) requires object storage. Saying 'store images in the database' in an interview is the most common red flag for senior roles. Object storage is the correct answer whenever binary data appears in a design.",
     diagramNote:
-      "Draw upload path: User → App Server (generates unique key: users/123/photo-456.jpg) → S3 Bucket (stores bytes) → App stores URL in PostgreSQL. Draw read path: User requests image → CDN Edge (cache hit → serve directly). CDN cache miss → CDN fetches from S3 → CDN caches at edge → serves user. Label: 'DB stores only the URL string (tiny). S3 stores the actual bytes (large). CDN serves bytes fast from the edge.'",
+      "Fig. 38.1 — Blob storage pattern: the DB stores only the URL; S3 stores the bytes; the CDN caches bytes at the edge for fast delivery.",
     example:
       "Instagram upload: user posts a photo → upload service generates a unique ID → image bytes go to S3 at path users/{user_id}/{photo_id}.jpg → the S3 URL is stored in PostgreSQL next to post metadata → CloudFront CDN caches the image at 200+ edge locations worldwide. The database row is 200 bytes. The image file is 2MB. Storing the image in the DB would make it 10,000× larger.",
     interviewTip:
@@ -733,7 +733,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Every API has authentication. Getting it wrong means any user can access any other user's data. JWT is the standard for stateless, horizontally-scalable auth. OAuth is the standard for third-party identity. These come up in almost every API design question.",
     diagramNote:
-      "Draw JWT flow: User sends credentials → Server validates → Server signs JWT (header.payload.signature) with secret key → Returns JWT to client → Client stores JWT → Every request: Client sends JWT in Authorization header → API Gateway verifies signature (no DB call) → extracts user_id → routes to service. Label the three JWT parts separately: header (algorithm), payload (user_id, role, exp), signature (HMAC of header+payload with secret).",
+      "Fig. 39.1 — JWT authentication: the server signs a self-contained token once; every subsequent request is verified without a database lookup.",
     example:
       "A typical mobile app: login returns a JWT (expires 15 min) + refresh token (expires 7 days). The app stores both. Every API call sends the JWT. After 15 min, the app silently calls POST /auth/refresh with the refresh token to get a new JWT — user never sees a re-login prompt. When the user logs out, the refresh token is deleted from the DB (revoked). The old JWT still works for up to 15 min — that's the trade-off of stateless tokens.",
     interviewTip:
@@ -752,7 +752,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "URL shortener is the most common starter system design question. It tests: unique ID generation, read-heavy scaling, caching, and database choice. The patterns (ID generation, redirect strategy, cache-aside) reuse in dozens of other designs.",
     diagramNote:
-      "Draw two flows. Write path: Client → POST /shorten (long_url) → App generates Base62 ID (e.g. 'abc123') → Store in DB: abc123 → long_url → Return short URL. Read/redirect path: Client → GET /abc123 → App checks Redis cache → HIT: 302 redirect to long_url. Cache MISS: App queries DB → stores in Redis → 302 redirect. Label the short_code column as the primary key and add the click_count increment step for analytics.",
+      "Fig. 40.1 — URL shortener: write path generates a Base62 key and stores the mapping; read path checks Redis before falling back to the DB.",
     example:
       "bit.ly serves 10B+ clicks/month. They use Base62 encoding with a distributed ID generator (like Snowflake) to avoid collisions. Popular links like a viral tweet's shortened URL might get 10M clicks in an hour — pure cache hits in Redis, the database is rarely touched for those. Analytics are batched: click counts are incremented in Redis and flushed to DB periodically to avoid write storms.",
     interviewTip:
@@ -769,7 +769,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "News feed is one of the five canonical system design questions. It tests fan-out strategies, the tradeoff between read and write amplification, caching, and real-time delivery. The push-vs-pull pattern appears in notifications, activity streams, and recommendation feeds.",
     diagramNote:
-      "Draw two paths: Push (fan-out on write): User posts → Post Service → Message Queue → Fan-out Service → writes post_id to Feed Cache (Redis sorted set) for each follower. Read: User opens feed → fetch post IDs from Redis → batch-fetch post content. Pull (fan-out on read): User opens feed → fetch last 20 posts from each followee → merge + sort → return. Label: push is fast to read, expensive to write. Pull is always fresh, slow to read. Show the hybrid: push for normal users, pull for celebrities merged at read time.",
+      "Fig. 41.1 — News feed fan-out: push pre-writes to followers' caches (fast reads, expensive writes); pull reads at request time (always fresh, slow). Hybrid merges both for celebrity accounts.",
     example:
       "Twitter uses a hybrid approach: when you tweet, your post is pushed to the Redis feed cache of your followers instantly (if they have < 10K followers). When a celebrity (10M followers) tweets, their posts are NOT pushed — instead, when you open your timeline, Twitter pulls the celebrity's recent tweets and merges them with your pre-computed feed in real time. This keeps write fanout manageable.",
     interviewTip:
@@ -786,7 +786,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Messaging app design is one of the most common senior-level interview questions. It tests WebSocket connection management at scale, offline message queuing, database choice for high-write time-series data, and real-time fan-out for groups.",
     diagramNote:
-      "Draw: Sender Client → WebSocket → Chat Server → Cassandra DB (store message) → Chat Server checks recipient connection → Recipient Online: deliver via WebSocket. Recipient Offline: push notification via APNs/FCM → recipient opens app → fetches unread messages from DB. For groups: Chat Server → Fan-out Service → delivers to each group member's chat server via pub/sub. Label connections: 'Each server handles ~50K concurrent WebSocket connections. Connection is maintained by heartbeat ping every 30s.'",
+      "Fig. 42.1 — Chat message flow: online recipients receive via WebSocket; offline recipients get a push notification and fetch on next open.",
     example:
       "WhatsApp handles 2 billion users with roughly 100 billion messages/day. They use Erlang for chat servers (designed for massive concurrent connections), Mnesia/custom storage for message queues, and store media in object storage. The three delivery receipts (single grey tick = sent to server, double grey tick = delivered to device, double blue tick = read by recipient) are implemented via acknowledgement messages sent back through the WebSocket channel.",
     interviewTip:
@@ -803,7 +803,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Web crawler design tests queue management, deduplication, distributed architecture, and politeness policies — skills that apply to any large-scale data ingestion system, not just crawlers.",
     diagramNote:
-      "Draw the crawl loop: URL Frontier (priority queue) → Fetcher Worker → HTML downloaded → Parser (extract links) → Deduplicator (Bloom filter: seen before? skip. No? add to frontier) → Content Store. Add a Politeness layer between Frontier and Fetcher: per-domain delay queue ensures one domain isn't hit more than once per second. Label the robots.txt check before each fetch.",
+      "Fig. 44.1 — Web crawler loop: the frontier feeds fetchers; parsed links are deduplicated via Bloom filter before re-entering the frontier.",
     example:
       "Googlebot crawls billions of pages. It uses a distributed URL frontier sharded by domain, respects crawl-delay in robots.txt, caches DNS lookups per domain for efficiency, and uses a distributed content-addressable hash to detect near-duplicate pages (e.g., a page with and without www). Crawl budget is allocated per domain — important sites are crawled daily, low-quality sites monthly.",
     interviewTip:
@@ -820,7 +820,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Notification systems appear in almost every design — social apps, e-commerce, SaaS. The architecture pattern (API → queue → per-channel workers) is reusable for any async multi-provider delivery system.",
     diagramNote:
-      "Draw: Client → POST /notify → Notification Service → Message Queue → three parallel workers: Push Worker (→ APNs / FCM), Email Worker (→ SendGrid / SMTP), SMS Worker (→ Twilio). Each worker checks User Preferences DB before sending. Failed delivery → DLQ → retry with backoff. Add User Preferences DB with columns: user_id, email_enabled, push_enabled, sms_enabled.",
+      "Fig. 45.1 — Notification pipeline: a queue decouples ingestion from delivery workers for push, email, and SMS; failed deliveries land in a DLQ.",
     example:
       "When you like someone's Instagram post, a notification is created: Notification Service publishes to a queue → Push Worker calls APNs with the device token → the like notification appears on the recipient's phone. If the user has push disabled in preferences, the worker skips the APNs call. Instagram sends billions of push notifications per day across iOS and Android simultaneously using this fan-out pattern.",
     interviewTip:
@@ -837,7 +837,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     whyItMatters:
       "Interviewers don't grade on whether you design the perfect system — they grade on whether you think like a senior engineer. The framework shows structured thinking, asking the right questions, and knowing where to go deep vs. stay high-level.",
     diagramNote:
-      "Draw a timeline bar: [0–10 min: Clarify requirements] [10–25 min: High-level design] [25–40 min: Deep dive on bottlenecks] [40–45 min: Trade-offs + wrap up]. Below the timeline, list the common mistakes at each phase: Phase 1 — jumping straight to drawing. Phase 2 — over-engineering. Phase 3 — staying too generic. Phase 4 — running out of time before mentioning trade-offs.",
+      "Fig. 46.1 — System design interview timeline: four phases with common mistakes to avoid at each stage.",
     example:
       "Given 'Design WhatsApp': Step 1 — ask about scale (2B users), features (text/media/groups), latency target (<1s delivery). Step 2 — draw: client → WebSocket server → message DB → push notification service. Step 3 — deep dive on message storage: 'At 100B messages/day, SQL won't scale — I'd use Cassandra partitioned by conversation_id.' Step 4 — trade-off: 'This design delivers at-least-once — duplicates are possible, but handled by message deduplication on the client.'",
     interviewTip:
