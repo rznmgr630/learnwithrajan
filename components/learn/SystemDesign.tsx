@@ -99,7 +99,15 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
           {/* Real-world example */}
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">Real-world example</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.example}</p>
+            <div className="space-y-3">
+              {concept.example.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
+                  {para.split("\n").map((line, j, arr) => (
+                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                  ))}
+                </p>
+              ))}
+            </div>
           </section>
 
           {/* Interview tip */}
