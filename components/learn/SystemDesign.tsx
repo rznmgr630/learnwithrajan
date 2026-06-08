@@ -65,7 +65,11 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What it is</h3>
             <div className="space-y-3">
               {concept.description.split("\n\n").map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">{para}</p>
+                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
+                  {para.split("\n").map((line, j, arr) => (
+                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                  ))}
+                </p>
               ))}
             </div>
           </section>
