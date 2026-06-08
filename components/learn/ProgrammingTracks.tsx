@@ -406,6 +406,30 @@ export function ProgrammingTracks() {
             {t("hub.sql.cta")}
           </span>
         </Link>
+
+        <Link href="/learn/mongodb" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.mongodb.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.mongodb.subtitle")}</p>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["Documents", "Aggregation", "Indexes", "Sharding", "NoSQL"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.mongodb.cta")}
+          </span>
+        </Link>
       </ProgrammingAccordionSection>
 
       <ProgrammingAccordionSection

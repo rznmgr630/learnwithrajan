@@ -533,6 +533,21 @@ export const UI_STRINGS = {
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
   },
+  "hub.mongodb.title": {
+    en: "MongoDB",
+    np: "MongoDB",
+    jp: "MongoDB",
+  },
+  "hub.mongodb.subtitle": {
+    en: "NoSQL fundamentals — documents, aggregation, indexing, and sharding",
+    np: "NoSQL आधारभूत — डकुमेन्ट, एग्रिगेसन, इन्डेक्स र शार्डिङ",
+    jp: "NoSQLの基礎 — ドキュメント・集計・インデックス・シャーディング",
+  },
+  "hub.mongodb.cta": {
+    en: "Start learning →",
+    np: "सिक्न सुरु गर्नुहोस् →",
+    jp: "学習を始める →",
+  },
   "hub.dsa.title": {
     en: "DSA Problems",
     np: "DSA समस्याहरू",
