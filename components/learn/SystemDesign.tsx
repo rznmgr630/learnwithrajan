@@ -22,7 +22,7 @@ function renderLine(text: string) {
   );
 }
 
-function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | null; onClose: () => void }) {
+function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConcept | null; index: number; onClose: () => void }) {
   useEffect(() => {
     if (!concept) return;
     const prev = document.body.style.overflow;
@@ -45,7 +45,7 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] p-5">
           <div className="min-w-0">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-              {concept.section} · #{concept.id}
+              {concept.section} · #{index}
             </span>
             <h2 className="text-xl font-bold leading-snug text-[var(--text)]">{concept.title}</h2>
             <p className="text-sm text-[var(--muted)]">{concept.tagline}</p>
@@ -169,14 +169,14 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
   );
 }
 
-function ConceptCard({ concept, onClick }: { concept: SystemDesignConcept; onClick: () => void }) {
+function ConceptCard({ concept, index, onClick }: { concept: SystemDesignConcept; index: number; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       className="group flex cursor-pointer items-start gap-4 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-4 text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]"
     >
       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/10 font-mono text-xs font-bold text-[var(--accent)]">
-        {concept.id}
+        {index}
       </span>
       <div className="min-w-0">
         <p className="font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition">
@@ -204,6 +204,11 @@ function ConceptCard({ concept, onClick }: { concept: SystemDesignConcept; onCli
     </button>
   );
 }
+
+const orderedConcepts = SYSTEM_DESIGN_SECTIONS.flatMap(
+  (section) => SYSTEM_DESIGN_CONCEPTS.filter((c) => c.section === section)
+);
+const positionOf = new Map(orderedConcepts.map((c, i) => [c.id, i + 1]));
 
 export function SystemDesign() {
   const [active, setActive] = useState<SystemDesignConcept | null>(null);
@@ -267,7 +272,7 @@ export function SystemDesign() {
                   </div>
                   <div className="flex flex-col gap-3">
                     {sectionConcepts.map((concept) => (
-                      <ConceptCard key={concept.id} concept={concept} onClick={() => setActive(concept)} />
+                      <ConceptCard key={concept.id} concept={concept} index={positionOf.get(concept.id)!} onClick={() => setActive(concept)} />
                     ))}
                   </div>
                 </div>
@@ -277,7 +282,7 @@ export function SystemDesign() {
         </div>
       </div>
 
-      <ConceptDrawer concept={active} onClose={() => setActive(null)} />
+      <ConceptDrawer concept={active} index={active ? positionOf.get(active.id)! : 0} onClose={() => setActive(null)} />
     </>
   );
 }
