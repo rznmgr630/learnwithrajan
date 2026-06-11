@@ -478,6 +478,16 @@ export const UI_STRINGS = {
     np: "सिस्टम डिजाइन, व्यावहारिक, र प्राविधिक अन्तर्वार्ता स्रोतहरू।",
     jp: "システム設計・行動・技術面接リソース。",
   },
+  "hub.programming.groupWebsites": {
+    en: "Websites for Developers",
+    np: "डेभलपरका लागि वेबसाइटहरू",
+    jp: "開発者向けウェブサイト",
+  },
+  "hub.programming.groupWebsitesHint": {
+    en: "Handpicked sites that will make you a better coder.",
+    np: "तपाईंलाई राम्रो कोडर बनाउने छानिएका साइटहरू।",
+    jp: "コーディング力を高める厳選サイト集。",
+  },
   "hub.systemDesign.title": {
     en: "System Design",
     np: "सिस्टम डिजाइन",
