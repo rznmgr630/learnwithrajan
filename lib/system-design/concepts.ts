@@ -70,7 +70,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     title: "Functional Requirements",
     tagline: "What the system must do",
     description:
-      "Functional requirements define every feature and action users can perform — the 'what'. For an e-commerce app: user can register, log in, view products, search products, filter by category/price, add to cart, apply coupon, place order, process payment, track order. Each bullet is a functional requirement. These are the core capabilities — without them, the product doesn't work. In system design, listing functional requirements first anchors every component you add: each server, database, and queue must serve at least one functional requirement. Anything added beyond that is over-engineering.",
+      "Functional requirements are simply the features a system must provide — in other words, what the user can actually do in the application.\n\nFor an e-commerce app, functional requirements include things like:\n\n• Signing up for a new account\n• Logging into the system\n• Viewing a list of products\n• Searching for specific products\n• Filtering products by category, price, or other attributes\n• Adding products to a shopping cart\n• Applying discount coupons\n• Placing an order\n• Processing payment\n• Tracking order status after purchase\n\nEach of these represents a clear user action or feature. If a feature doesn't describe what a user can do, it's not a functional requirement.\n\nIn system design, functional requirements are the starting point of everything. They help you define what you are building before thinking about how to build it. Once these are clear, you design the system components (like APIs, databases, services, and queues) to directly support these features.\n\nA good rule of thumb:\nIf a component or service doesn't support at least one functional requirement, it is likely unnecessary or over-engineered.\n\nIn short, functional requirements keep your system focused, simple, and directly tied to real user needs.",
     whyItMatters:
       "You can't design what you haven't defined. Functional requirements prevent scope creep, keep the interview structured, and ensure every architectural decision traces back to a real user need.",
     diagramNote:
@@ -843,6 +843,263 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
     interviewTip:
       "Practice saying 'Before I start drawing, let me clarify a few things' — this single sentence signals seniority. Never assume scale. Never assume features. Ask: users, scale, read/write ratio, latency requirements. Then restate: 'So I'm designing for 10M DAU, read-heavy, with < 200ms latency for the feed.' This confirmation prevents 30 minutes of work in the wrong direction.",
     tags: ["Interview Framework", "System Design", "Requirements", "High-level Design", "Trade-offs", "Bottlenecks"],
+  },
+
+  // ─── INTERVIEW Q&A ADDITIONS ─────────────────────────────────
+  {
+    id: 47,
+    section: "Data Layer",
+    title: "ACID vs BASE",
+    tagline: "Two opposing consistency models for databases",
+    description:
+      "ACID and BASE represent two fundamentally different guarantees about how a database handles data.\n\nACID stands for Atomicity, Consistency, Isolation, and Durability. Atomicity means a transaction either completes fully or rolls back entirely — you never get a half-applied change. Consistency means the database moves from one valid state to another, never leaving data in a corrupt intermediate state. Isolation means concurrent transactions behave as if they ran one after another — no dirty reads. Durability means once a transaction is committed, it survives crashes (written to disk, not just RAM).\n\nACID ensures strong consistency — transactions are reliable. Banks use ACID because a money transfer must debit and credit atomically. Partial updates would be catastrophic.\n\nBASE stands for Basically Available, Soft state, Eventual consistency. Basically Available means the system remains available even under failures, possibly returning stale data. Soft state means the system's state may change over time even without new input (due to replication lag). Eventual consistency means given enough time with no new updates, all nodes will converge to the same value.\n\nBASE prioritizes availability over strict consistency — used in distributed NoSQL systems like Cassandra and DynamoDB where strong consistency across all nodes would be too slow.\n\nChoose ACID when data correctness is non-negotiable (payments, bookings, inventory). Choose BASE when availability and performance matter more than perfect freshness (social feeds, analytics, activity logs).",
+    whyItMatters:
+      "The ACID vs BASE choice drives your entire database selection. ACID means PostgreSQL or MySQL. BASE means Cassandra, DynamoDB, or CouchDB. Using ACID when you need scale, or BASE when you need correctness, leads to serious production bugs.",
+    diagramNote:
+      "Fig. 47.1 — ACID enforces strict correctness on every transaction; BASE trades consistency for availability and performance in distributed systems.",
+    example:
+      "A payment system uses PostgreSQL (ACID) — a transfer of $100 is atomic: both the debit and credit happen or neither does. An activity feed uses Cassandra (BASE) — a new post might appear to some followers 200ms before others; eventual consistency is acceptable because there is no financial consequence.",
+    interviewTip:
+      "Frame the choice explicitly: 'I'd use a relational database with ACID guarantees here because consistency is non-negotiable for transactions.' Or: 'I'd use Cassandra with BASE semantics because we're writing activity events at high volume and eventual consistency is acceptable.' Never say 'I'll use ACID and BASE' — they represent opposite ends of the trade-off, not complements.",
+    tags: ["ACID", "BASE", "Atomicity", "Consistency", "Eventual Consistency", "PostgreSQL", "Cassandra", "Transactions"],
+  },
+  {
+    id: 48,
+    section: "Data Layer",
+    title: "Eventual Consistency",
+    tagline: "All nodes converge to the same value — given enough time",
+    description:
+      "Eventual consistency means that given no new updates, all nodes in a distributed system will eventually have the same state. It does not guarantee that all nodes are in sync at any given moment, only that they will converge over time.\n\nIn a strongly consistent system, after a write completes, any subsequent read on any node returns that write's value immediately. This requires coordination between nodes, which adds latency.\n\nIn an eventually consistent system, a write is accepted immediately on one node and propagated to others asynchronously. For a short window, different nodes may return different values. But once all replication messages have been delivered, every node agrees.\n\nWhy use it? Strong consistency across distributed nodes requires locks or consensus protocols (Paxos, Raft) — expensive in latency and availability. Eventual consistency allows each node to accept writes independently, enabling high availability and low latency at the cost of a brief inconsistency window.\n\nPractical impact: when you like a tweet, it might take 200ms for all data centers worldwide to reflect the like count. The user who liked sees the update instantly (their node has it). Users on other nodes see it shortly after. No real-world harm occurs from this brief inconsistency.\n\nCommon in: Cassandra (tunable consistency — you choose the quorum level), DynamoDB, CouchDB, DNS (updates propagate globally over minutes to hours via TTL).",
+    whyItMatters:
+      "Eventual consistency is the mechanism behind most high-scale systems. It's weaker than strong consistency but provides higher availability and lower latency — the trade-off that makes global systems possible.",
+    diagramNote:
+      "Fig. 48.1 — Eventual consistency: after a write to one node, replicas receive the update asynchronously; all converge to the same value within milliseconds to seconds.",
+    example:
+      "DNS is the most familiar example: when you update your domain's A record, the change propagates globally over 24–48 hours (the TTL). Different DNS resolvers return different IPs during propagation. Eventually, all resolvers converge on the new IP. The system is eventually consistent, not immediately consistent.",
+    interviewTip:
+      "When choosing AP over CP in CAP theorem, name eventual consistency as the mechanism: 'The system is eventually consistent — after a write, replicas may lag by up to 200ms, but all converge. For a social feed this is acceptable; for a payment ledger it is not.' Mention that Cassandra lets you tune the consistency level per operation — you can request strong consistency (QUORUM) for critical reads and eventual consistency (ONE) for high-throughput writes.",
+    tags: ["Eventual Consistency", "CAP Theorem", "AP", "Replication Lag", "Cassandra", "DynamoDB", "DNS"],
+  },
+  {
+    id: 49,
+    section: "Scaling & Distribution",
+    title: "Consistent Hashing",
+    tagline: "Add or remove servers without remapping all keys",
+    description:
+      "Standard hash partitioning maps a key to a shard using: shard = hash(key) % N. When N changes (adding or removing a server), almost every key remaps to a new shard, requiring a massive data migration — impractical for live systems.\n\nConsistent hashing solves this by arranging both servers and keys on a hash ring (an abstract circle from 0 to 2^32 - 1). Each server is placed at a position on the ring by hashing its name or ID. A key is assigned to the first server encountered when moving clockwise around the ring from the key's position.\n\nWhen a server is added, it takes over only the keys between itself and its predecessor on the ring — approximately 1/N of all keys. When a server is removed, its keys are absorbed by its successor — again approximately 1/N. In contrast to standard hashing, the vast majority of keys remain mapped to the same server.\n\nVirtual nodes (vnodes): real servers are typically assigned multiple positions on the ring (100–200 virtual nodes each). This evens out load distribution, since a single physical position can create hot spots when servers are unevenly spaced. Virtual nodes also let larger machines hold more positions, giving them proportionally more keys.\n\nUsed in: Cassandra (partitions data across nodes), DynamoDB (consistent key-to-partition mapping), Memcached, load balancers (session stickiness), CDN edge selection.",
+    whyItMatters:
+      "Without consistent hashing, scaling a cache cluster by adding one server invalidates all cached data — every key remaps. With consistent hashing, only 1/N of keys move. This is what enables Cassandra and DynamoDB to scale horizontally without full data reshuffling.",
+    diagramNote:
+      "Fig. 49.1 — Consistent hash ring: servers placed at hash positions; a key maps to the first clockwise server. Adding a server transfers only the keys between it and its predecessor.",
+    example:
+      "Cassandra uses consistent hashing to partition data. Each node owns a token range on the ring. Adding a 5th node to a 4-node cluster means that new node takes a fraction of one existing node's range — only ~20% of data moves, not 100%. This hot addition does not require taking the cluster offline.",
+    interviewTip:
+      "Bring up consistent hashing when discussing distributed caches or NoSQL databases: 'I'd use consistent hashing to partition keys across nodes so that adding a node only invalidates 1/N of cached data, not everything.' Mention virtual nodes when asked about uneven load: 'To handle hot spots and weight nodes by capacity, I'd assign each physical server multiple virtual positions on the ring.'",
+    tags: ["Consistent Hashing", "Hash Ring", "Virtual Nodes", "Cassandra", "DynamoDB", "Partitioning", "Sharding"],
+  },
+  {
+    id: 50,
+    section: "Advanced Topics",
+    title: "Bloom Filter",
+    tagline: "Tells you definitely NOT in set, probably IN set",
+    description:
+      "A Bloom filter is a space-efficient probabilistic data structure for testing set membership. It can definitively answer 'NO, this element is not in the set' — but when it says 'yes', there is a small probability of a false positive (the element was never inserted, but the filter says it might be).\n\nHow it works: a Bloom filter is a bit array of size M, initially all zeros. To insert an element, run it through K independent hash functions — each returns an index into the bit array. Set those K bits to 1. To query membership, run the same K hash functions. If all K positions are 1, the element is probably in the set. If any position is 0, the element is definitely not in the set.\n\nFalse positives exist because different elements can hash to overlapping bit positions. False negatives are impossible — if you inserted an element, all its bits are set and will always be found.\n\nTuning: a larger M reduces false positive rate but uses more memory. More hash functions K reduces false positives but increases computation. The optimal K is M/N × ln2, where N is the number of expected insertions.\n\nUse cases: caching (check Bloom filter before DB lookup — avoid a DB query for keys that definitely don't exist), duplicate detection in web crawlers (has this URL been visited?), spam filtering (is this email address in the blocklist?), database query optimization (BigTable uses Bloom filters to skip SSTable files that definitely don't contain a key).",
+    whyItMatters:
+      "Bloom filters eliminate unnecessary expensive lookups. A cache miss that hits the DB for a non-existent key wastes a DB round trip. A Bloom filter intercepts that miss in O(1) time with near-zero memory. Google BigTable, Apache Cassandra, and HBase all use Bloom filters for this exact purpose.",
+    diagramNote:
+      "Fig. 50.1 — Bloom filter bit array: insert sets K bits; lookup checks K bits — all 1 means probably present, any 0 means definitely absent.",
+    example:
+      "A web crawler maintains a Bloom filter of all visited URLs. Before fetching a page, it checks the filter. If definitely not visited (any bit is 0), fetch it and add to filter. If probably visited (all bits are 1), skip it. The filter uses 1GB of memory to track 1 billion URLs — storing 1 billion full URL strings would require 100–500GB.",
+    interviewTip:
+      "Mention Bloom filters when designing caches or crawlers: 'I'd use a Bloom filter in front of the cache to eliminate DB lookups for keys I know don't exist — it never has false negatives, only rare false positives, which just mean an unnecessary DB query, not a wrong result.' Also bring it up when asked about reducing cache misses or avoiding expensive downstream calls.",
+    tags: ["Bloom Filter", "Probabilistic", "Membership Test", "False Positive", "Caching", "Web Crawler", "BigTable"],
+  },
+  {
+    id: 51,
+    section: "Data Layer",
+    title: "Denormalization",
+    tagline: "Duplicate data to eliminate joins and speed up reads",
+    description:
+      "Normalization organizes data to eliminate redundancy — each piece of information lives in exactly one place, linked by foreign keys. To read related data, you join tables. This is correct and efficient for writes, but joins become expensive at scale.\n\nDenormalization deliberately reverses this — it duplicates data across tables to eliminate joins and speed up reads. For example: instead of joining users, posts, and comments tables to render a blog post with author names and comment counts, you store author_name and comment_count directly on the post row. Reads become a single table scan. Writes become slightly more complex — when an author changes their name, you must update every post row they authored.\n\nTrade-offs: Pros — faster reads, simpler queries, fewer joins, better cache coherence (one row has everything needed). Cons — more storage, more complex writes, potential for data inconsistency (two copies of the same value can drift).\n\nWhen to use: reads >> writes (product catalog, feed rendering), read performance is critical (a page that joins 6 tables takes 200ms; denormalized reads take 5ms), data consistency is manageable (author names rarely change — the update cost is acceptable), read replicas can't keep up with join complexity.\n\nCommon pattern: materialized views — a pre-computed query result stored as a table, automatically updated when source data changes. BigQuery, PostgreSQL, and Cassandra support materialized views.",
+    whyItMatters:
+      "At scale, a heavily normalized schema becomes a performance bottleneck — multi-table joins on millions of rows are slow and hard to cache. Denormalization is the tactical compromise that makes high-read systems fast without rewriting the entire data model.",
+    diagramNote:
+      "Fig. 51.1 — Normalized schema joins 3 tables to render one post; denormalized schema stores redundant data on one row, eliminating the joins at query time.",
+    example:
+      "Instagram's post feed: a normalized schema would join posts, users (for avatar + name), and like_counts tables. At 500M posts/day, those joins are prohibitively expensive. Instagram stores author_username, author_avatar_url, and like_count directly on the post row — denormalized. Reads are instant. When a user changes their username, a background job updates the cached copies.",
+    interviewTip:
+      "State the trade-off explicitly: 'I'd denormalize author_name into the posts table to eliminate a join at read time. The write complexity is worth it because reads outnumber writes 100:1 for a feed.' Use this argument for any read-heavy feature. Also mention materialized views as the database-managed version of denormalization.",
+    tags: ["Denormalization", "Normalization", "Joins", "Materialized View", "Read Performance", "Data Redundancy"],
+  },
+  {
+    id: 52,
+    section: "Advanced Topics",
+    title: "Service Discovery",
+    tagline: "How microservices find each other dynamically",
+    description:
+      "In a microservices system, services are deployed across dynamic environments — cloud VMs that come and go, containers that restart on different ports, auto-scaling groups that change instance counts. Static IP configuration is impractical. Service discovery automatically detects healthy service instances so clients can find them without hardcoded addresses.\n\nTwo models: Client-side discovery — the client queries a service registry (Consul, Eureka, etcd) to get a list of healthy instances, then chooses one using a load-balancing algorithm. The client has the registry client library embedded. Examples: Netflix Eureka, HashiCorp Consul. Server-side discovery — the client sends a request to a load balancer or API gateway. The gateway queries the registry and forwards the request. The client knows only one stable address (the gateway). Examples: AWS ALB with ECS service discovery, Kubernetes kube-proxy.\n\nService registry: a key-value store where each service registers its name, IP, port, and health status. Services send heartbeats to the registry; if a heartbeat is missed, the registry marks the instance unhealthy and removes it from the list. Registration can be self-registration (service registers itself on startup) or third-party registration (a sidecar or orchestrator handles registration).\n\nHealth checks are integral: liveness (is the process alive?), readiness (is it ready to accept traffic?). Kubernetes native support for both.",
+    whyItMatters:
+      "Without service discovery, updating a service's IP requires manually reconfiguring all callers — impossible in dynamic cloud environments. Service discovery is the infrastructure that makes microservices work at scale.",
+    diagramNote:
+      "Fig. 52.1 — Client-side discovery: clients query the registry to get instance list. Server-side discovery: gateway queries registry; client sees only the gateway.",
+    example:
+      "Netflix runs thousands of microservice instances. Eureka is their service registry. When a new Recommendation Service instance starts, it registers with Eureka. Other services that need recommendations query Eureka and get the current list of healthy Recommendation Service instances. If an instance fails its health check, Eureka removes it — callers never route traffic to dead instances.",
+    interviewTip:
+      "Include service discovery when designing any microservices architecture: 'Services register their address with a Consul registry on startup and send heartbeats every 10 seconds. Callers query Consul for healthy instances — the client library handles load balancing among them. If a service crashes, Consul removes it within 30 seconds (3 missed heartbeats).' For Kubernetes, say 'Kubernetes DNS and kube-proxy handle service discovery natively via Service objects.'",
+    tags: ["Service Discovery", "Consul", "Eureka", "Service Registry", "Health Check", "Microservices", "Kubernetes"],
+  },
+  {
+    id: 53,
+    section: "Advanced Topics",
+    title: "API Gateway",
+    tagline: "Single entry point that handles cross-cutting concerns",
+    description:
+      "An API Gateway is a reverse proxy that acts as the single entry point for all client requests in a microservices architecture. Instead of clients knowing the address of every microservice, they make all requests to the gateway. The gateway routes each request to the correct service.\n\nCore responsibilities: Routing — /api/users/* → User Service, /api/orders/* → Order Service, /api/products/* → Product Service. Authentication and authorization — validate JWT tokens before forwarding requests; individual services never handle auth. Rate limiting — cap requests per client per minute using token bucket or sliding window algorithms stored in Redis. Request/response transformation — convert request format, add headers, strip sensitive fields from responses. Load balancing — distribute traffic across healthy instances of each service. Logging and tracing — add a correlation ID to every request, log at the gateway, pass the ID to all downstream services. SSL termination — handle HTTPS at the gateway; internal microservice communication runs over plain HTTP.\n\nPopular gateways: AWS API Gateway, Kong, NGINX, Traefik, Envoy. In Kubernetes, an Ingress controller (typically NGINX) serves as the API Gateway.\n\nDifference from load balancer: a load balancer distributes traffic across identical instances of one service. An API Gateway routes traffic across many different services and handles cross-cutting concerns like auth and rate limiting.",
+    whyItMatters:
+      "Without an API Gateway, every microservice must implement authentication, rate limiting, and logging independently — massive duplication. The gateway centralizes these concerns, so services focus only on business logic.",
+    diagramNote:
+      "Fig. 53.1 — API Gateway: clients hit one address; the gateway authenticates, rate-limits, and routes to the correct microservice.",
+    example:
+      "Uber's mobile app makes all API calls to a single gateway endpoint. The gateway validates the driver's JWT, checks rate limits (max 1000 req/min per device), routes /trip/start to the Trip Service, /payment to the Payment Service, and /location to the Location Service. Each backend service receives the request pre-authenticated with the user context injected in a header.",
+    interviewTip:
+      "In any microservices design, add an API Gateway as the first layer: 'All clients talk to the API Gateway. It handles JWT validation, rate limiting (100 req/sec per user), and routes requests to the appropriate service. Individual services trust the gateway — they never re-validate auth.' This eliminates duplicated auth logic across 20+ services and gives you a single place to enforce policies.",
+    tags: ["API Gateway", "Routing", "Authentication", "Rate Limiting", "Microservices", "Kong", "NGINX", "Reverse Proxy"],
+  },
+  {
+    id: 54,
+    section: "Reliability",
+    title: "Bulkhead Pattern",
+    tagline: "Isolate failures so one service can't sink the whole ship",
+    description:
+      "The bulkhead pattern comes from naval engineering — ships are divided into watertight compartments so that if one floods, the rest stay buoyant. In software, it isolates resources (threads, connection pools, memory) so that a failure or slowdown in one part of the system doesn't exhaust shared resources and take down everything else.\n\nWithout bulkheads: a single thread pool serves all downstream calls (Payment Service, Inventory Service, Email Service). If the Email Service becomes slow and holds threads waiting for responses, all threads fill up. Now requests to the Payment Service also queue, even though the Payment Service is healthy. One slow service takes down all services.\n\nWith bulkheads: each downstream service gets its own dedicated thread pool (or connection pool). The Email Service's pool can fill up completely; Payment Service requests still use their own pool and process normally. Failure blast radius is contained to one bulkhead.\n\nImplementation: in Java (Hystrix, resilience4j), configure a semaphore or thread pool per service dependency. In Go, use goroutine pools with bounded work queues. In microservices, bulkhead often means separate Kubernetes pods, separate databases, or separate message queue consumers per service — so resource starvation in one service can't starve others.\n\nBulkhead + Circuit Breaker: circuit breaker detects failures and stops calling a service. Bulkhead limits the damage while the circuit is still closed (before the breaker trips).",
+    whyItMatters:
+      "In a microservices system sharing a common thread pool, one slow external dependency can cascade into a full outage. Bulkheads contain the blast radius — only the affected service's pool fills; everything else keeps running.",
+    diagramNote:
+      "Fig. 54.1 — Without bulkhead: shared thread pool exhausted by slow email service blocks all requests. With bulkhead: per-service pools isolate failures.",
+    example:
+      "An e-commerce checkout service calls: Payment Service (critical), Inventory Service (critical), Email Service (non-critical), Recommendation Service (optional). Using bulkheads: Payment and Inventory each get 50 threads. Email gets 10. Recommendations gets 5. When the email provider goes down and holds all 10 email threads, checkout still processes payments and inventory updates normally. Without bulkheads, 50 slow email threads could starve Payment Service of capacity.",
+    interviewTip:
+      "Pair bulkhead with circuit breaker: 'I'd use bulkheads to give each downstream service its own connection pool, so a slow email provider doesn't exhaust the shared pool. I'd combine this with a circuit breaker — after 50% failure rate in 10 seconds, stop calling the email service entirely and queue notifications for later.' Mention that bulkhead answers 'what happens while the circuit is still closed?'",
+    tags: ["Bulkhead Pattern", "Thread Pool", "Resource Isolation", "Fault Tolerance", "Resilience", "Circuit Breaker", "Blast Radius"],
+  },
+  {
+    id: 55,
+    section: "Advanced Topics",
+    title: "Event Sourcing",
+    tagline: "Store state changes as events, not current state",
+    description:
+      "Traditional databases store the current state of data — the last value written. When an order status changes from 'pending' to 'shipped', the row is updated and the history is lost.\n\nEvent sourcing stores every state change as an immutable event in an append-only log. The current state is not stored directly — it is derived by replaying events from the beginning. An order's events: OrderPlaced, PaymentProcessed, OrderPacked, OrderShipped, OrderDelivered. Replaying these events reconstructs the complete order state at any point in time.\n\nBenefits: Complete audit trail — you know exactly what happened, when, and by whom. Temporal queries — replay events up to a specific timestamp to answer 'what was the state at 3pm on Tuesday?' Debugging and root cause analysis — full history of every state change. Event replay — if a downstream service missed events due to downtime, replay from the last processed event. Natural fit for CQRS — the write side appends events; the read side builds projections from those events.\n\nChallenges: Increased storage — storing all events forever grows without bounds (use snapshots: periodically checkpoint current state so replay starts from the snapshot). Event versioning complexity — changing the structure of an event after it has been stored requires migration strategies. Eventual consistency — read-side projections may lag behind the event log.\n\nEvent sourcing is commonly used with Kafka (events stored durably) and CQRS (separate read models built from event streams).",
+    whyItMatters:
+      "Traditional CRUD databases lose history. Event sourcing makes every change observable and replayable — critical for financial systems, audit trails, compliance, and debugging production incidents where you need to reconstruct what happened.",
+    diagramNote:
+      "Fig. 55.1 — Event store appends immutable events; current state is a projection derived by replaying events from the log.",
+    example:
+      "A bank account implemented with event sourcing: events are AccountOpened($1000), MoneyDeposited($500), MoneyWithdrawn($200), MoneyTransferred($300). The current balance is computed by replaying: 1000 + 500 - 200 - 300 = $1000. To audit a dispute: replay events up to the disputed timestamp to see the exact state at that moment. The original transaction can never be modified — only corrective events appended.",
+    interviewTip:
+      "Propose event sourcing for systems needing audit trails or temporal queries: 'I'd use event sourcing for the payment service — every state change is an immutable event. This gives us a complete audit trail for compliance, lets us replay events to reconstruct state after a bug, and integrates naturally with our Kafka event pipeline.' Always mention snapshots to handle the growing-log problem.",
+    tags: ["Event Sourcing", "Immutable Events", "Audit Trail", "Replay", "Temporal Query", "CQRS", "Kafka", "Append-only Log"],
+  },
+  {
+    id: 56,
+    section: "Advanced Topics",
+    title: "CQRS",
+    tagline: "Separate the read model from the write model",
+    description:
+      "CQRS (Command Query Responsibility Segregation) separates read and write operations into different models. Commands change state (write model). Queries return data (read model). Each is optimized for its purpose independently.\n\nIn a traditional system, the same data model serves both reads and writes. At scale, this creates conflicts: writes need normalized, consistent data with strict constraints. Reads need denormalized, pre-joined, cached data that returns fast. A single model can't be optimal for both.\n\nWith CQRS: the write side handles commands (PlaceOrder, UpdateProfile, PostTweet) and enforces business rules and consistency. It writes to a normalized database optimized for transactions. The read side handles queries and serves from a read-optimized store — a denormalized projection, a cache, or a search index. Separate read models can be built for different consumers (mobile app, admin dashboard, analytics) without affecting the write path.\n\nHow the read model stays in sync: whenever the write side processes a command successfully, it publishes an event (OrderPlaced, ProfileUpdated). The read side subscribes to these events and updates its projections asynchronously. This introduces eventual consistency — the read model may lag by milliseconds.\n\nCQRS + Event Sourcing: the write side stores events; the read side builds projections by consuming those events. Enables rebuilding any read model from scratch by replaying the event log.\n\nWhen to use: complex domains with many read patterns, high read-to-write ratios, need to scale reads and writes independently, teams owning read vs. write paths separately.",
+    whyItMatters:
+      "When the same database serves 100,000 reads/sec and 1,000 writes/sec, those workloads compete. CQRS decouples them — the read model can be a Redis cache or Elasticsearch index; the write model can be PostgreSQL. Each scales independently.",
+    diagramNote:
+      "Fig. 56.1 — CQRS: commands go to the write model (normalized DB); events publish to the read model (denormalized projection/cache). Read queries never touch the write DB.",
+    example:
+      "An e-commerce product catalog: writes go to PostgreSQL (ACID, normalized, inventory constraints). Reads serve from Elasticsearch (full-text search, denormalized product documents with category, price, rating all in one document). When a product price changes, a ProductPriceUpdated event triggers an update to the Elasticsearch document. 99% of traffic is reads — served entirely from Elasticsearch without touching PostgreSQL.",
+    interviewTip:
+      "Propose CQRS when you have very different read and write patterns: 'I'd use CQRS here — the write model uses PostgreSQL for ACID guarantees on inventory. The read model is a Redis-cached denormalized view updated asynchronously via events. This lets us handle 100K read req/sec without touching the write database.' Always state the consistency trade-off: 'Read model may lag by up to 200ms.'",
+    tags: ["CQRS", "Command Query Responsibility Segregation", "Read Model", "Write Model", "Event Sourcing", "Eventual Consistency", "Projection"],
+  },
+  {
+    id: 57,
+    section: "Reliability",
+    title: "Heartbeat and Health Checks",
+    tagline: "How distributed systems detect and recover from failures",
+    description:
+      "In a distributed system, services can fail silently — a process may crash, a network partition may occur, or a service may become unresponsive without explicitly notifying its callers. Heartbeats and health checks are the mechanisms that detect these silent failures.\n\nA heartbeat is a periodic signal sent by a service to confirm it is alive. The service sends a heartbeat message (usually a lightweight ping) to its service registry or load balancer every N seconds. If the registry misses K consecutive heartbeats, it marks the service as unhealthy and stops routing traffic to it.\n\nHealth checks go deeper than 'is the process alive?'. They verify that the service is functional. Two types: Liveness probe — is the process alive and not deadlocked? If this fails, restart the container. Readiness probe — is the service ready to accept traffic? Checks that all dependencies (database, cache) are reachable. If this fails, remove the instance from the load balancer but don't restart it.\n\nKubernetes implements both probes natively: livenessProbe (restarts the pod on failure), readinessProbe (removes the pod from Service endpoints until healthy).\n\nActive vs passive health checks: active (the load balancer or registry sends synthetic pings to each instance on a schedule), passive (the load balancer monitors real traffic — if N consecutive requests to an instance return 5xx, mark it unhealthy). Active checks catch silent failures faster; passive checks reflect real user traffic.",
+    whyItMatters:
+      "Without health checks, a load balancer keeps routing traffic to crashed instances — users get errors. Heartbeats and health checks are what enable automatic failover, the foundation of high availability. Zero-downtime deployments depend on readiness probes: new instances only receive traffic once they pass readiness checks.",
+    diagramNote:
+      "Fig. 57.1 — Heartbeat flow: service pings registry every 10s; 3 missed heartbeats mark it unhealthy; load balancer stops routing traffic to it.",
+    example:
+      "Kubernetes readiness probe: a pod serving an API starts, but the database connection pool takes 5 seconds to warm up. During warmup, the readiness probe (GET /health/ready) returns 503. Kubernetes keeps the pod out of the Service endpoint list. After 5 seconds, /health/ready returns 200 and Kubernetes adds the pod to the load balancer. Users never hit an unready pod.",
+    interviewTip:
+      "Always include health checks when designing any service: 'Each service exposes GET /health/live (liveness) and GET /health/ready (readiness). The load balancer polls /health/ready every 10 seconds and removes unhealthy instances. Kubernetes uses the same endpoints for its probes. The liveness endpoint only checks the process is running; readiness checks that the DB connection pool and cache are reachable.' This answer specifically separates candidates who've operated production systems.",
+    tags: ["Heartbeat", "Health Check", "Liveness Probe", "Readiness Probe", "Kubernetes", "Load Balancer", "Failover", "High Availability"],
+  },
+  {
+    id: 58,
+    section: "Advanced Topics",
+    title: "Distributed Tracing",
+    tagline: "Follow a request as it flows across every microservice",
+    description:
+      "In a microservices architecture, a single user request might touch 10–20 services. When the request takes 2 seconds, which service is slow? Distributed tracing answers this question by tracking the entire request flow, capturing latency at every hop.\n\nHow it works: when a request enters the system at the API Gateway, a unique trace ID is generated (e.g., UUID). This trace ID is injected into every outgoing request header (typically X-Trace-ID or using the W3C Trace Context standard). Every service that receives a request creates a span — a record of the operation including start time, end time, service name, and parent span ID. All spans share the trace ID. At the end of the request, all spans are collected and assembled into a trace tree.\n\nThe trace tree shows: which services were called in sequence vs. in parallel, how long each service took, where errors occurred, and what the critical path was (the sequence of spans that determined total latency).\n\nTools: Jaeger (open-source, CNCF), Zipkin (open-source, originally from Twitter), AWS X-Ray (managed), Datadog APM, Honeycomb.\n\nIntegration with logs and metrics: a good observability platform correlates trace ID with logs (filter all logs for a trace ID to see what happened) and metrics (see which service's latency spike caused the trace to be slow).",
+    whyItMatters:
+      "In a monolith, a slow DB query shows up in a stack trace. In microservices, the slow service is one hop in a chain of 15 — invisible without distributed tracing. Tracing is the tool that makes distributed systems debuggable.",
+    diagramNote:
+      "Fig. 58.1 — Distributed trace: a single request generates spans across 5 services; the waterfall view shows which service added the most latency.",
+    example:
+      "A user's checkout takes 3 seconds. Distributed tracing reveals: API Gateway: 5ms, Auth Service: 10ms, Cart Service: 20ms, Inventory Service: 2,800ms, Payment Service: 100ms. The Inventory Service is the bottleneck — its span shows a full table scan with no index. Without tracing, identifying this would require checking logs across 5 services manually.",
+    interviewTip:
+      "Include distributed tracing in any microservices design: 'I'd use Jaeger for distributed tracing. Every request gets a trace ID at the API Gateway, passed in the X-Trace-ID header. Each service creates spans for its operations and reports to the Jaeger collector. When a request is slow, I can pull up the trace in Jaeger and see the exact service and operation causing latency.' Mention it as part of the observability trio: logs + metrics + traces.",
+    tags: ["Distributed Tracing", "Jaeger", "Zipkin", "Span", "Trace ID", "Observability", "Microservices", "Latency"],
+  },
+  {
+    id: 59,
+    section: "Reliability",
+    title: "Logging vs Metrics vs Tracing",
+    tagline: "The three pillars of observability",
+    description:
+      "Observability is the ability to understand the internal state of a system from its external outputs. The three pillars are logging, metrics, and tracing — each answers a different question.\n\nLogging records discrete events as structured text. Each log entry captures what happened at a specific moment: 'User 123 placed order 456', 'Database query failed with timeout', 'Cache miss for key product:789'. Logs are best for debugging specific errors and auditing events. They are high-cardinality (many unique values) and high-volume. Storage and search is expensive at scale. Tools: ELK Stack (Elasticsearch, Logstash, Kibana), Splunk, Loki.\n\nMetrics are numerical measurements aggregated over time: requests per second, error rate, P99 latency, CPU usage, memory consumption. Metrics are low-cardinality (a small number of distinct values) and cheap to store as time series. Alerts are built on metrics. Dashboards show metrics. Tools: Prometheus (collection and storage), Grafana (visualization).\n\nTracing tracks a request's journey across services (see concept 58). It answers 'where did this specific request spend its time?'. Unlike logs (what happened) or metrics (how many?), tracing answers 'which path did it take?'. Tools: Jaeger, Zipkin, AWS X-Ray.\n\nTogether they form a complete observability picture: metrics show something is wrong (P99 latency spiked), logs explain what is wrong (specific error messages), tracing shows where it's wrong (which service in the chain is slow).",
+    whyItMatters:
+      "Without all three, you are blind to different failure modes. Metrics catch regressions early. Logs provide the detail to diagnose. Tracing localizes failures in distributed systems. Using only one means slow debugging and undetected issues.",
+    diagramNote:
+      "Fig. 59.1 — Observability triangle: metrics (Prometheus) detect anomalies, logs (ELK) explain them, traces (Jaeger) localize them in distributed request chains.",
+    example:
+      "A P99 latency spike is caught by a Prometheus alert (metric: latency > 500ms for 5 minutes). The on-call engineer opens Grafana and sees the spike started at 14:32. They filter Loki logs for ERROR level at 14:32 and find 'InventoryService: connection pool exhausted'. They pull a Jaeger trace from 14:32 and confirm the Inventory Service span is 2.5 seconds — 3 pillars together resolve the incident in 10 minutes instead of hours.",
+    interviewTip:
+      "When asked about monitoring, name all three pillars and their tools: 'I'd use Prometheus and Grafana for metrics (P99 latency, error rate, RPS), ELK for logs (structured JSON logs with trace ID), and Jaeger for distributed tracing. Alerts fire on metrics breaches — logs and traces are the diagnostic tools you reach for when an alert fires.' This answer signals production experience.",
+    tags: ["Logging", "Metrics", "Tracing", "Observability", "Prometheus", "Grafana", "ELK", "Jaeger", "Three Pillars"],
+  },
+  {
+    id: 60,
+    section: "Reliability",
+    title: "Disaster Recovery and RPO/RTO",
+    tagline: "How fast you recover and how much data you can afford to lose",
+    description:
+      "Disaster recovery (DR) is a business continuity plan for recovering from system failures — hardware failures, data center outages, cyberattacks, or catastrophic data loss. Two key metrics quantify recovery requirements.\n\nRPO (Recovery Point Objective): the maximum acceptable amount of data loss, measured in time. If RPO = 1 hour, the system can recover from a disaster by restoring to a state from up to 1 hour ago — losing at most 1 hour of data. RPO drives backup frequency: if RPO = 15 minutes, backups must run every 15 minutes.\n\nRTO (Recovery Time Objective): the maximum acceptable downtime. If RTO = 4 hours, the system must be fully operational within 4 hours of a disaster being declared. RTO drives your recovery infrastructure investment — faster RTO requires hot standbys and automated failover; slower RTO allows cold backups restored manually.\n\nStrategies (from cheapest/slowest to most expensive/fastest): Backup and Restore — periodic snapshots to object storage (S3); RPO = backup interval, RTO = hours. Pilot Light — critical infrastructure running in a second region at minimal scale; RTO = 10s of minutes. Warm Standby — a scaled-down version of production runs continuously in a DR region; RTO = minutes. Active-Active Multi-Region — production runs in two or more regions simultaneously; RTO = seconds, RPO = seconds. Users automatically rerouted via DNS or load balancer when one region fails.\n\nMost organizations choose a strategy based on cost vs. business impact: a banking system needs near-zero RPO and RTO; a developer tool may tolerate 4-hour RPO and 1-day RTO.",
+    whyItMatters:
+      "Every system fails eventually. Without a defined RPO and RTO, you don't know if your recovery solution is adequate until disaster strikes. These two metrics quantify the business's risk tolerance and force you to design DR infrastructure that can actually meet the requirements.",
+    diagramNote:
+      "Fig. 60.1 — RPO defines maximum data loss (backup interval); RTO defines maximum downtime (recovery speed). Multi-region active-active achieves near-zero for both.",
+    example:
+      "A fintech company's RPO = 0 seconds (no data loss tolerated), RTO = 30 seconds (system must be live within 30 seconds of failure). This requires: synchronous replication to a second region (RPO = 0), automated DNS failover (RTO = 30s). A content blog's RPO = 24 hours (daily backup is fine), RTO = 4 hours (half a day to restore is acceptable). Cost difference: $50K/month vs $500/month.",
+    interviewTip:
+      "When designing any data-handling system, state RPO and RTO upfront: 'For this payment service, I'll target RPO = 1 minute and RTO = 5 minutes. This means: synchronous replication to a hot standby in a second AZ, automated failover via Route 53 health checks, and point-in-time recovery backups to S3 every minute.' Then justify each component against those targets.",
+    tags: ["Disaster Recovery", "RPO", "RTO", "Backup", "Multi-Region", "Failover", "Business Continuity", "High Availability"],
+  },
+  {
+    id: 61,
+    section: "Foundation",
+    title: "How to Design a Scalable System",
+    tagline: "10 key principles for building systems that grow with you",
+    description:
+      "Scalability is the ability to handle growing load — more users, more data, more requests — without degrading performance or reliability. Every scalable system applies a core set of principles.\n\n(1) Load balance traffic: distribute requests across multiple servers. A single server is both a bottleneck and a single point of failure. Add a load balancer in front of a horizontally scaled server pool.\n\n(2) Cache aggressively: serve frequently accessed data from memory (Redis, Memcached) to avoid repeated database queries. Apply caching at multiple layers: CDN edge, API gateway, application, database query cache.\n\n(3) Shard data: split large datasets across multiple database nodes using consistent hashing or range partitioning. No single database node should hold all data or handle all writes.\n\n(4) Use async processing: decouple slow or non-critical operations using message queues (Kafka, SQS). Order confirmation emails, image resizing, analytics events — none of these need to block the user's request.\n\n(5) Separate concerns with microservices: decompose the application into independent services. Scale only the services that are under load instead of scaling the entire application.\n\n(6) Monitor and alert: use metrics (Prometheus), logs (ELK), and traces (Jaeger) to detect problems before users do. Set P99 latency and error rate alerts.\n\n(7) Plan for failures: assume components will fail. Add circuit breakers, retries with exponential backoff, bulkheads, and replica failover. Design for graceful degradation.\n\n(8) Use CDN for static content: serve images, CSS, JS, and videos from edge servers near users. Reduce origin load by 80–95%.\n\n(9) Optimize databases: use indexes, read replicas, connection pooling, and query optimization before reaching for scaling solutions. Most database problems are query problems.\n\n(10) Document architecture: maintain up-to-date architecture diagrams and runbooks. Systems that aren't documented are systems that can't be operated under pressure.",
+    whyItMatters:
+      "These 10 principles are the checklist that turns a single-server prototype into a production system capable of serving millions of users. Each principle addresses a specific class of failure at scale — missing any one of them creates a predictable bottleneck.",
+    diagramNote:
+      "Fig. 61.1 — Scalable system anatomy: load balancer → stateless app servers → cache layer → sharded databases → async queue → CDN for static assets.",
+    example:
+      "Instagram's early architecture applied all 10 principles: Django app servers behind a load balancer, PostgreSQL sharded by user_id, Redis for feed cache and session storage, Gearman for async photo processing, Akamai CDN for images, Graphite for metrics, HAProxy for load balancing — serving 30 million users with 13 engineers before the Facebook acquisition.",
+    interviewTip:
+      "Use these 10 principles as a checklist at the end of any system design: 'Let me review against scalability principles: am I load balancing? Yes — ALB. Am I caching? Yes — Redis for hot data. Am I sharding? Yes — user_id hash across 50 shards. Am I using async? Yes — Kafka for notifications and analytics. Do I have monitoring? Yes — Prometheus with P99 alerts.' Walking through this checklist shows systematic thinking.",
+    tags: ["Scalability", "Load Balancing", "Caching", "Sharding", "Async", "Microservices", "CDN", "Monitoring", "Best Practices"],
   },
 ];
 
