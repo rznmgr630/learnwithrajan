@@ -549,6 +549,92 @@ export function ProgrammingTracks() {
       </ProgrammingAccordionSection>
 
       <ProgrammingAccordionSection
+        sectionId={`${baseId}-websites`}
+        titleKey="hub.programming.groupWebsites"
+        hintKey="hub.programming.groupWebsitesHint"
+      >
+        {[
+          {
+            name: "Exercism",
+            url: "https://exercism.org",
+            subtitle: "Writing clean code, language fundamentals and feedback-driven learning",
+            tags: ["Clean Code", "79 Languages", "Mentorship"],
+          },
+          {
+            name: "VisuAlgo",
+            url: "https://visualgo.net",
+            subtitle: "Visualizing algorithms, understanding how DS actually work and debugging logic gaps",
+            tags: ["Algorithms", "Data Structures", "Visualizer"],
+          },
+          {
+            name: "Project Euler",
+            url: "https://projecteuler.net",
+            subtitle: "Mathematical thinking, problem decomposition and deep reasoning",
+            tags: ["Math", "Problem Solving", "Logic"],
+          },
+          {
+            name: "Refactoring Guru",
+            url: "https://refactoring.guru",
+            subtitle: "Code structure, design patterns intuition and clean code thinking",
+            tags: ["Design Patterns", "Refactoring", "Clean Code"],
+          },
+          {
+            name: "Codewars",
+            url: "https://codewars.com",
+            subtitle: "Thinking in edge cases, writing expressive code and reading others' solutions",
+            tags: ["Kata", "Edge Cases", "Code Review"],
+          },
+        ].map((site) => (
+          <a
+            key={site.name}
+            href={site.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={learnHubCardClass}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                  {site.name}
+                </h3>
+                <p className="mt-1 text-sm text-[var(--muted)]">{site.subtitle}</p>
+              </div>
+              <svg
+                className="mt-1 h-4 w-4 shrink-0 text-[var(--faint)]"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {site.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+              Visit website →
+            </span>
+          </a>
+        ))}
+      </ProgrammingAccordionSection>
+
+      <ProgrammingAccordionSection
         sectionId={`${baseId}-interview`}
         titleKey="hub.programming.groupInterview"
         hintKey="hub.programming.groupInterviewHint"
