@@ -7,15 +7,17 @@ import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
 import { SdDiagram } from "@/components/learn/SdDiagram";
 
 function renderLine(text: string) {
-  const parts = text.split(/(<b>[^<]+<\/b>)/g);
+  const parts = text.split(/(<b>[^<]+<\/b>|`[^`]+`)/g);
   if (parts.length === 1) return <>{text}</>;
   return (
     <>
-      {parts.map((part, i) =>
-        part.startsWith("<b>") && part.endsWith("</b>")
-          ? <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(3, -4)}</strong>
-          : <span key={i}>{part}</span>
-      )}
+      {parts.map((part, i) => {
+        if (part.startsWith("<b>") && part.endsWith("</b>"))
+          return <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(3, -4)}</strong>;
+        if (part.startsWith("`") && part.endsWith("`"))
+          return <code key={i} className="rounded bg-[var(--elevated)] px-1.5 py-0.5 font-mono text-xs text-[var(--accent)]">{part.slice(1, -1)}</code>;
+        return <span key={i}>{part}</span>;
+      })}
     </>
   );
 }
