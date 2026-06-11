@@ -6,6 +6,20 @@ import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, SYSTEM_DESIGN_SECTIONS, type Sys
 import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
 import { SdDiagram } from "@/components/learn/SdDiagram";
 
+function renderLine(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  if (parts.length === 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**")
+          ? <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(2, -2)}</strong>
+          : <span key={i}>{part}</span>
+      )}
+    </>
+  );
+}
+
 function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | null; onClose: () => void }) {
   useEffect(() => {
     if (!concept) return;
@@ -67,12 +81,39 @@ function ConceptDrawer({ concept, onClose }: { concept: SystemDesignConcept | nu
               {concept.description.split("\n\n").map((para, i) => (
                 <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
                   {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                    <span key={j}>
+                      {renderLine(line)}
+                      {j < arr.length - 1 && <br />}
+                    </span>
                   ))}
                 </p>
               ))}
             </div>
           </section>
+
+          {/* Note */}
+          {concept.note && (
+            <section className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-400">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 2a6 6 0 0 0-6 6c0 2.386 1.395 4.448 3.418 5.445L7 15h6l-.418-1.555C14.605 12.448 16 10.386 16 8a6 6 0 0 0-6-6Zm-1 12.5V16h2v-1.5h-2Z" />
+                </svg>
+                Note
+              </h3>
+              <div className="space-y-2">
+                {concept.note.split("\n\n").map((para, i) => (
+                  <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
+                    {para.split("\n").map((line, j, arr) => (
+                      <span key={j}>
+                        {renderLine(line)}
+                        {j < arr.length - 1 && <br />}
+                      </span>
+                    ))}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Why it matters */}
           <section className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
