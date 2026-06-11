@@ -7,13 +7,13 @@ import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
 import { SdDiagram } from "@/components/learn/SdDiagram";
 
 function renderLine(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  const parts = text.split(/(<b>[^<]+<\/b>)/g);
   if (parts.length === 1) return <>{text}</>;
   return (
     <>
       {parts.map((part, i) =>
-        part.startsWith("**") && part.endsWith("**")
-          ? <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(2, -2)}</strong>
+        part.startsWith("<b>") && part.endsWith("</b>")
+          ? <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(3, -4)}</strong>
           : <span key={i}>{part}</span>
       )}
     </>
