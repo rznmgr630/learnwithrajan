@@ -972,6 +972,191 @@ export const SYSTEM_DESIGN_DIAGRAMS: Record<number, SDiagramConfig> = {
     rows: [["api"], ["prefs", "queue"], ["push", "email", "sms"], ["dlq"]],
   },
 
+  // ── 62. What is RabbitMQ ──────────────────────────────────────
+  62: {
+    nodes: [
+      { id: "prod",  label: "Producer",     sub: "publishes messages", shape: "rounded", color: "green" },
+      { id: "exch",  label: "Exchange",     sub: "routes messages",   color: "accent" },
+      { id: "queue", label: "Queue",        sub: "stores messages",   shape: "db", color: "orange" },
+      { id: "c1",    label: "Consumer A",   sub: "email service",     shape: "rounded", color: "green" },
+      { id: "c2",    label: "Consumer B",   sub: "analytics service", shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "prod",  to: "exch",  label: "publish" },
+      { from: "exch",  to: "queue", label: "binding" },
+      { from: "queue", to: "c1",    label: "deliver" },
+      { from: "queue", to: "c2",    label: "deliver" },
+    ],
+    rows: [["prod"], ["exch"], ["queue"], ["c1", "c2"]],
+  },
+
+  // ── 63. Exchanges, Queues & Bindings ─────────────────────────
+  63: {
+    nodes: [
+      { id: "prod", label: "Producer",      sub: "routing key: order.email", shape: "rounded", color: "green" },
+      { id: "exch", label: "Exchange",      sub: "orders exchange",           color: "accent" },
+      { id: "q1",   label: "email.queue",   sub: "bound: order.email",        shape: "db", color: "orange" },
+      { id: "q2",   label: "sms.queue",     sub: "bound: order.sms",          shape: "db", color: "orange" },
+      { id: "c1",   label: "Email Consumer", shape: "rounded", color: "green" },
+      { id: "c2",   label: "SMS Consumer",   shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "prod", to: "exch" },
+      { from: "exch", to: "q1",  label: "order.email" },
+      { from: "exch", to: "q2",  label: "order.sms" },
+      { from: "q1",   to: "c1" },
+      { from: "q2",   to: "c2" },
+    ],
+    rows: [["prod"], ["exch"], ["q1", "q2"], ["c1", "c2"]],
+  },
+
+  // ── 64. Exchange Types ────────────────────────────────────────
+  64: {
+    nodes: [
+      { id: "prod",   label: "Producer",       shape: "rounded", color: "green" },
+      { id: "direct", label: "Direct",         sub: "exact key match",    color: "accent" },
+      { id: "fanout", label: "Fanout",         sub: "all queues get it",  color: "orange" },
+      { id: "topic",  label: "Topic",          sub: "wildcard patterns",  color: "accent" },
+      { id: "qd",     label: "Matching Queue", sub: "1 exact match",      shape: "db" },
+      { id: "qf1",    label: "Queue 1",        sub: "gets all messages",  shape: "db", color: "orange" },
+      { id: "qf2",    label: "Queue 2",        sub: "gets all messages",  shape: "db", color: "orange" },
+      { id: "qt1",    label: "order.# queue",  sub: "matches order.*",    shape: "db" },
+      { id: "qt2",    label: "pay.# queue",    sub: "matches payment.*",  shape: "db" },
+    ],
+    edges: [
+      { from: "prod",   to: "direct" },
+      { from: "prod",   to: "fanout" },
+      { from: "prod",   to: "topic" },
+      { from: "direct", to: "qd" },
+      { from: "fanout", to: "qf1" },
+      { from: "fanout", to: "qf2" },
+      { from: "topic",  to: "qt1", label: "order.#" },
+      { from: "topic",  to: "qt2", label: "payment.#" },
+    ],
+    rows: [["prod"], ["direct", "fanout", "topic"], ["qd", "qf1", "qf2", "qt1", "qt2"]],
+  },
+
+  // ── 65. Message Acknowledgments ───────────────────────────────
+  65: {
+    nodes: [
+      { id: "queue",  label: "Queue",           shape: "db", color: "accent" },
+      { id: "cons",   label: "Consumer",        sub: "processes message",   shape: "rounded", color: "green" },
+      { id: "ack",    label: "basicAck",        sub: "message removed ✓",   color: "green" },
+      { id: "nackr",  label: "basicNack",       sub: "requeue=true → retry", color: "orange" },
+      { id: "nackd",  label: "basicNack",       sub: "requeue=false → DLX", color: "red" },
+      { id: "crash",  label: "Consumer Crash",  sub: "unacked → redelivered", color: "red" },
+    ],
+    edges: [
+      { from: "queue",  to: "cons",   label: "deliver" },
+      { from: "cons",   to: "ack" },
+      { from: "cons",   to: "nackr" },
+      { from: "cons",   to: "nackd" },
+      { from: "cons",   to: "crash",  dashed: true },
+      { from: "nackr",  to: "queue",  label: "back to queue", dashed: true },
+    ],
+    rows: [["queue"], ["cons"], ["ack", "nackr", "nackd", "crash"]],
+  },
+
+  // ── 66. Message Durability ─────────────────────────────────────
+  66: {
+    nodes: [
+      { id: "prod",    label: "Producer",          sub: "publishes message",         shape: "rounded", color: "green" },
+      { id: "exch",    label: "Durable Exchange",  sub: "survives restart",          color: "accent" },
+      { id: "queue",   label: "Durable Queue",     sub: "definition survives",       shape: "db", color: "accent" },
+      { id: "disk",    label: "Disk Write",        sub: "deliveryMode: 2 (persist)", color: "orange" },
+      { id: "confirm", label: "Publisher Confirm", sub: "ack sent back to producer", color: "green" },
+    ],
+    edges: [
+      { from: "prod",    to: "exch" },
+      { from: "exch",    to: "queue" },
+      { from: "queue",   to: "disk",    label: "persist message" },
+      { from: "disk",    to: "confirm" },
+      { from: "confirm", to: "prod",    label: "ack", dashed: true },
+    ],
+    rows: [["prod"], ["exch"], ["queue"], ["disk"], ["confirm"]],
+  },
+
+  // ── 67. Dead Letter Exchanges & Retry ─────────────────────────
+  67: {
+    nodes: [
+      { id: "main",  label: "Main Queue",      sub: "processing queue",       shape: "db", color: "accent" },
+      { id: "cons",  label: "Consumer",        sub: "fails → nack",           shape: "rounded", color: "orange" },
+      { id: "dlx",   label: "DLX Exchange",    sub: "x-dead-letter-exchange", color: "red" },
+      { id: "retry", label: "Retry Queue",     sub: "TTL: 30s delay",         shape: "db", color: "orange" },
+      { id: "perm",  label: "Permanent DLQ",   sub: "manual review",          shape: "db", color: "red" },
+    ],
+    edges: [
+      { from: "main",  to: "cons" },
+      { from: "cons",  to: "dlx",   label: "nack(requeue=false)" },
+      { from: "dlx",   to: "retry" },
+      { from: "retry", to: "main",  label: "after TTL expires", dashed: true },
+      { from: "retry", to: "perm",  label: "max retries hit",   dashed: true },
+    ],
+    rows: [["main"], ["cons"], ["dlx"], ["retry"], ["perm"]],
+  },
+
+  // ── 68. Prefetch & Flow Control ───────────────────────────────
+  68: {
+    nodes: [
+      { id: "queue", label: "Queue",          sub: "many messages pending", shape: "db", color: "accent" },
+      { id: "qos",   label: "basicQos(1)",    sub: "fair dispatch enabled", color: "accent" },
+      { id: "c1",    label: "Consumer 1",     sub: "fast — gets more msgs",  shape: "rounded", color: "green" },
+      { id: "c2",    label: "Consumer 2",     sub: "slow — gets fewer msgs", shape: "rounded", color: "orange" },
+      { id: "c3",    label: "Consumer 3",     sub: "medium speed",           shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "queue", to: "qos" },
+      { from: "qos",   to: "c1", label: "1 msg → ack → next" },
+      { from: "qos",   to: "c2", label: "1 msg → ack → next" },
+      { from: "qos",   to: "c3", label: "1 msg → ack → next" },
+    ],
+    rows: [["queue"], ["qos"], ["c1", "c2", "c3"]],
+  },
+
+  // ── 69. Clustering & High Availability ────────────────────────
+  69: {
+    nodes: [
+      { id: "prod", label: "Producer",          sub: "publishes messages",       shape: "rounded", color: "green" },
+      { id: "n1",   label: "Node 1 (Leader)",   sub: "Quorum Queue master",      color: "accent" },
+      { id: "n2",   label: "Node 2 (Follower)", sub: "Raft replica",             color: "accent" },
+      { id: "n3",   label: "Node 3 (Follower)", sub: "Raft replica",             color: "accent" },
+      { id: "elect",label: "Leader Election",   sub: "auto on node failure",     color: "orange" },
+      { id: "cons", label: "Consumer",          sub: "reconnects automatically", shape: "rounded", color: "green" },
+    ],
+    edges: [
+      { from: "prod",  to: "n1",    label: "publish" },
+      { from: "n1",    to: "n2",    label: "Raft write" },
+      { from: "n1",    to: "n3",    label: "Raft write" },
+      { from: "n2",    to: "elect", dashed: true },
+      { from: "n3",    to: "elect", dashed: true },
+      { from: "n1",    to: "cons",  label: "deliver" },
+    ],
+    rows: [["prod"], ["n1"], ["n2", "n3"], ["elect"], ["cons"]],
+  },
+
+  // ── 70. RabbitMQ Messaging Patterns ──────────────────────────
+  70: {
+    nodes: [
+      { id: "wq_p",  label: "Producer",        sub: "Work Queue",        shape: "rounded", color: "green" },
+      { id: "wq_q",  label: "Shared Queue",    sub: "one queue",         shape: "db", color: "accent" },
+      { id: "wq_c1", label: "Worker 1",        sub: "gets msg OR",       shape: "rounded" },
+      { id: "wq_c2", label: "Worker 2",        sub: "gets msg OR",       shape: "rounded" },
+      { id: "ps_p",  label: "Publisher",       sub: "Pub/Sub",           shape: "rounded", color: "orange" },
+      { id: "ps_x",  label: "Fanout Exchange", sub: "copies to all",     color: "orange" },
+      { id: "ps_c1", label: "Email Service",   sub: "gets every event",  shape: "rounded", color: "orange" },
+      { id: "ps_c2", label: "Analytics",       sub: "gets every event",  shape: "rounded", color: "orange" },
+    ],
+    edges: [
+      { from: "wq_p",  to: "wq_q" },
+      { from: "wq_q",  to: "wq_c1", label: "1 msg → 1 worker only" },
+      { from: "wq_q",  to: "wq_c2" },
+      { from: "ps_p",  to: "ps_x" },
+      { from: "ps_x",  to: "ps_c1", label: "copy to all" },
+      { from: "ps_x",  to: "ps_c2", label: "copy to all" },
+    ],
+    rows: [["wq_p", "ps_p"], ["wq_q", "ps_x"], ["wq_c1", "wq_c2", "ps_c1", "ps_c2"]],
+  },
+
   // ── 46. System Design Interview Framework ─────────────────────
   46: {
     nodes: [
