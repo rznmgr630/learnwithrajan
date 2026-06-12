@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, type ReactNode } from "react";
+import { useId, useRef, useEffect, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
 import { useGit7Progress } from "@/hooks/use-git-7-progress";
@@ -50,9 +50,25 @@ function ProgrammingAccordionSection({
   children: ReactNode;
 }) {
   const { t } = useLocale();
+  const ref = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    try {
+      const saved = sessionStorage.getItem(`acc:${sectionId}`);
+      if (saved !== null) el.open = saved === "1";
+    } catch {}
+    function onToggle() {
+      try { sessionStorage.setItem(`acc:${sectionId}`, el!.open ? "1" : "0"); } catch {}
+    }
+    el.addEventListener("toggle", onToggle);
+    return () => el.removeEventListener("toggle", onToggle);
+  }, [sectionId]);
 
   return (
     <details
+      ref={ref}
       id={sectionId}
       className="open:[&_.programming-chevron]:rotate-180 overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm"
       {...(defaultOpen ? { open: true } : {})}
