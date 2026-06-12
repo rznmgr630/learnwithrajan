@@ -51,20 +51,34 @@ function ProgrammingAccordionSection({
 }) {
   const { t } = useLocale();
   const ref = useRef<HTMLDetailsElement>(null);
+  // Use titleKey as the storage key — it's a stable string unlike the useId()-based sectionId
+  const storageKey = `acc:${titleKey}`;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    let shouldScroll = false;
     try {
-      const saved = sessionStorage.getItem(`acc:${sectionId}`);
-      if (saved !== null) el.open = saved === "1";
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved !== null) {
+        el.open = saved === "1";
+        // Scroll into view only if this is the section the user last navigated from
+        shouldScroll = saved === "1" && sessionStorage.getItem("acc:last") === storageKey;
+      }
     } catch {}
+    if (shouldScroll) {
+      const timer = setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      return () => clearTimeout(timer);
+    }
     function onToggle() {
-      try { sessionStorage.setItem(`acc:${sectionId}`, el!.open ? "1" : "0"); } catch {}
+      try {
+        sessionStorage.setItem(storageKey, el!.open ? "1" : "0");
+        if (el!.open) sessionStorage.setItem("acc:last", storageKey);
+      } catch {}
     }
     el.addEventListener("toggle", onToggle);
     return () => el.removeEventListener("toggle", onToggle);
-  }, [sectionId]);
+  }, [storageKey]);
 
   return (
     <details
