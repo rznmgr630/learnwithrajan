@@ -431,6 +431,13 @@ export function ProgrammingTracks() {
           </span>
         </Link>
 
+      </ProgrammingAccordionSection>
+
+      <ProgrammingAccordionSection
+        sectionId={`${baseId}-messaging`}
+        titleKey="hub.programming.groupMessaging"
+        hintKey="hub.programming.groupMessagingHint"
+      >
         <Link href="/learn/rabbitmq" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>

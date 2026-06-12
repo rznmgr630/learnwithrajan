@@ -528,6 +528,16 @@ export const UI_STRINGS = {
     np: "सम्बन्धात्मक डाटाबेस, SQL र डेटा मोडेलिङ।",
     jp: "リレーショナルDB・SQL・データモデリング。",
   },
+  "hub.programming.groupMessaging": {
+    en: "Message Queues",
+    np: "मेसेज क्यु",
+    jp: "メッセージキュー",
+  },
+  "hub.programming.groupMessagingHint": {
+    en: "Async messaging, brokers, and event-driven architecture.",
+    np: "असिन्क्रोनस मेसेजिङ, ब्रोकर र इभेन्ट-ड्रिभन आर्किटेक्चर।",
+    jp: "非同期メッセージング・ブローカー・イベント駆動アーキテクチャ。",
+  },
   "hub.sql.title": {
     en: "Relational Database",
     np: "सम्बन्धात्मक डाटाबेस",
