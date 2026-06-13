@@ -86,6 +86,7 @@ export function DuolingoPage() {
                     <span className="rounded-lg bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-bold text-[var(--accent)]">
                       Day {d.day}
                     </span>
+                    <span className="text-sm font-medium text-[var(--text)]">{d.category}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">
