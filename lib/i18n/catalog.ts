@@ -603,6 +603,16 @@ export const UI_STRINGS = {
     np: "इमेज इफेक्ट · सिकाइ प्रम्प्टहरू",
     jp: "画像エフェクト・学習プロンプト集",
   },
+  "hub.sectionPersonalDev": {
+    en: "Personal Development",
+    np: "व्यक्तिगत विकास",
+    jp: "自己啓発",
+  },
+  "hub.sectionPersonalDevHint": {
+    en: "Mindset · Focus · Goals · Growth",
+    np: "मानसिकता · फोकस · लक्ष्य · विकास",
+    jp: "マインドセット・集中・目標・成長",
+  },
   "hub.category.cta": {
     en: "Browse →",
     np: "हेर्नुहोस् →",

@@ -40,6 +40,16 @@ export function LearningHubCards() {
           {t("hub.category.cta")}
         </span>
       </Link>
+
+      <Link href="/learn/personal-development" className={learnHubCardClass}>
+        <h2 className="text-xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+          {t("hub.sectionPersonalDev")}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--muted)]">{t("hub.sectionPersonalDevHint")}</p>
+        <span className="mt-8 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+          {t("hub.category.cta")}
+        </span>
+      </Link>
     </div>
   );
 }
