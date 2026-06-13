@@ -8,16 +8,16 @@ type Video = {
 };
 
 const VIDEOS: Video[] = [
-  { id: "Z4F7SAknzhw", label: "Video 1" },
-  { id: "ZzeXMOawZBo", label: "Video 2" },
-  { id: "SU3DRpmW5qM", label: "Video 3" },
-  { id: "t260757b_vU", label: "Video 4" },
-  { id: "W6WUR9L_MOo", label: "Video 5" },
-  { id: "VjyDi69NbVc", label: "Video 6" },
-  { id: "678t3Dxl14M", label: "Video 7" },
-  { id: "U2w7SQ7NEUQ", label: "Video 8" },
-  { id: "GiWdNoebaak", label: "Video 9" },
-  { id: "nzPj65UGEGo", label: "Video 10" },
+  { id: "Z4F7SAknzhw", label: "Restart, Reset And Refocus Again." },
+  { id: "ZzeXMOawZBo", label: "Neuroscience Confirms: This Biblical Habit Rewires Your Brain" },
+  { id: "SU3DRpmW5qM", label: "Do This Every Time You Get Paid (Paycheck Routine)" },
+  { id: "t260757b_vU", label: "Stop Rambling: The 3-2-1 Speaking Trick That Makes You Sound Like A CEO" },
+  { id: "W6WUR9L_MOo", label: "This Will Make You So Scared of Scrolling You'll Never Do It Again" },
+  { id: "VjyDi69NbVc", label: "This ONE Psychological Trigger Gets Clients to Chase You" },
+  { id: "678t3Dxl14M", label: "how to ACTUALLY be yourself (when you've forgotten who that is)" },
+  { id: "U2w7SQ7NEUQ", label: "How to Sell Anything (Full Sales Course)" },
+  { id: "GiWdNoebaak", label: "The 4 Types of Social Intelligence — Which One Are You?" },
+  { id: "nzPj65UGEGo", label: "Why you should stop giving a f*ck and finally start living for you" },
 ];
 
 export function FocusGoalsPage() {
@@ -84,12 +84,12 @@ export function FocusGoalsPage() {
               </div>
 
               {/* Card footer */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-[var(--text)]">
-                  <span className="mr-2 font-mono text-[var(--faint)]">{String(i + 1).padStart(2, "0")}</span>
-                  Focus &amp; Goals
-                </span>
-                <span className="text-xs font-medium text-[var(--accent)] opacity-0 transition group-hover:opacity-100">
+              <div className="flex items-start justify-between gap-2 px-4 py-3">
+                <p className="text-xs font-medium leading-snug text-[var(--text)] line-clamp-2">
+                  <span className="mr-1.5 font-mono text-[var(--faint)]">{String(i + 1).padStart(2, "0")}</span>
+                  {v.label}
+                </p>
+                <span className="shrink-0 text-xs font-medium text-[var(--accent)] opacity-0 transition group-hover:opacity-100">
                   Watch →
                 </span>
               </div>
