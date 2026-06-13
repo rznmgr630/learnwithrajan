@@ -23,10 +23,10 @@ export function DuolingoMeaningCard() {
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-5 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">Duolingo Meaning</h2>
-        <p className="mt-1 text-sm text-[var(--muted)]">Daily vocabulary with examples</p>
+    <div className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="mb-3">
+        <p className="text-sm font-semibold text-[var(--text)]">Duolingo Meaning</p>
+        <p className="mt-0.5 text-xs text-[var(--muted)]">Daily vocabulary with examples</p>
       </div>
 
       <div className="flex flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: "520px" }}>
