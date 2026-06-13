@@ -6,6 +6,7 @@ export type DuolingoExample = {
 
 export type DuolingoWord = {
   word: string;
+  romaji: string;
   reading?: string;
   meaning_en: string;
   meaning_np: string;
@@ -23,12 +24,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "ホーム",
+        romaji: "hōmu",
         meaning_en: "Platform",
         meaning_np: "प्लेटफर्म",
         examples: [{ ja: "ホームはあそこです。", en: "The platform is over there.", np: "प्लेटफर्म त्यहाँ छ।" }],
       },
       {
         word: "改札口",
+        romaji: "kaisatsuguchi",
         reading: "かいさつぐち",
         meaning_en: "Ticket gate",
         meaning_np: "टिकट गेट",
@@ -36,6 +39,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "終点",
+        romaji: "shūten",
         reading: "しゅうてん",
         meaning_en: "Final stop",
         meaning_np: "अन्तिम स्टप",
@@ -43,6 +47,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "上野公園",
+        romaji: "Ueno Kōen",
         reading: "うえのこうえん",
         meaning_en: "Ueno Park",
         meaning_np: "उएनो पार्क",
@@ -50,6 +55,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "浅草",
+        romaji: "Asakusa",
         reading: "あさくさ",
         meaning_en: "Asakusa (place name)",
         meaning_np: "असाकुसा",
@@ -57,6 +63,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "えっと、紅茶を四つください",
+        romaji: "etto, kōcha wo yottsu kudasai",
         reading: "えっと、こうちゃをよっつください",
         meaning_en: "Um, four black teas, please",
         meaning_np: "उम, चार कालो चिया दिनुहोस्",
@@ -64,6 +71,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "電子レンジ",
+        romaji: "denshi renji",
         reading: "でんしレンジ",
         meaning_en: "Microwave",
         meaning_np: "माइक्रोवेभ",
@@ -71,6 +79,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "たぶん",
+        romaji: "tabun",
         meaning_en: "Probably",
         meaning_np: "सायद",
         examples: [{ ja: "たぶんベッドを買います。", en: "I will probably buy a bed.", np: "सायद बेड किन्छु।" }],
@@ -82,6 +91,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "新しい掃除機があります",
+        romaji: "atarashii sōjiki ga arimasu",
         reading: "あたらしいそうじきがあります",
         meaning_en: "I have a new vacuum cleaner",
         meaning_np: "मसँग नयाँ भ्याकुम क्लिनर छ",
@@ -89,12 +99,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "リビング",
+        romaji: "ribingu",
         meaning_en: "Living room",
         meaning_np: "बस्ने कोठा",
         examples: [{ ja: "リビングはどうですか。", en: "How's the living room?", np: "बस्ने कोठा कस्तो छ?" }],
       },
       {
         word: "明るい",
+        romaji: "akarui",
         reading: "あかるい",
         meaning_en: "Well-lit, bright",
         meaning_np: "उज्यालो",
@@ -102,12 +114,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "キッチン",
+        romaji: "kitchin",
         meaning_en: "Kitchen",
         meaning_np: "भान्साकोठा",
         examples: [{ ja: "キッチンはせまいですが、きれいです。", en: "The kitchen is small but clean.", np: "भान्साकोठा सानो छ तर सफा छ।" }],
       },
       {
         word: "自販機",
+        romaji: "jihanki",
         reading: "じはんき",
         meaning_en: "Vending machine",
         meaning_np: "भेन्डिङ मेसिन",
@@ -115,42 +129,49 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ロマンスドラマ",
+        romaji: "romansu dorama",
         meaning_en: "Romance drama",
         meaning_np: "रोमान्स नाटक",
         examples: [{ ja: "ロマンスドラマがまあまあです。", en: "Romance dramas are so-so.", np: "रोमान्स नाटक ठीकठाक छ।" }],
       },
       {
         word: "コメディ",
+        romaji: "komedī",
         meaning_en: "Comedy",
         meaning_np: "कमेडी",
         examples: [{ ja: "コメディはちょっと。", en: "I don't really like comedies.", np: "कमेडी त्यति मन पर्दैन।" }],
       },
       {
         word: "ファンタジー",
+        romaji: "fantajī",
         meaning_en: "Fantasy",
         meaning_np: "फ्यान्टासी",
         examples: [{ ja: "ファンタジー映画が好きです。", en: "I like fantasy movies.", np: "फ्यान्टासी चलचित्र मन पर्छ।" }],
       },
       {
         word: "ホラー",
+        romaji: "horā",
         meaning_en: "Horror",
         meaning_np: "हरर",
         examples: [{ ja: "ホラーはこわいです。", en: "Horror is scary.", np: "हरर डरलाग्दो हुन्छ।" }],
       },
       {
         word: "ミステリ",
+        romaji: "misuteri",
         meaning_en: "Mystery",
         meaning_np: "मिस्ट्री",
         examples: [{ ja: "ミステリが好きです。", en: "I like mystery.", np: "मिस्ट्री मन पर्छ।" }],
       },
       {
         word: "バレーボール",
+        romaji: "barēbōru",
         meaning_en: "Volleyball",
         meaning_np: "भलिबल",
         examples: [{ ja: "バレーボールをします。", en: "I play volleyball.", np: "म भलिबल खेल्छु।" }],
       },
       {
         word: "カフェ",
+        romaji: "kafe",
         meaning_en: "Cafe",
         meaning_np: "क्याफे",
         examples: [{ ja: "カフェでコーヒーを飲みます。", en: "I drink coffee at a cafe.", np: "क्याफेमा कफी पिउँछु।" }],
@@ -162,18 +183,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "コインロッカー",
+        romaji: "koin rokkā",
         meaning_en: "Storage lockers",
         meaning_np: "सामान राख्ने लकर",
         examples: [{ ja: "コインロッカーはありません。", en: "There are no storage lockers.", np: "यहाँ लकर छैन।" }],
       },
       {
         word: "コンセント",
+        romaji: "konsento",
         meaning_en: "Outlet / socket",
         meaning_np: "बिजुली सकेट",
         examples: [{ ja: "コンセントはどこですか。", en: "Where is the outlet?", np: "बिजुली सकेट कहाँ छ?" }],
       },
       {
         word: "地下",
+        romaji: "chika",
         reading: "ちか",
         meaning_en: "Underground level",
         meaning_np: "भुइँतल",
@@ -181,6 +205,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "お手洗い",
+        romaji: "otearai",
         reading: "おてあらい",
         meaning_en: "Restroom",
         meaning_np: "शौचालय",
@@ -188,6 +213,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "動画",
+        romaji: "dōga",
         reading: "どうが",
         meaning_en: "Videos",
         meaning_np: "भिडियो",
@@ -195,6 +221,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "晴れ",
+        romaji: "hare",
         reading: "はれ",
         meaning_en: "Sunny",
         meaning_np: "घाम लागेको",
@@ -202,6 +229,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "大好き",
+        romaji: "daisuki",
         reading: "だいすき",
         meaning_en: "Love, to love",
         meaning_np: "धेरै मन पर्नु",
@@ -209,6 +237,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ちゃんと",
+        romaji: "chanto",
         meaning_en: "Make sure / properly",
         meaning_np: "राम्ररी / ध्यानपूर्वक",
         examples: [{ ja: "ちゃんと昼ごはんも食べよう。", en: "Make sure to eat lunch too.", np: "दिउँसोको खाना पनि राम्ररी खाऊ।" }],
@@ -220,12 +249,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "はたらく",
+        romaji: "hataraku",
         meaning_en: "To work",
         meaning_np: "काम गर्नु",
         examples: [{ ja: "まいにちはたらきます。", en: "I work every day.", np: "म हरेक दिन काम गर्छु।" }],
       },
       {
         word: "丸",
+        romaji: "maru",
         reading: "まる",
         meaning_en: "Circle",
         meaning_np: "गोलो",
@@ -233,24 +264,28 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ヘッド",
+        romaji: "heddo",
         meaning_en: "Cleaning head (of a vacuum)",
         meaning_np: "मेसिनको टाउको",
         examples: [{ ja: "ヘッドをかえます。", en: "I replace the head.", np: "टाउको बदल्छु।" }],
       },
       {
         word: "ハンドル",
+        romaji: "handoru",
         meaning_en: "Handle",
         meaning_np: "समाउने भाग",
         examples: [{ ja: "ハンドルをもちます。", en: "I hold the handle.", np: "ह्यान्डल समाउँछु।" }],
       },
       {
         word: "たまりだす",
+        romaji: "tamaridasu",
         meaning_en: "To start accumulating",
         meaning_np: "जम्मा हुन थाल्नु",
         examples: [{ ja: "ゴミがたまりだします。", en: "Garbage starts accumulating.", np: "फोहोर जम्मा हुन थाल्छ।" }],
       },
       {
         word: "角",
+        romaji: "kado",
         reading: "かど",
         meaning_en: "Corner",
         meaning_np: "कुना",
@@ -258,18 +293,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "モップ",
+        romaji: "moppu",
         meaning_en: "Mop",
         meaning_np: "पोछा",
         examples: [{ ja: "モップでゆかをそうじします。", en: "I clean the floor with a mop.", np: "पोछाले भुइँ सफा गर्छु।" }],
       },
       {
         word: "ラグ",
+        romaji: "ragu",
         meaning_en: "Rag / floor cloth",
         meaning_np: "कपडा",
         examples: [{ ja: "ラグでふきます。", en: "I wipe with a rag.", np: "कपडाले पुछ्छु।" }],
       },
       {
         word: "交換する",
+        romaji: "kōkan suru",
         reading: "こうかんする",
         meaning_en: "To replace / swap",
         meaning_np: "बदल्नु / परिवर्तन गर्नु",
@@ -277,6 +315,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "吸い込む",
+        romaji: "suikomu",
         reading: "すいこむ",
         meaning_en: "To suck in (air/dust)",
         meaning_np: "तान्नु",
@@ -284,6 +323,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "乾く",
+        romaji: "kawaku",
         reading: "かわく",
         meaning_en: "To dry",
         meaning_np: "सुक्नु",
@@ -291,6 +331,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "拭き掃除",
+        romaji: "fuki sōji",
         reading: "ふきそうじ",
         meaning_en: "Wiping clean with a wet cloth",
         meaning_np: "भिजेको कपडाले पुछ्नु",
@@ -298,6 +339,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "乾拭き",
+        romaji: "karabuki",
         reading: "からぶき",
         meaning_en: "Dry wiping",
         meaning_np: "सुख्खा पुछाइ",
@@ -305,6 +347,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "便器",
+        romaji: "benki",
         reading: "べんき",
         meaning_en: "Toilet bowl",
         meaning_np: "कमोड",
@@ -312,6 +355,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "手洗い台",
+        romaji: "tearaidai",
         reading: "てあらいだい",
         meaning_en: "Handwash basin",
         meaning_np: "हातमुख धुने बेसिन",
@@ -319,6 +363,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "蛇口",
+        romaji: "jaguchi",
         reading: "じゃぐち",
         meaning_en: "Tap / faucet",
         meaning_np: "धारो",
@@ -326,6 +371,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "人感センサー",
+        romaji: "jinkan sensā",
         reading: "じんかんセンサー",
         meaning_en: "Human presence sensor",
         meaning_np: "मानव उपस्थिति सेन्सर",
@@ -333,6 +379,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "流す",
+        romaji: "nagasu",
         reading: "ながす",
         meaning_en: "To flush / wash away",
         meaning_np: "बगाउनु",
@@ -345,6 +392,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "家事",
+        romaji: "kaji",
         reading: "かじ",
         meaning_en: "Housework",
         meaning_np: "घरको काम",
@@ -352,12 +400,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "はじめてです",
+        romaji: "hajimete desu",
         meaning_en: "It's my first time",
         meaning_np: "पहिलो पटक हो",
         examples: [{ ja: "このりょうりははじめてです。", en: "This is my first time with this dish.", np: "यो खाना पहिलो पटक खाँदैछु।" }],
       },
       {
         word: "おすすめは何ですか",
+        romaji: "osusume wa nan desu ka",
         reading: "おすすめはなんですか",
         meaning_en: "What do you recommend?",
         meaning_np: "के सुझाव दिनुहुन्छ?",
@@ -365,6 +415,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "カードで払いですか",
+        romaji: "kādo de harai desu ka",
         reading: "カードではらいですか",
         meaning_en: "Can I pay by card?",
         meaning_np: "कार्डले तिर्न सकिन्छ?",
@@ -372,6 +423,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "もう一度おねがいします",
+        romaji: "mō ichido onegaishimasu",
         reading: "もういちどおねがいします",
         meaning_en: "One more time, please",
         meaning_np: "एकपटक फेरि गर्नुहोस्",
@@ -379,12 +431,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "やばくない？",
+        romaji: "yabaku nai?",
         meaning_en: "Isn't that crazy?",
         meaning_np: "अचम्मको होइन?",
         examples: [{ ja: "このねだん、やばくない？", en: "Isn't this price crazy?", np: "यो मूल्य अचम्मको होइन?" }],
       },
       {
         word: "信じられない",
+        romaji: "shinjirarenai",
         reading: "しんじられない",
         meaning_en: "I can't believe it",
         meaning_np: "विश्वास गर्न सकिन्न",
@@ -392,6 +446,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "嘘でしょ？",
+        romaji: "uso deshō?",
         reading: "うそでしょ？",
         meaning_en: "Are you kidding me?",
         meaning_np: "झुट होइन?",
@@ -399,24 +454,28 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ありえない！",
+        romaji: "arienai!",
         meaning_en: "No way!",
         meaning_np: "हुनै सक्दैन!",
         examples: [{ ja: "あのねだんはありえない！", en: "That price is unbelievable!", np: "त्यो मूल्य हुनै सक्दैन!" }],
       },
       {
         word: "え、マジで",
+        romaji: "e, maji de",
         meaning_en: "Wait, seriously?",
         meaning_np: "के साँच्चिकै?",
         examples: [{ ja: "え、マジで？やばい！", en: "Wait, seriously? That's crazy!", np: "के साँच्चिकै? अचम्म!" }],
       },
       {
         word: "ほっといてください",
+        romaji: "hottoite kudasai",
         meaning_en: "Leave me alone",
         meaning_np: "मलाई एक्लै छोड्नुहोस्",
         examples: [{ ja: "おねがいですからほっといてください。", en: "Please leave me alone.", np: "कृपया मलाई एक्लै छोड्नुहोस्।" }],
       },
       {
         word: "お持ち帰りできますか",
+        romaji: "omochi kaeri dekimasu ka",
         reading: "おもちかえりできますか",
         meaning_en: "Can I take this to go?",
         meaning_np: "यो लिएर जान सकिन्छ?",
@@ -424,6 +483,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "お会計おねがいします",
+        romaji: "okaikei onegaishimasu",
         reading: "おかいけいおねがいします",
         meaning_en: "Can I get the bill, please?",
         meaning_np: "बिल दिनुहोस् न",
@@ -436,6 +496,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "どんな感じになりましたか",
+        romaji: "donna kanji ni narimashita ka",
         reading: "どんなかんじになりましたか",
         meaning_en: "How did it turn out?",
         meaning_np: "कस्तो भयो?",
@@ -443,12 +504,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "まあまあでおきました",
+        romaji: "māmā de okimashita",
         meaning_en: "It turned out okay",
         meaning_np: "ठीकठाक भयो",
         examples: [{ ja: "てんきはまあまあでおきました。", en: "The weather turned out okay.", np: "मौसम ठीकठाक भयो।" }],
       },
       {
         word: "彼女のことを心配しています",
+        romaji: "kanojo no koto wo shinpai shite imasu",
         reading: "かのじょのことをしんぱいしています",
         meaning_en: "I worry about her",
         meaning_np: "म उनको बारेमा चिन्तित छु",
@@ -456,6 +519,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "町で会いました",
+        romaji: "machi de aimashita",
         reading: "まちであいました",
         meaning_en: "Met in town",
         meaning_np: "सहरमा भेट भयो",
@@ -463,6 +527,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "スマホの電池が切れそうです",
+        romaji: "sumaho no denchi ga kiresō desu",
         reading: "スマホのでんちがきれそうです",
         meaning_en: "Phone battery is about to die",
         meaning_np: "मोबाइलको ब्याट्री सकिन लाग्यो",
@@ -470,6 +535,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ちょっと待ってください",
+        romaji: "chotto matte kudasai",
         reading: "ちょっとまってください",
         meaning_en: "Wait a sec",
         meaning_np: "अलिकति पर्खनुहोस्",
@@ -482,6 +548,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "紹介します",
+        romaji: "shōkai shimasu",
         reading: "しょうかいします",
         meaning_en: "To introduce",
         meaning_np: "परिचय गर्नु",
@@ -489,6 +556,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "案内します",
+        romaji: "annai shimasu",
         reading: "あんないします",
         meaning_en: "To guide, show around",
         meaning_np: "गाइड गर्नु",
@@ -496,6 +564,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "説明します",
+        romaji: "setsumei shimasu",
         reading: "せつめいします",
         meaning_en: "To explain",
         meaning_np: "व्याख्या गर्नु",
@@ -503,6 +572,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "調べます",
+        romaji: "shirabemasu",
         reading: "しらべます",
         meaning_en: "To check, investigate",
         meaning_np: "अनुसन्धान गर्नु",
@@ -510,6 +580,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "弱い",
+        romaji: "yowai",
         reading: "よわい",
         meaning_en: "Weak",
         meaning_np: "कमजोर",
@@ -517,6 +588,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "交番",
+        romaji: "kōban",
         reading: "こうばん",
         meaning_en: "Police box",
         meaning_np: "प्रहरी बक्स",
@@ -524,6 +596,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "計画",
+        romaji: "keikaku",
         reading: "けいかく",
         meaning_en: "Plan",
         meaning_np: "योजना",
@@ -531,6 +604,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "お知らせ",
+        romaji: "oshirase",
         reading: "おしらせ",
         meaning_en: "Notice / announcement",
         meaning_np: "सूचना",
@@ -538,12 +612,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "スケジュール",
+        romaji: "sukejūru",
         meaning_en: "Schedule",
         meaning_np: "तालिका",
         examples: [{ ja: "スケジュールをかくにんします。", en: "I check the schedule.", np: "तालिका जाँच्छु।" }],
       },
       {
         word: "相談します",
+        romaji: "sōdan shimasu",
         reading: "そうだんします",
         meaning_en: "To consult, discuss",
         meaning_np: "परामर्श गर्नु",
@@ -551,6 +627,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "決めます",
+        romaji: "kimemasu",
         reading: "きめます",
         meaning_en: "To decide",
         meaning_np: "निर्णय गर्नु",
@@ -558,6 +635,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "集めます／まとめます",
+        romaji: "atsumemasu / matomemasu",
         reading: "あつめます／まとめます",
         meaning_en: "To gather / collect",
         meaning_np: "जम्मा गर्नु",
@@ -565,6 +643,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "戻ります",
+        romaji: "modorimasu",
         reading: "もどります",
         meaning_en: "To go back, return",
         meaning_np: "फर्कनु",
@@ -572,6 +651,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "出発します",
+        romaji: "shuppatsu shimasu",
         reading: "しゅっぱつします",
         meaning_en: "To depart",
         meaning_np: "प्रस्थान गर्नु",
@@ -579,6 +659,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "到着します",
+        romaji: "tōchaku shimasu",
         reading: "とうちゃくします",
         meaning_en: "To arrive",
         meaning_np: "आइपुग्नु",
@@ -586,6 +667,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ただいま",
+        romaji: "tadaima",
         meaning_en: "I'm home",
         meaning_np: "म आएँ",
         examples: [{ ja: "ただいま！おかえり。", en: "I'm home! Welcome back.", np: "म आएँ! स्वागत छ।" }],
@@ -597,6 +679,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "発音",
+        romaji: "hatsuon",
         reading: "はつおん",
         meaning_en: "Pronunciation",
         meaning_np: "उच्चारण",
@@ -604,12 +687,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "もうしわけありません",
+        romaji: "mōshiwake arimasen",
         meaning_en: "I am very sorry / Please excuse me",
         meaning_np: "म माफी माग्छु",
         examples: [{ ja: "もうしわけありません、おくれました。", en: "I'm very sorry, I'm late.", np: "म माफी माग्छु, ढिलो भयो।" }],
       },
       {
         word: "国連",
+        romaji: "kokuren",
         reading: "こくれん",
         meaning_en: "United Nations",
         meaning_np: "संयुक्त राष्ट्र संघ",
@@ -617,6 +702,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "調査",
+        romaji: "chōsa",
         reading: "ちょうさ",
         meaning_en: "Investigation, survey",
         meaning_np: "अनुसन्धान",
@@ -624,6 +710,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "収入",
+        romaji: "shūnyū",
         reading: "しゅうにゅう",
         meaning_en: "Income",
         meaning_np: "आय",
@@ -631,6 +718,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "理由",
+        romaji: "riyū",
         reading: "りゆう",
         meaning_en: "Reason",
         meaning_np: "कारण",
@@ -638,6 +726,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "基本的",
+        romaji: "kihonteki",
         reading: "きほんてき",
         meaning_en: "Standard, basic",
         meaning_np: "आधारभूत",
@@ -645,18 +734,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "つまらない",
+        romaji: "tsumaranai",
         meaning_en: "Boring",
         meaning_np: "उबाउलो",
         examples: [{ ja: "このえいがはつまらないです。", en: "This movie is boring.", np: "यो चलचित्र उबाउलो छ।" }],
       },
       {
         word: "おかげさまで",
+        romaji: "okagesama de",
         meaning_en: "Thanks to you (set phrase)",
         meaning_np: "तपाईंको कृपाले",
         examples: [{ ja: "おかげさまで、げんきです。", en: "Thanks to you, I am well.", np: "तपाईंको कृपाले, म स्वस्थ छु।" }],
       },
       {
         word: "聞きましょう",
+        romaji: "kikimashō",
         reading: "ききましょう",
         meaning_en: "Let's ask / listen",
         meaning_np: "सोधौँ / सुनौँ",
@@ -664,54 +756,63 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "もっと",
+        romaji: "motto",
         meaning_en: "More",
         meaning_np: "अझ बढी",
         examples: [{ ja: "もっと大きいのを買いましょう！", en: "Let's buy a bigger one!", np: "अझ ठूलो किनौँ!" }],
       },
       {
         word: "しょっぱい",
+        romaji: "shoppai",
         meaning_en: "Salty",
         meaning_np: "नुनिलो",
         examples: [{ ja: "このスープはしょっぱいです。", en: "This soup is salty.", np: "यो सुप नुनिलो छ।" }],
       },
       {
         word: "コーラ",
+        romaji: "kōra",
         meaning_en: "Cola",
         meaning_np: "कोला",
         examples: [{ ja: "コーラをのみます。", en: "I drink cola.", np: "म कोला पिउँछु।" }],
       },
       {
         word: "とんかつ",
+        romaji: "tonkatsu",
         meaning_en: "Pork cutlets",
         meaning_np: "सुँगुरको कटलेट",
         examples: [{ ja: "とんかつがすきです。", en: "I like pork cutlets.", np: "मलाई सुँगुरको कटलेट मन पर्छ।" }],
       },
       {
         word: "でも",
+        romaji: "demo",
         meaning_en: "But, though, however",
         meaning_np: "तर",
         examples: [{ ja: "たかいです。でもおいしいです。", en: "It's expensive. But it's delicious.", np: "महँगो छ। तर मिठो छ।" }],
       },
       {
         word: "かっこいい",
+        romaji: "kakkoii",
         meaning_en: "Cool, stylish",
         meaning_np: "कुल / स्टाइलिश",
         examples: [{ ja: "あのひとはかっこいいです。", en: "That person is cool.", np: "त्यो मान्छे कुल छ।" }],
       },
       {
         word: "ライオン",
+        romaji: "raion",
         meaning_en: "Lion",
         meaning_np: "सिंह",
         examples: [{ ja: "ライオンはどうぶつえんにいます。", en: "The lion is at the zoo.", np: "सिंह चिडियाखानामा छ।" }],
       },
       {
         word: "ガーデニング",
+        romaji: "gādeningu",
         meaning_en: "Gardening",
         meaning_np: "बगैँचा",
         examples: [{ ja: "まいにちガーデニングをします。", en: "I do gardening every day.", np: "म हरेक दिन बगैँचा गर्छु।" }],
       },
       {
         word: "料理",
+        romaji: "ryōri",
         reading: "りょうり",
         meaning_en: "Cooking",
         meaning_np: "खाना पकाउनु",
@@ -719,6 +820,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ストレッチ",
+        romaji: "sutoretchī",
         meaning_en: "Stretches",
         meaning_np: "स्ट्रेच",
         examples: [{ ja: "まいあさストレッチをします。", en: "I do stretches every morning.", np: "म हरेक बिहान स्ट्रेच गर्छु।" }],
@@ -730,12 +832,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
     words: [
       {
         word: "パレード",
+        romaji: "parēdo",
         meaning_en: "Parade",
         meaning_np: "परेड",
         examples: [{ ja: "パレードに行きませんか。", en: "Would you like to go to the parade?", np: "के तपाई परेडमा जानुहुन्छ?" }],
       },
       {
         word: "今週末",
+        romaji: "konshūmatsu",
         reading: "こんしゅうまつ",
         meaning_en: "This weekend",
         meaning_np: "यो हप्ताको अन्त",
@@ -743,6 +847,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "太鼓のパフォーマンス",
+        romaji: "taiko no pafōmansu",
         reading: "たいこのパフォーマンス",
         meaning_en: "Taiko drum performance",
         meaning_np: "ताइको ढोलको प्रदर्शन",
@@ -750,6 +855,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "花火大会",
+        romaji: "hanabi taikai",
         reading: "はなびたいかい",
         meaning_en: "Fireworks display",
         meaning_np: "आतिशबाजी",
@@ -757,18 +863,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ハロウィン",
+        romaji: "harowin",
         meaning_en: "Halloween",
         meaning_np: "हेलोउइन",
         examples: [{ ja: "ハロウィンのパーティーがあります。", en: "There's a Halloween party.", np: "हेलोउइनको पार्टी छ।" }],
       },
       {
         word: "ドキュメンタリー",
+        romaji: "dokyumentarī",
         meaning_en: "Documentary",
         meaning_np: "डकुमेन्टरी",
         examples: [{ ja: "ドキュメンタリーはすきですか。", en: "Do you like documentaries?", np: "तपाईलाई डकुमेन्टरी मन पर्छ?" }],
       },
       {
         word: "大晦日",
+        romaji: "ōmisoka",
         reading: "おおみそか",
         meaning_en: "New Year's Eve",
         meaning_np: "नयाँ वर्षको पूर्वसन्ध्या",
@@ -776,18 +885,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "テーマパーク",
+        romaji: "tēma pāku",
         meaning_en: "Theme park",
         meaning_np: "थिम पार्क",
         examples: [{ ja: "テーマパークに行きませんか。", en: "Would you like to go to a theme park?", np: "के तपाई थिम पार्क जानुहुन्छ?" }],
       },
       {
         word: "チョコバナナ",
+        romaji: "choko banana",
         meaning_en: "Chocolate-covered banana",
         meaning_np: "चकलेट केरा",
         examples: [{ ja: "チョコバナナをください。", en: "A chocolate-covered banana, please.", np: "एउटा चकलेट केरा दिनुहोस्।" }],
       },
       {
         word: "俳優",
+        romaji: "haiyū",
         reading: "はいゆう",
         meaning_en: "Actor",
         meaning_np: "अभिनेता",
@@ -795,42 +907,49 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
       {
         word: "ポスター",
+        romaji: "posutā",
         meaning_en: "Poster",
         meaning_np: "पोस्टर",
         examples: [{ ja: "ポスターはいくらですか。", en: "How much is the poster?", np: "पोस्टर कति पर्छ?" }],
       },
       {
         word: "RPG",
+        romaji: "ārupījī",
         meaning_en: "Role-playing game",
         meaning_np: "रोल-प्लेइङ गेम",
         examples: [{ ja: "RPGはすきです。", en: "I like role-playing games.", np: "मलाई RPG मन पर्छ।" }],
       },
       {
         word: "SF",
+        romaji: "esuefū",
         meaning_en: "Science fiction",
         meaning_np: "साइन्स फिक्सन",
         examples: [{ ja: "SFを見ます。", en: "I watch science fiction.", np: "म SF हेर्छु।" }],
       },
       {
         word: "ポップス",
+        romaji: "poppusu",
         meaning_en: "Pop music",
         meaning_np: "पप संगीत",
         examples: [{ ja: "ポップスをききます。", en: "I listen to pop music.", np: "म पप संगीत सुन्छु।" }],
       },
       {
         word: "カードゲーム",
+        romaji: "kādogēmu",
         meaning_en: "Card game",
         meaning_np: "कार्ड गेम",
         examples: [{ ja: "カードゲームをしましょう。", en: "Let's play card games.", np: "कार्ड गेम खेलौँ।" }],
       },
       {
         word: "パズル",
+        romaji: "pazuru",
         meaning_en: "Puzzle",
         meaning_np: "पजल",
         examples: [{ ja: "パズルをしましょう。", en: "Let's do a puzzle.", np: "पजल गरौँ।" }],
       },
       {
         word: "アニソン",
+        romaji: "anison",
         meaning_en: "Anime music",
         meaning_np: "एनिमे संगीत",
         examples: [{ ja: "アニソンはすきです。", en: "I like anime music.", np: "मलाई एनिमे संगीत मन पर्छ।" }],

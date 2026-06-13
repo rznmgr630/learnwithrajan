@@ -115,6 +115,7 @@ export function DuolingoPage() {
                           {w.reading && (
                             <span className="text-sm text-[var(--muted)]">（{w.reading}）</span>
                           )}
+                          <span className="text-xs text-[var(--faint)] font-mono">· {w.romaji}</span>
                         </div>
 
                         <div className="mt-2 ml-9 flex flex-wrap gap-1.5">
