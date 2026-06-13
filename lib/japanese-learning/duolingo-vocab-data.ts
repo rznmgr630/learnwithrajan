@@ -15,12 +15,14 @@ export type DuolingoWord = {
 
 export type DuolingoDay = {
   day: number;
+  category: string;
   words: DuolingoWord[];
 };
 
 export const DUOLINGO_DAYS: DuolingoDay[] = [
   {
     day: 1,
+    category: "Transport & Stations",
     words: [
       {
         word: "ホーム",
@@ -88,6 +90,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 2,
+    category: "Home & Entertainment",
     words: [
       {
         word: "新しい掃除機があります",
@@ -180,6 +183,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 3,
+    category: "Facilities & Daily Life",
     words: [
       {
         word: "コインロッカー",
@@ -246,6 +250,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 4,
+    category: "Cleaning & Household",
     words: [
       {
         word: "はたらく",
@@ -389,6 +394,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 5,
+    category: "Phrases & Restaurant",
     words: [
       {
         word: "家事",
@@ -493,6 +499,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 6,
+    category: "Expressions & Social",
     words: [
       {
         word: "どんな感じになりましたか",
@@ -545,6 +552,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 7,
+    category: "Verbs & Navigation",
     words: [
       {
         word: "紹介します",
@@ -676,6 +684,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 8,
+    category: "Mixed Vocabulary",
     words: [
       {
         word: "発音",
@@ -829,6 +838,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
   },
   {
     day: 9,
+    category: "Events & Hobbies",
     words: [
       {
         word: "パレード",
@@ -917,7 +927,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         romaji: "ārupījī",
         meaning_en: "Role-playing game",
         meaning_np: "रोल-प्लेइङ गेम",
-        examples: [{ ja: "RPGはすきです。", en: "I like role-playing games.", np: "मलाई RPG मन पर्छ।" }],
+        examples: [{ ja: "RPGはすきです。", en: "I like role-playing games.", np: "मलाई RPG मन पर्छु।" }],
       },
       {
         word: "SF",
@@ -953,6 +963,285 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Anime music",
         meaning_np: "एनिमे संगीत",
         examples: [{ ja: "アニソンはすきです。", en: "I like anime music.", np: "मलाई एनिमे संगीत मन पर्छ।" }],
+      },
+    ],
+  },
+  {
+    day: 10,
+    category: "Books & Media",
+    words: [
+      {
+        word: "DVD",
+        romaji: "dī buidī",
+        meaning_en: "DVD",
+        meaning_np: "डिभिडि",
+        examples: [{ ja: "あのDVDがほしいです。", en: "I want that DVD.", np: "त्यो DVD चाहन्छु।" }],
+      },
+      {
+        word: "フィクション",
+        romaji: "fikushon",
+        meaning_en: "Fiction",
+        meaning_np: "काल्पनिक कथा",
+        examples: [{ ja: "フィクションを読みます。", en: "I read fiction.", np: "म काल्पनिक कथा पढ्छु।" }],
+      },
+      {
+        word: "ノンフィクション",
+        romaji: "non-fikushon",
+        meaning_en: "Non-fiction",
+        meaning_np: "गैर-काल्पनिक",
+        examples: [{ ja: "ノンフィクションはすきですか。", en: "Do you like non-fiction?", np: "तपाईलाई गैर-काल्पनिक मन पर्छ?" }],
+      },
+      {
+        word: "話",
+        romaji: "hanashi",
+        reading: "はなし",
+        meaning_en: "Story / Talk",
+        meaning_np: "कथा / कुरा",
+        examples: [{ ja: "話はどうですか。", en: "How is the story?", np: "कथा कस्तो छ?" }],
+      },
+      {
+        word: "本屋",
+        romaji: "hon-ya",
+        reading: "ほんや",
+        meaning_en: "Bookstore",
+        meaning_np: "किताब पसल",
+        examples: [{ ja: "本屋に行きます。", en: "I'm going to the bookstore.", np: "किताब पसल जाँदैछु।" }],
+      },
+      {
+        word: "あまり",
+        romaji: "amari",
+        meaning_en: "(not) really / not much",
+        meaning_np: "त्यति (नकारात्मकमा)",
+        examples: [{ ja: "本はあまり読みません。", en: "I don't really read books.", np: "म किताब त्यति पढ्दिनँ।" }],
+      },
+      {
+        word: "漫画のコーナー",
+        romaji: "manga no kōnā",
+        reading: "まんがのコーナー",
+        meaning_en: "Manga section",
+        meaning_np: "मंगा सेक्सन",
+        examples: [{ ja: "漫画のコーナーはあそこです。", en: "The manga section is over there.", np: "मंगा सेक्सन त्यहाँ छ।" }],
+      },
+      {
+        word: "セール",
+        romaji: "sēru",
+        meaning_en: "Sale",
+        meaning_np: "सेल / छुट",
+        examples: [{ ja: "セールがあります。", en: "There is a sale.", np: "सेल छ।" }],
+      },
+    ],
+  },
+  {
+    day: 11,
+    category: "Food & Flavors",
+    words: [
+      {
+        word: "バニラ",
+        romaji: "banira",
+        meaning_en: "Vanilla",
+        meaning_np: "भेनिला",
+        examples: [{ ja: "バニラがだいすきです。", en: "I love vanilla.", np: "मलाई भेनिला धेरै मन पर्छ।" }],
+      },
+      {
+        word: "バニラのアイスクリーム",
+        romaji: "banira no aisukurīmu",
+        meaning_en: "Vanilla ice cream",
+        meaning_np: "भेनिला आइसक्रिम",
+        examples: [{ ja: "バニラのアイスクリームを買います。", en: "I'm going to buy vanilla ice cream.", np: "भेनिला आइसक्रिम किन्छु।" }],
+      },
+      {
+        word: "チョコミント",
+        romaji: "choko minto",
+        meaning_en: "Mint chocolate chip",
+        meaning_np: "चकलेट मिन्ट",
+        examples: [{ ja: "チョコミントはすきですか。", en: "Do you like mint chocolate chip?", np: "तपाईलाई चकलेट मिन्ट मन पर्छ?" }],
+      },
+      {
+        word: "味",
+        romaji: "aji",
+        reading: "あじ",
+        meaning_en: "Flavor",
+        meaning_np: "स्वाद",
+        examples: [{ ja: "すきな味は何ですか。", en: "What's your favorite flavor?", np: "तपाईंको मनपर्ने स्वाद के हो?" }],
+      },
+      {
+        word: "卵",
+        romaji: "tamago",
+        reading: "たまご",
+        meaning_en: "Egg",
+        meaning_np: "अण्डा",
+        examples: [{ ja: "もっと卵を買いましょう。", en: "We should buy more eggs.", np: "अझ धेरै अण्डा किनौँ।" }],
+      },
+    ],
+  },
+  {
+    day: 12,
+    category: "Theme Parks & Attractions",
+    words: [
+      {
+        word: "遊園地",
+        romaji: "yūenchi",
+        reading: "ゆうえんち",
+        meaning_en: "Amusement park",
+        meaning_np: "मनोरञ्जन पार्क",
+        examples: [{ ja: "たのしい遊園地です。", en: "It's a fun amusement park.", np: "रमाइलो मनोरञ्जन पार्क छ।" }],
+      },
+      {
+        word: "アトラクション",
+        romaji: "atorakushon",
+        meaning_en: "Attraction / ride",
+        meaning_np: "आकर्षण / राइड",
+        examples: [{ ja: "アトラクションに乗りましょう。", en: "Let's ride the attractions.", np: "राइडमा चढौँ।" }],
+      },
+      {
+        word: "ジェットコースター",
+        romaji: "jetto kōsutā",
+        meaning_en: "Rollercoaster",
+        meaning_np: "रोलरकोस्टर",
+        examples: [{ ja: "ジェットコースターがすきです。", en: "I like rollercoasters.", np: "मलाई रोलरकोस्टर मन पर्छ।" }],
+      },
+      {
+        word: "ゴーカート",
+        romaji: "gōkāto",
+        meaning_en: "Go-kart",
+        meaning_np: "गो-कार्ट",
+        examples: [{ ja: "はやいゴーカートです。", en: "The go-karts are fast.", np: "गो-कार्ट छिटो छ।" }],
+      },
+      {
+        word: "ショー",
+        romaji: "shō",
+        meaning_en: "Show",
+        meaning_np: "शो",
+        examples: [{ ja: "おもしろいショーです。", en: "It's a funny show.", np: "रमाइलो शो छ।" }],
+      },
+      {
+        word: "キャラクター",
+        romaji: "kyarakutā",
+        meaning_en: "Mascot / Character",
+        meaning_np: "मासकट / किरदार",
+        examples: [{ ja: "かわいいキャラクターです。", en: "It's a cute mascot.", np: "प्यारो किरदार छ।" }],
+      },
+      {
+        word: "入場料",
+        romaji: "nyūjōryō",
+        reading: "にゅうじょうりょう",
+        meaning_en: "Admission fee",
+        meaning_np: "प्रवेश शुल्क",
+        examples: [{ ja: "入場料はいくらですか。", en: "How much is the admission fee?", np: "प्रवेश शुल्क कति हो?" }],
+      },
+      {
+        word: "大人",
+        romaji: "otona",
+        reading: "おとな",
+        meaning_en: "Adult",
+        meaning_np: "वयस्क",
+        examples: [{ ja: "大人のチケットをください。", en: "An adult ticket, please.", np: "वयस्कको टिकट दिनुहोस्।" }],
+      },
+      {
+        word: "チケット",
+        romaji: "chiketto",
+        meaning_en: "Ticket",
+        meaning_np: "टिकट",
+        examples: [{ ja: "チケットはどこですか。", en: "Where is the ticket?", np: "टिकट कहाँ छ?" }],
+      },
+      {
+        word: "お菓子",
+        romaji: "okashi",
+        reading: "おかし",
+        meaning_en: "Snack / Sweets",
+        meaning_np: "मिठाई / स्न्याक्स",
+        examples: [{ ja: "すきなお菓子は何ですか。", en: "What's your favorite snack?", np: "तपाईंको मनपर्ने मिठाई के हो?" }],
+      },
+    ],
+  },
+  {
+    day: 13,
+    category: "Places & Activities",
+    words: [
+      {
+        word: "博物館",
+        romaji: "hakubutsukan",
+        reading: "はくぶつかん",
+        meaning_en: "Museum (natural history / general)",
+        meaning_np: "संग्रहालय",
+        examples: [{ ja: "博物館に行きます。", en: "I'm going to the museum.", np: "संग्रहालय जाँदैछु।" }],
+      },
+      {
+        word: "写真家",
+        romaji: "shashin-ka",
+        reading: "しゃしんか",
+        meaning_en: "Photographer",
+        meaning_np: "फोटोग्राफर",
+        examples: [{ ja: "はい、写真家です。", en: "Yes, I'm a photographer.", np: "हो, म फोटोग्राफर हुँ।" }],
+      },
+      {
+        word: "プロ",
+        romaji: "puro",
+        meaning_en: "Pro / Professional",
+        meaning_np: "पेशेवर",
+        examples: [{ ja: "プロのスポーツです。", en: "It's professional sports.", np: "यो पेशेवर खेल हो।" }],
+      },
+      {
+        word: "毎週",
+        romaji: "maishū",
+        reading: "まいしゅう",
+        meaning_en: "Every week",
+        meaning_np: "हरेक हप्ता",
+        examples: [{ ja: "毎週えいがを見ます。", en: "I watch movies every week.", np: "म हरेक हप्ता चलचित्र हेर्छु।" }],
+      },
+      {
+        word: "旅行",
+        romaji: "ryokō",
+        reading: "りょこう",
+        meaning_en: "Travel",
+        meaning_np: "यात्रा",
+        examples: [{ ja: "旅行がすきです。", en: "I like travelling.", np: "मलाई यात्रा मन पर्छ।" }],
+      },
+    ],
+  },
+  {
+    day: 14,
+    category: "Time, Going Out & Adjectives",
+    words: [
+      {
+        word: "午後",
+        romaji: "gogo",
+        reading: "ごご",
+        meaning_en: "Afternoon / PM",
+        meaning_np: "दिउँसो",
+        examples: [{ ja: "午後一時ですか。", en: "Is it 1 PM?", np: "दिउँसो एक बजे हो?" }],
+      },
+      {
+        word: "今晩",
+        romaji: "konban",
+        reading: "こんばん",
+        meaning_en: "Tonight",
+        meaning_np: "आज राति",
+        examples: [{ ja: "今晩でかけましょう。", en: "Let's go out tonight.", np: "आज राति बाहिर जाऊँ।" }],
+      },
+      {
+        word: "出かける",
+        romaji: "dekakeru",
+        reading: "でかける",
+        meaning_en: "To go out",
+        meaning_np: "बाहिर जानु",
+        examples: [{ ja: "今晩出かけましょう。", en: "Let's go out tonight.", np: "आज राति बाहिर जाऊँ।" }],
+      },
+      {
+        word: "速い",
+        romaji: "hayai",
+        reading: "はやい",
+        meaning_en: "Fast",
+        meaning_np: "छिटो",
+        examples: [{ ja: "はやいゴーカートです。", en: "The go-karts are fast.", np: "गो-कार्ट छिटो छ।" }],
+      },
+      {
+        word: "黄色い",
+        romaji: "kiiroi",
+        reading: "きいろい",
+        meaning_en: "Yellow",
+        meaning_np: "पहेँलो",
+        examples: [{ ja: "きいろいかばんです。", en: "It's a yellow bag.", np: "पहेँलो झोला छ।" }],
       },
     ],
   },
