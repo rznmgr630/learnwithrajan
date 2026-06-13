@@ -36,6 +36,20 @@ export function PersonalDevelopmentTracks() {
                 Watch →
               </span>
             </Link>
+
+            <Link href="/learn/discipline" className={subCardClass}>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                  Unbreakable Discipline
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                  7 videos — Goggins, Jocko, Stoicism, and deep work
+                </p>
+              </div>
+              <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
+                Watch →
+              </span>
+            </Link>
           </div>
         </div>
       </div>
