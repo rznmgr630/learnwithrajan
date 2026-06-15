@@ -5,7 +5,10 @@ import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTheme } from "@/components/ThemeProvider";
 
-const links = [{ href: "/learn", key: "nav.learningHub" as const }];
+const links = [
+  { href: "/learn", key: "nav.learningHub" as const },
+  { href: "/todo", key: "nav.dailyPlanner" as const },
+];
 
 function ThemeToggle() {
   const { theme, toggle } = useTheme();

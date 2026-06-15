@@ -7,6 +7,11 @@ export const UI_STRINGS = {
     np: "सिकाइ केन्द्र",
     jp: "学習ハブ",
   },
+  "nav.dailyPlanner": {
+    en: "Daily planner",
+    np: "दैनिक योजना",
+    jp: "日次プランナー",
+  },
   "nav.language": {
     en: "Language",
     np: "भाषा",
