@@ -568,6 +568,21 @@ export const UI_STRINGS = {
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
   },
+  "hub.supabase.title": {
+    en: "Supabase",
+    np: "Supabase",
+    jp: "Supabase",
+  },
+  "hub.supabase.subtitle": {
+    en: "Beginner to advanced — database, auth, RLS, real-time, storage, and edge functions",
+    np: "शुरुवाती देखि उन्नत — डाटाबेस, अथेन्टिकेसन, RLS, रियल-टाइम र स्टोरेज",
+    jp: "初級から上級 — データベース・認証・RLS・リアルタイム・ストレージ",
+  },
+  "hub.supabase.cta": {
+    en: "Start learning →",
+    np: "सिक्न सुरु गर्नुहोस् →",
+    jp: "学習を始める →",
+  },
   "hub.dsa.title": {
     en: "DSA Problems",
     np: "DSA समस्याहरू",
