@@ -438,6 +438,16 @@ export const UI_STRINGS = {
     np: "प्रणाली डिजाइन र सर्भर-साइड फ्रेमवर्क।",
     jp: "システム設計の考え方とサーバー側フレームワーク。",
   },
+  "hub.programming.groupBaas": {
+    en: "Backend as a Service",
+    np: "ब्याकएन्ड-एज-ए-सर्भिस",
+    jp: "BaaS",
+  },
+  "hub.programming.groupBaasHint": {
+    en: "Managed backend platforms — database, auth, storage, and real-time out of the box.",
+    np: "म्यानेज्ड ब्याकएन्ड प्लेटफर्म — डाटाबेस, अथेन्टिकेसन, स्टोरेज र रियल-टाइम।",
+    jp: "マネージド型バックエンド — DB・認証・ストレージ・リアルタイムをすぐ利用可能。",
+  },
   "hub.programming.groupDevops": {
     en: "DevOps & platforms",
     np: "DevOps र प्लेटफर्म",

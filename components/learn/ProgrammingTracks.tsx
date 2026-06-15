@@ -461,6 +461,13 @@ export function ProgrammingTracks() {
           </span>
         </Link>
 
+      </ProgrammingAccordionSection>
+
+      <ProgrammingAccordionSection
+        sectionId={`${baseId}-baas`}
+        titleKey="hub.programming.groupBaas"
+        hintKey="hub.programming.groupBaasHint"
+      >
         <Link href="/learn/supabase" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -484,7 +491,6 @@ export function ProgrammingTracks() {
             {t("hub.supabase.cta")}
           </span>
         </Link>
-
       </ProgrammingAccordionSection>
 
       <ProgrammingAccordionSection
