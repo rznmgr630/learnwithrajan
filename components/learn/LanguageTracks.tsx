@@ -9,6 +9,7 @@ import { JP_TOTAL_DAYS } from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { JP_N4_TOTAL_DAYS } from "@/lib/japanese-learning/n4/japanese-n4-data";
 import { JP_N3_TOTAL_DAYS } from "@/lib/japanese-learning/n3/japanese-n3-data";
 import { DuolingoMeaningCard } from "@/components/learn/DuolingoMeaningCard";
+import { EnglishMeaningCard } from "@/components/learn/EnglishMeaningCard";
 
 const subCardClass =
   "group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]";
@@ -128,6 +129,16 @@ export function LanguageTracks() {
 
         {/* Duolingo */}
         <DuolingoMeaningCard />
+      </div>
+
+      <div className="mt-8 border-t border-[var(--border)] pt-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">English</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">Intermediate vocabulary · 12 words a day · with Nepali meanings</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <EnglishMeaningCard />
+        </div>
       </div>
     </div>
   );
