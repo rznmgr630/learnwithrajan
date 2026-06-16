@@ -68,11 +68,17 @@ function renderParagraph(text: string, i: number) {
   );
 }
 
-function SectionLabel({ label, color = "accent" }: { label: string; color?: "accent" | "amber" | "muted" }) {
+function SectionLabel({ label, color = "accent" }: { label: string; color?: "accent" | "amber" | "muted" | "blue" }) {
   const dotColor =
-    color === "amber" ? "bg-amber-400" : color === "muted" ? "bg-[var(--muted)]" : "bg-[var(--accent)]";
+    color === "amber" ? "bg-amber-400" :
+    color === "muted" ? "bg-[var(--muted)]" :
+    color === "blue" ? "bg-blue-400" :
+    "bg-[var(--accent)]";
   const textColor =
-    color === "amber" ? "text-amber-400" : color === "muted" ? "text-[var(--muted)]" : "text-[var(--accent)]";
+    color === "amber" ? "text-amber-400" :
+    color === "muted" ? "text-[var(--muted)]" :
+    color === "blue" ? "text-blue-400" :
+    "text-[var(--accent)]";
   return (
     <div className="mb-3 flex items-center gap-2">
       <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
@@ -152,14 +158,8 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
 
           {/* Note */}
           {concept.note && (
-            <section className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 pl-5">
-              <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-blue-500/50" />
-              <div className="mb-3 flex items-center gap-2">
-                <svg className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 2a6 6 0 0 0-6 6c0 2.386 1.395 4.448 3.418 5.445L7 15h6l-.418-1.555C14.605 12.448 16 10.386 16 8a6 6 0 0 0-6-6Zm-1 12.5V16h2v-1.5h-2Z" />
-                </svg>
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400">Key Takeaway</h3>
-              </div>
+            <section className="rounded-xl border border-blue-500/20 border-l-4 border-l-blue-500/60 bg-blue-500/5 p-4">
+              <SectionLabel label="Key Takeaway" color="blue" />
               <div className="space-y-2.5">
                 {concept.note.split("\n\n").map((para, i) => renderParagraph(para, i))}
               </div>
@@ -167,8 +167,7 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
           )}
 
           {/* Why it matters */}
-          <section className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 pl-5">
-            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-amber-500/50" />
+          <section className="rounded-xl border border-amber-500/20 border-l-4 border-l-amber-500/60 bg-amber-500/5 p-4">
             <SectionLabel label="Why it matters" color="amber" />
             <div className="space-y-2.5">
               {concept.whyItMatters.split("\n\n").map((para, i) => renderParagraph(para, i))}
@@ -195,14 +194,8 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
           </section>
 
           {/* Interview tip */}
-          <section className="relative overflow-hidden rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4 pl-5">
-            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-[var(--accent)]/50" />
-            <div className="mb-3 flex items-center gap-2">
-              <svg className="h-3.5 w-3.5 text-[var(--accent)]" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
-              </svg>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Interview tip</h3>
-            </div>
+          <section className="rounded-xl border border-[var(--accent)]/20 border-l-4 border-l-[var(--accent)] bg-[var(--accent)]/5 p-4">
+            <SectionLabel label="Interview tip" color="accent" />
             <div className="space-y-2.5">
               {concept.interviewTip.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
