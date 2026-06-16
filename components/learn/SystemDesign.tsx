@@ -120,7 +120,18 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
           {/* Why it matters */}
           <section className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-400">Why it matters</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.whyItMatters}</p>
+            <div className="space-y-3">
+              {concept.whyItMatters.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
+                  {para.split("\n").map((line, j, arr) => (
+                    <span key={j}>
+                      {renderLine(line)}
+                      {j < arr.length - 1 && <br />}
+                    </span>
+                  ))}
+                </p>
+              ))}
+            </div>
           </section>
 
           {/* Diagram */}
@@ -146,7 +157,10 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
               {concept.example.split("\n\n").map((para, i) => (
                 <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
                   {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
+                    <span key={j}>
+                      {renderLine(line)}
+                      {j < arr.length - 1 && <br />}
+                    </span>
                   ))}
                 </p>
               ))}
@@ -161,7 +175,18 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
               </svg>
               Interview tip
             </h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.interviewTip}</p>
+            <div className="space-y-3">
+              {concept.interviewTip.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
+                  {para.split("\n").map((line, j, arr) => (
+                    <span key={j}>
+                      {renderLine(line)}
+                      {j < arr.length - 1 && <br />}
+                    </span>
+                  ))}
+                </p>
+              ))}
+            </div>
           </section>
         </div>
       </aside>
