@@ -22,6 +22,65 @@ function renderLine(text: string) {
   );
 }
 
+function renderParagraph(text: string, i: number) {
+  const lines = text.split("\n");
+  const elements = lines.map((line, j) => {
+    if (/^\s*↳/.test(line)) {
+      const content = line.replace(/^\s*↳\s*/, "");
+      return (
+        <div key={j} className="flex items-start gap-2 pl-5">
+          <span className="mt-0.5 shrink-0 text-xs text-[var(--accent)]/50">↳</span>
+          <span className="text-sm leading-relaxed text-[var(--muted)]">{renderLine(content)}</span>
+        </div>
+      );
+    }
+    if (line.startsWith("• ")) {
+      return (
+        <div key={j} className="flex items-start gap-2.5">
+          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/50" />
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(line.slice(2))}</span>
+        </div>
+      );
+    }
+    const numMatch = line.match(/^(\d+)\.\s(.+)$/);
+    if (numMatch) {
+      return (
+        <div key={j} className="flex items-start gap-3">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 font-mono text-[10px] font-bold text-[var(--accent)]">
+            {numMatch[1]}
+          </span>
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(numMatch[2])}</span>
+        </div>
+      );
+    }
+    if (!line.trim()) return null;
+    return (
+      <p key={j} className="text-sm leading-relaxed text-[var(--text)]">
+        {renderLine(line)}
+      </p>
+    );
+  });
+
+  return (
+    <div key={i} className="space-y-1.5">
+      {elements}
+    </div>
+  );
+}
+
+function SectionLabel({ label, color = "accent" }: { label: string; color?: "accent" | "amber" | "muted" }) {
+  const dotColor =
+    color === "amber" ? "bg-amber-400" : color === "muted" ? "bg-[var(--muted)]" : "bg-[var(--accent)]";
+  const textColor =
+    color === "amber" ? "text-amber-400" : color === "muted" ? "text-[var(--muted)]" : "text-[var(--accent)]";
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+      <h3 className={`text-xs font-semibold uppercase tracking-widest ${textColor}`}>{label}</h3>
+    </div>
+  );
+}
+
 function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConcept | null; index: number; onClose: () => void }) {
   useEffect(() => {
     if (!concept) return;
@@ -40,15 +99,21 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
         aria-label="Close"
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
+      <aside className="relative flex h-full w-full max-w-2xl flex-col bg-[var(--background)] shadow-2xl">
+        {/* Top accent gradient line */}
+        <div className="h-[3px] w-full shrink-0 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)]/50 to-transparent" />
+
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] p-5">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] px-6 py-5">
           <div className="min-w-0">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-              {concept.section} · #{index}
-            </span>
-            <h2 className="text-xl font-bold leading-snug text-[var(--text)]">{concept.title}</h2>
-            <p className="text-sm text-[var(--muted)]">{concept.tagline}</p>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">
+                {concept.section}
+              </span>
+              <span className="text-[10px] text-[var(--faint)]">#{index}</span>
+            </div>
+            <h2 className="text-2xl font-bold leading-snug text-[var(--text)]">{concept.title}</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">{concept.tagline}</p>
           </div>
           <button
             type="button"
@@ -63,13 +128,14 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto overscroll-y-contain p-5 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain px-6 py-6 flex flex-col gap-7">
+
           {/* Tags */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {concept.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-0.5 text-xs text-[var(--muted)]"
+                className="rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
               >
                 {tag}
               </span>
@@ -78,71 +144,41 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
 
           {/* What it is */}
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What it is</h3>
-            <div className="space-y-3">
-              {concept.description.split("\n\n").map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-                  {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>
-                      {renderLine(line)}
-                      {j < arr.length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              ))}
+            <SectionLabel label="What it is" color="accent" />
+            <div className="space-y-2.5">
+              {concept.description.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
 
           {/* Note */}
           {concept.note && (
-            <section className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-400">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+            <section className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 pl-5">
+              <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-blue-500/50" />
+              <div className="mb-3 flex items-center gap-2">
+                <svg className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10 2a6 6 0 0 0-6 6c0 2.386 1.395 4.448 3.418 5.445L7 15h6l-.418-1.555C14.605 12.448 16 10.386 16 8a6 6 0 0 0-6-6Zm-1 12.5V16h2v-1.5h-2Z" />
                 </svg>
-                Note
-              </h3>
-              <div className="space-y-2">
-                {concept.note.split("\n\n").map((para, i) => (
-                  <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-                    {para.split("\n").map((line, j, arr) => (
-                      <span key={j}>
-                        {renderLine(line)}
-                        {j < arr.length - 1 && <br />}
-                      </span>
-                    ))}
-                  </p>
-                ))}
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400">Key Takeaway</h3>
+              </div>
+              <div className="space-y-2.5">
+                {concept.note.split("\n\n").map((para, i) => renderParagraph(para, i))}
               </div>
             </section>
           )}
 
           {/* Why it matters */}
-          <section className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-400">Why it matters</h3>
-            <div className="space-y-3">
-              {concept.whyItMatters.split("\n\n").map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-                  {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>
-                      {renderLine(line)}
-                      {j < arr.length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              ))}
+          <section className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 pl-5">
+            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-amber-500/50" />
+            <SectionLabel label="Why it matters" color="amber" />
+            <div className="space-y-2.5">
+              {concept.whyItMatters.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
 
           {/* Diagram */}
           {SYSTEM_DESIGN_DIAGRAMS[concept.id] && (
             <section>
-              <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793 3 14.172V17h2.828l8.38-8.379-2.83-2.828Z" />
-                </svg>
-                Diagram
-              </h3>
+              <SectionLabel label="Diagram" color="accent" />
               <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-3">
                 <SdDiagram config={SYSTEM_DESIGN_DIAGRAMS[concept.id]} uid={`sd-${concept.id}`} />
               </div>
@@ -152,42 +188,26 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
 
           {/* Real-world example */}
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">Real-world example</h3>
-            <div className="space-y-3">
-              {concept.example.split("\n\n").map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-                  {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>
-                      {renderLine(line)}
-                      {j < arr.length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              ))}
+            <SectionLabel label="Real-world example" color="muted" />
+            <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4 space-y-2.5">
+              {concept.example.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
 
           {/* Interview tip */}
-          <section className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4">
-            <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+          <section className="relative overflow-hidden rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4 pl-5">
+            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-[var(--accent)]/50" />
+            <div className="mb-3 flex items-center gap-2">
+              <svg className="h-3.5 w-3.5 text-[var(--accent)]" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
               </svg>
-              Interview tip
-            </h3>
-            <div className="space-y-3">
-              {concept.interviewTip.split("\n\n").map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-                  {para.split("\n").map((line, j, arr) => (
-                    <span key={j}>
-                      {renderLine(line)}
-                      {j < arr.length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              ))}
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Interview tip</h3>
+            </div>
+            <div className="space-y-2.5">
+              {concept.interviewTip.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
+
         </div>
       </aside>
     </div>
