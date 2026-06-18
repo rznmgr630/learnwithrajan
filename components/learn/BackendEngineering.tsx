@@ -106,7 +106,7 @@ function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; o
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 flex flex-col gap-6">
           <div className="flex flex-wrap gap-2">
             {concept.tags.map((tag) => (
               <span
