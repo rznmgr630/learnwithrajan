@@ -9,6 +9,71 @@ import {
   type BackendConcept,
 } from "@/lib/backend-engineering/concepts";
 
+function renderLine(text: string) {
+  const parts = text.split(/(<b>[^<]+<\/b>|`[^`]+`)/g);
+  if (parts.length === 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("<b>") && part.endsWith("</b>"))
+          return <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(3, -4)}</strong>;
+        if (part.startsWith("`") && part.endsWith("`"))
+          return <code key={i} className="rounded bg-[var(--elevated)] px-1.5 py-0.5 font-mono text-xs text-[var(--accent)]">{part.slice(1, -1)}</code>;
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
+
+function renderParagraph(text: string, i: number) {
+  const lines = text.split("\n");
+  const elements = lines.map((line, j) => {
+    if (/^\s*↳/.test(line)) {
+      const content = line.replace(/^\s*↳\s*/, "");
+      return (
+        <div key={j} className="flex items-start gap-2 pl-5">
+          <span className="mt-0.5 shrink-0 text-xs text-[var(--accent)]/50">↳</span>
+          <span className="text-sm leading-relaxed text-[var(--muted)]">{renderLine(content)}</span>
+        </div>
+      );
+    }
+    if (line.startsWith("• ")) {
+      return (
+        <div key={j} className="flex items-start gap-2.5">
+          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/50" />
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(line.slice(2))}</span>
+        </div>
+      );
+    }
+    const numMatch = line.match(/^(\d+)\.\s(.+)$/);
+    if (numMatch) {
+      return (
+        <div key={j} className="flex items-start gap-3">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 font-mono text-[10px] font-bold text-[var(--accent)]">
+            {numMatch[1]}
+          </span>
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(numMatch[2])}</span>
+        </div>
+      );
+    }
+    if (!line.trim()) return null;
+    return (
+      <p key={j} className="text-sm leading-relaxed text-[var(--text)]">
+        {renderLine(line)}
+      </p>
+    );
+  });
+  return (
+    <div key={i} className="space-y-1.5">
+      {elements}
+    </div>
+  );
+}
+
+function renderBody(text: string) {
+  return text.split("\n\n").map((block, i) => renderParagraph(block, i));
+}
+
 function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; onClose: () => void }) {
   if (!concept) return null;
 
@@ -53,29 +118,29 @@ function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; o
             ))}
           </div>
 
-          <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What it is</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.description}</p>
+          <section className="flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">What it is</h3>
+            {renderBody(concept.description)}
           </section>
 
-          <section className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-400">Why it matters</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.whyItMatters}</p>
+          <section className="rounded-xl border border-amber-500/30 bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4 flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-amber-400">Why it matters</h3>
+            {renderBody(concept.whyItMatters)}
           </section>
 
-          <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">Real-world example</h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.example}</p>
+          <section className="flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">Real-world example</h3>
+            {renderBody(concept.example)}
           </section>
 
-          <section className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4">
-            <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+          <section className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4 flex flex-col gap-3">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
               <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
               </svg>
               Interview tip
             </h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.interviewTip}</p>
+            {renderBody(concept.interviewTip)}
           </section>
         </div>
       </aside>
