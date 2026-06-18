@@ -36,17 +36,53 @@ function renderLine(text: string) {
   );
 }
 
-function renderDescription(text: string) {
-  return text.split("\n\n").map((para, i) => (
-    <p key={i} className="text-sm leading-relaxed text-[var(--text)]">
-      {para.split("\n").map((line, j, arr) => (
-        <span key={j}>
-          {renderLine(line)}
-          {j < arr.length - 1 && <br />}
-        </span>
-      ))}
-    </p>
-  ));
+function renderParagraph(text: string, i: number) {
+  const lines = text.split("\n");
+  const elements = lines.map((line, j) => {
+    if (/^\s*↳/.test(line)) {
+      const content = line.replace(/^\s*↳\s*/, "");
+      return (
+        <div key={j} className="flex items-start gap-2 pl-5">
+          <span className="mt-0.5 shrink-0 text-xs text-[var(--accent)]/50">↳</span>
+          <span className="text-sm leading-relaxed text-[var(--muted)]">{renderLine(content)}</span>
+        </div>
+      );
+    }
+    if (line.startsWith("• ")) {
+      return (
+        <div key={j} className="flex items-start gap-2.5">
+          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/50" />
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(line.slice(2))}</span>
+        </div>
+      );
+    }
+    const numMatch = line.match(/^(\d+)\.\s(.+)$/);
+    if (numMatch) {
+      return (
+        <div key={j} className="flex items-start gap-3">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 font-mono text-[10px] font-bold text-[var(--accent)]">
+            {numMatch[1]}
+          </span>
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(numMatch[2])}</span>
+        </div>
+      );
+    }
+    if (!line.trim()) return null;
+    return (
+      <p key={j} className="text-sm leading-relaxed text-[var(--text)]">
+        {renderLine(line)}
+      </p>
+    );
+  });
+  return (
+    <div key={i} className="space-y-1.5">
+      {elements}
+    </div>
+  );
+}
+
+function renderBody(text: string) {
+  return text.split("\n\n").map((block, i) => renderParagraph(block, i));
 }
 
 function ConceptDrawer({
@@ -120,20 +156,20 @@ function ConceptDrawer({
           </div>
 
           {/* Description */}
-          <section>
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+          <section className="flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
               Explanation
             </h3>
-            <div className="space-y-3">{renderDescription(concept.description)}</div>
+            {renderBody(concept.description)}
           </section>
 
           {/* Note callout */}
           {concept.note && (
-            <section className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <section className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 flex flex-col gap-3">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400">
                 Key Takeaway
               </h3>
-              <div className="space-y-2">{renderDescription(concept.note)}</div>
+              {renderBody(concept.note)}
             </section>
           )}
 
@@ -174,8 +210,8 @@ function ConceptDrawer({
           </section>
 
           {/* Tip */}
-          <section className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4">
-            <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+          <section className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent)]/5 p-4 flex flex-col gap-3">
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
               <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
@@ -185,7 +221,7 @@ function ConceptDrawer({
               </svg>
               Production / Interview Tip
             </h3>
-            <p className="text-sm leading-relaxed text-[var(--text)]">{concept.tip}</p>
+            {renderBody(concept.tip)}
           </section>
         </div>
       </aside>
