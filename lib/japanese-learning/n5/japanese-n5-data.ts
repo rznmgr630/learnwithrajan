@@ -79,12 +79,22 @@ function jpOverview(day: number): LocalizedString[] {
   return [focus, second];
 }
 
+const DAY_EXTRA_TAGS: Record<number, { label: string; slug: string }[]> = {
+  1: [
+    { label: "は", slug: "p-wa" },
+    { label: "か", slug: "p-ka" },
+    { label: "も", slug: "p-mo" },
+    { label: "の", slug: "p-no" },
+  ],
+};
+
 function tagsForDay(day: number): { label: string; slug: string }[] {
-  if (day >= 26) return [{ label: "Exam sprint", slug: "sprint" }];
-  if (day % 4 === 0) return [{ label: "Listening", slug: "listening" }];
-  if (day % 4 === 1) return [{ label: "Grammar", slug: "grammar" }];
-  if (day % 4 === 2) return [{ label: "Particles", slug: "particles" }];
-  return [{ label: "Kanji", slug: "kanji" }];
+  const extra = DAY_EXTRA_TAGS[day] ?? [];
+  if (day >= 26) return [{ label: "Exam sprint", slug: "sprint" }, ...extra];
+  if (day % 4 === 0) return [{ label: "Listening", slug: "listening" }, ...extra];
+  if (day % 4 === 1) return [{ label: "Grammar", slug: "grammar" }, ...extra];
+  if (day % 4 === 2) return [{ label: "Particles", slug: "particles" }, ...extra];
+  return [{ label: "Kanji", slug: "kanji" }, ...extra];
 }
 
 function buildDay(day: number): JapaneseRoadmapDay {
