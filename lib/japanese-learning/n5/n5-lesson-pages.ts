@@ -53,6 +53,14 @@ function buildVocab(minnaLesson: number): VocabRow[] {
   });
 }
 
+export type ParticleEntry = {
+  particle: string;
+  romaji: string;
+  name: L10n;
+  meaning: L10n;
+  examples: GrammarExample[];
+};
+
 export type LessonMcq = {
   question: L10n;
   choices: L10n[];
@@ -69,6 +77,7 @@ export type N5LessonPageData = {
   youtubeTitle: string;
   conversation: ConversationLine[];
   grammar: GrammarPoint[];
+  particles: ParticleEntry[];
   vocabulary: VocabRow[];
   mcqs: LessonMcq[];
 };
@@ -435,6 +444,100 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Yamada-san wa ima oikutsu desu ka?",
             english: { en: "How old is Yamada now?", np: "यामाडाजी अहिले कति वर्षको हुनुभयो?" },
             scenario: { en: "Scenario 3 — Asking about someone else's age", np: "दृश्य ३ — अरुको उमेर सोध्ने" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "は",
+        romaji: "wa",
+        name: { en: "Topic marker", np: "Topic Marker" },
+        meaning: {
+          en: "Marks what the sentence is about (the topic). Does NOT mark the subject — it marks the topic. Pronounced 'wa', not 'ha'.",
+          np: "वाक्यको Topic (विषय) चिन्ह गर्छ। Subject होइन — Topic हो। 'HA' नभनेर 'WA' भनिन्छ।",
+        },
+        examples: [
+          {
+            japanese: "{私|わたし}はたなかです。",
+            reading: "Watashi wa Tanaka desu.",
+            english: { en: "I am Tanaka. (topic = I)", np: "म तानाका हुँ। (topic = म)" },
+            scenario: { en: "Stating identity", np: "पहिचान बताउने" },
+          },
+          {
+            japanese: "スミスさんは{学生|がくせい}ですか。",
+            reading: "Sumisu-san wa gakusei desu ka?",
+            english: { en: "Is Smith a student? (topic = Smith)", np: "स्मिथजी विद्यार्थी हुनुहुन्छ? (topic = स्मिथजी)" },
+            scenario: { en: "Topic in a question", np: "प्रश्नमा Topic" },
+          },
+        ],
+      },
+      {
+        particle: "か",
+        romaji: "ka",
+        name: { en: "Question particle", np: "प्रश्न Particle" },
+        meaning: {
+          en: "Placed at the end of a polite statement (after です) to turn it into a yes/no question. No question mark needed in written Japanese.",
+          np: "विनम्र statement (です) को अन्तमा जोड्दा हाँ/होइन प्रश्न बन्छ। लिखित जापानीमा '?' नलेखे हुन्छ।",
+        },
+        examples: [
+          {
+            japanese: "{学生|がくせい}ですか。",
+            reading: "Gakusei desu ka?",
+            english: { en: "Are you a student?", np: "तपाई विद्यार्थी हुनुहुन्छ?" },
+            scenario: { en: "Yes/no question", np: "हाँ/होइन प्रश्न" },
+          },
+          {
+            japanese: "{日本人|にほんじん}ですか。",
+            reading: "Nihonjin desu ka?",
+            english: { en: "Are you Japanese?", np: "तपाई जापानी हुनुहुन्छ?" },
+            scenario: { en: "Nationality question", np: "राष्ट्रियता प्रश्न" },
+          },
+        ],
+      },
+      {
+        particle: "も",
+        romaji: "mo",
+        name: { en: "Also / Too", np: "पनि" },
+        meaning: {
+          en: "Replaces は (never stacks on top of it) to mean 'also' or 'too'. When the same predicate applies to a second topic, use も instead of は.",
+          np: "は को सट्टा राखेर 'पनि' भन्ने अर्थ दिन्छ। दोस्रो topic मा は हटाएर も राख्ने।",
+        },
+        examples: [
+          {
+            japanese: "{私|わたし}は{学生|がくせい}です。やまださんも{学生|がくせい}です。",
+            reading: "Watashi wa gakusei desu. Yamada-san mo gakusei desu.",
+            english: { en: "I am a student. Yamada is also a student.", np: "म विद्यार्थी हुँ। यामाडा पनि विद्यार्थी हो।" },
+            scenario: { en: "Same predicate, second topic", np: "दोस्रो topic मा पनि" },
+          },
+          {
+            japanese: "スミスさんもアメリカじんです。",
+            reading: "Sumisu-san mo Amerikajin desu.",
+            english: { en: "Smith is also American.", np: "स्मिथजी पनि अमेरिकी हो।" },
+            scenario: { en: "Same nationality", np: "एउटै राष्ट्रियता" },
+          },
+        ],
+      },
+      {
+        particle: "の",
+        romaji: "no",
+        name: { en: "Possession / Belonging", np: "सम्बन्ध / को" },
+        meaning: {
+          en: "Connects two nouns: N₁ の N₂ = N₁'s N₂. Works exactly like the Nepali 'को'. The first noun modifies or owns the second.",
+          np: "दुई noun जोड्छ: N₁ の N₂ = N₁ को N₂। Nepali 'को' जस्तै काम गर्छ।",
+        },
+        examples: [
+          {
+            japanese: "{私|わたし}のほん",
+            reading: "Watashi no hon",
+            english: { en: "My book", np: "मेरो किताब" },
+            scenario: { en: "Personal possession", np: "व्यक्तिगत अधिकार" },
+          },
+          {
+            japanese: "{私|わたし}はIMCの{医者|いしゃ}です。",
+            reading: "Watashi wa IMC no isha desu.",
+            english: { en: "I am a doctor at IMC.", np: "म IMC को डाक्टर हुँ।" },
+            scenario: { en: "Affiliation", np: "संस्थागत सम्बद्धता" },
           },
         ],
       },
