@@ -24,7 +24,7 @@ export function VideoCard({ v, index }: { v: Video; index: number }) {
         ) : (
           <button
             onClick={() => setPlaying(true)}
-            className="group/btn relative h-full w-full"
+            className="group/btn relative h-full w-full cursor-pointer"
             aria-label={`Play ${v.label}`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
