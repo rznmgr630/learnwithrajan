@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import type {
   ConversationLine,
@@ -116,9 +117,14 @@ function GrammarSection({
   youtubeTitle,
 }: {
   grammar: GrammarPoint[];
-  youtubeVideoId: string;
+  youtubeVideoId: { en: string; np?: string; jp?: string };
   youtubeTitle: string;
 }) {
+  const { locale } = useLocale();
+  const videoId =
+    (locale === "np" ? youtubeVideoId.np : locale === "jp" ? youtubeVideoId.jp : undefined) ??
+    youtubeVideoId.en;
+
   return (
     <div className="space-y-5">
       {/* Embedded YouTube player */}
@@ -126,7 +132,7 @@ function GrammarSection({
         <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
           <iframe
             className="absolute inset-0 h-full w-full"
-            src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+            src={`https://www.youtube.com/embed/${videoId}`}
             title={youtubeTitle}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

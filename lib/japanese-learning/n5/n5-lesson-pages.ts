@@ -61,8 +61,8 @@ export type N5LessonPageData = {
   id: number;
   title: string;
   intro: string[];
-  /** YouTube video ID (11 chars) for the embedded grammar video. */
-  youtubeVideoId: string;
+  /** YouTube video IDs per locale. Falls back to `en` when a locale has no entry. */
+  youtubeVideoId: { en: string; np?: string; jp?: string };
   youtubeTitle: string;
   conversation: ConversationLine[];
   grammar: GrammarPoint[];
@@ -79,9 +79,11 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       "The particle は (wa) marks the topic of the sentence, and です (desu) is the polite way to say 'is / am / are'.",
       "Start every first meeting with はじめまして and close with どうぞよろしくおねがいします.",
     ],
-    // Replace with the Guruba Nepali video ID once available
-    youtubeVideoId: "dPjxIuJZiZc",
-    youtubeTitle: "Minna no Nihongo · Lesson 1 — Speaking practice",
+    youtubeVideoId: {
+      en: "dPjxIuJZiZc",
+      np: "0p55wZhPkM0",
+    },
+    youtubeTitle: "Minna no Nihongo · Lesson 1 — Grammar",
     conversation: [
       {
         speaker: "A",
