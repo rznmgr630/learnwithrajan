@@ -25,7 +25,7 @@ export const JP_CURRENT_DAY = 1;
 
 /** Short titles shown on cards — Minna lessons 1–25 map to Days 1–25; 26–30 are JLPT N5 sprint days. */
 export const JP_N5_DAY_TITLES: string[] = [
-  "Day 1 · Minna L1 — は／です／じこしょうかい",
+  "Chapter 1, は, です, じこしょうかい",
   "Day 2 · Minna L2 — これ／それ／あれ & price",
   "Day 3 · Minna L3 — existenceある & place に",
   "Day 4 · Minna L4 — ます／ました & object を",
