@@ -112,37 +112,29 @@ function ConversationSection({ lines }: { lines: ConversationLine[] }) {
 
 function GrammarSection({
   grammar,
-  youtubeUrl,
+  youtubeVideoId,
   youtubeTitle,
 }: {
   grammar: GrammarPoint[];
-  youtubeUrl: string;
+  youtubeVideoId: string;
   youtubeTitle: string;
 }) {
   return (
     <div className="space-y-5">
-      {/* YouTube link */}
-      <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] px-3.5 py-3">
-        <svg
-          className="h-7 w-7 shrink-0 text-red-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.52 3.5 12 3.5 12 3.5s-7.52 0-9.38.55A3.02 3.02 0 0 0 .5 6.19C0 8.06 0 12 0 12s0 3.94.5 5.81a3.02 3.02 0 0 0 2.12 2.14C4.48 20.5 12 20.5 12 20.5s7.52 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14C24 15.94 24 12 24 12s0-3.94-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-        </svg>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-[var(--text)]">Grammar Video</p>
-          <p className="truncate text-[11px] text-[var(--muted)]">{youtubeTitle}</p>
+      {/* Embedded YouTube player */}
+      <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+          <iframe
+            className="absolute inset-0 h-full w-full"
+            src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+            title={youtubeTitle}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
-        <a
-          href={youtubeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-600"
-        >
-          Watch
-        </a>
+        <div className="border-t border-[var(--border)] px-3 py-2">
+          <p className="text-[11px] text-[var(--muted)]">{youtubeTitle}</p>
+        </div>
       </div>
 
       {grammar.map((gp) => (
@@ -394,7 +386,7 @@ export function N5LessonDrawerContent({
       <Accordion number={2} title="Grammar">
         <GrammarSection
           grammar={lesson.grammar}
-          youtubeUrl={lesson.youtubeUrl}
+          youtubeVideoId={lesson.youtubeVideoId}
           youtubeTitle={lesson.youtubeTitle}
         />
       </Accordion>
