@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import type {
@@ -501,13 +501,29 @@ function KanjiSection({ kanjiItems }: { kanjiItems: KanjiStrokeEntry[] }) {
 // ─── Exercise ────────────────────────────────────────────────────────────────
 
 function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
-  const [answers, setAnswers] = useState<(number | null)[]>(() => mcqs.map(() => null));
+  const shuffledMcqs = useMemo(() => {
+    return mcqs.map((mcq) => {
+      const indices = mcq.choices.map((_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      return {
+        ...mcq,
+        choices: indices.map((i) => mcq.choices[i]),
+        correctIndex: indices.indexOf(mcq.correctIndex),
+      };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [answers, setAnswers] = useState<(number | null)[]>(() => shuffledMcqs.map(() => null));
   const [revealed, setRevealed] = useState(false);
   const { locale } = useLocale();
 
   const allAnswered = answers.every((a) => a !== null);
-  const score = answers.filter((a, i) => a === mcqs[i].correctIndex).length;
-  const total = mcqs.length;
+  const score = answers.filter((a, i) => a === shuffledMcqs[i].correctIndex).length;
+  const total = shuffledMcqs.length;
 
   function pick(qi: number, ci: number) {
     if (revealed) return;
@@ -540,7 +556,7 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
         )}
       </div>
 
-      {mcqs.map((mcq, qi) => {
+      {shuffledMcqs.map((mcq, qi) => {
         const picked = answers[qi];
         return (
           <div
@@ -609,7 +625,7 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
           <button
             type="button"
             onClick={() => {
-              setAnswers(mcqs.map(() => null));
+              setAnswers(shuffledMcqs.map(() => null));
               setRevealed(false);
             }}
             className="mt-3 rounded-lg border border-[var(--border)] px-4 py-1.5 text-xs text-[var(--muted)] transition hover:text-[var(--text)]"
