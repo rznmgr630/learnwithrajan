@@ -50,6 +50,20 @@ export function PersonalDevelopmentTracks() {
                 Watch →
               </span>
             </Link>
+
+            <Link href="/learn/focus-music" className={subCardClass}>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                  Focus &amp; Learn Music
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                  10 videos — lofi, deep focus, ambient and Indian ragas for flow state
+                </p>
+              </div>
+              <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
+                Listen →
+              </span>
+            </Link>
           </div>
         </div>
       </div>
