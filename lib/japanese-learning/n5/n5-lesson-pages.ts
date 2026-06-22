@@ -631,6 +631,348 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  {
+    id: 2,
+    title: "Lesson 2 — これ・それ・あれ (Demonstratives & Shopping)",
+    intro: [
+      {
+        en: "In this lesson you learn to point at things using これ (this), それ (that), and あれ (that over there). You also learn to ask prices with いくらですか and to say whose something is using の.",
+        np: "यस पाठमा वस्तु देखाउन これ (यो), それ (त्यो), अनि あれ (ऊ त्यो टाढा) सिक्नुहुनेछ। साथै いくらですか ले मूल्य सोध्न र の ले स्वामित्व बताउन पनि सिक्नुहुनेछ।",
+      },
+      {
+        en: "The pre-noun forms この/その/あの must be followed directly by a noun — they cannot stand alone like これ/それ/あれ.",
+        np: "この/その/あの ले सधैं noun अगाडि आउनु पर्छ — यिनीहरू これ/それ/あれ जस्तै एक्लै प्रयोग हुँदैनन्।",
+      },
+      {
+        en: "Use そうです to confirm something is correct and ちがいます to politely say it is not.",
+        np: "कुनै कुरा सही भएको पुष्टि गर्न そうです र नभएको भन्न ちがいます विनम्र रूपमा प्रयोग गर्नुस्।",
+      },
+    ],
+    youtubeVideoId: {
+      en: "dPjxIuJZiZc",
+      np: "-kqNsxOAjsU",
+    },
+    youtubeTitle: "Minna no Nihongo · Lesson 2 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "すみません、それはいくらですか。",
+        reading: "Sumimasen, sore wa ikura desu ka?",
+        english: { en: "Excuse me, how much is that?", np: "माफ गर्नुस्, त्यो कति हो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ごひゃくえんです。",
+        reading: "Gohyaku-en desu.",
+        english: { en: "It is five hundred yen.", np: "पाँच सय येन हो।" },
+      },
+      {
+        speaker: "A",
+        japanese: "あのかばんはいくらですか。",
+        reading: "Ano kaban wa ikura desu ka?",
+        english: { en: "How much is that bag over there?", np: "ऊ त्यो झोला कति हो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "さんぜんえんです。",
+        reading: "Sanzen-en desu.",
+        english: { en: "It is three thousand yen.", np: "तीन हजार येन हो।" },
+      },
+      {
+        speaker: "A",
+        japanese: "このかさはやまださんのですか。",
+        reading: "Kono kasa wa Yamada-san no desu ka?",
+        english: { en: "Is this umbrella Yamada's?", np: "यो छाता यामाडाजीको हो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、ちがいます。わたしのです。",
+        reading: "Iie, chigaimasu. Watashi no desu.",
+        english: { en: "No, it isn't. It's mine.", np: "होइन, मेरो हो।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "これ / それ / あれ は N です", np: "यो / त्यो / ऊत्यो + N हो" },
+        meaning: {
+          en: "Use これ (near speaker), それ (near listener), あれ (far from both) as standalone pronouns to identify things.",
+          np: "これ (वक्ताको नजिक), それ (श्रोताको नजिक), あれ (दुवैबाट टाढा) — वस्तु पहिचान गर्न standalone pronoun रूपमा प्रयोग गरिन्छ।",
+        },
+        whereWeUse: [
+          { en: "Pointing at an object to say what it is", np: "वस्तु देखाएर के हो भन्दा" },
+          { en: "Asking about something with ですか", np: "ですか ले सोध्दा" },
+        ],
+        examples: [
+          {
+            japanese: "これはほんです。",
+            reading: "Kore wa hon desu.",
+            english: { en: "This is a book.", np: "यो किताब हो।" },
+            scenario: { en: "Object near speaker", np: "वक्ताको नजिकको वस्तु" },
+          },
+          {
+            japanese: "それはなんですか。",
+            reading: "Sore wa nan desu ka?",
+            english: { en: "What is that?", np: "त्यो के हो?" },
+            scenario: { en: "Asking about object near listener", np: "श्रोताको नजिकको वस्तुबारे सोध्दा" },
+          },
+          {
+            japanese: "あれはびょういんです。",
+            reading: "Are wa byōin desu.",
+            english: { en: "That over there is a hospital.", np: "ऊ त्यो अस्पताल हो।" },
+            scenario: { en: "Pointing at a far object", np: "टाढाको वस्तु देखाउँदा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "この / その / あの + Noun", np: "यो / त्यो / ऊत्यो + Noun" },
+        meaning: {
+          en: "Pre-noun demonstratives: この (this), その (that), あの (that over there) must be placed directly before a noun. They cannot stand alone.",
+          np: "Noun अगाडि राखिने demonstrative: この (यो), その (त्यो), あの (ऊ त्यो) सधैं noun अगाडि राखिन्छ — एक्लो प्रयोग हुँदैन।",
+        },
+        whereWeUse: [
+          { en: "Specifying a particular noun ('this book', 'that bag')", np: "विशेष noun देखाउँदा ('यो किताब', 'त्यो झोला')" },
+          { en: "Asking about a specific item's price or owner", np: "कुनै वस्तुको मूल्य वा मालिक सोध्दा" },
+        ],
+        examples: [
+          {
+            japanese: "このかさはいくらですか。",
+            reading: "Kono kasa wa ikura desu ka?",
+            english: { en: "How much is this umbrella?", np: "यो छाता कति हो?" },
+            scenario: { en: "Price inquiry with この", np: "この ले मूल्य सोध्दा" },
+          },
+          {
+            japanese: "そのかばんをください。",
+            reading: "Sono kaban o kudasai.",
+            english: { en: "Please give me that bag.", np: "त्यो झोला दिनुस्।" },
+            scenario: { en: "Requesting an item with その", np: "その ले वस्तु माग्दा" },
+          },
+          {
+            japanese: "あのビルはなんですか。",
+            reading: "Ano biru wa nan desu ka?",
+            english: { en: "What is that building over there?", np: "ऊ त्यो भवन के हो?" },
+            scenario: { en: "Asking about far object with あの", np: "あの ले टाढाको वस्तुबारे सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "だれの N ですか — Whose N is it?", np: "को को N हो? — स्वामित्व सोध्न" },
+        meaning: {
+          en: "だれ (who) + の (possession marker) before a noun to ask whose something is. Answer with [person]の です.",
+          np: "だれ (को) + の (स्वामित्व चिन्ह) noun अगाडि राखेर स्वामित्व सोध्न। उत्तरमा [व्यक्ति]の です।",
+        },
+        whereWeUse: [
+          { en: "Asking whose something is", np: "कुनै वस्तु कसको हो भनी सोध्दा" },
+          { en: "Answering with [person]の です", np: "[व्यक्ति]の です ले उत्तर दिँदा" },
+        ],
+        examples: [
+          {
+            japanese: "これはだれのかばんですか。",
+            reading: "Kore wa dare no kaban desu ka?",
+            english: { en: "Whose bag is this?", np: "यो झोला कसको हो?" },
+            scenario: { en: "Asking ownership", np: "स्वामित्व सोध्दा" },
+          },
+          {
+            japanese: "やまださんのです。",
+            reading: "Yamada-san no desu.",
+            english: { en: "It is Yamada's.", np: "यामाडाजीको हो।" },
+            scenario: { en: "Stating ownership", np: "स्वामित्व बताउँदा" },
+          },
+          {
+            japanese: "このとけいはだれのですか。",
+            reading: "Kono tokei wa dare no desu ka?",
+            english: { en: "Whose watch is this?", np: "यो घडी कसको हो?" },
+            scenario: { en: "Ownership of a watch", np: "घडीको स्वामित्व" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "そうです / ちがいます — Confirming or Correcting", np: "सही / गलत — पुष्टि वा सुधार" },
+        meaning: {
+          en: "そうです = 'That's right' (polite confirmation). ちがいます = 'That's wrong / different' (polite correction). Use instead of simple はい/いいえ when confirming facts.",
+          np: "そうです = 'ठीक छ' (विनम्र पुष्टि)। ちがいます = 'होइन / फरक छ' (विनम्र सुधार)। सामान्य तथ्य पुष्टि/खण्डन गर्दा はい/いいえ को सट्टा प्रयोग।",
+        },
+        whereWeUse: [
+          { en: "Confirming a fact someone states about an object", np: "वस्तुको बारेमा भनिएको कुरा पुष्टि गर्दा" },
+          { en: "Politely correcting a wrong assumption", np: "गलत अनुमान विनम्र रूपमा सुधार्दा" },
+        ],
+        examples: [
+          {
+            japanese: "それはじしょですか。そうです。",
+            reading: "Sore wa jisho desu ka? — Sō desu.",
+            english: { en: "Is that a dictionary? — Yes, it is.", np: "त्यो शब्दकोश हो? — हो।" },
+            scenario: { en: "Confirming identity", np: "पुष्टि गर्दा" },
+          },
+          {
+            japanese: "これはやまださんのですか。いいえ、ちがいます。",
+            reading: "Kore wa Yamada-san no desu ka? — Iie, chigaimasu.",
+            english: { en: "Is this Yamada's? — No, it isn't.", np: "यो यामाडाजीको हो? — होइन।" },
+            scenario: { en: "Correcting a wrong assumption", np: "गलत अनुमान सुधार्दा" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "N は [person]の です — It belongs to [person]", np: "N, [व्यक्ति]को हो — स्वामित्व बताउन" },
+        meaning: {
+          en: "The pattern N は [person]の です shortens [person]の N です by dropping the repeated noun. Common in conversation after the context is established.",
+          np: "[व्यक्ति]の N です को सट्टा noun दोहोर्याउनु पर्दैन। Context स्पष्ट भइसकेपछि कुराकानीमा यो छोटो pattern धेरै प्रयोग हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "Stating ownership without repeating the noun", np: "Noun दोहोर्याउनु नपरी स्वामित्व बताउँदा" },
+          { en: "Answering だれの questions concisely", np: "だれの प्रश्नको संक्षिप्त उत्तर दिँदा" },
+        ],
+        examples: [
+          {
+            japanese: "このかさはわたしのです。",
+            reading: "Kono kasa wa watashi no desu.",
+            english: { en: "This umbrella is mine.", np: "यो छाता मेरो हो।" },
+            scenario: { en: "Claiming ownership", np: "स्वामित्व दाबी गर्दा" },
+          },
+          {
+            japanese: "そのペンはスミスさんのです。",
+            reading: "Sono pen wa Sumisu-san no desu.",
+            english: { en: "That pen is Smith's.", np: "त्यो कलम स्मिथजीको हो।" },
+            scenario: { en: "Attributing ownership to another", np: "अर्कालाई स्वामित्व दिँदा" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "の",
+        romaji: "no",
+        name: { en: "Possession / Connection", np: "स्वामित्व / सम्बन्ध" },
+        meaning: {
+          en: "Connects two nouns: N₁ の N₂ = N₁'s N₂. Also used at sentence end (N は [person]の です) to mean 'it belongs to [person]' by dropping the repeated noun.",
+          np: "दुई noun जोड्छ: N₁ の N₂ = N₁ को N₂। वाक्यको अन्तमा noun हटाएर N は [व्यक्ति]の です — 'त्यो [व्यक्ति]को हो' भन्न पनि प्रयोग हुन्छ।",
+        },
+        examples: [
+          {
+            japanese: "これはやまださんのかばんです。",
+            reading: "Kore wa Yamada-san no kaban desu.",
+            english: { en: "This is Yamada's bag.", np: "यो यामाडाजीको झोला हो।" },
+            scenario: { en: "Possession with の", np: "の ले स्वामित्व" },
+          },
+          {
+            japanese: "そのかさはわたしのです。",
+            reading: "Sono kasa wa watashi no desu.",
+            english: { en: "That umbrella is mine.", np: "त्यो छाता मेरो हो।" },
+            scenario: { en: "Shortened possession at sentence end", np: "वाक्यको अन्तमा छोटो स्वामित्व" },
+          },
+        ],
+      },
+      {
+        particle: "も",
+        romaji: "mo",
+        name: { en: "Also / Too", np: "पनि" },
+        meaning: {
+          en: "Replaces は to add the same predicate to a second topic — 'also / too'. Works with demonstratives too: これも、それも、あれも.",
+          np: "は को सट्टा राखेर दोस्रो topic मा पनि उही बात लागू गर्छ। Demonstrative सँग पनि: これも、それも、あれも।",
+        },
+        examples: [
+          {
+            japanese: "これもにほんごのほんです。",
+            reading: "Kore mo nihongo no hon desu.",
+            english: { en: "This is also a Japanese book.", np: "यो पनि जापानी किताब हो।" },
+            scenario: { en: "Also with demonstrative", np: "Demonstrative सँग 'पनि'" },
+          },
+          {
+            japanese: "それもやまださんのですか。",
+            reading: "Sore mo Yamada-san no desu ka?",
+            english: { en: "Is that also Yamada's?", np: "त्यो पनि यामाडाजीको हो?" },
+            scenario: { en: "Confirming additional ownership", np: "थप स्वामित्व पुष्टि" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(2),
+    mcqs: [
+      {
+        question: { en: "Which word means 'this' (near the speaker)?", np: "वक्ताको नजिकको वस्तु देखाउन कुन शब्द प्रयोग हुन्छ?" },
+        choices: ["これ", "それ", "あれ", "どれ"],
+        correctIndex: 0,
+        explanation: { en: "これ refers to something near the speaker. それ = near listener, あれ = far from both, どれ = which one?", np: "これ ले वक्ताको नजिकको वस्तु जनाउँछ। それ = श्रोताको नजिक, あれ = दुवैबाट टाढा, どれ = कुन?" },
+      },
+      {
+        question: { en: "Fill the blank: _____ かさはやまださんのです。(That umbrella [near you] is Yamada's.)", np: "खाली भर्नुस्: _____ かさはやまださんのです।" },
+        choices: ["その", "この", "あの", "どの"],
+        correctIndex: 0,
+        explanation: { en: "その is the pre-noun form of それ — used for objects near the listener. この = near speaker, あの = far.", np: "その, それ को pre-noun form हो — श्रोताको नजिकको noun अगाडि। この = वक्ताको नजिक, あの = टाढा।" },
+      },
+      {
+        question: { en: "How do you politely say 'That's wrong' in Japanese?", np: "जापानीमा विनम्र रूपमा 'होइन / गलत छ' कसरी भनिन्छ?" },
+        choices: ["ちがいます", "そうです", "ありません", "いいです"],
+        correctIndex: 0,
+        explanation: { en: "ちがいます means 'that's different / wrong' — a polite correction. そうです is the confirmation ('that's right').", np: "ちがいます = 'फरक छ / होइन' — विनम्र सुधार। そうです = 'ठीक छ' पुष्टि।" },
+      },
+      {
+        question: { en: "Which particle marks possession (like 'of' or ''s') in Japanese?", np: "जापानीमा स्वामित्व (को / को) जनाउने Particle कुन हो?" },
+        choices: ["の", "は", "を", "に"],
+        correctIndex: 0,
+        explanation: { en: "の connects two nouns to show possession or relationship: わたしの = my/mine, やまださんの = Yamada's.", np: "の ले दुई noun जोड्छ: わたしの = मेरो, やまださんの = यामाडाजीको।" },
+      },
+      {
+        question: { en: "What does いくらですか mean?", np: "いくらですか को अर्थ के हो?" },
+        choices: [
+          { en: "How much is it?", np: "यो कति हो?" },
+          { en: "What is this?", np: "यो के हो?" },
+          { en: "Where is this?", np: "यो कहाँ छ?" },
+          { en: "When is this?", np: "यो कहिले हो?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "いくら = how much (price). ですか makes it a polite question: How much is it?", np: "いくら = कति (मूल्य)। ですか ले विनम्र प्रश्न बनाउँछ: कति पर्छ?" },
+      },
+      {
+        question: { en: "Translate: これもにほんごのほんです。", np: "अनुवाद गर्नुस्: これもにほんごのほんです।" },
+        choices: [
+          { en: "This is also a Japanese book.", np: "यो पनि जापानी किताब हो।" },
+          { en: "This is a Japanese book.", np: "यो जापानी किताब हो।" },
+          { en: "That is a Japanese book too.", np: "त्यो पनि जापानी किताब हो।" },
+          { en: "This is not a Japanese book.", np: "यो जापानी किताब होइन।" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "も replaces は to mean 'also'. これも = this too. にほんごの = Japanese (language modifier).", np: "も ले は को ठाउँ लिएर 'पनि' अर्थ दिन्छ। これも = यो पनि।" },
+      },
+      {
+        question: { en: "Which pattern do you use to say 'this umbrella is mine'?", np: "'यो छाता मेरो हो' भन्न कुन pattern प्रयोग हुन्छ?" },
+        choices: [
+          "このかさはわたしのです",
+          "これはわたしのかさです",
+          "わたしはこのかさです",
+          "このかさがわたしはです",
+        ],
+        correctIndex: 0,
+        explanation: { en: "このかさはわたしのです uses [N は person の です] — the noun (かさ) is not repeated after の because context is clear.", np: "[N は person の です] pattern — の पछि noun दोहोर्याउनु पर्दैन किनकि context स्पष्ट छ।" },
+      },
+      {
+        question: { en: "What is the kanji for 'dictionary' (じしょ)?", np: "'शब्दकोश' (じしょ) को Kanji के हो?" },
+        choices: ["辞書", "雑誌", "本", "辞典"],
+        correctIndex: 0,
+        explanation: { en: "辞書 (じしょ) = 辞 (words/resign) + 書 (write/book) = dictionary.", np: "辞書 (जिशो) = 辞 (शब्द) + 書 (लेख्नु/किताब) = शब्दकोश।" },
+      },
+      {
+        question: { en: "A shopkeeper says いらっしゃいませ. What does it mean?", np: "पसलेले いらっしゃいませ भन्यो। यसको अर्थ के हो?" },
+        choices: [
+          { en: "Welcome (to the shop)", np: "स्वागत छ (पसलमा)" },
+          { en: "Thank you very much", np: "धेरै धन्यवाद" },
+          { en: "Please come again", np: "फेरि आउनुस्" },
+          { en: "Excuse me", np: "माफ गर्नुस्" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "いらっしゃいませ is a formal greeting used by shop staff to welcome customers.", np: "いらっしゃいませ पसलका कर्मचारीले ग्राहकलाई स्वागत गर्न भन्ने विनम्र अभिवादन हो।" },
+      },
+      {
+        question: { en: "Fill the blank: _____ はだれのですか。 (Whose is that over there?)", np: "खाली भर्नुस्: _____ はだれのですか। (ऊ त्यो कसको हो?)" },
+        choices: ["あれ", "これ", "それ", "どれ"],
+        correctIndex: 0,
+        explanation: { en: "あれ = that over there (far from both speaker and listener). これ = near speaker, それ = near listener.", np: "あれ = ऊ त्यो (दुवैबाट टाढा)। これ = वक्ताको नजिक, それ = श्रोताको नजिक।" },
+      },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
