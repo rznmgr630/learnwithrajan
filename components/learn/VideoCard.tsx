@@ -33,7 +33,7 @@ export function VideoCard({ v, index }: { v: Video; index: number }) {
               alt={v.label}
               className="h-full w-full object-cover transition duration-300 group-hover/btn:brightness-75"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/btn:opacity-100">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] shadow-xl transition duration-200 group-hover/btn:scale-110">
                 <svg className="h-6 w-6 translate-x-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
