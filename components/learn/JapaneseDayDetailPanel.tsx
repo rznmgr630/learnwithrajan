@@ -3,12 +3,15 @@
 import { useEffect } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
+import { N5LessonDrawerContent } from "@/components/learn/N5LessonDrawerContent";
 import { RichText } from "@/components/learn/RichText";
 import type { UiStringKey } from "@/lib/i18n/catalog";
 import {
   getJapaneseN5DayContext,
   resolveJapaneseN5Detail,
 } from "@/lib/japanese-learning/n5/japanese-n5-data";
+import { getLessonPage } from "@/lib/japanese-learning/n5/n5-lesson-pages";
+import { twentyKanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-pool";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
 
@@ -42,6 +45,8 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getJapaneseN5DayContext(dayNumber) : null;
   const detail = ctx ? resolveJapaneseN5Detail(ctx.day) : null;
+  const lessonPage = dayNumber !== null ? getLessonPage(dayNumber) : null;
+  const kanjiItems = dayNumber !== null ? twentyKanjiForDay(dayNumber) : [];
 
   useEffect(() => {
     if (!open) return;
@@ -99,60 +104,66 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
-          <div className="flex flex-wrap gap-2">
-            {ctx.day.tags.map((tag) => (
-              <span
-                key={`${ctx.day.day}-${tag.slug}`}
-                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
-              >
-                {japaneseTagLabel(tag.slug, t)}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-1 flex-col overflow-y-auto p-5">
+          {lessonPage ? (
+            <N5LessonDrawerContent lesson={lessonPage} kanjiItems={kanjiItems} />
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-wrap gap-2">
+                {ctx.day.tags.map((tag) => (
+                  <span
+                    key={`${ctx.day.day}-${tag.slug}`}
+                    className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]"
+                  >
+                    {japaneseTagLabel(tag.slug, t)}
+                  </span>
+                ))}
+              </div>
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.overviewHeading")}</h3>
-            <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
-              {intro.map((p, i) => (
-                <p key={i}>
-                  <RichText text={pickLocalized(p, locale)} />
-                </p>
-              ))}
-            </div>
-          </div>
-
-          {detail.sections?.map((sec, si) => (
-            <div key={`jp-sec-${si}`}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                <RichText text={pickLocalized(sec.title, locale)} />
-              </h3>
-              {sec.blocks && sec.blocks.length > 0 ? (
-                <JapaneseDetailBlockRenderer blocks={sec.blocks} />
-              ) : sec.items && sec.items.length > 0 ? (
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
-                  {sec.items.map((line, i) => (
-                    <li key={i} className="pl-1">
-                      <RichText text={pickLocalized(line, locale)} />
-                    </li>
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.overviewHeading")}</h3>
+                <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
+                  {intro.map((p, i) => (
+                    <p key={i}>
+                      <RichText text={pickLocalized(p, locale)} />
+                    </p>
                   ))}
-                </ul>
+                </div>
+              </div>
+
+              {detail.sections?.map((sec, si) => (
+                <div key={`jp-sec-${si}`}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    <RichText text={pickLocalized(sec.title, locale)} />
+                  </h3>
+                  {sec.blocks && sec.blocks.length > 0 ? (
+                    <JapaneseDetailBlockRenderer blocks={sec.blocks} />
+                  ) : sec.items && sec.items.length > 0 ? (
+                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
+                      {sec.items.map((line, i) => (
+                        <li key={i} className="pl-1">
+                          <RichText text={pickLocalized(line, locale)} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ))}
+
+              {detail.bullets && detail.bullets.length > 0 ? (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.practiceChecklist")}</h3>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
+                    {detail.bullets.map((line, i) => (
+                      <li key={i} className="pl-1">
+                        <RichText text={pickLocalized(line, locale)} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
-          ))}
-
-          {detail.bullets && detail.bullets.length > 0 ? (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.practiceChecklist")}</h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
-                {detail.bullets.map((line, i) => (
-                  <li key={i} className="pl-1">
-                    <RichText text={pickLocalized(line, locale)} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          )}
         </div>
 
         <div className="border-t border-[var(--border)] p-5">

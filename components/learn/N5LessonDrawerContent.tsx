@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import type {
   ConversationLine,
@@ -51,16 +49,16 @@ function Accordion({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] font-bold text-[var(--accent-fg)]">
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[10px] font-bold text-[var(--accent-fg)]">
           {number}
         </span>
-        <span className="flex-1 font-semibold text-[var(--text)]">{title}</span>
+        <span className="flex-1 text-sm font-semibold text-[var(--text)]">{title}</span>
         <svg
           className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           viewBox="0 0 16 16"
@@ -71,7 +69,7 @@ function Accordion({
         </svg>
       </button>
       {open && (
-        <div className="border-t border-[var(--border)] px-5 py-5">{children}</div>
+        <div className="border-t border-[var(--border)] px-4 py-4">{children}</div>
       )}
     </div>
   );
@@ -83,24 +81,24 @@ function ConversationSection({ lines }: { lines: ConversationLine[] }) {
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-[var(--faint)]">
-        Kanji with hiragana shown above. Particles (は・が・を…) are left visible.
+        Hiragana shown above kanji. Particles (は・が・を…) are left visible.
       </p>
       {lines.map((line, i) => {
         const isB = line.speaker === "B";
         return (
-          <div key={i} className={`flex gap-3 ${isB ? "flex-row-reverse" : ""}`}>
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-xs font-bold text-[var(--accent)]">
+          <div key={i} className={`flex gap-2.5 ${isB ? "flex-row-reverse" : ""}`}>
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
               {line.speaker}
             </div>
             <div
-              className={`max-w-[82%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-4 py-3 ${
+              className={`max-w-[85%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-3.5 py-2.5 ${
                 isB ? "rounded-tr-sm" : "rounded-tl-sm"
               }`}
             >
               <p className="text-[15px] leading-loose text-[var(--text)]">
                 <FuriganaText text={line.japanese} />
               </p>
-              <p className="mt-1 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
+              <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
               <p className="mt-0.5 text-xs text-[var(--muted)]">{line.english}</p>
             </div>
           </div>
@@ -122,11 +120,11 @@ function GrammarSection({
   youtubeTitle: string;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* YouTube link */}
-      <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] px-4 py-3">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] px-3.5 py-3">
         <svg
-          className="h-8 w-8 shrink-0 text-red-500"
+          className="h-7 w-7 shrink-0 text-red-500"
           viewBox="0 0 24 24"
           fill="currentColor"
           aria-hidden
@@ -147,30 +145,23 @@ function GrammarSection({
         </a>
       </div>
 
-      {/* Grammar points */}
       {grammar.map((gp) => (
-        <div key={gp.number} className="space-y-4">
+        <div key={gp.number} className="space-y-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,transparent)] text-[11px] font-bold text-[var(--accent)]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,transparent)] text-[10px] font-bold text-[var(--accent)]">
               {gp.number}
             </span>
-            <h3 className="font-semibold text-[var(--text)]">{gp.name}</h3>
+            <h3 className="text-sm font-semibold text-[var(--text)]">{gp.name}</h3>
           </div>
 
-          {/* Meaning */}
-          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-              Meaning
-            </p>
+          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">Meaning</p>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">{gp.meaning}</p>
           </div>
 
-          {/* Where we use */}
-          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-              Where we use
-            </p>
-            <ul className="mt-2 space-y-2">
+          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">Where we use</p>
+            <ul className="mt-2 space-y-1.5">
               {gp.whereWeUse.map((line, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-[var(--muted)]">
                   <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
@@ -180,25 +171,22 @@ function GrammarSection({
             </ul>
           </div>
 
-          {/* Examples */}
           <div>
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">
               Examples — 3 different scenarios
             </p>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {gp.examples.map((ex, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-4"
+                  className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-3.5"
                 >
-                  <p className="mb-2 text-[11px] font-medium text-[var(--faint)]">
-                    {ex.scenario}
-                  </p>
-                  <p className="text-lg leading-loose text-[var(--text)]">
+                  <p className="mb-1.5 text-[11px] font-medium text-[var(--faint)]">{ex.scenario}</p>
+                  <p className="text-base leading-loose text-[var(--text)]">
                     <FuriganaText text={ex.japanese} />
                   </p>
                   <p className="text-[11px] italic text-[var(--muted)]">{ex.reading}</p>
-                  <p className="mt-0.5 text-xs text-[var(--muted)]">{ex.english}</p>
+                  <p className="text-xs text-[var(--muted)]">{ex.english}</p>
                 </div>
               ))}
             </div>
@@ -214,7 +202,7 @@ function GrammarSection({
 function VocabularySection({ rows }: { rows: VocabRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-      <table className="w-full min-w-[520px] border-collapse text-sm">
+      <table className="w-full min-w-[480px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_92%,transparent)]">
             {["#", "Word", "Kanji", "Meaning", "Example", "Hint / Literal"].map((h) => (
@@ -257,7 +245,7 @@ function KanjiSection({ kanjiItems }: { kanjiItems: KanjiStrokeEntry[] }) {
       blocks={[
         {
           type: "kanjiStrokeStudy",
-          caption: "Practice writing each character — trace stroke order, then copy on grid paper.",
+          caption: "Trace stroke order then copy each character on grid paper.",
           items: kanjiItems,
         },
       ]}
@@ -265,7 +253,7 @@ function KanjiSection({ kanjiItems }: { kanjiItems: KanjiStrokeEntry[] }) {
   );
 }
 
-// ─── Exercise (MCQ) ──────────────────────────────────────────────────────────
+// ─── Exercise ────────────────────────────────────────────────────────────────
 
 function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
   const [answers, setAnswers] = useState<(number | null)[]>(() => mcqs.map(() => null));
@@ -284,13 +272,11 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-[var(--text)]">
-          Exercise — 10 Questions
-        </h2>
+        <h3 className="text-sm font-semibold text-[var(--text)]">Exercise — 10 Questions</h3>
         {revealed && (
-          <span className="rounded-full bg-[color-mix(in_oklab,var(--accent)_20%,transparent)] px-3 py-1 text-xs font-bold text-[var(--accent)]">
+          <span className="rounded-full bg-[color-mix(in_oklab,var(--accent)_20%,transparent)] px-2.5 py-0.5 text-xs font-bold text-[var(--accent)]">
             {score} / 10
           </span>
         )}
@@ -301,30 +287,25 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
         return (
           <div
             key={qi}
-            className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-4"
+            className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5"
           >
             <p className="text-sm font-medium text-[var(--text)]">
               <span className="mr-1.5 text-[var(--muted)]">Q{qi + 1}.</span>
               {mcq.question}
             </p>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
               {mcq.choices.map((choice, ci) => {
-                let cls =
-                  "w-full rounded-lg border px-3 py-2 text-left text-sm transition ";
+                let cls = "w-full rounded-lg border px-3 py-2 text-left text-xs transition ";
                 if (revealed) {
                   if (ci === mcq.correctIndex)
-                    cls +=
-                      "border-green-500 bg-[color-mix(in_oklab,#22c55e_12%,transparent)] text-green-400";
+                    cls += "border-green-500 bg-[color-mix(in_oklab,#22c55e_12%,transparent)] text-green-400";
                   else if (ci === picked)
-                    cls +=
-                      "border-red-500 bg-[color-mix(in_oklab,#ef4444_12%,transparent)] text-red-400";
+                    cls += "border-red-500 bg-[color-mix(in_oklab,#ef4444_12%,transparent)] text-red-400";
                   else cls += "border-[var(--border)] text-[var(--muted)] opacity-40";
                 } else if (picked === ci) {
-                  cls +=
-                    "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[var(--text)]";
+                  cls += "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[var(--text)]";
                 } else {
-                  cls +=
-                    "border-[var(--border)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_50%,var(--border))] hover:text-[var(--text)]";
+                  cls += "border-[var(--border)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_50%,var(--border))] hover:text-[var(--text)]";
                 }
                 return (
                   <button
@@ -340,7 +321,7 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
               })}
             </div>
             {revealed && picked !== mcq.correctIndex && (
-              <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
+              <p className="mt-2.5 text-xs leading-relaxed text-[var(--muted)]">
                 <span className="font-semibold text-[var(--accent)]">Explanation: </span>
                 {mcq.explanation}
               </p>
@@ -353,15 +334,15 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
         <button
           type="button"
           onClick={() => setRevealed(true)}
-          className="w-full rounded-xl bg-[var(--accent)] py-3 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
+          className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
         >
           Check Answers
         </button>
       )}
 
       {revealed && (
-        <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-5 text-center">
-          <p className="text-lg font-bold text-[var(--text)]">
+        <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-4 text-center">
+          <p className="font-bold text-[var(--text)]">
             {score === 10
               ? "Perfect score!"
               : score >= 7
@@ -370,16 +351,14 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
                   ? "Keep studying!"
                   : "Review the lesson and try again."}
           </p>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Score: {score} out of 10
-          </p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Score: {score} out of 10</p>
           <button
             type="button"
             onClick={() => {
               setAnswers(mcqs.map(() => null));
               setRevealed(false);
             }}
-            className="mt-4 rounded-lg border border-[var(--border)] px-5 py-2 text-xs text-[var(--muted)] transition hover:text-[var(--text)]"
+            className="mt-3 rounded-lg border border-[var(--border)] px-4 py-1.5 text-xs text-[var(--muted)] transition hover:text-[var(--text)]"
           >
             Try again
           </button>
@@ -391,35 +370,17 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export function N5LessonAccordionPage({
+export function N5LessonDrawerContent({
   lesson,
   kanjiItems,
 }: {
   lesson: N5LessonPageData;
   kanjiItems: KanjiStrokeEntry[];
 }) {
-  const { t } = useLocale();
-  void t; // locale available if needed for future i18n
-
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-24 pt-8 sm:px-6">
-      {/* Back nav */}
-      <div className="mb-6">
-        <LearnBackNav href="/learn/japanese-n5" labelKey="learn.backN5" />
-      </div>
-
-      {/* Header */}
-      <div className="mb-6">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
-          JLPT N5 · Minna no Nihongo I
-        </span>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-          {lesson.title}
-        </h1>
-      </div>
-
+    <div className="space-y-3">
       {/* Intro */}
-      <div className="mb-6 space-y-2 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)] px-5 py-4">
+      <div className="space-y-1.5 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)] px-4 py-3.5">
         {lesson.intro.map((sentence, i) => (
           <p key={i} className="text-sm leading-relaxed text-[var(--muted)]">
             {sentence}
@@ -427,31 +388,29 @@ export function N5LessonAccordionPage({
         ))}
       </div>
 
-      {/* Accordions */}
-      <div className="space-y-3">
-        <Accordion number={1} title="Conversation" defaultOpen>
-          <ConversationSection lines={lesson.conversation} />
-        </Accordion>
+      {/* 4 Accordions */}
+      <Accordion number={1} title="Conversation" defaultOpen>
+        <ConversationSection lines={lesson.conversation} />
+      </Accordion>
 
-        <Accordion number={2} title="Grammar">
-          <GrammarSection
-            grammar={lesson.grammar}
-            youtubeUrl={lesson.youtubeUrl}
-            youtubeTitle={lesson.youtubeTitle}
-          />
-        </Accordion>
+      <Accordion number={2} title="Grammar">
+        <GrammarSection
+          grammar={lesson.grammar}
+          youtubeUrl={lesson.youtubeUrl}
+          youtubeTitle={lesson.youtubeTitle}
+        />
+      </Accordion>
 
-        <Accordion number={3} title="Vocabulary">
-          <VocabularySection rows={lesson.vocabulary} />
-        </Accordion>
+      <Accordion number={3} title="Vocabulary">
+        <VocabularySection rows={lesson.vocabulary} />
+      </Accordion>
 
-        <Accordion number={4} title="Kanji — 20 characters">
-          <KanjiSection kanjiItems={kanjiItems} />
-        </Accordion>
-      </div>
+      <Accordion number={4} title="Kanji — 20 characters">
+        <KanjiSection kanjiItems={kanjiItems} />
+      </Accordion>
 
       {/* Exercise */}
-      <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-5">
+      <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
         <ExerciseSection mcqs={lesson.mcqs} />
       </div>
     </div>
