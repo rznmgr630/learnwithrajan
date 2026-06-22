@@ -103,10 +103,11 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
     youtubeVideoId: {
-      en: "dPjxIuJZiZc",
+      en: "1JephUxTHxg",
       np: "0p55wZhPkM0",
     },
     youtubeVideoIdPart2: {
+      en: "dPjxIuJZiZc",
       np: "TuKne6-DrZc",
     },
     youtubeTitle: "Minna no Nihongo · Lesson 1 — Grammar",
@@ -654,8 +655,11 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
     youtubeVideoId: {
-      en: "dPjxIuJZiZc",
+      en: "d6UnRexUg5A",
       np: "-kqNsxOAjsU",
+    },
+    youtubeVideoIdPart2: {
+      en: "qZ8Q5hL-ws8",
     },
     youtubeTitle: "Minna no Nihongo · Lesson 2 — Grammar",
     conversation: [
