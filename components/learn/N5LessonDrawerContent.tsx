@@ -111,6 +111,80 @@ function ConversationSection({ lines }: { lines: ConversationLine[] }) {
 
 // ─── Grammar ──────────────────────────────────────────────────────────────────
 
+function GrammarPointItem({
+  gp,
+  defaultOpen = false,
+}: {
+  gp: GrammarPoint;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2.5 px-3.5 py-3 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
+      >
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,transparent)] text-[10px] font-bold text-[var(--accent)]">
+          {gp.number}
+        </span>
+        <span className="flex-1 text-sm font-semibold text-[var(--text)]">{gp.name}</span>
+        <svg
+          className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M8 10.94 2.53 5.47l.94-.94L8 9.06l4.53-4.53.94.94z" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="space-y-3 border-t border-[var(--border)] px-3.5 py-3.5">
+          <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">Meaning</p>
+            <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{gp.meaning}</p>
+          </div>
+
+          <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">Where we use</p>
+            <ul className="mt-2 space-y-1.5">
+              {gp.whereWeUse.map((line, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[var(--muted)]">
+                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              Examples — 3 different scenarios
+            </p>
+            <div className="space-y-2">
+              {gp.examples.map((ex, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-3"
+                >
+                  <p className="mb-1 text-[10px] font-medium text-[var(--faint)]">{ex.scenario}</p>
+                  <p className="text-base leading-loose text-[var(--text)]">
+                    <FuriganaText text={ex.japanese} />
+                  </p>
+                  <p className="text-[11px] italic text-[var(--muted)]">{ex.reading}</p>
+                  <p className="text-xs text-[var(--muted)]">{ex.english}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GrammarSection({
   grammar,
   youtubeVideoId,
@@ -144,52 +218,7 @@ function GrammarSection({
       </div>
 
       {grammar.map((gp) => (
-        <div key={gp.number} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,transparent)] text-[10px] font-bold text-[var(--accent)]">
-              {gp.number}
-            </span>
-            <h3 className="text-sm font-semibold text-[var(--text)]">{gp.name}</h3>
-          </div>
-
-          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">Meaning</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">{gp.meaning}</p>
-          </div>
-
-          <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">Where we use</p>
-            <ul className="mt-2 space-y-1.5">
-              {gp.whereWeUse.map((line, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[var(--muted)]">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-              Examples — 3 different scenarios
-            </p>
-            <div className="space-y-2.5">
-              {gp.examples.map((ex, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-3.5"
-                >
-                  <p className="mb-1.5 text-[11px] font-medium text-[var(--faint)]">{ex.scenario}</p>
-                  <p className="text-base leading-loose text-[var(--text)]">
-                    <FuriganaText text={ex.japanese} />
-                  </p>
-                  <p className="text-[11px] italic text-[var(--muted)]">{ex.reading}</p>
-                  <p className="text-xs text-[var(--muted)]">{ex.english}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <GrammarPointItem key={gp.number} gp={gp} defaultOpen={gp.number === 1} />
       ))}
     </div>
   );
