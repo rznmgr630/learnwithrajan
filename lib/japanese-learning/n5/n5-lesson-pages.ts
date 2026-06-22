@@ -125,32 +125,277 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     grammar: [
       {
         number: 1,
-        name: "Identity Particle — は (wa)",
+        name: "N₁ は N₂ です — Identity statement",
         meaning:
-          "は marks the TOPIC of the sentence. In identity sentences (X は Y です) it answers 'What is X?' — it can be a name, nationality, or occupation.",
+          "は marks N₁ as the topic; です is the polite copula (is / am / are). The full pattern X は Y です states that X IS Y — a name, nationality, or occupation. (Nepali: वातासीवा ... देस् = म ... हुँ)",
         whereWeUse: [
-          "Self-introduction: わたし は _____ です  (I am _____)",
-          "Talking about others: [name]さん は _____ です  ([name] is _____)",
-          "Yes/no questions: _____ は _____ ですか？  (Is _____ _____?)",
+          "Name: わたし は [name] です",
+          "Nationality: わたし は [country]じん です",
+          "Occupation: わたし は [job] です",
         ],
         examples: [
           {
-            japanese: "{私|わたし}はたなかです。",
-            reading: "Watashi wa Tanaka desu.",
-            english: "I am Tanaka.",
-            scenario: "Scenario 1 — Giving your own name (self-introduction)",
+            japanese: "{私|わたし}はやまだです。",
+            reading: "Watashi wa Yamada desu.",
+            english: "I am Yamada.",
+            scenario: "Scenario 1 — Stating your name",
           },
           {
-            japanese: "スミスさんはアメリカじんです。",
-            reading: "Sumisu-san wa Amerikajin desu.",
-            english: "Smith is American.",
-            scenario: "Scenario 2 — Stating someone's nationality",
+            japanese: "{私|わたし}は{学生|がくせい}です。",
+            reading: "Watashi wa gakusei desu.",
+            english: "I am a student.",
+            scenario: "Scenario 2 — Stating your occupation",
           },
           {
-            japanese: "スミスさんは{学生|がくせい}ですか。",
-            reading: "Sumisu-san wa gakusei desu ka?",
-            english: "Is Smith a student?",
-            scenario: "Scenario 3 — Asking about someone's occupation (yes/no question)",
+            japanese: "{私|わたし}は{医者|いしゃ}です。",
+            reading: "Watashi wa isha desu.",
+            english: "I am a doctor.",
+            scenario: "Scenario 3 — Another occupation",
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: "N₁ は N₂ じゃありません / ではありません — Negation",
+        meaning:
+          "Negates an identity statement: N₁ is NOT N₂. じゃありません is conversational; ではありません is more formal. Short form: じゃないです / ではないです. (Nepali: ज्या आरीमासेन् / देवा आरीमासेन् = होइन)",
+        whereWeUse: [
+          "Conversational: わたし は [N₂] じゃありません",
+          "Formal: わたし は [N₂] ではありません",
+          "Short form (casual): じゃないです / ではないです",
+        ],
+        examples: [
+          {
+            japanese: "{私|わたし}はたなかじゃありません。",
+            reading: "Watashi wa Tanaka ja arimasen.",
+            english: "I am not Tanaka.",
+            scenario: "Scenario 1 — Denying your name",
+          },
+          {
+            japanese: "{私|わたし}は{学生|がくせい}じゃありません。",
+            reading: "Watashi wa gakusei ja arimasen.",
+            english: "I am not a student.",
+            scenario: "Scenario 2 — Denying your occupation",
+          },
+          {
+            japanese: "{私|わたし}は{医者|いしゃ}じゃありません。",
+            reading: "Watashi wa isha ja arimasen.",
+            english: "I am not a doctor.",
+            scenario: "Scenario 3 — Formal negation with ではありません",
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: "さん・ちゃん・くん・さま — Honorific name suffixes",
+        meaning:
+          "Suffixes added after a person's name to show respect or affection. NEVER use them with your own name. (Nepali: सान, च्यान, कुन, सामा — व्यक्तिको पछाडी जि भन्दा प्रयोग गरिन्छ)",
+        whereWeUse: [
+          "さん (san) — general respect for any adult, male or female (Mr. / Ms.)",
+          "ちゃん (chan) — affectionate, used for girls and young children",
+          "くん (kun) — for boys or male juniors / subordinates",
+          "さま (sama) — very formal or high-status (おうさま = king, かみさま = god)",
+        ],
+        examples: [
+          {
+            japanese: "やまださん",
+            reading: "Yamada-san",
+            english: "Mr. / Ms. Yamada",
+            scenario: "Scenario 1 — さん: general respect suffix",
+          },
+          {
+            japanese: "きたはらちゃん",
+            reading: "Kitahara-chan",
+            english: "Kitahara (affectionate — girl or child)",
+            scenario: "Scenario 2 — ちゃん: for girls and children",
+          },
+          {
+            japanese: "きむらくん",
+            reading: "Kimura-kun",
+            english: "Kimura (for a boy or junior male)",
+            scenario: "Scenario 3 — くん: for boys and male juniors",
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: "〜人（じん）— Nationality suffix",
+        meaning:
+          "Add じん after a country name to form the word for a national of that country. (Nepali: कुनै देशको नामको पछाडी जिन् आउदा त्यो देशको नागरिक हन्छ)",
+        whereWeUse: [
+          "[country] + じん = person from that country",
+          "Use with は N です to state nationality: わたしは [country]じんです",
+        ],
+        examples: [
+          {
+            japanese: "{日本|にほん} → {日本人|にほんじん}",
+            reading: "Nihon → Nihonjin",
+            english: "Japan → Japanese person",
+            scenario: "Scenario 1 — Japanese nationality",
+          },
+          {
+            japanese: "ネパール → ネパール{人|じん}",
+            reading: "Nepāru → Nepārujin",
+            english: "Nepal → Nepalese person",
+            scenario: "Scenario 2 — Nepalese nationality",
+          },
+          {
+            japanese: "{私|わたし}はネパール{人|じん}です。",
+            reading: "Watashi wa Nepārujin desu.",
+            english: "I am Nepalese.",
+            scenario: "Scenario 3 — Full sentence using じん",
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: "〜か — Question particle",
+        meaning:
+          "Adding か at the end of a polite statement (after です) turns it into a yes/no question. No rising intonation marker is needed in writing. (Nepali: か → आउदा Question (?) हुन्छ)",
+        whereWeUse: [
+          "Yes/no question: [statement です] + か",
+          "Information question: だれ / なに / どこ… + ですか",
+        ],
+        examples: [
+          {
+            japanese: "あなたは{学生|がくせい}ですか。",
+            reading: "Anata wa gakusei desu ka?",
+            english: "Are you a student?",
+            scenario: "Scenario 1 — Yes/no question about occupation",
+          },
+          {
+            japanese: "あの{人|ひと}はだれですか。",
+            reading: "Ano hito wa dare desu ka?",
+            english: "Who is that person?",
+            scenario: "Scenario 2 — Information question using だれ",
+          },
+          {
+            japanese: "{私|わたし}は{学生|がくせい}です。あなたも{学生|がくせい}ですか。",
+            reading: "Watashi wa gakusei desu. Anata mo gakusei desu ka?",
+            english: "I am a student. Are you also a student?",
+            scenario: "Scenario 3 — Question following a statement",
+          },
+        ],
+      },
+      {
+        number: 6,
+        name: "あの人は だれですか / あの方は どなたですか — Who (informal vs polite)",
+        meaning:
+          "Both mean 'who is that person?' but at different politeness levels. だれ is everyday/informal; どなた is polite/formal. Similarly あの人 (informal) vs あの方 (polite). (Nepali: informal मा दारे / polite formal मा दोनाता)",
+        whereWeUse: [
+          "Informal: あの人は だれですか (casual context)",
+          "Polite/formal: あの方は どなたですか (about a senior or respected person)",
+        ],
+        examples: [
+          {
+            japanese: "あの{人|ひと}はだれですか。",
+            reading: "Ano hito wa dare desu ka?",
+            english: "Who is that person? (informal)",
+            scenario: "Scenario 1 — Casual: asking who someone is",
+          },
+          {
+            japanese: "あのかたはどなたですか。",
+            reading: "Ano kata wa donata desu ka?",
+            english: "Who is that person? (polite)",
+            scenario: "Scenario 2 — Polite: asking about a respected person",
+          },
+          {
+            japanese: "すみません、あのかたはどなたですか。",
+            reading: "Sumimasen, ano kata wa donata desu ka?",
+            english: "Excuse me, who is that person?",
+            scenario: "Scenario 3 — Politely asking a third person's identity",
+          },
+        ],
+      },
+      {
+        number: 7,
+        name: "も — Also / Too",
+        meaning:
+          "も replaces は to mean 'also' or 'too'. When the same predicate applies to a second subject, swap は for も. (Nepali: कुनै पनि क्रमामा Same आउदा も प्रयोग गरिन्छ)",
+        whereWeUse: [
+          "X は Y です。Z も Y です → Z is ALSO Y",
+          "Replace は (not other particles) with も on the added subject",
+        ],
+        examples: [
+          {
+            japanese: "{私|わたし}は{学生|がくせい}です。やまださんも{学生|がくせい}です。",
+            reading: "Watashi wa gakusei desu. Yamada-san mo gakusei desu.",
+            english: "I am a student. Yamada is also a student.",
+            scenario: "Scenario 1 — も with same occupation",
+          },
+          {
+            japanese: "スミスさんはアメリカじんです。ジョンさんもアメリカじんです。",
+            reading: "Sumisu-san wa Amerikajin desu. Jon-san mo Amerikajin desu.",
+            english: "Smith is American. John is also American.",
+            scenario: "Scenario 2 — も with same nationality",
+          },
+          {
+            japanese: "たなかさんは{学生|がくせい}です。{私|わたし}も{学生|がくせい}です。",
+            reading: "Tanaka-san wa gakusei desu. Watashi mo gakusei desu.",
+            english: "Tanaka is a student. I am also a student.",
+            scenario: "Scenario 3 — も with first-person subject",
+          },
+        ],
+      },
+      {
+        number: 8,
+        name: "N₁ の N₂ — Possession / Belonging",
+        meaning:
+          "の connects two nouns: N₁ の N₂ means 'N₁'s N₂' or 'N₂ of N₁'. Works like the English apostrophe-s ('s). (Nepali: N₁ の N₂（の）→ को)",
+        whereWeUse: [
+          "Possession: [owner] の [thing] → owner's thing",
+          "Affiliation: [organization] の [role] → role at that organization",
+          "Description: [category] の [item] → item from that category",
+        ],
+        examples: [
+          {
+            japanese: "{私|わたし}はIMCの{医者|いしゃ}です。",
+            reading: "Watashi wa IMC no isha desu.",
+            english: "I am a doctor at IMC.",
+            scenario: "Scenario 1 — の showing affiliation (organization + role)",
+          },
+          {
+            japanese: "{山田|やまだ}さんは{東京|とうきょう}{大学|だいがく}の{先生|せんせい}です。",
+            reading: "Yamada-san wa Tokyo Daigaku no sensei desu.",
+            english: "Yamada is a teacher at Tokyo University.",
+            scenario: "Scenario 2 — の with institution and title",
+          },
+          {
+            japanese: "これは{私|わたし}のほんです。",
+            reading: "Kore wa watashi no hon desu.",
+            english: "This is my book.",
+            scenario: "Scenario 3 — の showing personal possession",
+          },
+        ],
+      },
+      {
+        number: 9,
+        name: "〜歳（さい）— Age counter",
+        meaning:
+          "さい is the counter for years of age. 何歳（なんさい）= 'how old?'. The polite/formal form is おいくつ. (Nepali: साई (उमेर) — उमेर जान्न प्रयोग गरिन्छ)",
+        whereWeUse: [
+          "Casual: なんさい ですか (How old are you?)",
+          "Polite: おいくつ ですか (How old are you? — respectful)",
+          "Request: ねんれいを おしえてください (Please tell me your age)",
+        ],
+        examples: [
+          {
+            japanese: "あなたはなんさいですか。",
+            reading: "Anata wa nan-sai desu ka?",
+            english: "How old are you?",
+            scenario: "Scenario 1 — Casual way to ask age",
+          },
+          {
+            japanese: "おいくつですか。",
+            reading: "Oikutsu desu ka?",
+            english: "How old are you? (polite)",
+            scenario: "Scenario 2 — Polite way to ask age",
+          },
+          {
+            japanese: "{山田|やまだ}さんはいまおいくつですか。",
+            reading: "Yamada-san wa ima oikutsu desu ka?",
+            english: "How old is Yamada now?",
+            scenario: "Scenario 3 — Asking about someone else's age",
           },
         ],
       },
