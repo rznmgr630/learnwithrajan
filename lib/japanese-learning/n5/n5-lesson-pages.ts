@@ -74,6 +74,8 @@ export type N5LessonPageData = {
   intro: L10n[];
   /** YouTube video IDs per locale. Falls back to `en` when a locale has no entry. */
   youtubeVideoId: { en: string; np?: string; jp?: string };
+  /** Optional second video (Part 2) — shown as a Part 1 / Part 2 toggle in the Grammar accordion. */
+  youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
   conversation: ConversationLine[];
   grammar: GrammarPoint[];
@@ -103,6 +105,9 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     youtubeVideoId: {
       en: "dPjxIuJZiZc",
       np: "0p55wZhPkM0",
+    },
+    youtubeVideoIdPart2: {
+      np: "TuKne6-DrZc",
     },
     youtubeTitle: "Minna no Nihongo · Lesson 1 — Grammar",
     conversation: [

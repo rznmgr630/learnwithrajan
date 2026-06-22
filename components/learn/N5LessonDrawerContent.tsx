@@ -202,32 +202,69 @@ function GrammarPointItem({
 function GrammarSection({
   grammar,
   youtubeVideoId,
+  youtubeVideoIdPart2,
   youtubeTitle,
 }: {
   grammar: GrammarPoint[];
   youtubeVideoId: { en: string; np?: string; jp?: string };
+  youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
 }) {
   const { locale } = useLocale();
-  const videoId =
+  const [part, setPart] = useState<1 | 2>(1);
+
+  const part1Id =
     (locale === "np" ? youtubeVideoId.np : locale === "jp" ? youtubeVideoId.jp : undefined) ??
     youtubeVideoId.en;
+
+  const part2Id =
+    youtubeVideoIdPart2
+      ? (locale === "np" ? youtubeVideoIdPart2.np : youtubeVideoIdPart2.en) ?? null
+      : null;
+
+  const hasPart2 = part2Id !== null && part2Id !== undefined;
+  const activeId = hasPart2 && part === 2 ? part2Id! : part1Id;
+
+  const part1Label = locale === "np" ? "भाग १" : "Part 1";
+  const part2Label = locale === "np" ? "भाग २" : "Part 2";
 
   return (
     <div className="space-y-5">
       {/* Embedded YouTube player */}
       <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+        {hasPart2 && (
+          <div className="flex gap-1 border-b border-[var(--border)] p-2">
+            {([1, 2] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPart(p)}
+                className={[
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+                  part === p
+                    ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+                    : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]",
+                ].join(" ")}
+              >
+                {p === 1 ? part1Label : part2Label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
           <iframe
+            key={activeId}
             className="absolute inset-0 h-full w-full"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title={youtubeTitle}
+            src={`https://www.youtube.com/embed/${activeId}`}
+            title={`${youtubeTitle}${hasPart2 ? ` — ${part === 1 ? part1Label : part2Label}` : ""}`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
         <div className="border-t border-[var(--border)] px-3 py-2">
-          <p className="text-[11px] text-[var(--muted)]">{youtubeTitle}</p>
+          <p className="text-[11px] text-[var(--muted)]">
+            {youtubeTitle}{hasPart2 ? ` — ${part === 1 ? part1Label : part2Label}` : ""}
+          </p>
         </div>
       </div>
 
@@ -623,6 +660,7 @@ export function N5LessonDrawerContent({
         <GrammarSection
           grammar={lesson.grammar}
           youtubeVideoId={lesson.youtubeVideoId}
+          youtubeVideoIdPart2={lesson.youtubeVideoIdPart2}
           youtubeTitle={lesson.youtubeTitle}
         />
       </Accordion>
