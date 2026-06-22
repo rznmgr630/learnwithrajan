@@ -92,7 +92,7 @@ function tagsForDay(day: number): { label: string; slug: string }[] {
   const extra = DAY_EXTRA_TAGS[day] ?? [];
   if (day >= 26) return [{ label: "Exam sprint", slug: "sprint" }, ...extra];
   if (day % 4 === 0) return [{ label: "Listening", slug: "listening" }, ...extra];
-  if (day % 4 === 1) return [{ label: "Grammar", slug: "grammar" }, ...extra];
+  if (day % 4 === 1) return extra.length ? extra : [{ label: "Grammar", slug: "grammar" }];
   if (day % 4 === 2) return [{ label: "Particles", slug: "particles" }, ...extra];
   return [{ label: "Kanji", slug: "kanji" }, ...extra];
 }
