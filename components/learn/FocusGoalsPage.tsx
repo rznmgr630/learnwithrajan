@@ -1,6 +1,7 @@
 "use client";
 
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { VideoCard } from "@/components/learn/VideoCard";
 
 type Video = {
   id: string;
@@ -58,42 +59,7 @@ export function FocusGoalsPage() {
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VIDEOS.map((v, i) => (
-            <a
-              key={v.id}
-              href={`https://www.youtube.com/watch?v=${v.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:shadow-md"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video w-full overflow-hidden bg-[var(--elevated)]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
-                  alt={`Video ${i + 1}`}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105 group-hover:brightness-90"
-                />
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] shadow-lg">
-                    <svg className="h-5 w-5 translate-x-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card footer */}
-              <div className="flex items-start justify-between gap-2 px-4 py-3">
-                <p className="text-xs font-medium leading-snug text-[var(--text)] line-clamp-2">
-                  <span className="mr-1.5 font-mono text-[var(--faint)]">{String(i + 1).padStart(2, "0")}</span>
-                  {v.label}
-                </p>
-                <span className="shrink-0 text-xs font-medium text-[var(--accent)] opacity-0 transition group-hover:opacity-100">
-                  Watch →
-                </span>
-              </div>
-            </a>
+            <VideoCard key={v.id} v={v} index={i} />
           ))}
         </div>
       </div>
