@@ -10,8 +10,8 @@ type Video = {
 
 const VIDEOS: Video[] = [
   { id: "dASoYamteBI", label: "Overthinking? Try This Dopamine Reset | Healing Indian Ragas | Shunya Waves" },
-  { id: "jfKfPfyJRdk", label: "Lofi Hip Hop Radio — Beats to Relax / Study To" },
-  { id: "5qap5aO4i9A", label: "Lofi Hip Hop Radio — Beats to Relax / Study To (Lofi Girl)" },
+  { id: "fhL67fnDXcU", label: "Coding Music — Synthwave Beats to Program To" },
+  { id: "M5QY2_8704o", label: "Chillstep Music for Programming / Cyber / Coding" },
   { id: "7NOSDKb0HlU", label: "Lofi Hip Hop Radio — Beats to Study / Relax To" },
   { id: "JxhBJSJRyqg", label: "4 Hours of Deep Focus Music for Studying" },
   { id: "gtmzPUmq7XU", label: "4 Hours of Ambient Study Music to Concentrate" },
