@@ -337,12 +337,13 @@ function EyeIcon({ open }: { open: boolean }) {
 function VocabularySection({ rows }: { rows: VocabRow[] }) {
   const { locale } = useLocale();
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
+  const [order, setOrder] = useState<VocabRow[]>(rows);
 
-  const allShown = revealed.size === rows.length;
+  const allShown = revealed.size === order.length;
 
   function toggleAll() {
     if (allShown) setRevealed(new Set());
-    else setRevealed(new Set(rows.map((r) => r.sn)));
+    else setRevealed(new Set(order.map((r) => r.sn)));
   }
 
   function toggleOne(sn: number) {
@@ -354,12 +355,35 @@ function VocabularySection({ rows }: { rows: VocabRow[] }) {
     });
   }
 
+  function shuffle() {
+    setOrder((prev) => {
+      const arr = [...prev];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    });
+    setRevealed(new Set());
+  }
+
   const showAllLabel = locale === "np" ? "सबै देखाउनुस्" : "Show All";
   const hideAllLabel = locale === "np" ? "सबै लुकाउनुस्" : "Hide All";
+  const shuffleLabel = locale === "np" ? "फेरबदल" : "Shuffle";
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={shuffle}
+          className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--muted)] transition hover:text-[var(--text)]"
+        >
+          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+            <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clipRule="evenodd" />
+          </svg>
+          {shuffleLabel}
+        </button>
         <button
           type="button"
           onClick={toggleAll}
@@ -384,7 +408,7 @@ function VocabularySection({ rows }: { rows: VocabRow[] }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {order.map((row) => {
               const shown = revealed.has(row.sn);
               return (
                 <tr
