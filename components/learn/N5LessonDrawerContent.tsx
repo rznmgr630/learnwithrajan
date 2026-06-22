@@ -10,6 +10,7 @@ import type {
   L10n,
   LessonMcq,
   N5LessonPageData,
+  ParticleEntry,
   VocabRow,
 } from "@/lib/japanese-learning/n5/n5-lesson-pages";
 import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool";
@@ -237,6 +238,86 @@ function GrammarSection({
   );
 }
 
+// ─── Particles ───────────────────────────────────────────────────────────────
+
+function ParticleItem({
+  entry,
+  defaultOpen = false,
+}: {
+  entry: ParticleEntry;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const { locale } = useLocale();
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_oklab,var(--accent)_15%,transparent)] text-xl font-bold text-[var(--accent)]">
+          {entry.particle}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[var(--text)]">{l(entry.name, locale)}</p>
+          <p className="text-[11px] font-mono text-[var(--muted)]">{entry.romaji}</p>
+        </div>
+        <svg
+          className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M8 10.94 2.53 5.47l.94-.94L8 9.06l4.53-4.53.94.94z" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="space-y-3 border-t border-[var(--border)] px-3.5 py-3.5">
+          <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              {locale === "np" ? "अर्थ" : "Meaning"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{l(entry.meaning, locale)}</p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              {locale === "np" ? "उदाहरण" : "Examples"}
+            </p>
+            <div className="space-y-2">
+              {entry.examples.map((ex, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-3"
+                >
+                  <p className="mb-1 text-[10px] font-medium text-[var(--faint)]">{l(ex.scenario, locale)}</p>
+                  <p className="text-base leading-loose text-[var(--text)]">
+                    <FuriganaText text={ex.japanese} />
+                  </p>
+                  <p className="text-[11px] italic text-[var(--muted)]">{ex.reading}</p>
+                  <p className="text-xs text-[var(--muted)]">{l(ex.english, locale)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ParticlesSection({ particles }: { particles: ParticleEntry[] }) {
+  return (
+    <div className="space-y-3">
+      {particles.map((entry, i) => (
+        <ParticleItem key={entry.particle} entry={entry} defaultOpen={i === 0} />
+      ))}
+    </div>
+  );
+}
+
 // ─── Vocabulary ───────────────────────────────────────────────────────────────
 
 function VocabularySection({ rows }: { rows: VocabRow[] }) {
@@ -421,6 +502,7 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
 const SECTION_LABELS = {
   conversation: { en: "Conversation", np: "संवाद", jp: "会話" },
   grammar:      { en: "Grammar",      np: "व्याकरण", jp: "文法" },
+  particles:    { en: "Particles",    np: "Particles (पार्टिकल)", jp: "助詞" },
   vocabulary:   { en: "Vocabulary",   np: "शब्दभण्डार", jp: "語彙" },
   kanji:        { en: "Kanji — 20 characters", np: "Kanji — २० अक्षर", jp: "漢字 — 20文字" },
 } as const;
@@ -457,11 +539,17 @@ export function N5LessonDrawerContent({
         />
       </Accordion>
 
-      <Accordion number={3} title={l(SECTION_LABELS.vocabulary, locale)}>
+      {lesson.particles.length > 0 && (
+        <Accordion number={3} title={l(SECTION_LABELS.particles, locale)}>
+          <ParticlesSection particles={lesson.particles} />
+        </Accordion>
+      )}
+
+      <Accordion number={4} title={l(SECTION_LABELS.vocabulary, locale)}>
         <VocabularySection rows={lesson.vocabulary} />
       </Accordion>
 
-      <Accordion number={4} title={l(SECTION_LABELS.kanji, locale)}>
+      <Accordion number={5} title={l(SECTION_LABELS.kanji, locale)}>
         <KanjiSection kanjiItems={kanjiItems} />
       </Accordion>
 
