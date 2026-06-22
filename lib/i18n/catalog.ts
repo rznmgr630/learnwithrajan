@@ -673,6 +673,11 @@ export const UI_STRINGS = {
     np: "← भाषा",
     jp: "← 言語",
   },
+  "learn.backN5": {
+    en: "← N5 Roadmap",
+    np: "← N5 रोडम्याप",
+    jp: "← N5 ロードマップ",
+  },
   "backendRoadmap.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
