@@ -7,11 +7,18 @@ import type {
   ConversationLine,
   FuriganaString,
   GrammarPoint,
+  L10n,
   LessonMcq,
   N5LessonPageData,
   VocabRow,
 } from "@/lib/japanese-learning/n5/n5-lesson-pages";
 import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool";
+import type { Locale } from "@/lib/i18n/types";
+
+function l(v: L10n, locale: Locale): string {
+  if (typeof v === "string") return v;
+  return (v as Record<string, string | undefined>)[locale] ?? v.en;
+}
 
 // ─── Furigana ────────────────────────────────────────────────────────────────
 
@@ -79,6 +86,7 @@ function Accordion({
 // ─── Conversation ─────────────────────────────────────────────────────────────
 
 function ConversationSection({ lines }: { lines: ConversationLine[] }) {
+  const { locale } = useLocale();
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-[var(--faint)]">
@@ -100,7 +108,7 @@ function ConversationSection({ lines }: { lines: ConversationLine[] }) {
                 <FuriganaText text={line.japanese} />
               </p>
               <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">{line.english}</p>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{l(line.english, locale)}</p>
             </div>
           </div>
         );
@@ -119,6 +127,7 @@ function GrammarPointItem({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const { locale } = useLocale();
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_60%,transparent)]">
       <button
@@ -129,7 +138,7 @@ function GrammarPointItem({
         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,transparent)] text-[10px] font-bold text-[var(--accent)]">
           {gp.number}
         </span>
-        <span className="flex-1 text-sm font-semibold text-[var(--text)]">{gp.name}</span>
+        <span className="flex-1 text-sm font-semibold text-[var(--text)]">{l(gp.name, locale)}</span>
         <svg
           className={`h-3.5 w-3.5 shrink-0 text-[var(--muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           viewBox="0 0 16 16"
@@ -143,17 +152,21 @@ function GrammarPointItem({
       {open && (
         <div className="space-y-3 border-t border-[var(--border)] px-3.5 py-3.5">
           <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">Meaning</p>
-            <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{gp.meaning}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              {locale === "np" ? "अर्थ" : "Meaning"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{l(gp.meaning, locale)}</p>
           </div>
 
           <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">Where we use</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+              {locale === "np" ? "कहाँ प्रयोग गर्ने" : "Where we use"}
+            </p>
             <ul className="mt-2 space-y-1.5">
               {gp.whereWeUse.map((line, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-[var(--muted)]">
                   <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                  <span>{line}</span>
+                  <span>{l(line, locale)}</span>
                 </li>
               ))}
             </ul>
@@ -161,7 +174,7 @@ function GrammarPointItem({
 
           <div>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-              Examples — 3 different scenarios
+              {locale === "np" ? "उदाहरण — ३ फरक परिस्थिति" : "Examples — 3 different scenarios"}
             </p>
             <div className="space-y-2">
               {gp.examples.map((ex, i) => (
@@ -169,12 +182,12 @@ function GrammarPointItem({
                   key={i}
                   className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] p-3"
                 >
-                  <p className="mb-1 text-[10px] font-medium text-[var(--faint)]">{ex.scenario}</p>
+                  <p className="mb-1 text-[10px] font-medium text-[var(--faint)]">{l(ex.scenario, locale)}</p>
                   <p className="text-base leading-loose text-[var(--text)]">
                     <FuriganaText text={ex.japanese} />
                   </p>
                   <p className="text-[11px] italic text-[var(--muted)]">{ex.reading}</p>
-                  <p className="text-xs text-[var(--muted)]">{ex.english}</p>
+                  <p className="text-xs text-[var(--muted)]">{l(ex.english, locale)}</p>
                 </div>
               ))}
             </div>
@@ -227,6 +240,7 @@ function GrammarSection({
 // ─── Vocabulary ───────────────────────────────────────────────────────────────
 
 function VocabularySection({ rows }: { rows: VocabRow[] }) {
+  const { locale } = useLocale();
   return (
     <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
       <table className="w-full min-w-[520px] border-collapse text-sm">
@@ -252,7 +266,7 @@ function VocabularySection({ rows }: { rows: VocabRow[] }) {
               <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.word}</td>
               <td className="px-3 py-2.5 font-mono text-xs text-[var(--muted)]">{row.romaji}</td>
               <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.kanji ?? "—"}</td>
-              <td className="px-3 py-2.5 text-xs text-[var(--muted)]">{row.meaning}</td>
+              <td className="px-3 py-2.5 text-xs text-[var(--muted)]">{l(row.meaning, locale)}</td>
               <td className="px-3 py-2.5 text-sm text-[var(--text)]">{row.example}</td>
             </tr>
           ))}
@@ -395,6 +409,13 @@ function ExerciseSection({ mcqs }: { mcqs: LessonMcq[] }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
+const SECTION_LABELS = {
+  conversation: { en: "Conversation", np: "संवाद", jp: "会話" },
+  grammar:      { en: "Grammar",      np: "व्याकरण", jp: "文法" },
+  vocabulary:   { en: "Vocabulary",   np: "शब्दभण्डार", jp: "語彙" },
+  kanji:        { en: "Kanji — 20 characters", np: "Kanji — २० अक्षर", jp: "漢字 — 20文字" },
+} as const;
+
 export function N5LessonDrawerContent({
   lesson,
   kanjiItems,
@@ -402,23 +423,24 @@ export function N5LessonDrawerContent({
   lesson: N5LessonPageData;
   kanjiItems: KanjiStrokeEntry[];
 }) {
+  const { locale } = useLocale();
   return (
     <div className="space-y-3">
       {/* Intro */}
       <div className="space-y-1.5 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)] px-4 py-3.5">
         {lesson.intro.map((sentence, i) => (
           <p key={i} className="text-sm leading-relaxed text-[var(--muted)]">
-            {sentence}
+            {l(sentence, locale)}
           </p>
         ))}
       </div>
 
       {/* 4 Accordions */}
-      <Accordion number={1} title="Conversation" defaultOpen>
+      <Accordion number={1} title={l(SECTION_LABELS.conversation, locale)} defaultOpen>
         <ConversationSection lines={lesson.conversation} />
       </Accordion>
 
-      <Accordion number={2} title="Grammar">
+      <Accordion number={2} title={l(SECTION_LABELS.grammar, locale)}>
         <GrammarSection
           grammar={lesson.grammar}
           youtubeVideoId={lesson.youtubeVideoId}
@@ -426,11 +448,11 @@ export function N5LessonDrawerContent({
         />
       </Accordion>
 
-      <Accordion number={3} title="Vocabulary">
+      <Accordion number={3} title={l(SECTION_LABELS.vocabulary, locale)}>
         <VocabularySection rows={lesson.vocabulary} />
       </Accordion>
 
-      <Accordion number={4} title="Kanji — 20 characters">
+      <Accordion number={4} title={l(SECTION_LABELS.kanji, locale)}>
         <KanjiSection kanjiItems={kanjiItems} />
       </Accordion>
 
