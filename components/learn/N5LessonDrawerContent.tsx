@@ -202,10 +202,10 @@ function GrammarSection({
 function VocabularySection({ rows }: { rows: VocabRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-      <table className="w-full min-w-[480px] border-collapse text-sm">
+      <table className="w-full min-w-[520px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_92%,transparent)]">
-            {["#", "Word", "Kanji", "Meaning", "Example", "Hint / Literal"].map((h) => (
+            {["#", "Word", "Romaji", "Kanji", "Meaning", "Example"].map((h) => (
               <th
                 key={h}
                 className="whitespace-nowrap px-3 py-2 text-left text-[11px] font-semibold text-[var(--text)]"
@@ -223,12 +223,10 @@ function VocabularySection({ rows }: { rows: VocabRow[] }) {
             >
               <td className="px-3 py-2.5 text-xs text-[var(--faint)]">{row.sn}</td>
               <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.word}</td>
+              <td className="px-3 py-2.5 font-mono text-xs text-[var(--muted)]">{row.romaji}</td>
               <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.kanji ?? "—"}</td>
               <td className="px-3 py-2.5 text-xs text-[var(--muted)]">{row.meaning}</td>
-              <td className="px-3 py-2.5 text-sm leading-loose text-[var(--text)]">
-                <FuriganaText text={row.example} />
-              </td>
-              <td className="px-3 py-2.5 text-[11px] text-[var(--faint)]">{row.literal}</td>
+              <td className="px-3 py-2.5 text-sm text-[var(--text)]">{row.example}</td>
             </tr>
           ))}
         </tbody>

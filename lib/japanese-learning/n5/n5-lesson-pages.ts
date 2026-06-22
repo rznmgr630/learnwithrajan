@@ -1,4 +1,6 @@
-/** Data for the new standalone N5 lesson accordion pages (/learn/japanese-n5/lesson/[id]). */
+/** Data for the N5 lesson accordion drawer content. */
+
+import { N5_VOCAB_BY_LESSON } from "@/lib/japanese-learning/n5/n5-vocab-data";
 
 /** A string that may contain {kanji|reading} notation for furigana rendering. */
 export type FuriganaString = string;
@@ -28,11 +30,25 @@ export type GrammarPoint = {
 export type VocabRow = {
   sn: number;
   word: string;
+  romaji: string;
   kanji?: string;
   meaning: string;
-  example: FuriganaString;
-  literal: string;
+  example: string;
 };
+
+function buildVocab(minnaLesson: number): VocabRow[] {
+  return (N5_VOCAB_BY_LESSON[minnaLesson] ?? []).map((t, idx) => {
+    const [romaji, kana, kanji, en, , , example] = t;
+    return {
+      sn: idx + 1,
+      word: kana,
+      romaji,
+      kanji: kanji.trim() === "" ? undefined : kanji,
+      meaning: en,
+      example,
+    };
+  });
+}
 
 export type LessonMcq = {
   question: string;
@@ -136,47 +152,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
       },
     ],
-    vocabulary: [
-      {
-        sn: 1,
-        word: "はじめまして",
-        meaning: "Nice to meet you",
-        example: "はじめまして、たなかです。",
-        literal: "初めて (hajimete) = for the first time",
-      },
-      {
-        sn: 2,
-        word: "わたし",
-        kanji: "私",
-        meaning: "I, me",
-        example: "{私|わたし}はがくせいです。",
-        literal: "私 = self / personal",
-      },
-      {
-        sn: 3,
-        word: "がくせい",
-        kanji: "学生",
-        meaning: "student",
-        example: "あのひとは{学生|がくせい}です。",
-        literal: "学 (study) + 生 (life / person)",
-      },
-      {
-        sn: 4,
-        word: "せんせい",
-        kanji: "先生",
-        meaning: "teacher / doctor (honorific title)",
-        example: "やまだ{先生|せんせい}はにほんじんです。",
-        literal: "先 (ahead / first) + 生 (born / life)",
-      },
-      {
-        sn: 5,
-        word: "かいしゃいん",
-        kanji: "会社員",
-        meaning: "company employee",
-        example: "かれは{会社員|かいしゃいん}です。",
-        literal: "会社 (company) + 員 (member)",
-      },
-    ],
+    vocabulary: buildVocab(1),
     mcqs: [
       {
         question: "Which particle marks the topic of a Japanese sentence?",
