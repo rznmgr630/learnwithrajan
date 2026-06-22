@@ -54,10 +54,10 @@ function buildVocab(minnaLesson: number): VocabRow[] {
 }
 
 export type LessonMcq = {
-  question: string;
-  choices: string[];
+  question: L10n;
+  choices: L10n[];
   correctIndex: number;
-  explanation: string;
+  explanation: L10n;
 };
 
 export type N5LessonPageData = {
@@ -442,21 +442,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     vocabulary: buildVocab(1),
     mcqs: [
       {
-        question: "Which particle marks the topic of a Japanese sentence?",
+        question: { en: "Which particle marks the topic of a Japanese sentence?", np: "कुन Particle ले जापानी वाक्यको Topic चिन्ह गर्छ?" },
         choices: ["は", "が", "を", "に"],
         correctIndex: 0,
-        explanation:
-          "は (wa) is the topic marker. In X は Y です, は marks X as what the sentence is about.",
+        explanation: { en: "は (wa) is the topic marker. In X は Y です, は marks X as what the sentence is about.", np: "は (वा) Topic marker हो। X は Y です मा, は ले X लाई वाक्यको विषय बनाउँछ।" },
       },
       {
-        question: "Fill the blank: わたし _____ たなかです。",
+        question: { en: "Fill the blank: わたし _____ たなかです。", np: "खाली ठाउँ भर्नुस्: わたし _____ たなかです।" },
         choices: ["は", "が", "を", "も"],
         correctIndex: 0,
-        explanation:
-          "は marks わたし as the topic — 'As for me, I am Tanaka.'",
+        explanation: { en: "は marks わたし as the topic — 'As for me, I am Tanaka.'", np: "は ले わたし लाई Topic बनाउँछ — 'मको बारेमा, म तानाका हुँ।'" },
       },
       {
-        question: "How do you say 'I am a student' in polite Japanese?",
+        question: { en: "How do you say 'I am a student' in polite Japanese?", np: "विनम्र जापानीमा 'म विद्यार्थी हुँ' कसरी भन्ने?" },
         choices: [
           "わたしはがくせいです",
           "わたしがくせいます",
@@ -464,37 +462,38 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           "わたしはがくせいあります",
         ],
         correctIndex: 0,
-        explanation:
-          "わたし は がくせい です = topic (I) + identity (student) + polite copula (desu).",
+        explanation: { en: "わたし は がくせい です = topic (I) + identity (student) + polite copula (desu).", np: "わたし は がくせい です = Topic (म) + Identity (विद्यार्थी) + विनम्र Copula (देस्)।" },
       },
       {
-        question: "What does はじめまして mean?",
-        choices: ["Nice to meet you", "Thank you very much", "Good morning", "Excuse me"],
-        correctIndex: 0,
-        explanation:
-          "はじめまして is only said when meeting someone for the FIRST time.",
-      },
-      {
-        question: "What is the role of です in わたしはがくせいです？",
+        question: { en: "What does はじめまして mean?", np: "はじめまして को अर्थ के हो?" },
         choices: [
-          "Polite copula — 'is / am / are'",
-          "Question particle",
-          "Topic marker",
-          "Past tense marker",
+          { en: "Nice to meet you", np: "पहिलो भेटमा नमस्कार" },
+          { en: "Thank you very much", np: "धेरै धन्यवाद" },
+          { en: "Good morning", np: "शुभ बिहानी" },
+          { en: "Excuse me", np: "माफ गर्नुस्" },
         ],
         correctIndex: 0,
-        explanation:
-          "です is the polite form of the copula (to be). It ends polite identity statements.",
+        explanation: { en: "はじめまして is only said when meeting someone for the FIRST time.", np: "はじめまして पहिलो पटक भेट हुँदा मात्र भनिन्छ।" },
       },
       {
-        question: "How do you turn 'がくせいです' into a yes/no question?",
+        question: { en: "What is the role of です in わたしはがくせいです？", np: "わたしはがくせいです मा です को भूमिका के हो?" },
+        choices: [
+          { en: "Polite copula — 'is / am / are'", np: "विनम्र Copula — 'हो / हुँ / छ'" },
+          { en: "Question particle", np: "प्रश्न Particle" },
+          { en: "Topic marker", np: "Topic Marker" },
+          { en: "Past tense marker", np: "Past tense marker" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "です is the polite form of the copula (to be). It ends polite identity statements.", np: "です Copula (हुनु) को विनम्र रूप हो। यसले विनम्र Identity statement समाप्त गर्छ।" },
+      },
+      {
+        question: { en: "How do you turn 'がくせいです' into a yes/no question?", np: "'がくせいです' लाई हाँ/होइन प्रश्नमा कसरी बदल्ने?" },
         choices: ["がくせいですか", "がくせいですは", "かがくせいです", "がくせいかです"],
         correctIndex: 0,
-        explanation:
-          "Add か at the very end after です to form a polite yes/no question.",
+        explanation: { en: "Add か at the very end after です to form a polite yes/no question.", np: "です को पछाडी か जोड्दा विनम्र हाँ/होइन प्रश्न बन्छ।" },
       },
       {
-        question: "Which sentence means 'Smith is American'?",
+        question: { en: "Which sentence means 'Smith is American'?", np: "'स्मिथ अमेरिकी हो' भन्ने वाक्य कुन हो?" },
         choices: [
           "スミスさんはアメリカじんです",
           "スミスさんがアメリカじんですか",
@@ -502,34 +501,30 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           "スミスさんはアメリカじんあります",
         ],
         correctIndex: 0,
-        explanation:
-          "X は Y です = X is Y. は marks the topic (スミスさん), です links to the identity.",
+        explanation: { en: "X は Y です = X is Y. は marks the topic (スミスさん), です links to the identity.", np: "X は Y です = X, Y हो। は ले Topic (スミスさん) चिन्ह गर्छ, です ले Identity जोड्छ।" },
       },
       {
-        question: "What is the kanji for 'I' (わたし)?",
+        question: { en: "What is the kanji for 'I' (わたし)?", np: "'म' (わたし) को Kanji के हो?" },
         choices: ["私", "先", "生", "学"],
         correctIndex: 0,
-        explanation:
-          "私 (わたし) means 'I' or 'me'. It is one of the first kanji introduced in N5.",
+        explanation: { en: "私 (わたし) means 'I' or 'me'. It is one of the first kanji introduced in N5.", np: "私 (わたし) को अर्थ 'म' हो। यो N5 मा सिकाइने पहिलो Kanji मध्येको एक हो।" },
       },
       {
-        question: "What does どうぞよろしくおねがいします mean?",
+        question: { en: "What does どうぞよろしくおねがいします mean?", np: "どうぞよろしくおねがいします को अर्थ के हो?" },
         choices: [
-          "Pleased to meet you / please treat me well",
-          "Thank you very much",
-          "Good evening",
-          "See you later",
+          { en: "Pleased to meet you / please treat me well", np: "भेट भएर खुशी / कृपया राम्रोसँग हेरिदिनुस्" },
+          { en: "Thank you very much", np: "धेरै धन्यवाद" },
+          { en: "Good evening", np: "शुभ साँझ" },
+          { en: "See you later", np: "पछि भेटौंला" },
         ],
         correctIndex: 0,
-        explanation:
-          "Said at the end of introductions — a polite request for a good ongoing relationship.",
+        explanation: { en: "Said at the end of introductions — a polite request for a good ongoing relationship.", np: "परिचयको अन्तमा भनिन्छ — राम्रो सम्बन्धको विनम्र अनुरोध।" },
       },
       {
-        question: "Which kanji means 'student'?",
+        question: { en: "Which kanji means 'student'?", np: "कुन Kanji को अर्थ 'विद्यार्थी' हो?" },
         choices: ["学生", "先生", "会社員", "私"],
         correctIndex: 0,
-        explanation:
-          "学生 (がくせい) = 学 (study) + 生 (person / life) = student.",
+        explanation: { en: "学生 (がくせい) = 学 (study) + 生 (person / life) = student.", np: "学生 (がकसेई) = 学 (पढ्नु) + 生 (मान्छे / जीवन) = विद्यार्थी।" },
       },
     ],
   },
