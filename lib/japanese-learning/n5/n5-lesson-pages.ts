@@ -2848,39 +2848,6 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           },
         ],
       },
-      {
-        number: 3,
-        name: { en: "もう〜ました / まだ〜ていません — Already / Not yet", np: "もう〜ました / まだ〜ていません — पहिले नै / अझै होइन" },
-        meaning: {
-          en: "もう (mō) + past verb = already done. まだ (mada) + negative = not yet. These are used to describe whether an action has been completed.",
-          np: "もう + past verb = पहिले नै गरिसक्यो। まだ + negative = अझै गरेको छैन। कुनै काम भयो कि भएन भन्न प्रयोग हुन्छ।",
-        },
-        whereWeUse: [
-          { en: "もうたべました (I've already eaten) — use past tense after もう.", np: "もうたべました = पहिले नै खाइसकेँ — もう पछि past tense।" },
-          { en: "まだたべていません (I haven't eaten yet) — use negative て-form after まだ.", np: "まだたべていません = अझै खाइसकेको छैन — まだ पछि negative て-form।" },
-          { en: "もうかいましたか? (Have you bought it already?) / いいえ、まだです (No, not yet).", np: "もうかいましたか? / いいえ、まだです — प्रश्न र उत्तर।" },
-        ],
-        examples: [
-          {
-            japanese: "もう たべました。",
-            reading: "Mō tabemashita.",
-            english: { en: "I've already eaten.", np: "पहिले नै खाइसकेँ।" },
-            scenario: { en: "Action already completed", np: "काम पहिले नै सकिएको" },
-          },
-          {
-            japanese: "まだ かっていません。",
-            reading: "Mada katte imasen.",
-            english: { en: "I haven't bought it yet.", np: "अझै किनेको छैन।" },
-            scenario: { en: "Action not yet done", np: "काम अझै नभएको" },
-          },
-          {
-            japanese: "もう えらびましたか。いいえ、まだです。",
-            reading: "Mō erabimashita ka? Iie, mada desu.",
-            english: { en: "Have you chosen already? — No, not yet.", np: "पहिले नै रोज्नुभयो? — होइन, अझै।" },
-            scenario: { en: "Question and reply", np: "प्रश्न र उत्तर" },
-          },
-        ],
-      },
     ],
     particles: [
       {
