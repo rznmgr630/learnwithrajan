@@ -1420,39 +1420,6 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         number: 3,
-        name: { en: "N を Verb — Object marker を", np: "N を Verb — Object marker を" },
-        meaning: {
-          en: "を (wo) marks the direct object of an action verb — the thing being acted on. Pattern: [Subject] は [Object] を [Verb]. を only appears with action verbs.",
-          np: "を (wo) ले action verb को direct object चिन्हित गर्छ — जुन वस्तुमा कार्य हुन्छ। Pattern: [Subject] は [Object] を [Verb]। を केवल action verb सँग आउँछ।",
-        },
-        whereWeUse: [
-          { en: "わたしは コーヒーをのみます — I drink coffee", np: "わたしは コーヒーをのみます — म कफी पिउँछु" },
-          { en: "まいにち にほんごをべんきょうします — I study Japanese every day", np: "まいにち にほんごをべんきょうします — हरेक दिन जापानिज पढ्छु" },
-          { en: "テレビをみません — I don't watch TV", np: "テレビをみません — म टिभी हेर्दिनँ" },
-        ],
-        examples: [
-          {
-            japanese: "あさ、コーヒーをのみます。",
-            reading: "Asa, kōhī wo nomimasu.",
-            english: { en: "In the morning I drink coffee.", np: "बिहान कफी पिउँछु।" },
-            scenario: { en: "Morning drink habit", np: "बिहानको पेय बानी" },
-          },
-          {
-            japanese: "まいにちにほんごをべんきょうします。",
-            reading: "Mainichi Nihongo wo benkyō shimasu.",
-            english: { en: "I study Japanese every day.", np: "हरेक दिन जापानिज पढ्छु।" },
-            scenario: { en: "Study habit", np: "पढाइको बानी" },
-          },
-          {
-            japanese: "きのうテレビをみませんでした。",
-            reading: "Kinō terebi wo mimasen deshita.",
-            english: { en: "I didn't watch TV yesterday.", np: "हिजो टिभी हेरिनँ।" },
-            scenario: { en: "Past negative with object", np: "Object सहित भूत नकार" },
-          },
-        ],
-      },
-      {
-        number: 4,
         name: { en: "〜から 〜まで — From ~ to / until ~", np: "〜から 〜まで — देखि ~ सम्म" },
         meaning: {
           en: "から marks the starting point (from), まで marks the end point (to / until). Use with time or place. They can be used together or separately.",
@@ -1484,17 +1451,45 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           },
         ],
       },
+    ],
+    particles: [
       {
-        number: 5,
-        name: { en: "N と N — And (connecting nouns)", np: "N と N — र (Noun जोड्न)" },
+        particle: "を",
+        romaji: "wo",
+        name: { en: "を — Object marker", np: "を — Object marker" },
         meaning: {
-          en: "と connects two or more nouns with the meaning 'and'. Unlike や (which implies 'and others'), と lists nouns exhaustively. Pattern: N1 と N2 (と N3…).",
-          np: "と ले दुई वा बढी noun लाई 'र' को अर्थमा जोड्छ। や (अरू पनि छन् भन्ने संकेत) भन्दा फरक, と ले सबै सूचीबद्ध गर्छ। Pattern: N1 と N2 (と N3…)।",
+          en: "を (wo) marks the direct object of an action verb — the thing being acted on. Pattern: [Subject] は [Object] を [Verb]. を only appears with action verbs, never with です.",
+          np: "を (wo) ले action verb को direct object चिन्हित गर्छ — जुन वस्तुमा कार्य हुन्छ। Pattern: [Subject] は [Object] を [Verb]। को केवल action verb सँग आउँछ, です सँग हुँदैन।",
         },
-        whereWeUse: [
-          { en: "コーヒーとこうちゃをのみます — I drink coffee and tea", np: "コーヒーとこうちゃをのみます — कफी र चिया पिउँछु" },
-          { en: "かようびとすいようびにやすみます — I rest on Tuesday and Wednesday", np: "かようびとすいようびにやすみます — मंगल र बुधबार आराम गर्छु" },
+        examples: [
+          {
+            japanese: "あさ、コーヒーをのみます。",
+            reading: "Asa, kōhī wo nomimasu.",
+            english: { en: "In the morning I drink coffee.", np: "बिहान कफी पिउँछु।" },
+            scenario: { en: "Morning drink habit", np: "बिहानको पेय बानी" },
+          },
+          {
+            japanese: "まいにちにほんごをべんきょうします。",
+            reading: "Mainichi Nihongo wo benkyō shimasu.",
+            english: { en: "I study Japanese every day.", np: "हरेक दिन जापानिज पढ्छु।" },
+            scenario: { en: "Study habit", np: "पढाइको बानी" },
+          },
+          {
+            japanese: "きのうテレビをみませんでした。",
+            reading: "Kinō terebi wo mimasen deshita.",
+            english: { en: "I didn't watch TV yesterday.", np: "हिजो टिभी हेरिनँ।" },
+            scenario: { en: "Past negative with object", np: "Object सहित भूत नकार" },
+          },
         ],
+      },
+      {
+        particle: "と",
+        romaji: "to",
+        name: { en: "と — And (connecting nouns)", np: "と — र (Noun जोड्न)" },
+        meaning: {
+          en: "と connects two or more nouns with 'and' in an exhaustive list. Unlike や (which implies 'and others'), と lists exactly what is mentioned. Pattern: N1 と N2 (と N3…).",
+          np: "と ले दुई वा बढी noun लाई 'र' को अर्थमा सम्पूर्ण सूचीमा जोड्छ। や (अरू पनि छन् भन्ने संकेत) भन्दा फरक, と ले जे उल्लेख गरिएको छ त्यही मात्र जोड्छ। Pattern: N1 と N2 (と N3…)।",
+        },
         examples: [
           {
             japanese: "まいにちコーヒーとこうちゃをのみます。",
@@ -1517,7 +1512,6 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
       },
     ],
-    particles: [],
     vocabulary: buildVocab(4),
     mcqs: [
       {
