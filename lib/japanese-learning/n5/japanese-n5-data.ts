@@ -27,8 +27,8 @@ export const JP_CURRENT_DAY = 1;
 export const JP_N5_DAY_TITLES: string[] = [
   "Chapter 1, は, です",
   "Chapter 2, これ, それ, あれ",
-  "Day 3 · Minna L3 — existenceある & place に",
-  "Day 4 · Minna L4 — ます／ました & object を",
+  "Chapter 3, ここ, そこ, あそこ",
+  "Chapter 4, まいにちのせいかつ",
   "Day 5 · Minna L5 — movement へ／で／と",
   "Day 6 · Minna L6 — transitive verbs & で／を",
   "Day 7 · Minna L7 — あげる／もらう",
@@ -90,6 +90,16 @@ const DAY_EXTRA_TAGS: Record<number, { label: string; slug: string }[]> = {
     { label: "これ", slug: "p-kore" },
     { label: "それ", slug: "p-sore" },
     { label: "あれ", slug: "p-are" },
+  ],
+  3: [
+    { label: "ここ", slug: "p-koko" },
+    { label: "どこ", slug: "p-doko" },
+    { label: "〜かい", slug: "p-kai" },
+  ],
+  4: [
+    { label: "ます", slug: "p-masu" },
+    { label: "を", slug: "p-wo" },
+    { label: "から〜まで", slug: "p-kara-made" },
   ],
 };
 

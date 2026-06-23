@@ -984,6 +984,639 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  {
+    id: 3,
+    title: "Lesson 3 — ここ・そこ・あそこ (Places, Floors & Prices)",
+    intro: [
+      {
+        en: "In this lesson you learn place pronouns: ここ (here), そこ (there), あそこ (over there), and どこ (where?). You also learn their polite equivalents: こちら/そちら/あちら/どちら.",
+        np: "यस पाठमा ठाउँ जनाउने शब्दहरू सिक्नुहुनेछ: ここ (यहाँ), そこ (त्यहाँ), あそこ (उ त्यहाँ) र どこ (कहाँ?)। यिनको विनम्र रूप: こちら/そちら/あちら/どちら पनि सिक्नुहुनेछ।",
+      },
+      {
+        en: "You will practice asking which floor something is on (なんかいですか) and asking prices (いくらですか) in a department store setting.",
+        np: "डिपार्टमेन्ट स्टोरको परिस्थितिमा कुन तल्लामा छ (なんかいですか) र कति पर्छ (いくらですか) सोध्न अभ्यास गर्नुहुनेछ।",
+      },
+      {
+        en: "N1のN2 shows origin or ownership: 日本の車 = Japanese car. The prefix お adds politeness to nouns (お国, おなまえ).",
+        np: "N1のN2 ले उत्पत्ति वा सम्बन्ध देखाउँछ: 日本の車 = जापानी गाडी। お prefix ले noun लाई विनम्र बनाउँछ (お国, おなमे)।",
+      },
+    ],
+    youtubeVideoId: {
+      en: "RqDs_jctpls",
+      np: "828aTz6WxgI",
+    },
+    youtubeVideoIdPart2: {
+      en: "bxXTb8I8IEQ",
+      np: "ZmFmdRIY3J8",
+    },
+    youtubeTitle: "Minna no Nihongo · Lesson 3 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "すみません、くつうりばはなんかいですか。",
+        reading: "Sumimasen, kutsu-uriba wa nan-gai desu ka?",
+        english: { en: "Excuse me, what floor is the shoe department?", np: "माफ गर्नुस्, जुता बेच्ने ठाउँ कति तल्लामा छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ごかいでございます。",
+        reading: "Go-kai de gozaimasu.",
+        english: { en: "It is on the fifth floor.", np: "पाँचौँ तल्लामा छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "ネクタイはどこですか。",
+        reading: "Nekutai wa doko desu ka?",
+        english: { en: "Where are neckties?", np: "टाई कहाँ छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ネクタイはさんかいでございます。",
+        reading: "Nekutai wa san-kai de gozaimasu.",
+        english: { en: "Neckties are on the third floor.", np: "टाई तेस्रो तल्लामा छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "あのう、このネクタイをみせてください。",
+        reading: "Anou, kono nekutai wo misete kudasai.",
+        english: { en: "Um, please show me this necktie.", np: "इ... यो टाई देखाउनुस् न।" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、どうぞ。いくらですか。さんぜんえんでございます。",
+        reading: "Hai, dōzo. Ikura desu ka? — San-zen-en de gozaimasu.",
+        english: { en: "Yes, here you go. — How much? — It is 3,000 yen.", np: "हजुर, लिनुस्। — कति पर्छ? — तीन हजार येन हो।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "ここ / そこ / あそこ / どこ — Place pronouns (casual)", np: "ここ / そこ / あそこ / どこ — ठाउँ जनाउने Pronoun (सामान्य)" },
+        meaning: {
+          en: "These words point to places. ここ = near speaker, そこ = near listener, あそこ = far from both, どこ = where? Pattern: N1 は ここ/そこ/あそこ です (N1 is here/there/over there).",
+          np: "यी शब्दले ठाउँ देखाउँछन्। ここ = वक्ताको नजिक, そこ = श्रोताको नजिक, あそこ = दुवैबाट टाढा, どこ = कहाँ? Pattern: N1 は ここ/そこ/あそこ です।",
+        },
+        whereWeUse: [
+          { en: "N1 は ここ です — N1 is here (near speaker)", np: "N1 は ここ です — N1 यहाँ छ (वक्ताको नजिक)" },
+          { en: "N1 は そこ です — N1 is there (near listener)", np: "N1 は そこ です — N1 त्यहाँ छ (श्रोताको नजिक)" },
+          { en: "N1 は あそこ です — N1 is over there (far)", np: "N1 は あそこ です — N1 ऊ त्यहाँ छ (टाढा)" },
+          { en: "Reverse: ここ は N1 です — Here is N1", np: "उल्टो: ここ は N1 です — यहाँ N1 छ" },
+        ],
+        examples: [
+          {
+            japanese: "きょうしつはここです。",
+            reading: "Kyōshitsu wa koko desu.",
+            english: { en: "The classroom is here.", np: "कक्षाकोठा यहाँ छ।" },
+            scenario: { en: "Pointing at nearby place", np: "नजिकको ठाउँ देखाउँदा" },
+          },
+          {
+            japanese: "しょくどうはそこですか。",
+            reading: "Shokudō wa soko desu ka?",
+            english: { en: "Is the dining hall there?", np: "चमेनागृह त्यहाँ छ?" },
+            scenario: { en: "Asking about a place near the listener", np: "श्रोताको नजिकको ठाउँ सोध्दा" },
+          },
+          {
+            japanese: "うけつけはあそこです。",
+            reading: "Uketsuke wa asoko desu.",
+            english: { en: "The reception is over there.", np: "सोधपूछ कक्ष ऊ त्यहाँ छ।" },
+            scenario: { en: "Pointing at a far place", np: "टाढाको ठाउँ देखाउँदा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "こちら / そちら / あちら / どちら — Polite direction/place words", np: "こちら / そちら / あちら / どちら — विनम्र दिशा/ठाउँ शब्द" },
+        meaning: {
+          en: "Polite equivalents: ここ→こちら, そこ→そちら, あそこ→あちら, どこ→どちら. Use in formal/shop settings. Also used to ask which country or company someone is from.",
+          np: "विनम्र समकक्ष: ここ→こちら, そこ→そちら, あそこ→あちら, どこ→どちら। दोकान वा औपचारिक परिस्थितिमा प्रयोग गरिन्छ। कुन देश वा कम्पनीको हो भन्न पनि प्रयोग हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "Shop/office staff uses こちら/そちら/あちら instead of ここ/そこ/あそこ", np: "दोकान/कार्यालयमा ここ/そこ/あそこ को सट्टा こちら/そちら/あちら" },
+          { en: "どちら ですか — Where (polite) / Which one? (choice)", np: "どちら ですか — कहाँ (विनम्र) / कुन? (छनोट)" },
+          { en: "お国はどちらですか — What country are you from? (formal)", np: "お国はどちらですか — हजुर कहाँको हो? (औपचारिक)" },
+        ],
+        examples: [
+          {
+            japanese: "エレベーターはこちらでございます。",
+            reading: "Erebētā wa kochira de gozaimasu.",
+            english: { en: "The elevator is this way.", np: "लिफ्ट यतातिर छ।" },
+            scenario: { en: "Staff directing a customer (formal)", np: "कर्मचारीले ग्राहकलाई बाटो देखाउँदा (औपचारिक)" },
+          },
+          {
+            japanese: "お国はどちらですか。ネパールです。",
+            reading: "O-kuni wa dochira desu ka? — Nepāru desu.",
+            english: { en: "Where are you from? — I am from Nepal.", np: "हजुर कहाँको हो? — नेपाल हो।" },
+            scenario: { en: "Asking nationality politely", np: "विनम्र रूपमा राष्ट्रियता सोध्दा" },
+          },
+          {
+            japanese: "会社はどちらですか。",
+            reading: "Kaisha wa dochira desu ka?",
+            english: { en: "Which company are you with?", np: "कुन कम्पनीमा हुनुहुन्छ?" },
+            scenario: { en: "Asking about someone's company politely", np: "कम्पनीबारे विनम्र रूपमा सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "N は なんかい ですか — What floor is N?", np: "N は なんかい ですか — N कति तल्लामा छ?" },
+        meaning: {
+          en: "〜かい (floor counter) is used to count building floors. なんかい = which/what floor. Floors: いっかい (1F), にかい (2F), さんがい (3F), よんかい (4F), ごかい (5F), ちか (basement).",
+          np: "〜かい ले भवनका तल्लाहरू गन्छ। なんかい = कति तला? तल्लाहरू: いっかい (1F), にかい (2F), さんがい (3F), よんかい (4F), ごかい (5F), ちか (भुइँतला/basement)।",
+        },
+        whereWeUse: [
+          { en: "Asking which floor in a department store or building", np: "डिपार्टमेन्ट स्टोर वा भवनमा तल्ला सोध्दा" },
+          { en: "Answering with: N は 〜かい です/でございます", np: "उत्तर: N は 〜かい です/でございます" },
+        ],
+        examples: [
+          {
+            japanese: "くつうりばはなんかいですか。ごかいでございます。",
+            reading: "Kutsu-uriba wa nan-gai desu ka? — Go-kai de gozaimasu.",
+            english: { en: "What floor is the shoe department? — Fifth floor.", np: "जुता बेच्ने ठाउँ कति तल्लामा? — पाँचौँ तल्लामा।" },
+            scenario: { en: "Department store inquiry", np: "डिपार्टमेन्ट स्टोरमा सोध्दा" },
+          },
+          {
+            japanese: "しょくどうはちかです。",
+            reading: "Shokudō wa chika desu.",
+            english: { en: "The dining hall is in the basement.", np: "चमेनागृह भुइँतलामा छ।" },
+            scenario: { en: "Basement location", np: "भुइँतलाको ठेगाना" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "N1 の N2 — Origin / affiliation (Country/Company + Product)", np: "N1 の N2 — उत्पत्ति / सम्बन्ध (देश/कम्पनी + वस्तु)" },
+        meaning: {
+          en: "の connects nouns showing origin, material, or type. Used for country-of-origin: 日本の車 (Japanese car), or company affiliation. This extends の from Lesson 2 into origin contexts.",
+          np: "の ले उत्पत्ति, सामग्री वा प्रकार देखाउँदै noun जोड्छ। देश-उत्पत्तिमा: 日本の車 (जापानी गाडी), वा कम्पनी सम्बन्धमा। Lesson 2 को の को विस्तार हो।",
+        },
+        whereWeUse: [
+          { en: "Country の product: これは 日本の 車 です", np: "देश の वस्तु: これは 日本の 車 です" },
+          { en: "Company の product or person: NTCの でんわ", np: "कम्पनी の वस्तु/व्यक्ति: NTCの でんわ" },
+        ],
+        examples: [
+          {
+            japanese: "これはにほんのくるまです。",
+            reading: "Kore wa Nihon no kuruma desu.",
+            english: { en: "This is a Japanese car.", np: "यो जापानको गाडी हो।" },
+            scenario: { en: "Country of origin", np: "उत्पत्ति देश" },
+          },
+          {
+            japanese: "これはアメリカのくるまです。",
+            reading: "Kore wa Amerika no kuruma desu.",
+            english: { en: "This is an American car.", np: "यो अमेरिकाको गाडी हो।" },
+            scenario: { en: "Different country of origin", np: "अर्को देशको उत्पत्ति" },
+          },
+          {
+            japanese: "これはドイツのくつです。",
+            reading: "Kore wa Doitsu no kutsu desu.",
+            english: { en: "These are German shoes.", np: "यो जर्मनीको जुता हो।" },
+            scenario: { en: "Product + country", np: "वस्तु + देश" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "お〜 prefix — Polite / honorific nouns", np: "お〜 prefix — विनम्र/सम्मानजनक Noun" },
+        meaning: {
+          en: "Adding お (or ご) before a noun makes it polite/respectful. Common in formal speech and service settings. Examples: 国→お国, 名前→おなまえ, 酒→お酒. NOT used for all nouns — learn word by word.",
+          np: "Noun अगाडि お (वा ご) थप्दा विनम्र/सम्मानजनक बन्छ। औपचारिक र सेवा-परिस्थितिमा सामान्य छ। उदाहरण: 国→お国, 名前→おなまえ, 酒→お酒। सबै noun मा प्रयोग हुँदैन — एक-एक गरी सिक्नुस्।",
+        },
+        whereWeUse: [
+          { en: "Formal questions: お名前は? お国はどちら?", np: "औपचारिक प्रश्न: お名前は? お国はどちら?" },
+          { en: "Service/shop staff speech: おいくらでございますか", np: "दोकान/सेवामा: おいくराでございますか" },
+        ],
+        examples: [
+          {
+            japanese: "おくにはどちらですか。",
+            reading: "O-kuni wa dochira desu ka?",
+            english: { en: "What country are you from? (polite)", np: "हजुर कहाँको हो? (विनम्र)" },
+            scenario: { en: "Polite nationality question", np: "विनम्र राष्ट्रियता प्रश्न" },
+          },
+          {
+            japanese: "おなまえはなんですか。",
+            reading: "O-namae wa nan desu ka?",
+            english: { en: "What is your name? (polite)", np: "हजुरको नाम के हो? (विनम्र)" },
+            scenario: { en: "Polite name question", np: "विनम्र नाम प्रश्न" },
+          },
+        ],
+      },
+    ],
+    particles: [],
+    vocabulary: buildVocab(3),
+    mcqs: [
+      {
+        question: { en: "Which word means 'here' near the speaker (casual)?", np: "वक्ताको नजिक 'यहाँ' जनाउने शब्द (सामान्य) कुन हो?" },
+        choices: ["ここ", "そこ", "あそこ", "どこ"],
+        correctIndex: 0,
+        explanation: { en: "ここ = here (near speaker). そこ = there (near listener). あそこ = over there (far). どこ = where?", np: "ここ = यहाँ (वक्ताको नजिक)। そこ = त्यहाँ (श्रोताको नजिक)। あそこ = ऊ त्यहाँ (टाढा)। どこ = कहाँ?" },
+      },
+      {
+        question: { en: "Which is the polite form of そこ?", np: "そこ को विनम्र रूप कुन हो?" },
+        choices: ["そちら", "こちら", "あちら", "どちら"],
+        correctIndex: 0,
+        explanation: { en: "そちら is the polite equivalent of そこ (there, near the listener). こちら = polite ここ, あちら = polite あそこ, どちら = polite どこ.", np: "そちら, そこ को विनम्र रूप हो (त्यहाँ, श्रोताको नजिक)। こちら = ここ को विनम्र, あちら = あそこ को विनम्र, どちら = どこ को विनम्र।" },
+      },
+      {
+        question: { en: "Fill the blank: トイレは _____ ですか。 (Where is the toilet?)", np: "खाली भर्नुस्: トイレは _____ ですか। (शौचालय कहाँ छ?)" },
+        choices: ["どこ", "ここ", "どちら", "あそこ"],
+        correctIndex: 0,
+        explanation: { en: "どこ is the casual question word for place (where?). どちら is also correct but more polite/formal. In a simple casual question, どこ is standard.", np: "どこ ले सामान्य ठाउँ सोध्छ। どちら पनि सही छ तर बढी विनम्र। सामान्य प्रश्नमा どこ मानक हो।" },
+      },
+      {
+        question: { en: "When do you use どちら instead of どこ?", np: "どこ को सट्टा どちら कहिले प्रयोग गर्ने?" },
+        choices: [
+          { en: "When asking about a company, school or country politely", np: "कम्पनी, विद्यालय वा देशको बारेमा विनम्र रूपमा सोध्दा" },
+          { en: "When asking about toilet location", np: "शौचालयको ठेगाना सोध्दा" },
+          { en: "When pointing at a nearby object", np: "नजिकको वस्तु देखाउँदा" },
+          { en: "When counting floors in a building", np: "भवनको तल्ला गन्दा" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どちら is used politely to ask about a person's company, school, or country of origin. It replaces どこ in formal contexts.", np: "どちら ले कम्पनी, विद्यालय वा देशको बारेमा विनम्र रूपमा सोध्छ। औपचारिक परिस्थितिमा どこ को सट्टा प्रयोग हुन्छ।" },
+      },
+      {
+        question: { en: "What does なんかいですか mean?", np: "なんかいですか को अर्थ के हो?" },
+        choices: [
+          { en: "What floor is it?", np: "कति तल्लामा छ?" },
+          { en: "How many people are there?", np: "कति जना छन्?" },
+          { en: "How much does it cost?", np: "कति पर्छ?" },
+          { en: "When does it open?", np: "कहिले खुल्छ?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "なん (what/how many) + かい (floor counter) + ですか = What floor is it? Used in department stores and buildings.", np: "なん (के/कति) + かい (तल्ला गणना) + ですか = कति तल्लामा छ? डिपार्टमेन्ट स्टोर र भवनमा प्रयोग।" },
+      },
+      {
+        question: { en: "How do you say 'The dining hall is in the basement'?", np: "चमेनागृह भुइँतलामा छ — कसरी भनिन्छ?" },
+        choices: [
+          "しょくどうはちかです",
+          "しょくどうはいっかいです",
+          "しょくどうはあそこです",
+          "しょくどうはさんかいです",
+        ],
+        correctIndex: 0,
+        explanation: { en: "ちか (地下) = basement. いっかい = 1st floor. あそこ = over there (not a floor). さんかい = 3rd floor.", np: "ちか (地下) = भुइँतला/basement। いっかい = पहिलो तल्ला। あそこ = ऊ त्यहाँ (तल्ला होइन)। さんかい = तेस्रो तल्ला।" },
+      },
+      {
+        question: { en: "これはにほんのくつです — What does this sentence mean?", np: "これはにほんのくつです — यस वाक्यको अर्थ के हो?" },
+        choices: [
+          { en: "These are Japanese shoes.", np: "यो जापानको जुता हो।" },
+          { en: "These are my shoes.", np: "यो मेरो जुता हो।" },
+          { en: "Japan has shoes.", np: "जापानमा जुता छ।" },
+          { en: "These shoes are expensive.", np: "यो जुता महँगो छ।" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "にほんの connects Japan (origin) to くつ (shoes): Japanese shoes. の here shows country of origin.", np: "にほんの ले जापान (उत्पत्ति) र くつ (जुता) जोड्छ: जापानको जुता। यहाँ の ले देश-उत्पत्ति देखाउँछ।" },
+      },
+      {
+        question: { en: "What is the polite form of desu used in shops?", np: "दोकानमा प्रयोग हुने です को विनम्र रूप के हो?" },
+        choices: ["でございます", "ですよ", "でしょう", "ですね"],
+        correctIndex: 0,
+        explanation: { en: "でございます is the very polite (humble/formal) equivalent of です, used by shop staff and in formal service contexts.", np: "でございます, です को अत्यन्त विनम्र (humble/formal) समकक्ष हो। दोकानका कर्मचारी र औपचारिक सेवामा प्रयोग हुन्छ।" },
+      },
+      {
+        question: { en: "Which expression means 'please show me this'?", np: "'यो देखाउनुस्' भन्न कुन अभिव्यक्ति प्रयोग गरिन्छ?" },
+        choices: [
+          "これをみせてください",
+          "これをください",
+          "これはなんですか",
+          "これはいくらですか",
+        ],
+        correctIndex: 0,
+        explanation: { en: "みせてください = please show (me). をください = please give me. なんですか = what is this? いくらですか = how much?", np: "みせてください = देखाउनुस्। をください = दिनुस्। なんですか = के हो? いくらですか = कति पर्छ?" },
+      },
+      {
+        question: { en: "How do you add polite honorific prefix to 国 (くに)?", np: "国 (くに) मा विनम्र prefix कसरी थपिन्छ?" },
+        choices: ["おくに", "ごくに", "くにお", "くにさん"],
+        correctIndex: 0,
+        explanation: { en: "お + 国 = おくに. The prefix お is added before the noun to make it polite/respectful. Used in formal questions like おくにはどちらですか.", np: "お + 国 = おくに। Noun अगाडि お थप्दा विनम्र बन्छ। औपचारिक प्रश्नमा: おくにはどちらですか।" },
+      },
+    ],
+  },
+  {
+    id: 4,
+    title: "Lesson 4 — まいにち の せいかつ (Daily Routine & Time)",
+    intro: [
+      {
+        en: "In this lesson you learn polite verb forms: V ます (present/future), V ません (negative), V ました (past), and V ませんでした (past negative). You also practice daily routine verbs like おきます (wake up), はたらきます (work), ねます (sleep).",
+        np: "यस पाठमा विनम्र Verb रूपहरू सिक्नुहुनेछ: V ます (वर्तमान/भविष्य), V ません (नकार), V ました (भूत), र V ませんでした (भूत नकार)। दैनिक जीवनका Verb जस्तै おきます (उठ्छु), はたらきます (काम गर्छु), ねます (सुत्छु) पनि अभ्यास गरिन्छ।",
+      },
+      {
+        en: "You will use the object marker を to say what you do (コーヒーをのみます), and 〜から〜まで to express time ranges (くじから ごじまで).",
+        np: "Object marker を प्रयोग गरेर के गर्छौ भन्न (コーヒーをのみます), र समयको दायरा 〜から〜まで (くじから ごじまで) अभिव्यक्त गर्न सिक्नुहुनेछ।",
+      },
+      {
+        en: "Key time words: 今 (now), 〜時/〜分/半 for clock times, 午前/午後 for AM/PM, 朝/昼/晩/夜 for parts of the day, and all seven weekdays plus 何曜日 (what day?).",
+        np: "मुख्य समय शब्दहरू: 今 (अहिले), 〜時/〜分/半 घडीको समयको लागि, 午前/午後 AM/PM को लागि, 朝/昼/晩/夜 दिनका भागहरूको लागि, र सातै वारहरू सहित 何曜日 (कुन बार?)।",
+      },
+    ],
+    youtubeVideoId: {
+      en: "L4_VIDEO_PENDING",
+      np: "L4_VIDEO_NP_PENDING",
+    },
+    youtubeTitle: "Minna no Nihongo · Lesson 4 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "まいにちなんじにおきますか。",
+        reading: "Mainichi nan-ji ni okimasu ka?",
+        english: { en: "What time do you get up every day?", np: "हजुर हरेक दिन कति बजे उठ्नुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "しちじにおきます。そして、はちじからしごとをします。",
+        reading: "Shichi-ji ni okimasu. Soshite, hachi-ji kara shigoto wo shimasu.",
+        english: { en: "I get up at 7. Then I work from 8 o'clock.", np: "सात बजे उठ्छु। अनि आठ बजेदेखि काम गर्छु।" },
+      },
+      {
+        speaker: "A",
+        japanese: "しごとはなんじにおわりますか。",
+        reading: "Shigoto wa nan-ji ni owarimasu ka?",
+        english: { en: "What time does work finish?", np: "काम कति बजे सकिन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ごじにおわります。えーと、きのうはろくじにおわりました。たいへんでしたね。",
+        reading: "Go-ji ni owarimasu. Ēto, kinō wa roku-ji ni owarimashita. Taihen deshita ne.",
+        english: { en: "It finishes at 5. Well, yesterday it finished at 6. That was tough.", np: "पाँच बजे सकिन्छ। अं... हिजो छ बजे सकियो। गाह्रो थियो हगी।" },
+      },
+      {
+        speaker: "A",
+        japanese: "よるはなにをしますか。",
+        reading: "Yoru wa nani wo shimasu ka?",
+        english: { en: "What do you do in the evening?", np: "बेलुका के गर्नुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "テレビをみます。そして、じゅうにじごろねます。",
+        reading: "Terebi wo mimasu. Soshite, jūni-ji goro nemasu.",
+        english: { en: "I watch TV. Then I sleep around midnight.", np: "टिभी हेर्छु। अनि बाह्र बजेतिर सुत्छु।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "V ます — Polite non-past (present / future)", np: "V ます — विनम्र वर्तमान/भविष्य" },
+        meaning: {
+          en: "ます is the polite ending for verbs in present or future tense. It expresses habits (I drink coffee every day) and intentions (I will study tomorrow). Pattern: [verb stem] + ます.",
+          np: "ます विनम्र Verb को वर्तमान वा भविष्य काल हो। बानी (हरेक दिन कफी पिउँछु) र इरादा (भोलि पढ्छु) दुवैमा प्रयोग हुन्छ। Pattern: [verb stem] + ます।",
+        },
+        whereWeUse: [
+          { en: "Daily habits: まいにち コーヒーをのみます — I drink coffee every day", np: "दैनिक बानी: まいにち コーヒーをのみます — हरेक दिन कफी पिउँछु" },
+          { en: "Future plans: あした としょかんにいきます — I will go to the library tomorrow", np: "भविष्य योजना: あした としょかんにいきます — भोलि पुस्तकालय जान्छु" },
+          { en: "Negative: V ません — I don't / won't …", np: "नकार: V ません — गर्दिनँ / जाँदिनँ…" },
+        ],
+        examples: [
+          {
+            japanese: "まいあさろくじにおきます。",
+            reading: "Mai-asa roku-ji ni okimasu.",
+            english: { en: "I wake up at six every morning.", np: "हरेक बिहान छ बजे उठ्छु।" },
+            scenario: { en: "Daily morning routine", np: "दैनिक बिहानको दिनचर्या" },
+          },
+          {
+            japanese: "あしたはたらきません。やすみです。",
+            reading: "Ashita hatarakimasen. Yasumi desu.",
+            english: { en: "I won't work tomorrow. It's a day off.", np: "भोलि काम गर्दिनँ। बिदा छ।" },
+            scenario: { en: "Negative — day off", np: "नकार — बिदाको दिन" },
+          },
+          {
+            japanese: "きょうとしょかんでべんきょうします。",
+            reading: "Kyō toshokan de benkyō shimasu.",
+            english: { en: "Today I will study at the library.", np: "आज पुस्तकालयमा पढ्छु।" },
+            scenario: { en: "Today's plan", np: "आजको योजना" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "V ました / V ませんでした — Polite past", np: "V ました / V ませんでした — विनम्र भूतकाल" },
+        meaning: {
+          en: "ました is the polite past tense (did). ませんでした is the polite past negative (did not). Use these to talk about completed actions yesterday, last week, etc.",
+          np: "ました विनम्र भूतकाल हो (गरे/गयौँ)। ませんでした विनम्र भूत नकार हो (गरिनँ)। हिजो, गत हप्ता आदिका सम्पन्न कार्यहरूको लागि प्रयोग गर्नुस्।",
+        },
+        whereWeUse: [
+          { en: "きのう テレビをみました — I watched TV yesterday", np: "きのう テレビをみました — हिजो टिभी हेरें" },
+          { en: "おととい べんきょうしませんでした — I didn't study the day before yesterday", np: "おととい べんきょうしませんでした — अस्ती पढिनँ" },
+          { en: "〜ましたか — Did you …? (past question)", np: "〜ましたか — गर्नुभयो? (भूत प्रश्न)" },
+        ],
+        examples: [
+          {
+            japanese: "きのうきんこうにいきました。",
+            reading: "Kinō ginkō ni ikimashita.",
+            english: { en: "I went to the bank yesterday.", np: "हिजो बैंक गएँ।" },
+            scenario: { en: "Past action — yesterday", np: "भूत कार्य — हिजो" },
+          },
+          {
+            japanese: "おとといはやすみませんでした。",
+            reading: "Ototoi wa yasumimasen deshita.",
+            english: { en: "I didn't rest the day before yesterday.", np: "अस्ती आराम गरिनँ।" },
+            scenario: { en: "Past negative", np: "भूत नकार" },
+          },
+          {
+            japanese: "きのうべんきょうしましたか。はい、としょかんでしました。",
+            reading: "Kinō benkyō shimashita ka? — Hai, toshokan de shimashita.",
+            english: { en: "Did you study yesterday? — Yes, I did it at the library.", np: "हिजो पढ्नुभयो? — हो, पुस्तकालयमा पढें।" },
+            scenario: { en: "Past question and answer", np: "भूत प्रश्न र उत्तर" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "N を Verb — Object marker を", np: "N を Verb — Object marker を" },
+        meaning: {
+          en: "を (wo) marks the direct object of an action verb — the thing being acted on. Pattern: [Subject] は [Object] を [Verb]. を only appears with action verbs.",
+          np: "を (wo) ले action verb को direct object चिन्हित गर्छ — जुन वस्तुमा कार्य हुन्छ। Pattern: [Subject] は [Object] を [Verb]। を केवल action verb सँग आउँछ।",
+        },
+        whereWeUse: [
+          { en: "わたしは コーヒーをのみます — I drink coffee", np: "わたしは コーヒーをのみます — म कफी पिउँछु" },
+          { en: "まいにち にほんごをべんきょうします — I study Japanese every day", np: "まいにち にほんごをべんきょうします — हरेक दिन जापानिज पढ्छु" },
+          { en: "テレビをみません — I don't watch TV", np: "テレビをみません — म टिभी हेर्दिनँ" },
+        ],
+        examples: [
+          {
+            japanese: "あさ、コーヒーをのみます。",
+            reading: "Asa, kōhī wo nomimasu.",
+            english: { en: "In the morning I drink coffee.", np: "बिहान कफी पिउँछु।" },
+            scenario: { en: "Morning drink habit", np: "बिहानको पेय बानी" },
+          },
+          {
+            japanese: "まいにちにほんごをべんきょうします。",
+            reading: "Mainichi Nihongo wo benkyō shimasu.",
+            english: { en: "I study Japanese every day.", np: "हरेक दिन जापानिज पढ्छु।" },
+            scenario: { en: "Study habit", np: "पढाइको बानी" },
+          },
+          {
+            japanese: "きのうテレビをみませんでした。",
+            reading: "Kinō terebi wo mimasen deshita.",
+            english: { en: "I didn't watch TV yesterday.", np: "हिजो टिभी हेरिनँ।" },
+            scenario: { en: "Past negative with object", np: "Object सहित भूत नकार" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "〜から 〜まで — From ~ to / until ~", np: "〜から 〜まで — देखि ~ सम्म" },
+        meaning: {
+          en: "から marks the starting point (from), まで marks the end point (to / until). Use with time or place. They can be used together or separately.",
+          np: "から ले सुरु बिन्दु (देखि) चिन्हित गर्छ, まで ले अन्त बिन्दु (सम्म) चिन्हित गर्छ। समय वा ठाउँसँग प्रयोग हुन्छ। सँगै वा अलग-अलग प्रयोग गर्न सकिन्छ।",
+        },
+        whereWeUse: [
+          { en: "くじから ごじまで はたらきます — I work from 9 to 5", np: "くじから ごじまで はたらきます — नौ बजेदेखि पाँच बजेसम्म काम गर्छु" },
+          { en: "から alone: くじから しごとを します — work starts from 9", np: "から मात्र: くじから しごとをします — नौ बजेदेखि काम सुरु हुन्छ" },
+          { en: "まで alone: ごじまで べんきょうします — study until 5", np: "まで मात्र: ごじまで べんきょうします — पाँच बजेसम्म पढ्छु" },
+        ],
+        examples: [
+          {
+            japanese: "くじからごじまではたらきます。",
+            reading: "Ku-ji kara go-ji made hatarakimasu.",
+            english: { en: "I work from 9 to 5.", np: "नौ बजेदेखि पाँच बजेसम्म काम गर्छु।" },
+            scenario: { en: "Work hours", np: "कामको समय" },
+          },
+          {
+            japanese: "げつようびからきんようびまでしごとをします。",
+            reading: "Getsu-yōbi kara kin-yōbi made shigoto wo shimasu.",
+            english: { en: "I work from Monday to Friday.", np: "सोमबारदेखि शुक्रबारसम्म काम गर्छु।" },
+            scenario: { en: "Weekly work schedule", np: "साताको काम तालिका" },
+          },
+          {
+            japanese: "ごごじゅうじまでべんきょうしました。",
+            reading: "Gogo jū-ji made benkyō shimashita.",
+            english: { en: "I studied until 10 PM.", np: "रात दश बजेसम्म पढें।" },
+            scenario: { en: "Study until a time (past)", np: "एक समयसम्म पढाइ (भूत)" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "N と N — And (connecting nouns)", np: "N と N — र (Noun जोड्न)" },
+        meaning: {
+          en: "と connects two or more nouns with the meaning 'and'. Unlike や (which implies 'and others'), と lists nouns exhaustively. Pattern: N1 と N2 (と N3…).",
+          np: "と ले दुई वा बढी noun लाई 'र' को अर्थमा जोड्छ। や (अरू पनि छन् भन्ने संकेत) भन्दा फरक, と ले सबै सूचीबद्ध गर्छ। Pattern: N1 と N2 (と N3…)।",
+        },
+        whereWeUse: [
+          { en: "コーヒーとこうちゃをのみます — I drink coffee and tea", np: "コーヒーとこうちゃをのみます — कफी र चिया पिउँछु" },
+          { en: "かようびとすいようびにやすみます — I rest on Tuesday and Wednesday", np: "かようびとすいようびにやすみます — मंगल र बुधबार आराम गर्छु" },
+        ],
+        examples: [
+          {
+            japanese: "まいにちコーヒーとこうちゃをのみます。",
+            reading: "Mainichi kōhī to kōcha wo nomimasu.",
+            english: { en: "I drink coffee and tea every day.", np: "हरेक दिन कफी र चिया पिउँछु।" },
+            scenario: { en: "Listing two drinks", np: "दुई पेय सूचीबद्ध गर्दा" },
+          },
+          {
+            japanese: "どようびとにちようびはやすみます。",
+            reading: "Doyōbi to nichiyōbi wa yasumimasu.",
+            english: { en: "I rest on Saturday and Sunday.", np: "शनि र आइतबार आराम गर्छु।" },
+            scenario: { en: "Two days off", np: "दुई बिदाका दिन" },
+          },
+          {
+            japanese: "としょかんでにほんごとえいごをべんきょうします。",
+            reading: "Toshokan de Nihongo to Eigo wo benkyō shimasu.",
+            english: { en: "I study Japanese and English at the library.", np: "पुस्तकालयमा जापानिज र अंग्रेजी पढ्छु।" },
+            scenario: { en: "Two languages studied together", np: "एकसाथ दुई भाषा" },
+          },
+        ],
+      },
+    ],
+    particles: [],
+    vocabulary: buildVocab(4),
+    mcqs: [
+      {
+        question: { en: "Which sentence means 'I wake up at 7 every morning'?", np: "हरेक बिहान सात बजे उठ्छु — कुन वाक्यले यो भन्छ?" },
+        choices: [
+          "まいあさしちじにおきます",
+          "まいあさしちじにねます",
+          "きのうしちじにおきました",
+          "しちじにおきませんでした",
+        ],
+        correctIndex: 0,
+        explanation: { en: "まいあさ = every morning, しちじに = at 7 o'clock, おきます = wake up (present habit). ねます = sleep. ました = past.", np: "まいあさ = हरेक बिहान, しちじに = सात बजे, おきます = उठ्छु (वर्तमान बानी)। ねます = सुत्छु। ました = भूतकाल।" },
+      },
+      {
+        question: { en: "What is the past form of はたらきます?", np: "はたらきます को भूतकाल रूप के हो?" },
+        choices: ["はたらきました", "はたらきません", "はたらきますか", "はたらきませんでした"],
+        correctIndex: 0,
+        explanation: { en: "ます → ました changes present to polite past (did). ません is negative. ませんでした is past negative.", np: "ます → ました ले वर्तमानलाई विनम्र भूतमा (गरें) बदल्छ। ません नकार हो। ませんでした भूत नकार।" },
+      },
+      {
+        question: { en: "Choose the correct sentence: 'I didn't study yesterday.'", np: "सही वाक्य छान्नुस्: 'हिजो पढिनँ।'" },
+        choices: [
+          "きのうべんきょうしませんでした",
+          "きのうべんきょうしました",
+          "きのうべんきょうします",
+          "きのうべんきょうしませんか",
+        ],
+        correctIndex: 0,
+        explanation: { en: "ませんでした = polite past negative (did not do). しました = did. します = present/future. しませんか = invitation (won't you?).", np: "ませんでした = विनम्र भूत नकार (गरिनँ)। しました = गरें। します = गर्छु। しませんか = निमन्त्रणा।" },
+      },
+      {
+        question: { en: "What does を mark in a sentence?", np: "वाक्यमा を ले के चिन्हित गर्छ?" },
+        choices: [
+          { en: "The direct object of an action verb", np: "Action verb को direct object" },
+          { en: "The location of an action", np: "कार्यको स्थान" },
+          { en: "The time of an action", np: "कार्यको समय" },
+          { en: "The subject of a sentence", np: "वाक्यको subject" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "を marks the direct object — what is being done. E.g. コーヒーをのみます: を marks コーヒー as the thing being drunk.", np: "を ले direct object — के गरिँदैछ भन्ने — चिन्हित गर्छ। जस्तै: コーヒーをのみます मा コーヒー लाई を ले चिन्हित गर्छ।" },
+      },
+      {
+        question: { en: "Fill the blank: わたしは コーヒー _____ のみます。", np: "खाली भर्नुस्: わたしは コーヒー _____ のみます।" },
+        choices: ["を", "は", "が", "に"],
+        correctIndex: 0,
+        explanation: { en: "を is the object marker used with action verbs. Here のみます (drink) acts on コーヒー, so を is correct.", np: "を action verb सँग object चिन्हित गर्छ। यहाँ のみます (पिउँछु) ले コーヒー मा कार्य गर्छ, त्यसैले を सही छ।" },
+      },
+      {
+        question: { en: "What does くじから ごじまで mean?", np: "くじから ごじまで को अर्थ के हो?" },
+        choices: [
+          { en: "From 9 o'clock to 5 o'clock", np: "नौ बजेदेखि पाँच बजेसम्म" },
+          { en: "At 9 and at 5", np: "नौ बजे र पाँच बजे" },
+          { en: "Before 9 and after 5", np: "नौ बजे अघि र पाँच बजे पछि" },
+          { en: "Around 9 to around 5", np: "लगभग नौ बजेदेखि लगभग पाँच बजेसम्म" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "から = from (start point), まで = to/until (end point). くじから ごじまで = from 9 to 5.", np: "から = देखि (सुरु बिन्दु), まで = सम्म (अन्त बिन्दु)। くじから ごじまで = नौ बजेदेखि पाँच बजेसम्म।" },
+      },
+      {
+        question: { en: "Which word is the correct way to say 'from Monday to Friday'?", np: "'सोमबारदेखि शुक्रबारसम्म' कसरी भनिन्छ?" },
+        choices: [
+          "げつようびからきんようびまで",
+          "げつようびまできんようびから",
+          "きんようびからげつようびまで",
+          "げつようびとまできんようび",
+        ],
+        correctIndex: 0,
+        explanation: { en: "Start (から) comes before end (まで): げつようびから (from Monday) + きんようびまで (to Friday). The order cannot be reversed.", np: "सुरु (から) अन्त (まで) अघि आउँछ: げつようびから (सोमबारदेखि) + きんようびまで (शुक्रबारसम्म)। क्रम उल्टो हुँदैन।" },
+      },
+      {
+        question: { en: "What does と do in コーヒーとこうちゃ?", np: "コーヒーとこうちゃ मा と ले के गर्छ?" },
+        choices: [
+          { en: "Connects two nouns with 'and'", np: "दुई noun लाई 'र' ले जोड्छ" },
+          { en: "Shows where something is", np: "कुनै कुरा कहाँ छ भन्छ" },
+          { en: "Marks the object of drinking", np: "पिउने वस्तु चिन्हित गर्छ" },
+          { en: "Asks a question", np: "प्रश्न सोध्छ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "と connects nouns with 'and' in an exhaustive list. コーヒーとこうちゃ = coffee and tea (those two, nothing else implied).", np: "と ले noun लाई 'र' को अर्थमा सम्पूर्ण सूचीमा जोड्छ। コーヒーとこうちゃ = कफी र चिया (ती दुई मात्र)।" },
+      },
+      {
+        question: { en: "なんようびですか is asking about…?", np: "なんようびですか ले के सोध्छ?" },
+        choices: [
+          { en: "What day of the week it is", np: "आज कुन बार हो" },
+          { en: "What time it is", np: "कति बजे भयो" },
+          { en: "Which floor something is on", np: "कुन तल्लामा छ" },
+          { en: "How many people there are", np: "कति जना छन्" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "何曜日 (なんようび) = what day of the week. 何時 = what time. 何階 = which floor. 何人 = how many people.", np: "何曜日 (なんようび) = कुन बार। 何時 = कति बज्यो। 何階 = कति तल्ला। 何人 = कति जना।" },
+      },
+      {
+        question: { en: "Which is the correct expression when something was tough/hard?", np: "कुनै कुरा गाह्रो भएको व्यक्त गर्न कुन अभिव्यक्ति सही छ?" },
+        choices: ["たいへんですね", "おねがいします", "かしこまりました", "えーと"],
+        correctIndex: 0,
+        explanation: { en: "たいへんですね expresses sympathy — 'That's tough/hard, isn't it?'. おねがいします = please / I ask you. かしこまりました = certainly (formal). えーと = well, let me see (filler).", np: "たいへんですね सहानुभूति व्यक्त गर्छ — 'गाह्रो छ हगी।' おねगいします = कृपया। かしこまりました = निश्चय (औपचारिक)। えーと = अं... (सोच्दा भन्ने)।" },
+      },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
