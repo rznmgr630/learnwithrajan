@@ -1740,6 +1740,354 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  // ═══════════════════════════════════════════════════════════════════════
+  // LESSON 5 — こうつう と いどう (Transport & Movement)
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    id: 5,
+    title: "Lesson 5 — こうつう と いどう (Transport & Movement)",
+    intro: [
+      {
+        en: "In this lesson you learn how to talk about going places: where you go, how you get there, and how often you go.",
+        np: "यस पाठमा तपाई कहाँ जानुहुन्छ, कसरी जानुहुन्छ र कति पटक जानुहुन्छ भनेर कुरा गर्न सिक्नुहुनेछ।",
+      },
+      {
+        en: "The particle へ (e) marks the destination — 'toward'. The particle で (de) marks the means of transport — 'by'.",
+        np: "Particle へ (ए) गन्तव्य चिन्ह गर्छ — 'तर्फ'। Particle で (दे) यातायातको साधन चिन्ह गर्छ — 'ले'।",
+      },
+      {
+        en: "Frequency adverbs like よく (often), たいてい (usually), and ときどき (sometimes) come before the verb. あまり and ぜんぜん always pair with a negative verb.",
+        np: "Frequency adverbs जस्तै よく (प्राय:), たいてい (सामान्यतया), र ときどき (कहिलेकाहीँ) verb अगाडि आउँछन्। あまり र ぜんぜん सधैं negative verb सँग प्रयोग हुन्छन्।",
+      },
+    ],
+    youtubeVideoId: { en: "kCVhyuUEMkM", np: "kCVhyuUEMkM" },
+    youtubeTitle: "Minna no Nihongo · Lesson 5 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "たなかさん、{週末|しゅうまつ}はどこへいきますか。",
+        reading: "Tanaka-san, shūmatsu wa doko e ikimasu ka?",
+        english: { en: "Tanaka, where are you going this weekend?", np: "तानाकाजी, यो शनिबार-आइतबार कहाँ जानुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "かぞくと{海|うみ}へいきます。",
+        reading: "Kazoku to umi e ikimasu.",
+        english: { en: "I'm going to the sea with my family.", np: "परिवारसँग समुद्रतर्फ जाँदैछु।" },
+      },
+      {
+        speaker: "A",
+        japanese: "いいですね。どうやっていきますか。",
+        reading: "Ii desu ne. Dō yatte ikimasu ka?",
+        english: { en: "That sounds nice! How are you getting there?", np: "राम्रो! कसरी जानुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "{車|くるま}でいきます。スミスさんは？",
+        reading: "Kuruma de ikimasu. Sumisu-san wa?",
+        english: { en: "By car. What about you, Smith?", np: "कारले जाँदैछु। स्मिथजी, तपाई?" },
+      },
+      {
+        speaker: "A",
+        japanese: "{私|わたし}は{図書館|としょかん}へいきます。いつも{電車|でんしゃ}でひとりでいきます。",
+        reading: "Watashi wa toshokan e ikimasu. Itsumo densha de hitori de ikimasu.",
+        english: { en: "I'm going to the library. I always go alone by train.", np: "म पुस्तकालय जाँदैछु। सधैं एक्लै रेलले जान्छु।" },
+      },
+      {
+        speaker: "B",
+        japanese: "よく{図書館|としょかん}へいきますか。",
+        reading: "Yoku toshokan e ikimasu ka?",
+        english: { en: "Do you go to the library often?", np: "पुस्तकालय प्राय: जानुहुन्छ?" },
+      },
+      {
+        speaker: "A",
+        japanese: "はい、よくいきます。にちようびはたいてい{図書館|としょかん}です。",
+        reading: "Hai, yoku ikimasu. Nichiyōbi wa taitei toshokan desu.",
+        english: { en: "Yes, I go often. Sundays are usually at the library.", np: "हो, प्राय: जान्छु। आइतबार सामान्यतया पुस्तकालयमा हुन्छु।" },
+      },
+      {
+        speaker: "B",
+        japanese: "そうですか。{私|わたし}はあまり{図書館|としょかん}へいきません。",
+        reading: "Sō desu ka. Watashi wa amari toshokan e ikimasen.",
+        english: { en: "I see. I don't go to the library very often.", np: "हो र। म पुस्तकालय धेरै जाँदिनँ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "こんどいっしょにいきませんか。",
+        reading: "Kondo issho ni ikimasen ka?",
+        english: { en: "Why don't we go together next time?", np: "अर्को पटक सँगै जाउँ न?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいですね。ぜひいきましょう。",
+        reading: "Ii desu ne. Zehi ikimashō.",
+        english: { en: "That sounds great. Let's definitely go!", np: "राम्रो! जरुर जाउँ।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "[Place] へ いきます / きます / かえります", np: "[ठाउँ] へ いきます / きます / かえります" },
+        meaning: {
+          en: "Use へ (e) to mark the destination. いきます = go (away from speaker), きます = come (toward speaker), かえります = return home.",
+          np: "Destination चिन्ह गर्न へ प्रयोग गर्नुस्। いきます = जानु (वक्ताबाट टाढा), きます = आउनु (वक्ततर्फ), かえります = घर फर्कनु।",
+        },
+        whereWeUse: [
+          { en: "Stating where you are going: がっこうへいきます (I go to school).", np: "कहाँ जाँदैछौ भन्न: がっこうへいきます।" },
+          { en: "Asking where someone is going: どこへいきますか (Where are you going?).", np: "कहाँ जाँदैछौ सोध्न: どこへいきますか।" },
+          { en: "かえります always refers to returning to one's own home/base — not just any location.", np: "かえります सधैं आफ्नै घर/ठाउँ फर्कनलाई प्रयोग हुन्छ।" },
+        ],
+        examples: [
+          {
+            japanese: "{私|わたし}は{学校|がっこう}へいきます。",
+            reading: "Watashi wa gakkō e ikimasu.",
+            english: { en: "I go to school.", np: "म विद्यालय जान्छु।" },
+            scenario: { en: "Morning routine", np: "बिहानको दैनिकी" },
+          },
+          {
+            japanese: "{先生|せんせい}がきます。",
+            reading: "Sensei ga kimasu.",
+            english: { en: "The teacher is coming.", np: "शिक्षक आउँदैछन्।" },
+            scenario: { en: "Classroom announcement", np: "कक्षाकोठामा सूचना" },
+          },
+          {
+            japanese: "{毎晩|まいばん}{家|いえ}へかえります。",
+            reading: "Maiban ie e kaerimasu.",
+            english: { en: "I return home every evening.", np: "म हरेक साँझ घर फर्कन्छु।" },
+            scenario: { en: "Daily schedule", np: "दैनिक तालिका" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "[Transport] で いきます — means of transport", np: "[यातायात] で いきます — साधन" },
+        meaning: {
+          en: "Use で (de) to say how you travel — by bus, by train, on foot etc. で marks the means or instrument.",
+          np: "कसरी यात्रा गर्नुहुन्छ — बसले, रेलले, पैदल आदि भन्न で प्रयोग गर्नुस्। で साधन वा उपकरण चिन्ह गर्छ।",
+        },
+        whereWeUse: [
+          { en: "Means of transport: バスでいきます (I go by bus).", np: "यातायात साधन: バスでいきます।" },
+          { en: "Asking how someone travels: どうやっていきますか (How do you get there?).", np: "कसरी जानुहुन्छ सोध्न: どうやっていきますか।" },
+          { en: "On foot uses あるいて — no で needed: あるいていきます (I go on foot).", np: "पैदल जाँदा あるいて प्रयोग हुन्छ — で चाहिँदैन: あるいていきます।" },
+        ],
+        examples: [
+          {
+            japanese: "{電車|でんしゃ}でいきます。",
+            reading: "Densha de ikimasu.",
+            english: { en: "I go by train.", np: "रेलले जान्छु।" },
+            scenario: { en: "Explaining your commute", np: "यात्राको बारेमा भन्दा" },
+          },
+          {
+            japanese: "タクシーで{空港|くうこう}へいきます。",
+            reading: "Takushī de kūkō e ikimasu.",
+            english: { en: "I go to the airport by taxi.", np: "ट्याक्सीले विमानस्थल जान्छु।" },
+            scenario: { en: "Travel plans", np: "यात्राको योजना" },
+          },
+          {
+            japanese: "あるいてえきへいきます。",
+            reading: "Aruite eki e ikimasu.",
+            english: { en: "I walk to the station.", np: "पैदल स्टेसन जान्छु।" },
+            scenario: { en: "Short distance", np: "नजिकको दूरी" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Frequency: よく · たいてい · ときどき · あまり〜ません · ぜんぜん〜ません", np: "आवृत्ति: よく · たいてい · ときどき · あまり〜ません · ぜんぜん〜ません" },
+        meaning: {
+          en: "Place frequency adverbs before the verb. よく (often) → たいてい (usually) → ときどき (sometimes) → あまり〜ません (not very often) → ぜんぜん〜ません (not at all). Important: あまり and ぜんぜん must be followed by a negative verb.",
+          np: "Frequency adverbs verb अगाडि राख्नुस्। よく (प्राय:) → たいてい (सामान्यतया) → ときどき (कहिलेकाहीँ) → あまり〜ません (धेरै होइन) → ぜんぜん〜ません (बिल्कुल होइन)। महत्त्वपूर्ण: あまり र ぜんぜん पछि negative verb चाहिन्छ।",
+        },
+        whereWeUse: [
+          { en: "よく、たいてい、ときどき pair with positive verbs: よくいきます (I often go).", np: "よく、たいてい、ときどき positive verb सँग: よくいきます।" },
+          { en: "あまり MUST pair with negative: あまりいきません (I don't go very often).", np: "あまり negative verb सँग मात्र: あまりいきません।" },
+          { en: "ぜんぜん MUST pair with negative: ぜんぜんいきません (I don't go at all).", np: "ぜんぜん negative verb सँग मात्र: ぜんぜんいきません।" },
+        ],
+        examples: [
+          {
+            japanese: "よく{図書館|としょかん}へいきます。",
+            reading: "Yoku toshokan e ikimasu.",
+            english: { en: "I often go to the library.", np: "म प्राय: पुस्तकालय जान्छु।" },
+            scenario: { en: "Talking about habits", np: "बानी बारेमा कुरा गर्दा" },
+          },
+          {
+            japanese: "あまりバスでいきません。",
+            reading: "Amari basu de ikimasen.",
+            english: { en: "I don't go by bus very often.", np: "म बसले धेरै जाँदिनँ।" },
+            scenario: { en: "Describing rare habits", np: "बिरलै गर्ने कुरा" },
+          },
+          {
+            japanese: "ぜんぜん{電車|でんしゃ}にのりません。",
+            reading: "Zenzen densha ni norimasen.",
+            english: { en: "I don't ride the train at all.", np: "म बिल्कुल रेल चढ्दिनँ।" },
+            scenario: { en: "Strong negation", np: "पूर्ण अस्वीकार" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "へ",
+        romaji: "e",
+        name: { en: "Direction particle", np: "दिशा Particle" },
+        meaning: { en: "Marks the destination or direction of movement — 'to', 'toward'.", np: "गति वा दिशाको गन्तव्य चिन्ह गर्छ — 'तर्फ', 'मा'।" },
+        examples: [
+          {
+            japanese: "{学校|がっこう}へいきます。",
+            reading: "Gakkō e ikimasu.",
+            english: { en: "I go to school.", np: "म विद्यालय जान्छु।" },
+            scenario: { en: "Destination of movement", np: "गतिको गन्तव्य" },
+          },
+          {
+            japanese: "{東京|とうきょう}へきます。",
+            reading: "Tōkyō e kimasu.",
+            english: { en: "I come to Tokyo.", np: "म टोकियो आउँछु।" },
+            scenario: { en: "Coming toward a place", np: "ठाउँतर्फ आउँदा" },
+          },
+          {
+            japanese: "{家|うち}へかえります。",
+            reading: "Uchi e kaerimasu.",
+            english: { en: "I return home.", np: "म घर फर्कन्छु।" },
+            scenario: { en: "Going back home", np: "घर फर्कँदा" },
+          },
+        ],
+      },
+      {
+        particle: "で",
+        romaji: "de",
+        name: { en: "Means particle (transport)", np: "साधन Particle (यातायात)" },
+        meaning: { en: "Marks the means or method of getting somewhere — 'by', 'using'.", np: "कुनै ठाउँ पुग्ने साधन वा तरिका चिन्ह गर्छ — 'ले', 'द्वारा'।" },
+        examples: [
+          {
+            japanese: "バスでいきます。",
+            reading: "Basu de ikimasu.",
+            english: { en: "I go by bus.", np: "म बसले जान्छु।" },
+            scenario: { en: "Naming the transport", np: "यातायात बताउँदा" },
+          },
+          {
+            japanese: "ちかてつで{駅|えき}へいきます。",
+            reading: "Chikatetsu de eki e ikimasu.",
+            english: { en: "I go to the station by subway.", np: "सबवेले स्टेसन जान्छु।" },
+            scenario: { en: "Combined で and へ", np: "で र へ सँगसँगै" },
+          },
+          {
+            japanese: "タクシーで{空港|くうこう}へいきます。",
+            reading: "Takushī de kūkō e ikimasu.",
+            english: { en: "I go to the airport by taxi.", np: "ट्याक्सीले विमानस्थल जान्छु।" },
+            scenario: { en: "Travel scenario", np: "यात्राको परिस्थिति" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(5),
+    mcqs: [
+      {
+        question: { en: "Which particle marks the destination of movement?", np: "गतिको गन्तव्य चिन्ह गर्ने particle कुन हो?" },
+        choices: [
+          { en: "へ — direction marker (to, toward)", np: "へ — दिशा particle (तर्फ)" },
+          { en: "で — means marker (by, using)", np: "で — साधन particle (ले)" },
+          { en: "を — object marker", np: "を — कर्म particle" },
+          { en: "は — topic marker", np: "は — Topic particle" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "へ (e) marks the destination — がっこうへいきます (I go to school). で marks the means — バスでいきます (I go by bus).", np: "へ गन्तव्य चिन्ह गर्छ — がっこうへいきます। で साधन चिन्ह गर्छ — バスでいきます।" },
+      },
+      {
+        question: { en: "Which particle marks how you travel — the means of transport?", np: "यातायातको साधन बताउने particle कुन हो?" },
+        choices: [
+          { en: "で — means of transport (by)", np: "で — यातायात साधन (ले)" },
+          { en: "へ — direction (toward)", np: "へ — दिशा (तर्फ)" },
+          { en: "に — time/location", np: "に — समय/ठाउँ" },
+          { en: "から — starting point (from)", np: "から — प्रारम्भ (बाट)" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "で marks the means: バスで (by bus), でんしゃで (by train), くるまで (by car). へ marks direction: がっこうへ (to school).", np: "で साधन चिन्ह गर्छ: バスで, でんしゃで, くるまで। へ दिशा चिन्ह गर्छ: がっこうへ।" },
+      },
+      {
+        question: { en: "What does たいてい mean?", np: "たいてい को अर्थ के हो?" },
+        choices: [
+          { en: "Usually / generally", np: "सामान्यतया" },
+          { en: "Often / frequently", np: "प्राय:" },
+          { en: "Sometimes", np: "कहिलेकाहीँ" },
+          { en: "Not at all", np: "बिल्कुल होइन" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "Frequency scale: よく (often) > たいてい (usually) > ときどき (sometimes) > あまり〜ません (not very often) > ぜんぜん〜ません (not at all).", np: "आवृत्तिको क्रम: よく > たいてい > ときどき > あまり〜ません > ぜんぜん〜ません।" },
+      },
+      {
+        question: { en: "ぜんぜん must always be followed by…?", np: "ぜんぜん पछि सधैं के आउनु पर्छ?" },
+        choices: [
+          { en: "A negative verb (〜ません / 〜ない)", np: "Negative verb (〜ません / 〜ない)" },
+          { en: "A positive verb (〜ます)", np: "Positive verb (〜ます)" },
+          { en: "An adjective", np: "Adjective" },
+          { en: "A noun", np: "Noun" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "ぜんぜん〜ません = not at all. ぜんぜんいきません (I don't go at all). Same rule for あまり〜ません. Both MUST pair with a negative verb.", np: "ぜんぜん〜ません = बिल्कुल होइन। ぜんぜんいきません = बिल्कुल जाँदिनँ। あまり को पनि यही नियम।" },
+      },
+      {
+        question: { en: "どうやっていきますか is asking about…?", np: "どうやっていきますか ले के सोध्छ?" },
+        choices: [
+          { en: "How you get there (means of transport)", np: "कसरी जानुहुन्छ (यातायातको साधन)" },
+          { en: "Where you are going", np: "कहाँ जानुहुन्छ" },
+          { en: "When you are going", np: "कहिले जानुहुन्छ" },
+          { en: "With whom you are going", np: "कससँग जानुहुन्छ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どうやって = how / by what means. It asks for the method of transport. どこへ = where. いつ = when. だれと = with whom.", np: "どうやって = कसरी / कुन साधनले। यातायात सोध्छ। どこへ = कहाँ। いつ = कहिले। だれと = कससँग।" },
+      },
+      {
+        question: { en: "ひとりでいきます means…?", np: "ひとりでいきます को अर्थ के हो?" },
+        choices: [
+          { en: "I go alone / by myself", np: "म एक्लै जान्छु" },
+          { en: "I go with one person", np: "म एक जनासँग जान्छु" },
+          { en: "I go together with everyone", np: "म सबैसँगै जान्छु" },
+          { en: "I go first", np: "म पहिले जान्छु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "ひとりで = alone / by oneself. ひとり = one person. で here marks the manner (by oneself). Contrast: ともだちといきます (go with a friend).", np: "ひとりで = एक्लै। ひとり = एक जना। で यहाँ तरिका चिन्ह गर्छ। Contrast: ともだちといきます (साथीसँग जानु)।" },
+      },
+      {
+        question: { en: "What is the difference between いきます and かえります?", np: "いきます र かえります को फरक के हो?" },
+        choices: [
+          { en: "いきます = go (to any place); かえります = return to one's own home/base", np: "いきます = जानु (जुनसुकै ठाउँ); かえります = आफ्नै घर/ठाउँ फर्कनु" },
+          { en: "いきます = go fast; かえります = go slowly", np: "いきます = छिटो जानु; かえります = बिस्तारै जानु" },
+          { en: "Both mean the same thing", np: "दुवैको एउटै अर्थ छ" },
+          { en: "いきます = come; かえります = go", np: "いきます = आउनु; かえります = जानु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "いきます = go (away from speaker's base). きます = come (toward speaker). かえります = return to one's home or starting point — always implies going BACK.", np: "いきます = जानु (वक्ताबाट टाढा)। きます = आउनु (वक्ततर्फ)। かえります = आफ्नो घर/प्रारम्भ ठाउँमा फर्कनु — सधैं 'फर्कनु' बुझाउँछ।" },
+      },
+      {
+        question: { en: "Fill in the blank: ___でがっこうへいきます。(I go to school by bus.)", np: "खाली ठाउँ भर्नुस्: ___でがっこうへいきます。(बसले विद्यालय जान्छु।)" },
+        choices: ["バス", "へ", "よく", "うち"],
+        correctIndex: 0,
+        explanation: { en: "バスでがっこうへいきます = I go to school by bus. バス (bus) + で (by means of) + がっこうへ (to school) + いきます (go).", np: "バスでがっこうへいきます = बसले विद्यालय जान्छु। バス + で (साधन) + がっこうへ (विद्यालयतर्फ) + いきます।" },
+      },
+      {
+        question: { en: "よくいきます tells us the speaker goes…?", np: "よくいきます ले वक्ता कति पटक जान्छ भन्छ?" },
+        choices: [
+          { en: "Often / frequently", np: "प्राय: / बारम्बार" },
+          { en: "Sometimes", np: "कहिलेकाहीँ" },
+          { en: "Never", np: "कहिल्यै होइन" },
+          { en: "Not very often", np: "धेरै होइन" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "よく = often / frequently. It sits at the top of the frequency scale above たいてい (usually) and ときどき (sometimes).", np: "よく = प्राय: / बारम्बार। यो frequency scale मा सबैभन्दा माथि छ — たいてい र ときどき भन्दा माथि।" },
+      },
+      {
+        question: { en: "Which sentence is grammatically correct?", np: "कुन वाक्य व्याकरणिक रूपमा सही छ?" },
+        choices: [
+          { en: "あまりいきません (I don't go very often)", np: "あまりいきません (धेरै जाँदिनँ)" },
+          { en: "あまりいきます (I go not very often)", np: "あまりいきます (धेरै जाँदिनँ — गलत)" },
+          { en: "ぜんぜんいきます (I don't go at all)", np: "ぜんぜんいきます (बिल्कुल जाँदिनँ — गलत)" },
+          { en: "あまりよくいきます (I go often not much)", np: "あまりよくいきます (गलत)" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "あまり and ぜんぜん MUST pair with negative verbs (〜ません). あまりいきません ✓. ぜんぜんいきません ✓. Using them with 〜ます (positive) is a grammar error.", np: "あまり र ぜんぜん सधैं negative verb (〜ません) सँग आउनु पर्छ। あまりいきません ✓। ぜんぜんいきません ✓। Positive verb सँग प्रयोग गर्नु गल्ती हो।" },
+      },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
