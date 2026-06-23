@@ -2088,6 +2088,692 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  // ═══════════════════════════════════════════════════════════════════════
+  // LESSON 6 — たべものと のみもの (Food, Drink & Invitations)
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    id: 6,
+    title: "Lesson 6 — たべもの と のみもの (Food, Drink & Invitations)",
+    intro: [
+      {
+        en: "In this lesson you learn to talk about eating and drinking: what you eat, where you eat, and how to invite someone to join you.",
+        np: "यस पाठमा खाना र पिउने बारे कुरा गर्न सिक्नुहुनेछ: के खानुहुन्छ, कहाँ खानुहुन्छ, र कसैलाई सँगसँगै आउन कसरी निम्तो दिने।",
+      },
+      {
+        en: "The particle で (de) marks where an action takes place — 'at' or 'in'. The particle を (o) marks the direct object of a verb — the thing you eat, drink, or buy.",
+        np: "Particle で क्रिया हुने ठाउँ चिन्ह गर्छ — 'मा'। Particle を verb को direct object चिन्ह गर्छ — के खानुहुन्छ, पिउनुहुन्छ, वा किन्नुहुन्छ।",
+      },
+      {
+        en: "To invite someone: 〜ませんか (won't you...?). To suggest: 〜ましょう (let's...) or 〜ましょうか (shall we...?).",
+        np: "कसैलाई निम्त्याउन: 〜ませんか (जाउँ न?)। सुझाव दिन: 〜ましょう (जाउँ) वा 〜ましょうか (जाउँ कि?)।",
+      },
+    ],
+    youtubeVideoId: { en: "hYbMa7PmMNw", np: "hYbMa7PmMNw" },
+    youtubeTitle: "Minna no Nihongo · Lesson 6 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "たなかさん、{昼休|ひるやす}みに いっしょに ランチを たべませんか。",
+        reading: "Tanaka-san, hiruyasumi ni issho ni ranchi o tabemasen ka?",
+        english: { en: "Tanaka, would you like to have lunch together during the break?", np: "तानाकाजी, दिउँसो विश्राममा सँगसँगै खाना खाउँ न?" },
+      },
+      {
+        speaker: "B",
+        japanese: "もちろん。どこで たべますか。",
+        reading: "Mochiron. Doko de tabemasu ka?",
+        english: { en: "Of course! Where shall we eat?", np: "अवश्य! कहाँ खाने?" },
+      },
+      {
+        speaker: "A",
+        japanese: "{駅|えき}の まえに レストランが あります。あそこは どうですか。",
+        reading: "Eki no mae ni resutoran ga arimasu. Asoko wa dō desu ka?",
+        english: { en: "There's a restaurant in front of the station. How about there?", np: "स्टेसनको अगाडि एउटा रेस्टुरेन्ट छ। त्यहाँ जाउँ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいですね。そこで たべましょう。なにを たべますか。",
+        reading: "Ii desu ne. Soko de tabemashō. Nani o tabemasu ka?",
+        english: { en: "Sounds good! Let's eat there. What are you going to eat?", np: "राम्रो! त्यहीँ खाउँ। के खाने?" },
+      },
+      {
+        speaker: "A",
+        japanese: "{私|わたし}は パスタを たべます。たなかさんは？",
+        reading: "Watashi wa pasuta o tabemasu. Tanaka-san wa?",
+        english: { en: "I'll have pasta. What about you, Tanaka?", np: "म पास्ता खान्छु। तानाकाजी?" },
+      },
+      {
+        speaker: "B",
+        japanese: "{私|わたし}は さかなを たべます。のみものは なにに しますか。",
+        reading: "Watashi wa sakana o tabemasu. Nomimono wa nani ni shimasu ka?",
+        english: { en: "I'll have fish. What will you have to drink?", np: "म माछा खान्छु। पिउने के लिन्छौ?" },
+      },
+      {
+        speaker: "A",
+        japanese: "コーヒーを のみます。たなかさんは？",
+        reading: "Kōhī o nomimasu. Tanaka-san wa?",
+        english: { en: "I'll have coffee. And you?", np: "म कफी पिउँछु। तपाई?" },
+      },
+      {
+        speaker: "B",
+        japanese: "{私|わたし}は こうちゃに します。あとで いっしょに こうえんへ いきませんか。",
+        reading: "Watashi wa kōcha ni shimasu. Atode issho ni kōen e ikimasen ka?",
+        english: { en: "I'll go with black tea. Shall we go to the park together afterwards?", np: "म कालो चिया लिन्छु। पछि सँगसँगै पार्क जाउँ न?" },
+      },
+      {
+        speaker: "A",
+        japanese: "いいですね。でも、ちょっと しごとが あります。",
+        reading: "Ii desu ne. Demo, chotto shigoto ga arimasu.",
+        english: { en: "That sounds nice. But I have a bit of work to do.", np: "राम्रो! तर, मलाई अलिकति काम छ।" },
+      },
+      {
+        speaker: "B",
+        japanese: "そうですか。じゃあ、また こんど いきましょう。",
+        reading: "Sō desu ka. Jā, mata kondo ikimashō.",
+        english: { en: "I see. Well then, let's go another time.", np: "हो र। ठीक छ, अर्को पटक जाउँ।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "[Place] で [Object] を [Verb] — action at a location", np: "[ठाउँ] で [Object] を [Verb] — ठाउँमा क्रिया" },
+        meaning: {
+          en: "Use で (de) to mark WHERE an action happens — 'at the restaurant', 'at school'. Combine with を to say what you do there.",
+          np: "क्रिया कहाँ हुन्छ चिन्ह गर्न で प्रयोग गर्नुस् — 'रेस्टुरेन्टमा', 'विद्यालयमा'। को को संगसंगै के गर्नुहुन्छ भन्न।",
+        },
+        whereWeUse: [
+          { en: "Location of eating/drinking: レストランでパスタをたべます (I eat pasta at the restaurant).", np: "खाना/पिउने ठाउँ: レストランでパスタをたべます।" },
+          { en: "Location of studying/working: としょかんでべんきょうをします (I study at the library).", np: "पढ्ने/काम गर्ने ठाउँ: としょかんでべんきょうをします।" },
+          { en: "Note: で here means PLACE of action — different from Day 5's で for transport means.", np: "注意: यो で क्रियाको ठाउँ — Day 5 को यातायात で भन्दा फरक।" },
+        ],
+        examples: [
+          {
+            japanese: "レストランで パスタを たべます。",
+            reading: "Resutoran de pasuta o tabemasu.",
+            english: { en: "I eat pasta at the restaurant.", np: "रेस्टुरेन्टमा पास्ता खान्छु।" },
+            scenario: { en: "Lunch plans", np: "दिउँसो खानाको योजना" },
+          },
+          {
+            japanese: "カフェで コーヒーを のみます。",
+            reading: "Kafe de kōhī o nomimasu.",
+            english: { en: "I drink coffee at the café.", np: "क्याफेमा कफी पिउँछु।" },
+            scenario: { en: "Morning routine", np: "बिहानको दैनिकी" },
+          },
+          {
+            japanese: "うちで しょくじを つくります。",
+            reading: "Uchi de shokuji o tsukurimasu.",
+            english: { en: "I make a meal at home.", np: "घरमा खाना बनाउँछु।" },
+            scenario: { en: "Home cooking", np: "घरमा खाना पकाउँदा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "〜ませんか — Invitation 'Won't you...?'", np: "〜ませんか — निम्तो 'जाउँ न?'" },
+        meaning: {
+          en: "Add ませんか to the verb stem to invite someone politely. It literally means 'Won't you...?' and is softer than a direct request.",
+          np: "Verb stem मा ませんか जोडेर विनम्र निम्तो दिन्छ। शाब्दिक अर्थ 'जाउँ न?' — सिधा अनुरोध भन्दा नम्र।",
+        },
+        whereWeUse: [
+          { en: "Inviting to eat together: いっしょにたべませんか (Won't you eat with me?).", np: "सँगसँगै खान निम्त्याउन: いっしょにたべませんか।" },
+          { en: "Inviting to go somewhere: いっしょにいきませんか (Won't you come with me?).", np: "सँगसँगै जान: いっしょにいきませんか।" },
+          { en: "Polite refusal uses ちょっと: ちょっと... (a little [difficult] — implies sorry, can't).", np: "नम्र अस्वीकार: ちょっと... (अलिकति... — माफ गर्नुहोस् बुझिन्छ)।" },
+        ],
+        examples: [
+          {
+            japanese: "いっしょに ランチを たべませんか。",
+            reading: "Issho ni ranchi o tabemasen ka?",
+            english: { en: "Won't you have lunch with me?", np: "सँगसँगै खाना खाउँ न?" },
+            scenario: { en: "Lunch invitation", np: "खानाको निम्तो" },
+          },
+          {
+            japanese: "こうえんへ いきませんか。",
+            reading: "Kōen e ikimasen ka?",
+            english: { en: "Won't you come to the park?", np: "पार्क जाउँ न?" },
+            scenario: { en: "After-work suggestion", np: "काम पछिको सुझाव" },
+          },
+          {
+            japanese: "コーヒーを のみませんか。",
+            reading: "Kōhī o nomimasen ka?",
+            english: { en: "Won't you have some coffee?", np: "कफी पिउँ न?" },
+            scenario: { en: "Casual offer", np: "अनौपचारिक प्रस्ताव" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "〜ましょう / 〜ましょうか — 'Let's...' / 'Shall we...?'", np: "〜ましょう / 〜ましょうか — 'जाउँ' / 'जाउँ कि?'" },
+        meaning: {
+          en: "〜ましょう (masho) = 'Let's do it!' — a confident proposal. 〜ましょうか (masho ka) = 'Shall we...?' — a softer, checking suggestion.",
+          np: "〜ましょう = 'जाउँ!' — आत्मविश्वासपूर्ण प्रस्ताव। 〜ましょうか = 'जाउँ कि?' — नरम, सोध्ने प्रकारको सुझाव।",
+        },
+        whereWeUse: [
+          { en: "Confirming a plan: そこでたべましょう (Let's eat there).", np: "योजना पक्का गर्न: そこでたべましょう (त्यहीँ खाउँ)।" },
+          { en: "Suggesting: 〜ましょうか (Shall we...?) — leaves it open for the other person.", np: "सुझाव दिन: 〜ましょうか — अर्को व्यक्तिलाई निर्णय गर्ने ठाउँ दिन्छ।" },
+          { en: "Response to 〜ませんか invitation: そうしましょう (Yes, let's!) — the natural reply.", np: "〜ませんか को जवाफमा: そうしましょう (हो, जाउँ!) — स्वाभाविक उत्तर।" },
+        ],
+        examples: [
+          {
+            japanese: "そこで たべましょう。",
+            reading: "Soko de tabemashō.",
+            english: { en: "Let's eat there.", np: "त्यहीँ खाउँ।" },
+            scenario: { en: "Agreeing on a place", np: "ठाउँमा सहमत हुँदा" },
+          },
+          {
+            japanese: "また こんど いきましょう。",
+            reading: "Mata kondo ikimashō.",
+            english: { en: "Let's go another time.", np: "अर्को पटक जाउँ।" },
+            scenario: { en: "Deferring plans", np: "योजना पर सार्दा" },
+          },
+          {
+            japanese: "コーヒーを のみましょうか。",
+            reading: "Kōhī o nomimashō ka?",
+            english: { en: "Shall we have some coffee?", np: "कफी पिउँ कि?" },
+            scenario: { en: "Soft suggestion", np: "नरम सुझाव" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "で",
+        romaji: "de",
+        name: { en: "Location particle (place of action)", np: "ठाउँ Particle (क्रियाको ठाउँ)" },
+        meaning: { en: "Marks WHERE an action takes place — 'at', 'in'. Different from transport で (by bus etc.) — this で is about the place the activity happens.", np: "क्रिया कहाँ हुन्छ चिन्ह गर्छ — 'मा'। यातायातको で भन्दा फरक — यो で क्रियाको ठाउँको बारेमा हो।" },
+        examples: [
+          {
+            japanese: "レストランで たべます。",
+            reading: "Resutoran de tabemasu.",
+            english: { en: "I eat at the restaurant.", np: "रेस्टुरेन्टमा खान्छु।" },
+            scenario: { en: "Place of eating", np: "खाने ठाउँ" },
+          },
+          {
+            japanese: "としょかんで べんきょうします。",
+            reading: "Toshokan de benkyō shimasu.",
+            english: { en: "I study at the library.", np: "पुस्तकालयमा पढ्छु।" },
+            scenario: { en: "Place of study", np: "पढ्ने ठाउँ" },
+          },
+          {
+            japanese: "うちで コーヒーを のみます。",
+            reading: "Uchi de kōhī o nomimasu.",
+            english: { en: "I drink coffee at home.", np: "घरमा कफी पिउँछु।" },
+            scenario: { en: "Home activity", np: "घरमा क्रिया" },
+          },
+        ],
+      },
+      {
+        particle: "を",
+        romaji: "o",
+        name: { en: "Object marker particle", np: "Object Particle" },
+        meaning: { en: "Marks the direct object of a verb — the thing being eaten, drunk, bought, or made.", np: "Verb को direct object चिन्ह गर्छ — जे खाइन्छ, पिइन्छ, किनिन्छ, वा बनाइन्छ।" },
+        examples: [
+          {
+            japanese: "コーヒーを のみます。",
+            reading: "Kōhī o nomimasu.",
+            english: { en: "I drink coffee.", np: "म कफी पिउँछु।" },
+            scenario: { en: "Direct object of drink", np: "पिउने वस्तु" },
+          },
+          {
+            japanese: "パンを たべます。",
+            reading: "Pan o tabemasu.",
+            english: { en: "I eat bread.", np: "म रोटी खान्छु।" },
+            scenario: { en: "Direct object of eat", np: "खाने वस्तु" },
+          },
+          {
+            japanese: "ほんを かいます。",
+            reading: "Hon o kaimasu.",
+            english: { en: "I buy a book.", np: "म किताब किन्छु।" },
+            scenario: { en: "Direct object of buy", np: "किन्ने वस्तु" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(6),
+    mcqs: [
+      {
+        question: { en: "Which particle marks WHERE an action takes place?", np: "क्रिया कहाँ हुन्छ चिन्ह गर्ने particle कुन हो?" },
+        choices: [
+          { en: "で — location of action (at, in)", np: "で — क्रियाको ठाउँ (मा)" },
+          { en: "へ — direction (toward)", np: "へ — दिशा (तर्फ)" },
+          { en: "に — time or destination", np: "に — समय वा गन्तव्य" },
+          { en: "の — possession", np: "の — स्वामित्व" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "で marks the place of action: レストランでたべます (eat at the restaurant). へ marks direction. This で is different from transport で (バスで = by bus).", np: "で क्रियाको ठाउँ चिन्ह गर्छ: レストランでたべます। へ दिशा चिन्ह गर्छ। यो で यातायात で भन्दा फरक।" },
+      },
+      {
+        question: { en: "What does the particle を do in 'コーヒーをのみます'?", np: "'コーヒーをのみます' मा particle を ले के गर्छ?" },
+        choices: [
+          { en: "Marks coffee as the direct object (the thing being drunk)", np: "कफीलाई direct object (पिइने वस्तु) चिन्ह गर्छ" },
+          { en: "Marks where the drinking happens", np: "पिउने ठाउँ चिन्ह गर्छ" },
+          { en: "Marks the direction of movement", np: "गतिको दिशा चिन्ह गर्छ" },
+          { en: "Marks the time of drinking", np: "पिउने समय चिन्ह गर्छ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "を marks the direct object — the thing the verb acts on. コーヒーをのみます: coffee is what is being drunk. Other examples: パンをたべます, ほんをかいます.", np: "を direct object चिन्ह गर्छ। コーヒーをのみます: कफी पिइन्छ। अन्य: パンをたべます, ほんをかいます।" },
+      },
+      {
+        question: { en: "How do you invite someone to eat lunch with you?", np: "कसैलाई दिउँसो खाना सँगसँगै खान कसरी निम्त्याउँछौ?" },
+        choices: [
+          { en: "いっしょにランチをたべませんか", np: "いっしょにランチをたべませんか" },
+          { en: "いっしょにランチをたべます", np: "いっしょにランチをたべます" },
+          { en: "いっしょにランチをたべましょう", np: "いっしょにランチをたべましょう" },
+          { en: "いっしょにランチをたべません", np: "いっしょにランチをたべません" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "〜ませんか is the invitation form — 'Won't you...?'. 〜ましょう means 'Let's...' (used after both agree). 〜ません is a negative statement, not an invitation.", np: "〜ませんか निम्तो हो — 'जाउँ न?'। 〜ましょう = 'जाउँ' (दुवै सहमत भएपछि)। 〜ません negative statement हो।" },
+      },
+      {
+        question: { en: "What does 〜ましょう express?", np: "〜ましょう ले के व्यक्त गर्छ?" },
+        choices: [
+          { en: "A confident proposal: 'Let's do it!'", np: "आत्मविश्वासपूर्ण प्रस्ताव: 'गरौँ!'" },
+          { en: "A question: 'Do you...?'", np: "प्रश्न: 'गर्नुहुन्छ?'" },
+          { en: "A polite refusal", np: "नम्र अस्वीकार" },
+          { en: "A past action", np: "भूतकालको क्रिया" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "〜ましょう = 'Let's...!' — a confident joint suggestion. 〜ましょうか = 'Shall we...?' — softer. ませんか = 'Won't you...?' — an invitation.", np: "〜ましょう = 'गरौँ!' — आत्मविश्वासपूर्ण। 〜ましょうか = 'गरौँ कि?' — नरम। ませんか = 'गर्नु हुन्न र?' — निम्तो।" },
+      },
+      {
+        question: { en: "のみます takes which particle for the thing being drunk?", np: "पिइने वस्तुका लागि のみます ले कुन particle लिन्छ?" },
+        choices: ["を", "へ", "で", "に"],
+        correctIndex: 0,
+        explanation: { en: "Direct-object verbs like のみます, たべます, かいます all take を: コーヒーをのみます, パンをたべます, ほんをかいます.", np: "のみます, たべます, かいます जस्ता direct-object verbs ले を लिन्छन्: コーヒーをのみます, パンをたべます।" },
+      },
+      {
+        question: { en: "たべます means…?", np: "たべます को अर्थ के हो?" },
+        choices: [
+          { en: "Eat (polite present)", np: "खानु (विनम्र वर्तमान)" },
+          { en: "Drink (polite present)", np: "पिउनु (विनम्र वर्तमान)" },
+          { en: "Buy (polite present)", np: "किन्नु (विनम्र वर्तमान)" },
+          { en: "Cook (polite present)", np: "पकाउनु (विनम्र वर्तमान)" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "たべます = eat. のみます = drink. かいます = buy. つくります = make/cook. All are polite (〜ます) forms.", np: "たべます = खानु। のみます = पिउनु। かいます = किन्नु। つくります = बनाउनु। सबै विनम्र (〜ます) रूप।" },
+      },
+      {
+        question: { en: "もちろん means…?", np: "もちろん को अर्थ के हो?" },
+        choices: [
+          { en: "Of course!", np: "अवश्य!" },
+          { en: "Maybe / perhaps", np: "शायद" },
+          { en: "A little bit", np: "अलिकति" },
+          { en: "That's right", np: "ठीक छ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "もちろん = of course / naturally. It's used to enthusiastically agree. ちょっと = a little (also used as a soft refusal: ちょっと... = 'it's a bit difficult...').", np: "もちろん = अवश्य। सहर्ष सहमत हुन प्रयोग हुन्छ। ちょっと = अलिकति (नम्र अस्वीकारमा पनि: ちょっと... = 'अलि गाह्रो...')।" },
+      },
+      {
+        question: { en: "Fill in the blank: レストラン___ランチをたべます。", np: "खाली ठाउँ भर्नुस्: レストラン___ランチをたべます।" },
+        choices: ["で", "へ", "を", "が"],
+        correctIndex: 0,
+        explanation: { en: "レストランでランチをたべます = I eat lunch at the restaurant. で marks the place of action here — different from transport (バスで = by bus).", np: "レストランでランチをたべます = रेस्टुरेन्टमा दिउँसो खाना खान्छु। यो で क्रियाको ठाउँ — यातायात で (バスで) भन्दा फरक।" },
+      },
+      {
+        question: { en: "ひるやすみ means…?", np: "ひるやすみ को अर्थ के हो?" },
+        choices: [
+          { en: "Lunch break", np: "दिउँसोको विश्राम" },
+          { en: "Lunchtime meal", np: "दिउँसोको खाना" },
+          { en: "Morning break", np: "बिहानको विश्राम" },
+          { en: "Evening rest", np: "साँझको विश्राम" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "ひるやすみ = lunch break / noon rest (昼休み). ひる = noon/daytime; やすみ = rest/break. ひるごはん = the lunch meal itself.", np: "ひるやすみ = दिउँसोको विश्राम (昼休み)। ひる = दिउँसो; やすみ = विश्राम। ひるごはん = दिउँसोको खाना।" },
+      },
+      {
+        question: { en: "あとで means…?", np: "あとで को अर्थ के हो?" },
+        choices: [
+          { en: "Later / after that", np: "पछि / त्यसपछि" },
+          { en: "Before that", np: "त्यसभन्दा पहिले" },
+          { en: "Right now", np: "अहिले नै" },
+          { en: "Together", np: "सँगसँगै" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "あとで = later / after that. あとでコーヒーをのみましょう = Let's have coffee later. いま = now. まえに = before. いっしょに = together.", np: "あとで = पछि / त्यसपछि। あとでコーヒーをのみましょう = पछि कफी पिउँ। いま = अहिले। まえに = पहिले। いっしょに = सँगसँगै।" },
+      },
+    ],
+  },
+  // ═══════════════════════════════════════════════════════════════════════
+  // LESSON 7 — プレゼント (Gifts, Giving & Receiving)
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    id: 7,
+    title: "Lesson 7 — プレゼント (Gifts, Giving & Receiving)",
+    intro: [
+      {
+        en: "In this lesson you learn the three verbs for giving and receiving — あげます, もらいます, and くれます — and how to use them with the particles に and から.",
+        np: "यस पाठमा दिने र पाउने तीन verb — あげます, もらいます, र くれます — र ती particle に र から सँग कसरी प्रयोग गर्ने सिक्नुहुनेछ।",
+      },
+      {
+        en: "あげます = I/someone gives TO another person. もらいます = I/someone RECEIVES from another person. くれます = someone gives TO me (or my in-group).",
+        np: "あげます = म/कोही अर्को व्यक्तिलाई दिन्छ। もらいます = म/कोही अर्को व्यक्तिबाट पाउँछ। くれます = कोहीले मलाई दिन्छ।",
+      },
+      {
+        en: "Key particles: に marks the recipient (to whom), から marks the source (from whom).",
+        np: "मुख्य particle: に पाउने व्यक्ति चिन्ह गर्छ (कसलाई), から दिने स्रोत चिन्ह गर्छ (कसबाट)।",
+      },
+    ],
+    youtubeVideoId: { en: "RQlOsHLDfCE", np: "RQlOsHLDfCE" },
+    youtubeTitle: "Minna no Nihongo · Lesson 7 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "きのう スミスさんの たんじょうびでしたね。だれかに プレゼントを もらいましたか。",
+        reading: "Kinō Sumisu-san no tanjōbi deshita ne. Dare ka ni purezento o moraimashita ka?",
+        english: { en: "Yesterday was your birthday, wasn't it, Smith? Did you receive a present from anyone?", np: "हिजो तपाईको जन्मदिन थियो हैन, स्मिथजी? कसैबाट उपहार पाउनुभयो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、かのじょから {花|はな}と カードを もらいました。",
+        reading: "Hai, kanojo kara hana to kādo o moraimashita.",
+        english: { en: "Yes, I received flowers and a card from my girlfriend.", np: "हो, प्रेमिकाबाट फूल र कार्ड पाएँ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "いいですね。スミスさんは だれかに なにか あげましたか。",
+        reading: "Ii desu ne. Sumisu-san wa dare ka ni nani ka agemashita ka?",
+        english: { en: "That's lovely! Did you give anything to anyone?", np: "राम्रो! तपाईले पनि कसैलाई केही दिनुभयो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、かぞくに チョコレートを あげました。{母|はは}に {花|はな}も あげました。",
+        reading: "Hai, kazoku ni chokoreeto o agemashita. Haha ni hana mo agemashita.",
+        english: { en: "Yes, I gave chocolate to my family. I also gave flowers to my mother.", np: "हो, परिवारलाई चकलेट दिएँ। आमालाई फूल पनि दिएँ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "すてきですね。たんじょうびは たのしかったですか。",
+        reading: "Suteki desu ne. Tanjōbi wa tanoshikatta desu ka?",
+        english: { en: "How lovely! Was the birthday fun?", np: "कति राम्रो! जन्मदिन मजाले बित्यो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、とても たのしかったです。ともだちも きてくれました。",
+        reading: "Hai, totemo tanoshikatta desu. Tomodachi mo kite kuremashita.",
+        english: { en: "Yes, it was very fun! My friends also came for me.", np: "हो, एकदम मजा भयो! साथीहरू पनि आइदिए।" },
+      },
+      {
+        speaker: "A",
+        japanese: "クリスマスには なにを あげる つもりですか。",
+        reading: "Kurisumasu ni wa nani o ageru tsumori desu ka?",
+        english: { en: "What are you planning to give for Christmas?", np: "क्रिसमसमा के दिने विचार छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "かのじょに ゆびわを あげたいです。でも まだ かっていません。",
+        reading: "Kanojo ni yubiwa o agetai desu. Demo mada katte imasen.",
+        english: { en: "I want to give my girlfriend a ring. But I haven't bought it yet.", np: "प्रेमिकालाई औंठी दिन चाहन्छु। तर अझै किनेको छैन।" },
+      },
+      {
+        speaker: "A",
+        japanese: "もう えらびましたか。",
+        reading: "Mō erabimashita ka?",
+        english: { en: "Have you already chosen one?", np: "पहिले नै रोज्नुभयो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、まだです。いっしょに えらんでくれませんか。",
+        reading: "Iie, mada desu. Issho ni erande kuremasen ka?",
+        english: { en: "No, not yet. Would you help me choose one?", np: "होइन, अझै। सँगसँगै रोजिदिनु हुन्न?" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "[Person] に [Object] を あげます — give to someone", np: "[व्यक्ति] に [वस्तु] を あげます — कसैलाई दिनु" },
+        meaning: {
+          en: "Use あげます when I (or someone) gives something TO another person outside my group. に marks the recipient.",
+          np: "जब म (वा कोही) अर्को व्यक्तिलाई केही दिन्छ तब あげます प्रयोग गर्नुस्। に पाउने व्यक्ति चिन्ह गर्छ।",
+        },
+        whereWeUse: [
+          { en: "Giving to a friend: ともだちにプレゼントをあげます (I give a present to my friend).", np: "साथीलाई दिन: ともだちにプレゼントをあげます।" },
+          { en: "Giving to family: ははにはなをあげました (I gave flowers to my mother).", np: "परिवारलाई दिन: ははにはなをあげました।" },
+          { en: "Never use あげます when the receiver is yourself — use もらいます instead.", np: "आफू पाउने भए あげます प्रयोग नगर्नुस् — もらいます प्रयोग गर्नुस्।" },
+        ],
+        examples: [
+          {
+            japanese: "ともだちに プレゼントを あげます。",
+            reading: "Tomodachi ni purezento o agemasu.",
+            english: { en: "I give a present to my friend.", np: "साथीलाई उपहार दिन्छु।" },
+            scenario: { en: "Giving a gift", np: "उपहार दिँदा" },
+          },
+          {
+            japanese: "{母|はは}に {花|はな}を あげました。",
+            reading: "Haha ni hana o agemashita.",
+            english: { en: "I gave flowers to my mother.", np: "आमालाई फूल दिएँ।" },
+            scenario: { en: "Past giving", np: "भूतकालमा दिएको" },
+          },
+          {
+            japanese: "かれしに カードを あげます。",
+            reading: "Kareshi ni kādo o agemasu.",
+            english: { en: "I give a card to my boyfriend.", np: "प्रेमीलाई कार्ड दिन्छु।" },
+            scenario: { en: "Occasion gift", np: "विशेष अवसरमा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "[Person] から [Object] を もらいます — receive from someone", np: "[व्यक्ति] から [वस्तु] を もらいます — कसैबाट पाउनु" },
+        meaning: {
+          en: "Use もらいます when I (or someone) receives something FROM another person. から marks the source — who gave it.",
+          np: "जब म (वा कोही) अर्को व्यक्तिबाट केही पाउँछ तब もらいます प्रयोग गर्नुस्। から स्रोत चिन्ह गर्छ — कसले दियो।",
+        },
+        whereWeUse: [
+          { en: "Receiving from a friend: ともだちからはなをもらいました (I received flowers from my friend).", np: "साथीबाट पाउन: ともだちからはなをもらいました।" },
+          { en: "に can also replace から as the source: ともだちにもらいました = same meaning.", np: "に ले पनि कसबाट भन्न सकिन्छ: ともだちにもらいました = एउटै अर्थ।" },
+          { en: "Ask 'from whom': だれからもらいましたか (Who did you receive it from?).", np: "कसबाट सोध्न: だれからもらいましたか।" },
+        ],
+        examples: [
+          {
+            japanese: "かのじょから {花|はな}を もらいました。",
+            reading: "Kanojo kara hana o moraimashita.",
+            english: { en: "I received flowers from my girlfriend.", np: "प्रेमिकाबाट फूल पाएँ।" },
+            scenario: { en: "Birthday gift received", np: "जन्मदिनमा पाएको" },
+          },
+          {
+            japanese: "{父|ちち}から ワインを もらいます。",
+            reading: "Chichi kara wain o moraimasu.",
+            english: { en: "I receive wine from my father.", np: "बुबाबाट वाइन पाउँछु।" },
+            scenario: { en: "Receiving from family", np: "परिवारबाट पाउँदा" },
+          },
+          {
+            japanese: "だれから もらいましたか。",
+            reading: "Dare kara moraimashita ka?",
+            english: { en: "Who did you receive it from?", np: "कसबाट पाउनुभयो?" },
+            scenario: { en: "Asking the source", np: "स्रोत सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "もう〜ました / まだ〜ていません — Already / Not yet", np: "もう〜ました / まだ〜ていません — पहिले नै / अझै होइन" },
+        meaning: {
+          en: "もう (mō) + past verb = already done. まだ (mada) + negative = not yet. These are used to describe whether an action has been completed.",
+          np: "もう + past verb = पहिले नै गरिसक्यो। まだ + negative = अझै गरेको छैन। कुनै काम भयो कि भएन भन्न प्रयोग हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "もうたべました (I've already eaten) — use past tense after もう.", np: "もうたべました = पहिले नै खाइसकेँ — もう पछि past tense।" },
+          { en: "まだたべていません (I haven't eaten yet) — use negative て-form after まだ.", np: "まだたべていません = अझै खाइसकेको छैन — まだ पछि negative て-form।" },
+          { en: "もうかいましたか? (Have you bought it already?) / いいえ、まだです (No, not yet).", np: "もうかいましたか? / いいえ、まだです — प्रश्न र उत्तर।" },
+        ],
+        examples: [
+          {
+            japanese: "もう たべました。",
+            reading: "Mō tabemashita.",
+            english: { en: "I've already eaten.", np: "पहिले नै खाइसकेँ।" },
+            scenario: { en: "Action already completed", np: "काम पहिले नै सकिएको" },
+          },
+          {
+            japanese: "まだ かっていません。",
+            reading: "Mada katte imasen.",
+            english: { en: "I haven't bought it yet.", np: "अझै किनेको छैन।" },
+            scenario: { en: "Action not yet done", np: "काम अझै नभएको" },
+          },
+          {
+            japanese: "もう えらびましたか。いいえ、まだです。",
+            reading: "Mō erabimashita ka? Iie, mada desu.",
+            english: { en: "Have you chosen already? — No, not yet.", np: "पहिले नै रोज्नुभयो? — होइन, अझै।" },
+            scenario: { en: "Question and reply", np: "प्रश्न र उत्तर" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "に",
+        romaji: "ni",
+        name: { en: "Recipient particle (giving)", np: "पाउने Particle (दिँदा)" },
+        meaning: { en: "Marks the RECIPIENT of a gift — who receives it. Used with あげます and くれます. Also used with もらいます (alternate to から).", np: "उपहार पाउने व्यक्ति चिन्ह गर्छ। あげます र くれます सँग प्रयोग हुन्छ। もらいます सँग पनि (から को विकल्प)।" },
+        examples: [
+          {
+            japanese: "ともだちに プレゼントを あげます。",
+            reading: "Tomodachi ni purezento o agemasu.",
+            english: { en: "I give a present to my friend.", np: "साथीलाई उपहार दिन्छु।" },
+            scenario: { en: "Recipient of giving", np: "दिने क्रियाको पाउने" },
+          },
+          {
+            japanese: "{母|はは}に カードを あげました。",
+            reading: "Haha ni kādo o agemashita.",
+            english: { en: "I gave a card to my mother.", np: "आमालाई कार्ड दिएँ।" },
+            scenario: { en: "Giving to family", np: "परिवारलाई दिँदा" },
+          },
+          {
+            japanese: "だれに あげましたか。",
+            reading: "Dare ni agemashita ka?",
+            english: { en: "Who did you give it to?", np: "कसलाई दिनुभयो?" },
+            scenario: { en: "Asking the recipient", np: "पाउने व्यक्ति सोध्दा" },
+          },
+        ],
+      },
+      {
+        particle: "から",
+        romaji: "kara",
+        name: { en: "Source particle (receiving)", np: "स्रोत Particle (पाउँदा)" },
+        meaning: { en: "Marks the SOURCE of a received item — who gave it. Used with もらいます. Also means 'from' for places and 'because' in some contexts.", np: "पाइएको वस्तुको स्रोत चिन्ह गर्छ — कसले दियो। もらいます सँग प्रयोग हुन्छ। ठाउँमा 'बाट' र कारणमा 'किनभने' को अर्थ पनि।" },
+        examples: [
+          {
+            japanese: "かのじょから {花|はな}を もらいました。",
+            reading: "Kanojo kara hana o moraimashita.",
+            english: { en: "I received flowers from my girlfriend.", np: "प्रेमिकाबाट फूल पाएँ।" },
+            scenario: { en: "Source of gift", np: "उपहारको स्रोत" },
+          },
+          {
+            japanese: "{父|ちち}から てがみを もらいます。",
+            reading: "Chichi kara tegami o moraimasu.",
+            english: { en: "I receive a letter from my father.", np: "बुबाबाट पत्र पाउँछु।" },
+            scenario: { en: "Receiving from family", np: "परिवारबाट पाउँदा" },
+          },
+          {
+            japanese: "だれから もらいましたか。",
+            reading: "Dare kara moraimashita ka?",
+            english: { en: "Who did you receive it from?", np: "कसबाट पाउनुभयो?" },
+            scenario: { en: "Asking the source", np: "स्रोत सोध्दा" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(7),
+    mcqs: [
+      {
+        question: { en: "Which verb means 'I give something to someone else (outside my group)'?", np: "आफ्नो समूह बाहिरको कसैलाई दिनलाई कुन verb प्रयोग गर्नुहुन्छ?" },
+        choices: [
+          { en: "あげます — give (outward, to others)", np: "あげます — दिनु (अरूलाई)" },
+          { en: "もらいます — receive", np: "もらいます — पाउनु" },
+          { en: "くれます — give to me", np: "くれます — मलाई दिनु" },
+          { en: "おくります — send", np: "おくります — पठाउनु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "あげます = give outward (I/someone gives to another person). くれます = give TO me/my group. もらいます = receive. The viewpoint changes which verb you use.", np: "あげます = बाहिर दिनु (म/कोही अर्को व्यक्तिलाई दिन्छ)। くれます = मलाई दिनु। もらいます = पाउनु। दृष्टिकोण अनुसार verb फरक हुन्छ।" },
+      },
+      {
+        question: { en: "Which particle marks the source in 'I received flowers FROM my girlfriend'?", np: "'म प्रेमिकाबाट फूल पाएँ' मा कुन particle स्रोत चिन्ह गर्छ?" },
+        choices: [
+          { en: "から — from (source)", np: "から — बाट (स्रोत)" },
+          { en: "に — to (recipient)", np: "に — लाई (पाउने)" },
+          { en: "で — at / by means of", np: "で — मा / ले" },
+          { en: "へ — toward", np: "へ — तर्फ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "かのじょからはなをもらいました = I received flowers FROM my girlfriend. から marks the source (giver). に marks the recipient in giving (ともだちにあげます).", np: "かのじょからはなをもらいました। から = स्रोत (दिने)। に = पाउने (ともだちにあげます)।" },
+      },
+      {
+        question: { en: "What is the difference between あげます and くれます?", np: "あげます र くれます को फरक के हो?" },
+        choices: [
+          { en: "あげます = I give to others; くれます = others give to ME", np: "あげます = म अरूलाई दिन्छु; くれます = अरूले मलाई दिन्छन्" },
+          { en: "あげます = I receive; くれます = I give", np: "あげます = म पाउँछु; くれます = म दिन्छु" },
+          { en: "Both mean the same thing", np: "दुवैको एउटै अर्थ" },
+          { en: "あげます is polite; くれます is casual", np: "あげます विनम्र; くれます अनौपचारिक" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "あげます = give outward (speaker → others). くれます = give inward (others → speaker/my group). もらいます = receive (speaker ← others). The 'direction' determines which verb.", np: "あげます = बाहिर दिनु (वक्ता → अरू)। くれます = भित्र दिनु (अरू → वक्ता)। もらいます = पाउनु। 'दिशा' अनुसार verb छानिन्छ।" },
+      },
+      {
+        question: { en: "Which particle marks the recipient in 'I give a present TO my friend'?", np: "'म साथीलाई उपहार दिन्छु' मा कुन particle पाउने व्यक्ति चिन्ह गर्छ?" },
+        choices: [
+          { en: "に — to (recipient)", np: "に — लाई (पाउने)" },
+          { en: "から — from (source)", np: "から — बाट (स्रोत)" },
+          { en: "を — object marker", np: "を — Object marker" },
+          { en: "と — with / and", np: "と — सँग / र" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "ともだちにプレゼントをあげます: に marks who receives (friend). から marks who gives (source). を marks what is given (present).", np: "ともだちにプレゼントをあげます: に = पाउने (साथी)। から = दिने (स्रोत)। を = दिइने वस्तु (उपहार)।" },
+      },
+      {
+        question: { en: "もうたべました means…?", np: "もうたべました को अर्थ के हो?" },
+        choices: [
+          { en: "I have already eaten", np: "पहिले नै खाइसकेँ" },
+          { en: "I haven't eaten yet", np: "अझै खाइसकेको छैन" },
+          { en: "I will eat later", np: "पछि खान्छु" },
+          { en: "I want to eat", np: "खान मन छ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "もう + past verb = already completed. もうたべました = already ate. まだ + negative = not yet: まだたべていません = haven't eaten yet.", np: "もう + past verb = पहिले नै सकियो। もうたべました = पहिले नै खाइसकेँ। まだ + negative = अझै होइन: まだたべていません।" },
+      },
+      {
+        question: { en: "まだたべていません means…?", np: "まだたべていません को अर्थ के हो?" },
+        choices: [
+          { en: "I haven't eaten yet", np: "अझै खाइसकेको छैन" },
+          { en: "I already ate", np: "पहिले नै खाइसकेँ" },
+          { en: "I don't like eating", np: "खान मन पर्दैन" },
+          { en: "I eat sometimes", np: "कहिलेकाहीँ खान्छु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "まだ + negative て-form = not yet. まだたべていません = haven't eaten yet. もうたべました = already ate. いいえ、まだです = No, not yet (short reply).", np: "まだ + negative て-form = अझै होइन। まだたべていません = अझै खाइसकेको छैन। もうたべました = पहिले नै खाइसकेँ।" },
+      },
+      {
+        question: { en: "たんじょうび means…?", np: "たんじょうび को अर्थ के हो?" },
+        choices: [
+          { en: "Birthday", np: "जन्मदिन" },
+          { en: "Christmas", np: "क्रिसमस" },
+          { en: "Wedding anniversary", np: "विवाह वर्षगाँठ" },
+          { en: "New Year", np: "नयाँ वर्ष" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "たんじょうび = birthday (誕生日). クリスマス = Christmas. けっこんきねんび = wedding anniversary. おしょうがつ = New Year.", np: "たんじょうび = जन्मदिन। クリスマス = क्रिसमस। けっこんきねんび = विवाह वर्षगाँठ। おしょうがつ = नयाँ वर्ष।" },
+      },
+      {
+        question: { en: "Fill in the blank: かのじょ___はなをもらいました。(I received flowers FROM my girlfriend.)", np: "खाली ठाउँ भर्नुस्: かのじょ___はなをもらいました।(प्रेमिकाबाट फूल पाएँ।)" },
+        choices: ["から", "に", "で", "へ"],
+        correctIndex: 0,
+        explanation: { en: "かのじょからはなをもらいました = I received flowers from my girlfriend. から marks the source/giver in もらいます sentences.", np: "かのじょからはなをもらいました = प्रेमिकाबाट फूल पाएँ। から = स्रोत/दिने व्यक्ति — もらいます वाक्यमा।" },
+      },
+      {
+        question: { en: "Fill in the blank: おかあさん___プレゼントをあげました。(I gave a present TO my mother.)", np: "खाली ठाउँ भर्नुस्: おかあさん___プレゼントをあげました।(आमालाई उपहार दिएँ।)" },
+        choices: ["に", "から", "で", "と"],
+        correctIndex: 0,
+        explanation: { en: "おかあさんにプレゼントをあげました = I gave a present to my mother. に marks the recipient in あげます sentences.", np: "おかあさんにプレゼントをあげました = आमालाई उपहार दिएँ। に = पाउने व्यक्ति — あげます वाक्यमा।" },
+      },
+      {
+        question: { en: "What does だれから mean?", np: "だれから को अर्थ के हो?" },
+        choices: [
+          { en: "From whom", np: "कसबाट" },
+          { en: "To whom", np: "कसलाई" },
+          { en: "With whom", np: "कससँग" },
+          { en: "For whom", np: "कसका लागि" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "だれから = from whom (who gave it). だれに = to whom (who received it). だれと = with whom. だれのために = for whom.", np: "だれから = कसबाट (कसले दियो)। だれに = कसलाई (कसले पायो)। だれと = कससँग। だれのために = कसका लागि।" },
+      },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
