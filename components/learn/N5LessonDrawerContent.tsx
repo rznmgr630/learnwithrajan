@@ -645,7 +645,7 @@ const SECTION_LABELS = {
   grammar:      { en: "Grammar",      np: "व्याकरण", jp: "文法" },
   particles:    { en: "Particles",    np: "Particles (पार्टिकल)", jp: "助詞" },
   vocabulary:   { en: "Vocabulary",   np: "शब्दभण्डार", jp: "語彙" },
-  kanji:        { en: "Kanji — 20 characters", np: "Kanji — २० अक्षर", jp: "漢字 — 20文字" },
+  kanji:        (n: number) => ({ en: `Kanji — ${n} characters`, np: `Kanji — ${n} अक्षर`, jp: `漢字 — ${n}文字` }),
 } as const;
 
 export function N5LessonDrawerContent({
@@ -691,9 +691,11 @@ export function N5LessonDrawerContent({
         <VocabularySection rows={lesson.vocabulary} />
       </Accordion>
 
-      <Accordion number={5} title={l(SECTION_LABELS.kanji, locale)}>
-        <KanjiSection kanjiItems={kanjiItems} />
-      </Accordion>
+      {kanjiItems.length > 0 && (
+        <Accordion number={5} title={l(SECTION_LABELS.kanji(kanjiItems.length), locale)}>
+          <KanjiSection kanjiItems={kanjiItems} />
+        </Accordion>
+      )}
 
       {/* Exercise */}
       <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
