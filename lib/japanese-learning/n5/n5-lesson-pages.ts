@@ -1805,7 +1805,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "Frequency adverbs जस्तै よく (प्राय:), たいてい (सामान्यतया), र ときどき (कहिलेकाहीँ) verb अगाडि आउँछन्। あまり र ぜんぜん सधैं negative verb सँग प्रयोग हुन्छन्।",
       },
     ],
-    youtubeVideoId: { en: "kCVhyuUEMkM", np: "kCVhyuUEMkM" },
+    youtubeVideoId: { en: "rA9yXCEx668", np: "zqEJ-gJ-9wk" },
     youtubeTitle: "Minna no Nihongo · Lesson 5 — Grammar",
     conversation: [
       {
@@ -2213,7 +2213,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "कसैलाई निम्त्याउन: 〜ませんか (जाउँ न?)। सुझाव दिन: 〜ましょう (जाउँ) वा 〜ましょうか (जाउँ कि?)।",
       },
     ],
-    youtubeVideoId: { en: "hYbMa7PmMNw", np: "hYbMa7PmMNw" },
+    youtubeVideoId: { en: "bF8pOPGOav4", np: "1Cjf5eoer5Q" },
+    youtubeVideoIdPart2: { en: "eiwajswYBvU" },
     youtubeTitle: "Minna no Nihongo · Lesson 6 — Grammar",
     conversation: [
       {
@@ -2622,7 +2623,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "मुख्य particle: に पाउने व्यक्ति चिन्ह गर्छ (कसलाई), から दिने स्रोत चिन्ह गर्छ (कसबाट)।",
       },
     ],
-    youtubeVideoId: { en: "RQlOsHLDfCE", np: "RQlOsHLDfCE" },
+    youtubeVideoId: { en: "K0mndPgSRHc", np: "U8GSSAK53hc" },
+    youtubeVideoIdPart2: { en: "Q5FbKkaoj6A" },
     youtubeTitle: "Minna no Nihongo · Lesson 7 — Grammar",
     conversation: [
       {
