@@ -1454,6 +1454,51 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     grammar: [
       {
         number: 1,
+        name: {
+          en: "〜じ — Telling the time (special readings: 4, 7, 9)",
+          np: "〜じ — समय भन्ने तरिका (विशेष पठन: ४, ७, ९)",
+        },
+        meaning: {
+          en: "To say o'clock, attach じ (時) after the number. Most numbers are regular — いちじ, にじ, さんじ, ごじ, ろくじ, はちじ, じゅうじ. But <b>three numbers change their reading</b> and must be memorised: <b>4 = よじ</b> (not しじ), <b>7 = しちじ</b> (not ななじ), <b>9 = くじ</b> (not きゅうじ).",
+          np: "o'clock भन्न number को पछि じ (時) लगाउनुस्। धेरैजसो numbers सामान्य हुन्छन् — いちじ, にじ, さんじ, ごじ, ろくじ, はちじ, じゅうじ। तर <b>तीनवटाको पठन फरक हुन्छ</b> र याद गर्नुपर्छ: <b>४ = よじ</b> (しじ होइन), <b>७ = しちじ</b> (ななじ होइन), <b>９ = くじ</b> (きゅうじ होइन)।",
+        },
+        whereWeUse: [
+          {
+            en: "4 o'clock → よじ — まいにち よじに おきます (I wake up at 4 every day)",
+            np: "४ बजे → よじ — まいにち よじに おきます (हरेक दिन चार बजे उठ्छु)",
+          },
+          {
+            en: "7 o'clock → しちじ — しちじに しごとを します (I work at 7 o'clock)",
+            np: "७ बजे → しちじ — しちじに しごとをします (सात बजे काम गर्छु)",
+          },
+          {
+            en: "9 o'clock → くじ — くじから ごじまで はたらきます (I work from 9 to 5)",
+            np: "९ बजे → くじ — くじから ごじまで はたらきます (नौ बजेदेखि पाँच बजेसम्म काम गर्छु)",
+          },
+        ],
+        examples: [
+          {
+            japanese: "まいにちよじにおきます。",
+            reading: "Mainichi yo-ji ni okimasu.",
+            english: { en: "I wake up at 4 o'clock every day.", np: "हरेक दिन चार बजे उठ्छु।" },
+            scenario: { en: "4 o'clock → よじ (not しじ)", np: "४ बजे → よじ (しじ होइन)" },
+          },
+          {
+            japanese: "しちじにしごとをします。",
+            reading: "Shichi-ji ni shigoto wo shimasu.",
+            english: { en: "I start work at 7 o'clock.", np: "सात बजे काम गर्छु।" },
+            scenario: { en: "7 o'clock → しちじ (not ななじ)", np: "७ बजे → しちじ (ななじ होइन)" },
+          },
+          {
+            japanese: "くじからごじまではたらきます。",
+            reading: "Ku-ji kara go-ji made hatarakimasu.",
+            english: { en: "I work from 9 to 5.", np: "नौ बजेदेखि पाँच बजेसम्म काम गर्छु।" },
+            scenario: { en: "9 o'clock → くじ (not きゅうじ)", np: "९ बजे → くじ (きゅうじ होइन)" },
+          },
+        ],
+      },
+      {
+        number: 2,
         name: { en: "V ます — Polite non-past (present / future)", np: "V ます — विनम्र वर्तमान/भविष्य" },
         meaning: {
           en: "ます is the polite ending for verbs in present or future tense. It expresses habits (I drink coffee every day) and intentions (I will study tomorrow). Pattern: [verb stem] + ます.",
@@ -1486,7 +1531,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
       },
       {
-        number: 2,
+        number: 3,
         name: { en: "V ました / V ませんでした — Polite past", np: "V ました / V ませんでした — विनम्र भूतकाल" },
         meaning: {
           en: "ました is the polite past tense (did). ませんでした is the polite past negative (did not). Use these to talk about completed actions yesterday, last week, etc.",
@@ -1519,7 +1564,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
       },
       {
-        number: 3,
+        number: 4,
         name: { en: "〜から 〜まで — From ~ to / until ~", np: "〜から 〜まで — देखि ~ सम्म" },
         meaning: {
           en: "から marks the starting point (from), まで marks the end point (to / until). Use with time or place. They can be used together or separately.",
