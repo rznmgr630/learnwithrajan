@@ -224,7 +224,7 @@ export const N5_VOCAB_BY_LESSON: Record<number, N5VocabTuple[]> = {
     ["eeto", "えーと", "", "well, let me see (filler)", "अं…", "考える間を埋める言葉", "えーと、さんじはんです。"],
     ["onegaishimasu", "おねがいします", "お願いします", "please, I ask you", "Request गर्छु।", "依頼・お願いの表現", "みずをおねがいします。"],
     ["kashikomarimashita", "かしこまりました", "", "Certainly (formal, service context)", "निश्चयक ठीकै", "目上の人・客への丁寧な承諾", "かしこまりました。すぐにおもちします。"],
-    ["otoiawase-no-bangou", "おといあわせのばんごう", "お問い合わせの番号", "the number being inquired about", "सोधिरहनुभएको नम्बर", "お客様への確認表現", "おといあわせのばんごうをどうぞ。"],
+    ["otoiawase-no-bangou", "おといあわせのばんごう", "お問い合わせの番号", "the number being inquired about", "तपाइले सोध्नु भएको नम्बर", "お客様への確認表現", "おといあわせのばんごうをどうぞ。"],
     // ── Textbook sequence (Chapter 4) ──────────────────────────────────────────
     ["masu", "ます", "", "polite present (verb)", "वर्तमान विनम्र", "丁寧現在", "べんきょうします。"],
     ["mashita", "ました", "", "polite past", "भूत विनम्र", "丁寧過去", "きのうコーヒーをのみました。"],
@@ -245,6 +245,13 @@ export const N5_VOCAB_BY_LESSON: Record<number, N5VocabTuple[]> = {
     ["biru", "ビール", "", "beer", "बियर", "ビール", "ビールをのみました。"],
     ["pan", "パン", "", "bread", "रोटी", "パン", "パンをたべました。"],
     ["jimu", "ジム", "", "gym", "जिम", "ジム", "ジムでうんどうします。"],
+    // ── Gratitude / cities ─────────────────────────────────────────────────────
+    ["doumo-arigatou", "どうもありがとうございました", "", "Thank you very much", "धेरै धेरै धन्यवाद", "丁寧な感謝", "どうもありがとうございました。またどうぞ。"],
+    ["nyuuyooku", "ニューヨーク", "", "New York", "न्युयोर्क", "都市名", "ニューヨークからきました。"],
+    ["pekin", "ペキン", "", "Beijing", "बेइजिङ", "都市名", "ペキンはちゅうごくのしゅとです。"],
+    ["rondon", "ロンドン", "", "London", "लन्डन", "都市名", "ロンドンはイギリスのしゅとです。"],
+    ["bankoku", "バンコク", "", "Bangkok", "बैंकक", "都市名", "バンコクはタイのしゅとです。"],
+    ["rosanzerusu", "ロサンゼルス", "", "Los Angeles", "लस एन्जेलस", "都市名", "ロサンゼルスはアメリカのまちです。"],
   ],
   5: [
     ["e", "へ", "", "toward (direction)", "तर्फ", "方向", "がっこうへいきます。"],
