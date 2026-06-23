@@ -11,7 +11,7 @@ import {
   resolveJapaneseN5Detail,
 } from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { getLessonPage } from "@/lib/japanese-learning/n5/n5-lesson-pages";
-import { twentyKanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-pool";
+import { kanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-by-day";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
 
@@ -46,7 +46,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
   const ctx = dayNumber !== null ? getJapaneseN5DayContext(dayNumber) : null;
   const detail = ctx ? resolveJapaneseN5Detail(ctx.day) : null;
   const lessonPage = dayNumber !== null ? getLessonPage(dayNumber) : null;
-  const kanjiItems = dayNumber !== null ? twentyKanjiForDay(dayNumber) : [];
+  const kanjiItems = dayNumber !== null ? kanjiForDay(dayNumber) : [];
 
   useEffect(() => {
     if (!open) return;

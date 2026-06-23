@@ -119,7 +119,17 @@ const UNIQUE = (() => {
   return [...m.values()];
 })();
 
-/** Twenty distinct kanji per calendar day — stroke SVG + stroke count for copy practice. */
+/** Look up KanjiStrokeEntry objects for an explicit list of characters. Unknown chars are skipped. */
+export function lookupKanjiEntries(chars: string[]): KanjiStrokeEntry[] {
+  const map = new Map(UNIQUE.map((r) => [r.k, r]));
+  return chars.flatMap((c) => {
+    const row = map.get(c);
+    if (!row) return [];
+    return [{ kanji: row.k, readings: row.r, meaning: row.m, strokes: row.s, strokeSvgUrl: kanjiVgStrokeSvgUrl(row.k) ?? "" }];
+  });
+}
+
+/** @deprecated Use kanjiForDay from n5-kanji-by-day.ts for explicit day assignments. */
 export function twentyKanjiForDay(day: number): KanjiStrokeEntry[] {
   const n = UNIQUE.length;
   const stride = 37;
