@@ -30,8 +30,8 @@ export const JP_N5_DAY_TITLES: string[] = [
   "Chapter 3, ここ, そこ, あそこ",
   "Chapter 4, まいにちのせいかつ",
   "Chapter 5, こうつう と いどう",
-  "Day 6 · Minna L6 — transitive verbs & で／を",
-  "Day 7 · Minna L7 — あげる／もらう",
+  "Chapter 6, たべもの と のみもの",
+  "Chapter 7, プレゼント",
   "Day 8 · Minna L8 — い／な adjectives",
   "Day 9 · Minna L9 — すき／じょうず／わかる／から",
   "Day 10 · Minna L10 — います／あります locations",
@@ -105,6 +105,16 @@ const DAY_EXTRA_TAGS: Record<number, { label: string; slug: string }[]> = {
     { label: "へ", slug: "p-e" },
     { label: "で", slug: "p-de" },
     { label: "よく", slug: "p-yoku" },
+  ],
+  6: [
+    { label: "で", slug: "p-de-loc" },
+    { label: "を", slug: "p-wo" },
+    { label: "〜ましょう", slug: "p-masho" },
+  ],
+  7: [
+    { label: "に", slug: "p-ni-recip" },
+    { label: "から", slug: "p-kara-source" },
+    { label: "あげる", slug: "p-ageru" },
   ],
 };
 
