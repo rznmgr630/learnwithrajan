@@ -1550,6 +1550,35 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     ],
     particles: [
       {
+        particle: "に",
+        romaji: "ni",
+        name: { en: "に — Time / target marker", np: "に — समय / लक्ष्य marker" },
+        meaning: {
+          en: "に marks the specific time an action occurs (at 7 o'clock, on Tuesday) and the target/destination of movement. For time: [time] に [verb]. Days and clock times require に; まいにち, きょう, あした do NOT take に.",
+          np: "に ले कार्य हुने सटीक समय (सात बजे, मंगलबार) र गन्तव्य चिन्हित गर्छ। समयको लागि: [समय] に [verb]। दिन र घडीको समयमा に चाहिन्छ; तर まいにち, きょう, あした मा に लाग्दैन।",
+        },
+        examples: [
+          {
+            japanese: "しちじにおきます。",
+            reading: "Shichi-ji ni okimasu.",
+            english: { en: "I get up at 7 o'clock.", np: "सात बजे उठ्छु।" },
+            scenario: { en: "Clock time + に", np: "घडीको समय + に" },
+          },
+          {
+            japanese: "かようびにやすみます。",
+            reading: "Kayōbi ni yasumimasu.",
+            english: { en: "I rest on Tuesday.", np: "मंगलबार आराम गर्छु।" },
+            scenario: { en: "Day of week + に", np: "बारको नाम + に" },
+          },
+          {
+            japanese: "ごぜんくじからごごごじまではたらきます。",
+            reading: "Gozen ku-ji kara gogo go-ji made hatarakimasu.",
+            english: { en: "I work from 9 AM to 5 PM.", np: "बिहान नौ बजेदेखि दिउँसो पाँच बजेसम्म काम गर्छु।" },
+            scenario: { en: "Time range without に (から/まで)", np: "समय दायरामा に लाग्दैन (から/まで)" },
+          },
+        ],
+      },
+      {
         particle: "を",
         romaji: "wo",
         name: { en: "を — Object marker", np: "を — Object marker" },
