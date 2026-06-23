@@ -1381,8 +1381,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
     youtubeVideoId: {
-      en: "L4_VIDEO_PENDING",
-      np: "L4_VIDEO_NP_PENDING",
+      en: "Y2cAUmUN1oU",
+      np: "UsWFQM-0SYk",
+    },
+    youtubeVideoIdPart2: {
+      en: "s9JtHvqO8zA",
+      np: "tyP_uYY7TtM",
     },
     youtubeTitle: "Minna no Nihongo · Lesson 4 — Grammar",
     conversation: [
