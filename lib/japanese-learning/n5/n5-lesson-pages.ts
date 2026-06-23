@@ -1872,100 +1872,160 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     grammar: [
       {
         number: 1,
-        name: { en: "[Place] へ いきます / きます / かえります", np: "[ठाउँ] へ いきます / きます / かえります" },
+        name: { en: "で particle — two uses: place of action & means of transport", np: "で particle — दुई प्रयोग: क्रियाको ठाउँ र यातायातको साधन" },
         meaning: {
-          en: "Use へ (e) to mark the destination. いきます = go (away from speaker), きます = come (toward speaker), かえります = return home.",
-          np: "Destination चिन्ह गर्न へ प्रयोग गर्नुस्। いきます = जानु (वक्ताबाट टाढा), きます = आउनु (वक्ततर्फ), かえります = घर फर्कनु।",
+          en: "<b>1st use (place of action):</b> で marks WHERE an action happens. Pattern: [place] で [verb]. <b>2nd use (means of transport):</b> で marks HOW you travel. Pattern: [transport] で いきます.",
+          np: "<b>पहिलो प्रयोग (क्रियाको ठाउँ):</b> で क्रिया हुने ठाउँ चिन्ह गर्छ। Pattern: [ठाउँ] で [verb]। <b>दोस्रो प्रयोग (यातायातको साधन):</b> で यातायातको साधन चिन्ह गर्छ। Pattern: [यातायात] で いきます।",
         },
         whereWeUse: [
-          { en: "Stating where you are going: がっこうへいきます (I go to school).", np: "कहाँ जाँदैछौ भन्न: がっこうへいきます।" },
-          { en: "Asking where someone is going: どこへいきますか (Where are you going?).", np: "कहाँ जाँदैछौ सोध्न: どこへいきますか।" },
-          { en: "かえります always refers to returning to one's own home/base — not just any location.", np: "かえります सधैं आफ्नै घर/ठाउँ फर्कनलाई प्रयोग हुन्छ।" },
+          { en: "1st — place: がっこうでべんきょうします (study at school)", np: "पहिलो — ठाउँ: がっこうでべんきょうします (विद्यालयमा पढ्छु)" },
+          { en: "2nd — transport: バスでいきます (go by bus)", np: "दोस्रो — साधन: バスでいきます (बसले जान्छु)" },
+          { en: "The same particle で does both jobs — context tells you which meaning applies", np: "एउटै particle で ले दुवै काम गर्छ — context ले अर्थ छुट्याउँछ" },
         ],
         examples: [
           {
-            japanese: "{私|わたし}は{学校|がっこう}へいきます。",
-            reading: "Watashi wa gakkō e ikimasu.",
-            english: { en: "I go to school.", np: "म विद्यालय जान्छु।" },
-            scenario: { en: "Morning routine", np: "बिहानको दैनिकी" },
+            japanese: "レストランでコーヒーをのみます。",
+            reading: "Resutoran de kōhī o nomimasu.",
+            english: { en: "I drink coffee at the restaurant.", np: "रेस्टुरेन्टमा कफी पिउँछु।" },
+            scenario: { en: "1st use — place of action", np: "पहिलो — क्रियाको ठाउँ" },
           },
-          {
-            japanese: "{先生|せんせい}がきます。",
-            reading: "Sensei ga kimasu.",
-            english: { en: "The teacher is coming.", np: "शिक्षक आउँदैछन्।" },
-            scenario: { en: "Classroom announcement", np: "कक्षाकोठामा सूचना" },
-          },
-          {
-            japanese: "{毎晩|まいばん}{家|いえ}へかえります。",
-            reading: "Maiban ie e kaerimasu.",
-            english: { en: "I return home every evening.", np: "म हरेक साँझ घर फर्कन्छु।" },
-            scenario: { en: "Daily schedule", np: "दैनिक तालिका" },
-          },
-        ],
-      },
-      {
-        number: 2,
-        name: { en: "[Transport] で いきます — means of transport", np: "[यातायात] で いきます — साधन" },
-        meaning: {
-          en: "Use で (de) to say how you travel — by bus, by train, on foot etc. で marks the means or instrument.",
-          np: "कसरी यात्रा गर्नुहुन्छ — बसले, रेलले, पैदल आदि भन्न で प्रयोग गर्नुस्। で साधन वा उपकरण चिन्ह गर्छ।",
-        },
-        whereWeUse: [
-          { en: "Means of transport: バスでいきます (I go by bus).", np: "यातायात साधन: バスでいきます।" },
-          { en: "Asking how someone travels: どうやっていきますか (How do you get there?).", np: "कसरी जानुहुन्छ सोध्न: どうやっていきますか।" },
-          { en: "On foot uses あるいて — no で needed: あるいていきます (I go on foot).", np: "पैदल जाँदा あるいて प्रयोग हुन्छ — で चाहिँदैन: あるいていきます।" },
-        ],
-        examples: [
           {
             japanese: "{電車|でんしゃ}でいきます。",
             reading: "Densha de ikimasu.",
             english: { en: "I go by train.", np: "रेलले जान्छु।" },
-            scenario: { en: "Explaining your commute", np: "यात्राको बारेमा भन्दा" },
+            scenario: { en: "2nd use — means of transport", np: "दोस्रो — यातायातको साधन" },
           },
           {
             japanese: "タクシーで{空港|くうこう}へいきます。",
             reading: "Takushī de kūkō e ikimasu.",
             english: { en: "I go to the airport by taxi.", np: "ट्याक्सीले विमानस्थल जान्छु।" },
-            scenario: { en: "Travel plans", np: "यात्राको योजना" },
+            scenario: { en: "Transport + destination combined", np: "साधन र गन्तव्य सँगसँगै" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "[Place] へ いきます/きます/かえります — direction of movement", np: "[ठाउँ] へ いきます/きます/かえります — गतिको दिशा" },
+        meaning: {
+          en: "へ (e) marks the destination — the place you are heading toward. いきます = go (away from speaker), きます = come (toward speaker), かえります = return to one's own home.",
+          np: "へ (ए) गन्तव्य चिन्ह गर्छ — कहाँ जाँदैछौ। いきます = जानु (वक्ताबाट टाढा), きます = आउनु (वक्तातर्फ), かえります = आफ्नै घर फर्कनु।",
+        },
+        whereWeUse: [
+          { en: "Going somewhere: がっこうへいきます — I go to school", np: "कहीँ जाँदा: がっこうへいきます — विद्यालय जान्छु" },
+          { en: "Coming: せんせいがきます — The teacher is coming", np: "आउँदा: せんせいがきます — शिक्षक आउँदैछन्" },
+          { en: "Returning home: うちへかえります — I return home", np: "घर फर्कँदा: うちへかえります — घर फर्कन्छु" },
+        ],
+        examples: [
+          {
+            japanese: "がっこうへいきます。",
+            reading: "Gakkō e ikimasu.",
+            english: { en: "I go to school.", np: "म विद्यालय जान्छु।" },
+            scenario: { en: "Destination — school", np: "गन्तव्य — विद्यालय" },
           },
           {
-            japanese: "あるいてえきへいきます。",
-            reading: "Aruite eki e ikimasu.",
-            english: { en: "I walk to the station.", np: "पैदल स्टेसन जान्छु।" },
-            scenario: { en: "Short distance", np: "नजिकको दूरी" },
+            japanese: "どこへいきますか。",
+            reading: "Doko e ikimasu ka?",
+            english: { en: "Where are you going?", np: "कहाँ जानुहुन्छ?" },
+            scenario: { en: "Asking destination", np: "गन्तव्य सोध्दा" },
+          },
+          {
+            japanese: "うちへかえります。",
+            reading: "Uchi e kaerimasu.",
+            english: { en: "I return home.", np: "म घर फर्कन्छु।" },
+            scenario: { en: "Going back home", np: "घर फर्कँदा" },
           },
         ],
       },
       {
         number: 3,
-        name: { en: "Frequency: よく · たいてい · ときどき · あまり〜ません · ぜんぜん〜ません", np: "आवृत्ति: よく · たいてい · ときどき · あまり〜ません · ぜんぜん〜ません" },
+        name: { en: "と particle — and (listing) / with (companion)", np: "と particle — र (सूची) / सँग (साथी)" },
         meaning: {
-          en: "Place frequency adverbs before the verb. よく (often) → たいてい (usually) → ときどき (sometimes) → あまり〜ません (not very often) → ぜんぜん〜ません (not at all). Important: あまり and ぜんぜん must be followed by a negative verb.",
-          np: "Frequency adverbs verb अगाडि राख्नुस्। よく (प्राय:) → たいてい (सामान्यतया) → ときどき (कहिलेकाहीँ) → あまり〜ません (धेरै होइन) → ぜんぜん〜ません (बिल्कुल होइन)। महत्त्वपूर्ण: あまり र ぜんぜん पछि negative verb चाहिन्छ।",
+          en: "と has two related jobs: (1) <b>connecting nouns</b> — コーヒーとこうちゃ (coffee and tea); (2) <b>marking the companion</b> — ともだちといきます (I go with a friend). ひとりで (alone) is the contrasting expression.",
+          np: "と को दुई प्रयोग: (1) <b>noun जोड्न</b> — コーヒーとこうちゃ (कफी र चिया); (2) <b>साथी चिन्ह गर्न</b> — ともだちといきます (साथीसँग जान्छु)। ひとりで (एक्लै) यसको विपरीत अभिव्यक्ति हो।",
         },
         whereWeUse: [
-          { en: "よく、たいてい、ときどき pair with positive verbs: よくいきます (I often go).", np: "よく、たいてい、ときどき positive verb सँग: よくいきます।" },
-          { en: "あまり MUST pair with negative: あまりいきません (I don't go very often).", np: "あまり negative verb सँग मात्र: あまりいきません।" },
-          { en: "ぜんぜん MUST pair with negative: ぜんぜんいきません (I don't go at all).", np: "ぜんぜん negative verb सँग मात्र: ぜんぜんいきません।" },
+          { en: "List two items: コーヒーとこうちゃ — coffee and tea", np: "दुई वस्तु सूचीमा: コーヒーとこうちゃ — कफी र चिया" },
+          { en: "Go with someone: ともだちといきます — I go with a friend", np: "कसैसँग जाँदा: ともだちといきます — साथीसँग जान्छु" },
+          { en: "Go alone: ひとりでいきます — (ひとりで uses で, not と)", np: "एक्लै जाँदा: ひとりでいきます — (ひとりで मा で चाहिन्छ, と होइन)" },
         ],
         examples: [
           {
-            japanese: "よく{図書館|としょかん}へいきます。",
-            reading: "Yoku toshokan e ikimasu.",
-            english: { en: "I often go to the library.", np: "म प्राय: पुस्तकालय जान्छु।" },
-            scenario: { en: "Talking about habits", np: "बानी बारेमा कुरा गर्दा" },
+            japanese: "ともだちといきます。",
+            reading: "Tomodachi to ikimasu.",
+            english: { en: "I go with a friend.", np: "साथीसँग जान्छु।" },
+            scenario: { en: "Companion — going with someone", np: "साथी — कोहीसँग जाँदा" },
           },
           {
-            japanese: "あまりバスでいきません。",
-            reading: "Amari basu de ikimasen.",
-            english: { en: "I don't go by bus very often.", np: "म बसले धेरै जाँदिनँ।" },
-            scenario: { en: "Describing rare habits", np: "बिरलै गर्ने कुरा" },
+            japanese: "コーヒーとこうちゃをのみます。",
+            reading: "Kōhī to kōcha o nomimasu.",
+            english: { en: "I drink coffee and black tea.", np: "कफी र कालो चिया पिउँछु।" },
+            scenario: { en: "Listing — two drinks", np: "सूची — दुई पेय" },
           },
           {
-            japanese: "ぜんぜん{電車|でんしゃ}にのりません。",
-            reading: "Zenzen densha ni norimasen.",
-            english: { en: "I don't ride the train at all.", np: "म बिल्कुल रेल चढ्दिनँ।" },
-            scenario: { en: "Strong negation", np: "पूर्ण अस्वीकार" },
+            japanese: "ひとりでいきます。",
+            reading: "Hitori de ikimasu.",
+            english: { en: "I go alone.", np: "एक्लै जान्छु।" },
+            scenario: { en: "Going alone (ひとりで)", np: "एक्लै जाँदा" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "いつ — When (question word)", np: "いつ — कहिले (प्रश्नवाचक शब्द)" },
+        meaning: {
+          en: "いつ = 'when'. Use it to ask about time generally — not a specific clock hour. The answer is a day, date, or time period. Important: いつ does NOT take the particle に.",
+          np: "いつ = 'कहिले'। सामान्य समयबारे सोध्न — सटीक घडीको समय होइन। उत्तरमा बार, मिति वा समय अवधि हुन सक्छ। ध्यान: いつ सँग に particle लाग्दैन।",
+        },
+        whereWeUse: [
+          { en: "いつ いきますか — When are you going?", np: "いつ いきますか — कहिले जानुहुन्छ?" },
+          { en: "いつ かえりますか — When do you return?", np: "いつ かえりますか — कहिले फर्कनुहुन्छ?" },
+          { en: "Note: clock times use に (しちじに) but いつ does NOT take に", np: "घडीको समयमा に लाग्छ (しちじに) तर いつ मा に लाग्दैन" },
+        ],
+        examples: [
+          {
+            japanese: "いつ いきますか。",
+            reading: "Itsu ikimasu ka?",
+            english: { en: "When are you going?", np: "कहिले जानुहुन्छ?" },
+            scenario: { en: "Asking when", np: "कहिले सोध्दा" },
+          },
+          {
+            japanese: "あした いきます。",
+            reading: "Ashita ikimasu.",
+            english: { en: "I am going tomorrow.", np: "भोलि जान्छु।" },
+            scenario: { en: "Answering いつ", np: "いつ को जवाफ" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "どうやって — How / By what means", np: "どうやって — कसरी / कुन तरिकाले" },
+        meaning: {
+          en: "どうやって = 'how' or 'by what means'. Use it to ask HOW someone travels or gets somewhere. The answer pairs with で: バスで (by bus), でんしゃで (by train), あるいて (on foot — no で).",
+          np: "どうやって = 'कसरी'। कोही कसरी यात्रा गर्छ वा कहीँ पुग्छ सोध्न प्रयोग गर्नुस्। उत्तरमा で प्रयोग हुन्छ: バスで, でんしゃで, आदि। पैदल: あるいて (で छैन)।",
+        },
+        whereWeUse: [
+          { en: "Asking means: どうやって いきますか — How do you get there?", np: "साधन सोध्न: どうやって いきますか — कसरी जानुहुन्छ?" },
+          { en: "Answer with transport で: バスでいきます — I go by bus", np: "यातायात で सँग उत्तर: バスでいきます — बसले जान्छु" },
+          { en: "On foot: あるいていきます — no で needed", np: "पैदल: あるいていきます — で चाहिँदैन" },
+        ],
+        examples: [
+          {
+            japanese: "どうやって いきますか。",
+            reading: "Dō yatte ikimasu ka?",
+            english: { en: "How do you get there?", np: "कसरी जानुहुन्छ?" },
+            scenario: { en: "Asking about transport means", np: "यातायातको साधन सोध्दा" },
+          },
+          {
+            japanese: "{電車|でんしゃ}でいきます。",
+            reading: "Densha de ikimasu.",
+            english: { en: "I go by train.", np: "रेलले जान्छु।" },
+            scenario: { en: "Answering どうやって", np: "どうやって को जवाफ" },
+          },
+          {
+            japanese: "あるいていきます。",
+            reading: "Aruite ikimasu.",
+            english: { en: "I walk there.", np: "पैदल जान्छु।" },
+            scenario: { en: "On foot — no で", np: "पैदल — で छैन" },
           },
         ],
       },
@@ -2220,100 +2280,166 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     grammar: [
       {
         number: 1,
-        name: { en: "[Place] で [Object] を [Verb] — action at a location", np: "[ठाउँ] で [Object] を [Verb] — ठाउँमा क्रिया" },
+        name: { en: "V てください / V て — polite vs casual requests", np: "V てください / V て — विनम्र र अनौपचारिक अनुरोध" },
         meaning: {
-          en: "Use で (de) to mark WHERE an action happens — 'at the restaurant', 'at school'. Combine with を to say what you do there.",
-          np: "क्रिया कहाँ हुन्छ चिन्ह गर्न で प्रयोग गर्नुस् — 'रेस्टुरेन्टमा', 'विद्यालयमा'। को को संगसंगै के गर्नुहुन्छ भन्न।",
+          en: "て-form + ください = polite request ('Please do…'). て-form alone = casual request used with close friends or family. The て-form is the verb's connective form; it is the same for both.",
+          np: "て-form + ください = विनम्र अनुरोध ('गर्नुहोस् / दिनुहोस्')। て-form मात्र = अनौपचारिक अनुरोध — घनिष्ठ साथी वा परिवारसँग। て-form दुवैमा एउटै हुन्छ।",
         },
         whereWeUse: [
-          { en: "Location of eating/drinking: レストランでパスタをたべます (I eat pasta at the restaurant).", np: "खाना/पिउने ठाउँ: レストランでパスタをたべます।" },
-          { en: "Location of studying/working: としょかんでべんきょうをします (I study at the library).", np: "पढ्ने/काम गर्ने ठाउँ: としょかんでべんきょうをします।" },
-          { en: "Note: で here means PLACE of action — different from Day 5's で for transport means.", np: "注意: यो で क्रियाको ठाउँ — Day 5 को यातायात で भन्दा फरक।" },
+          { en: "Polite: たべてください — Please eat (to a guest / superior)", np: "विनम्र: たべてください — खानुहोस् (पाहुना वा माथिल्लोलाई)" },
+          { en: "Casual: たべて — Eat! (to a friend / younger person)", np: "अनौपचारिक: たべて — खा! (साथी वा सानोलाई)" },
+          { en: "Both use the same て-form — only the ending changes", np: "दुवैमा एउटै て-form — अन्त्य मात्र फरक हुन्छ" },
         ],
         examples: [
           {
-            japanese: "レストランで パスタを たべます。",
-            reading: "Resutoran de pasuta o tabemasu.",
-            english: { en: "I eat pasta at the restaurant.", np: "रेस्टुरेन्टमा पास्ता खान्छु।" },
-            scenario: { en: "Lunch plans", np: "दिउँसो खानाको योजना" },
+            japanese: "これを たべてください。",
+            reading: "Kore o tabete kudasai.",
+            english: { en: "Please eat this.", np: "यो खानुहोस्।" },
+            scenario: { en: "Polite request to a guest", np: "पाहुनालाई विनम्र अनुरोध" },
           },
           {
-            japanese: "カフェで コーヒーを のみます。",
-            reading: "Kafe de kōhī o nomimasu.",
-            english: { en: "I drink coffee at the café.", np: "क्याफेमा कफी पिउँछु।" },
-            scenario: { en: "Morning routine", np: "बिहानको दैनिकी" },
+            japanese: "ちょっと まってください。",
+            reading: "Chotto matte kudasai.",
+            english: { en: "Please wait a moment.", np: "एक छिन पर्खनुहोस्।" },
+            scenario: { en: "Polite — asking someone to wait", np: "विनम्र — पर्खन भन्दा" },
           },
           {
-            japanese: "うちで しょくじを つくります。",
-            reading: "Uchi de shokuji o tsukurimasu.",
-            english: { en: "I make a meal at home.", np: "घरमा खाना बनाउँछु।" },
-            scenario: { en: "Home cooking", np: "घरमा खाना पकाउँदा" },
+            japanese: "みて！",
+            reading: "Mite!",
+            english: { en: "Look! / Watch!", np: "हेर!" },
+            scenario: { en: "Casual request — te-form alone", np: "अनौपचारिक — て-form मात्र" },
           },
         ],
       },
       {
         number: 2,
-        name: { en: "〜ませんか — Invitation 'Won't you...?'", np: "〜ませんか — निम्तो 'जाउँ न?'" },
+        name: { en: "V ましょう / V ましょうか — Let's… / Shall we…?", np: "V ましょう / V ましょうか — जाउँ / जाउँ कि?" },
         meaning: {
-          en: "Add ませんか to the verb stem to invite someone politely. It literally means 'Won't you...?' and is softer than a direct request.",
-          np: "Verb stem मा ませんか जोडेर विनम्र निम्तो दिन्छ। शाब्दिक अर्थ 'जाउँ न?' — सिधा अनुरोध भन्दा नम्र।",
+          en: "〜ましょう = 'Let's…' — confident proposal to do something together. 〜ましょうか = 'Shall we…?' — softer, leaving the decision open. Both use the verb stem.",
+          np: "〜ましょう = 'जाउँ' — सँगसँगै केही गर्ने आत्मविश्वासी प्रस्ताव। 〜ましょうか = 'जाउँ कि?' — नरम, निर्णय खुला राख्ने। दुवै verb stem बाट बन्छन्।",
         },
         whereWeUse: [
-          { en: "Inviting to eat together: いっしょにたべませんか (Won't you eat with me?).", np: "सँगसँगै खान निम्त्याउन: いっしょにたべませんか।" },
-          { en: "Inviting to go somewhere: いっしょにいきませんか (Won't you come with me?).", np: "सँगसँगै जान: いっしょにいきませんか।" },
-          { en: "Polite refusal uses ちょっと: ちょっと... (a little [difficult] — implies sorry, can't).", np: "नम्र अस्वीकार: ちょっと... (अलिकति... — माफ गर्नुहोस् बुझिन्छ)।" },
-        ],
-        examples: [
-          {
-            japanese: "いっしょに ランチを たべませんか。",
-            reading: "Issho ni ranchi o tabemasen ka?",
-            english: { en: "Won't you have lunch with me?", np: "सँगसँगै खाना खाउँ न?" },
-            scenario: { en: "Lunch invitation", np: "खानाको निम्तो" },
-          },
-          {
-            japanese: "こうえんへ いきませんか。",
-            reading: "Kōen e ikimasen ka?",
-            english: { en: "Won't you come to the park?", np: "पार्क जाउँ न?" },
-            scenario: { en: "After-work suggestion", np: "काम पछिको सुझाव" },
-          },
-          {
-            japanese: "コーヒーを のみませんか。",
-            reading: "Kōhī o nomimasen ka?",
-            english: { en: "Won't you have some coffee?", np: "कफी पिउँ न?" },
-            scenario: { en: "Casual offer", np: "अनौपचारिक प्रस्ताव" },
-          },
-        ],
-      },
-      {
-        number: 3,
-        name: { en: "〜ましょう / 〜ましょうか — 'Let's...' / 'Shall we...?'", np: "〜ましょう / 〜ましょうか — 'जाउँ' / 'जाउँ कि?'" },
-        meaning: {
-          en: "〜ましょう (masho) = 'Let's do it!' — a confident proposal. 〜ましょうか (masho ka) = 'Shall we...?' — a softer, checking suggestion.",
-          np: "〜ましょう = 'जाउँ!' — आत्मविश्वासपूर्ण प्रस्ताव। 〜ましょうか = 'जाउँ कि?' — नरम, सोध्ने प्रकारको सुझाव।",
-        },
-        whereWeUse: [
-          { en: "Confirming a plan: そこでたべましょう (Let's eat there).", np: "योजना पक्का गर्न: そこでたべましょう (त्यहीँ खाउँ)।" },
-          { en: "Suggesting: 〜ましょうか (Shall we...?) — leaves it open for the other person.", np: "सुझाव दिन: 〜ましょうか — अर्को व्यक्तिलाई निर्णय गर्ने ठाउँ दिन्छ।" },
-          { en: "Response to 〜ませんか invitation: そうしましょう (Yes, let's!) — the natural reply.", np: "〜ませんか को जवाफमा: そうしましょう (हो, जाउँ!) — स्वाभाविक उत्तर।" },
+          { en: "いきましょう — Let's go", np: "いきましょう — जाउँ" },
+          { en: "たべましょう — Let's eat", np: "たべましょう — खाउँ" },
+          { en: "～ましょうか — milder, asking Shall we?: いきましょうか — Shall we go?", np: "〜ましょうか — नरम प्रश्न: いきましょうか — जाउँ कि?" },
         ],
         examples: [
           {
             japanese: "そこで たべましょう。",
             reading: "Soko de tabemashō.",
             english: { en: "Let's eat there.", np: "त्यहीँ खाउँ।" },
-            scenario: { en: "Agreeing on a place", np: "ठाउँमा सहमत हुँदा" },
+            scenario: { en: "Agreeing on a plan", np: "योजनामा सहमत हुँदा" },
           },
           {
             japanese: "また こんど いきましょう。",
             reading: "Mata kondo ikimashō.",
             english: { en: "Let's go another time.", np: "अर्को पटक जाउँ।" },
-            scenario: { en: "Deferring plans", np: "योजना पर सार्दा" },
+            scenario: { en: "Deferring a plan", np: "योजना पर सार्दा" },
           },
           {
             japanese: "コーヒーを のみましょうか。",
             reading: "Kōhī o nomimashō ka?",
             english: { en: "Shall we have some coffee?", np: "कफी पिउँ कि?" },
             scenario: { en: "Soft suggestion", np: "नरम सुझाव" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "N を V — object marker を", np: "N を V — कर्म marker を" },
+        meaning: {
+          en: "を (o) marks the DIRECT OBJECT of an action — the thing being eaten, drunk, watched, read, bought, etc. Pattern: [noun] を [verb]. を is never stressed in speech.",
+          np: "を ले कार्यको प्रत्यक्ष कर्म चिन्ह गर्छ — के खाइन्छ, पिइन्छ, हेरिन्छ, पढिन्छ, किनिन्छ, आदि। Pattern: [noun] を [verb]। बोल्दा を मा जोड नदिनुस्।",
+        },
+        whereWeUse: [
+          { en: "コーヒーをのみます — drink coffee (を marks coffee as the thing drunk)", np: "コーヒーをのみます — कफी पिउँछु (を ले कफी कर्म हो)" },
+          { en: "テレビをみます — watch TV", np: "テレビをみます — टिभी हेर्छु" },
+          { en: "サッカーをします — play soccer (N をします = do/play N)", np: "サッカーをします — फुटबल खेल्छु (N をします = N गर्छु)" },
+        ],
+        examples: [
+          {
+            japanese: "コーヒーを のみます。",
+            reading: "Kōhī o nomimasu.",
+            english: { en: "I drink coffee.", np: "कफी पिउँछु।" },
+            scenario: { en: "Drinking — を for object", np: "पिउँदा — कर्म को लागि を" },
+          },
+          {
+            japanese: "テレビを みます。",
+            reading: "Terebi o mimasu.",
+            english: { en: "I watch TV.", np: "टिभी हेर्छु।" },
+            scenario: { en: "Watching — を for object", np: "हेर्दा — कर्म को लागि を" },
+          },
+          {
+            japanese: "こうえんで サッカーを します。",
+            reading: "Kōen de sakkā o shimasu.",
+            english: { en: "I play soccer at the park.", np: "पार्कमा फुटबल खेल्छु।" },
+            scenario: { en: "N をします + place で", np: "N をします + ठाउँ で" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "N で V — place of action (2nd use of で)", np: "N で V — क्रियाको ठाउँ (で को दोस्रो प्रयोग)" },
+        meaning: {
+          en: "で marks WHERE the action happens — 'at', 'in'. This is different from the Chapter 5 use (transport means). Context — if で follows a place name it means location; if it follows a vehicle it means transport.",
+          np: "で ले क्रिया हुने ठाउँ चिन्ह गर्छ — 'मा'। यो Chapter 5 को प्रयोग (यातायात साधन) भन्दा फरक हो। Context: で ले ठाउँ अनुसरण गर्छ भने ठाउँ, गाडी अनुसरण गर्छ भने साधन।",
+        },
+        whereWeUse: [
+          { en: "レストランでたべます — eat at the restaurant (place of action)", np: "レストランでたべます — रेस्टुरेन्टमा खान्छु (क्रियाको ठाउँ)" },
+          { en: "がっこうでべんきょうします — study at school", np: "がっこうでべんきょうします — विद्यालयमा पढ्छु" },
+          { en: "Contrast: バスでいきます — go BY bus (transport); うちでたべます — eat AT home (place)", np: "तुलना: バスでいきます — बसले (साधन); うちでたべます — घरमा (ठाउँ)" },
+        ],
+        examples: [
+          {
+            japanese: "レストランで パスタを たべます。",
+            reading: "Resutoran de pasuta o tabemasu.",
+            english: { en: "I eat pasta at the restaurant.", np: "रेस्टुरेन्टमा पास्ता खान्छु।" },
+            scenario: { en: "Place of eating", np: "खाने ठाउँ" },
+          },
+          {
+            japanese: "としょかんで べんきょうします。",
+            reading: "Toshokan de benkyō shimasu.",
+            english: { en: "I study at the library.", np: "पुस्तकालयमा पढ्छु।" },
+            scenario: { en: "Place of studying", np: "पढ्ने ठाउँ" },
+          },
+          {
+            japanese: "こうえんで しゃしんを とります。",
+            reading: "Kōen de shashin o torimasu.",
+            english: { en: "I take photos at the park.", np: "पार्कमा फोटो खिच्छु।" },
+            scenario: { en: "Activity at a place", np: "ठाउँमा गतिविधि" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "何 (なに/なん) — what (question word)", np: "何 (なに/なん) — के (प्रश्नवाचक शब्द)" },
+        meaning: {
+          en: "何 = 'what'. Read なに before を/が/も; read なん before counter words (じ, かい, ようび). Common question patterns: なにをしますか (what will you do?), なんじですか (what time is it?), なんようびですか (what day is it?).",
+          np: "何 = 'के'। を/が/も अगाडि なに पढ्नुस्; counter words (じ, かい, ようび) अगाडि なん पढ्नुस्। सामान्य प्रश्न: なにをしますか (के गर्नुहुन्छ?), なんじですか (कति बजे?), なんようびですか (कुन बार?)।",
+        },
+        whereWeUse: [
+          { en: "なにをしますか — What will you do?", np: "なにをしますか — के गर्नुहुन्छ?" },
+          { en: "なんじですか — What time is it?", np: "なんじですか — कति बज्यो?" },
+          { en: "なんようびですか — What day of the week is it?", np: "なんようびですか — आज कुन बार हो?" },
+        ],
+        examples: [
+          {
+            japanese: "なにを たべますか。",
+            reading: "Nani o tabemasu ka?",
+            english: { en: "What will you eat?", np: "के खानुहुन्छ?" },
+            scenario: { en: "Asking what to eat", np: "के खाने सोध्दा" },
+          },
+          {
+            japanese: "なんじに いきますか。",
+            reading: "Nan-ji ni ikimasu ka?",
+            english: { en: "What time are you going?", np: "कति बजे जानुहुन्छ?" },
+            scenario: { en: "Asking the time of departure", np: "जाने समय सोध्दा" },
+          },
+          {
+            japanese: "きょうは なんようびですか。",
+            reading: "Kyō wa nan-yōbi desu ka?",
+            english: { en: "What day is it today?", np: "आज कुन बार हो?" },
+            scenario: { en: "Asking the day", np: "बार सोध्दा" },
           },
         ],
       },
@@ -2563,6 +2689,65 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     grammar: [
       {
         number: 1,
+        name: { en: "に particle — recipient of giving, sending, teaching, calling", np: "に particle — दिने, पठाउने, सिकाउने, फोन गर्ने कार्यको प्राप्तकर्ता" },
+        meaning: {
+          en: "に marks the RECIPIENT — the person who receives the action. It works with: あげます (give to), おくります (send to), おしえます (teach to), かします (lend to), でんわをかけます (call someone). Pattern: [person] に [object] を [verb].",
+          np: "に ले प्राप्तकर्ता चिन्ह गर्छ — कसले कार्य पाउँछ। यी verb सँग काम गर्छ: あげます (दिन), おくります (पठाउन), おしえます (सिकाउन), かします (सापटी दिन), でんわをかけます (फोन गर्न)। Pattern: [व्यक्ति] に [वस्तु] を [verb]।",
+        },
+        whereWeUse: [
+          { en: "Giving: ともだちにプレゼントをあげます — I give a present to my friend", np: "दिँदा: ともだちにプレゼントをあげます — साथीलाई उपहार दिन्छु" },
+          { en: "Sending: ははにてがみをおくります — I send a letter to my mother", np: "पठाउँदा: ははにてがみをおくります — आमालाई चिठी पठाउँछु" },
+          { en: "Calling: がっこうにでんわをかけます — I call the school", np: "फोन गर्दा: がっこうにでんわをかけます — विद्यालयमा फोन गर्छु" },
+        ],
+        examples: [
+          {
+            japanese: "ともだちに プレゼントを あげます。",
+            reading: "Tomodachi ni purezento o agemasu.",
+            english: { en: "I give a present to my friend.", np: "साथीलाई उपहार दिन्छु।" },
+            scenario: { en: "に — recipient of giving", np: "に — दिने कार्यको प्राप्तकर्ता" },
+          },
+          {
+            japanese: "{母|はは}に てがみを おくります。",
+            reading: "Haha ni tegami o okurimasu.",
+            english: { en: "I send a letter to my mother.", np: "आमालाई चिठी पठाउँछु।" },
+            scenario: { en: "に — recipient of sending", np: "に — पठाउने कार्यको प्राप्तकर्ता" },
+          },
+          {
+            japanese: "がっこうに でんわを かけます。",
+            reading: "Gakkō ni denwa o kakemasu.",
+            english: { en: "I make a phone call to the school.", np: "विद्यालयमा फोन गर्छु।" },
+            scenario: { en: "に — person/place being called", np: "に — फोन गरिने व्यक्ति/ठाउँ" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "から particle — source of receiving", np: "から particle — पाउने स्रोत" },
+        meaning: {
+          en: "から marks the SOURCE — the person you receive something FROM. It works with もらいます (receive). Pattern: [person] から [object] を もらいます. Note: に can also replace から with もらいます, but から is more natural.",
+          np: "から ले स्रोत चिन्ह गर्छ — कसबाट पाउँछौ। もらいます सँग काम गर्छ। Pattern: [व्यक्ति] から [वस्तु] を もらいます। ध्यान: に ले पनि から को सट्टा हुन सक्छ तर から अधिक स्वाभाविक।",
+        },
+        whereWeUse: [
+          { en: "ともだちからプレゼントをもらいます — I receive a present from my friend", np: "ともだちからプレゼントをもらいます — साथीबाट उपहार पाउँछु" },
+          { en: "ははからはなをもらいました — I received flowers from my mother (past)", np: "ははからはなをもらいました — आमाबाट फूल पाएँ (भूतकाल)" },
+        ],
+        examples: [
+          {
+            japanese: "ともだちから プレゼントを もらいます。",
+            reading: "Tomodachi kara purezento o moraimasu.",
+            english: { en: "I receive a present from my friend.", np: "साथीबाट उपहार पाउँछु।" },
+            scenario: { en: "から — source of gift", np: "から — उपहारको स्रोत" },
+          },
+          {
+            japanese: "{母|はは}から {花|はな}を もらいました。",
+            reading: "Haha kara hana o moraimashita.",
+            english: { en: "I received flowers from my mother.", np: "आमाबाट फूल पाएँ।" },
+            scenario: { en: "から — past receiving", np: "から — भूतकालमा पाएको" },
+          },
+        ],
+      },
+      {
+        number: 3,
         name: { en: "[Person] に [Object] を あげます — give to someone", np: "[व्यक्ति] に [वस्तु] を あげます — कसैलाई दिनु" },
         meaning: {
           en: "Use あげます when I (or someone) gives something TO another person outside my group. に marks the recipient.",
@@ -2595,7 +2780,40 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
       },
       {
-        number: 2,
+        number: 4,
+        name: { en: "もう〜ました / まだ〜です — already done / not yet", np: "もう〜ました / まだ〜です — पहिले नै भयो / अझै भएको छैन" },
+        meaning: {
+          en: "もう + past verb = 'already (done)'. まだです = 'not yet' (short answer). In a question: もう〜ましたか = 'Have you already…?'. Yes answer: はい、もう〜ました. No answer: いいえ、まだです.",
+          np: "もう + past verb = 'पहिले नै (भयो)'। まだです = 'अझै होइन' (छोटो उत्तर)। प्रश्नमा: もう〜ましたか = 'पहिले नै...भयो?'। हो: はい、もう〜ました। होइन: いいえ、まだです।",
+        },
+        whereWeUse: [
+          { en: "もう ごはんをたべましたか — Have you already eaten? (खाना खाइसक्नुभयो?)", np: "もう ごはんをたべましたか — खाना खाइसक्नुभयो?" },
+          { en: "Yes: はい、もうたべました — Yes, I have already eaten", np: "हो: はい、もうたべました — हो, खाइसकें" },
+          { en: "No: いいえ、まだです — No, not yet", np: "होइन: いいえ、まだです — होइन, अझै खाइनँ" },
+        ],
+        examples: [
+          {
+            japanese: "もう ごはんを たべましたか。",
+            reading: "Mō gohan o tabemashita ka?",
+            english: { en: "Have you already eaten? (खाना खाइसक्नुभयो?)", np: "खाना खाइसक्नुभयो?" },
+            scenario: { en: "Asking if someone already ate", np: "खाना खाइसक्यो सोध्दा" },
+          },
+          {
+            japanese: "はい、もう たべました。",
+            reading: "Hai, mō tabemashita.",
+            english: { en: "Yes, I have already eaten.", np: "हो, खाइसकें।" },
+            scenario: { en: "Confirming already done", np: "पहिले नै भयो भन्दा" },
+          },
+          {
+            japanese: "いいえ、まだです。",
+            reading: "Iie, mada desu.",
+            english: { en: "No, not yet.", np: "होइन, अझै।" },
+            scenario: { en: "Not yet done", np: "अझै भएको छैन" },
+          },
+        ],
+      },
+      {
+        number: 5,
         name: { en: "[Person] から [Object] を もらいます — receive from someone", np: "[व्यक्ति] から [वस्तु] を もらいます — कसैबाट पाउनु" },
         meaning: {
           en: "Use もらいます when I (or someone) receives something FROM another person. から marks the source — who gave it.",
