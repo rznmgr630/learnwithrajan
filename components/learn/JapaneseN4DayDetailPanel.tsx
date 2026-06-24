@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import { RichText } from "@/components/learn/RichText";
@@ -37,6 +37,45 @@ function n4TagLabel(slug: string, translate: (key: UiStringKey) => string): stri
   return key ? translate(key) : slug;
 }
 
+function Accordion({
+  number,
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  number: number;
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
+      >
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[10px] font-bold text-[var(--accent-fg)]">
+          {number}
+        </span>
+        <span className="flex-1 text-sm font-semibold text-[var(--text)]">{title}</span>
+        <svg
+          className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M8 10.94 2.53 5.47l.94-.94L8 9.06l4.53-4.53.94.94z" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-[var(--border)] px-4 py-4">{children}</div>
+      )}
+    </div>
+  );
+}
+
 export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
@@ -65,6 +104,7 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
 
   const done = isDone(dayNumber);
   const intro = normalizeOverview(detail.overview);
+  const sections = detail.sections ?? [];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
@@ -99,7 +139,8 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
+          {/* Tags */}
           <div className="flex flex-wrap gap-2">
             {ctx.day.tags.map((tag) => (
               <span
@@ -111,26 +152,27 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
             ))}
           </div>
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.overviewHeading")}</h3>
-            <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
-              {intro.map((p, i) => (
-                <p key={i}>
-                  <RichText text={pickLocalized(p, locale)} />
-                </p>
-              ))}
-            </div>
+          {/* Overview */}
+          <div className="space-y-1.5 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)] px-4 py-3.5">
+            {intro.map((p, i) => (
+              <p key={i} className="text-sm leading-relaxed text-[var(--muted)]">
+                <RichText text={pickLocalized(p, locale)} />
+              </p>
+            ))}
           </div>
 
-          {detail.sections?.map((sec, si) => (
-            <div key={`jn4-sec-${si}`}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                <RichText text={pickLocalized(sec.title, locale)} />
-              </h3>
+          {/* Sections as accordions */}
+          {sections.map((sec, si) => (
+            <Accordion
+              key={`jn4-sec-${si}`}
+              number={si + 1}
+              title={pickLocalized(sec.title, locale)}
+              defaultOpen={si === 0}
+            >
               {sec.blocks && sec.blocks.length > 0 ? (
                 <JapaneseDetailBlockRenderer blocks={sec.blocks} />
               ) : sec.items && sec.items.length > 0 ? (
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
+                <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
                   {sec.items.map((line, i) => (
                     <li key={i} className="pl-1">
                       <RichText text={pickLocalized(line, locale)} />
@@ -138,12 +180,13 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
                   ))}
                 </ul>
               ) : null}
-            </div>
+            </Accordion>
           ))}
 
+          {/* Practice checklist */}
           {detail.bullets && detail.bullets.length > 0 ? (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.practiceChecklist")}</h3>
+            <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("jpDetail.practiceChecklist")}</p>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--faint)]">
                 {detail.bullets.map((line, i) => (
                   <li key={i} className="pl-1">
