@@ -66,7 +66,14 @@ export type JapaneseDetailBlock =
         strokeSvgUrl: string;
       }[];
     }
-  | { type: "vocabTable"; rows: VocabRow[] };
+  | { type: "vocabTable"; rows: VocabRow[] }
+  | {
+      type: "youtubeEmbed";
+      videoIdEn: string;
+      videoIdEnPart2?: string;
+      videoIdNp?: string;
+      title: string;
+    };
 
 /** One row in a vocabulary table block. */
 export type VocabRow = {

@@ -4,6 +4,24 @@
 
 export type YoutubeClip = { url: string; title: string };
 
+export type GrammarVideoSpec = {
+  videoIdEn: string;
+  videoIdEnPart2?: string;
+  videoIdNp?: string;
+};
+
+const MINNA_II_GRAMMAR_VIDEO: Record<number, GrammarVideoSpec> = {
+  47: {
+    videoIdEn: "6bvunzqH898",
+    videoIdEnPart2: "LKgfJbtNMqs",
+    videoIdNp: "ud4fr8n7RoU",
+  },
+};
+
+export function grammarVideoForMinnaIILesson(lesson: number): GrammarVideoSpec | null {
+  return MINNA_II_GRAMMAR_VIDEO[lesson] ?? null;
+}
+
 /** Featured clips where stable URLs exist; otherwise falls back to guided search links. */
 const MINNA_II_LESSON: Record<number, YoutubeClip[]> = {
   47: [
