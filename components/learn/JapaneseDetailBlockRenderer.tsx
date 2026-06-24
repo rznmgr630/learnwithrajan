@@ -489,9 +489,7 @@ type DialogueLine = Extract<JapaneseDetailBlock, { type: "dialogue" }>["lines"][
 
 function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
   const { locale } = useLocale();
-  const [shown, setShown] = useState(1);
 
-  // Map speakers to sides: first unique speaker = left, second = right
   const speakerOrder: string[] = [];
   for (const line of lines) {
     const s = line.speaker ?? "";
@@ -499,14 +497,12 @@ function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
     if (speakerOrder.length === 2) break;
   }
 
-  const allShown = shown >= lines.length;
-
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-[var(--faint)]">
         Hiragana shown above kanji. Particles (は・が・を…) are left visible.
       </p>
-      {lines.slice(0, shown).map((line, li) => {
+      {lines.map((line, li) => {
         const isRight = speakerOrder.indexOf(line.speaker ?? "") === 1;
         const initial = (line.speaker ?? "?").charAt(0);
         return (
@@ -531,29 +527,6 @@ function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
           </div>
         );
       })}
-      <div className="flex items-center gap-2 pt-1">
-        {!allShown ? (
-          <button
-            type="button"
-            onClick={() => setShown((n) => n + 1)}
-            className="flex items-center gap-1.5 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
-          >
-            {locale === "np" ? "अर्को" : "Next"}
-            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
-              <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
-            </svg>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShown(1)}
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
-          >
-            {locale === "np" ? "फेरि सुरु गर्नुस्" : "Restart"}
-          </button>
-        )}
-        <span className="text-[11px] text-[var(--faint)]">{shown} / {lines.length}</span>
-      </div>
     </div>
   );
 }
