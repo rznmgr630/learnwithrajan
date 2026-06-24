@@ -1,10 +1,6 @@
 import { ensureDialogueAtLeastTwentyLines } from "@/lib/japanese-learning/n5/n5-dialogue-expand";
 import { twentyN4KanjiForDay } from "@/lib/japanese-learning/n4/n4-kanji-pool";
-import {
-  youtubeClipsForMinnaIILesson,
-  youtubeClipsForN4SprintDay,
-  grammarVideoForMinnaIILesson,
-} from "@/lib/japanese-learning/n4/n4-youtube-links";
+import { grammarVideoForMinnaIILesson } from "@/lib/japanese-learning/n4/n4-youtube-links";
 import {
   n4VocabularySectionTitle,
   n4VocabularyRows,
@@ -22,8 +18,7 @@ const SECTION = {
   particles: { en: "Particles & usage", np: "जुड्ने शब्द र प्रयोग", jp: "助詞と使い分け" },
   grammar: { en: "Grammar", np: "व्याकरण", jp: "文法" },
   kanji: { en: "Kanji — stroke order (20 characters)", np: "कांजी — रेखाहरू (२० वर्ण)", jp: "漢字 · 筆順（20字）" },
-  mcq: { en: "Multiple choice", np: "बहुविकल्प", jp: "選択問題" },
-  listening: { en: "Listening — shadow these YouTube picks", np: "सुन्ने — यी YouTube छनोटहरू छायाँ गर्नुहोस्", jp: "聴解 · 次のYouTubeでシャドーイング" },
+  exercise: { en: "Exercise", np: "व्यायाम", jp: "練習問題" },
 } satisfies Record<string, LocalizedString>;
 
 export function buildJapaneseN4DayDetail(
@@ -37,11 +32,6 @@ export function buildJapaneseN4DayDetail(
       : spec.bookRef;
 
   const dialogueLines = ensureDialogueAtLeastTwentyLines(spec.dialogue);
-
-  const youtubeVideos =
-    spec.minnaLesson !== null
-      ? youtubeClipsForMinnaIILesson(spec.minnaLesson)
-      : youtubeClipsForN4SprintDay(day);
 
   const kanjiItems = twentyN4KanjiForDay(day);
 
@@ -65,12 +55,6 @@ export function buildJapaneseN4DayDetail(
     np: `दिन ${day} का बीस N4 कांजी · छवि लोड नभएमा Open stroke SVG ट्याप गर्नुहोस्`,
     jp: `Day ${day} のN4漢字20字 · 画像が出ないときは「Open stroke SVG」を開いてください`,
   };
-  const listeningTitle: LocalizedString = {
-    en: `Audio-first · ${ref}`,
-    np: `अडियो पहिले · ${ref}`,
-    jp: `音声優先 · ${ref}`,
-  };
-
   const sections: JapaneseRoadmapDayDetailSection[] = [
     {
       title: SECTION.conversation,
@@ -103,28 +87,16 @@ export function buildJapaneseN4DayDetail(
       ],
     },
     {
-      title: SECTION.mcq,
-      blocks: spec.mcqs.map(
-        (m): JapaneseDetailBlock => ({
-          type: "mcq",
-          question: m.question,
-          choices: m.choices,
-          correctIndex: m.correctIndex,
-          explanation: m.explanation,
-        }),
-      ),
-    },
-    {
-      title: SECTION.listening,
+      title: SECTION.exercise,
       blocks: [
         {
-          type: "listening",
-          title: listeningTitle,
-          scenario: spec.listening.scenario,
-          instruction: spec.listening.instruction,
-          keyPhrases: spec.listening.keyPhrases,
-          studyTip: spec.listening.studyTip,
-          youtubeVideos,
+          type: "exerciseBlock",
+          mcqs: spec.mcqs.map((m) => ({
+            question: m.question,
+            choices: m.choices,
+            correctIndex: m.correctIndex,
+            explanation: m.explanation,
+          })),
         },
       ],
     },
