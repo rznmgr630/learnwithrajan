@@ -4,6 +4,15 @@
 
 export type YoutubeClip = { url: string; title: string };
 
+/** Featured clips where stable URLs exist; otherwise falls back to guided search links. */
+const MINNA_II_LESSON: Record<number, YoutubeClip[]> = {
+  47: [
+    { url: "https://www.youtube.com/watch?v=6bvunzqH898", title: "Minna II L47 · EN Part 1" },
+    { url: "https://www.youtube.com/watch?v=LKgfJbtNMqs", title: "Minna II L47 · EN Part 2" },
+    { url: "https://www.youtube.com/watch?v=ud4fr8n7RoU", title: "Minna II L47 · NP" },
+  ],
+};
+
 function minnaIISearch(lesson: number, jpTitle: string): YoutubeClip {
   return {
     url:
@@ -24,6 +33,8 @@ function englishSearchN4(lesson: number): YoutubeClip {
 
 /** Listening clips for Minna II Lessons 26–50. */
 export function youtubeClipsForMinnaIILesson(lesson: number): YoutubeClip[] {
+  const preset = MINNA_II_LESSON[lesson];
+  if (preset && preset.length > 0) return preset;
   return [
     minnaIISearch(lesson, "会話"),
     minnaIISearch(lesson, "聞く"),

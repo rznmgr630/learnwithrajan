@@ -4,6 +4,12 @@ import {
   youtubeClipsForMinnaIILesson,
   youtubeClipsForN4SprintDay,
 } from "@/lib/japanese-learning/n4/n4-youtube-links";
+import {
+  n4VocabularySectionCaption,
+  n4VocabularySectionTitle,
+  n4VocabularyTableHeaders,
+  n4VocabularyTableRows,
+} from "@/lib/japanese-learning/n4/n4-lesson-vocabulary";
 import type {
   JapaneseDetailBlock,
   JapaneseRoadmapDayDetail,
@@ -79,6 +85,17 @@ export function buildJapaneseN4DayDetail(
           caption: particleCaption,
           headers: particleHeaders,
           rows: spec.particles.map((p): LocalizedString[] => [`${p.particle}`, p.note]),
+        },
+      ],
+    },
+    {
+      title: n4VocabularySectionTitle(),
+      blocks: [
+        {
+          type: "table",
+          caption: n4VocabularySectionCaption(ref),
+          headers: n4VocabularyTableHeaders(),
+          rows: n4VocabularyTableRows(spec.minnaLesson),
         },
       ],
     },
