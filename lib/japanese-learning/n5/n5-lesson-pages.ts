@@ -3007,6 +3007,2360 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  // ─── WEEK 2 ───────────────────────────────────────────────────────────────
+  {
+    id: 8,
+    title: "Lesson 8 — い・な けいようし (Adjectives)",
+    intro: [
+      {
+        en: "In this lesson you learn two types of Japanese adjectives: い-adjectives (おいしい, あたらしい) and な-adjectives (きれい, しずか). Both can describe nouns or act as sentence predicates.",
+        np: "यस पाठमा जापानी भाषाका दुई प्रकारका विशेषणहरू सिक्नुहुनेछ: い-विशेषण (おいしい, あたらしい) र な-विशेषण (きれい, しずか)। दुवैले noun अगाडि र predicate रूपमा प्रयोग हुन्छन्।",
+      },
+      {
+        en: "い-adjectives conjugate by changing their い ending: negative → くない、past → かった、past-neg → くなかった. な-adjectives follow the noun pattern: negative → じゃありません、past → でした.",
+        np: "い-विशेषणको い ending फेरिन्छ: नकार → くない、भूत → かった、भूत-नकार → くなかった। な-विशेषण Noun जस्तो: नकार → じゃありません、भूत → でした।",
+      },
+      {
+        en: "Before a noun: い-adj attaches directly (あたらしいかばん), but な-adj needs な (きれいなへや). Use とても for 'very' and あまり only with negatives for 'not very'.",
+        np: "Noun अगाडि: い-adj सिधै जोडिन्छ (あたらしいかばん), तर な-adj ले な चाहिन्छ (きれいなへや)। 'धेरै' को लागि とても, नकारसँग 'त्यति होइन' को लागि あまり।",
+      },
+    ],
+    youtubeVideoId: { en: "J6E5VTFtXAs" },
+    youtubeVideoIdPart2: { en: "6HCkKy_VTFU" },
+    youtubeTitle: "Minna no Nihongo · Lesson 8 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "このへやはとてもひろいですね。",
+        reading: "Kono heya wa totemo hiroi desu ne.",
+        english: { en: "This room is very spacious, isn't it.", np: "यो कोठा धेरै ठूलो छ, हगि।" },
+      },
+      {
+        speaker: "B",
+        japanese: "そうですね。でも、すこしくらいです。",
+        reading: "Sō desu ne. Demo, sukoshi kurai desu.",
+        english: { en: "Yes. But it is a little dark.", np: "हो। तर अलिकति अँध्यारो छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "そのかばんはあたらしいですか。",
+        reading: "Sono kaban wa atarashii desu ka?",
+        english: { en: "Is that bag new?", np: "त्यो झोला नयाँ हो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、あたらしくないです。ふるいですが、きれいです。",
+        reading: "Iie, atarashiku nai desu. Furui desu ga, kirei desu.",
+        english: { en: "No, it is not new. It is old but pretty.", np: "होइन, नयाँ होइन। पुरानो छ तर राम्रो छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "たかかったですか。",
+        reading: "Takakatta desu ka?",
+        english: { en: "Was it expensive?", np: "महँगो थियो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、やすかったです。セールでかいました。",
+        reading: "Iie, yasukatta desu. Sēru de kaimashita.",
+        english: { en: "No, it was cheap. I bought it on sale.", np: "होइन, सस्तो थियो। सेलमा किनें।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "い-adj — positive / negative / past / past-neg", np: "い-विशेषण — सकारात्मक / नकारात्मक / भूत / भूत-नकार" },
+        meaning: {
+          en: "い-adj ends in い. Remove い to get the stem, then attach the ending. Positive: [adj]い + です. Negative: [stem]くないです. Past: [stem]かったです. Past-neg: [stem]くなかったです.",
+          np: "い-adj, い मा समाप्त हुन्छ। い हटाएर stem पाइन्छ। सकारात्मक: [adj]い + です। नकार: [stem]くないです। भूत: [stem]かったです। भूत-नकार: [stem]くなかったです।",
+        },
+        whereWeUse: [
+          { en: "おいしい → neg: おいしくないです", np: "おいしい → नकार: おいしくないです" },
+          { en: "おいしい → past: おいしかったです", np: "おいしい → भूत: おいしかったです" },
+          { en: "おいしい → past-neg: おいしくなかったです", np: "おいしい → भूत-नकार: おいしくなかったです" },
+        ],
+        examples: [
+          {
+            japanese: "このりょうりはおいしいです。",
+            reading: "Kono ryōri wa oishii desu.",
+            english: { en: "This dish is delicious.", np: "यो खाना मिठो छ।" },
+            scenario: { en: "Positive い-adj predicate", np: "सकारात्मक い-adj predicate" },
+          },
+          {
+            japanese: "このりょうりはおいしくないです。",
+            reading: "Kono ryōri wa oishiku nai desu.",
+            english: { en: "This dish is not delicious.", np: "यो खाना मिठो छैन।" },
+            scenario: { en: "Negative い-adj", np: "नकारात्मक い-adj" },
+          },
+          {
+            japanese: "そのケーキはおいしかったです。",
+            reading: "Sono kēki wa oishikatta desu.",
+            english: { en: "That cake was delicious.", np: "त्यो केक मिठो थियो।" },
+            scenario: { en: "Past い-adj", np: "भूत い-adj" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "な-adj — positive / negative / past / past-neg", np: "な-विशेषण — सकारात्मक / नकारात्मक / भूत / भूत-नकार" },
+        meaning: {
+          en: "な-adj behave like nouns with です. Positive: [adj]です. Negative: [adj]じゃありません. Past: [adj]でした. Past-neg: [adj]じゃありませんでした. KEY: きれい ends in い but is a な-adj — a common mistake.",
+          np: "な-adj, Noun जस्तै です सँग। सकारात्मक: [adj]です। नकार: [adj]じゃありません। भूत: [adj]でした। भूत-नकार: [adj]じゃありませんでした। महत्त्वपूर्ण: きれい, い मा अन्त्य भए पनि な-adj हो।",
+        },
+        whereWeUse: [
+          { en: "きれい → neg: きれいじゃありません", np: "きれい → नकार: きれいじゃありません" },
+          { en: "きれい → past: きれいでした", np: "きれい → भूत: きれいでした" },
+          { en: "しずか → past-neg: しずかじゃありませんでした", np: "しずか → भूत-नकार: しずかじゃありませんでした" },
+        ],
+        examples: [
+          {
+            japanese: "このへやはきれいです。",
+            reading: "Kono heya wa kirei desu.",
+            english: { en: "This room is clean/pretty.", np: "यो कोठा सफा/राम्रो छ।" },
+            scenario: { en: "Positive な-adj predicate", np: "सकारात्मक な-adj predicate" },
+          },
+          {
+            japanese: "このへやはきれいじゃありません。",
+            reading: "Kono heya wa kirei ja arimasen.",
+            english: { en: "This room is not clean.", np: "यो कोठा सफा छैन।" },
+            scenario: { en: "Negative な-adj", np: "नकारात्मक な-adj" },
+          },
+          {
+            japanese: "そのこうえんはしずかでした。",
+            reading: "Sono kōen wa shizuka deshita.",
+            english: { en: "That park was quiet.", np: "त्यो पार्क शान्त थियो।" },
+            scenario: { en: "Past な-adj", np: "भूत な-adj" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "[い-adj]+N  vs  [な-adj]+な+N — pre-noun position", np: "[い-adj]+N  vs  [な-adj]+な+N — Noun अगाडि विशेषण" },
+        meaning: {
+          en: "Before a noun, い-adj attach directly (あたらしいかばん). な-adj require な (きれいなへや). This な is NOT the copula — it links the な-adj to the noun.",
+          np: "Noun अगाडि い-adj सिधै जोडिन्छ (あたらしいかばん)। な-adj ले な चाहिन्छ (きれいなへや)। यो な Copula होइन — な-adj लाई Noun सँग जोड्ने particle हो।",
+        },
+        whereWeUse: [
+          { en: "い-adj + noun: おいしい + ケーキ = おいしいケーキ", np: "い-adj + noun: おいしい + ケーキ = おいしいケーキ" },
+          { en: "な-adj + な + noun: きれい + な + へや = きれいなへや", np: "な-adj + な + noun: きれい + な + へや = きれいなへや" },
+          { en: "Good → いい (pre-noun stays いい; negated/past use よ- stem)", np: "Good → いい (Noun अगाडि いい; conjugated रूप よ- stem)" },
+        ],
+        examples: [
+          {
+            japanese: "あたらしいかばんをかいました。",
+            reading: "Atarashii kaban o kaimashita.",
+            english: { en: "I bought a new bag.", np: "नयाँ झोला किनें।" },
+            scenario: { en: "い-adj directly before noun", np: "Noun अगाडि い-adj" },
+          },
+          {
+            japanese: "きれいなへやですね。",
+            reading: "Kirei na heya desu ne.",
+            english: { en: "What a clean room!", np: "सफा कोठा छ, हगि!" },
+            scenario: { en: "な-adj + な before noun", np: "Noun अगाडि な-adj + な" },
+          },
+          {
+            japanese: "しずかなとしょかんでべんきょうします。",
+            reading: "Shizuka na toshokan de benkyō shimasu.",
+            english: { en: "I study at a quiet library.", np: "शान्त पुस्तकालयमा पढ्छु।" },
+            scenario: { en: "な-adj modifying a place noun", np: "ठाउँको Noun अगाडि な-adj" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "とても / あまり — degree adverbs", np: "とても / あまり — मात्रा जनाउने शब्द" },
+        meaning: {
+          en: "とても (very) intensifies positive or negative adjectives. あまり (not very) is used ONLY with negative forms. Never say あまりおいしいです — always pair あまり with a negative: あまりおいしくないです.",
+          np: "とても (धेरै) सकारात्मक वा नकारात्मक विशेषण दुवैमा। あまり (त्यति होइन) नकारात्मक रूपसँग मात्र। あまりおいしいです कहिल्यै नभन्नुस् — सधैं あまり + नकार: あまりおいしくないです।",
+        },
+        whereWeUse: [
+          { en: "とても + positive adj: とてもおいしいです (very delicious)", np: "とても + सकारात्मक: とてもおいしいです (धेरै मिठो)" },
+          { en: "あまり + negative adj: あまりおいしくないです (not very delicious)", np: "あまり + नकारात्मक: あまりおいしくないです (त्यति मिठो छैन)" },
+          { en: "あまり + な-adj negative: あまりしずかじゃないです", np: "あまり + な-adj नकार: あまりしずかじゃないです" },
+        ],
+        examples: [
+          {
+            japanese: "このケーキはとてもおいしいです。",
+            reading: "Kono kēki wa totemo oishii desu.",
+            english: { en: "This cake is very delicious.", np: "यो केक धेरै मिठो छ।" },
+            scenario: { en: "とても with positive い-adj", np: "सकारात्मक い-adj सँग とても" },
+          },
+          {
+            japanese: "このえいがはあまりおもしろくないです。",
+            reading: "Kono eiga wa amari omoshiroku nai desu.",
+            english: { en: "This movie is not very interesting.", np: "यो चलचित्र त्यति रोचक छैन।" },
+            scenario: { en: "あまり with negative い-adj", np: "नकारात्मक い-adj सँग あまり" },
+          },
+          {
+            japanese: "そのまちはとてもにぎやかです。",
+            reading: "Sono machi wa totemo nigiyaka desu.",
+            english: { en: "That town is very lively.", np: "त्यो सहर धेरै चहलपहल छ।" },
+            scenario: { en: "とても with な-adj", np: "な-adj सँग とても" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "いい (good) — irregular conjugation", np: "いい (राम्रो) — अनियमित conjugation" },
+        meaning: {
+          en: "いい uses よ- as the conjugation stem, NOT い-. Negative: よくない. Past: よかった. Past-neg: よくなかった. Only the plain positive form is いい; all other forms come from よ-.",
+          np: "いい को conjugation stem, い- होइन, よ- हो। नकार: よくない। भूत: よかった। भूत-नकार: よくなかった। Plain positive मात्र いい; बाँकी सब よ- बाट।",
+        },
+        whereWeUse: [
+          { en: "positive: いいです (it's good)", np: "सकारात्मक: いいです (राम्रो छ)" },
+          { en: "negative: よくないです (it's not good)", np: "नकारात्मक: よくないです (राम्रो छैन)" },
+          { en: "past: よかったです (it was good)", np: "भूत: よかったです (राम्रो थियो)" },
+        ],
+        examples: [
+          {
+            japanese: "てんきがよくなかったです。",
+            reading: "Tenki ga yoku nakatta desu.",
+            english: { en: "The weather was not good.", np: "मौसम राम्रो थिएन।" },
+            scenario: { en: "Past-negative: よくなかった", np: "भूत-नकार: よくなかった" },
+          },
+          {
+            japanese: "きのうのえいがはよかったです。",
+            reading: "Kinō no eiga wa yokatta desu.",
+            english: { en: "Yesterday's movie was good.", np: "हिजोको चलचित्र राम्रो थियो।" },
+            scenario: { en: "Past: よかった", np: "भूत: よかった" },
+          },
+          {
+            japanese: "このかばんはいいですね。",
+            reading: "Kono kaban wa ii desu ne.",
+            english: { en: "This bag is nice, isn't it.", np: "यो झोला राम्रो छ, हगि।" },
+            scenario: { en: "Positive stays いい (not よい)", np: "Positive, いい नै रहन्छ (よい होइन)" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "が",
+        romaji: "ga",
+        name: { en: "Subject marker (adj / weather / feelings)", np: "कर्ता Marker (विशेषण / मौसम / भावना)" },
+        meaning: {
+          en: "が marks the grammatical subject — particularly in sentences about weather, feelings, and descriptions. It highlights new or contrastive information, while は marks the ongoing topic.",
+          np: "が ले व्याकरणिक subject चिन्ह गर्छ — विशेष गरी मौसम, भावना र वर्णनका वाक्यमा। नयाँ वा contrast information उजागर गर्छ, जबकि は ongoing topic हो।",
+        },
+        examples: [
+          {
+            japanese: "てんきがいいです。",
+            reading: "Tenki ga ii desu.",
+            english: { en: "The weather is nice.", np: "मौसम राम्रो छ।" },
+            scenario: { en: "が marking weather as subject", np: "मौसमलाई subject चिन्ह" },
+          },
+          {
+            japanese: "このへやはひろいですが、くらいです。",
+            reading: "Kono heya wa hiroi desu ga, kurai desu.",
+            english: { en: "This room is spacious, but dark.", np: "यो कोठा ठूलो छ, तर अँध्यारो छ।" },
+            scenario: { en: "が as 'but' connector between clauses", np: "खण्डहरू जोड्ने が" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(8),
+    mcqs: [
+      {
+        question: { en: "What is the negative form of おいしい?", np: "おいしい को नकारात्मक रूप के हो?" },
+        choices: ["おいしくないです", "おいしいじゃないです", "おいしくないます", "おいしいではないです"],
+        correctIndex: 0,
+        explanation: { en: "い-adj negative = [stem]くないです. Remove い → おいし + くない + です.", np: "い-adj नकार = [stem]くないです। い हटाउनुस् → おいし + くない + です।" },
+      },
+      {
+        question: { en: "What is the past form of やすい?", np: "やすい को भूत रूप के हो?" },
+        choices: ["やすかったです", "やすいでした", "やすくでした", "やすかったます"],
+        correctIndex: 0,
+        explanation: { en: "い-adj past = [stem]かったです. Remove い → やす + かった + です = やすかったです.", np: "い-adj भूत = [stem]かったです। い हटाउनुस् → やす + かった + です = やすかったです।" },
+      },
+      {
+        question: { en: "How do you say 'a quiet room' in Japanese?", np: "'शान्त कोठा' जापानीमा कसरी भनिन्छ?" },
+        choices: ["しずかなへや", "しずかいへや", "しずかへや", "しずかのへや"],
+        correctIndex: 0,
+        explanation: { en: "な-adj before a noun requires な: しずか + な + へや = しずかなへや.", np: "Noun अगाडि な-adj ले な चाहिन्छ: しずか + な + へや = しずかなへや।" },
+      },
+      {
+        question: { en: "Which word is a な-adjective even though it ends in い?", np: "い मा अन्त्य भए पनि कुन शब्द な-विशेषण हो?" },
+        choices: ["きれい", "あたらしい", "おいしい", "おおきい"],
+        correctIndex: 0,
+        explanation: { en: "きれい is a な-adj despite ending in い — a classic trap. あたらしい, おいしい, おおきい are genuine い-adj.", np: "きれい な-adj हो भले पनि い मा अन्त्य — सामान्य गल्ती। あたらしい, おいしい, おおきい सच्चा い-adj।" },
+      },
+      {
+        question: { en: "Complete: このへやは _____ きれいです。(This room is VERY clean.)", np: "पूरा गर्नुस्: このへやは _____ きれいです।" },
+        choices: ["とても", "あまり", "あまりも", "ぜんぜん"],
+        correctIndex: 0,
+        explanation: { en: "とても (very) pairs with positive forms. あまり pairs ONLY with negatives.", np: "とても (धेरै) सकारात्मक रूपसँग। あまり नकारसँग मात्र।" },
+      },
+      {
+        question: { en: "The past negative of いい is…?", np: "いい को भूत नकारात्मक रूप के हो?" },
+        choices: ["よくなかったです", "いいくなかったです", "いくなかったです", "よいじゃなかったです"],
+        correctIndex: 0,
+        explanation: { en: "いい is irregular. Its stem is よ-. Past-neg = よくなかった + です.", np: "いい अनियमित। Stem = よ-। भूत-नकार = よくなかった + です।" },
+      },
+      {
+        question: { en: "Which sentence correctly uses あまり?", np: "あまり सही प्रयोग भएको वाक्य कुन हो?" },
+        choices: [
+          "このえいがはあまりおもしろくないです",
+          "このえいがはあまりおもしろいです",
+          "このえいがはあまりです",
+          "このえいがはとてもあまりおもしろいです",
+        ],
+        correctIndex: 0,
+        explanation: { en: "あまり must pair with a NEGATIVE form. あまりおもしろくない is correct; あまりおもしろい is wrong.", np: "あまり नकारात्मक रूपसँग मात्र। あまりおもしろくない सही; あまりおもしろい गलत।" },
+      },
+      {
+        question: { en: "What does きれいなへや mean?", np: "きれいなへや को अर्थ के हो?" },
+        choices: [
+          { en: "A clean/pretty room", np: "सफा/राम्रो कोठा" },
+          { en: "A clean person", np: "सफा मान्छे" },
+          { en: "The room is clean (predicate)", np: "कोठा सफा छ (predicate)" },
+          { en: "A very clean room", np: "धेरै सफा कोठा" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "きれいな + へや = 'clean/pretty room'. な links the な-adj to the noun it modifies (pre-noun position).", np: "きれいな + へや = 'सफा/राम्रो कोठा'। な ले な-adj लाई modify हुने Noun सँग जोड्छ।" },
+      },
+      {
+        question: { en: "What is the past-negative of ふるい?", np: "ふるい को भूत-नकारात्मक रूप के हो?" },
+        choices: ["ふるくなかったです", "ふるくないでした", "ふるいじゃなかったです", "ふるかったじゃないです"],
+        correctIndex: 0,
+        explanation: { en: "い-adj past-neg = [stem]くなかった + です. ふるい → ふるくなかったです.", np: "い-adj भूत-नकार = [stem]くなかった + です। ふるい → ふるくなかったです।" },
+      },
+      {
+        question: { en: "Which adjective type adds な directly before a noun?", np: "कुन प्रकारको विशेषणले Noun अगाडि な थप्छ?" },
+        choices: [
+          { en: "な-adjectives (e.g. きれい, しずか, げんき)", np: "な-विशेषण (जस्तै きれい, しずか, げんき)" },
+          { en: "い-adjectives (e.g. おおきい, たかい)", np: "い-विशेषण (जस्तै おおきい, たかい)" },
+          { en: "All adjectives add な", np: "सबै विशेषणले な थप्छन्" },
+          { en: "No adjective needs な", np: "कुनैले な थप्दैन" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "な-adj need な when modifying nouns: きれいな+N. い-adj attach without な: おおきい+N.", np: "な-adj ले Noun modify गर्दा な चाहिन्छ। い-adj ले な बिना जोडिन्छ।" },
+      },
+    ],
+  },
+  {
+    id: 9,
+    title: "Lesson 9 — すき・きらい・じょうず (Preferences & Hobbies)",
+    intro: [
+      {
+        en: "In this lesson you learn to express likes, dislikes, and abilities using the が particle. すきです (like), きらいです (dislike), じょうずです (skilled at), へたです (poor at), and わかります (understand) all take が as their subject marker.",
+        np: "यस पाठमा が Particle प्रयोग गरी मनपर्ने, नमनपर्ने र क्षमता बताउन सिक्नुहुनेछ। すきです (मनपर्छ), きらいです (मनपर्दैन), じょうずです (दक्ष), へたです (कमजोर), र わかります (बुझ्छु) — सबैले が प्रयोग गर्छन्।",
+      },
+      {
+        en: "Use どんな to ask 'what kind of?' and から to give a reason: 〜から、〜 means 'because 〜, 〜'. You also learn the たい form: V-stem + たいです expresses a personal desire.",
+        np: "'कस्तो?' सोध्न どんな र कारण दिन から प्रयोग गर्नुस्: 〜から、〜 = 'किनभने 〜'। साथै たい form: V-stem + たいです ले व्यक्तिगत इच्छा जनाउँछ।",
+      },
+      {
+        en: "Note: じょうずです describes skill in a humble or objective way. When praising the listener's skill, use お上手ですね instead — using じょうずです about yourself is natural, but about the listener sounds condescending.",
+        np: "नोट: じょうずです क्षमता वस्तुनिष्ठ रूपमा बताउँछ। श्रोताको तारिफ गर्दा お上手ですね भन्नुस् — आफ्नो बारेमा じょうずです स्वाभाविक, तर श्रोताको बारेमा घमण्डी लाग्न सक्छ।",
+      },
+    ],
+    youtubeVideoId: { en: "dFfEMWr_4kE" },
+    youtubeVideoIdPart2: { en: "g4LHsVU4TrY" },
+    youtubeTitle: "Minna no Nihongo · Lesson 9 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "どんなスポーツがすきですか。",
+        reading: "Donna supōtsu ga suki desu ka?",
+        english: { en: "What kind of sport do you like?", np: "तपाईलाई कस्तो खेल मनपर्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "サッカーがすきです。でも、じょうずじゃありません。",
+        reading: "Sakkā ga suki desu. Demo, jōzu ja arimasen.",
+        english: { en: "I like soccer. But I am not skilled at it.", np: "मलाई फुटबल मनपर्छ। तर दक्ष छैन।" },
+      },
+      {
+        speaker: "A",
+        japanese: "にほんごがわかりますか。",
+        reading: "Nihongo ga wakarimasu ka?",
+        english: { en: "Do you understand Japanese?", np: "तपाईलाई जापानी भाषा बुझिन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "すこしわかります。もっとべんきょうしたいです。",
+        reading: "Sukoshi wakarimasu. Motto benkyō shitai desu.",
+        english: { en: "I understand a little. I want to study more.", np: "अलिकति बुझिन्छ। थप पढ्न चाहन्छु।" },
+      },
+      {
+        speaker: "A",
+        japanese: "りょうりはじょうずですか。",
+        reading: "Ryōri wa jōzu desu ka?",
+        english: { en: "Are you good at cooking?", np: "खाना पकाउन दक्ष हुनुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、へたです。にほんりょうりをならいたいです。",
+        reading: "Iie, heta desu. Nihon ryōri o naraitai desu.",
+        english: { en: "No, I am poor at it. I want to learn Japanese cooking.", np: "होइन, कमजोर छु। जापानी खाना सिक्न चाहन्छु।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "N が すきです / きらいです — Likes and dislikes", np: "N が すきです / きらいです — मनपर्ने र नमनपर्ने" },
+        meaning: {
+          en: "すき (like) and きらい (dislike) are な-adj. The thing liked/disliked is marked with が, NOT を. Pattern: [topic] は [thing] が すき/きらい です.",
+          np: "すき (मनपर्छ) र きらい (मनपर्दैन) な-adj हुन्। मनपर्ने/नमनपर्ने वस्तु が ले चिन्ह गरिन्छ, を ले होइन। Pattern: [topic] は [thing] が すき/きらい です।",
+        },
+        whereWeUse: [
+          { en: "Likes: わたしは サッカーが すきです (I like soccer)", np: "मनपर्छ: わたしは サッカーが すきです" },
+          { en: "Dislikes: わたしは にんじんが きらいです (I dislike carrots)", np: "नमनपर्छ: わたしは にんじんが きらいです" },
+          { en: "Question: なにが すきですか (What do you like?)", np: "प्रश्न: なにが すきですか" },
+        ],
+        examples: [
+          {
+            japanese: "わたしはおんがくがすきです。",
+            reading: "Watashi wa ongaku ga suki desu.",
+            english: { en: "I like music.", np: "मलाई सङ्गीत मनपर्छ।" },
+            scenario: { en: "Stating a like", np: "मनपर्ने बताउँदा" },
+          },
+          {
+            japanese: "やまださんはやさいがきらいです。",
+            reading: "Yamada-san wa yasai ga kirai desu.",
+            english: { en: "Yamada dislikes vegetables.", np: "यामाडाजीलाई तरकारी मनपर्दैन।" },
+            scenario: { en: "Stating a dislike about someone", np: "अरूको नमनपर्ने" },
+          },
+          {
+            japanese: "どんなおんがくがすきですか。",
+            reading: "Donna ongaku ga suki desu ka?",
+            english: { en: "What kind of music do you like?", np: "तपाईलाई कस्तो सङ्गीत मनपर्छ?" },
+            scenario: { en: "Asking about preferences with どんな", np: "どんな सँग मनपर्ने सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "N が じょうずです / へたです — Skill and ability", np: "N が じょうずです / へたです — दक्षता र क्षमता" },
+        meaning: {
+          en: "じょうず (skilled/good at) and へた (poor at) are な-adj. The skill is marked by が. To describe YOUR OWN skill, use じょうず/へた freely. To praise the LISTENER's skill, use お上手ですね (more polite).",
+          np: "じょうず (दक्ष) र へた (कमजोर) な-adj हुन्। सीप が ले। आफ्नो बारेमा じょうず/へた स्वतन्त्र रूपमा। श्रोताको तारिफ गर्दा お上手ですね (बढी विनम्र)।",
+        },
+        whereWeUse: [
+          { en: "Self: わたしは ピアノが じょうずです (I am good at piano)", np: "आफ्नो: わたしは ピアノが じょうずです" },
+          { en: "Self: わたしは りょうりが へたです (I am poor at cooking)", np: "आफ्नो: わたしは りょうりが へたです" },
+          { en: "Praise listener: ピアノがお上手ですね (You are skilled at piano)", np: "श्रोता तारिफ: ピアノがお上手ですね" },
+        ],
+        examples: [
+          {
+            japanese: "かのじょはダンスがじょうずです。",
+            reading: "Kanojo wa dansu ga jōzu desu.",
+            english: { en: "She is good at dancing.", np: "उनी नाचमा दक्ष छिन्।" },
+            scenario: { en: "じょうず about a third person", np: "तेस्रो व्यक्तिको बारेमा じょうず" },
+          },
+          {
+            japanese: "わたしはえがへたです。",
+            reading: "Watashi wa e ga heta desu.",
+            english: { en: "I am poor at drawing.", np: "म चित्र कोर्न कमजोर छु।" },
+            scenario: { en: "へた about oneself", np: "आफ्नो बारेमा へた" },
+          },
+          {
+            japanese: "にほんごがおじょうずですね。",
+            reading: "Nihongo ga o-jōzu desu ne.",
+            english: { en: "You are skilled at Japanese!", np: "हजुर जापानी भाषामा दक्ष हुनुहुन्छ!" },
+            scenario: { en: "Polite praise using お上手", np: "お上手 प्रयोग गरी विनम्र तारिफ" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "N が わかります — understand N", np: "N が わかります — N बुझिन्छ" },
+        meaning: {
+          en: "わかります (understand) takes が for what is understood. Pattern: [person] は [thing] が わかります. Contrast with できます (can do) which also takes が.",
+          np: "わかります (बुझ्छु) ले बुझिने वस्तु が ले चिन्ह गर्छ। Pattern: [व्यक्ति] は [वस्तु] が わかります। できます (सक्छु) सँग तुलना — यसले पनि が लिन्छ।",
+        },
+        whereWeUse: [
+          { en: "Language: わたしは えいごが わかります (I understand English)", np: "भाषा: わたしは えいごが わかります" },
+          { en: "Question: にほんごが わかりますか (Do you understand Japanese?)", np: "प्रश्न: にほんごが わかりますか" },
+          { en: "Partial: すこし わかります (I understand a little)", np: "आंशिक: すこし わかります" },
+        ],
+        examples: [
+          {
+            japanese: "えいごがわかります。",
+            reading: "Eigo ga wakarimasu.",
+            english: { en: "I understand English.", np: "मलाई अङ्ग्रेजी बुझिन्छ।" },
+            scenario: { en: "Understanding a language", np: "भाषा बुझिने" },
+          },
+          {
+            japanese: "すこしわかります。",
+            reading: "Sukoshi wakarimasu.",
+            english: { en: "I understand a little.", np: "अलिकति बुझिन्छ।" },
+            scenario: { en: "Partial understanding", np: "आंशिक बुझाइ" },
+          },
+          {
+            japanese: "にほんごがぜんぜんわかりません。",
+            reading: "Nihongo ga zenzen wakarimasen.",
+            english: { en: "I do not understand Japanese at all.", np: "जापानी भाषा बिल्कुल बुझिँदैन।" },
+            scenario: { en: "No understanding with ぜんぜん", np: "ぜんぜん सँग शून्य बुझाइ" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "V-stem たいです — want to do V", np: "V-stem たいです — V गर्न चाहन्छु" },
+        meaning: {
+          en: "Attach たい to the verb stem (ます-form minus ます) to say 'I want to do V'. たい is an い-adj: its negative is たくない, past is たかった. Use only for the speaker's own desires — not for third persons.",
+          np: "Verb stem (ます-form मा ます हटाएर) मा たい थप्दा 'V गर्न चाहन्छु' भन्ने अर्थ हुन्छ। たい, い-adj हो: नकार = たくない, भूत = たかった। वक्ताको आफ्नो इच्छाका लागि मात्र — तेस्रो व्यक्तिको लागि होइन।",
+        },
+        whereWeUse: [
+          { en: "Want to eat: たべます → stem たべ + たい = たべたいです", np: "खान चाहनु: たべます → stem たべ + たい = たべたいです" },
+          { en: "Want to go: いきます → stem いき + たい = いきたいです", np: "जान चाहनु: いきます → stem いき + たい = いきたいです" },
+          { en: "Past: いきたかったです (I wanted to go)", np: "भूत: いきたかったです (जान चाहेको थिएँ)" },
+        ],
+        examples: [
+          {
+            japanese: "にほんへいきたいです。",
+            reading: "Nihon e ikitai desu.",
+            english: { en: "I want to go to Japan.", np: "जापान जान चाहन्छु।" },
+            scenario: { en: "Desire to travel", np: "यात्रा गर्ने इच्छा" },
+          },
+          {
+            japanese: "すしをたべたいです。",
+            reading: "Sushi o tabetai desu.",
+            english: { en: "I want to eat sushi.", np: "सुशी खान चाहन्छु।" },
+            scenario: { en: "Desire to eat specific food", np: "खाने इच्छा" },
+          },
+          {
+            japanese: "もっとにほんごをべんきょうしたいです。",
+            reading: "Motto Nihongo o benkyō shitai desu.",
+            english: { en: "I want to study Japanese more.", np: "थप जापानी पढ्न चाहन्छु।" },
+            scenario: { en: "Desire to study more", np: "थप पढ्ने इच्छा" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "〜から、〜 — Reason + Result", np: "〜から、〜 — कारण + परिणाम" },
+        meaning: {
+          en: "から at the end of a clause means 'because'. Pattern: [reason clause] から、[result clause]. The reason clause uses plain or polite verb forms. から is placed directly after the reason.",
+          np: "Clause को अन्तमा から को अर्थ 'किनभने' हो। Pattern: [कारण clause] から、[परिणाम clause]। कारण clause मा plain वा polite verb। कारण ठ्याक्कै पछि から।",
+        },
+        whereWeUse: [
+          { en: "Reason → result: にほんごがすきだから、まいにちべんきょうします", np: "कारण → परिणाम: にほんごがすきだから、まいにちべんきょうします" },
+          { en: "Adjective reason: さむいから、うちにいます", np: "विशेषण कारण: さむいから、うちにいます" },
+          { en: "Question: どうしてですか (Why?) — answer with から", np: "प्रश्न: どうしてですか — から ले जवाफ दिनुस्" },
+        ],
+        examples: [
+          {
+            japanese: "さむいから、うちにいます。",
+            reading: "Samui kara, uchi ni imasu.",
+            english: { en: "Because it is cold, I am at home.", np: "जाडो भएकाले घरमा छु।" },
+            scenario: { en: "Weather reason", np: "मौसम कारण" },
+          },
+          {
+            japanese: "にほんごがすきだから、まいにちべんきょうします。",
+            reading: "Nihongo ga suki dakara, mainichi benkyō shimasu.",
+            english: { en: "Because I like Japanese, I study every day.", np: "जापानी मनपर्ने भएकाले, हरेक दिन पढ्छु।" },
+            scenario: { en: "Preference as reason", np: "मनपर्ने कारण" },
+          },
+          {
+            japanese: "むずかしいから、もっとれんしゅうします。",
+            reading: "Muzukashii kara, motto renshū shimasu.",
+            english: { en: "Because it is difficult, I will practice more.", np: "गाह्रो भएकाले थप अभ्यास गर्छु।" },
+            scenario: { en: "Difficulty as reason", np: "कठिनाइ कारण" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "が",
+        romaji: "ga",
+        name: { en: "Subject of preference / ability / understanding", np: "मनपर्ने / क्षमता / बुझाइको Subject" },
+        meaning: {
+          en: "With すき/きらい/じょうず/へた/わかります, the thing liked/disliked/skilled-at/understood is marked by が, not を. This が marks what the adjective or verb is about.",
+          np: "すき/きらい/じょうず/へた/わかります सँग मनपर्ने/नमनपर्ने/दक्ष/कमजोर/बुझिने वस्तु が ले चिन्ह गरिन्छ, を ले होइन।",
+        },
+        examples: [
+          {
+            japanese: "わたしはおんがくがすきです。",
+            reading: "Watashi wa ongaku ga suki desu.",
+            english: { en: "I like music.", np: "मलाई सङ्गीत मनपर्छ।" },
+            scenario: { en: "が marking the liked thing", np: "मनपर्ने वस्तु が ले" },
+          },
+          {
+            japanese: "かれはえいごがわかります。",
+            reading: "Kare wa eigo ga wakarimasu.",
+            english: { en: "He understands English.", np: "उनलाई अङ्ग्रेजी बुझिन्छ।" },
+            scenario: { en: "が marking what is understood", np: "बुझिने वस्तु が ले" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(9),
+    mcqs: [
+      {
+        question: { en: "Which particle marks the thing you like in すきです sentences?", np: "すきです वाक्यमा मनपर्ने वस्तु कुन Particle ले चिन्ह गर्छ?" },
+        choices: ["が", "を", "は", "に"],
+        correctIndex: 0,
+        explanation: { en: "With すき/きらい/じょうず/へた, the thing is marked by が, not を. わたしは サッカーが すきです.", np: "すき/きらい/じょうず/へた सँग वस्तु が ले, को ले होइन। わたしは サッカーが すきです।" },
+      },
+      {
+        question: { en: "How do you say 'I want to eat sushi'?", np: "'म सुशी खान चाहन्छु' कसरी भनिन्छ?" },
+        choices: ["すしをたべたいです", "すしがたべたいです", "すしをたべますたい", "すしをたべたくです"],
+        correctIndex: 0,
+        explanation: { en: "V-stem たいです: たべ (stem) + たい = たべたい. The object stays を: すしをたべたいです.", np: "V-stem たいです: たべ (stem) + たい = たべたい। Object は を नै: すしをたべたいです।" },
+      },
+      {
+        question: { en: "What does じょうずじゃありません mean?", np: "じょうずじゃありません को अर्थ के हो?" },
+        choices: [
+          { en: "Not skilled at it", np: "दक्ष छैन" },
+          { en: "Very skilled", np: "धेरै दक्ष" },
+          { en: "Skilled in the past", np: "पहिले दक्ष थिए" },
+          { en: "Want to be skilled", np: "दक्ष हुन चाहन्छु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "じょうず is a な-adj. Negative = じゃありません. So じょうずじゃありません = 'not skilled'.", np: "じょうず, な-adj हो। नकार = じゃありません। अतः じょうずじゃありません = 'दक्ष छैन'।" },
+      },
+      {
+        question: { en: "Fill the blank: さむい___、うちにいます。(Because it's cold, I'm home.)", np: "खाली भर्नुस्: さむい___、うちにいます।" },
+        choices: ["から", "ので", "が", "に"],
+        correctIndex: 0,
+        explanation: { en: "から placed after the reason clause means 'because'. さむいから = because it is cold.", np: "कारण clause पछि から = 'किनभने'। さむいから = जाडो भएकाले।" },
+      },
+      {
+        question: { en: "What does どんなスポーツがすきですか mean?", np: "どんなスポーツがすきですか को अर्थ के हो?" },
+        choices: [
+          { en: "What kind of sport do you like?", np: "तपाईलाई कस्तो खेल मनपर्छ?" },
+          { en: "Do you like sports?", np: "तपाईलाई खेल मनपर्छ?" },
+          { en: "How many sports do you like?", np: "तपाईलाई कति खेल मनपर्छन्?" },
+          { en: "Which sport are you good at?", np: "तपाई कुन खेलमा दक्ष हुनुहुन्छ?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どんな = what kind of. どんなスポーツ = what kind of sport. が すきですか = do you like?", np: "どんな = कस्तो। どんなスポーツ = कस्तो खेल। が すきですか = मनपर्छ?" },
+      },
+      {
+        question: { en: "Which sentence is NOT natural Japanese?", np: "कुन वाक्य स्वाभाविक जापानी होइन?" },
+        choices: [
+          "わたしはえいごをわかります",
+          "わたしはえいごがわかります",
+          "えいごがわかりますか",
+          "すこしわかります",
+        ],
+        correctIndex: 0,
+        explanation: { en: "わかります takes が, not を. わたしはえいごをわかります is wrong. The correct form is わたしはえいごがわかります.", np: "わかります, が लिन्छ, को लाई होइन। わたしはえいごをわかります गलत। सही: わたしはえいごがわかります।" },
+      },
+      {
+        question: { en: "たべたくないです means…?", np: "たべたくないです को अर्थ के हो?" },
+        choices: [
+          { en: "I don't want to eat", np: "खान मन छैन" },
+          { en: "I want to eat", np: "खान मन छ" },
+          { en: "I didn't eat", np: "खाइनँ" },
+          { en: "I ate", np: "खाएँ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "たい is an い-adj. Its negative = たくない. たべたくないです = do not want to eat.", np: "たい, い-adj हो। नकार = たくない। たべたくないです = खान मन छैन।" },
+      },
+      {
+        question: { en: "Which is correct: 'I like cooking' in Japanese?", np: "'मलाई खाना पकाउन मनपर्छ' जापानीमा कसरी?" },
+        choices: [
+          "わたしはりょうりがすきです",
+          "わたしはりょうりをすきです",
+          "わたしはすきがりょうりです",
+          "わたしはりょうりにすきです",
+        ],
+        correctIndex: 0,
+        explanation: { en: "The liked thing uses が: りょうりが すきです. を is wrong here.", np: "मनपर्ने वस्तुमा が: りょうりが すきです। यहाँ を गलत।" },
+      },
+      {
+        question: { en: "How do you express 'I want to learn Japanese'?", np: "'म जापानी सिक्न चाहन्छु' कसरी भनिन्छ?" },
+        choices: [
+          "にほんごをならいたいです",
+          "にほんごがならいたいです",
+          "にほんごをならいます",
+          "にほんごをならいたくない",
+        ],
+        correctIndex: 0,
+        explanation: { en: "V-stem たい: ならいます → ならい + たい = ならいたいです. Object is を.", np: "V-stem たい: ならいます → ならい + たい = ならいたいです। Object = を।" },
+      },
+      {
+        question: { en: "What is the correct way to praise someone else's Japanese skill?", np: "अरूको जापानी भाषाको तारिफ गर्ने सही तरिका कुन हो?" },
+        choices: [
+          { en: "にほんごがお上手ですね", np: "にほんごがお上手ですね" },
+          { en: "にほんごがじょうずですね", np: "にほんごがじょうずですね" },
+          { en: "にほんごがすきですね", np: "にほんごがすきですね" },
+          { en: "にほんごがわかりますね", np: "にほんごがわかりますね" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "Use お上手ですね when praising the listener's skill — more polite than just じょうずですね.", np: "श्रोताको तारिफ गर्दा お上手ですね — じょうずですね भन्दा बढी विनम्र।" },
+      },
+    ],
+  },
+  {
+    id: 10,
+    title: "Lesson 10 — います・あります (Existence & Location)",
+    intro: [
+      {
+        en: "In this lesson you learn two existence verbs: います for animate beings (people, animals) and あります for inanimate things. The pattern N は [place] に います/あります states WHERE something exists.",
+        np: "यस पाठमा दुई existence verb सिक्नुहुनेछ: います जीवित प्राणीहरूका लागि (मान्छे, जनावर) र あります निर्जीव वस्तुका लागि। Pattern: N は [ठाउँ] に います/あります — वस्तु कहाँ छ।",
+      },
+      {
+        en: "The reverse pattern [place] に N が います/あります states WHAT exists in a place. Position words (うえ/した/まえ/うしろ/となり/なか/そと/ちかく) combine with の and a noun to pinpoint location.",
+        np: "उल्टो pattern: [ठाउँ] に N が います/あります — ठाउँमा के/को छ। Position शब्दहरू (うえ/した/まえ/うしろ/となり/なか/そと/ちかく) + の + noun = सटीक ठेगाना।",
+      },
+      {
+        en: "Use に for the static location of existence (where something IS). Do not confuse with で (the place where an ACTION happens).",
+        np: "Existence को static location को लागि に (वस्तु कहाँ छ)। で (जहाँ कार्य हुन्छ) सँग नमिसाउनुस्।",
+      },
+    ],
+    youtubeVideoId: { en: "U4nHSu5oa90" },
+    youtubeVideoIdPart2: { en: "oVCkv9CYGCA" },
+    youtubeTitle: "Minna no Nihongo · Lesson 10 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "ねこはどこにいますか。",
+        reading: "Neko wa doko ni imasu ka?",
+        english: { en: "Where is the cat?", np: "बिरालो कहाँ छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "にわにいます。きがありますね。",
+        reading: "Niwa ni imasu. Ki ga arimasu ne.",
+        english: { en: "It is in the garden. There is a tree, isn't there.", np: "बगैचामा छ। रूख पनि छ, हगि।" },
+      },
+      {
+        speaker: "A",
+        japanese: "つくえのうえになにがありますか。",
+        reading: "Tsukue no ue ni nani ga arimasu ka?",
+        english: { en: "What is on top of the desk?", np: "टेबलको माथि के छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ほんとペンがあります。",
+        reading: "Hon to pen ga arimasu.",
+        english: { en: "There are books and a pen.", np: "किताब र कलम छन्।" },
+      },
+      {
+        speaker: "A",
+        japanese: "じむしょにやまださんがいますか。",
+        reading: "Jimusho ni Yamada-san ga imasu ka?",
+        english: { en: "Is Yamada in the office?", np: "कार्यालयमा यामाडाजी हुनुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、いません。となりのへやにいます。",
+        reading: "Iie, imasen. Tonari no heya ni imasu.",
+        english: { en: "No, not here. He is in the next room.", np: "होइन, हुनुहुन्न। छेउको कोठामा हुनुहुन्छ।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "います vs あります — animate vs inanimate existence", np: "います vs あります — जीवित vs निर्जीव अस्तित्व" },
+        meaning: {
+          en: "います: living beings that move by themselves — people, animals. あります: things that do not move on their own — objects, plants (plants are borderline but use あります). Both are used with に for location.",
+          np: "います: आफैं चल्न सक्ने जीवित प्राणी — मान्छे, जनावर। あります: आफैं नचल्ने वस्तु — सामान, बिरुवा। दुवैले location को लागि に प्रयोग गर्छन्।",
+        },
+        whereWeUse: [
+          { en: "Person/animal: せんせいが います (a teacher is here)", np: "मान्छे/जनावर: せんせいが います" },
+          { en: "Object: つくえが あります (there is a desk)", np: "वस्तु: つくえが あります" },
+          { en: "Plant (boundary): にわに きが あります (there is a tree in the garden)", np: "बिरुवा (सीमा): にわに きが あります" },
+        ],
+        examples: [
+          {
+            japanese: "こうえんにこどもがいます。",
+            reading: "Kōen ni kodomo ga imasu.",
+            english: { en: "There are children in the park.", np: "पार्कमा बच्चाहरू छन्।" },
+            scenario: { en: "います with people", np: "मान्छेसँग います" },
+          },
+          {
+            japanese: "へやにテレビがあります。",
+            reading: "Heya ni terebi ga arimasu.",
+            english: { en: "There is a TV in the room.", np: "कोठामा टिभी छ।" },
+            scenario: { en: "あります with an object", np: "वस्तुसँग あります" },
+          },
+          {
+            japanese: "びょういんにいしゃがいます。",
+            reading: "Byōin ni isha ga imasu.",
+            english: { en: "There is a doctor in the hospital.", np: "अस्पतालमा डाक्टर हुनुहुन्छ।" },
+            scenario: { en: "います with professional person", np: "व्यावसायिक व्यक्तिसँग います" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "N は [place] に います/あります — WHERE something exists", np: "N は [ठाउँ] に います/あります — वस्तु कहाँ छ" },
+        meaning: {
+          en: "When the topic N is known and you state WHERE it is: N は [place] に います/あります. The place is marked by に. Pattern: ねこは にわに います (the cat is in the garden).",
+          np: "Topic N थाहा भएको हुँदा कहाँ छ बताउँदा: N は [ठाउँ] に います/あります। ठाउँ に ले। Pattern: ねこは にわに います।",
+        },
+        whereWeUse: [
+          { en: "Where is the cat? ねこは にわに います (The cat is in the garden)", np: "बिरालो कहाँ छ? ねこは にわに います" },
+          { en: "Where is Yamada? やまださんは じむしょに います", np: "यामाडाजी कहाँ? やまださんは じむしょに います" },
+          { en: "Negative: ここに いません (not here)", np: "नकार: ここに いません (यहाँ छैन)" },
+        ],
+        examples: [
+          {
+            japanese: "いぬはにわにいます。",
+            reading: "Inu wa niwa ni imasu.",
+            english: { en: "The dog is in the garden.", np: "कुकुर बगैचामा छ।" },
+            scenario: { en: "Animal location", np: "जनावरको ठेगाना" },
+          },
+          {
+            japanese: "さいふはかばんのなかにあります。",
+            reading: "Saifu wa kaban no naka ni arimasu.",
+            english: { en: "The wallet is inside the bag.", np: "पर्स झोलाको भित्र छ।" },
+            scenario: { en: "Object location using position word", np: "Position शब्द प्रयोगी वस्तुको ठेगाना" },
+          },
+          {
+            japanese: "やまださんはとなりのへやにいます。",
+            reading: "Yamada-san wa tonari no heya ni imasu.",
+            english: { en: "Yamada is in the next room.", np: "यामाडाजी छेउको कोठामा हुनुहुन्छ।" },
+            scenario: { en: "Person location", np: "व्यक्तिको ठेगाना" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "[place] に N が います/あります — WHAT exists in a place", np: "[ठाउँ] に N が います/あります — ठाउँमा के छ" },
+        meaning: {
+          en: "When introducing a new entity, put the place first: [place] に [new N] が います/あります. The place is given as context, then が introduces the new existence information.",
+          np: "नयाँ entity परिचय गराउँदा ठाउँ पहिले: [ठाउँ] に [नयाँ N] が います/あります। ठाउँ context को रूपमा, अनि が ले नयाँ existence जानकारी।",
+        },
+        whereWeUse: [
+          { en: "New info: こうえんに こどもが います (There are children in the park)", np: "नयाँ जानकारी: こうえんに こどもが います" },
+          { en: "What is there: つくえの うえに なにが ありますか", np: "त्यहाँ के छ: つくえの うえに なにが ありますか" },
+          { en: "Answer: ほんが あります (There is a book)", np: "जवाफ: ほんが あります" },
+        ],
+        examples: [
+          {
+            japanese: "つくえのうえにほんがあります。",
+            reading: "Tsukue no ue ni hon ga arimasu.",
+            english: { en: "There is a book on the desk.", np: "टेबलको माथि किताब छ।" },
+            scenario: { en: "Introducing a new object", np: "नयाँ वस्तु परिचय" },
+          },
+          {
+            japanese: "どこにねこがいますか。",
+            reading: "Doko ni neko ga imasu ka?",
+            english: { en: "Where is the cat? (lit. In where does the cat exist?)", np: "कहाँ बिरालो छ?" },
+            scenario: { en: "Asking where using this pattern", np: "यो pattern ले कहाँ सोध्दा" },
+          },
+          {
+            japanese: "ほんのよこにえんぴつがあります。",
+            reading: "Hon no yoko ni enpitsu ga arimasu.",
+            english: { en: "There is a pencil beside the book.", np: "किताबको छेउमा पेन्सिल छ।" },
+            scenario: { en: "Using position word よこ (beside)", np: "Position शब्द よこ सहित" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "Position words — うえ/した/まえ/うしろ/となり/なか/そと/ちかく", np: "Position शब्दहरू — माथि/तल/अगाडि/पछाडि/छेउ/भित्र/बाहिर/नजिक" },
+        meaning: {
+          en: "Position words describe relative location. Pattern: [noun] の [position] に. They cannot stand alone — they need の + a reference noun. Example: つくえのうえに = on top of the desk.",
+          np: "Position शब्दहरूले सापेक्ष ठेगाना बताउँछन्। Pattern: [noun] の [position] に। एक्लो प्रयोग हुँदैन — の + reference noun चाहिन्छ। जस्तै: つくえのうえに = टेबलको माथि।",
+        },
+        whereWeUse: [
+          { en: "うえ (above/on top): ほんのうえに (on the book)", np: "うえ (माथि): ほんのうえに" },
+          { en: "した (below/under): つくえのしたに (under the desk)", np: "した (तल): つくえのしたに" },
+          { en: "となり (next to): ぎんこうのとなりに (next to the bank)", np: "となり (छेउ): ぎんこうのとなりに" },
+        ],
+        examples: [
+          {
+            japanese: "ほんはつくえのうえにあります。",
+            reading: "Hon wa tsukue no ue ni arimasu.",
+            english: { en: "The book is on top of the desk.", np: "किताब टेबलको माथि छ।" },
+            scenario: { en: "うえ — on top of", np: "うえ — माथि" },
+          },
+          {
+            japanese: "ねこはソファのしたにいます。",
+            reading: "Neko wa sofā no shita ni imasu.",
+            english: { en: "The cat is under the sofa.", np: "बिरालो सोफाको तल छ।" },
+            scenario: { en: "した — under", np: "した — तल" },
+          },
+          {
+            japanese: "ゆうびんきょくはぎんこうのとなりにあります。",
+            reading: "Yūbinkyoku wa ginkō no tonari ni arimasu.",
+            english: { en: "The post office is next to the bank.", np: "हुलाक घर बैंकको छेउमा छ।" },
+            scenario: { en: "となり — next to", np: "となり — छेउमा" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "に (existence location) vs で (action location)", np: "に (अस्तित्वको ठेगाना) vs で (कार्यको ठेगाना)" },
+        meaning: {
+          en: "KEY distinction: に marks WHERE something EXISTS (static). で marks WHERE an ACTION takes place (dynamic). います/あります always use に. Action verbs (たべる, はたらく, etc.) use で.",
+          np: "महत्त्वपूर्ण भिन्नता: に ले वस्तु कहाँ छ (static) चिन्ह गर्छ। で ले कार्य कहाँ हुन्छ (dynamic) चिन्ह गर्छ। います/あります सधैं に। Action verb (たべる, はたらく आदि) で।",
+        },
+        whereWeUse: [
+          { en: "Existence (に): こうえんに います (existing in the park)", np: "अस्तित्व (に): こうえんに います" },
+          { en: "Action (で): こうえんで あそびます (playing in the park)", np: "कार्य (で): こうえんで あそびます" },
+          { en: "Both: こうえんに います。こうえんで あそびます。", np: "दुवै: こうえんに います। こうえんで あそびます।" },
+        ],
+        examples: [
+          {
+            japanese: "かれはにほんにいます。",
+            reading: "Kare wa Nihon ni imasu.",
+            english: { en: "He is in Japan.", np: "उनी जापानमा छन्।" },
+            scenario: { en: "に for static existence", np: "Static अस्तित्वको लागि に" },
+          },
+          {
+            japanese: "かれはにほんではたらきます。",
+            reading: "Kare wa Nihon de hatarakimasu.",
+            english: { en: "He works in Japan.", np: "उनी जापानमा काम गर्छन्।" },
+            scenario: { en: "で for action location", np: "कार्यको ठेगानाको लागि で" },
+          },
+          {
+            japanese: "としょかんにほんがあります。としょかんでよみます。",
+            reading: "Toshokan ni hon ga arimasu. Toshokan de yomimasu.",
+            english: { en: "There are books in the library. I read at the library.", np: "पुस्तकालयमा किताब छन्। पुस्तकालयमा पढ्छु।" },
+            scenario: { en: "に and で in the same context", np: "एउटै context मा に र で" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "に",
+        romaji: "ni",
+        name: { en: "Location of existence", np: "अस्तित्वको ठेगाना" },
+        meaning: {
+          en: "に marks the static location where something EXISTS. Used with います and あります. Different from で (place of action). Think: に = 'at/in' (being), で = 'at/in' (doing).",
+          np: "に ले वस्तु कहाँ अवस्थित छ चिन्ह गर्छ। います र あります सँग प्रयोग। で (कार्यको ठेगाना) भन्दा भिन्न। सम्झनुस्: に = 'मा' (छ), で = 'मा' (गर्छ)।",
+        },
+        examples: [
+          {
+            japanese: "かいしゃにだれがいますか。",
+            reading: "Kaisha ni dare ga imasu ka?",
+            english: { en: "Who is at the company?", np: "कम्पनीमा को हुनुहुन्छ?" },
+            scenario: { en: "に for existence location", np: "अस्तित्वको ठेगानाको लागि に" },
+          },
+          {
+            japanese: "つくえのうえにほんがあります。",
+            reading: "Tsukue no ue ni hon ga arimasu.",
+            english: { en: "There is a book on the desk.", np: "टेबलको माथि किताब छ।" },
+            scenario: { en: "に with position word", np: "Position शब्दसँग に" },
+          },
+        ],
+      },
+      {
+        particle: "が",
+        romaji: "ga",
+        name: { en: "Subject of existence", np: "अस्तित्वको Subject" },
+        meaning: {
+          en: "が marks the subject of います/あります — the thing that exists. In existence sentences, the subject is typically new information introduced with が.",
+          np: "が ले います/あります को subject चिन्ह गर्छ — अवस्थित हुने वस्तु। Existence वाक्यमा subject प्रायः が ले परिचय गराइने नयाँ जानकारी हो।",
+        },
+        examples: [
+          {
+            japanese: "こうえんにこどもがいます。",
+            reading: "Kōen ni kodomo ga imasu.",
+            english: { en: "There are children in the park.", np: "पार्कमा बच्चाहरू छन्।" },
+            scenario: { en: "が introducing new subject (children)", np: "が ले नयाँ subject (बच्चा) परिचय" },
+          },
+          {
+            japanese: "いぬがいません。",
+            reading: "Inu ga imasen.",
+            english: { en: "There is no dog.", np: "कुकुर छैन।" },
+            scenario: { en: "Negative existence with が", np: "नकारात्मक अस्तित्वमा が" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(10),
+    mcqs: [
+      {
+        question: { en: "Which verb do you use for animate beings (people, animals)?", np: "जीवित प्राणीहरू (मान्छे, जनावर) को लागि कुन verb प्रयोग गर्नुहुन्छ?" },
+        choices: ["います", "あります", "あります", "おります"],
+        correctIndex: 0,
+        explanation: { en: "います is for animate beings that can move on their own (people, animals). あります is for inanimate objects.", np: "います, आफैं चल्न सक्ने जीवित प्राणीका लागि (मान्छे, जनावर)। あります, निर्जीव वस्तुका लागि।" },
+      },
+      {
+        question: { en: "Fill the blank: さいふは かばんのなか___あります。", np: "खाली भर्नुस्: さいふは かばんのなか___あります।" },
+        choices: ["に", "で", "を", "が"],
+        correctIndex: 0,
+        explanation: { en: "に marks the static location of existence. あります uses に: かばんのなかに = inside the bag.", np: "に ले अस्तित्वको static location चिन्ह गर्छ। あります, に प्रयोग गर्छ।" },
+      },
+      {
+        question: { en: "What is the negative of います?", np: "います को नकारात्मक रूप के हो?" },
+        choices: ["いません", "いないです", "いくない", "いますじゃない"],
+        correctIndex: 0,
+        explanation: { en: "The polite negative of います is いません. (あります → ありません)", np: "います को विनम्र नकार = いません। (あります → ありません)" },
+      },
+      {
+        question: { en: "Which particle marks WHERE an action takes place?", np: "कार्य कहाँ हुन्छ चिन्ह गर्ने Particle कुन हो?" },
+        choices: ["で", "に", "が", "を"],
+        correctIndex: 0,
+        explanation: { en: "で marks the place where an action occurs. に marks where something EXISTS. としょかんでよみます (read at library) vs としょかんにいます (exist at library).", np: "で ले कार्यको ठेगाना। に ले अस्तित्वको ठेगाना। としょかんでよみます vs としょかんにいます।" },
+      },
+      {
+        question: { en: "どこにねこがいますか — What does this mean?", np: "どこにねこがいますか — यसको अर्थ के हो?" },
+        choices: [
+          { en: "Where is the cat?", np: "बिरालो कहाँ छ?" },
+          { en: "Is there a cat?", np: "बिरालो छ?" },
+          { en: "What is the cat doing?", np: "बिरालो के गर्दैछ?" },
+          { en: "Whose cat is it?", np: "बिरालो कसको हो?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どこ = where, に = location particle, ねこが = cat (subject), いますか = exists?. Meaning: where does the cat exist?", np: "どこ = कहाँ, に = location, ねこが = बिरालो (subject), いますか = छ? — बिरालो कहाँ छ?" },
+      },
+      {
+        question: { en: "Which position word means 'next to'?", np: "'छेउमा' जनाउने position शब्द कुन हो?" },
+        choices: ["となり", "うえ", "した", "なか"],
+        correctIndex: 0,
+        explanation: { en: "となり = next to (neighboring position). うえ = above/on top. した = below. なか = inside.", np: "となり = छेउमा। うえ = माथि। した = तल। なか = भित्र।" },
+      },
+      {
+        question: { en: "Which sentence correctly says 'There is a dog in the garden'?", np: "'बगैचामा कुकुर छ' भन्ने सही वाक्य कुन हो?" },
+        choices: [
+          "にわにいぬがいます",
+          "にわでいぬがいます",
+          "にわにいぬがあります",
+          "にわはいぬにいます",
+        ],
+        correctIndex: 0,
+        explanation: { en: "Dog (animate) → います. Location → に. Pattern: にわに(location に) いぬが(subject が) います.", np: "कुकुर (जीवित) → います। Location → に। Pattern: にわに いぬが います।" },
+      },
+      {
+        question: { en: "Complete: つくえの___にほんがあります。(There is a book ON TOP of the desk.)", np: "पूरा गर्नुस्: つくえの___にほんがあります।" },
+        choices: ["うえ", "した", "なか", "まえ"],
+        correctIndex: 0,
+        explanation: { en: "うえ = above/on top. つくえのうえに = on top of the desk.", np: "うえ = माथि। つくえのうえに = टेबलको माथि।" },
+      },
+      {
+        question: { en: "Use あります or います: テレビは へやの___にあります。", np: "あります वा います: テレビは へやの___にあります।" },
+        choices: [
+          { en: "なか (inside) — テレビはへやのなかにあります", np: "なか (भित्र) — テレビはへやのなかにあります" },
+          { en: "なか — テレビはへやのなかにいます", np: "なか — テレビはへやのなかにいます" },
+          { en: "そと — テレビはへやのそとにあります", np: "そと — テレビはへやのそとにあります" },
+          { en: "うえ — テレビはへやのうえにいます", np: "うえ — テレビはへやのうえにいます" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "TV is inanimate → あります. なか = inside. テレビはへやのなかにあります = the TV is inside the room.", np: "TV निर्जीव → あります। なか = भित्र। テレビはへやのなかにあります।" },
+      },
+      {
+        question: { en: "What is the difference between に and で in location contexts?", np: "Location context मा に र で को फरक के हो?" },
+        choices: [
+          { en: "に = where something EXISTS; で = where an ACTION happens", np: "に = वस्तु कहाँ छ; で = कार्य कहाँ हुन्छ" },
+          { en: "に = where an action happens; で = where something exists", np: "に = कार्य कहाँ हुन्छ; で = वस्तु कहाँ छ" },
+          { en: "Both have the same meaning", np: "दुवैको एउटै अर्थ" },
+          { en: "に is formal; で is casual", np: "に औपचारिक; で अनौपचारिक" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "に: static location of existence (います/あります). で: location of a dynamic action (たべる/はたらく).", np: "に: static अस्तित्वको ठेगाना (います/あります)। で: dynamic कार्यको ठेगाना (たべる/はたらく)।" },
+      },
+    ],
+  },
+  {
+    id: 11,
+    title: "Lesson 11 — かずと りょう (Counters & Quantities)",
+    intro: [
+      {
+        en: "In this lesson you learn two counting systems: native Japanese counting (ひとつ、ふたつ、みっつ… for general objects up to ten) and sino-Japanese counter words (〜本 for long objects, 〜枚 for flat objects, 〜台 for machines, 〜匹 for animals).",
+        np: "यस पाठमा दुई गणना प्रणाली सिक्नुहुनेछ: जापानी मौलिक गणना (ひとつ、ふたつ、みっつ… सामान्य वस्तुका लागि दश सम्म) र Sino-Japanese counter शब्दहरू (〜本 लामो वस्तुका लागि, 〜枚 पातलो वस्तुका लागि, 〜台 मेसिनका लागि, 〜匹 जनावरका लागि)।",
+      },
+      {
+        en: "The counter goes after the quantity in Japanese: ケーキを ひとつ ください (one cake please) or ビールを さんぼん ください (three bottles of beer please). Pay attention to sound changes: いっぽん/にほん/さんぼん.",
+        np: "जापानीमा counter, quantity पछि: ケーキを ひとつ ください (एउटा केक दिनुस्) वा ビールを さんぼん ください (तीन बोतल बियर दिनुस्)। ध्वनि परिवर्तनमा ध्यान: いっぽん/にほん/さんぼん।",
+      },
+      {
+        en: "To ask 'how many?', use いくつ for native counting or the counter-specific question word: 何本/何枚/何台/何匹.",
+        np: "'कति?' सोध्न: मौलिक गणनाको लागि いくつ, वा counter-specific प्रश्न शब्द: 何本/何枚/何台/何匹।",
+      },
+    ],
+    youtubeVideoId: { en: "nqUVYQwOkIY" },
+    youtubeVideoIdPart2: { en: "qhX1YEKQC28" },
+    youtubeTitle: "Minna no Nihongo · Lesson 11 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "りんごをいくつかいますか。",
+        reading: "Ringo o ikutsu kaimasu ka?",
+        english: { en: "How many apples will you buy?", np: "स्याउ कति किन्नुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "みっつかいます。それから、ケーキをひとつかいます。",
+        reading: "Mittsu kaimasu. Sorekara, kēki o hitotsu kaimasu.",
+        english: { en: "I will buy three. And then one cake.", np: "तिनवटा किन्छु। अनि एउटा केक पनि।" },
+      },
+      {
+        speaker: "A",
+        japanese: "ビールはなんぼんのみましたか。",
+        reading: "Bīru wa nanbon nomimashita ka?",
+        english: { en: "How many bottles of beer did you drink?", np: "बियर कति बोतल पिउनुभयो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "さんぼんのみました。",
+        reading: "Sanbon nomimashita.",
+        english: { en: "I drank three bottles.", np: "तीन बोतल पिएँ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "すみません、きってをごまいください。",
+        reading: "Sumimasen, kitte o gomai kudasai.",
+        english: { en: "Excuse me, five stamps please.", np: "माफ गर्नुस्, पाँच वटा टिकट दिनुस्।" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、ごまいですね。いちまいひゃくえんです。",
+        reading: "Hai, gomai desu ne. Ichimai hyaku-en desu.",
+        english: { en: "Yes, five stamps. One hundred yen each.", np: "हो, पाँचवटा। एउटाको एक सय येन।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Native Japanese counting — ひとつ through とお", np: "मौलिक जापानी गणना — ひとつ देखि とお सम्म" },
+        meaning: {
+          en: "Japanese has a native counting series for general objects up to ten. These can be used for most countable things when you don't know the specific counter. いくつ = how many (native).",
+          np: "सामान्य वस्तुहरूको लागि दश सम्म जापानीको मौलिक गणना श्रृङ्खला छ। Specific counter थाहा नभएको बेला यी प्रयोग गर्न सकिन्छ। いくつ = कति वटा (मौलिक)।",
+        },
+        whereWeUse: [
+          { en: "1–10: ひとつ ふたつ みっつ よっつ いつつ むっつ ななつ やっつ ここのつ とお", np: "१–१०: ひとつ ふたつ みっつ よっつ いつつ むっつ ななつ やっつ ここのつ とお" },
+          { en: "General objects: りんごをみっつください (three apples)", np: "सामान्य वस्तु: りんごをみっつください" },
+          { en: "Question: いくつかいましたか (how many did you buy?)", np: "प्रश्न: いくつかいましたか" },
+        ],
+        examples: [
+          {
+            japanese: "ケーキをふたつください。",
+            reading: "Kēki o futatsu kudasai.",
+            english: { en: "Two cakes please.", np: "दुईवटा केक दिनुस्।" },
+            scenario: { en: "Ordering food with native counter", np: "मौलिक counter ले खाना अर्डर गर्दा" },
+          },
+          {
+            japanese: "りんごをいくつかいましたか。みっつかいました。",
+            reading: "Ringo o ikutsu kaimashita ka? — Mittsu kaimashita.",
+            english: { en: "How many apples did you buy? — I bought three.", np: "कति स्याउ किन्नुभयो? — तीनवटा किनें।" },
+            scenario: { en: "Asking and answering quantity", np: "मात्रा सोध्दा र जवाफ दिँदा" },
+          },
+          {
+            japanese: "みかんをやっつたべました。",
+            reading: "Mikan o yattsu tabemashita.",
+            english: { en: "I ate eight mandarin oranges.", np: "आठवटा सुन्तला खाएँ।" },
+            scenario: { en: "Large native count", np: "ठूलो मौलिक गणना" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "〜本 (ほん) — counter for long thin objects", np: "〜本 (ほん) — लामो पातलो वस्तुका लागि counter" },
+        meaning: {
+          en: "〜本 counts long, cylindrical or thin objects: bottles, pens, bananas, trees, films. Important sound changes: 1 = いっぽん、2 = にほん、3 = さんぼん、6 = ろっぽん、8 = はっぽん、10 = じゅっぽん.",
+          np: "〜本 ले लामो, बेलनाकार वा पातलो वस्तु गन्छ: बोतल, कलम, केरा, रूख, चलचित्र। ध्वनि परिवर्तन: 1 = いっぽん、2 = にほん、3 = さんぼん、6 = ろっぽん、8 = はっぽん、10 = じゅっぽん।",
+        },
+        whereWeUse: [
+          { en: "Bottles: ビールをさんぼんのみました (drank three bottles of beer)", np: "बोतल: ビールをさんぼんのみました" },
+          { en: "Pens: ペンをにほんかいました (bought two pens)", np: "कलम: ペンをにほんかいました" },
+          { en: "Question: なんぼんかいましたか (how many [long things]?)", np: "प्रश्न: なんぼんかいましたか" },
+        ],
+        examples: [
+          {
+            japanese: "ビールをいっぽんください。",
+            reading: "Bīru o ippon kudasai.",
+            english: { en: "One bottle of beer please.", np: "एक बोतल बियर दिनुस्।" },
+            scenario: { en: "いっぽん (1 bottle)", np: "いっぽん (१ बोतल)" },
+          },
+          {
+            japanese: "えんぴつをさんぼんかいました。",
+            reading: "Enpitsu o sanbon kaimashita.",
+            english: { en: "I bought three pencils.", np: "तीनवटा पेन्सिल किनें।" },
+            scenario: { en: "さんぼん (3 pencils)", np: "さんぼん (३ पेन्सिल)" },
+          },
+          {
+            japanese: "なんぼんのみましたか。ろっぽんのみました。",
+            reading: "Nanbon nomimashita ka? — Roppon nomimashita.",
+            english: { en: "How many bottles did you drink? — I drank six.", np: "कति बोतल पिउनुभयो? — छ बोतल पिएँ।" },
+            scenario: { en: "ろっぽん (6 bottles)", np: "ろっぽん (६ बोतल)" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "〜枚 (まい) — counter for flat thin objects", np: "〜枚 (まい) — पातलो flat वस्तुका लागि counter" },
+        meaning: {
+          en: "〜枚 counts flat, thin objects: paper, stamps, shirts, photographs, plates. Regular reading: いちまい、にまい、さんまい… No major sound changes unlike 〜本. Question: なんまい.",
+          np: "〜枚 ले पातलो, flat वस्तु गन्छ: कागज, टिकट, सर्ट, फोटो, थाल। नियमित: いちまい、にまい、さんまい… 〜本 जस्तो ध्वनि परिवर्तन छैन। प्रश्न: なんまい।",
+        },
+        whereWeUse: [
+          { en: "Stamps: きってをごまいください (five stamps)", np: "टिकट: きってをごまいください" },
+          { en: "Shirts: シャツをさんまいかいました (bought three shirts)", np: "सर्ट: シャツをさんまいかいました" },
+          { en: "Question: なんまいありますか (how many flat things are there?)", np: "प्रश्न: なんまいありますか" },
+        ],
+        examples: [
+          {
+            japanese: "かみをにまいください。",
+            reading: "Kami o nimai kudasai.",
+            english: { en: "Two sheets of paper please.", np: "दुई पाना कागज दिनुस्।" },
+            scenario: { en: "にまい (2 sheets)", np: "にまい (२ पाना)" },
+          },
+          {
+            japanese: "しゃしんをじゅうまいとりました。",
+            reading: "Shashin o jūmai torimashita.",
+            english: { en: "I took ten photos.", np: "दश वटा फोटो खिचें।" },
+            scenario: { en: "じゅうまい (10 photos)", np: "じゅうまい (१० फोटो)" },
+          },
+          {
+            japanese: "なんまいかいましたか。",
+            reading: "Nanmai kaimashita ka?",
+            english: { en: "How many did you buy?", np: "कति वटा किन्नुभयो?" },
+            scenario: { en: "Asking with なんまい", np: "なんまい ले सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "〜台 (だい) and 〜匹 (ひき) — machines and animals", np: "〜台 (だい) र 〜匹 (ひき) — मेसिन र जनावर" },
+        meaning: {
+          en: "〜台 counts machines and vehicles: cars, computers, TVs, bikes. 〜匹 counts small animals: cats, dogs, fish, insects. Sound changes for 〜匹: 1 = いっぴき、3 = さんびき、6 = ろっぴき、8 = はっぴき.",
+          np: "〜台 ले मेसिन र सवारी साधन गन्छ: कार, कम्प्युटर, टिभी, साइकल। 〜匹 ले सानो जनावर गन्छ: बिरालो, कुकुर, माछा, किरा। 〜匹 ध्वनि परिवर्तन: 1 = いっぴき、3 = さんびき।",
+        },
+        whereWeUse: [
+          { en: "Machines (〜台): パソコンをいちだいかいました (bought one PC)", np: "मेसिन (〜台): パソコンをいちだいかいました" },
+          { en: "Animals (〜匹): ねこをにひきかっています (keeping two cats)", np: "जनावर (〜匹): ねこをにひきかっています" },
+          { en: "Question: なんだい/なんびき", np: "प्रश्न: なんだい/なんびき" },
+        ],
+        examples: [
+          {
+            japanese: "くるまをいちだいかいました。",
+            reading: "Kuruma o ichidai kaimashita.",
+            english: { en: "I bought one car.", np: "एउटा कार किनें।" },
+            scenario: { en: "いちだい (1 machine)", np: "いちだい (१ मेसिन)" },
+          },
+          {
+            japanese: "ねこをいっぴきかっています。",
+            reading: "Neko o ippiki katte imasu.",
+            english: { en: "I keep one cat.", np: "एउटा बिरालो पालेको छु।" },
+            scenario: { en: "いっぴき (1 small animal)", np: "いっぴき (१ सानो जनावर)" },
+          },
+          {
+            japanese: "いぬをなんびきかっていますか。",
+            reading: "Inu o nanbiki katte imasu ka?",
+            english: { en: "How many dogs do you keep?", np: "कति वटा कुकुर पाल्नुभएको छ?" },
+            scenario: { en: "なんびき question", np: "なんびき प्रश्न" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "N を [counter] ください — ordering and requesting", np: "N を [counter] ください — अर्डर र अनुरोध" },
+        meaning: {
+          en: "The counter word slots after the object in the ordering pattern: [object] を [number + counter] ください. The object is marked by を, the counter follows the number directly.",
+          np: "अर्डरको pattern मा counter, object पछि: [object] を [नम्बर + counter] ください। Object, を ले चिन्हित; counter, नम्बर पछि सिधै।",
+        },
+        whereWeUse: [
+          { en: "Food: りんごをみっつください (three apples please)", np: "खाना: りんごをみっつください" },
+          { en: "Drinks: コーヒーをふたつください (two coffees please)", np: "पेय: コーヒーをふたつください" },
+          { en: "Bottles: ビールをさんぼんください (three beers please)", np: "बोतल: ビールをさんぼんください" },
+        ],
+        examples: [
+          {
+            japanese: "コーヒーをひとつおねがいします。",
+            reading: "Kōhī o hitotsu onegai shimasu.",
+            english: { en: "One coffee please.", np: "एउटा कफी अनुरोध गर्छु।" },
+            scenario: { en: "Polite ordering in a café", np: "कफेमा विनम्र अर्डर" },
+          },
+          {
+            japanese: "ビールをさんぼんください。",
+            reading: "Bīru o sanbon kudasai.",
+            english: { en: "Three beers please.", np: "तीन बोतल बियर दिनुस्।" },
+            scenario: { en: "Ordering with 〜本 counter", np: "〜本 counter ले अर्डर" },
+          },
+          {
+            japanese: "きってをごまいとふうとうをさんまいください。",
+            reading: "Kitte o gomai to fūtō o sanmai kudasai.",
+            english: { en: "Five stamps and three envelopes please.", np: "पाँच टिकट र तीन खाम दिनुस्।" },
+            scenario: { en: "Multiple items with と", np: "と ले धेरै वस्तु" },
+          },
+        ],
+      },
+    ],
+    particles: [],
+    vocabulary: buildVocab(11),
+    mcqs: [
+      {
+        question: { en: "Which native Japanese counter means 'three'?", np: "जापानीको मौलिक गणनामा 'तीन' कसरी भनिन्छ?" },
+        choices: ["みっつ", "みつ", "さんつ", "さんこ"],
+        correctIndex: 0,
+        explanation: { en: "Native Japanese: ひとつ(1)、ふたつ(2)、みっつ(3)、よっつ(4)、いつつ(5).", np: "मौलिक जापानी: ひとつ(१)、ふたつ(२)、みっつ(३)、よっつ(४)、いつつ(५)।" },
+      },
+      {
+        question: { en: "Which counter is used for bottles of beer?", np: "बियरको बोतल गन्न कुन counter प्रयोग हुन्छ?" },
+        choices: ["〜本", "〜枚", "〜台", "〜匹"],
+        correctIndex: 0,
+        explanation: { en: "〜本 (ほん) counts long objects including bottles. Beer bottles = ビールをさんぼん.", np: "〜本 (ほん) ले बोतल सहित लामो वस्तु गन्छ। बियरको बोतल = ビールをさんぼん।" },
+      },
+      {
+        question: { en: "How do you say 'one bottle' using 〜本?", np: "〜本 प्रयोग गरी 'एक बोतल' कसरी भनिन्छ?" },
+        choices: ["いっぽん", "いちほん", "ひとつほん", "いちぽん"],
+        correctIndex: 0,
+        explanation: { en: "1 with 〜本 = いっぽん (double consonant p). にほん (2), さんぼん (3).", np: "〜本 सँग 1 = いっぽん (double p)। にほん (२), さんぼん (३)।" },
+      },
+      {
+        question: { en: "Which counter is for flat thin objects like stamps and paper?", np: "टिकट र कागज जस्ता flat पातलो वस्तुका लागि कुन counter हो?" },
+        choices: ["〜枚", "〜本", "〜台", "〜匹"],
+        correctIndex: 0,
+        explanation: { en: "〜枚 (まい) counts flat, thin objects: stamps (きって), paper (かみ), shirts (シャツ).", np: "〜枚 (まい) ले flat, पातलो वस्तु गन्छ: टिकट, कागज, सर्ट।" },
+      },
+      {
+        question: { en: "How do you order 'three beers' using 〜本?", np: "〜本 प्रयोग गरी 'तीन बियर' कसरी अर्डर गर्ने?" },
+        choices: [
+          "ビールをさんぼんください",
+          "ビールをみっつください",
+          "ビールをさんほんください",
+          "ビールをさんぼんいます",
+        ],
+        correctIndex: 0,
+        explanation: { en: "さんぼん = 3 long things (b sound after さん). Pattern: ビールを さんぼん ください.", np: "さんぼん = ३ वटा लामो वस्तु (さん पछि b ध्वनि)। Pattern: ビールを さんぼん ください।" },
+      },
+      {
+        question: { en: "Which counter is used for machines and cars?", np: "मेसिन र कारका लागि कुन counter हो?" },
+        choices: ["〜台", "〜本", "〜枚", "〜匹"],
+        correctIndex: 0,
+        explanation: { en: "〜台 (だい) counts machines and vehicles: car (くるま), TV (テレビ), computer (パソコン).", np: "〜台 (だい) ले मेसिन र सवारी साधन: कार, टिभी, कम्प्युटर।" },
+      },
+      {
+        question: { en: "What does いくつありますか mean?", np: "いくつありますか को अर्थ के हो?" },
+        choices: [
+          { en: "How many are there?", np: "कति वटा छन्?" },
+          { en: "Where are they?", np: "कहाँ छन्?" },
+          { en: "What is there?", np: "के छ?" },
+          { en: "How much do they cost?", np: "कति पर्छन्?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "いくつ = how many (native Japanese). あります = exist. So いくつありますか = how many are there?", np: "いくつ = कति वटा (मौलिक जापानी)। あります = छ। अतः いくつありますか = कति वटा छन्?" },
+      },
+      {
+        question: { en: "How do you say 'five stamps please'?", np: "'पाँच टिकट दिनुस्' कसरी भनिन्छ?" },
+        choices: [
+          "きってをごまいください",
+          "きってをいつつください",
+          "きってをごほんください",
+          "きってをごだいください",
+        ],
+        correctIndex: 0,
+        explanation: { en: "Stamps are flat → 〜枚. Five = ご. きってをごまいください = five stamps please.", np: "टिकट flat → 〜枚। पाँच = ご। きってをごまいください = पाँच टिकट दिनुस्।" },
+      },
+      {
+        question: { en: "Fill the blank: ねこをさん___かっています。(keeping three cats)", np: "खाली भर्नुस्: ねこをさん___かっています।" },
+        choices: ["びき", "ぼん", "まい", "だい"],
+        correctIndex: 0,
+        explanation: { en: "〜匹 for small animals. さん + ひき → さんびき (b sound after さん). Three cats = さんびき.", np: "〜匹 सानो जनावरका लागि। さん + ひき → さんびき। तीन बिरालो = さんびき।" },
+      },
+      {
+        question: { en: "Native Japanese counter for 'eight'?", np: "'आठ' को लागि मौलिक जापानी counter के हो?" },
+        choices: ["やっつ", "はちつ", "やつ", "やtsu"],
+        correctIndex: 0,
+        explanation: { en: "Native Japanese eight = やっつ. Full list: ひとつ ふたつ みっつ よっつ いつつ むっつ ななつ やっつ ここのつ とお.", np: "मौलिक जापानी आठ = やっつ। सूची: ひとつ ふたつ みっつ よっつ いつつ むっつ ななつ やっつ ここのつ とお।" },
+      },
+    ],
+  },
+  {
+    id: 12,
+    title: "Lesson 12 — くらべる (Comparison)",
+    intro: [
+      {
+        en: "In this lesson you learn how to compare things in Japanese. Use A は B より [adj] to say A is more [adj] than B, and A と B と どちらが [adj] ですか to ask 'which of A and B is more [adj]?'.",
+        np: "यस पाठमा जापानीमा तुलना गर्न सिक्नुहुनेछ। A は B より [adj] — 'B भन्दा A बढी [adj] छ', र A と B と どちらが [adj] ですか — 'A र B मध्ये कुन बढी [adj] छ?' सोध्न।",
+      },
+      {
+        en: "To say 'the most [adj] in a group', use [group] で いちばん [adj]. You also learn past-tense forms for both い and な adjectives, and the question どうでしたか (how was it?).",
+        np: "'समूहमा सबभन्दा [adj]' भन्न: [समूह] で いちばん [adj]। साथै い र な दुवै विशेषणको भूत-काल र प्रश्न どうでしたか (कस्तो थियो?) सिक्नुहुनेछ।",
+      },
+      {
+        en: "When comparing two things equally, use A も B も [adj] (both A and B are [adj]). When they differ, add adjective + ほうが to highlight the winner.",
+        np: "दुई वस्तु बराबर भए: A も B も [adj] (A र B दुवै [adj] छन्)। फरक भए: adj + ほうが ले 'बढी' भएको थाहा पाइन्छ।",
+      },
+    ],
+    youtubeVideoId: { en: "Xq_CGhOMc1Q" },
+    youtubeVideoIdPart2: { en: "7DYaL10t9oM" },
+    youtubeTitle: "Minna no Nihongo · Lesson 12 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "とうきょうとおおさかとどちらがおおきいですか。",
+        reading: "Tōkyō to Ōsaka to dochira ga ōkii desu ka?",
+        english: { en: "Which is bigger, Tokyo or Osaka?", np: "टोक्यो र ओसाका मध्ये कुन ठूलो छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "とうきょうのほうがおおきいです。",
+        reading: "Tōkyō no hō ga ōkii desu.",
+        english: { en: "Tokyo is bigger.", np: "टोक्यो ठूलो छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "にほんでいちばんたかいやまはなんですか。",
+        reading: "Nihon de ichiban takai yama wa nan desu ka?",
+        english: { en: "What is the tallest mountain in Japan?", np: "जापानमा सबभन्दा अग्लो पहाड कुन हो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "ふじさんがいちばんたかいです。",
+        reading: "Fujisan ga ichiban takai desu.",
+        english: { en: "Mt Fuji is the tallest.", np: "फुजी पहाड सबभन्दा अग्लो छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "きのうのパーティーはどうでしたか。",
+        reading: "Kinō no pātī wa dō deshita ka?",
+        english: { en: "How was yesterday's party?", np: "हिजोको पार्टी कस्तो थियो?" },
+      },
+      {
+        speaker: "B",
+        japanese: "とてもたのしかったです。りょうりもおいしかったです。",
+        reading: "Totemo tanoshikatta desu. Ryōri mo oishikatta desu.",
+        english: { en: "It was very fun. The food was delicious too.", np: "धेरै रमाइलो थियो। खाना पनि मिठो थियो।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "A は B より [adj] — A is more [adj] than B", np: "A は B より [adj] — B भन्दा A बढी [adj]" },
+        meaning: {
+          en: "より means 'than' in comparisons. Pattern: A は B より [adj] です. A is the topic (は), B is the baseline (より). The adjective describes A relative to B. No need to say 'more' — the structure implies it.",
+          np: "より को अर्थ तुलनामा 'भन्दा'। Pattern: A は B より [adj] です। A = topic (は), B = आधार (より)। विशेषणले A लाई B सँग सापेक्ष वर्णन गर्छ।",
+        },
+        whereWeUse: [
+          { en: "Size: とうきょうは おおさかより おおきいです (Tokyo is bigger than Osaka)", np: "आकार: とうきょうは おおさかより おおきいです" },
+          { en: "Price: このかばんは あのかばんより たかいです (this bag is more expensive than that one)", np: "मूल्य: このかばんは あのかばんより たかいです" },
+          { en: "な-adj: でんしゃは バスより べんりです (train is more convenient than bus)", np: "な-adj: でんしゃは バスより べんりです" },
+        ],
+        examples: [
+          {
+            japanese: "なつはふゆよりあついです。",
+            reading: "Natsu wa fuyu yori atsui desu.",
+            english: { en: "Summer is hotter than winter.", np: "गर्मी, जाडो भन्दा तातो हुन्छ।" },
+            scenario: { en: "Seasonal comparison with い-adj", np: "मौसम तुलना い-adj ले" },
+          },
+          {
+            japanese: "このへやはあのへやよりしずかです。",
+            reading: "Kono heya wa ano heya yori shizuka desu.",
+            english: { en: "This room is quieter than that room.", np: "यो कोठा त्यो कोठा भन्दा शान्त छ।" },
+            scenario: { en: "Comparison with な-adj", np: "な-adj ले तुलना" },
+          },
+          {
+            japanese: "でんしゃはバスよりはやいです。",
+            reading: "Densha wa basu yori hayai desu.",
+            english: { en: "The train is faster than the bus.", np: "ट्रेन बस भन्दा छिटो छ।" },
+            scenario: { en: "Transport comparison", np: "सवारी साधन तुलना" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "A と B と どちらが [adj] ですか — Which of A or B is more [adj]?", np: "A と B と どちらが [adj] ですか — A र B मध्ये कुन बढी [adj]?" },
+        meaning: {
+          en: "To ask 'which of two things is more X?', list both with と と, then ask どちらが [adj] ですか. Answer with [winner] の ほうが [adj] です to say 'the [winner] side is [adj]'.",
+          np: "'दुई वस्तुमध्ये कुन बढी X?' सोध्न: दुवैलाई と と ले सूचीकृत गर्नुस्, अनि どちらが [adj] ですか। जवाफ: [winner] の ほうが [adj] です।",
+        },
+        whereWeUse: [
+          { en: "Question: にほんごと えいごと どちらが むずかしいですか", np: "प्रश्न: にほんごと えいごと どちらが むずかしいですか" },
+          { en: "Answer: にほんごのほうが むずかしいです (Japanese is more difficult)", np: "जवाफ: にほんごのほうが むずかしいです" },
+          { en: "If equal: どちらも おなじです (both are the same)", np: "बराबर भए: どちらも おなじです" },
+        ],
+        examples: [
+          {
+            japanese: "なつとふゆとどちらがすきですか。",
+            reading: "Natsu to fuyu to dochira ga suki desu ka?",
+            english: { en: "Which do you prefer, summer or winter?", np: "गर्मी र जाडोमध्ये कुन मनपर्छ?" },
+            scenario: { en: "Preference comparison question", np: "प्राथमिकता तुलना प्रश्न" },
+          },
+          {
+            japanese: "なつのほうがすきです。",
+            reading: "Natsu no hō ga suki desu.",
+            english: { en: "I prefer summer.", np: "गर्मी मनपर्छ।" },
+            scenario: { en: "Answering with ほうが", np: "ほうが ले जवाफ" },
+          },
+          {
+            japanese: "バスとでんしゃとどちらがはやいですか。",
+            reading: "Basu to densha to dochira ga hayai desu ka?",
+            english: { en: "Which is faster, the bus or the train?", np: "बस र ट्रेनमध्ये कुन छिटो छ?" },
+            scenario: { en: "Transport comparison question", np: "सवारी साधन तुलना प्रश्न" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "[group] で いちばん [adj] — the most [adj] in a [group]", np: "[समूह] で いちばん [adj] — [समूह] मा सबभन्दा [adj]" },
+        meaning: {
+          en: "いちばん means 'number one / most'. The group is marked by で. Pattern: [group] で いちばん [adj] (noun) = the most [adj] [noun] in [group]. Used to pick out the superlative from a set.",
+          np: "いちばん को अर्थ 'सबभन्दा'। समूह で ले चिन्ह। Pattern: [समूह] で いちばん [adj] = [समूह] मा सबभन्दा [adj]। समूहबाट सर्वोत्कृष्ट छान्न प्रयोग।",
+        },
+        whereWeUse: [
+          { en: "Superlative adj: このみせで いちばん おいしい りょうりは なんですか", np: "Superlative: このみせで いちばん おいしい りょうりは なんですか" },
+          { en: "Country: せかいで いちばん おおきいくには どこですか", np: "देश: せかいで いちばん おおきいくには どこですか" },
+          { en: "Person: クラスで いちばん せが たかいのは だれですか", np: "व्यक्ति: クラスで いちばん せが たかいのは だれですか" },
+        ],
+        examples: [
+          {
+            japanese: "にほんでいちばんたかいやまはふじさんです。",
+            reading: "Nihon de ichiban takai yama wa Fujisan desu.",
+            english: { en: "The tallest mountain in Japan is Mt Fuji.", np: "जापानमा सबभन्दा अग्लो पहाड फुजी हो।" },
+            scenario: { en: "Superlative in a country", np: "देशभित्र सर्वोत्कृष्ट" },
+          },
+          {
+            japanese: "クラスでいちばんはやくはしれるのはだれですか。",
+            reading: "Kurasu de ichiban hayaku hashireru no wa dare desu ka?",
+            english: { en: "Who can run the fastest in the class?", np: "कक्षामा सबभन्दा छिटो दौड्न सक्ने को हो?" },
+            scenario: { en: "Superlative person", np: "सर्वोत्कृष्ट व्यक्ति" },
+          },
+          {
+            japanese: "このみせでいちばんにんきのりょうりはなんですか。",
+            reading: "Kono mise de ichiban ninki no ryōri wa nan desu ka?",
+            english: { en: "What is the most popular dish in this restaurant?", np: "यो रेस्टुरेन्टमा सबभन्दा लोकप्रिय खाना के हो?" },
+            scenario: { en: "Superlative with noun modifier", np: "Noun modifier सँग सर्वोत्कृष्ट" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "Past forms of adjectives — review", np: "विशेषणका भूत रूपहरू — समीक्षा" },
+        meaning: {
+          en: "Review from L8: い-adj past = [stem]かったです (おいしかった). な-adj past = [adj]でした (しずかでした). Past-neg い: [stem]くなかったです. Past-neg な: [adj]じゃありませんでした. These appear in comparison contexts.",
+          np: "L8 को स्मरण: い-adj भूत = [stem]かったです। な-adj भूत = [adj]でした। भूत-नकार い: [stem]くなかったです। भूत-नकार な: [adj]じゃありませんでした। तुलना context मा प्रयोग।",
+        },
+        whereWeUse: [
+          { en: "Past positive い: りょこうは たのしかったです (the trip was fun)", np: "भूत सकारात्मक い: りょこうは たのしかったです" },
+          { en: "Past positive な: ホテルは きれいでした (the hotel was clean)", np: "भूत सकारात्मक な: ホテルは きれいでした" },
+          { en: "Review question: どうでしたか (how was it?)", np: "समीक्षा प्रश्न: どうでしたか" },
+        ],
+        examples: [
+          {
+            japanese: "きのうのりょこうはどうでしたか。",
+            reading: "Kinō no ryokō wa dō deshita ka?",
+            english: { en: "How was yesterday's trip?", np: "हिजोको यात्रा कस्तो थियो?" },
+            scenario: { en: "Asking with どうでしたか", np: "どうでしたか ले सोध्दा" },
+          },
+          {
+            japanese: "たのしかったですが、つかれました。",
+            reading: "Tanoshikatta desu ga, tsukaremashita.",
+            english: { en: "It was fun, but I got tired.", np: "रमाइलो थियो तर थकाइ लाग्यो।" },
+            scenario: { en: "Past い-adj + contrast が", np: "भूत い-adj + contrast が" },
+          },
+          {
+            japanese: "ホテルはあまりきれいじゃありませんでした。",
+            reading: "Hoteru wa amari kirei ja arimasen deshita.",
+            english: { en: "The hotel was not very clean.", np: "होटल त्यति सफा थिएन।" },
+            scenario: { en: "Past-negative な-adj", np: "भूत-नकार な-adj" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "どのN が いちばん [adj] ですか — Which N is most [adj]?", np: "どのN が いちばん [adj] ですか — कुन N सबभन्दा [adj] छ?" },
+        meaning: {
+          en: "When selecting the most [adj] from a set of three or more, use どの + N. Pattern: [set] で どの N が いちばん [adj] ですか. Answer: [N] が いちばん [adj] です.",
+          np: "तीन वा बढी वस्तुमध्ये सबभन्दा [adj] छान्न どの + N। Pattern: [set] で どの N が いちばん [adj] ですか। जवाफ: [N] が いちばん [adj] です।",
+        },
+        whereWeUse: [
+          { en: "From a menu: どのりょうりが いちばん おいしいですか (which dish is most delicious?)", np: "मेनुबाट: どのりょうりが いちばん おいしいですか" },
+          { en: "From a group: このなかで どれが いちばん やすいですか (which of these is cheapest?)", np: "समूहबाट: このなかで どれが いちばん やすいですか" },
+          { en: "Answer: Aがいちばん…です", np: "जवाफ: Aがいちばん…です" },
+        ],
+        examples: [
+          {
+            japanese: "このなかでどれがいちばんやすいですか。",
+            reading: "Kono naka de dore ga ichiban yasui desu ka?",
+            english: { en: "Which of these is the cheapest?", np: "यी मध्ये कुन सबभन्दा सस्तो छ?" },
+            scenario: { en: "Selecting from a set with どれ", np: "どれ ले सेटबाट छान्दा" },
+          },
+          {
+            japanese: "このかばんがいちばんやすいです。",
+            reading: "Kono kaban ga ichiban yasui desu.",
+            english: { en: "This bag is the cheapest.", np: "यो झोला सबभन्दा सस्तो छ।" },
+            scenario: { en: "Superlative answer", np: "सर्वोत्कृष्ट जवाफ" },
+          },
+          {
+            japanese: "スポーツのなかでどれがいちばんすきですか。",
+            reading: "Supōtsu no naka de dore ga ichiban suki desu ka?",
+            english: { en: "Among sports, which do you like most?", np: "खेलहरूमध्ये कुन सबभन्दा मनपर्छ?" },
+            scenario: { en: "Preference superlative", np: "प्राथमिकता सर्वोत्कृष्ट" },
+          },
+        ],
+      },
+    ],
+    particles: [],
+    vocabulary: buildVocab(12),
+    mcqs: [
+      {
+        question: { en: "Which pattern means 'A is more [adj] than B'?", np: "'A, B भन्दा बढी [adj] छ' भन्ने pattern कुन हो?" },
+        choices: [
+          "A は B より [adj] です",
+          "A が B より [adj] です",
+          "A も B より [adj] です",
+          "A と B より [adj] です",
+        ],
+        correctIndex: 0,
+        explanation: { en: "The comparison pattern is: A は B より [adj] です. A is the topic (は), B is the baseline (より).", np: "तुलना pattern: A は B より [adj] です। A = topic (は), B = आधार (より)।" },
+      },
+      {
+        question: { en: "How do you ask 'Which is bigger, Tokyo or Osaka?'", np: "'टोक्यो र ओसाकामध्ये कुन ठूलो छ?' कसरी सोधिन्छ?" },
+        choices: [
+          "とうきょうとおおさかとどちらがおおきいですか",
+          "とうきょうかおおさかのほうがおおきいですか",
+          "とうきょうよりおおさかはどちらですか",
+          "とうきょうとおおさかはいちばんおおきいですか",
+        ],
+        correctIndex: 0,
+        explanation: { en: "Two-item comparison: A と B と どちらが [adj] ですか. Both items are listed with と と.", np: "दुई-वस्तु तुलना: A と B と どちらが [adj] ですか। दुवै と と ले।" },
+      },
+      {
+        question: { en: "What does いちばん mean?", np: "いちばん को अर्थ के हो?" },
+        choices: [
+          { en: "The most / number one", np: "सबभन्दा / नम्बर एक" },
+          { en: "More than", np: "भन्दा बढी" },
+          { en: "Less than", np: "भन्दा कम" },
+          { en: "Both equally", np: "दुवै बराबर" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "いちばん = number one / most. Used for superlatives: [group]で いちばん [adj].", np: "いちばん = नम्बर एक / सबभन्दा। Superlative को लागि: [समूह]で いちばん [adj]।" },
+      },
+      {
+        question: { en: "Which particle marks the group in superlative sentences?", np: "Superlative वाक्यमा समूह चिन्ह गर्ने Particle कुन हो?" },
+        choices: ["で", "に", "を", "が"],
+        correctIndex: 0,
+        explanation: { en: "で marks the scope/group: にほんで いちばん たかいやま = tallest mountain IN Japan.", np: "で ले scope/समूह: にほんで いちばん たかいやま = जापानमा सबभन्दा अग्लो पहाड।" },
+      },
+      {
+        question: { en: "Translate: なつはふゆよりあついです。", np: "अनुवाद गर्नुस्: なつはふゆよりあついです।" },
+        choices: [
+          { en: "Summer is hotter than winter.", np: "गर्मी जाडो भन्दा तातो हुन्छ।" },
+          { en: "Winter is hotter than summer.", np: "जाडो गर्मी भन्दा तातो हुन्छ।" },
+          { en: "Summer and winter are both hot.", np: "गर्मी र जाडो दुवै तातो छन्।" },
+          { en: "It is the hottest in summer.", np: "गर्मीमा सबभन्दा तातो हुन्छ।" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "なつ (summer) は topic, ふゆ (winter) より = than winter, あつい = hot. Summer is hotter than winter.", np: "なつ (गर्मी) は topic, ふゆ (जाडो) より = भन्दा, あつい = तातो। गर्मी जाडो भन्दा तातो।" },
+      },
+      {
+        question: { en: "How do you answer 'which of two do you prefer' in Japanese?", np: "'दुई वस्तुमध्ये कुन मनपर्छ' को जवाफ कसरी दिने?" },
+        choices: [
+          { en: "[winner] の ほうが すきです", np: "[winner] の ほうが すきです" },
+          { en: "[winner] が いちばん すきです", np: "[winner] が いちばん すきです" },
+          { en: "[winner] より すきです", np: "[winner] より すきです" },
+          { en: "[winner] は すきです", np: "[winner] は すきです" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "After a どちらが…ですか question, answer with [winner] の ほうが [adj] です.", np: "どちらが…ですか प्रश्न पछि जवाफ: [winner] の ほうが [adj] です।" },
+      },
+      {
+        question: { en: "What does どうでしたか mean?", np: "どうでしたか को अर्थ के हो?" },
+        choices: [
+          { en: "How was it?", np: "कस्तो थियो?" },
+          { en: "How is it?", np: "कस्तो छ?" },
+          { en: "What happened?", np: "के भयो?" },
+          { en: "Where did you go?", np: "कहाँ गएको थियो?" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どう = how. でした = was (past polite copula). どうでしたか = how was it?", np: "どう = कस्तो। でした = थियो (भूत विनम्र copula)। どうでしたか = कस्तो थियो?" },
+      },
+      {
+        question: { en: "What is the past form of きれい (な-adj)?", np: "きれい (な-adj) को भूत रूप के हो?" },
+        choices: ["きれいでした", "きれいかったです", "きれいくなかった", "きれいじゃないでした"],
+        correctIndex: 0,
+        explanation: { en: "な-adj past = [adj] + でした. きれい + でした = きれいでした.", np: "な-adj भूत = [adj] + でした। きれい + でした = きれいでした।" },
+      },
+      {
+        question: { en: "Fill: にほんでいちばん___やまはふじさんです。(The tallest mountain in Japan is Mt Fuji.)", np: "भर्नुस्: にほんでいちばん___やまはふじさんです।" },
+        choices: ["たかい", "たかく", "たかい な", "たかくて"],
+        correctIndex: 0,
+        explanation: { en: "いちばん + い-adj (plain form) + noun. いちばん + たかい + やま = the tallest mountain.", np: "いちばん + い-adj (plain form) + noun। いちばん + たかい + やま = सबभन्दा अग्लो पहाड।" },
+      },
+      {
+        question: { en: "When comparing two things equally, use…", np: "दुई वस्तु बराबर भए के प्रयोग गर्ने?" },
+        choices: [
+          { en: "どちらも おなじです", np: "どちらも おなじです" },
+          { en: "どちらが おなじです", np: "どちらが おなじです" },
+          { en: "どちらは おなじです", np: "どちらは おなじです" },
+          { en: "いちばん おなじです", np: "いちばん おなじです" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どちらも = both. おなじ = same. どちらも おなじです = both are the same.", np: "どちらも = दुवै। おなじ = बराबर। どちらも おなじです = दुवै बराबर छन्।" },
+      },
+    ],
+  },
+  {
+    id: 13,
+    title: "Lesson 13 — ほしい・たい・もくてき (Wants & Purpose)",
+    intro: [
+      {
+        en: "In this lesson you learn to express what you WANT (noun) and what you WANT TO DO (verb). N が ほしいです says 'I want N'. V-stem たいです says 'I want to do V'. Both use が for the target.",
+        np: "यस पाठमा के चाहिएको छ (Noun) र के गर्न चाहिन्छ (Verb) व्यक्त गर्न सिक्नुहुनेछ। N が ほしいです = 'मलाई N चाहिन्छ'। V-stem たいです = 'V गर्न चाहन्छु'।",
+      },
+      {
+        en: "You also learn the purpose pattern V-stem + に + movement verb: にほんへいきます (go to Japan) can be extended to にほんりょうりをならいに にほんへいきます (go to Japan to learn Japanese cooking).",
+        np: "साथै उद्देश्य pattern: V-stem + に + movement verb: にほんへいきます लाई → にほんりょうりをならいに にほんへいきます (जापानी खाना सिक्न जापान जान्छु) मा विस्तार।",
+      },
+      {
+        en: "The question word どんな means 'what kind of' — どんなN が ほしいですか (what kind of N do you want?). ほしい is an い-adj, so it conjugates like one.",
+        np: "प्रश्न शब्द どんな = 'कस्तो' — どんなN が ほしいですか (कस्तो N चाहिन्छ?)। ほしい, い-adj हो — त्यसैले त्यसैगरी conjugate।",
+      },
+    ],
+    youtubeVideoId: { en: "JriNbAXfwEM" },
+    youtubeVideoIdPart2: { en: "0n7Hsd9J-LQ" },
+    youtubeTitle: "Minna no Nihongo · Lesson 13 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "なにがほしいですか。",
+        reading: "Nani ga hoshii desu ka?",
+        english: { en: "What do you want?", np: "तपाईलाई के चाहिन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "あたらしいパソコンがほしいです。",
+        reading: "Atarashii pasokon ga hoshii desu.",
+        english: { en: "I want a new computer.", np: "मलाई नयाँ कम्प्युटर चाहिन्छ।" },
+      },
+      {
+        speaker: "A",
+        japanese: "なつやすみになにをしたいですか。",
+        reading: "Natsuyasumi ni nani o shitai desu ka?",
+        english: { en: "What do you want to do during summer vacation?", np: "गर्मी बिदामा के गर्न चाहनुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "うみへおよぎにいきたいです。",
+        reading: "Umi e oyogi ni ikitai desu.",
+        english: { en: "I want to go to the sea to swim.", np: "पौड्न समुद्रमा जान चाहन्छु।" },
+      },
+      {
+        speaker: "A",
+        japanese: "どんなおみやげがほしいですか。",
+        reading: "Donna omiyage ga hoshii desu ka?",
+        english: { en: "What kind of souvenir do you want?", np: "कस्तो उपहार चाहिन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "にほんのおかしがほしいです。",
+        reading: "Nihon no okashi ga hoshii desu.",
+        english: { en: "I want Japanese sweets.", np: "जापानी मिठाई चाहिन्छ।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "N が ほしいです — I want N", np: "N が ほしいです — मलाई N चाहिन्छ" },
+        meaning: {
+          en: "ほしい (want / desire for a noun) is an い-adj. The wanted noun is marked by が. Pattern: [topic は] [thing] が ほしいです. To ask: なに が ほしいですか. Like たい, use only for the speaker's own wants.",
+          np: "ほしい (Noun इच्छा) il-adj हो। चाहिने वस्तु が ले। Pattern: [topic は] [वस्तु] が ほしいです। सोध्न: なに が ほしいですか। たい जस्तै, वक्ताको मात्र इच्छाका लागि।",
+        },
+        whereWeUse: [
+          { en: "Thing: あたらしいくるまがほしいです (I want a new car)", np: "वस्तु: あたらしいくるまがほしいです" },
+          { en: "Negative: ほしくないです (I don't want it)", np: "नकार: ほしくないです" },
+          { en: "どんな question: どんなNがほしいですか (what kind of N do you want?)", np: "どんな प्रश्न: どんなNがほしいですか" },
+        ],
+        examples: [
+          {
+            japanese: "あたらしいパソコンがほしいです。",
+            reading: "Atarashii pasokon ga hoshii desu.",
+            english: { en: "I want a new computer.", np: "नयाँ कम्प्युटर चाहिन्छ।" },
+            scenario: { en: "Wanting a gadget", np: "उपकरण चाहँदा" },
+          },
+          {
+            japanese: "なにもほしくないです。",
+            reading: "Nani mo hoshiku nai desu.",
+            english: { en: "I don't want anything.", np: "केही पनि चाहिँदैन।" },
+            scenario: { en: "Negative ほしい with なにも", np: "なにも सँग नकारात्मक ほしい" },
+          },
+          {
+            japanese: "どんなプレゼントがほしいですか。",
+            reading: "Donna purezento ga hoshii desu ka?",
+            english: { en: "What kind of present do you want?", np: "कस्तो उपहार चाहिन्छ?" },
+            scenario: { en: "どんな preference question", np: "どんな प्राथमिकता प्रश्न" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "V-stem + に + movement verb — purpose of movement", np: "V-stem + に + movement verb — आन्दोलनको उद्देश्य" },
+        meaning: {
+          en: "To express the PURPOSE of going/coming, use V-stem + に + movement verb (いく/くる/かえる). Pattern: [place] へ [V-stem] に いきます. The に signals purpose: going IN ORDER TO do V.",
+          np: "जाने/आउने उद्देश्य व्यक्त गर्न: V-stem + に + movement verb (いく/くる/かえる)। Pattern: [ठाउँ] へ [V-stem] に いきます। に ले उद्देश्य: V गर्न जान्छु।",
+        },
+        whereWeUse: [
+          { en: "To swim: うみへ あそびに いきます (go to the sea to play)", np: "पौड्न: うみへ あそびに いきます" },
+          { en: "To study: としょかんへ べんきょうしに いきます (go to library to study)", np: "पढ्न: としょかんへ べんきょうしに いきます" },
+          { en: "To buy: デパートへ かいものに いきます (go to department store to shop)", np: "किन्न: デパートへ かいものに いきます" },
+        ],
+        examples: [
+          {
+            japanese: "うみへおよぎにいきます。",
+            reading: "Umi e oyogi ni ikimasu.",
+            english: { en: "I go to the sea to swim.", np: "पौड्न समुद्रमा जान्छु।" },
+            scenario: { en: "Purpose with おようぎ (swim)", np: "おようぎ (पौड्ने) उद्देश्य" },
+          },
+          {
+            japanese: "デパートへかいものにいきました。",
+            reading: "Depāto e kaimono ni ikimashita.",
+            english: { en: "I went to the department store to shop.", np: "किनमेल गर्न डिपार्टमेन्ट स्टोर गएँ।" },
+            scenario: { en: "Past purpose movement", np: "भूतकालीन उद्देश्य आन्दोलन" },
+          },
+          {
+            japanese: "としょかんへほんをかりにいきます。",
+            reading: "Toshokan e hon o kari ni ikimasu.",
+            english: { en: "I go to the library to borrow books.", np: "किताब उधारो लिन पुस्तकालय जान्छु।" },
+            scenario: { en: "Purpose: borrowing books", np: "उद्देश्य: किताब उधारो" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "V-stem たいです vs N が ほしいです — desire comparison", np: "V-stem たいです vs N が ほしいです — इच्छा तुलना" },
+        meaning: {
+          en: "Key distinction: たいです follows a VERB stem (want to DO something). ほしいです follows a NOUN (want a THING). Both use が for the target/object. Both are い-adj in conjugation. Both for speaker only.",
+          np: "महत्त्वपूर्ण भिन्नता: たいです VERB stem पछि (काम गर्न चाहन्छु)। ほしいです NOUN पछि (वस्तु चाहिन्छ)। दुवैले target/object को लागि が। दुवै conjugation मा い-adj। दुवै वक्ताको मात्र।",
+        },
+        whereWeUse: [
+          { en: "Want a thing (ほしい): あたらしいくるまがほしいです", np: "वस्तु चाहनु (ほしい): あたらしいくるまがほしいです" },
+          { en: "Want to do (たい): うみへいきたいです", np: "काम गर्न चाहनु (たい): うみへいきたいです" },
+          { en: "Both negated: ほしくないです / いきたくないです", np: "दुवै नकार: ほしくないです / いきたくないです" },
+        ],
+        examples: [
+          {
+            japanese: "あたらしいくるまがほしいです。でも、かいたくないです。",
+            reading: "Atarashii kuruma ga hoshii desu. Demo, kaitaku nai desu.",
+            english: { en: "I want a new car. But I don't want to buy one.", np: "नयाँ कार चाहिन्छ। तर किन्न चाहिँदैन।" },
+            scenario: { en: "ほしい vs たい contrast", np: "ほしい vs たい विरोधाभास" },
+          },
+          {
+            japanese: "なにがほしいですか。",
+            reading: "Nani ga hoshii desu ka?",
+            english: { en: "What do you want (thing)?", np: "तपाईलाई के चाहिन्छ (वस्तु)?" },
+            scenario: { en: "Asking about wanted things", np: "चाहिने वस्तु सोध्दा" },
+          },
+          {
+            japanese: "なにをしたいですか。",
+            reading: "Nani o shitai desu ka?",
+            english: { en: "What do you want to do?", np: "के गर्न चाहनुहुन्छ?" },
+            scenario: { en: "Asking about desired actions", np: "इच्छित कार्य सोध्दा" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "どんな + N — What kind of N?", np: "どんな + N — कस्तो N?" },
+        meaning: {
+          en: "どんな is a pre-noun interrogative meaning 'what kind of'. Pattern: どんな + N + が ほしいですか (what kind of N do you want?). Unlike どの (which selects from a known set), どんな asks about type/quality.",
+          np: "どんな, Noun अगाडिको प्रश्नवाचक शब्द जसको अर्थ 'कस्तो'। Pattern: どんな + N + が ほしいですか। どの (थाहा भएको सेटबाट छान्दा) भन्दा फरक — どんな ले प्रकार/गुण सोध्छ।",
+        },
+        whereWeUse: [
+          { en: "Desired item: どんなNがほしいですか (what kind of N do you want?)", np: "चाहिने वस्तु: どんなNがほしいですか" },
+          { en: "Food: どんなりょうりがすきですか (what kind of food do you like?)", np: "खाना: どんなりょうりがすきですか" },
+          { en: "Person: どんなひとがすきですか (what kind of person do you like?)", np: "व्यक्ति: どんなひとがすきですか" },
+        ],
+        examples: [
+          {
+            japanese: "どんなおんがくがすきですか。",
+            reading: "Donna ongaku ga suki desu ka?",
+            english: { en: "What kind of music do you like?", np: "कस्तो सङ्गीत मनपर्छ?" },
+            scenario: { en: "Type preference", np: "प्रकार प्राथमिकता" },
+          },
+          {
+            japanese: "どんなしごとをしたいですか。",
+            reading: "Donna shigoto o shitai desu ka?",
+            english: { en: "What kind of work do you want to do?", np: "कस्तो काम गर्न चाहनुहुन्छ?" },
+            scenario: { en: "Career aspiration", np: "करियर आकांक्षा" },
+          },
+          {
+            japanese: "どんなひとがすきですか。",
+            reading: "Donna hito ga suki desu ka?",
+            english: { en: "What kind of person do you like?", np: "कस्तो मान्छे मनपर्छ?" },
+            scenario: { en: "Preference about people", np: "मान्छेको बारेमा प्राथमिकता" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "Negative of ほしい and たい — ほしくない / たくない", np: "ほしい र たい को नकार — ほしくない / たくない" },
+        meaning: {
+          en: "Both ほしい and たい are い-adj so their negatives follow い-adj rules. ほしい negative: ほしくない(です). たい negative: たくない(です). Past: ほしかった / たかった. Past-neg: ほしくなかった / たくなかった.",
+          np: "ほしい र たい दुवै い-adj भएकाले नकार い-adj नियम अनुसार। ほしい नकार: ほしくない(です)। たい नकार: たくない(です)। भूत: ほしかった / たかった। भूत-नकार: ほしくなかった / たくなかった।",
+        },
+        whereWeUse: [
+          { en: "Negative: いきたくないです (I don't want to go)", np: "नकार: いきたくないです" },
+          { en: "Negative ほしい: なにもほしくないです (I don't want anything)", np: "नकार ほしい: なにもほしくないです" },
+          { en: "Past: あのえいがをみたかったです (I wanted to see that movie)", np: "भूत: あのえいがをみたかったです" },
+        ],
+        examples: [
+          {
+            japanese: "きょうはどこにもいきたくないです。",
+            reading: "Kyō wa doko ni mo ikitaku nai desu.",
+            english: { en: "I don't want to go anywhere today.", np: "आज कतै जान मन छैन।" },
+            scenario: { en: "Negative たい with どこにも", np: "どこにも सँग नकारात्मक たい" },
+          },
+          {
+            japanese: "そのかばんはほしくなかったです。",
+            reading: "Sono kaban wa hoshiku nakatta desu.",
+            english: { en: "I didn't want that bag.", np: "त्यो झोला चाहिएको थिएन।" },
+            scenario: { en: "Past-negative ほしい", np: "भूत-नकार ほしい" },
+          },
+          {
+            japanese: "ずっとにほんへいきたかったです。",
+            reading: "Zutto Nihon e ikitakatta desu.",
+            english: { en: "I always wanted to go to Japan.", np: "सधैं जापान जान चाहेको थिएँ।" },
+            scenario: { en: "Past たい expressing long-held desire", np: "लामो समयदेखिको इच्छा भूत たい" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "が",
+        romaji: "ga",
+        name: { en: "Subject of desire (ほしい)", np: "इच्छाको Subject (ほしい)" },
+        meaning: {
+          en: "With ほしいです, the desired object/noun is marked by が. Pattern: [thing] が ほしいです. This が is the same subject marker seen with すき/きらい — it marks what the desire targets.",
+          np: "ほしいです सँग चाहिने वस्तु/Noun が ले चिन्ह। Pattern: [वस्तु] が ほしいです। यो が, すき/きらい सँग देखिने त्यही subject marker — इच्छाले के लक्षित गर्छ चिन्ह।",
+        },
+        examples: [
+          {
+            japanese: "あたらしいかばんがほしいです。",
+            reading: "Atarashii kaban ga hoshii desu.",
+            english: { en: "I want a new bag.", np: "नयाँ झोला चाहिन्छ।" },
+            scenario: { en: "が marking the desired noun", np: "が ले चाहिने Noun" },
+          },
+          {
+            japanese: "なにがほしいですか。",
+            reading: "Nani ga hoshii desu ka?",
+            english: { en: "What do you want?", np: "के चाहिन्छ?" },
+            scenario: { en: "なに が in a want question", np: "इच्छा प्रश्नमा なに が" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(13),
+    mcqs: [
+      {
+        question: { en: "Which sentence says 'I want a new car'?", np: "'मलाई नयाँ कार चाहिन्छ' भन्ने वाक्य कुन हो?" },
+        choices: [
+          "あたらしいくるまがほしいです",
+          "あたらしいくるまをほしいです",
+          "あたらしいくるまにほしいです",
+          "あたらしいくるまはほしいです",
+        ],
+        correctIndex: 0,
+        explanation: { en: "ほしいです takes が for the desired noun. あたらしいくるまが ほしいです.", np: "ほしいです, チャहिने Noun को लागि が। あたらしいくるまが ほしいです।" },
+      },
+      {
+        question: { en: "What does うみへおよぎにいきます mean?", np: "うみへおよぎにいきます को अर्थ के हो?" },
+        choices: [
+          { en: "I go to the sea to swim", np: "पौड्न समुद्रमा जान्छु" },
+          { en: "I swim in the sea", np: "समुद्रमा पौड्छु" },
+          { en: "I want to swim in the sea", np: "समुद्रमा पौड्न चाहन्छु" },
+          { en: "I went to the sea yesterday", np: "हिजो समुद्रमा गएँ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "V-stem + に + movement verb = going FOR THE PURPOSE of V. おようぎ (stem of およぐ) に いきます = go to swim.", np: "V-stem + に + movement verb = V को उद्देश्यले जाने। おようぎ (およぐ को stem) に いきます = पौड्न जान्छु।" },
+      },
+      {
+        question: { en: "What is the difference between ほしい and たい?", np: "ほしい र たい को फरक के हो?" },
+        choices: [
+          { en: "ほしい = want a THING (noun); たい = want to DO (verb)", np: "ほしい = वस्तु चाहिन्छ (noun); たい = गर्न चाहन्छु (verb)" },
+          { en: "ほしい = want to DO; たい = want a THING", np: "ほしい = गर्न चाहन्छु; たい = वस्तु चाहिन्छ" },
+          { en: "Both mean the same thing", np: "दुवैको अर्थ उही" },
+          { en: "ほしい is past tense; たい is present", np: "ほしい भूतकाल; たい वर्तमान" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "ほしい follows a noun (want a THING). たい follows a verb stem (want to DO). Both conjugate as い-adj.", np: "ほしい, Noun पछि (वस्तु चाहिन्छ)। たい, Verb stem पछि (गर्न चाहन्छु)। दुवै い-adj।" },
+      },
+      {
+        question: { en: "How do you say 'I don't want to go'?", np: "'म जान चाहिँदैन' कसरी भनिन्छ?" },
+        choices: ["いきたくないです", "いきほしくないです", "いきたいじゃないです", "いきくないです"],
+        correctIndex: 0,
+        explanation: { en: "たい is an い-adj. Negative of たい = たくない. いき (stem) + たくない + です = いきたくないです.", np: "たい, い-adj। नकार = たくない। いき (stem) + たくない + です = いきたくないです।" },
+      },
+      {
+        question: { en: "Fill the blank: どんな___がほしいですか。(What kind of ___ do you want?)", np: "खाली भर्नुस्: どんな___がほしいですか।" },
+        choices: [
+          { en: "Any noun (e.g. プレゼント, くるま)", np: "कुनै Noun (जस्तै プレゼント, くるま)" },
+          { en: "Verb stem", np: "Verb stem" },
+          { en: "Adjective", np: "विशेषण" },
+          { en: "Particle", np: "Particle" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どんな modifies nouns. どんな + [noun] が ほしいですか = what kind of [noun] do you want?", np: "どんな ले Noun modify गर्छ। どんな + [Noun] が ほしいですか।" },
+      },
+      {
+        question: { en: "What is the purpose-of-movement pattern?", np: "आन्दोलनको उद्देश्य pattern के हो?" },
+        choices: [
+          { en: "[place] へ [V-stem] に いきます", np: "[ठाउँ] へ [V-stem] に いきます" },
+          { en: "[place] を [V-stem] に いきます", np: "[ठाउँ] を [V-stem] に いきます" },
+          { en: "[place] で [V-stem] が いきます", np: "[ठाउँ] で [V-stem] が いきます" },
+          { en: "[place] に [V-stem] が いきます", np: "[ठाउँ] に [V-stem] が いきます" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "Purpose: [place] へ [V-stem] に [movement verb]. The に signals 'in order to'. うみへ あそびに いきます.", np: "उद्देश्य: [ठाउँ] へ [V-stem] に [movement verb]। に ले 'को लागि'। うみへ あそびに いきます।" },
+      },
+      {
+        question: { en: "Which is correct: 'I went to the library to study'?", np: "'पढ्न पुस्तकालय गएँ' को सही जापानी कुन हो?" },
+        choices: [
+          "としょかんへべんきょうしにいきました",
+          "としょかんでべんきょうにいきました",
+          "としょかんをべんきょうしにいきました",
+          "としょかんにべんきょうたいいきました",
+        ],
+        correctIndex: 0,
+        explanation: { en: "Purpose: としょかん(library)へ + べんきょうし(study stem)に + いきました(went). All correct particles.", np: "उद्देश्य: としょかん(पुस्तकालय)へ + べんきょうし(पढ्ने stem)に + いきました(गएँ)।" },
+      },
+      {
+        question: { en: "Past tense of ほしい?", np: "ほしい को भूत रूप के हो?" },
+        choices: ["ほしかったです", "ほしいでした", "ほしくでした", "ほしかったます"],
+        correctIndex: 0,
+        explanation: { en: "ほしい is an い-adj. Past = [stem]かった + です. ほし + かった + です = ほしかったです.", np: "ほしい, い-adj। भूत = [stem]かった + です। ほし + かった + です = ほしかったです।" },
+      },
+      {
+        question: { en: "What is どんな used for?", np: "どんな कसको लागि प्रयोग हुन्छ?" },
+        choices: [
+          { en: "Asking 'what kind of' (type/quality)", np: "'कस्तो' (प्रकार/गुण) सोध्न" },
+          { en: "Asking 'which one' from a set", np: "सेटबाट 'कुन' सोध्न" },
+          { en: "Asking 'how many'", np: "'कति' सोध्न" },
+          { en: "Asking 'where'", np: "'कहाँ' सोध्न" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "どんな = what kind of. It asks about type or quality, not a specific item from a set (that's どの/どれ).", np: "どんな = कस्तो। प्रकार वा गुण सोध्छ, सेटबाट specific वस्तु होइन (त्यो どの/どれ)।" },
+      },
+      {
+        question: { en: "Which particle marks the object when using V-stem たいです?", np: "V-stem たいです प्रयोग गर्दा object कुन Particle ले चिन्ह गर्छ?" },
+        choices: ["を", "が", "に", "は"],
+        correctIndex: 0,
+        explanation: { en: "With たいです, the object of the verb keeps を: すしをたべたいです. Only the が is for すき/きらい/ほしい type adjectives.", np: "たいです सँग verb को object, を नै: すしをたべたいです। が, すき/きらい/ほしい type adj को लागि।" },
+      },
+    ],
+  },
+  {
+    id: 14,
+    title: "Lesson 14 — てください・ています (て-form)",
+    intro: [
+      {
+        en: "In this lesson you learn the te-form (て-form) of verbs — the most important building block in Japanese grammar. It is used to make requests (てください), describe ongoing actions or states (ています), and connect verbs.",
+        np: "यस पाठमा Verb को て-form सिक्नुहुनेछ — जापानी व्याकरणको सबभन्दा महत्त्वपूर्ण आधार। अनुरोध (てください), जारी कार्य वा अवस्था (ています), र Verb जोड्न प्रयोग।",
+      },
+      {
+        en: "て-form construction rules depend on verb group: Group 1 (u-verbs) — the final kana changes sound; Group 2 (ru-verbs) — drop る, add て; Irregular — する → して、くる → きて.",
+        np: "て-form बनाउने नियम Verb group अनुसार: Group 1 (u-verb) — अन्तिम kana परिवर्तन; Group 2 (ru-verb) — る हटाएर て; Irregular — する → して、くる → きて।",
+      },
+      {
+        en: "ています has two main meanings: an action in progress (いま よんでいます — reading now) and a resulting state (けっこんしています — is married, i.e. got married and the state continues).",
+        np: "ています को दुई मुख्य अर्थ: जारी कार्य (いま よんでいます — अहिले पढ्दैछु) र resulting state (けっこんしています — विवाहित छ — विवाह भएको र अवस्था जारी)।",
+      },
+    ],
+    youtubeVideoId: { en: "rjIB-PPVQZY" },
+    youtubeVideoIdPart2: { en: "2a3ZWlFcFM8" },
+    youtubeTitle: "Minna no Nihongo · Lesson 14 — Grammar",
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "すみません、しずかにしてください。",
+        reading: "Sumimasen, shizuka ni shite kudasai.",
+        english: { en: "Excuse me, please be quiet.", np: "माफ गर्नुस्, शान्त रहिदिनुस्।" },
+      },
+      {
+        speaker: "B",
+        japanese: "すみません。いまなにをしていますか。",
+        reading: "Sumimasen. Ima nani o shite imasu ka?",
+        english: { en: "Sorry. What are you doing now?", np: "माफ गर्नुस्। अहिले के गर्दैहुनुहुन्छ?" },
+      },
+      {
+        speaker: "A",
+        japanese: "しゅくだいをしています。てつだってください。",
+        reading: "Shukudai o shite imasu. Tetsudatte kudasai.",
+        english: { en: "I am doing homework. Please help me.", np: "गृहकार्य गर्दैछु। मद्दत गरिदिनुस्।" },
+      },
+      {
+        speaker: "B",
+        japanese: "もうたべましたか。",
+        reading: "Mō tabemashita ka?",
+        english: { en: "Have you already eaten?", np: "खाइसक्नुभयो?" },
+      },
+      {
+        speaker: "A",
+        japanese: "いいえ、まだたべていません。",
+        reading: "Iie, mada tabete imasen.",
+        english: { en: "No, I haven't eaten yet.", np: "होइन, अझै खाएको छैन।" },
+      },
+      {
+        speaker: "B",
+        japanese: "いっしょにたべましょう。はやくきてください。",
+        reading: "Issho ni tabemashō. Hayaku kite kudasai.",
+        english: { en: "Let's eat together. Please come quickly.", np: "सँगै खाउँ। छिटो आइदिनुस्।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "て-form construction rules (all three groups)", np: "て-form बनाउने नियमहरू (तीनै समूह)" },
+        meaning: {
+          en: "Group 2 (eru/iru verbs): drop る, add て. Group 1 (all others): change final kana → く→いて、ぐ→いで、す→して、つ/る/う→って、ぬ/ぶ/む→んで. Exception: いく→いって. Irregular: する→して、くる→きて.",
+          np: "Group 2 (eru/iru verb): る हटाएर て। Group 1: अन्तिम kana → く→いて、ぐ→いで、す→して、つ/る/う→って、ぬ/ぶ/む→んで। Exception: いく→いって। Irregular: する→して、くる→きて।",
+        },
+        whereWeUse: [
+          { en: "Group 2: たべる→たべて、みる→みて、おきる→おきて", np: "Group 2: たべる→たべて、みる→みて、おきる→おきて" },
+          { en: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いく→いって)", np: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いって)" },
+          { en: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって", np: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって" },
+        ],
+        examples: [
+          {
+            japanese: "たべる → たべて ／ みる → みて",
+            reading: "taberu → tabete / miru → mite",
+            english: { en: "Group 2: drop る, add て", np: "Group 2: る हटाएर て" },
+            scenario: { en: "Group 2 conjugation", np: "Group 2 conjugation" },
+          },
+          {
+            japanese: "かく → かいて ／ いく → いって",
+            reading: "kaku → kaite / iku → itte",
+            english: { en: "Group 1 -く: く → いて (except いく → いって)", np: "Group 1 -く: く → いて (いく → いって exception)" },
+            scenario: { en: "Group 1 -く with exception", np: "Group 1 -く र exception" },
+          },
+          {
+            japanese: "する → して ／ くる → きて",
+            reading: "suru → shite / kuru → kite",
+            english: { en: "Irregular verbs", np: "अनियमित Verb" },
+            scenario: { en: "Irregular て-form", np: "अनियमित て-form" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "V-て + ください — polite request 'please do V'", np: "V-て + ください — विनम्र अनुरोध 'V गरिदिनुस्'" },
+        meaning: {
+          en: "Attach ください to the て-form to make a polite request. Pattern: [V-て] ください. To ask politely: [て-form] + ください. For commands, use more directly (てください), for softer request add すみません first.",
+          np: "て-form मा ください थप्दा विनम्र अनुरोध। Pattern: [V-て] ください। नरम अनुरोधको लागि पहिले すみません।",
+        },
+        whereWeUse: [
+          { en: "Direction: みぎへ まがってください (please turn right)", np: "दिशा: みぎへ まがってください" },
+          { en: "Hurry: はやく きてください (please come quickly)", np: "हतार: はやく きてください" },
+          { en: "Help: てつだってください (please help me)", np: "मद्दत: てつだってください" },
+        ],
+        examples: [
+          {
+            japanese: "ここになまえをかいてください。",
+            reading: "Koko ni namae o kaite kudasai.",
+            english: { en: "Please write your name here.", np: "यहाँ नाम लेखिदिनुस्।" },
+            scenario: { en: "Administrative request", np: "प्रशासनिक अनुरोध" },
+          },
+          {
+            japanese: "しずかにしてください。",
+            reading: "Shizuka ni shite kudasai.",
+            english: { en: "Please be quiet.", np: "शान्त रहिदिनुस्।" },
+            scenario: { en: "Manner request", np: "व्यवहार अनुरोध" },
+          },
+          {
+            japanese: "もういちどいってください。",
+            reading: "Mō ichi-do itte kudasai.",
+            english: { en: "Please say it one more time.", np: "अझ एकपटक भनिदिनुस्।" },
+            scenario: { en: "Classroom request", np: "कक्षाकोठाको अनुरोध" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "V-て + います — ongoing action (progressive)", np: "V-て + います — जारी कार्य (progressive)" },
+        meaning: {
+          en: "V-て + います describes an action in progress right now. Pattern: [subject] は [V-て] います. Question: なにを しています か. This use is equivalent to English '-ing'. Negative: V-て + いません.",
+          np: "V-て + います ले अहिले जारी कार्य बताउँछ। Pattern: [subject] は [V-て] います। प्रश्न: なにを しています か। अङ्ग्रेजीको '-ing' जस्तै। नकार: V-て + いません।",
+        },
+        whereWeUse: [
+          { en: "Reading: いまほんをよんでいます (reading a book now)", np: "पढ्दैछु: いまほんをよんでいます" },
+          { en: "Working: かいしゃではたらいています (working at a company)", np: "काम गर्दैछु: かいしゃではたらいています" },
+          { en: "Negative: まだたべていません (not eating yet)", np: "नकार: まだたべていません" },
+        ],
+        examples: [
+          {
+            japanese: "いまにほんごをべんきょうしています。",
+            reading: "Ima Nihongo o benkyō shite imasu.",
+            english: { en: "I am studying Japanese now.", np: "अहिले जापानी पढ्दैछु।" },
+            scenario: { en: "Ongoing study", np: "जारी पढाइ" },
+          },
+          {
+            japanese: "かのじょはでんわをしています。",
+            reading: "Kanojo wa denwa o shite imasu.",
+            english: { en: "She is on the phone.", np: "उनी फोनमा छिन्।" },
+            scenario: { en: "Action in progress", np: "जारी कार्य" },
+          },
+          {
+            japanese: "まだしゅくだいをしていません。",
+            reading: "Mada shukudai o shite imasen.",
+            english: { en: "I haven't done the homework yet.", np: "अझै गृहकार्य गरेको छैन।" },
+            scenario: { en: "Negative progressive with まだ", np: "まだ सँग नकारात्मक progressive" },
+          },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "V-て + います — resulting state", np: "V-て + います — resulting state (परिणामी अवस्था)" },
+        meaning: {
+          en: "ています also describes a STATE resulting from a completed action. Examples: しっています (I know — have come to know and the state continues), けっこんしています (is married — got married, state continues), すんでいます (lives in — settled and stays).",
+          np: "ています ले पूरा भएको कार्यबाट परिणामी STATE पनि बताउँछ। जस्तै: しっています (थाहा छ), けっこんしています (विवाहित छ), すんでいます (बस्छ)।",
+        },
+        whereWeUse: [
+          { en: "Knowledge: しっています (I know) / しりません (I don't know — NOT しっていません)", np: "ज्ञान: しっています / शिरません (know/don't know)" },
+          { en: "Marital status: けっこんしています (is married)", np: "वैवाहिक अवस्था: けっこんしています" },
+          { en: "Residence: とうきょうにすんでいます (lives in Tokyo)", np: "निवास: とうきょうにすんでいます" },
+        ],
+        examples: [
+          {
+            japanese: "やまださんはとうきょうにすんでいます。",
+            reading: "Yamada-san wa Tōkyō ni sunde imasu.",
+            english: { en: "Yamada lives in Tokyo.", np: "यामाडाजी टोक्योमा बस्नुहुन्छ।" },
+            scenario: { en: "Residence (resulting state)", np: "निवास (resulting state)" },
+          },
+          {
+            japanese: "かれはもうけっこんしています。",
+            reading: "Kare wa mō kekkon shite imasu.",
+            english: { en: "He is already married.", np: "उनी पहिले नै विवाहित छन्।" },
+            scenario: { en: "Marital state", np: "वैवाहिक अवस्था" },
+          },
+          {
+            japanese: "このことばをしっていますか。",
+            reading: "Kono kotoba o shitte imasu ka?",
+            english: { en: "Do you know this word?", np: "यो शब्द थाहा छ?" },
+            scenario: { en: "Knowledge state — しっています", np: "ज्ञान अवस्था — しっています" },
+          },
+        ],
+      },
+      {
+        number: 5,
+        name: { en: "もう + past vs まだ + negative — already / not yet", np: "もう + भूत vs まだ + नकार — पहिले नै / अझै" },
+        meaning: {
+          en: "もう (already) pairs with a PAST positive verb: もうたべました (already ate). まだ (still / not yet) pairs with NEGATIVE: まだたべていません (haven't eaten yet). KEY: もう + negative means 'not anymore'.",
+          np: "もう (पहिले नै) PAST positive verb सँग: もうたべました। まだ (अझै) NEGATIVE सँग: まだたべていません। KEY: もう + नकार = 'अब होइन' (not anymore)।",
+        },
+        whereWeUse: [
+          { en: "Already done: もうしゅくだいをしました (already did homework)", np: "पहिले नै: もうしゅくだいをしました" },
+          { en: "Not yet: まだしゅくだいをしていません (haven't done homework yet)", np: "अझै: まだしゅくだいをしていません" },
+          { en: "Not anymore: もうたべません (I won't eat anymore)", np: "अब होइन: もうたべません" },
+        ],
+        examples: [
+          {
+            japanese: "もうたべましたか。",
+            reading: "Mō tabemashita ka?",
+            english: { en: "Have you already eaten?", np: "खाइसक्नुभयो?" },
+            scenario: { en: "Asking with もう", np: "もう ले सोध्दा" },
+          },
+          {
+            japanese: "いいえ、まだたべていません。",
+            reading: "Iie, mada tabete imasen.",
+            english: { en: "No, I haven't eaten yet.", np: "होइन, अझै खाएको छैन।" },
+            scenario: { en: "まだ + negative ています", np: "まだ + नकारात्मक ています" },
+          },
+          {
+            japanese: "はい、もうたべました。",
+            reading: "Hai, mō tabemashita.",
+            english: { en: "Yes, I already ate.", np: "हो, पहिले नै खाएँ।" },
+            scenario: { en: "もう + past tense", np: "もう + भूतकाल" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "て",
+        romaji: "te",
+        name: { en: "て-form (connector / request / progressive marker)", np: "て-form (जोडक / अनुरोध / progressive marker)" },
+        meaning: {
+          en: "The て-form is not a particle but a verb form. It connects verbs (V-て V = do V and then V), makes requests (V-てください), and combines with います to form progressive/state structures.",
+          np: "て-form Particle होइन तर Verb form हो। Verb जोड्छ (V-て V = V गरेर V), अनुरोध गर्छ (V-てください), र います सँग मिलाएर progressive/state बनाउँछ।",
+        },
+        examples: [
+          {
+            japanese: "はやくきてください。",
+            reading: "Hayaku kite kudasai.",
+            english: { en: "Please come quickly.", np: "छिटो आइदिनुस्।" },
+            scenario: { en: "てください request", np: "てください अनुरोध" },
+          },
+          {
+            japanese: "いまよんでいます。",
+            reading: "Ima yonde imasu.",
+            english: { en: "I am reading now.", np: "अहिले पढ्दैछु।" },
+            scenario: { en: "ています progressive", np: "ています progressive" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(14),
+    mcqs: [
+      {
+        question: { en: "What is the て-form of たべる (Group 2)?", np: "たべる (Group 2) को て-form के हो?" },
+        choices: ["たべて", "たべって", "たべいて", "たべnte"],
+        correctIndex: 0,
+        explanation: { en: "Group 2: drop る, add て. たべる → drop る → たべ + て = たべて.", np: "Group 2: る हटाएर て। たべる → る हटाउनुस् → たべ + て = たべて।" },
+      },
+      {
+        question: { en: "What is the て-form of かく (write)?", np: "かく (लेख्नु) को て-form के हो?" },
+        choices: ["かいて", "かって", "かくて", "かnde"],
+        correctIndex: 0,
+        explanation: { en: "Group 1 -く: く → いて. かく → かいて.", np: "Group 1 -く: く → いて। かく → かいて।" },
+      },
+      {
+        question: { en: "What is the て-form of いく (go)?", np: "いく (जानु) को て-form के हो?" },
+        choices: ["いって", "いいて", "いくて", "いんで"],
+        correctIndex: 0,
+        explanation: { en: "いく is an exception: いく → いって (not いいて). This is the only -く verb that uses って instead of いて.", np: "いく exception: いく → いって (いいて होइन)। -く verb मध्ये त्यसको मात्र って।" },
+      },
+      {
+        question: { en: "What does てください do?", np: "てください ले के गर्छ?" },
+        choices: [
+          { en: "Makes a polite request: please do V", np: "विनम्र अनुरोध: V गरिदिनुस्" },
+          { en: "Describes an ongoing action", np: "जारी कार्य बताउँछ" },
+          { en: "Expresses a past completed action", np: "भूतकालीन पूरा कार्य बताउँछ" },
+          { en: "Expresses desire to do V", np: "V गर्ने इच्छा बताउँछ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "V-て + ください = please do V (polite request). E.g. かいてください = please write.", np: "V-て + ください = V गरिदिनुस् (विनम्र अनुरोध)। जस्तै: かいてください = लेखिदिनुस्।" },
+      },
+      {
+        question: { en: "What does いまほんをよんでいます mean?", np: "いまほんをよんでいます को अर्थ के हो?" },
+        choices: [
+          { en: "I am reading a book now (ongoing action)", np: "अहिले किताब पढ्दैछु (जारी कार्य)" },
+          { en: "I read a book (past)", np: "किताब पढें (भूत)" },
+          { en: "I want to read a book", np: "किताब पढ्न चाहन्छु" },
+          { en: "Please read a book", np: "किताब पढिदिनुस्" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "V-て + います = action in progress. よんで (te-form of よむ) + います = am reading.", np: "V-て + います = जारी कार्य। よんで (よむ को て-form) + います = पढ्दैछु।" },
+      },
+      {
+        question: { en: "Which sentence says 'I haven't eaten yet'?", np: "'अझै खाएको छैन' भन्ने वाक्य कुन हो?" },
+        choices: [
+          "まだたべていません",
+          "もうたべていません",
+          "まだたべませんでした",
+          "もうたべませんでした",
+        ],
+        correctIndex: 0,
+        explanation: { en: "まだ (not yet) + negative ています form. まだ + たべて + いません = haven't eaten yet.", np: "まだ (अझै) + नकारात्मक ています। まだ + たべて + いません = अझै खाएको छैन।" },
+      },
+      {
+        question: { en: "What is the て-form of する?", np: "する को て-form के हो?" },
+        choices: ["して", "すて", "すって", "するて"],
+        correctIndex: 0,
+        explanation: { en: "する is irregular. Its て-form is して (not すて or すって).", np: "する अनियमित। て-form = して (すて वा すって होइन)।" },
+      },
+      {
+        question: { en: "とうきょうにすんでいます means…?", np: "とうきょうにすんでいます को अर्थ के हो?" },
+        choices: [
+          { en: "Lives in Tokyo (resulting state)", np: "टोक्योमा बस्छ (resulting state)" },
+          { en: "Is going to Tokyo", np: "टोक्यो जाँदैछ" },
+          { en: "Went to Tokyo", np: "टोक्यो गयो" },
+          { en: "Is studying in Tokyo", np: "टोक्योमा पढ्दैछ" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "すんでいます = lives (resulting state of having moved). とうきょうに = in Tokyo.", np: "すんでいます = बस्छ (resulting state of having moved)। とうきょうに = टोक्योमा।" },
+      },
+      {
+        question: { en: "What is the て-form of のむ (drink)?", np: "のむ (पिउनु) को て-form के हो?" },
+        choices: ["のんで", "のいで", "のって", "のmて"],
+        correctIndex: 0,
+        explanation: { en: "Group 1 -む: む → んで. のむ → のんで.", np: "Group 1 -む: む → んで। のむ → のんで।" },
+      },
+      {
+        question: { en: "What does もうたべました mean?", np: "もうたべました को अर्थ के हो?" },
+        choices: [
+          { en: "I already ate", np: "पहिले नै खाएँ" },
+          { en: "I haven't eaten yet", np: "अझै खाएको छैन" },
+          { en: "I am eating now", np: "अहिले खाँदैछु" },
+          { en: "I will eat soon", np: "छिट्टै खान्छु" },
+        ],
+        correctIndex: 0,
+        explanation: { en: "もう (already) + past verb たべました (ate). = already ate. Contrast: まだたべていません = haven't eaten yet.", np: "もう (पहिले नै) + भूत verb たべました (खाएँ)। = पहिले नै खाएँ। विरोधाभास: まだたべていません = अझै खाएको छैन।" },
+      },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
