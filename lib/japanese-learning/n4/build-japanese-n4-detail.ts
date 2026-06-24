@@ -3,6 +3,7 @@ import { twentyN4KanjiForDay } from "@/lib/japanese-learning/n4/n4-kanji-pool";
 import {
   youtubeClipsForMinnaIILesson,
   youtubeClipsForN4SprintDay,
+  grammarVideoForMinnaIILesson,
 } from "@/lib/japanese-learning/n4/n4-youtube-links";
 import {
   n4VocabularySectionTitle,
@@ -92,7 +93,7 @@ export function buildJapaneseN4DayDetail(
     },
     {
       title: SECTION.grammar,
-      blocks: grammarBlocks(spec),
+      blocks: grammarBlocks(spec, spec.minnaLesson),
     },
     {
       title: SECTION.kanji,
@@ -152,10 +153,21 @@ export function buildJapaneseN4DayDetail(
   };
 }
 
-function grammarBlocks(spec: N5LessonSpec): JapaneseDetailBlock[] {
-  const blocks: JapaneseDetailBlock[] = [
-    { type: "list", variant: "bullet", items: spec.grammarBullets },
-  ];
+function grammarBlocks(spec: N5LessonSpec, minnaLesson: number | null): JapaneseDetailBlock[] {
+  const blocks: JapaneseDetailBlock[] = [];
+  if (minnaLesson !== null) {
+    const vid = grammarVideoForMinnaIILesson(minnaLesson);
+    if (vid) {
+      blocks.push({
+        type: "youtubeEmbed",
+        videoIdEn: vid.videoIdEn,
+        videoIdEnPart2: vid.videoIdEnPart2,
+        videoIdNp: vid.videoIdNp,
+        title: `Minna II Lesson ${minnaLesson}`,
+      });
+    }
+  }
+  blocks.push({ type: "list", variant: "bullet", items: spec.grammarBullets });
   if (spec.grammarTable && spec.grammarTable.rows.length > 0) {
     blocks.push({
       type: "table",
