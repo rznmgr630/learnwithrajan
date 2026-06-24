@@ -65,7 +65,18 @@ export type JapaneseDetailBlock =
         strokes: number;
         strokeSvgUrl: string;
       }[];
-    };
+    }
+  | { type: "vocabTable"; rows: VocabRow[] };
+
+/** One row in a vocabulary table block. */
+export type VocabRow = {
+  sn: number;
+  word: string;
+  romaji: string;
+  kanji?: string;
+  meaning: LocalizedString;
+  example: string;
+};
 
 export interface JapaneseRoadmapDayDetailSection {
   title: LocalizedString;

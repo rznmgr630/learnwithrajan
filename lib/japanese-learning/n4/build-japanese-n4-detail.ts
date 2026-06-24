@@ -5,10 +5,8 @@ import {
   youtubeClipsForN4SprintDay,
 } from "@/lib/japanese-learning/n4/n4-youtube-links";
 import {
-  n4VocabularySectionCaption,
   n4VocabularySectionTitle,
-  n4VocabularyTableHeaders,
-  n4VocabularyTableRows,
+  n4VocabularyRows,
 } from "@/lib/japanese-learning/n4/n4-lesson-vocabulary";
 import type {
   JapaneseDetailBlock,
@@ -90,14 +88,7 @@ export function buildJapaneseN4DayDetail(
     },
     {
       title: n4VocabularySectionTitle(),
-      blocks: [
-        {
-          type: "table",
-          caption: n4VocabularySectionCaption(ref),
-          headers: n4VocabularyTableHeaders(),
-          rows: n4VocabularyTableRows(spec.minnaLesson),
-        },
-      ],
+      blocks: [{ type: "vocabTable", rows: n4VocabularyRows(spec.minnaLesson) }],
     },
     {
       title: SECTION.grammar,
