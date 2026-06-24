@@ -499,6 +499,12 @@ function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
 
   return (
     <div className="space-y-3">
+      <style>{`
+        @keyframes chatBubbleIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <p className="text-[11px] text-[var(--faint)]">
         Hiragana shown above kanji. Particles (は・が・を…) are left visible.
       </p>
@@ -506,7 +512,11 @@ function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
         const isRight = speakerOrder.indexOf(line.speaker ?? "") === 1;
         const initial = (line.speaker ?? "?").charAt(0);
         return (
-          <div key={li} className={`flex gap-2.5 ${isRight ? "flex-row-reverse" : ""}`}>
+          <div
+            key={li}
+            className={`flex gap-2.5 ${isRight ? "flex-row-reverse" : ""}`}
+            style={{ opacity: 0, animation: "chatBubbleIn 0.35s ease forwards", animationDelay: `${li * 0.3}s` }}
+          >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
               {initial}
             </div>
