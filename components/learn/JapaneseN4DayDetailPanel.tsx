@@ -139,7 +139,8 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col overflow-y-auto p-5">
+          <div className="flex flex-col gap-3">
           {/* Tags */}
           <div className="flex flex-wrap gap-2">
             {ctx.day.tags.map((tag) => (
@@ -196,6 +197,7 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
               </ul>
             </div>
           ) : null}
+          </div>
         </div>
 
         <div className="border-t border-[var(--border)] p-5">
