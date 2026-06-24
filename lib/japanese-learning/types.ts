@@ -73,7 +73,16 @@ export type JapaneseDetailBlock =
       videoIdEnPart2?: string;
       videoIdNp?: string;
       title: string;
-    };
+    }
+  | { type: "exerciseBlock"; mcqs: MCQItem[] };
+
+/** One MCQ used inside an exerciseBlock. */
+export type MCQItem = {
+  question: LocalizedString;
+  choices: LocalizedString[];
+  correctIndex: number;
+  explanation?: LocalizedString;
+};
 
 /** One row in a vocabulary table block. */
 export type VocabRow = {

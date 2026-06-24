@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import type { JapaneseDetailBlock, LocalizedString, VocabRow } from "@/lib/japanese-learning/types";
+import { useState, useEffect, useRef, useMemo } from "react";
+import type { JapaneseDetailBlock, LocalizedString, VocabRow, MCQItem } from "@/lib/japanese-learning/types";
 import { resolveDialogueGloss } from "@/lib/japanese-learning/dialogue-gloss-i18n";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
@@ -447,6 +447,8 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return <VocabularyTableBlock key={key} rows={block.rows} />;
           case "youtubeEmbed":
             return <YouTubeEmbedBlock key={key} block={block} />;
+          case "exerciseBlock":
+            return <ExerciseBlock key={key} mcqs={block.mcqs} />;
           default:
             return null;
         }
@@ -505,6 +507,128 @@ function YouTubeEmbedBlock({ block }: { block: YoutubeEmbedBlockType }) {
           {block.title}{hasPart2 ? ` — ${part === 1 ? part1Label : part2Label}` : ""}
         </p>
       </div>
+    </div>
+  );
+}
+
+function ExerciseBlock({ mcqs }: { mcqs: MCQItem[] }) {
+  const shuffledMcqs = useMemo(() => {
+    return mcqs.map((mcq) => {
+      const indices = mcq.choices.map((_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      return {
+        ...mcq,
+        choices: indices.map((i) => mcq.choices[i]),
+        correctIndex: indices.indexOf(mcq.correctIndex),
+      };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [answers, setAnswers] = useState<(number | null)[]>(() => shuffledMcqs.map(() => null));
+  const [revealed, setRevealed] = useState(false);
+  const { locale } = useLocale();
+
+  const allAnswered = answers.every((a) => a !== null);
+  const score = answers.filter((a, i) => a === shuffledMcqs[i].correctIndex).length;
+  const total = shuffledMcqs.length;
+
+  function pick(qi: number, ci: number) {
+    if (revealed) return;
+    setAnswers((prev) => { const next = [...prev]; next[qi] = ci; return next; });
+  }
+
+  const scoreMsg =
+    score === total
+      ? locale === "np" ? "पूर्ण अंक!" : "Perfect score!"
+      : score >= 7
+        ? locale === "np" ? "उत्कृष्ट काम!" : "Great work!"
+        : score >= 5
+          ? locale === "np" ? "पढाई जारी राख्नुस्!" : "Keep studying!"
+          : locale === "np" ? "पाठ पुनरावलोकन गर्नुस् र फेरि प्रयास गर्नुस्।" : "Review the lesson and try again.";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-[var(--text)]">
+          {locale === "np" ? `व्यायाम — ${total} प्रश्नहरू` : `Exercise — ${total} Questions`}
+        </h3>
+        {revealed && (
+          <span className="rounded-full bg-[color-mix(in_oklab,var(--accent)_20%,transparent)] px-2.5 py-0.5 text-xs font-bold text-[var(--accent)]">
+            {score} / {total}
+          </span>
+        )}
+      </div>
+
+      {shuffledMcqs.map((mcq, qi) => {
+        const picked = answers[qi];
+        return (
+          <div key={qi} className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] p-3.5">
+            <p className="text-sm font-medium text-[var(--text)]">
+              <span className="mr-1.5 text-[var(--muted)]">Q{qi + 1}.</span>
+              {pickLocalized(mcq.question, locale)}
+            </p>
+            <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {mcq.choices.map((choice, ci) => {
+                let cls = "w-full rounded-lg border px-3 py-2 text-left text-xs transition ";
+                if (revealed) {
+                  if (ci === mcq.correctIndex)
+                    cls += "border-green-500 bg-[color-mix(in_oklab,#22c55e_12%,transparent)] text-green-400";
+                  else if (ci === picked)
+                    cls += "border-red-500 bg-[color-mix(in_oklab,#ef4444_12%,transparent)] text-red-400";
+                  else cls += "border-[var(--border)] text-[var(--muted)] opacity-40";
+                } else if (picked === ci) {
+                  cls += "border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[var(--text)]";
+                } else {
+                  cls += "border-[var(--border)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_50%,var(--border))] hover:text-[var(--text)]";
+                }
+                return (
+                  <button key={ci} type="button" disabled={revealed} className={cls} onClick={() => pick(qi, ci)}>
+                    {String.fromCharCode(65 + ci)}. {pickLocalized(choice, locale)}
+                  </button>
+                );
+              })}
+            </div>
+            {revealed && picked !== mcq.correctIndex && mcq.explanation && (
+              <p className="mt-2.5 text-xs leading-relaxed text-[var(--muted)]">
+                <span className="font-semibold text-[var(--accent)]">
+                  {locale === "np" ? "व्याख्या: " : "Explanation: "}
+                </span>
+                {pickLocalized(mcq.explanation, locale)}
+              </p>
+            )}
+          </div>
+        );
+      })}
+
+      {allAnswered && !revealed && (
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
+        >
+          {locale === "np" ? "उत्तर जाँच गर्नुस्" : "Check Answers"}
+        </button>
+      )}
+
+      {revealed && (
+        <div className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-4 text-center">
+          <p className="font-bold text-[var(--text)]">{scoreMsg}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {locale === "np" ? `अंक: ${score} / ${total}` : `Score: ${score} out of ${total}`}
+          </p>
+          <button
+            type="button"
+            onClick={() => { setAnswers(shuffledMcqs.map(() => null)); setRevealed(false); }}
+            className="mt-3 rounded-lg border border-[var(--border)] px-4 py-1.5 text-xs text-[var(--muted)] transition hover:text-[var(--text)]"
+          >
+            {locale === "np" ? "फेरि प्रयास गर्नुस्" : "Try again"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
