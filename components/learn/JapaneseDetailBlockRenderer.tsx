@@ -285,47 +285,9 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             );
           case "code":
             return <DetailCode key={key} title={block.title} code={block.code} />;
-          case "dialogue": {
-            // Map speakers to sides: first unique speaker = left, second = right
-            const speakerOrder: string[] = [];
-            for (const line of block.lines) {
-              const s = line.speaker ?? "";
-              if (!speakerOrder.includes(s)) speakerOrder.push(s);
-              if (speakerOrder.length === 2) break;
-            }
-            return (
-              <div key={key} className="space-y-3">
-                <p className="text-[11px] text-[var(--faint)]">
-                  Hiragana shown above kanji. Particles (は・が・を…) are left visible.
-                </p>
-                {block.lines.map((line, li) => {
-                  const isRight = speakerOrder.indexOf(line.speaker ?? "") === 1;
-                  const initial = (line.speaker ?? "?").charAt(0);
-                  return (
-                    <div key={li} className={`flex gap-2.5 ${isRight ? "flex-row-reverse" : ""}`}>
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
-                        {initial}
-                      </div>
-                      <div
-                        className={`max-w-[85%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-3.5 py-2.5 ${
-                          isRight ? "rounded-tr-sm" : "rounded-tl-sm"
-                        }`}
-                      >
-                        {line.speaker ? (
-                          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">{line.speaker}</p>
-                        ) : null}
-                        <p className="text-[15px] leading-loose text-[var(--text)]">{line.ja}</p>
-                        {line.reading ? (
-                          <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
-                        ) : null}
-                        <p className="mt-0.5 text-xs text-[var(--muted)]">{resolveDialogueGloss(line.en, locale)}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          }
+          case "dialogue":
+            return <DialogueBlock key={key} lines={block.lines} />;
+
           case "mcq": {
             const mcq = block;
             const correctChoice = ls(mcq.choices[mcq.correctIndex]);
@@ -518,6 +480,79 @@ function YouTubeEmbedBlock({ block }: { block: YoutubeEmbedBlockType }) {
         <p className="text-[11px] text-[var(--muted)]">
           {block.title}{hasPart2 ? ` — ${part === 1 ? part1Label : part2Label}` : ""}
         </p>
+      </div>
+    </div>
+  );
+}
+
+type DialogueLine = Extract<JapaneseDetailBlock, { type: "dialogue" }>["lines"][number];
+
+function DialogueBlock({ lines }: { lines: DialogueLine[] }) {
+  const { locale } = useLocale();
+  const [shown, setShown] = useState(1);
+
+  // Map speakers to sides: first unique speaker = left, second = right
+  const speakerOrder: string[] = [];
+  for (const line of lines) {
+    const s = line.speaker ?? "";
+    if (!speakerOrder.includes(s)) speakerOrder.push(s);
+    if (speakerOrder.length === 2) break;
+  }
+
+  const allShown = shown >= lines.length;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-[var(--faint)]">
+        Hiragana shown above kanji. Particles (は・が・を…) are left visible.
+      </p>
+      {lines.slice(0, shown).map((line, li) => {
+        const isRight = speakerOrder.indexOf(line.speaker ?? "") === 1;
+        const initial = (line.speaker ?? "?").charAt(0);
+        return (
+          <div key={li} className={`flex gap-2.5 ${isRight ? "flex-row-reverse" : ""}`}>
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
+              {initial}
+            </div>
+            <div
+              className={`max-w-[85%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-3.5 py-2.5 ${
+                isRight ? "rounded-tr-sm" : "rounded-tl-sm"
+              }`}
+            >
+              {line.speaker ? (
+                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">{line.speaker}</p>
+              ) : null}
+              <p className="text-[15px] leading-loose text-[var(--text)]">{line.ja}</p>
+              {line.reading ? (
+                <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
+              ) : null}
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{resolveDialogueGloss(line.en, locale)}</p>
+            </div>
+          </div>
+        );
+      })}
+      <div className="flex items-center gap-2 pt-1">
+        {!allShown ? (
+          <button
+            type="button"
+            onClick={() => setShown((n) => n + 1)}
+            className="flex items-center gap-1.5 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-[var(--accent-fg)] transition hover:brightness-110"
+          >
+            {locale === "np" ? "अर्को" : "Next"}
+            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+              <path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShown(1)}
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-semibold text-[var(--muted)] transition hover:text-[var(--text)]"
+          >
+            {locale === "np" ? "फेरि सुरु गर्नुस्" : "Restart"}
+          </button>
+        )}
+        <span className="text-[11px] text-[var(--faint)]">{shown} / {lines.length}</span>
       </div>
     </div>
   );
