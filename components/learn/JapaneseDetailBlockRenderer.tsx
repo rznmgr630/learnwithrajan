@@ -285,24 +285,35 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             );
           case "code":
             return <DetailCode key={key} title={block.title} code={block.code} />;
-          case "dialogue":
+          case "dialogue": {
+            // Map speakers to sides: first unique speaker = left, second = right
+            const speakerOrder: string[] = [];
+            for (const line of block.lines) {
+              const s = line.speaker ?? "";
+              if (!speakerOrder.includes(s)) speakerOrder.push(s);
+              if (speakerOrder.length === 2) break;
+            }
             return (
               <div key={key} className="space-y-3">
                 <p className="text-[11px] text-[var(--faint)]">
                   Hiragana shown above kanji. Particles (は・が・を…) are left visible.
                 </p>
                 {block.lines.map((line, li) => {
-                  const isB = line.speaker === "B";
+                  const isRight = speakerOrder.indexOf(line.speaker ?? "") === 1;
+                  const initial = (line.speaker ?? "?").charAt(0);
                   return (
-                    <div key={li} className={`flex gap-2.5 ${isB ? "flex-row-reverse" : ""}`}>
+                    <div key={li} className={`flex gap-2.5 ${isRight ? "flex-row-reverse" : ""}`}>
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
-                        {line.speaker ?? "?"}
+                        {initial}
                       </div>
                       <div
                         className={`max-w-[85%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-3.5 py-2.5 ${
-                          isB ? "rounded-tr-sm" : "rounded-tl-sm"
+                          isRight ? "rounded-tr-sm" : "rounded-tl-sm"
                         }`}
                       >
+                        {line.speaker ? (
+                          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">{line.speaker}</p>
+                        ) : null}
                         <p className="text-[15px] leading-loose text-[var(--text)]">{line.ja}</p>
                         {line.reading ? (
                           <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
@@ -314,6 +325,7 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                 })}
               </div>
             );
+          }
           case "mcq": {
             const mcq = block;
             const correctChoice = ls(mcq.choices[mcq.correctIndex]);
