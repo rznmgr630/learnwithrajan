@@ -287,24 +287,31 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
             return <DetailCode key={key} title={block.title} code={block.code} />;
           case "dialogue":
             return (
-              <div
-                key={key}
-                className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4"
-              >
-                {block.lines.map((line, li) => (
-                  <div key={li} className="text-sm">
-                    {line.speaker ? (
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        {line.speaker}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 text-base leading-relaxed text-[var(--text)]">{line.ja}</p>
-                    {line.reading ? (
-                      <p className="mt-1 font-mono text-xs text-[var(--muted)]">{line.reading}</p>
-                    ) : null}
-                    <p className="mt-1 text-sm text-[var(--muted)]">{resolveDialogueGloss(line.en, locale)}</p>
-                  </div>
-                ))}
+              <div key={key} className="space-y-3">
+                <p className="text-[11px] text-[var(--faint)]">
+                  Hiragana shown above kanji. Particles (は・が・を…) are left visible.
+                </p>
+                {block.lines.map((line, li) => {
+                  const isB = line.speaker === "B";
+                  return (
+                    <div key={li} className={`flex gap-2.5 ${isB ? "flex-row-reverse" : ""}`}>
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] text-[10px] font-bold text-[var(--accent)]">
+                        {line.speaker ?? "?"}
+                      </div>
+                      <div
+                        className={`max-w-[85%] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_78%,transparent)] px-3.5 py-2.5 ${
+                          isB ? "rounded-tr-sm" : "rounded-tl-sm"
+                        }`}
+                      >
+                        <p className="text-[15px] leading-loose text-[var(--text)]">{line.ja}</p>
+                        {line.reading ? (
+                          <p className="mt-0.5 text-[11px] italic text-[var(--muted)]">{line.reading}</p>
+                        ) : null}
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">{resolveDialogueGloss(line.en, locale)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             );
           case "mcq": {
