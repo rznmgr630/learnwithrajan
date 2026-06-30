@@ -3,320 +3,330 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_1_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Day 1 sets expectations: what you should already know, what React is for, and how to run a tiny app in the browser. You will not master every API today — the goal is a clear mental model and a working `Hello React` on your machine.",
-      np: "दिन १ ले अपेक्षा सेट गर्छ: तपाईंले पहिले नै जान्नुपर्ने, React किन, र ब्राउजरमा सानो एप कसरी चलाउने। आज सबै API मास्टर गर्ने होइन — स्पष्ट मानसिक मोडेल र काम गर्ने `Hello React`।",
-      jp: "1日目は前提・Reactの役割・ブラウザで最小アプリを動かす流れを押さえます。今日ですべてのAPIを覚える必要はなく、心の模型と動く Hello を目標にします。",
+      en: "React is a JavaScript library for building UIs from small, reusable pieces called <b>components</b>.\n\nThink of it like LEGO — each block (component) does one thing, and you stack them to build anything. React handles updating the screen when data changes, so you never manually touch the DOM.\n\nWhy React over plain HTML + JS?\n• <b>Reusable pieces</b> — write a `Button` once, use it 100 times\n• <b>Automatic updates</b> — change your data, React updates the UI for you\n• <b>Huge ecosystem</b> — routing, forms, animations — there's a library for everything",
+      np: "React component भन्ने साना टुक्राबाट UI बनाउने JavaScript library हो। LEGO जस्तै — एउटा block एक काम, थुपारेर जे पनि बन्छ।",
+      jp: "React はコンポーネントから UI を組み立てる JS ライブラリ。LEGO のように再利用できる部品を積み上げます。",
     },
     {
-      en: "Keep Node LTS installed, use any modern editor (VS Code is common), and follow along in a fresh Vite + React project or Create React App if your course uses it — the ideas transfer either way.",
-      np: "Node LTS राख्नुहोस्, आधुनिक सम्पादक प्रयोग गर्नुहोस्, र Vite + React वा तपाईंको पाठ्यक्रमले प्रयोग गर्ने CRA मा अनुसरण गर्नुहोस् — विचार दुवैमा उस्तै।",
-      jp: "Node LTS と好きなエディタ（VS Code が多い）を用意し、Vite + React か教材が使うテンプレートで手を動かしてください。考え方は共通です。",
+      en: "In Day 1 we cover:\n• Creating a React project with <b>Vite</b> (the modern build tool)\n• Writing your first functional component\n• Understanding <b>JSX</b> — the HTML-inside-JavaScript syntax\n• Passing data into components with <b>props</b>\n• How React renders to the real DOM",
+      np: "Day 1 मा: Vite project, functional component, JSX, props, र DOM rendering।",
+      jp: "Day 1: Vite でプロジェクト作成、関数コンポーネント、JSX、props、DOM レンダリングを学びます。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Prerequisites",
-        np: "पूर्वआवश्यकताहरू",
-        jp: "前提知識",
-      },
+      title: { en: "What is React and why use it", np: "React के हो र किन प्रयोग गर्ने", jp: "React とは何か・なぜ使うか" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "You should be comfortable in HTML, CSS, and JavaScript (ES2015+) — especially `let`/`const`, arrow functions, modules (`import`/`export`), and template literals. TypeScript is optional for this day but pairs well with React later.",
-            np: "HTML, CSS, र JavaScript (ES2015+) मा सहज हुनुहोस् — `let`/`const`, arrow, `import`/`export`, template literal। TypeScript वैकल्पिक तर पछि राम्रो जोडा।",
-            jp: "HTML・CSS・JavaScript（ES2015+） に慣れていること（`let`/`const`、アロー関数、`import`/`export`、テンプレートリテラル）。TypeScript は任意ですが後で相性が良いです。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "Node.js (LTS) — ships `npm` / `npx` so you can scaffold and run dev servers.",
-              np: "Node.js (LTS) — `npm` / `npx` सहित scaffold र dev server।",
-              jp: "Node.js（LTS） — `npm` / `npx` でプロジェクト作成と開発サーバー起動。",
-            },
-            {
-              en: "A code editor with syntax highlighting and a terminal pane (VS Code, WebStorm, etc.).",
-              np: "सम्पादक — syntax highlighting र टर्मिनल (VS Code, WebStorm)।",
-              jp: "エディタ — シンタックスハイライトとターミナル（VS Code など）。",
-            },
-            {
-              en: "Git basics — clone, commit, branch — so you can save checkpoints as you experiment.",
-              np: "Git आधार — clone, commit, branch — प्रयोग गर्दा checkpoint।",
-              jp: "Git の基本 — clone / commit / branch で試行のチェックポイントを残す。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "What is React?",
-        np: "React के हो?",
-        jp: "React とは？",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "React is a JavaScript library for building user interfaces from reusable pieces called components. You describe *what* the UI should look like for a given state; React figures out efficient updates to the real DOM.",
-            np: "React प्रयोगकर्ता इन्टरफेस बनाउने JavaScript लाइब्रेरी हो — कम्पोनेन्ट भनिने पुन: प्रयोग योग्य टुक्राहरूबाट। अवस्थाको लागि UI कस्तो हुनुपर्छ वर्णन गर्नुहोस्; React ले DOM अद्यावधिक कुशलतापूर्वक गर्छ।",
-            jp: "React は コンポーネント と呼ぶ部品から ユーザーインターフェース を組み立てる JavaScript ライブラリです。ある状態に対して UI をどう見せるかを宣言すると、React が実 DOM への効率的な更新を担います。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "Declarative — you write UI as a function of data instead of manually mutating the DOM.",
-              np: "घोषणात्मक — DOM हातले मेटाउनुको सट्टा डाटाको फंक्शनको रूपमा UI।",
-              jp: "宣言的 — DOM を直接いじるより、データの関数として UI を書く。",
-            },
-            {
-              en: "Component model — small units compose into screens; props flow down, events bubble up.",
-              np: "कम्पोनेन्ट मोडेल — साना एकाइहरूले स्क्रिन बनाउँछन्; props तल, घटना माथि।",
-              jp: "コンポーネント — 小さな単位が画面を構成。props は下へ、イベントは上へ。",
-            },
-            {
-              en: "Ecosystem — routing, data fetching, styling, and forms are usually solved with companion libraries (React Router, TanStack Query, etc.).",
-              np: "इकोसिस्टम — routing, data fetching, styling साथी लाइब्रेरीले (React Router, TanStack Query)।",
-              jp: "エコシステム — ルーティングや取得・スタイルは別ライブラリで補うのが一般的。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Minimal example — root + component",
-        np: "न्यूनतम उदाहरण — root + कम्पोनेन्ट",
-        jp: "最小例 — root とコンポーネント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Modern apps call `createRoot` from `react-dom/client`, pass a DOM node, then `render` a React element tree. Your root component is often named `App`.",
-            np: "आधुनिक एपले `createRoot` (`react-dom/client`) प्रयोग गर्छ, DOM node दिन्छ, अनि `render` ले React element रूख। जरा कम्पोनेन्ट प्रायः `App`।",
-            jp: "最近は `react-dom/client` の `createRoot` に DOM ノードを渡し、`render` で要素ツリーを描画します。ルートは多く `App` です。",
+            en: "There are two ways to build UIs: <b>imperative</b> and <b>declarative</b>.\n\n• <b>Imperative</b> — you give step-by-step instructions: \"find the button, change its colour, find the counter, add 1 to it\"\n  ↳ Like giving someone turn-by-turn driving directions\n• <b>Declarative</b> — you describe the end result: \"the counter shows the current count, the button is blue when active\"\n  ↳ Like telling a GPS your destination and letting it figure out the route\n\nReact is declarative. You describe WHAT the UI should look like for a given state. React figures out HOW to update the DOM efficiently.",
+            np: "Imperative = step-by-step निर्देशन। Declarative = अन्तिम अवस्था वर्णन। React declarative छ।",
+            jp: "命令型（手順指示）と宣言型（結果記述）の違い。React は宣言型で、状態に応じた UI を記述するだけです。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "main.jsx — entry file (Vite-style)",
-            np: "main.jsx — प्रवेश फाइल (Vite-शैली)",
-            jp: "main.jsx — エントリ（Vite 想定）",
-          },
-          code: `import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.jsx";
+          title: { en: "Imperative (vanilla JS) vs Declarative (React)", np: "Imperative vs Declarative", jp: "命令型 vs 宣言型" },
+          code: `// ❌ Imperative — manually tell the DOM what to do
+const btn = document.getElementById('like-btn');
+btn.addEventListener('click', () => {
+  const count = parseInt(btn.textContent);
+  btn.textContent = count + 1;
+  if (count + 1 > 0) btn.classList.add('liked');
+});
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);`,
+// ✅ Declarative — describe what the UI looks like
+function LikeButton() {
+  const [likes, setLikes] = React.useState(0);
+  return (
+    <button
+      className={likes > 0 ? 'liked' : ''}
+      onClick={() => setLikes(likes + 1)}
+    >
+      {likes}
+    </button>
+  );
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The <b>virtual DOM</b> is React's secret weapon for performance. Instead of updating the real browser DOM on every change (slow), React:\n1. Keeps a lightweight copy of the DOM in memory (the virtual DOM)\n2. When state changes, creates a new virtual DOM copy\n3. Compares old vs new (called <b>diffing</b>)\n4. Only updates the real DOM where things actually changed\n\nResult: your UI stays fast even with hundreds of components updating.",
+            np: "Virtual DOM = memory मा lightweight DOM copy। React diff गरेर real DOM मा minimum update गर्छ।",
+            jp: "仮想 DOM はメモリ上の軽量コピー。変更前後を比較し、必要な部分だけ実 DOM を更新します。",
+          },
+        },
+      ],
+    },
+    {
+      title: { en: "Creating a project with Vite", np: "Vite सँग project बनाउने", jp: "Vite でプロジェクト作成" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Vite</b> is a modern build tool that makes React development blazing fast. Think of it as the engine under the hood — it serves your files to the browser during development and bundles them for production.\n\nWhy Vite over the old Create React App?\n• Starts in under 1 second (CRA can take 30s+)\n• Hot reloads changes instantly (no full page refresh)\n• Much smaller and simpler configuration",
+            np: "Vite = तीव्र build tool। CRA भन्दा 30x छिटो start। Hot reload instant।",
+            jp: "Vite は超高速ビルドツール。CRA より起動が速く、変更即反映の HMR が強力です。",
+          },
         },
         {
           type: "code",
-          title: {
-            en: "App.jsx — your first component",
-            np: "App.jsx — तपाईंको पहिलो कम्पोनेन्ट",
-            jp: "App.jsx — 最初のコンポーネント",
+          title: { en: "Create a new React project with Vite", np: "Vite सँग नयाँ React project", jp: "Vite で React プロジェクト作成" },
+          code: `# Create a new project (run in your terminal)
+npm create vite@latest my-app -- --template react
+
+# Navigate into the project folder
+cd my-app
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+
+# Your app is now running at http://localhost:5173`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "After running those commands, your project folder looks like this:\n\n• `index.html` — the single HTML file your browser loads\n  ↳ Has a `<div id=\"root\">` — React mounts your entire app here\n• `src/main.jsx` — the entry point; connects React to the DOM\n• `src/App.jsx` — your root component (start editing here)\n• `src/App.css` — styles for App\n• `public/` — static assets (images, fonts) that are served as-is\n• `vite.config.js` — Vite configuration (you rarely need to touch this)",
+            np: "index.html (root div), src/main.jsx (entry), src/App.jsx (root component) — project structure।",
+            jp: "index.html（root div）、src/main.jsx（エントリ）、src/App.jsx（ルートコンポーネント）が主な構成。",
           },
-          code: `function App() {
-  const title = "Hello, React";
+        },
+      ],
+    },
+    {
+      title: { en: "JSX — JavaScript + HTML together", np: "JSX — JavaScript + HTML सँगै", jp: "JSX — JS と HTML を一緒に" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>JSX</b> (JavaScript XML) lets you write HTML-like syntax inside JavaScript. It looks like HTML but it's not — it compiles to `React.createElement()` calls. Think of JSX as a shorthand notation, like how `5 + 3` is shorthand for \"add five and three.\"\n\nJSX rules you must know:\n• Must return <b>one root element</b> — wrap in `<div>` or `<>` (empty fragment)\n• Use `<b>className</b>` instead of `class` (class is a JS keyword)\n• Use `<b>htmlFor</b>` instead of `for` on labels\n• JavaScript expressions go inside <b>curly braces</b> `{}`\n• <b>Self-close</b> tags that have no children: `<img />`, `<br />`",
+            np: "JSX = HTML-like syntax JavaScript भित्र। className, htmlFor, {} expressions, self-closing tags।",
+            jp: "JSX は JS 内に HTML 的な記法を書ける構文。className・htmlFor・{式}・自己閉じタグがポイント。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "JSX examples — all the key rules", np: "JSX उदाहरणहरू", jp: "JSX の主なルール例" },
+          code: `function UserCard({ name, avatar, isOnline }) {
+  const statusText = isOnline ? 'Online' : 'Offline';
 
   return (
-    <main>
-      <h1>{title}</h1>
-      <p>Edit App.jsx and save — Fast Refresh updates the browser.</p>
-    </main>
+    // One root element — use <> fragment if no wrapper needed
+    <div className="card">
+      {/* Comments look like this in JSX */}
+      <img src={avatar} alt={name} />
+
+      <h2>{name}</h2>
+
+      {/* Expression in JSX */}
+      <p>Status: {statusText}</p>
+
+      {/* Inline style is an object, not a string */}
+      <span style={{ color: isOnline ? 'green' : 'grey' }}>
+        ● {statusText}
+      </span>
+
+      {/* Self-closing tag */}
+      <hr />
+    </div>
+  );
+}`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "HTML vs JSX — key differences to memorize",
+            np: "HTML र JSX बीचका फरकहरू",
+            jp: "HTML と JSX の主な違い",
+          },
+          headers: [
+            { en: "In HTML", np: "HTML मा", jp: "HTML" },
+            { en: "In JSX", np: "JSX मा", jp: "JSX" },
+            { en: "Why different", np: "किन फरक", jp: "理由" },
+          ],
+          rows: [
+            [
+              { en: "`class=\"btn\"`", np: "`class=\"btn\"`", jp: "`class=\"btn\"`" },
+              { en: "`className=\"btn\"`", np: "`className=\"btn\"`", jp: "`className=\"btn\"`" },
+              { en: "`class` is a reserved word in JS", np: "class JS keyword", jp: "class は JS の予約語" },
+            ],
+            [
+              { en: "`for=\"name\"`", np: "`for=\"name\"`", jp: "`for=\"name\"`" },
+              { en: "`htmlFor=\"name\"`", np: "`htmlFor=\"name\"`", jp: "`htmlFor=\"name\"`" },
+              { en: "`for` is a JS keyword (loops)", np: "for JS keyword", jp: "for は JS のループ予約語" },
+            ],
+            [
+              { en: "`onclick=\"fn()\"`", np: "`onclick=\"fn()\"`", jp: "`onclick=\"fn()\"`" },
+              { en: "`onClick={fn}`", np: "`onClick={fn}`", jp: "`onClick={fn}`" },
+              { en: "Events use camelCase; pass function reference", np: "camelCase, function reference", jp: "camelCase・関数参照を渡す" },
+            ],
+            [
+              { en: "`style=\"color:red\"`", np: "`style=\"color:red\"`", jp: "`style=\"color:red\"`" },
+              { en: "`style={{ color: 'red' }}`", np: "`style={{ color: 'red' }}`", jp: "`style={{ color: 'red' }}`" },
+              { en: "Style is a JS object, not a string", np: "object, string होइन", jp: "オブジェクトで渡す" },
+            ],
+            [
+              { en: "`<img src=\"x.png\">`", np: "`<img src=\"x.png\">`", jp: "`<img src=\"x.png\">`" },
+              { en: "`<img src=\"x.png\" />`", np: "`<img src=\"x.png\" />`", jp: "`<img src=\"x.png\" />`" },
+              { en: "All tags must be explicitly closed", np: "सबै tag बन्द हुनुपर्छ", jp: "すべてのタグを明示的に閉じる" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Functional components & props", np: "Functional components र props", jp: "関数コンポーネントと props" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A <b>component</b> is just a JavaScript function that returns JSX. That's it.\n\nNaming rule: component names MUST start with a capital letter. `button` is an HTML element. `Button` is your React component.\n\n<b>Props</b> are how you pass data INTO a component — exactly like function arguments. The parent passes props; the child receives them as a single object (usually destructured).\n\n• Props are <b>read-only</b> — the child must never modify them\n  ↳ Think of props as the instruction sheet you hand to a worker — they follow it, they don't rewrite it\n• You can pass any JavaScript value: strings, numbers, booleans, arrays, objects, even functions",
+            np: "Component = JSX return गर्ने JS function। Capital letter बाट सुरु। Props = parent बाट child मा data।",
+            jp: "コンポーネントは JSX を返す関数。名前は大文字始まり。props は親から子へのデータで読み取り専用。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Components and props in action", np: "Components र props उदाहरण", jp: "コンポーネントと props の例" },
+          code: `// A reusable Button component
+// Props are destructured from the first argument object
+function Button({ label, color = 'blue', onClick }) {
+  return (
+    <button
+      style={{ backgroundColor: color }}
+      onClick={onClick}
+    >
+      {label}
+    </button>
   );
 }
 
-export default App;`,
+// A Greeting component with a default prop value
+function Greeting({ name = 'stranger', age }) {
+  return (
+    <h1>
+      Hello {name}, you are {age} years old!
+    </h1>
+  );
+}
+
+// Using both components in App
+function App() {
+  return (
+    <div>
+      <Greeting name="Rajan" age={25} />
+      <Greeting /> {/* uses default name="stranger" */}
+
+      <Button
+        label="Save"
+        color="green"
+        onClick={() => alert('Saved!')}
+      />
+      <Button label="Delete" color="red" onClick={() => {}} />
+    </div>
+  );
+}`,
         },
         {
           type: "paragraph",
           text: {
-            en: "JSX looks like HTML in JavaScript but compiles to `React.createElement` calls. Curly braces `{title}` embed JavaScript expressions inside markup.",
-            np: "JSX JavaScript भित्र HTML जस्तो देखिन्छ तर `React.createElement` मा कम्पाइल हुन्छ। `{title}` ले अभिव्यक्ति हाल्छ।",
-            jp: "JSX は HTML に似た構文ですが `React.createElement` に変換されます。`{title}` で式を埋め込みます。",
+            en: "The special <b>`children`</b> prop lets you nest content inside a component, like HTML:\n\n`<Card><p>Hello inside the card</p></Card>`\n\nInside `Card`, you access the nested content via `{children}`:\n\n`function Card({ children }) { return <div className=\"card\">{children}</div>; }`\n\nThis is how layout components (cards, modals, panels) work — they render whatever you put inside them.",
+            np: "children prop = component भित्र nested content। Layout components यसैले काम गर्छन्।",
+            jp: "children props でコンポーネント内にコンテンツをネストできます。レイアウト系コンポーネントに便利。",
           },
         },
       ],
     },
     {
-      title: {
-        en: "How updates flow (mental model)",
-        np: "अद्यावधिक कसरी बग्छ (मानसिक मोडेल)",
-        jp: "更新の流れ（心の模型）",
-      },
+      title: { en: "How React renders — the mental model", np: "React कसरी render गर्छ", jp: "React のレンダリングモデル" },
       blocks: [
         {
-          type: "list",
-          variant: "number",
-          items: [
-            {
-              en: "State or props change on a component.",
-              np: "कम्पोनेन्टमा state वा props बदलिन्छ।",
-              jp: "コンポーネントの state または props が変わる。",
-            },
-            {
-              en: "React re-runs your component function (or class render) to compute the next UI description.",
-              np: "React ले कम्पोनेन्ट फंक्फन फेरि चलाउँछ — अर्को UI वर्णन।",
-              jp: "React が関数を再実行し、次の UI 記述を求める。",
-            },
-            {
-              en: "React reconciles with the previous tree and updates only what changed in the real DOM.",
-              np: "React ले अघिल्लो रूखसँग मिलाउँछ र वास्तविक DOM मा परिवर्तन मात्र अद्यावधिक गर्छ।",
-              jp: "差分を取り、実 DOM は必要な部分だけ更新される。",
-            },
-          ],
+          type: "paragraph",
+          text: {
+            en: "Understanding React's render cycle prevents a lot of confusion. Here's exactly what happens:\n\n1. Your `main.jsx` calls `createRoot(document.getElementById('root'))` — finds the `<div id=\"root\">` in index.html\n2. `.render(<App />)` tells React to call the `App` function\n3. React runs `App()`, gets back JSX (a description of the UI)\n4. React converts that JSX into real DOM nodes and inserts them into the `<div id=\"root\">`\n5. When state or props change later, React re-runs the affected component function and updates only what changed",
+            np: "createRoot → render → component function call → JSX → real DOM। State बदलिँदा minimum update।",
+            jp: "createRoot → render → 関数実行 → JSX → 実 DOM。状態変化時は差分だけ更新されます。",
+          },
         },
-        { type: "diagram", id: "react-render-cycle" },
+        {
+          type: "code",
+          title: { en: "main.jsx — how React connects to the DOM", np: "main.jsx — React र DOM को जोडाइ", jp: "main.jsx — React と DOM の接続" },
+          code: `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
+
+// 1. Find the <div id="root"> in index.html
+const rootElement = document.getElementById('root');
+
+// 2. Tell React to "own" that DOM element
+const root = createRoot(rootElement);
+
+// 3. Render your App component tree into it
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// StrictMode: development helper that runs components twice
+// to catch accidental side effects. Has no effect in production.`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>The component tree</b> — every React app is a tree of components:\n\n• `App` is the root (the trunk)\n• `Header`, `Main`, `Footer` are branches\n• `Button`, `Card`, `Input` are leaves\n\nData flows <b>down</b> (parent passes props to children). Events flow <b>up</b> (child calls a function passed from the parent). This one-way flow makes bugs much easier to trace — you always know where data came from.",
+            np: "Component tree: App (root) → branches → leaves। Data नीचे (props), Events माथि (callbacks)।",
+            jp: "コンポーネントツリーは木構造。データは下（props）、イベントは上（コールバック）へ流れます。",
+          },
+        },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "What is JSX?",
-        np: "JSX के हो?",
-        jp: "JSX とは？",
-      },
+      question: { en: "What exactly is JSX — is it HTML?", np: "JSX ठ्याक्कै के हो?", jp: "JSX とは正確に何ですか？" },
       answer: {
-        en: "A syntax extension that lets you write tree-shaped UI next to JavaScript. The build tool (Vite, Babel, etc.) transforms JSX into plain function calls the browser can run.",
-        np: "वाक्य विस्तार जसले UI रूख JavaScript नजिक लेख्न दिन्छ। build उपकरणले JSX ले सादा फंक्फन कलमा बदल्छ।",
-        jp: "JavaScript の横に木構造の UI を書くための構文拡張です。Vite / Babel などがブラウザで動く関数呼び出しに変換します。",
+        en: "JSX looks like HTML but it is NOT HTML. It is a syntax extension for JavaScript. Your build tool (Vite) transforms JSX into plain `React.createElement()` function calls that the browser can run. The JSX `<h1>Hello</h1>` becomes `React.createElement('h1', null, 'Hello')`. JSX is just a more readable way to write those function calls.",
+        np: "JSX HTML होइन — JavaScript syntax extension हो। Build tool ले `React.createElement()` calls मा convert गर्छ।",
+        jp: "JSX は HTML ではなく JS の構文拡張。ビルドツールが `React.createElement()` 呼び出しに変換します。",
       },
     },
     {
-      question: {
-        en: "Why does React use a virtual tree instead of touching the DOM directly every time?",
-        np: "React ले हरेक पटक सिधै DOM किन छोड्दैन?",
-        jp: "毎回 DOM を直接触らないのはなぜ？",
-      },
+      question: { en: "Why not just use HTML directly?", np: "सिधै HTML किन प्रयोग नगर्ने?", jp: "HTML を直接使えばよいのでは？" },
       answer: {
-        en: "Batching and diffing many small reads/writes on the real DOM is slow. React computes the next tree in memory, diffs against the last render, and applies a minimal patch — fewer layout thrashes and clearer component logic.",
-        np: "धेरै साना DOM पढाइ/लेखाइ ढिलो। React ले स्मृतिमा अर्को रूख गन्छ, अन्तर गर्छ, न्यून patch लगाउँछ — कम layout thrash, स्पष्ट तर्क।",
-        jp: "細かい DOM 操作のたびにレイアウトが走ると遅いため、メモリ上で次ツリーを作り差分だけ実 DOM に反映します。",
+        en: "Plain HTML is static — it cannot update itself when data changes without JavaScript. React (via JSX) lets you express dynamic UIs as a function of data: `UI = f(state)`. When state changes, the UI re-computes automatically. Also, components let you reuse UI pieces — you can't reuse a chunk of HTML without copy-pasting.",
+        np: "HTML static छ — data बदलिँदा आफैँ update हुँदैन। React मा UI = f(state) — state बदलिँदा UI automatic update।",
+        jp: "HTML は静的で data 変化に自動応答できません。React は UI = f(state) として動的に更新します。",
       },
     },
     {
-      question: {
-        en: "What is `StrictMode` and should I keep it?",
-        np: "`StrictMode` के हो, राख्ने?",
-        jp: "`StrictMode` とは？外していい？",
-      },
+      question: { en: "What is a component exactly?", np: "Component ठ्याक्कै के हो?", jp: "コンポーネントとは正確に何ですか？" },
       answer: {
-        en: "A development-only wrapper that double-invokes some lifecycles and warns about unsafe patterns so you catch bugs early. Keep it in dev; it does not affect production bundle behavior beyond helping you write safer code.",
-        np: "विकास-मात्र wrapper जसले केही lifecycle दुई पटक चलाउँछ। dev मा राख्नुहोस्; production मा असुरक्षित ढाँचा चाँडो समात्न मद्दत।",
-        jp: "開発時に厳しめのチェックをしてくれるラッパーです。開発では残すのがおすすめです。",
+        en: "A component is a function (or historically, a class) that: (1) accepts props as input, (2) returns JSX as output. That's it. `function Button(props) { return <button>{props.label}</button>; }` is a complete, valid component. Components compose — you use components inside other components to build complex UIs from simple pieces.",
+        np: "Component = props input लिने र JSX output दिने function। Components भित्र components राखेर complex UI बन्छ।",
+        jp: "コンポーネントは props を受け取り JSX を返す関数。コンポーネントを組み合わせて複雑な UI を作ります。",
       },
     },
     {
-      question: {
-        en: "What is the difference between React and React DOM?",
-        np: "React र React DOM मा के फरक?",
-        jp: "React と React DOM の違いは？",
-      },
+      question: { en: "Can I still use class components?", np: "Class components अझै प्रयोग गर्न मिल्छ?", jp: "クラスコンポーネントはまだ使えますか？" },
       answer: {
-        en: "`react` owns components, state, and reconciliation. `react-dom` bridges that model to browser DOM nodes (`createRoot`, `render`, event delegation). Other renderers exist (e.g. React Native for mobile).",
-        np: "`react` ले कम्पोनेन्ट, state, reconciliation। `react-dom` ले ब्राउजर DOM (`createRoot`, `render`) जोड्छ। अन्य renderer (React Native) पनि।",
-        jp: "`react` がコンポーネントと調停、`react-dom` がブラウザ DOM との橋渡しです。",
+        en: "Yes, React still supports class components and has no plans to remove them. But: all modern React code uses functional components + hooks. Class components have more boilerplate, can't use hooks, and are harder to compose. If you're starting new, use function components exclusively. You may encounter class components in older codebases.",
+        np: "हो, अझै support गर्छ। तर modern React सबै functional components + hooks प्रयोग गर्छ। New code मा function components मात्र।",
+        jp: "まだサポートされていますが、モダンな React は関数コンポーネント + フックが主流です。新規では関数コンポーネントを使いましょう。",
       },
     },
     {
-      question: {
-        en: "Can I learn React without npm?",
-        np: "npm बिना React सिक्न मिल्छ?",
-        jp: "npm なしで学べる？",
-      },
+      question: { en: "What is the virtual DOM and do I need to understand it deeply?", np: "Virtual DOM के हो, गहिरो बुझ्न जरुरी छ?", jp: "仮想 DOM は深く理解する必要がありますか？" },
       answer: {
-        en: "For serious projects you will use a package manager. For quick experiments, online playgrounds (StackBlitz, CodeSandbox) hide tooling — but locally, `npm create vite@latest` is the common path.",
-        np: "गम्भीर परियोजनामा package manager चाहिन्छ। अनलाइन playground ले उपकरण लुकाउँछ; स्थानीयमा `npm create vite@latest` सामान्य।",
-        jp: "本番寄りではパッケージマネージャが前提です。手元では Vite などのスキャフォールドが一般的です。",
+        en: "The virtual DOM is React's internal optimization — it's a lightweight JavaScript object tree that mirrors the real DOM structure. React uses it to batch and minimize real DOM updates. You don't need to understand it deeply to use React effectively. What matters: React is declarative, you describe the UI, React handles efficient updates. The virtual DOM is the implementation detail behind that promise.",
+        np: "Virtual DOM = React को internal optimization। গहिरो बुझ्न जरुरी छैन। Declarative UI लेख्नुस् — React ले efficient update handle गर्छ।",
+        jp: "仮想 DOM は React の内部最適化。深く理解しなくても React を使えます。宣言的に UI を書けば React が効率よく更新します。",
       },
-    },
-    {
-      question: {
-        en: "Is React a framework?",
-        np: "React फ्रेमवर्क हो?",
-        jp: "React はフレームワーク？",
-      },
-      answer: {
-        en: "Officially it is a library focused on UI. In practice teams add routing, data, and build tooling — so it feels framework-sized. Next.js is closer to a full framework built on React.",
-        np: "आधिकारिक रूपमा लाइब्रेरी UI केन्द्रित। व्यवहारमा routing, data, build थपिन्छ — फ्रेमवर्क जस्तो। Next.js React माथि पूर्ण फ्रेमवर्क नजिक।",
-        jp: "公式には UI に特化したライブラリ。ルーティング等を足すとフレームワーク級になります。",
-      },
-    },
-    {
-      question: {
-        en: "What are props (preview for the next lessons)?",
-        np: "props के हुन् (अर्को पाठको पूर्वावलोकन)?",
-        jp: "props とは（次のレッスンの予告）？",
-      },
-      answer: {
-        en: "Props (short for properties) are read-only inputs passed from a parent component to a child. They let you reuse the same component with different data — think function arguments for UI.",
-        np: "Props अभिभावकबाट सन्तानमा पढाइ-मात्र इनपुट। फरक डाटासँग पुन: प्रयोग — UI को फंक्फन तर्क।",
-        jp: "props は親から子へ渡す読み取り専用の入力で、同じ部品を別データで再利用するためのものです。",
-      },
-    },
-    {
-      question: {
-        en: "Why do I see the app twice in development sometimes?",
-        np: "विकासमा एप दुई पटक किन देखिन्छ?",
-        jp: "開発で二重に見えることがあるのは？",
-      },
-      answer: {
-        en: "`StrictMode` intentionally double-invokes render paths in development to surface side effects. Remove `StrictMode` only if you understand the trade-off — do not silence warnings just to hide duplicate logs.",
-        np: "`StrictMode` ले dev मा जानाजानी दुई पटक चलाउँछ। side effect देखाउन। बुझेर मात्र हटाउनुहोस्।",
-        jp: "`StrictMode` が開発時に意図的に二重実行することがあります。警告を消す目的で安易に外さないでください。",
-      },
-    },
-    {
-      question: {
-        en: "Where should I put side effects like `fetch` or timers?",
-        np: "`fetch` वा timer जस्ता side effect कहाँ?",
-        jp: "`fetch` やタイマーはどこに？",
-      },
-      answer: {
-        en: "Not inside the render body of a component — that would run unpredictably. Day 1 stops at the model; later you will use `useEffect` (or newer data APIs) with clear dependency lists.",
-        np: "render शरीरभित्र होइन — अनियमित चल्छ। आज मोडेल मात्र; पछि `useEffect` (वा नयाँ data API) निर्भरता सूचीसहित।",
-        jp: "レンダー関数の本体に直接書かないのが原則です。後のレッスンで `useEffect` などを学びます。",
-      },
-    },
-    {
-      question: {
-        en: "How do I create a new project today?",
-        np: "आज नयाँ परियोजना कसरी बनाउने?",
-        jp: "今日どうやって新規プロジェクトを作る？",
-      },
-      answer: {
-        en: "Run `npm create vite@latest my-app -- --template react` (or `react-ts`), `cd my-app`, `npm install`, `npm run dev`. CRA is legacy for new work — prefer Vite or a framework starter your team standardizes on.",
-        np: "`npm create vite@latest my-app -- --template react`, `cd`, `npm install`, `npm run dev`। CRA पुरानो — Vite रोज्नुहोस्।",
-        jp: "`npm create vite@latest` で React テンプレートを選び、`npm run dev`。新規は Vite 系が一般的です。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Scaffold a Vite React app, run dev, and change `App.jsx` while watching Fast Refresh.",
-      np: "Vite React एप बनाउनुहोस्, dev चलाउनुहोस्, `App.jsx` बदल्दै Fast Refresh हेर्नुहोस्।",
-      jp: "Vite で React を作り、保存しながら Fast Refresh を確認する。",
-    },
-    {
-      en: "Draw a quick diagram: state change → re-render → DOM patch.",
-      np: "चित्र: state बदलाव → re-render → DOM patch।",
-      jp: "state → 再レンダー → DOM 更新の図を手で描く。",
     },
   ],
 };

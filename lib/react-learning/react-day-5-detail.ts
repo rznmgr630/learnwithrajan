@@ -1,169 +1,89 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-/** Day 5 — “Styling components” block (~32m): global CSS → modules → CSS-in-JS, concerns, inline, UI kits, icons, module exercise, Like component. */
 export const REACT_DAY_5_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Day 5 surveys how to style React components without fighting the framework: global CSS, CSS Modules for local class names, CSS-in-JS trade-offs, separation of concerns, inline styles for dynamic one-offs, UI libraries for speed, and icons. You finish with a CSS Modules exercise and a Like toggle that ties styling to state.",
-      np: "दिन ५ ले React कम्पोनेन्ट कसरी शैली दिने हेर्छ: global CSS, CSS Modules, CSS-in-JS, चिन्ता अलगाव, inline, UI लाइब्रेरी, आइकन। अन्त्यमा CSS Modules अभ्यास र Like toggle।",
-      jp: "5日目は React コンポーネントのスタイル の選択肢を横断します。グローバル CSS、CSS Modules、CSS-in-JS、関心の分離、インライン、UI ライブラリ、アイコン。最後に CSS Modules の演習 と Like トグルです。",
+      en: "Every React component needs a look. Unlike plain HTML where one `styles.css` file rules everything, React gives you several ways to style components — each with trade-offs.\n\nAnalogy: choosing a styling approach is like choosing how to dress:\n• <b>Off-the-rack</b> (Tailwind CSS) — grab utility classes, combine them, done fast\n• <b>Bespoke tailoring</b> (CSS Modules) — scoped styles, your own design language\n• <b>A uniform</b> (component library) — consistent, opinionated, zero decision fatigue\n\nNone is wrong. Pick the one that fits your team and project.",
+      np: "React मा styling को धेरै तरिका: plain CSS, CSS Modules, Tailwind, inline styles, र UI libraries।",
+      jp: "React のスタイリング方法は複数あります。Tailwind、CSS Modules、UIライブラリなどを比較します。",
     },
     {
-      en: "Your playlist totals about 32 minutes; timestamps below are pacing hints (Introduction 0m26s through Like ~5m19s). Pick one primary strategy per project — mixing three styling systems without discipline creates maintenance pain.",
-      np: "प्लेलिस्ट ~३२ मिनेट; तलका समय गति संकेत। प्रति परियोजना एक मुख्य रणनीति — धेरै प्रणाली मिसाउँदा मर्मत दुख्छ।",
-      jp: "再生リストは 約32分。タイムスタンプは目安です。プロジェクトごとに 主軸となるスタイル方針を一つ 決めると運用が楽です。",
+      en: "In this day we cover:\n• <b>Plain CSS with `className`</b> — the simplest starting point\n• <b>CSS Modules</b> — scoped styles that never leak into other components\n• <b>Tailwind CSS</b> — utility-first, compose styles directly in JSX\n• <b>Inline styles</b> — dynamic values from JavaScript\n• <b>UI component libraries</b> — shadcn/ui, Radix UI, MUI, Mantine",
+      np: "className, CSS Modules, Tailwind, inline styles, र UI libraries सबै cover गर्छौं।",
+      jp: "className・CSS Modules・Tailwind・インラインスタイル・UIライブラリを学びます。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Introduction (~0m 26s)",
-        np: "परिचय (~०m २६s)",
-        jp: "イントロ（約 0m26s）",
-      },
+      title: { en: "Plain CSS and className", np: "Plain CSS र className", jp: "プレーン CSS と className" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React does not care where your CSS lives — only that class names on `className` or `style` objects reach the DOM. The ecosystem offers many answers; the skill is matching team size, design system maturity, and SSR constraints to a stack you can sustain.",
-            np: "React लाई CSS कहाँ भन्दा className वा `style` DOM मा पुग्छ भन्ने मात्र। टिम, डिजाइन प्रणाली, SSR अनुसार stack छान्नुहोस्।",
-            jp: "React は CSS の置き場所より、`className` / `style` が DOM に届くかが本質です。チーム規模や SSR に合わせて選びます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Vanilla CSS (~4m 11s)",
-        np: "Vanilla CSS (~४m ११s)",
-        jp: "Vanilla CSS（約 4m11s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Import a `.css` file from your entry (`main.jsx`) or from a component. Rules are global unless you use a naming convention (BEM, ITCSS) or build tools that hash classes. Good for reset, fonts, and tokens shared app-wide.",
-            np: "`.css` `main.jsx` वा कम्पोनेन्टबाट import। नियम विश्वव्यापी — BEM जस्तो नाम वा hash। reset, font, token को लागि राम्रो।",
-            jp: "`.css` を `main.jsx` やコンポーネントから import。グローバルになるので BEM 等かビルドのスコープ化が鍵。リセットやトークンに向きます。",
+            en: "React uses <b>`className`</b> instead of `class` — because `class` is a reserved keyword in JavaScript. This is the most common beginner trip-up.\n\nPlain CSS: create a `.css` file, import it, and use class names in `className`. Simple — but global. A `.button` class in `Button.css` can accidentally affect every button in your entire app.\n\n• Use plain CSS for truly global styles (fonts, resets, base typography)\n↳ Put these in `index.css` or `global.css`\n• Avoid plain CSS for component-specific styles — use CSS Modules or Tailwind instead",
+            np: "React मा `class` को सट्टा `className` प्रयोग गरिन्छ। Plain CSS global हुन्छ — component-specific styles को लागि Modules वा Tailwind राम्रो।",
+            jp: "React では `class` の代わりに `className` を使います。プレーン CSS はグローバルなので注意が必要です。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Component.jsx + sidecar global class names",
-            np: "Component.jsx + global class",
-            jp: "グローバルクラス例",
-          },
-          code: `import "./Badge.css";
-
-export function Badge({ children }) {
-  return <span className="badge badge--pill">{children}</span>;
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "CSS Modules (~3m 45s)",
-        np: "CSS Modules (~३m ४५s)",
-        jp: "CSS Modules（約 3m45s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Rename to `*.module.css`. Vite/webpack turns `.button` into a unique string at build time; you import `styles` as an object and use `styles.button`. Collisions disappear without runtime CSS-in-JS. `composes:` can reuse other local classes.",
-            np: "फाइललाई `*.module.css` नाम दिनुहोस् — build ले अद्वितीय class string बनाउँछ; `styles.button`। `composes:` पुन: प्रयोग।",
-            jp: "`*.module.css` を import すると `styles` オブジェクトが得られ、ビルド時にクラス名が一意化されます。`composes:` でローカルクラスを合成できます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Button.module.css + JSX",
-            np: "Button.module.css + JSX",
-            jp: "Button.module.css",
-          },
-          code: `/* Button.module.css */
-.root {
-  border-radius: 999px;
-  padding: 0.5rem 1rem;
-}
-.primary {
-  composes: root;
-  background: var(--accent);
-  color: var(--accent-fg);
+          title: { en: "Button.css + Button.jsx", np: "Button.css र Button.jsx", jp: "Button.css と Button.jsx" },
+          code: `/* Button.css */
+.button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
 }
 
-// Button.jsx
-import styles from "./Button.module.css";
+.primary { background: #3b82f6; color: white; }
+.danger  { background: #ef4444; color: white; }
 
-export function Button({ children }) {
-  return <button type="button" className={styles.primary}>{children}</button>;
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "CSS-in-JS (~7m 51s)",
-        np: "CSS-in-JS (~७m ५१s)",
-        jp: "CSS-in-JS（約 7m51s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Libraries like styled-components or Emotion let you write CSS inside JavaScript (template literals or `css` props). Pros: colocation, easy dynamic styles from props, theme objects. Cons: runtime cost, SSR setup, debugging generated class names. Zero-runtime options (Vanilla Extract, Linaria) compile to static CSS files — middle ground.",
-            np: "styled-components / Emotion — JS भित्र CSS। फाइदा: colocation, props बाट गतिशील। बेफाइदा: runtime, SSR। Vanilla Extract — शून्य-runtime।",
-            jp: "styled-components / Emotion などは JS 内にスタイル。動的スタイルに強い一方、ランタイムコストと SSR 設定があります。Vanilla Extract 等はビルドで静的 CSS に落とします。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Separation of concerns (~2m 30s)",
-        np: "चिन्ता अलगाव (~२m ३०s)",
-        jp: "関心の分離（約 2m30s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "“Separation” does not mean “never put CSS near a component.” It means boundaries are clear: markup + behavior + scoped styles ship together for a feature, while design tokens (colors, spacing scales) stay shared. Avoid scattering magic numbers across dozens of files without a token layer.",
-            np: "\"अलग\" भनेको \"CSS टाढा\" होइन — सीमा स्पष्ट: markup, व्यवहार, scoped style सँगै; token साझा। जादू संख्या छर्न नदिनुहोस्।",
-            jp: "分離は「CSS を遠ざける」ではなく、責務の境界をはっきりさせることです。機能単位でまとめ、デザイントークンは共有レイヤに置きます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Inline styles (~1m 02s)",
-        np: "इनलाइन शैली (~१m ०२s)",
-        jp: "インラインスタイル（約 1m02s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The `style` prop accepts a camelCase JavaScript object (`backgroundColor`, not `background-color`). Good for one-off dynamics (progress width, drag position). Not for full themes — no pseudo-classes (`:hover`) unless you duplicate logic in JS. Prefer classes for complex styling.",
-            np: "`style` — camelCase object (`backgroundColor`)। गतिशील एकल को लागि। `:hover` जस्तो छैन — जटिल शैली class मा।",
-            jp: "`style` は キャメルケースのオブジェクトです。進捗バー幅など動的な一回り向き。`:hover` は CSS 側が向いています。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Dynamic bar width",
-            np: "गतिशील बार चौडाइ",
-            jp: "動的な幅",
-          },
-          code: `function ProgressBar({ value }) {
+/* Button.jsx */
+import "./Button.css";
+
+function Button({ label, variant = "primary" }) {
   return (
-    <div className="progress-track">
-      <div className="progress-fill" style={{ width: \`\${value}%\` }} />
+    <button className={\`button \${variant}\`}>
+      {label}
+    </button>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "CSS Modules — scoped styles", np: "CSS Modules — scoped styles", jp: "CSS Modules — スコープ付きスタイル" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "CSS Modules solve the global-name-collision problem by compiling class names to unique identifiers.\n\nAnalogy: CSS Modules are like a serial-numbered stamp — even if every component has a class called `.button`, they all get different compiled names like `Button_button__3xK4z`. No collisions, ever.\n\n• Files must end in <b>`.module.css`</b>\n• Import the module as an object: `import styles from './Card.module.css'`\n• Access classes as properties: `styles.card`\n↳ The runtime value is the unique compiled name — you never type it manually",
+            np: "CSS Modules ले class names लाई unique identifiers मा compile गर्छ। `.module.css` file बनाउनुस् र object को रूपमा import गर्नुस्।",
+            jp: "CSS Modules はクラス名をユニークなIDにコンパイルしてスコープを確保します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Card.module.css + Card.jsx", np: "Card.module.css र Card.jsx", jp: "Card.module.css と Card.jsx" },
+          code: `/* Card.module.css */
+.card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+}
+.title    { font-size: 1.125rem; font-weight: 600; }
+.featured { border-color: #3b82f6; background: #eff6ff; }
+
+/* Card.jsx */
+import styles from "./Card.module.css";
+import clsx from "clsx"; // npm install clsx
+
+function Card({ title, featured }) {
+  return (
+    <div className={clsx(styles.card, { [styles.featured]: featured })}>
+      <h2 className={styles.title}>{title}</h2>
     </div>
   );
 }`,
@@ -171,259 +91,219 @@ export function Button({ children }) {
       ],
     },
     {
-      title: {
-        en: "Popular UI libraries (~2m 03s)",
-        np: "लोकप्रिय UI लाइब्रेरी (~२m ०३s)",
-        jp: "代表的な UI ライブラリ（約 2m03s）",
-      },
-      blocks: [
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "MUI (Material UI) — comprehensive React components + theming; heavier bundle, strong docs.",
-              np: "MUI — थोक कम्पोनेन्ट + theme; bundle भारी।",
-              jp: "MUI — コンポーネントとテーマが揃い、バンドルは大きめ。",
-            },
-            {
-              en: "Chakra UI / Mantine — ergonomic props (`colorScheme`, `size`), good DX for internal tools.",
-              np: "Chakra / Mantine — सुविधाजनक props, आन्तरिक उपकरण।",
-              jp: "Chakra / Mantine — props で組みやすい内向けツール向き。",
-            },
-            {
-              en: "Radix Primitives / React Aria — unstyled accessible building blocks; you bring CSS Modules or Tailwind.",
-              np: "Radix / React Aria — unstyled, पहुँच; CSS Modules/Tailwind सँग।",
-              jp: "Radix 等はスタイルなしの高水準プリミティブ。見た目は自分で載せます。",
-            },
-            {
-              en: "Bootstrap (`react-bootstrap`) — familiar grid + components; class-based mental model maps from HTML/CSS courses.",
-              np: "react-bootstrap — चिनिएको grid; HTML पाठ्यक्रमसँग मेल।",
-              jp: "react-bootstrap — 馴染みのグリッドとコンポーネント。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Adding icons (~1m 52s)",
-        np: "आइकन थप्दै (~१m ५२s)",
-        jp: "アイコンの追加（約 1m52s）",
-      },
+      title: { en: "Tailwind CSS — utility-first styling", np: "Tailwind CSS — utility-first", jp: "Tailwind CSS — ユーティリティファースト" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Use `react-icons` (many packs as tree-shakeable imports), `lucide-react`, or inline SVG components for full control. Prefer SVG for crisp scaling; set `aria-hidden` on decorative icons and pair with visible text or `aria-label` on the control.",
-            np: "`react-icons`, `lucide-react`, वा SVG। सजावटी मा `aria-hidden`; नियन्त्रणमा `aria-label`।",
-            jp: "`react-icons` や `lucide-react`、または SVG コンポーネント。装飾なら `aria-hidden`、操作手段にはラベルを。",
+            en: "Tailwind gives you hundreds of tiny single-purpose CSS classes. Instead of writing a separate CSS file, you compose styles directly in JSX.\n\nAnalogy: Tailwind is like cooking with individual spices — no premixed sauces, just raw ingredients you combine exactly the way you want.\n\n• `p-4` = `padding: 1rem`\n• `rounded-xl` = `border-radius: 0.75rem`\n• `hover:shadow-lg` = shadow appears on hover\n• `md:text-base` = apply at medium screen width and above\n↳ The prefix before `:` is a <b>modifier</b> — Tailwind supports responsive, hover, focus, dark mode, group, and more",
+            np: "Tailwind मा utility classes JSX भित्रै compose गरिन्छ। `p-4`, `rounded-xl`, `hover:shadow-lg` जस्ता classes।",
+            jp: "Tailwind はクラスを JSX に直接書いてスタイルを組み立てます。レスポンシブやダークモードもサポート。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Lucide icon as a child of a button",
-            np: "बटन भित्र Lucide",
-            jp: "ボタン内に Lucide",
-          },
-          code: `import { Heart } from "lucide-react";
+          title: { en: "Tailwind product card", np: "Tailwind card", jp: "Tailwind カードコンポーネント" },
+          code: `// Install (Vite): npm install -D tailwindcss @tailwindcss/vite
+// vite.config.js: plugins: [tailwindcss()]
+// main.css: @import "tailwindcss";
 
-export function LikeButton({ liked, onToggle }) {
+function ProductCard({ name, price, image, inStock }) {
   return (
-    <button
-      type="button"
-      aria-pressed={liked}
-      aria-label={liked ? "Unlike" : "Like"}
-      onClick={onToggle}
-    >
-      <Heart size={20} aria-hidden fill={liked ? "currentColor" : "none"} />
-    </button>
+    <div className="rounded-2xl border border-gray-200 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <img
+        src={image}
+        alt={name}
+        className="mb-4 h-40 w-full rounded-lg object-cover"
+      />
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+        {name}
+      </h3>
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-lg font-bold text-blue-600">\${price}</span>
+        <span
+          className={\`rounded-full px-2.5 py-0.5 text-xs font-medium \${
+            inStock
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }\`}
+        >
+          {inStock ? "In stock" : "Sold out"}
+        </span>
+      </div>
+    </div>
   );
 }`,
         },
       ],
     },
     {
-      title: {
-        en: "Exercise — Using CSS Modules (~3m 00s)",
-        np: "अभ्यास — CSS Modules (~३m ००s)",
-        jp: "演習：CSS Modules（約 3m00s）",
-      },
+      title: { en: "Inline styles and dynamic styling", np: "Inline styles र dynamic styling", jp: "インラインスタイルと動的スタイリング" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Convert a component that used global class strings to `*.module.css`. Verify in DevTools that emitted class names include a hash suffix. Extract shared tokens (`--radius`, `--shadow`) to `:root` or a `tokens.css` import so modules stay lean.",
-            np: "global class बाट `*.module.css` मा। DevTools मा hash पुष्टि। token `:root` वा `tokens.css`।",
-            jp: "グローバル class を `*.module.css` に移し、DevTools で ハッシュ付きクラスを確認します。トークンは共通ファイルへ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Building a Like component (~5m 19s)",
-        np: "Like कम्पोनेन्ट (~५m १९s)",
-        jp: "Like コンポーネント（約 5m19s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Combine `useState` for `liked` with visual feedback from CSS Modules (filled vs outline heart) or an icon prop. Keep click target at least ~44×44 CSS px for touch. Optional: `prefers-reduced-motion` media query to tone down animations.",
-            np: "`useState` ले `liked` र CSS Module वा icon। क्लिक लक्ष्य ~४४px। `prefers-reduced-motion`।",
-            jp: "`liked` の state と CSS Modules（塗りつぶし／線）やアイコンで表現します。タップ領域を確保し、必要なら `prefers-reduced-motion` で動きを控えめにします。",
+            en: "In React, the `style` prop takes a <b>JavaScript object</b> — not a CSS string. Property names are camelCase: `backgroundColor`, not `background-color`.\n\nUse inline styles for truly <b>dynamic values</b> that come from JavaScript at runtime:\n• Colours from a user preference stored in state\n• Positions from drag-and-drop coordinates\n• Progress bar widths computed from a percentage\n↳ For everything else, prefer Tailwind or CSS Modules — inline styles cannot do `:hover`, media queries, or keyframe animations\n\nBest pattern: <b>Tailwind for base styles + inline style for the one dynamic value</b>.",
+            np: "React मा `style` prop JavaScript object लिन्छ। Dynamic values को लागि use गर्नुस् — hover/media queries support हुँदैन।",
+            jp: "React の `style` は JS オブジェクトです。動的な値（色・座標）に使い、ホバーやメディアクエリは CSS で。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "LikeButton.jsx + LikeButton.module.css (sketch)",
-            np: "LikeButton.jsx + module css",
-            jp: "Like ボタン例",
-          },
-          code: `import { useState } from "react";
-import styles from "./LikeButton.module.css";
-import { Heart } from "lucide-react";
-
-export function LikeButton() {
-  const [liked, setLiked] = useState(false);
+          title: { en: "Progress bar + avatar with inline dynamic styles", np: "Dynamic inline style", jp: "動的インラインスタイル例" },
+          code: `function ProgressBar({ value, max = 100 }) {
+  const percent = Math.min(100, Math.round((value / max) * 100));
   return (
-    <button
-      type="button"
-      className={\`\${styles.hit} \${liked ? styles.on : styles.off}\`}
-      aria-pressed={liked}
-      aria-label="Like"
-      onClick={() => setLiked((v) => !v)}
-    >
-      <Heart className={styles.icon} size={22} aria-hidden />
-    </button>
+    <div className="h-2 w-full rounded-full bg-gray-200">
+      {/* Tailwind = base shape; inline = dynamic width */}
+      <div
+        className="h-full rounded-full bg-blue-500 transition-[width] duration-500"
+        style={{ width: \`\${percent}%\` }}
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemax={max}
+      />
+    </div>
   );
 }
 
-/* LikeButton.module.css */
-.hit { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; border: 0; border-radius: 999px; cursor: pointer; }
-.on { color: crimson; background: color-mix(in oklab, crimson 12%, transparent); }
-.off { color: var(--muted); background: var(--elevated); }
-.icon { display: block; }`,
+function Avatar({ user }) {
+  // avatarColor comes from user's profile (e.g. "#e11d48")
+  return (
+    <div
+      className="flex h-10 w-10 items-center justify-center rounded-full font-semibold text-white"
+      style={{ backgroundColor: user.avatarColor }}
+    >
+      {user.initials}
+    </div>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "UI component libraries", np: "UI component libraries", jp: "UI コンポーネントライブラリ" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A component library gives you pre-built, accessible components — modals, dropdowns, date pickers, tooltips — that would take days to build correctly from scratch.\n\nAnalogy: a UI library is like buying furniture. Faster than building, looks professional immediately — but you're bound to their design decisions. There are two categories:\n• <b>Headless libraries</b> (Radix UI, Headless UI) — behaviour and accessibility only; you add all the styles\n• <b>Styled libraries</b> (MUI, Mantine, shadcn/ui) — come with visual design",
+            np: "UI libraries pre-built accessible components दिन्छन्। Headless (no styles) र opinionated (full styles) — दुई प्रकार।",
+            jp: "UI ライブラリは既製コンポーネントを提供。ヘッドレス型と完全スタイル型があります。",
+          },
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Popular React UI libraries — choose based on how much control you need",
+            np: "Popular UI libraries",
+            jp: "主要 React UI ライブラリ比較",
+          },
+          headers: [
+            { en: "Library", np: "Library", jp: "ライブラリ" },
+            { en: "Styling", np: "Styling", jp: "スタイル" },
+            { en: "Approach", np: "Approach", jp: "アプローチ" },
+            { en: "Best for", np: "Best for", jp: "向いている用途" },
+          ],
+          rows: [
+            [
+              { en: "shadcn/ui", np: "shadcn/ui", jp: "shadcn/ui" },
+              { en: "Tailwind", np: "Tailwind", jp: "Tailwind" },
+              { en: "Copy-paste into your project — you own the code", np: "Copy-paste", jp: "ソースをプロジェクトにコピー" },
+              { en: "Tailwind projects, full design control", np: "Tailwind + control", jp: "Tailwind × 自由度重視" },
+            ],
+            [
+              { en: "Radix UI", np: "Radix UI", jp: "Radix UI" },
+              { en: "Headless (unstyled)", np: "Unstyled", jp: "スタイルなし" },
+              { en: "Accessible primitives — you supply all styles", np: "Accessible primitives", jp: "アクセシブルな土台のみ" },
+              { en: "Custom design systems", np: "Custom design", jp: "独自デザインシステム" },
+            ],
+            [
+              { en: "MUI (Material UI)", np: "MUI", jp: "MUI" },
+              { en: "Material Design", np: "Material Design", jp: "Material Design" },
+              { en: "Full-featured, highly opinionated", np: "Full-featured", jp: "フル機能・意見が強め" },
+              { en: "Admin dashboards, enterprise apps", np: "Admin, enterprise", jp: "管理画面・エンタープライズ" },
+            ],
+            [
+              { en: "Mantine", np: "Mantine", jp: "Mantine" },
+              { en: "Custom CSS", np: "Custom CSS", jp: "独自 CSS" },
+              { en: "100+ components, form hooks, great DX", np: "100+ components", jp: "100+コンポーネント・DX良好" },
+              { en: "Mid-size projects wanting batteries-included", np: "Mid-size projects", jp: "中規模・フル装備希望" },
+            ],
+          ],
+        },
+        {
+          type: "code",
+          title: { en: "shadcn/ui — install and use", np: "shadcn/ui setup", jp: "shadcn/ui のセットアップ" },
+          code: `# 1. Initialise shadcn/ui in your Vite + Tailwind project
+npx shadcn@latest init
+
+# 2. Add individual components (copies source into src/components/ui/)
+npx shadcn@latest add button card dialog
+
+// 3. Use — fully customisable, the source code is yours
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+function ProfileCard({ user }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{user.name}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{user.bio}</p>
+        <Button variant="outline" className="mt-4">
+          Follow
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "Can I use Tailwind with React?",
-        np: "React सँग Tailwind?",
-        jp: "React で Tailwind は使える？",
-      },
+      question: { en: "Why `className` instead of `class`?", np: "`className` किन?", jp: "なぜ `className`？" },
       answer: {
-        en: "Yes — Tailwind is a utility-first CSS build step that emits classes you place in `className`. It pairs well with Vite and PostCSS. It is not “CSS-in-JS” in the styled-components sense, but still co-locates styling with JSX via class lists.",
-        np: "हो — Tailwind utility CSS build; `className` मा। Vite सँग राम्रो। styled-components जस्तो CSS-in-JS होइन।",
-        jp: "使えます。 ユーティリティクラスを `className` に並べる方式で、Vite との組み合わせが一般的です。",
+        en: "`class` is a reserved keyword in JavaScript (ES6 classes). Since JSX compiles to JavaScript function calls, using `class` would cause a syntax conflict. React chose `className` to sidestep this. Similarly, `for` in `<label for='...'>` becomes `htmlFor` in JSX.",
+        np: "`class` JavaScript keyword हो। JSX JavaScript मा compile हुने भएकाले `className` प्रयोग गरिन्छ।",
+        jp: "`class` は JS の予約語なので `className` を使います。`for` → `htmlFor` も同様です。",
       },
     },
     {
-      question: {
-        en: "Why does my CSS Module class print as `Button_primary__x3F9a`?",
-        np: "Module class लामो किन?",
-        jp: "CSS Modules のクラス名が長いのは？",
-      },
+      question: { en: "What is the difference between CSS Modules and styled-components?", np: "CSS Modules र styled-components?", jp: "CSS Modules と styled-components の違いは？" },
       answer: {
-        en: "The bundler scopes your original class names by appending a hash derived from the file path and content. That guarantees uniqueness across the app while you keep short names like `.primary` in source.",
-        np: "Bundler ले hash जोड्छ — फाइल र सामग्रीबाट अद्वितीयता; स्रोतमा `.primary` छोटो राख्न मिल्छ।",
-        jp: "ビルドがファイル由来のハッシュを付け、アプリ全体で衝突しないようにしています。ソースでは短い名前で書けます。",
+        en: "CSS Modules: standard CSS files with scoped class names — compiled at build time, zero runtime cost. styled-components: CSS written in JavaScript template literals — requires a runtime library (~12kB gzipped) and generates class names dynamically. For new projects, CSS Modules or Tailwind is generally preferred for simplicity and performance. styled-components excels at dynamic theming based on JavaScript props.",
+        np: "CSS Modules: build time, zero runtime। styled-components: runtime library, JS भित्र CSS।",
+        jp: "CSS Modules はビルド時処理でゼロランタイムコスト。styled-components はランタイムコストあり。",
       },
     },
     {
-      question: {
-        en: "Should I mix CSS Modules and styled-components in one app?",
-        np: "CSS Modules र styled-components मिसाउने?",
-        jp: "CSS Modules と styled-components を混ぜていい？",
-      },
+      question: { en: "Should I use Tailwind or CSS Modules?", np: "Tailwind कि CSS Modules?", jp: "Tailwind と CSS Modules どちらを使う？" },
       answer: {
-        en: "Possible during migrations, but two mental models confuse onboarding. Prefer one primary system per surface (marketing pages might stay global CSS while the app shell uses modules, if documented).",
-        np: "माइग्रेसनमा मिल्छ; दुई मोडेल भ्रम। एक मुख्य प्रणाली रोज्नुहोस्।",
-        jp: "移行中はあり得ますが、方針を文書化して主軸を一つに寄せるのが無難です。",
+        en: "Both are excellent choices. Tailwind is faster to write (no file-switching), enforces a consistent design scale, and is the default in most modern starters (Next.js, shadcn/ui). CSS Modules are better when you need full CSS power (complex animations, pseudo-selectors) or when migrating from an existing CSS codebase. Many teams use both: Tailwind for layout and spacing, CSS Modules for complex component-specific styles.",
+        np: "Tailwind: छिटो, consistent। CSS Modules: full CSS power। अधिकांश नयाँ projects मा Tailwind popular।",
+        jp: "どちらも良い選択。新規は Tailwind が多数派。複雑なアニメーションは CSS Modules が有利。",
       },
     },
     {
-      question: {
-        en: "Do inline styles beat CSS specificity wars?",
-        np: "inline ले specificity जित्छ?",
-        jp: "インラインで詳細度の戦いに勝てる？",
-      },
+      question: { en: "How do I conditionally apply CSS classes?", np: "Conditional CSS classes?", jp: "条件付きクラスの適用方法は？" },
       answer: {
-        en: "Inline declarations are very specific to the element, but you still lose pseudo-elements, media queries, and animations unless you reimplement them. Use inline for truly dynamic values; keep design language in classes.",
-        np: "इनलाइन विशिष्ट तर pseudo/media/animation हराउँछ। गतिशील मान मात्र; डिजाइन class मा।",
-        jp: "インラインは要素に直結しますが、疑似クラスやメディアクエリは別途必要です。動的な数値に寄せ、デザイン言語は class に。",
+        en: "Three approaches: 1) Template literal: `className={\`btn \${active ? 'btn-active' : ''}\`}`. 2) `clsx` package (recommended): `className={clsx('btn', { 'btn-active': active, 'btn-disabled': disabled })}` — handles undefined/false cleanly. 3) `cn` helper from shadcn/ui (combines `clsx` + `tailwind-merge`): `className={cn('btn', isActive && 'ring-2')}`. Install clsx with `npm install clsx`.",
+        np: "Template literal, clsx library, वा shadcn `cn` utility — तीनवटा तरिका।",
+        jp: "テンプレートリテラル、clsx ライブラリ、shadcn の `cn` が一般的です。",
       },
     },
     {
-      question: {
-        en: "How do UI libraries affect bundle size?",
-        np: "UI लाइब्रेरी ले bundle कसरी?",
-        jp: "UI ライブラリはバンドルにどう効く？",
-      },
+      question: { en: "Can I use multiple styling approaches in the same project?", np: "एउटै project मा multiple approaches?", jp: "複数スタイリング方法の混在は OK？" },
       answer: {
-        en: "Full suites import many components unless you tree-shake carefully. Measure with `rollup-plugin-visualizer` or Next’s analyzer. Headless libraries ship less CSS because you supply styles.",
-        np: "पूरा suite धेरै import — tree-shake। Headless ले कम CSS।",
-        jp: "丸ごと取り込むと大きくなりやすいので tree-shaking と分析ツールで確認します。ヘッドレスは見た目分が軽いです。",
+        en: "Yes, and it's common in production apps. A typical setup: Tailwind for layout, spacing, and responsive styles + CSS Modules for complex component animations + inline styles for one or two dynamic computed values + shadcn/ui for interactive elements (modals, comboboxes). The rule of thumb: be consistent within a single component — don't mix Tailwind and CSS Modules for the same element.",
+        np: "हो — Tailwind layout, CSS Modules animations, inline dynamic values, shadcn/ui interactive elements। एउटा component भित्र consistent रहनुस्।",
+        jp: "はい。Tailwind + CSS Modules + インライン + UI ライブラリの混在は実務では一般的です。",
       },
-    },
-    {
-      question: {
-        en: "Can I use `class` instead of `className` in React?",
-        np: "`class` प्रयोग गर्न मिल्छ?",
-        jp: "`class` ではダメ？",
-      },
-      answer: {
-        en: "Use `className` — React mirrors the DOM property name. (`class` works in some legacy compatibility paths but is not the JSX convention.)",
-        np: "`className` प्रयोग गर्नुहोस् — DOM सम्पत्ति नाम। `class` JSX मा होइन।",
-        jp: "`className` を使います（DOM のプロパティ名に合わせています）。",
-      },
-    },
-    {
-      question: {
-        en: "What about CSS variables with React?",
-        np: "CSS variables र React?",
-        jp: "CSS 変数（カスタムプロパティ）は？",
-      },
-      answer: {
-        en: "Excellent combo. Define tokens on `:root` or a layout wrapper, read them in any CSS file or inline `style={{ [\"--x\"]: value }}` for per-instance overrides. They bridge global design with component-specific tweaks.",
-        np: "राम्रो जोडा। `:root` मा token; `style={{ ['--x']: v }}` पनि।",
-        jp: "相性が良いです。 `:root` でトークンを定義し、インラインでは `style={{ ['--x']: value }}` で上書きもできます。",
-      },
-    },
-    {
-      question: {
-        en: "Should the Like button own state or receive `liked` from parent?",
-        np: "Like मा state अभिभावक वा सन्तान?",
-        jp: "Like の state は親？子？",
-      },
-      answer: {
-        en: "Local state is fine for a self-contained social “like” on a demo page. If other widgets must react (counter, analytics, disabled after submit), lift `liked` and pass `liked` + `onToggle` as props — same pattern as Day 4.",
-        np: "डेमोमा स्थानीय state ठीक। अरू UI ले प्रतिक्रिया दिनुपर्छ भने lift गरी props।",
-        jp: "デモなら子で stateで十分です。他の UI と連動するなら 親に持ち上げ、Day 4 と同様に props で渡します。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Move one component from global classes to CSS Modules; confirm hashed classes in DevTools.",
-      np: "एउटा कम्पोनेन्ट CSS Modules मा; DevTools मा hash।",
-      jp: "1 コンポーネントを CSS Modules に移し、DevTools でハッシュを確認する。",
-    },
-    {
-      en: "Add `lucide-react` (or `react-icons`) to a button with `aria-pressed` for a toggle.",
-      np: "`lucide-react` + बटन + `aria-pressed`।",
-      jp: "トグルボタンに `aria-pressed` とアイコンを付ける。",
-    },
-    {
-      en: "Build LikeButton with `useState`, module classes for on/off, and 44px minimum hit target.",
-      np: "LikeButton `useState`, on/off class, ४४px hit।",
-      jp: "LikeButton を state・モジュール CSS・44px タップ領域で完成させる。",
     },
   ],
 };

@@ -1,155 +1,198 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-/** Day 15 — Routing with React Router v6: Navigation, Parameters & Guards. */
 export const REACT_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Day 15 covers client-side routing with React Router v6: the shift from `BrowserRouter` to `createBrowserRouter`, route objects, nested routes with `<Outlet />`, `Link`/`NavLink`, programmatic navigation, route parameters with `useParams` and `useSearchParams`, passing state between pages with `useLocation`, protected routes, error pages, and the data-router additions (loaders and actions) introduced in v6.4.",
-      np: "दिन १५ React Router v6: `createBrowserRouter`, route objects, nested routes, `<Outlet />`, Link/NavLink, navigate, useParams/useSearchParams, useLocation state, protected routes, errorElement, loader/action।",
-      jp: "15日目は React Router v6 によるクライアントサイドルーティングを扱います。`createBrowserRouter`・ルートオブジェクト・ネストしたルート・`<Outlet />`・Link/NavLink・プログラムナビゲーション・useParams/useSearchParams・useLocation によるページ間データ受け渡し・保護ルート・エラーページ・v6.4 で追加された loader と action を学びます。",
+      en: "React apps are <b>single-page applications</b> — the server sends one HTML file, and JavaScript handles showing different \"pages.\" React Router maps URLs to components.\n\nAnalogy: React Router is like a hotel receptionist — the guest (URL) comes in, the receptionist (router) checks the list, and sends them to the right room (component). You change rooms (navigate) without checking out of the hotel (no page reload).\n\n<b>Why not just use `<a>` tags?</b> A normal link reloads the entire page from the server. React Router intercepts the click, updates the URL bar, and swaps the component — instant, no flicker.",
+      np: "React Router ले URL लाई component मा map गर्छ। SPA मा page reload नभई navigation हुन्छ।",
+      jp: "React Router は URL をコンポーネントにマッピングします。SPA なのでページリロードなしで画面が切り替わります。",
     },
     {
-      en: "The v6 data-router API (`createBrowserRouter` + `RouterProvider`) is the modern recommended approach; the classic `<BrowserRouter>` wrapper still works for simpler setups.",
-      np: "`createBrowserRouter` + `RouterProvider` अहिलेको सिफारिस; `<BrowserRouter>` सरल परियोजनाका लागि ठीक छ।",
-      jp: "データルーター API（`createBrowserRouter` + `RouterProvider`）が現在の推奨形式です。シンプルな構成では従来の `<BrowserRouter>` も引き続き使えます。",
+      en: "In this day we cover:\n\n• <b>`BrowserRouter`</b> — wraps your app and enables URL-based routing\n• <b>Route definitions</b> — map paths to components\n• <b>`<Link>` and `<NavLink>`</b> — client-side navigation without page refresh\n• <b>URL params and search params</b> — reading `:id` and `?sort=price` from the URL\n• <b>Nested routes with `<Outlet>`</b> — shared layout components\n• <b>`useNavigate`</b> — programmatic navigation from code\n• <b>Protected routes</b> — redirect unauthenticated users to login",
+      np: "BrowserRouter, routes, Link, URL params, nested routes, useNavigate, protected routes — सबै cover गर्छौं।",
+      jp: "BrowserRouter・ルート定義・Link・URLパラメータ・ネストルート・useNavigate・保護ルートを網羅します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Introduction — what is client-side routing?",
-        np: "परिचय — client-side routing के हो?",
-        jp: "イントロ — クライアントサイドルーティングとは",
+        en: "Setting up React Router v6",
+        np: "React Router v6 सेटअप",
+        jp: "React Router v6 のセットアップ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Client-side routing intercepts URL changes in the browser and swaps components without a full page reload. The server serves one HTML shell; React owns the rest. React Router v6 made major API improvements over v5: declarative route objects instead of JSX routes, `<Outlet />` for nesting, relative paths, and in v6.4 a full data layer with loaders/actions.",
-            np: "Client-side routing: browser मा URL परिवर्तन intercepted; full reload बिना component swap। React Router v6 ले v5 भन्दा route object, `<Outlet />`, relative path, v6.4 मा data layer ल्यायो।",
-            jp: "クライアントサイドルーティングはブラウザの URL 変更を捕捉し、フルリロードなしにコンポーネントを切り替えます。サーバは HTML シェルだけ返し、あとは React が管理します。React Router v6 は v5 から大幅に改善され、ルートオブジェクト・`<Outlet />`・相対パス・v6.4 のデータ層が加わりました。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "`createBrowserRouter` — the recommended v6.4+ API; unlocks loaders, actions, and `<Await>`.",
-              np: "`createBrowserRouter` — v6.4+ सिफारिस; loaders/actions unlock।",
-              jp: "`createBrowserRouter` — v6.4 以降の推奨 API。ローダー・アクション・`<Await>` が使える。",
-            },
-            {
-              en: "`BrowserRouter` — the legacy wrapper pattern; fine for apps that do not need data APIs.",
-              np: "`BrowserRouter` — पुरानो wrapper; data API नचाहिएको ठाउँमा ठीक।",
-              jp: "`BrowserRouter` — 従来のラッパーパターン。データ API が不要なアプリには今でも問題ない。",
-            },
-            {
-              en: "v5 → v6 breaking changes: no `<Switch>`, `exact` removed, `useHistory` → `useNavigate`, `<Redirect>` → `<Navigate>`.",
-              np: "v5→v6: `<Switch>` हटाइयो, `exact` छैन, `useHistory`→`useNavigate`, `<Redirect>`→`<Navigate>`।",
-              jp: "v5→v6 の破壊的変更: `<Switch>` 削除、`exact` 不要、`useHistory`→`useNavigate`、`<Redirect>`→`<Navigate>`。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Setting up routes with createBrowserRouter",
-        np: "createBrowserRouter सँग routes सेटअप",
-        jp: "createBrowserRouter によるルート設定",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Pass an array of route objects — each with `path` and `element` — to `createBrowserRouter`, then mount `<RouterProvider router={router} />` at the app root. Nested arrays under `children` define sub-routes rendered via `<Outlet />`.",
-            np: "`createBrowserRouter` मा route object array; `<RouterProvider>` root मा mount; `children` ले sub-route।",
-            jp: "`path` と `element` を持つルートオブジェクトの配列を `createBrowserRouter` に渡し、アプリルートに `<RouterProvider router={router} />` を置きます。`children` でサブルートを定義し `<Outlet />` で描画します。",
+            en: "Install React Router, wrap your app in `<BrowserRouter>`, then define routes with `<Routes>` and `<Route>`.\n\n• `path=\"/\"` — home page\n• `path=\"/posts/:id\"` — `:id` is a URL parameter (wildcard that matches anything)\n• `path=\"*\"` — catch-all for 404 pages\n\n<b>v6 vs v5 changes:</b> `<Switch>` became `<Routes>`, the `exact` prop is gone (all routes match exactly by default), and `component=` became `element=`.",
+            np: "npm install react-router-dom। BrowserRouter ले app wrap गर्नुहोस्। Routes र Route ले path-to-component map गर्छ।",
+            jp: "npm install 後、BrowserRouter でアプリをラップし Routes / Route でパスとコンポーネントを対応付けます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Full router setup — createBrowserRouter",
-            np: "createBrowserRouter — पूर्ण router सेटअप",
-            jp: "createBrowserRouter — ルート設定の全体",
+            en: "main.jsx + App.jsx — basic routing setup",
+            np: "basic routing setup",
+            jp: "基本ルーティング設定",
           },
-          code: `// src/router.tsx
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { AppLayout } from "./layouts/AppLayout";
-import { HomePage } from "./pages/HomePage";
-import { ProductsPage } from "./pages/ProductsPage";
-import { ProductDetailPage } from "./pages/ProductDetailPage";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { ErrorPage } from "./pages/ErrorPage";
-import { productLoader } from "./loaders/productLoader";
+          code: `// main.jsx
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
 
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <AppLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      { index: true, element: <HomePage /> },
-      { path: "products", element: <ProductsPage /> },
-      {
-        path: "products/:id",
-        element: <ProductDetailPage />,
-        loader: productLoader,
-        errorElement: <ErrorPage />,
-      },
-    ],
-  },
-  { path: "*", element: <NotFoundPage /> },
-]);
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
 
-// src/main.tsx
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { RouterProvider } from "react-router-dom";
-import { router } from "./router";
+// App.jsx
+import { Routes, Route } from "react-router-dom";
+import Home       from "./pages/Home";
+import PostList   from "./pages/PostList";
+import PostDetail from "./pages/PostDetail";
+import NotFound   from "./pages/NotFound";
+import Navbar     from "./components/Navbar";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
-);`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Nested routes and <Outlet />",
-        np: "Nested routes र <Outlet />",
-        jp: "ネストルートと <Outlet />",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A parent route renders a layout component that includes `<Outlet />`. React Router renders the matching child route's element in place of `<Outlet />`. This lets you share navbars, sidebars, and breadcrumbs without repeating markup.",
-            np: "Parent route → layout component + `<Outlet />`। Router ले child route element त्यहाँ render गर्छ। navbar/sidebar एकपटक लेख्नु।",
-            jp: "親ルートはレイアウトコンポーネントを描画し、そこに `<Outlet />` を置きます。一致した子ルートの要素がそこに差し込まれます。ナビバーやサイドバーを一度だけ書けば済みます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "AppLayout with Outlet — shared navbar",
-            np: "AppLayout — shared navbar",
-            jp: "AppLayout — 共有ナビバーと Outlet",
-          },
-          code: `// src/layouts/AppLayout.tsx
-import { Outlet } from "react-router-dom";
-import { Navbar } from "../components/Navbar";
-
-export function AppLayout() {
+export default function App() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {/* Child route element renders here */}
+      <Routes>
+        <Route path="/"          element={<Home />} />
+        <Route path="/posts"     element={<PostList />} />
+        <Route path="/posts/:id" element={<PostDetail />} />
+        <Route path="*"          element={<NotFound />} />
+      </Routes>
+    </>
+  );
+}
+
+// Navbar.jsx — client-side links
+import { Link, NavLink } from "react-router-dom";
+
+export default function Navbar() {
+  return (
+    <nav>
+      <Link to="/">Home</Link>
+      {/* NavLink adds an "active" class when the URL matches */}
+      <NavLink to="/posts" className={({ isActive }) => isActive ? "active" : ""}>
+        Posts
+      </NavLink>
+    </nav>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "URL parameters and search params",
+        np: "URL parameters र search params",
+        jp: "URLパラメータとサーチパラメータ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "React Router gives you two types of dynamic URL data:\n\n• <b>URL parameters</b> — part of the path: `/posts/42` → `:id` = `\"42\"`\n  ↳ Use `useParams()` to read them\n• <b>Search params</b> — after the `?`: `/posts?sort=price&order=asc`\n  ↳ Use `useSearchParams()` to read and update them\n\nSearch params are great for filters and sorting — they're bookmarkable, shareable, and updating them doesn't cause a navigation.",
+            np: "useParams() ले :id पढ्छ। useSearchParams() ले ?sort=price जस्ता query strings पढ्छ।",
+            jp: "`useParams()` で `:id`、`useSearchParams()` で `?sort=price` のようなクエリを読み取ります。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useParams + useSearchParams",
+            np: "params examples",
+            jp: "パラメータの例",
+          },
+          code: `// PostDetail.jsx — reading a URL parameter
+import { useParams } from "react-router-dom";
+
+export default function PostDetail() {
+  const { id } = useParams();  // "/posts/42" → id = "42"
+
+  // fetch by id (TanStack Query)
+  const { data: post, isLoading } = useQuery({
+    queryKey: ["post", id],
+    queryFn:  () => fetch(\`/api/posts/\${id}\`).then(r => r.json()),
+  });
+
+  if (isLoading) return <p>Loading...</p>;
+  return <h1>{post.title}</h1>;
+}
+
+// PostList.jsx — reading + updating search params
+import { useSearchParams } from "react-router-dom";
+
+export default function PostList() {
+  const [params, setParams] = useSearchParams();
+  const sort  = params.get("sort")  ?? "date";
+  const order = params.get("order") ?? "desc";
+
+  return (
+    <select value={sort} onChange={e => setParams({ sort: e.target.value, order })}>
+      <option value="date">Date</option>
+      <option value="price">Price</option>
+    </select>
+    // URL updates to ?sort=price without a page reload
+  );
+}
+
+// useLocation — full URL object
+import { useLocation } from "react-router-dom";
+const location = useLocation();
+// { pathname: "/posts", search: "?sort=price", hash: "", state: null }`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Nested routes with Outlet",
+        np: "Nested routes — Outlet",
+        jp: "ネストルートと Outlet",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Nested routes let a parent route render a shared layout while child routes fill in the content area.\n\nAnalogy: nested routes are like Russian dolls — the outer doll (layout) always renders; the inner doll (page content) swaps based on the URL.\n\n`<Outlet />` is the placeholder where the active child route renders. Think of it like `{children}` but driven by the URL.\n\n• `/dashboard` → renders `DashboardLayout` + `Overview` (index route)\n• `/dashboard/settings` → renders `DashboardLayout` + `Settings`\n  ↳ The sidebar is always visible — only the content area changes",
+            np: "Outlet ले child route को content render गर्छ। Layout always देखिन्छ, content मात्र URL अनुसार बदलिन्छ।",
+            jp: "Outlet はアクティブな子ルートがレンダーされる場所。レイアウトは常に表示、中身だけURLで切り替わります。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "DashboardLayout + nested route definitions",
+            np: "nested routes example",
+            jp: "ネストルートの例",
+          },
+          code: `// App.jsx — nested route definition
+<Routes>
+  <Route path="/dashboard" element={<DashboardLayout />}>
+    <Route index            element={<Overview />} />     {/* /dashboard */}
+    <Route path="posts"     element={<PostManager />} />  {/* /dashboard/posts */}
+    <Route path="settings"  element={<Settings />} />     {/* /dashboard/settings */}
+  </Route>
+</Routes>
+
+// DashboardLayout.jsx — the outer shell
+import { Outlet, NavLink } from "react-router-dom";
+
+export default function DashboardLayout() {
+  return (
+    <div className="flex">
+      <aside className="w-48 border-r p-4">
+        <NavLink to="/dashboard">Overview</NavLink>
+        <NavLink to="/dashboard/posts">Posts</NavLink>
+        <NavLink to="/dashboard/settings">Settings</NavLink>
+      </aside>
+
+      <main className="flex-1 p-6">
+        {/* Active child route renders here */}
         <Outlet />
       </main>
     </div>
@@ -160,465 +203,128 @@ export function AppLayout() {
     },
     {
       title: {
-        en: "Link, NavLink, and useNavigate",
-        np: "Link, NavLink, useNavigate",
-        jp: "Link・NavLink・useNavigate",
+        en: "Programmatic navigation with useNavigate",
+        np: "useNavigate — programmatic navigation",
+        jp: "useNavigate によるプログラム的ナビゲーション",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`<Link to=\"/path\">` renders an `<a>` tag that intercepts clicks to prevent full reloads. `<NavLink>` adds an `isActive` callback for styling the currently active item. `useNavigate()` returns a function for programmatic navigation — useful after form submissions or auth checks.",
-            np: "`<Link>` → reload रोक्छ। `<NavLink>` → active styling। `useNavigate` → submit/auth पछि program ले navigate।",
-            jp: "`<Link>` はクリックを横取りしてフルリロードを防ぎます。`<NavLink>` は `isActive` で現在のリンクにスタイルを付けられます。`useNavigate` はフォーム送信や認証チェック後にプログラムで遷移するために使います。",
+            en: "`useNavigate` lets you navigate from JavaScript code — not from clicking a link. Common uses:\n\n• Redirect after a form submits successfully\n• Go back to the previous page — `navigate(-1)`\n• Replace the current history entry so \"back\" doesn't return to login — `navigate('/dashboard', { replace: true })`\n• Navigate with state — pass data to the next page without exposing it in the URL",
+            np: "useNavigate() ले form submit पछि, logout पछि जस्ता programmatic navigation गर्छ।",
+            jp: "`useNavigate()` でフォーム送信後のリダイレクトや戻るボタンなどを制御します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "NavLink with active class",
-            np: "NavLink — active class",
-            jp: "NavLink — アクティブスタイル",
+            en: "useNavigate patterns",
+            np: "navigate patterns",
+            jp: "navigate のパターン",
           },
-          code: `// src/components/Navbar.tsx
-import { NavLink } from "react-router-dom";
-
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/products", label: "Products" },
-  { to: "/about", label: "About" },
-];
-
-export function Navbar() {
-  return (
-    <nav className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center gap-6">
-        {links.map(({ to, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === "/"}
-            className={({ isActive }) =>
-              isActive
-                ? "font-semibold text-blue-600 border-b-2 border-blue-600 pb-1"
-                : "text-gray-600 hover:text-blue-600 transition-colors"
-            }
-          >
-            {label}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
-  );
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "useNavigate — programmatic navigation after submit",
-            np: "useNavigate — submit पछि navigate",
-            jp: "useNavigate — 送信後のプログラムナビゲーション",
-          },
-          code: `import { useNavigate } from "react-router-dom";
-
-export function CreateProductForm() {
-  const navigate = useNavigate();
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const product = Object.fromEntries(formData);
-
-    await createProduct(product); // call your API
-    navigate("/products", { replace: true }); // back to list
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input name="name" placeholder="Product name" required />
-      <button type="submit">Create</button>
-    </form>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Route parameters with useParams",
-        np: "useParams सँग route parameters",
-        jp: "useParams によるルートパラメータ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Declare a dynamic segment with `:paramName` in the route path. Inside the matching component, call `useParams()` to read the extracted string. Always validate or parse (e.g. `Number(id)`) before using in logic — `useParams` returns `string | undefined`.",
-            np: "`:paramName` route path मा; `useParams()` ले string दिन्छ। `Number(id)` जस्तो parse गर्नुस् — undefined हुन सक्छ।",
-            jp: "ルートの `path` に `:paramName` を書き、コンポーネント内で `useParams()` で取り出します。戻り値は `string | undefined` なので、使う前に `Number(id)` などで変換・検証しましょう。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "ProductDetailPage — useParams",
-            np: "ProductDetailPage — useParams",
-            jp: "ProductDetailPage — useParams の例",
-          },
-          code: `// src/pages/ProductDetailPage.tsx
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { fetchProductById } from "../api/products";
-
-export function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
-
-  const { data: product, isLoading, isError } = useQuery({
-    queryKey: ["product", id],
-    queryFn: () => fetchProductById(Number(id)),
-    enabled: Boolean(id),
-  });
-
-  if (isLoading) return <p>Loading product…</p>;
-  if (isError || !product) return <p>Product not found.</p>;
-
-  return (
-    <article>
-      <h1 className="text-2xl font-bold">{product.name}</h1>
-      <p className="text-gray-600">{product.description}</p>
-      <span className="text-lg font-semibold">\${product.price}</span>
-    </article>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "useSearchParams — query strings for filters and pagination",
-        np: "useSearchParams — query strings: filter, pagination",
-        jp: "useSearchParams — フィルタとページネーションのクエリ文字列",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "`useSearchParams()` is the React Router equivalent of `useState` for URL query parameters. It returns the current `URLSearchParams` instance and a setter. Reading query params from the URL makes filters and pagination bookmarkable and shareable.",
-            np: "`useSearchParams` → URL query param मा `useState` जस्तो। setter ले URL update गर्छ। filter/pagination bookmark गर्न सकिन्छ।",
-            jp: "`useSearchParams()` はクエリパラメータ用の `useState` のようなものです。現在の `URLSearchParams` とセッター関数を返します。URL にフィルタを載せると URL を共有・ブックマークできます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "ProductsPage — /products?category=electronics&page=2",
-            np: "ProductsPage — query strings",
-            jp: "ProductsPage — クエリ文字列の読み書き",
-          },
-          code: `// src/pages/ProductsPage.tsx
-import { useSearchParams } from "react-router-dom";
-
-const CATEGORIES = ["all", "electronics", "clothing", "books"];
-
-export function ProductsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const category = searchParams.get("category") ?? "all";
-  const page = Number(searchParams.get("page") ?? "1");
-
-  function handleCategoryChange(newCat: string) {
-    setSearchParams({ category: newCat, page: "1" });
-  }
-
-  function handlePageChange(newPage: number) {
-    setSearchParams({ category, page: String(newPage) });
-  }
-
-  return (
-    <div>
-      {/* Category filter */}
-      <div className="flex gap-2 mb-4">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategoryChange(cat)}
-            className={cat === category ? "btn-active" : "btn"}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Products grid — pass category + page to your data hook */}
-      <ProductGrid category={category} page={page} />
-
-      {/* Pagination */}
-      <div className="flex gap-2 mt-4">
-        <button disabled={page <= 1} onClick={() => handlePageChange(page - 1)}>
-          Prev
-        </button>
-        <span>Page {page}</span>
-        <button onClick={() => handlePageChange(page + 1)}>Next</button>
-      </div>
-    </div>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "useLocation and passing state between routes",
-        np: "useLocation र routes बीच state पठाउने",
-        jp: "useLocation とルート間のステート受け渡し",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Sometimes you need to pass non-URL data between pages — for example a success message after a form, or a prefetched entity to avoid a second request. Pass `state` in `useNavigate` or `<Link state={...}>`, then read it with `useLocation().state` in the destination. Note: state is lost on manual refresh.",
-            np: "URL मा नभएको data pass: `navigate('/page', { state })` वा `<Link state={...}>`। destination मा `useLocation().state`। refresh मा state गुम्छ।",
-            jp: "URL に載せたくないデータ（送信後の成功メッセージや先読みエンティティなど）はナビゲーション時に `state` として渡せます。遷移先で `useLocation().state` で読み取ります。手動リロードで消えることに注意してください。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Passing and reading route state",
-            np: "route state pass र read",
-            jp: "ルートステートの受け渡しと読み取り",
-          },
-          code: `// Sender — navigate with state
-import { useNavigate } from "react-router-dom";
-
-function OrderForm() {
-  const navigate = useNavigate();
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const order = await submitOrder(formData);
-    navigate("/order-confirmation", {
-      state: { orderId: order.id, total: order.total },
-    });
-  }
-  // …
-}
-
-// Receiver — read state in destination page
-import { useLocation } from "react-router-dom";
-
-interface OrderState {
-  orderId: string;
-  total: number;
-}
-
-function OrderConfirmationPage() {
-  const location = useLocation();
-  const state = location.state as OrderState | null;
-
-  if (!state) {
-    // State missing on refresh — redirect or show fallback
-    return <p>Order placed. <a href="/orders">View orders</a>.</p>;
-  }
-
-  return (
-    <div>
-      <h1>Order confirmed!</h1>
-      <p>Order #{state.orderId} · Total: \${state.total}</p>
-    </div>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Protected routes — guarding authenticated pages",
-        np: "Protected routes — authentication guard",
-        jp: "保護ルート — 認証ガード",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The most common pattern is a `ProtectedRoute` wrapper component that reads auth state and either renders `<Outlet />` for authenticated users or redirects to `/login`. Put it in your route tree as a parent of the routes you want to guard.",
-            np: "`ProtectedRoute` wrapper: auth state check — authenticated → `<Outlet />`, otherwise `<Navigate to=\"/login\" />`। guard गर्ने routes को parent मा राख्नु।",
-            jp: "`ProtectedRoute` ラッパーが認証状態を確認し、ログイン済みなら `<Outlet />` を、未ログインなら `/login` にリダイレクトします。保護したいルートの親として配置します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "ProtectedRoute component",
-            np: "ProtectedRoute component",
-            jp: "ProtectedRoute コンポーネント",
-          },
-          code: `// src/components/ProtectedRoute.tsx
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-
-export function ProtectedRoute() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const location = useLocation();
-
-  if (!isAuthenticated) {
-    // Preserve the attempted URL so we can redirect back after login
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <Outlet />;
-}
-
-// Usage in router config:
-//
-// {
-//   element: <ProtectedRoute />,
-//   children: [
-//     { path: "dashboard", element: <DashboardPage /> },
-//     { path: "settings",  element: <SettingsPage />  },
-//     { path: "profile",   element: <ProfilePage />   },
-//   ],
-// }
-
-// Login page — redirect back after successful login
-import { useNavigate, useLocation } from "react-router-dom";
+          code: `import { useNavigate, useLocation } from "react-router-dom";
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
+  const from = location.state?.from ?? "/dashboard";
 
-  async function handleLogin(credentials: Credentials) {
-    await login(credentials);
-    navigate(from, { replace: true }); // go where they wanted
+  async function handleSubmit(e) {
+    e.preventDefault();
+    await login(email, password);
+    // replace: true removes the login page from history
+    navigate(from, { replace: true });
   }
-  // …
-}`,
+}
+
+function PostDetail({ id }) {
+  const navigate = useNavigate();
+
+  async function handleDelete() {
+    await deletePost(id);
+    navigate("/posts");     // go to list after delete
+  }
+
+  function handleBack() {
+    navigate(-1);           // equivalent to browser back button
+  }
+}
+
+// Passing invisible state (lost on page refresh)
+navigate("/order-success", { state: { orderId: "abc-123" } });
+
+// Reading it on the destination page
+const { state } = useLocation();
+console.log(state?.orderId); // "abc-123"`,
         },
       ],
     },
     {
       title: {
-        en: "Error pages with errorElement and useRouteError",
-        np: "errorElement र useRouteError सँग error pages",
-        jp: "errorElement と useRouteError によるエラーページ",
+        en: "Protected routes — auth guards",
+        np: "Protected routes — auth guards",
+        jp: "保護ルート（認証ガード）",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Add `errorElement` to any route in the config. React Router catches errors thrown in that route's `loader`, `action`, or component render and shows the error element instead. Inside it, call `useRouteError()` to access the thrown value.",
-            np: "`errorElement` route config मा; loader/action/render बाट throw भएमा देखाउँछ। `useRouteError()` ले thrown value पाइन्छ।",
-            jp: "ルート設定に `errorElement` を追加すると、そのルートの `loader`・`action`・コンポーネント描画でスローされたエラーが補足されます。`useRouteError()` でスローされた値を取得できます。",
+            en: "A protected route redirects unauthenticated users to the login page. Analogy: a bouncer at a club — no wristband (token), you get sent to the ticket counter (login page).\n\n<b>The pattern:</b>\n1. Create a `RequireAuth` wrapper component\n2. Check if the user is logged in\n3. If yes — render `{children}`\n4. If no — `<Navigate to=\"/login\" />` redirects them\n\nAlways pass `replace` on the redirect so login replaces the protected URL in history — otherwise pressing Back after login loops back to login again.",
+            np: "RequireAuth wrapper ले unauthenticated users लाई login page मा redirect गर्छ।",
+            jp: "RequireAuth ラッパーで未認証ユーザーをログインページにリダイレクトします。",
           },
         },
         {
           type: "code",
           title: {
-            en: "ErrorPage component",
-            np: "ErrorPage component",
-            jp: "ErrorPage コンポーネント",
+            en: "RequireAuth + redirect back after login",
+            np: "auth guard pattern",
+            jp: "認証ガードパターン",
           },
-          code: `// src/pages/ErrorPage.tsx
-import { useRouteError, isRouteErrorResponse, Link } from "react-router-dom";
+          code: `// RequireAuth.jsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
 
-export function ErrorPage() {
-  const error = useRouteError();
+export function RequireAuth({ children }) {
+  const { user }   = useAuth();
+  const location   = useLocation();
 
-  if (isRouteErrorResponse(error)) {
-    // Router threw a Response (e.g. from a loader)
+  if (!user) {
+    // Save where the user was trying to go
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <h1 className="text-4xl font-bold">{error.status}</h1>
-        <p className="text-gray-600">{error.statusText}</p>
-        {error.data?.message && <p>{error.data.message}</p>}
-        <Link to="/" className="btn-primary">Back to home</Link>
-      </div>
+      <Navigate to="/login" state={{ from: location.pathname }} replace />
     );
   }
 
-  const message = error instanceof Error ? error.message : "Unknown error";
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-4xl font-bold">Oops!</h1>
-      <p className="text-gray-600">{message}</p>
-      <Link to="/" className="btn-primary">Back to home</Link>
-    </div>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Loaders and actions (data router, v6.4+)",
-        np: "Loaders र actions (data router, v6.4+)",
-        jp: "ローダーとアクション（データルーター v6.4+）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A `loader` function runs on the server or client before the route component renders, receives `{ params, request }`, and its return value is available via `useLoaderData()`. An `action` handles `<Form>` or `fetch`-based mutations and can return data or redirect. Together they shift data concerns out of `useEffect` into the routing layer.",
-            np: "`loader` component render अघि; `{ params, request }` पाउँछ; `useLoaderData()` बाट पाइन्छ। `action` — form/mutation handle। data concern routing layer मा।",
-            jp: "`loader` はルートコンポーネントが描画される前に実行され `{ params, request }` を受け取ります。戻り値は `useLoaderData()` で取得します。`action` は `<Form>` や fetch ベースの変更を処理します。データ処理を `useEffect` からルーティング層に移せます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "productLoader — fetch before render",
-            np: "productLoader — render अघि fetch",
-            jp: "productLoader — 描画前データ取得",
-          },
-          code: `// src/loaders/productLoader.ts
-import type { LoaderFunctionArgs } from "react-router-dom";
-import { json } from "react-router-dom";
-import { fetchProductById } from "../api/products";
-
-export async function productLoader({ params }: LoaderFunctionArgs) {
-  const id = Number(params.id);
-  if (isNaN(id)) throw json({ message: "Invalid product ID" }, { status: 400 });
-
-  const product = await fetchProductById(id);
-  if (!product) throw json({ message: "Product not found" }, { status: 404 });
-
-  return product; // available via useLoaderData() in the component
+  return children;
 }
 
-// src/pages/ProductDetailPage.tsx (data-router version)
-import { useLoaderData } from "react-router-dom";
-import type { Product } from "../types";
+// App.jsx — wrap protected routes
+<Routes>
+  <Route path="/login" element={<Login />} />
 
-export function ProductDetailPage() {
-  const product = useLoaderData() as Product;
+  <Route path="/dashboard" element={
+    <RequireAuth>
+      <DashboardLayout />
+    </RequireAuth>
+  }>
+    <Route index           element={<Overview />} />
+    <Route path="settings" element={<Settings />} />
+  </Route>
+</Routes>
 
-  return (
-    <article>
-      <h1 className="text-2xl font-bold">{product.name}</h1>
-      <p className="text-gray-600">{product.description}</p>
-      <span className="text-lg font-semibold">\${product.price}</span>
-    </article>
-  );
+// Login.jsx — redirect back after successful login
+function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from ?? "/dashboard";
+
+  async function onSubmit(data) {
+    await signIn(data.email, data.password);
+    navigate(from, { replace: true });
+  }
 }`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Summary",
-        np: "सारांश",
-        jp: "まとめ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "You now have a full client-side routing toolkit: `createBrowserRouter` for configuration, `<Outlet />` for nested layouts, `NavLink` for active navigation, `useParams` and `useSearchParams` for URL-driven state, `useLocation` for ephemeral state passing, `ProtectedRoute` for auth guards, `errorElement` for boundary handling, and loaders for co-locating data fetching with routes.",
-            np: "createBrowserRouter, Outlet, NavLink, useParams, useSearchParams, useLocation, ProtectedRoute, errorElement, loader — पूर्ण client-side routing toolkit।",
-            jp: "`createBrowserRouter`・`<Outlet />`・`NavLink`・`useParams`・`useSearchParams`・`useLocation`・`ProtectedRoute`・`errorElement`・ローダーを組み合わせた完全なクライアントサイドルーティングの知識を習得しました。",
-          },
         },
       ],
     },
@@ -626,116 +332,63 @@ export function ProductDetailPage() {
   faq: [
     {
       question: {
-        en: "React Router vs TanStack Router — which should I choose?",
-        np: "React Router vs TanStack Router — कुन रोज्ने?",
-        jp: "React Router と TanStack Router どちらを選ぶ？",
+        en: "What is the difference between BrowserRouter and HashRouter?",
+        np: "BrowserRouter र HashRouter मा के फरक?",
+        jp: "BrowserRouter と HashRouter の違いは？",
       },
       answer: {
-        en: "React Router v6 is the established choice with a huge ecosystem, great docs, and server-framework integrations (Remix). TanStack Router is fully type-safe with automatic route type inference — excellent if TypeScript strictness is top priority. For most new projects React Router v6 is the pragmatic default; reach for TanStack Router if you feel the lack of end-to-end types.",
-        np: "React Router v6 — ecosystem ठूलो, Remix integration। TanStack Router — पूर्ण type-safe। नयाँ project मा React Router default; type strictness चाहिए भने TanStack।",
-        jp: "React Router v6 はエコシステムが大きく Remix 連携もある定番選択です。TanStack Router は完全な型推論が強みです。多くの新規プロジェクトでは React Router v6 が実用的なデフォルトですが、エンドツーエンドの型安全性が最優先なら TanStack Router を選びます。",
-      },
-    },
-    {
-      question: {
-        en: "Why use createBrowserRouter instead of BrowserRouter?",
-        np: "BrowserRouter बाट createBrowserRouter किन?",
-        jp: "BrowserRouter より createBrowserRouter を使う理由は？",
-      },
-      answer: {
-        en: "`createBrowserRouter` unlocks the data API: loaders, actions, fetcher, `defer`, and `<Await>` for streaming. It also enables better error boundaries per route and the `shouldRevalidate` hook. `BrowserRouter` is still fine for apps that do not need these features, but new projects should prefer the data router.",
-        np: "`createBrowserRouter` ले loaders/actions/fetcher/defer unlock गर्छ; per-route error boundary। data API नचाहिए `BrowserRouter` ठीक। नयाँ project data router prefer।",
-        jp: "`createBrowserRouter` はローダー・アクション・fetcher・`defer`・`<Await>` などデータ API を使えるようにします。ルートごとのエラーバウンダリも強化されます。これらが不要なら `BrowserRouter` でも問題ありませんが、新規プロジェクトはデータルーターを推奨します。",
+        en: "<b>BrowserRouter</b> uses the HTML5 History API — clean URLs like `/posts/42`. Requires the server to serve `index.html` for all routes (configure Nginx / Vite's `historyApiFallback`). <b>HashRouter</b> uses the URL hash — `/#/posts/42`. No server config needed; works on any static host. Use BrowserRouter for modern apps; HashRouter only when you can't control the server.",
+        np: "BrowserRouter = clean URLs (/posts/42), server config चाहिन्छ। HashRouter = /#/ URLs, server config चाहिँदैन।",
+        jp: "BrowserRouter はクリーンな URL でサーバー設定が必要。HashRouter は `/#/` 形式でサーバー設定不要。",
       },
     },
     {
       question: {
         en: "How do I handle 404 pages?",
-        np: "404 pages कसरी?",
+        np: "404 pages कसरी handle गर्ने?",
         jp: "404 ページはどう処理する？",
       },
       answer: {
-        en: "Add a catch-all route with `path: \"*\"` as the last entry at the top level of your router config. It matches any URL that no other route claims. You can also let an individual route's `errorElement` catch loader 404 responses using `isRouteErrorResponse`.",
-        np: "`path: \"*\"` router config को अन्तिम entry मा। वा loader बाट 404 throw + `isRouteErrorResponse`।",
-        jp: "ルーター設定のトップレベルの最後に `path: \"*\"` のキャッチオールルートを追加します。ローダーで 404 を `throw json({}, { status: 404 })` し、`isRouteErrorResponse` で判別する方法もあります。",
+        en: "Add a catch-all route at the END of your `<Routes>` with `path=\"*\"`. React Router tries routes in order — `*` only matches if nothing else did. `<Route path=\"*\" element={<NotFound />} />`. This must be last, or it will match before specific routes.",
+        np: "Routes को अन्तमा `path=\"*\"` भएको route थप्नुहोस्। यो सबैभन्दा पछि match हुन्छ।",
+        jp: "`<Routes>` の末尾に `path=\"*\"` を追加。他のルートにマッチしなかった場合にのみ使われます。",
       },
     },
     {
       question: {
-        en: "Can I pass data between pages without URL params?",
-        np: "URL params बिना pages बीच data pass?",
-        jp: "URL パラメータなしでページ間データを渡せる？",
+        en: "What is the difference between `<Link>` and `<a>`?",
+        np: "`<Link>` र `<a>` मा के फरक?",
+        jp: "`<Link>` と `<a>` の違いは？",
       },
       answer: {
-        en: "Yes — use `useNavigate('/path', { state: {...} })` or `<Link to=\"/path\" state={...}>`. Read it with `useLocation().state`. This state lives in session history and is lost on manual refresh; use a persistent store (Zustand, localStorage) for data that must survive reloads.",
-        np: "`navigate(path, { state })` वा `<Link state={...}>`; `useLocation().state` ले पढ्ने। refresh मा गुम्छ; reload survive गर्न store/localStorage।",
-        jp: "`useNavigate('/path', { state: {...} })` か `<Link state={...}>` で渡し、`useLocation().state` で読みます。セッション履歴に存在するためリロードで消えます。永続化が必要なら Zustand や localStorage を使います。",
+        en: "`<a href=\"/posts\">` causes a full page reload — the browser sends a new HTTP request. `<Link to=\"/posts\">` intercepts the click, updates the URL using the History API, and swaps the React component — no server request, no flicker, no lost state. Use `<Link>` for internal navigation; `<a>` for external links (other domains).",
+        np: "`<a>` ले full page reload गर्छ। `<Link>` ले component swap मात्र गर्छ, server request पठाउँदैन।",
+        jp: "`<a>` はページ全体をリロード。`<Link>` はクライアント側でコンポーネントを切り替えるだけです。",
       },
     },
     {
       question: {
-        en: "How do I preserve scroll position on navigation?",
-        np: "Navigation मा scroll position कसरी preserve?",
-        jp: "ナビゲーション時にスクロール位置を保持するには？",
+        en: "How do I show a loading state during navigation?",
+        np: "Navigation को बेला loading state कसरी देखाउने?",
+        jp: "ナビゲーション中にローディングを表示するには？",
       },
       answer: {
-        en: "React Router v6 with `createBrowserRouter` handles scroll restoration automatically for most cases. For fine-grained control, add `<ScrollRestoration />` from `react-router-dom` once inside your root layout. For programmatic scrolling (e.g. scroll-to-top on route change), use `useEffect` with `window.scrollTo(0, 0)` and `useLocation` as the trigger.",
-        np: "`createBrowserRouter` ले mostly auto handle। fine-grained: `<ScrollRestoration />` root layout मा एकपटक। programmatic: `useEffect` + `useLocation` + `window.scrollTo`।",
-        jp: "`createBrowserRouter` は多くの場合スクロール復元を自動で処理します。細かい制御には `<ScrollRestoration />` をルートレイアウトに一か所置きます。ルート変更でトップへ戻したい場合は `useEffect` と `useLocation` で `window.scrollTo(0, 0)` を呼びます。",
+        en: "For lazy-loaded routes, wrap with `<Suspense fallback={<Spinner />}>` — React shows the fallback while the chunk downloads. For data-loading patterns (React Router loaders), use `const navigation = useNavigation(); navigation.state === 'loading'`.",
+        np: "Lazy routes मा `<Suspense fallback={<Spinner />}>` use गर्नुहोस्। Data loading मा `useNavigation()` hook।",
+        jp: "lazy ルートには `<Suspense>` が便利。データローディングには `useNavigation()` フックを使います。",
       },
     },
     {
       question: {
-        en: "What is the difference between useNavigate and redirect?",
-        np: "useNavigate र redirect को फरक?",
-        jp: "useNavigate と redirect の違いは？",
+        en: "How do I pass data between routes without URL params?",
+        np: "URL params बिना routes बीचमा data कसरी pass गर्ने?",
+        jp: "URLパラメータなしでルート間でデータを渡すには？",
       },
       answer: {
-        en: "`useNavigate` is a hook — use it inside React components and hooks. `redirect` is a utility function from `react-router-dom` intended for use inside loaders and actions (outside the React render tree) where hooks cannot be called. Both produce navigation, but from different runtime contexts.",
-        np: "`useNavigate` — hook; component/hook भित्र। `redirect` — loader/action भित्र (React render बाहिर)। उत्पादन एउटै — navigation; context फरक।",
-        jp: "`useNavigate` はフック — コンポーネントやカスタムフック内で使います。`redirect` はローダー・アクション（Reactのレンダーツリーの外側）で使うユーティリティ関数です。どちらもナビゲーションを生成しますが、呼び出しコンテキストが異なります。",
+        en: "Three options:\n• <b>Router state</b>: `navigate('/success', { state: { orderId } })` — lost on page refresh, good for one-time messages\n• <b>Global state</b>: Zustand / Context — persists while the app is open\n• <b>Server refetch</b>: fetch on the destination page with TanStack Query — most reliable, works after refresh",
+        np: "Router state (navigate), global state (Zustand), वा destination मा re-fetch (TanStack Query)।",
+        jp: "router state・global state・サーバーフェッチの3択。リフレッシュ後も必要なら TanStack Query が最確実。",
       },
-    },
-    {
-      question: {
-        en: "How do I test components that use React Router?",
-        np: "React Router भएका components कसरी test?",
-        jp: "React Router を使うコンポーネントのテストは？",
-      },
-      answer: {
-        en: "Wrap the component under test in `<MemoryRouter initialEntries={['/your-path']}>` (for `BrowserRouter`-based apps) or use `createMemoryRouter` + `RouterProvider` for data-router apps. Both keep routing in-memory without a browser. Testing Library's `render` + your router wrapper lets you assert navigation and URL-driven behavior.",
-        np: "`<MemoryRouter initialEntries={['/path']}>` wrap वा `createMemoryRouter` + `RouterProvider`। in-memory routing — browser नचाहिने। Testing Library render + wrapper।",
-        jp: "`BrowserRouter` 系なら `<MemoryRouter initialEntries={['/path']}>` でラップします。データルーター系は `createMemoryRouter` + `RouterProvider` を使います。どちらもブラウザ不要で in-memory にルーティングを保ちます。Testing Library の `render` と組み合わせてナビゲーションを検証できます。",
-      },
-    },
-    {
-      question: {
-        en: "Should routing logic go in components or in route loaders?",
-        np: "Routing logic — component मा कि loader मा?",
-        jp: "ルーティングロジックはコンポーネントに書くべきか、ローダーに書くべきか？",
-      },
-      answer: {
-        en: "Prefer loaders for data that the route needs before it can render — this enables parallel data fetching, better error boundaries per route, and avoids `useEffect` waterfalls. Keep inside components: user-interaction-triggered fetches, mutations, and UI state. As a rule: if the data is required to show the page at all, it belongs in a loader.",
-        np: "Loader: page render गर्न चाहिने data (parallel fetch, better error boundary, useEffect waterfall नहोस्)। Component: user interaction triggered fetch, mutation, UI state। rule: page देखाउनै चाहिने data → loader।",
-        jp: "ページ描画に必須なデータはローダーに置くのが望ましいです。並列データ取得・ルートごとのエラーバウンダリ・`useEffect` のウォーターフォール回避につながります。ユーザー操作トリガーの取得・ミューテーション・UI 状態はコンポーネントに残します。原則: ページ表示に絶対必要なデータはローダーへ。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Set up `createBrowserRouter` with at least three routes (Home, Products list, Product detail with `:id`), and an `AppLayout` that renders a `<Navbar />` and `<Outlet />`.",
-      np: "`createBrowserRouter` — Home, Products, `/products/:id`; AppLayout → Navbar + Outlet।",
-      jp: "`createBrowserRouter` で Home・Products 一覧・`/products/:id` の 3 ルートを設定し、`AppLayout` に Navbar と `<Outlet />` を置く。",
-    },
-    {
-      en: "Implement `<NavLink>` with an `isActive` class in the navbar, and a `ProtectedRoute` that redirects unauthenticated users to `/login` with the `from` location preserved.",
-      np: "NavLink active class; ProtectedRoute → `/login` redirect, `from` location preserve।",
-      jp: "ナビバーに isActive スタイル付きの `<NavLink>` を実装し、`ProtectedRoute` で未認証ユーザーを `from` ロケーションを保持して `/login` にリダイレクトする。",
-    },
-    {
-      en: "Add `useSearchParams` to the Products page for a category filter and page number, then write a `productLoader` that throws a 404 `Response` if the product is not found.",
-      np: "Products page मा useSearchParams (category + page); productLoader — product नभेटे 404 throw।",
-      jp: "Products ページに `useSearchParams` でカテゴリフィルタとページ番号を追加し、`productLoader` で商品が見つからない場合に 404 `Response` をスローする。",
     },
   ],
 };

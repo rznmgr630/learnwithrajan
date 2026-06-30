@@ -3,369 +3,288 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_2_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Day 2 is about tooling: a repeatable dev environment, generating a real project with a bundler, reading the folder layout, and writing a small component you can import elsewhere. By the end you should recognize every top-level file in a Vite + React starter and know where to add new components.",
-      np: "दिन २ उपकरण मा केन्द्रित: दोहोर्याउन मिल्ने विकास वातावरण, bundler सहित परियोजना बनाउने, फोल्डर लेआउट पढ्ने, र अन्तर्ग्रहण गर्न मिल्ने सानो कम्पोनेन्ट। अन्त्यमा Vite + React starter का मुख्य फाइल चिन्नुहोस्।",
-      jp: "2日目は開発環境とプロジェクトの骨格です。エディタと Node をそろえ、Vite でアプリを生成し、ディレクトリの役割を把握し、小さなコンポーネントを切り出してみます。",
+      en: "A well-organized project saves hours of confusion later. React doesn't enforce a folder structure — you decide. But there are proven patterns that scale.\n\nAnalogy: organizing a project is like setting up a kitchen. You can throw everything in one drawer, but you'll waste time searching. Put knives in one place, spices on one shelf — and everything is findable in seconds.\n\nThe same principle applies to code: components in `components/`, utilities in `utils/`, data-fetching logic in `hooks/` or `services/`.",
+      np: "React folder structure enforce गर्दैन। तर proven patterns छन्। Kitchen जस्तै — सबै एक drawer मा राख्न सकिन्छ, तर खोज्न समय लाग्छ।",
+      jp: "React はフォルダ構成を強制しません。キッチンの整理と同じ — 場所を決めると探す時間が減ります。",
     },
     {
-      en: "Lessons 03–07 cover: scaffold & structure & components, then how React updates the UI (render vs commit, reconciliation at a high level), and finally the wider ecosystem (routing, data, styling, meta-frameworks) you bolt on around the core library. Commands use Vite; CRA is legacy for new apps — ideas still transfer.",
-      np: "०३–०७: scaffold, संरचना, कम्पोनेन्ट; अनि React ले UI कसरी अद्यावधिक गर्छ (render vs commit, reconciliation); अन्त्यमा इकोसिस्टम (routing, data, styling, meta-framework)। Vite; CRA पुरानो — विचार उस्तै।",
-      jp: "03〜07：作成・構成・コンポーネント → React が UI をどう更新するか（レンダーとコミット、和解の概要）→ 核のまわりのエコシステム（ルーティング、取得、スタイル、メタフレームワーク）。Vite 前提。CRA は新規では旧式寄りですが考え方は共通です。",
+      en: "In Day 2 we cover:\n• <b>ES module imports and exports</b> — named vs default\n• <b>Organizing component files</b> — flat vs feature-based layouts\n• <b>The entry chain</b> — index.html → main.jsx → App.jsx\n• <b>Path aliases</b> — replacing `../../components/Button` with `@/components/Button`\n• <b>React DevTools</b> — inspecting your component tree and debugging re-renders",
+      np: "Day 2 मा: ES modules, file organization, entry chain, path aliases, React DevTools।",
+      jp: "Day 2: ES モジュール、ファイル構成、エントリーチェーン、パスエイリアス、React DevTools を学びます。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Setting up the development environment",
-        np: "विकास वातावरण सेटअप",
-        jp: "開発環境のセットアップ",
-      },
+      title: { en: "ES Modules — import and export", np: "ES Modules — import र export", jp: "ES モジュール — import と export" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Install Node.js LTS from nodejs.org (or use nvm/fnm to switch versions per project). LTS gives you a stable `node` and `npm` so you can run `npm create`, `npm install`, and `npm run dev` without surprises.",
-            np: "Node.js LTS nodejs.org बाट (वा nvm/fnm)। LTS ले स्थिर `node` र `npm` दिन्छ — `npm create`, `install`, `run dev`।",
-            jp: "Node.js（LTS） を入れます（nvm / fnm でバージョン切替も可）。`npm create` や `npm run dev` の前提になります。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "Terminal — macOS Terminal, Windows Terminal, or the integrated terminal in VS Code (`View → Terminal`). You will live here for installs and scripts.",
-              np: "टर्मिनल — macOS Terminal, Windows Terminal, वा VS Code टर्मिनल। स्थापना र script यहीँ।",
-              jp: "ターミナル — OS 付属か VS Code 統合ターミナル。インストールと npm script はここで実行します。",
-            },
-            {
-              en: "Editor — VS Code with extensions such as ESLint and the official ES7+ React/Redux/React-Native snippets (optional) speeds up JSX. Enable “format on save” if your team uses Prettier.",
-              np: "सम्पादक — VS Code, ESLint, React snippets (वैकल्पिक)। टिमले Prettier प्रयोग गरे फर्म्याट अन सेभ।",
-              jp: "エディタ — VS Code + ESLint など。チームで Prettier なら保存時フォーマットを有効に。",
-            },
-            {
-              en: "Browser — Chrome, Edge, or Firefox with React DevTools (browser extension) so you can inspect the component tree after the app runs.",
-              np: "ब्राउजर — Chrome/Edge/Firefox र React DevTools extension — कम्पोनेन्ट रूख हेर्न।",
-              jp: "ブラウザ — Chrome 等 + React DevTools 拡張でコンポーネントツリーを確認します。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "03 · Creating a React app",
-        np: "०३ · React एप बनाउने",
-        jp: "03 · React アプリの作成",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The modern default is Vite: fast dev server, native ESM, and minimal config. `npm create vite@latest` downloads the latest template wizard; you pick a project name and the React or React + TypeScript template.",
-            np: "आधुनिक मानक Vite: छिटो dev server, ESM, कम config। `npm create vite@latest` ले wizard चलाउँछ — नाम र React वा React + TS टेम्प्लेट छान्नुहोस्।",
-            jp: "現状の定番は Vite です。`npm create vite@latest` でウィザードが開き、React または React + TypeScript を選びます。",
+            en: "<b>ES Modules</b> are JavaScript's built-in system for splitting code across files. Before modules, JavaScript had no official way to share code between files — everything was global and messy. Modules fix that.\n\nThere are two export styles:\n• <b>Default export</b> — one per file, imported with any name you choose\n  ↳ Use for the main thing a file provides (usually a component)\n• <b>Named export</b> — multiple per file, imported by exact name\n  ↳ Use for utilities, hooks, constants, types\n\nRule of thumb: components → default export. Utilities and hooks → named exports.",
+            np: "ES Modules = JavaScript को code-sharing system। Default export (एक per file) vs Named export (धेरै per file)।",
+            jp: "ES モジュールは JS の公式コード共有システム。デフォルト（1 つ）vs 名前付き（複数）。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Scaffold + first run",
-            np: "Scaffold + पहिलो चलाउने",
-            jp: "作成して起動",
-          },
-          code: `# Interactive wizard (choose React or React + TypeScript)
-npm create vite@latest
-
-# Or non-interactive example:
-npm create vite@latest my-app -- --template react
-cd my-app
-npm install
-npm run dev`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Create React App (`create-react-app`) still exists in older courses; it wraps webpack and is slower to start than Vite. If you maintain CRA apps, the ideas in this day still apply — entry `index.js`, `src/App.js`, `public/index.html`.",
-            np: "CRA पुराना पाठ्यक्रममा; webpack, Vite भन्दा ढिलो सुरु। CRA मर्मत गर्दा पनि — `index.js`, `src/App.js`, `public/index.html` उस्तै अवधारणा।",
-            jp: "CRA は教材で残っていますが、新規は Vite やフレームワークが主流です。CRA でも入口・`src`・`public` の役割は同型です。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "`package.json` — lists dependencies (React, etc.) and scripts (`dev`, `build`, `preview`).",
-              np: "`package.json` — dependencies (React) र scripts (`dev`, `build`, `preview`)।",
-              jp: "`package.json` — 依存関係と npm scripts（`dev` / `build` 等）の定義。",
-            },
-            {
-              en: "`package-lock.json` (or `pnpm-lock.yaml`) — pins exact versions so teammates get the same tree under `node_modules`.",
-              np: "`package-lock.json` — सटीक संस्करण पिन गर्छ — `node_modules` उस्तै।",
-              jp: "ロックファイルで依存のバージョンを固定し、環境差を減らします。",
-            },
-            {
-              en: "`npm run dev` — starts the development server with Hot Module Replacement / Fast Refresh so edits re-render without losing all client state when possible.",
-              np: "`npm run dev` — dev server + Fast Refresh — सम्पादनले छिटो पुन: प्रदर्शन।",
-              jp: "`npm run dev` — 開発サーバーと Fast Refresh で編集がすぐ反映されます。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "04 · Project structure",
-        np: "०४ · परियोजना संरचना",
-        jp: "04 · プロジェクト構成",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Vite keeps a thin root: `index.html` at the top (not inside `public/`) is the real entry the browser loads — it contains a `<script type=\"module\" src=\"/src/main.jsx\">` (or `.tsx`). `public/` holds static assets copied as-is (favicon, `robots.txt`). `src/` is where your React code lives.",
-            np: "Vite पातलो जरा: `index.html` माथि (public भित्र होइन) — ब्राउजर प्रवेश; `<script type=\"module\" src=\"/src/main.jsx\">`। `public/` स्थिर फाइल। `src/` React कोड।",
-            jp: "`index.html` がルートにあり、`<script type=\"module\" src=\"/src/main.jsx\">` で JS を読み込みます。`public/` はそのまま配信される静的ファイル、`src/` がアプリ本体です。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Typical Vite + React layout (simplified)",
-            np: "Vite + React लेआउट (सरलीकृत)",
-            jp: "典型的なフォルダ構成（簡略）",
-          },
-          code: `my-app/
-├── index.html          # Browser entry; links to /src/main.jsx
-├── package.json
-├── vite.config.js      # Vite plugins & path aliases (optional)
-├── public/
-│   └── vite.svg        # Served at /vite.svg
-└── src/
-    ├── main.jsx        # createRoot + render(<App />)
-    ├── App.jsx         # Root component (often refactored later)
-    ├── App.css
-    └── assets/         # Images imported from JS (hashed on build)`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Files under `src/` are bundled — imports are analyzed, JSX is compiled, and unused code can be tree-shaken in production. Files in `public/` are not processed; use them for files that must keep exact URLs or names.",
-            np: "`src/` भित्र bundle — import विश्लेषण, JSX कम्पाइल। `public/` प्रक्रिया हुँदैन; URL/नाम ठ्याक्कै चाहिने।",
-            jp: "`src/` はバンドル対象、`public/` はビルド処理を通さずそのまま配信されます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "05 · Creating a React component",
-        np: "०५ · React कम्पोनेन्ट बनाउने",
-        jp: "05 · React コンポーネントの作成",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A function component is a JavaScript function whose name starts with a capital letter and that returns JSX. Export it as `default` when each file owns one primary component (Vite/React style), or use named exports when a file exports several small helpers.",
-            np: "फंक्शन कम्पोनेन्ट — नाम ठूलो अक्षरबाट, JSX फर्काउँछ। फाइलमा एक मुख्य भए `default export`; धेरै साना भए named export।",
-            jp: "関数コンポーネントは先頭大文字の関数で JSX を返すものです。ファイルごとに主役が一つなら default export、複数なら named export が使われます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "src/components/Greeting.jsx",
-            np: "src/components/Greeting.jsx",
-            jp: "src/components/Greeting.jsx",
-          },
-          code: `function Greeting({ name }) {
-  return (
-    <section aria-labelledby="greeting-heading">
-      <h2 id="greeting-heading">Hello, {name}</h2>
-      <p>Welcome to your Vite + React app.</p>
-    </section>
-  );
+          title: { en: "Named vs default exports and imports", np: "Named vs default export/import", jp: "名前付き vs デフォルトのエクスポート" },
+          code: `// ─── src/components/Button.jsx ───────────────────────────
+// Default export — one main thing from this file
+export default function Button({ label, onClick }) {
+  return <button onClick={onClick}>{label}</button>;
 }
 
-export default Greeting;`,
+// ─── src/utils/format.js ──────────────────────────────────
+// Named exports — multiple utilities from one file
+export function formatDate(date) {
+  return new Date(date).toLocaleDateString();
+}
+
+export function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export const MAX_ITEMS = 100;
+
+// ─── src/App.jsx ──────────────────────────────────────────
+// Importing a default export (you name it yourself)
+import Button from './components/Button';
+
+// Importing named exports (must match exact name)
+import { formatDate, capitalize, MAX_ITEMS } from './utils/format';
+
+// Rename on import with 'as'
+import { formatDate as fmtDate } from './utils/format';`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Common import/export mistakes:\n• Mixing up default and named imports — `import { Button }` when Button is a default export gives `undefined`\n• Forgetting the curly braces for named imports\n• Circular imports (A imports B, B imports A) — causes bugs at runtime\n\n<b>Re-exporting</b> with `export { Button } from './Button'` in an `index.js` file lets you group related exports together for cleaner imports.",
+            np: "Default import: `import Button` (curly braces नाइ)। Named import: `import { fn }` (curly braces चाहिन्छ)।",
+            jp: "デフォルトは波括弧なし、名前付きは波括弧あり。混同に注意。",
+          },
+        },
+      ],
+    },
+    {
+      title: { en: "Organizing your component files", np: "Component files organize गर्ने", jp: "コンポーネントファイルの整理" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "There is no single correct way to organize a React project. But two layouts dominate in practice: <b>flat by type</b> and <b>feature-based</b>.\n\n<b>Flat by type</b> (great for small projects, under 20 components):\n• All components in `src/components/`\n• All hooks in `src/hooks/`\n• All utilities in `src/utils/`\n\n<b>Feature-based</b> (scales to large apps):\n• Each feature gets its own folder: `src/features/posts/`\n• That folder contains the components, hooks, and utils just for that feature\n• Shared things go in `src/shared/` or `src/common/`\n\nStart flat, move to feature-based when you have 20+ components or multiple developers.",
+            np: "Flat by type (small project) vs Feature-based (large app)। 20+ components भएपछि feature-based तिर जानुस्।",
+            jp: "タイプ別フラット（小規模向け）vs フィーチャー別（大規模向け）。20 コンポーネントを超えたら移行検討。",
+          },
         },
         {
           type: "code",
-          title: {
-            en: "Use it from App.jsx",
-            np: "App.jsx बाट प्रयोग",
-            jp: "App.jsx から利用",
+          title: { en: "Flat vs feature-based folder layout", np: "Flat vs Feature-based layout", jp: "フラット vs フィーチャー構成" },
+          code: `// ─── FLAT LAYOUT (good for learning + small apps) ─────────
+src/
+  components/
+    Button.jsx
+    Card.jsx
+    Header.jsx
+    Modal.jsx
+  hooks/
+    useAuth.js
+    useFetch.js
+  utils/
+    format.js
+    validate.js
+  App.jsx
+  main.jsx
+
+// ─── FEATURE-BASED LAYOUT (good for large apps) ────────────
+src/
+  features/
+    posts/
+      PostCard.jsx
+      PostList.jsx
+      usePostData.js
+    auth/
+      LoginForm.jsx
+      useAuth.js
+  shared/
+    components/
+      Button.jsx
+      Modal.jsx
+    utils/
+      format.js
+  App.jsx
+  main.jsx
+
+// ─── BARREL FILE (index.js) — cleaner imports ───────────────
+// src/components/index.js
+export { default as Button } from './Button';
+export { default as Card } from './Card';
+export { default as Modal } from './Modal';
+
+// Now one import instead of three:
+import { Button, Card, Modal } from '@/components';`,
+        },
+      ],
+    },
+    {
+      title: { en: "The index.html → main.jsx → App.jsx chain", np: "Entry chain बुझ्ने", jp: "エントリーチェーンを理解する" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When you run `npm run dev` and open your browser, here's exactly what happens:\n\n1. Browser requests your site → Vite serves `index.html`\n2. `index.html` has a `<script type=\"module\" src=\"/src/main.jsx\">` — browser loads `main.jsx`\n3. `main.jsx` imports `App`, calls `createRoot`, and calls `render(<App />)`\n4. React runs `App()`, gets the component tree, and writes it into `<div id=\"root\">`\n5. Your page appears\n\nUnderstanding this chain helps debug blank pages — if your app shows nothing, check each step in order.",
+            np: "Browser → index.html → main.jsx → createRoot → App render। Blank page? यही chain check गर्नुस्।",
+            jp: "ブラウザ → index.html → main.jsx → createRoot → App レンダリング。空白画面はこのチェーンを順に確認。",
           },
-          code: `import Greeting from "./components/Greeting.jsx";
+        },
+        {
+          type: "code",
+          title: { en: "The three entry files in full", np: "तीन entry files", jp: "3 つのエントリーファイル" },
+          code: `// ─── index.html ────────────────────────────────────────────
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My App</title>
+  </head>
+  <body>
+    <!-- React mounts your entire app into this div -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+// ─── src/main.jsx ────────────────────────────────────────────
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+
+// ─── src/App.jsx ─────────────────────────────────────────────
+import './App.css';
 
 function App() {
   return (
     <main>
-      <Greeting name="Ada" />
+      <h1>Hello React</h1>
+      <p>Edit App.jsx and save to see hot reload in action.</p>
     </main>
   );
 }
 
 export default App;`,
         },
-        {
-          type: "paragraph",
-          text: {
-            en: "Convention: one component per file when the component grows; keep `components/` for reusable UI and leave `App` as the composition root until you add routing. Props like `{ name }` are covered in depth on the next days — here, treat them as function arguments for markup.",
-            np: "रूढिवाची: कम्पोनेन्ट ठूलो भए फाइल प्रति एक; `components/` पुन: प्रयोग UI। `App` संरचनाको जरा। `{ name }` props अर्को दिन — अहिले markup को तर्क जस्तै।",
-            jp: "成長に合わせて 1 ファイル 1 コンポーネント と `components/` 分けが一般的です。`{ name }` など props は続きの日で深掘りします。",
-          },
-        },
       ],
     },
     {
-      title: {
-        en: "06 · How React works",
-        np: "०६ · React कसरी काम गर्छ",
-        jp: "06 · React の動き方",
-      },
+      title: { en: "Absolute imports with path aliases", np: "Path aliases सँग absolute imports", jp: "パスエイリアスで絶対パスインポート" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React splits work into roughly render and commit. During render, your component functions run and React builds a lightweight description of the UI (a tree of React elements — plain objects, not DOM nodes). During commit, React applies the minimal DOM updates needed so the browser matches that description.",
-            np: "React ले काम render र commit मा बाँड्छ। render मा कम्पोनेन्ट चल्छ र UI को वर्णन (React elements — सादा object, DOM होइन)। commit मा न्यूनतम DOM अद्यावधिक।",
-            jp: "大ざっぱに レンダー と コミット があります。レンダーで関数コンポーネントが走り、UI の記述（要素のツリー。DOM ではない）が作られます。コミットで実 DOM へ必要最小限の変更が入ります。",
+            en: "Relative imports like `../../components/Button` are fragile — move a file one folder deeper and every import breaks. <b>Path aliases</b> let you write `@/components/Button` from anywhere in the project.\n\nThe `@` alias is the community standard — it maps to your `src/` folder. Most projects you encounter use this convention.",
+            np: "Relative import `../../` fragile छ। Path alias `@/` ले src/ folder map गर्छ — कहाँबाट पनि import गर्न मिल्छ।",
+            jp: "相対パス `../../` は壊れやすい。`@/` エイリアスで src/ を指定すればどこからでも同じパスで import できます。",
           },
         },
         {
-          type: "list",
-          variant: "number",
-          items: [
-            {
-              en: "Trigger — state or parent props change (or the root mounts).",
-              np: "ट्रिगर — state वा अभिभावक props बदलिन्छ (वा root mount)।",
-              jp: "きっかけ — state や親からの props の変化、または初回マウント。",
-            },
-            {
-              en: "Render — React calls your components purely to compute the next element tree (same inputs → same JSX output is the goal).",
-              np: "Render — React ले कम्पोनेन्ट शुद्ध रूपमा चलाउँछ — अर्को element रूख (उस्तै इनपुट → उस्तै JSX लक्ष्य)।",
-              jp: "レンダー — 次の要素ツリーを求めるためにコンポーネントを呼びます（同じ入力なら同じ出力が理想）。",
-            },
-            {
-              en: "Reconciliation — React diffs the new tree with the previous one and decides which fibers/DOM nodes can be reused vs recreated.",
-              np: "Reconciliation — React ले नयाँ र पुरानो रूख diff गर्छ — कुन fiber/DOM पुन: प्रयोग वा नयाँ।",
-              jp: "和解（リコンシリエーション） — 前回ツリーとの差分で、再利用と更新の範囲を決めます。",
-            },
-            {
-              en: "Commit — DOM mutations, refs, layout, and paint run in a careful order; concurrent features may yield work across frames (details come later).",
-              np: "Commit — DOM, ref, layout, paint क्रममा; concurrent ले frame बीच yield गर्न सक्छ (पछि)।",
-              jp: "コミット — DOM 更新や ref、レイアウトなどが順序立てて実行されます（Concurrent は後の話）。",
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The phrase virtual DOM usually means the in-memory tree of React elements from the last render and the tree from the current render. React does not mirror every HTML attribute into a giant parallel DOM object for its own sake — it compares element descriptions, figures out what changed, then updates the real DOM in one coordinated commit. That batching is why small frequent state changes do not always map one-to-one to expensive layout work.",
-            np: "virtual DOM भनेको प्राय स्मृतिमा React element रूख — अघिल्लो र अहिलेको render। React ले हरेक HTML विशेषता प्रतिलिपि गर्दैन — element वर्णन तुलना गर्छ, वास्तविक DOM मा समन्वयित commit। batching ले सानो state परिवर्तन सधै महँगो layout सँग मेल खाँदैन।",
-            jp: "仮想 DOM とは、ざっくり メモリ上の React 要素ツリー（前回レンダーと今回レンダー）を指す言い方です。ブラウザの DOM を常に丸ごと二重管理するのではなく、要素の記述同士を比較し、必要な差分だけ 実 DOM に反映します。まとめて更新するので、細かい state 変更が必ずしもレイアウト嵐に直結しません。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "react-virtual-dom",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Fiber is React’s internal unit of work (a linked structure per component instance). You rarely touch it directly; knowing it exists explains why “render” can be scheduled, paused, or retried in modern React.",
-            np: "Fiber React को आन्तरिक काम एकाइ — प्रत्यक्ष छुनु पर्दैन; \"render\" किन schedule/pause हुन्छ भन्ने बुझाउँछ।",
-            jp: "Fiber は内部の作業単位です。直接は触れませんが、「レンダーがスケジュールされる」理由の一端になります。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Rules of thumb for Day 2: keep side effects (timers, `fetch`, subscriptions) out of the render body — you will wire them with `useEffect` or data libraries soon. Treat render as predictable: given props/state, return JSX only.",
-            np: "दिन २ नियम: side effect (timer, `fetch`) render शरीरभित्र होइन — चाँडै `useEffect` वा data लाइब्रेरी। render लाई पूर्वानुमेय मान्नुहोस्।",
-            jp: "今日の心得：`fetch` やタイマーはレンダー本体に書かない（後で `useEffect` やデータ層へ）。props/state が決まれば JSX が決まるようにします。",
-          },
+          type: "code",
+          title: { en: "Setting up the @ path alias", np: "@ alias setup", jp: "@ エイリアスの設定" },
+          code: `// ─── vite.config.js ─────────────────────────────────────────
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+
+// ─── tsconfig.json (TypeScript only) ────────────────────────
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}
+
+// ─── Usage ───────────────────────────────────────────────────
+// Before (fragile):
+import Button from '../../components/Button';
+
+// After (clean alias):
+import Button from '@/components/Button';
+import { formatDate } from '@/utils/format';
+import { useAuth } from '@/hooks/useAuth';
+
+// Install Node types if you get a 'path' error:
+// npm install --save-dev @types/node`,
         },
       ],
     },
     {
-      title: {
-        en: "07 · React ecosystem",
-        np: "०७ · React इकोसिस्टम",
-        jp: "07 · React エコシステム",
-      },
+      title: { en: "React DevTools — your debugging superpower", np: "React DevTools — debugging superpower", jp: "React DevTools — デバッグの強力ツール" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The `react` and `react-dom` packages solve UI composition and updates. Almost everything else — routing, server data caching, global state, forms, CSS strategy, testing, bundling — comes from the ecosystem: community packages or meta-frameworks (Next.js, Remix, React Router v7 framework mode) that ship opinions on routing and data loading.",
-            np: "`react` / `react-dom` ले UI संरचना र अद्यावधिक। बाँकी — routing, data caching, state, forms, CSS, testing, bundling — इकोसिस्टम वा meta-framework (Next.js, Remix) बाट।",
-            jp: "`react` / `react-dom` は UI の組み立てと更新が中心です。ルーティング、サーバデータの取得・キャッシュ、フォーム、スタイル、テストなどは周辺のエコシステムか、それらを束ねるメタフレームワーク（Next.js、Remix など）で補います。",
+            en: "<b>React DevTools</b> is a browser extension (Chrome and Firefox) that adds two panels to your browser's developer tools:\n\n• <b>Components tab</b> — shows your entire component tree; click any component to inspect its current props and state\n  ↳ Essential for debugging \"why is this component showing the wrong data?\"\n• <b>Profiler tab</b> — records which components re-rendered and how long each took\n  ↳ Use this to find performance bottlenecks — components that re-render too often\n\nInstall it by searching \"React Developer Tools\" in the Chrome Web Store or Firefox Add-ons.",
+            np: "React DevTools = browser extension। Components tab (props/state inspect), Profiler tab (re-render track)।",
+            jp: "React DevTools はブラウザ拡張。Components タブで props/state を確認、Profiler タブで再レンダリングを追跡。",
           },
         },
         {
-          type: "table",
-          caption: {
-            en: "Common layers teams add (examples, not exhaustive)",
-            np: "टिमले थप्ने स्तर (उदाहरण मात्र)",
-            jp: "よく足す層の例（網羅ではありません）",
-          },
-          headers: [
-            { en: "Concern", np: "चिन्ता", jp: "関心" },
-            { en: "Typical tools", np: "साधारण उपकरण", jp: "例となるツール" },
-          ],
-          rows: [
-            [
-              { en: "URLs & screens", np: "URL र स्क्रिन", jp: "URL と画面" },
-              {
-                en: "React Router, TanStack Router; or a framework’s file-based routes",
-                np: "React Router; वा framework को route",
-                jp: "React Router、TanStack Router、各フレームのルート",
-              },
-            ],
-            [
-              { en: "Remote data", np: "टाढा डाटा", jp: "リモートデータ" },
-              {
-                en: "TanStack Query, SWR, Apollo Client; or framework loaders / Server Components",
-                np: "TanStack Query, SWR; वा framework loader",
-                jp: "TanStack Query、SWR、フレームの loader / RSC など",
-              },
-            ],
-            [
-              { en: "Styling", np: "शैली", jp: "スタイル" },
-              {
-                en: "CSS Modules, Tailwind, vanilla-extract, styled-components — pick one convention per app",
-                np: "CSS Modules, Tailwind — एपमा एक नियम",
-                jp: "CSS Modules、Tailwind 等。アプリ内で方針を統一",
-              },
-            ],
-            [
-              { en: "Forms", np: "फर्म", jp: "フォーム" },
-              {
-                en: "Controlled inputs in React; libraries like React Hook Form for scale",
-                np: "controlled input; React Hook Form ठूलो फर्म",
-                jp: "制御コンポーネント、規模が出たら React Hook Form など",
-              },
-            ],
-            [
-              { en: "Testing", np: "परीक्षण", jp: "テスト" },
-              {
-                en: "Vitest + React Testing Library; Playwright/Cypress for E2E",
-                np: "Vitest + RTL; Playwright E2E",
-                jp: "Vitest + Testing Library、E2E は Playwright 等",
-              },
-            ],
-          ],
+          type: "code",
+          title: { en: "What DevTools shows for a component", np: "DevTools inspection उदाहरण", jp: "DevTools での検査例" },
+          code: `// Clicking this component in DevTools shows:
+// Props: { items: Array(3), title: "My List", onSelect: f }
+// State: { selectedIndex: 1 }
+// Rendered by: App > MainPanel > ItemList
+
+function ItemList({ items, title, onSelect }) {
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  return (
+    <div>
+      <h2>{title}</h2>
+      {items.map((item, i) => (
+        <div
+          key={item.id}
+          style={{ fontWeight: i === selectedIndex ? 'bold' : 'normal' }}
+          onClick={() => { setSelectedIndex(i); onSelect(item); }}
+        >
+          {item.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// DevTools power tips:
+// ⚙️ Settings → "Highlight updates when components render"
+//    A flash appears on every re-render — spot unnecessary renders visually
+//
+// Profiler → Record → interact → Stop
+//    Flamegraph shows render time per component`,
         },
         {
           type: "paragraph",
           text: {
-            en: "You do not install all of these on Day 2. Start with plain React + Vite, then add one concern at a time when a real feature needs it — that avoids dependency soup and makes debugging easier.",
-            np: "दिन २ मा सबै स्थापना गर्नुहोइन। React + Vite बाट, एक चिन्ता एक पटक जब वास्तविक फिचर चाहिन्छ — निर्भरता soup बचाउँछ।",
-            jp: "今日ですべて入れる必要はありません。Vite + React から始め、必要になった関心ごとに一つずつ足すのが運用しやすいです。",
+            en: "Three DevTools workflows to use every day:\n\n• <b>Inspect state</b> — click a component in the tree → see its state in the right panel → edit values live to test different scenarios\n• <b>Trace a bug</b> — click the component showing wrong data → trace its props up the tree to find where the wrong value comes from\n• <b>Performance check</b> — use Profiler during a slow interaction to find which component is the bottleneck",
+            np: "DevTools 3 workflows: state inspect, bug source tracing, performance profiling।",
+            jp: "毎日使う 3 つのワークフロー：state 確認、バグ追跡、パフォーマンス計測。",
           },
         },
       ],
@@ -373,182 +292,44 @@ export default App;`,
   ],
   faq: [
     {
-      question: {
-        en: "What is the difference between `npm`, `npx`, and `node`?",
-        np: "`npm`, `npx`, `node` मा के फरक?",
-        jp: "`npm` と `npx` と `node` の違いは？",
-      },
+      question: { en: "What is the difference between .jsx and .js files?", np: ".jsx र .js फाइलमा के फरक?", jp: ".jsx と .js の違いは？" },
       answer: {
-        en: "`node` runs JavaScript on your machine. `npm` is the package manager that installs libraries into `node_modules` and reads `package.json`. `npx` runs a package binary without installing it globally — `npm create vite@latest` uses it to fetch and execute the Vite scaffolding tool once.",
-        np: "`node` JS चलाउँछ। `npm` लाइब्रेरी स्थापना। `npx` अस्थायी रूपमा package binary चलाउँछ — `npm create vite@latest`।",
-        jp: "`node` は実行環境、`npm` は依存のインストール、`npx` は（グローバルに入れずに）CLI を一時実行するのに使います。",
+        en: "Technically, Vite allows JSX syntax in both `.js` and `.jsx` files. The `.jsx` extension is a convention that signals 'this file contains JSX' — editors give better syntax highlighting and autocomplete. TypeScript projects use `.tsx` (TypeScript + JSX) and `.ts` (TypeScript, no JSX). Convention: use `.jsx` for components, `.js` for pure JavaScript utilities.",
+        np: "Technically दुवैमा JSX चल्छ। `.jsx` = JSX भएको signal। TypeScript: `.tsx` (JSX) र `.ts` (no JSX)।",
+        jp: "どちらでも JSX が動きます。`.jsx` は JSX を含む目印の慣習。TypeScript では `.tsx`/`.ts` を使います。",
       },
     },
     {
-      question: {
-        en: "Why is `node_modules` so large?",
-        np: "`node_modules` यति ठूलो किन?",
-        jp: "`node_modules` が巨大なのはなぜ？",
-      },
+      question: { en: "Do I need barrel files (index.js)?", np: "Barrel files (index.js) चाहिन्छ?", jp: "バレルファイル（index.js）は必要？" },
       answer: {
-        en: "Each dependency can pull in transitive dependencies (their own dependencies). The lockfile keeps versions reproducible. Do not commit hand-edits inside `node_modules`; reinstall with `npm install` if something looks corrupted.",
-        np: "प्रत्येक निर्भरताले अप्रत्यक्ष निर्भरता तान्छ। lockfile पुनरुत्पादन। `node_modules` हातले नसुनाउनु; बिग्रिए `npm install`।",
-        jp: "依存の依存が連鎖するためです。通常は Git にコミットせず、壊れたら `node_modules` を消して `npm install` し直します。",
+        en: "No, they are optional. Barrel files (`index.js` that re-exports from sibling files) make imports cleaner: `import { Button, Card } from '@/components'` instead of two separate lines. The downside: large barrel files slow down build tools (tree-shaking becomes harder). For projects under 50 components barrel files are fine. For large apps, some teams skip them for build performance.",
+        np: "Optional। Barrel files import clean बनाउँछ। 50 भन्दा कम component मा ठीक। Large app मा build slow हुन सक्छ।",
+        jp: "任意です。クリーンな import になりますが、大規模では tree-shaking が難しくなる場合も。",
       },
     },
     {
-      question: {
-        en: "Default export vs named export — when do I use which?",
-        np: "default vs named export — कहिले?",
-        jp: "default export と named export、どちらを使う？",
-      },
+      question: { en: "Why does Vite start so much faster than Create React App?", np: "Vite किन CRA भन्दा धेरै छिटो start हुन्छ?", jp: "Vite が CRA よりはるかに速い理由は？" },
       answer: {
-        en: "Default: one main thing per file (`import App from \"./App\"` — any local name works). Named: several exports (`import { formatDate, slugify } from \"./utils\"`). Mixing styles is fine; stay consistent within a codebase so imports are grep-friendly.",
-        np: "Default: फाइलमा एक मुख्य। Named: धेरै। मिश्रण मिल्छ; कोडबेसमा एकरूपता राख्नुहोस्।",
-        jp: "ファイルの主役が一つなら default、ユーティリティを複数出すなら named が読みやすいことが多いです。",
+        en: "CRA bundles your entire app with webpack before serving the first page — on a large project that can take 30–60 seconds. Vite skips the pre-bundling step in development: it serves source files as native ES modules and lets the browser do the importing. Only the files the current page actually needs are loaded. HMR (hot module replacement) is also faster because Vite only processes the one changed file.",
+        np: "CRA = bundle पहिले, server पछि (slow)। Vite = native ES modules serve (no bundle), browser import गर्छ (fast)।",
+        jp: "CRA は先にすべてバンドル（遅い）。Vite は ES モジュールをそのまま配信し、ブラウザが import します（速い）。",
       },
     },
     {
-      question: {
-        en: "Should component files be `.js` or `.jsx`?",
-        np: "`.js` वा `.jsx`?",
-        jp: "拡張子は `.js` と `.jsx` どちら？",
-      },
+      question: { en: "What is import.meta.env?", np: "import.meta.env के हो?", jp: "import.meta.env とは？" },
       answer: {
-        en: "If the file contains JSX, `.jsx` (or `.tsx` with TypeScript) makes that obvious to humans and tooling. Some teams use `.js` everywhere with Babel/Vite configured to parse JSX anyway — pick a team rule and stick to it.",
-        np: "JSX छ भने `.jsx` (वा `.tsx`)। केही टिम `.js` मात्र — टिम नियम पालन गर्नुहोस्।",
-        jp: "JSX を含むなら `.jsx` / `.tsx` が分かりやすいです。設定で `.js` にもできるのでチーム規約に合わせます。",
+        en: "`import.meta.env` is Vite's way to access environment variables in your React code. Create a `.env` file in your project root and prefix variables with `VITE_`: `VITE_API_URL=https://api.example.com`. Access it in code with `import.meta.env.VITE_API_URL`. Only variables prefixed with `VITE_` are exposed to the browser — never put secrets like private API keys here.",
+        np: "Vite environment variables। `.env` file मा `VITE_` prefix। `import.meta.env.VITE_NAME` ले access। Secret server side राख्नुस्।",
+        jp: "Vite の環境変数アクセス。`.env` に `VITE_` プレフィックスで定義し参照。秘密鍵はブラウザに置かない。",
       },
     },
     {
-      question: {
-        en: "What is `vite.config.js` for?",
-        np: "`vite.config.js` के लागि?",
-        jp: "`vite.config.js` は何用？",
-      },
+      question: { en: "My browser shows a blank white page — what do I check first?", np: "Browser blank white page — के check गर्ने?", jp: "ブラウザが真っ白 — まず何を確認する？" },
       answer: {
-        en: "Vite-specific settings: plugins (e.g. `@vitejs/plugin-react`), path aliases like `@/` → `src/`, server port, and build targets. You can start without touching it; add config when you need aliases or SSR later.",
-        np: "Vite सेटिङ: plugin, path alias `@/` → `src/`, port, build। सुरुमा नछोए पनि हुन्छ; alias चाहिएपछि।",
-        jp: "プラグイン、パスエイリアス、開発サーバー設定など。最初はデフォルトのままで問題ありません。",
+        en: "Check in this order: (1) Open browser DevTools (F12) → Console tab — is there a JavaScript error? Fix that first. (2) Check the Elements tab — is there content inside `<div id=\"root\">`? If empty, React failed to mount. (3) Check your terminal — is the Vite dev server running? Does it show errors? (4) Verify `main.jsx` — does `document.getElementById('root')` match the actual id in `index.html`? (5) Is `App.jsx` returning valid JSX with exactly one root element?",
+        np: "Order: (1) Console error, (2) #root content, (3) Vite terminal error, (4) getElementById id match, (5) JSX valid।",
+        jp: "確認順：① コンソールエラー、② #root の中身、③ Vite ターミナルエラー、④ id 一致、⑤ JSX の有効性。",
       },
-    },
-    {
-      question: {
-        en: "How do environment variables work in Vite?",
-        np: "Vite मा env कसरी?",
-        jp: "Vite で環境変数は？",
-      },
-      answer: {
-        en: "Define `VITE_`-prefixed variables in `.env`, `.env.local`, etc. Access them in client code as `import.meta.env.VITE_API_URL`. Only `VITE_*` keys are exposed to the browser bundle — never put secrets in front-end env files.",
-        np: "`.env` मा `VITE_` उपसर्ग। कोडमा `import.meta.env.VITE_*`। गोप्य कुरा frontend `.env` मा होइन।",
-        jp: "クライアントに載せる値は `VITE_` 接頭辞付きで `import.meta.env` から読みます。秘密情報はフロントの `.env` に置かないでください。",
-      },
-    },
-    {
-      question: {
-        en: "Can I put HTML pages inside `src/`?",
-        np: "`src/` भित्र HTML?",
-        jp: "`src/` に HTML ページを置ける？",
-      },
-      answer: {
-        en: "SPAs usually have one `index.html` at the project root. Additional “pages” are React components switched by the router, not separate `.html` files in `src/`. Multi-page setups exist but are a different Vite mode.",
-        np: "SPA मा प्राय एक `index.html` जरामा। अतिरिक्त \"पृष्ठ\" router ले कम्पोनेन्ट बदल्छ। बहु-पृष्ठ अर्को Vite मोड।",
-        jp: "典型的な SPA はルートの `index.html` 一枚で、画面はルーターがコンポーネントを切り替えます。",
-      },
-    },
-    {
-      question: {
-        en: "What breaks if I rename `main.jsx` but forget to update `index.html`?",
-        np: "`main.jsx` नाम बदल्यो, `index.html` बिर्सिए के हुन्छ?",
-        jp: "`main.jsx` をリネームしたのに `index.html` を直さないと？",
-      },
-      answer: {
-        en: "The browser requests the old path and gets 404 — blank page or Vite error overlay. The `<script type=\"module\" src=\"...\">` must always point to your real entry file.",
-        np: "ब्राउजर पुरानो path माग्छ — 404। `<script src=\"...\">` सधै वास्तविक entry मिलाउनुहोस्।",
-        jp: "モジュールの読み込みが失敗し、白画面やエラーオーバーレイになります。`index.html` の script パスを合わせます。",
-      },
-    },
-    {
-      question: {
-        en: "How does Fast Refresh differ from a full page reload?",
-        np: "Fast Refresh र पूर्ण reload मा फरक?",
-        jp: "Fast Refresh とフルリロードの違いは？",
-      },
-      answer: {
-        en: "Fast Refresh tries to patch components in place and preserve React state when your edit is compatible (e.g. JSX tweak). Syntax errors or certain edits still force a harder reload. It speeds the edit-save-feedback loop.",
-        np: "Fast Refresh स्थानमा patch — मिल्दो सम्पादनमा state जोगाउँछ। syntax त्रुटिमा कडा reload।",
-        jp: "互換のある変更では状態を保ったまま差し替えを試みます。構文エラーなどではフルリロードに近い挙動になります。",
-      },
-    },
-    {
-      question: {
-        en: "Should every component live in `components/`?",
-        np: "सबै `components/` मा?",
-        jp: "全部 `components/` に置く？",
-      },
-      answer: {
-        en: "Common pattern: `components/` for reusable UI, `pages/` or `routes/` when you adopt a router, `hooks/` for custom hooks, `lib/` for non-UI helpers. Flat `src/` is fine for tiny apps — refactor into folders as files multiply.",
-        np: "`components/` पुन: प्रयोग; router भए `pages/`; `hooks/`, `lib/`। सानो एपमा फ्ल्याट `src/` मिल्छ।",
-        jp: "再利用 UI は `components/`、ルート単位は `pages/` などに分けるパターンが多いです。小規模なら最初はフラットでも構いません。",
-      },
-    },
-    {
-      question: {
-        en: "What is reconciliation in one sentence?",
-        np: "Reconciliation एक वाक्यमा?",
-        jp: "リコンシリエーション（和解）を一文で？",
-      },
-      answer: {
-        en: "React compares the newly rendered element tree with the last one and reuses or updates the smallest set of internal nodes and DOM elements so the screen matches your latest JSX.",
-        np: "React ले नयाँ element रूख पुरानोसँग तुलना गर्छ र न्यूनतम internal/DOM नोड पुन: प्रयोग वा अद्यावधिक गर्छ।",
-        jp: "新しい要素ツリーと前回のツリーを比較し、画面を最新の JSX に合わせるために必要最小限のノードだけを再利用・更新することです。",
-      },
-    },
-    {
-      question: {
-        en: "Is the virtual DOM a second copy of the whole HTML page in memory?",
-        np: "virtual DOM पूरै HTML को दोस्रो प्रतिलिपि हो?",
-        jp: "仮想 DOM はページ全体の HTML のコピー？",
-      },
-      answer: {
-        en: "Not really. It is the tree of plain JavaScript objects React builds from your components — lightweight descriptions (type, props, children), not a full clone of every DOM property. The browser still owns the real DOM; React’s job is to compute patches so that DOM stays in sync with your latest UI description.",
-        np: "पूर्ण प्रतिलिपि होइन। सादा JS object रूख — हल्का वर्णन (type, props, children), हरेक DOM गुणको प्रतिलिपि होइन। वास्तविक DOM ब्राउजरको; React ले patch गन्छ।",
-        jp: "ページ全体の HTML を丸ごと複製しているわけではありません。要素を表す軽いオブジェクトのツリーで、ブラウザの 実 DOM は別です。React はそのツリー同士の差分から、実 DOM への最小の更新を計算します。",
-      },
-    },
-    {
-      question: {
-        en: "Is Next.js “React” or something different?",
-        np: "Next.js \"React\" हो वा फरक?",
-        jp: "Next.js は React とは別物？",
-      },
-      answer: {
-        en: "Next.js is a React framework: it still renders React components, but adds a file router, build pipeline, optional server-side data APIs, and deployment defaults. You learn the same component model; the framework decides where code runs (client vs server) more explicitly.",
-        np: "Next.js React फ्रेमवर्क हो — अझै React कम्पोनेन्ट; file router, build, server data API थप्छ। कम्पोनेन्ट मोडेल उस्तै; client vs server स्पष्ट।",
-        jp: "Next.js は React 上のフレームワークです。コンポーネントは React のままですが、ルーティングやビルド、データ取得の置き場（クライアント／サーバ）の扱いが強くなります。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Run `npm create vite@latest`, install deps, and confirm `npm run dev` opens the starter page.",
-      np: "`npm create vite@latest`, install, `npm run dev` ले starter खुल्छ भन्ने पुष्टि।",
-      jp: "Vite で作成し `npm run dev` で起動できることを確認する。",
-    },
-    {
-      en: "Trace the load chain: `index.html` → `src/main.jsx` → `App.jsx` in DevTools Network tab.",
-      np: "लोड चेन: `index.html` → `main.jsx` → `App.jsx` Network मा।",
-      jp: "Network タブで index.html → main → App の読み込み順を追う。",
-    },
-    {
-      en: "Add `src/components/Greeting.jsx`, import it into `App`, and change props to see Fast Refresh.",
-      np: "`Greeting.jsx` थपी `App` मा import; props बदल्दै Fast Refresh।",
-      jp: "新規コンポーネントを作り App から import、props を変えて Fast Refresh を体感する。",
-    },
-    {
-      en: "In your own words, describe render → reconcile → commit; note one ecosystem package you might add first (e.g. router) and why.",
-      np: "आफ्नै शब्दमा render → reconcile → commit; पहिलो इकोसिस्टम प्याकेज (जस्तै router) र किन।",
-      jp: "render → reconcile → commit を自分の言葉で説明し、最初に足しそうな周辺パッケージ（例：ルータ）と理由を一行で書く。",
     },
   ],
 };
