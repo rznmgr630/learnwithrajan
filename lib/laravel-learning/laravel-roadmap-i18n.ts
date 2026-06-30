@@ -30,6 +30,8 @@ const LARAVEL_TAG: Record<string, LocalizedString> = {
   caching: { en: "caching", np: "क्यासिङ", jp: "キャッシュ" },
   testing: { en: "testing", np: "परीक्षण", jp: "テスト" },
   pest: { en: "Pest", np: "Pest", jp: "Pest" },
+  sanctum: { en: "Sanctum", np: "Sanctum", jp: "Sanctum" },
+  "rest-api": { en: "REST API", np: "REST API", jp: "REST API" },
 };
 
 export function laravelTags(slugs: [string, string]): RoadmapTag[] {
@@ -109,6 +111,11 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
+  },
+  15: {
+    en: "Sanctum REST API — auth endpoints & full CRUD",
+    np: "Sanctum REST API — auth endpoints र full CRUD",
+    jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
 };
 
