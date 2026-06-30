@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_9_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Eloquent relationships map database foreign-key joins into expressive PHP methods. **hasOne / hasMany** define the parent side; **belongsTo** defines the child. **belongsToMany** handles many-to-many through a pivot table. Relationships are lazy by default — they only query when accessed.",
+      en: "Think of Eloquent relationships like the connections between people in real life — a user has many posts, a post belongs to a user, a student belongs to many courses.\n\nEloquent turns these real-world connections into simple PHP methods so you never have to write raw SQL joins.\n\n<b>The four core relationship types</b>\n• <b>hasOne</b> — one parent, one child (a user has one profile)\n• <b>hasMany</b> — one parent, many children (a user has many posts)\n• <b>belongsTo</b> — the child points back to its parent (a post belongs to a user)\n• <b>belongsToMany</b> — two models connected through a middle table called a pivot (a user belongs to many roles)\n\nRelationships are <b>lazy by default</b> — they only hit the database when you actually access them, not when you define them.",
       np: "Eloquent relationship ले FK joins PHP methods मा। hasOne/hasMany parent; belongsTo child; belongsToMany pivot।",
       jp: "Eloquent リレーションは外部キー結合を PHP メソッドで表現します。hasOne/hasMany が親側、belongsTo が子側、belongsToMany が多対多のピボットです。",
     },
     {
-      en: "The **N+1 problem** — accidentally firing one SQL query per related model — is the most common Eloquent performance pitfall. Solve it with `with()` (eager loading). **Soft deletes** mark records as deleted without physically removing rows, enabling `restore()` and audit trails. **Observers** centralize model event logic out of controllers.",
+      en: "Three more concepts round out this day:\n\n<b>N+1 problem</b>\n• Loading 100 posts then looping to get each post's author fires 101 queries — one for posts, then one per post for its author\n  ↳ Fix: use `with('author')` to load everything in 2 queries instead of 101\n\n<b>Soft deletes</b>\n• Instead of physically deleting a row, Laravel marks it with a timestamp in a `deleted_at` column\n  ↳ The row stays in the table but is invisible to normal queries — you can restore it any time\n\n<b>Observers</b>\n• An observer is a class that listens for model events (created, updated, deleted) and runs your code automatically\n  ↳ Keeps model-related side effects out of controllers and in one organised place",
       np: "N+1 problem: `with()` ले solve। Soft delete: row physically remove नगरी mark। Observer ले event logic centralize।",
       jp: "N+1 問題は `with()` で解決します。ソフトデリートは行を物理削除せず `deleted_at` を記録。オブザーバでモデルイベントロジックを集中管理できます。",
     },
@@ -24,7 +24,7 @@ export const LARAVEL_DAY_9_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "By convention Laravel infers the foreign key from the model name (e.g., `user_id` for `User`). You can override it by passing explicit arguments to the relation method. `belongsTo` can also use `withDefault()` to return a stub model instead of `null` when the foreign key is missing.",
+            en: "Laravel figures out the foreign key automatically by looking at the model name.\n\n<b>How the naming convention works</b>\n• If you call `belongsTo(User::class)`, Laravel looks for a `user_id` column on the current table\n  ↳ It takes the model name, converts it to snake_case, and adds `_id`\n• You can override this by passing the column name as the second argument: `$this->belongsTo(User::class, 'author_id')`\n\n<b>Avoiding null errors with `withDefault()`</b>\n• If a post has no `user_id`, accessing `$post->user` returns `null` — which causes a crash if you then try `$post->user->name`\n  ↳ `withDefault(['name' => 'Anonymous'])` returns a placeholder User model instead of `null`\n  ↳ Much safer when dealing with optional relationships",
             np: "Convention ले `user_id` infer। Override गर्न explicit argument। `withDefault()` ले null बाट जोगिन सकिन्छ।",
             jp: "規約で `user_id` などを自動推定。上書きするには関係メソッドに引数を渡します。`withDefault()` で外部キーが null のとき空モデルを返せます。",
           },
@@ -139,7 +139,7 @@ foreach ($user->roles as $role) {
         {
           type: "paragraph",
           text: {
-            en: "**hasOneThrough** and **hasManyThrough** let you reach models across two foreign keys without a direct relationship. The classic example: a `Country` hasMany `User`s, and each `User` hasMany `Post`s — `Country` can access `Post`s through `User`s without a direct FK.",
+            en: "Sometimes two models are connected through a third, and you want to jump straight to the end without a direct foreign key.\n\n<b>hasManyThrough explained with an analogy</b>\n• Think of it like: Country → has many Users → each User has many Posts\n  ↳ You want to ask \"give me all posts written by users in this country\" — but there's no direct `country_id` on the `posts` table\n• `hasManyThrough(Post::class, User::class)` builds the two-step join for you automatically\n  ↳ Laravel figures out the chain — you don't have to write raw SQL",
             np: "hasOneThrough/hasManyThrough: Country→Users→Posts — direct FK बिना। Country ले Posts access।",
             jp: "hasOneThrough / hasManyThrough で 2 つの外部キーをまたいでモデルにアクセス。Country→Users→Posts が典型例です。",
           },
@@ -174,7 +174,7 @@ $posts   = $country->posts; // all posts by users in this country`,
         {
           type: "paragraph",
           text: {
-            en: "**Polymorphic relations** allow a single relationship to connect one model to multiple target model types. The classic use case: `Comment` can belong to either `Post` or `Video`. The `commentable_type` column stores the target model class, `commentable_id` stores the target ID.",
+            en: "A polymorphic relationship lets one model belong to multiple different model types — without creating a separate table for each.\n\n<b>Real-world example: comments</b>\n• Imagine you want users to leave comments on both blog posts and videos\n  ↳ Without polymorphism you'd need a `post_comments` table AND a `video_comments` table\n  ↳ With polymorphism, one `comments` table serves both — using two special columns\n• `commentable_type` stores which model owns the comment (e.g., `App\\Models\\Post` or `App\\Models\\Video`)\n• `commentable_id` stores the ID of that specific post or video\n  ↳ Together they uniquely identify the parent — no matter what type it is",
             np: "Polymorphic: Comment ले Post वा Video दुवैमा belong गर्न सक्छ। `commentable_type` र `commentable_id`।",
             jp: "ポリモーフィック関係で 1 つのリレーションが複数のモデル型につながります。Comment が Post にも Video にも属せる典型例です。",
           },
@@ -236,7 +236,7 @@ $parent  = $comment->commentable; // returns Post or Video instance`,
         {
           type: "paragraph",
           text: {
-            en: "The **N+1 problem** occurs when you iterate over a collection and access a lazy relationship inside the loop — Laravel fires 1 query to get the parent records, then N more (one per parent) to get each child. **Eager loading** with `with()` replaces the N queries with a single `WHERE IN (...)` query.",
+            en: "The N+1 problem is the most common performance mistake in Eloquent — and the easiest to fix once you spot it.\n\n<b>What is the N+1 problem?</b>\n• Imagine you load 100 blog posts, then loop through them to get each post's author\n  ↳ That's 1 query to get the posts + 100 queries to get each author = 101 total\n• The number of extra queries grows with your data — at 1,000 posts it becomes 1,001 queries\n  ↳ This kills performance and is easy to miss in development where datasets are small\n\n<b>The fix: eager loading with `with()`</b>\n• `Post::with('user')->get()` runs exactly 2 SQL queries — one for posts, one for all their users at once\n  ↳ Laravel connects them in memory — no extra query per post in the loop\n• Always use `with()` when you know you'll be accessing a relationship inside a loop",
             np: "N+1: loop भित्र lazy relationship access — 1+N queries। `with()` ले 1+1 queries मात्र।",
             jp: "N+1 問題はループ内で遅延リレーションにアクセスすることで発生。`with()` で `WHERE IN (...)` の 1 クエリに置き換えます。",
           },
@@ -296,7 +296,7 @@ echo $users->first()->posts_count; // no extra query for each user`,
         {
           type: "paragraph",
           text: {
-            en: "The `SoftDeletes` trait adds a `deleted_at` timestamp instead of physically deleting the row. All normal queries automatically filter out soft-deleted records (`WHERE deleted_at IS NULL`). Use `withTrashed()` to include them, `onlyTrashed()` to show only deleted records, and `restore()` to undelete.",
+            en: "Soft deletes give you a safety net — deleted records aren't really gone, just hidden.\n\n<b>How soft deletes work</b>\n• When you call `$post->delete()` on a model using `SoftDeletes`, Laravel sets `deleted_at` to the current timestamp instead of running `DELETE FROM posts`\n  ↳ The row stays in the database — it's just marked as deleted\n• All normal queries automatically add `WHERE deleted_at IS NULL` so soft-deleted rows are invisible\n  ↳ You don't need to add any filtering yourself — it's handled behind the scenes\n\n<b>Working with soft-deleted records</b>\n• `Post::withTrashed()->get()` — returns all records, including soft-deleted ones\n• `Post::onlyTrashed()->get()` — returns only the soft-deleted records\n• `$post->restore()` — clears `deleted_at` and brings the record back\n• `$post->forceDelete()` — physically removes the row from the database permanently",
             np: "`SoftDeletes` trait ले `deleted_at` set गर्छ। Normal query मा filter। `withTrashed()` ले सब देखाउँछ।",
             jp: "`SoftDeletes` トレイトは物理削除の代わりに `deleted_at` を記録。通常クエリは自動的にフィルタ。`withTrashed()` で全件、`onlyTrashed()` で削除済みのみ取得できます。",
           },
@@ -340,7 +340,7 @@ Post::withTrashed()->find(1)->restore(); // clears deleted_at
         {
           type: "paragraph",
           text: {
-            en: "**Model events** fire at defined lifecycle points: `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `restoring`, `restored`. Listen inline in `boot()` for simple cases, or create a dedicated **observer** class for more complex logic.",
+            en: "Model events let you run code automatically when something happens to a model — like auto-generating a slug when a post is created, or soft-deleting related comments when a post is deleted.\n\n<b>When each event fires</b>\n• `creating` / `created` — fires before and after a new record is inserted into the database\n• `updating` / `updated` — fires before and after an existing record is changed\n• `saving` / `saved` — fires on both creates and updates (a catch-all for either)\n• `deleting` / `deleted` — fires before and after a record is deleted\n• `restoring` / `restored` — fires when a soft-deleted record is brought back\n\n<b>Two ways to listen to events</b>\n• For simple cases: add an inline closure inside `boot()` in your model\n  ↳ Quick and easy, but gets messy when you stack up multiple events\n• For complex cases: create a dedicated <b>Observer</b> class with one method per event\n  ↳ All event logic lives in one organised file — easier to read, test, and maintain",
             np: "Model events: `creating`, `created`, `updating`, `deleted` आदि। Simple: `boot()` मा inline। Complex: observer class।",
             jp: "モデルイベントはライフサイクルの各段階で発火。シンプルなら `boot()` に直接、複雑なロジックはオブザーバクラスに切り出します。",
           },
@@ -407,7 +407,7 @@ public function boot(): void
         jp: "Laravel はどうやって外部キー名を知りますか？",
       },
       answer: {
-        en: "Laravel uses the snake_case model name plus `_id`. For `belongsTo(User::class)` it expects `user_id`. For `hasMany(Post::class)` defined on a `User` model it expects `user_id` on the `posts` table. Override by passing the second argument: `$this->belongsTo(User::class, 'author_id')`. The third argument overrides the local key (usually `id`).",
+        en: "Laravel follows a naming convention so you don't have to spell out every column name.\n\n• For `belongsTo(User::class)` — Laravel looks for a `user_id` column on the current table\n• For `hasMany(Post::class)` on a `User` model — Laravel looks for `user_id` on the `posts` table\n  ↳ The pattern is always: the related model name in snake_case + `_id`\n\nIf your column has a different name (like `author_id` instead of `user_id`), pass it as the second argument:\n`$this->belongsTo(User::class, 'author_id')`\n  ↳ The third argument overrides the local key on your own table (defaults to `id`)",
         np: "Snake_case model name + `_id`। Override: `$this->belongsTo(User::class, 'author_id')`।",
         jp: "スネークケースのモデル名 + `_id` が規約です。上書きするには `$this->belongsTo(User::class, 'author_id')` のように第 2 引数で指定します。",
       },
@@ -419,7 +419,7 @@ public function boot(): void
         jp: "ピボットテーブル名が規約と異なる場合は？",
       },
       answer: {
-        en: "Pass the table name as the second argument to `belongsToMany()`: `return $this->belongsToMany(Role::class, 'user_role_assignments')`. You can also override both foreign key columns as the third and fourth arguments: `$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`.",
+        en: "By convention, Laravel expects the pivot table to be named using both model names in alphabetical order, singular, joined with an underscore — for example, `role_user` for User and Role.\n\nIf your table has a different name, pass it as the second argument:\n`$this->belongsToMany(Role::class, 'user_role_assignments')`\n\nIf your foreign key column names also don't match the convention, pass them as the third and fourth arguments:\n`$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`\n  ↳ Third argument = the foreign key pointing to the current model's table\n  ↳ Fourth argument = the foreign key pointing to the related model's table",
         np: "`$this->belongsToMany(Role::class, 'user_role_assignments')` — table name explicit।",
         jp: "`belongsToMany(Role::class, 'user_role_assignments')` のように第 2 引数でテーブル名を指定します。外部キー列名は第 3・第 4 引数で上書きできます。",
       },
@@ -431,7 +431,7 @@ public function boot(): void
         jp: "リレーションのカラムでフィルタするには？",
       },
       answer: {
-        en: "Use `whereHas()` to require that at least one related record matches a condition: `Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`. Use `whereDoesntHave()` for the inverse. For counting, `withCount()` adds a `_count` attribute without loading the relation. `has('comments', '>=', 3)` matches models with at least 3 related records.",
+        en: "Use `whereHas()` — it lets you filter parent models based on a condition in their related records.\n\n<b>Examples</b>\n• Get all posts that have at least one approved comment:\n`Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`\n  ↳ Only returns posts where a matching comment exists — posts with no approved comments are excluded\n• `whereDoesntHave('comments')` — returns posts with zero comments (the inverse)\n• `has('comments', '>=', 3)` — returns posts with 3 or more comments\n\n<b>Counting without loading</b>\n• `withCount('comments')` adds a `comments_count` integer to each post — without loading the actual comment models\n  ↳ Perfect for showing \"12 comments\" in a list without fetching all 12 comment rows",
         np: "`whereHas('comments', fn($q) => $q->where('approved', true))` — related condition। `withCount()` ले count।",
         jp: "`whereHas('comments', fn($q) => $q->where('approved', true))` で条件付きリレーションフィルタ。`withCount()` は件数を追加属性として取得します。",
       },
@@ -443,7 +443,7 @@ public function boot(): void
         jp: "`withCount` とは何ですか、どんな場面で使いますか？",
       },
       answer: {
-        en: "`User::withCount('posts')->get()` adds a `posts_count` integer attribute to each User without loading the actual Post models — the count is done as a subquery or aggregate in the SQL. Use it whenever you need to display \"X posts\" in a list without needing the post data itself, or to sort users by their post count with `->orderByDesc('posts_count')`.",
+        en: "`withCount()` gives you a number attached to each model — without loading all the related records.\n\n• `User::withCount('posts')->get()` adds a `posts_count` attribute to every User\n  ↳ Laravel runs a `COUNT(*)` in the SQL — no Post models are loaded into memory\n• Use it when you want to show \"Rajan has 12 posts\" in a list — you just need the number, not the posts themselves\n• You can also sort by it: `->orderByDesc('posts_count')` to rank users by most posts\n  ↳ Much more efficient than loading all posts and counting them in PHP",
         np: "`withCount('posts')` ले `posts_count` attribute add — Post models load गर्दैन। List display को लागि।",
         jp: "`withCount('posts')` は `posts_count` 属性を追加しますが Post モデルはロードしません。「X 件の投稿」表示や `orderByDesc('posts_count')` による並び替えに最適です。",
       },
@@ -455,7 +455,7 @@ public function boot(): void
         jp: "オブザーバと `boot()` での直接イベントリスニングの違いは？",
       },
       answer: {
-        en: "Both work identically at runtime. The difference is **organisation**: inline closures in `boot()` keep the logic close to the model definition but become messy with multiple events. An observer class groups all event methods in one file, making it easy to register, mock in tests, and disable temporarily. Prefer observers when you have more than 2–3 model events.",
+        en: "Both approaches work the same way at runtime — the difference is about keeping your code clean.\n\n<b>Inline listeners in `boot()`</b>\n• Quick to write for one or two simple events\n  ↳ Can get hard to read when you stack up many event closures in one method\n\n<b>Observer class</b>\n• All event methods (creating, updating, deleting, etc.) live in one file\n  ↳ Easy to find, read, test independently, and temporarily disable during tests\n\nAs a rule of thumb: use an observer as soon as you have more than 2–3 model events, or when the event logic is more than a couple of lines.",
         np: "Runtime मा same। Observer ले सबै event एक file मा — test गर्न सजिलो। 2-3 events भन्दा बढी भए observer।",
         jp: "ランタイムでの動作は同じ。オブザーバは全イベントを 1 ファイルにまとめ、テストでのモックや一時的な無効化が容易です。イベントが 2〜3 件を超えたらオブザーバへ移しましょう。",
       },

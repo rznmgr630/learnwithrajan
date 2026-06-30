@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_10_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**File storage** abstracts local disk, S3, and any cloud driver behind a single `Storage` facade. File uploads from forms follow a standard `$request->file('field')->store()` pattern. **Laravel's HTTP Client** wraps Guzzle with a fluent, test-friendly API for calling external APIs.",
+      en: "Most real applications need to save files (profile pictures, PDF invoices, CSV exports) and call external APIs (payment gateways, weather data, third-party services). Day 10 covers both.\n\n<b>File storage</b>\n• Laravel's `Storage` facade gives you one consistent API whether you're saving files to your local server or to Amazon S3\n  ↳ Swap from local disk to S3 by changing one line in `.env` — no code changes needed\n\n<b>HTTP Client</b>\n• Laravel's built-in HTTP Client lets you call external APIs cleanly, with retry logic and easy test support\n  ↳ No need to install Guzzle yourself — it wraps Guzzle behind a simple, readable interface",
       np: "Storage facade ले local/S3 abstract। HTTP Client ले Guzzle wrap — fluent API।",
       jp: "Storage ファサードでローカル・S3・クラウドを抽象化。HTTP クライアントは Guzzle を流暢な API でラップします。",
     },
     {
-      en: "**Mail** in Laravel uses Mailable classes with `envelope()` / `content()` methods and ships with drivers for SMTP, Mailgun, SES, and Postmark. **Notifications** are higher-level than mail — they can be sent via mail, SMS, Slack, browser push, or stored in a database table, all from a single `Notification` class.",
+      en: "<b>Mail</b>\n• Laravel represents each type of email as its own class called a <b>Mailable</b>\n  ↳ You define the subject, template, and attachments in that class — then just call `Mail::to($user)->send(new WelcomeEmail($user))`\n• Works with any mail provider: SMTP, Mailgun, Amazon SES, Postmark — all swappable via `.env`\n\n<b>Notifications</b>\n• Notifications are a step above email — one Notification class can deliver the same message through multiple channels at once\n  ↳ Send an email AND store a record in the database AND ping Slack — all from one `$user->notify()` call\n• Think of it as a universal alert system for your app",
       np: "Mail: Mailable class, SMTP/Mailgun/SES driver। Notification: mail, database, Slack एकैपटक।",
       jp: "Mail は Mailable クラスで SMTP・Mailgun・SES などに対応。Notification はメール・SMS・Slack・DB など複数チャネルを 1 クラスで管理します。",
     },
@@ -24,7 +24,7 @@ export const LARAVEL_DAY_10_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Configure disks in `config/filesystems.php`. The `local` disk stores in `storage/app`; `public` stores in `storage/app/public` (accessible via symlink at `public/storage`). Run `php artisan storage:link` to create the symlink. For S3, add credentials to `.env` and set `FILESYSTEM_DISK=s3`.",
+            en: "Laravel uses the concept of <b>disks</b> — named storage locations you configure once and then refer to by name throughout your code.\n\n<b>The two built-in disks</b>\n• `local` — saves files to `storage/app` on your server (not accessible via browser URL)\n  ↳ Use for private files like invoices, internal reports, or anything users shouldn't access directly\n• `public` — saves files to `storage/app/public` and makes them web-accessible at `/storage/filename`\n  ↳ Before this works, run `php artisan storage:link` once to create the symlink from `public/storage` to `storage/app/public`\n\n<b>Using S3</b>\n• Add your AWS credentials to `.env` and set `FILESYSTEM_DISK=s3`\n  ↳ Every `Storage::put()` call now saves to S3 instead of local — same code, different destination",
             np: "`config/filesystems.php` मा disk configure। `php artisan storage:link` ले symlink बनाउँछ। S3 को लागि `.env` मा credentials।",
             jp: "`config/filesystems.php` でディスクを設定。S3 は `.env` に認証情報を追加し `FILESYSTEM_DISK=s3` に設定。`php artisan storage:link` でシンボリックリンクを作成します。",
           },
@@ -141,7 +141,7 @@ composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies`,
         {
           type: "paragraph",
           text: {
-            en: "Laravel's HTTP Client (`Illuminate\\Support\\Facades\\Http`) wraps Guzzle with a clean fluent interface, built-in retry logic, and first-class testing support via `Http::fake()`. It returns `Illuminate\\Http\\Client\\Response` with helper methods like `->json()`, `->status()`, `->successful()`, and `->throw()`.",
+            en: "When your app needs to talk to an external API — a payment processor, a weather service, a CRM — Laravel's HTTP Client makes it clean and straightforward.\n\n<b>What it gives you</b>\n• A readable, chainable interface: `Http::withToken($token)->get('https://api.example.com/users')`\n  ↳ No manual Guzzle setup — just chain methods to build your request\n• Built-in retry logic: `->retry(3, 500)` tries the request 3 times with a 500ms gap between attempts\n• Easy response helpers:\n  ↳ `->json()` — decode the JSON response body into a PHP array\n  ↳ `->status()` — get the HTTP status code (200, 404, 500…)\n  ↳ `->successful()` — returns `true` if the status code is in the 2xx range\n  ↳ `->throw()` — throws an exception automatically if the request fails\n• Test-friendly: `Http::fake()` intercepts outgoing requests in tests so you never make real API calls",
             np: "`Http` facade ले Guzzle wrap। `->json()`, `->status()`, `->successful()`, `->throw()`। Test मा `Http::fake()`।",
             jp: "`Http` ファサードは Guzzle をラップ。`->json()`・`->status()`・`->successful()`・`->throw()` などで便利に操作。テストは `Http::fake()` で完結します。",
           },
@@ -239,7 +239,7 @@ Http::assertNotSent(fn ($r) => str_contains($r->url(), 'payment'));`,
         {
           type: "paragraph",
           text: {
-            en: "A **Mailable** class encapsulates everything needed to send one type of email: `envelope()` sets subject/from/cc/bcc, `content()` selects the Blade view or Markdown template, and `attachments()` lists files to attach. Always use queued mail (`Mail::to()->queue()`) for any production SMTP that may be slow.",
+            en: "A <b>Mailable</b> is a PHP class that represents one type of email — like a welcome email, a password reset, or an invoice receipt.\n\n<b>Three methods you define</b>\n• `envelope()` — sets the subject line, the from address, CC, and BCC\n  ↳ Think of this as filling in the email's header information before writing the body\n• `content()` — points to the Blade view (or Markdown template) that becomes the email body\n  ↳ Any public property on the Mailable class is automatically available in that view\n• `attachments()` — returns an array of files to attach to the email\n  ↳ Can attach local files, Storage disk files, or files from S3\n\n<b>A note on performance</b>\n• Sending email via SMTP during a web request blocks the user from getting a response until the mail server replies\n  ↳ Always use `Mail::to($user)->queue(new WelcomeEmail($user))` in production — it hands the work off to a background queue worker so the user's response is instant",
             np: "Mailable: `envelope()` (subject/from), `content()` (view), `attachments()`। Production मा queue।",
             jp: "Mailable は `envelope()` で件名・差出人、`content()` でテンプレート、`attachments()` で添付ファイルを設定します。本番の遅い SMTP には必ずキュー送信を使います。",
           },
@@ -354,7 +354,7 @@ MAIL_PORT=1025`,
         {
           type: "paragraph",
           text: {
-            en: "Notifications are higher-level than Mailables. A single `Notification` class defines delivery via multiple **channels** in its `via()` method. Laravel ships with `mail`, `database`, `broadcast`, `vonage` (SMS), and community channels for Slack, Telegram, and more.",
+            en: "A <b>Notification</b> is like a Mailable but smarter — it can deliver the same message through multiple channels at the same time.\n\n<b>How it works</b>\n• You define a `via()` method that returns the list of channels to use: `return ['mail', 'database']`\n  ↳ Laravel calls the matching method for each channel: `toMail()`, `toDatabase()`, `toBroadcast()`, etc.\n• Every channel gets the same information — you just shape it differently per channel\n  ↳ Email gets a nicely formatted `MailMessage`; the database channel gets a plain PHP array\n\n<b>Built-in channels</b>\n• `mail` — send an email\n• `database` — store a record in a `notifications` table for in-app notification bells\n• `broadcast` — push to the browser via WebSockets for real-time alerts\n• `vonage` — send an SMS\n• Community packages add Slack, Telegram, Discord, and more",
             np: "Notification ले `via()` method मा multiple channel define गर्छ — mail, database, Slack।",
             jp: "Notification は `via()` で複数チャネルを宣言します。組み込みは `mail`・`database`・`broadcast`。コミュニティ製の Slack・Telegram チャネルも豊富です。",
           },
@@ -476,7 +476,7 @@ $user->notifications()->delete();
         jp: "S3 ストレージの設定とファイルの公開方法は？",
       },
       answer: {
-        en: "Add AWS credentials to `.env` (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`), set `FILESYSTEM_DISK=s3`, and run `composer require league/flysystem-aws-s3-v3`. For public files, set the S3 bucket ACL to `public-read` or use `Storage::disk('s3')->setVisibility('path', 'public')` after upload. For private files, generate temporary signed URLs with `Storage::temporaryUrl('path', now()->addMinutes(30))`.",
+        en: "Four steps to connect S3:\n\n• Add your AWS credentials to `.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`\n• Set `FILESYSTEM_DISK=s3` in `.env`\n• Run `composer require league/flysystem-aws-s3-v3` to install the S3 adapter\n• That's it — all `Storage::put()` calls now go to S3\n\n<b>Public vs private files</b>\n• For files you want anyone to access via a URL (profile pictures, public downloads):\n  ↳ Use `Storage::disk('s3')->setVisibility($path, 'public')` after uploading, or set the S3 bucket ACL\n• For files that should only be accessible to specific users (contracts, private documents):\n  ↳ Use `Storage::temporaryUrl($path, now()->addMinutes(30))` to generate a signed URL that expires automatically",
         np: "`.env` मा AWS credentials, `FILESYSTEM_DISK=s3`, flysystem package install। Public: visibility `public`; Private: `temporaryUrl()`।",
         jp: "`.env` に AWS 認証情報を設定し `FILESYSTEM_DISK=s3`、`league/flysystem-aws-s3-v3` をインストール。公開ファイルは `setVisibility('path', 'public')`、非公開は `temporaryUrl()` を使います。",
       },
@@ -488,7 +488,7 @@ $user->notifications()->delete();
         jp: "`store()` と `storeAs()` の違いは？",
       },
       answer: {
-        en: "`store('directory', 'disk')` generates a random unique filename using the file's SHA-1 hash — guaranteed unique, safe from collisions. `storeAs('directory', 'filename.ext', 'disk')` lets you specify the exact filename. Use `store()` when uniqueness matters most (uploaded files); use `storeAs()` when the filename must be predictable (e.g., `user-42-avatar.jpg`).",
+        en: "Both methods save a file — they just handle the filename differently.\n\n• `store('avatars', 'public')` — Laravel generates a random unique filename automatically (based on a hash)\n  ↳ Safe from filename collisions: two users uploading `photo.jpg` won't overwrite each other\n  ↳ Use this for most uploads where the filename doesn't matter\n• `storeAs('avatars', 'user-42-avatar.jpg', 'public')` — you choose the exact filename\n  ↳ Use this when the filename needs to be predictable — like replacing a user's avatar each time they upload",
         np: "`store()` ले random unique name। `storeAs()` ले exact name। Collision-free upload: `store()`।",
         jp: "`store()` はハッシュベースのランダムなファイル名を生成。`storeAs()` はファイル名を指定します。衝突を避けたいアップロードには `store()`、ファイル名が決まっている場合は `storeAs()` を使います。",
       },
@@ -500,7 +500,7 @@ $user->notifications()->delete();
         jp: "メールをローカルで送信せずにプレビューするには？",
       },
       answer: {
-        en: "Three options: (1) Set `MAIL_MAILER=log` to write all emails to `storage/logs/laravel.log`. (2) Use **Mailpit** (a local SMTP trap with a web UI at `localhost:8025`) — set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025`. (3) Use **Laravel Sail**'s built-in Mailpit container. In Blade, you can also return a Mailable from a route for browser preview: `Route::get('/preview', fn() => new WelcomeEmail(User::first()))`.",
+        en: "You have three good options for developing with email locally without actually sending anything:\n\n• <b>Log driver</b> — set `MAIL_MAILER=log` and all emails get written to `storage/logs/laravel.log` as plain text\n  ↳ Easiest option — no extra tools needed, just check the log file\n• <b>Mailpit</b> — a local SMTP trap that catches all outgoing mail and shows it in a web UI at `localhost:8025`\n  ↳ Set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025` — emails show up visually, exactly as the user would see them\n  ↳ Laravel Sail includes Mailpit automatically\n• <b>Route preview</b> — return a Mailable directly from a route for instant browser rendering:\n`Route::get('/preview', fn() => new WelcomeEmail(User::first()))`\n  ↳ Great for tweaking the email design — just refresh the browser to see changes",
         np: "`MAIL_MAILER=log` (log file मा लेख्छ); Mailpit (local SMTP trap); route मा Mailable return गरेर preview।",
         jp: "`MAIL_MAILER=log` でログファイルに書き出し、Mailpit でローカル SMTP トラップ、またはルートから Mailable を直接返してブラウザプレビューできます。",
       },
@@ -512,7 +512,7 @@ $user->notifications()->delete();
         jp: "`Notifiable` トレイトとはどのモデルに必要ですか？",
       },
       answer: {
-        en: "The `Notifiable` trait (from `Illuminate\\Notifications\\Notifiable`) adds the `notify()` method plus relationship helpers `notifications()`, `unreadNotifications()`, and `readNotifications()` to any model. The default `User` model already uses it. Add it to any other model that should receive notifications — for example, a `Team` model or a `Customer` model. The trait also lets you route notifications to different addresses per channel by defining `routeNotificationFor{Channel}()` methods.",
+        en: "The `Notifiable` trait is what gives a model the ability to receive notifications.\n\n<b>What it adds to your model</b>\n• `$user->notify(new InvoicePaid($invoice))` — send a notification to that model\n• `$user->notifications` — fetch all notifications (read + unread) from the database\n• `$user->unreadNotifications` — fetch only unread ones\n• `$user->readNotifications` — fetch only already-read ones\n\n<b>Who needs it?</b>\n• The default `User` model already has it — you don't need to add anything\n• If you want to send notifications to a different model (like a `Team` or a `Company`), just add `use Notifiable;` to that class\n\n<b>Custom routing</b>\n• If your model stores the email address in a column other than `email`, define a `routeNotificationForMail()` method to return the right address\n  ↳ Same pattern for other channels: `routeNotificationForVonage()`, `routeNotificationForSlack()`, etc.",
         np: "`Notifiable` trait ले `notify()` र notification relationships थप्छ। User model मा default छ। अरू model मा manually use।",
         jp: "`Notifiable` トレイトは `notify()` と関係ヘルパを追加します。デフォルトの `User` モデルに含まれています。他のモデルにも `use Notifiable;` で追加できます。",
       },
@@ -524,7 +524,7 @@ $user->notifications()->delete();
         jp: "データベース通知とメール通知の違いは？",
       },
       answer: {
-        en: "Email notifications are **fire-and-forget** — they go to an external mail server and you cannot read them back from Laravel. **Database notifications** are stored in the `notifications` table (run `php artisan notifications:table && php artisan migrate`) and are readable/queryable in PHP: `$user->unreadNotifications`. They are ideal for in-app notification bells, audit trails, and anything where you need to show the user their notification history. Both channels can be used simultaneously by returning `['mail', 'database']` from `via()`.",
+        en: "They serve completely different purposes — most real apps use both at once.\n\n<b>Email notifications</b>\n• Go to an external mail server and that's it — you can't read them back in PHP\n  ↳ Great for alerts the user sees in their inbox (new message, invoice ready)\n  ↳ Your app has no record of whether they read it\n\n<b>Database notifications</b>\n• Stored in a `notifications` table in your own database — fully queryable\n  ↳ Run `php artisan notifications:table && php artisan migrate` to create the table first\n  ↳ Access them with `$user->unreadNotifications` — perfect for in-app notification bells\n  ↳ You can track read/unread status, show a history, and mark individual notifications as read\n\n• Use both together by returning `['mail', 'database']` from `via()` — one `notify()` call handles both channels",
         np: "Email notification fire-and-forget; Database notification `notifications` table मा store — PHP बाट read गर्न सकिन्छ। In-app bell को लागि।",
         jp: "メール通知は送りっぱなし。データベース通知は `notifications` テーブルに保存され、`$user->unreadNotifications` で参照可能。アプリ内の通知ベルや履歴表示に最適です。`via()` で両チャネルを同時に指定できます。",
       },
@@ -536,7 +536,7 @@ $user->notifications()->delete();
         jp: "HTTP クライアントのリトライの仕組みと失敗時の動作は？",
       },
       answer: {
-        en: "`->retry($times, $sleepMilliseconds)` retries the request on connection errors or 5xx responses. If all attempts fail, an `Illuminate\\Http\\Client\\RequestException` is thrown. Use `->throw()` to always throw on 4xx/5xx, or `->throwIf($condition)` for conditional throwing. Chain `->throwUnlessStatus(200)` to ensure an exact status. For circuit-breaker logic, catch the exception and implement your own backoff strategy.",
+        en: "`->retry($times, $sleepMilliseconds)` automatically re-attempts a request when it fails — useful for flaky APIs or temporary network hiccups.\n\n<b>How it works</b>\n• `->retry(3, 500)` — tries up to 3 times, waiting 500 milliseconds between each attempt\n  ↳ Retries on connection errors and 5xx server errors (like 503 Service Unavailable)\n  ↳ Does NOT retry on 4xx errors — those mean your request was wrong, not the server\n• If all 3 attempts fail, Laravel throws a `RequestException`\n  ↳ Catch it with `try/catch` to handle the failure gracefully\n\n<b>Throwing on failure</b>\n• `->throw()` — throw an exception automatically for any 4xx or 5xx response (without needing retry)\n• `->throwIf($condition)` — throw only when a custom condition is true\n• `->throwUnlessStatus(200)` — throw unless the status code is exactly 200",
         np: "`->retry(3, 500)` ले 3 attempts। सबै fail भए `RequestException`। `->throw()` ले 4xx/5xx मा exception।",
         jp: "`->retry(3, 500)` で最大 3 回、500ms 間隔でリトライ。全て失敗すると `RequestException` がスロー。`->throw()` で 4xx/5xx を常に例外にします。",
       },

@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_3_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Controllers** organize request-handling logic into PHP classes under `App\\Http\\Controllers`. Laravel's **Service Container** auto-injects constructor dependencies. **Form Requests** extract validation and authorization into dedicated classes, keeping each controller method focused on a single responsibility.",
+      en: "When a user hits a URL, something has to decide what to do. That something is a <b>Controller</b> — a PHP class that receives the request, does the work (or calls a service to do it), and sends back a response.\n\nAs your app grows, two more ideas keep things clean:\n• <b>Service Container</b> — Laravel automatically creates the objects your controller needs, so you don't have to `new` them up yourself\n  ↳ You just type-hint what you need in the constructor, and Laravel provides it\n• <b>Form Requests</b> — instead of putting validation rules inside your controller, you move them to their own dedicated class\n  ↳ Keeps each controller method short and focused on one thing",
       np: "Controllers HTTP logic PHP class मा। Form Requests validation र authorization अलग class मा राख्छन्।",
       jp: "コントローラはリクエスト処理ロジックをクラスにまとめます。フォームリクエストで検証と認可を分離し、コントローラを薄く保ちます。",
     },
@@ -19,7 +19,7 @@ export const LARAVEL_DAY_3_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Laravel supports three patterns: **basic** (any public methods), **single-action / invokable** (one `__invoke` method), and **resource** (`--resource` scaffolds 7 CRUD methods; `--api` scaffolds 5, skipping `create` and `edit` which serve HTML forms).",
+            en: "Laravel gives you three types of controllers — pick the one that fits your task:\n\n<b>Basic controller</b>\n• A class with any number of public methods, one per action\n  ↳ Good for grouping related actions together (e.g. all user-related actions in one file)\n\n<b>Single-action (invokable) controller</b>\n• A class with exactly one method called `__invoke`\n  ↳ Use when one action is complex enough to deserve its own file — like publishing a post or processing a payment\n  ↳ Route to it directly: `Route::post('/posts/{post}/publish', PublishPostController::class)`\n\n<b>Resource controller</b>\n• Scaffolds 7 standard CRUD methods automatically with `--resource`\n  ↳ index (list all), create (show form), store (save new), show (view one), edit (show edit form), update (save edit), destroy (delete)\n• Use `--api` to get 5 methods — skips `create` and `edit` because APIs return JSON, not HTML forms",
             np: "Basic, single-action (`__invoke`), resource (`--resource` = 7), API resource (`--api` = 5)।",
             jp: "基本・シングルアクション（`__invoke`）・リソース（`--resource` 7 メソッド）・API リソース（`--api` 5 メソッド）。",
           },
@@ -133,7 +133,7 @@ class PostController extends Controller
         {
           type: "paragraph",
           text: {
-            en: "A **Form Request** encapsulates `authorize()` (returns bool — `false` yields 403) and `rules()` (the validation rule array). Type-hint it in the controller method and Laravel runs both checks automatically before the method body executes. Retrieve safe data with `$request->validated()`, never `$request->all()`.",
+            en: "A <b>Form Request</b> is a dedicated class that handles two things before your controller method even runs:\n\n<b>1. Authorization — are you allowed to do this?</b>\n• The `authorize()` method returns `true` (allowed) or `false` (not allowed)\n  ↳ Returning `false` automatically sends a 403 Forbidden response — your controller code never runs\n\n<b>2. Validation — is the data valid?</b>\n• The `rules()` method returns an array of validation rules\n  ↳ If any rule fails, Laravel stops and sends the user back with error messages automatically\n\nTo use it, just type-hint the Form Request class in your controller method — Laravel runs both checks for you.\nAlways retrieve the validated data with `$request->validated()`, not `$request->all()` — `validated()` returns only the fields that passed the rules, nothing more.",
             np: "Form Request मा `authorize()` (false = 403) र `rules()`। type-hint गर्दा auto check। `$request->validated()` ले validated data मात्र।",
             jp: "フォームリクエストは `authorize()`（false で 403）と `rules()` をカプセル化します。型ヒントを書くだけで自動検証。`$request->validated()` で安全なデータのみ取得。",
           },
@@ -366,7 +366,7 @@ return response('Unauthorized text', 401)
         jp: "インライン `validate()` とフォームリクエストの使い分けは？",
       },
       answer: {
-        en: "Use **inline validation** for simple one-off checks (2–3 rules). Use a **Form Request** when the rules are complex, authorization logic belongs alongside them, multiple controller actions share the same rules, or you want to unit-test rules in isolation. Form Requests also give you `prepareForValidation` and `passedValidation` lifecycle hooks.",
+        en: "Use <b>inline validation</b> (`$request->validate([...])`) when you have a simple form with just 2–3 rules and no special logic.\n\nSwitch to a <b>Form Request</b> when:\n• The rules are complex or too long to keep readable inside a controller\n• You need to check authorization at the same time (e.g. only the post owner can edit it)\n• Multiple controller methods share the same rules and you don't want to copy-paste them\n• You want to write unit tests specifically for your validation rules\n\nForm Requests also give you two useful lifecycle hooks:\n• `prepareForValidation()` — runs before rules are checked, lets you clean or transform input\n  ↳ E.g. trim whitespace from a name field before validating it\n• `passedValidation()` — runs after all rules pass, useful for side effects like logging",
         np: "Simple = inline। Complex, auth, reuse = Form Request। lifecycle hooks पनि मिल्छ।",
         jp: "シンプルな検証はインライン。ルールが複雑・認可が伴う・複数アクションで共有の場合はフォームリクエスト。ライフサイクルフックも利用できます。",
       },
@@ -378,7 +378,7 @@ return response('Unauthorized text', 401)
         jp: "`authorize()` が `false` を返すとどうなる？",
       },
       answer: {
-        en: "Returning `false` throws an `AuthorizationException`, which the exception handler converts to a **403 Forbidden** response. You can also return a `Gate::response()` object to customize the 403 message. For APIs, this produces a JSON `{message: 'This action is unauthorized.'}` body.",
+        en: "When `authorize()` returns `false`, Laravel throws an `AuthorizationException` automatically — you don't have to handle it yourself.\n\nWhat the user gets depends on how the request was made:\n• <b>Web request</b> — a 403 Forbidden page\n• <b>API request (JSON)</b> — a 403 response with `{\"message\": \"This action is unauthorized.\"}`\n\nIf you want to customize the error message, return a `Gate::response()` object instead of a plain `false` — it lets you set a specific message for the 403.",
         np: "`false` = `AuthorizationException` → 403। `Gate::response()` ले message customize। API मा JSON।",
         jp: "`false` で `AuthorizationException` がスローされ **403 Forbidden** に変換。`Gate::response()` でメッセージをカスタマイズ可。API では JSON ボディになります。",
       },
@@ -390,7 +390,7 @@ return response('Unauthorized text', 401)
         jp: "コントローラから手動で 422 を返すには？",
       },
       answer: {
-        en: "Throw `\\Illuminate\\Validation\\ValidationException::withMessages(['field' => ['Error message']])`. Laravel formats it as a 422 with the `errors` key. Alternatively call `abort(422)` for a generic response, or `response()->json(['errors' => [...]], 422)` for full control in an API.",
+        en: "You have three options depending on how much control you need:\n\n• Throw a `ValidationException` with specific field errors:\n  ↳ `throw \\Illuminate\\Validation\\ValidationException::withMessages(['field' => ['Error message']])`\n  ↳ Laravel formats this as a 422 with an `errors` key — the same format Form Requests produce\n• Use `abort(422)` for a quick generic 422 with no field detail\n• Use `response()->json(['errors' => [...]], 422)` for full manual control in an API — you build the JSON yourself",
         np: "`ValidationException::withMessages([...])` throw → 422। `abort(422)` वा `response()->json([...], 422)` पनि।",
         jp: "`ValidationException::withMessages([...])` をスローすると 422 になります。`abort(422)` や `response()->json(['errors' => [...]], 422)` も使えます。",
       },
@@ -402,7 +402,7 @@ return response('Unauthorized text', 401)
         jp: "1 つのコントローラで Web と API 両方を扱える？",
       },
       answer: {
-        en: "Technically yes — branch on `$request->expectsJson()`. In practice, keeping separate controllers is cleaner: `App\\Http\\Controllers\\PostController` for web (views + redirects) and `App\\Http\\Controllers\\Api\\PostController` for JSON. The API version skips `create`/`edit` methods.",
+        en: "Technically yes — you can check `$request->expectsJson()` inside a method and return a view or JSON based on that.\n\nIn practice though, keeping them separate is much cleaner and easier to maintain:\n• `App\\Http\\Controllers\\PostController` — handles web requests, returns views and redirects\n• `App\\Http\\Controllers\\Api\\PostController` — handles API requests, returns JSON only\n  ↳ The API version skips `create` and `edit` methods since APIs don't serve HTML forms",
         np: "`$request->expectsJson()` ले branch। तर अलग controller cleaner।",
         jp: "技術的には可能。ただし `Api\\` 名前空間にコントローラを分けた方が明確です。",
       },
@@ -414,7 +414,7 @@ return response('Unauthorized text', 401)
         jp: "HTTP レスポンスのテスト方法は？",
       },
       answer: {
-        en: "Use Laravel's HTTP testing helpers (Pest or PHPUnit): `$this->get('/posts')->assertOk()->assertViewIs('posts.index')` or `$this->postJson('/api/posts', $data)->assertCreated()->assertJsonPath('data.title', 'My Post')`. Authenticate with `$this->actingAs($user)`. Run the suite with `php artisan test` or `./vendor/bin/pest`.",
+        en: "Laravel gives you simple HTTP test helpers that simulate real requests without a browser:\n\n• To test a GET route: `$this->get('/posts')->assertOk()->assertViewIs('posts.index')`\n• To test an API endpoint: `$this->postJson('/api/posts', $data)->assertCreated()->assertJsonPath('data.title', 'My Post')`\n• To test as a logged-in user: chain `actingAs($user)` before the request\n  ↳ E.g. `$this->actingAs($user)->get('/dashboard')->assertOk()`\n\nRun the full test suite with `php artisan test` (PHPUnit) or `./vendor/bin/pest` (Pest).",
         np: "`$this->get()->assertOk()`, `postJson()->assertCreated()`, `actingAs($user)` — `php artisan test`।",
         jp: "`$this->get('/posts')->assertOk()` や `postJson(...)->assertCreated()` のヘルパを使います。`actingAs($user)` で認証再現。`php artisan test` か `pest` で実行。",
       },

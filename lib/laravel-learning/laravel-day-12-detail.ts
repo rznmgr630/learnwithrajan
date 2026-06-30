@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_12_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Authentication answers **who are you?** Authorization answers **what can you do?** Laravel provides two tools: **Gates** (simple closures for one-off checks) and **Policies** (classes that group all rules for a model). API Resources keep your JSON responses clean and consistent, hiding internal model details from consumers.",
+      en: "These are two different questions every app needs to answer:\n\n<b>Authentication = who are you?</b>\n• Are you logged in? Who is this user?\n  ↳ Covered in Day 11 — sessions, tokens, Breeze\n\n<b>Authorization = what can you do?</b>\n• Can this logged-in user edit this post? Delete someone else's account?\n  ↳ That's what Day 12 covers — Gates and Policies\n\n<b>API Resources</b> — a separate but related topic: they control exactly what your JSON responses look like, so you don't accidentally expose sensitive model fields to API consumers.",
       np: "Auth = who. Authz = what. Gate र Policy authz को लागि। API Resource = clean JSON।",
       jp: "認証は「誰か」、認可は「何ができるか」。Gate はシンプルなクロージャ、Policy はモデル単位のクラス。API Resource で JSON を整形。",
     },
@@ -19,7 +19,7 @@ export const LARAVEL_DAY_12_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "**Gates** are closures registered in a service provider (typically `AppServiceProvider::boot()`). They are best for actions that don't map neatly to a single model. The first argument is always the authenticated user; additional arguments are the resources being checked.",
+            en: "A <b>Gate</b> is the simplest form of authorization — just a closure that returns `true` (allowed) or `false` (denied).\n\nThink of it like a bouncer at a door: you describe the rule once ('only admins and editors can enter'), then check it anywhere in your app.\n\n• Gates are defined in a service provider, usually inside `AppServiceProvider::boot()`\n• The first argument is always the authenticated user — Laravel injects it automatically\n• You can pass extra arguments (like a model) as additional parameters\n• Use Gates for one-off actions that don't belong to a specific model\n  ↳ Example: 'can this user view the analytics dashboard?' — not tied to any single record",
             np: "Gate ले simple closure मा authorization। `AppServiceProvider::boot()` मा define।",
             jp: "Gate はクロージャで認可ルールを定義。`AppServiceProvider::boot()` に記述するのが一般的。",
           },
@@ -98,7 +98,7 @@ if ($request->user()->can('update-post', $post)) {
         {
           type: "paragraph",
           text: {
-            en: "**Policies** are classes that group all authorization logic for a single Eloquent model. Laravel auto-discovers policies when the model and policy follow the naming convention (`Post` → `PostPolicy`). Each method maps to a CRUD action.",
+            en: "When you have many rules that all relate to one model — 'who can view a Post, create a Post, update a Post, delete a Post?' — putting them all in individual Gates gets messy fast. That's what <b>Policies</b> are for.\n\nA Policy is a PHP class where each method is one authorization rule for that model:\n• `viewAny` — can the user see the list?\n• `view` — can the user see this specific record?\n• `create` — can the user create a new one?\n• `update` — can the user edit this record?\n• `delete` — can the user delete this record?\n\nLaravel auto-discovers policies using naming convention: `Post` model → `PostPolicy` class. No manual registration needed.",
             np: "Policy ले model को सबै authorization logic एकठाउँ। `make:policy` ले generate।",
             jp: "Policy は 1 モデルの認可ロジックをクラスにまとめたもの。命名規則で自動検出される。",
           },
@@ -202,7 +202,7 @@ Route::put('/posts/{post}', [PostController::class, 'update'])
         {
           type: "paragraph",
           text: {
-            en: "For **roles and permissions** at scale, consider the **Spatie Laravel Permission** package. It provides `assignRole()`, `hasRole()`, `givePermissionTo()`, and `can()`, backed by DB tables so you can manage permissions without deploying code.",
+            en: "Need to manage roles and permissions from a database — so you can assign or revoke them at runtime without deploying code? The <b>Spatie Laravel Permission</b> package is the standard choice. It adds `assignRole()`, `hasRole()`, `givePermissionTo()`, and `can()` methods backed by database tables.",
             np: "Roles/permissions को लागि Spatie package। DB मा store।",
             jp: "大規模な RBAC には Spatie Laravel Permission パッケージが便利。DB ベースで権限を管理。",
           },
@@ -223,7 +223,7 @@ Route::put('/posts/{post}', [PostController::class, 'update'])
         {
           type: "paragraph",
           text: {
-            en: "**API Resources** sit between your Eloquent models and JSON responses. They let you control exactly which fields are exposed, rename attributes, add computed fields, and conditionally include relationships — without polluting your model with presentation logic.",
+            en: "When you return an Eloquent model directly from a controller, every column in the database gets sent to the client — including things like `password`, `remember_token`, or internal timestamps you'd rather keep private.\n\n<b>API Resources</b> sit between your models and your JSON responses. They are a transformation layer where you decide exactly:\n• Which fields to include (and which to hide)\n• How to rename or reformat fields\n• Which relationships to include (and only if they're already loaded, to avoid N+1 queries)\n• Which fields to show only to certain users (like admins)\n\nThis keeps your API clean, consistent, and safe — your internal database structure stays private.",
             np: "API Resource ले model र JSON बीच layer। `toArray()` मा field control।",
             jp: "API Resource は Eloquent とレスポンスの間の変換レイヤー。公開フィールドを完全にコントロール。",
           },
@@ -316,7 +316,7 @@ class PostController extends Controller
         {
           type: "paragraph",
           text: {
-            en: "For **API versioning**, group routes under a prefix and keep controllers in versioned namespaces: `routes/api/v1.php` and `App\\Http\\Controllers\\Api\\V1\\PostController`. You can also use different Resource classes per version.",
+            en: "For <b>API versioning</b>, group your routes under a version prefix and keep controllers in versioned namespaces.\n\n• Routes go in: `routes/api/v1.php`\n• Controllers live in: `App\\Http\\Controllers\\Api\\V1\\`\n• You can use different Resource classes per version if the response shape changes between versions\n\nThis way, old API clients keep working on `v1` while new clients use `v2`.",
             np: "API versioning: `v1` prefix र versioned namespace।",
             jp: "API バージョニングは `v1` プレフィックスと名前空間で管理。バージョンごとに Resource クラスを切り替えることもできます。",
           },
@@ -348,7 +348,7 @@ Route::prefix('v2')->group(function () {
         {
           type: "paragraph",
           text: {
-            en: "A typical **token-authenticated API** flow: client calls `POST /api/login`, receives a token, stores it, then sends `Authorization: Bearer <token>` on all subsequent requests. API controllers return **API Resources** for consistent responses. CORS must be configured for browser-based clients.",
+            en: "Here's the full flow of a typical token-authenticated API:\n\n• Client sends `POST /api/login` with email and password\n• Laravel verifies credentials, issues a token, returns it in the response\n• Client stores the token and sends it as `Authorization: Bearer <token>` on every subsequent request\n• API controllers return <b>API Resources</b> so responses are clean and consistent\n\nIf the API will be called from a web browser on a different domain, you also need to configure CORS to allow that domain.",
             np: "Login → token → Bearer header → API Resource response। Browser को लागि CORS।",
             jp: "ログイン → トークン取得 → Bearer ヘッダーで送信 → API Resource で応答。ブラウザは CORS 設定が必要。",
           },
@@ -403,7 +403,7 @@ class AuthController extends Controller
         {
           type: "paragraph",
           text: {
-            en: "For **SPA cookie auth** (same domain), call `GET /sanctum/csrf-cookie` first to initialize the CSRF cookie, then use normal `POST /login` with session cookies. No Bearer token is needed — the browser sends the session cookie automatically.",
+            en: "For a <b>same-domain SPA</b> (your React/Vue frontend is served from the same domain as the API), you can skip tokens entirely and use cookie-based auth instead:\n\n• Call `GET /sanctum/csrf-cookie` first — this sets the CSRF cookie in the browser\n• Then log in normally via `POST /login`\n• The browser automatically sends the session cookie with every request\n• No `Authorization: Bearer` header needed",
             np: "SPA cookie auth: `/sanctum/csrf-cookie` पहिले call। Bearer token चाहिँदैन।",
             jp: "SPA クッキー認証は `/sanctum/csrf-cookie` で初期化後、通常ログイン。Bearer 不要。",
           },
@@ -419,7 +419,7 @@ class AuthController extends Controller
         jp: "Gate と Policy の違いは？",
       },
       answer: {
-        en: "**Gates** are simple closures for one-off, model-agnostic checks (e.g. `view-reports`). **Policies** are classes that group all authorization rules for a specific Eloquent model. Use Policies when you have CRUD-style checks on a model — they keep related logic together. Use Gates for global actions not tied to a model. Internally, `$this->authorize('update', $post)` in a controller resolves to `PostPolicy::update` automatically.",
+        en: "Both are authorization tools — they check whether a user is allowed to do something. The difference is scope:\n\n• <b>Gates</b> — a single closure for a single one-off rule. Best for actions not tied to a specific model (e.g. 'can this user view the reports dashboard?').\n• <b>Policies</b> — a class that groups all the rules for one model. Best when you have multiple CRUD-style checks on the same model (view, create, update, delete).\n\nInternally, calling `$this->authorize('update', $post)` in a controller automatically resolves to `PostPolicy::update` — you don't need to register anything manually.",
         np: "Gate = simple, model-agnostic। Policy = model-specific class। Controller मा `authorize()` ले auto resolve।",
         jp: "Gate はシンプルなクロージャ、Policy はモデル単位のクラス。`authorize()` は Policy を自動解決。",
       },
@@ -431,7 +431,7 @@ class AuthController extends Controller
         jp: "Policy から 403 を返す方法は？",
       },
       answer: {
-        en: "Return `false` from a policy method and Laravel will translate it to a 403 `AuthorizationException` when you call `$this->authorize()`. You can also return a `Response` object for a custom message: `return Response::deny('You do not own this post.', 403)`. In Blade, `@can` simply hides the section — it doesn't throw.",
+        en: "Return `false` from a policy method. When you call `$this->authorize()` in a controller and the policy returns `false`, Laravel automatically throws a 403 `AuthorizationException`.\n\nIf you want to include a custom error message, return a `Response` object instead:\n`return Response::deny('You do not own this post.', 403)`\n\nNote: in Blade, `@can` simply hides or shows the HTML — it doesn't throw an exception.",
         np: "`false` return गर्नु → 403। `Response::deny()` custom message।",
         jp: "`false` を返すと 403 になる。`Response::deny('message')` でカスタムメッセージも可能。",
       },
@@ -443,7 +443,7 @@ class AuthController extends Controller
         jp: "`@can` で Blade に Policy をチェックできますか？",
       },
       answer: {
-        en: "Yes. `@can('update', $post)` resolves `PostPolicy::update` exactly the same way as `Gate::allows('update', $post)`. The model instance (`$post`) is required for model-bound policies so Laravel can infer which policy class to use. `@can('create', App\\Models\\Post::class)` works for actions with no model instance.",
+        en: "Yes. `@can('update', $post)` works exactly the same as `Gate::allows('update', $post)` — it resolves `PostPolicy::update` automatically.\n\n• Pass the model instance when checking model-bound rules: `@can('update', $post)`\n• Pass the class name when there's no instance yet (for create): `@can('create', App\\Models\\Post::class)`\n\n`@can` just shows or hides HTML — it doesn't abort the request. Always also check in the controller or use `$this->authorize()` to enforce the rule on the server side.",
         np: "`@can('update', $post)` — Policy::update call। Model class pass गर्न सकिन्छ।",
         jp: "`@can('update', $post)` は Gate と同じ仕組みで Policy を解決します。",
       },
@@ -455,7 +455,7 @@ class AuthController extends Controller
         jp: "API Resource レスポンスにメタデータを追加する方法は？",
       },
       answer: {
-        en: "Override `with(Request $request): array` in your Resource or ResourceCollection class. Data in `with()` appears alongside `data` at the top level. Example: return `['meta' => ['version' => 'v1', 'generated_at' => now()]]`. For collections, you can also use `$this->additional(['meta' => [...]])` when constructing the resource in the controller.",
+        en: "Override the `with(Request $request): array` method in your Resource or ResourceCollection class. Whatever you return from `with()` appears alongside `data` at the top level of the JSON response.\n\nFor example: `return ['meta' => ['version' => 'v1', 'generated_at' => now()]]`\n\nAlternatively, in the controller you can call `->additional(['meta' => [...]])` when constructing the resource — useful when the metadata depends on something only the controller knows.",
         np: "`with()` method override गर्नु वा `additional()` call।",
         jp: "`with()` をオーバーライドするか、コントローラで `additional()` を呼ぶとメタデータを追加できます。",
       },
@@ -467,7 +467,7 @@ class AuthController extends Controller
         jp: "Laravel で API をバージョニングする方法は？",
       },
       answer: {
-        en: "The simplest approach is **URL versioning**: prefix routes with `v1`, `v2` etc. and keep controllers in `App\\Http\\Controllers\\Api\\V1\\`. Use separate Resource classes per version if the response shape changes. Avoid using HTTP headers for versioning — it's harder to test and debug. Laravel 11 supports dedicated route files per version via `bootstrap/app.php` route loading.",
+        en: "The simplest and most practical approach is <b>URL versioning</b>:\n\n• Prefix your routes: `Route::prefix('v1')->group(...)`\n• Keep controllers in versioned namespaces: `App\\Http\\Controllers\\Api\\V1\\`\n• Use separate Resource classes per version if the response shape changes\n\nAvoid header-based versioning (sending a version in HTTP headers) — it's harder to test, harder to debug in a browser, and harder to document.\n\nLaravel 11 supports loading dedicated route files per version via `bootstrap/app.php`.",
         np: "URL prefix `v1`, `v2`। Versioned namespace। Header versioning सिफारिश होइन।",
         jp: "URL プレフィックス `v1`/`v2` が最もシンプル。バージョン別に名前空間とリソースを分ける。",
       },
@@ -479,7 +479,7 @@ class AuthController extends Controller
         jp: "`api_token` カラムと Sanctum トークンの違いは？",
       },
       answer: {
-        en: "The old `api_token` column was part of Laravel's built-in token guard (`driver: token` in `config/auth.php`). It stored a single plain-text token per user in the `users` table — extremely basic, no revocation, no scopes. **Sanctum** replaces this with a dedicated `personal_access_tokens` table supporting multiple tokens per user, abilities, last-used tracking, and easy revocation. Never use the legacy `api_token` approach in new projects.",
+        en: "The old `api_token` column was Laravel's original built-in token system (`driver: token` in `config/auth.php`). It stored a single plain-text token directly in the `users` table — one token per user, no scopes, no revocation, no tracking. Very basic.\n\n<b>Sanctum</b> is the modern replacement. It uses a separate `personal_access_tokens` table and supports:\n• Multiple tokens per user (different apps, different devices)\n• Abilities (scopes) to limit what each token can do\n• Last-used tracking\n• Individual or bulk revocation\n\nNever use the legacy `api_token` approach in a new project.",
         np: "`api_token` पुरानो simple approach। Sanctum ले `personal_access_tokens` table use गर्छ।",
         jp: "`api_token` は古い単一トークン方式。Sanctum は複数トークン・スコープ・失効管理対応の現代的な仕組みです。",
       },

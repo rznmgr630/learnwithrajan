@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_8_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Sessions** store per-user server-side state across requests. **Flash data** lives for exactly one request — ideal for success/error messages after a redirect. Together they power the Post-Redirect-Get pattern that prevents duplicate form submissions in browser apps.",
+      en: "When a user logs in and then navigates to the next page, how does Laravel know they're still logged in? HTTP is stateless — each request is completely independent.\n\n• <b>Sessions</b> solve this by storing data server-side (tied to the user's browser cookie) so it persists across requests\n  ↳ Anything you put in the session is private to that user\n• <b>Flash data</b> is a special type of session data that lives for exactly one request, then disappears automatically\n  ↳ Perfect for \"Profile updated successfully!\" messages after a redirect",
       np: "Session ले per-user state राख्छ। Flash data एक request मात्र — success/error message को लागि।",
       jp: "**セッション** はユーザーごとのサーバー側の状態を管理。**フラッシュデータ** は次のリクエストまでだけ保持され、リダイレクト後のメッセージに最適です。",
     },
     {
-      en: "**Caching** dramatically speeds up reads by storing expensive computations or database results. **Redis** is the production-grade driver for both sessions and cache. **Localization** translates your UI via `lang/` files and the `__()` / `trans()` helpers — switch locale at runtime with `App::setLocale()`.",
+      en: "Some operations are slow — hitting the database on every page load for the same data is wasteful.\n\n• <b>Caching</b> stores the result of an expensive operation (a DB query, an API call) and serves it from memory on the next request\n  ↳ `Cache::remember()` checks, fetches-if-missing, stores, and returns — all in one line\n• <b>Redis</b> is the go-to production driver for both sessions and cache — it's fast, supports TTLs natively, and works across multiple servers\n• <b>Localization</b> lets you translate your UI into any language using `lang/` files and the `__()` helper\n  ↳ Switch locale at runtime with `App::setLocale('np')`",
       np: "Cache ले DB queries cache। Redis production driver। Localization ले `lang/` files द्वारा UI translate।",
       jp: "**キャッシュ** は高コストなクエリ結果を保存して高速化。Redis が本番向けドライバ。**ローカライゼーション** は `lang/` と `__()` で UI を多言語化します。",
     },
@@ -24,7 +24,7 @@ export const LARAVEL_DAY_8_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Configure the session driver in `.env` via `SESSION_DRIVER`. The `file` driver is fine for local dev; use `database` or `redis` in production. When using `database`, run `php artisan session:table` and `migrate` first to create the `sessions` table.",
+            en: "Think of a session like a locker at a train station — the user gets a key (a cookie), and the server stores their belongings inside.\n\n• Configure which storage backend to use via `SESSION_DRIVER` in `.env`\n  ↳ `file` — stores sessions as files on disk, zero setup, fine for local development\n  ↳ `database` — stores sessions in a SQL table, inspectable, but adds one DB query per request\n  ↳ `redis` — stores sessions in Redis memory, fast and shared across multiple servers\n• When using `database`, first run `php artisan session:table` then `php artisan migrate` to create the `sessions` table",
             np: "`.env` मा `SESSION_DRIVER` — `file` local; `redis` वा `database` production।",
             jp: "`.env` の `SESSION_DRIVER` でドライバを選択。ローカルは `file`、本番は `redis` または `database` が一般的です。`database` 使用時は `session:table` + migrate が必要です。",
           },
@@ -118,7 +118,7 @@ session()->keep(['status']); // keep only specific keys
         {
           type: "paragraph",
           text: {
-            en: "Set `CACHE_DRIVER` (or `CACHE_STORE` in Laravel 11) in `.env`. The **cache-aside** pattern is the most common: check the cache first; on a miss, load from the DB, store in cache, then return. `Cache::remember()` implements this in one line.",
+            en: "The <b>cache-aside pattern</b> is the most common caching strategy — and `Cache::remember()` implements all of it in a single line.\n\nHere's what happens step by step:\n• Check the cache for the key — if found, return it immediately (cache hit, no DB query)\n• If not found (cache miss) — run the closure to load fresh data from the database\n• Store the result in the cache with a TTL (time to live) so it expires automatically\n• Return the value\n\nSet the cache backend via `CACHE_STORE` (Laravel 11) or `CACHE_DRIVER` (Laravel 10) in `.env`.",
             np: "`.env` मा `CACHE_STORE`। Cache-aside pattern: cache miss भए DB load, store, return। `Cache::remember()` एक line।",
             jp: "`.env` に `CACHE_STORE` を設定。キャッシュアサイドパターンが最も一般的です。`Cache::remember()` がこれを 1 行で実装します。",
           },
@@ -212,7 +212,7 @@ Redis::connection('cache')->set('foo', 'bar');`,
         {
           type: "paragraph",
           text: {
-            en: "Laravel 11 ships with translations inside `vendor/laravel/framework/src/Illuminate/Translation/lang/`. Run `php artisan lang:publish` to copy them to `lang/` in your project so you can modify them. Application strings live in `lang/{locale}/file.php` (array format) or `lang/{locale}.json` (string-keyed format).",
+            en: "Laravel's localization system lets you write your UI strings once and translate them for any language.\n\n• In Laravel 11, the built-in translation strings live inside the vendor package\n  ↳ Run `php artisan lang:publish` to copy them into your project's `lang/` folder so you can edit them\n• Your own strings go in either:\n  ↳ `lang/{locale}/file.php` — PHP array format, organized by file (e.g. `lang/en/messages.php`)\n  ↳ `lang/{locale}.json` — JSON format, keyed by the original English string\n• Use `__('messages.welcome', ['name' => $user->name])` to look up and interpolate a translation",
             np: "`php artisan lang:publish` ले vendor बाट copy। `lang/{locale}/file.php` वा `lang/{locale}.json`।",
             jp: "`php artisan lang:publish` でベンダーから `lang/` にコピー。`lang/{locale}/file.php` か `lang/{locale}.json` に翻訳を書きます。",
           },
@@ -289,7 +289,7 @@ App::isLocale('np');             // true/false
         jp: "Redis でセッションとキャッシュの両方を使うには？",
       },
       answer: {
-        en: "Set `SESSION_DRIVER=redis` and `CACHE_STORE=redis` in `.env`, along with `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD`. Install `predis/predis` (`composer require predis/predis`) or use the `phpredis` PHP extension. For separate Redis databases per concern set `REDIS_CACHE_DB=1` (sessions use DB 0 by default) in `config/database.php`.",
+        en: "Add these to `.env`:\n• `SESSION_DRIVER=redis`\n• `CACHE_STORE=redis`\n• `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, and `REDIS_PASSWORD` if your Redis server requires one\n\nThen install a PHP Redis client — either `composer require predis/predis` (pure PHP, easy to install) or the `phpredis` PHP extension (faster, but requires server-level access).\n\nOptionally separate session and cache into different Redis databases to avoid key collisions: set `REDIS_CACHE_DB=1` in `config/database.php` (sessions use DB 0 by default).",
         np: "`.env` मा `SESSION_DRIVER=redis` र `CACHE_STORE=redis`। `predis/predis` install गर्नुस्।",
         jp: "`.env` に `SESSION_DRIVER=redis` と `CACHE_STORE=redis` を設定。`predis/predis` をインストールするか `phpredis` 拡張を使います。",
       },
@@ -301,7 +301,7 @@ App::isLocale('np');             // true/false
         jp: "`session()` と `Cache` の違いは？",
       },
       answer: {
-        en: "**Sessions** are scoped to an individual user (identified by their session cookie) — data is private and persists across requests for that user until it expires or is cleared. **Cache** is shared across all users (and all server instances when using Redis/Memcached) — it stores public computations like rendered HTML fragments, query results, and computed settings. Never store sensitive user data in the shared cache.",
+        en: "They look similar but serve completely different purposes.\n\n• <b>Sessions</b> are scoped to one user — identified by their session cookie\n  ↳ Data is private: only that user's requests can see it\n  ↳ Examples: \"is the user logged in?\", \"what's in their shopping cart?\"\n• <b>Cache</b> is shared across all users and all server instances (when using Redis)\n  ↳ Data is public: every request on every server can read it\n  ↳ Examples: the homepage posts list (same for every visitor), computed site settings\n\nGolden rule: never store sensitive user-specific data (passwords, tokens, personal info) in the shared cache.",
         np: "Session user-specific (private); Cache सबैले share गर्छन् — query result, rendered HTML। Cache मा sensitive data नराख्नुस्।",
         jp: "セッションはユーザーごとのプライベートなデータ。キャッシュは全ユーザーで共有する公開データ（クエリ結果・HTML など）。機密情報をキャッシュに入れないでください。",
       },
@@ -313,7 +313,7 @@ App::isLocale('np');             // true/false
         jp: "バリデーションエラーメッセージを翻訳するには？",
       },
       answer: {
-        en: "Run `php artisan lang:publish` to copy the framework's `validation.php` file into `lang/en/validation.php`. Then create `lang/{locale}/validation.php` with the same keys translated. Laravel automatically uses the active locale when building validation messages. For custom attribute names override the `attributes` array at the bottom of the file.",
+        en: "Run `php artisan lang:publish` to copy Laravel's built-in `validation.php` file into `lang/en/validation.php` in your project.\n\nThen create a new file at `lang/{locale}/validation.php` (e.g. `lang/np/validation.php`) with the same array keys but translated values.\n\nLaravel automatically picks up the active locale when generating validation error messages — no extra code needed. To customize attribute names so errors say \"Email address\" instead of \"email\", override the `attributes` array at the bottom of the file.",
         np: "`php artisan lang:publish` गरेर `lang/en/validation.php` copy। `lang/np/validation.php` बनाउनुस्।",
         jp: "`php artisan lang:publish` で `lang/en/validation.php` をコピーし、`lang/{locale}/validation.php` に翻訳します。属性名は `attributes` 配列でカスタマイズできます。",
       },
@@ -325,7 +325,7 @@ App::isLocale('np');             // true/false
         jp: "翻訳の名前付きパラメータとは？",
       },
       answer: {
-        en: "Translation strings can contain `:name` placeholders. Pass a second argument array to `__()` or `trans()` to replace them: `__('messages.welcome', ['name' => 'Alice'])` turns `'Welcome, :name!'` into `'Welcome, Alice!'`. Parameter names are case-insensitive; `:Name` capitalizes the first letter and `:NAME` uppercases the entire replacement.",
+        en: "Translation strings can contain `:name` placeholders — pass the replacements as an array to `__()` or `trans()`.\n\nExample: `__('messages.welcome', ['name' => 'Alice'])` turns `'Welcome, :name!'` into `'Welcome, Alice!'`.\n\nCase variants work automatically:\n• `:name` — uses the replacement value as-is\n• `:Name` — capitalizes the first letter of the replacement\n• `:NAME` — uppercases the entire replacement value",
         np: "`:name` placeholder — `['name' => 'Alice']` pass गर्नुस्। `:Name` first letter capitalize; `:NAME` uppercase।",
         jp: "`:name` プレースホルダに第 2 引数で値を渡します。`:Name` で先頭を大文字、`:NAME` で全大文字にもなります。",
       },
@@ -337,7 +337,7 @@ App::isLocale('np');             // true/false
         jp: "ロケール別に翻訳を遅延ロードできますか？",
       },
       answer: {
-        en: "Yes — Laravel only loads the translation files that are actually called. If you call `__('messages.welcome')` with locale `en`, only `lang/en/messages.php` is loaded. Files for other locales (and other file names in the same locale) are never read. For JSON translations, each `lang/{locale}.json` file is loaded once per request when any key from it is first accessed.",
+        en: "Yes — Laravel is lazy about loading translation files. It only loads a file when a key from it is first accessed.\n\n• Calling `__('messages.welcome')` with locale `en` loads only `lang/en/messages.php`\n  ↳ `lang/np/messages.php` and any other locale files are never touched during that request\n• `lang/{locale}.json` is loaded once per request the first time any of its keys are accessed\n\nThis means you can safely add dozens of translation files for different languages — they won't slow down requests for users in other locales.",
         np: "Laravel ले called भएका files मात्र load गर्छ — सबै at once होइन।",
         jp: "Laravel は実際に呼び出されたファイルだけをロードします。JSON 翻訳は最初のキーアクセス時に 1 回だけ読み込まれます。",
       },
@@ -349,7 +349,7 @@ App::isLocale('np');             // true/false
         jp: "キャッシュアサイドパターンと `Cache::remember()` の関係は？",
       },
       answer: {
-        en: "In the **cache-aside** pattern, the application code is responsible for loading data on cache misses: (1) look up the key in the cache, (2) if missing (cache miss), load from the source (DB), (3) store in the cache with a TTL, (4) return the value. `Cache::remember('key', $ttl, fn() => DB::query())` does all four steps atomically — you just provide the key, TTL, and the closure that loads fresh data.",
+        en: "The <b>cache-aside pattern</b> means the application code is responsible for managing the cache — the cache is not automatically kept in sync with the database.\n\nThe four steps:\n• Check the cache for the key\n• If missing (cache miss) — load fresh data from the source, usually the database\n• Store the result in the cache with a TTL so it expires automatically\n• Return the value\n\n`Cache::remember('key', $ttl, fn() => DB::query())` does all four steps in one call:\n• You provide the key, the TTL in seconds, and a closure that fetches fresh data\n  ↳ The closure only runs on a cache miss — on a hit, it is never called at all",
         np: "Cache-aside: cache miss भए DB load, cache store, return। `Cache::remember()` ले सबै एक call मा।",
         jp: "キャッシュアサイドは (1) キャッシュを参照、(2) ミスなら DB からロード、(3) TTL 付きでキャッシュに保存、(4) 返却 — の 4 ステップ。`Cache::remember()` がこれをアトミックに 1 行で行います。",
       },

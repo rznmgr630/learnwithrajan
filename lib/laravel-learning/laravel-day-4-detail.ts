@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Blade** is Laravel's compiled template engine. Files use the `.blade.php` extension and live in `resources/views/`. Blade adds template **inheritance** (`@extends`/`@section`/`@yield`), rich **control flow** directives, **components** (anonymous and class-based), and **stacks** for injecting assets from child templates — all compiling down to plain PHP cached in `storage/framework/views/`.",
+      en: "<b>Blade</b> is how you build the HTML in your Laravel app. Instead of writing raw PHP inside HTML, you write clean template syntax — Blade converts it to PHP behind the scenes and caches the result so it's fast.\n\nBlade files live in `resources/views/` and use the `.blade.php` extension. The four main features you'll use:\n• <b>Inheritance</b> — define one master layout, then fill in the pieces from each page\n  ↳ Uses `@extends`, `@section`, and `@yield`\n• <b>Control flow</b> — `@if`, `@foreach`, `@forelse` — cleaner than raw PHP tags inside HTML\n• <b>Components</b> — reusable UI pieces like buttons, alerts, and cards\n• <b>Stacks</b> — let child pages inject their own scripts or styles into the shared layout",
       np: "Blade Laravel को compiled template engine। `.blade.php` फाइल `resources/views/` मा। inheritance, control flow, components, stacks सब।",
       jp: "Blade は Laravel のコンパイル済みテンプレートエンジン。`resources/views/` に `.blade.php` ファイルを配置。継承・制御フロー・コンポーネント・スタックが使えます。",
     },
@@ -19,7 +19,7 @@ export const LARAVEL_DAY_4_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Define a **layout** file with `@yield('slot-name')` placeholders. Child views `@extend` the layout and `@section` fill each slot. Use `@parent` inside a section to prepend/append to the layout's default content. `{{ $var }}` echoes **HTML-escaped** output; `{!! $html !!}` is **unescaped** (use with trusted content only). `{{-- comment --}}` leaves no HTML output.",
+            en: "Think of your layout file as a page frame — the header, navigation, and footer that every page shares. You mark the spots where each page fills in its own content using `@yield('slot-name')`.\n\nEach page then uses that frame:\n• `@extends('layouts.app')` — says \"use this layout as my frame\"\n• `@section('content') ... @endsection` — fills in the slot named 'content'\n• `@parent` inside a section — keeps the layout's default content and adds to it\n\nOutputting data in Blade:\n• `{{ $var }}` — safe output, HTML-escaped automatically\n  ↳ Always use this for user-entered content — it prevents XSS attacks\n• `{!! $html !!}` — raw unescaped output\n  ↳ Only use with content you trust completely (e.g. HTML you generated yourself)\n• `{{-- comment --}}` — a Blade comment, never appears in the final HTML output",
             np: "Layout मा `@yield`; child मा `@extends` + `@section`। `{{ $var }}` escaped; `{!! $html !!}` unescaped। `{{-- comment --}}`।",
             jp: "レイアウトに `@yield`、子ビューで `@extends` + `@section` で埋めます。`{{ $var }}` は HTML エスケープ、`{!! $html !!}` は生の出力。`{{-- --}}` はコメント（出力なし）。",
           },
@@ -77,7 +77,7 @@ export const LARAVEL_DAY_4_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Pass data from a controller to a Blade view with `view('name', ['key' => $value])`, `view('name')->with('key', $value)`, or `view('name', compact('post', 'comments'))`. All keys become variables inside the template.",
+            en: "To send data from your controller into the view, pick any of these three equivalent styles — they all work the same way:\n• `view('posts.show', ['post' => $post])` — explicit array, always clear and readable\n• `view('posts.show')->with('post', $post)` — chained helper, good for conditionally adding data\n• `view('posts.show', compact('post', 'comments'))` — PHP shorthand when your variable names already match the keys you want\n\nWhatever key name you use in the array becomes a `$variable` inside the template.",
             np: "Controller बाट Blade मा data: `view('name', ['key' => $value])` वा `compact('post')`।",
             jp: "コントローラから Blade へのデータ渡し：`view('name', ['key' => $value])`・`->with()`・`compact()` のいずれかを使います。",
           },
@@ -232,7 +232,7 @@ export const LARAVEL_DAY_4_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "**Anonymous components** are plain `.blade.php` files in `resources/views/components/`. No PHP class needed. Use `$attributes->merge([])` to forward HTML attributes and `$slot` for the default slot content. Render with `<x-component-name>`. **Class components** add a PHP class (generated with `php artisan make:component`) for computed properties and logic.",
+            en: "Components let you build reusable UI pieces — like a button, alert box, or card — that you can drop into any view with a single tag.\n\n<b>Anonymous components</b>\n• Just a `.blade.php` file in `resources/views/components/` — no PHP class needed\n  ↳ Declare what props it accepts with `@props(['variant' => 'primary'])`\n• Use `$slot` to render whatever content goes between the component's opening and closing tags\n• Use `$attributes->merge(['class' => '...'])` to pass through any extra HTML attributes the caller adds\n• Render with `<x-button variant=\"primary\">Save</x-button>`\n\n<b>Class components</b>\n• Add a PHP class alongside the view — useful when you need computed properties or logic in the component\n  ↳ Generate both files at once: `php artisan make:component Alert`\n  ↳ The class lives in `app/View/Components/`, the view in `resources/views/components/`",
             np: "Anonymous: `resources/views/components/` मा blade file। `<x-name>` ले render। Class component: PHP class + view — `make:component`।",
             jp: "匿名コンポーネントは `resources/views/components/` の Blade ファイルだけ。クラスコンポーネントは `make:component` で PHP クラス + ビューを生成します。",
           },
@@ -362,7 +362,7 @@ class Alert extends Component
         {
           type: "paragraph",
           text: {
-            en: "`@csrf` generates a hidden CSRF token field — required on every HTML form that submits to a `web` route. `@method('PUT')` spoofs non-GET/POST HTTP verbs inside an HTML form (browsers only send GET/POST natively). `@error('field')` renders an inline error block when that field fails validation. `@vite()` generates `<link>` and `<script>` tags pointing to Vite-compiled assets, including HMR in development.",
+            en: "Four directives you'll use on almost every form:\n\n<b>`@csrf`</b>\n• Adds a hidden token field that proves the form was submitted from your own site\n  ↳ Without it, Laravel rejects the request with a 419 error — never skip it on web forms\n\n<b>`@method('PUT')`</b>\n• Browsers can only send GET and POST natively — HTML forms can't send PUT, PATCH, or DELETE\n  ↳ This directive adds a hidden field so Laravel knows which HTTP method you actually intended\n\n<b>`@error('field')`</b>\n• Renders an inline error message when that field fails validation\n  ↳ Only shows up when there's an error — renders nothing when the field passes\n\n<b>`@vite(['resources/css/app.css', 'resources/js/app.js'])`</b>\n• Generates the correct `<link>` and `<script>` tags for your CSS and JS\n  ↳ In development: points to the Vite dev server with hot-module reload (HMR) for instant updates\n  ↳ In production: uses hashed filenames from the build manifest for cache-busting",
             np: "`@csrf` — CSRF token; `@method('PUT')` — verb spoof; `@error` — validation error; `@vite()` — Vite assets (HMR dev)।",
             jp: "`@csrf` は CSRF トークンフィールド。`@method('PUT')` で動詞を偽装。`@error` でフィールドエラー表示。`@vite()` で Vite アセットを読み込み（開発時は HMR 付き）。",
           },
@@ -445,7 +445,7 @@ class Alert extends Component
         {
           type: "paragraph",
           text: {
-            en: "Use `@include('partials.nav')` for simple file reuse. `@includeIf('partials.banner')` silently skips missing files. `@includeWhen($user->isAdmin(), 'partials.admin-nav')` conditionally includes. `@includeFirst(['custom.nav', 'partials.nav'])` uses the first file that exists.",
+            en: "Laravel has four ways to pull in a partial view — pick the right one for your situation:\n• `@include('partials.nav')` — simple include, like a copy-paste of that file into this spot\n• `@includeIf('partials.banner')` — only includes if the file exists, silently skips it otherwise\n  ↳ Useful for optional UI elements that may not exist in every project variant\n• `@includeWhen($user->isAdmin(), 'partials.admin-nav')` — only includes when a condition is true\n• `@includeFirst(['custom.nav', 'partials.nav'])` — tries each file in order, uses the first one that exists\n  ↳ Useful for themes or overridable templates where some projects customize the default",
             np: "`@include` — file reuse। `@includeIf` — file छैन भने skip। `@includeWhen` — conditional। `@includeFirst` — पहिलो available file।",
             jp: "`@include` で部分ビューを読み込み。`@includeIf` はファイルが無い場合にスキップ。`@includeWhen` で条件付き。`@includeFirst` で存在する最初のファイルを使用。",
           },
@@ -461,7 +461,7 @@ class Alert extends Component
         jp: "コントローラから Blade ビューへのデータ渡し方は？",
       },
       answer: {
-        en: "Three equivalent ways: `return view('posts.show', ['post' => $post])` (associative array), `return view('posts.show')->with('post', $post)` (chained helper), or `return view('posts.show', compact('post', 'comments'))` (PHP `compact` shorthand). All array keys become `$variable` inside the template.",
+        en: "Three ways, all equivalent — choose whichever feels most readable for your situation:\n• `return view('posts.show', ['post' => $post])` — explicit array, always clear\n• `return view('posts.show')->with('post', $post)` — chain as many `->with()` calls as you need\n• `return view('posts.show', compact('post', 'comments'))` — PHP shorthand when your local variable names already match the keys you want\n\nIn all three cases, the key name becomes a `$variable` inside the template.",
         np: "`view('name', ['key' => $val])`, `->with('key', $val)`, `compact('post')` — तिनीहरू सबै equivalent।",
         jp: "連想配列・`->with()` チェーン・`compact()` の 3 通り。配列のキーがテンプレート内の変数名になります。",
       },
@@ -473,7 +473,7 @@ class Alert extends Component
         jp: "`@include` と `<x-component>` の違いは？",
       },
       answer: {
-        en: "`@include` is a simple file-paste with access to the parent scope (all parent variables are available automatically). `<x-component>` is more powerful: it supports explicit **props**, **slots** (default + named), `$attributes->merge()` for HTML attribute forwarding, and an optional PHP class for logic. Use `@include` for truly static partials; use components for reusable UI with defined interfaces.",
+        en: "Both pull in another template, but they work very differently:\n\n<b>`@include('partials.nav')`</b>\n• Simple file paste — the included file can see all variables from the parent view automatically\n  ↳ Good for static partials like a nav bar or footer that don't need their own props\n\n<b>`<x-component>`</b>\n• More like a reusable building block with a clear, defined interface\n  ↳ Accepts explicit <b>props</b> (declared inputs), keeping the caller in control of what data goes in\n  ↳ Supports <b>slots</b> (default and named) for injecting content between the tags\n  ↳ Forwards extra HTML attributes with `$attributes->merge()`\n  ↳ Can have a PHP class behind it for computed properties or logic\n\nRule of thumb: use `@include` for simple one-off partials, use components for any UI you'll reuse in multiple places.",
         np: "`@include` — simple file paste, parent scope accessible। `<x-component>` — props, slots, attributes, PHP class।",
         jp: "`@include` は親スコープをすべて引き継ぐシンプルな埋め込み。`<x-component>` は props・スロット・属性マージ・PHP クラスロジックをサポートします。",
       },
@@ -485,7 +485,7 @@ class Alert extends Component
         jp: "Blade の `{{ }}` は JavaScript テンプレートリテラルと衝突しない？",
       },
       answer: {
-        en: "Blade processes `{{ $var }}` before the browser sees the page. If you need to output a literal `{{ }}` without Blade touching it (e.g. for a Vue.js or Alpine.js template), prefix with `@`: write `@{{ message }}` and Blade will render the literal `{{ message }}` string. Alternatively, wrap the entire block in `@verbatim ... @endverbatim`.",
+        en: "Blade processes all `{{ }}` on the server before the HTML is sent to the browser. If you're using a JavaScript framework like Vue.js or Alpine.js that also uses `{{ }}` syntax, you have two options to stop Blade from touching them:\n\n• Prefix with `@`: write `@{{ message }}` — Blade strips the `@` and outputs the literal text `{{ message }}` for JavaScript to process\n  ↳ Best for one or two expressions\n• Wrap a whole block in `@verbatim ... @endverbatim` — Blade leaves everything inside completely untouched\n  ↳ Best when you have many JavaScript expressions in one section",
         np: "Blade `{{ }}` process गर्छ। Vue/Alpine को लागि `@{{ message }}` वा `@verbatim` block प्रयोग गर्नुस्।",
         jp: "Blade は `{{ $var }}` をサーバで処理します。Vue/Alpine 向けにリテラル `{{ }}` を出力するには `@{{ message }}` か `@verbatim ... @endverbatim` ブロックを使います。",
       },
@@ -497,7 +497,7 @@ class Alert extends Component
         jp: "`@stack` と `@section` の違いは？",
       },
       answer: {
-        en: "`@section` / `@yield` works as a single-slot override: a child can define the section once (or `@parent` to extend it). `@stack` / `@push` is **additive** — multiple `@push` calls from any child view or component all accumulate into the stack in order. This makes `@stack` ideal for scripts and styles that need to be contributed by multiple components on one page.",
+        en: "They solve different problems:\n\n<b>`@section` / `@yield`</b>\n• One slot, one value — a child view fills it in once\n  ↳ If two children both define the same `@section`, the last one wins\n  ↳ Use `@parent` if you want to keep the layout's default content and add to it\n\n<b>`@stack` / `@push`</b>\n• Additive — every `@push` call adds to the stack, they all accumulate in order\n  ↳ Multiple components on the same page can each push their own scripts to `@stack('scripts')`\n  ↳ Great for page-specific JavaScript or CSS that different components on the page need to inject",
         np: "`@section` — एकपटक override। `@stack` — additive; multiple `@push` सबै accumulate। scripts/styles inject गर्न ideal।",
         jp: "`@section` は 1 回だけ上書き。`@stack` は **累積型**で、複数の `@push` が順番に積まれます。ページ内複数コンポーネントがスクリプトを注入するのに向いています。",
       },
@@ -509,7 +509,7 @@ class Alert extends Component
         jp: "Blade で `{{` をそのまま HTML に出力するには？",
       },
       answer: {
-        en: "Prefix the opening brace with `@`: write `@{{ message }}`. Blade strips the `@` and outputs the literal text `{{ message }}` without parsing it. For larger blocks containing many `{{ }}` expressions, use `@verbatim ... @endverbatim` — Blade won't touch anything inside that block.",
+        en: "Two ways — same ones as escaping for JavaScript frameworks:\n• Write `@{{ message }}` — Blade strips the `@` and outputs `{{ message }}` as literal HTML text\n  ↳ Use this for one or two expressions\n• Wrap a large block in `@verbatim ... @endverbatim` — Blade ignores everything between those tags\n  ↳ Use this when you have many `{{ }}` expressions in a section and don't want to prefix each one individually",
         np: "`@{{ message }}` लेख्नुस् — Blade `@` हटाएर `{{ message }}` literal output दिन्छ। ठूलो block मा `@verbatim`।",
         jp: "`@{{ message }}` と書くと Blade は `@` を除去し `{{ message }}` をそのまま出力します。大きなブロックには `@verbatim ... @endverbatim` を使います。",
       },

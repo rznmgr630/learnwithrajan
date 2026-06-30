@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_11_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Authentication is the foundation of any real application. Laravel gives you **session-based auth** for web, **token-based auth** via Sanctum for APIs, and **Breeze** as a full starter kit that scaffolds login, register, password reset, and email verification in minutes.",
+      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
       np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
       jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
     },
@@ -23,7 +23,7 @@ export const LARAVEL_DAY_11_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Laravel ships with two **default guards**: `web` (session cookie) and `api` (token). Guards live in `config/auth.php`. The `web` guard uses the `SessionGuard` driver and the `users` table provider by default. Each guard authenticates requests independently — you can check `Auth::guard('api')->check()` separately from `Auth::check()`.",
+            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
             np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
             jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
           },
@@ -58,7 +58,7 @@ $request->session()->regenerateToken();`,
         {
           type: "paragraph",
           text: {
-            en: "The `auth` **middleware** protects routes. Apply it in route files or inside a controller constructor. The `verified` middleware checks `email_verified_at` is not null.",
+            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
             np: "`auth` middleware route सुरक्षित गर्छ।",
             jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
           },
@@ -94,7 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         {
           type: "paragraph",
           text: {
-            en: "**Laravel Breeze** is the minimal auth starter. It scaffolds everything and lets you choose a frontend stack. It's perfect for new projects; for heavier needs (teams, 2FA) look at Jetstream.",
+            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
             np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
             jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
           },
@@ -124,27 +124,27 @@ php artisan migrate`,
           variant: "bullet",
           items: [
             {
-              en: "**Login** — `GET /login` + `POST /login` with rate-limiting (5 attempts / min).",
+              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
               np: "Login — rate limiting सहित।",
               jp: "ログイン — レート制限（5回/分）付き。",
             },
             {
-              en: "**Registration** — `GET /register` + `POST /register`; hashes password with `bcrypt`.",
+              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
               np: "Registration — `bcrypt` पासवर्ड।",
               jp: "登録 — パスワードは `bcrypt` でハッシュ。",
             },
             {
-              en: "**Password reset** — `forgot-password` → `reset-password` pages; sends signed mail.",
+              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
               np: "Password reset — signed mail।",
               jp: "パスワードリセット — 署名付きメールで送信。",
             },
             {
-              en: "**Email verification** — `GET /verify-email`; re-send button; `MustVerifyEmail` on User model.",
+              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
               np: "Email verify — `MustVerifyEmail` interface।",
               jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
             },
             {
-              en: "**Profile edit** — update name/email/password; delete account.",
+              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
               np: "Profile edit पनि।",
               jp: "プロフィール編集・アカウント削除もあり。",
             },
@@ -153,7 +153,7 @@ php artisan migrate`,
         {
           type: "paragraph",
           text: {
-            en: "**Manual user registration** (without Breeze): hash the password with `Hash::make($password)` (never store plain text), create the user record, then call `Auth::login($user)` to auto-log them in.",
+            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
             np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
             jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
           },
@@ -196,7 +196,7 @@ public function store(Request $request): RedirectResponse
         {
           type: "paragraph",
           text: {
-            en: "**Laravel Sanctum** provides a featherweight token system for SPAs, mobile apps, and simple APIs. It supports two modes: **API token** (issue personal access tokens) and **SPA cookie auth** (stateful, cookie-based, no tokens needed). It does NOT handle OAuth2 — use Passport for that.",
+            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
             np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
             jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
           },
@@ -298,7 +298,7 @@ Route::middleware('auth:sanctum')->group(function () {
         {
           type: "paragraph",
           text: {
-            en: "Laravel's **password broker** handles the full reset flow: generate a signed token, email a reset link, validate the token, update the password. You rarely call this manually when using Breeze, but knowing the facade helps for custom flows.",
+            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
             np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
             jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
           },
@@ -334,7 +334,7 @@ return $status === Password::PASSWORD_RESET
         {
           type: "paragraph",
           text: {
-            en: "**Email verification** requires the `User` model to implement `MustVerifyEmail`. After registration, Laravel sends a verification email automatically. Protect routes with the `verified` middleware — unverified users are redirected to `/email/verify`.",
+            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
             np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
             jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
           },
@@ -378,7 +378,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "Breeze・Jetstream・Fortify の違いは？",
       },
       answer: {
-        en: "**Fortify** is a headless backend-only auth library — no views, just routes and logic. **Breeze** wraps Fortify with simple views (Blade, Livewire, Inertia) and is ideal for most projects. **Jetstream** is a full-featured kit that adds team management, two-factor authentication, API token management via Sanctum, and a richer UI (Livewire or Inertia). Start with Breeze, upgrade to Jetstream only if you need teams or 2FA.",
+        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
         np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
         jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
       },
@@ -390,7 +390,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "Sanctum はモバイルアプリに適していますか？",
       },
       answer: {
-        en: "Yes — Sanctum's **API token mode** is the recommended approach for mobile apps. The app logs in once, receives a plain-text token, stores it securely (iOS Keychain / Android Keystore), and sends it as `Authorization: Bearer <token>` on every request. Tokens can have abilities (scopes) and can be revoked individually. For complex OAuth2 flows (e.g. third-party apps), use Laravel Passport instead.",
+        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
         np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
         jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
       },
@@ -402,7 +402,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "認証済みユーザーにロールを追加する方法は？",
       },
       answer: {
-        en: "The simplest approach is a `role` column on the `users` table (`admin`, `editor`, `viewer`). For more advanced RBAC with permissions, use the **Spatie Laravel Permission** package (`composer require spatie/laravel-permission`), which provides `hasRole()`, `can()`, and DB-backed permissions. You can also use Gates and Policies (Day 12) to authorize actions without a formal role system.",
+        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 12) to authorize actions without needing a formal role system at all.",
         np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
         jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
       },
@@ -414,7 +414,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "`remember_token` フィールドは何のためにあるの？",
       },
       answer: {
-        en: "When a user logs in with **\"remember me\"** checked (`Auth::attempt($credentials, true)`), Laravel stores a long-lived token in the `remember_token` column and sets a persistent cookie (`laravel_token`). On future visits the cookie is validated against the DB without the user re-entering credentials. The token is rotated on each use and cleared on logout. Never remove this column from the `users` migration if you want remember-me functionality.",
+        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
         np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
         jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
       },
@@ -426,7 +426,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "複数の認証ガードは持てますか？",
       },
       answer: {
-        en: "Yes. Add guards in `config/auth.php`. A common pattern is a separate `admin` guard backed by an `admins` table/model with its own session. Example: `Auth::guard('admin')->attempt($credentials)`. Middleware can be scoped: `Route::middleware('auth:admin')`. Each guard is fully independent, so an authenticated `admin` user is not recognized by the `web` guard.",
+        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
         np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
         jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
       },
@@ -438,7 +438,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "特定ユーザータイプのみルートを保護する方法は？",
       },
       answer: {
-        en: "Use a **Gate** or **Policy** (covered in Day 12), or write a custom middleware. Example custom middleware: `php artisan make:middleware EnsureUserIsAdmin`. Inside the `handle` method, check `$request->user()?->role === 'admin'` and return `abort(403)` or `abort(401)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11) or `Kernel.php` (Laravel 10).",
+        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 12.",
         np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
         jp: "カスタムミドルウェアか Gate/Policy（Day 12 参照）。`abort(403)` で弾く。",
       },
@@ -450,7 +450,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
         jp: "フィーチャーテストで認証をテストする方法は？",
       },
       answer: {
-        en: "Use `$this->actingAs($user)` to authenticate a user for the duration of the test request. For API tests use `$this->actingAs($user, 'sanctum')`. Create users with factories: `$user = User::factory()->create()`. Check responses with `->assertRedirect('/login')` for unauthenticated access and `->assertOk()` for authenticated access.",
+        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
         np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
         jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
       },
