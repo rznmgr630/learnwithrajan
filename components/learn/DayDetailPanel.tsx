@@ -310,9 +310,7 @@ export function DayDetailPanel({
                           ) : null}
                           <div className="space-y-3">
                             {splitFaqAnswerIntoParagraphs(item.answer).map((para, pi) => (
-                              <p key={pi}>
-                                <RichText text={para} />
-                              </p>
+                              <RichParagraph key={pi} text={para} />
                             ))}
                           </div>
                           {item.callout ? (
