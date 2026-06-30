@@ -1,289 +1,288 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-/** Day 4 follows the “Managing state” block: props, callbacks, state vs props, children, DevTools, then Button + Alert exercises. */
 export const REACT_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Managing state (~6m in-course) is about deciding who owns a piece of data and how it flows through props as read-only inputs. You will pass values and callbacks down, compare state vs props, compose with `children`, use React DevTools to debug trees, then finish with a Button and Alert exercise pattern common in forms and modals.",
-      np: "state व्यवस्थापन (~६m) — कसले डाटा मालिक र props मार्फत पढाइ-मात्र प्रवाह। मान र callback तल, state vs props, `children`, DevTools, अनि Button र Alert अभ्यास।",
-      jp: "状態の扱い（教材では約6分の塊）では、どのコンポーネントがデータの持ち主かと、props で下へ読み取り専用で渡す流れを固めます。値とコールバック、state と props の違い、`children`、DevTools、最後に Button / Alert の演習パターンです。",
+      en: "Props are how parent components talk to children — read-only data flowing downward. State is a component's private memory — data it owns and can change. Together they are the two fundamental data types in React. Analogy: props are like a letter you receive (read-only, came from outside); state is your own notebook (you control it, you update it, you decide what goes in it).",
+      np: "Props = parent बाट आउने read-only data। State = component को आफ्नै memory। Lifting state up ले siblings बीच data share गर्न दिन्छ।",
+      jp: "propsは親から子への読み取り専用データ、stateはコンポーネント自身のメモリです。",
     },
     {
-      en: "Lessons 08–14 in your playlist (props → functions → state vs props → children → DevTools → two exercises) map to the sections below. Times are hints for pacing, not requirements.",
-      np: "०८–१४ (props → functions → state vs props → children → DevTools → अभ्यास) तल मेल खान्छ। समय गति संकेत मात्र।",
-      jp: "プレイリストの 08〜14 が以下の見出しに対応します。時間は目安です。",
+      en: "Today we cover:\n• <b>Props in depth</b> — destructuring, defaults, spread, callbacks\n• <b>useState</b> — reading, updating, functional updates, batching\n• <b>Updating objects and arrays</b> in state immutably\n• <b>The children prop</b> — composition pattern\n• <b>Lifting state up</b> — sharing state between sibling components",
+      np: "Props (destructuring, defaults), useState, immutable updates, children prop, र lifting state up।",
+      jp: "props（分割代入、デフォルト値）、useState、不変更新、childrenプロップ、state引き上げ。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Managing state — overview (~6m 03s)",
-        np: "state व्यवस्थापन — अवलोकन (~६m ०३s)",
-        jp: "状態管理の概要（約 6m03s）",
-      },
+      title: { en: "Props in depth", np: "Props को गहिरो ज्ञान", jp: "propsの詳細" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "State is data that belongs to a component and may change over time (via `useState`, `useReducer`, or class `this.state` in legacy code). When state changes, React re-renders that component and its descendants so the UI stays in sync. Lift state up when two siblings need the same value — store it in the nearest common parent and pass it down as props.",
-            np: "State कम्पोनेन्टको डाटा जो समयसँग बदलिन्छ (`useState`…)। बदल्दा React re-render गर्छ। Lift state up — दुई भाइलाई चाहिए नजिकको अभिभावक मा राखी props तल।",
-            jp: "state はコンポーネントが持ち、時間で変えられるデータです（`useState` 等）。変わるとその subtree が再レンダーされます。兄弟で共有するなら共通親に state を持ち上げ、props で配ります。",
+            en: "Props are <b>immutable inputs</b> — a component receives them but cannot modify them. Think of a component as a function: props are its parameters. Trying to change a prop inside the component is like a function trying to modify its caller's variables — it breaks the one-way data flow React is built on.\n\nBest practices:\n• <b>Destructure props</b> in the function signature for cleaner code\n• <b>Set default values</b> with `= defaultValue` in destructuring\n• <b>Spread props</b> with `{...props}` to pass all props down to a child\n• <b>Callback props</b> (functions passed as props) are how children communicate back to parents",
+            np: "Props = immutable inputs। Destructure गर्नुहोस्, default values राख्नुहोस्। Callback props ले children → parent communication हुन्छ।",
+            jp: "propsは不変の入力値。分割代入、デフォルト値、スプレッド、コールバックの4つのパターン。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Lifted counter — parent owns state",
-            np: "उठाइएको counter — अभिभावकमा state",
-            jp: "親が state を持つカウンター",
-          },
-          code: `import { useState } from "react";
-
-function App() {
-  const [count, setCount] = useState(0);
+          title: { en: "Props patterns", np: "Props ढाँचाहरू", jp: "propsのパターン" },
+          code: `// Destructuring + default values in the signature
+function Button({
+  label,
+  variant = 'primary',   // default if not passed
+  disabled = false,
+  onClick,               // callback prop — parent passes a function
+}) {
   return (
-    <main>
-      <CounterDisplay value={count} />
-      <CounterControls count={count} onIncrement={() => setCount((c) => c + 1)} />
-    </main>
-  );
-}
-
-function CounterDisplay({ value }) {
-  return <p className="tabular-nums">Count: {value}</p>;
-}
-
-function CounterControls({ count, onIncrement }) {
-  return (
-    <button type="button" onClick={onIncrement}>
-      Increment (now {count})
+    <button
+      disabled={disabled}
+      className={'btn btn-' + variant}
+      onClick={onClick}
+    >
+      {label}
     </button>
-  );
-}`,
-        },
-        { type: "diagram", id: "react-data-flow" },
-      ],
-    },
-    {
-      title: {
-        en: "08 · Passing data via props (~3m 58s)",
-        np: "०८ · props मार्फत डाटा (~३m ५८s)",
-        jp: "08 · props でデータを渡す（約 3m58s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Props are the public inputs to a component. The parent chooses values; the child reads them and renders JSX. Destructure in the signature for clarity: `function Avatar({ src, alt, size = 40 }) { … }`. React elements are props too — that is how you pass icons or layout slots without new syntax.",
-            np: "Props सार्वजनिक इनपुट; अभिभावक मान छान्छ, सन्तान पढ्छ। स्पष्टताको लागि destructure: `function Avatar({ src, alt, size = 40 })`।",
-            jp: "props は親から子への公開入力です。シグネチャで分割代入すると読みやすくなります。要素を props で渡すこともよくあります。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "09 · Passing functions via props (~3m 46s)",
-        np: "०९ · props मार्फत फंक्फन (~३m ४६s)",
-        jp: "09 · props で関数を渡す（約 3m46s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Callbacks let a child notify the parent (“user clicked row 3”, “form submitted”). Name them `onSomething` in props to mirror DOM conventions (`onClick`). The parent passes `() => handleSomething(id)` when the child should not know about parent implementation details — only the contract (`onSelect(item)`).",
-            np: "Callback ले सन्तानले अभिभावकलाई सूचित गर्छ। props मा `onSomething`। अभिभावकले `() => handle(id)` — सम्झौता मात्र।",
-            jp: "コールバックで子が親に通知します。props 名は `on…` が慣習。親は `() => …` で id などを閉じ込めます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "10 · State vs props (~1m 33s)",
-        np: "१० · state बनाम props (~१m ३३s)",
-        jp: "10 · state と props（約 1m33s）",
-      },
-      blocks: [
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "Props — external configuration from parent; treat as read-only in the child (do not assign to `props.xxx`).",
-              np: "Props — अभिभावकबाट; सन्तानमा पढाइ-मात्र (`props.x` मा assign नगर्नुहोस्)।",
-              jp: "props — 親からの設定。子では書き換えない（再代入しない）。",
-            },
-            {
-              en: "State — internal data the component owns and updates; changing state schedules a re-render of that component.",
-              np: "State — कम्पोनेन्टले धान्छ र अद्यावधिक गर्छ; बदल्दा re-render।",
-              jp: "state — そのコンポーネントが保持・更新。変えると再レンダー。",
-            },
-            {
-              en: "Derived data — if a value can be computed from props + state alone, do not store it in another state variable — compute during render (or memoize later when profiling says you need it).",
-              np: "व्युत्पन्न — props+state बाट गन्न मिल्छ भने अर्को state मा नराख्नुहोस् — render मा गन्नुहोस्।",
-              jp: "派生値は props と state から計算できるなら、別の state に複製しないのが原則です。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "11 · Passing children (~5m 05s)",
-        np: "११ · children पास (~५m ०५s)",
-        jp: "11 · children を渡す（約 5m05s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Whatever JSX sits between a component’s opening and closing tags becomes the `children` prop — a powerful composition pattern for cards, layouts, and dialogs. You can type `children` as `ReactNode` in TypeScript. `children` is a prop like any other; you can combine it with explicit props (`title`, `footer`).",
-            np: "ट्याग बीचको JSX `children` prop — composition। TS मा `ReactNode`। `children` पनि एउटा prop — `title` सँग मिश्रण।",
-            jp: "開始タグと終了タグの間の JSX が `children` です。カードやレイアウトの合成に使います。TypeScript では `ReactNode` 等で型付けできます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Card shell with header slot + children",
-            np: "header + children सहित Card",
-            jp: "ヘッダーと children を持つ Card",
-          },
-          code: `function Card({ title, children }) {
-  return (
-    <section className="card">
-      {title ? <header className="card-header">{title}</header> : null}
-      <div className="card-body">{children}</div>
-    </section>
   );
 }
 
 // Usage
-<Card title="Settings">
-  <p>Update your profile information.</p>
-  <button type="button">Save</button>
-</Card>`,
+<Button label="Save" onClick={() => handleSave()} />
+<Button label="Delete" variant="danger" onClick={() => handleDelete(id)} />
+<Button label="Loading..." disabled={true} />
+
+// Spread pattern — pass all parent props down
+function IconButton({ icon, ...rest }) {
+  return <button {...rest}>{icon} {rest.label}</button>;
+}`,
         },
-      ],
-    },
-    {
-      title: {
-        en: "12 · Inspecting components with React DevTools (~2m 10s)",
-        np: "१२ · React DevTools (~२m १०s)",
-        jp: "12 · React DevTools（約 2m10s）",
-      },
-      blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "Install the React Developer Tools browser extension. The Components tab shows the live tree: pick a node to inspect props, state, and hooks values at that moment. Use the search/filter box to jump to deep components. The Profiler tab (separate topic) records render timing — enable it when optimising hot paths.",
-            np: "React DevTools extension। Components ट्याब — props, state, hooks। खोज बाकस। Profiler अर्को विषय — अनुकूलनमा।",
-            jp: "React Developer Tools を入れ、Components タブでツリーを選び props / state / hooks を確認します。Profilerは別途パフォーマンス調査に使います。",
+          type: "table",
+          caption: {
+            en: "Common prop patterns",
+            np: "सामान्य prop ढाँचाहरू",
+            jp: "よく使うpropsパターン",
           },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "Highlight updates (older DevTools option) or watch Fast Refresh logs to catch accidental render storms during development.",
-              np: "Highlight updates वा Fast Refresh — विकासमा अनावश्यक render समात्न।",
-              jp: "更新のハイライトやログで、過剰な再レンダーを掴みやすくなります。",
-            },
-            {
-              en: "Rules: DevTools only sees development builds clearly; production may use minified names — still useful for props/state inspection.",
-              np: "DevTools dev build मा स्पष्ट; production मा नाम minify — तैपनि उपयोगी।",
-              jp: "本番は名前が短縮されることもありますが、props/state の確認には依然有用です。",
-            },
+          headers: [
+            { en: "Pattern", np: "ढाँचा", jp: "パターン" },
+            { en: "Syntax", np: "Syntax", jp: "構文" },
+            { en: "Use when", np: "कहिले प्रयोग", jp: "使いどき" },
+          ],
+          rows: [
+            [
+              { en: "Required prop", np: "Required prop", jp: "必須prop" },
+              { en: "`function Foo({ name })`", np: "`function Foo({ name })`", jp: "`function Foo({ name })`" },
+              { en: "Always needed", np: "सधैं चाहिन्छ", jp: "常に必要" },
+            ],
+            [
+              { en: "Optional with default", np: "Default सहित optional", jp: "デフォルト付きオプション" },
+              { en: "`{ size = 'md' }`", np: "`{ size = 'md' }`", jp: "`{ size = 'md' }`" },
+              { en: "Has a sensible fallback", np: "Fallback छ", jp: "代替値がある" },
+            ],
+            [
+              { en: "Callback prop", np: "Callback prop", jp: "コールバックprop" },
+              { en: "`{ onSubmit }`", np: "`{ onSubmit }`", jp: "`{ onSubmit }`" },
+              { en: "Child notifies parent", np: "Child → Parent", jp: "子が親に通知" },
+            ],
+            [
+              { en: "Children prop", np: "Children prop", jp: "childrenプロップ" },
+              { en: "`{ children }`", np: "`{ children }`", jp: "`{ children }`" },
+              { en: "Wrap arbitrary content", np: "Content wrap", jp: "任意の内容を包む" },
+            ],
           ],
         },
       ],
     },
     {
-      title: {
-        en: "13 · Exercise — Building a Button component (~7m 02s)",
-        np: "१३ · अभ्यास — Button कम्पोनेन्ट (~७m ०२s)",
-        jp: "13 · 演習：Button コンポーネント（約 7m02s）",
-      },
+      title: { en: "useState — giving components memory", np: "useState — component लाई memory", jp: "useState — コンポーネントにメモリを" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Wrap a native `<button>` so your app shares one visual system (variants: primary / secondary / danger), `disabled`, `type=\"button\"` inside forms to avoid accidental submit, and optional `children` for the label.",
-            np: "नेटिभ `<button>` लपेट्नुहोस् — variant, `disabled`, फर्म भित्र `type=\"button\"` (submit नचलोस्), `children` लेबल।",
-            jp: "ネイティブ `<button>` をラップし、variant、`disabled`、フォーム内では `type=\"button\"`（誤送信防止）、ラベルは `children` とします。",
+            en: "<b>useState</b> lets a component remember a value between renders. Without it, every time React re-renders your component, all local variables reset to their initial values.\n\nAnalogy: a light switch has state — it is either ON or OFF. When you flip it, the room updates instantly. `useState` works the same way — you have a current value (the switch position) and a setter function (the flipper). Call the setter, React re-renders the component with the new value.\n\nImportant rules:\n• <b>Never modify state directly</b> — `count++` does not trigger a re-render; `setCount(count + 1)` does\n• <b>State updates may batch</b> — calling `setCount(count + 1)` three times in a row only adds 1, not 3\n  ↳ Use the functional form: `setCount(prev => prev + 1)` to always work off the latest value\n• <b>useState is per-component</b> — each component instance has its own independent state",
+            np: "useState ले component लाई renders बीच value याद राख्न दिन्छ। Setter call = re-render। Functional update `prev => prev + 1` सबैभन्दा safe।",
+            jp: "useStateはレンダー間で値を保持します。セッター呼び出しで再レンダー。関数型更新が安全。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Button.jsx — variants + disabled",
-            np: "Button.jsx — variant + disabled",
-            jp: "Button.jsx",
-          },
-          code: `function Button({
-  variant = "primary",
-  disabled = false,
-  type = "button",
-  children,
-  ...rest
-}) {
-  const className = ["btn", \`btn--\${variant}\`, disabled ? "btn--disabled" : ""]
-    .filter(Boolean)
-    .join(" ");
+          title: { en: "Counter with functional update", np: "Counter — functional update सहित", jp: "カウンター（関数型更新）" },
+          code: `import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0); // initial value = 0
+
+  // Functional update — always works off the latest state
+  const increment = () => setCount(prev => prev + 1);
+  const decrement = () => setCount(prev => prev - 1);
+  const reset     = () => setCount(0);
+
+  // WHY functional update matters:
+  // setCount(count + 1) three times => adds 1 (uses same stale 'count')
+  // setCount(prev => prev + 1) three times => adds 3 (each gets fresh value)
 
   return (
-    <button type={type} className={className} disabled={disabled} {...rest}>
-      {children}
-    </button>
+    <div>
+      <button onClick={decrement}>-</button>
+      <span>{count}</span>
+      <button onClick={increment}>+</button>
+      <button onClick={reset}>Reset</button>
+    </div>
   );
-}
-
-export default Button;`,
+}`,
         },
       ],
     },
     {
-      title: {
-        en: "14 · Exercise — Showing an Alert",
-        np: "१४ · अभ्यास — Alert देखाउने",
-        jp: "14 · 演習：アラートを表示する",
-      },
+      title: { en: "Updating objects and arrays in state", np: "State मा objects र arrays update गर्ने", jp: "stateのオブジェクト・配列更新" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Combine local state in a parent (`showAlert`) with a Button that toggles or sets it true, and an Alert child that renders only when the flag is true. Reset with a dismiss control. For accessibility, use `role=\"alert\"` on the message region and return focus to the triggering button after dismiss when possible.",
-            np: "`showAlert` state, Button ले true, Alert सर्तीय render। dismiss। `role=\"alert\"`।",
-            jp: "親の `showAlert` などの state と Button で表示を切り替え、条件付きで Alert を出します。`role=\"alert\"` と閉じた後のフォーカスに配慮します。",
+            en: "React state must be treated as <b>immutable</b> — you cannot modify objects or arrays in place. You must always create a new object or array.\n\nAnalogy: React's state is like a photograph — you cannot erase and redraw on it, you take a new photo each time. React compares the old photo with the new photo (by reference) to decide whether to re-render. If you modify the same photo, React sees the same reference and thinks nothing changed.\n\nThe three most common array operations:\n• <b>Add item</b> — spread the old array and add the new item: `[...arr, newItem]`\n• <b>Remove item</b> — filter out the item: `arr.filter(i => i.id !== id)`\n• <b>Update item</b> — map and replace the matching item: `arr.map(i => i.id === id ? {...i, done: true} : i)`",
+            np: "State immutable छ — object/array directly modify नगर्नुहोस्। नयाँ array/object बनाउनुहोस्। Spread operator `...` सबैभन्दा common tool।",
+            jp: "stateは不変。直接変更せず、新しい配列・オブジェクトを作成しましょう。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "App.jsx — button opens alert",
-            np: "App.jsx — button ले alert",
-            jp: "App.jsx の例",
-          },
-          code: `import { useState } from "react";
-import Button from "./Button.jsx";
-import Alert from "./Alert.jsx";
+          title: { en: "Immutable state updates", np: "Immutable state updates", jp: "不変なstate更新" },
+          code: `import { useState } from 'react';
 
-export default function App() {
-  const [visible, setVisible] = useState(false);
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'Buy milk',   done: false },
+    { id: 2, text: 'Walk dog',   done: false },
+    { id: 3, text: 'Read book',  done: true  },
+  ]);
+  const [user, setUser] = useState({ name: 'Rajan', age: 25 });
+
+  // ADD — spread existing array, append new item
+  const addTodo = (text) => {
+    setTodos(prev => [...prev, { id: Date.now(), text, done: false }]);
+  };
+
+  // REMOVE — filter out the item
+  const removeTodo = (id) => {
+    setTodos(prev => prev.filter(todo => todo.id !== id));
+  };
+
+  // UPDATE — map, replace matching item
+  const toggleTodo = (id) => {
+    setTodos(prev => prev.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ));
+  };
+
+  // UPDATE OBJECT — spread existing, override one field
+  const updateName = (name) => {
+    setUser(prev => ({ ...prev, name }));
+  };
+
+  // BAD (never do this):
+  // todos.push({ id: 4, text: 'bad' }); // mutating — React won't see the change
+  // setTodos(todos); // same reference — no re-render
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "The children prop", np: "Children prop", jp: "childrenプロップ" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The <b>children</b> prop is special — it holds whatever JSX you place between the opening and closing tags of a component. It enables the <b>composition pattern</b>: you build a wrapper component that controls layout and style, and the consumer controls the content inside.\n\nAnalogy: children is like the filling inside a sandwich — the bread (the wrapper component) defines the shape and style, but you choose what goes in the middle. Different sandwiches, same bread.\n\nWhen to use children:\n• Layout components — `<Card>`, `<Modal>`, `<Section>`, `<Container>`\n• Wrapper utilities — `<ErrorBoundary>`, `<AuthGuard>`, `<Tooltip>`\n• Compound components — where parent and children share implicit state (covered in Day 11)",
+            np: "Children prop = component tags बीचको JSX। Layout components (`<Card>`, `<Modal>`) मा बहुत उपयोगी।",
+            jp: "childrenプロップはタグ間のJSX。レイアウトコンポーネントで活躍します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Card component with children", np: "Card component — children सहित", jp: "childrenを使ったCardコンポーネント" },
+          code: `// The wrapper — controls layout, style, and structure
+function Card({ title, children, footer }) {
+  return (
+    <div className="card">
+      {title && <div className="card-header"><h3>{title}</h3></div>}
+      <div className="card-body">
+        {children}  {/* whatever the consumer puts between <Card>...</Card> */}
+      </div>
+      {footer && <div className="card-footer">{footer}</div>}
+    </div>
+  );
+}
+
+// Consumer — controls the content
+function App() {
+  return (
+    <div>
+      <Card title="User Profile">
+        <img src="/avatar.jpg" alt="User" />
+        <p>Name: Rajan</p>
+        <p>Role: Developer</p>
+      </Card>
+
+      <Card title="Stats" footer={<button>View All</button>}>
+        <p>Posts: 42</p>
+        <p>Followers: 128</p>
+      </Card>
+    </div>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Lifting state up", np: "State lifting up", jp: "stateの引き上げ" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Lifting state up</b> is the pattern for sharing state between sibling components. Since props only flow downward (parent → child), two siblings cannot directly share state. The solution: move the state to their common parent and pass it down as props.\n\nAnalogy: if two siblings need to share information, they pass notes through their parent — the parent holds the data, sends it down to whichever sibling needs to read it, and gives the other sibling a function to update it.\n\nThe pattern:\n1. Move state from the child that owned it to the lowest common ancestor\n2. Pass the state value as a prop to the child that reads it\n3. Pass the setter (or a handler function) as a prop to the child that changes it",
+            np: "Lifting state up = siblings बीच state share गर्न state लाई parent मा move गर्ने। Value prop down, setter prop down।",
+            jp: "兄弟間でstateを共有するには、共通の親に引き上げてpropsで渡します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Lifting state to share between siblings", np: "Siblings बीच state share", jp: "兄弟間でstate共有" },
+          code: `import { useState } from 'react';
+
+// SearchInput reads from and writes to the state
+function SearchInput({ query, onQueryChange }) {
+  return (
+    <input
+      value={query}
+      onChange={e => onQueryChange(e.target.value)}
+      placeholder="Search..."
+    />
+  );
+}
+
+// ResultsList only reads the state (it doesn't own it)
+function ResultsList({ query }) {
+  const results = ['Apple', 'Banana', 'Cherry'].filter(item =>
+    item.toLowerCase().includes(query.toLowerCase())
+  );
+  return (
+    <ul>
+      {results.map(r => <li key={r}>{r}</li>)}
+    </ul>
+  );
+}
+
+// Parent owns the state and passes it down to both siblings
+function SearchPage() {
+  const [query, setQuery] = useState('');
 
   return (
-    <main>
-      <Button variant="primary" onClick={() => setVisible(true)}>
-        Show alert
-      </Button>
-      {visible ? (
-        <Alert onClose={() => setVisible(false)}>
-          Something important happened.
-        </Alert>
-      ) : null}
-    </main>
+    <div>
+      {/* SearchInput writes to state via callback prop */}
+      <SearchInput query={query} onQueryChange={setQuery} />
+      {/* ResultsList reads state via value prop */}
+      <ResultsList query={query} />
+    </div>
   );
 }`,
         },
@@ -293,128 +292,63 @@ export default function App() {
   faq: [
     {
       question: {
-        en: "Can a child component update a prop value directly?",
-        np: "सन्तानले props सिधै बदल्न मिल्छ?",
-        jp: "子が props を直接書き換えていい？",
+        en: "What happens if I modify props directly?",
+        np: "Props directly modify गरे के हुन्छ?",
+        jp: "propsを直接変更したらどうなる？",
       },
       answer: {
-        en: "No. Props are read-only inputs. The child should call a callback prop (`onRename`) or dispatch to context / external store patterns — the parent (or store owner) performs the actual state update.",
-        np: "होइन। Props पढाइ-मात्र। सन्तानले callback (`onRename`) — अभिभावक ले state अद्यावधिक।",
-        jp: "ダメです。 変更は親（やストアの持ち主）が行い、子は コールバック で依頼します。",
+        en: "React will not catch it at runtime, but it breaks the one-way data flow. The parent component still thinks the original value is correct — now there is a mismatch between what the parent thinks and what the child shows. On the next render, the parent will overwrite your change with the old value. Always call a callback prop (like `onChange`) to ask the parent to update its state.",
+        np: "Props modify गर्दा parent को value unchanged रहन्छ — next render मा overwrite हुन्छ। Callback prop बाट parent को state update गर्नुहोस्।",
+        jp: "直接変更しても親は古い値を持ったまま。次のレンダーで上書きされます。コールバックpropで更新を依頼しましょう。",
       },
     },
     {
       question: {
-        en: "Why pass `() => handleClick(id)` instead of `handleClick` when I need an id?",
-        np: "`() => handleClick(id)` किन?",
-        jp: "id が要るとき `() => handleClick(id)` にする理由は？",
+        en: "Why does my state update seem delayed by one render?",
+        np: "State update एक render ढिलो देखिन्छ — किन?",
+        jp: "stateの更新が1レンダー遅れて見えるのはなぜ？",
       },
       answer: {
-        en: "`handleClick` alone has no slot for `id` unless you wrap it. The arrow closes over the current `id` from the render where the button was created. Alternative: `onClick={(e) => handleClick(e, id)}` or a small child component that receives `id` as a prop and calls `onSelect(id)` internally.",
-        np: "`handleClick` मात्रमा `id` छैन। arrow ले id बन्द गर्छ। वा सानो सन्तान कम्पोनेन्ट।",
-        jp: "`handleClick` だけでは `id` を渡せないので、クロージャで包むか、子コンポーネントに `id` を渡して内部で `onSelect(id)` とします。",
+        en: "State updates are asynchronous — `setState` schedules a re-render, it does not update the variable in place immediately. After calling `setCount(5)`, reading `count` in the same function still gives you the old value. The new value (`5`) is only available in the next render's function call. This is why functional updates (`prev => prev + 1`) are safer than reading the current state variable.",
+        np: "setState ले re-render schedule गर्छ, immediately variable update गर्दैन। Same function मा old value नै पाउँछ। Functional update `prev => ...` प्रयोग गर्नुहोस्।",
+        jp: "setState は再レンダーをスケジュールするだけ。同じ関数内では古い値のまま。関数型更新を使いましょう。",
       },
     },
     {
       question: {
-        en: "Is `children` always an array?",
-        np: "`children` सधै सरणी?",
-        jp: "`children` は常に配列？",
+        en: "What is the difference between controlled and uncontrolled components?",
+        np: "Controlled र uncontrolled components को फरक के हो?",
+        jp: "制御コンポーネントと非制御コンポーネントの違いは？",
       },
       answer: {
-        en: "No. A single child is a single node; multiple nodes become an array (or fragment). Use `React.Children` utilities if you need to map or count children robustly.",
-        np: "होइन। एक सन्तान एक नोड; धेरै सरणी वा fragment। `React.Children` प्रयोग।",
-        jp: "単一ノードのこともあれば、複数では配列になり得ます。数えたり変形するなら `React.Children` が安全です。",
+        en: "A controlled component's value is driven by React state — `<input value={text} onChange={e => setText(e.target.value)} />`. React owns the value, the DOM reflects it. An uncontrolled component stores its own value in the DOM — you read it with a ref when needed (`inputRef.current.value`). Controlled components are more verbose but give you full control (validation, formatting, disabling submit). Prefer controlled for any form you need to interact with programmatically.",
+        np: "Controlled = React state ले value control गर्छ। Uncontrolled = DOM ले value राख्छ, ref बाट पढ्छ। Forms को लागि controlled नै best।",
+        jp: "制御：ReactのstateがDOM値を管理。非制御：DOMが値を保持しrefで読む。フォームは制御が推奨。",
       },
     },
     {
       question: {
-        en: "What is prop drilling?",
-        np: "prop drilling के हो?",
-        jp: "prop drilling とは？",
+        en: "How many useState calls can I have in one component?",
+        np: "एउटा component मा कति useState हुन सक्छ?",
+        jp: "1つのコンポーネントにuseStateはいくつ使える？",
       },
       answer: {
-        en: "Passing the same prop through many intermediate layers that do not use it, only forward it. It is valid for small apps. When it hurts readability, reach for context, composition (`children`), or state libraries — not on Day 4’s quiz, but you will see them soon.",
-        np: "धेरै मध्यवर्ती तहबाट एउटै prop मात्र अगाडि पठाउनु — सानो एपमा ठीक। पढ्न गाह्रो भए context, children, state लाइब्रेरी।",
-        jp: "使わない中間コンポーネントを何層も通して props を渡すことです。小規模では問題なく、肥大したら Context や合成で緩和します。",
+        en: "As many as you need — React tracks them by call order. The only rule: never call `useState` inside a loop, condition, or nested function. Always call hooks at the top level of the component. If you find yourself using 6+ separate state variables that all change together, consider merging them into one object with `useState({ ... })` or switching to `useReducer` (covered in Day 9).",
+        np: "जति चाहियो उति। Loop, condition, nested function भित्र call नगर्नुहोस् — top level मात्र। ६+ related state छ भने useReducer consider गर्नुहोस्।",
+        jp: "必要なだけ使えます。ループや条件の中では呼ばないこと。6個以上関連するなら`useReducer`も検討。",
       },
     },
     {
       question: {
-        en: "How do I share data without prop drilling — what is React Context?",
-        np: "prop drilling बिना डाटा साझਾ — React Context के हो?",
-        jp: "prop drilling なしでデータを共有するには？ Context とは？",
+        en: "When should I use an object vs separate state variables?",
+        np: "Object state बनाम separate state variables — कहिले के?",
+        jp: "オブジェクトstateと個別変数、どちらを使う？",
       },
       answer: {
-        en: "Context lets a parent provide a value once and any descendant read it with `useContext`, skipping intermediate props. Typical steps: `createContext(default)`, wrap with `<MyContext.Provider value={…}>`, read with `useContext(MyContext)` in nested components. Use it for theme, locale, auth session, or rarely-changing global defaults — not as a replacement for every piece of state (too many providers hurts traceability). Official reference: React docs → Context / `useContext`.",
-        np: "Context — अभिभावकले `Provider` मार्फत मान दिन्छ, सन्तान `useContext` ले पढ्छ। theme/locale/auth जस्ता स्थिर-ish मानको लागि; हरेक state को लागि होइन। React डकुमेन्टेशन → Context।",
-        jp: "Context は親が `Provider` で値を渡し、深い子が `useContext` で読む仕組みです。テーマ・ロケール・認証など更新頻度が低い共有に向き、すべての state を Context に押し込むのは避けます。詳細は React 公式の Context / `useContext` を参照してください。",
+        en: "Use separate variables for independent values that change independently (e.g., `isLoading`, `error`, `searchQuery` — they change at different times for different reasons). Use an object when values are part of the same entity and change together (e.g., a form with `name`, `email`, `password` — they are all about the same user). One common mistake: putting unrelated values in one object makes every update verbose (you must spread the whole object even if only one field changed).",
+        np: "Independent values = separate variables। Related entity (form fields) = object। Unrelated values लाई एउटै object मा नराख्नुहोस्।",
+        jp: "独立した値は別々に、同じエンティティのフィールドはオブジェクトで。無関係な値を1つにまとめないこと。",
       },
-    },
-    {
-      question: {
-        en: "Why must `type=\"button\"` be the default for reusable buttons in forms?",
-        np: "फर्ममा `type=\"button\"` किन?",
-        jp: "フォームで `type=\"button\"` をデフォルトにする理由は？",
-      },
-      answer: {
-        en: "Inside a `<form>`, the HTML default for `<button>` is `submit`. A reusable `Button` that omits `type` could accidentally submit the form when the user only wanted a local action. Default to `button` and set `submit` explicitly for primary form submission.",
-        np: "`<form>` भित्र `<button>` को पूर्वनिर्धारित `submit`। `button` डिफल्ट; submit मुख्य पेशकशवाला मात्र।",
-        jp: "フォーム内では `<button>` の省略形が `submit` になりがちです。共有 `Button` は `type=\"button\"` を既定にし、送信専用は `submit` と明示します。",
-      },
-    },
-    {
-      question: {
-        en: "DevTools shows `hooks` state — is that different from props?",
-        np: "DevTools मा hooks state — props भन्दा फरक?",
-        jp: "DevTools の hooks と props は別？",
-      },
-      answer: {
-        en: "Hooks hold component state and side-effect bookkeeping (`useState`, `useEffect`, etc.). They are internal to the component function, not passed by the parent. Props remain the external API from parents; DevTools simply surfaces both for debugging.",
-        np: "Hooks आन्तरिक state; props अभिभावकबाट बाह्य API। DevTools दुवै debug को लागि देखाउँछ।",
-        jp: "hooks はコンポーネント内部の state 等、props は親からの入力です。DevTools は両方を表示するだけです。",
-      },
-    },
-    {
-      question: {
-        en: "Should Alert content live in state or be passed as children?",
-        np: "Alert सामग्री state वा children?",
-        jp: "Alert の本文は state？ children？",
-      },
-      answer: {
-        en: "Visibility (`open` / `visible`) is state. Message body is often `children` so `<Alert>Saved!</Alert>` reads naturally, or a `message` prop if you prefer a stricter API. Pick one style per design system.",
-        np: "दृश्यता state। सन्देश प्राय children वा `message` prop — डिजाइन प्रणालीमा एकरूप।",
-        jp: "開閉は state、本文は `children` か `message` prop のどちらかに揃えるのが一般的です。",
-      },
-    },
-    {
-      question: {
-        en: "What is wrong with mutating an object stored in state?",
-        np: "state भित्रको object म्युटेट गर्दा के बिग्रिन्छ?",
-        jp: "state のオブジェクトを直接変えるとダメなのは？",
-      },
-      answer: {
-        en: "React relies on reference changes to know something updated. Mutating `obj.count++` in place keeps the same reference, so React may skip re-rendering. Prefer `setState` with a new object (`setForm({ ...form, name: next })`) or functional updaters for arrays.",
-        np: "React ले reference हेर्छ। स्थानमा mutate गर्दा उही reference — re-render छुट्न सक्छ। `{ ...form, … }` नयाँ object प्रयोग गर्नुहोस्।",
-        jp: "参照が変わったかで更新を検知します。インプレース改変は参照が同じのままなので再レンダーされないことがあります。スプレッドで新オブジェクトを渡します。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Refactor a piece of UI so all configuration arrives via props and all reactions go through `on…` callbacks.",
-      np: "UI लाई props र `on…` callback मार्फत मात्र कन्फिगर/प्रतिक्रिया गर्नुहोस्।",
-      jp: "設定は props、親への通知は `on…` に集約してリファクタする。",
-    },
-    {
-      en: "Open React DevTools, select a leaf component, and verify props vs hooks values while toggling UI.",
-      np: "DevTools मा पात कम्पोनेन्ट छानी props vs hooks UI बदल्दै जाँच।",
-      jp: "DevTools で末端コンポーネントを選び、操作しながら props / hooks を見比べる。",
-    },
-    {
-      en: "Complete the Button + Alert flow: default `type=\"button\"`, variant class, dismiss sets `visible` false.",
-      np: "Button + Alert: `type=\"button\"` डिफल्ट, variant, dismiss ले `visible` false।",
-      jp: "Button + Alert を完成させ、`type=\"button\"`・variant・閉じるで state を false に戻す。",
     },
   ],
 };

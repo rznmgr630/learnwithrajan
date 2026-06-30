@@ -152,6 +152,46 @@ const REACT_TAG: Record<string, LocalizedString> = {
     np: "TanStack Query",
     jp: "TanStack Query",
   },
+  auth: {
+    en: "authentication",
+    np: "प्रमाणीकरण",
+    jp: "認証",
+  },
+  mutations: {
+    en: "mutations",
+    np: "mutations",
+    jp: "ミューテーション",
+  },
+  animation: {
+    en: "animation",
+    np: "Animation",
+    jp: "アニメーション",
+  },
+  framer: {
+    en: "Framer Motion",
+    np: "Framer Motion",
+    jp: "Framer Motion",
+  },
+  a11y: {
+    en: "accessibility",
+    np: "Accessibility",
+    jp: "アクセシビリティ",
+  },
+  aria: {
+    en: "ARIA",
+    np: "ARIA",
+    jp: "ARIA",
+  },
+  build: {
+    en: "build & deploy",
+    np: "Build र Deploy",
+    jp: "ビルドとデプロイ",
+  },
+  architecture: {
+    en: "architecture",
+    np: "Architecture",
+    jp: "アーキテクチャ",
+  },
 };
 
 export function reactTags(slugs: [string, string]): RoadmapTag[] {
@@ -242,69 +282,48 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
     np: "Global State — Zustand, Context Patterns र TanStack Query",
     jp: "グローバル状態管理 — Zustand・Context パターン・TanStack Query",
   },
+  17: {
+    en: "Authentication flows — auth context, JWT, protected routes & interceptors",
+    np: "Authentication — auth context, JWT, protected routes र interceptors",
+    jp: "認証フロー — auth コンテキスト・JWT・保護ルート・インターセプター",
+  },
+  18: {
+    en: "TanStack Query advanced — mutations, optimistic updates & infinite scroll",
+    np: "TanStack Query advanced — mutations, optimistic updates र infinite scroll",
+    jp: "TanStack Query 応用 — ミューテーション・楽観的更新・無限スクロール",
+  },
+  19: {
+    en: "Animation with Framer Motion — variants, transitions & gestures",
+    np: "Animation — Framer Motion, variants, transitions र gestures",
+    jp: "Framer Motion アニメーション — バリアント・トランジション・ジェスチャー",
+  },
+  20: {
+    en: "Accessibility — ARIA, focus management & keyboard navigation",
+    np: "Accessibility — ARIA, focus management र keyboard navigation",
+    jp: "アクセシビリティ — ARIA・フォーカス管理・キーボードナビゲーション",
+  },
+  21: {
+    en: "Build optimization & deployment — Vite, bundle analysis & Vercel",
+    np: "Build optimization र deployment — Vite, bundle analysis र Vercel",
+    jp: "ビルド最適化とデプロイ — Vite・バンドル分析・Vercel",
+  },
+  22: {
+    en: "Production architecture — feature folders, data layers & Storybook",
+    np: "Production architecture — feature folders, data layers र Storybook",
+    jp: "本番アーキテクチャ — フィーチャー構成・データ層・Storybook",
+  },
 };
 
 const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
-  "react-getting-started": {
-    en: "Getting started",
-    np: "सुरुवात",
-    jp: "はじめに",
-  },
-  "react-building-components": {
-    en: "Building components (~58m)",
-    np: "कम्पोनेन्ट निर्माण (~५८m)",
-    jp: "コンポーネント構築（約58分）",
-  },
-  "react-managing-state": {
-    en: "Managing state (~35m)",
-    np: "state व्यवस्थापन (~३५m)",
-    jp: "状態管理（約35分）",
-  },
-  "react-styling-components": {
-    en: "Styling components (~32m)",
-    np: "कम्पोनेन्ट शैली (~३२m)",
-    jp: "スタイル（約32分）",
-  },
-  "react-managing-component-state": {
-    en: "Managing component state (~41m)",
-    np: "कम्पोनेन्ट state व्यवस्थापन (~४१m)",
-    jp: "コンポーネントの状態（約41分）",
-  },
-  "react-building-forms": {
-    en: "Building forms (~1h)",
-    np: "फर्म निर्माण (~१ घण्टा)",
-    jp: "フォーム構築（約1時間）",
-  },
-  "react-connecting-backend": {
-    en: "Connecting to the backend (~1h)",
-    np: "ब्याकएन्ड जडान (~१ घण्टा)",
-    jp: "バックエンド接続（約1時間）",
-  },
-  "react-advanced-hooks": {
-    en: "Advanced hooks & shared state",
-    np: "Advanced hooks र shared state",
-    jp: "高度なフックと共有状態",
-  },
-  "react-advanced-patterns": {
-    en: "Advanced patterns & reliability",
-    np: "Advanced patterns र reliability",
-    jp: "高度なパターンと信頼性",
-  },
-  "react-typescript-testing": {
-    en: "TypeScript & testing",
-    np: "TypeScript र testing",
-    jp: "TypeScript とテスト",
-  },
-  "react-routing": {
-    en: "Client-side routing",
-    np: "Client-side routing",
-    jp: "クライアントサイドルーティング",
-  },
-  "react-global-state": {
-    en: "Global state management",
-    np: "Global state व्यवस्थापन",
-    jp: "グローバル状態管理",
-  },
+  "react-w1": { en: "Foundation", np: "आधार", jp: "基礎" },
+  "react-w2": { en: "Core mechanics", np: "Core mechanics", jp: "コアの仕組み" },
+  "react-w3": { en: "Forms & API", np: "Forms र API", jp: "フォームとAPI" },
+  "react-w4": { en: "Advanced hooks", np: "Advanced hooks", jp: "高度なフック" },
+  "react-w5": { en: "Advanced patterns", np: "Advanced patterns", jp: "高度なパターン" },
+  "react-w6": { en: "TypeScript & testing", np: "TypeScript र testing", jp: "TypeScriptとテスト" },
+  "react-w7": { en: "Routing & state", np: "Routing र state", jp: "ルーティングと状態管理" },
+  "react-w8": { en: "Production patterns", np: "Production patterns", jp: "本番パターン" },
+  "react-w9": { en: "Production readiness", np: "Production readiness", jp: "本番対応" },
 };
 
 export function reactDayTitle(day: number): LocalizedString {

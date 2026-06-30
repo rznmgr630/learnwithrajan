@@ -1,493 +1,330 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-/** Day 8 — Connecting to the Backend (~1h): useEffect, deps, cleanup, fetch, HTTP, errors, async/await, abort, loading, CRUD, services, custom hooks. */
 export const REACT_DAY_8_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Day 8 bridges React UI to remote data: `useEffect` for side effects, dependency arrays and cleanup, then `fetch` with HTTP basics, errors, `async`/`await`, AbortController, and loading UX. You finish by deleting, creating, and updating resources, then layering a reusable client, user service, generic HTTP helper, and a custom data-fetching hook.",
-      np: "दिन ८ UI र remote data: `useEffect`, deps, cleanup, `fetch`, HTTP, त्रुटि, async/await, abort, loading। CRUD पछि API client, user service, generic HTTP, custom hook।",
-      jp: "8日目は `useEffect` で副作用を扱い、依存配列とクリーンアップ、`fetch`・HTTP・エラー・async/await・キャンセル・ローディングを押さえます。削除・作成・更新のあと、API クライアント・ユーザーサービス・汎用 HTTP・データ取得用カスタムフックへ整理します。",
+      en: "Real apps need to talk to servers — fetching user data, loading posts, submitting orders. React's `useEffect` hook runs code <b>after</b> the component renders, making it the right place for network requests, subscriptions, and timers.\n\nAnalogy: `useEffect` is like a receptionist who runs errands after the meeting ends — the meeting (render) happens first, then the receptionist acts. If the meeting is cancelled (component unmounts), the receptionist stops the errand.",
+      np: "useEffect component render भएपछि run हुन्छ — data fetch, subscriptions, timers को लागि।",
+      jp: "`useEffect` はレンダー後に実行 — データ取得・購読・タイマーに使います。",
     },
     {
-      en: "Playlist length is about one hour; timestamps in section titles are pacing hints from the curriculum.",
-      np: "प्लेलिस्ट ~१ घण्टा; शीर्षकमा समय संकेत।",
-      jp: "再生時間は 約1時間。見出しの時間は目安です。",
+      en: "In this day we cover:\n• <b>useEffect</b> — the 3 dependency array patterns and when to use each\n• <b>Loading / error / data states</b> — the three-state async pattern\n• <b>Cleanup</b> — AbortController, event listener removal, timer clearing\n• <b>Axios</b> — cleaner API calls with base URLs and interceptors\n• <b>Full CRUD pattern</b> — a reusable hook for list, create, update, delete",
+      np: "useEffect patterns, async states, cleanup, Axios, CRUD hook।",
+      jp: "useEffect・非同期状態・クリーンアップ・Axios・CRUD フック。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Introduction (~0m 53s)",
-        np: "परिचय (~०m ५३s)",
-        jp: "イントロ（約 0m53s）",
-      },
+      title: { en: "useEffect — the 3 dependency patterns", np: "useEffect patterns", jp: "useEffect の3パターン" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "You will keep server state and UI state mentally separate: the browser talks to an API with HTTP verbs and JSON, while React decides when to run effects and how to reflect loading, data, and errors in the tree.",
-            np: "server state vs UI state; HTTP + JSON; React मा when र UI।",
-            jp: "サーバの状態と画面の状態を分けて考えます。HTTP と JSON で通信し、React では いつ副作用を走らせるか と ローディング・データ・エラーの見せ方を決めます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Understanding the Effect Hook (~3m 50s)",
-        np: "Effect Hook बुझाइ (~३m ५०s)",
-        jp: "Effect Hook の理解（約 3m50s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "`useEffect(fn, deps?)` runs `fn` after paint (by default) so you do not block rendering. Use it for subscriptions, timers, imperative DOM, and data fetching — not for deriving values you can compute during render.",
-            np: "`useEffect` paint पछि। subscription/timer/DOM/fetch। render मा निकाल्न मिल्ने कुरा effect मा होइन।",
-            jp: "`useEffect` は（通常）描画のあとに走ります。購読・タイマー・命令的 DOM・取得向きで、レンダー中に計算できる値は effect に書きません。",
-          },
-        },
-        { type: "diagram", id: "react-use-effect-lifecycle" },
-      ],
-    },
-    {
-      title: {
-        en: "Effect dependencies (~8m 34s)",
-        np: "Effect निर्भरता (~८m ३४s)",
-        jp: "Effect の依存配列（約 8m34s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The dependency array tells React which values from the component scope must be fresh when the effect re-runs. `[]` runs once on mount (in Strict Mode dev, mount may run twice to surface bugs). Omitting the array means every render — rarely what you want for network calls.",
-            np: "deps — कुन मान बदल्दा effect फेरि। `[]` mount मा। array नभए हरेक render — सामान्यमा fetch मा होइन।",
-            jp: "依存配列は「この値が変わったら effect をやり直す」という意味です。`[]` はマウント時（開発の Strict Mode ではマウントが二重になり得ます）。配列省略は毎レンダーで、取得にはほぼ不向きです。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Effect cleanup (~2m 30s)",
-        np: "Effect cleanup (~२m ३०s)",
-        jp: "Effect のクリーンアップ（約 2m30s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Return a cleanup function from `useEffect` to undo side effects: unsubscribe listeners, clear timers, or abort in-flight requests before the next run or on unmount. Cleanup runs before the effect runs again and when the component unmounts.",
-            np: "cleanup — unsubscribe, timer clear, abort। अर्को चरण अघि वा unmount मा।",
-            jp: "`useEffect` からクリーンアップ関数を返すと、次の effect の前とアンマウント時に呼ばれます。購読解除・タイマー解除・進行中リクエストの中止に使います。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Fetching data (~5m 32s)",
-        np: "डाटा fetch (~५m ३२s)",
-        jp: "データ取得（約 5m32s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Typical pattern: `useEffect` kicks off `fetch(url)`, then `setState` with the parsed body. Keep three pieces of UI state in mind: `loading`, `data`, `error` (each optional until you need them).",
-            np: "`useEffect` + `fetch` + `setState`। `loading`/`data`/`error`।",
-            jp: "`useEffect` で `fetch` を開始し、結果を `setState` します。`loading`・`data`・`error` の状態を分けて持つと扱いやすいです。",
+            en: "The dependency array tells React <b>when</b> to re-run the effect:\n• <b>No array</b> — runs after every render (almost never what you want)\n  ↳ Causes infinite loops if the effect updates state\n• <b>Empty array `[]`</b> — runs once after the first render (on mount)\n  ↳ The right pattern for fetching data when the page loads\n• <b>`[dep1, dep2]`</b> — runs whenever any dependency changes\n  ↳ Use when the effect depends on props or state (e.g. re-fetch when `userId` changes)\n\nThe linter rule `react-hooks/exhaustive-deps` enforces that every value used inside the effect is listed in the dependency array — follow it.",
+            np: "No array = हर render। [] = एक पटक। [dep] = dep बदलिँदा।",
+            jp: "配列なし=毎回、[]= マウント時一回、[dep]=依存変化時。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Sketch — fetch in an effect",
-            np: "effect मा fetch",
-            jp: "effect 内 fetch の骨子",
-          },
-          code: `const [data, setData] = useState(null);
-const [error, setError] = useState(null);
-const [loading, setLoading] = useState(true);
+          title: { en: "The 3 useEffect patterns", np: "useEffect 3 patterns", jp: "3つの useEffect パターン" },
+          code: `import { useEffect, useState } from "react";
 
-useEffect(() => {
-  let cancelled = false;
-  setLoading(true);
-  fetch(\"/api/items\")
-    .then((r) => r.json())
-    .then((json) => {
-      if (!cancelled) setData(json);
-    })
-    .catch((e) => {
-      if (!cancelled) setError(e);
-    })
-    .finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-  return () => {
-    cancelled = true;
-  };
-}, []);`,
+function Demo({ userId }) {
+  const [user, setUser] = useState(null);
+
+  // Pattern 1: empty array — fetch once when the component mounts
+  useEffect(() => {
+    fetch("/api/settings").then(r => r.json()).then(setSettings);
+  }, []);
+
+  // Pattern 2: dependency array — re-fetch whenever userId changes
+  useEffect(() => {
+    fetch(\`/api/users/\${userId}\`)
+      .then(r => r.json())
+      .then(setUser);
+  }, [userId]); // re-runs when userId prop changes
+
+  // Pattern 3: no array — runs after EVERY render (avoid unless you know why)
+  useEffect(() => {
+    document.title = user?.name ?? "Loading...";
+  }); // no array = every render
+
+  return <div>{user?.name}</div>;
+}`,
         },
       ],
     },
     {
-      title: {
-        en: "Understanding HTTP requests (~3m 02s)",
-        np: "HTTP अनुरोध (~३m ०२s)",
-        jp: "HTTP リクエストの理解（約 3m02s）",
-      },
+      title: { en: "Loading, error & data states — the async pattern", np: "Async states", jp: "非同期の3状態パターン" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`GET` reads resources; `POST` creates; `PUT`/`PATCH` update; `DELETE` removes. `fetch` defaults to GET. Set `method`, `headers` (e.g. `Content-Type: application/json`), and `body: JSON.stringify(...)` for writes.",
-            np: "GET पढ्नु; POST बनाउनु; PUT/PATCH अद्यावधिक; DELETE हटाउनु। `Content-Type` + `JSON.stringify`।",
-            jp: "`GET` は取得、`POST` は作成、`PUT`/`PATCH` は更新、`DELETE` は削除です。`fetch` の第2引数で `method`・`headers`・`body`（`JSON.stringify`）を渡します。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Handling errors (~2m 03s)",
-        np: "त्रुटि व्यवस्थापन (~२m ०३s)",
-        jp: "エラー処理（約 2m03s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Network failures reject the promise. HTTP error statuses (4xx/5xx) still resolve `fetch` — check `response.ok` or `response.status` and `throw` or branch to your error state. Parse `response.json()` carefully for API error bodies.",
-            np: "network → reject। 4xx/5x मा `response.ok` जाँच।",
-            jp: "ネットワーク障害は reject しますが、`fetch` は 4xx/5xx でも resolve するので `response.ok` や `status` を確認します。API のエラーボディは `json()` で読み取ります。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Working with async and await (~4m 21s)",
-        np: "async/await (~४m २१s)",
-        jp: "async と await（約 4m21s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Mark the effect callback `async` only if you keep `try`/`catch`/`finally` readable — some teams prefer an inner async IIFE so the effect callback itself stays synchronous and cleanup stays obvious.",
-            np: "`async` effect वा भित्र async IIFE + `try/catch`।",
-            jp: "effect を `async` にするか、中で `(async () => { try { ... } catch ... })()` にするかは好みです。`try`/`catch`/`finally` で読みやすく保ちます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Cancelling a fetch request (~2m 27s)",
-        np: "fetch रद्द (~२m २७s)",
-        jp: "fetch のキャンセル（約 2m27s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Use `AbortController`: pass `{ signal: controller.signal }` to `fetch`, then call `controller.abort()` in cleanup when deps change or the component unmounts. Handle `AbortError` in `catch` if you do not want it treated as a user-visible failure.",
-            np: "`AbortController` + `signal`; cleanup मा `abort()`। `AbortError`।",
-            jp: "`AbortController` の `signal` を `fetch` に渡し、クリーンアップで `abort()` します。`AbortError` は意図したキャンセルとして扱い分けます。",
+            en: "Every async operation has exactly three possible states:\n• <b>Loading</b> — request is in flight; show a spinner\n• <b>Error</b> — request failed; show an error message with a retry option\n• <b>Data</b> — request succeeded; show the content\n\nAnalogy: ordering pizza — you are waiting (loading), the pizza arrives (data), or the delivery failed (error). Good UX shows the user which state they are in at all times.\n\nUse `try/catch/finally` — `finally` always runs and is the right place to `setLoading(false)`, whether the request succeeded or failed.",
+            np: "Async 3 states: loading, error, data। try/catch/finally pattern।",
+            jp: "非同期の3状態：ローディング・エラー・データ。try/catch/finally。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "AbortController in useEffect",
-            np: "AbortController",
-            jp: "AbortController の例",
-          },
-          code: `useEffect(() => {
-  const ctrl = new AbortController();
-  fetch(\"/api/user\", { signal: ctrl.signal })
-    .then((r) => {
-      if (!r.ok) throw new Error(String(r.status));
-      return r.json();
-    })
-    .then(setUser)
-    .catch((e) => {
-      if (e.name === \"AbortError\") return;
-      setErr(e);
-    });
-  return () => ctrl.abort();
-}, []);`,
+          title: { en: "Full loading / error / data pattern", np: "Async state pattern", jp: "非同期状態パターン" },
+          code: `import { useEffect, useState } from "react";
+
+function PostsList() {
+  const [posts, setPosts]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    fetch("https://jsonplaceholder.typicode.com/posts")
+      .then(res => {
+        if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+        return res.json();
+      })
+      .then(data => setPosts(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Loading posts...</p>;
+  if (error)   return <p>Error: {error} <button onClick={() => window.location.reload()}>Retry</button></p>;
+
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}`,
         },
       ],
     },
     {
-      title: {
-        en: "Showing a loading indicator (~3m 02s)",
-        np: "लोडिङ सूचक (~३m ०२s)",
-        jp: "ローディング表示（約 3m02s）",
-      },
+      title: { en: "Cleanup — preventing memory leaks", np: "useEffect cleanup", jp: "クリーンアップ" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Drive UI from `loading`: skeletons, spinners, or disabled controls. Pair with `aria-busy=\"true\"` on the region that is updating when it helps assistive tech.",
-            np: "`loading` — spinner/skeleton। `aria-busy`।",
-            jp: "`loading` が true の間はスピナーやスケルトンを出します。更新領域に `aria-busy=\"true\"` を付けるとアクセシビリティに役立ちます。",
+            en: "A cleanup function runs when the component <b>unmounts</b> or before the effect runs again. It is the `return` value of your effect.\n\nAnalogy: cleanup is like turning off the stove when you leave the kitchen — if you do not, bad things happen while nobody is watching.\n\nThree things that always need cleanup:\n• <b>Fetch requests</b> — use `AbortController` to cancel in-flight requests when the component unmounts\n  ↳ Without this, the `setState` call fires after unmount and React logs a warning\n• <b>Event listeners</b> — always call `removeEventListener` with the same function reference\n• <b>Timers</b> — always call `clearTimeout` or `clearInterval`",
+            np: "Cleanup: AbortController, removeEventListener, clearTimeout।",
+            jp: "クリーンアップ：AbortController・リスナー削除・タイマークリア。",
           },
+        },
+        {
+          type: "code",
+          title: { en: "Cleanup examples — fetch, listeners & timers", np: "Cleanup examples", jp: "クリーンアップ例" },
+          code: `import { useEffect, useState } from "react";
+
+// 1. AbortController — cancel fetch on unmount
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(\`/api/users/\${userId}\`, { signal: controller.signal })
+      .then(r => r.json())
+      .then(setUser)
+      .catch(err => {
+        if (err.name !== "AbortError") console.error(err);
+      });
+
+    return () => controller.abort(); // fires on unmount or before next run
+  }, [userId]);
+
+  return <div>{user?.name}</div>;
+}
+
+// 2. Event listener cleanup
+function WindowSize() {
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+
+  useEffect(() => {
+    function handleResize() {
+      setSize({ w: window.innerWidth, h: window.innerHeight });
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize); // cleanup
+  }, []);
+
+  return <p>{size.w} x {size.h}</p>;
+}
+
+// 3. Timer cleanup
+function Countdown({ seconds }) {
+  const [left, setLeft] = useState(seconds);
+
+  useEffect(() => {
+    const id = setInterval(() => setLeft(n => n - 1), 1000);
+    return () => clearInterval(id); // cleanup on unmount
+  }, []);
+
+  return <p>{left}s remaining</p>;
+}`,
         },
       ],
     },
     {
-      title: {
-        en: "Deleting data (~5m 50s)",
-        np: "डाटा मेटाउने (~५m ५०s)",
-        jp: "データの削除（約 5m50s）",
-      },
+      title: { en: "Axios — cleaner API calls", np: "Axios", jp: "Axios" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Call `fetch(url, { method: \"DELETE\" })` (or REST conventions your API uses). On success, remove the item from local state immutably (filter/map) or invalidate a cache if you use one.",
-            np: "`DELETE`; सफल भए immutable ले state बाट हटाउनु।",
-            jp: "`method: \"DELETE\"` で削除します。成功したら フィルタなどでリスト状態をイミュータブルに更新します。",
+            en: "The native `fetch` API is fine but has rough edges — you have to manually check `res.ok`, call `.json()`, and handle every status code. <b>Axios</b> handles these automatically:\n• Throws on non-2xx responses (no need to check `res.ok`)\n• Parses JSON response automatically\n• Lets you create an <b>instance</b> with a base URL — no more repeating the domain on every call\n• <b>Interceptors</b> — middleware for requests/responses; perfect for attaching auth tokens\n\nAnaly: Axios is like a travel agency — you say where you want to go (the URL), and it handles visas, currency, and logistics (auth headers, JSON parsing, error handling).",
+            np: "Axios: auto JSON parse, non-2xx error throw, base URL, interceptors।",
+            jp: "Axios: JSON 自動解析・非2xxエラー・ベース URL・インターセプター。",
           },
+        },
+        {
+          type: "code",
+          title: { en: "Axios instance with auth interceptor", np: "Axios instance", jp: "Axios インスタンスと認証インターセプター" },
+          code: `// src/lib/api.js — create once, import everywhere
+import axios from "axios";
+
+export const api = axios.create({
+  baseURL: "https://api.example.com",
+  timeout: 10000,
+});
+
+// Attach the auth token to every request automatically
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = \`Bearer \${token}\`;
+  return config;
+});
+
+// Handle 401 globally — redirect to login
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) window.location.href = "/login";
+    return Promise.reject(err);
+  },
+);
+
+// Usage in any component — much cleaner than raw fetch
+const { data: posts }   = await api.get("/posts");
+const { data: newPost } = await api.post("/posts", { title, body });
+await api.put(\`/posts/\${id}\`, { title });
+await api.delete(\`/posts/\${id}\`);`,
         },
       ],
     },
     {
-      title: {
-        en: "Creating data (~5m 09s)",
-        np: "डाटा सिर्जना (~५m ०९s)",
-        jp: "データの作成（約 5m09s）",
-      },
+      title: { en: "Full CRUD pattern — a reusable API hook", np: "CRUD hook", jp: "CRUD フックパターン" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`POST` with `JSON.stringify` body; read `201` / `200` per API contract. Append the returned entity (with server id) to your list or navigate to a detail view.",
-            np: "POST + body; server id सहित सूचीमा थप्नु।",
-            jp: "`POST` と `body` で作成し、レスポンスの id を使って一覧に追加するか、詳細へ遷移します。",
+            en: "A clean CRUD pattern separates <b>API logic</b> from <b>component logic</b>. The component does not know about fetch, Axios, or URLs — it just calls functions from a hook and receives state.\n\nThis separation means:\n• The component stays simple and testable\n• The API logic is reusable across multiple components\n• Swapping the API client (fetch → Axios → TanStack Query) requires changing one file\n\nFor production apps, consider <b>TanStack Query</b> (Day 16) which handles caching, background refetching, and optimistic updates automatically.",
+            np: "API logic र component logic अलग राख्नुस् — reusable hook।",
+            jp: "API ロジックとコンポーネントを分離。カスタムフックで再利用可能に。",
           },
         },
-      ],
-    },
-    {
-      title: {
-        en: "Updating data (~5m 25s)",
-        np: "डाटा अद्यावधिक (~५m २५s)",
-        jp: "データの更新（約 5m25s）",
-      },
-      blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "`PUT` (replace) vs `PATCH` (partial) — follow your backend. Merge the response into state with `map` so the edited row stays stable for `key`.",
-            np: "PUT/PATCH — API अनुसार; `map` ले state merge।",
-            jp: "`PUT` と `PATCH` は API 仕様に合わせます。返却オブジェクトで `map` により該当行だけ差し替えます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Extracting a reusable API client (~3m 55s)",
-        np: "पुन: प्रयोग API client (~३m ५५s)",
-        jp: "再利用可能な API クライアント（約 3m55s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Centralize `baseURL`, default headers, and JSON helpers in one module so components stay thin. You can wrap `fetch` or adopt axios later — the boundary is the same: one place for cross-cutting concerns.",
-            np: "`baseURL`, headers, JSON — एक मोड्युल।",
-            jp: "`baseURL`・共通 headers・JSON の読み書きを一つのモジュールにまとめ、コンポーネントを薄く保ちます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Extracting the user service (~8m 22s)",
-        np: "User service (~८m २२s)",
-        jp: "ユーザーサービスの切り出し（約 8m22s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A user service exposes `getUsers`, `createUser`, etc., calling your HTTP helper. This keeps resource-shaped functions out of React components and makes testing and mocking easier.",
-            np: "userService — `getUsers` आदि; परीक्षण र mock सजिलो।",
-            jp: "`getUsers` などリソース単位の関数を `userService` に置き、コンポーネントは「いつ呼ぶか」に集中します。テストとモックがしやすくなります。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Creating a generic HTTP service (~8m 00s)",
-        np: "सामान्य HTTP सेवा (~८m ००s)",
-        jp: "汎用 HTTP サービス（約 8m00s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Implement `get`, `post`, `put`, `patch`, `delete` once, each taking path, optional body, and optional `signal`. Domain services call into this layer so cancellation and error normalization stay consistent.",
-            np: "get/post/... एक पटक; `signal` पास।",
-            jp: "`get`/`post`/… を一か所に実装し、`signal` を透過させます。ドメインサービスはここを経由してキャンセルとエラー形式を揃えます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Creating a custom data fetching hook (~3m 53s)",
-        np: "अनुकूल data-fetching hook (~३m ५३s)",
-        jp: "データ取得用カスタムフック（約 3m53s）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A hook like `useUsers()` encapsulates effect + state + abort and returns `{ data, error, loading, refetch }`. Call it from multiple components without duplicating effect logic — mind stale closures if you expose callbacks.",
-            np: "`useUsers` — effect + state + abort; `refetch`।",
-            jp: "`useUsers` のように effect・状態・中止をまとめ、`{ data, error, loading, refetch }` を返します。複数コンポーネントでロジックの重複を避けられます。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Summary",
-        np: "सारांश",
-        jp: "まとめ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "You now tie async work to the React lifecycle with `useEffect`, manage dependencies and cleanup, handle HTTP and errors, cancel safely, show loading, perform CRUD, and structure networking behind a thin HTTP layer, resource services, and hooks.",
-            np: "useEffect + HTTP + abort + CRUD + service/hook संरचना।",
-            jp: "`useEffect`・依存とクリーンアップ・HTTP/エラー・キャンセル・ローディング・CRUD・HTTP 層・サービス・フックという整理ができる状態になっています。",
-          },
+          type: "code",
+          title: { en: "usePostsApi — reusable CRUD hook", np: "CRUD hook", jp: "CRUD フック" },
+          code: `import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+
+export function usePostsApi() {
+  const [posts, setPosts]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/posts");
+      setPosts(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function createPost(body) {
+    const { data } = await api.post("/posts", body);
+    setPosts(prev => [data, ...prev]); // optimistic local update
+  }
+
+  async function updatePost(id, body) {
+    const { data } = await api.put(\`/posts/\${id}\`, body);
+    setPosts(prev => prev.map(p => p.id === id ? data : p));
+  }
+
+  async function deletePost(id) {
+    const backup = posts;
+    setPosts(prev => prev.filter(p => p.id !== id)); // optimistic remove
+    try {
+      await api.delete(\`/posts/\${id}\`);
+    } catch {
+      setPosts(backup); // restore on failure
+    }
+  }
+
+  return { posts, loading, error, createPost, updatePost, deletePost, refresh: load };
+}
+
+// In a component — clean and simple:
+function PostsPage() {
+  const { posts, loading, error, deletePost } = usePostsApi();
+  if (loading) return <p>Loading...</p>;
+  if (error)   return <p>Error: {error}</p>;
+  return <ul>{posts.map(p => <li key={p.id}>{p.title} <button onClick={() => deletePost(p.id)}>Delete</button></li>)}</ul>;
+}`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "Why not call `fetch` directly in the component body?",
-        np: "`fetch` render मा किन होइन?",
-        jp: "レンダー本体で `fetch` してはダメ？",
-      },
+      question: { en: "Why can't I use async directly in useEffect?", np: "useEffect मा async direct किन नहुने?", jp: "useEffect に async を直接書けない理由は？" },
       answer: {
-        en: "The body runs on every render, which would spam the network and race updates. `useEffect` (or an event handler for user-initiated loads) scopes work to intentional moments.",
-        np: "body हरेक render — network spam। useEffect वा event मा।",
-        jp: "コンポーネント関数本体は毎レンダー走るため、そこで `fetch` すると無制限にリクエストが出ます。`useEffect` やユーザー操作に紐づけます。",
+        en: "useEffect expects either nothing or a cleanup function as the return value. An async function returns a Promise, not undefined or a function — React would try to call the Promise as a cleanup function and fail silently. Wrap your async code in an inner named function and call it immediately: `useEffect(() => { async function load() { ... } load(); }, []);`",
+        np: "async function Promise return गर्छ — useEffect cleanup function expect गर्छ। Inner function बनाएर call गर्नुस्।",
+        jp: "async 関数は Promise を返しますが useEffect はクリーンアップ関数を期待するため。内部 async 関数をすぐ呼ぶ形で対応します。",
       },
     },
     {
-      question: {
-        en: "What belongs in the dependency array?",
-        np: "dependency array मा के राख्ने?",
-        jp: "依存配列には何を入れる？",
-      },
+      question: { en: "What is the difference between useEffect and useLayoutEffect?", np: "useEffect र useLayoutEffect फरक?", jp: "useEffect と useLayoutEffect の違いは？" },
       answer: {
-        en: "Every reactive value from component scope that the effect reads (`props`, `state`, derived values) should usually be listed so the effect stays in sync. ESLint `react-hooks/exhaustive-deps` helps — fix warnings intentionally, not with blind eslint-disable.",
-        np: "effect ले पढेका props/state। eslint exhaustive-deps।",
-        jp: "effect 内で読む props・state などは原則列挙します。`exhaustive-deps` の警告は意図を持って直します。",
+        en: "`useEffect` fires after the browser has painted the screen — it is asynchronous and does not block rendering. `useLayoutEffect` fires synchronously after the DOM is updated but before the browser paints — use it when you need to measure DOM nodes or prevent a visual flash (e.g. reading and setting an element's scroll position). For 99% of cases, `useEffect` is correct.",
+        np: "useEffect: paint पछि async। useLayoutEffect: paint अगाडि sync — DOM measure गर्न।",
+        jp: "useEffect はペイント後・非同期。useLayoutEffect はペイント前・同期。DOM 計測時に使います。",
       },
     },
     {
-      question: {
-        en: "Is an ignore flag as good as AbortController?",
-        np: "ignore flag = AbortController?",
-        jp: "無視フラグは AbortController と同じ？",
-      },
+      question: { en: "How do I fetch data once vs every time a prop changes?", np: "एक पटक vs prop बदलिँदा fetch?", jp: "一度だけ vs props 変化ごとにfetchする方法は？" },
       answer: {
-        en: "A `cancelled` flag prevents stale setState after unmount but does not stop the download. `AbortController` actually cancels the request and frees bandwidth; prefer it for large payloads.",
-        np: "flag ले setState रोक्छ, download होइन। Abort ठूलो payload मा राम्रो।",
-        jp: "フラグは古いレスポンスでの setState を防ぐだけで、通信は止まりません。`AbortController` はリクエスト自体を打ち切れます。",
+        en: "Once: `useEffect(() => { fetch(...) }, [])` — the empty array means it only runs on mount. Every time a prop changes: `useEffect(() => { fetch(...) }, [userId])` — add the prop to the dependency array. The effect re-runs whenever `userId` changes.",
+        np: "[] = एक पटक mount मा। [userId] = userId बदलिँदा।",
+        jp: "[]= マウント時一回。[userId]=userId 変化ごと。",
       },
     },
     {
-      question: {
-        en: "Should I use `useEffect` or React Query / SWR for server state?",
-        np: "`useEffect` वा React Query?",
-        jp: "`useEffect` と React Query / SWR はどう使い分ける？",
-      },
+      question: { en: "What is SWR and how does it differ from useEffect?", np: "SWR र useEffect फरक?", jp: "SWR と useEffect の違いは？" },
       answer: {
-        en: "This course teaches raw effects so you understand the platform. Libraries add caching, deduping, retries, and background refetch — adopt them when your manual state gets unwieldy.",
-        np: "पाठ raw effect। library मा cache/dedupe/retry।",
-        jp: "教材では素の `useEffect` で仕組みを理解します。キャッシュ・重複排除・再取得が必要になったら React Query / SWR などを検討します。",
+        en: "SWR (Stale-While-Revalidate) is a data fetching library by Vercel. Like TanStack Query, it abstracts over useEffect for data fetching — adding caching, background revalidation, deduplication, and optimistic updates. `useEffect` is manual plumbing; SWR and TanStack Query are higher-level abstractions built on top of that plumbing.",
+        np: "SWR = data fetching library (caching, revalidation)। useEffect = manual approach।",
+        jp: "SWR は useEffect 上のキャッシュ・再検証付き抽象化ライブラリです。",
       },
     },
     {
-      question: {
-        en: "Where do I put the API base URL?",
-        np: "baseURL कहाँ?",
-        jp: "API のベース URL はどこに書く？",
-      },
+      question: { en: "Should I use TanStack Query instead of useEffect for fetching?", np: "Data fetch मा TanStack Query वा useEffect?", jp: "データ取得に TanStack Query を使うべき？" },
       answer: {
-        en: "Use environment variables (e.g. `NEXT_PUBLIC_...` in Next) injected at build time, read in your HTTP client module — never hardcode secrets in the client bundle.",
-        np: "env vars (जस्तै Next `NEXT_PUBLIC_`); secret client मा होइन।",
-        jp: "環境変数（Next なら `NEXT_PUBLIC_` など）をビルド時に読み、HTTP クライアントで使います。秘密鍵はクライアントに埋め込まないでください。",
+        en: "For most production apps: yes. TanStack Query (covered in Day 16) handles caching, deduplication (same URL requested from 5 components only fires 1 request), background refetching, stale-time, retry logic, and optimistic updates — all things you would otherwise build manually with useEffect. Use useEffect for non-data effects (subscriptions, timers, DOM manipulation) and TanStack Query for server data.",
+        np: "Production app मा TanStack Query राम्रो — caching, deduplication, retry automatic।",
+        jp: "本番アプリでは TanStack Query が優れています。キャッシュ・重複排除・リトライが自動です。",
       },
-    },
-    {
-      question: {
-        en: "Why split userService from httpService?",
-        np: "userService र httpService किन अलग?",
-        jp: "userService と httpService を分ける理由は？",
-      },
-      answer: {
-        en: "`httpService` is transport (verbs, headers, errors). `userService` is domain (URLs and shapes for users). That split keeps HTTP policy consistent while resource modules stay readable.",
-        np: "http = transport; user = domain URL/shape।",
-        jp: "`httpService` は通信の作法、`userService` はユーザーの URL とデータ形です。責務が分かれて保守しやすくなります。",
-      },
-    },
-    {
-      question: {
-        en: "What if my effect needs the latest callback without listing it in deps?",
-        np: "callback deps बिना नयाँ?",
-        jp: "依存にコールバックを入れたくないときは？",
-      },
-      answer: {
-        en: "Prefer `useCallback` with correct deps, or the ref pattern (`useRef` holding the latest fn) for stable subscriptions. Avoid `useEffect(fn, [])` that closes over stale props — that is a real bug class.",
-        np: "`useCallback` वा ref pattern। stale closure बचाउनु।",
-        jp: "`useCallback` で依存を整えるか、ref に最新の関数を入れるパターンがあります。`[]` の effect が古い props を閉じ込めるのは典型的なバグです。",
-      },
-    },
-    {
-      question: {
-        en: "How do I test components that fetch?",
-        np: "fetch भएको component परीक्षण?",
-        jp: "fetch するコンポーネントのテストは？",
-      },
-      answer: {
-        en: "Mock `fetch` globally, inject a fake client, or test hooks in isolation with `@testing-library/react`’s `renderHook`. Assert loading → success/error transitions.",
-        np: "mock fetch वा fake client; renderHook; loading→success।",
-        jp: "`fetch` をモックするか、フェイクの API モジュールを差し替えます。`renderHook` でフック単体を検証し、loading → 成功/失敗を見ます。",
-      },
-    },
-  ],
-  bullets: [
-    {
-      en: "Build a read-only screen: `useEffect`, `[]`, `fetch`, `response.ok`, and `loading`/`error`/`data` state.",
-      np: "पढ्ने स्क्रिन: effect, `[]`, fetch, `ok`, state।",
-      jp: "読み取り専用画面を `useEffect` + `[]` + `fetch` + `ok` チェック + 三状態 で作る。",
-    },
-    {
-      en: "Add `AbortController` cleanup; verify navigating away mid-request does not surface a scary error toast.",
-      np: "AbortController; navigate गर्दा त्रुटि toast छैन भनी जाँच।",
-      jp: "`AbortController` のクリーンアップを入れ、画面遷移中のキャンセルで余計なエラー表示が出ないか確かめる。",
-    },
-    {
-      en: "Refactor to `httpService` + `userService` + `useUsers` (or equivalent) so your component only composes UI.",
-      np: "http + user + hook refactor; UI मात्र component मा।",
-      jp: "`httpService`・`userService`・カスタムフックに分け、コンポーネントは UI のみにする。",
     },
   ],
 };
