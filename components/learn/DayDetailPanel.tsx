@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { DayDetailBlockRenderer } from "@/components/learn/DayDetailBlockRenderer";
 import type { RoadmapDiagramTrack } from "@/components/learn/DayDetailBlockRenderer";
-import { RichText } from "@/components/learn/RichText";
+import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadmap-detail";
 import { localizeGitRoadmapDayDetail } from "@/lib/git-learning/localize-git-roadmap-detail";
 import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
@@ -198,11 +198,11 @@ export function DayDetailPanel({
               <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 {t("jpDetail.overviewHeading")}
               </h3>
-              <div className="mt-2 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
+              <div className="mt-2 space-y-3">
                 {introToShow.map((p, i) => (
-                  <p key={i}>
-                    <RichText text={p} />
-                  </p>
+                  <div key={i}>
+                    <RichParagraph text={p} />
+                  </div>
                 ))}
               </div>
             </div>
