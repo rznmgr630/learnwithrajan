@@ -32,6 +32,16 @@ const LARAVEL_TAG: Record<string, LocalizedString> = {
   pest: { en: "Pest", np: "Pest", jp: "Pest" },
   sanctum: { en: "Sanctum", np: "Sanctum", jp: "Sanctum" },
   "rest-api": { en: "REST API", np: "REST API", jp: "REST API" },
+  "advanced-eloquent": { en: "advanced Eloquent", np: "Advanced Eloquent", jp: "高度なEloquent" },
+  security: { en: "security", np: "सुरक्षा", jp: "セキュリティ" },
+  artisan: { en: "Artisan", np: "Artisan", jp: "Artisan" },
+  broadcasting: { en: "broadcasting", np: "Broadcasting", jp: "ブロードキャスト" },
+  livewire: { en: "Livewire", np: "Livewire", jp: "Livewire" },
+  inertia: { en: "Inertia.js", np: "Inertia.js", jp: "Inertia.js" },
+  performance: { en: "performance", np: "प्रदर्शन", jp: "パフォーマンス" },
+  redis: { en: "Redis", np: "Redis", jp: "Redis" },
+  deployment: { en: "deployment", np: "Deployment", jp: "デプロイ" },
+  devops: { en: "DevOps", np: "DevOps", jp: "DevOps" },
 };
 
 export function laravelTags(slugs: [string, string]): RoadmapTag[] {
@@ -117,6 +127,41 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
+  16: {
+    en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
+    np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
+    jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
+  },
+  17: {
+    en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
+    np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
+    jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
+  },
+  18: {
+    en: "Custom Artisan commands — arguments, options & console I/O",
+    np: "Custom Artisan commands — arguments, options र console I/O",
+    jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
+  },
+  19: {
+    en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
+    np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
+    jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
+  },
+  20: {
+    en: "Frontend integration — Livewire, Inertia.js & Vite",
+    np: "Frontend — Livewire, Inertia.js र Vite",
+    jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
+  },
+  21: {
+    en: "Performance — query optimization, N+1, Redis & queue scaling",
+    np: "Performance — query optimization, N+1, Redis र queue scaling",
+    jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
+  },
+  22: {
+    en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
+    np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
+    jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",
+  },
 };
 
 const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
@@ -149,6 +194,16 @@ const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
     en: "Production — queues, APIs & testing",
     np: "उत्पादन — queues, APIs र testing",
     jp: "本番 — キュー・API・テスト",
+  },
+  "laravel-w7": {
+    en: "Advanced features",
+    np: "Advanced features",
+    jp: "高度な機能",
+  },
+  "laravel-w8": {
+    en: "Frontend & deployment",
+    np: "Frontend र Deployment",
+    jp: "フロントエンドとデプロイ",
   },
 };
 

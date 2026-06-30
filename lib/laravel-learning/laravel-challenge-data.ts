@@ -15,11 +15,18 @@ import { LARAVEL_DAY_12_DETAIL } from "@/lib/laravel-learning/laravel-day-12-det
 import { LARAVEL_DAY_13_DETAIL } from "@/lib/laravel-learning/laravel-day-13-detail";
 import { LARAVEL_DAY_14_DETAIL } from "@/lib/laravel-learning/laravel-day-14-detail";
 import { LARAVEL_DAY_15_DETAIL } from "@/lib/laravel-learning/laravel-day-15-detail";
+import { LARAVEL_DAY_16_DETAIL } from "@/lib/laravel-learning/laravel-day-16-detail";
+import { LARAVEL_DAY_17_DETAIL } from "@/lib/laravel-learning/laravel-day-17-detail";
+import { LARAVEL_DAY_18_DETAIL } from "@/lib/laravel-learning/laravel-day-18-detail";
+import { LARAVEL_DAY_19_DETAIL } from "@/lib/laravel-learning/laravel-day-19-detail";
+import { LARAVEL_DAY_20_DETAIL } from "@/lib/laravel-learning/laravel-day-20-detail";
+import { LARAVEL_DAY_21_DETAIL } from "@/lib/laravel-learning/laravel-day-21-detail";
+import { LARAVEL_DAY_22_DETAIL } from "@/lib/laravel-learning/laravel-day-22-detail";
 import { laravelDayTitle, laravelTags, laravelWeekTitle } from "@/lib/laravel-learning/laravel-roadmap-i18n";
 
 export const LARAVEL_CURRENT_DAY = 1;
 
-export const LARAVEL_TOTAL_DAYS = 15;
+export const LARAVEL_TOTAL_DAYS = 22;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: LARAVEL_DAY_1_DETAIL,
@@ -37,6 +44,13 @@ const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   13: LARAVEL_DAY_13_DETAIL,
   14: LARAVEL_DAY_14_DETAIL,
   15: LARAVEL_DAY_15_DETAIL,
+  16: LARAVEL_DAY_16_DETAIL,
+  17: LARAVEL_DAY_17_DETAIL,
+  18: LARAVEL_DAY_18_DETAIL,
+  19: LARAVEL_DAY_19_DETAIL,
+  20: LARAVEL_DAY_20_DETAIL,
+  21: LARAVEL_DAY_21_DETAIL,
+  22: LARAVEL_DAY_22_DETAIL,
 };
 
 function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -95,6 +109,27 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
       laravelDayRow(13, ["queues", "events"]),
       laravelDayRow(14, ["testing", "pest"]),
       laravelDayRow(15, ["sanctum", "rest-api"]),
+    ],
+  },
+  {
+    id: "laravel-w7",
+    title: laravelWeekTitle("laravel-w7"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#f87171)]",
+    days: [
+      laravelDayRow(16, ["advanced-eloquent", "eloquent"]),
+      laravelDayRow(17, ["security", "middleware"]),
+      laravelDayRow(18, ["artisan", "foundation"]),
+      laravelDayRow(19, ["broadcasting", "events"]),
+    ],
+  },
+  {
+    id: "laravel-w8",
+    title: laravelWeekTitle("laravel-w8"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_34%,#4ade80)]",
+    days: [
+      laravelDayRow(20, ["livewire", "inertia"]),
+      laravelDayRow(21, ["performance", "redis"]),
+      laravelDayRow(22, ["deployment", "devops"]),
     ],
   },
 ];
