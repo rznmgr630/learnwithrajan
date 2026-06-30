@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_7_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Migrations** are version-controlled schema files that let the entire team evolve the database structure without touching it manually. They pair with **Seeders** (static data) and **Factories** (fake data via Faker) to make dev environments reproducible in one command.",
+      en: "Think of your database as a shared document your whole team edits — without version control, one developer adds a column manually and everyone else's app breaks.\n\n<b>Migrations</b> solve this: they are PHP files that describe a database change, so the whole team stays in sync by running `php artisan migrate`.\n\n• <b>Seeders</b> fill the database with test or static data (admin accounts, country lists)\n  ↳ Run with `php artisan db:seed`\n• <b>Factories</b> generate realistic fake data using the Faker library\n  ↳ Perfect for development and testing — create 100 posts in a single line of code",
       np: "Migration database schema को version control। Seeder/Factory ले dev data तयार।",
       jp: "マイグレーション はスキーマをバージョン管理します。Seeder・Factory と組み合わせて開発環境を一コマンドで再現できます。",
     },
     {
-      en: "The **Query Builder** (`DB::table()`) and **Eloquent ORM** both sit on PDO. Eloquent adds model casting, relationships, scopes, observers, and soft deletes on top. Use Eloquent by default; drop to the Query Builder only for performance-critical aggregate queries without hydration.",
+      en: "Laravel gives you two ways to query the database, both powered by PDO under the hood.\n\n• <b>Query Builder</b> (`DB::table()`) — returns plain arrays or objects, no overhead\n  ↳ Great for raw aggregations, reports, or tables without a model\n• <b>Eloquent ORM</b> — returns model instances with built-in superpowers: relationships, casting, scopes, soft deletes, and more\n  ↳ The default choice for most application code\n\nRule of thumb: use Eloquent by default. Only switch to the Query Builder when you need a performance-critical aggregate and don't want the overhead of hydrating model objects.",
       np: "Eloquent ORM र Query Builder दुवै PDO मा। Eloquent ले casting, relationship, scope थप्छ।",
       jp: "Eloquent は PDO 上に ORM 機能を追加。キャスト・リレーション・スコープなどが使えます。集計だけのクエリはクエリビルダで十分です。",
     },
@@ -24,7 +24,7 @@ export const LARAVEL_DAY_7_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Create a migration with Artisan. The `up()` method applies changes; `down()` must perfectly reverse them so `migrate:rollback` works. Never edit a migration that has already been run in production — add a new one instead.",
+            en: "Imagine your database schema as source code — migrations are its commit history.\n\n• Use `php artisan make:migration create_posts_table` to create a new migration file\n  ↳ Laravel infers whether it's a `create` or `alter` operation from the name you give it\n• The `up()` method applies the change (add a table, add a column)\n• The `down()` method reverses it exactly — this is what `migrate:rollback` uses\n  ↳ Golden rule: <b>never edit a migration that has already been run in production</b> — create a new one instead",
             np: "`up()` ले apply गर्छ; `down()` ले reverse। Production मा run भएको migration नबदल्नुस्।",
             jp: "`up()` で適用・`down()` で巻き戻し。本番で実行済みのマイグレーションは絶対に編集せず、新しいマイグレーションを追加してください。",
           },
@@ -154,7 +154,7 @@ php artisan migrate:fresh --seed      # + run seeders`,
         {
           type: "paragraph",
           text: {
-            en: "**Factories** use the Faker library to generate realistic fake data for each model. **Seeders** call factories (or insert static data) and are the entry point for `php artisan db:seed`. The `DatabaseSeeder` class calls all other seeders, making the whole database reproducible in one command.",
+            en: "Every developer on your team needs test data — factories and seeders make this reproducible with a single command.\n\n• <b>Factories</b> describe how to generate a fake version of a model using the Faker library\n  ↳ Define once in `database/factories/`, use anywhere in tests or seeders\n• <b>Seeders</b> call factories (or insert static data) and are the entry point for `php artisan db:seed`\n  ↳ The `DatabaseSeeder` class calls all other seeders in order\n\nEnd result: any developer can run `php artisan migrate:fresh --seed` and get a fully populated database identical to everyone else's.",
             np: "Factory ले Faker द्वारा fake data। Seeder ले factory call गर्छ; DatabaseSeeder सबैको entry point।",
             jp: "ファクトリは Faker でモデルの偽データを生成。シーダーがファクトリを呼び出し、`DatabaseSeeder` で一括実行します。",
           },
@@ -264,7 +264,7 @@ php artisan migrate:fresh --seed    # fresh DB + all seeders`,
         {
           type: "paragraph",
           text: {
-            en: "The **Query Builder** returns plain arrays/`stdClass` objects — great for aggregations or legacy tables. **Eloquent** hydrates results as model instances with full ORM capabilities. Both use the same underlying fluent API. **Local scopes** name common query constraints and chain them like any other method.",
+            en: "The key difference between the two is what you get back.\n\n• <b>Query Builder</b> returns plain arrays or `stdClass` objects — fast, lightweight, no overhead\n  ↳ Great for raw aggregations, reports, or when you don't need model methods\n• <b>Eloquent</b> returns full model instances — you can call relationships, use scopes, fire events\n  ↳ This process is called \"hydration\" — wrapping a database row into a PHP object\n\n<b>Local scopes</b> let you name common query conditions and chain them naturally:\n• Define `scopePublished($query)` on the model\n  ↳ Call it as `Post::published()->latest()->get()` — reads like plain English",
             np: "Query Builder ले plain array; Eloquent ले model instance। Local scope ले common constraint मा नाम।",
             jp: "クエリビルダは配列・`stdClass`、Eloquent はモデルインスタンスを返します。ローカルスコープで共通クエリ条件に名前を付けられます。",
           },
@@ -396,7 +396,7 @@ $posts = Post::published()->orderByDesc('published_at')->paginate(10);`,
         {
           type: "paragraph",
           text: {
-            en: "Laravel provides three pagination strategies. **`paginate()`** executes a `COUNT(*)` query and provides full page metadata. **`simplePaginate()`** skips the count and only knows previous/next. **`cursorPaginate()`** uses an opaque cursor token for infinite scroll — ideal for large datasets and real-time feeds.",
+            en: "Pagination splits a large result set into pages — without it, fetching 100,000 posts at once would exhaust your server's memory.\n\nLaravel gives you three flavors:\n• <b>`paginate(15)`</b> — runs a `COUNT(*)` query to know the total, gives you full page metadata (first, last, total)\n  ↳ Best for traditional \"Page 2 of 14\" style navigation\n• <b>`simplePaginate(15)`</b> — skips the count query, only knows \"previous\" and \"next\"\n  ↳ Faster for huge tables where the total page count doesn't matter\n• <b>`cursorPaginate(20)`</b> — uses an opaque cursor token instead of page numbers, ideal for infinite scroll\n  ↳ The most performant option for real-time feeds and APIs",
             np: "`paginate()` COUNT सहित; `simplePaginate()` prev/next; `cursorPaginate()` cursor — infinite scroll।",
             jp: "`paginate()` は COUNT 付き全ページ情報。`simplePaginate()` は前後のみ。`cursorPaginate()` はカーソルベースで大規模データに最適です。",
           },
@@ -438,7 +438,7 @@ return response()->json($posts);
         jp: "`migrate:fresh` と `migrate:rollback` はどう違いますか？",
       },
       answer: {
-        en: "`migrate:rollback` reverses only the **last batch** of migrations by running their `down()` methods — data is kept where possible. `migrate:fresh` drops **all tables** completely (skipping `down()`) then reruns all migrations from scratch — all data is lost. Use `migrate:fresh --seed` in local dev; never use `fresh` in staging or production.",
+        en: "These two are very different — don't confuse them.\n\n• <b>`migrate:rollback`</b> reverses only the <b>last batch</b> of migrations by calling their `down()` methods\n  ↳ Your data is preserved wherever possible\n  ↳ Safe to use on staging and production\n• <b>`migrate:fresh`</b> drops <b>every single table</b> in the database (skipping `down()`) then re-runs all migrations from scratch\n  ↳ All data is permanently destroyed\n  ↳ Only use this in local development\n\nRule: use `migrate:fresh --seed` for local dev; use `migrate` or `migrate:rollback` everywhere else.",
         np: "`rollback` ले last batch undo; `fresh` ले सबै drop गरेर re-run। Production मा `fresh` नगर्नुस्।",
         jp: "`rollback` は最新バッチだけ `down()` で巻き戻し。`fresh` は全テーブルをドロップしてゼロから再実行。本番では `fresh` は使いません。",
       },
@@ -450,7 +450,7 @@ return response()->json($posts);
         jp: "`$fillable` は何を防ぎますか？",
       },
       answer: {
-        en: "`$fillable` (or `$guarded`) prevents **mass-assignment vulnerabilities**. Without it, a malicious user could submit `is_admin=true` in a form and `User::create($request->all())` would silently set it. `$fillable` whitelists only the columns the application intentionally allows users to populate. `$guarded = []` disables the protection entirely — use only for internal/CLI models.",
+        en: "`$fillable` protects against a security attack called <b>mass assignment</b>.\n\nHere's the problem: if you write `User::create($request->all())` without `$fillable`, a malicious user can POST `is_admin=true` in a form and it silently gets saved to the database.\n\n• `$fillable` is a whitelist — only the listed columns can be filled via `create()` or `fill()`\n  ↳ Everything not listed is silently ignored, not rejected with an error\n• `$guarded = []` disables protection entirely\n  ↳ Only safe for internal CLI-only models that never touch user input",
         np: "Mass-assignment attack रोक्छ — `is_admin=true` submit भए। `$fillable` ले allowed columns मात्र accept।",
         jp: "大量代入の脆弱性を防ぎます。`$fillable` がないと `is_admin=true` のようなフォーム改ざんが通ってしまいます。`$guarded = []` は保護を完全に無効化するため注意が必要です。",
       },
@@ -462,7 +462,7 @@ return response()->json($posts);
         jp: "`firstOrCreate` と `updateOrCreate` の使い分けは？",
       },
       answer: {
-        en: "`firstOrCreate(['slug' => 'hello'], $attributes)` finds the record matching the first array and creates it only if it does not exist — the **record is never updated**. `updateOrCreate` does the same lookup but also **updates the matched record** with the second array if it exists. Use `firstOrCreate` for idempotent inserts (e.g., OAuth providers); use `updateOrCreate` for sync operations (e.g., importing CSV rows).",
+        en: "Both do \"find or create\" — the difference is what happens when the record already exists.\n\n• <b>`firstOrCreate(['slug' => 'hello'], $attributes)`</b>\n  ↳ Finds the record and returns it unchanged if found — <b>never updates</b>\n  ↳ Use for idempotent inserts (e.g. registering an OAuth provider for the first time)\n• <b>`updateOrCreate(['slug' => 'hello'], $newAttributes)`</b>\n  ↳ Finds the record, then <b>updates it</b> with the second array if it already exists\n  ↳ Use when syncing data from an external source (e.g. importing a CSV file)",
         np: "`firstOrCreate`: नभए create, छ भने unchanged। `updateOrCreate`: नभए create, छ भने update।",
         jp: "`firstOrCreate` は存在しなければ作成するだけ。`updateOrCreate` は存在する場合も第 2 配列で更新します。CSV インポートなど同期処理には `updateOrCreate`、OAuth 登録などには `firstOrCreate` が典型的です。",
       },
@@ -474,7 +474,7 @@ return response()->json($posts);
         jp: "JSON カラムをどうクエリしますか？",
       },
       answer: {
-        en: "Use arrow `->` notation inside `where()`: `Post::where('meta->color', 'red')->get()`. For nested keys: `Post::where('meta->settings->theme', 'dark')`. This works on MySQL 5.7+, PostgreSQL, and SQLite (3.38+). Cast the column as `'array'` in `$casts` for PHP-side access via `$post->meta['color']`.",
+        en: "Laravel supports querying inside JSON columns using an arrow `->` notation inside `where()`.\n\n• `Post::where('meta->color', 'red')->get()` — query a top-level JSON key\n• `Post::where('meta->settings->theme', 'dark')` — query nested keys\n  ↳ Works on MySQL 5.7+, PostgreSQL, and SQLite 3.38+\n\nFor PHP-side access, cast the column as `'array'` in `$casts`, then access it like a normal PHP array: `$post->meta['color']`.",
         np: "`->where('meta->color', 'red')` arrow notation। `$casts` मा `'array'` cast।",
         jp: "`where('meta->color', 'red')` のように `->` で JSON パスを指定。`$casts` に `'array'` を設定すると PHP 側で配列として扱えます。",
       },
@@ -486,7 +486,7 @@ return response()->json($posts);
         jp: "Eloquent オブザーバとはいつ使いますか？",
       },
       answer: {
-        en: "An **observer** is a class that groups all model event listeners (`creating`, `created`, `updating`, `updated`, `deleting`, `deleted`, `restored`). Register with `Post::observe(PostObserver::class)` in a ServiceProvider or `AppServiceProvider::boot()`. Use observers when model event logic grows beyond a few lines — they keep models thin. For simple one-liners, inline closures in model `boot()` are fine.",
+        en: "An <b>observer</b> is a class that groups all the lifecycle event hooks for a single model in one place.\n\nModels fire events at key moments: `creating`, `created`, `updating`, `updated`, `deleting`, `deleted`, `restored`.\n\n• Without an observer: you scatter these hooks across model `boot()` methods, service providers, or controllers\n• With an observer: all of a model's event logic lives in one clean class\n  ↳ Register it with `Post::observe(PostObserver::class)` in a service provider\n\nWhen to use one: if a model's event logic grows beyond a few lines, move it to an observer. For a single one-liner, an inline closure in `boot()` is perfectly fine.",
         np: "Observer ले model event listeners एक class मा। `Post::observe(PostObserver::class)` गरेर register।",
         jp: "オブザーバは `creating`・`updated` などのモデルイベントをまとめたクラスです。ロジックが複数行になったらオブザーバに移しましょう。",
       },
@@ -498,7 +498,7 @@ return response()->json($posts);
         jp: "既存カラムにインデックスを追加するには？",
       },
       answer: {
-        en: "Create a new migration that modifies the table: `Schema::table('posts', function (Blueprint $table) { $table->index('slug'); $table->unique('email'); $table->index(['user_id', 'status']); });`. Never alter the original migration if it has already been run on any environment. Composite indexes on columns you frequently query together significantly speed up filtered queries.",
+        en: "Create a new migration that modifies the existing table — never edit the original migration once it has been run.\n\nInside the new migration's `up()` method use `Schema::table()` (not `Schema::create()`): `$table->index('slug')` for a regular index, `$table->unique('email')` for a unique index, or `$table->index(['user_id', 'status'])` for a composite index.\n\n• A <b>composite index</b> on columns you always filter together (e.g. `WHERE user_id = 1 AND status = 'published'`) is far faster than two separate single-column indexes\n  ↳ The order of columns in a composite index matters — put the most selective column first",
         np: "नयाँ migration मा `Schema::table` → `->index()` वा `->unique()`। Original migration नबदल्नुस्।",
         jp: "新しいマイグレーションで `Schema::table` を使い `->index()` / `->unique()` を追加します。既存のマイグレーションは変更しません。複合インデックスは複数列でフィルタするクエリを大幅に高速化します。",
       },

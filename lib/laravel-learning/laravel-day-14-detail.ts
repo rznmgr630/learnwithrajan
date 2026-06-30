@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Testing is a first-class feature in Laravel. **Pest** provides a clean functional syntax on top of PHPUnit, while Laravel's own test helpers make HTTP, database, mail, and queue assertions trivially easy. A solid test suite gives you confidence to refactor and ship without fear.",
+      en: "Writing tests sounds like extra work, but it's actually the fastest way to move forward without fear.\n• A good test suite means you can change code confidently — if something breaks, you find out in seconds, not after a user reports a bug\n\n<b>What Laravel gives you</b>\n• <b>Pest</b> — a modern, readable testing framework built on top of PHPUnit\n  ↳ No class boilerplate — just `it('does something', fn() => ...)` functions\n• <b>HTTP helpers</b> — simulate requests like `$this->get('/users')` without a real browser\n• <b>Database helpers</b> — check that data was saved or deleted correctly\n• <b>Fake facades</b> — intercept emails, queued jobs, and events so tests stay fast and isolated",
       np: "Laravel testing first-class। Pest = PHPUnit माथि functional syntax। HTTP, DB, mail, queue assert।",
       jp: "Laravel はテストを標準サポート。Pest は PHPUnit 上のクリーンな構文。HTTP・DB・メール・キューのアサーションが簡単。",
     },
@@ -23,7 +23,7 @@ export const LARAVEL_DAY_14_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "**Pest** is pre-installed in Laravel 11 (also installable in Laravel 10). It wraps PHPUnit — all PHPUnit assertions and features work inside Pest tests. The key difference is the function-style syntax: no class boilerplate, just `it()` and `test()` closures.",
+            en: "PHPUnit is the traditional PHP testing framework — it works, but every test file requires a class, every method name starts with `test_`, and the assertion syntax can feel clunky.\n\n<b>Pest is the modern alternative</b>\n• It wraps PHPUnit under the hood — every PHPUnit assertion still works, nothing is lost\n• But the outer syntax is much cleaner:\n  ↳ No class required — just call `it()` or `test()` with a closure\n  ↳ `it('can create a post', fn() => ...)` reads like a plain English sentence\n  ↳ The `expect()` API chains naturally: `expect($user)->not->toBeNull()->name->toBe('Alice')`\n• Laravel 11 ships with Pest pre-installed — zero extra setup needed",
             np: "Pest Laravel 11 मा pre-installed। PHPUnit को wrapper। Class boilerplate छैन।",
             jp: "Pest は Laravel 11 にプリインストール。PHPUnit のラッパーなのでアサーションはすべて使える。クラス不要で `it()` / `test()` だけ。",
           },
@@ -126,7 +126,7 @@ expect(User::find(1))
         {
           type: "paragraph",
           text: {
-            en: "Feature tests hit your full application stack — routing, middleware, controllers, database — without a real HTTP server. Use `$this->get()`, `$this->post()`, etc. The response object exposes rich assertion methods for status codes, JSON, HTML content, redirects, and session state.",
+            en: "A feature test simulates a real HTTP request through your entire application — the route resolves, middleware runs, the controller executes, and the database is hit.\n• You don't need a running server or a browser — Laravel handles the full request/response cycle in memory\n  ↳ `$this->get('/posts')` fires a GET request and returns a response object you can assert against\n  ↳ `$this->actingAs($user)->post('/posts', [...])` simulates a logged-in user submitting a form\n• These tests are the most valuable kind — they test your app the same way a real user would interact with it",
             np: "Feature test = full stack। Real server चाहिँदैन। Response assert methods।",
             jp: "フィーチャーテストはルーティングから DB まで全スタックを通す。実サーバーは不要。",
           },
@@ -259,7 +259,7 @@ it('redirects guests to login', function () {
         {
           type: "paragraph",
           text: {
-            en: "`RefreshDatabase` wraps each test in a transaction and rolls it back after, keeping the DB clean. `DatabaseTransactions` does the same but is faster for read-heavy tests (no migration re-run). **Factories** generate realistic model instances with fake data, and support relationships, states, and sequences.",
+            en: "Tests that touch the database need a clean slate before each test — otherwise results from one test bleed into the next.\n\n<b>`RefreshDatabase`</b> handles this automatically:\n• Before the first test runs, it migrates the database from scratch\n• Before each subsequent test, it wraps everything in a transaction — then rolls it back after\n  ↳ Every test starts with a completely empty database\n\n<b>Factories</b> are how you create test data without hand-writing SQL `INSERT` statements:\n• `User::factory()->create()` — creates a real database row with realistic fake data\n• `User::factory()->count(10)->create()` — create 10 rows at once\n• `User::factory()->admin()->create()` — use a custom state defined in the factory class",
             np: "`RefreshDatabase` — clean DB। Factory ले test data बनाउँछ।",
             jp: "`RefreshDatabase` でテストごとに DB をクリーン。Factory でリアルなテストデータを生成。",
           },
@@ -368,7 +368,7 @@ public function unverified(): static
         {
           type: "paragraph",
           text: {
-            en: "Laravel's **fake facades** swap real implementations with recording stubs for the duration of a test. Nothing is actually sent or executed — you just assert that the right things _would have been_ dispatched. This is faster, cheaper, and deterministic compared to hitting real services.",
+            en: "Testing code that calls external services (email, queues, events) is tricky — you don't want real emails sent or real jobs running during tests.\n\n<b>Laravel's fake facades solve this</b>\n• Call `Mail::fake()`, `Queue::fake()`, or `Event::fake()` at the start of a test\n  ↳ From that point on, nothing is actually sent or dispatched — Laravel just records what would have happened\n• After running the code under test, use assertion methods to verify the right things were triggered:\n  ↳ `Mail::assertSent(WelcomeMail::class)` — was this email triggered?\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — was this job queued?\n  ↳ `Event::assertDispatched(OrderShipped::class)` — was this event fired?\n• Tests stay fast (no network calls) and reliable (no flaky external dependencies)",
             np: "Fake facade ले real implementation replace। Assert ले check। Real service hit हुँदैन।",
             jp: "フェイクファサードは実装をスタブに差し替え。実際には何も送らずアサーションのみ。高速・決定的。",
           },
@@ -514,7 +514,7 @@ it('runs the weekly report command', function () {
         jp: "Pest と PHPUnit どちらを使うべき？",
       },
       answer: {
-        en: "**Pest** is the recommended default in new Laravel projects. It compiles to PHPUnit under the hood so there is no feature loss. Its functional syntax reduces boilerplate, the `expect()` API is more readable than assertion methods, and features like `it()->with()` (datasets) and `arch()` (architecture tests) are built in. Use PHPUnit directly only if you have an existing test suite you're not ready to migrate.",
+        en: "<b>Pest</b> is the recommended default for all new Laravel projects — here's why:\n• Less boilerplate: no class, no `setUp()`, no `public function test_...` naming convention\n  ↳ A Pest test is just an `it()` call with a closure — much easier to read and write\n• Better assertions: `expect($value)->toBe(42)` reads more like English than `$this->assertEquals(42, $value)`\n• Extras built in: datasets (`it()->with([...])`), architecture tests (`arch()`), and parallel test execution\n• No feature loss: it compiles to PHPUnit under the hood — every PHPUnit assertion works inside Pest\n\nThe only reason to stick with PHPUnit is if you have an existing test suite you're not ready to migrate yet.",
         np: "New project मा Pest। PHPUnit wrapper, feature loss छैन। Old project छ भने PHPUnit ठीक।",
         jp: "新規プロジェクトは Pest が推奨。PHPUnit のラッパーなので機能差なし。既存スイートがある場合は PHPUnit をそのまま使ってよい。",
       },
@@ -526,7 +526,7 @@ it('runs the weekly report command', function () {
         jp: "`RefreshDatabase` はパフォーマンスにどう影響しますか？",
       },
       answer: {
-        en: "`RefreshDatabase` runs all migrations from scratch on the **first test** in a suite, then wraps each subsequent test in a transaction that rolls back after the test — so the DB is clean but you pay migrations only once per suite run. If you use an in-memory SQLite database (`DB_CONNECTION=sqlite DB_DATABASE=:memory:` in `phpunit.xml`), migrations are extremely fast. For large suites with slow migrations, `DatabaseTransactions` (no migration re-run) or `LazilyRefreshDatabase` can improve speed.",
+        en: "`RefreshDatabase` is the most common approach and works like this:\n• <b>First test in the suite</b>: runs all your migrations from scratch against the test database\n• <b>Every subsequent test</b>: wraps the test in a database transaction, then rolls it back after\n  ↳ Each test starts clean without re-running migrations — so it's fast after the first one\n\n<b>Speed tips</b>\n• Use an in-memory SQLite database for tests: set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`\n  ↳ SQLite migrations run almost instantly — great for local development\n• For very large migration suites, `LazilyRefreshDatabase` only migrates when a test actually needs the database",
         np: "First test मा migrate एकपटक, बाकी transaction rollback। SQLite in-memory सबभन्दा fast।",
         jp: "最初の 1 回だけマイグレーション実行、以降はトランザクションロールバック。SQLite インメモリが最速。",
       },
@@ -538,7 +538,7 @@ it('runs the weekly report command', function () {
         jp: "バリデーションエラーをテストする方法は？",
       },
       answer: {
-        en: "For web (Blade) routes, use `->assertSessionHasErrors('field_name')` or `->assertSessionHasErrors(['title', 'body'])`. For API (JSON) routes, use `->assertUnprocessable()` (422) plus `->assertJsonValidationErrors('field_name')` or `->assertJsonValidationErrorFor('email')`. You can also assert the exact error message with `->assertJsonValidationErrors(['email' => 'required'])`.",
+        en: "It depends on whether the route returns HTML or JSON:\n\n<b>Web (Blade) routes</b> — validation errors are flashed to the session and the user is redirected back:\n• `->assertSessionHasErrors('title')` — one field failed\n• `->assertSessionHasErrors(['title', 'body'])` — multiple fields failed\n\n<b>API (JSON) routes</b> — Laravel returns a 422 response with an errors object:\n• `->assertUnprocessable()` — confirms a 422 status code\n• `->assertJsonValidationErrors('email')` — confirms the field appears in the errors list\n• `->assertJsonValidationErrors(['email' => 'The email field is required.'])` — checks the exact message",
         np: "Web: `assertSessionHasErrors()`। API: `assertJsonValidationErrors()`। 422 = `assertUnprocessable()`।",
         jp: "Web は `assertSessionHasErrors()`、API は `assertJsonValidationErrors()` と `assertUnprocessable()`（422）。",
       },
@@ -550,7 +550,7 @@ it('runs the weekly report command', function () {
         jp: "通知が送信されたことをアサートする方法は？",
       },
       answer: {
-        en: "Call `Notification::fake()` at the start of your test, then after running the action, use `Notification::assertSentTo($user, MyNotification::class)`. You can pass a callback as the third argument to inspect the notification's properties. `Notification::assertNothingSent()` verifies no notifications fired. This works for any notification channel — mail, Slack, SMS, database.",
+        en: "Call `Notification::fake()` at the start of your test — after that, no notifications actually go out.\n\nThen, after running the action that should trigger the notification:\n• `Notification::assertSentTo($user, MyNotification::class)` — was this notification sent to this user?\n• Pass a callback as a third argument to check the notification's data:\n  ↳ `Notification::assertSentTo($user, MyNotification::class, fn($n) => $n->order->id === 5)`\n• `Notification::assertNothingSent()` — confirms nothing was sent at all\n\nThis works regardless of which channel the notification uses — email, Slack, SMS, database — because `Notification::fake()` intercepts all of them.",
         np: "`Notification::fake()` → assert। `assertSentTo()` user र class दिनु।",
         jp: "`Notification::fake()` 後に `assertSentTo($user, MyNotification::class)`。チャンネル問わず動作。",
       },
@@ -562,7 +562,7 @@ it('runs the weekly report command', function () {
         jp: "ミドルウェアを独立してテストできますか？",
       },
       answer: {
-        en: "Yes — though it's more common to test middleware behavior through HTTP feature tests (e.g. assert that an unauthenticated request redirects). For true unit testing of middleware, instantiate it directly, pass a `Request` and a `Closure` as the `$next` handler, and assert the returned response. For multiple middleware, use `$this->withMiddleware(MyMiddleware::class)` to enable specific ones, or `$this->withoutMiddleware()` to skip all and test the controller in isolation.",
+        en: "Yes, though the most practical approach is to test middleware <b>indirectly through feature tests</b>:\n• `$this->get('/dashboard')->assertRedirect('/login')` — confirms the auth middleware is working\n  ↳ You don't need to instantiate the middleware class itself — the full stack proves it\n\nFor direct unit testing of a middleware class:\n• Instantiate it, pass a `Request` object and a `$next` closure, and assert the response\n  ↳ Useful when middleware has complex internal logic that's hard to test via HTTP\n\nTo isolate a controller by skipping middleware in a test, call `$this->withoutMiddleware()` at the top — it disables all middleware for that test only.",
         np: "Feature test मा indirect test सजिलो। Direct unit test को लागि Request र Closure pass।",
         jp: "HTTPテストで間接的にテストが一般的。直接 `new Middleware()` して Request と Closure を渡す方法もある。",
       },
@@ -574,7 +574,7 @@ it('runs the weekly report command', function () {
         jp: "例外処理をテストする方法は？",
       },
       answer: {
-        en: "For HTTP responses, simply assert the status code: `->assertNotFound()` (404), `->assertForbidden()` (403), `->assertStatus(500)`. To assert a specific exception is thrown inside a test (non-HTTP), use Pest's `expect(fn() => $this->method())->toThrow(ModelNotFoundException::class)`. To prevent Laravel's exception handler from converting exceptions to HTTP responses (useful for seeing raw errors), call `$this->withoutExceptionHandling()` at the top of your test.",
+        en: "For <b>HTTP responses</b>, assert the status code — that's usually all you need:\n• `->assertNotFound()` — 404 (e.g. when a model isn't found)\n• `->assertForbidden()` — 403 (e.g. when authorization fails)\n• `->assertStatus(500)` — any specific code\n\nFor <b>non-HTTP code</b> that throws an exception, use Pest's `expect()` wrapper:\n• `expect(fn() => $thing->doSomething())->toThrow(ModelNotFoundException::class)`\n\n<b>Debugging tip</b>: by default, Laravel's exception handler catches exceptions and converts them to HTTP responses (like a 500 page). If you want to see the raw exception instead of a response, call `$this->withoutExceptionHandling()` at the top of your test.",
         np: "HTTP: status code assert। Raw exception: `toThrow()`। `withoutExceptionHandling()` debug को लागि।",
         jp: "HTTP は `assertNotFound()` など。例外を直接テストは `toThrow()`。`withoutExceptionHandling()` で生の例外を確認。",
       },
@@ -586,7 +586,7 @@ it('runs the weekly report command', function () {
         jp: "キューに入れられたメールをテストする方法は？",
       },
       answer: {
-        en: "If the mailable implements `ShouldQueue`, use `Mail::assertQueued(WelcomeMail::class)` (not `assertSent()`). `assertSent()` only catches synchronously sent mail; `assertQueued()` catches those pushed to the queue. After calling `Mail::fake()`, both queued and sent mail is intercepted — nothing actually goes out.",
+        en: "There are two different assertion methods and they check different things:\n\n• `Mail::assertSent()` — checks for mail that was sent <b>immediately</b> (synchronous, no queue)\n• `Mail::assertQueued()` — checks for mail that was <b>pushed onto the queue</b> (the mailable implements `ShouldQueue`)\n\nIf your mailable implements `ShouldQueue` and you use `assertSent()`, the assertion will fail even if the code is working — because the mail was queued, not sent directly.\n\nUse `assertQueued()` for any mailable with `ShouldQueue`. After calling `Mail::fake()`, both kinds are intercepted — no real email goes out either way.",
         np: "`Mail::assertQueued()` — `assertSent()` होइन। `ShouldQueue` implement भएको mailable को लागि।",
         jp: "`ShouldQueue` を実装したメールは `assertQueued()` でチェック。`assertSent()` は同期送信のみ。",
       },

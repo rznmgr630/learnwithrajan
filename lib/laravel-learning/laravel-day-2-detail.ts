@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_2_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Routing** maps an HTTP verb + URI to a closure or controller action. In Laravel 11 the `routes/web.php` and `routes/api.php` files are registered inside `bootstrap/app.php` via `->withRouting()`. The **Router** resolves the correct handler, runs the middleware pipeline, and returns a response.",
+      en: "Every time a browser visits a URL in your app, Laravel needs to know: which PHP function should handle this request? That is what <b>routing</b> does — it maps a URL (plus an HTTP verb like GET or POST) to a closure or a controller action.\n\n• Route definitions live in `routes/web.php` (browser requests) and `routes/api.php` (API requests)\n• In Laravel 11 both files are registered in `bootstrap/app.php` via `->withRouting()`\n  ↳ The Router reads the incoming URI and verb, finds the matching route definition, runs any middleware attached to it, and calls the handler",
       np: "Routing HTTP verb + URI लाई closure वा controller मा जोड्छ। Laravel 11 मा `bootstrap/app.php` मा `->withRouting()` बाट register हुन्छ।",
       jp: "ルーティングは HTTP メソッドと URI をクロージャまたはコントローラに結び付けます。Laravel 11 では `bootstrap/app.php` の `->withRouting()` で登録されます。",
     },
@@ -19,7 +19,7 @@ export const LARAVEL_DAY_2_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Laravel exposes static helpers for every HTTP verb: `Route::get`, `Route::post`, `Route::put`, `Route::patch`, `Route::delete`. Use `Route::any` to accept all verbs, or `Route::match(['get','post'], …)` for a subset.",
+            en: "Laravel gives you a static helper for every HTTP verb. You call the helper with the URI and a handler (a closure or a `[Controller::class, 'method']` array):\n• `Route::get` — fetch a resource (read-only)\n• `Route::post` — submit data to create something\n• `Route::put` / `Route::patch` — replace or partially update an existing resource\n• `Route::delete` — remove a resource\n• `Route::any` — accepts every HTTP verb on the same URI\n• `Route::match(['get','post'], ...)` — accepts only the verbs you list",
             np: "Laravel मा `get`, `post`, `put`, `patch`, `delete`, `any`, `match` route helper छन्।",
             jp: "Laravel はすべての HTTP メソッド向けに静的ヘルパを提供します（`get`・`post`・`put`・`patch`・`delete`・`any`・`match`）。",
           },
@@ -59,7 +59,7 @@ Route::view('/about', 'about');`,
         {
           type: "paragraph",
           text: {
-            en: "**Route parameters** are defined with `{name}` (required) or `{name?}` (optional, supply a default). Constrain with `->where('id', '[0-9]+')` or the shorthand helpers like `->whereNumber('id')`, `->whereAlpha('slug')`, `->whereAlphaNumeric('code')`.",
+            en: "Sometimes a URL contains a dynamic piece — like a user ID or a post slug. You capture those with <b>route parameters</b>:\n• `{name}` — required. The request will 404 if this segment is missing\n• `{name?}` — optional. You must supply a default value in the closure or controller\n• Add constraints to reject invalid values before they reach your controller — use `->where('id', '[0-9]+')` or the shorthand helpers like `->whereNumber('id')`, `->whereAlpha('slug')`, `->whereAlphaNumeric('code')`\n  ↳ Constraints are checked by the Router, so bad values never even reach your controller",
             np: "`{name}` required; `{name?}` optional (default चाहिन्छ)। `->whereNumber()` जस्ता constraint helpers।",
             jp: "`{name}` で必須、`{name?}` でオプション（デフォルト値を設定）。`->whereNumber()` などの制約ヘルパも使えます。",
           },
@@ -100,7 +100,7 @@ Route::get('/shop/{category}/{slug}', [ShopController::class, 'show'])
         {
           type: "paragraph",
           text: {
-            en: "**Name a route** with `->name('users.index')` so you can generate URLs with `route('users.index')` without hard-coding paths. If the URI ever changes, every `route()` call stays correct automatically.",
+            en: "Hard-coding paths like `/users/42` throughout your codebase is fragile — if the URI ever changes, you have to update it everywhere. <b>Named routes</b> solve this by giving a route a stable name:\n• Add `->name('users.show')` to any route definition\n• Generate the URL anywhere with `route('users.show', ['id' => 42])`\n• If the URI changes later, only the route definition needs updating — every `route()` call stays correct automatically\n  ↳ Convention: use `resource.action` naming, e.g. `users.index`, `users.show`, `users.store`",
             np: "`->name('users.index')` ले URL path बदलिए पनि `route()` सही रहन्छ।",
             jp: "`->name('users.index')` で URI を名前で参照できます。URI が変わっても `route()` 呼び出しは壊れません。",
           },
@@ -131,7 +131,7 @@ if (request()->routeIs('users.*')) { ... }`,
         {
           type: "paragraph",
           text: {
-            en: "**Route groups** share attributes (prefix, name prefix, middleware, controller) across multiple routes. Groups are chainable and nestable.",
+            en: "When many routes share the same prefix, middleware, or controller, you can stop repeating yourself by wrapping them in a <b>route group</b>. Groups let you set shared attributes once and apply them to every route inside:\n• `->prefix('admin')` — prepends `/admin` to every URI in the group\n• `->name('admin.')` — prepends `admin.` to every route name\n• `->middleware([...])` — applies the same middleware to all routes\n• `->controller(SomeController::class)` — avoids repeating the class on each route\n  ↳ Groups are chainable and nestable — you can put a group inside a group",
             np: "Route groups ले prefix, name, middleware, controller share गर्छन्। chainable र nestable।",
             jp: "ルートグループでプレフィックス・名前・ミドルウェア・コントローラを複数ルートで共有できます。ネスト可能です。",
           },
@@ -178,7 +178,7 @@ Route::controller(UserController::class)->group(function () {
         {
           type: "paragraph",
           text: {
-            en: "`Route::resource('posts', PostController::class)` registers **7 conventional routes** in one call. `Route::apiResource()` registers **5** (omits `create` and `edit` which serve HTML forms — not needed for APIs).",
+            en: "Most resources in a web app need the same standard set of operations — list all, show one, show a create form, save, show an edit form, update, delete. Instead of writing all seven routes by hand, `Route::resource()` registers them all in a single line.\n• `Route::resource('posts', PostController::class)` — registers <b>7 routes</b> covering list, create form, save, show, edit form, update, and delete\n• `Route::apiResource('posts', PostController::class)` — registers <b>5 routes</b>, skipping `create` and `edit` (those serve HTML forms, which APIs do not need)\n  ↳ The table below shows every route that gets registered and its controller method name",
             np: "`Route::resource()` ले 7 routes; `apiResource()` ले 5 (create/edit बिना)।",
             jp: "`Route::resource()` で **7 ルート**を一括登録。`apiResource()` は HTML フォーム不要の API 向けに **5 ルート**のみ。",
           },
@@ -282,7 +282,7 @@ Route::apiResources([
         {
           type: "paragraph",
           text: {
-            en: "**Route model binding**: when a route parameter name matches a type-hinted model parameter in the controller, Laravel queries the database automatically and injects the model—or returns **404** if not found. Customize the lookup column with `{post:slug}` or by overriding `getRouteKeyName()` on the model.",
+            en: "<b>Route model binding</b> is a shortcut that saves you from writing `Post::findOrFail($id)` in every controller method. Here is how it works:\n• Name a route parameter the same as the type-hinted model variable in the controller (`{post}` → `Post $post`)\n• Laravel automatically queries the database and injects the model instance\n• If no record is found, Laravel returns a <b>404</b> response automatically — no extra code needed\n• To look up by a column other than `id`, use `{post:slug}` in the route, or override `getRouteKeyName()` on the model",
             np: "**Route model binding**: parameter र model type-hint मिल्यो भने Laravel आफैं DB query गर्छ; नभेटे 404। `{post:slug}` वा `getRouteKeyName()` ले column बदल्न।",
             jp: "**ルートモデルバインディング**：パラメータ名とコントローラのモデル型ヒントが一致すると自動で DB から取得（なければ 404）。`{post:slug}` でカラム変更も可。",
           },
@@ -320,7 +320,7 @@ Route::get('/posts/{post}/comments/{comment}', [CommentController::class, 'show'
         {
           type: "paragraph",
           text: {
-            en: "**API routes in Laravel 11**: `routes/api.php` is opt-in; enable it by adding `->withRouting(api: __DIR__.'/../routes/api.php')` in `bootstrap/app.php` (or the installer scaffolds this for you). API routes run through the `api` middleware group (stateless — no sessions, no CSRF). Requests are prefixed with `/api` by default.",
+            en: "<b>API routes in Laravel 11</b> — the `routes/api.php` file is opt-in (it does not exist by default). To enable it, add `->withRouting(api: __DIR__.'/../routes/api.php')` inside `bootstrap/app.php`. The Laravel installer can scaffold this for you automatically.\n\nKey differences from `web.php` routes:\n• API routes run through the `api` middleware group — <b>stateless</b>, meaning no sessions and no CSRF tokens\n• All API routes are automatically prefixed with `/api`\n• Authentication is handled via tokens (Sanctum or Passport) instead of sessions",
             np: "Laravel 11 मा `api.php` opt-in; `bootstrap/app.php` मा `->withRouting(api:...)` थप्नुस्। stateless — session/CSRF छैन। `/api` prefix।",
             jp: "Laravel 11 の API ルートはオプトイン。`bootstrap/app.php` に `->withRouting(api: ...)` を追加（インストーラが自動設定）。`api` ミドルウェアグループ（ステートレス）で `/api` プレフィックス。",
           },
@@ -355,7 +355,7 @@ php artisan route:list -v`,
         jp: "`web.php` と `api.php` の違いは？",
       },
       answer: {
-        en: "`web.php` routes run through the `web` middleware group which enables **sessions**, **CSRF protection**, cookie encryption, and the `auth` guard based on sessions. `api.php` routes use the `api` group: **stateless**, no session, no CSRF—authentication is typically via a token (Sanctum, Passport). When `Accept: application/json` is present, validation failures return 422 JSON instead of a redirect.",
+        en: "`web.php` routes run through the `web` middleware group, which enables <b>sessions</b>, <b>CSRF protection</b>, cookie encryption, and session-based authentication. `api.php` routes use the `api` group — <b>stateless</b> with no session or CSRF token. Authentication for API routes is done via tokens (Sanctum, Passport). When a request to an API route has the `Accept: application/json` header, validation failures return a 422 JSON response instead of a redirect.",
         np: "`web.php` — session, CSRF, cookie। `api.php` — stateless, token auth, JSON। `Accept: application/json` भए 422 JSON।",
         jp: "`web.php` はセッション・CSRF・Cookie 付き。`api.php` はステートレスでトークン認証向け。`Accept: application/json` があれば検証失敗は 422 JSON を返します。",
       },
@@ -367,7 +367,7 @@ php artisan route:list -v`,
         jp: "リソースルート名とコントローラメソッドの対応は？",
       },
       answer: {
-        en: "The pattern is `resource.action`. For `Route::resource('posts', PostController::class)`: `posts.index` → `index()`, `posts.create` → `create()`, `posts.store` → `store()`, `posts.show` → `show()`, `posts.edit` → `edit()`, `posts.update` → `update()`, `posts.destroy` → `destroy()`. For nested resources the prefix stacks: `posts.comments.show`.",
+        en: "The pattern is `resource.action`. For `Route::resource('posts', PostController::class)`: `posts.index` → `index()`, `posts.create` → `create()`, `posts.store` → `store()`, `posts.show` → `show()`, `posts.edit` → `edit()`, `posts.update` → `update()`, `posts.destroy` → `destroy()`. For nested resources the prefix stacks — for example a `posts.comments` resource produces names like `posts.comments.show`.",
         np: "Pattern: `resource.action`. `posts.index` → `index()`, etc. Nested: `posts.comments.show`।",
         jp: "パターンは `resource.action`。`posts.index` → `index()`、`posts.store` → `store()` など。ネストは `posts.comments.show`。",
       },
@@ -379,7 +379,7 @@ php artisan route:list -v`,
         jp: "`web.php` と `api.php` 以外にルートファイルを追加できる？",
       },
       answer: {
-        en: "Yes. In Laravel 11, add additional files in `bootstrap/app.php` inside `->withRouting()` using the `then` callback, e.g. `then: function () { Route::middleware('web')->group(base_path('routes/auth.php')); }`. In Laravel 10 you added them in `RouteServiceProvider::boot()`.",
+        en: "Yes. In Laravel 11, add extra route files inside `->withRouting()` in `bootstrap/app.php` using the `then` callback — for example: `then: function () { Route::middleware('web')->group(base_path('routes/auth.php')); }`. In Laravel 10, you added them in `RouteServiceProvider::boot()`.",
         np: "हो। Laravel 11 मा `bootstrap/app.php` को `->withRouting(then: ...)` मा थप्न सकिन्छ।",
         jp: "できます。Laravel 11 では `bootstrap/app.php` の `->withRouting(then: ...)` コールバックで追加ファイルをロードします。",
       },
@@ -391,7 +391,7 @@ php artisan route:list -v`,
         jp: "ルートモデルバインディングとは？",
       },
       answer: {
-        en: "**Implicit binding**: when a route parameter name matches the variable name of a type-hinted Eloquent model in a controller method, Laravel automatically queries `Model::findOrFail($value)` and injects the instance. If no record exists the response is an automatic 404. **Explicit binding**: you manually call `Route::model('user', User::class)` or `Route::bind('user', fn ($value) => ...)` in a service provider for custom resolution logic.",
+        en: "<b>Implicit binding</b> — when a route parameter name matches the variable name of a type-hinted Eloquent model in the controller method, Laravel automatically runs `Model::findOrFail($value)` and injects the model. If no record exists the response is an automatic 404. <b>Explicit binding</b> — you manually register custom resolution logic via `Route::model('user', User::class)` or `Route::bind('user', fn ($value) => ...)` in a service provider, for cases where the default lookup is not enough.",
         np: "Implicit: parameter name र model type-hint मिल्यो भने Laravel auto `findOrFail`; नभेटे 404। Explicit: `Route::model()` वा `Route::bind()`।",
         jp: "暗黙バインド：パラメータ名と型ヒントが一致すると `findOrFail` を自動実行（なければ 404）。明示バインド：`Route::model()` / `Route::bind()` でカスタムロジックを定義。",
       },
@@ -403,7 +403,7 @@ php artisan route:list -v`,
         jp: "`apiResource` を特定のメソッドに絞るには？",
       },
       answer: {
-        en: "Chain `->only([...])` to whitelist specific actions, or `->except([...])` to blacklist. Example: `Route::apiResource('posts', PostController::class)->only(['index', 'show', 'store'])` registers only those three routes. You can verify with `php artisan route:list --name=posts`.",
+        en: "Chain `->only([...])` to allow only specific actions, or `->except([...])` to exclude specific actions. For example: `Route::apiResource('posts', PostController::class)->only(['index', 'show', 'store'])` registers only those three routes. You can verify which routes were registered with `php artisan route:list --name=posts`.",
         np: "`->only(['index','show','store'])` वा `->except(['destroy'])` chain गर्नुस्। `route:list` ले verify।",
         jp: "`->only([...])` で許可するアクションを絞り込み、`->except([...])` で除外できます。`php artisan route:list --name=posts` で確認してください。",
       },

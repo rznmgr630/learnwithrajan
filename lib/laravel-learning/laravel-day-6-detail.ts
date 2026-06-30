@@ -3,12 +3,12 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_6_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Middleware** sits in the HTTP pipeline between the incoming request and your controller — perfect for cross-cutting concerns like authentication, rate limiting, CORS headers, and string trimming. In **Laravel 11** middleware is registered in `bootstrap/app.php` via `->withMiddleware()` rather than in `Http/Kernel.php`.",
+      en: "Think of middleware as a series of checkpoints that every HTTP request must pass through before reaching your controller.\n\n<b>What does middleware do?</b>\n• It handles concerns that apply to many routes — instead of repeating logic in every controller\n  ↳ Authentication: is this user logged in? If not, redirect to login\n  ↳ Rate limiting: has this user sent too many requests? If so, return a 429 Too Many Requests\n  ↳ CORS headers: add the right headers so browsers allow cross-origin requests\n  ↳ Input trimming: strip whitespace from all string inputs automatically\n\n<b>Laravel 11 change</b>\n• In older versions, middleware was registered in `Http/Kernel.php`\n  ↳ That file no longer exists in Laravel 11 — all middleware registration happens in `bootstrap/app.php` using `->withMiddleware()`",
       np: "Middleware HTTP pipeline मा — auth, rate limit, CORS। Laravel 11 मा `bootstrap/app.php` मा दर्ता।",
       jp: "ミドルウェアはリクエストとコントローラの間に置かれ、認証・レート制限・CORS などを一元処理します。Laravel 11 では `bootstrap/app.php` に登録します。",
     },
     {
-      en: "The **Request** object (`Illuminate\\Http\\Request`) is injected into every controller method and exposes the full HTTP input: query strings, JSON body, uploaded files, headers, cookies, and IP. **URL generation helpers** (`route()`, `url()`, `asset()`, signed URLs) keep links correct even when the app moves domains.",
+      en: "The <b>Request</b> object is your window into everything about the incoming HTTP request — and Laravel automatically injects it into your controller methods.\n\n<b>What you can read from the Request</b>\n• Form inputs and query string values\n• JSON body (when `Content-Type: application/json`)\n• Uploaded files\n• Headers, cookies, the client's IP address\n  ↳ No more `$_POST`, `$_GET`, or `$_FILES` — the Request object is cleaner and testable\n\n<b>URL generation helpers</b>\n• `route('name')`, `url('/path')`, `asset('file.js')` — generate absolute URLs tied to your app's domain\n  ↳ If your app moves domains, only `APP_URL` in `.env` needs to change — all URLs update automatically",
       np: "Request object ले input, file, header सब expose गर्छ। URL helper ले link सही राख्छ।",
       jp: "**Request** がコントローラにインジェクトされ、入力・ファイル・ヘッダなどすべて取得可能。URL ヘルパは `route()`・`url()`・`asset()` で一貫したリンクを生成します。",
     },
@@ -24,7 +24,7 @@ export const LARAVEL_DAY_6_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Generate a middleware class with Artisan. The `handle()` method receives the `Request` and a `Closure $next` — call `$next($request)` to pass the request down the pipeline, or return a response early to abort. **After middleware** runs code on the way back out: capture `$response = $next($request)` and modify it before returning.",
+            en: "Every middleware is a PHP class with one key method — `handle()`. Laravel calls it on every matching request.\n\n<b>Inside `handle()`</b>\n• `$next($request)` — passes the request further down the pipeline (toward the controller)\n  ↳ Call this to continue; skip it to abort the request early (e.g. return a redirect or 403)\n• Code before `$next($request)` runs on the way in — this is a <b>before middleware</b>\n• Code after `$next($request)` runs on the way out — this is an <b>after middleware</b>\n  ↳ Capture the response: `$response = $next($request)`, modify it, then `return $response`",
             np: "Artisan ले class बनाउँछ। `$next($request)` ले pipeline जारी राख्छ। After middleware ले response modify गर्न सकिन्छ।",
             jp: "Artisan で生成。`handle()` が `$next($request)` を呼ぶとパイプライン継続。`$response = $next($request)` を取得してから変更する「after ミドルウェア」パターンも使えます。",
           },
@@ -74,7 +74,7 @@ class AddResponseHeader
         {
           type: "paragraph",
           text: {
-            en: "**Laravel 11 registration** lives entirely in `bootstrap/app.php`. You can append/prepend middleware globally, create aliases (short names), and define named groups. The old `Http/Kernel.php` file no longer exists.",
+            en: "In Laravel 11, you register all middleware in `bootstrap/app.php` inside the `->withMiddleware()` callback.\n\n<b>What you can do there</b>\n• `append()` / `prepend()` — add middleware to the global stack (runs on every request)\n• `alias()` — give a middleware a short name so you can use it in route definitions (`->middleware('admin')`)\n• `appendToGroup()` / `prependToGroup()` — add middleware to an existing group like `web` or `api`\n  ↳ Groups let you apply multiple middleware to a set of routes in one line",
             np: "Laravel 11 मा `bootstrap/app.php` मा मात्र दर्ता। `Http/Kernel.php` छैन।",
             jp: "**Laravel 11** では `bootstrap/app.php` のみで登録。`Http/Kernel.php` は廃止されました。",
           },
@@ -204,7 +204,7 @@ Route::middleware('admin-panel')->group(function () {
         {
           type: "paragraph",
           text: {
-            en: "Type-hint `Illuminate\\Http\\Request $request` in any controller method and Laravel's service container automatically resolves and injects it. Every HTTP detail you need is available as a method call — no superglobals (`$_POST`, `$_GET`) needed.",
+            en: "To access the current HTTP request in a controller, just type-hint `Request $request` in the method signature — Laravel injects it automatically.\n\n<b>Why this is better than PHP superglobals</b>\n• No more `$_POST['name']`, `$_GET['page']`, `$_FILES['avatar']`\n  ↳ The Request object provides clean, consistent methods for all of these\n• It's testable — you can pass a fake Request in unit tests without making a real HTTP call\n• Dot notation lets you read nested data: `$request->input('address.city')`",
             np: "Controller method मा `Request $request` type-hint — container ले inject। `$_POST` आवश्यक छैन।",
             jp: "コントローラメソッドに `Request $request` と型付けするだけでコンテナが自動注入します。`$_POST` などスーパーグローバルは不要です。",
           },
@@ -301,7 +301,7 @@ public function store(Request $request)
         {
           type: "paragraph",
           text: {
-            en: "Laravel provides several helpers to generate URLs so you never hard-code paths. `route()` resolves a **named route**, `url()` builds an absolute URL from a path, `action()` targets a controller method, and `asset()` points to `public/`. All respect `APP_URL` in `.env`.",
+            en: "Hard-coding URLs like `/users/42` in your code is fragile — if you rename a route, every hard-coded link breaks.\n\nLaravel's URL helpers solve this:\n• `route('users.show', $user)` — generates a URL from a named route\n  ↳ If the route URI changes, only the route file needs updating — all links stay correct\n• `url('/about')` — builds an absolute URL from a path, using `APP_URL` from `.env`\n• `action([UserController::class, 'index'])` — generates a URL that points to a specific controller method\n• `asset('img/logo.png')` — generates a URL to a file in your `public/` folder\n  ↳ `secure_asset()` forces HTTPS",
             np: "`route()`, `url()`, `action()`, `asset()` — `APP_URL` अनुसार absolute URL।",
             jp: "`route()`・`url()`・`action()`・`asset()` は `APP_URL` を基にした絶対 URL を返します。",
           },
@@ -405,7 +405,7 @@ return response()->noContent();`,
         jp: "ミドルウェアからコントローラにデータを渡すには？",
       },
       answer: {
-        en: "Use `$request->merge(['key' => $value])` to add attributes to the input bag, or use `$request->attributes->set('key', $value)` for internal server-side data that must not be tampered with via user input. In the controller, read with `$request->get('key')` or `$request->attributes->get('key')`. The `attributes` bag is invisible to user-submitted form data.",
+        en: "Middleware often resolves something useful — like the current tenant or a decoded API token — and needs to hand it to the controller.\n\n<b>Two ways to do it:</b>\n• `$request->merge(['key' => $value])` — adds it to the input bag\n  ↳ Read in controller with `$request->input('key')`\n  ↳ Drawback: users could potentially send a form field with the same name and interfere\n• `$request->attributes->set('key', $value)` — adds it to the server-side attributes bag\n  ↳ Read in controller with `$request->attributes->get('key')`\n  ↳ This bag is completely separate from user-submitted data — safe for internal use",
         np: "`$request->merge()` वा `$request->attributes->set()` ले controller मा data पठाउनुस्। `attributes` bag user-tamper-proof छ।",
         jp: "`$request->merge()` か `$request->attributes->set()` でデータを付加し、コントローラで `$request->get()` か `attributes->get()` で読み取ります。`attributes` バッグはユーザー入力から独立しています。",
       },
@@ -417,7 +417,7 @@ return response()->noContent();`,
         jp: "`web` と `api` ミドルウェアグループの違いは？",
       },
       answer: {
-        en: "The `web` group enables cookies, sessions, CSRF protection, and URL signing — everything needed for a stateful browser experience. The `api` group is stateless (no session, no CSRF) and includes `throttle:api` for rate limiting. Never add session-dependent auth to API routes; use `auth:sanctum` or `auth:api` (token-based) instead.",
+        en: "These two groups reflect two different ways applications work.\n\n<b>`web` group</b>\n• Enables cookies, sessions, and CSRF protection\n• Designed for browser-facing routes — the kind where a user logs in and gets a session cookie\n  ↳ Without CSRF protection, a malicious website could trick a logged-in user into submitting forms\n\n<b>`api` group</b>\n• Stateless — no session, no CSRF\n• Designed for mobile apps and frontends that send a token with every request instead of using cookies\n• Includes `throttle:api` rate limiting\n  ↳ Use `auth:sanctum` for token-based authentication on API routes, not `auth` (which relies on sessions)",
         np: "`web` stateful (session, CSRF); `api` stateless (throttle)। API मा `auth:sanctum` प्रयोग।",
         jp: "`web` はセッション・CSRF あり。`api` はステートレスでレート制限のみ。API には `auth:sanctum` などトークン認証を使います。",
       },
@@ -429,7 +429,7 @@ return response()->noContent();`,
         jp: "`throttle:api` と `throttle:60,1` はどう違いますか？",
       },
       answer: {
-        en: "`throttle:60,1` hard-codes 60 requests per 1 minute for every caller. `throttle:api` reads the named rate limiter `api` defined via `RateLimiter::for('api', function ($request) { … })` — typically in `bootstrap/app.php`. The named limiter can vary limits by user tier, authenticated vs guest, or per-route — far more flexible for real applications.",
+        en: "Both limit how many requests a user can make, but in different ways.\n\n<b>`throttle:60,1`</b>\n• Hard-coded: 60 requests per 1 minute for every single caller — no exceptions\n  ↳ Simple but inflexible — an admin user gets the same limit as a free-tier user\n\n<b>`throttle:api`</b>\n• Reads a named rate limiter called `api` that you define in `bootstrap/app.php`\n• The named limiter is a function, so it can return different limits depending on context:\n  ↳ Authenticated users get 1000 requests/minute, guests get 60\n  ↳ Premium plan users get unlimited, free users get 100\n• Much more practical for real applications where different users deserve different limits",
         np: "`throttle:60,1` fixed 60/min; `throttle:api` named limiter — tier अनुसार लचिलो।",
         jp: "`throttle:60,1` は固定。`throttle:api` は `RateLimiter::for('api',…)` の名前付きリミッタで、ユーザープランに応じて上限を変えられます。",
       },
@@ -441,7 +441,7 @@ return response()->noContent();`,
         jp: "コントローラ実行後にミドルウェアがレスポンスを変更できますか？",
       },
       answer: {
-        en: "Yes — this is called **after middleware**. Capture the response: `$response = $next($request)`, then modify it before returning. Typical uses: adding response headers (`X-Response-Time`, `X-App-Version`), logging the response status code, or injecting a debug toolbar. Code placed after `$next($request)` in `handle()` runs on the way back out through the pipeline.",
+        en: "Yes — this is called <b>after middleware</b>, and it's just as common as before middleware.\n\n<b>How it works</b>\n• Instead of returning `$next($request)` directly, capture it: `$response = $next($request)`\n• The controller runs completely at that point\n• Now you can modify `$response` before returning it\n\n<b>Common uses</b>\n• Add security or debug headers to every response: `$response->headers->set('X-App-Version', '1.0')`\n• Log the HTTP status code of every response\n• Inject a debug toolbar (this is how Debugbar works)\n  ↳ Everything after `$next($request)` in `handle()` runs on the way back out",
         np: "After middleware: `$response = $next($request)` capture, modify, return। Header थप्नु, log गर्नु।",
         jp: "`$response = $next($request)` で取得後に変更して `return` する「after ミドルウェア」パターンです。レスポンスヘッダの追加や処理時間のログに使います。",
       },
@@ -453,7 +453,7 @@ return response()->noContent();`,
         jp: "署名付き URL とはいつ使いますか？",
       },
       answer: {
-        en: "A signed URL has an HMAC signature appended as a query parameter — the URL cannot be modified without invalidating it. Laravel validates it via the `signed` middleware or `URL::hasValidSignature()`. Use it for **email unsubscribe links**, **password reset links**, **invoice download links**, or any unauthenticated but sensitive action. Use `URL::temporarySignedRoute()` to add an expiry time and prevent link reuse.",
+        en: "A signed URL is a regular URL with a cryptographic signature added to it — if anyone changes even one character of the URL, the signature becomes invalid.\n\n<b>How it works</b>\n• Laravel generates the URL with `URL::signedRoute()` and appends a `signature` query parameter\n• When the user visits the URL, Laravel checks the signature with the `signed` middleware\n  ↳ If it's valid, the request proceeds; if tampered, it returns a 403 error\n\n<b>When to use signed URLs</b>\n• Email unsubscribe links — so one user can't unsubscribe another user by guessing the URL\n• Password reset links\n• Invoice or file download links\n• Any unauthenticated action that should only work for a specific intended recipient\n\n<b>Adding an expiry</b>\n• Use `URL::temporarySignedRoute()` to make the link expire after a set time\n  ↳ Prevents old links from being reused indefinitely",
         np: "HMAC signature भएको URL — tamper करे invalid। Email unsubscribe, password reset, invoice download को लागि।",
         jp: "HMAC 署名付きの URL で、改ざんすると無効になります。`signed` ミドルウェアか `URL::hasValidSignature()` で検証。メール解除・パスワードリセット・請求書 DL などに使います。",
       },
@@ -465,7 +465,7 @@ return response()->noContent();`,
         jp: "リソースコントローラの特定メソッドだけにミドルウェアを適用するには？",
       },
       answer: {
-        en: "Use `->only()` or `->except()` on the resource route to limit registered actions, then attach middleware to specific named routes. Alternatively, in the controller constructor use `$this->middleware('auth')->only(['store', 'update', 'destroy'])` — this leaves `index` and `show` public while protecting write actions.",
+        en: "Resource controllers register 7 routes (index, create, store, show, edit, update, destroy) by default — but you often only want middleware on some of them.\n\n<b>Option 1: Controller constructor</b>\n• Use `$this->middleware('auth')->only(['store', 'update', 'destroy'])` in the constructor\n  ↳ `index` and `show` stay public (no auth needed to browse)\n  ↳ `store`, `update`, `destroy` require authentication (write actions)\n• `->except(['index', 'show'])` is the inverse — apply to everything except the listed methods\n\n<b>Option 2: Route definition</b>\n• Use `->only()` or `->except()` on `Route::resource()` to limit which routes are even registered\n  ↳ Then attach middleware to individual named routes using their auto-generated names like `posts.store`",
         np: "Controller constructor मा `$this->middleware('auth')->only(['store','update','destroy'])` — index/show public रहन्छ।",
         jp: "コントローラのコンストラクタで `$this->middleware('auth')->only(['store','update','destroy'])` とすると、`index`・`show` は公開のまま書き込みだけ保護できます。",
       },

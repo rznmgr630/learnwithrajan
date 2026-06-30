@@ -3,7 +3,7 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_5_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Validation** is the gatekeeper between raw HTTP input and your application logic. Laravel offers inline validation via `$request->validate([...])`, a rich library of built-in rules, custom Rule classes, and full-featured **Form Request** objects with lifecycle hooks. Failures on web requests redirect back with flashed errors; failures on API requests return a 422 JSON response.",
+      en: "When a user submits a form, you need to check the data before your app does anything with it — this is called validation.\n\n<b>Why validation matters</b>\n• Without it, a user could submit an empty email, a password with 1 character, or a negative price\n  ↳ Validation catches bad data at the door, before it reaches your database\n\n<b>How Laravel handles it</b>\n• Inline: call `$request->validate([...])` right inside your controller method — quick for simple forms\n• <b>Form Request</b>: a dedicated class that holds validation rules, authorization checks, and lifecycle hooks — better for complex forms\n• Built-in rules: Laravel ships with 70+ rules like `required`, `email`, `min:8`, `unique` — no extra code needed\n• Custom Rule classes: write your own rule when built-ins aren't enough\n\n<b>What happens when validation fails?</b>\n• Web request (browser form): Laravel automatically redirects back to the form with the errors flashed to the session\n• API request (JSON): Laravel returns a `422 Unprocessable Entity` response with a JSON `errors` object",
       np: "Validation HTTP input र application logic बीचको gatekeeper। inline, built-in rules, custom Rule, Form Request। Web = redirect; API = 422 JSON।",
       jp: "バリデーションは HTTP 入力とアプリロジックの門番です。インライン検証・組み込みルール・カスタムルール・フォームリクエストを使い分けます。Web は redirect、API は 422 JSON で失敗を返します。",
     },
@@ -19,7 +19,7 @@ export const LARAVEL_DAY_5_DETAIL: RoadmapDayDetail = {
         {
           type: "paragraph",
           text: {
-            en: "Rules can be written as a pipe-delimited string `'required|email|max:255'` or as an array `['required', 'email', 'max:255']`. Prefer the **array syntax** when mixing string rules with `Rule::*` objects — it avoids ambiguity and makes rules easier to read.",
+            en: "Laravel gives you two ways to write validation rules — and it matters which one you choose.\n\n<b>Pipe string syntax</b> `'required|email|max:255'`\n• Short and readable for simple rules\n  ↳ Gets messy when you mix in objects like `Rule::unique()` or `Rule::in()`\n\n<b>Array syntax</b> `['required', 'email', 'max:255']`\n• Cleaner when mixing plain string rules with `Rule::*` objects\n  ↳ Use this as your default — it scales better and avoids quoting issues",
             np: "Rules pipe string `'required|email'` वा array `['required', 'email']`। `Rule::*` object सहित array syntax राम्रो।",
             jp: "ルールはパイプ区切り文字列または配列で記述できます。`Rule::*` オブジェクトと混在させる場合は配列形式を使いましょう。",
           },
@@ -197,7 +197,7 @@ $request->validate([
         {
           type: "paragraph",
           text: {
-            en: "When a validation need isn't covered by built-in rules, create a **custom rule class**. In Laravel 10/11 the modern approach is `ValidationRule` (implements a single `validate()` method). The older `implicit` rule approach still works but the invokable/modern style is preferred.",
+            en: "Sometimes Laravel's built-in rules won't cover your exact need — for example, validating that a username contains no spaces, or that a product code follows a company-specific format.\n\n<b>Custom Rule classes let you package that logic cleanly</b>\n• Generate one with `php artisan make:rule RuleName`\n• Implement the `validate()` method — call `$fail('message')` if the value is invalid\n  ↳ If `$fail()` is never called, the rule passes\n• In Laravel 10/11, implement `ValidationRule` — the single-method modern approach\n  ↳ The older `Rule` interface still works but the modern style is cleaner",
             np: "Built-in rules पुग्दैन भने custom Rule class बनाउनुस्। Laravel 10/11 मा `ValidationRule` implement गर्ने `validate()` method modern approach।",
             jp: "組み込みルールで対応できない場合はカスタムルールクラスを作成します。Laravel 10/11 では `ValidationRule` の `validate()` メソッドを実装するのが現代的なアプローチです。",
           },
@@ -301,7 +301,7 @@ class AllowedDomain implements ValidationRule
         {
           type: "paragraph",
           text: {
-            en: "A **Form Request** provides `authorize()` + `rules()` plus several lifecycle hooks: `prepareForValidation()` normalizes input before rules run, `passedValidation()` fires after rules pass, `messages()` customizes error text, `attributes()` renames field labels. The `$request->validated()` method returns only the fields that appear in `rules()`, giving you a safe, filtered array for `Model::create()`.",
+            en: "A Form Request is a dedicated PHP class that bundles everything related to handling a form — all in one place.\n\n<b>The two required methods</b>\n• `authorize()` — returns `true` if the current user is allowed to make this request, `false` for a 403 Forbidden\n• `rules()` — returns the array of validation rules\n\n<b>Optional lifecycle hooks</b>\n• `prepareForValidation()` — runs before rules, lets you normalize input (e.g. trim whitespace, lowercase an email)\n• `passedValidation()` — runs after rules pass, lets you enrich data (e.g. generate a slug)\n• `messages()` — customize the error messages for specific rules\n• `attributes()` — rename field labels in error messages (e.g. `bio` → `biography`)\n\n<b>The key benefit: `$request->validated()`</b>\n• Returns only the fields defined in `rules()` — nothing more\n  ↳ Safe to pass directly to `Model::create($request->validated())` without mass-assignment risk",
             np: "Form Request: `authorize()`, `rules()`, `prepareForValidation()`, `passedValidation()`, `messages()`, `attributes()`। `$request->validated()` ले rules मा defined fields मात्र।",
             jp: "フォームリクエストは `authorize()`・`rules()` に加えて複数のライフサイクルフックを持ちます。`$request->validated()` は `rules()` に定義されたフィールドのみを返すので、`Model::create()` に安全に渡せます。",
           },
@@ -394,7 +394,7 @@ class UpdateUserRequest extends FormRequest
         {
           type: "paragraph",
           text: {
-            en: "Validate **nested arrays** using dot notation: `'items.*.name'` validates the `name` key of every element in an `items` array. `'items.0.price'` targets the first element specifically. Combine with `'items' => ['required', 'array', 'min:1']` to validate the array itself first.",
+            en: "Forms sometimes send arrays of data — like a list of order items. Laravel handles this cleanly with dot notation.\n\n• `'items' => ['required', 'array', 'min:1']` — validate the array itself first (must exist, must have at least 1 item)\n• `'items.*.name'` — validate the `name` key on every item in the array\n  ↳ The `*` is a wildcard that means \"every element\"\n• `'items.0.price'` — validate the `price` of the first element only\n  ↳ Use a number index when you need to target a specific position",
             np: "Nested arrays: `'items.*.name'` ले every item को `name` validate। `'items.0.price'` पहिलो element।",
             jp: "ネスト配列はドット記法で: `'items.*.name'` で全要素の `name` を検証。`'items.0.price'` で最初の要素だけ。",
           },
@@ -442,7 +442,7 @@ class UpdateUserRequest extends FormRequest
         jp: "`$request->validate()` とフォームリクエストの違いは？",
       },
       answer: {
-        en: "Both ultimately use the same validation engine. `$request->validate([...])` is concise and lives inline in the controller method — fine for 2–4 simple rules. A **Form Request** moves rules, authorization, messages, attributes, and lifecycle hooks into a dedicated testable class. Choose Form Request when rules grow complex, when auth belongs alongside them, or when you need `prepareForValidation`.",
+        en: "Both use the same validation engine under the hood — the difference is where the logic lives.\n\n• `$request->validate([...])` — written directly inside your controller method\n  ↳ Great for simple forms with 2–4 rules\n  ↳ Gets messy when rules grow, authorization is needed, or error messages need customizing\n• <b>Form Request</b> — a separate class dedicated to one form\n  ↳ Keeps the controller clean — the controller just calls `$request->validated()` and moves on\n  ↳ Better when rules are complex, when you need `authorize()`, or when you want `prepareForValidation()`\n  ↳ Easier to unit-test in isolation\n\nRule of thumb: start with `$request->validate()`, switch to a Form Request once you need more than rules.",
         np: "दुवैले same validation engine। `validate()` inline, simple। Form Request — complex, auth, lifecycle hooks, testable।",
         jp: "どちらも同じ検証エンジンを使います。`validate()` はインラインで簡潔。フォームリクエストはルール・認可・フックを専用クラスに分離し、単体テストもしやすくなります。",
       },
@@ -454,7 +454,7 @@ class UpdateUserRequest extends FormRequest
         jp: "全バリデーションエラーを一度に表示するには？",
       },
       answer: {
-        en: "The `$errors` variable is shared with every Blade view via the `web` middleware group. Use `$errors->any()` to check for errors, then `$errors->all()` to get a flat array of all messages. For per-field display use `@error('field')` or `$errors->first('field')`. On API requests, `$errors` is not used — the 422 JSON response contains an `errors` object keyed by field name.",
+        en: "Laravel automatically passes validation errors to your Blade views — no manual passing needed.\n\n• `$errors->any()` — returns `true` if there are any errors at all (use to show/hide an error banner)\n• `$errors->all()` — returns a flat array of all error messages across all fields\n• `@error('fieldname') ... @enderror` — Blade directive that only renders when that specific field has an error\n  ↳ `$message` inside the block contains the error text\n• `$errors->first('fieldname')` — returns just the first error for a specific field\n\n<b>On API requests:</b>\n• The `$errors` variable is not used\n  ↳ Laravel returns a `422` JSON response with an `errors` object keyed by field name",
         np: "`$errors->all()` ले सबै messages। `@error('field')` single field। API = 422 JSON `errors` object।",
         jp: "`$errors->all()` で全メッセージを取得。フィールド別は `@error('field')`。API では 422 JSON の `errors` オブジェクトを参照します。",
       },
@@ -466,7 +466,7 @@ class UpdateUserRequest extends FormRequest
         jp: "ファイルアップロードの検証方法は？",
       },
       answer: {
-        en: "Use `'file'` (any upload), `'image'` (image types only), `'mimes:jpg,png,pdf'` for specific types, `'max:2048'` for file size in kilobytes, and `'dimensions:min_width=100,min_height=100'` for image dimensions. Always store files via `$request->file('avatar')->store('avatars', 'public')` — never trust the original filename. Ensure your form has `enctype=\"multipart/form-data\"` and `@csrf`.",
+        en: "File validation uses the same `validate()` call — just with file-specific rules.\n\n<b>Common file rules</b>\n• `'file'` — any successfully uploaded file\n• `'image'` — image file only (jpg, png, gif, svg, webp)\n• `'mimes:jpg,png,pdf'` — restrict to specific file types\n• `'max:2048'` — maximum file size in kilobytes (2 MB here)\n• `'dimensions:min_width=100,min_height=100'` — image dimension constraints\n\n<b>Storing the file safely</b>\n• Never use the original filename from the user — it could contain path traversal characters\n  ↳ Use `$request->file('avatar')->store('avatars', 'public')` — Laravel generates a safe random filename\n\n<b>One more thing to check</b>\n• Your HTML form must have `enctype=\"multipart/form-data\"` for file uploads to work\n  ↳ Without it, the file will not be sent to PHP at all",
         np: "`file`, `image`, `mimes`, `max` (KB), `dimensions`। Store: `->store('dir', 'public')`। Form: `enctype=\"multipart/form-data\"`।",
         jp: "`file`・`image`・`mimes`・`max`（KB 単位）・`dimensions` を組み合わせます。保存は `->store()` を使用。フォームには `enctype=\"multipart/form-data\"` が必要です。",
       },
@@ -478,7 +478,7 @@ class UpdateUserRequest extends FormRequest
         jp: "`sometimes` ルールは何をする？",
       },
       answer: {
-        en: "`sometimes` makes all the other rules on that field **conditional**: they only apply when the field is actually present in the request payload. Without `sometimes`, absent fields still fail `required` etc. This is useful for PATCH endpoints where only changed fields are sent, or for optional form fields that still need validation when provided.",
+        en: "By default, if a field is missing from the request, Laravel still runs all its rules — which can cause unexpected failures.\n\n`sometimes` fixes this by making all other rules on that field conditional:\n• <b>Without `sometimes`</b>: a missing `phone` field fails `max:20` even if the user didn't send it\n• <b>With `sometimes`</b>: rules only apply when the field is actually present in the request\n  ↳ If the field is absent, all rules are skipped\n\n<b>When to use it:</b>\n• PATCH endpoints — only changed fields are sent, not the entire form\n• Optional fields that still need validation rules when they are provided (e.g. a phone number field that, if filled, must be max 20 characters)",
         np: "`sometimes` ले field present भएमा मात्र अन्य rules apply गर्छ। PATCH endpoint वा optional field मा उपयोगी।",
         jp: "`sometimes` は他のルールを「フィールドが存在するときのみ」に限定します。PATCH エンドポイントや、入力があれば検証したいオプションフィールドに便利です。",
       },
@@ -490,7 +490,7 @@ class UpdateUserRequest extends FormRequest
         jp: "API コントローラで JSON ボディを検証するには？",
       },
       answer: {
-        en: "Exactly the same way — `$request->validate([...])` or a Form Request. Laravel reads the parsed JSON body when `Content-Type: application/json` is set (and the client sends `Accept: application/json`). On failure, instead of redirecting, Laravel returns a **422 JSON** response with an `errors` object. To force JSON error responses even without the `Accept` header, throw `ValidationException::withMessages([...])` or add the route to the `api` group.",
+        en: "The same validation code works for both browser forms and API JSON requests — no changes needed.\n\n<b>What happens automatically</b>\n• When the client sends `Content-Type: application/json`, Laravel reads and parses the JSON body\n• Add `Accept: application/json` in the request header to tell Laravel you want a JSON error response\n  ↳ Without it, Laravel might redirect instead of returning JSON on failure\n\n<b>On failure</b>\n• Laravel returns a `422 Unprocessable Entity` response with an `errors` JSON object\n  ↳ No redirect, no flashed session data — just clean JSON your frontend can read\n\n<b>Tip:</b> Routes inside the `api` middleware group always return JSON errors, even without the `Accept` header",
         np: "Same `validate()` वा Form Request। `Content-Type: application/json` भए JSON body read। fail = 422 JSON। `Accept: application/json` चाहिन्छ।",
         jp: "全く同じ方法です。`Content-Type: application/json` で Laravel は JSON ボディを読みます。失敗時は **422 JSON** を返します。`Accept: application/json` ヘッダーがない場合も API ルートグループなら JSON レスポンスになります。",
       },
