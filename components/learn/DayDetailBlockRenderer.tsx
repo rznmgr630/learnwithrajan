@@ -7,7 +7,7 @@ import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/Devops
 import { ReactNativeDiagram, isReactNativeRoadmapDiagram } from "@/components/learn/ReactNativeDiagrams";
 import { NextjsDiagram, isNextjsRoadmapDiagram } from "@/components/learn/NextjsDiagrams";
 import { LaravelDiagram, isLaravelRoadmapDiagram } from "@/components/learn/LaravelDiagrams";
-import { RichText } from "@/components/learn/RichText";
+import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 
 export type RoadmapDiagramTrack =
@@ -95,9 +95,9 @@ export function DayDetailBlockRenderer({
         switch (block.type) {
           case "paragraph":
             return (
-              <p key={key} className="text-sm leading-relaxed text-[var(--muted)]">
-                <RichText text={block.text} />
-              </p>
+              <div key={key}>
+                <RichParagraph text={block.text} />
+              </div>
             );
           case "list": {
             const ordered = block.variant === "number";
