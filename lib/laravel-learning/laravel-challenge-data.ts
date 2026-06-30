@@ -14,11 +14,12 @@ import { LARAVEL_DAY_11_DETAIL } from "@/lib/laravel-learning/laravel-day-11-det
 import { LARAVEL_DAY_12_DETAIL } from "@/lib/laravel-learning/laravel-day-12-detail";
 import { LARAVEL_DAY_13_DETAIL } from "@/lib/laravel-learning/laravel-day-13-detail";
 import { LARAVEL_DAY_14_DETAIL } from "@/lib/laravel-learning/laravel-day-14-detail";
+import { LARAVEL_DAY_15_DETAIL } from "@/lib/laravel-learning/laravel-day-15-detail";
 import { laravelDayTitle, laravelTags, laravelWeekTitle } from "@/lib/laravel-learning/laravel-roadmap-i18n";
 
 export const LARAVEL_CURRENT_DAY = 1;
 
-export const LARAVEL_TOTAL_DAYS = 14;
+export const LARAVEL_TOTAL_DAYS = 15;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: LARAVEL_DAY_1_DETAIL,
@@ -35,6 +36,7 @@ const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   12: LARAVEL_DAY_12_DETAIL,
   13: LARAVEL_DAY_13_DETAIL,
   14: LARAVEL_DAY_14_DETAIL,
+  15: LARAVEL_DAY_15_DETAIL,
 };
 
 function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -89,7 +91,11 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "laravel-w6",
     title: laravelWeekTitle("laravel-w6"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#a78bfa)]",
-    days: [laravelDayRow(13, ["queues", "events"]), laravelDayRow(14, ["testing", "pest"])],
+    days: [
+      laravelDayRow(13, ["queues", "events"]),
+      laravelDayRow(14, ["testing", "pest"]),
+      laravelDayRow(15, ["sanctum", "rest-api"]),
+    ],
   },
 ];
 
