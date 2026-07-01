@@ -3,7 +3,7 @@ import { Fragment } from "react";
 type Segment =
   | { kind: "text"; value: string }
   | { kind: "code"; value: string }
-  | { kind: "bold"; value: string };
+  | { kind: "bold"; children: Segment[] };
 
 /** Split on paired ` backticks — GitHub-style inline code. Unclosed ` stays literal. */
 function parseInlineBackticks(input: string): Segment[] {
@@ -29,7 +29,13 @@ function parseInlineBackticks(input: string): Segment[] {
   return mergeTextRuns(out);
 }
 
-/** Split <b>bold</b> HTML tags inside plain text runs. Unclosed tags stay literal. */
+/**
+ * Split <b>bold</b> HTML tags inside plain text runs. Unclosed tags stay literal.
+ * Content inside a bold span is itself run through backtick parsing, so
+ * `<b>\`code\` and text</b>` still renders its inline code — parsing backticks
+ * globally first (before bold) would cut the `<b>`/`</b>` tags into separate
+ * fragments whenever a code span sits inside them, leaving the tags literal.
+ */
 function parseBoldHtml(input: string): Segment[] {
   const out: Segment[] = [];
   let i = 0;
@@ -39,7 +45,7 @@ function parseBoldHtml(input: string): Segment[] {
     if (open > i) out.push({ kind: "text", value: input.slice(i, open) });
     const close = input.indexOf("</b>", open + 3);
     if (close === -1) { out.push({ kind: "text", value: input.slice(open) }); break; }
-    out.push({ kind: "bold", value: input.slice(open + 3, close) });
+    out.push({ kind: "bold", children: parseInlineBackticks(input.slice(open + 3, close)) });
     i = close + 4;
   }
   return mergeTextRuns(out);
@@ -63,7 +69,7 @@ function parseBoldInText(input: string): Segment[] {
       out.push({ kind: "text", value: input.slice(open) });
       break;
     }
-    out.push({ kind: "bold", value: input.slice(open + 2, close) });
+    out.push({ kind: "bold", children: [{ kind: "text", value: input.slice(open + 2, close) }] });
     i = close + 2;
   }
   return mergeTextRuns(out);
@@ -88,18 +94,18 @@ function mergeTextRuns(segments: Segment[]): Segment[] {
   return merged;
 }
 
-/** Backticks first, then <b> HTML bold, then ** markdown bold on each text segment. */
+/** <b> HTML bold first (with backticks parsed inside it), then backticks, then ** markdown bold on each remaining text segment. */
 function parseInlineFormatting(input: string): Segment[] {
-  const afterTicks = parseInlineBackticks(input);
+  const afterHtml = parseBoldHtml(input);
   const out: Segment[] = [];
-  for (const seg of afterTicks) {
-    if (seg.kind === "code") {
+  for (const seg of afterHtml) {
+    if (seg.kind === "bold") {
       out.push(seg);
     } else {
-      const afterHtml = parseBoldHtml(seg.value);
-      for (const s of afterHtml) {
-        if (s.kind === "bold") out.push(s);
-        else out.push(...parseBoldInText(s.value));
+      const afterTicks = parseInlineBackticks(seg.value);
+      for (const s of afterTicks) {
+        if (s.kind === "code") out.push(s);
+        else if (s.kind === "text") out.push(...parseBoldInText(s.value));
       }
     }
   }
@@ -121,38 +127,32 @@ type RichTextProps = {
 /**
  * Renders plain text with inline `code` and **bold** / <b>bold</b>.
  */
+function renderSegment(part: Segment, key: number) {
+  if (part.kind === "code") {
+    return (
+      <code key={key} className={codeClass}>
+        {part.value}
+      </code>
+    );
+  }
+  if (part.kind === "bold") {
+    return (
+      <strong key={key} className={boldClass}>
+        {part.children.map((child, i) => renderSegment(child, i))}
+      </strong>
+    );
+  }
+  return <Fragment key={key}>{part.value}</Fragment>;
+}
+
 export function RichText({ text, className }: RichTextProps) {
   const parts = parseInlineFormatting(text);
-  return (
-    <span className={className}>
-      {parts.map((part, i) =>
-        part.kind === "code" ? (
-          <code key={i} className={codeClass}>
-            {part.value}
-          </code>
-        ) : part.kind === "bold" ? (
-          <strong key={i} className={boldClass}>
-            {part.value}
-          </strong>
-        ) : (
-          <Fragment key={i}>{part.value}</Fragment>
-        ),
-      )}
-    </span>
-  );
+  return <span className={className}>{parts.map((part, i) => renderSegment(part, i))}</span>;
 }
 
 function renderInlineLine(text: string) {
   const parts = parseInlineFormatting(text);
-  return parts.map((part, i) =>
-    part.kind === "code" ? (
-      <code key={i} className={codeClass}>{part.value}</code>
-    ) : part.kind === "bold" ? (
-      <strong key={i} className={boldClass}>{part.value}</strong>
-    ) : (
-      <Fragment key={i}>{part.value}</Fragment>
-    ),
-  );
+  return parts.map((part, i) => renderSegment(part, i));
 }
 
 /**
