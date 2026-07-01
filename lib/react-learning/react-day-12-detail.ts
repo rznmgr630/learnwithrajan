@@ -247,65 +247,169 @@ function PostEditor() {
     },
     {
       title: {
-        en: "useTransition & useDeferredValue — keeping the UI responsive",
-        np: "useTransition & useDeferredValue — UI responsive राख्ने",
-        jp: "useTransition & useDeferredValue — UI を応答性良く保つ",
+        en: "useTransition — marking updates as non-urgent",
+        np: "useTransition — non-urgent updates mark गर्ने",
+        jp: "useTransition — 低優先度更新のマーク",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React's concurrent features let you mark some state updates as non-urgent, so they can be interrupted by more important work (like typing). Analogy: `useTransition` is like a priority queue at a hospital — a user typing (urgent) goes straight in, a background report generation (non-urgent) waits.\n\n<b>useTransition</b> — wraps a state update as non-urgent. React can pause and resume it.\n<b>useDeferredValue</b> — creates a lagging copy of a value. The UI renders with the old value instantly, then updates when idle.\n\nBoth solve the same problem (slow renders blocking fast interactions) with different APIs.",
-            np: "useTransition: non-urgent update wrap गर्छ। useDeferredValue: value को lagging copy बनाउँछ।",
-            jp: "useTransition は低優先度更新をマーク。useDeferredValue は値の遅延コピーを作ります。",
+            en: "React renders synchronously by default — a slow state update (e.g. filtering 10,000 items) blocks the entire UI, making typing feel laggy. `useTransition` lets you mark a state update as <b>non-urgent</b>, telling React it can pause and interrupt that update if a more important update (like a keypress) comes in.\n\nHow it works:\n• `startTransition(fn)` — wraps the non-urgent state update\n• `isPending` — `true` while the transition is in progress; use it to show a loading indicator\n• React renders the current UI immediately with the urgent update, then finishes the transition in the background\n\nAnalogy: a hospital triage system — a patient typing (urgent) goes straight to a doctor. A routine checkup (the transition) waits. The hospital keeps functioning; nobody is frozen.",
+            np: "useTransition: non-urgent update wrap। startTransition() + isPending। React urgent update पहिले finish गर्छ।",
+            jp: "startTransition で低優先度更新をラップ。isPending でローディング表示。React は緊急更新を優先。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>When to use `useTransition`:</b>\n• Filtering or sorting a large list based on user input\n• Switching between heavy tabs where each tab renders a lot of content\n• Navigating between routes with expensive components\n\n<b>When NOT to use `useTransition`:</b>\n• Controlled inputs — the input's `value` must update urgently or it feels broken\n• Animation — use CSS transitions or Framer Motion instead\n• Simple toggles — the overhead is not worth it for fast updates",
+            np: "Use: large list filter, tab switch, route navigate। Avoid: controlled inputs, animations।",
+            jp: "大規模リスト・タブ切り替え・ルート遷移に有効。入力フィールドやアニメーションには不向き。",
           },
         },
         {
           type: "code",
-          title: { en: "useTransition and useDeferredValue", np: "useTransition र useDeferredValue", jp: "useTransition と useDeferredValue" },
-          code: `// useTransition — for filtering a large list
-function ProductSearch() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState(allProducts);
+          title: { en: "useTransition — search filter and tab switching", np: "useTransition examples", jp: "useTransition の使用例" },
+          code: `import { useState, useTransition } from 'react';
+
+// 1. Filter a large list — input stays responsive while list re-renders
+function ProductSearch({ allProducts }: { allProducts: { id: number; name: string }[] }) {
+  const [query, setQuery]            = useState('');
+  const [results, setResults]        = useState(allProducts);
   const [isPending, startTransition] = useTransition();
 
-  const handleSearch = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setQuery(val); // urgent — update input immediately
 
     startTransition(() => {
       // non-urgent — React can defer this if the user keeps typing
-      setResults(allProducts.filter(p => p.name.includes(val)));
+      setResults(allProducts.filter(p =>
+        p.name.toLowerCase().includes(val.toLowerCase())
+      ));
     });
   };
 
   return (
-    <>
-      <input value={query} onChange={handleSearch} />
-      {isPending && <p>Filtering...</p>}
-      <ProductList products={results} />
-    </>
+    <div>
+      <input value={query} onChange={handleChange} placeholder="Search products..." />
+      {isPending && <p className="text-sm text-gray-400">Filtering...</p>}
+      <ul style={{ opacity: isPending ? 0.6 : 1 }}>
+        {results.map(p => <li key={p.id}>{p.name}</li>)}
+      </ul>
+    </div>
   );
 }
 
-// useDeferredValue — alternative approach
-function SearchResults({ query }) {
-  const deferredQuery = useDeferredValue(query);
-  // deferredQuery lags behind query — the list re-renders
-  // with the old value until React has time to update
-  const results = useMemo(
-    () => allProducts.filter(p => p.name.includes(deferredQuery)),
-    [deferredQuery]
-  );
+// 2. Tab switching — switch immediately, render tab content in background
+type Tab = 'overview' | 'details' | 'reviews';
 
-  const isStale = query !== deferredQuery;
+function ProductPage() {
+  const [activeTab, setActiveTab]    = useState<Tab>('overview');
+  const [isPending, startTransition] = useTransition();
+
+  const switchTab = (tab: Tab) => {
+    startTransition(() => setActiveTab(tab));
+  };
 
   return (
-    <div style={{ opacity: isStale ? 0.5 : 1 }}>
-      <ProductList products={results} />
+    <div>
+      <div className="flex gap-2">
+        {(['overview', 'details', 'reviews'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => switchTab(tab)}
+            className={activeTab === tab ? 'font-bold' : 'opacity-60'}
+          >
+            {isPending ? '...' : tab}
+          </button>
+        ))}
+      </div>
+      {activeTab === 'overview' && <div>Overview content</div>}
+      {activeTab === 'details'  && <div>Details content</div>}
+      {activeTab === 'reviews'  && <div>Reviews content</div>}
     </div>
   );
 }`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "useDeferredValue — a lagging copy of a fast-changing value",
+        np: "useDeferredValue — fast-changing value को lagging copy",
+        jp: "useDeferredValue — 高速変化する値の遅延コピー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useDeferredValue` takes a value and returns a <b>deferred copy</b> of it — a version that lags behind and only updates when React has spare time. It solves the same problem as `useTransition` (keeping the UI responsive during expensive renders) but with a different API.\n\nKey difference:\n• `useTransition` — you control the update: `startTransition(() => setState(newVal))`\n  ↳ Use when you own the state setter\n• `useDeferredValue` — you defer a value you received (from a prop or state): `const deferred = useDeferredValue(query)`\n  ↳ Use when you don't own the state — e.g. the value comes from a prop, or from a third-party component you can't modify\n\nThe deferred value is always a trailing snapshot — it's the last value React had time to render. While it's stale (`value !== deferred`), you can visually indicate this to the user.",
+            np: "useDeferredValue: value को lagging copy। Own state = useTransition। Prop/third-party = useDeferredValue।",
+            jp: "useDeferredValue は値の遅延コピー。自分で state を持てない場合に useTransition の代わりに使う。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Best practice — memoize the expensive component:</b> Wrap the component that uses the deferred value in `React.memo`. Without `memo`, the component re-renders twice on every keystroke (once with the new value, once with the deferred value) — `memo` prevents the second render by comparing props shallowly.\n\n<b>Stale content pattern:</b> use `value !== deferredValue` as a staleness flag to dim the old results while fresh ones are computing — better UX than a full loading spinner.",
+            np: "React.memo + useDeferredValue = keystroke दुई re-render बाट बचाउँछ। Stale flag ले old results dim गर्छ।",
+            jp: "React.memo と組み合わせると二重再レンダーを防ぐ。staleness フラグで古い結果を薄表示。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "useDeferredValue — search results with stale dimming", np: "useDeferredValue example", jp: "useDeferredValue の使用例" },
+          code: `import { useState, useDeferredValue, useMemo, memo } from 'react';
+
+// Expensive component — memoize so it only re-renders when deferredQuery changes
+const SearchResults = memo(function SearchResults({
+  query,
+  products,
+}: {
+  query: string;
+  products: { id: number; name: string }[];
+}) {
+  const results = useMemo(
+    () => products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())),
+    [query, products],
+  );
+
+  return (
+    <ul>
+      {results.map(p => <li key={p.id}>{p.name}</li>)}
+    </ul>
+  );
+});
+
+function ProductSearch({ allProducts }: { allProducts: { id: number; name: string }[] }) {
+  const [query, setQuery] = useState('');
+  const deferredQuery     = useDeferredValue(query);
+
+  // isStale: the displayed list is behind the input
+  const isStale = query !== deferredQuery;
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search..."
+      />
+
+      {/* Dim old results while fresh results are computing */}
+      <div style={{ opacity: isStale ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+        <SearchResults query={deferredQuery} products={allProducts} />
+      </div>
+    </div>
+  );
+}
+
+// When to prefer useDeferredValue over useTransition:
+// - You receive the value as a prop (can't wrap setState in startTransition)
+// - A child component owns the slow render, not the parent
+// - You want to keep the API reactive (value flows down, not imperative)`,
         },
       ],
     },

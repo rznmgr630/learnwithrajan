@@ -366,6 +366,218 @@ const queryClient = new QueryClient({
         },
       ],
     },
+    {
+      title: {
+        en: "useOptimistic — instant UI feedback (React 19)",
+        np: "useOptimistic — instant UI feedback (React 19)",
+        jp: "useOptimistic — 即座の UI フィードバック（React 19）",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useOptimistic` is a React 19 hook that makes optimistic UI updates simpler than manually managing TanStack Query's `onMutate` + `onError` + `onSettled` pattern.\n\nIt takes two arguments:\n1. The current real state (from the server)\n2. An <b>update function</b> `(currentState, optimisticValue) => nextState`\n\nAnd returns `[optimisticState, addOptimistic]`:\n• `optimisticState` — the current display value (real OR optimistic while a transition is pending)\n• `addOptimistic(value)` — trigger an optimistic update; `value` is passed to your update function\n\nWhen the real state (argument 1) updates after the server responds, the optimistic value is automatically discarded and replaced with the server truth — no manual rollback needed.\n\nAnalogy: a receptionist who writes your name on the whiteboard immediately when you arrive, then erases and replaces it when the official booking system confirms your registration.",
+            np: "useOptimistic (React 19): optimistic state + addOptimistic()। Server response आएपछि automatically real state use गर्छ।",
+            jp: "useOptimistic（React 19）: optimisticState と addOptimistic()。サーバー応答後は自動で実データに切り替わる。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`useOptimistic` <b>must be used inside a transition</b> — wrap `addOptimistic` calls inside `startTransition` or a React 19 Server Action. Outside a transition the optimistic value is discarded immediately.\n\n<b>Difference from TanStack Query optimistic updates:</b>\n• TanStack Query: manual `onMutate` snapshot → `onError` rollback → `onSettled` invalidate (verbose but explicit)\n• `useOptimistic`: declare the update shape once; React handles the lifecycle automatically\n• Use `useOptimistic` for Server Action-based forms in Next.js 15+. Use TanStack Query's pattern for REST/GraphQL mutations in client-rendered apps.",
+            np: "startTransition भित्र use गर्नुस्। TanStack Query = manual rollback। useOptimistic = automatic। Next.js 15 Server Actions मा ideal।",
+            jp: "startTransition 内で使用。TanStack Query は手動ロールバック。useOptimistic は自動。Next.js 15 の Server Action に最適。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useOptimistic — optimistic like button and message list",
+            np: "useOptimistic examples",
+            jp: "useOptimistic の使用例",
+          },
+          code: `import { useOptimistic, startTransition, useState } from 'react';
+
+// 1. Optimistic like button — update UI before server confirms
+function LikeButton({ postId, initialLiked, initialCount }: {
+  postId: string;
+  initialLiked: boolean;
+  initialCount: number;
+}) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [count, setCount] = useState(initialCount);
+  const [optimisticLiked, addOptimisticLike] = useOptimistic(
+    liked,
+    (_current, next: boolean) => next,
+  );
+
+  async function handleLike() {
+    const next = !optimisticLiked;
+
+    startTransition(() => addOptimisticLike(next));
+
+    try {
+      const res = await fetch(\`/api/posts/\${postId}/like\`, {
+        method: next ? 'POST' : 'DELETE',
+      });
+      const data = await res.json();
+      setLiked(data.liked);
+      setCount(data.likesCount);
+    } catch {
+      // Server failed — optimistic state discarded, real state wins
+    }
+  }
+
+  return (
+    <button onClick={handleLike}>
+      {optimisticLiked ? '❤️' : '🤍'} {count + (optimisticLiked && !liked ? 1 : 0)}
+    </button>
+  );
+}
+
+// 2. Optimistic message list — show message immediately before server confirms
+type Message = { id: string; text: string; sending?: boolean };
+
+function ChatInput({ roomId }: { roomId: string }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [optimisticMessages, addOptimistic] = useOptimistic(
+    messages,
+    (current, newMsg: Message) => [...current, newMsg],
+  );
+
+  async function sendMessage(text: string) {
+    const temp: Message = { id: crypto.randomUUID(), text, sending: true };
+
+    startTransition(() => {
+      addOptimistic(temp);
+    });
+
+    const saved = await fetch(\`/api/rooms/\${roomId}/messages\`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }).then(r => r.json());
+
+    setMessages(prev => [...prev, saved]);
+  }
+
+  return (
+    <div>
+      <ul>
+        {optimisticMessages.map(m => (
+          <li key={m.id} style={{ opacity: m.sending ? 0.6 : 1 }}>
+            {m.text} {m.sending && '⏳'}
+          </li>
+        ))}
+      </ul>
+      <button onClick={() => sendMessage('Hello!')}>Send</button>
+    </div>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "useActionState — form state from actions (React 19)",
+        np: "useActionState — actions बाट form state (React 19)",
+        jp: "useActionState — アクションからのフォーム状態（React 19）",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useActionState` is a React 19 hook that manages state derived from a form action — Server Actions in Next.js 15+, or regular async functions in client components. It replaces the common pattern of `useState` + manual `isPending` + `try/catch` inside form handlers.\n\nSignature: `const [state, action, isPending] = useActionState(actionFn, initialState)`\n\n• `actionFn(prevState, formData)` — receives the previous state and the form data; returns the next state\n• `state` — the current state (starts as `initialState`, updates after each action call)\n• `action` — pass this to a `<form action={action}>` or call it directly\n• `isPending` — `true` while the action is running\n\nAnalogy: `useActionState` is a form assistant — you hand it the rules (the action function) and it manages the clipboard (state), tracks whether work is in progress (isPending), and reports results automatically.",
+            np: "useActionState (React 19): [state, action, isPending] = useActionState(fn, init)। Form action manage गर्छ। useState + isPending + try/catch replace गर्छ।",
+            jp: "useActionState（React 19）: [state, action, isPending]。フォームアクションの状態管理を一元化。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Client component usage:</b> `useActionState` works in both server and client components. In client components, the action function is a regular `async` function. In Next.js 15 Server Components, the action function can be a Server Action (marked `'use server'`) — giving you server-side mutation with automatic client state sync and no API route needed.\n\n<b>When to prefer `useActionState` over `useMutation` (TanStack Query):</b>\n• Form-driven mutations with native `<form action>` (especially Server Actions)\n• Simple forms that don't need cache invalidation or refetching\n\n<b>When to prefer `useMutation`:</b>\n• Complex cache management (invalidate, optimistic, prefetch)\n• Programmatic mutations triggered outside a form submit",
+            np: "Client र server दुवैमा काम गर्छ। Simple form mutation = useActionState। Complex cache = useMutation।",
+            jp: "クライアント・サーバー両対応。シンプルなフォームは useActionState、複雑なキャッシュは useMutation。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useActionState — contact form with validation",
+            np: "useActionState example",
+            jp: "useActionState の使用例",
+          },
+          code: `'use client';
+
+import { useActionState } from 'react';
+
+interface ContactFormState {
+  status: 'idle' | 'success' | 'error';
+  message: string;
+  errors?: { email?: string; message?: string };
+}
+
+async function submitContactForm(
+  prevState: ContactFormState,
+  formData: FormData,
+): Promise<ContactFormState> {
+  const email   = formData.get('email') as string;
+  const message = formData.get('message') as string;
+
+  const errors: ContactFormState['errors'] = {};
+  if (!email.includes('@'))  errors.email   = 'Invalid email address';
+  if (message.length < 10)   errors.message = 'Message must be at least 10 characters';
+  if (Object.keys(errors).length) {
+    return { status: 'error', message: 'Please fix the errors below', errors };
+  }
+
+  try {
+    await fetch('/api/contact', {
+      method: 'POST',
+      body: JSON.stringify({ email, message }),
+    });
+    return { status: 'success', message: 'Message sent! We will reply within 24 hours.' };
+  } catch {
+    return { status: 'error', message: 'Failed to send. Please try again.' };
+  }
+}
+
+// No useState, no isPending state, no try/catch in the component
+function ContactForm() {
+  const [state, action, isPending] = useActionState(submitContactForm, {
+    status: 'idle',
+    message: '',
+  });
+
+  if (state.status === 'success') {
+    return <p className="text-green-600">{state.message}</p>;
+  }
+
+  return (
+    <form action={action}>
+      <div>
+        <input name="email" type="email" placeholder="your@email.com" />
+        {state.errors?.email && (
+          <p className="text-red-500 text-sm">{state.errors.email}</p>
+        )}
+      </div>
+      <div>
+        <textarea name="message" placeholder="Your message..." rows={4} />
+        {state.errors?.message && (
+          <p className="text-red-500 text-sm">{state.errors.message}</p>
+        )}
+      </div>
+      {state.status === 'error' && (
+        <p className="text-red-600">{state.message}</p>
+      )}
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Sending...' : 'Send Message'}
+      </button>
+    </form>
+  );
+}`,
+        },
+      ],
+    },
   ],
   faq: [
     {

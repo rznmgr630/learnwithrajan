@@ -317,6 +317,188 @@ function Cursor() {
         },
       ],
     },
+    {
+      title: {
+        en: "useImperativeHandle — expose a controlled API via ref",
+        np: "useImperativeHandle — ref मार्फत controlled API",
+        jp: "useImperativeHandle — ref でカスタム API を公開",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useImperativeHandle` customizes what a parent receives when it holds a `ref` on your component. By default, `forwardRef` gives the parent the raw DOM node — every property and method. `useImperativeHandle` replaces that with a controlled object you define: only the methods the parent should use.\n\nAnalogy: a TV remote is `useImperativeHandle` — it exposes `volumeUp`, `channelDown`, `mute`. Without it the parent would have access to the TV's circuit board (the raw DOM node).\n\n<b>When to use:</b>\n• Building reusable UI library components (`<Modal>`, `<VideoPlayer>`, `<DatePicker>`) with an imperative API\n• Exposing coordinated operations — `shake()` that animates + focuses, `reset()` that clears + validates\n• Enforcing an API contract — the parent can only call what you choose to expose\n\n<b>When NOT to use:</b> regular application code. Prefer passing callbacks as props. `useImperativeHandle` is primarily a component library tool — it adds complexity without benefit in typical app components.",
+            np: "useImperativeHandle: parent को ref मा expose हुने API customize गर्छ। Library components को लागि। App code मा props use गर्नुस्।",
+            jp: "親 ref に公開する API をカスタマイズ。ライブラリ向け。通常はプロップで代替。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useImperativeHandle — Input with focus, clear and shake",
+            np: "useImperativeHandle example",
+            jp: "useImperativeHandle の例",
+          },
+          code: `import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+
+// Define the API we expose to parents — not the raw DOM node
+interface InputHandle {
+  focus: () => void;
+  clear: () => void;
+  shake: () => void;
+}
+
+const Input = forwardRef<InputHandle, { label: string; placeholder?: string }>(
+  function Input({ label, placeholder }, ref) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [shaking, setShaking] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      focus() {
+        inputRef.current?.focus();
+      },
+      clear() {
+        if (inputRef.current) inputRef.current.value = '';
+        inputRef.current?.focus();
+      },
+      shake() {
+        setShaking(true);
+        setTimeout(() => setShaking(false), 500);
+      },
+    }));
+
+    return (
+      <div>
+        <label>{label}</label>
+        <input
+          ref={inputRef}
+          placeholder={placeholder}
+          className={shaking ? 'animate-shake border-red-500' : ''}
+        />
+      </div>
+    );
+  }
+);
+
+// Parent uses only the three exposed methods — cannot access inputRef.current directly
+function SignupForm() {
+  const emailRef    = useRef<InputHandle>(null);
+  const passwordRef = useRef<InputHandle>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await validateForm();
+
+    if (!res.email) {
+      emailRef.current?.shake();
+      emailRef.current?.focus();
+    }
+    if (!res.password) {
+      passwordRef.current?.shake();
+      passwordRef.current?.focus();
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Input ref={emailRef}    label="Email"    placeholder="you@example.com" />
+      <Input ref={passwordRef} label="Password" placeholder="••••••••" />
+      <button type="submit">Sign Up</button>
+    </form>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "useId — stable unique IDs for accessible components",
+        np: "useId — accessible components को लागि unique IDs",
+        jp: "useId — アクセシブルなコンポーネント用の安定 ID",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useId` generates a stable, unique string ID that is consistent across the server render and the client hydration — making it safe for SSR apps like Next.js.\n\n<b>The problem it solves:</b> HTML accessibility requires form inputs to be linked to their labels via matching `id` and `htmlFor` attributes. Three naive approaches all have problems:\n• `Math.random()` — new ID on every render and on every server restart → SSR hydration mismatch\n• Hardcoded string `'email-input'` — breaks when the component is used twice on the same page (duplicate IDs)\n• Module-level counter `let n = 0` — differs between server and client render order → hydration mismatch\n\n`useId` fixes all three: React derives the ID from the component's position in the fiber tree so it is identical on server and client, and unique per component instance.",
+            np: "useId: SSR-safe stable unique ID। Math.random() = hydration mismatch। Hardcoded = duplicate। useId ले तिनै fix गर्छ।",
+            jp: "useId は SSR で安全な安定した一意 ID。Math.random() や固定文字列の問題をすべて解決。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Rules:</b>\n• One `useId()` call per component — derive multiple IDs from suffixes: `` `${id}-label` ``, `` `${id}-hint` ``, `` `${id}-error` ``\n• Never use it for list keys — use data IDs (e.g. `item.id`) for lists\n• Never store, pass as a prop to children for use as a key, or hardcode the generated value",
+            np: "एउटा call per component। Suffix ले multiple IDs। List keys को लागि data ID use गर्नुस्।",
+            jp: "1コンポーネント1回。複数 ID はサフィックスで。リストキーには使わない。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useId — accessible form fields and ARIA attributes",
+            np: "useId example",
+            jp: "useId の使用例",
+          },
+          code: `import { useId } from 'react';
+
+// 1. Basic — link label to input accessibly
+function EmailField({ label }: { label: string }) {
+  const id = useId(); // e.g. ":r0:" — stable, unique per instance
+
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type="email" />
+    </div>
+  );
+}
+
+// Render twice — each instance gets a different ID automatically
+// <EmailField label="Primary Email" />   → id=":r0:"
+// <EmailField label="Backup Email" />    → id=":r1:"
+
+// 2. Multiple IDs from one call — use suffixes
+function PasswordField() {
+  const id = useId();
+
+  return (
+    <div>
+      <label htmlFor={\`\${id}-input\`}>Password</label>
+      <input
+        id={\`\${id}-input\`}
+        type="password"
+        aria-describedby={\`\${id}-hint\`}
+        aria-errormessage={\`\${id}-error\`}
+      />
+      <p id={\`\${id}-hint\`} className="text-sm text-gray-500">
+        Must be at least 8 characters
+      </p>
+      <p id={\`\${id}-error\`} role="alert" className="hidden text-red-500">
+        Password is too short
+      </p>
+    </div>
+  );
+}
+
+// 3. ARIA — connect a description element to an interactive element
+function AvatarCard({ name, bio }: { name: string; bio: string }) {
+  const id = useId();
+
+  return (
+    <div>
+      <img
+        src={\`/avatars/\${name}.jpg\`}
+        alt={name}
+        aria-describedby={id}
+      />
+      <p id={id}>{bio}</p>
+    </div>
+  );
+}`,
+        },
+      ],
+    },
   ],
   faq: [
     {
