@@ -284,6 +284,229 @@ function PostsPage() {
         },
       ],
     },
+    {
+      title: {
+        en: "useRef — DOM access and mutable values",
+        np: "useRef — DOM access र mutable values",
+        jp: "useRef — DOM アクセスと可変値",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useRef` has two distinct use cases:\n• <b>DOM reference</b> — attach to an element with `ref={myRef}` to call imperative methods like `.focus()`, `.scrollIntoView()`, `.play()` — things you cannot do via props\n• <b>Mutable container</b> — store any value that persists across renders but does NOT trigger a re-render when changed\n\nKey difference from `useState`:\n• `setState` → triggers a re-render, value shows on screen\n• `ref.current =` → no re-render, updates silently in the background\n\nAnalogy: `useState` is a whiteboard visible to the whole team — any change triggers a meeting. `useRef` is a sticky note on your desk — you update it without disturbing anyone.\n\n<b>When to use ref over state:</b>\n• Storing DOM nodes, timer IDs, WebSocket instances, or interval references\n• Tracking a previous value for comparison without causing a re-render\n• Values used only inside effects or event handlers — never rendered directly",
+            np: "useRef: DOM reference + re-render नगर्ने mutable container। setState = re-render, ref.current = = no re-render।",
+            jp: "`useRef` は DOM 参照と再レンダーを起こさない可変コンテナ。`setState` との違いは再レンダーの有無。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useRef — DOM ref, mutable container, previous value",
+            np: "useRef examples",
+            jp: "useRef の使用例",
+          },
+          code: `import { useRef, useEffect, useState } from 'react';
+
+// 1. DOM ref — focus input on mount
+function SearchInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return <input ref={inputRef} placeholder="Search..." />;
+}
+
+// 2. DOM ref — scroll to bottom of a chat list on new messages
+function ChatWindow({ messages }: { messages: string[] }) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  return (
+    <div className="overflow-y-auto h-64">
+      {messages.map((m, i) => <p key={i}>{m}</p>)}
+      <div ref={bottomRef} />
+    </div>
+  );
+}
+
+// 3. Mutable container — store interval ID without triggering re-render
+function Stopwatch() {
+  const [time, setTime] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const start = () => {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => setTime(t => t + 1), 1000);
+  };
+  const stop = () => {
+    clearInterval(intervalRef.current!);
+    intervalRef.current = null;
+  };
+
+  return (
+    <div>
+      <p>{time}s</p>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+    </div>
+  );
+}
+
+// 4. Mutable container — track previous value without re-render
+function PriceDisplay({ price }: { price: number }) {
+  const prevRef = useRef(price);
+
+  useEffect(() => {
+    prevRef.current = price; // update AFTER render — this render still shows old value
+  }, [price]);
+
+  const diff = price - prevRef.current;
+  return (
+    <p>
+      \${price}
+      {diff !== 0 && (
+        <span style={{ color: diff > 0 ? 'green' : 'red' }}>
+          {diff > 0 ? ' ▲' : ' ▼'} \${Math.abs(diff)}
+        </span>
+      )}
+    </p>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "useLayoutEffect — synchronous DOM measurement",
+        np: "useLayoutEffect — sync DOM measurement",
+        jp: "useLayoutEffect — 同期 DOM 計測",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useLayoutEffect` has the same signature as `useEffect` but fires <b>synchronously</b> after React commits DOM changes and <b>before</b> the browser paints the screen.\n\nTimeline:\n• <b>useEffect</b>: Render → Commit → Browser paints → Effect runs\n• <b>useLayoutEffect</b>: Render → Commit → Effect runs → Browser paints\n\nAnalogy: `useEffect` is a painter who decorates after the guests arrive — they might see bare walls for a moment. `useLayoutEffect` is a painter who finishes before the doors open — guests see the completed room.\n\n<b>When to use `useLayoutEffect`:</b>\n• Reading DOM geometry (width, height, bounding rect) to position another element\n• Preventing a visual flash when state must be set based on DOM size before first paint\n• Syncing scroll position or animation frames before the user sees the screen\n\n<b>Stick with `useEffect` for:</b>\n• Data fetching\n• Subscriptions, timers, WebSockets\n• Anything that does not read or write DOM dimensions\n\nFor 99% of cases `useEffect` is correct. Use `useLayoutEffect` only when you see a visual flicker that `useEffect` cannot prevent.",
+            np: "useLayoutEffect: paint हुनु अगाडि sync run। DOM measure र visual flash रोक्न। 99% cases useEffect नै।",
+            jp: "ペイント前に同期実行。DOM 計測やフラッシュ防止に。通常は useEffect で十分。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "useLayoutEffect — tooltip positioning and flash prevention",
+            np: "useLayoutEffect examples",
+            jp: "useLayoutEffect の使用例",
+          },
+          code: `import { useLayoutEffect, useRef, useState } from 'react';
+
+// 1. Tooltip positioning — measure trigger BEFORE paint so tooltip never flashes at wrong position
+function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const trigger = triggerRef.current;
+    const tooltip = tooltipRef.current;
+    if (!trigger || !tooltip) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const tRect = tooltip.getBoundingClientRect();
+
+    tooltip.style.left = \`\${rect.left + rect.width / 2 - tRect.width / 2}px\`;
+    tooltip.style.top  = \`\${rect.top - tRect.height - 8 + window.scrollY}px\`;
+    // useEffect here would cause a flash — tooltip appears at (0,0) then jumps
+  });
+
+  return (
+    <>
+      <button ref={triggerRef}>{children}</button>
+      <div ref={tooltipRef} style={{ position: 'absolute' }} className="tooltip">
+        {text}
+      </div>
+    </>
+  );
+}
+
+// 2. Flash prevention — set initial value based on DOM before first paint
+function ResizablePanel() {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    if (panelRef.current) {
+      setHeight(panelRef.current.scrollHeight);
+      // With useEffect the panel would flash from 0 to full height after paint
+    }
+  }, []);
+
+  return (
+    <div ref={panelRef} style={{ height }} className="overflow-hidden transition-all">
+      <p>Content that determines the panel height</p>
+    </div>
+  );
+}
+
+// 3. Auto-scroll chat — read and set scroll BEFORE paint to avoid jitter
+function Chat({ messages }: { messages: string[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
+    if (atBottom) el.scrollTop = el.scrollHeight;
+  }, [messages]);
+
+  return (
+    <div ref={containerRef} className="overflow-y-auto h-96">
+      {messages.map((m, i) => <p key={i}>{m}</p>)}
+    </div>
+  );
+}`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "useEffect vs useLayoutEffect",
+            np: "useEffect vs useLayoutEffect",
+            jp: "useEffect vs useLayoutEffect",
+          },
+          headers: [
+            { en: "Aspect", np: "पक्ष", jp: "観点" },
+            { en: "useEffect", np: "useEffect", jp: "useEffect" },
+            { en: "useLayoutEffect", np: "useLayoutEffect", jp: "useLayoutEffect" },
+          ],
+          rows: [
+            [
+              { en: "Timing", np: "समय", jp: "タイミング" },
+              { en: "After browser paint (async)", np: "Browser paint पछि (async)", jp: "ペイント後（非同期）" },
+              { en: "Before browser paint (sync)", np: "Browser paint अगाडि (sync)", jp: "ペイント前（同期）" },
+            ],
+            [
+              { en: "Blocks paint?", np: "Paint block?", jp: "ペイントをブロック？" },
+              { en: "No", np: "होइन", jp: "しない" },
+              { en: "Yes — can cause jank if slow", np: "हो — slow भयो भने jank हुन्छ", jp: "する — 重い処理は jank の原因" },
+            ],
+            [
+              { en: "Use for", np: "प्रयोग", jp: "用途" },
+              { en: "Data fetch, subscriptions, timers", np: "Data fetch, subscriptions, timers", jp: "データ取得・購読・タイマー" },
+              { en: "DOM measurement, flash prevention", np: "DOM measure, flash रोक्न", jp: "DOM 計測・フラッシュ防止" },
+            ],
+            [
+              { en: "How often", np: "कति पटक", jp: "使用頻度" },
+              { en: "99% of cases", np: "99% cases", jp: "99%のケース" },
+              { en: "Rare — only when you see a visual flicker", np: "बिरलै — visual flicker देखिँदा मात्र", jp: "まれ — フリッカーが出た時だけ" },
+            ],
+          ],
+        },
+      ],
+    },
   ],
   faq: [
     {
