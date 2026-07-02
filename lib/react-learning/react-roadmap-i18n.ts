@@ -192,6 +192,41 @@ const REACT_TAG: Record<string, LocalizedString> = {
     np: "Architecture",
     jp: "アーキテクチャ",
   },
+  internals: {
+    en: "React internals",
+    np: "React internals",
+    jp: "React 内部構造",
+  },
+  debugging: {
+    en: "debugging",
+    np: "Debugging",
+    jp: "デバッグ",
+  },
+  devtools: {
+    en: "DevTools",
+    np: "DevTools",
+    jp: "DevTools",
+  },
+  projects: {
+    en: "projects",
+    np: "Projects",
+    jp: "プロジェクト",
+  },
+  portfolio: {
+    en: "portfolio",
+    np: "Portfolio",
+    jp: "ポートフォリオ",
+  },
+  interview: {
+    en: "interview prep",
+    np: "Interview Prep",
+    jp: "面接対策",
+  },
+  career: {
+    en: "career",
+    np: "Career",
+    jp: "キャリア",
+  },
 };
 
 export function reactTags(slugs: [string, string]): RoadmapTag[] {
@@ -258,56 +293,81 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "カスタムフック・複合コンポーネント・並行機能",
   },
   12: {
+    en: "Component design patterns — Smart/Presentational, HOC, Provider, Slot & Polymorphic",
+    np: "Component design patterns — Smart/Presentational, HOC, Provider, Slot र Polymorphic",
+    jp: "コンポーネント設計パターン — Smart/Presentational・HOC・Provider・Slot・ポリモーフィック",
+  },
+  13: {
+    en: "React internals — Virtual DOM, Fiber, reconciliation & concurrent rendering",
+    np: "React internals — Virtual DOM, Fiber, reconciliation र concurrent rendering",
+    jp: "React 内部構造 — Virtual DOM・Fiber・reconciliation・並行レンダリング",
+  },
+  14: {
     en: "Error boundaries, portals & code splitting with Suspense",
     np: "Error boundaries, portals र Suspense सहित code splitting",
     jp: "エラー境界・ポータル・Suspense によるコード分割",
   },
-  13: {
+  15: {
     en: "TypeScript with React — props, hooks, events & generics",
     np: "React सँग TypeScript — props, hooks, events र generics",
     jp: "React + TypeScript — props・hooks・イベント・ジェネリクス",
   },
-  14: {
+  16: {
     en: "Testing — React Testing Library, Vitest & custom hooks",
     np: "Testing — React Testing Library, Vitest र custom hooks",
     jp: "テスト — React Testing Library・Vitest・カスタムフック",
   },
-  15: {
+  17: {
+    en: "Debugging — React DevTools, browser tools & common errors",
+    np: "Debugging — React DevTools, browser tools र common errors",
+    jp: "デバッグ — React DevTools・ブラウザツール・よくあるエラー",
+  },
+  18: {
     en: "Routing with React Router v6 — Navigation, Parameters & Guards",
     np: "React Router v6 — Navigation, Parameters र Guards",
     jp: "React Router v6 によるルーティング — ナビゲーション・パラメータ・ガード",
   },
-  16: {
+  19: {
     en: "Global State — Zustand, Context Patterns & TanStack Query",
     np: "Global State — Zustand, Context Patterns र TanStack Query",
     jp: "グローバル状態管理 — Zustand・Context パターン・TanStack Query",
   },
-  17: {
+  20: {
     en: "Authentication flows — auth context, JWT, protected routes & interceptors",
     np: "Authentication — auth context, JWT, protected routes र interceptors",
     jp: "認証フロー — auth コンテキスト・JWT・保護ルート・インターセプター",
   },
-  18: {
+  21: {
     en: "TanStack Query advanced — mutations, optimistic updates & infinite scroll",
     np: "TanStack Query advanced — mutations, optimistic updates र infinite scroll",
     jp: "TanStack Query 応用 — ミューテーション・楽観的更新・無限スクロール",
   },
-  19: {
+  22: {
     en: "Animation with Framer Motion — variants, transitions & gestures",
     np: "Animation — Framer Motion, variants, transitions र gestures",
     jp: "Framer Motion アニメーション — バリアント・トランジション・ジェスチャー",
   },
-  20: {
+  23: {
     en: "Accessibility — ARIA, focus management & keyboard navigation",
     np: "Accessibility — ARIA, focus management र keyboard navigation",
     jp: "アクセシビリティ — ARIA・フォーカス管理・キーボードナビゲーション",
   },
-  21: {
+  24: {
     en: "Build optimization & deployment — Vite, bundle analysis & Vercel",
     np: "Build optimization र deployment — Vite, bundle analysis र Vercel",
     jp: "ビルド最適化とデプロイ — Vite・バンドル分析・Vercel",
   },
-  22: {
+  25: {
+    en: "Production project ideas — from Todo App to Notion Clone",
+    np: "Production project ideas — Todo App देखि Notion Clone सम्म",
+    jp: "本番プロジェクト案 — Todo アプリから Notion クローンまで",
+  },
+  26: {
+    en: "React interview preparation — questions, coding rounds & debugging drills",
+    np: "React interview preparation — questions, coding rounds र debugging drills",
+    jp: "React 面接対策 — 質問・コーディング面接・デバッグ演習",
+  },
+  27: {
     en: "Production architecture — feature folders, data layers & Storybook",
     np: "Production architecture — feature folders, data layers र Storybook",
     jp: "本番アーキテクチャ — フィーチャー構成・データ層・Storybook",
@@ -320,10 +380,11 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
   "react-w3": { en: "Forms & API", np: "Forms र API", jp: "フォームとAPI" },
   "react-w4": { en: "Advanced hooks", np: "Advanced hooks", jp: "高度なフック" },
   "react-w5": { en: "Advanced patterns", np: "Advanced patterns", jp: "高度なパターン" },
-  "react-w6": { en: "TypeScript & testing", np: "TypeScript र testing", jp: "TypeScriptとテスト" },
+  "react-w6": { en: "TypeScript, testing & debugging", np: "TypeScript, testing र debugging", jp: "TypeScript・テスト・デバッグ" },
   "react-w7": { en: "Routing & state", np: "Routing र state", jp: "ルーティングと状態管理" },
   "react-w8": { en: "Production patterns", np: "Production patterns", jp: "本番パターン" },
   "react-w9": { en: "Production readiness", np: "Production readiness", jp: "本番対応" },
+  "react-w10": { en: "Capstone", np: "Capstone", jp: "キャップストーン" },
 };
 
 export function reactDayTitle(day: number): LocalizedString {
