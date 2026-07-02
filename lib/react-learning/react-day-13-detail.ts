@@ -3,372 +3,285 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_13_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "TypeScript adds a type layer on top of JavaScript. In React, this means your IDE knows exactly what props a component accepts, what events your handlers receive, and what your hooks return — before you even run the code.\n\nAnalogy: TypeScript is like labels on every box in a warehouse — without labels you have to open each box to know what's inside; with labels, you find what you need instantly and can't accidentally put the wrong thing in the wrong box.\n\n<b>Why TypeScript in React?</b>\n• <b>Autocomplete</b> — your editor suggests valid props as you type\n• <b>Catch bugs early</b> — passing a number where a string is expected becomes a compile error, not a runtime crash\n• <b>Self-documenting</b> — the type signature tells you exactly how to use a component without reading its source\n• <b>Safe refactoring</b> — rename a prop and TypeScript flags every file that needs updating",
-      np: "TypeScript ले JavaScript माथि type layer थप्छ। React मा: props, events, hooks सबैमा type safety।",
-      jp: "TypeScript は JavaScript に型を追加。props・イベント・フックの型が IDE に見えるので補完とバグ検出が改善します。",
+      en: "You've been calling `setState` for 12 days without asking what actually happens after you call it. Today you open the hood. Understanding React's internals — the Virtual DOM, reconciliation, Fiber, and the render/commit split — is what separates \"I can build with React\" from \"I know why my app is slow and how to fix it.\" This is also the single most common senior-level interview topic. Analogy: you've been driving the car for 12 days; today you learn how the engine actually turns fuel into motion.",
+      np: "12 दिनसम्म setState call गर्यौं, आज भित्री कुरा बुझ्ने पालो — Virtual DOM, reconciliation, Fiber, render/commit split। यो senior interview को सबैभन्दा common topic हो।",
+      jp: "12日間 setState を呼んできましたが、今日は内部を見ます。Virtual DOM・reconciliation・Fiber・render/commit の分離を理解します。シニア面接で最頻出のトピックです。",
     },
     {
-      en: "In this day we cover:\n\n• Setting up a React + TypeScript project with Vite\n• Typing component <b>props interfaces</b>\n• <b>Event types</b> — MouseEvent, ChangeEvent, FormEvent\n• Typing <b>hooks</b> — useState, useRef, useReducer, useContext\n• <b>Generic components</b> — reusable components that work with any data type\n• Useful <b>utility types</b> — Partial, Pick, Omit, ComponentProps",
-      np: "Vite setup, props typing, event types, hooks typing, generic components, utility types — सबै cover गर्छौं।",
-      jp: "Vite セットアップ、props 型付け、イベント型、フック型付け、ジェネリックコンポーネント、ユーティリティ型を学びます。",
+      en: "Today's topics:\n• <b>Virtual DOM</b> — why React doesn't touch the real DOM directly\n• <b>Reconciliation & the Diffing Algorithm</b> — how React decides what changed\n• <b>Fiber</b> — the architecture that makes rendering interruptible\n• <b>Render Phase vs Commit Phase</b> — the two-phase update model\n• <b>Scheduling & Batching</b> — how React prioritizes and groups updates\n• <b>Strict Mode</b> — why your components render twice in development\n• <b>Concurrent Rendering</b> — how React 18+ keeps apps responsive under load",
+      np: "Virtual DOM, Reconciliation, Diffing, Fiber, Render/Commit Phase, Scheduling, Batching, Strict Mode, Concurrent Rendering।",
+      jp: "Virtual DOM・Reconciliation・Diffing・Fiber・Render/Commitフェーズ・Scheduling・Batching・Strict Mode・並行レンダリングを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Setting up React with TypeScript",
-        np: "React + TypeScript सेटअप",
-        jp: "React + TypeScript のセットアップ",
+        en: "The Virtual DOM — why React doesn't touch the real DOM directly",
+        np: "Virtual DOM — किन React ले real DOM सीधै touch गर्दैन",
+        jp: "Virtual DOM — なぜ React は実 DOM を直接操作しないのか",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Vite makes TypeScript setup trivial — one flag and you get a fully configured project with `tsconfig.json`, `.tsx` files, and type checking built in.\n\nThe most important `tsconfig.json` option is `\"strict\": true` — this enables a bundle of strict checks that catch the most common mistakes. Always start with strict mode on.",
-            np: "Vite को `--template react-ts` flag ले TypeScript project ready गर्छ। `strict: true` सधैं राख्नुहोस्।",
-            jp: "`--template react-ts` で完全な TypeScript 構成が即座に用意されます。`strict: true` は必ず有効にしましょう。",
+            en: "The real DOM is slow to mutate — every change can trigger layout recalculation and repainting, which are expensive browser operations. The Virtual DOM is a lightweight JavaScript object tree that mirrors the real DOM's structure. Analogy: the Virtual DOM is an architect's blueprint — cheap to redraw and compare on paper, versus expensive to physically rebuild a wall every time you change your mind.\n\n<b>The core idea:</b> every time state changes, React builds a brand-new Virtual DOM tree describing what the UI *should* look like. It doesn't touch the real DOM yet — it compares the new tree against the previous one first, and only applies the minimal set of real DOM changes needed. This comparison step is called <b>reconciliation</b>.\n\n<b>Common misconception:</b> the Virtual DOM isn't inherently \"faster than the DOM\" in isolation — a single DOM write can be faster than diffing plus a DOM write. The win is <b>batching many changes into one real DOM update</b> instead of many, and giving React a declarative model (\"here's what the UI should look like\") instead of an imperative one (\"here's how to mutate it step by step\").",
+            np: "Virtual DOM = हल्का JS object tree जसले real DOM mirror गर्छ। State change हुँदा नयाँ tree बनाइ पुरानोसँग compare गरी minimal DOM changes मात्र apply गरिन्छ — यसलाई reconciliation भनिन्छ।",
+            jp: "Virtual DOM は実 DOM を映す軽量な JS オブジェクトツリー。状態変化のたびに新しいツリーを作り、前のツリーと比較して最小限の実 DOM 変更のみ適用する — これが reconciliation です。",
           },
         },
         {
-          type: "code",
-          title: {
-            en: "Create a project + key tsconfig options",
-            np: "Project बनाउने + tsconfig",
-            jp: "プロジェクト作成と tsconfig",
-          },
-          code: `# Create a React + TypeScript project
-npm create vite@latest my-app -- --template react-ts
-cd my-app && npm install && npm run dev
-
-// tsconfig.json — key options
-{
-  "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "bundler",
-    "paths": { "@/*": ["./src/*"] }
-  }
-}
-
-// Preferred — plain function with typed props
-function Button({ label, onClick }: ButtonProps) { return <button onClick={onClick}>{label}</button>; }
-
-// Avoid React.FC — has implicit children, awkward generics
-// const Button: React.FC<ButtonProps> = ({ label }) => { ... }`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Why avoid `React.FC`?</b>\n• It implicitly adds `children?: ReactNode` to every component — even ones that shouldn't accept children\n• It makes generics awkward\n• The React team itself moved away from it\n\nJust type props directly on the function — simpler and more explicit.",
-            np: "`React.FC` ले implicit children थप्छ र generics awkward बनाउँछ। Plain typed function नै राम्रो।",
-            jp: "`React.FC` は暗黙の children と不便なジェネリクスがあるため、直接 props を型付けした関数が推奨です。",
-          },
+          type: "diagram",
+          id: "react-virtual-dom",
         },
       ],
     },
     {
       title: {
-        en: "Typing component props",
-        np: "Component props type गर्ने",
-        jp: "コンポーネント props の型付け",
+        en: "Reconciliation and the Diffing Algorithm",
+        np: "Reconciliation र Diffing Algorithm",
+        jp: "Reconciliation と Diffing アルゴリズム",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Props are the primary place you spend time with TypeScript in React. Use `interface` for objects you'll extend; use `type` for unions and computed types. Either works — pick one and be consistent.\n\n<b>Common prop patterns:</b>\n• <b>Required prop</b> — `label: string`\n• <b>Optional prop with default</b> — `variant?: 'primary' | 'secondary'`\n• <b>Callback prop</b> — `onClick?: (id: string) => void`\n• <b>Children</b> — `children: React.ReactNode`\n• <b>CSS class override</b> — `className?: string`",
-            np: "Interface vs type: दुवै चल्छ। Union types, optional props, callback props — सबै patterns।",
-            jp: "interface と type は混在可能。Union 型、省略可能 props、コールバック props の典型パターン。",
+            en: "Reconciliation is the process of comparing two Virtual DOM trees (old vs new) and computing the minimal set of real DOM operations to get from one to the other. A naive tree-diff algorithm is O(n³) — too slow for UI at 60fps. React's diffing algorithm makes it O(n) with two heuristics:\n\n<b>Heuristic 1 — different element types produce different trees.</b> If a `<div>` becomes a `<span>` at the same position, React doesn't bother diffing their children — it tears down the whole subtree and builds a new one from scratch. This is why swapping element types is more expensive than updating attributes.\n\n<b>Heuristic 2 — keys tell React which list items persisted.</b> Without keys, React compares list items by position — index 0 vs index 0, index 1 vs index 1. If you insert an item at the front, every item after it appears \"changed\" by position, even though only one item is actually new. A stable, unique `key` lets React match old and new items by identity, not position, so it can reorder/reuse them instead of re-rendering everything below the insertion point.",
+            np: "Reconciliation ले दुई Virtual DOM trees compare गरी minimal DOM operations निकाल्छ। Two heuristics: (1) फरक element type भए subtree पूरै rebuild हुन्छ (2) keys ले list items लाई position भन्दा identity द्वारा match गर्छ।",
+            jp: "Reconciliation は2つの Virtual DOM ツリーを比較し最小限の DOM 操作を導く。2つのヒューリスティック：(1) 要素タイプが違えばサブツリー全体を再構築 (2) key で位置でなく同一性によりリスト項目を照合。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Props interfaces — common patterns",
-            np: "Props interface patterns",
-            jp: "props インターフェースのパターン",
-          },
-          code: `interface ButtonProps {
-  label: string;
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md" | "lg";
-  disabled?: boolean;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  children?: React.ReactNode;
-  className?: string;
-}
-
-function Button({ label, variant = "primary", size = "md", disabled = false, onClick }: ButtonProps) {
+          title: { en: "Why array index as key breaks reconciliation", np: "Array index key ले reconciliation किन बिगार्छ", jp: "配列インデックスキーが reconciliation を壊す理由" },
+          code: `// BAD — index as key
+function TodoList({ todos }: { todos: { id: string; text: string }[] }) {
   return (
-    <button className={\`btn btn-\${variant} btn-\${size}\`} disabled={disabled} onClick={onClick}>
-      {label}
-    </button>
+    <ul>
+      {todos.map((todo, index) => (
+        <li key={index}>
+          <input defaultValue={todo.text} /> {/* uncontrolled — keeps its own DOM state */}
+        </li>
+      ))}
+    </ul>
   );
 }
 
-// Discriminated union — different shapes for different alert types
-type AlertProps =
-  | { type: "success"; message: string }
-  | { type: "error"; message: string; code: number }
-  | { type: "warning"; message: string; dismissible?: boolean };
+// Insert a new todo at the FRONT of the array:
+// Before: [ {id: 'a', text: 'Buy milk'} ]           key=0 -> "Buy milk"
+// After:  [ {id: 'b', text: 'Call mom'}, {id:'a',...} ]  key=0 -> "Call mom", key=1 -> "Buy milk"
+//
+// React sees key=0 "changed text" (it thinks it's the SAME element, just updated).
+// Since the <input> is uncontrolled, React reuses the DOM node and its typed-in value —
+// so the new item at position 0 displays the OLD item's leftover input state. Bug!
 
-function Alert(props: AlertProps) {
-  if (props.type === "error") {
-    // TypeScript knows props.code exists here
-    return <div>Error {props.code}: {props.message}</div>;
-  }
-  return <div>{props.message}</div>;
-}`,
+// GOOD — stable identity as key
+function TodoListFixed({ todos }: { todos: { id: string; text: string }[] }) {
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>
+          <input defaultValue={todo.text} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+// Now React sees a NEW key ('b') appear and an EXISTING key ('a') move —
+// it inserts a new DOM node instead of confusingly reusing one.`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Rule of thumb:</b> index-as-key is only safe when the list is static (never reordered, filtered, or has items inserted/removed) — for anything else, use a stable ID from your data.",
+            np: "List कहिल्यै reorder/filter/insert नहुने भए मात्र index-as-key सुरक्षित छ।",
+            jp: "リストが並び替え・フィルタ・挿入されない場合のみインデックスキーは安全です。",
+          },
         },
       ],
     },
     {
       title: {
-        en: "Typing events",
-        np: "Event types",
-        jp: "イベントの型付け",
+        en: "Fiber — the architecture behind interruptible rendering",
+        np: "Fiber — interruptible rendering को architecture",
+        jp: "Fiber — 中断可能なレンダリングを支える構造",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React wraps native browser events in its own `SyntheticEvent` system. Each event type is a generic: `React.ChangeEvent<HTMLInputElement>` means \"a change event on an input element.\" TypeScript narrows the event so `e.target.value` is always a string, not `any`.",
-            np: "React events generic हुन्छन्: `ChangeEvent<HTMLInputElement>` मा `e.target.value` string नै हो।",
-            jp: "React イベントはジェネリックで、`ChangeEvent<HTMLInputElement>` なら `e.target.value` が string と確定します。",
+            en: "Before React 16, reconciliation walked the component tree recursively and synchronously — once started, it couldn't stop until the whole tree was processed, even if it took so long the browser dropped frames (janky scrolling, unresponsive typing). Fiber (introduced in React 16) rewrote the reconciler around a linked-list data structure instead of a plain recursive call stack.\n\n<b>What a Fiber actually is:</b> a JavaScript object representing one unit of work for one component instance — it holds the component's type, props, state, and pointers to its parent, child, and sibling fibers. Analogy: the old recursive stack is like reading a book straight through with no bookmark — Fiber is the same book with a bookmark on every page, so you can stop after any page, do something more urgent, and resume exactly where you left off.\n\n<b>Why this matters practically:</b> Fiber is what makes `useTransition`, `useDeferredValue`, Suspense, and time-slicing possible (Day 14/old-Day 12). None of those APIs could exist with the old synchronous, non-interruptible reconciler.",
+            np: "Fiber = हरेक component को एक unit-of-work object, linked-list structure मा। Render कामलाई pause/resume गर्न मिल्ने बनायो — यसैले useTransition, Suspense जस्ता features सम्भव भए।",
+            jp: "Fiber は各コンポーネントの作業単位を表すオブジェクトで、連結リスト構造を持つ。レンダー作業を一時停止・再開可能にし、useTransition や Suspense を実現しました。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "react-render-cycle",
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Render Phase vs Commit Phase",
+        np: "Render Phase vs Commit Phase",
+        jp: "Render フェーズ vs Commit フェーズ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Every React update happens in two distinct phases:\n\n<b>1. Render phase (can be interrupted, can be thrown away):</b>\n• React calls your component functions, builds the new Fiber tree, and diffs it against the current tree\n• Pure — no DOM mutations happen here, and no side effects should happen here either\n• Interruptible — React can pause, abandon, or restart this phase (e.g. a higher-priority update comes in) without any visible side effect, precisely because nothing has touched the screen yet\n\n<b>2. Commit phase (synchronous, cannot be interrupted):</b>\n• React applies the computed changes to the real DOM in one synchronous pass\n• Runs `useLayoutEffect` callbacks synchronously right after the DOM mutates, then runs `useEffect` callbacks asynchronously after the browser paints\n• Cannot be paused — once commit starts, it must finish, or the user would see a half-updated UI\n\n<b>Why this split exists:</b> if rendering could mutate the DOM directly, an interrupted/discarded render would leave the screen in an inconsistent state. Keeping the render phase pure and DOM-free is what makes it safe to interrupt.",
+            np: "Render phase: component functions call गरी नयाँ Fiber tree बनाउने — pure, interruptible, DOM छुँदैन। Commit phase: real DOM मा changes apply गर्ने — synchronous, interrupt हुन सक्दैन।",
+            jp: "Render フェーズ：新しい Fiber ツリーを作る — 純粋で中断可能、DOM に触れない。Commit フェーズ：実 DOM に変更を適用 — 同期的で中断不可。",
           },
         },
         {
           type: "table",
-          caption: {
-            en: "Common React event types",
-            np: "सामान्य event types",
-            jp: "よく使う React イベント型",
-          },
+          caption: { en: "Render phase vs commit phase", np: "Render vs Commit phase", jp: "Render フェーズ vs Commit フェーズ" },
           headers: [
-            { en: "Event", np: "Event", jp: "イベント" },
-            { en: "Type", np: "Type", jp: "型" },
-            { en: "Use for", np: "प्रयोग", jp: "用途" },
+            { en: "", np: "", jp: "" },
+            { en: "Render phase", np: "Render phase", jp: "Render フェーズ" },
+            { en: "Commit phase", np: "Commit phase", jp: "Commit フェーズ" },
           ],
           rows: [
             [
-              { en: "onClick", np: "onClick", jp: "onClick" },
-              { en: "React.MouseEvent<HTMLButtonElement>", np: "MouseEvent", jp: "MouseEvent" },
-              { en: "Button clicks", np: "Button click", jp: "ボタンクリック" },
+              { en: "Touches the DOM?", np: "DOM touch गर्छ?", jp: "DOM に触れる？" },
+              { en: "No", np: "छैन", jp: "しない" },
+              { en: "Yes", np: "हो", jp: "する" },
             ],
             [
-              { en: "onChange", np: "onChange", jp: "onChange" },
-              { en: "React.ChangeEvent<HTMLInputElement>", np: "ChangeEvent", jp: "ChangeEvent" },
-              { en: "Input, select, textarea", np: "Input, select", jp: "入力要素" },
+              { en: "Interruptible?", np: "Interruptible?", jp: "中断可能？" },
+              { en: "Yes (concurrent features)", np: "हो", jp: "可能" },
+              { en: "No — always synchronous", np: "छैन", jp: "不可能" },
             ],
             [
-              { en: "onSubmit", np: "onSubmit", jp: "onSubmit" },
-              { en: "React.FormEvent<HTMLFormElement>", np: "FormEvent", jp: "FormEvent" },
-              { en: "Form submission", np: "Form submit", jp: "フォーム送信" },
+              { en: "What runs here", np: "के चल्छ", jp: "実行内容" },
+              { en: "Component functions, diffing", np: "Component functions, diffing", jp: "コンポーネント関数、diff計算" },
+              { en: "DOM mutations, useLayoutEffect, useEffect", np: "DOM mutations, effects", jp: "DOM変更、useLayoutEffect、useEffect" },
             ],
             [
-              { en: "onKeyDown", np: "onKeyDown", jp: "onKeyDown" },
-              { en: "React.KeyboardEvent<HTMLInputElement>", np: "KeyboardEvent", jp: "KeyboardEvent" },
-              { en: "Keyboard shortcuts", np: "Keyboard", jp: "キーボード操作" },
-            ],
-            [
-              { en: "onDrop", np: "onDrop", jp: "onDrop" },
-              { en: "React.DragEvent<HTMLDivElement>", np: "DragEvent", jp: "DragEvent" },
-              { en: "Drag and drop", np: "Drag & drop", jp: "ドラッグ＆ドロップ" },
+              { en: "Side effects allowed?", np: "Side effects हुन्छ?", jp: "副作用は許可？" },
+              { en: "No — must stay pure", np: "छैन — pure हुनुपर्छ", jp: "不可 — 純粋関数であるべき" },
+              { en: "Yes — this is where effects fire", np: "हो", jp: "可能" },
             ],
           ],
-        },
-        {
-          type: "code",
-          title: {
-            en: "Event typing in practice",
-            np: "Event typing example",
-            jp: "イベント型付けの実例",
-          },
-          code: `function SearchForm() {
-  const [query, setQuery] = React.useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value); // TypeScript knows this is a string
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Searching for:", query);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={query} onChange={handleChange} />
-      <button type="submit">Search</button>
-    </form>
-  );
-}
-
-// Custom event callback types
-interface TableProps {
-  onRowSelect: (id: string) => void;
-  onSort: (column: string, direction: "asc" | "desc") => void;
-}`,
         },
       ],
     },
     {
       title: {
-        en: "Typing hooks",
-        np: "Hooks type गर्ने",
-        jp: "フックの型付け",
+        en: "Scheduling and Batching",
+        np: "Scheduling र Batching",
+        jp: "スケジューリングとバッチング",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Most hooks infer their types automatically from the initial value. But for nullable state (`null` initially, something later) you must provide an explicit generic — otherwise TypeScript infers the type as `null` forever.",
-            np: "Hooks अधिकतर type infer गर्छन्। Nullable state मा explicit generic चाहिन्छ।",
-            jp: "フックは多くの場合型を推論しますが、初期値が null の場合は明示的なジェネリクスが必要です。",
+            en: "<b>Scheduling</b> is how React decides which update to work on first when multiple updates are pending. Not all updates are equally urgent — a keystroke should win over a background data refresh. React assigns updates a priority (called a \"lane\") and the scheduler works on higher-priority lanes first, pausing lower-priority render work if needed. This is the mechanism underneath `useTransition` (Day 14) — marking an update as \"low priority\" is literally assigning it to a lower-priority lane.\n\n<b>Batching</b> is grouping multiple state updates into a single re-render instead of one re-render per `setState` call. Before React 18, batching only happened inside React event handlers — a `setTimeout` or a Promise callback would trigger a separate re-render per update. <b>Automatic batching (React 18+)</b> extended this everywhere: timeouts, promises, native event handlers all batch now.",
+            np: "Scheduling ले कुन update पहिले process गर्ने भन्ने priority (lane) अनुसार decide गर्छ। Batching ले multiple setState calls लाई एउटै re-render मा group गर्छ — React 18 देखि सबैतिर automatic।",
+            jp: "スケジューリングは優先度（lane）に基づきどの更新を先に処理するか決める。バッチングは複数の setState を1回の再レンダーにまとめる — React 18からはどこでも自動的に行われます。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Typing useState, useRef, useReducer, custom hooks",
-            np: "Hook types",
-            jp: "フックの型付け例",
-          },
-          code: `// useState — explicit generic when initial value is null
-const [user, setUser] = useState<User | null>(null);
-const [posts, setPosts] = useState<Post[]>([]);
-const [count, setCount] = useState(0); // inferred as number
+          title: { en: "Automatic batching — before vs after React 18", np: "Automatic batching example", jp: "自動バッチングの例" },
+          code: `function Counter() {
+  const [count, setCount] = useState(0);
+  const [flag, setFlag] = useState(false);
 
-// useRef — typed to the DOM element
-const inputRef = useRef<HTMLInputElement>(null);
-// inputRef.current is HTMLInputElement | null
-
-// useReducer
-type State = { count: number; status: "idle" | "loading" | "error" };
-type Action = { type: "increment" } | { type: "setLoading" } | { type: "reset" };
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "increment": return { ...state, count: state.count + 1 };
-    case "setLoading": return { ...state, status: "loading" };
-    case "reset":      return { count: 0, status: "idle" };
+  function handleClick() {
+    // Inside a React event handler — ALWAYS batched, even pre-18
+    setCount(c => c + 1);
+    setFlag(f => !f);
+    // Only ONE re-render happens here, not two
   }
-}
-const [state, dispatch] = useReducer(reducer, { count: 0, status: "idle" });
 
-// useContext — guard against null
-const ThemeContext = createContext<"light" | "dark" | null>(null);
-function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be inside ThemeProvider");
-  return ctx; // now guaranteed non-null
-}
+  function handleFetch() {
+    fetch('/api/data').then(() => {
+      // Before React 18: TWO re-renders (not batched — outside React's event system)
+      // React 18+:        ONE re-render (automatic batching covers promises too)
+      setCount(c => c + 1);
+      setFlag(f => !f);
+    });
+  }
 
-// Generic custom hook
-function useLocalStorage<T>(key: string, initial: T): [T, (val: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    const stored = localStorage.getItem(key);
-    return stored ? (JSON.parse(stored) as T) : initial;
-  });
-  const set = (val: T) => {
-    localStorage.setItem(key, JSON.stringify(val));
-    setValue(val);
-  };
-  return [value, set];
+  // Opting OUT of batching when you genuinely need synchronous, separate renders
+  // (rare — e.g. reading layout between two specific updates)
+  function handleUrgentUpdate() {
+    flushSync(() => {
+      setCount(c => c + 1);
+    });
+    // DOM is updated here — count's new value is already painted
+    flushSync(() => {
+      setFlag(f => !f);
+    });
+  }
+
+  return <button onClick={handleClick}>{count} / {String(flag)}</button>;
 }`,
         },
       ],
     },
     {
       title: {
-        en: "Generic components & utility types",
-        np: "Generic components र utility types",
-        jp: "ジェネリックコンポーネントとユーティリティ型",
+        en: "Strict Mode — why components render twice in development",
+        np: "Strict Mode — development मा components दुई पटक किन render हुन्छन्",
+        jp: "Strict Mode — 開発中にコンポーネントが2回レンダーされる理由",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Generic components let you write one component that works with any data type. A `<List>` component can render a list of users, posts, or products — all type-safe.\n\nAnalogy: a generic component is like a vending machine with configurable slots — the machine mechanism is the same, but what goes in each slot depends on the customer.",
-            np: "Generic components एकै पटक लेखेर कुनै पनि data type सँग काम गर्छन्।",
-            jp: "ジェネリックコンポーネントは任意のデータ型で再利用できる汎用コンポーネントです。",
+            en: "`<StrictMode>` is a development-only wrapper that intentionally double-invokes certain functions to surface bugs that would otherwise hide until production. It does nothing in production builds — zero runtime cost for your users.\n\n<b>What gets double-invoked in development:</b>\n• Component function bodies (render phase) — to catch impure rendering (e.g. mutating a variable outside the function, relying on `Math.random()` or `Date.now()` directly during render)\n• `useState`, `useMemo`, `useReducer` initializer functions\n• Effect setup + cleanup functions are run an extra mount/unmount/mount cycle — to catch effects that don't clean up properly (e.g. a subscription that isn't unsubscribed, so remounting doubles it)\n\n<b>The real bug Strict Mode is designed to catch:</b> an effect that subscribes to something in its setup but doesn't unsubscribe in its cleanup. Under Strict Mode's extra mount/unmount/mount, that bug becomes visible immediately (duplicate subscriptions) instead of silently accumulating in production over time as users navigate.",
+            np: "StrictMode ले development मा मात्र functions double-invoke गरी impure rendering र missing effect cleanup जस्ता bugs पहिल्यै देखाउँछ। Production मा कुनै असर पर्दैन।",
+            jp: "StrictMode は開発時のみ関数を二重実行し、不純なレンダリングやエフェクトのクリーンアップ漏れを早期発見する。本番には一切影響しません。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Generic components + utility types",
-            np: "Generic + utility types",
-            jp: "ジェネリックコンポーネントとユーティリティ型",
-          },
-          code: `// Generic list component
-function List<T extends { id: string | number }>({
-  items,
-  renderItem,
-  emptyMessage = "No items found",
-}: {
-  items: T[];
-  renderItem: (item: T) => React.ReactNode;
-  emptyMessage?: string;
-}) {
-  if (items.length === 0) return <p>{emptyMessage}</p>;
-  return <ul>{items.map((item) => <li key={item.id}>{renderItem(item)}</li>)}</ul>;
+          title: { en: "The exact bug Strict Mode catches", np: "StrictMode ले पक्रने bug", jp: "StrictMode が捕捉するバグ" },
+          code: `// BUGGY — subscribes but never unsubscribes correctly
+function ChatRoom({ roomId }: { roomId: string }) {
+  useEffect(() => {
+    const connection = createConnection(roomId);
+    connection.connect();
+    // Missing: return () => connection.disconnect();
+    // In production this silently leaks a connection every time roomId changes
+    // or the component remounts. Under StrictMode's extra mount/unmount/mount,
+    // you immediately see TWO active connections in the network tab — impossible to miss.
+  }, [roomId]);
+
+  return <div>Connected to {roomId}</div>;
 }
 
-// TypeScript infers T from the items array
-<List items={users} renderItem={(u) => <span>{u.name}</span>} />
-<List items={posts} renderItem={(p) => <span>{p.title}</span>} />
+// FIXED
+function ChatRoomFixed({ roomId }: { roomId: string }) {
+  useEffect(() => {
+    const connection = createConnection(roomId);
+    connection.connect();
+    return () => connection.disconnect(); // cleanup — StrictMode's double-run now shows ONE connection
+  }, [roomId]);
 
-// --- Utility types ---
-interface ButtonProps {
-  label: string;
-  variant: "primary" | "secondary";
-  size: "sm" | "md" | "lg";
-  onClick: () => void;
-}
-
-type OptionalButton = Partial<ButtonProps>;                    // all optional
-type CoreButton    = Pick<ButtonProps, "label" | "variant">;  // subset
-type NoClick       = Omit<ButtonProps, "onClick">;            // remove prop
-
-// ComponentProps — extract props from any component
-import { ComponentProps } from "react";
-type NativeInputProps = ComponentProps<"input">;              // all native input props
-type MyButtonProps    = ComponentProps<typeof Button>;        // from your component`,
+  return <div>Connected to {roomId}</div>;
+}`,
         },
+      ],
+    },
+    {
+      title: {
+        en: "Concurrent Rendering",
+        np: "Concurrent Rendering",
+        jp: "並行レンダリング",
+      },
+      blocks: [
         {
-          type: "table",
-          caption: {
-            en: "React-specific TypeScript types quick reference",
-            np: "React TypeScript types",
-            jp: "React 固有の TypeScript 型",
+          type: "paragraph",
+          text: {
+            en: "Concurrent Rendering is the umbrella term for everything Fiber, scheduling, and the render/commit split enable together: React can prepare multiple versions of the UI at once, pause work on one to handle something more urgent, and discard in-progress renders that are no longer needed. \"Concurrent\" doesn't mean parallel (JavaScript is still single-threaded) — it means <b>interruptible</b>.\n\n<b>You already met concurrent rendering's user-facing APIs:</b> `useTransition` and `useDeferredValue` (Day 14) are how you opt specific updates into low-priority, interruptible treatment. Suspense (Day 14) is how components declare \"I'm not ready yet\" and let React render a fallback for just that part of the tree without blocking everything else.\n\n<b>The mental model that ties this whole day together:</b> React is not a library that immediately reflects your state into the DOM. It's a scheduler that decides, based on priority, WHEN to run your render phase, and only commits to the DOM once, atomically, when the result is ready and not superseded by newer, higher-priority work.",
+            np: "Concurrent Rendering ले Fiber + Scheduling + render/commit split सबै जोड्छ — React ले multiple UI versions prepare गरी priority अनुसार काम गर्छ। 'Concurrent' ले parallel भन्दा 'interruptible' अर्थ दिन्छ।",
+            jp: "並行レンダリングは Fiber・スケジューリング・render/commit分離をすべて統合する概念。「並行」とはスレッド並列ではなく「中断可能」を意味します。",
           },
-          headers: [
-            { en: "Type", np: "Type", jp: "型" },
-            { en: "Meaning", np: "अर्थ", jp: "意味" },
-          ],
-          rows: [
-            [
-              { en: "React.ReactNode", np: "ReactNode", jp: "ReactNode" },
-              { en: "Anything renderable — JSX, string, number, null, array", np: "Renderable सबै", jp: "レンダー可能なすべて" },
-            ],
-            [
-              { en: "React.ReactElement", np: "ReactElement", jp: "ReactElement" },
-              { en: "A JSX element specifically (not null or string)", np: "JSX element मात्र", jp: "JSX 要素のみ" },
-            ],
-            [
-              { en: "React.CSSProperties", np: "CSSProperties", jp: "CSSProperties" },
-              { en: "Type for the style prop object", np: "style prop को type", jp: "style prop の型" },
-            ],
-            [
-              { en: "React.RefObject<T>", np: "RefObject", jp: "RefObject" },
-              { en: "Read-only ref from useRef", np: "useRef ref", jp: "useRef の読み取り専用 ref" },
-            ],
-            [
-              { en: "React.MouseEventHandler<T>", np: "MouseEventHandler", jp: "MouseEventHandler" },
-              { en: "Shorthand for (e: MouseEvent<T>) => void", np: "onClick shorthand", jp: "onClick の省略型" },
-            ],
-          ],
         },
       ],
     },
@@ -376,62 +289,62 @@ type MyButtonProps    = ComponentProps<typeof Button>;        // from your compo
   faq: [
     {
       question: {
-        en: "Should I use `interface` or `type` for props?",
-        np: "`interface` कि `type` props को लागि?",
-        jp: "props には `interface` と `type` どちらを使う？",
+        en: "Is the Virtual DOM always faster than manipulating the real DOM directly?",
+        np: "Virtual DOM सधैं real DOM भन्दा फास्ट हुन्छ?",
+        jp: "Virtual DOM は常に実DOM操作より速い？",
       },
       answer: {
-        en: "Both work for objects. `interface` is slightly better for props because it gives clearer error messages and supports `extends` for composition. `type` is better for unions, mapped types, and computed types. Common convention: `interface` for component props, `type` for everything else. The most important thing is consistency within your team.",
-        np: "दुवै चल्छ। Props को लागि `interface` राम्रो error messages दिन्छ। Unions को लागि `type` राम्रो।",
-        jp: "どちらでも機能します。props には `interface`、Union 型には `type` がよく使われます。チームで統一するのが大切です。",
+        en: "No. A hand-optimized, targeted DOM update can outperform React's diff-then-update pipeline for a single, known change. The Virtual DOM's value is developer experience at scale — you write declarative code without manually tracking what changed, and React batches many changes into efficient DOM writes. It trades a small per-update overhead for a large reduction in the complexity of managing a big, frequently-changing UI by hand.",
+        np: "होइन। Single, known change को लागि hand-optimized DOM update बढी फास्ट हुन सक्छ। Virtual DOM को फाइदा scale मा developer experience हो।",
+        jp: "いいえ。単一の既知の変更なら手動最適化の方が速いこともあります。Virtual DOM の価値は規模が大きい時の開発体験にあります。",
       },
     },
     {
       question: {
-        en: "What is `React.FC` and why avoid it?",
-        np: "`React.FC` के हो र किन avoid गर्ने?",
-        jp: "`React.FC` とは？なぜ避けるのか？",
+        en: "Does every state update go through the full render + commit cycle?",
+        np: "हरेक state update ले पूरा render+commit cycle जान्छ?",
+        jp: "すべての状態更新が render+commit サイクルを通る？",
       },
       answer: {
-        en: "`React.FC` was popular in React 17 because it added `children` automatically. That implicit children caused bugs — components that shouldn't accept children did. React 18 removed the implicit children from `React.FC`. Now there is no reason to use it — just type props directly on the function.",
-        np: "`React.FC` ले पहिले implicit children थप्थ्यो — bug prone। React 18 पछि plain typed function नै राम्रो।",
-        jp: "React 18 で暗黙の children が廃止されました。今は直接 props を型付けするほうがシンプルです。",
+        en: "Yes, conceptually — but React can bail out early. If a component's render output is referentially identical to its previous output (common with `React.memo`, or when state is set to the same value it already had), React skips re-rendering children of that subtree entirely. That's why Day 10's memoization techniques (`memo`, `useMemo`, `useCallback`) work — they help React's bail-out checks succeed more often.",
+        np: "हो, तर React ले early bail-out गर्न सक्छ — output उही भए (memo को कारणले), subtree re-render skip हुन्छ।",
+        jp: "概念上はい。ただし出力が同一なら（memo などにより）React はサブツリーの再レンダーを省略できます。",
       },
     },
     {
       question: {
-        en: "How do I type a ref for a third-party component?",
-        np: "Third-party component को ref type कसरी गर्ने?",
-        jp: "サードパーティコンポーネントの ref をどう型付けする？",
+        en: "Why does Strict Mode make my API calls fire twice?",
+        np: "Strict Mode ले API calls किन दुई पटक fire गर्छ?",
+        jp: "Strict Mode で API 呼び出しが2回発火するのはなぜ？",
       },
       answer: {
-        en: "Check the library's documentation — most well-maintained libraries export the ref type. If the library doesn't export types, build a minimal interface with just the methods you need: `interface MySelectRef { focus(): void; clear(): void; }` then use `useRef<MySelectRef | null>(null)`.",
-        np: "Library ले ref type export गर्छ — documentation हेर्नुहोस्। Export नभए `interface` बनाउनुहोस्।",
-        jp: "ライブラリのドキュメントで ref 型を確認。エクスポートされていなければ必要なメソッドだけの interface を自作します。",
+        en: "Because your `useEffect` is doing the fetch without proper cleanup/cancellation, and StrictMode's extra mount/unmount/mount cycle exposes it. This is by design — in production (without StrictMode) the same class of bug would manifest as duplicate network requests when a component remounts quickly (e.g. fast navigation). Fix it with an `AbortController` in the effect cleanup, or use a data-fetching library (TanStack Query, Day 17/18) that already handles this.",
+        np: "useEffect मा proper cleanup नभएकोले हो — StrictMode ले यो bug उजागर गर्छ। AbortController वा TanStack Query use गर्नुहोस्।",
+        jp: "useEffect に適切なクリーンアップがないためです。AbortController や TanStack Query の利用で解決します。",
       },
     },
     {
       question: {
-        en: "What is `as const` and when do I need it?",
-        np: "`as const` के हो?",
-        jp: "`as const` とは？",
+        en: "What's the difference between reconciliation and rendering?",
+        np: "Reconciliation र rendering मा के फरक?",
+        jp: "Reconciliation と rendering の違いは？",
       },
       answer: {
-        en: "`as const` tells TypeScript to infer the narrowest possible type. Without it: `const SIZES = ['sm', 'md', 'lg']` is typed as `string[]`. With it: `const SIZES = ['sm', 'md', 'lg'] as const` is `readonly ['sm', 'md', 'lg']`. You can then derive a union type: `type Size = typeof SIZES[number]` which equals `'sm' | 'md' | 'lg'`.",
-        np: "`as const` ले narrowest type infer गर्छ। Array बाट union type derive गर्न उपयोगी।",
-        jp: "`as const` で最も狭い型を推論。`typeof SIZES[number]` で Union 型を導出できます。",
+        en: "\"Rendering\" is React calling your component function to get a description of the UI (JSX -> Virtual DOM nodes). \"Reconciliation\" is the subsequent step of comparing that new description against the previous one to compute what changed. Rendering always happens when a component re-renders; reconciliation is the diffing that decides whether any real DOM work is needed as a result.",
+        np: "Rendering = component function call गरी UI description निकाल्ने। Reconciliation = नयाँ र पुरानो description compare गर्ने।",
+        jp: "Rendering はコンポーネント関数を呼びUI記述を得ること。Reconciliation は新旧の記述を比較すること。",
       },
     },
     {
       question: {
-        en: "How do I handle `any` in legacy code?",
-        np: "Legacy code मा `any` कसरी handle गर्ने?",
-        jp: "レガシーコードの `any` はどう扱う？",
+        en: "Do I need to understand Fiber internals to use React well?",
+        np: "React राम्रोसँग use गर्न Fiber internals बुझ्नुपर्छ?",
+        jp: "React をうまく使うために Fiber の内部を理解する必要はある？",
       },
       answer: {
-        en: "Gradually. Strategy: (1) Enable `strict: true` immediately. (2) Use `unknown` instead of `any` where data comes from outside (API responses, localStorage) — it forces you to check the type before using it. (3) Add types file by file starting with the most-used utilities. (4) Use `// @ts-expect-error` with a comment rather than `// @ts-ignore` — `ts-expect-error` will fail if the error disappears, keeping the codebase honest.",
-        np: "Gradually type गर्नुहोस्। `strict: true` सुरुमा। `any` को सट्टा `unknown` प्रयोग गर्नुहोस्।",
-        jp: "段階的に型付け。`strict: true` 有効化、外部データには `unknown` を使い、ファイル単位で進めましょう。",
+        en: "Not to build most apps — but it's high-value knowledge for three situations: debugging confusing re-render or stale-closure bugs, understanding why `useTransition`/Suspense behave the way they do, and technical interviews at mid-to-senior level, where \"explain what happens when you call setState\" is one of the most common questions.",
+        np: "Basic apps को लागि जरुरी छैन, तर debugging, concurrent features बुझ्न, र interviews को लागि उपयोगी छ।",
+        jp: "基本的なアプリには不要ですが、デバッグ・並行機能の理解・面接対策に有用です。",
       },
     },
   ],
