@@ -22,11 +22,16 @@ import { REACT_DAY_19_DETAIL } from "@/lib/react-learning/react-day-19-detail";
 import { REACT_DAY_20_DETAIL } from "@/lib/react-learning/react-day-20-detail";
 import { REACT_DAY_21_DETAIL } from "@/lib/react-learning/react-day-21-detail";
 import { REACT_DAY_22_DETAIL } from "@/lib/react-learning/react-day-22-detail";
+import { REACT_DAY_23_DETAIL } from "@/lib/react-learning/react-day-23-detail";
+import { REACT_DAY_24_DETAIL } from "@/lib/react-learning/react-day-24-detail";
+import { REACT_DAY_25_DETAIL } from "@/lib/react-learning/react-day-25-detail";
+import { REACT_DAY_26_DETAIL } from "@/lib/react-learning/react-day-26-detail";
+import { REACT_DAY_27_DETAIL } from "@/lib/react-learning/react-day-27-detail";
 import { reactDayTitle, reactTags, reactWeekTitle } from "@/lib/react-learning/react-roadmap-i18n";
 
 export const REACT_CURRENT_DAY = 1;
 
-export const REACT_TOTAL_DAYS = 22;
+export const REACT_TOTAL_DAYS = 27;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_DAY_1_DETAIL,
@@ -51,6 +56,11 @@ const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   20: REACT_DAY_20_DETAIL,
   21: REACT_DAY_21_DETAIL,
   22: REACT_DAY_22_DETAIL,
+  23: REACT_DAY_23_DETAIL,
+  24: REACT_DAY_24_DETAIL,
+  25: REACT_DAY_25_DETAIL,
+  26: REACT_DAY_26_DETAIL,
+  27: REACT_DAY_27_DETAIL,
 };
 
 function reactDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -107,7 +117,9 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#f472b6)]",
     days: [
       reactDayRow(11, ["patterns", "hooks"]),
-      reactDayRow(12, ["error", "suspense"]),
+      reactDayRow(12, ["patterns", "components"]),
+      reactDayRow(13, ["internals", "performance"]),
+      reactDayRow(14, ["error", "suspense"]),
     ],
   },
   {
@@ -115,8 +127,9 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w6"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#60a5fa)]",
     days: [
-      reactDayRow(13, ["typescript", "types"]),
-      reactDayRow(14, ["testing", "quality"]),
+      reactDayRow(15, ["typescript", "types"]),
+      reactDayRow(16, ["testing", "quality"]),
+      reactDayRow(17, ["debugging", "devtools"]),
     ],
   },
   {
@@ -124,8 +137,8 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w7"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#818cf8)]",
     days: [
-      reactDayRow(15, ["routing", "navigation"]),
-      reactDayRow(16, ["zustand", "query"]),
+      reactDayRow(18, ["routing", "navigation"]),
+      reactDayRow(19, ["zustand", "query"]),
     ],
   },
   {
@@ -133,9 +146,9 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w8"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_36%,#f87171)]",
     days: [
-      reactDayRow(17, ["auth", "routing"]),
-      reactDayRow(18, ["query", "mutations"]),
-      reactDayRow(19, ["animation", "framer"]),
+      reactDayRow(20, ["auth", "routing"]),
+      reactDayRow(21, ["query", "mutations"]),
+      reactDayRow(22, ["animation", "framer"]),
     ],
   },
   {
@@ -143,9 +156,18 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w9"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_32%,#4ade80)]",
     days: [
-      reactDayRow(20, ["a11y", "aria"]),
-      reactDayRow(21, ["build", "performance"]),
-      reactDayRow(22, ["architecture", "patterns"]),
+      reactDayRow(23, ["a11y", "aria"]),
+      reactDayRow(24, ["build", "performance"]),
+    ],
+  },
+  {
+    id: "react-w10",
+    title: reactWeekTitle("react-w10"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_28%,#facc15)]",
+    days: [
+      reactDayRow(25, ["projects", "portfolio"]),
+      reactDayRow(26, ["interview", "career"]),
+      reactDayRow(27, ["architecture", "patterns"]),
     ],
   },
 ];
