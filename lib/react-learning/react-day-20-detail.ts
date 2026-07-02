@@ -3,119 +3,67 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_20_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "<b>Accessibility</b> (a11y) means your app works for everyone — people using screen readers, keyboard-only users, people with low vision or motor disabilities. It's not an optional feature; in many countries it's a legal requirement under disability discrimination laws.\n\nThe good news: most accessibility comes free from using the right HTML elements. Analogy: accessible design is like a ramp alongside stairs — it's not just for wheelchair users; it helps everyone with strollers, luggage, or a sprained ankle. Good HTML is like building the ramp into the architecture from the start, not bolting it on afterwards.",
-      np: "Accessibility (a11y) = app सबैले प्रयोग गर्न मिल्ने। Semantic HTML, ARIA, focus management र keyboard navigation।",
-      jp: "アクセシビリティ(a11y)とは、すべての人がアプリを使えるようにすることです。",
+      en: "Authentication is the gatekeeper of your app — it verifies who the user is. In a React SPA, authentication involves: storing a token after login, attaching that token to every API request, and controlling which pages require a logged-in user.\n\nAnalogy: authentication is like a nightclub:\n• The <b>bouncer</b> (login form) checks your ID (credentials)\n• The <b>wristband</b> (JWT token) proves you've been verified\n• <b>Security at each area</b> (protected route) checks the wristband before letting you in\n• The <b>wristband expires</b> after a while (token expiry) — you must renew it",
+      np: "Authentication = app को gatekeeper। Token store, API headers, protected routes build गर्छौं।",
+      jp: "認証はアプリの門番。ログイン後のトークン保存・APIヘッダー付与・保護ルートを実装します。",
     },
     {
-      en: "Today we cover the five pillars of React accessibility:\n\n• <b>Semantic HTML</b> — use the right element for the job; screen readers understand `<button>` but not `<div onClick>`\n• <b>ARIA attributes</b> — bridge the gap when HTML alone can't communicate meaning\n• <b>Focus management</b> — control where keyboard focus goes when modals open/close\n• <b>Keyboard navigation</b> — every interaction must be reachable without a mouse\n• <b>Testing accessibility</b> — automated checks with axe + React Testing Library queries",
-      np: "Semantic HTML, ARIA, focus management, keyboard navigation र testing — पाँच pillars।",
-      jp: "セマンティックHTML・ARIA・フォーカス管理・キーボードナビゲーション・テストの5つを学びます。",
+      en: "In this day we build a complete authentication flow:\n\n<b>What we cover</b>\n• JWT basics and where to store tokens (`localStorage` vs `httpOnly` cookies)\n• Building an `AuthContext` + `useAuth()` custom hook\n• Axios request interceptors — attach tokens automatically to every request\n• Protected routes that redirect unauthenticated users to login\n• Refresh tokens — staying logged in without re-entering credentials",
+      np: "JWT storage, AuthContext, Axios interceptors, protected routes, refresh tokens।",
+      jp: "JWTストレージ・AuthContext・Axiosインターセプター・保護ルート・リフレッシュトークン。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Semantic HTML — the foundation",
-        np: "Semantic HTML — आधार",
-        jp: "セマンティックHTML — 基礎",
+        en: "Token storage — localStorage vs httpOnly cookies",
+        np: "Token storage — localStorage vs cookies",
+        jp: "トークン保存 — localStorage vs Cookie",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Screen readers understand the meaning of HTML elements — `<button>` announces itself as a button, `<nav>` as navigation, `<h1>` as a heading. Generic `<div>` and `<span>` elements have no meaning.\n\nThe most common accessibility mistake in React: using a `<div>` with an `onClick` instead of a `<button>`. A `<button>` is:\n• Keyboard-focusable by default (Tab to reach it)\n• Activatable with Enter and Space keys\n• Announced as \"button\" by screen readers\n• Disabled with the `disabled` attribute\n\nA `<div onClick>` has none of these without extra work.\n\nThe rule: <b>if it does something, it's a `<button>`; if it goes somewhere, it's an `<a>`</b>.",
-            np: "`<button>` keyboard-focusable छ, `<div onClick>` छैन। सही element रोज्नुहोस्।",
-            jp: "`<button>` はキーボードフォーカス可能ですが `<div onClick>` はそうではありません。",
+            en: "After a successful login, the server sends back a token. Where you store it matters for security.\n\n• <b>`localStorage`</b> — easy to use, survives page refresh, readable by any JavaScript on the page\n  ↳ Risk: XSS attacks can steal it if an attacker injects malicious JS\n• <b>`sessionStorage`</b> — same as localStorage but cleared when the tab closes\n  ↳ Good for sensitive sessions, but users get logged out on every tab close\n• <b>`httpOnly` cookie</b> — browser stores it, sends it automatically, JavaScript cannot read it\n  ↳ Best XSS protection, but requires careful CORS and CSRF configuration",
+            np: "localStorage: easy तर XSS vulnerable। httpOnly cookie: XSS-safe तर CORS setup चाहिन्छ।",
+            jp: "localStorage は簡単だが XSS リスク。httpOnly Cookie は安全だが CORS 設定が必要。",
           },
-        },
-        {
-          type: "code",
-          title: { en: "Semantic elements — bad vs good", np: "Semantic HTML उदाहरण", jp: "セマンティックHTMLの例" },
-          code: `// ❌ BAD — div with onClick, no keyboard access, no semantic meaning
-function BadToggle({ isOpen, onToggle }) {
-  return (
-    <div onClick={onToggle} className="toggle-btn">
-      {isOpen ? "Close" : "Open"}
-    </div>
-  );
-}
-
-// ✅ GOOD — button element, keyboard accessible, correct semantics
-function GoodToggle({ isOpen, onToggle }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={isOpen}
-    >
-      {isOpen ? "Close" : "Open"}
-    </button>
-  );
-}
-
-// ✅ Correct landmark structure
-function PageLayout({ children }) {
-  return (
-    <>
-      <header>
-        <nav aria-label="Main navigation">
-          <a href="/">Home</a>
-          <a href="/about">About</a>
-        </nav>
-      </header>
-      <main id="main-content">
-        {children}
-      </main>
-      <footer>
-        <p>© 2025</p>
-      </footer>
-    </>
-  );
-}`,
         },
         {
           type: "table",
           caption: {
-            en: "Semantic HTML elements — use these instead of divs",
-            np: "Semantic elements — div को सट्टा प्रयोग गर्ने",
-            jp: "div の代わりに使うセマンティック要素",
+            en: "Token storage trade-offs — choose based on your security requirements",
+            np: "Token storage trade-offs",
+            jp: "トークン保存の比較",
           },
           headers: [
-            { en: "Element", np: "Element", jp: "要素" },
-            { en: "Role", np: "Role", jp: "ロール" },
-            { en: "Use when", np: "कहिले", jp: "使う場面" },
+            { en: "Storage", np: "Storage", jp: "保存場所" },
+            { en: "XSS safe?", np: "XSS safe?", jp: "XSS安全?" },
+            { en: "CSRF risk?", np: "CSRF risk?", jp: "CSRFリスク?" },
+            { en: "Survives refresh?", np: "Refresh survive?", jp: "更新後も保持?" },
+            { en: "Best for", np: "Best for", jp: "適したケース" },
           ],
           rows: [
             [
-              { en: "`<header>`", np: "`<header>`", jp: "`<header>`" },
-              { en: "banner", np: "banner", jp: "バナー" },
-              { en: "Site header or section header", np: "Site वा section header", jp: "サイトやセクションのヘッダー" },
+              { en: "`localStorage`", np: "`localStorage`", jp: "`localStorage`" },
+              { en: "No", np: "No", jp: "いいえ" },
+              { en: "No", np: "No", jp: "なし" },
+              { en: "Yes", np: "Yes", jp: "はい" },
+              { en: "Learning / low-risk apps", np: "Learning apps", jp: "学習・低リスク" },
             ],
             [
-              { en: "`<nav>`", np: "`<nav>`", jp: "`<nav>`" },
-              { en: "navigation", np: "navigation", jp: "ナビゲーション" },
-              { en: "Primary navigation links", np: "Navigation links", jp: "主要なナビゲーションリンク" },
+              { en: "`sessionStorage`", np: "`sessionStorage`", jp: "`sessionStorage`" },
+              { en: "No", np: "No", jp: "いいえ" },
+              { en: "No", np: "No", jp: "なし" },
+              { en: "Tab only", np: "Tab only", jp: "タブのみ" },
+              { en: "Short-lived sensitive sessions", np: "Short sessions", jp: "短期セッション" },
             ],
             [
-              { en: "`<main>`", np: "`<main>`", jp: "`<main>`" },
-              { en: "main", np: "main", jp: "メインコンテンツ" },
-              { en: "Primary page content (once per page)", np: "मुख्य content (एक पटक मात्र)", jp: "ページの主要コンテンツ（1回のみ）" },
-            ],
-            [
-              { en: "`<article>`", np: "`<article>`", jp: "`<article>`" },
-              { en: "article", np: "article", jp: "記事" },
-              { en: "Self-contained content (blog post, card)", np: "Independent content", jp: "独立したコンテンツ（ブログ記事等）" },
-            ],
-            [
-              { en: "`<button>`", np: "`<button>`", jp: "`<button>`" },
-              { en: "button", np: "button", jp: "ボタン" },
-              { en: "Any clickable action (NOT navigation)", np: "Action (navigation होइन)", jp: "クリック可能なアクション" },
-            ],
-            [
-              { en: "`<a href>`", np: "`<a href>`", jp: "`<a href>`" },
-              { en: "link", np: "link", jp: "リンク" },
-              { en: "Navigation to a URL", np: "URL मा navigate गर्न", jp: "URLへのナビゲーション" },
+              { en: "`httpOnly` cookie", np: "`httpOnly` cookie", jp: "`httpOnly` Cookie" },
+              { en: "Yes", np: "Yes", jp: "はい" },
+              { en: "Yes (need CSRF token)", np: "Yes", jp: "あり(CSRF必要)" },
+              { en: "Yes", np: "Yes", jp: "はい" },
+              { en: "Production / high-security apps", np: "Production apps", jp: "本番・高セキュリティ" },
             ],
           ],
         },
@@ -123,330 +71,428 @@ function PageLayout({ children }) {
     },
     {
       title: {
-        en: "ARIA — when HTML isn't enough",
-        np: "ARIA — HTML पर्याप्त नभएको बेला",
-        jp: "ARIA — HTML だけでは不十分な場合",
+        en: "Building an AuthContext",
+        np: "AuthContext बनाउने",
+        jp: "AuthContext の構築",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "ARIA (Accessible Rich Internet Applications) attributes add semantic information that HTML alone can't provide.\n\nAnalogy: ARIA is like adding subtitles to a silent film — you use it when the visual story can't be understood from the footage alone.\n\nThe golden rule: <b>no ARIA is better than bad ARIA</b>. Wrong ARIA is worse than no ARIA — it actively misleads screen readers.\n\nCommon ARIA attributes:\n• `aria-label` — names an element that has no visible text (icon buttons)\n• `aria-labelledby` — points to another element's text as the label\n• `aria-describedby` — adds a longer description (hint text, error messages)\n• `aria-expanded` — communicates open/closed state of accordions, dropdowns\n• `aria-live` — announces dynamic content changes (notifications, errors)\n• `aria-hidden=\"true\"` — hides decorative elements from screen readers",
-            np: "ARIA attributes screen readers लाई semantic information दिन्छ। Wrong ARIA भन्दा no ARIA better।",
-            jp: "ARIA 属性はスクリーンリーダーに意味を伝えます。誤った ARIA は使わないより悪いです。",
+            en: "An `AuthContext` centralizes all authentication state and logic in one place. Every component that needs to know \"is the user logged in?\" or \"who is the user?\" calls `useAuth()` instead of drilling props through the tree.\n\n• <b>AuthContext</b> holds: current user, token, loading state\n• <b>AuthProvider</b> wraps the app and provides the context value\n• <b>`useAuth()`</b> is the custom hook consumers call — clean and typed",
+            np: "AuthContext मा user, token, loading state। useAuth() hook ले consume गर्छ।",
+            jp: "AuthContext にユーザー・トークン・ローディング状態を集中管理。useAuth() で消費。",
           },
         },
         {
           type: "code",
-          title: { en: "Common ARIA patterns in React", np: "ARIA patterns", jp: "ARIA パターン" },
-          code: `// aria-label for icon-only buttons
-function CloseButton({ onClose }) {
-  return (
-    <button type="button" onClick={onClose} aria-label="Close dialog">
-      ✕  {/* Screen reader announces: "Close dialog, button" */}
-    </button>
-  );
+          title: { en: "auth-context.tsx — complete auth context", np: "auth-context.tsx", jp: "auth-context.tsx" },
+          code: `import { createContext, useContext, useState, useEffect } from "react";
+import { api } from "./api"; // your axios instance
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
 }
 
-// aria-expanded for accordion
-function Accordion({ title, children }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const contentId = useId(); // React 18+ unique ID
-
-  return (
-    <div>
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        aria-controls={contentId}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {title}
-      </button>
-      <div id={contentId} hidden={!isOpen}>
-        {children}
-      </div>
-    </div>
-  );
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
-// aria-live for toast notifications
-function ToastContainer({ message }) {
-  return (
-    // polite = waits for user to finish; assertive = interrupts immediately
-    <div aria-live="polite" aria-atomic="true" className="sr-only">
-      {message}
-    </div>
-  );
-}
+const AuthContext = createContext<AuthContextType | null>(null);
 
-// aria-describedby for form field hints and errors
-function FormField({ id, label, hint, error, ...inputProps }) {
-  const hintId = \`\${id}-hint\`;
-  const errorId = \`\${id}-error\`;
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // true while checking localStorage
 
-  return (
-    <div>
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        aria-describedby={\`\${hint ? hintId : ""} \${error ? errorId : ""}\`.trim()}
-        aria-invalid={!!error}
-        {...inputProps}
-      />
-      {hint && <p id={hintId}>{hint}</p>}
-      {error && <p id={errorId} role="alert">{error}</p>}
-    </div>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Focus management — modals and drawers",
-        np: "Focus management — modals र drawers",
-        jp: "フォーカス管理 — モーダルとドロワー",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When a modal opens, keyboard focus must move inside it — otherwise a keyboard user is stuck interacting with the background. When the modal closes, focus must return to the element that triggered it.\n\nAnalogy: when a modal opens, focus should jump inside it — like a spotlight following the main actor onto the stage. When they exit, the spotlight returns to where it was.\n\nThe three requirements for accessible modals:\n1. When opened — move focus to the first focusable element inside\n2. While open — trap focus (Tab cycles only within the modal)\n3. When closed — return focus to the trigger element\n\n`react-focus-lock` handles all three with a single wrapper component.",
-            np: "Modal खुल्दा focus inside जाने, बन्द हुँदा trigger मा फर्कने। `react-focus-lock` ले automatically handle गर्छ।",
-            jp: "モーダルを開いたらフォーカスを内部へ、閉じたらトリガー要素へ戻します。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Accessible modal with focus trap", np: "Accessible modal", jp: "アクセシブルなモーダル" },
-          code: `import { useRef, useEffect } from "react";
-import FocusLock from "react-focus-lock"; // npm install react-focus-lock
-
-function Modal({ isOpen, onClose, title, children }) {
-  const triggerRef = useRef(null); // store the element that opened the modal
-
-  // Manual approach (without react-focus-lock)
-  const closeButtonRef = useRef(null);
+  // Rehydrate from localStorage on page load
   useEffect(() => {
-    if (isOpen) {
-      // Move focus inside when modal opens
-      closeButtonRef.current?.focus();
+    const storedToken = localStorage.getItem("access_token");
+    const storedUser = localStorage.getItem("user");
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
     }
-  }, [isOpen]);
+    setIsLoading(false);
+  }, []);
 
-  if (!isOpen) return null;
+  async function login(email: string, password: string) {
+    const { data } = await api.post("/auth/login", { email, password });
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem("access_token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+  }
 
-  return (
-    // react-focus-lock traps Tab inside; react-remove-scroll stops background scroll
-    <FocusLock returnFocus> {/* returnFocus automatically restores prior focus */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        className="fixed inset-0 z-50 flex items-center justify-center"
-      >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-        {/* Dialog content */}
-        <div className="relative rounded-2xl bg-white p-6 shadow-2xl">
-          <h2 id="modal-title">{title}</h2>
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="absolute right-4 top-4"
-          >
-            ✕
-          </button>
-          {children}
-        </div>
-      </div>
-    </FocusLock>
-  );
-}
-
-// Keyboard: Escape to close
-useEffect(() => {
-  const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
-  if (isOpen) document.addEventListener("keydown", handleEsc);
-  return () => document.removeEventListener("keydown", handleEsc);
-}, [isOpen, onClose]);`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Keyboard navigation",
-        np: "Keyboard navigation",
-        jp: "キーボードナビゲーション",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Every interaction in your app must be reachable and operable with only a keyboard. The Tab key moves focus between interactive elements. Enter and Space activate buttons/links.\n\nFor custom widgets (tabs, listboxes, tree views), the <b>roving tabindex</b> pattern is the standard:\n• Only ONE item in the group is in the tab sequence at a time (`tabIndex={0}`)\n• All others are removed from tab sequence but programmatically focusable (`tabIndex={-1}`)\n• Arrow keys move the active item and shift the `tabIndex={0}` to the new item\n• This prevents Tab from having to skip through every item in a large list\n\n`tabIndex` values to know:\n• `tabIndex={0}` — natural tab order (same as a native interactive element)\n• `tabIndex={-1}` — not in tab order, but focusable via `element.focus()`\n• `tabIndex={1+}` — avoid; creates unpredictable tab order",
-            np: "Roving tabindex pattern: एक item मात्र tab sequence मा। Arrow keys ले active item move गर्छ।",
-            jp: "ロービングtabindexパターン：グループ内の1要素だけ tab 順序に含め、矢印キーで移動します。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Roving tabindex — accessible tab list", np: "Roving tabindex pattern", jp: "ロービングtabindex" },
-          code: `import { useState, useRef } from "react";
-
-function TabList({ tabs }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const tabRefs = useRef([]);
-
-  function handleKeyDown(e, index) {
-    let newIndex = index;
-
-    if (e.key === "ArrowRight") {
-      newIndex = (index + 1) % tabs.length;
-    } else if (e.key === "ArrowLeft") {
-      newIndex = (index - 1 + tabs.length) % tabs.length;
-    } else if (e.key === "Home") {
-      newIndex = 0;
-    } else if (e.key === "End") {
-      newIndex = tabs.length - 1;
-    } else {
-      return; // let other keys propagate normally
-    }
-
-    e.preventDefault();
-    setActiveIndex(newIndex);
-    tabRefs.current[newIndex]?.focus(); // move focus to new tab
+  function logout() {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
   }
 
   return (
-    <div>
-      <div role="tablist" aria-label="Content tabs">
-        {tabs.map((tab, index) => (
-          <button
-            key={tab.id}
-            ref={(el) => (tabRefs.current[index] = el)}
-            role="tab"
-            id={\`tab-\${tab.id}\`}
-            aria-selected={index === activeIndex}
-            aria-controls={\`panel-\${tab.id}\`}
-            tabIndex={index === activeIndex ? 0 : -1} // roving tabindex
-            onKeyDown={(e) => handleKeyDown(e, index)}
-            onClick={() => setActiveIndex(index)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {tabs.map((tab, index) => (
-        <div
-          key={tab.id}
-          role="tabpanel"
-          id={\`panel-\${tab.id}\`}
-          aria-labelledby={\`tab-\${tab.id}\`}
-          hidden={index !== activeIndex}
-        >
-          {tab.content}
-        </div>
-      ))}
-    </div>
+    <AuthContext.Provider
+      value={{ user, token, isAuthenticated: !!token, isLoading, login, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
 }`,
         },
       ],
     },
     {
       title: {
-        en: "Testing accessibility",
-        np: "Accessibility testing",
-        jp: "アクセシビリティのテスト",
+        en: "Axios interceptors — automatic auth headers",
+        np: "Axios interceptors",
+        jp: "Axios インターセプター",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Automated tools catch ~30% of accessibility issues — the rest require manual testing (keyboard navigation, screen reader). Use both.\n\nTools to use:\n• <b>axe-core</b> — integrates with React DevTools and RTL; catches missing labels, wrong roles, color contrast\n• <b>React Testing Library</b> — its query priorities enforce accessible markup (prefer `getByRole` over `getByTestId`)\n• <b>eslint-plugin-jsx-a11y</b> — catches accessibility issues at write time\n• <b>NVDA</b> (Windows, free) or <b>VoiceOver</b> (Mac, built-in) — real screen reader testing",
-            np: "axe-core, RTL queries, eslint-plugin-jsx-a11y र real screen reader test गर्नुहोस्।",
-            jp: "axe-core・RTL・eslint-plugin-jsx-a11y で自動チェック、実際のスクリーンリーダーでも確認。",
+            en: "An Axios interceptor is like a mail room worker who stamps every outgoing letter with the company letterhead — you don't add it manually to every request, it happens automatically.\n\n• <b>Request interceptor</b> — runs before every request leaves your app, adds the token\n  ↳ Always reads the latest token from localStorage, so it works after a token refresh\n• <b>Response interceptor</b> — runs after every response arrives, handles 401 errors\n  ↳ Can automatically redirect to login or trigger a token refresh",
+            np: "Request interceptor: token header add गर्छ। Response interceptor: 401 handle गर्छ।",
+            jp: "リクエストインターセプターでトークン付与。レスポンスインターセプターで401処理。",
           },
         },
         {
           type: "code",
-          title: { en: "Accessibility testing with RTL and axe", np: "RTL + axe testing", jp: "RTL と axe によるテスト" },
-          code: `// 1. Install: npm install -D @axe-core/react jest-axe
-// For dev-only axe overlay: add to main.jsx
-if (import.meta.env.DEV) {
-  import("@axe-core/react").then(({ default: axe }) => {
-    axe(React, ReactDOM, 1000); // logs violations to console every second
-  });
-}
+          title: { en: "api.ts — Axios instance with interceptors", np: "api.ts", jp: "api.ts" },
+          code: `import axios from "axios";
 
-// 2. jest-axe for automated test assertions
-import { render } from "@testing-library/react";
-import { axe, toHaveNoViolations } from "jest-axe";
-expect.extend(toHaveNoViolations);
-
-test("Button component has no accessibility violations", async () => {
-  const { container } = render(
-    <button type="button" onClick={() => {}}>Submit</button>
-  );
-  const results = await axe(container);
-  expect(results).toHaveNoViolations();
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000/api",
 });
 
-// 3. RTL accessible queries — these ENFORCE good accessibility
-// Preferred order (most to least semantic):
-screen.getByRole("button", { name: /submit/i });      // best
-screen.getByLabelText("Email address");               // for inputs
-screen.getByPlaceholderText("Enter email");           // ok
-screen.getByText("Submit");                           // ok for non-interactive
-screen.getByTestId("submit-btn");                     // last resort
+// REQUEST interceptor — attach token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = \`Bearer \${token}\`;
+  }
+  return config;
+});
 
-// If getByRole fails, your component likely has an accessibility problem
-// (missing aria-label, wrong role, no accessible name)
-
-// 4. Check ARIA state in tests
-test("Accordion is keyboard accessible", async () => {
-  const { getByRole } = render(<Accordion title="FAQ" content="Answer" />);
-  const button = getByRole("button", { name: "FAQ" });
-
-  expect(button).toHaveAttribute("aria-expanded", "false");
-  await userEvent.click(button);
-  expect(button).toHaveAttribute("aria-expanded", "true");
-});`,
+// RESPONSE interceptor — handle 401 (token expired)
+api.interceptors.response.use(
+  (response) => response, // pass through successful responses
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid — clear storage and redirect to login
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Protected routes with auth state",
+        np: "Protected routes",
+        jp: "保護ルート",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A protected route checks if the user is authenticated before showing the page. If not, it redirects to the login page. The key challenge is the <b>loading flash</b> — on page load, before we've checked localStorage, `isAuthenticated` is false, which would incorrectly redirect an already-logged-in user.\n\nSolution: show a loading spinner while `isLoading` is true.",
+            np: "Protected route ले isAuthenticated check गर्छ। isLoading true छ भने spinner देखाउनुस्।",
+            jp: "isLoading 中はスピナーを表示。isAuthenticated でリダイレクト判定。",
+          },
         },
         {
-          type: "table",
-          caption: {
-            en: "WCAG 2.1 conformance levels — what to target",
-            np: "WCAG 2.1 levels",
-            jp: "WCAG 2.1 適合レベル",
+          type: "code",
+          title: { en: "PrivateRoute.tsx + App.tsx wiring", np: "PrivateRoute.tsx", jp: "PrivateRoute.tsx" },
+          code: `// PrivateRoute.tsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "./auth-context";
+
+export function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    // Save the attempted URL so we can redirect back after login
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// App.tsx — wrap protected routes
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/dashboard/*"
+            element={
+              <PrivateRoute>
+                <DashboardLayout />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+// LoginPage.tsx — redirect back after login
+function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname ?? "/dashboard";
+
+  async function handleSubmit(data: { email: string; password: string }) {
+    await login(data.email, data.password);
+    navigate(from, { replace: true }); // go back to where they came from
+  }
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Refresh tokens — staying logged in",
+        np: "Refresh tokens",
+        jp: "リフレッシュトークン",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Short-lived access tokens (15 minutes) limit damage if stolen. Long-lived refresh tokens (7 days) let users stay logged in. The flow:\n\n1. Login returns both: `access_token` (short) + `refresh_token` (long)\n2. API calls use the `access_token`\n3. When `access_token` expires → 401 response\n4. Interceptor catches the 401 → calls `/auth/refresh` with `refresh_token`\n5. Server returns a new `access_token`\n6. Interceptor retries the original request with the new token\n\n↳ The user never sees an error — the token swap is invisible",
+            np: "Access token (15 min) + refresh token (7 days)। Interceptor ले auto-refresh गर्छ।",
+            jp: "短命アクセストークン＋長命リフレッシュトークン。インターセプターが自動更新。",
           },
-          headers: [
-            { en: "Level", np: "Level", jp: "レベル" },
-            { en: "Requirement", np: "आवश्यकता", jp: "要件" },
-            { en: "Example criteria", np: "उदाहरण", jp: "基準例" },
-          ],
-          rows: [
-            [
-              { en: "A — Must", np: "A — अनिवार्य", jp: "A — 必須" },
-              { en: "Minimum; legal floor in most jurisdictions", np: "Minimum legal requirement", jp: "最低限の法的要件" },
-              { en: "All images have alt text; form inputs have labels", np: "Image alt, form labels", jp: "画像にalt・フォームにラベル" },
-            ],
-            [
-              { en: "AA — Should", np: "AA — गर्नुपर्छ", jp: "AA — 推奨" },
-              { en: "Standard target for most apps; required by WCAG compliance", np: "Standard target", jp: "標準的な目標レベル" },
-              { en: "4.5:1 color contrast; keyboard accessible; focus visible", np: "Color contrast, keyboard access", jp: "コントラスト比・キーボード操作" },
-            ],
-            [
-              { en: "AAA — Nice", np: "AAA — राम्रो", jp: "AAA — 理想" },
-              { en: "Enhanced; not required for full conformance", np: "Enhanced, not required", jp: "強化レベル（必須ではない）" },
-              { en: "7:1 contrast; sign language videos; no time limits", np: "7:1 contrast, no time limits", jp: "7:1コントラスト・時間制限なし" },
-            ],
-          ],
+        },
+        {
+          type: "code",
+          title: { en: "Refresh token interceptor", np: "Refresh interceptor", jp: "リフレッシュインターセプター" },
+          code: `// Enhanced response interceptor with token refresh
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: Function; reject: Function }> = [];
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Queue requests while refresh is in progress
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = \`Bearer \${token}\`;
+          return api(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refresh_token");
+        const { data } = await axios.post("/auth/refresh", { refreshToken });
+
+        localStorage.setItem("access_token", data.access_token);
+
+        // Retry all queued requests with new token
+        failedQueue.forEach(({ resolve }) => resolve(data.access_token));
+        failedQueue = [];
+
+        originalRequest.headers.Authorization = \`Bearer \${data.access_token}\`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed — log out
+        failedQueue.forEach(({ reject }) => reject(refreshError));
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The `isRefreshing` flag prevents a race condition: if 3 API calls fail at the same time with 401, only one refresh request is sent. The other 2 are queued and retried once the new token arrives.\n\n• <b>Refresh token rotation</b> — each refresh call invalidates the old refresh token and issues a new one. Prevents replay attacks.\n• <b>Logout everywhere</b> — when a user logs out on one device, invalidate all refresh tokens on the server.",
+            np: "isRefreshing flag ले race condition prevent गर्छ। Rotation + logout-everywhere।",
+            jp: "isRefreshing で競合防止。ローテーション + 全デバイスログアウト。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "OAuth — logging in with Google, GitHub, etc.",
+        np: "OAuth — Google, GitHub जस्ता provider बाट login",
+        jp: "OAuth — Google・GitHub などでのログイン",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Everything above assumed <b>your own backend</b> issues the token after checking a password it owns. OAuth flips that: a third-party provider (Google, GitHub) authenticates the user, and your app never sees their Google password at all. Analogy: JWT auth is your own building's ID badge system — you issue and check the badges. OAuth is like a hotel accepting a government-issued passport instead — you trust a passport office (Google) you don't control, and you just verify the passport is real.\n\n<b>The Authorization Code flow, from the frontend's point of view:</b>\n• Your app redirects the browser to Google's login/consent screen, with your app's `client_id` and a `redirect_uri` in the URL\n• The user logs in and approves — Google redirects back to your `redirect_uri` with a one-time `code` in the query string\n• Your <b>backend</b> (never the frontend — this step needs a secret `client_secret`) exchanges that `code` for Google's tokens and the user's profile\n• Your backend then issues <b>its own</b> JWT/session for your app, exactly like the login flow earlier in this day\n\n↳ The frontend's real job is small: build the redirect URL, host a callback route, and hand the `code` off to your backend. The `client_secret` exchange must never happen in frontend code — it would leak your app's secret to anyone who opens DevTools.",
+            np: "OAuth मा third-party (Google) ले authenticate गर्छ, तपाईंको backend ले उनको password कहिल्यै देख्दैन। Frontend ले redirect + callback route मात्र handle गर्छ; `code`-लाई token मा exchange गर्ने काम backend ले गर्नुपर्छ (client_secret सुरक्षित राख्न)।",
+            jp: "OAuth ではGoogleなど第三者が認証し、あなたのバックエンドはパスワードを一切見ません。フロントエンドはリダイレクトとコールバックのみ担当し、`code`のトークン交換は必ずバックエンドで行います（client_secret 漏洩防止）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Google OAuth — redirect button + callback route", np: "Google OAuth उदाहरण", jp: "Google OAuth の例" },
+          code: `// LoginPage.tsx — "Sign in with Google" button
+function GoogleSignInButton() {
+  function handleGoogleLogin() {
+    const params = new URLSearchParams({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirect_uri: \`\${window.location.origin}/auth/google/callback\`,
+      response_type: "code",
+      scope: "openid email profile",
+    });
+    // Full page redirect — this is NOT an API call, it navigates away from your app
+    window.location.href = \`https://accounts.google.com/o/oauth2/v2/auth?\${params}\`;
+  }
+
+  return <button onClick={handleGoogleLogin}>Sign in with Google</button>;
+}
+
+// GoogleCallback.tsx — the route Google redirects back to
+function GoogleCallback() {
+  const [searchParams] = useSearchParams();
+  const { setSession } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (!code) return;
+
+    // Hand the code to YOUR backend — it holds the client_secret and
+    // does the real token exchange with Google, then returns YOUR app's own token
+    api.post("/auth/google/callback", { code }).then(({ data }) => {
+      setSession(data.token, data.user); // same shape as a normal login response
+      navigate("/dashboard", { replace: true });
+    });
+  }, [searchParams]);
+
+  return <div>Signing you in...</div>;
+}
+
+// In real projects, most teams skip hand-rolling this and use either:
+// - @react-oauth/google (handles the redirect + token dance for Google specifically)
+// - A backend-driven library like NextAuth.js / Auth.js, which manages
+//   the whole provider list (Google, GitHub, etc.) server-side`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Role-based access control (RBAC) — different UI for different roles",
+        np: "Role-based access control (RBAC)",
+        jp: "ロールベースアクセス制御（RBAC）",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Authentication answers \"who is this user?\" — authorization (RBAC) answers \"what is this user allowed to do?\". Once your backend includes a `role` (or a `permissions` array) on the user object returned at login, the frontend can conditionally render UI based on it. Analogy: authentication is the wristband that gets you into the venue; RBAC is the different colored wristbands that decide whether you can also get backstage.\n\n<b>The pattern:</b> a `useHasPermission()` hook for inline checks, and a `<RequireRole>` guard component (the same shape as `PrivateRoute` above) for gating entire routes.\n\n<b>Critical security caveat:</b> frontend RBAC is a UX convenience only — it hides buttons/routes a user shouldn't see, making the app feel coherent. It is <b>not</b> a security boundary. Any user can open DevTools and re-enable a hidden button, or call your API directly with a stolen token. The backend must independently re-check permissions on every single request — never trust that \"the frontend already checked.\"",
+            np: "Authentication ले 'को हो' भन्छ, RBAC ले 'के गर्न पाउँछ' भन्छ। Frontend RBAC UX मात्र हो — real security चाहिँ backend ले हरेक request मा independently check गर्नुपर्छ।",
+            jp: "認証は「誰か」、RBAC は「何ができるか」を答えます。フロントエンドの RBAC は UX 目的のみ — 実際のセキュリティはバックエンドが毎リクエスト独立して検証する必要があります。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "useHasPermission hook + RequireRole guard", np: "useHasPermission + RequireRole", jp: "useHasPermission + RequireRole" },
+          code: `// user object now carries roles from the backend
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "editor" | "viewer";
+}
+
+// Inline check — hide/show a button
+function useHasPermission(requiredRole: User["role"]) {
+  const { user } = useAuth();
+  const ROLE_RANK = { viewer: 0, editor: 1, admin: 2 };
+  if (!user) return false;
+  return ROLE_RANK[user.role] >= ROLE_RANK[requiredRole];
+}
+
+function InvoiceToolbar() {
+  const canEdit = useHasPermission("editor");
+  return (
+    <div>
+      <button>View Invoice</button>
+      {canEdit && <button>Edit Invoice</button>} {/* hidden for viewers */}
+    </div>
+  );
+}
+
+// Route-level guard — parallel to PrivateRoute, but role-aware
+function RequireRole({
+  role,
+  children,
+}: {
+  role: User["role"];
+  children: React.ReactNode;
+}) {
+  const { user, isLoading } = useAuth();
+  const hasAccess = useHasPermission(role);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!hasAccess) return <Navigate to="/403" replace />; // logged in, but not allowed
+
+  return <>{children}</>;
+}
+
+// App.tsx
+<Route
+  path="/admin/*"
+  element={
+    <RequireRole role="admin">
+      <AdminPanel />
+    </RequireRole>
+  }
+/>
+
+// REMINDER: /api/admin/* endpoints on the server must ALSO check req.user.role === "admin"
+// independently. This frontend guard only prevents accidental navigation, not attacks.`,
         },
       ],
     },
@@ -454,62 +500,74 @@ test("Accordion is keyboard accessible", async () => {
   faq: [
     {
       question: {
-        en: "What is the difference between aria-label and aria-labelledby?",
-        np: "aria-label र aria-labelledby मा के फरक?",
-        jp: "aria-label と aria-labelledby の違いは？",
+        en: "Is it safe to store JWT in localStorage?",
+        np: "localStorage मा JWT राख्नु safe छ?",
+        jp: "localStorage に JWT を保存しても安全？",
       },
       answer: {
-        en: "`aria-label` provides the accessible name as a string directly: `aria-label=\"Close menu\"`. `aria-labelledby` points to another element's text: `aria-labelledby=\"modal-title-id\"` — the accessible name is whatever text that element contains. Use `aria-labelledby` when a visible label element already exists (avoids duplication and stays in sync). Use `aria-label` for icon-only elements with no visible label.",
-        np: "`aria-label` = direct string। `aria-labelledby` = अर्को element को text point। Visible label छ भने `aria-labelledby` use गर्नुहोस्।",
-        jp: "`aria-label` は直接文字列を指定。`aria-labelledby` は別要素のテキストを参照します。",
+        en: "It depends on your XSS exposure. If your app has no XSS vulnerabilities, localStorage is fine. For apps handling sensitive data (banking, health), use httpOnly cookies which JavaScript cannot read. The practical rule: most SPAs use localStorage; high-security apps use httpOnly cookies.",
+        np: "XSS exposure मा depend। Sensitive apps मा httpOnly cookies प्रयोग गर्नुस्।",
+        jp: "XSS リスク次第。高セキュリティアプリは httpOnly Cookie を使う。",
       },
     },
     {
       question: {
-        en: "What are the most common accessibility mistakes in React?",
-        np: "React मा सबभन्दा common accessibility mistakes?",
-        jp: "React で最も多いアクセシビリティの間違いは？",
+        en: "What is the difference between JWT and sessions?",
+        np: "JWT र sessions मा के फरक?",
+        jp: "JWT とセッションの違いは？",
       },
       answer: {
-        en: "The top 5:\n• `<div onClick>` instead of `<button>` — not keyboard accessible\n• Missing `alt` on `<img>` — screen readers read the file name\n• Form inputs without `<label>` — users can't tell what to type\n• Missing focus styles — `outline: none` without a replacement loses keyboard users\n• `aria-hidden=\"true\"` on elements that contain interactive content — hides them from assistive tech but they're still clickable",
-        np: "div onClick, img without alt, input without label, focus style हटाउनु — top 5 mistakes।",
-        jp: "div onClick、alt なし img、label なし input、フォーカススタイル削除が主な間違いです。",
+        en: "Sessions store auth state on the server (a session ID maps to user data in a database/Redis). JWT is stateless — the token itself contains the user data, signed by the server. Sessions are easier to invalidate (delete the record); JWT invalidation requires a token blacklist or short expiry + refresh tokens.",
+        np: "Session: server-side। JWT: stateless, token मा data। JWT revocation गाह्रो।",
+        jp: "セッションはサーバー側。JWTはステートレスでトークン自体にデータを含む。",
       },
     },
     {
       question: {
-        en: "Do I need to test with a real screen reader?",
-        np: "Real screen reader सँग test गर्नु पर्छ?",
-        jp: "実際のスクリーンリーダーでテストする必要がありますか？",
+        en: "How do I handle 'remember me' functionality?",
+        np: "'Remember me' कसरी handle गर्ने?",
+        jp: "「ログインを保持」はどう実装？",
       },
       answer: {
-        en: "Yes, eventually. Automated tools catch structural issues but can't tell you if the experience makes sense. Spend 30 minutes with VoiceOver (Mac: Cmd+F5) or NVDA (Windows, free) navigating your app with only the keyboard and no mouse. You'll find issues automated tools miss: confusing announcement order, verbose labels, navigation that works visually but is disorienting by ear. Aim for a weekly screen reader check on critical user flows.",
-        np: "हो। Automated tools ~30% issue catch गर्छ। VoiceOver वा NVDA सँग manual test पनि गर्नुहोस्।",
-        jp: "はい。自動ツールは~30%しか検出できません。VoiceOver や NVDA でも確認しましょう。",
+        en: "Issue a longer-lived refresh token (30 days instead of 7) when the user checks 'remember me'. Store in localStorage (persists after browser close) instead of sessionStorage. On the server, differentiate token TTLs by the remember_me flag in the login request.",
+        np: "Remember me: longer refresh token (30 days)। localStorage store गर्नुस्।",
+        jp: "「記憶する」: リフレッシュトークンを 30 日に延長し localStorage に保存。",
       },
     },
     {
       question: {
-        en: "What is the color contrast requirement?",
-        np: "Color contrast requirement के हो?",
-        jp: "カラーコントラストの要件は？",
+        en: "What happens when the access token expires mid-request?",
+        np: "Request बीचमा token expire भयो भने?",
+        jp: "リクエスト中にアクセストークンが期限切れになったら？",
       },
       answer: {
-        en: "WCAG AA requires: 4.5:1 contrast ratio for normal text, 3:1 for large text (18pt+ or 14pt+ bold). Use a tool to check: the axe browser extension highlights contrast failures. Common mistake: light gray text on white backgrounds. Rule of thumb: if you squint and the text is hard to read, it probably fails contrast. Tailwind's default text colors are designed to meet AA requirements.",
-        np: "WCAG AA: normal text 4.5:1, large text 3:1 contrast ratio। axe extension ले check गर्न सकिन्छ।",
-        jp: "WCAG AA：通常テキスト 4.5:1、大きいテキスト 3:1 のコントラスト比が必要です。",
+        en: "The server returns 401. The Axios response interceptor catches it, silently calls the refresh endpoint, gets a new access token, then retries the original request — all without the user seeing an error. This is the refresh token interceptor pattern shown in Section 5.",
+        np: "401 → interceptor ले refresh call गर्छ → original request retry।",
+        jp: "401 → インターセプターがリフレッシュ → 元のリクエストをリトライ。",
       },
     },
     {
       question: {
-        en: "Does Tailwind CSS support accessibility out of the box?",
-        np: "Tailwind CSS ले accessibility automatically support गर्छ?",
-        jp: "Tailwind CSS はアクセシビリティをすぐにサポートしていますか？",
+        en: "How do I test protected routes?",
+        np: "Protected routes कसरी test गर्ने?",
+        jp: "保護ルートのテスト方法は？",
       },
       answer: {
-        en: "Partially. Tailwind provides utilities that help: `sr-only` (visually hides but keeps in accessibility tree), `not-sr-only` (reverses it), `focus:ring` for visible focus styles, and default text colors that meet contrast ratios. But Tailwind can't force you to use semantic elements, add ARIA attributes, or manage focus. It's a tool; accessibility still requires deliberate choices. One gotcha: if you use `outline-none` to remove focus rings, always add a `focus:ring` alternative.",
-        np: "`sr-only`, `focus:ring` utilities helpful छ। तर semantic HTML र ARIA आफैं गर्नु पर्छ।",
-        jp: "`sr-only`・`focus:ring` など便利なユーティリティがありますが、セマンティックHTMLやARIAは自分で対応が必要です。",
+        en: "Wrap the component in a test with a mock AuthProvider that returns `isAuthenticated: false` and check for a redirect to `/login`. For authenticated tests, return `isAuthenticated: true` with a mock user. Mock the Axios instance with `vi.mock('./api')` to avoid real network calls.",
+        np: "Mock AuthProvider साथ test। vi.mock('./api') ले API mock गर्नुस्।",
+        jp: "モック AuthProvider でテスト。vi.mock('./api') で API をモック。",
+      },
+    },
+    {
+      question: {
+        en: "Why can't the frontend do the OAuth token exchange itself?",
+        np: "Frontend ले OAuth token exchange आफैं किन गर्न सक्दैन?",
+        jp: "なぜフロントエンドが OAuth のトークン交換を行えないのか？",
+      },
+      answer: {
+        en: "The token exchange step requires your app's `client_secret` — a value that proves to Google/GitHub that the request really comes from your registered app. Any secret shipped in frontend JavaScript is visible to anyone who opens DevTools, which defeats its purpose. That's why the `code` your callback route receives must be sent to your own backend, which holds the secret safely in server-side environment variables.",
+        np: "Token exchange मा `client_secret` चाहिन्छ, जुन frontend JS मा राख्दा DevTools बाट देखिन्छ। त्यसैले `code` backend मा पठाउनुपर्छ।",
+        jp: "トークン交換には `client_secret` が必要で、フロントエンドに置くと DevTools で見えてしまいます。だから `code` はバックエンドに送る必要があります。",
       },
     },
   ],

@@ -3,328 +3,530 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "React apps are <b>single-page applications</b> — the server sends one HTML file, and JavaScript handles showing different \"pages.\" React Router maps URLs to components.\n\nAnalogy: React Router is like a hotel receptionist — the guest (URL) comes in, the receptionist (router) checks the list, and sends them to the right room (component). You change rooms (navigate) without checking out of the hotel (no page reload).\n\n<b>Why not just use `<a>` tags?</b> A normal link reloads the entire page from the server. React Router intercepts the click, updates the URL bar, and swaps the component — instant, no flicker.",
-      np: "React Router ले URL लाई component मा map गर्छ। SPA मा page reload नभई navigation हुन्छ।",
-      jp: "React Router は URL をコンポーネントにマッピングします。SPA なのでページリロードなしで画面が切り替わります。",
+      en: "TypeScript adds a type layer on top of JavaScript. In React, this means your IDE knows exactly what props a component accepts, what events your handlers receive, and what your hooks return — before you even run the code.\n\nAnalogy: TypeScript is like labels on every box in a warehouse — without labels you have to open each box to know what's inside; with labels, you find what you need instantly and can't accidentally put the wrong thing in the wrong box.\n\n<b>Why TypeScript in React?</b>\n• <b>Autocomplete</b> — your editor suggests valid props as you type\n• <b>Catch bugs early</b> — passing a number where a string is expected becomes a compile error, not a runtime crash\n• <b>Self-documenting</b> — the type signature tells you exactly how to use a component without reading its source\n• <b>Safe refactoring</b> — rename a prop and TypeScript flags every file that needs updating",
+      np: "TypeScript ले JavaScript माथि type layer थप्छ। React मा: props, events, hooks सबैमा type safety।",
+      jp: "TypeScript は JavaScript に型を追加。props・イベント・フックの型が IDE に見えるので補完とバグ検出が改善します。",
     },
     {
-      en: "In this day we cover:\n\n• <b>`BrowserRouter`</b> — wraps your app and enables URL-based routing\n• <b>Route definitions</b> — map paths to components\n• <b>`<Link>` and `<NavLink>`</b> — client-side navigation without page refresh\n• <b>URL params and search params</b> — reading `:id` and `?sort=price` from the URL\n• <b>Nested routes with `<Outlet>`</b> — shared layout components\n• <b>`useNavigate`</b> — programmatic navigation from code\n• <b>Protected routes</b> — redirect unauthenticated users to login",
-      np: "BrowserRouter, routes, Link, URL params, nested routes, useNavigate, protected routes — सबै cover गर्छौं।",
-      jp: "BrowserRouter・ルート定義・Link・URLパラメータ・ネストルート・useNavigate・保護ルートを網羅します。",
+      en: "In this day we cover:\n\n• Setting up a React + TypeScript project with Vite\n• Typing component <b>props interfaces</b>\n• <b>Event types</b> — MouseEvent, ChangeEvent, FormEvent\n• Typing <b>hooks</b> — useState, useRef, useReducer, useContext\n• <b>Generic components</b> — reusable components that work with any data type\n• Useful <b>utility types</b> — Partial, Pick, Omit, ComponentProps",
+      np: "Vite setup, props typing, event types, hooks typing, generic components, utility types — सबै cover गर्छौं।",
+      jp: "Vite セットアップ、props 型付け、イベント型、フック型付け、ジェネリックコンポーネント、ユーティリティ型を学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Setting up React Router v6",
-        np: "React Router v6 सेटअप",
-        jp: "React Router v6 のセットアップ",
+        en: "Setting up React with TypeScript",
+        np: "React + TypeScript सेटअप",
+        jp: "React + TypeScript のセットアップ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Install React Router, wrap your app in `<BrowserRouter>`, then define routes with `<Routes>` and `<Route>`.\n\n• `path=\"/\"` — home page\n• `path=\"/posts/:id\"` — `:id` is a URL parameter (wildcard that matches anything)\n• `path=\"*\"` — catch-all for 404 pages\n\n<b>v6 vs v5 changes:</b> `<Switch>` became `<Routes>`, the `exact` prop is gone (all routes match exactly by default), and `component=` became `element=`.",
-            np: "npm install react-router-dom। BrowserRouter ले app wrap गर्नुहोस्। Routes र Route ले path-to-component map गर्छ।",
-            jp: "npm install 後、BrowserRouter でアプリをラップし Routes / Route でパスとコンポーネントを対応付けます。",
+            en: "Vite makes TypeScript setup trivial — one flag and you get a fully configured project with `tsconfig.json`, `.tsx` files, and type checking built in.\n\nThe most important `tsconfig.json` option is `\"strict\": true` — this enables a bundle of strict checks that catch the most common mistakes. Always start with strict mode on.",
+            np: "Vite को `--template react-ts` flag ले TypeScript project ready गर्छ। `strict: true` सधैं राख्नुहोस्।",
+            jp: "`--template react-ts` で完全な TypeScript 構成が即座に用意されます。`strict: true` は必ず有効にしましょう。",
           },
         },
         {
           type: "code",
           title: {
-            en: "main.jsx + App.jsx — basic routing setup",
-            np: "basic routing setup",
-            jp: "基本ルーティング設定",
+            en: "Create a project + key tsconfig options",
+            np: "Project बनाउने + tsconfig",
+            jp: "プロジェクト作成と tsconfig",
           },
-          code: `// main.jsx
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
+          code: `# Create a React + TypeScript project
+npm create vite@latest my-app -- --template react-ts
+cd my-app && npm install && npm run dev
 
-createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
-);
+// tsconfig.json — key options
+{
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "paths": { "@/*": ["./src/*"] }
+  }
+}
 
-// App.jsx
-import { Routes, Route } from "react-router-dom";
-import Home       from "./pages/Home";
-import PostList   from "./pages/PostList";
-import PostDetail from "./pages/PostDetail";
-import NotFound   from "./pages/NotFound";
-import Navbar     from "./components/Navbar";
+// Preferred — plain function with typed props
+function Button({ label, onClick }: ButtonProps) { return <button onClick={onClick}>{label}</button>; }
 
-export default function App() {
+// Avoid React.FC — has implicit children, awkward generics
+// const Button: React.FC<ButtonProps> = ({ label }) => { ... }`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Why avoid `React.FC`?</b>\n• It implicitly adds `children?: ReactNode` to every component — even ones that shouldn't accept children\n• It makes generics awkward\n• The React team itself moved away from it\n\nJust type props directly on the function — simpler and more explicit.",
+            np: "`React.FC` ले implicit children थप्छ र generics awkward बनाउँछ। Plain typed function नै राम्रो।",
+            jp: "`React.FC` は暗黙の children と不便なジェネリクスがあるため、直接 props を型付けした関数が推奨です。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Typing component props",
+        np: "Component props type गर्ने",
+        jp: "コンポーネント props の型付け",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Props are the primary place you spend time with TypeScript in React. Use `interface` for objects you'll extend; use `type` for unions and computed types. Either works — pick one and be consistent.\n\n<b>Common prop patterns:</b>\n• <b>Required prop</b> — `label: string`\n• <b>Optional prop with default</b> — `variant?: 'primary' | 'secondary'`\n• <b>Callback prop</b> — `onClick?: (id: string) => void`\n• <b>Children</b> — `children: React.ReactNode`\n• <b>CSS class override</b> — `className?: string`",
+            np: "Interface vs type: दुवै चल्छ। Union types, optional props, callback props — सबै patterns।",
+            jp: "interface と type は混在可能。Union 型、省略可能 props、コールバック props の典型パターン。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Props interfaces — common patterns",
+            np: "Props interface patterns",
+            jp: "props インターフェースのパターン",
+          },
+          code: `interface ButtonProps {
+  label: string;
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "sm" | "md" | "lg";
+  disabled?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+function Button({ label, variant = "primary", size = "md", disabled = false, onClick }: ButtonProps) {
   return (
-    <>
-      <Navbar />
-      <Routes>
-        <Route path="/"          element={<Home />} />
-        <Route path="/posts"     element={<PostList />} />
-        <Route path="/posts/:id" element={<PostDetail />} />
-        <Route path="*"          element={<NotFound />} />
-      </Routes>
-    </>
+    <button className={\`btn btn-\${variant} btn-\${size}\`} disabled={disabled} onClick={onClick}>
+      {label}
+    </button>
   );
 }
 
-// Navbar.jsx — client-side links
-import { Link, NavLink } from "react-router-dom";
+// Discriminated union — different shapes for different alert types
+type AlertProps =
+  | { type: "success"; message: string }
+  | { type: "error"; message: string; code: number }
+  | { type: "warning"; message: string; dismissible?: boolean };
 
-export default function Navbar() {
-  return (
-    <nav>
-      <Link to="/">Home</Link>
-      {/* NavLink adds an "active" class when the URL matches */}
-      <NavLink to="/posts" className={({ isActive }) => isActive ? "active" : ""}>
-        Posts
-      </NavLink>
-    </nav>
-  );
+function Alert(props: AlertProps) {
+  if (props.type === "error") {
+    // TypeScript knows props.code exists here
+    return <div>Error {props.code}: {props.message}</div>;
+  }
+  return <div>{props.message}</div>;
 }`,
         },
       ],
     },
     {
       title: {
-        en: "URL parameters and search params",
-        np: "URL parameters र search params",
-        jp: "URLパラメータとサーチパラメータ",
+        en: "Typing events",
+        np: "Event types",
+        jp: "イベントの型付け",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React Router gives you two types of dynamic URL data:\n\n• <b>URL parameters</b> — part of the path: `/posts/42` → `:id` = `\"42\"`\n  ↳ Use `useParams()` to read them\n• <b>Search params</b> — after the `?`: `/posts?sort=price&order=asc`\n  ↳ Use `useSearchParams()` to read and update them\n\nSearch params are great for filters and sorting — they're bookmarkable, shareable, and updating them doesn't cause a navigation.",
-            np: "useParams() ले :id पढ्छ। useSearchParams() ले ?sort=price जस्ता query strings पढ्छ।",
-            jp: "`useParams()` で `:id`、`useSearchParams()` で `?sort=price` のようなクエリを読み取ります。",
+            en: "React wraps native browser events in its own `SyntheticEvent` system. Each event type is a generic: `React.ChangeEvent<HTMLInputElement>` means \"a change event on an input element.\" TypeScript narrows the event so `e.target.value` is always a string, not `any`.",
+            np: "React events generic हुन्छन्: `ChangeEvent<HTMLInputElement>` मा `e.target.value` string नै हो।",
+            jp: "React イベントはジェネリックで、`ChangeEvent<HTMLInputElement>` なら `e.target.value` が string と確定します。",
+          },
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Common React event types",
+            np: "सामान्य event types",
+            jp: "よく使う React イベント型",
+          },
+          headers: [
+            { en: "Event", np: "Event", jp: "イベント" },
+            { en: "Type", np: "Type", jp: "型" },
+            { en: "Use for", np: "प्रयोग", jp: "用途" },
+          ],
+          rows: [
+            [
+              { en: "onClick", np: "onClick", jp: "onClick" },
+              { en: "React.MouseEvent<HTMLButtonElement>", np: "MouseEvent", jp: "MouseEvent" },
+              { en: "Button clicks", np: "Button click", jp: "ボタンクリック" },
+            ],
+            [
+              { en: "onChange", np: "onChange", jp: "onChange" },
+              { en: "React.ChangeEvent<HTMLInputElement>", np: "ChangeEvent", jp: "ChangeEvent" },
+              { en: "Input, select, textarea", np: "Input, select", jp: "入力要素" },
+            ],
+            [
+              { en: "onSubmit", np: "onSubmit", jp: "onSubmit" },
+              { en: "React.FormEvent<HTMLFormElement>", np: "FormEvent", jp: "FormEvent" },
+              { en: "Form submission", np: "Form submit", jp: "フォーム送信" },
+            ],
+            [
+              { en: "onKeyDown", np: "onKeyDown", jp: "onKeyDown" },
+              { en: "React.KeyboardEvent<HTMLInputElement>", np: "KeyboardEvent", jp: "KeyboardEvent" },
+              { en: "Keyboard shortcuts", np: "Keyboard", jp: "キーボード操作" },
+            ],
+            [
+              { en: "onDrop", np: "onDrop", jp: "onDrop" },
+              { en: "React.DragEvent<HTMLDivElement>", np: "DragEvent", jp: "DragEvent" },
+              { en: "Drag and drop", np: "Drag & drop", jp: "ドラッグ＆ドロップ" },
+            ],
+          ],
+        },
+        {
+          type: "code",
+          title: {
+            en: "Event typing in practice",
+            np: "Event typing example",
+            jp: "イベント型付けの実例",
+          },
+          code: `function SearchForm() {
+  const [query, setQuery] = React.useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value); // TypeScript knows this is a string
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Searching for:", query);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={query} onChange={handleChange} />
+      <button type="submit">Search</button>
+    </form>
+  );
+}
+
+// Custom event callback types
+interface TableProps {
+  onRowSelect: (id: string) => void;
+  onSort: (column: string, direction: "asc" | "desc") => void;
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Typing hooks",
+        np: "Hooks type गर्ने",
+        jp: "フックの型付け",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Most hooks infer their types automatically from the initial value. But for nullable state (`null` initially, something later) you must provide an explicit generic — otherwise TypeScript infers the type as `null` forever.",
+            np: "Hooks अधिकतर type infer गर्छन्। Nullable state मा explicit generic चाहिन्छ।",
+            jp: "フックは多くの場合型を推論しますが、初期値が null の場合は明示的なジェネリクスが必要です。",
           },
         },
         {
           type: "code",
           title: {
-            en: "useParams + useSearchParams",
-            np: "params examples",
-            jp: "パラメータの例",
+            en: "Typing useState, useRef, useReducer, custom hooks",
+            np: "Hook types",
+            jp: "フックの型付け例",
           },
-          code: `// PostDetail.jsx — reading a URL parameter
-import { useParams } from "react-router-dom";
+          code: `// useState — explicit generic when initial value is null
+const [user, setUser] = useState<User | null>(null);
+const [posts, setPosts] = useState<Post[]>([]);
+const [count, setCount] = useState(0); // inferred as number
 
-export default function PostDetail() {
-  const { id } = useParams();  // "/posts/42" → id = "42"
+// useRef — typed to the DOM element
+const inputRef = useRef<HTMLInputElement>(null);
+// inputRef.current is HTMLInputElement | null
 
-  // fetch by id (TanStack Query)
-  const { data: post, isLoading } = useQuery({
-    queryKey: ["post", id],
-    queryFn:  () => fetch(\`/api/posts/\${id}\`).then(r => r.json()),
+// useReducer
+type State = { count: number; status: "idle" | "loading" | "error" };
+type Action = { type: "increment" } | { type: "setLoading" } | { type: "reset" };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "increment": return { ...state, count: state.count + 1 };
+    case "setLoading": return { ...state, status: "loading" };
+    case "reset":      return { count: 0, status: "idle" };
+  }
+}
+const [state, dispatch] = useReducer(reducer, { count: 0, status: "idle" });
+
+// useContext — guard against null
+const ThemeContext = createContext<"light" | "dark" | null>(null);
+function useTheme() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error("useTheme must be inside ThemeProvider");
+  return ctx; // now guaranteed non-null
+}
+
+// Generic custom hook
+function useLocalStorage<T>(key: string, initial: T): [T, (val: T) => void] {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : initial;
+  });
+  const set = (val: T) => {
+    localStorage.setItem(key, JSON.stringify(val));
+    setValue(val);
+  };
+  return [value, set];
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Generic hooks — type-safe custom hooks for any data shape",
+        np: "Generic hooks — कुनै पनि data shape को लागि type-safe custom hooks",
+        jp: "ジェネリックフック — 任意のデータ形状に対応する型安全なカスタムフック",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The `useLocalStorage<T>` hook above already showed the shape: a custom hook needs its own type parameter whenever the data it stores or returns changes per caller. Without a generic, the hook has to pick one hard-coded type (or fall back to `any`, which silently loses all safety) — with a generic, every call site gets its own correct, narrow type.\n\n<b>Why this matters:</b> `useLocalStorage<User>('user', defaultUser)` should return `[User, (val: User) => void]`, while `useLocalStorage<Settings>('settings', defaultSettings)` should return `[Settings, (val: Settings) => void]` — same hook implementation, two completely different, correctly-typed call sites.\n\n<b>Syntax gotcha in `.tsx` files:</b> writing an arrow function with a bare generic — `const useFetch = <T>(url: string) => {...}` — is ambiguous with JSX syntax and fails to parse in `.tsx`. Add a trailing comma: `<T,>(url: string) => {...}`. Regular `function` declarations (like `function useFetch<T>(url: string) {...}`) don't have this problem — prefer them when writing generic hooks in `.tsx` files.",
+            np: "Custom hook ले फरक callers मा फरक data return गर्नुपर्दा generic `<T>` चाहिन्छ। `.tsx` मा arrow function generic लेख्दा `<T,>` (trailing comma) चाहिन्छ — JSX सँग ambiguous हुनबाट बचाउन। `function` declaration मा यो समस्या हुँदैन।",
+            jp: "呼び出し元ごとに異なるデータを返す必要があるカスタムフックにはジェネリック `<T>` が必要です。`.tsx` でアロー関数にジェネリックを書く場合は `<T,>`（末尾カンマ）が必要— JSX と曖昧にならないようにするためです。`function` 宣言ではこの問題は起きません。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "A generic useFetch<T> hook",
+            np: "Generic useFetch<T> hook",
+            jp: "ジェネリック useFetch<T> フック",
+          },
+          code: `interface FetchState<T> {
+  data: T | null;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+// "function" declaration avoids the <T,> trailing-comma gotcha entirely
+function useFetch<T>(url: string): FetchState<T> {
+  const [state, setState] = useState<FetchState<T>>({
+    data: null,
+    isLoading: true,
+    error: null,
   });
 
-  if (isLoading) return <p>Loading...</p>;
-  return <h1>{post.title}</h1>;
+  useEffect(() => {
+    let cancelled = false;
+    setState({ data: null, isLoading: true, error: null });
+
+    fetch(url)
+      .then((res) => res.json() as Promise<T>)
+      .then((data) => {
+        if (!cancelled) setState({ data, isLoading: false, error: null });
+      })
+      .catch((error: Error) => {
+        if (!cancelled) setState({ data: null, isLoading: false, error });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return state;
 }
 
-// PostList.jsx — reading + updating search params
-import { useSearchParams } from "react-router-dom";
+// Each call site gets its own correctly-typed result — no "any" anywhere
+interface User { id: string; name: string; }
+interface Product { id: string; price: number; }
 
-export default function PostList() {
-  const [params, setParams] = useSearchParams();
-  const sort  = params.get("sort")  ?? "date";
-  const order = params.get("order") ?? "desc";
+const { data: user } = useFetch<User>('/api/me');         // data: User | null
+const { data: products } = useFetch<Product[]>('/api/products'); // data: Product[] | null
 
-  return (
-    <select value={sort} onChange={e => setParams({ sort: e.target.value, order })}>
-      <option value="date">Date</option>
-      <option value="price">Price</option>
-    </select>
-    // URL updates to ?sort=price without a page reload
-  );
-}
-
-// useLocation — full URL object
-import { useLocation } from "react-router-dom";
-const location = useLocation();
-// { pathname: "/posts", search: "?sort=price", hash: "", state: null }`,
+// user?.name        -> string | undefined, fully typed
+// products?.[0].price -> number | undefined, fully typed`,
         },
       ],
     },
     {
       title: {
-        en: "Nested routes with Outlet",
-        np: "Nested routes — Outlet",
-        jp: "ネストルートと Outlet",
+        en: "Generic components & utility types",
+        np: "Generic components र utility types",
+        jp: "ジェネリックコンポーネントとユーティリティ型",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Nested routes let a parent route render a shared layout while child routes fill in the content area.\n\nAnalogy: nested routes are like Russian dolls — the outer doll (layout) always renders; the inner doll (page content) swaps based on the URL.\n\n`<Outlet />` is the placeholder where the active child route renders. Think of it like `{children}` but driven by the URL.\n\n• `/dashboard` → renders `DashboardLayout` + `Overview` (index route)\n• `/dashboard/settings` → renders `DashboardLayout` + `Settings`\n  ↳ The sidebar is always visible — only the content area changes",
-            np: "Outlet ले child route को content render गर्छ। Layout always देखिन्छ, content मात्र URL अनुसार बदलिन्छ।",
-            jp: "Outlet はアクティブな子ルートがレンダーされる場所。レイアウトは常に表示、中身だけURLで切り替わります。",
+            en: "Generic components let you write one component that works with any data type. A `<List>` component can render a list of users, posts, or products — all type-safe.\n\nAnalogy: a generic component is like a vending machine with configurable slots — the machine mechanism is the same, but what goes in each slot depends on the customer.",
+            np: "Generic components एकै पटक लेखेर कुनै पनि data type सँग काम गर्छन्।",
+            jp: "ジェネリックコンポーネントは任意のデータ型で再利用できる汎用コンポーネントです。",
           },
         },
         {
           type: "code",
           title: {
-            en: "DashboardLayout + nested route definitions",
-            np: "nested routes example",
-            jp: "ネストルートの例",
+            en: "Generic components + utility types",
+            np: "Generic + utility types",
+            jp: "ジェネリックコンポーネントとユーティリティ型",
           },
-          code: `// App.jsx — nested route definition
-<Routes>
-  <Route path="/dashboard" element={<DashboardLayout />}>
-    <Route index            element={<Overview />} />     {/* /dashboard */}
-    <Route path="posts"     element={<PostManager />} />  {/* /dashboard/posts */}
-    <Route path="settings"  element={<Settings />} />     {/* /dashboard/settings */}
-  </Route>
-</Routes>
+          code: `// Generic list component
+function List<T extends { id: string | number }>({
+  items,
+  renderItem,
+  emptyMessage = "No items found",
+}: {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  emptyMessage?: string;
+}) {
+  if (items.length === 0) return <p>{emptyMessage}</p>;
+  return <ul>{items.map((item) => <li key={item.id}>{renderItem(item)}</li>)}</ul>;
+}
 
-// DashboardLayout.jsx — the outer shell
-import { Outlet, NavLink } from "react-router-dom";
+// TypeScript infers T from the items array
+<List items={users} renderItem={(u) => <span>{u.name}</span>} />
+<List items={posts} renderItem={(p) => <span>{p.title}</span>} />
 
-export default function DashboardLayout() {
-  return (
-    <div className="flex">
-      <aside className="w-48 border-r p-4">
-        <NavLink to="/dashboard">Overview</NavLink>
-        <NavLink to="/dashboard/posts">Posts</NavLink>
-        <NavLink to="/dashboard/settings">Settings</NavLink>
-      </aside>
+// --- Utility types ---
+interface ButtonProps {
+  label: string;
+  variant: "primary" | "secondary";
+  size: "sm" | "md" | "lg";
+  onClick: () => void;
+}
 
-      <main className="flex-1 p-6">
-        {/* Active child route renders here */}
-        <Outlet />
-      </main>
-    </div>
-  );
-}`,
+type OptionalButton = Partial<ButtonProps>;                    // all optional
+type CoreButton    = Pick<ButtonProps, "label" | "variant">;  // subset
+type NoClick       = Omit<ButtonProps, "onClick">;            // remove prop
+
+// ComponentProps — extract props from any component
+import { ComponentProps } from "react";
+type NativeInputProps = ComponentProps<"input">;              // all native input props
+type MyButtonProps    = ComponentProps<typeof Button>;        // from your component`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "React-specific TypeScript types quick reference",
+            np: "React TypeScript types",
+            jp: "React 固有の TypeScript 型",
+          },
+          headers: [
+            { en: "Type", np: "Type", jp: "型" },
+            { en: "Meaning", np: "अर्थ", jp: "意味" },
+          ],
+          rows: [
+            [
+              { en: "React.ReactNode", np: "ReactNode", jp: "ReactNode" },
+              { en: "Anything renderable — JSX, string, number, null, array", np: "Renderable सबै", jp: "レンダー可能なすべて" },
+            ],
+            [
+              { en: "React.ReactElement", np: "ReactElement", jp: "ReactElement" },
+              { en: "A JSX element specifically (not null or string)", np: "JSX element मात्र", jp: "JSX 要素のみ" },
+            ],
+            [
+              { en: "React.CSSProperties", np: "CSSProperties", jp: "CSSProperties" },
+              { en: "Type for the style prop object", np: "style prop को type", jp: "style prop の型" },
+            ],
+            [
+              { en: "React.RefObject<T>", np: "RefObject", jp: "RefObject" },
+              { en: "Read-only ref from useRef", np: "useRef ref", jp: "useRef の読み取り専用 ref" },
+            ],
+            [
+              { en: "React.MouseEventHandler<T>", np: "MouseEventHandler", jp: "MouseEventHandler" },
+              { en: "Shorthand for (e: MouseEvent<T>) => void", np: "onClick shorthand", jp: "onClick の省略型" },
+            ],
+          ],
         },
       ],
     },
     {
       title: {
-        en: "Programmatic navigation with useNavigate",
-        np: "useNavigate — programmatic navigation",
-        jp: "useNavigate によるプログラム的ナビゲーション",
+        en: "Generic hooks — type-safe reusable state logic",
+        np: "Generic hooks — type-safe reusable state logic",
+        jp: "ジェネリックフック — 型安全で再利用可能な state ロジック",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`useNavigate` lets you navigate from JavaScript code — not from clicking a link. Common uses:\n\n• Redirect after a form submits successfully\n• Go back to the previous page — `navigate(-1)`\n• Replace the current history entry so \"back\" doesn't return to login — `navigate('/dashboard', { replace: true })`\n• Navigate with state — pass data to the next page without exposing it in the URL",
-            np: "useNavigate() ले form submit पछि, logout पछि जस्ता programmatic navigation गर्छ।",
-            jp: "`useNavigate()` でフォーム送信後のリダイレクトや戻るボタンなどを制御します。",
+            en: "The real payoff of a generic hook is <b>contextual typing</b> — TypeScript looks at the value you actually pass in and infers `T` from it, so the caller almost never types `<T>` by hand. In `useLocalStorage<T>(key: string, initialValue: T)`, the second argument's type <b>is</b> `T` — pass `\"light\"` and `T` becomes `string`; pass `[] as CartItem[]` and `T` becomes `CartItem[]`. No annotation needed at the call site.\n\nAnalogy: a barista can tell your cup size just by looking at the cup you handed over — no need to say \"large\" out loud. But if you walk up empty-handed and just say \"one coffee please,\" there's nothing to measure — you must state the size yourself. That's exactly the difference between `useLocalStorage(\"theme\", \"light\")` (the `initialValue` is the cup — TypeScript reads `T` off it) and `useFetch<User[]>('/api/users')` (the argument is just a URL string — there's no value shaped like `User[]` to look at, so you must supply `<T>` explicitly).\n\n<b>Rule of thumb:</b>\n• If `T` can be read off an argument you're already passing (an initial value, a list of items, a default) — omit `<T>`; TypeScript infers it and still catches mismatched updates later.\n• If `T` describes something that never appears in the arguments (a URL, an id, an empty call with no seed data) — you must write `<T>` explicitly, or TypeScript has nothing to infer it from.",
+            np: "Generic hook को फाइदा हो contextual typing — TypeScript ले तपाईंले पास गरेको value हेरेर `T` आफैं पत्ता लगाउँछ, त्यसैले caller ले प्रायः `<T>` हातले लेख्नु पर्दैन। `useLocalStorage(\"theme\", \"light\")` मा दोस्रो argument नै `T` हो — `\"light\"` पास गर्दा `T` = `string` हुन्छ। तर `useFetch<User[]>('/api/users')` मा argument त URL string मात्र हो, त्यहाँ `User[]` जस्तो कुनै value नै छैन infer गर्न — त्यसैले `<T>` हातले लेख्नैपर्छ।\n\nनियम: argument बाट `T` पत्ता लाग्छ भने `<T>` नलेख्नुहोस् — TypeScript ले infer गर्छ। Argument मा `T` को कुनै संकेत नै छैन भने (जस्तै URL मात्र) explicit `<T>` लेख्नैपर्छ।",
+            jp: "ジェネリックフックの本当の利点は「文脈による型推論」— TypeScript は渡された値を見て `T` を推論するため、呼び出し側が `<T>` を書く必要はほとんどありません。`useLocalStorage(\"theme\", \"light\")` では第二引数自体が `T` そのものなので、`\"light\"` を渡せば `T` は `string` になります。\n\n一方 `useFetch<User[]>('/api/users')` では引数は URL 文字列だけで、`User[]` のような値が存在しないため推論できません — この場合は `<T>` を明示的に書く必要があります。\n\n目安: 引数から `T` を読み取れるなら `<T>` は省略可能。引数に `T` の手がかりが全くない場合（URL だけなど）は明示的に指定する必要があります。",
           },
         },
         {
           type: "code",
           title: {
-            en: "useNavigate patterns",
-            np: "navigate patterns",
-            jp: "navigate のパターン",
+            en: "Inferred T vs. explicit T — useLocalStorage, useToggleList, useFetch",
+            np: "Inferred vs explicit T — उदाहरणहरू",
+            jp: "推論される T と明示する T の例",
           },
-          code: `import { useNavigate, useLocation } from "react-router-dom";
+          code: `// TypeScript infers T from the *value* you pass in — no <T> needed at the call site
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : initialValue;
+  });
 
-function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from ?? "/dashboard";
+  const setAndPersist = (next: T) => {
+    localStorage.setItem(key, JSON.stringify(next));
+    setValue(next);
+  };
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    await login(email, password);
-    // replace: true removes the login page from history
-    navigate(from, { replace: true });
-  }
+  return [value, setAndPersist];
 }
 
-function PostDetail({ id }) {
-  const navigate = useNavigate();
+// No explicit <T> anywhere — TypeScript reads it straight off initialValue
+const [theme, setTheme] = useLocalStorage("theme", "light");        // T = string
+const [cart, setCart]   = useLocalStorage("cart", [] as CartItem[]); // T = CartItem[]
+setTheme("dark");  // ok
+setTheme(42);       // Error: number is not assignable to type 'string'
 
-  async function handleDelete() {
-    await deletePost(id);
-    navigate("/posts");     // go to list after delete
-  }
+// A generic hook for a list of selectable items — T inferred from initialItems
+function useToggleList<T>(initialItems: T[]) {
+  const [items, setItems] = useState<T[]>(initialItems);
 
-  function handleBack() {
-    navigate(-1);           // equivalent to browser back button
-  }
+  const toggle = (item: T) => {
+    setItems((prev) => (prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]));
+  };
+
+  return { items, toggle };
 }
 
-// Passing invisible state (lost on page refresh)
-navigate("/order-success", { state: { orderId: "abc-123" } });
+const { items: selectedTags, toggle } = useToggleList(["react", "typescript"]); // T = string
+toggle("hooks"); // ok
+toggle(5);        // Error: number is not assignable to type 'string'
 
-// Reading it on the destination page
-const { state } = useLocation();
-console.log(state?.orderId); // "abc-123"`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Protected routes — auth guards",
-        np: "Protected routes — auth guards",
-        jp: "保護ルート（認証ガード）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A protected route redirects unauthenticated users to the login page. Analogy: a bouncer at a club — no wristband (token), you get sent to the ticket counter (login page).\n\n<b>The pattern:</b>\n1. Create a `RequireAuth` wrapper component\n2. Check if the user is logged in\n3. If yes — render `{children}`\n4. If no — `<Navigate to=\"/login\" />` redirects them\n\nAlways pass `replace` on the redirect so login replaces the protected URL in history — otherwise pressing Back after login loops back to login again.",
-            np: "RequireAuth wrapper ले unauthenticated users लाई login page मा redirect गर्छ।",
-            jp: "RequireAuth ラッパーで未認証ユーザーをログインページにリダイレクトします。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "RequireAuth + redirect back after login",
-            np: "auth guard pattern",
-            jp: "認証ガードパターン",
-          },
-          code: `// RequireAuth.jsx
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
-
-export function RequireAuth({ children }) {
-  const { user }   = useAuth();
-  const location   = useLocation();
-
-  if (!user) {
-    // Save where the user was trying to go
-    return (
-      <Navigate to="/login" state={{ from: location.pathname }} replace />
-    );
-  }
-
-  return children;
+// --- When there is nothing to infer T from, you MUST supply it explicitly ---
+interface User {
+  id: string;
+  name: string;
 }
 
-// App.jsx — wrap protected routes
-<Routes>
-  <Route path="/login" element={<Login />} />
+// "url" is just a string — nothing in the arguments tells TypeScript the response shape
+function useFetch<T>(url: string): { data: T | null; isLoading: boolean } {
+  const [data, setData] = useState<T | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  <Route path="/dashboard" element={
-    <RequireAuth>
-      <DashboardLayout />
-    </RequireAuth>
-  }>
-    <Route index           element={<Overview />} />
-    <Route path="settings" element={<Settings />} />
-  </Route>
-</Routes>
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(url)
+      .then((res) => res.json() as Promise<T>)
+      .then((json) => setData(json))
+      .finally(() => setIsLoading(false));
+  }, [url]);
 
-// Login.jsx — redirect back after successful login
-function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from ?? "/dashboard";
+  return { data, isLoading };
+}
 
-  async function onSubmit(data) {
-    await signIn(data.email, data.password);
-    navigate(from, { replace: true });
-  }
-}`,
+// Explicit type argument required — there is no User[] value being passed in
+const { data: users } = useFetch<User[]>("/api/users"); // data: User[] | null
+
+// const { data } = useFetch("/api/users");
+// Without <T>, TypeScript can't infer anything from a plain string —
+// T silently defaults to 'unknown', so 'data' becomes unusable without a manual cast.`,
         },
       ],
     },
@@ -332,62 +534,74 @@ function Login() {
   faq: [
     {
       question: {
-        en: "What is the difference between BrowserRouter and HashRouter?",
-        np: "BrowserRouter र HashRouter मा के फरक?",
-        jp: "BrowserRouter と HashRouter の違いは？",
+        en: "Should I use `interface` or `type` for props?",
+        np: "`interface` कि `type` props को लागि?",
+        jp: "props には `interface` と `type` どちらを使う？",
       },
       answer: {
-        en: "<b>BrowserRouter</b> uses the HTML5 History API — clean URLs like `/posts/42`. Requires the server to serve `index.html` for all routes (configure Nginx / Vite's `historyApiFallback`). <b>HashRouter</b> uses the URL hash — `/#/posts/42`. No server config needed; works on any static host. Use BrowserRouter for modern apps; HashRouter only when you can't control the server.",
-        np: "BrowserRouter = clean URLs (/posts/42), server config चाहिन्छ। HashRouter = /#/ URLs, server config चाहिँदैन।",
-        jp: "BrowserRouter はクリーンな URL でサーバー設定が必要。HashRouter は `/#/` 形式でサーバー設定不要。",
+        en: "Both work for objects. `interface` is slightly better for props because it gives clearer error messages and supports `extends` for composition. `type` is better for unions, mapped types, and computed types. Common convention: `interface` for component props, `type` for everything else. The most important thing is consistency within your team.",
+        np: "दुवै चल्छ। Props को लागि `interface` राम्रो error messages दिन्छ। Unions को लागि `type` राम्रो।",
+        jp: "どちらでも機能します。props には `interface`、Union 型には `type` がよく使われます。チームで統一するのが大切です。",
       },
     },
     {
       question: {
-        en: "How do I handle 404 pages?",
-        np: "404 pages कसरी handle गर्ने?",
-        jp: "404 ページはどう処理する？",
+        en: "What is `React.FC` and why avoid it?",
+        np: "`React.FC` के हो र किन avoid गर्ने?",
+        jp: "`React.FC` とは？なぜ避けるのか？",
       },
       answer: {
-        en: "Add a catch-all route at the END of your `<Routes>` with `path=\"*\"`. React Router tries routes in order — `*` only matches if nothing else did. `<Route path=\"*\" element={<NotFound />} />`. This must be last, or it will match before specific routes.",
-        np: "Routes को अन्तमा `path=\"*\"` भएको route थप्नुहोस्। यो सबैभन्दा पछि match हुन्छ।",
-        jp: "`<Routes>` の末尾に `path=\"*\"` を追加。他のルートにマッチしなかった場合にのみ使われます。",
+        en: "`React.FC` was popular in React 17 because it added `children` automatically. That implicit children caused bugs — components that shouldn't accept children did. React 18 removed the implicit children from `React.FC`. Now there is no reason to use it — just type props directly on the function.",
+        np: "`React.FC` ले पहिले implicit children थप्थ्यो — bug prone। React 18 पछि plain typed function नै राम्रो।",
+        jp: "React 18 で暗黙の children が廃止されました。今は直接 props を型付けするほうがシンプルです。",
       },
     },
     {
       question: {
-        en: "What is the difference between `<Link>` and `<a>`?",
-        np: "`<Link>` र `<a>` मा के फरक?",
-        jp: "`<Link>` と `<a>` の違いは？",
+        en: "How do I type a ref for a third-party component?",
+        np: "Third-party component को ref type कसरी गर्ने?",
+        jp: "サードパーティコンポーネントの ref をどう型付けする？",
       },
       answer: {
-        en: "`<a href=\"/posts\">` causes a full page reload — the browser sends a new HTTP request. `<Link to=\"/posts\">` intercepts the click, updates the URL using the History API, and swaps the React component — no server request, no flicker, no lost state. Use `<Link>` for internal navigation; `<a>` for external links (other domains).",
-        np: "`<a>` ले full page reload गर्छ। `<Link>` ले component swap मात्र गर्छ, server request पठाउँदैन।",
-        jp: "`<a>` はページ全体をリロード。`<Link>` はクライアント側でコンポーネントを切り替えるだけです。",
+        en: "Check the library's documentation — most well-maintained libraries export the ref type. If the library doesn't export types, build a minimal interface with just the methods you need: `interface MySelectRef { focus(): void; clear(): void; }` then use `useRef<MySelectRef | null>(null)`.",
+        np: "Library ले ref type export गर्छ — documentation हेर्नुहोस्। Export नभए `interface` बनाउनुहोस्।",
+        jp: "ライブラリのドキュメントで ref 型を確認。エクスポートされていなければ必要なメソッドだけの interface を自作します。",
       },
     },
     {
       question: {
-        en: "How do I show a loading state during navigation?",
-        np: "Navigation को बेला loading state कसरी देखाउने?",
-        jp: "ナビゲーション中にローディングを表示するには？",
+        en: "What is `as const` and when do I need it?",
+        np: "`as const` के हो?",
+        jp: "`as const` とは？",
       },
       answer: {
-        en: "For lazy-loaded routes, wrap with `<Suspense fallback={<Spinner />}>` — React shows the fallback while the chunk downloads. For data-loading patterns (React Router loaders), use `const navigation = useNavigation(); navigation.state === 'loading'`.",
-        np: "Lazy routes मा `<Suspense fallback={<Spinner />}>` use गर्नुहोस्। Data loading मा `useNavigation()` hook।",
-        jp: "lazy ルートには `<Suspense>` が便利。データローディングには `useNavigation()` フックを使います。",
+        en: "`as const` tells TypeScript to infer the narrowest possible type. Without it: `const SIZES = ['sm', 'md', 'lg']` is typed as `string[]`. With it: `const SIZES = ['sm', 'md', 'lg'] as const` is `readonly ['sm', 'md', 'lg']`. You can then derive a union type: `type Size = typeof SIZES[number]` which equals `'sm' | 'md' | 'lg'`.",
+        np: "`as const` ले narrowest type infer गर्छ। Array बाट union type derive गर्न उपयोगी।",
+        jp: "`as const` で最も狭い型を推論。`typeof SIZES[number]` で Union 型を導出できます。",
       },
     },
     {
       question: {
-        en: "How do I pass data between routes without URL params?",
-        np: "URL params बिना routes बीचमा data कसरी pass गर्ने?",
-        jp: "URLパラメータなしでルート間でデータを渡すには？",
+        en: "How do I handle `any` in legacy code?",
+        np: "Legacy code मा `any` कसरी handle गर्ने?",
+        jp: "レガシーコードの `any` はどう扱う？",
       },
       answer: {
-        en: "Three options:\n• <b>Router state</b>: `navigate('/success', { state: { orderId } })` — lost on page refresh, good for one-time messages\n• <b>Global state</b>: Zustand / Context — persists while the app is open\n• <b>Server refetch</b>: fetch on the destination page with TanStack Query — most reliable, works after refresh",
-        np: "Router state (navigate), global state (Zustand), वा destination मा re-fetch (TanStack Query)।",
-        jp: "router state・global state・サーバーフェッチの3択。リフレッシュ後も必要なら TanStack Query が最確実。",
+        en: "Gradually. Strategy: (1) Enable `strict: true` immediately. (2) Use `unknown` instead of `any` where data comes from outside (API responses, localStorage) — it forces you to check the type before using it. (3) Add types file by file starting with the most-used utilities. (4) Use `// @ts-expect-error` with a comment rather than `// @ts-ignore` — `ts-expect-error` will fail if the error disappears, keeping the codebase honest.",
+        np: "Gradually type गर्नुहोस्। `strict: true` सुरुमा। `any` को सट्टा `unknown` प्रयोग गर्नुहोस्।",
+        jp: "段階的に型付け。`strict: true` 有効化、外部データには `unknown` を使い、ファイル単位で進めましょう。",
+      },
+    },
+    {
+      question: {
+        en: "Why doesn't `useLocalStorage(\"theme\", \"light\")` need `<string>`, but `useFetch<User[]>('/api/users')` does?",
+        np: "`useLocalStorage(\"theme\", \"light\")` मा `<string>` किन चाहिँदैन, तर `useFetch<User[]>('/api/users')` मा किन चाहिन्छ?",
+        jp: "`useLocalStorage(\"theme\", \"light\")` に `<string>` は不要なのに、`useFetch<User[]>('/api/users')` にはなぜ必要？",
+      },
+      answer: {
+        en: "TypeScript infers a generic's type parameter from any argument that has the shape `T`. `useLocalStorage<T>(key: string, initialValue: T)` receives `\"light\"` as `initialValue`, so `T` is inferred as `string` directly — writing `<string>` would be redundant. `useFetch<T>(url: string)` only receives a URL string; nothing in the arguments is shaped like the response data, so TypeScript has no value to look at and `T` must be supplied explicitly, or it silently falls back to `unknown`.",
+        np: "TypeScript ले generic को `T` लाई त्यस्तो argument बाट infer गर्छ जसको shape नै `T` हो। `useLocalStorage` मा `initialValue` नै `T` भएकोले `\"light\"` बाट `T = string` सिधै थाहा हुन्छ। `useFetch` मा भने `url` एउटा string मात्र हो — response data जस्तो कुनै argument नै छैन, त्यसैले `T` explicit दिनैपर्छ, नत्र `unknown` मा default हुन्छ।",
+        jp: "TypeScript は `T` の形をした引数からジェネリック型を推論します。`useLocalStorage` では `initialValue` 自体が `T` なので `\"light\"` から `T = string` と直接わかります。一方 `useFetch` は `url`（文字列）しか受け取らず、レスポンスデータの形をした引数が無いため推論できず、`<T>` を明示しないと `unknown` にフォールバックします。",
       },
     },
   ],

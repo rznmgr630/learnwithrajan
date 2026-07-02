@@ -3,83 +3,84 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_18_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "TanStack Query (formerly React Query) is more than just a data fetcher — it's a complete server state synchronization library. Day 16 covered the basics (`useQuery`). Today we go deeper.\n\nAnalogy: Day 16 taught you how to <b>read from the library</b>. Today you learn:\n• How to <b>write notes back</b> (mutations)\n• How to make the UI feel <b>instant</b> even before the server confirms (optimistic updates)\n• How to <b>page through encyclopedias</b> without loading the whole thing (infinite scroll)\n• How to <b>pre-order books before you need them</b> (prefetching)",
-      np: "TanStack Query advanced: mutations, optimistic updates, infinite scroll, prefetching।",
-      jp: "TanStack Query 応用。ミューテーション・楽観的更新・無限スクロール・プリフェッチ。",
+      en: "React apps are <b>single-page applications</b> — the server sends one HTML file, and JavaScript handles showing different \"pages.\" React Router maps URLs to components.\n\nAnalogy: React Router is like a hotel receptionist — the guest (URL) comes in, the receptionist (router) checks the list, and sends them to the right room (component). You change rooms (navigate) without checking out of the hotel (no page reload).\n\n<b>Why not just use `<a>` tags?</b> A normal link reloads the entire page from the server. React Router intercepts the click, updates the URL bar, and swaps the component — instant, no flicker.",
+      np: "React Router ले URL लाई component मा map गर्छ। SPA मा page reload नभई navigation हुन्छ।",
+      jp: "React Router は URL をコンポーネントにマッピングします。SPA なのでページリロードなしで画面が切り替わります。",
     },
     {
-      en: "What we cover today:\n\n• <b>`useMutation`</b> — POST, PUT, DELETE operations with status tracking\n  ↳ `isPending`, `isSuccess`, `isError` states built in\n• <b>Optimistic updates</b> — update the UI before the server responds, roll back on failure\n• <b>`useInfiniteQuery`</b> — paginated / infinite-scroll data loading\n• <b>Prefetching</b> — load data before the user navigates to it\n• <b>Query invalidation strategies</b> — keeping cached data fresh",
-      np: "useMutation, optimistic updates, useInfiniteQuery, prefetch, invalidation।",
-      jp: "useMutation・楽観的更新・useInfiniteQuery・プリフェッチ・無効化戦略。",
+      en: "In this day we cover:\n\n• <b>`BrowserRouter`</b> — wraps your app and enables URL-based routing\n• <b>Route definitions</b> — map paths to components\n• <b>`<Link>` and `<NavLink>`</b> — client-side navigation without page refresh\n• <b>URL params and search params</b> — reading `:id` and `?sort=price` from the URL\n• <b>Nested routes with `<Outlet>`</b> — shared layout components\n• <b>`useNavigate`</b> — programmatic navigation from code\n• <b>Protected routes</b> — redirect unauthenticated users to login",
+      np: "BrowserRouter, routes, Link, URL params, nested routes, useNavigate, protected routes — सबै cover गर्छौं।",
+      jp: "BrowserRouter・ルート定義・Link・URLパラメータ・ネストルート・useNavigate・保護ルートを網羅します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "useMutation — writing data to the server",
-        np: "useMutation — data write गर्ने",
-        jp: "useMutation — サーバーへの書き込み",
+        en: "Setting up React Router v6",
+        np: "React Router v6 सेटअप",
+        jp: "React Router v6 のセットアップ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`useQuery` reads data. `useMutation` writes it. Use `useMutation` for any operation that changes server state: creating a post, updating a profile, deleting a comment, uploading a file.\n\n• <b>`mutationFn`</b> — the async function that performs the write\n• <b>`onSuccess`</b> — runs after a successful mutation (update cache, show toast)\n• <b>`onError`</b> — runs on failure (show error message, log)\n• <b>`onSettled`</b> — runs after either success or failure (like `finally`)\n• Call with `mutation.mutate(data)` or `await mutation.mutateAsync(data)`",
-            np: "useMutation: mutationFn, onSuccess, onError, onSettled। mutate() ले call गर्छ।",
-            jp: "useMutation: mutationFn・onSuccess・onError。mutate() または mutateAsync() で呼び出す。",
+            en: "Install React Router, wrap your app in `<BrowserRouter>`, then define routes with `<Routes>` and `<Route>`.\n\n• `path=\"/\"` — home page\n• `path=\"/posts/:id\"` — `:id` is a URL parameter (wildcard that matches anything)\n• `path=\"*\"` — catch-all for 404 pages\n\n<b>v6 vs v5 changes:</b> `<Switch>` became `<Routes>`, the `exact` prop is gone (all routes match exactly by default), and `component=` became `element=`.",
+            np: "npm install react-router-dom। BrowserRouter ले app wrap गर्नुहोस्। Routes र Route ले path-to-component map गर्छ।",
+            jp: "npm install 後、BrowserRouter でアプリをラップし Routes / Route でパスとコンポーネントを対応付けます。",
           },
         },
         {
           type: "code",
-          title: { en: "useMutation — create, update, delete examples", np: "useMutation examples", jp: "useMutation の例" },
-          code: `import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+          title: {
+            en: "main.jsx + App.jsx — basic routing setup",
+            np: "basic routing setup",
+            jp: "基本ルーティング設定",
+          },
+          code: `// main.jsx
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
 
-// CREATE — POST new post
-function useCreatePost() {
-  const queryClient = useQueryClient();
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
 
-  return useMutation({
-    mutationFn: async (data: { title: string; body: string }) => {
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to create post");
-      return res.json();
-    },
-    onSuccess: (newPost) => {
-      // Add new post to the cache without refetching
-      queryClient.setQueryData(["posts"], (old: Post[] = []) => [...old, newPost]);
-      toast.success("Post created!");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
-  });
+// App.jsx
+import { Routes, Route } from "react-router-dom";
+import Home       from "./pages/Home";
+import PostList   from "./pages/PostList";
+import PostDetail from "./pages/PostDetail";
+import NotFound   from "./pages/NotFound";
+import Navbar     from "./components/Navbar";
+
+export default function App() {
+  return (
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/"          element={<Home />} />
+        <Route path="/posts"     element={<PostList />} />
+        <Route path="/posts/:id" element={<PostDetail />} />
+        <Route path="*"          element={<NotFound />} />
+      </Routes>
+    </>
+  );
 }
 
-// Usage in a component
-function CreatePostForm() {
-  const createPost = useCreatePost();
+// Navbar.jsx — client-side links
+import { Link, NavLink } from "react-router-dom";
 
+export default function Navbar() {
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault();
-      const form = new FormData(e.currentTarget);
-      createPost.mutate({
-        title: form.get("title") as string,
-        body: form.get("body") as string,
-      });
-    }}>
-      <input name="title" placeholder="Title" />
-      <textarea name="body" placeholder="Body" />
-      <button type="submit" disabled={createPost.isPending}>
-        {createPost.isPending ? "Saving..." : "Create Post"}
-      </button>
-      {createPost.isError && <p className="text-red-500">{createPost.error.message}</p>}
-    </form>
+    <nav>
+      <Link to="/">Home</Link>
+      {/* NavLink adds an "active" class when the URL matches */}
+      <NavLink to="/posts" className={({ isActive }) => isActive ? "active" : ""}>
+        Posts
+      </NavLink>
+    </nav>
   );
 }`,
         },
@@ -87,389 +88,113 @@ function CreatePostForm() {
     },
     {
       title: {
-        en: "Optimistic updates — instant feedback",
-        np: "Optimistic updates",
-        jp: "楽観的更新 — 即座のフィードバック",
+        en: "URL parameters and search params",
+        np: "URL parameters र search params",
+        jp: "URLパラメータとサーチパラメータ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Optimistic updates make the UI feel instant by updating the local cache <b>before</b> the server confirms. If the server succeeds, nothing changes. If it fails, you roll back to the previous state.\n\nAnalogy: a confident waiter immediately removes your empty glass and brings a full one — they assume you want more. If you say 'actually, water please', they take it back. The experience is faster; the fallback is graceful.\n\n• <b>`onMutate`</b> — runs before the request, update cache optimistically, return snapshot for rollback\n• <b>`onError`</b> — receives the context from `onMutate`, restore previous state\n• <b>`onSettled`</b> — always invalidate the query after to sync with server truth",
-            np: "Optimistic: UI पहिले update, server confirm पछि। Fail भयो भने rollback।",
-            jp: "サーバー確認前に UI を更新。失敗時はスナップショットでロールバック。",
+            en: "React Router gives you two types of dynamic URL data:\n\n• <b>URL parameters</b> — part of the path: `/posts/42` → `:id` = `\"42\"`\n  ↳ Use `useParams()` to read them\n• <b>Search params</b> — after the `?`: `/posts?sort=price&order=asc`\n  ↳ Use `useSearchParams()` to read and update them\n\nSearch params are great for filters and sorting — they're bookmarkable, shareable, and updating them doesn't cause a navigation.",
+            np: "useParams() ले :id पढ्छ। useSearchParams() ले ?sort=price जस्ता query strings पढ्छ।",
+            jp: "`useParams()` で `:id`、`useSearchParams()` で `?sort=price` のようなクエリを読み取ります。",
           },
         },
         {
           type: "code",
-          title: { en: "Optimistic like button with rollback", np: "Optimistic like", jp: "楽観的いいね" },
-          code: `function useLikePost() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (postId: string) =>
-      fetch(\`/api/posts/\${postId}/like\`, { method: "POST" }).then((r) => r.json()),
-
-    // 1. Called BEFORE the request — update cache immediately
-    onMutate: async (postId) => {
-      // Cancel any in-flight refetches that would overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["posts"] });
-
-      // Snapshot the current value for rollback
-      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
-
-      // Optimistically update the cache
-      queryClient.setQueryData<Post[]>(["posts"], (old = []) =>
-        old.map((p) =>
-          p.id === postId
-            ? { ...p, liked: true, likesCount: p.likesCount + 1 }
-            : p,
-        ),
-      );
-
-      // Return snapshot so onError can roll back
-      return { previousPosts };
-    },
-
-    // 2. On failure — restore the snapshot
-    onError: (_err, _postId, context) => {
-      if (context?.previousPosts) {
-        queryClient.setQueryData(["posts"], context.previousPosts);
-      }
-    },
-
-    // 3. Always sync with server after mutation (success or failure)
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "useInfiniteQuery — infinite scroll & pagination",
-        np: "useInfiniteQuery — infinite scroll",
-        jp: "useInfiniteQuery — 無限スクロール",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "`useInfiniteQuery` is designed for paginated data where you want to load more as the user scrolls. Instead of replacing the current page with the next, it accumulates pages in a `data.pages` array.\n\n• <b>`queryFn`</b> receives `pageParam` — the cursor/page number for this fetch\n• <b>`getNextPageParam`</b> — reads the last page and returns the next cursor (return `undefined` to stop)\n• <b>`data.pages`</b> — array of all loaded pages\n• <b>`fetchNextPage()`</b> — trigger loading the next page\n• <b>`hasNextPage`</b> — boolean, false when `getNextPageParam` returns `undefined`",
-            np: "useInfiniteQuery: pages array accumulate गर्छ। fetchNextPage() ले more load गर्छ।",
-            jp: "useInfiniteQuery: ページを配列で蓄積。fetchNextPage() で追加ロード。",
+          title: {
+            en: "useParams + useSearchParams",
+            np: "params examples",
+            jp: "パラメータの例",
           },
-        },
-        {
-          type: "code",
-          title: { en: "useInfiniteQuery + intersection observer", np: "Infinite scroll", jp: "無限スクロール実装" },
-          code: `import { useInfiniteQuery } from "@tanstack/react-query";
-import { useRef, useEffect } from "react";
+          code: `// PostDetail.jsx — reading a URL parameter
+import { useParams } from "react-router-dom";
 
-interface PostsPage {
-  items: Post[];
-  nextCursor: string | null;
-}
+export default function PostDetail() {
+  const { id } = useParams();  // "/posts/42" → id = "42"
 
-function usePosts() {
-  return useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: async ({ pageParam }: { pageParam: string | null }) => {
-      const url = pageParam
-        ? \`/api/posts?cursor=\${pageParam}\`
-        : "/api/posts";
-      const res = await fetch(url);
-      return res.json() as Promise<PostsPage>;
-    },
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor, // null = no more pages
-  });
-}
-
-function PostFeed() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts();
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  // Auto-load when sentinel scrolls into view
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting && hasNextPage) fetchNextPage(); },
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage]);
-
-  const posts = data?.pages.flatMap((page) => page.items) ?? [];
-
-  return (
-    <div>
-      {posts.map((post) => <PostCard key={post.id} post={post} />)}
-      {/* Sentinel — triggers next page load when visible */}
-      <div ref={sentinelRef} className="h-10" />
-      {isFetchingNextPage && <Spinner />}
-      {!hasNextPage && <p className="text-center text-muted">You've reached the end</p>}
-    </div>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Prefetching — load data before navigation",
-        np: "Prefetching",
-        jp: "プリフェッチ — ナビゲーション前のデータ読み込み",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Prefetching loads data into the cache before the user navigates to a page, making navigation feel instant. Analogy: prefetching is like a chef starting your next course while you're still eating the current one — when you're ready for it, it's already there.\n\n• <b>`queryClient.prefetchQuery()`</b> — fetch and cache without rendering\n  ↳ Call on `onMouseEnter` of a link — hover intent usually gives you 200–400ms\n• <b>`initialData`</b> — provide data synchronously (if you already have it from a parent query)\n• <b>`placeholderData`</b> — show stale/approximate data while fresh data loads (no loading spinner)\n  ↳ Use `keepPreviousData` for pagination — show current page while next page loads",
-            np: "prefetchQuery() ले hover मा data cache गर्छ। placeholderData ले skeleton avoid गर्छ।",
-            jp: "ホバー時にプリフェッチ。placeholderData でスケルトン不要。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Prefetch on hover + placeholder data", np: "Prefetch example", jp: "プリフェッチの例" },
-          code: `import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-
-function PostListItem({ post }: { post: Post }) {
-  const queryClient = useQueryClient();
-
-  function handleMouseEnter() {
-    // Prefetch post detail on hover — gives 200-400ms head start
-    queryClient.prefetchQuery({
-      queryKey: ["post", post.id],
-      queryFn: () => fetch(\`/api/posts/\${post.id}\`).then((r) => r.json()),
-      staleTime: 30_000, // Don't re-fetch if already cached in last 30s
-    });
-  }
-
-  return (
-    <Link to={\`/posts/\${post.id}\`} onMouseEnter={handleMouseEnter}>
-      {post.title}
-    </Link>
-  );
-}
-
-// On the detail page — data is likely already in cache from prefetch
-function PostDetailPage() {
-  const { id } = useParams();
-
-  const { data: post } = useQuery({
+  // fetch by id (TanStack Query)
+  const { data: post, isLoading } = useQuery({
     queryKey: ["post", id],
-    queryFn: () => fetch(\`/api/posts/\${id}\`).then((r) => r.json()),
-    // placeholderData: use a list item as skeleton while full data loads
-    placeholderData: () => {
-      const posts = queryClient.getQueryData<Post[]>(["posts"]);
-      return posts?.find((p) => p.id === id);
-    },
+    queryFn:  () => fetch(\`/api/posts/\${id}\`).then(r => r.json()),
   });
 
-  // No loading spinner — either prefetched data or placeholder from list is shown immediately
-  return <article>{post?.title}</article>;
-}`,
+  if (isLoading) return <p>Loading...</p>;
+  return <h1>{post.title}</h1>;
+}
+
+// PostList.jsx — reading + updating search params
+import { useSearchParams } from "react-router-dom";
+
+export default function PostList() {
+  const [params, setParams] = useSearchParams();
+  const sort  = params.get("sort")  ?? "date";
+  const order = params.get("order") ?? "desc";
+
+  return (
+    <select value={sort} onChange={e => setParams({ sort: e.target.value, order })}>
+      <option value="date">Date</option>
+      <option value="price">Price</option>
+    </select>
+    // URL updates to ?sort=price without a page reload
+  );
+}
+
+// useLocation — full URL object
+import { useLocation } from "react-router-dom";
+const location = useLocation();
+// { pathname: "/posts", search: "?sort=price", hash: "", state: null }`,
         },
       ],
     },
     {
       title: {
-        en: "Query invalidation strategies",
-        np: "Query invalidation strategies",
-        jp: "クエリ無効化の戦略",
+        en: "Nested routes with Outlet",
+        np: "Nested routes — Outlet",
+        jp: "ネストルートと Outlet",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The TanStack Query cache can go stale — data changes on the server but your UI still shows the old version. Invalidation tells TanStack Query to refetch specific queries.\n\n• <b>`invalidateQueries`</b> — marks as stale, refetches immediately if there's an active observer\n  ↳ Use after mutations that change the data a query fetches\n• <b>`refetchQueries`</b> — forces an immediate refetch regardless of staleness\n• <b>`staleTime`</b> — milliseconds before data is considered stale. `0` = always stale (default). `Infinity` = never stale\n  ↳ Set `staleTime: 5 * 60 * 1000` for data that changes infrequently (5 min cache)\n• <b>`refetchOnWindowFocus`</b> — default `true` — refetches when user tabs back into the window",
-            np: "invalidateQueries: stale mark। staleTime: cache duration। refetchOnWindowFocus: auto-refetch।",
-            jp: "invalidateQueries でキャッシュを無効化。staleTime でキャッシュ有効期間を設定。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Invalidation patterns", np: "Invalidation", jp: "無効化パターン" },
-          code: `const queryClient = useQueryClient();
-
-// 1. Invalidate all post queries (refetches list AND individual posts)
-queryClient.invalidateQueries({ queryKey: ["posts"] });
-
-// 2. Invalidate a specific post
-queryClient.invalidateQueries({ queryKey: ["post", postId] });
-
-// 3. Invalidate everything
-queryClient.invalidateQueries();
-
-// 4. Force immediate refetch (even if not stale)
-queryClient.refetchQueries({ queryKey: ["posts"] });
-
-// 5. Set data directly without refetch (use when mutation returns the updated data)
-queryClient.setQueryData(["post", postId], updatedPost);
-
-// 6. Remove from cache completely (forces fresh fetch next time)
-queryClient.removeQueries({ queryKey: ["post", postId] });
-
-// Global defaults in QueryClient config
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,        // 1 minute — don't refetch if under 1 min old
-      gcTime: 5 * 60 * 1000,       // 5 minutes — remove from cache after 5 min unused
-      refetchOnWindowFocus: true,   // Refetch when user returns to tab
-      retry: 2,                     // Retry failed queries 2 times
-    },
-  },
-});`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "When to use each cache management tool",
-            np: "Cache management tools",
-            jp: "キャッシュ管理ツールの使い分け",
-          },
-          headers: [
-            { en: "Tool", np: "Tool", jp: "ツール" },
-            { en: "What it does", np: "काम", jp: "動作" },
-            { en: "Use when", np: "Use when", jp: "使うタイミング" },
-          ],
-          rows: [
-            [
-              { en: "`invalidateQueries`", np: "`invalidateQueries`", jp: "`invalidateQueries`" },
-              { en: "Marks stale, refetches if active", np: "Stale mark + refetch", jp: "古いとマーク、即再取得" },
-              { en: "After any mutation", np: "Mutation पछि", jp: "ミューテーション後" },
-            ],
-            [
-              { en: "`setQueryData`", np: "`setQueryData`", jp: "`setQueryData`" },
-              { en: "Update cache directly", np: "Direct cache update", jp: "キャッシュを直接更新" },
-              { en: "Mutation returns the new data", np: "New data return", jp: "新データが返ってきた時" },
-            ],
-            [
-              { en: "`prefetchQuery`", np: "`prefetchQuery`", jp: "`prefetchQuery`" },
-              { en: "Fetch into cache without rendering", np: "Pre-load", jp: "レンダー前に読み込み" },
-              { en: "On hover, before navigation", np: "Hover/navigate पहिले", jp: "ホバー・ナビゲーション前" },
-            ],
-            [
-              { en: "`removeQueries`", np: "`removeQueries`", jp: "`removeQueries`" },
-              { en: "Delete from cache entirely", np: "Cache delete", jp: "完全に削除" },
-              { en: "After logout (clear user data)", np: "Logout पछि", jp: "ログアウト後" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "useOptimistic — instant UI feedback (React 19)",
-        np: "useOptimistic — instant UI feedback (React 19)",
-        jp: "useOptimistic — 即座の UI フィードバック（React 19）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "`useOptimistic` is a React 19 hook that makes optimistic UI updates simpler than manually managing TanStack Query's `onMutate` + `onError` + `onSettled` pattern.\n\nIt takes two arguments:\n1. The current real state (from the server)\n2. An <b>update function</b> `(currentState, optimisticValue) => nextState`\n\nAnd returns `[optimisticState, addOptimistic]`:\n• `optimisticState` — the current display value (real OR optimistic while a transition is pending)\n• `addOptimistic(value)` — trigger an optimistic update; `value` is passed to your update function\n\nWhen the real state (argument 1) updates after the server responds, the optimistic value is automatically discarded and replaced with the server truth — no manual rollback needed.\n\nAnalogy: a receptionist who writes your name on the whiteboard immediately when you arrive, then erases and replaces it when the official booking system confirms your registration.",
-            np: "useOptimistic (React 19): optimistic state + addOptimistic()। Server response आएपछि automatically real state use गर्छ।",
-            jp: "useOptimistic（React 19）: optimisticState と addOptimistic()。サーバー応答後は自動で実データに切り替わる。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "`useOptimistic` <b>must be used inside a transition</b> — wrap `addOptimistic` calls inside `startTransition` or a React 19 Server Action. Outside a transition the optimistic value is discarded immediately.\n\n<b>Difference from TanStack Query optimistic updates:</b>\n• TanStack Query: manual `onMutate` snapshot → `onError` rollback → `onSettled` invalidate (verbose but explicit)\n• `useOptimistic`: declare the update shape once; React handles the lifecycle automatically\n• Use `useOptimistic` for Server Action-based forms in Next.js 15+. Use TanStack Query's pattern for REST/GraphQL mutations in client-rendered apps.",
-            np: "startTransition भित्र use गर्नुस्। TanStack Query = manual rollback। useOptimistic = automatic। Next.js 15 Server Actions मा ideal।",
-            jp: "startTransition 内で使用。TanStack Query は手動ロールバック。useOptimistic は自動。Next.js 15 の Server Action に最適。",
+            en: "Nested routes let a parent route render a shared layout while child routes fill in the content area.\n\nAnalogy: nested routes are like Russian dolls — the outer doll (layout) always renders; the inner doll (page content) swaps based on the URL.\n\n`<Outlet />` is the placeholder where the active child route renders. Think of it like `{children}` but driven by the URL.\n\n• `/dashboard` → renders `DashboardLayout` + `Overview` (index route)\n• `/dashboard/settings` → renders `DashboardLayout` + `Settings`\n  ↳ The sidebar is always visible — only the content area changes",
+            np: "Outlet ले child route को content render गर्छ। Layout always देखिन्छ, content मात्र URL अनुसार बदलिन्छ।",
+            jp: "Outlet はアクティブな子ルートがレンダーされる場所。レイアウトは常に表示、中身だけURLで切り替わります。",
           },
         },
         {
           type: "code",
           title: {
-            en: "useOptimistic — optimistic like button and message list",
-            np: "useOptimistic examples",
-            jp: "useOptimistic の使用例",
+            en: "DashboardLayout + nested route definitions",
+            np: "nested routes example",
+            jp: "ネストルートの例",
           },
-          code: `import { useOptimistic, startTransition, useState } from 'react';
+          code: `// App.jsx — nested route definition
+<Routes>
+  <Route path="/dashboard" element={<DashboardLayout />}>
+    <Route index            element={<Overview />} />     {/* /dashboard */}
+    <Route path="posts"     element={<PostManager />} />  {/* /dashboard/posts */}
+    <Route path="settings"  element={<Settings />} />     {/* /dashboard/settings */}
+  </Route>
+</Routes>
 
-// 1. Optimistic like button — update UI before server confirms
-function LikeButton({ postId, initialLiked, initialCount }: {
-  postId: string;
-  initialLiked: boolean;
-  initialCount: number;
-}) {
-  const [liked, setLiked] = useState(initialLiked);
-  const [count, setCount] = useState(initialCount);
-  const [optimisticLiked, addOptimisticLike] = useOptimistic(
-    liked,
-    (_current, next: boolean) => next,
-  );
+// DashboardLayout.jsx — the outer shell
+import { Outlet, NavLink } from "react-router-dom";
 
-  async function handleLike() {
-    const next = !optimisticLiked;
-
-    startTransition(() => addOptimisticLike(next));
-
-    try {
-      const res = await fetch(\`/api/posts/\${postId}/like\`, {
-        method: next ? 'POST' : 'DELETE',
-      });
-      const data = await res.json();
-      setLiked(data.liked);
-      setCount(data.likesCount);
-    } catch {
-      // Server failed — optimistic state discarded, real state wins
-    }
-  }
-
+export default function DashboardLayout() {
   return (
-    <button onClick={handleLike}>
-      {optimisticLiked ? '❤️' : '🤍'} {count + (optimisticLiked && !liked ? 1 : 0)}
-    </button>
-  );
-}
+    <div className="flex">
+      <aside className="w-48 border-r p-4">
+        <NavLink to="/dashboard">Overview</NavLink>
+        <NavLink to="/dashboard/posts">Posts</NavLink>
+        <NavLink to="/dashboard/settings">Settings</NavLink>
+      </aside>
 
-// 2. Optimistic message list — show message immediately before server confirms
-type Message = { id: string; text: string; sending?: boolean };
-
-function ChatInput({ roomId }: { roomId: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [optimisticMessages, addOptimistic] = useOptimistic(
-    messages,
-    (current, newMsg: Message) => [...current, newMsg],
-  );
-
-  async function sendMessage(text: string) {
-    const temp: Message = { id: crypto.randomUUID(), text, sending: true };
-
-    startTransition(() => {
-      addOptimistic(temp);
-    });
-
-    const saved = await fetch(\`/api/rooms/\${roomId}/messages\`, {
-      method: 'POST',
-      body: JSON.stringify({ text }),
-    }).then(r => r.json());
-
-    setMessages(prev => [...prev, saved]);
-  }
-
-  return (
-    <div>
-      <ul>
-        {optimisticMessages.map(m => (
-          <li key={m.id} style={{ opacity: m.sending ? 0.6 : 1 }}>
-            {m.text} {m.sending && '⏳'}
-          </li>
-        ))}
-      </ul>
-      <button onClick={() => sendMessage('Hello!')}>Send</button>
+      <main className="flex-1 p-6">
+        {/* Active child route renders here */}
+        <Outlet />
+      </main>
     </div>
   );
 }`,
@@ -478,103 +203,201 @@ function ChatInput({ roomId }: { roomId: string }) {
     },
     {
       title: {
-        en: "useActionState — form state from actions (React 19)",
-        np: "useActionState — actions बाट form state (React 19)",
-        jp: "useActionState — アクションからのフォーム状態（React 19）",
+        en: "Programmatic navigation with useNavigate",
+        np: "useNavigate — programmatic navigation",
+        jp: "useNavigate によるプログラム的ナビゲーション",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`useActionState` is a React 19 hook that manages state derived from a form action — Server Actions in Next.js 15+, or regular async functions in client components. It replaces the common pattern of `useState` + manual `isPending` + `try/catch` inside form handlers.\n\nSignature: `const [state, action, isPending] = useActionState(actionFn, initialState)`\n\n• `actionFn(prevState, formData)` — receives the previous state and the form data; returns the next state\n• `state` — the current state (starts as `initialState`, updates after each action call)\n• `action` — pass this to a `<form action={action}>` or call it directly\n• `isPending` — `true` while the action is running\n\nAnalogy: `useActionState` is a form assistant — you hand it the rules (the action function) and it manages the clipboard (state), tracks whether work is in progress (isPending), and reports results automatically.",
-            np: "useActionState (React 19): [state, action, isPending] = useActionState(fn, init)। Form action manage गर्छ। useState + isPending + try/catch replace गर्छ।",
-            jp: "useActionState（React 19）: [state, action, isPending]。フォームアクションの状態管理を一元化。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Client component usage:</b> `useActionState` works in both server and client components. In client components, the action function is a regular `async` function. In Next.js 15 Server Components, the action function can be a Server Action (marked `'use server'`) — giving you server-side mutation with automatic client state sync and no API route needed.\n\n<b>When to prefer `useActionState` over `useMutation` (TanStack Query):</b>\n• Form-driven mutations with native `<form action>` (especially Server Actions)\n• Simple forms that don't need cache invalidation or refetching\n\n<b>When to prefer `useMutation`:</b>\n• Complex cache management (invalidate, optimistic, prefetch)\n• Programmatic mutations triggered outside a form submit",
-            np: "Client र server दुवैमा काम गर्छ। Simple form mutation = useActionState। Complex cache = useMutation।",
-            jp: "クライアント・サーバー両対応。シンプルなフォームは useActionState、複雑なキャッシュは useMutation。",
+            en: "`useNavigate` lets you navigate from JavaScript code — not from clicking a link. Common uses:\n\n• Redirect after a form submits successfully\n• Go back to the previous page — `navigate(-1)`\n• Replace the current history entry so \"back\" doesn't return to login — `navigate('/dashboard', { replace: true })`\n• Navigate with state — pass data to the next page without exposing it in the URL",
+            np: "useNavigate() ले form submit पछि, logout पछि जस्ता programmatic navigation गर्छ।",
+            jp: "`useNavigate()` でフォーム送信後のリダイレクトや戻るボタンなどを制御します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "useActionState — contact form with validation",
-            np: "useActionState example",
-            jp: "useActionState の使用例",
+            en: "useNavigate patterns",
+            np: "navigate patterns",
+            jp: "navigate のパターン",
           },
-          code: `'use client';
+          code: `import { useNavigate, useLocation } from "react-router-dom";
 
-import { useActionState } from 'react';
+function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from ?? "/dashboard";
 
-interface ContactFormState {
-  status: 'idle' | 'success' | 'error';
-  message: string;
-  errors?: { email?: string; message?: string };
-}
-
-async function submitContactForm(
-  prevState: ContactFormState,
-  formData: FormData,
-): Promise<ContactFormState> {
-  const email   = formData.get('email') as string;
-  const message = formData.get('message') as string;
-
-  const errors: ContactFormState['errors'] = {};
-  if (!email.includes('@'))  errors.email   = 'Invalid email address';
-  if (message.length < 10)   errors.message = 'Message must be at least 10 characters';
-  if (Object.keys(errors).length) {
-    return { status: 'error', message: 'Please fix the errors below', errors };
-  }
-
-  try {
-    await fetch('/api/contact', {
-      method: 'POST',
-      body: JSON.stringify({ email, message }),
-    });
-    return { status: 'success', message: 'Message sent! We will reply within 24 hours.' };
-  } catch {
-    return { status: 'error', message: 'Failed to send. Please try again.' };
+  async function handleSubmit(e) {
+    e.preventDefault();
+    await login(email, password);
+    // replace: true removes the login page from history
+    navigate(from, { replace: true });
   }
 }
 
-// No useState, no isPending state, no try/catch in the component
-function ContactForm() {
-  const [state, action, isPending] = useActionState(submitContactForm, {
-    status: 'idle',
-    message: '',
-  });
+function PostDetail({ id }) {
+  const navigate = useNavigate();
 
-  if (state.status === 'success') {
-    return <p className="text-green-600">{state.message}</p>;
+  async function handleDelete() {
+    await deletePost(id);
+    navigate("/posts");     // go to list after delete
   }
 
-  return (
-    <form action={action}>
-      <div>
-        <input name="email" type="email" placeholder="your@email.com" />
-        {state.errors?.email && (
-          <p className="text-red-500 text-sm">{state.errors.email}</p>
-        )}
-      </div>
-      <div>
-        <textarea name="message" placeholder="Your message..." rows={4} />
-        {state.errors?.message && (
-          <p className="text-red-500 text-sm">{state.errors.message}</p>
-        )}
-      </div>
-      {state.status === 'error' && (
-        <p className="text-red-600">{state.message}</p>
-      )}
-      <button type="submit" disabled={isPending}>
-        {isPending ? 'Sending...' : 'Send Message'}
-      </button>
-    </form>
-  );
+  function handleBack() {
+    navigate(-1);           // equivalent to browser back button
+  }
+}
+
+// Passing invisible state (lost on page refresh)
+navigate("/order-success", { state: { orderId: "abc-123" } });
+
+// Reading it on the destination page
+const { state } = useLocation();
+console.log(state?.orderId); // "abc-123"`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Protected routes — auth guards",
+        np: "Protected routes — auth guards",
+        jp: "保護ルート（認証ガード）",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A protected route redirects unauthenticated users to the login page. Analogy: a bouncer at a club — no wristband (token), you get sent to the ticket counter (login page).\n\n<b>The pattern:</b>\n1. Create a `RequireAuth` wrapper component\n2. Check if the user is logged in\n3. If yes — render `{children}`\n4. If no — `<Navigate to=\"/login\" />` redirects them\n\nAlways pass `replace` on the redirect so login replaces the protected URL in history — otherwise pressing Back after login loops back to login again.",
+            np: "RequireAuth wrapper ले unauthenticated users लाई login page मा redirect गर्छ।",
+            jp: "RequireAuth ラッパーで未認証ユーザーをログインページにリダイレクトします。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "RequireAuth + redirect back after login",
+            np: "auth guard pattern",
+            jp: "認証ガードパターン",
+          },
+          code: `// RequireAuth.jsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
+
+export function RequireAuth({ children }) {
+  const { user }   = useAuth();
+  const location   = useLocation();
+
+  if (!user) {
+    // Save where the user was trying to go
+    return (
+      <Navigate to="/login" state={{ from: location.pathname }} replace />
+    );
+  }
+
+  return children;
+}
+
+// App.jsx — wrap protected routes
+<Routes>
+  <Route path="/login" element={<Login />} />
+
+  <Route path="/dashboard" element={
+    <RequireAuth>
+      <DashboardLayout />
+    </RequireAuth>
+  }>
+    <Route index           element={<Overview />} />
+    <Route path="settings" element={<Settings />} />
+  </Route>
+</Routes>
+
+// Login.jsx — redirect back after successful login
+function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from ?? "/dashboard";
+
+  async function onSubmit(data) {
+    await signIn(data.email, data.password);
+    navigate(from, { replace: true });
+  }
 }`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Lazy routes and error routes",
+        np: "Lazy routes र error routes",
+        jp: "遅延ルートとエラールート",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Two route-level features that are easy to skip early on but expected in production apps:\n\n<b>Lazy routes</b> — combine `React.lazy` (Day 14) directly with route definitions so each page is its own downloaded chunk. This is the single biggest code-splitting win in a routed app, because the router already knows exactly when each page is needed.\n\n<b>Error routes</b> — every route can have an `errorElement` that renders if that route's component throws during rendering, OR if its data loader/action throws. Without one, an error in a deeply nested route can blank out the entire app; with one, only that route's slot shows an error, and everything else (navbar, sibling routes) keeps working. Analogy: an `errorElement` is a route-scoped Error Boundary (Day 14) — same idea, but wired into the router instead of wrapped manually around a subtree.",
+            np: "Lazy routes ले प्रत्येक page लाई छुट्टै chunk बनाउँछ। Error routes (`errorElement`) ले route-specific error UI देखाउँछ — route-scoped Error Boundary जस्तै।",
+            jp: "遅延ルートは各ページを独立したチャンクにします。errorElement はルート単位のエラーバウンダリのようなもので、そのルートだけにエラーUIを表示します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "React.lazy routes + errorElement per route", np: "Lazy + error routes example", jp: "遅延ルートと errorElement の例" },
+          code: `import { lazy, Suspense } from "react";
+import { createBrowserRouter, RouterProvider, useRouteError } from "react-router-dom";
+
+// Each page is its own chunk — downloaded only when its route is visited
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Settings  = lazy(() => import("./pages/Settings"));
+
+// A generic error boundary component for route-level failures
+function RouteErrorBoundary() {
+  const error = useRouteError() as { statusText?: string; message?: string };
+  return (
+    <div role="alert">
+      <h2>Something went wrong on this page</h2>
+      <p>{error.statusText || error.message}</p>
+    </div>
+  );
+}
+
+const router = createBrowserRouter([
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    errorElement: <RouteErrorBoundary />, // catches errors ONLY within this route subtree
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<Spinner />}>
+            <Dashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <Suspense fallback={<Spinner />}>
+            <Settings />
+          </Suspense>
+        ),
+        errorElement: <RouteErrorBoundary />, // even more granular — just this leaf route
+      },
+    ],
+  },
+]);
+
+function App() {
+  return <RouterProvider router={router} />;
+}
+
+// Without errorElement, an error in Settings would blank the ENTIRE app.
+// With it, only the Settings slot shows an error — the sidebar and other
+// dashboard routes keep working.`,
         },
       ],
     },
@@ -582,62 +405,62 @@ function ContactForm() {
   faq: [
     {
       question: {
-        en: "When should I use `mutate` vs `mutateAsync`?",
-        np: "`mutate` vs `mutateAsync` कहिले?",
-        jp: "`mutate` と `mutateAsync` の使い分けは？",
+        en: "What is the difference between BrowserRouter and HashRouter?",
+        np: "BrowserRouter र HashRouter मा के फरक?",
+        jp: "BrowserRouter と HashRouter の違いは？",
       },
       answer: {
-        en: "`mutate` is fire-and-forget — errors are handled by `onError`. `mutateAsync` returns a Promise you can `await` and wrap in try/catch. Use `mutate` for simple fire-and-forget mutations. Use `mutateAsync` when you need to do something after the mutation in the same async flow (e.g., navigate after save, chain multiple mutations).",
-        np: "mutate: fire-and-forget। mutateAsync: await गर्न, chaining को लागि।",
-        jp: "mutate は投げっぱなし。mutateAsync は await して連鎖処理したい時。",
+        en: "<b>BrowserRouter</b> uses the HTML5 History API — clean URLs like `/posts/42`. Requires the server to serve `index.html` for all routes (configure Nginx / Vite's `historyApiFallback`). <b>HashRouter</b> uses the URL hash — `/#/posts/42`. No server config needed; works on any static host. Use BrowserRouter for modern apps; HashRouter only when you can't control the server.",
+        np: "BrowserRouter = clean URLs (/posts/42), server config चाहिन्छ। HashRouter = /#/ URLs, server config चाहिँदैन।",
+        jp: "BrowserRouter はクリーンな URL でサーバー設定が必要。HashRouter は `/#/` 形式でサーバー設定不要。",
       },
     },
     {
       question: {
-        en: "How do I update a single item in a list query after a mutation?",
-        np: "Mutation पछि list को single item update कसरी?",
-        jp: "ミューテーション後にリストの1アイテムだけ更新するには？",
+        en: "How do I handle 404 pages?",
+        np: "404 pages कसरी handle गर्ने?",
+        jp: "404 ページはどう処理する？",
       },
       answer: {
-        en: "Use `queryClient.setQueryData` with a `.map()`: `queryClient.setQueryData(['posts'], (old) => old.map(p => p.id === updatedPost.id ? updatedPost : p))`. This is more efficient than invalidating (no refetch), but only works if the mutation returns the full updated object.",
-        np: "setQueryData + .map(): `old.map(p => p.id === updated.id ? updated : p)`",
-        jp: "setQueryData に .map() で対象アイテムだけ置換。再フェッチ不要。",
+        en: "Add a catch-all route at the END of your `<Routes>` with `path=\"*\"`. React Router tries routes in order — `*` only matches if nothing else did. `<Route path=\"*\" element={<NotFound />} />`. This must be last, or it will match before specific routes.",
+        np: "Routes को अन्तमा `path=\"*\"` भएको route थप्नुहोस्। यो सबैभन्दा पछि match हुन्छ।",
+        jp: "`<Routes>` の末尾に `path=\"*\"` を追加。他のルートにマッチしなかった場合にのみ使われます。",
       },
     },
     {
       question: {
-        en: "What is the difference between `invalidateQueries` and `setQueryData`?",
-        np: "`invalidateQueries` र `setQueryData` मा के फरक?",
-        jp: "`invalidateQueries` と `setQueryData` の違いは？",
+        en: "What is the difference between `<Link>` and `<a>`?",
+        np: "`<Link>` र `<a>` मा के फरक?",
+        jp: "`<Link>` と `<a>` の違いは？",
       },
       answer: {
-        en: "`setQueryData` updates the cache directly — no network request. Use when you have the new data already (mutation returned it). `invalidateQueries` marks data as stale and triggers a refetch — use when you want the server's latest version, or the mutation only returns a partial result.",
-        np: "setQueryData: no network। invalidateQueries: server से fresh data fetch।",
-        jp: "setQueryData はネットワーク不要。invalidateQueries はサーバーから再取得。",
+        en: "`<a href=\"/posts\">` causes a full page reload — the browser sends a new HTTP request. `<Link to=\"/posts\">` intercepts the click, updates the URL using the History API, and swaps the React component — no server request, no flicker, no lost state. Use `<Link>` for internal navigation; `<a>` for external links (other domains).",
+        np: "`<a>` ले full page reload गर्छ। `<Link>` ले component swap मात्र गर्छ, server request पठाउँदैन।",
+        jp: "`<a>` はページ全体をリロード。`<Link>` はクライアント側でコンポーネントを切り替えるだけです。",
       },
     },
     {
       question: {
-        en: "How do I cancel an in-flight query?",
-        np: "In-flight query कसरी cancel गर्ने?",
-        jp: "実行中のクエリをキャンセルするには？",
+        en: "How do I show a loading state during navigation?",
+        np: "Navigation को बेला loading state कसरी देखाउने?",
+        jp: "ナビゲーション中にローディングを表示するには？",
       },
       answer: {
-        en: "TanStack Query v5 uses AbortSignal automatically — pass `signal` from `queryFn`'s argument to your fetch: `queryFn: async ({ signal }) => fetch('/api/posts', { signal })`. When the component unmounts or the query key changes before it completes, TanStack Query aborts the request.",
-        np: "queryFn मा signal pass गर्नुस्: `queryFn: ({ signal }) => fetch(url, { signal })`",
-        jp: "queryFn の signal を fetch に渡す。アンマウント時に自動キャンセル。",
+        en: "For lazy-loaded routes, wrap with `<Suspense fallback={<Spinner />}>` — React shows the fallback while the chunk downloads. For data-loading patterns (React Router loaders), use `const navigation = useNavigation(); navigation.state === 'loading'`.",
+        np: "Lazy routes मा `<Suspense fallback={<Spinner />}>` use गर्नुहोस्। Data loading मा `useNavigation()` hook।",
+        jp: "lazy ルートには `<Suspense>` が便利。データローディングには `useNavigation()` フックを使います。",
       },
     },
     {
       question: {
-        en: "Can I use TanStack Query with WebSockets?",
-        np: "TanStack Query र WebSockets?",
-        jp: "TanStack Query を WebSocket と併用できる？",
+        en: "How do I pass data between routes without URL params?",
+        np: "URL params बिना routes बीचमा data कसरी pass गर्ने?",
+        jp: "URLパラメータなしでルート間でデータを渡すには？",
       },
       answer: {
-        en: "Yes. Use `useQuery` for the initial fetch. Then set up a WebSocket subscription that calls `queryClient.setQueryData` when a push update arrives. This gives you the best of both: initial load from HTTP (reliable), real-time updates from WebSocket (fast). Alternatively, `queryClient.invalidateQueries` on each WebSocket message triggers a refetch.",
-        np: "useQuery for initial fetch। WebSocket message मा setQueryData call।",
-        jp: "初回は useQuery、WebSocket メッセージで setQueryData を呼ぶ。",
+        en: "Three options:\n• <b>Router state</b>: `navigate('/success', { state: { orderId } })` — lost on page refresh, good for one-time messages\n• <b>Global state</b>: Zustand / Context — persists while the app is open\n• <b>Server refetch</b>: fetch on the destination page with TanStack Query — most reliable, works after refresh",
+        np: "Router state (navigate), global state (Zustand), वा destination मा re-fetch (TanStack Query)।",
+        jp: "router state・global state・サーバーフェッチの3択。リフレッシュ後も必要なら TanStack Query が最確実。",
       },
     },
   ],

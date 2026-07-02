@@ -3,63 +3,120 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Tests give you confidence to change your code without breaking things. For React, the gold-standard approach is testing <b>behavior, not implementation</b> — interact with your components the way a user would (click buttons, type in inputs, check text appears) rather than checking internal state.\n\nAnalogy: testing implementation is like inspecting every gear in a car engine to see if it works; testing behavior is like taking the car for a test drive. The test drive tells you what actually matters: does the car go, stop, and steer?\n\n<b>The testing stack:</b>\n• <b>Vitest</b> — the test runner (like Jest but faster, built for Vite)\n• <b>React Testing Library (RTL)</b> — renders components and provides human-friendly queries\n• <b>@testing-library/user-event</b> — simulates real user interactions (typing, clicking)\n• <b>@testing-library/jest-dom</b> — adds custom matchers like `toBeInTheDocument()`",
-      np: "Testing = behavior test, implementation नहोस्। Vitest + RTL + userEvent — stack।",
-      jp: "テストは実装でなく振る舞いを検証。Vitest + RTL + userEvent が現代の標準スタックです。",
+      en: "Production React apps need to handle failures gracefully. An unhandled error in one component shouldn't crash your entire app. <b>Error Boundaries</b> are React's try/catch for the component tree — they catch errors in children and show a fallback UI instead of a white screen. Analogy: an Error Boundary is like a circuit breaker — when one circuit fails, it trips without taking down the whole house.",
+      np: "Error Boundaries ले component tree मा errors catch गरेर fallback UI देखाउँछ। एउटा component crash हुँदा पूरो app crash हुँदैन।",
+      jp: "Error Boundary はコンポーネントツリーの try/catch です。一つのエラーでアプリ全体がクラッシュするのを防ぎます。",
     },
     {
-      en: "In this day we cover:\n\n• Setting up <b>Vitest + RTL</b>\n• Writing your first <b>component test</b>\n• Testing <b>async behavior</b> — loading states and API calls\n• Testing <b>custom hooks</b> with `renderHook`\n• <b>Best practices</b> — what to test, what not to test, query priority",
-      np: "Vitest setup, component tests, async tests, renderHook, best practices — सबै cover।",
-      jp: "セットアップ、コンポーネントテスト、非同期テスト、renderHook、ベストプラクティスを学びます。",
+      en: "Today's topics:\n• <b>Error Boundaries</b> — catching render errors, `react-error-boundary` library\n• <b>Granular placement</b> — where to put boundaries for best user experience\n• <b>Portals</b> — rendering DOM output outside the parent tree (modals, tooltips)\n• <b>React.lazy + Suspense</b> — code splitting for faster initial loads\n• <b>useTransition + useDeferredValue</b> — keeping the UI responsive during heavy updates",
+      np: "Error Boundaries, Portals, React.lazy+Suspense, useTransition, useDeferredValue।",
+      jp: "Error Boundary・Portal・React.lazy+Suspense・useTransition・useDeferredValue を学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Setting up Vitest + React Testing Library",
-        np: "Vitest + RTL setup",
-        jp: "Vitest + RTL のセットアップ",
+        en: "Error Boundaries — catching render errors",
+        np: "Error Boundaries — render errors catch गर्ने",
+        jp: "Error Boundary — レンダーエラーを捕捉する",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Vitest integrates directly with Vite — no separate config file needed for most projects. It reads your `vite.config.ts` and adds test settings inside it.\n\n<b>What each package does:</b>\n• `vitest` — test runner, assertion library, mock functions\n• `@testing-library/react` — renders React components into a virtual DOM\n• `@testing-library/user-event` — simulates real user interactions (more realistic than `fireEvent`)\n• `@testing-library/jest-dom` — adds matchers: `toBeInTheDocument`, `toHaveValue`, `toBeDisabled`\n• `jsdom` — provides the browser environment (window, document) for Node.js tests",
-            np: "Vitest Vite सँग integrate हुन्छ। RTL + userEvent + jest-dom — testing stack।",
-            jp: "Vitest は Vite と統合。RTL + userEvent + jest-dom の 3 パッケージで構成されます。",
+            en: "An Error Boundary catches JavaScript errors that happen during rendering, in lifecycle methods, or in constructors of the component tree below it. Without one, a single error causes the whole React tree to unmount — the user sees a blank page.\n\n<b>Two ways to create them:</b>\n• Write a class component with `componentDidCatch` and `getDerivedStateFromError` (verbose, old way)\n• Use the `react-error-boundary` library (modern, recommended — no class components needed)\n\n<b>Important:</b> Error Boundaries do NOT catch errors in event handlers, async code (setTimeout, Promises), or server-side rendering. Those need try/catch.",
+            np: "Error Boundary ले render errors catch गर्छ। `react-error-boundary` library use गर्नुहोस्। Async errors catch गर्दैन।",
+            jp: "レンダー中のエラーを捕捉。`react-error-boundary` が現代的な方法。非同期エラーは対象外。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Install + configure",
-            np: "Install र configure",
-            jp: "インストールと設定",
+          title: { en: "react-error-boundary usage", np: "react-error-boundary उदाहरण", jp: "react-error-boundary の使い方" },
+          code: `import { ErrorBoundary } from 'react-error-boundary';
+
+// The fallback shown when something crashes
+function ErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div role="alert" className="error-card">
+      <h2>Something went wrong</h2>
+      <p>{error.message}</p>
+      <button onClick={resetErrorBoundary}>Try again</button>
+    </div>
+  );
+}
+
+// Wrap any component tree that might fail
+function App() {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error, info) => {
+        // Log to Sentry, Datadog, etc.
+        console.error('Caught error:', error, info.componentStack);
+      }}
+    >
+      <Dashboard />
+    </ErrorBoundary>
+  );
+}
+
+// Programmatic reset — e.g. after navigation
+function Dashboard() {
+  const { resetBoundary } = useErrorBoundary();
+
+  return (
+    <button onClick={resetBoundary}>Reset</button>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Where to place Error Boundaries",
+        np: "Error Boundaries कहाँ राख्ने",
+        jp: "Error Boundary の配置場所",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Placement granularity matters. Analogy: circuit breakers at the right level — one breaker for the whole house is too coarse (a fridge fault kills all lights), one per lightbulb is too fine (too complex to manage). Aim for feature-level boundaries.\n\n<b>Three placement strategies:</b>\n• App-level — one boundary at the root. Catches everything but shows one error screen for any failure\n• Feature-level — wrap each major section (sidebar, main content, notifications widget). One section fails, rest stays up\n• Component-level — wrap individual risky components (third-party embeds, dynamic imports). Most granular",
+            np: "Feature-level Error Boundaries best practice। एउटा section crash हुँदा बाँकी काम गर्छ।",
+            jp: "機能レベルの境界が最適。一箇所のエラーが他に影響しません。",
           },
-          code: `npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom
+        },
+        {
+          type: "code",
+          title: { en: "Feature-level boundaries", np: "Feature-level boundaries", jp: "機能レベルの境界" },
+          code: `function App() {
+  return (
+    <div className="app-layout">
+      {/* Sidebar crash won't affect main content */}
+      <ErrorBoundary FallbackComponent={SidebarError}>
+        <Sidebar />
+      </ErrorBoundary>
 
-// vite.config.ts — add test block
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+      {/* Each dashboard widget is isolated */}
+      <main>
+        <ErrorBoundary FallbackComponent={WidgetError}>
+          <RevenueChart />
+        </ErrorBoundary>
 
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./src/test/setup.ts"],
-  },
-});
+        <ErrorBoundary FallbackComponent={WidgetError}>
+          <RecentOrders />
+        </ErrorBoundary>
+      </main>
+    </div>
+  );
+}
 
-// src/test/setup.ts — run before every test file
-import "@testing-library/jest-dom";
-
-// package.json scripts
-{
-  "scripts": {
-    "test":    "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+// Async errors (event handlers) need regular try/catch:
+async function handleSubmit() {
+  try {
+    await api.post('/orders', data);
+  } catch (err) {
+    setError(err.message); // handle in state, not Error Boundary
   }
 }`,
         },
@@ -67,231 +124,425 @@ import "@testing-library/jest-dom";
     },
     {
       title: {
-        en: "Your first component test",
-        np: "पहिलो component test",
-        jp: "最初のコンポーネントテスト",
+        en: "Portals — render outside the parent DOM",
+        np: "Portals — parent DOM बाहिर render गर्ने",
+        jp: "Portal — 親 DOM の外にレンダーする",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "RTL's philosophy: find elements the way a user finds them — by visible text, by accessible role, by label — NOT by CSS class or implementation detail.\n\nThe query types:\n• `getBy...` — finds the element, throws if not found\n• `queryBy...` — finds the element, returns `null` if not found (use to assert absence)\n• `findBy...` — async, waits up to 1 second for the element to appear\n\nAlways prefer `getByRole` over `getByTestId`. A passing test that uses `getByRole('button')` means the button is accessible; a test using `getByTestId('submit-btn')` tells you nothing about accessibility.",
-            np: "RTL: role/label/text बाट elements खोज्नुहोस्, CSS class बाट होइन। getBy/queryBy/findBy — तीन queries।",
-            jp: "RTL では role・label・text で要素を探します。CSS クラスや実装詳細には依存しません。",
+            en: "A Portal lets you render a component's output to a different DOM node than its parent. Analogy: a Portal is like a transporter — your component lives in one part of the React tree, but its DOM output appears somewhere entirely different (typically the `<body>`).\n\n<b>Why you need this:</b>\n• Modals and dialogs — they need to overlay everything; if rendered inside a `overflow: hidden` container, they get clipped\n• Tooltips — same problem, need to escape stacking contexts\n• Notification toasts — should always appear on top, not inside a card\n\n<b>Key insight:</b> Portal children still receive Context from their React parent — events still bubble up through the React tree, not the DOM tree.",
+            np: "Portal ले component को DOM output अर्को node मा render गर्छ। Modals, tooltips, toasts को लागि।",
+            jp: "Portal は DOM の別ノードにレンダーします。モーダルやツールチップに使います。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Component test examples",
-            np: "Component test examples",
-            jp: "コンポーネントテストの例",
-          },
-          code: `import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { Button } from "./Button";
+          title: { en: "Modal with Portal", np: "Portal सहित Modal", jp: "Portal を使ったモーダル" },
+          code: `import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 
-// Basic render + click test
-test("calls onClick when clicked", async () => {
-  const handleClick = vi.fn();
-  render(<Button onClick={handleClick}>Click me</Button>);
+function Modal({ isOpen, onClose, children }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
 
-  // Find by accessible role + name
-  const btn = screen.getByRole("button", { name: /click me/i });
-  await userEvent.click(btn);
+  if (!isOpen) return null;
 
-  expect(handleClick).toHaveBeenCalledOnce();
-});
+  // Render into #modal-root (add <div id="modal-root"></div> to index.html)
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()} // prevent overlay click
+        role="dialog"
+        aria-modal="true"
+      >
+        {children}
+      </div>
+    </div>,
+    document.getElementById('modal-root')
+  );
+}
 
-// Test that something is NOT rendered
-test("does not show error message initially", () => {
-  render(<LoginForm />);
-  expect(screen.queryByText(/invalid credentials/i)).not.toBeInTheDocument();
-});
+// Usage — even though Modal renders to #modal-root in the DOM,
+// it still receives the ThemeContext from its React parent:
+function ProductPage() {
+  const [showModal, setShowModal] = useState(false);
 
-// Test form interaction
-test("shows error when email is invalid", async () => {
-  render(<LoginForm />);
-  const user = userEvent.setup();
-
-  await user.type(screen.getByLabelText(/email/i), "not-an-email");
-  await user.click(screen.getByRole("button", { name: /sign in/i }));
-
-  expect(await screen.findByText(/invalid email/i)).toBeInTheDocument();
-});`,
+  return (
+    <>
+      <button onClick={() => setShowModal(true)}>Buy Now</button>
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <CheckoutForm />
+      </Modal>
+    </>
+  );
+}`,
         },
       ],
     },
     {
       title: {
-        en: "Testing async behavior — loading and API calls",
-        np: "Async behavior test गर्ने",
-        jp: "非同期の振る舞いをテストする",
+        en: "React.lazy + Suspense — code splitting",
+        np: "React.lazy + Suspense — code splitting",
+        jp: "React.lazy + Suspense — コード分割",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Components that fetch data have three states: loading, success, and error. Test all three. The key tool is `vi.mock()` — it replaces your API module with a controlled fake so tests don't hit the real network.\n\nAnalogy: mocking is like using a stunt double — the movie runs normally, but the dangerous parts are performed by a controlled substitute.",
-            np: "Async components: loading, success, error — तीनै state test गर्नुहोस्। `vi.mock()` ले API fake बनाउँछ।",
-            jp: "非同期コンポーネントは loading・success・error の 3 状態をテスト。`vi.mock()` でネットワークをモック。",
+            en: "By default, Vite bundles your entire app into one JavaScript file. For large apps, this means a user downloading the dashboard code even if they only visit the login page. Code splitting breaks the bundle into chunks — loaded on demand.\n\n`React.lazy` + `Suspense` is the built-in way to do this:\n• `React.lazy(() => import('./Dashboard'))` — tells the bundler to split Dashboard into a separate chunk\n• `<Suspense fallback={<Spinner />}>` — shows the fallback while the chunk is loading\n\n<b>Most impactful split:</b> split by route — each page is its own chunk, downloaded only when navigated to.",
+            np: "React.lazy ले bundle को separate chunk बनाउँछ, needed हुँदा मात्र download हुन्छ।",
+            jp: "React.lazy + Suspense でルートごとにバンドルを分割し、必要時だけ読み込みます。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Testing async loading, success & error states",
-            np: "Async states test",
-            jp: "非同期の状態テスト",
-          },
-          code: `import { render, screen } from "@testing-library/react";
-import { vi } from "vitest";
-import * as api from "./api"; // the module your component uses
-import { PostList } from "./PostList";
+          title: { en: "Route-based code splitting", np: "Route-based code splitting", jp: "ルートベースのコード分割" },
+          code: `import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-// Mock the whole API module
-vi.mock("./api");
+// Each page is its own chunk — downloaded only when navigated to
+const Home = lazy(() => import('./pages/Home'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Settings = lazy(() => import('./pages/Settings'));
 
-test("shows loading then posts", async () => {
-  vi.mocked(api.fetchPosts).mockResolvedValue([
-    { id: 1, title: "Hello World" },
-    { id: 2, title: "Second Post" },
-  ]);
+// A reusable page loader
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="spinner" />
+    </div>
+  );
+}
 
-  render(<PostList />);
+function App() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Suspense>
+  );
+}
 
-  // Loading state appears immediately
-  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+// You can also split heavy components within a page:
+const RichTextEditor = lazy(() => import('./components/RichTextEditor'));
 
-  // Wait for posts to appear (findBy is async)
-  expect(await screen.findByText("Hello World")).toBeInTheDocument();
-  expect(screen.getByText("Second Post")).toBeInTheDocument();
-
-  // Loading is gone
-  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
-});
-
-test("shows error when fetch fails", async () => {
-  vi.mocked(api.fetchPosts).mockRejectedValue(new Error("Network error"));
-
-  render(<PostList />);
-
-  expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
-});`,
+function PostEditor() {
+  const [showEditor, setShowEditor] = useState(false);
+  return showEditor
+    ? <Suspense fallback={<div>Loading editor...</div>}><RichTextEditor /></Suspense>
+    : <button onClick={() => setShowEditor(true)}>Open Editor</button>;
+}`,
         },
       ],
     },
     {
       title: {
-        en: "Testing custom hooks with renderHook",
-        np: "Custom hooks test — renderHook",
-        jp: "renderHook でカスタムフックをテスト",
+        en: "useTransition — marking updates as non-urgent",
+        np: "useTransition — non-urgent updates mark गर्ने",
+        jp: "useTransition — 低優先度更新のマーク",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Hooks can't be called outside of a React component — they need the React runtime. `renderHook` creates a minimal component wrapper around your hook so you can test it directly.\n\n`act()` wraps any interaction that causes state updates — this tells React to process the update synchronously so assertions see the final state.",
-            np: "Hooks React runtime चाहिन्छ। `renderHook` ले minimal wrapper बनाउँछ। `act()` ले state updates process गर्छ।",
-            jp: "フックは React ランタイムが必要。`renderHook` が最小ラッパーを作成。`act()` で状態更新を同期処理します。",
+            en: "React renders synchronously by default — a slow state update (e.g. filtering 10,000 items) blocks the entire UI, making typing feel laggy. `useTransition` lets you mark a state update as <b>non-urgent</b>, telling React it can pause and interrupt that update if a more important update (like a keypress) comes in.\n\nHow it works:\n• `startTransition(fn)` — wraps the non-urgent state update\n• `isPending` — `true` while the transition is in progress; use it to show a loading indicator\n• React renders the current UI immediately with the urgent update, then finishes the transition in the background\n\nAnalogy: a hospital triage system — a patient typing (urgent) goes straight to a doctor. A routine checkup (the transition) waits. The hospital keeps functioning; nobody is frozen.",
+            np: "useTransition: non-urgent update wrap। startTransition() + isPending। React urgent update पहिले finish गर्छ।",
+            jp: "startTransition で低優先度更新をラップ。isPending でローディング表示。React は緊急更新を優先。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>When to use `useTransition`:</b>\n• Filtering or sorting a large list based on user input\n• Switching between heavy tabs where each tab renders a lot of content\n• Navigating between routes with expensive components\n\n<b>When NOT to use `useTransition`:</b>\n• Controlled inputs — the input's `value` must update urgently or it feels broken\n• Animation — use CSS transitions or Framer Motion instead\n• Simple toggles — the overhead is not worth it for fast updates",
+            np: "Use: large list filter, tab switch, route navigate। Avoid: controlled inputs, animations।",
+            jp: "大規模リスト・タブ切り替え・ルート遷移に有効。入力フィールドやアニメーションには不向き。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "renderHook + act examples",
-            np: "renderHook examples",
-            jp: "renderHook の例",
+          title: { en: "useTransition — search filter and tab switching", np: "useTransition examples", jp: "useTransition の使用例" },
+          code: `import { useState, useTransition } from 'react';
+
+// 1. Filter a large list — input stays responsive while list re-renders
+function ProductSearch({ allProducts }: { allProducts: { id: number; name: string }[] }) {
+  const [query, setQuery]            = useState('');
+  const [results, setResults]        = useState(allProducts);
+  const [isPending, startTransition] = useTransition();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val); // urgent — update input immediately
+
+    startTransition(() => {
+      // non-urgent — React can defer this if the user keeps typing
+      setResults(allProducts.filter(p =>
+        p.name.toLowerCase().includes(val.toLowerCase())
+      ));
+    });
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={handleChange} placeholder="Search products..." />
+      {isPending && <p className="text-sm text-gray-400">Filtering...</p>}
+      <ul style={{ opacity: isPending ? 0.6 : 1 }}>
+        {results.map(p => <li key={p.id}>{p.name}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+// 2. Tab switching — switch immediately, render tab content in background
+type Tab = 'overview' | 'details' | 'reviews';
+
+function ProductPage() {
+  const [activeTab, setActiveTab]    = useState<Tab>('overview');
+  const [isPending, startTransition] = useTransition();
+
+  const switchTab = (tab: Tab) => {
+    startTransition(() => setActiveTab(tab));
+  };
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        {(['overview', 'details', 'reviews'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => switchTab(tab)}
+            className={activeTab === tab ? 'font-bold' : 'opacity-60'}
+          >
+            {isPending ? '...' : tab}
+          </button>
+        ))}
+      </div>
+      {activeTab === 'overview' && <div>Overview content</div>}
+      {activeTab === 'details'  && <div>Details content</div>}
+      {activeTab === 'reviews'  && <div>Reviews content</div>}
+    </div>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "useDeferredValue — a lagging copy of a fast-changing value",
+        np: "useDeferredValue — fast-changing value को lagging copy",
+        jp: "useDeferredValue — 高速変化する値の遅延コピー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`useDeferredValue` takes a value and returns a <b>deferred copy</b> of it — a version that lags behind and only updates when React has spare time. It solves the same problem as `useTransition` (keeping the UI responsive during expensive renders) but with a different API.\n\nKey difference:\n• `useTransition` — you control the update: `startTransition(() => setState(newVal))`\n  ↳ Use when you own the state setter\n• `useDeferredValue` — you defer a value you received (from a prop or state): `const deferred = useDeferredValue(query)`\n  ↳ Use when you don't own the state — e.g. the value comes from a prop, or from a third-party component you can't modify\n\nThe deferred value is always a trailing snapshot — it's the last value React had time to render. While it's stale (`value !== deferred`), you can visually indicate this to the user.",
+            np: "useDeferredValue: value को lagging copy। Own state = useTransition। Prop/third-party = useDeferredValue।",
+            jp: "useDeferredValue は値の遅延コピー。自分で state を持てない場合に useTransition の代わりに使う。",
           },
-          code: `import { renderHook, act } from "@testing-library/react";
-import { useCounter } from "./useCounter";
-import { useAuth } from "./useAuth";
-import { AuthProvider } from "./AuthProvider";
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Best practice — memoize the expensive component:</b> Wrap the component that uses the deferred value in `React.memo`. Without `memo`, the component re-renders twice on every keystroke (once with the new value, once with the deferred value) — `memo` prevents the second render by comparing props shallowly.\n\n<b>Stale content pattern:</b> use `value !== deferredValue` as a staleness flag to dim the old results while fresh ones are computing — better UX than a full loading spinner.",
+            np: "React.memo + useDeferredValue = keystroke दुई re-render बाट बचाउँछ। Stale flag ले old results dim गर्छ।",
+            jp: "React.memo と組み合わせると二重再レンダーを防ぐ。staleness フラグで古い結果を薄表示。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "useDeferredValue — search results with stale dimming", np: "useDeferredValue example", jp: "useDeferredValue の使用例" },
+          code: `import { useState, useDeferredValue, useMemo, memo } from 'react';
 
-// Test a simple hook
-test("useCounter increments and decrements", () => {
-  const { result } = renderHook(() => useCounter(0));
+// Expensive component — memoize so it only re-renders when deferredQuery changes
+const SearchResults = memo(function SearchResults({
+  query,
+  products,
+}: {
+  query: string;
+  products: { id: number; name: string }[];
+}) {
+  const results = useMemo(
+    () => products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())),
+    [query, products],
+  );
 
-  expect(result.current.count).toBe(0);
-
-  act(() => result.current.increment());
-  expect(result.current.count).toBe(1);
-
-  act(() => result.current.decrement());
-  expect(result.current.count).toBe(0);
+  return (
+    <ul>
+      {results.map(p => <li key={p.id}>{p.name}</li>)}
+    </ul>
+  );
 });
 
-// Test a hook that needs Context
-test("useAuth returns user when logged in", async () => {
-  const { result } = renderHook(() => useAuth(), {
-    wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+function ProductSearch({ allProducts }: { allProducts: { id: number; name: string }[] }) {
+  const [query, setQuery] = useState('');
+  const deferredQuery     = useDeferredValue(query);
+
+  // isStale: the displayed list is behind the input
+  const isStale = query !== deferredQuery;
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search..."
+      />
+
+      {/* Dim old results while fresh results are computing */}
+      <div style={{ opacity: isStale ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+        <SearchResults query={deferredQuery} products={allProducts} />
+      </div>
+    </div>
+  );
+}
+
+// When to prefer useDeferredValue over useTransition:
+// - You receive the value as a prop (can't wrap setState in startTransition)
+// - A child component owns the slow render, not the parent
+// - You want to keep the API reactive (value flows down, not imperative)`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Retry strategies — recovering from transient failures",
+        np: "Retry strategies — transient failures बाट recover गर्ने",
+        jp: "リトライ戦略 — 一時的な障害からの復旧",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Not every failure is permanent. A flaky mobile network, a server briefly restarting, a load balancer routing to an unhealthy node for one request — these are <b>transient</b> failures that often succeed on the very next try. Showing the user a hard error page for a blip that would have resolved itself in 2 seconds is bad UX. Analogy: if a phone call drops once, you redial — you don't assume the other person's phone is broken forever.\n\n<b>Exponential backoff with jitter:</b> instead of retrying immediately (which can hammer an already-struggling server) or at a fixed interval (which causes every failed client to retry in lockstep — a \"thundering herd\"), each retry waits longer than the last, plus a small random jitter so clients don't all retry at the exact same moment.",
+            np: "हरेक failure permanent हुँदैन — network blip जस्ता transient failures प्रायः अर्को try मा नै सफल हुन्छन्। Exponential backoff + jitter ले retry लाई क्रमशः ढिलो र randomize गर्छ।",
+            jp: "すべての失敗が恒久的とは限りません。一時的な障害は次の試行で成功することが多い。指数バックオフ＋ジッターで再試行の間隔を徐々に広げ、ランダム化します。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Retry with exponential backoff, and TanStack Query's built-in retry", np: "Exponential backoff retry", jp: "指数バックオフによるリトライ" },
+          code: `// Hand-rolled retry with exponential backoff + jitter
+async function fetchWithRetry(url: string, maxAttempts = 3): Promise<Response> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+      return res;
+    } catch (err) {
+      if (attempt === maxAttempts) throw err; // out of retries — surface the error
+
+      const baseDelay = 2 ** attempt * 100;         // 200ms, 400ms, 800ms...
+      const jitter = Math.random() * 100;
+      await new Promise(r => setTimeout(r, baseDelay + jitter));
+    }
+  }
+  throw new Error('unreachable');
+}
+
+// The pragmatic answer in real apps — TanStack Query already does this for you
+function useProducts() {
+  return useQuery({
+    queryKey: ['products'],
+    queryFn: () => fetchWithRetry('/api/products'),
+    retry: 3,                                  // retry up to 3 times automatically
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // capped exponential backoff
   });
+}
 
-  expect(result.current.user).toBeNull();
+// Automatic retries are NOT a replacement for a manual "Try again" —
+// give the user their own escape hatch once automatic retries are exhausted:
+function ProductList() {
+  const { data, error, refetch, isFetching } = useProducts();
 
-  await act(async () => {
-    await result.current.login("test@example.com", "password");
-  });
+  if (error) {
+    return (
+      <div role="alert">
+        <p>Couldn't load products.</p>
+        <button onClick={() => refetch()} disabled={isFetching}>
+          {isFetching ? 'Retrying...' : 'Try again'}
+        </button>
+      </div>
+    );
+  }
+  return <ul>{data?.map(p => <li key={p.id}>{p.name}</li>)}</ul>;
+}
 
-  expect(result.current.user?.email).toBe("test@example.com");
-});`,
+// The same "give the user an escape hatch" idea applies to Error Boundaries —
+// resetErrorBoundary (covered earlier in this file) is the manual retry for render errors.`,
         },
       ],
     },
     {
       title: {
-        en: "Testing best practices",
-        np: "Testing best practices",
-        jp: "テストのベストプラクティス",
+        en: "Empty states — the UI state everyone forgets to design",
+        np: "Empty states — सबैले बिर्सने UI state",
+        jp: "空状態 — みんなが設計を忘れる UI ステート",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>What to test:</b>\n• The happy path — does the feature work when used correctly?\n• Error cases — what happens when an API fails or form is invalid?\n• Edge cases — empty state, single item, max items\n• Accessibility — can assistive technology interact with this?\n\n<b>What NOT to test:</b>\n• Implementation details — component internal state, private methods\n• Third-party library behavior — test that you call the library correctly, not that the library works\n• Snapshot tests for complex UI — brittle, fail on every style change, add no value",
-            np: "Happy path, error cases, edge cases test गर्नुहोस्। Implementation details र snapshots test नगर्नुहोस्।",
-            jp: "正常系・エラー・エッジケースをテスト。実装詳細・スナップショットは避けましょう。",
+            en: "Every data-driven component actually has <b>four</b> states, not two (\"loading\" and \"done\"):\n• <b>Loading</b> — the request is in flight\n• <b>Error</b> — the request failed\n• <b>Empty</b> — the request succeeded, but there is zero data to show\n• <b>Success with data</b> — the request succeeded and there's something to render\n\n<b>The bug this section exists to prevent:</b> treating \"empty\" as a special case of \"error.\" A search for a product that doesn't exist is a <b>successful</b> response containing an empty array — that is completely different from the server failing. Showing \"Something went wrong\" for a legitimate zero-results search is confusing and, if the user's search was correct, actively wrong.\n\n<b>A good empty state does two things a generic \"No data\" doesn't:</b> it explains *why* it's empty (no results for this filter vs. you haven't created anything yet vs. everything is done), and it offers a next action (clear filters, create your first item, invite a teammate).",
+            np: "हरेक data component मा वास्तवमा चार states हुन्छन्: loading, error, empty, success-with-data। Empty र error फरक हुन् — empty result पनि एउटा valid success response हो।",
+            jp: "データ表示コンポーネントには実は4つの状態があります：loading・error・empty・success。空とエラーは別物 — 検索結果ゼロも正常な成功レスポンスです。",
           },
         },
         {
-          type: "table",
-          caption: {
-            en: "RTL query priority — use the highest applicable",
-            np: "RTL query priority",
-            jp: "RTL クエリの優先順位",
-          },
-          headers: [
-            { en: "Priority", np: "Priority", jp: "優先度" },
-            { en: "Query", np: "Query", jp: "クエリ" },
-            { en: "When to use", np: "प्रयोग", jp: "用途" },
-          ],
-          rows: [
-            [
-              { en: "1 (best)", np: "1 (सबैभन्दा राम्रो)", jp: "1（最良）" },
-              { en: "getByRole", np: "getByRole", jp: "getByRole" },
-              { en: "Buttons, inputs, headings, links — anything with a role", np: "Role भएका elements", jp: "role のある要素すべて" },
-            ],
-            [
-              { en: "2", np: "2", jp: "2" },
-              { en: "getByLabelText", np: "getByLabelText", jp: "getByLabelText" },
-              { en: "Form inputs with associated labels", np: "Label भएका inputs", jp: "ラベル付き入力" },
-            ],
-            [
-              { en: "3", np: "3", jp: "3" },
-              { en: "getByPlaceholderText", np: "getByPlaceholderText", jp: "getByPlaceholderText" },
-              { en: "Inputs without labels (use labels instead)", np: "Label नभएका inputs", jp: "ラベルなし入力" },
-            ],
-            [
-              { en: "4", np: "4", jp: "4" },
-              { en: "getByText", np: "getByText", jp: "getByText" },
-              { en: "Any visible text — paragraphs, headings, buttons", np: "Visible text", jp: "表示テキスト" },
-            ],
-            [
-              { en: "5 (last resort)", np: "5 (अन्तिम)", jp: "5（最終手段）" },
-              { en: "getByTestId", np: "getByTestId", jp: "getByTestId" },
-              { en: "Only when nothing else works", np: "अरु नभएको बेला मात्र", jp: "他の手段が使えない場合のみ" },
-            ],
-          ],
+          type: "code",
+          title: { en: "Correctly branching on all four states", np: "चार states सही तरिकाले branch गर्ने", jp: "4つの状態を正しく分岐する" },
+          code: `function ProductSearchResults({ query }: { query: string }) {
+  const { data, isLoading, error } = useProductSearch(query);
+
+  if (isLoading) return <Skeleton count={6} />;
+
+  if (error) {
+    // A REAL failure — the request itself did not succeed
+    return <ErrorState message="Couldn't reach the server." onRetry={() => refetch()} />;
+  }
+
+  if (data && data.length === 0) {
+    // NOT an error — a successful response with zero items
+    return (
+      <EmptyState
+        title={\`No results for "\${query}"\`}
+        hint="Try a different spelling, or remove some filters."
+        action={{ label: 'Clear filters', onClick: clearFilters }}
+      />
+    );
+  }
+
+  // Success with data
+  return <ul>{data!.map(p => <ProductCard key={p.id} product={p} />)}</ul>;
+}
+
+// A reusable EmptyState — explains WHY and offers a NEXT ACTION, not just "No data"
+function EmptyState({
+  title,
+  hint,
+  action,
+}: {
+  title: string;
+  hint: string;
+  action?: { label: string; onClick: () => void };
+}) {
+  return (
+    <div className="empty-state">
+      <p className="font-medium">{title}</p>
+      <p className="text-sm text-gray-500">{hint}</p>
+      {action && <button onClick={action.onClick}>{action.label}</button>}
+    </div>
+  );
+}`,
         },
       ],
     },
@@ -299,62 +550,86 @@ test("useAuth returns user when logged in", async () => {
   faq: [
     {
       question: {
-        en: "What is the difference between Vitest and Jest?",
-        np: "Vitest र Jest को फरक?",
-        jp: "Vitest と Jest の違いは？",
+        en: "Can I use try/catch instead of Error Boundaries?",
+        np: "Error Boundaries को सट्टा try/catch use गर्न सक्छु?",
+        jp: "Error Boundary の代わりに try/catch を使える？",
       },
       answer: {
-        en: "Vitest is Jest-compatible (same API: `describe`, `test`, `expect`, `vi.mock`) but built for Vite. Key differences: Vitest starts faster because it reuses the Vite dev server; it supports ES modules natively without Babel transform; `vi.mock` is more predictable than `jest.mock`. If you know Jest, Vitest feels identical — just faster.",
-        np: "Vitest Jest-compatible छ (same API) तर Vite को लागि। Faster startup, native ESM support।",
-        jp: "Vitest は Jest と同じ API ですが Vite 向けに最適化。ES モジュールをネイティブサポートし起動が速いです。",
+        en: "try/catch only works for imperative code (event handlers, async functions). Error Boundaries catch errors that happen during rendering — and you can't wrap JSX in a try/catch. You need both: Error Boundaries for render errors, try/catch for async/event handler errors. They complement each other.",
+        np: "try/catch: event handlers, async। Error Boundaries: render errors। दुवै चाहिन्छ।",
+        jp: "try/catch はイベントハンドラや非同期向け。Error Boundary はレンダーエラー向け。両方が必要です。",
       },
     },
     {
       question: {
-        en: "Why does RTL avoid testing implementation details?",
-        np: "RTL ले implementation details test किन avoid गर्छ?",
-        jp: "RTL が実装詳細を避けるのはなぜ？",
+        en: "Do Error Boundaries catch errors in event handlers?",
+        np: "Error Boundaries ले event handlers को errors catch गर्छ?",
+        jp: "Error Boundary はイベントハンドラのエラーを捕捉する？",
       },
       answer: {
-        en: "Implementation details tests break when you refactor — even if the feature still works perfectly. For example, testing that a component has `isOpen: true` in state will break if you rename that variable to `menuVisible`. RTL tests that what the USER sees changed (the dropdown opened), not how you implemented it. This makes tests resilient to refactoring.",
-        np: "Implementation test refactor गर्दा break हुन्छ। User देख्ने behavior test गर्नुहोस् — refactor-resistant।",
-        jp: "実装テストはリファクタリングで壊れます。ユーザーが見る振る舞いをテストすれば、実装を変えても壊れません。",
+        en: "No. Error Boundaries only catch errors that occur during rendering, in lifecycle methods, and in constructors. Event handler errors (onClick, onChange) happen outside the render cycle — use try/catch inside them. This is a common gotcha: a button click crashes silently if you don't have try/catch in the handler.",
+        np: "होइन। Event handler errors try/catch ले handle गर्नुहोस्।",
+        jp: "いいえ。イベントハンドラのエラーは try/catch で処理してください。",
       },
     },
     {
       question: {
-        en: "How do I test a component that uses React Router?",
-        np: "React Router use गर्ने component कसरी test गर्ने?",
-        jp: "React Router を使うコンポーネントのテスト方法は？",
+        en: "When should I NOT use lazy loading?",
+        np: "Lazy loading कहिले use नगर्ने?",
+        jp: "遅延読み込みを使わない場面は？",
       },
       answer: {
-        en: "Wrap the component in a `MemoryRouter` (from react-router-dom) in your test. `MemoryRouter` keeps navigation in memory — no real browser history needed. `render(<MemoryRouter initialEntries={['/posts/1']}><PostDetail /></MemoryRouter>)`. For testing navigation (clicking a link causes redirect), use `createMemoryRouter` and `RouterProvider` from React Router v6.",
-        np: "`MemoryRouter` मा wrap गर्नुहोस्। Browser history नचाहिने in-memory routing। Test मा route params पनि set गर्न सकिन्छ।",
-        jp: "`MemoryRouter` でラップすれば実ブラウザ不要。React Router v6 では `createMemoryRouter` も使えます。",
+        en: "Don't lazy-load small components (buttons, inputs, simple cards) — the HTTP request overhead outweighs the bundle savings. Lazy loading is best for route-level pages, heavy components (rich text editors, chart libraries, maps), and admin sections rarely visited. A good rule of thumb: lazy-load anything over 10KB that isn't needed on initial load.",
+        np: "Small components lazy-load नगर्नुहोस्। Routes, heavy components (charts, editors) को लागि राम्रो।",
+        jp: "小さなコンポーネントは不要。ルートや重いコンポーネント（チャート、エディタ）に使います。",
       },
     },
     {
       question: {
-        en: "What is the difference between a mock, a stub, and a spy?",
-        np: "Mock, stub, spy को फरक?",
-        jp: "モック・スタブ・スパイの違いは？",
+        en: "What is the difference between Suspense for data fetching vs lazy loading?",
+        np: "Data fetching Suspense र lazy loading Suspense मा के फरक?",
+        jp: "データ取得の Suspense と遅延読み込みの Suspense の違いは？",
       },
       answer: {
-        en: "In practice with Vitest they overlap, but conceptually: a <b>stub</b> replaces a function with a fake that returns controlled values (`vi.fn(() => 'fake data')`). A <b>spy</b> wraps the real function to record calls without replacing it (`vi.spyOn(api, 'fetch')`). A <b>mock</b> replaces a whole module with a fake implementation (`vi.mock('./api')`). In tests, you'll mostly use `vi.fn()` for callbacks and `vi.mock()` for API modules.",
-        np: "Stub: fake return value। Spy: real function wrap गरेर calls record। Mock: whole module replace।",
-        jp: "スタブ: 偽の戻り値。スパイ: 本物をラップして記録。モック: モジュール全体を置換。実務では `vi.fn()` と `vi.mock()` が中心です。",
+        en: "Same component, different trigger. For lazy loading, Suspense activates when a lazy-imported component hasn't loaded its JS chunk yet. For data fetching, Suspense activates when a component 'suspends' (throws a Promise) while waiting for data — this requires a Suspense-compatible data library (TanStack Query, Relay, Next.js). The `<Suspense>` wrapper is identical in both cases.",
+        np: "Same component, different trigger। Lazy: JS chunk load। Data: Promise throw। TanStack Query ले support गर्छ।",
+        jp: "同じコンポーネント、異なるトリガー。遅延読み込みは JS チャンク、データ取得は Promise のスロー。",
       },
     },
     {
       question: {
-        en: "How do I test a component that uses Context?",
-        np: "Context use गर्ने component कसरी test गर्ने?",
-        jp: "Context を使うコンポーネントのテスト方法は？",
+        en: "What is a Suspense boundary waterfall?",
+        np: "Suspense boundary waterfall के हो?",
+        jp: "Suspense ウォーターフォールとは？",
       },
       answer: {
-        en: "Create a custom `renderWithProviders` helper that wraps your component in all the Providers it needs. Call this instead of `render` in tests. Example: `function renderWithProviders(ui) { return render(<ThemeProvider><QueryClientProvider client={testClient}>{ui}</QueryClientProvider></ThemeProvider>); }`. For Context values you want to control in a specific test, create a test-specific provider that accepts a value prop.",
-        np: "`renderWithProviders` helper बनाउनुहोस् जसले सबै Providers wrap गर्छ। Test-specific Context values को लागि test provider।",
-        jp: "全 Provider をラップする `renderWithProviders` ヘルパーを用意しましょう。テスト固有の値は専用 Provider で渡します。",
+        en: "A waterfall happens when Suspense boundaries are nested, causing sequential loading: the outer boundary loads first, reveals the inner component, which triggers another load. Instead of loading A and B in parallel, you load A, then B — doubling the wait time. Fix: hoist data fetching to the parent so all data loads in parallel before Suspense boundaries kick in.",
+        np: "Nested Suspense boundaries ले sequential loading गराउँछ। Data fetching parent मा hoist गरेर fix गर्ने।",
+        jp: "入れ子の Suspense が順次ロードを引き起こす問題。親でデータ取得を並列化して解決します。",
+      },
+    },
+    {
+      question: {
+        en: "Should I retry every failed request automatically?",
+        np: "हरेक failed request automatically retry गर्नुपर्छ?",
+        jp: "失敗したリクエストはすべて自動リトライすべき？",
+      },
+      answer: {
+        en: "No — only retry errors that are plausibly transient (network errors, 502/503/504 status codes, timeouts). Don't retry a 401 (unauthorized) or 400 (bad request) — retrying the exact same broken request will just fail the exact same way and waste time before showing the real error. Most HTTP clients and TanStack Query let you inspect the error/status in a `retry` function to make this decision.",
+        np: "होइन — transient errors (network, 502/503/504) मात्र retry गर्नुहोस्। 401/400 जस्ता errors retry गर्दा फेरि उही किसिमले fail हुन्छ।",
+        jp: "いいえ。一時的なエラー（ネットワーク、502/503/504）のみリトライしてください。401や400は再試行しても同じ結果になります。",
+      },
+    },
+    {
+      question: {
+        en: "Is an empty state the same thing as a loading skeleton?",
+        np: "Empty state र loading skeleton उस्तै हो?",
+        jp: "空状態とローディングスケルトンは同じもの？",
+      },
+      answer: {
+        en: "No — they're opposite ends of the same request. A skeleton is a placeholder shown WHILE you don't yet know the outcome. An empty state is shown AFTER you know the outcome, and the outcome is \"success, zero items.\" Showing a skeleton forever when data has already arrived (but is empty) is a common bug — always check `isLoading` first, then check the data length separately.",
+        np: "होइन — फरक हुन्। Skeleton ले नतिजा थाहा नहुँदै देखाउँछ, empty state ले नतिजा 'success तर zero items' भएपछि देखाउँछ।",
+        jp: "いいえ、別物です。スケルトンは結果が分かる前、空状態は「成功だがゼロ件」と分かった後に表示します。",
       },
     },
   ],
