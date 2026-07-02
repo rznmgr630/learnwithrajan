@@ -3,61 +3,92 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_19_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Animation makes your UI feel alive — not flashy, but purposeful. A fade-in tells users \"new content arrived.\" A slide-out confirms \"that item was removed.\" <b>Framer Motion</b> is the most popular React animation library: it uses a declarative API (describe the animation, not the steps) and handles the hard parts (interruptions, layout shifts, accessibility) automatically.\n\nAnalogy: Framer Motion is like a skilled stage director — you describe the scene changes, the director choreographs the actors. You say \"enter from the left\" and exit \"fade out\" — the director figures out the timing, easing, and interruptions.",
-      np: "Framer Motion ले React मा declarative animation दिन्छ — motion components, variants, gestures र layout animations।",
-      jp: "Framer Motion は宣言的な API で React にアニメーションを追加するライブラリです。",
+      en: "As apps grow, state management becomes a challenge. `useState` and Context work for medium-sized apps, but larger apps benefit from dedicated tools. Two categories:\n\n• <b>Client state</b> — UI toggles, user preferences, cart items — things that live in the browser. Use <b>Zustand</b>.\n• <b>Server state</b> — data fetched from an API — it needs caching, background refresh, and synchronization. Use <b>TanStack Query</b>.\n\nAnalogy: Zustand is like a shared whiteboard in the office (everyone can read and update it); TanStack Query is like a smart assistant who fetches documents from the archive, caches them on your desk, and automatically refreshes them when they might be stale.",
+      np: "Zustand = client state (cart, preferences)। TanStack Query = server state (API data, caching)।",
+      jp: "Zustand はクライアント状態、TanStack Query はサーバー状態（API データのキャッシュと同期）に使います。",
     },
     {
-      en: "In this day we cover the full Framer Motion toolkit:\n\n• <b>`motion` components</b> — the foundation: animate any HTML element with `initial`, `animate`, `exit` props\n• <b>AnimatePresence</b> — play exit animations before React removes a component from the DOM\n• <b>Variants</b> — named animation states that orchestrate parent-child stagger effects\n• <b>Gestures</b> — `whileHover`, `whileTap`, `drag` for interactive micro-animations\n• <b>Layout animations</b> — smooth transitions when a component's size or position changes",
-      np: "motion components, AnimatePresence, variants, gestures र layout animations सिक्छौं।",
-      jp: "motion コンポーネント・AnimatePresence・バリアント・ジェスチャー・レイアウトアニメーションを学びます。",
+      en: "In this day we cover:\n\n• <b>Zustand</b> — creating a store, selectors, actions\n• <b>Zustand middleware</b> — `persist` (save to localStorage), `devtools` (Redux DevTools)\n• <b>TanStack Query `useQuery`</b> — fetching with caching, loading/error states\n• <b>TanStack Query `useMutation`</b> — create/update/delete with cache invalidation\n• <b>Optimistic updates</b> — instant UI feedback before the server responds\n• <b>Choosing the right tool</b> — when to use what",
+      np: "Zustand store, middleware, TanStack Query useQuery/useMutation, optimistic updates, tool selection।",
+      jp: "Zustand・ミドルウェア・TanStack Query の useQuery/useMutation・楽観的更新・ツール選択を網羅します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "motion components & basic animation",
-        np: "motion components र basic animation",
-        jp: "motion コンポーネントと基本アニメーション",
+        en: "Zustand — the simplest global store",
+        np: "Zustand — global store",
+        jp: "Zustand — シンプルなグローバルストア",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Framer Motion wraps any HTML element with a `motion.*` prefix. You add `initial` (start state), `animate` (end state), and `transition` (how to get there). React handles when to mount/update; Framer Motion handles how it looks during the change.\n\n• `initial` — the state when the component first appears\n• `animate` — the target state to animate toward\n• `exit` — the state when the component leaves (requires `AnimatePresence`)\n• `transition` — duration, easing, delay, spring config\n\nFramer Motion uses <b>spring physics</b> by default (`type: 'spring'`) — animations feel natural because they overshoot slightly like a real object. Use `type: 'tween'` for precise CSS-style easing.",
-            np: "`motion.div` लाई `initial`, `animate`, `transition` props दिएर animate गर्ने।",
-            jp: "`motion.*` で要素をラップし、`initial`・`animate`・`transition` を指定します。",
+            en: "Zustand is a tiny state management library (under 1KB). No providers, no boilerplate — just a `create()` function that returns a hook. Analogy: Context + useReducer is like writing a contract in triplicate; Zustand is like a sticky note that everyone can read.\n\n<b>Key concepts:</b>\n• The store holds both <b>state</b> (data) and <b>actions</b> (functions that update state) in one object\n• Call `set()` to update state — Zustand handles re-renders automatically\n• Use <b>selectors</b> to subscribe to only part of the store — prevents unnecessary re-renders",
+            np: "Zustand tiny (1KB), no boilerplate। create() ले hook return गर्छ। State र actions एकै ठाउँमा।",
+            jp: "Zustand は 1KB 以下。`create()` でフックを作るだけ。state と action を同じオブジェクトに定義します。",
           },
         },
         {
           type: "code",
-          title: { en: "Basic motion.div + state-driven animation", np: "Basic motion.div", jp: "基本の motion.div" },
-          code: `import { motion } from "framer-motion";
+          title: {
+            en: "Creating and using a Zustand cart store",
+            np: "Zustand cart store",
+            jp: "Zustand カートストア",
+          },
+          code: `// stores/useCartStore.js
+import { create } from "zustand";
 
-// Fade + slide up on mount
-function Card({ title }) {
+const useCartStore = create((set) => ({
+  // ── state ──────────────────────────────────────────
+  items: [],
+
+  // ── actions ────────────────────────────────────────
+  addItem: (item) =>
+    set((state) => ({ items: [...state.items, item] })),
+
+  removeItem: (id) =>
+    set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+
+  updateQuantity: (id, qty) =>
+    set((state) => ({
+      items: state.items.map((i) => (i.id === id ? { ...i, qty } : i)),
+    })),
+
+  clearCart: () => set({ items: [] }),
+}));
+
+// ── Component usage ────────────────────────────────────
+function CartIcon() {
+  // Selector: only re-renders when item count changes
+  const count = useCartStore((state) => state.items.length);
+  return <span>{count}</span>;
+}
+
+function ProductCard({ product }) {
+  const addItem = useCartStore((state) => state.addItem);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="rounded-xl p-4 shadow"
-    >
-      {title}
-    </motion.div>
+    <button onClick={() => addItem({ id: product.id, name: product.name, qty: 1 })}>
+      Add to cart
+    </button>
   );
 }
 
-// Animate on state change — like button scales when liked
-function LikeButton({ liked, onToggle }) {
+function CartPage() {
+  // Subscribe to multiple fields at once
+  const { items, removeItem, clearCart } = useCartStore();
+
   return (
-    <motion.button
-      animate={{ scale: liked ? 1.2 : 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      onClick={onToggle}
-    >
-      {liked ? "❤️" : "🤍"}
-    </motion.button>
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {item.name}
+          <button onClick={() => removeItem(item.id)}>Remove</button>
+        </li>
+      ))}
+      <button onClick={clearCart}>Clear all</button>
+    </ul>
   );
 }`,
         },
@@ -65,270 +96,417 @@ function LikeButton({ liked, onToggle }) {
     },
     {
       title: {
-        en: "AnimatePresence — exit animations",
-        np: "AnimatePresence — exit animations",
-        jp: "AnimatePresence — 退場アニメーション",
+        en: "Zustand middleware — persist & devtools",
+        np: "Zustand middleware",
+        jp: "Zustand ミドルウェア",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "React removes components from the DOM instantly when they unmount. Without `AnimatePresence`, there's no chance to play an exit animation — the element is already gone.\n\n`AnimatePresence` holds the component in the DOM until its `exit` animation finishes, then unmounts it.\n\nAnalogy: `AnimatePresence` is like a stage manager who holds the curtain until the actor completes their exit walk — no teleporting off-stage.\n\nKey rule: every direct child of `AnimatePresence` needs a unique `key` prop — that's how it tracks which child is entering vs exiting.",
-            np: "`AnimatePresence` ले exit animation सकिएपछि मात्र component unmount गर्छ।",
-            jp: "`AnimatePresence` はアンマウント前に退場アニメーションを完了させます。",
+            en: "Zustand middleware wraps your store creator to add extra behaviour:\n\n• <b>`persist`</b> — automatically saves and restores state from `localStorage`. Perfect for cart items, user preferences, theme settings — survives page refresh.\n• <b>`devtools`</b> — connects to the Redux DevTools browser extension so you can inspect state changes, time-travel debug, and see action names.\n\nCompose them by nesting: `devtools(persist(storeCreator))`.",
+            np: "persist ले localStorage मा state save गर्छ। devtools ले Redux DevTools extension सँग connect गर्छ।",
+            jp: "persist は localStorage に自動保存、devtools は Redux DevTools でデバッグ可能にします。",
           },
         },
         {
           type: "code",
-          title: { en: "AnimatePresence for list items + route transitions", np: "AnimatePresence उदाहरण", jp: "AnimatePresence の例" },
-          code: `import { AnimatePresence, motion } from "framer-motion";
+          title: {
+            en: "persist + devtools middleware",
+            np: "middleware example",
+            jp: "ミドルウェアの例",
+          },
+          code: `import { create } from "zustand";
+import { persist, devtools } from "zustand/middleware";
 
-// Animate list item removal
-function TodoList({ todos, onDelete }) {
+const useCartStore = create(
+  devtools(
+    persist(
+      (set) => ({
+        items: [],
+        addItem: (item) => set((s) => ({ items: [...s.items, item] }), false, "cart/addItem"),
+        clearCart: () => set({ items: [] }, false, "cart/clear"),
+      }),
+      {
+        name: "cart-storage",   // key in localStorage
+        // Only persist the items array, not derived values
+        partialize: (state) => ({ items: state.items }),
+      }
+    ),
+    { name: "CartStore" }       // name shown in Redux DevTools
+  )
+);
+
+// Subscribe to state changes outside React (e.g. in an analytics module)
+useCartStore.subscribe(
+  (state) => state.items.length,  // what to watch
+  (count) => analytics.track("cartUpdated", { count })
+);
+
+// Read/write state outside a component
+const currentItems = useCartStore.getState().items;
+useCartStore.setState({ items: [] });`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "TanStack Query — server state management",
+        np: "TanStack Query — server state",
+        jp: "TanStack Query — サーバー状態管理",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "TanStack Query manages data that comes from a server. It solves problems that `useEffect + useState` don't handle automatically:\n\n• <b>Caching</b> — the same query across different components doesn't fetch twice\n• <b>Background refetch</b> — stale data is refreshed automatically when the window refocuses\n• <b>Loading/error states</b> — `isLoading`, `isFetching`, `error` out of the box\n• <b>Deduplication</b> — multiple components requesting the same data get one network call\n\nAnalogy: `useEffect` for fetching is like going to the library yourself every time; TanStack Query is like a library subscription service that delivers updates automatically.",
+            np: "TanStack Query = API data caching, background refetch, loading/error states automatic।",
+            jp: "TanStack Query はキャッシュ・バックグラウンドrefetch・ローディング状態を自動で管理します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "QueryClient setup + useQuery examples",
+            np: "useQuery examples",
+            jp: "useQuery の例",
+          },
+          code: `// main.jsx — set up the QueryClient provider
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime:  1000 * 60 * 5,  // data is "fresh" for 5 minutes
+      retry:      2,               // retry failed requests twice
+    },
+  },
+});
+
+createRoot(document.getElementById("root")).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
+);
+
+// PostList.jsx — useQuery
+import { useQuery } from "@tanstack/react-query";
+
+export default function PostList() {
+  const {
+    data: posts,
+    isLoading,
+    error,
+    isFetching,  // true when background-refetching
+  } = useQuery({
+    queryKey:  ["posts"],                          // cache key
+    queryFn:   () => fetch("/api/posts").then(r => r.json()),
+  });
+
+  if (isLoading) return <p>Loading posts...</p>;
+  if (error)     return <p>Error: {error.message}</p>;
+
   return (
     <ul>
-      <AnimatePresence>
-        {todos.map((todo) => (
-          <motion.li
-            key={todo.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            transition={{ duration: 0.25 }}
-          >
-            {todo.text}
-            <button onClick={() => onDelete(todo.id)}>×</button>
-          </motion.li>
-        ))}
-      </AnimatePresence>
+      {isFetching && <span>Refreshing...</span>}
+      {posts.map(p => <li key={p.id}>{p.title}</li>)}
     </ul>
   );
 }
 
-// Route transitions with React Router
-import { useLocation } from "react-router-dom";
-
-function AnimatedRoutes() {
-  const location = useLocation();
-  return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
-        <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
-      </Routes>
-    </AnimatePresence>
-  );
-}
-
-function PageWrapper({ children }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
-  );
-}`,
+// Query with a parameter — refetches automatically when userId changes
+const { data: userPosts } = useQuery({
+  queryKey: ["posts", userId],        // different key = separate cache entry
+  queryFn:  () => fetch(\`/api/users/\${userId}/posts\`).then(r => r.json()),
+  enabled:  !!userId,                 // don't fetch until userId is defined
+});`,
         },
       ],
     },
     {
       title: {
-        en: "Variants — orchestrated animations",
-        np: "Variants — orchestrated animations",
-        jp: "バリアント — 協調アニメーション",
+        en: "TanStack Query — mutations and cache invalidation",
+        np: "useMutation — create/update/delete",
+        jp: "useMutation とキャッシュ無効化",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Variants let you define named animation states as objects, then reference them by name. The real power: parent variants automatically propagate to children — enabling stagger effects where list items animate in one by one.\n\nInstead of writing `initial={{ opacity: 0 }}` on every item, you define the states once on the parent and children inherit them.\n\n• Define variants as a plain object: `{ hidden: {...}, visible: {...} }`\n• Reference by name string: `initial=\"hidden\" animate=\"visible\"`\n• Use `staggerChildren` in the parent transition to delay each child by a set amount",
-            np: "Variants ले named states define गर्छ। Parent variants children मा propagate हुन्छ — stagger effect को लागि।",
-            jp: "バリアントで名前付きアニメーション状態を定義し、子コンポーネントへ伝播させます。",
+            en: "`useMutation` handles create, update, and delete operations. After a mutation succeeds, you <b>invalidate</b> the relevant queries — TanStack Query automatically refetches them so the UI shows fresh data.\n\n<b>Optimistic updates</b> go a step further: update the UI instantly before the server responds, then roll back on error. Analogy: tapping a like button — the count increments instantly (optimistic) even though the server hasn't confirmed yet.",
+            np: "useMutation ले POST/PUT/DELETE handle गर्छ। onSuccess मा invalidateQueries ले fresh data fetch गर्छ।",
+            jp: "useMutation で変更操作を行い、成功後に invalidateQueries でデータを自動更新します。",
           },
         },
         {
           type: "code",
-          title: { en: "Staggered list animation with variants", np: "Staggered list animation", jp: "スタガーリストアニメーション" },
-          code: `import { motion } from "framer-motion";
+          title: {
+            en: "useMutation + optimistic update",
+            np: "mutation + optimistic update",
+            jp: "ミューテーションと楽観的更新",
+          },
+          code: `import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,   // each child delays 100ms after the previous
-      delayChildren: 0.2,     // wait 200ms before starting the first child
+function CreatePost() {
+  const queryClient = useQueryClient();
+
+  // ── Basic mutation (refetch after success) ───────────────
+  const { mutate, isPending } = useMutation({
+    mutationFn: (newPost) =>
+      fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(newPost),
+      }).then(r => r.json()),
+
+    onSuccess: () => {
+      // Tell TanStack Query the posts list is now stale → refetch
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  return (
+    <button onClick={() => mutate({ title: "New post" })} disabled={isPending}>
+      {isPending ? "Saving..." : "Create Post"}
+    </button>
+  );
+}
+
+// ── Optimistic delete (instant UI, rollback on error) ────────
+const deleteMutation = useMutation({
+  mutationFn: (id) => fetch(\`/api/posts/\${id}\`, { method: "DELETE" }),
+
+  onMutate: async (id) => {
+    await queryClient.cancelQueries({ queryKey: ["posts"] }); // stop in-flight refetches
+    const previous = queryClient.getQueryData(["posts"]);     // snapshot
+    queryClient.setQueryData(["posts"], (old) =>              // remove optimistically
+      old.filter((p) => p.id !== id)
+    );
+    return { previous };                                      // save snapshot for rollback
+  },
+
+  onError: (_err, _id, ctx) => {
+    queryClient.setQueryData(["posts"], ctx.previous);        // rollback on failure
+  },
+
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ["posts"] });   // always sync with server
+  },
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Choosing the right state tool",
+        np: "सही state tool छान्नुहोस्",
+        jp: "適切な状態管理ツールの選択",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>The golden rule:</b> use the simplest tool that solves the problem.\n\n• Local component state only one component cares about → `useState`\n• State shared between a few nearby components → lift state up to parent\n• App-wide UI state (theme, auth user, cart) → Zustand\n• Data from a server (posts, products, user profile) → TanStack Query\n\nThe most common mistake: using Zustand to store fetched data (then you have to manage loading/error/cache yourself). Let TanStack Query own server data; let Zustand own client state. They work great together.",
+            np: "useState → local, lift state → sibling sharing, Zustand → app-wide UI, TanStack Query → server data।",
+            jp: "useState は local、Zustand は app-wide UI、TanStack Query はサーバーデータ。混同しないことが重要。",
+          },
+        },
+        {
+          type: "table",
+          caption: {
+            en: "State management decision table",
+            np: "State tool decision table",
+            jp: "状態管理ツール選択表",
+          },
+          headers: [
+            { en: "State type", np: "State type", jp: "状態の種類" },
+            { en: "Tool", np: "Tool", jp: "ツール" },
+            { en: "Example", np: "Example", jp: "例" },
+            { en: "When NOT to use", np: "कहिले नगर्ने", jp: "使わない場面" },
+          ],
+          rows: [
+            [
+              { en: "Local UI state", np: "Local UI state", jp: "ローカルUI状態" },
+              { en: "useState / useReducer", np: "useState", jp: "useState" },
+              { en: "Form fields, toggle, modal open", np: "form, toggle", jp: "フォーム・モーダル開閉" },
+              { en: "Never — always the first choice", np: "सधैं use गर्ने", jp: "常に最初の選択" },
+            ],
+            [
+              { en: "Shared UI state", np: "Shared UI", jp: "共有UI状態" },
+              { en: "Context (small apps) / Zustand", np: "Context/Zustand", jp: "Context / Zustand" },
+              { en: "Theme, sidebar open, notifications", np: "theme, sidebar", jp: "テーマ・サイドバー" },
+              { en: "If only 1–2 components need it — lift state instead", np: "少数component → lift state", jp: "1–2コンポーネントなら lift state" },
+            ],
+            [
+              { en: "Server / API data", np: "Server data", jp: "サーバーデータ" },
+              { en: "TanStack Query", np: "TanStack Query", jp: "TanStack Query" },
+              { en: "Posts list, user profile, product catalog", np: "posts, user, products", jp: "投稿一覧・ユーザー情報" },
+              { en: "Never store API data in Zustand", np: "Zustand मा API data नराख्नुहोस्", jp: "Zustand に API データを入れない" },
+            ],
+            [
+              { en: "Complex client logic", np: "Complex client logic", jp: "複雑なクライアントロジック" },
+              { en: "Zustand with slices", np: "Zustand", jp: "Zustand（スライス）" },
+              { en: "Shopping cart, wizard steps, undo/redo", np: "cart, wizard, undo", jp: "カート・ウィザード・Undo" },
+              { en: "When data primarily lives on the server", np: "server data को लागि नगर्ने", jp: "サーバーデータには不向き" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Redux Toolkit — when a team needs more structure than Zustand",
+        np: "Redux Toolkit — Zustand भन्दा बढी structure चाहिँदा",
+        jp: "Redux Toolkit — Zustand 以上の構造が必要なとき",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Redux Toolkit (RTK) is the modern, officially-recommended way to write Redux — it removes the old boilerplate (hand-written action types, action creators, `switch` reducers with manual immutability). Analogy: classic Redux is like assembling furniture with no labeled screws — RTK is the same furniture with a labeled, guided kit.\n\n<b>Key pieces:</b>\n• `createSlice` — generates action creators and a reducer from a single object; you write code that *looks* like it mutates state (`state.items.push(item)`), but RTK uses Immer under the hood to produce a safe, immutable update\n• `configureStore` — sets up the store with good defaults (Redux DevTools, middleware for catching accidental mutations) already wired in\n• `RTK Query` — RTK's own data-fetching layer, similar in spirit to TanStack Query (already covered above), for teams who want one library for both client and server state",
+            np: "Redux Toolkit (RTK) ले classic Redux को boilerplate हटाउँछ। createSlice ले Immer प्रयोग गरी 'mutate' जस्तो देखिने तर safe immutable update दिन्छ। configureStore ले DevTools पहिल्यै wire गरेको हुन्छ।",
+            jp: "Redux Toolkit（RTK）は従来の Redux のボイラープレートを排除します。`createSlice` は Immer を使い、見た目は mutate でも安全に不変更新します。`configureStore` は DevTools 等が最初から設定済みです。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "A cart slice with Redux Toolkit",
+            np: "RTK cart slice",
+            jp: "RTK のカートスライス",
+          },
+          code: `// features/cart/cartSlice.js
+import { createSlice } from "@reduxjs/toolkit";
+
+const cartSlice = createSlice({
+  name: "cart",
+  initialState: { items: [] },
+  reducers: {
+    // Looks like a mutation — Immer converts it to an immutable update
+    addItem: (state, action) => {
+      state.items.push(action.payload);
+    },
+    removeItem: (state, action) => {
+      state.items = state.items.filter((i) => i.id !== action.payload);
+    },
+    clearCart: (state) => {
+      state.items = [];
     },
   },
-};
+});
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 200, damping: 20 },
-  },
-};
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+export default cartSlice.reducer;
 
-function ProductGrid({ products }) {
+// app/store.js
+import { configureStore } from "@reduxjs/toolkit";
+import cartReducer from "../features/cart/cartSlice";
+
+export const store = configureStore({
+  reducer: { cart: cartReducer }, // DevTools + safety middleware included by default
+});
+
+// Component usage — react-redux hooks
+import { useSelector, useDispatch } from "react-redux";
+import { addItem } from "../features/cart/cartSlice";
+
+function ProductCard({ product }) {
+  const dispatch = useDispatch();
+  const count = useSelector((state) => state.cart.items.length);
+
   return (
-    <motion.ul
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-3 gap-4"
-    >
-      {products.map((p) => (
-        <motion.li key={p.id} variants={itemVariants}>
-          <ProductCard product={p} />
-        </motion.li>
-      ))}
-    </motion.ul>
+    <button onClick={() => dispatch(addItem({ id: product.id, name: product.name }))}>
+      Add to cart ({count})
+    </button>
   );
-}
-// Result: each card fades + slides in, staggered 100ms apart`,
+}`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Redux Toolkit vs Zustand",
+            np: "Redux Toolkit vs Zustand",
+            jp: "Redux Toolkit vs Zustand",
+          },
+          headers: [
+            { en: "Aspect", np: "पक्ष", jp: "観点" },
+            { en: "Redux Toolkit", np: "Redux Toolkit", jp: "Redux Toolkit" },
+            { en: "Zustand", np: "Zustand", jp: "Zustand" },
+          ],
+          rows: [
+            [
+              { en: "Boilerplate", np: "Boilerplate", jp: "定型コード" },
+              { en: "More — slices, store setup, Provider", np: "बढी — slices, store, Provider", jp: "多い — スライス・ストア・Provider" },
+              { en: "Minimal — one `create()` call, no Provider", np: "न्यून — `create()` मात्र", jp: "最小 — `create()` のみ" },
+            ],
+            [
+              { en: "Debugging", np: "Debugging", jp: "デバッグ" },
+              { en: "Best-in-class Redux DevTools — time-travel, action log", np: "उत्कृष्ट DevTools — time-travel", jp: "最高クラスの DevTools — タイムトラベル" },
+              { en: "Good, via `devtools` middleware", np: "राम्रो — devtools middleware", jp: "`devtools` ミドルウェアで対応" },
+            ],
+            [
+              { en: "Best fit", np: "उपयुक्त", jp: "適する場面" },
+              { en: "Large teams, enterprise apps, strict conventions wanted", np: "ठूला teams, enterprise apps", jp: "大規模チーム・エンタープライズ" },
+              { en: "Small-to-mid teams, greenfield apps, fast iteration", np: "साना teams, greenfield apps", jp: "小〜中規模・新規プロジェクト" },
+            ],
+          ],
         },
       ],
     },
     {
       title: {
-        en: "Gestures — hover, tap & drag",
-        np: "Gestures — hover, tap र drag",
-        jp: "ジェスチャー — ホバー・タップ・ドラッグ",
+        en: "Global state architecture — deciding what actually belongs in global state",
+        np: "Global state architecture — के global state मा राख्ने भन्ने निर्णय",
+        jp: "グローバル状態アーキテクチャ — 何をグローバル状態にすべきか",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Framer Motion has built-in gesture props that animate on user interaction. No `onMouseEnter`/`onMouseLeave` boilerplate — just add a prop:\n\n• `whileHover` — animate while the cursor is over the element\n• `whileTap` — animate while the element is being pressed\n• `whileFocus` — animate while the element is focused (great for inputs)\n• `drag` — make an element draggable\n• `dragConstraints` — limit drag area with `{ top, right, bottom, left }` or a ref to a container\n\nThese are <b>gesture animations</b> — they automatically reverse when the gesture ends.",
-            np: "`whileHover`, `whileTap`, `drag` props ले gesture animations दिन्छ।",
-            jp: "`whileHover`・`whileTap`・`drag` でジェスチャーアニメーションが簡単に実装できます。",
+            en: "Before reaching for Zustand or Redux, ask three questions about a piece of state:\n\n• <b>Does more than one, unrelated part of the tree need to read it?</b> If only a parent and its direct children need it, props (or lifting state up) are simpler than global state.\n• <b>Does it need to survive route changes?</b> A logged-in user or cart should persist across pages; a form's in-progress input usually shouldn't.\n• <b>Is it data your server owns, or data your UI owns?</b> This is the most common architecture mistake: putting fetched data (posts, products) into Zustand/Redux. Server data has its own lifecycle — it can go stale, needs refetching, needs deduplication — which is exactly what TanStack Query (covered above) already solves. Global client-state tools should hold only genuinely client-only state: theme, sidebar-open, current step of a wizard, the auth token itself (not the user's server-fetched profile data).",
+            np: "Global state मा राख्नुअघि तीन प्रश्न सोध्नुहोस्: धेरै unrelated ठाउँले पढ्छ? Route change पछि पनि चाहिन्छ? यो server data हो कि client-only UI state हो? Server data लाई TanStack Query मा राख्नुहोस्, client-only state लाई मात्र Zustand/Redux मा।",
+            jp: "グローバル状態にする前に3つ問いましょう：無関係な複数箇所が読むか？ルート変更後も必要か？サーバーデータかクライアント専用UI状態か？サーバーデータは TanStack Query に任せ、Zustand/Redux にはクライアント専用状態のみ置きます。",
           },
         },
         {
-          type: "code",
-          title: { en: "Hover, tap, drag & scroll-driven animations", np: "Gesture animations", jp: "ジェスチャーアニメーション" },
-          code: `import { motion, useScroll, useTransform } from "framer-motion";
-
-// Button with hover + tap feedback
-function AnimatedButton({ children, onClick }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(0,0,0,0.15)" }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      onClick={onClick}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-// Draggable card with constraints
-function DraggableCard() {
-  return (
-    <motion.div
-      drag
-      dragConstraints={{ left: -100, right: 100, top: -50, bottom: 50 }}
-      dragElastic={0.2}        // how much it stretches past constraints
-      whileDrag={{ scale: 1.05, cursor: "grabbing" }}
-      className="w-48 rounded-xl bg-white p-4 shadow-xl cursor-grab"
-    >
-      Drag me!
-    </motion.div>
-  );
-}
-
-// Scroll-driven animation (parallax header opacity)
-function ParallaxHeader() {
-  const { scrollY } = useScroll();
-  // As user scrolls from 0px to 200px, opacity goes from 1 to 0
-  const opacity = useTransform(scrollY, [0, 200], [1, 0]);
-  const scale = useTransform(scrollY, [0, 200], [1, 0.8]);
-
-  return (
-    <motion.header style={{ opacity, scale }} className="sticky top-0">
-      Hero content that fades as you scroll
-    </motion.header>
-  );
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Layout animations",
-        np: "Layout animations",
-        jp: "レイアウトアニメーション",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Layout animations handle the hardest animation problem: smoothly transitioning when a component's <b>size or position changes</b> due to DOM changes — not just CSS property changes.\n\nNormally when items reorder, are added, or removed from a list, siblings jump to their new positions instantly. The `layout` prop tells Framer Motion to animate that position change smoothly.\n\nAnalogy: normally when you remove a book from a shelf, all the books slide into place instantly. With `layout`, they smoothly slide into their new positions.\n\n• `layout` prop — animate any position/size change\n• `layoutId` — shared layout animation: one element morphs into another across two different parts of the tree (e.g., a card expanding into a modal)",
-            np: "`layout` prop ले position/size changes animate गर्छ। `layoutId` ले shared layout animation गर्छ।",
-            jp: "`layout` でレイアウト変化をアニメーション、`layoutId` で共有アニメーションを実装します。",
+          type: "table",
+          caption: {
+            en: "The state escalation ladder — start at the top, escalate only when needed",
+            np: "State escalation ladder",
+            jp: "状態管理のエスカレーションラダー",
           },
-        },
-        {
-          type: "code",
-          title: { en: "Layout animation + shared layout (card → modal)", np: "Layout animation", jp: "レイアウトアニメーション" },
-          code: `import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useState } from "react";
-
-// Reorderable list — items animate when sorted
-function SortableList({ items }) {
-  return (
-    <LayoutGroup>
-      <ul>
-        {items.map((item) => (
-          <motion.li key={item.id} layout>
-            {item.name}
-          </motion.li>
-        ))}
-      </ul>
-    </LayoutGroup>
-  );
-}
-
-// Shared layout animation — card expands to modal
-function Gallery({ items }) {
-  const [selectedId, setSelectedId] = useState(null);
-
-  return (
-    <>
-      <div className="grid grid-cols-3 gap-4">
-        {items.map((item) => (
-          <motion.div
-            key={item.id}
-            layoutId={item.id}          // <-- same layoutId as the modal
-            onClick={() => setSelectedId(item.id)}
-            className="cursor-pointer rounded-xl overflow-hidden"
-          >
-            <img src={item.thumbnail} alt={item.title} />
-          </motion.div>
-        ))}
-      </div>
-
-      <AnimatePresence>
-        {selectedId && (
-          <motion.div
-            layoutId={selectedId}       // <-- morphs FROM the clicked card
-            className="fixed inset-0 z-50 m-8 rounded-2xl bg-white"
-          >
-            <FullImage item={items.find(i => i.id === selectedId)} />
-            <button onClick={() => setSelectedId(null)}>Close</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}`,
+          headers: [
+            { en: "Tier", np: "Tier", jp: "段階" },
+            { en: "Tool", np: "Tool", jp: "ツール" },
+            { en: "Escalate when...", np: "कहिले escalate गर्ने", jp: "エスカレーション条件" },
+            { en: "Example", np: "उदाहरण", jp: "例" },
+          ],
+          rows: [
+            [
+              { en: "1", np: "1", jp: "1" },
+              { en: "Local `useState`", np: "Local `useState`", jp: "ローカル `useState`" },
+              { en: "A sibling or cousin component needs it too", np: "sibling/cousin component लाई पनि चाहियो", jp: "兄弟・いとこコンポーネントにも必要" },
+              { en: "A single accordion's open/closed flag", np: "एउटा accordion को open/close", jp: "1つのアコーディオンの開閉" },
+            ],
+            [
+              { en: "2", np: "2", jp: "2" },
+              { en: "Lifted state / Context", np: "Lifted state / Context", jp: "リフト / Context" },
+              { en: "Many distant components need it, but it changes rarely", np: "धेरै टाढाका components चाहिन्छ, कम बदलिन्छ", jp: "遠い多数のコンポーネントが必要、更新頻度は低い" },
+              { en: "Current theme, current locale", np: "theme, locale", jp: "テーマ・言語設定" },
+            ],
+            [
+              { en: "3", np: "3", jp: "3" },
+              { en: "Zustand / Redux Toolkit", np: "Zustand / Redux Toolkit", jp: "Zustand / Redux Toolkit" },
+              { en: "It changes often and Context re-renders become a measured problem", np: "बारम्बार बदलिन्छ, Context re-render समस्या भयो", jp: "更新頻度が高く Context の再レンダーが問題になる" },
+              { en: "Shopping cart, multi-step wizard state", np: "cart, wizard state", jp: "カート・ウィザードの状態" },
+            ],
+            [
+              { en: "4", np: "4", jp: "4" },
+              { en: "TanStack Query (server cache)", np: "TanStack Query", jp: "TanStack Query" },
+              { en: "The data actually comes from — and is owned by — your API", np: "data वास्तवमा API बाट आउँछ र त्यहीँ owned हुन्छ", jp: "データが API 由来かつ API が所有" },
+              { en: "Posts, products, user profile fetched from the server", np: "posts, products, profile", jp: "投稿・商品・ユーザープロフィール" },
+            ],
+          ],
         },
       ],
     },
@@ -336,62 +514,62 @@ function Gallery({ items }) {
   faq: [
     {
       question: {
-        en: "Does Framer Motion hurt performance?",
-        np: "Framer Motion ले performance slow गर्छ?",
-        jp: "Framer Motion はパフォーマンスに影響しますか？",
+        en: "When should I use Zustand vs Context?",
+        np: "Zustand vs Context — कहिले के?",
+        jp: "Zustand と Context はどう使い分ける？",
       },
       answer: {
-        en: "Framer Motion animates `transform` and `opacity` by default — these run on the GPU compositor thread without triggering layout recalculation, so they're fast. Avoid animating `width`, `height`, `top`, `left` properties — those trigger layout and are slow. Use `x`/`y`/`scale` instead of `left`/`top`/`width`/`height`. The `layout` prop does trigger layout reads but batches them intelligently.",
-        np: "transform र opacity animate गर्दा fast हुन्छ। width/height animate नगर्नुहोस्।",
-        jp: "`transform` と `opacity` は GPU で動くため速いです。`width`/`height` のアニメーションは避けてください。",
+        en: "Context re-renders ALL consumers when its value changes — even components that don't use the changed part. This causes performance issues in large apps. Zustand uses selectors so components only re-render when their specific slice of state changes. Rule of thumb: Context is fine for low-frequency updates (theme, locale, auth user). Use Zustand when state changes frequently (cart, notifications) or you have many consumers.",
+        np: "Context ले सबै consumers re-render गर्छ। Zustand ले selector ले आवश्यक component मात्र re-render गर्छ।",
+        jp: "Context は変更時に全 consumer が再レンダー。Zustand は selector で必要な部分だけ再レンダーします。",
       },
     },
     {
       question: {
-        en: "When should I NOT animate?",
-        np: "Animation कहिले नगर्ने?",
-        jp: "アニメーションを使わない場面は？",
+        en: "Does TanStack Query replace useEffect for data fetching?",
+        np: "TanStack Query ले useEffect replace गर्छ?",
+        jp: "TanStack Query は useEffect の代わりになる？",
       },
       answer: {
-        en: "Don't animate for animation's sake. Red flags:\n• Animation takes longer than 300ms — users feel it as lag\n• Animation blocks interaction (user can't click while animating)\n• Animations everywhere with no consistent pattern\n• Animating the same thing the user sees constantly (e.g. a counter that pulses on every increment)\n\nGood uses: state transitions (loading → data), entering/exiting elements, micro-feedback (button tap), meaningful navigation (page transitions). The rule: animation should communicate information, not decorate.",
-        np: "Animation 300ms भन्दा धेरै नराख्नुहोस्। User interaction block नगर्नुहोस्।",
-        jp: "300ms 以上のアニメーションは遅く感じます。インタラクションをブロックしないよう注意。",
+        en: "Yes, for data fetching. TanStack Query handles everything useEffect + useState does for fetching, plus: caching, deduplication, background refetch, retry logic, loading/error states, and cache invalidation. The only time to use useEffect for fetching is if you explicitly want no caching or have a one-time side effect not tied to UI.",
+        np: "Data fetching को लागि हो। TanStack Query ले caching, retry, background refetch सबै handle गर्छ।",
+        jp: "データ取得には TanStack Query の方が優れています。キャッシュ・リトライ・バックグラウンドrefetch を自動化します。",
       },
     },
     {
       question: {
-        en: "How do I respect prefers-reduced-motion?",
-        np: "prefers-reduced-motion कसरी respect गर्ने?",
-        jp: "prefers-reduced-motion への対応方法は？",
+        en: "How do I reset TanStack Query cache on logout?",
+        np: "Logout मा TanStack Query cache कसरी reset गर्ने?",
+        jp: "ログアウト時に TanStack Query のキャッシュをリセットするには？",
       },
       answer: {
-        en: "Framer Motion has a built-in hook: `const { reducedMotion } = useReducedMotion()`. If the user has enabled \"Reduce motion\" in their OS, `reducedMotion` is `'always'`. You can use this to skip animations or use instant transitions. Alternatively, wrap all animations in a check: `const shouldAnimate = !prefersReducedMotion; <motion.div animate={shouldAnimate ? { opacity: 1 } : {}}>`. Framer Motion v10+ also has a global `MotionConfig reducedMotion=\"user\"` that automatically respects the OS setting.",
-        np: "`useReducedMotion()` hook ले OS setting check गर्छ र animation skip गर्न सकिन्छ।",
-        jp: "`useReducedMotion()` で OS 設定を確認し、アニメーションをスキップできます。",
+        en: "Call `queryClient.clear()` in your logout handler — this removes ALL cached data. If you use the Zustand auth store, trigger this in the `logout` action. Place `queryClient` outside React (singleton) so it's accessible anywhere: `const queryClient = new QueryClient()` at the module level, not inside a component.",
+        np: "logout handler मा `queryClient.clear()` call गर्नुहोस् — सबै cache remove हुन्छ।",
+        jp: "ログアウト処理で `queryClient.clear()` を呼ぶと全キャッシュが削除されます。",
       },
     },
     {
       question: {
-        en: "What is the difference between `animate` and `transition`?",
-        np: "`animate` र `transition` मा के फरक?",
-        jp: "`animate` と `transition` の違いは？",
+        en: "Can Zustand and TanStack Query work together?",
+        np: "Zustand र TanStack Query सँगै use गर्न सकिन्छ?",
+        jp: "Zustand と TanStack Query は一緒に使える？",
       },
       answer: {
-        en: "`animate` defines the TARGET state — what values to animate TO (e.g. `{ opacity: 1, y: 0 }`). `transition` defines HOW to get there — duration, easing, spring stiffness, delay. Think: `animate` is the destination; `transition` is the mode of transport. You can also put `transition` inside variant definitions to give each state its own timing.",
-        np: "`animate` = destination (कहाँ जाने), `transition` = how to get there (कसरी)।",
-        jp: "`animate` は目標値、`transition` はその到達方法（速度・イージング等）を定義します。",
+        en: "Yes — this is the recommended pattern. Zustand manages client state (cart, auth token, UI preferences). TanStack Query manages server state (fetched data). They don't conflict. Example: Zustand stores `authToken` → TanStack Query reads it from the Zustand store to add to API request headers. `useCartStore` (Zustand) + `useProducts` query (TanStack) on the same page is completely normal.",
+        np: "हो। Zustand = client state, TanStack Query = server state। दुवै एकै page मा use गर्न सकिन्छ।",
+        jp: "推奨パターンです。Zustand はクライアント状態、TanStack Query はサーバーデータを担当します。",
       },
     },
     {
       question: {
-        en: "How do I trigger an animation from a parent component?",
-        np: "Parent बाट animation trigger गर्ने कसरी?",
-        jp: "親コンポーネントからアニメーションをトリガーするには？",
+        en: "What is the difference between `staleTime` and `gcTime` in TanStack Query?",
+        np: "`staleTime` र `gcTime` मा के फरक?",
+        jp: "`staleTime` と `gcTime` の違いは？",
       },
       answer: {
-        en: "Use Framer Motion's `useAnimationControls()` hook: `const controls = useAnimation(); controls.start('visible')`. Pass `controls` as the `animate` prop: `<motion.div animate={controls} variants={variants}>`. Now calling `controls.start('visible')` from the parent plays the animation. Alternatively, use the `whileInView` prop for scroll-triggered animations: `<motion.div whileInView={{ opacity: 1 }} viewport={{ once: true }}>` — animates once when it enters the viewport.",
-        np: "`useAnimation()` controls दिन्छ। `controls.start('visible')` ले parent बाट trigger गर्न मिल्छ।",
-        jp: "`useAnimation()` でコントロールを取得し、親から `controls.start()` を呼び出します。",
+        en: "`staleTime` — how long data is considered \"fresh.\" While fresh, TanStack Query serves it from cache without refetching (default: 0 = immediately stale). `gcTime` (formerly `cacheTime`) — how long unused cache data is kept in memory before being garbage collected (default: 5 minutes). Set `staleTime: 1000 * 60 * 5` for data that changes infrequently (products, settings) to avoid unnecessary background refetches.",
+        np: "staleTime = data कति देर fresh मानिन्छ। gcTime = unused cache कति देर memory मा राखिन्छ।",
+        jp: "staleTime はデータが「新鮮」な期間、gcTime はキャッシュがメモリに残る期間（デフォルト5分）。",
       },
     },
   ],

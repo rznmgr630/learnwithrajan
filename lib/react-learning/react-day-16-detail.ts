@@ -3,351 +3,372 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const REACT_DAY_16_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "As apps grow, state management becomes a challenge. `useState` and Context work for medium-sized apps, but larger apps benefit from dedicated tools. Two categories:\n\n• <b>Client state</b> — UI toggles, user preferences, cart items — things that live in the browser. Use <b>Zustand</b>.\n• <b>Server state</b> — data fetched from an API — it needs caching, background refresh, and synchronization. Use <b>TanStack Query</b>.\n\nAnalogy: Zustand is like a shared whiteboard in the office (everyone can read and update it); TanStack Query is like a smart assistant who fetches documents from the archive, caches them on your desk, and automatically refreshes them when they might be stale.",
-      np: "Zustand = client state (cart, preferences)। TanStack Query = server state (API data, caching)।",
-      jp: "Zustand はクライアント状態、TanStack Query はサーバー状態（API データのキャッシュと同期）に使います。",
+      en: "Tests give you confidence to change your code without breaking things. For React, the gold-standard approach is testing <b>behavior, not implementation</b> — interact with your components the way a user would (click buttons, type in inputs, check text appears) rather than checking internal state.\n\nAnalogy: testing implementation is like inspecting every gear in a car engine to see if it works; testing behavior is like taking the car for a test drive. The test drive tells you what actually matters: does the car go, stop, and steer?\n\n<b>The testing stack:</b>\n• <b>Vitest</b> — the test runner (like Jest but faster, built for Vite)\n• <b>React Testing Library (RTL)</b> — renders components and provides human-friendly queries\n• <b>@testing-library/user-event</b> — simulates real user interactions (typing, clicking)\n• <b>@testing-library/jest-dom</b> — adds custom matchers like `toBeInTheDocument()`",
+      np: "Testing = behavior test, implementation नहोस्। Vitest + RTL + userEvent — stack।",
+      jp: "テストは実装でなく振る舞いを検証。Vitest + RTL + userEvent が現代の標準スタックです。",
     },
     {
-      en: "In this day we cover:\n\n• <b>Zustand</b> — creating a store, selectors, actions\n• <b>Zustand middleware</b> — `persist` (save to localStorage), `devtools` (Redux DevTools)\n• <b>TanStack Query `useQuery`</b> — fetching with caching, loading/error states\n• <b>TanStack Query `useMutation`</b> — create/update/delete with cache invalidation\n• <b>Optimistic updates</b> — instant UI feedback before the server responds\n• <b>Choosing the right tool</b> — when to use what",
-      np: "Zustand store, middleware, TanStack Query useQuery/useMutation, optimistic updates, tool selection।",
-      jp: "Zustand・ミドルウェア・TanStack Query の useQuery/useMutation・楽観的更新・ツール選択を網羅します。",
+      en: "In this day we cover:\n\n• Setting up <b>Vitest + RTL</b>\n• Writing your first <b>component test</b>\n• Testing <b>async behavior</b> — loading states and API calls\n• Testing <b>custom hooks</b> with `renderHook`\n• <b>Best practices</b> — what to test, what not to test, query priority",
+      np: "Vitest setup, component tests, async tests, renderHook, best practices — सबै cover।",
+      jp: "セットアップ、コンポーネントテスト、非同期テスト、renderHook、ベストプラクティスを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Zustand — the simplest global store",
-        np: "Zustand — global store",
-        jp: "Zustand — シンプルなグローバルストア",
+        en: "Setting up Vitest + React Testing Library",
+        np: "Vitest + RTL setup",
+        jp: "Vitest + RTL のセットアップ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Zustand is a tiny state management library (under 1KB). No providers, no boilerplate — just a `create()` function that returns a hook. Analogy: Context + useReducer is like writing a contract in triplicate; Zustand is like a sticky note that everyone can read.\n\n<b>Key concepts:</b>\n• The store holds both <b>state</b> (data) and <b>actions</b> (functions that update state) in one object\n• Call `set()` to update state — Zustand handles re-renders automatically\n• Use <b>selectors</b> to subscribe to only part of the store — prevents unnecessary re-renders",
-            np: "Zustand tiny (1KB), no boilerplate। create() ले hook return गर्छ। State र actions एकै ठाउँमा।",
-            jp: "Zustand は 1KB 以下。`create()` でフックを作るだけ。state と action を同じオブジェクトに定義します。",
+            en: "Vitest integrates directly with Vite — no separate config file needed for most projects. It reads your `vite.config.ts` and adds test settings inside it.\n\n<b>What each package does:</b>\n• `vitest` — test runner, assertion library, mock functions\n• `@testing-library/react` — renders React components into a virtual DOM\n• `@testing-library/user-event` — simulates real user interactions (more realistic than `fireEvent`)\n• `@testing-library/jest-dom` — adds matchers: `toBeInTheDocument`, `toHaveValue`, `toBeDisabled`\n• `jsdom` — provides the browser environment (window, document) for Node.js tests",
+            np: "Vitest Vite सँग integrate हुन्छ। RTL + userEvent + jest-dom — testing stack।",
+            jp: "Vitest は Vite と統合。RTL + userEvent + jest-dom の 3 パッケージで構成されます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Creating and using a Zustand cart store",
-            np: "Zustand cart store",
-            jp: "Zustand カートストア",
+            en: "Install + configure",
+            np: "Install र configure",
+            jp: "インストールと設定",
           },
-          code: `// stores/useCartStore.js
-import { create } from "zustand";
+          code: `npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom
 
-const useCartStore = create((set) => ({
-  // ── state ──────────────────────────────────────────
-  items: [],
+// vite.config.ts — add test block
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
-  // ── actions ────────────────────────────────────────
-  addItem: (item) =>
-    set((state) => ({ items: [...state.items, item] })),
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+  },
+});
 
-  removeItem: (id) =>
-    set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+// src/test/setup.ts — run before every test file
+import "@testing-library/jest-dom";
 
-  updateQuantity: (id, qty) =>
-    set((state) => ({
-      items: state.items.map((i) => (i.id === id ? { ...i, qty } : i)),
-    })),
-
-  clearCart: () => set({ items: [] }),
-}));
-
-// ── Component usage ────────────────────────────────────
-function CartIcon() {
-  // Selector: only re-renders when item count changes
-  const count = useCartStore((state) => state.items.length);
-  return <span>{count}</span>;
-}
-
-function ProductCard({ product }) {
-  const addItem = useCartStore((state) => state.addItem);
-
-  return (
-    <button onClick={() => addItem({ id: product.id, name: product.name, qty: 1 })}>
-      Add to cart
-    </button>
-  );
-}
-
-function CartPage() {
-  // Subscribe to multiple fields at once
-  const { items, removeItem, clearCart } = useCartStore();
-
-  return (
-    <ul>
-      {items.map((item) => (
-        <li key={item.id}>
-          {item.name}
-          <button onClick={() => removeItem(item.id)}>Remove</button>
-        </li>
-      ))}
-      <button onClick={clearCart}>Clear all</button>
-    </ul>
-  );
+// package.json scripts
+{
+  "scripts": {
+    "test":    "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
+  }
 }`,
         },
       ],
     },
     {
       title: {
-        en: "Zustand middleware — persist & devtools",
-        np: "Zustand middleware",
-        jp: "Zustand ミドルウェア",
+        en: "Your first component test",
+        np: "पहिलो component test",
+        jp: "最初のコンポーネントテスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Zustand middleware wraps your store creator to add extra behaviour:\n\n• <b>`persist`</b> — automatically saves and restores state from `localStorage`. Perfect for cart items, user preferences, theme settings — survives page refresh.\n• <b>`devtools`</b> — connects to the Redux DevTools browser extension so you can inspect state changes, time-travel debug, and see action names.\n\nCompose them by nesting: `devtools(persist(storeCreator))`.",
-            np: "persist ले localStorage मा state save गर्छ। devtools ले Redux DevTools extension सँग connect गर्छ।",
-            jp: "persist は localStorage に自動保存、devtools は Redux DevTools でデバッグ可能にします。",
+            en: "RTL's philosophy: find elements the way a user finds them — by visible text, by accessible role, by label — NOT by CSS class or implementation detail.\n\nThe query types:\n• `getBy...` — finds the element, throws if not found\n• `queryBy...` — finds the element, returns `null` if not found (use to assert absence)\n• `findBy...` — async, waits up to 1 second for the element to appear\n\nAlways prefer `getByRole` over `getByTestId`. A passing test that uses `getByRole('button')` means the button is accessible; a test using `getByTestId('submit-btn')` tells you nothing about accessibility.",
+            np: "RTL: role/label/text बाट elements खोज्नुहोस्, CSS class बाट होइन। getBy/queryBy/findBy — तीन queries।",
+            jp: "RTL では role・label・text で要素を探します。CSS クラスや実装詳細には依存しません。",
           },
         },
         {
           type: "code",
           title: {
-            en: "persist + devtools middleware",
-            np: "middleware example",
-            jp: "ミドルウェアの例",
+            en: "Component test examples",
+            np: "Component test examples",
+            jp: "コンポーネントテストの例",
           },
-          code: `import { create } from "zustand";
-import { persist, devtools } from "zustand/middleware";
+          code: `import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { Button } from "./Button";
 
-const useCartStore = create(
-  devtools(
-    persist(
-      (set) => ({
-        items: [],
-        addItem: (item) => set((s) => ({ items: [...s.items, item] }), false, "cart/addItem"),
-        clearCart: () => set({ items: [] }, false, "cart/clear"),
-      }),
-      {
-        name: "cart-storage",   // key in localStorage
-        // Only persist the items array, not derived values
-        partialize: (state) => ({ items: state.items }),
-      }
-    ),
-    { name: "CartStore" }       // name shown in Redux DevTools
-  )
-);
+// Basic render + click test
+test("calls onClick when clicked", async () => {
+  const handleClick = vi.fn();
+  render(<Button onClick={handleClick}>Click me</Button>);
 
-// Subscribe to state changes outside React (e.g. in an analytics module)
-useCartStore.subscribe(
-  (state) => state.items.length,  // what to watch
-  (count) => analytics.track("cartUpdated", { count })
-);
+  // Find by accessible role + name
+  const btn = screen.getByRole("button", { name: /click me/i });
+  await userEvent.click(btn);
 
-// Read/write state outside a component
-const currentItems = useCartStore.getState().items;
-useCartStore.setState({ items: [] });`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "TanStack Query — server state management",
-        np: "TanStack Query — server state",
-        jp: "TanStack Query — サーバー状態管理",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "TanStack Query manages data that comes from a server. It solves problems that `useEffect + useState` don't handle automatically:\n\n• <b>Caching</b> — the same query across different components doesn't fetch twice\n• <b>Background refetch</b> — stale data is refreshed automatically when the window refocuses\n• <b>Loading/error states</b> — `isLoading`, `isFetching`, `error` out of the box\n• <b>Deduplication</b> — multiple components requesting the same data get one network call\n\nAnalogy: `useEffect` for fetching is like going to the library yourself every time; TanStack Query is like a library subscription service that delivers updates automatically.",
-            np: "TanStack Query = API data caching, background refetch, loading/error states automatic।",
-            jp: "TanStack Query はキャッシュ・バックグラウンドrefetch・ローディング状態を自動で管理します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "QueryClient setup + useQuery examples",
-            np: "useQuery examples",
-            jp: "useQuery の例",
-          },
-          code: `// main.jsx — set up the QueryClient provider
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime:  1000 * 60 * 5,  // data is "fresh" for 5 minutes
-      retry:      2,               // retry failed requests twice
-    },
-  },
+  expect(handleClick).toHaveBeenCalledOnce();
 });
 
-createRoot(document.getElementById("root")).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
-);
+// Test that something is NOT rendered
+test("does not show error message initially", () => {
+  render(<LoginForm />);
+  expect(screen.queryByText(/invalid credentials/i)).not.toBeInTheDocument();
+});
 
-// PostList.jsx — useQuery
-import { useQuery } from "@tanstack/react-query";
+// Test form interaction
+test("shows error when email is invalid", async () => {
+  render(<LoginForm />);
+  const user = userEvent.setup();
 
-export default function PostList() {
-  const {
-    data: posts,
-    isLoading,
-    error,
-    isFetching,  // true when background-refetching
-  } = useQuery({
-    queryKey:  ["posts"],                          // cache key
-    queryFn:   () => fetch("/api/posts").then(r => r.json()),
-  });
+  await user.type(screen.getByLabelText(/email/i), "not-an-email");
+  await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-  if (isLoading) return <p>Loading posts...</p>;
-  if (error)     return <p>Error: {error.message}</p>;
-
-  return (
-    <ul>
-      {isFetching && <span>Refreshing...</span>}
-      {posts.map(p => <li key={p.id}>{p.title}</li>)}
-    </ul>
-  );
-}
-
-// Query with a parameter — refetches automatically when userId changes
-const { data: userPosts } = useQuery({
-  queryKey: ["posts", userId],        // different key = separate cache entry
-  queryFn:  () => fetch(\`/api/users/\${userId}/posts\`).then(r => r.json()),
-  enabled:  !!userId,                 // don't fetch until userId is defined
+  expect(await screen.findByText(/invalid email/i)).toBeInTheDocument();
 });`,
         },
       ],
     },
     {
       title: {
-        en: "TanStack Query — mutations and cache invalidation",
-        np: "useMutation — create/update/delete",
-        jp: "useMutation とキャッシュ無効化",
+        en: "Testing async behavior — loading and API calls",
+        np: "Async behavior test गर्ने",
+        jp: "非同期の振る舞いをテストする",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "`useMutation` handles create, update, and delete operations. After a mutation succeeds, you <b>invalidate</b> the relevant queries — TanStack Query automatically refetches them so the UI shows fresh data.\n\n<b>Optimistic updates</b> go a step further: update the UI instantly before the server responds, then roll back on error. Analogy: tapping a like button — the count increments instantly (optimistic) even though the server hasn't confirmed yet.",
-            np: "useMutation ले POST/PUT/DELETE handle गर्छ। onSuccess मा invalidateQueries ले fresh data fetch गर्छ।",
-            jp: "useMutation で変更操作を行い、成功後に invalidateQueries でデータを自動更新します。",
+            en: "Components that fetch data have three states: loading, success, and error. Test all three. The key tool is `vi.mock()` — it replaces your API module with a controlled fake so tests don't hit the real network.\n\nAnalogy: mocking is like using a stunt double — the movie runs normally, but the dangerous parts are performed by a controlled substitute.",
+            np: "Async components: loading, success, error — तीनै state test गर्नुहोस्। `vi.mock()` ले API fake बनाउँछ।",
+            jp: "非同期コンポーネントは loading・success・error の 3 状態をテスト。`vi.mock()` でネットワークをモック。",
           },
         },
         {
           type: "code",
           title: {
-            en: "useMutation + optimistic update",
-            np: "mutation + optimistic update",
-            jp: "ミューテーションと楽観的更新",
+            en: "Testing async loading, success & error states",
+            np: "Async states test",
+            jp: "非同期の状態テスト",
           },
-          code: `import { useMutation, useQueryClient } from "@tanstack/react-query";
+          code: `import { render, screen } from "@testing-library/react";
+import { vi } from "vitest";
+import * as api from "./api"; // the module your component uses
+import { PostList } from "./PostList";
 
-function CreatePost() {
-  const queryClient = useQueryClient();
+// Mock the whole API module
+vi.mock("./api");
 
-  // ── Basic mutation (refetch after success) ───────────────
-  const { mutate, isPending } = useMutation({
-    mutationFn: (newPost) =>
-      fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(newPost),
-      }).then(r => r.json()),
+test("shows loading then posts", async () => {
+  vi.mocked(api.fetchPosts).mockResolvedValue([
+    { id: 1, title: "Hello World" },
+    { id: 2, title: "Second Post" },
+  ]);
 
-    onSuccess: () => {
-      // Tell TanStack Query the posts list is now stale → refetch
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
+  render(<PostList />);
 
-  return (
-    <button onClick={() => mutate({ title: "New post" })} disabled={isPending}>
-      {isPending ? "Saving..." : "Create Post"}
-    </button>
-  );
-}
+  // Loading state appears immediately
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
 
-// ── Optimistic delete (instant UI, rollback on error) ────────
-const deleteMutation = useMutation({
-  mutationFn: (id) => fetch(\`/api/posts/\${id}\`, { method: "DELETE" }),
+  // Wait for posts to appear (findBy is async)
+  expect(await screen.findByText("Hello World")).toBeInTheDocument();
+  expect(screen.getByText("Second Post")).toBeInTheDocument();
 
-  onMutate: async (id) => {
-    await queryClient.cancelQueries({ queryKey: ["posts"] }); // stop in-flight refetches
-    const previous = queryClient.getQueryData(["posts"]);     // snapshot
-    queryClient.setQueryData(["posts"], (old) =>              // remove optimistically
-      old.filter((p) => p.id !== id)
-    );
-    return { previous };                                      // save snapshot for rollback
-  },
+  // Loading is gone
+  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+});
 
-  onError: (_err, _id, ctx) => {
-    queryClient.setQueryData(["posts"], ctx.previous);        // rollback on failure
-  },
+test("shows error when fetch fails", async () => {
+  vi.mocked(api.fetchPosts).mockRejectedValue(new Error("Network error"));
 
-  onSettled: () => {
-    queryClient.invalidateQueries({ queryKey: ["posts"] });   // always sync with server
-  },
+  render(<PostList />);
+
+  expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
 });`,
         },
       ],
     },
     {
       title: {
-        en: "Choosing the right state tool",
-        np: "सही state tool छान्नुहोस्",
-        jp: "適切な状態管理ツールの選択",
+        en: "Testing custom hooks with renderHook",
+        np: "Custom hooks test — renderHook",
+        jp: "renderHook でカスタムフックをテスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>The golden rule:</b> use the simplest tool that solves the problem.\n\n• Local component state only one component cares about → `useState`\n• State shared between a few nearby components → lift state up to parent\n• App-wide UI state (theme, auth user, cart) → Zustand\n• Data from a server (posts, products, user profile) → TanStack Query\n\nThe most common mistake: using Zustand to store fetched data (then you have to manage loading/error/cache yourself). Let TanStack Query own server data; let Zustand own client state. They work great together.",
-            np: "useState → local, lift state → sibling sharing, Zustand → app-wide UI, TanStack Query → server data।",
-            jp: "useState は local、Zustand は app-wide UI、TanStack Query はサーバーデータ。混同しないことが重要。",
+            en: "Hooks can't be called outside of a React component — they need the React runtime. `renderHook` creates a minimal component wrapper around your hook so you can test it directly.\n\n`act()` wraps any interaction that causes state updates — this tells React to process the update synchronously so assertions see the final state.",
+            np: "Hooks React runtime चाहिन्छ। `renderHook` ले minimal wrapper बनाउँछ। `act()` ले state updates process गर्छ।",
+            jp: "フックは React ランタイムが必要。`renderHook` が最小ラッパーを作成。`act()` で状態更新を同期処理します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "renderHook + act examples",
+            np: "renderHook examples",
+            jp: "renderHook の例",
+          },
+          code: `import { renderHook, act } from "@testing-library/react";
+import { useCounter } from "./useCounter";
+import { useAuth } from "./useAuth";
+import { AuthProvider } from "./AuthProvider";
+
+// Test a simple hook
+test("useCounter increments and decrements", () => {
+  const { result } = renderHook(() => useCounter(0));
+
+  expect(result.current.count).toBe(0);
+
+  act(() => result.current.increment());
+  expect(result.current.count).toBe(1);
+
+  act(() => result.current.decrement());
+  expect(result.current.count).toBe(0);
+});
+
+// Test a hook that needs Context
+test("useAuth returns user when logged in", async () => {
+  const { result } = renderHook(() => useAuth(), {
+    wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+  });
+
+  expect(result.current.user).toBeNull();
+
+  await act(async () => {
+    await result.current.login("test@example.com", "password");
+  });
+
+  expect(result.current.user?.email).toBe("test@example.com");
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Integration tests — testing a full user flow",
+        np: "Integration tests — पूरा user flow test गर्ने",
+        jp: "統合テスト — 一連のユーザーフローをテストする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Every test so far has been a <b>component test</b> — it renders one component in isolation and mocks everything that component depends on (its API calls, sometimes its children). An <b>integration test</b> renders a slice of the real component tree together — a form component, its parent page, maybe a layout wrapper — and only mocks the true boundary of your app: the API layer. It exercises the actual user flow end to end, not a fragment of it.\n\nAnalogy: a component test checks that the ignition switch turns on when you insert the key. An integration test starts the car, drives it out of the garage, and confirms it actually moves — it catches problems in how the parts connect, not just whether each part works alone.\n\n<b>Bugs integration tests catch that component tests miss:</b>\n• A form component validates correctly in isolation, but the parent page never actually wires up `onSubmit` — a prop-passing mistake invisible to a component test of either piece alone\n• Two components pass a differently-shaped prop than expected (one sends `{ id }`, the other expects `{ userId }`) — each compiles and passes its own component test with hand-crafted mock props\n• A page reads a value from Context or a router param that its child never actually receives at runtime — a wiring/routing-integration bug that only shows up once the real tree is assembled",
+            np: "अहिलेसम्मका सबै component test थिए — एउटा component isolation मा render गरेर बाँकी सबै (API calls, कहिलेकाहीँ children) mock गरिन्छ। Integration test ले real component tree को एउटा slice (form + parent page) सँगै render गर्छ, API layer मात्र mock गर्छ — पूरा user flow test हुन्छ। Prop-passing mistakes, context wiring, routing integration bugs — यी component test ले पक्रन सक्दैन।",
+            jp: "これまでのテストはすべて<b>コンポーネントテスト</b>でした — 1つのコンポーネントを孤立させ、依存先（APIコール、時には子コンポーネント）をすべてモックします。<b>統合テスト</b>は実際のコンポーネントツリーの一部（フォーム + 親ページ）を一緒にレンダーし、APIレイヤーだけをモックして、実際のユーザーフローを最初から最後まで検証します。props の受け渡しミス、context の配線ミス、ルーティング統合の不具合はコンポーネントテストでは見つかりません。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Integration test — login page + real routing, mocked API",
+            np: "Integration test — login page + real routing",
+            jp: "統合テストの例 — ログインページ + 実ルーティング",
+          },
+          code: `import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import * as api from "./api";
+import { App } from "./App"; // real router + real LoginPage + real LoginForm + real Dashboard
+
+// The ONLY mock: the network boundary. LoginPage, LoginForm, the router, and
+// the Dashboard route all render for real — that's what makes this "integration".
+vi.mock("./api");
+
+test("logging in redirects the user to the dashboard", async () => {
+  vi.mocked(api.login).mockResolvedValue({ token: "fake-jwt", user: { name: "Asha" } });
+  const user = userEvent.setup();
+
+  render(
+    <MemoryRouter initialEntries={["/login"]}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  await user.type(screen.getByLabelText(/email/i), "asha@example.com");
+  await user.type(screen.getByLabelText(/password/i), "correct-pw");
+  await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+  // Asserts on the OUTCOME of the whole flow — the route actually changed
+  expect(await screen.findByRole("heading", { name: /welcome, asha/i })).toBeInTheDocument();
+  expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument(); // login form is gone — we navigated away
+});
+
+test("shows an inline error and stays on the login page when the API rejects", async () => {
+  vi.mocked(api.login).mockRejectedValue(new Error("Invalid credentials"));
+  const user = userEvent.setup();
+
+  render(
+    <MemoryRouter initialEntries={["/login"]}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  await user.type(screen.getByLabelText(/email/i), "asha@example.com");
+  await user.type(screen.getByLabelText(/password/i), "wrong-pw");
+  await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+  expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/email/i)).toBeInTheDocument(); // still on login — no navigation happened
+});`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>The trade-off — where integration tests sit in the testing pyramid:</b> write fewer of them than component tests. Three costs stack up: they're <b>slower</b> (more rendering, more async waiting for network round-trips), there's <b>more code to set up and maintain</b> (mock servers, fixture data, wrapping providers), and they're <b>more brittle to unrelated changes</b> — rename a label in a completely different child component and this test can fail even though the login flow itself is unchanged. In exchange, each one gives you more confidence per test, because it proves the pieces actually work together — not just that each piece works when handed perfect, pre-mocked input. A healthy ratio (the testing pyramid): many fast component tests for logic-heavy pieces (hooks, validation, individual components), a smaller set of integration tests reserved for your critical user flows (login, checkout, form submission).",
+            np: "Integration tests component tests भन्दा कम लेख्नुहोस् — यी ढिलो हुन्छन्, setup/maintain गर्न बढी code चाहिन्छ (mock server, fixtures, providers), र असम्बन्धित परिवर्तनले पनि break हुन सक्छ (fragile)। तर प्रति-test confidence बढी दिन्छन् किनकि पूरा flow test हुन्छ। Testing pyramid: धेरै component tests, थोरै integration tests — critical flows (login, checkout) मा मात्र focus गर्नुहोस्।",
+            jp: "トレードオフ（テストピラミッドでの位置づけ）: 統合テストはコンポーネントテストより数を絞ります。理由は3つ — <b>遅い</b>（レンダリングとネットワーク待ちが増える）、<b>セットアップと保守のコードが増える</b>（モックサーバー、フィクスチャ、プロバイダーのラップ）、そして<b>無関係な変更に弱い</b>（全く別の子コンポーネントのラベルを変えただけでこのテストが壊れることがある）。その代わり1件あたりの信頼性は高く、部品が実際に連携して動くことを証明します。健全な比率は、ロジックの多い部分（フック、バリデーション、個々のコンポーネント）には多数の高速なコンポーネントテストを、ログインや決済など重要なユーザーフローには少数の統合テストを、という形です。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Testing best practices",
+        np: "Testing best practices",
+        jp: "テストのベストプラクティス",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>What to test:</b>\n• The happy path — does the feature work when used correctly?\n• Error cases — what happens when an API fails or form is invalid?\n• Edge cases — empty state, single item, max items\n• Accessibility — can assistive technology interact with this?\n\n<b>What NOT to test:</b>\n• Implementation details — component internal state, private methods\n• Third-party library behavior — test that you call the library correctly, not that the library works\n• Snapshot tests for complex UI — brittle, fail on every style change, add no value",
+            np: "Happy path, error cases, edge cases test गर्नुहोस्। Implementation details र snapshots test नगर्नुहोस्।",
+            jp: "正常系・エラー・エッジケースをテスト。実装詳細・スナップショットは避けましょう。",
           },
         },
         {
           type: "table",
           caption: {
-            en: "State management decision table",
-            np: "State tool decision table",
-            jp: "状態管理ツール選択表",
+            en: "RTL query priority — use the highest applicable",
+            np: "RTL query priority",
+            jp: "RTL クエリの優先順位",
           },
           headers: [
-            { en: "State type", np: "State type", jp: "状態の種類" },
-            { en: "Tool", np: "Tool", jp: "ツール" },
-            { en: "Example", np: "Example", jp: "例" },
-            { en: "When NOT to use", np: "कहिले नगर्ने", jp: "使わない場面" },
+            { en: "Priority", np: "Priority", jp: "優先度" },
+            { en: "Query", np: "Query", jp: "クエリ" },
+            { en: "When to use", np: "प्रयोग", jp: "用途" },
           ],
           rows: [
             [
-              { en: "Local UI state", np: "Local UI state", jp: "ローカルUI状態" },
-              { en: "useState / useReducer", np: "useState", jp: "useState" },
-              { en: "Form fields, toggle, modal open", np: "form, toggle", jp: "フォーム・モーダル開閉" },
-              { en: "Never — always the first choice", np: "सधैं use गर्ने", jp: "常に最初の選択" },
+              { en: "1 (best)", np: "1 (सबैभन्दा राम्रो)", jp: "1（最良）" },
+              { en: "getByRole", np: "getByRole", jp: "getByRole" },
+              { en: "Buttons, inputs, headings, links — anything with a role", np: "Role भएका elements", jp: "role のある要素すべて" },
             ],
             [
-              { en: "Shared UI state", np: "Shared UI", jp: "共有UI状態" },
-              { en: "Context (small apps) / Zustand", np: "Context/Zustand", jp: "Context / Zustand" },
-              { en: "Theme, sidebar open, notifications", np: "theme, sidebar", jp: "テーマ・サイドバー" },
-              { en: "If only 1–2 components need it — lift state instead", np: "少数component → lift state", jp: "1–2コンポーネントなら lift state" },
+              { en: "2", np: "2", jp: "2" },
+              { en: "getByLabelText", np: "getByLabelText", jp: "getByLabelText" },
+              { en: "Form inputs with associated labels", np: "Label भएका inputs", jp: "ラベル付き入力" },
             ],
             [
-              { en: "Server / API data", np: "Server data", jp: "サーバーデータ" },
-              { en: "TanStack Query", np: "TanStack Query", jp: "TanStack Query" },
-              { en: "Posts list, user profile, product catalog", np: "posts, user, products", jp: "投稿一覧・ユーザー情報" },
-              { en: "Never store API data in Zustand", np: "Zustand मा API data नराख्नुहोस्", jp: "Zustand に API データを入れない" },
+              { en: "3", np: "3", jp: "3" },
+              { en: "getByPlaceholderText", np: "getByPlaceholderText", jp: "getByPlaceholderText" },
+              { en: "Inputs without labels (use labels instead)", np: "Label नभएका inputs", jp: "ラベルなし入力" },
             ],
             [
-              { en: "Complex client logic", np: "Complex client logic", jp: "複雑なクライアントロジック" },
-              { en: "Zustand with slices", np: "Zustand", jp: "Zustand（スライス）" },
-              { en: "Shopping cart, wizard steps, undo/redo", np: "cart, wizard, undo", jp: "カート・ウィザード・Undo" },
-              { en: "When data primarily lives on the server", np: "server data को लागि नगर्ने", jp: "サーバーデータには不向き" },
+              { en: "4", np: "4", jp: "4" },
+              { en: "getByText", np: "getByText", jp: "getByText" },
+              { en: "Any visible text — paragraphs, headings, buttons", np: "Visible text", jp: "表示テキスト" },
+            ],
+            [
+              { en: "5 (last resort)", np: "5 (अन्तिम)", jp: "5（最終手段）" },
+              { en: "getByTestId", np: "getByTestId", jp: "getByTestId" },
+              { en: "Only when nothing else works", np: "अरु नभएको बेला मात्र", jp: "他の手段が使えない場合のみ" },
             ],
           ],
         },
@@ -357,62 +378,74 @@ const deleteMutation = useMutation({
   faq: [
     {
       question: {
-        en: "When should I use Zustand vs Context?",
-        np: "Zustand vs Context — कहिले के?",
-        jp: "Zustand と Context はどう使い分ける？",
+        en: "What is the difference between Vitest and Jest?",
+        np: "Vitest र Jest को फरक?",
+        jp: "Vitest と Jest の違いは？",
       },
       answer: {
-        en: "Context re-renders ALL consumers when its value changes — even components that don't use the changed part. This causes performance issues in large apps. Zustand uses selectors so components only re-render when their specific slice of state changes. Rule of thumb: Context is fine for low-frequency updates (theme, locale, auth user). Use Zustand when state changes frequently (cart, notifications) or you have many consumers.",
-        np: "Context ले सबै consumers re-render गर्छ। Zustand ले selector ले आवश्यक component मात्र re-render गर्छ।",
-        jp: "Context は変更時に全 consumer が再レンダー。Zustand は selector で必要な部分だけ再レンダーします。",
+        en: "Vitest is Jest-compatible (same API: `describe`, `test`, `expect`, `vi.mock`) but built for Vite. Key differences: Vitest starts faster because it reuses the Vite dev server; it supports ES modules natively without Babel transform; `vi.mock` is more predictable than `jest.mock`. If you know Jest, Vitest feels identical — just faster.",
+        np: "Vitest Jest-compatible छ (same API) तर Vite को लागि। Faster startup, native ESM support।",
+        jp: "Vitest は Jest と同じ API ですが Vite 向けに最適化。ES モジュールをネイティブサポートし起動が速いです。",
       },
     },
     {
       question: {
-        en: "Does TanStack Query replace useEffect for data fetching?",
-        np: "TanStack Query ले useEffect replace गर्छ?",
-        jp: "TanStack Query は useEffect の代わりになる？",
+        en: "Why does RTL avoid testing implementation details?",
+        np: "RTL ले implementation details test किन avoid गर्छ?",
+        jp: "RTL が実装詳細を避けるのはなぜ？",
       },
       answer: {
-        en: "Yes, for data fetching. TanStack Query handles everything useEffect + useState does for fetching, plus: caching, deduplication, background refetch, retry logic, loading/error states, and cache invalidation. The only time to use useEffect for fetching is if you explicitly want no caching or have a one-time side effect not tied to UI.",
-        np: "Data fetching को लागि हो। TanStack Query ले caching, retry, background refetch सबै handle गर्छ।",
-        jp: "データ取得には TanStack Query の方が優れています。キャッシュ・リトライ・バックグラウンドrefetch を自動化します。",
+        en: "Implementation details tests break when you refactor — even if the feature still works perfectly. For example, testing that a component has `isOpen: true` in state will break if you rename that variable to `menuVisible`. RTL tests that what the USER sees changed (the dropdown opened), not how you implemented it. This makes tests resilient to refactoring.",
+        np: "Implementation test refactor गर्दा break हुन्छ। User देख्ने behavior test गर्नुहोस् — refactor-resistant।",
+        jp: "実装テストはリファクタリングで壊れます。ユーザーが見る振る舞いをテストすれば、実装を変えても壊れません。",
       },
     },
     {
       question: {
-        en: "How do I reset TanStack Query cache on logout?",
-        np: "Logout मा TanStack Query cache कसरी reset गर्ने?",
-        jp: "ログアウト時に TanStack Query のキャッシュをリセットするには？",
+        en: "How do I test a component that uses React Router?",
+        np: "React Router use गर्ने component कसरी test गर्ने?",
+        jp: "React Router を使うコンポーネントのテスト方法は？",
       },
       answer: {
-        en: "Call `queryClient.clear()` in your logout handler — this removes ALL cached data. If you use the Zustand auth store, trigger this in the `logout` action. Place `queryClient` outside React (singleton) so it's accessible anywhere: `const queryClient = new QueryClient()` at the module level, not inside a component.",
-        np: "logout handler मा `queryClient.clear()` call गर्नुहोस् — सबै cache remove हुन्छ।",
-        jp: "ログアウト処理で `queryClient.clear()` を呼ぶと全キャッシュが削除されます。",
+        en: "Wrap the component in a `MemoryRouter` (from react-router-dom) in your test. `MemoryRouter` keeps navigation in memory — no real browser history needed. `render(<MemoryRouter initialEntries={['/posts/1']}><PostDetail /></MemoryRouter>)`. For testing navigation (clicking a link causes redirect), use `createMemoryRouter` and `RouterProvider` from React Router v6.",
+        np: "`MemoryRouter` मा wrap गर्नुहोस्। Browser history नचाहिने in-memory routing। Test मा route params पनि set गर्न सकिन्छ।",
+        jp: "`MemoryRouter` でラップすれば実ブラウザ不要。React Router v6 では `createMemoryRouter` も使えます。",
       },
     },
     {
       question: {
-        en: "Can Zustand and TanStack Query work together?",
-        np: "Zustand र TanStack Query सँगै use गर्न सकिन्छ?",
-        jp: "Zustand と TanStack Query は一緒に使える？",
+        en: "What is the difference between a mock, a stub, and a spy?",
+        np: "Mock, stub, spy को फरक?",
+        jp: "モック・スタブ・スパイの違いは？",
       },
       answer: {
-        en: "Yes — this is the recommended pattern. Zustand manages client state (cart, auth token, UI preferences). TanStack Query manages server state (fetched data). They don't conflict. Example: Zustand stores `authToken` → TanStack Query reads it from the Zustand store to add to API request headers. `useCartStore` (Zustand) + `useProducts` query (TanStack) on the same page is completely normal.",
-        np: "हो। Zustand = client state, TanStack Query = server state। दुवै एकै page मा use गर्न सकिन्छ।",
-        jp: "推奨パターンです。Zustand はクライアント状態、TanStack Query はサーバーデータを担当します。",
+        en: "In practice with Vitest they overlap, but conceptually: a <b>stub</b> replaces a function with a fake that returns controlled values (`vi.fn(() => 'fake data')`). A <b>spy</b> wraps the real function to record calls without replacing it (`vi.spyOn(api, 'fetch')`). A <b>mock</b> replaces a whole module with a fake implementation (`vi.mock('./api')`). In tests, you'll mostly use `vi.fn()` for callbacks and `vi.mock()` for API modules.",
+        np: "Stub: fake return value। Spy: real function wrap गरेर calls record। Mock: whole module replace।",
+        jp: "スタブ: 偽の戻り値。スパイ: 本物をラップして記録。モック: モジュール全体を置換。実務では `vi.fn()` と `vi.mock()` が中心です。",
       },
     },
     {
       question: {
-        en: "What is the difference between `staleTime` and `gcTime` in TanStack Query?",
-        np: "`staleTime` र `gcTime` मा के फरक?",
-        jp: "`staleTime` と `gcTime` の違いは？",
+        en: "How do I test a component that uses Context?",
+        np: "Context use गर्ने component कसरी test गर्ने?",
+        jp: "Context を使うコンポーネントのテスト方法は？",
       },
       answer: {
-        en: "`staleTime` — how long data is considered \"fresh.\" While fresh, TanStack Query serves it from cache without refetching (default: 0 = immediately stale). `gcTime` (formerly `cacheTime`) — how long unused cache data is kept in memory before being garbage collected (default: 5 minutes). Set `staleTime: 1000 * 60 * 5` for data that changes infrequently (products, settings) to avoid unnecessary background refetches.",
-        np: "staleTime = data कति देर fresh मानिन्छ। gcTime = unused cache कति देर memory मा राखिन्छ।",
-        jp: "staleTime はデータが「新鮮」な期間、gcTime はキャッシュがメモリに残る期間（デフォルト5分）。",
+        en: "Create a custom `renderWithProviders` helper that wraps your component in all the Providers it needs. Call this instead of `render` in tests. Example: `function renderWithProviders(ui) { return render(<ThemeProvider><QueryClientProvider client={testClient}>{ui}</QueryClientProvider></ThemeProvider>); }`. For Context values you want to control in a specific test, create a test-specific provider that accepts a value prop.",
+        np: "`renderWithProviders` helper बनाउनुहोस् जसले सबै Providers wrap गर्छ। Test-specific Context values को लागि test provider।",
+        jp: "全 Provider をラップする `renderWithProviders` ヘルパーを用意しましょう。テスト固有の値は専用 Provider で渡します。",
+      },
+    },
+    {
+      question: {
+        en: "How many integration tests should a typical feature have?",
+        np: "एउटा feature मा कति integration tests चाहिन्छ?",
+        jp: "1つの機能にどれくらい統合テストが必要？",
+      },
+      answer: {
+        en: "Usually just one or two per critical flow — the happy path, and maybe the most important failure path (e.g. login succeeds, login fails with wrong password). Don't try to re-test every edge case at the integration level; edge cases (empty email, malformed input, every validation rule) belong in fast, focused component tests on the form component itself. Reserve integration tests for proving the pieces are wired together correctly, not for exhaustive coverage.",
+        np: "प्रति critical flow एक-दुई मात्र — happy path + सबैभन्दा महत्त्वपूर्ण failure path। Edge cases (empty email, validation rules) component tests मा छोड्नुहोस् — integration tests ले wiring मात्र prove गर्नुपर्छ, exhaustive coverage होइन।",
+        jp: "重要フローごとに1〜2件で十分 — ハッピーパスと最も重要な失敗パス（例: ログイン成功、パスワード間違いで失敗）。エッジケース（空メール、バリデーションルール全部）はフォームコンポーネント自体の高速なコンポーネントテストに任せましょう。統合テストは配線が正しいことを証明する役割に絞ります。",
       },
     },
   ],
