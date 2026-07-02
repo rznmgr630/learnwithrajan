@@ -290,6 +290,75 @@ function App() {
         },
       ],
     },
+    {
+      title: {
+        en: "Virtualization — rendering only what's on screen",
+        np: "Virtualization — screen मा देखिने मात्र render गर्ने",
+        jp: "仮想化 — 画面に見える分だけレンダーする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "None of the tools above fix this problem: rendering a list of 10,000 rows creates 10,000 real DOM nodes, even though a typical screen can only show ~20 of them at once. `React.memo` and `useMemo` make each row cheaper to compute, but they don't reduce how many DOM nodes exist — the browser still has to lay out, paint, and keep 10,000 nodes in memory. Analogy: virtualization is like a paginated phone book instead of a single 10,000-page scroll — you only ever print the page someone is actually reading.\n\n<b>The core idea:</b>\n• Calculate which rows are currently visible in the scroll container, plus a small \"overscan\" buffer (a few extra rows above/below, so fast scrolling doesn't show blank gaps)\n• Render ONLY those rows as real DOM nodes, absolutely positioned at their correct offset\n• Render an invisible \"spacer\" the height of the FULL list, so the scrollbar behaves as if all 10,000 rows exist\n• As the user scrolls, swap which rows are rendered — old rows unmount, new ones mount, but the DOM node count stays roughly constant",
+            np: "10,000 rows भएको list ले 10,000 DOM nodes बनाउँछ, स्क्रिनमा ~20 मात्र देखिए पनि। Memoization ले यो घटाउँदैन। Virtualization ले visible rows मात्र render गर्छ, बाँकीलाई spacer ले fake गर्छ।",
+            jp: "10,000行のリストは実際には約20行しか画面に見えなくても10,000個のDOMノードを作る。メモ化はこれを減らさない。仮想化は見える行だけをレンダーし、残りはスペーサーで見せかける。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Virtualizing a 10,000-row list with @tanstack/react-virtual", np: "@tanstack/react-virtual उदाहरण", jp: "@tanstack/react-virtual の例" },
+          code: `import { useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function BigList({ items }: { items: { id: string; name: string }[] }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: items.length,           // 10,000
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 40,        // estimated row height in px
+    overscan: 5,                   // extra rows above/below viewport
+  });
+
+  return (
+    // The scroll container — fixed height, overflow auto
+    <div ref={parentRef} style={{ height: 500, overflow: 'auto' }}>
+      {/* Spacer — makes the scrollbar act like all 10,000 rows exist */}
+      <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+        {virtualizer.getVirtualItems().map(virtualRow => (
+          <div
+            key={virtualRow.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: virtualRow.size,
+              transform: \`translateY(\${virtualRow.start}px)\`, // positions this row
+            }}
+          >
+            {items[virtualRow.index].name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Only ~20-30 <div> rows exist in the DOM at any time, regardless of
+// whether "items" has 100 rows or 1,000,000 rows.`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>`@tanstack/react-virtual` vs the older `react-window`:</b> both solve the same problem. `react-window` is smaller and simpler for fixed-size lists/grids; `@tanstack/react-virtual` (from the TanStack team behind Query) is the more actively maintained modern choice, with better support for dynamic/variable row heights and horizontal + grid virtualization.\n\n<b>When virtualization is NOT worth it:</b>\n• Lists under roughly 100-200 items — the browser handles that many real DOM nodes fine, and virtualization adds real complexity (no native browser find-in-page, trickier accessibility, harder to test)\n• Content with wildly unpredictable heights that are expensive to measure — variable-height virtualization works, but the estimation logic gets fiddly and bugs (overlapping/gapped rows) are easy to introduce",
+            np: "`react-window` सानो/fixed-size list को लागि। `@tanstack/react-virtual` बढी actively maintained, variable heights सपोर्ट गर्छ। 100-200 items भन्दा कम भए virtualization चाहिँदैन।",
+            jp: "`react-window` は固定サイズの小規模リスト向け。`@tanstack/react-virtual` はより活発にメンテナンスされ可変高さに対応。100〜200件未満なら仮想化は不要。",
+          },
+        },
+      ],
+    },
   ],
   faq: [
     {
@@ -350,6 +419,18 @@ function App() {
         en: "Measure first with the React DevTools Profiler. Signs you need optimization: (1) Profiler shows a component taking > 16ms to render (slower than 60fps), (2) a component renders 10+ times when the user does one action, (3) the app feels sluggish during a specific interaction. If none of these are true, skip optimization — premature optimization makes code harder to read and maintain.",
         np: "Profiler ले > 16ms render देखाए, वा एउटा action मा 10+ renders देखाए optimize गर्नुहोस्।",
         jp: "Profiler で > 16ms のレンダーや 1 アクションで 10+ 回の再レンダーが見えたら対処。なければ不要です。",
+      },
+    },
+    {
+      question: {
+        en: "Do I still need React.memo and useMemo if I'm using virtualization?",
+        np: "Virtualization प्रयोग गरे पनि React.memo र useMemo चाहिन्छ?",
+        jp: "仮想化を使っていても React.memo や useMemo は必要？",
+      },
+      answer: {
+        en: "Yes — they solve different problems. Virtualization reduces <b>how many</b> rows exist in the DOM at once (e.g. rendering 20 out of 10,000). `React.memo`/`useMemo` reduce <b>how expensive</b> each of those rendered rows is to compute. A virtualized row that does a heavy calculation on every scroll-triggered render still benefits from `useMemo`. Use both together for very large, computation-heavy lists.",
+        np: "हो, दुबैले फरक समस्या समाधान गर्छन्। Virtualization ले rows को संख्या घटाउँछ, React.memo/useMemo ले हरेक row render गर्न कति खर्चिलो छ त्यो घटाउँछ। धेरै ठूलो, heavy computation भएको list मा दुबै सँगै प्रयोग गर्नुहोस्।",
+        jp: "はい、解決する問題が異なります。仮想化はDOM上の行数を減らし、React.memo/useMemoは各行のレンダーコストを減らします。計算量の多い巨大リストでは両方を併用してください。",
       },
     },
   ],
