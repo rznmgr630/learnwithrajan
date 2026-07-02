@@ -263,8 +263,68 @@ function ProfileCard({ user }) {
         },
       ],
     },
+    {
+      title: { en: "React Icons — a single package for every icon set", np: "React Icons — एउटै package मा सबै icon sets", jp: "React Icons — 全アイコンセットを1パッケージで" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "`react-icons` bundles the most popular icon sets — Font Awesome, Material Design, Feather, Bootstrap Icons, Ionicons, and more — behind one consistent component API. Instead of installing a separate package per icon set, you install `react-icons` once and import from whichever sub-package you need.\n\nAnalogy: `react-icons` is a hardware store with every brand of screw on one shelf, organized by aisle (sub-package) — you still have to walk to the right aisle instead of dumping the whole store in your cart.\n\n• Each icon set lives in its own sub-path: `react-icons/fa` (Font Awesome), `react-icons/md` (Material Design), `react-icons/fi` (Feather)\n• Icons render as inline SVG components — they inherit `color` from CSS `currentColor` by default, and accept a `size` prop directly\n↳ `<FaHeart color=\"red\" size={24} />` needs no extra CSS classes for sizing/coloring",
+            np: "`react-icons` ले Font Awesome, Material Design, Feather जस्ता popular icon sets लाई एउटै API मुनि ल्याउँछ। हरेक set आफ्नो sub-path मा हुन्छ — जस्तै `react-icons/fa`।",
+            jp: "`react-icons` は Font Awesome、Material Design、Feather など主要アイコンセットを1つの API にまとめます。各セットは `react-icons/fa` のようなサブパスにあります。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>The one gotcha that matters — how you import it.</b> Day 24's bundle-analysis lesson already flagged this: `import * as Icons from 'react-icons'` pulls every icon from every icon set into your bundle, adding megabytes for a handful of icons. Always import named icons from the specific sub-package instead — bundlers can then tree-shake away everything you didn't use.",
+            np: "Bundle bloat जोगिन सधैं specific sub-package बाट named import गर्नुस् — `react-icons` बाट सिधै `* as Icons` import नगर्नुस् (Day 24 मा bundle analysis मा यो touch भइसकेको छ)।",
+            jp: "バンドル肥大化を避けるため、必ず特定のサブパッケージから named import すること。`react-icons` から `* as Icons` で読み込むのは禁物（Day 24 のバンドル分析でも触れています）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Correct vs incorrect react-icons imports", np: "Correct vs incorrect import", jp: "正しい import と誤った import" },
+          code: `// npm install react-icons
+
+// CORRECT — named import from the specific set's sub-package
+// Bundler tree-shakes away every other icon in "fa" and every other set entirely
+import { FaHeart, FaShoppingCart } from "react-icons/fa";
+import { MdSettings } from "react-icons/md";
+
+function LikeButton({ liked }) {
+  return (
+    <button aria-label="Like">
+      {/* color defaults to currentColor — inherits the button's text color */}
+      <FaHeart color={liked ? "#ef4444" : "currentColor"} size={20} />
+    </button>
+  );
+}
+
+// WRONG — pulls in every icon from every icon set (Font Awesome, Material,
+// Feather, Bootstrap, Ionicons...) even though only one icon is used.
+// This alone can add several MB to your production bundle.
+import * as Icons from "react-icons";
+function BadButton() {
+  return <Icons.FaHeart />;
+}`,
+        },
+      ],
+    },
   ],
   faq: [
+    {
+      question: {
+        en: "Should I use react-icons or install a single icon library directly (e.g. `lucide-react`)?",
+        np: "react-icons कि सिधै एउटा icon library (जस्तै `lucide-react`) install गर्ने?",
+        jp: "react-icons と単体アイコンライブラリ（`lucide-react` など）、どちらを使うべき？",
+      },
+      answer: {
+        en: "Use a single dedicated library like `lucide-react` (the default in shadcn/ui) when your whole app commits to one visual style — it's already tree-shakeable per-icon and has a smaller, more consistent icon set. Reach for `react-icons` when you need icons from multiple design systems in one project (e.g. matching a specific brand's Font Awesome icon someone designed with) — just be disciplined about importing from the correct sub-package every time.",
+        np: "एउटै visual style भए `lucide-react` जस्तो single library राम्रो। धेरै design systems बाट icons चाहिएमा `react-icons` — तर sub-package बाट मात्र import गर्नुस्।",
+        jp: "一貫したビジュアルスタイルなら `lucide-react` のような単体ライブラリが良い。複数のデザインシステムのアイコンが必要なら `react-icons` を、サブパッケージから正しく import して使う。",
+      },
+    },
     {
       question: { en: "Why `className` instead of `class`?", np: "`className` किन?", jp: "なぜ `className`？" },
       answer: {

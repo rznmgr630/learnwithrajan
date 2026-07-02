@@ -321,6 +321,223 @@ function AvatarUpload() {
         },
       ],
     },
+    {
+      title: { en: "Dynamic Forms — adding and removing fields at runtime", np: "Dynamic Forms — runtime मा fields थप्ने/हटाउने", jp: "動的フォーム — 実行時にフィールドを追加・削除" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Some forms need a variable number of the same field — multiple phone numbers, multiple invoice line items, multiple team members. `register`ing a fixed set of named fields does not work here since you do not know the count ahead of time. RHF's `useFieldArray` manages an array of fields as its own mini form.\n\nAnalogy: `useFieldArray` is like a checklist with a `+` button — each row is independent, has its own validation, and you can insert or remove a row without disturbing the others.\n\n• `fields` — the current array of field objects (each has a stable `id`, not your data's own id — always use `field.id` as the React `key`, never the array index)\n• `append(value)` — adds a new row at the end\n• `remove(index)` — removes a row by index\n• Each row's inputs are registered as `` `items.${index}.name` `` — nested paths into the array",
+            np: "Variable-length fields (phone numbers, line items) को लागि `useFieldArray` use गर्नुहोस्। `field.id` लाई key बनाउनुहोस्, index होइन।",
+            jp: "可変長フィールド（電話番号、明細行など）には `useFieldArray` を使う。key には `field.id` を使い、インデックスは使わない。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Invoice line items with useFieldArray", np: "useFieldArray उदाहरण", jp: "useFieldArray の例" },
+          code: `import { useForm, useFieldArray } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  items: z.array(
+    z.object({
+      description: z.string().min(1, "Required"),
+      amount: z.number().min(0.01, "Must be positive"),
+    })
+  ).min(1, "Add at least one item"),
+});
+
+type FormData = z.infer<typeof schema>;
+
+function InvoiceForm() {
+  const { register, control, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { items: [{ description: "", amount: 0 }] },
+  });
+
+  const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
+  return (
+    <form onSubmit={handleSubmit(data => console.log(data))}>
+      {fields.map((field, index) => (
+        // field.id is a stable RHF-generated id — NOT your data's id, and NOT the index
+        <div key={field.id} className="flex gap-2">
+          <input {...register(\`items.\${index}.description\`)} placeholder="Description" />
+          {errors.items?.[index]?.description && <p>{errors.items[index]?.description?.message}</p>}
+
+          <input
+            {...register(\`items.\${index}.amount\`, { valueAsNumber: true })}
+            type="number"
+            placeholder="Amount"
+          />
+          <button type="button" onClick={() => remove(index)}>Remove</button>
+        </div>
+      ))}
+
+      <button type="button" onClick={() => append({ description: "", amount: 0 })}>
+        + Add line item
+      </button>
+      <button type="submit">Save invoice</button>
+    </form>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Multi-step Forms — wizards that split one form across steps", np: "Multi-step Forms — steps मा बाँडिएको form", jp: "マルチステップフォーム — 複数ステップに分けたフォーム" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A signup wizard (account info → address → payment) is still ONE logical form — you don't want to lose step 1's data when the user reaches step 3. The common approach: keep a single `useForm()` instance for the whole wizard, and a `step` state variable that controls which fields are visible. Analogy: it's one long hallway with several doors — you only show one room at a time, but it's the same house.\n\n• Render all steps' fields inside the same `<form>`, but conditionally hide inactive steps with CSS or conditional rendering (do not unmount them if you want RHF to keep their values registered)\n• Use `trigger([\"field1\", \"field2\"])` to validate only the current step's fields before letting the user click \"Next\" — this avoids showing step 3's errors while the user is still on step 1\n• On the final step, `handleSubmit` validates the WHOLE schema and submits everything at once",
+            np: "Multi-step wizard एउटै `useForm()` instance प्रयोग गर्छ, `step` state ले कुन fields देखाउने control गर्छ। `trigger()` ले current step मात्र validate गर्छ।",
+            jp: "マルチステップウィザードは1つの `useForm()` インスタンスを使い、`step` state で表示フィールドを制御。`trigger()` で現在のステップのみ検証する。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "3-step signup wizard with per-step validation", np: "3-step wizard उदाहरण", jp: "3ステップウィザードの例" },
+          code: `import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const schema = z.object({
+  name:    z.string().min(1, "Required"),
+  email:   z.string().email(),
+  address: z.string().min(1, "Required"),
+  city:    z.string().min(1, "Required"),
+  cardNumber: z.string().length(16, "16 digits"),
+});
+type FormData = z.infer<typeof schema>;
+
+const STEP_FIELDS: Record<number, (keyof FormData)[]> = {
+  1: ["name", "email"],
+  2: ["address", "city"],
+  3: ["cardNumber"],
+};
+
+function SignupWizard() {
+  const [step, setStep] = useState(1);
+  const { register, trigger, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  async function goNext() {
+    const valid = await trigger(STEP_FIELDS[step]); // validate ONLY this step's fields
+    if (valid) setStep(s => s + 1);
+  }
+
+  return (
+    <form onSubmit={handleSubmit(data => console.log("Submitting all steps:", data))}>
+      <progress value={step} max={3} /> {/* progress indicator */}
+
+      {step === 1 && (
+        <>
+          <input {...register("name")} placeholder="Full name" />
+          {errors.name && <p>{errors.name.message}</p>}
+          <input {...register("email")} placeholder="Email" />
+          {errors.email && <p>{errors.email.message}</p>}
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <input {...register("address")} placeholder="Address" />
+          {errors.address && <p>{errors.address.message}</p>}
+          <input {...register("city")} placeholder="City" />
+          {errors.city && <p>{errors.city.message}</p>}
+        </>
+      )}
+
+      {step === 3 && (
+        <input {...register("cardNumber")} placeholder="Card number" />
+      )}
+
+      <div>
+        {step > 1 && <button type="button" onClick={() => setStep(s => s - 1)}>Back</button>}
+        {step < 3
+          ? <button type="button" onClick={goNext}>Next</button>
+          : <button type="submit">Finish signup</button>}
+      </div>
+    </form>
+  );
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Form performance — why React Hook Form re-renders less", np: "Form performance — RHF ले किन कम re-render गर्छ", jp: "フォームのパフォーマンス — RHF が再レンダーを抑える理由" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A naive controlled form with `useState` per field re-renders the ENTIRE form component on every keystroke in every field — for a 30-field form, that's 30 fields worth of re-renders (plus any expensive children) for each character typed anywhere.\n\n`register` avoids this by attaching a plain DOM `ref` to the input instead of controlling it through state — RHF reads the value straight from the DOM node when needed (on submit, on blur, or on an explicit `trigger()` call), and only triggers a React re-render for the specific parts of the form that must visually update (like showing a new error message).\n\n<b>Choosing a validation mode for large forms:</b>\n• `mode: 'onSubmit'` (default) — validates once, on submit. Fewest re-renders, but the user only sees errors after clicking submit\n• `mode: 'onBlur'` — validates when a field loses focus. Good balance for large forms — feedback per field without a re-render on every keystroke\n• `mode: 'onChange'` — validates on every keystroke. Best UX for short forms (login), but causes the most re-renders — avoid for forms with 20+ fields",
+            np: "Naive useState-per-field ले हरेक keystroke मा पूरा form re-render गर्छ। RHF ले ref प्रयोग गरी केवल आवश्यक भाग मात्र re-render गर्छ। ठूला forms मा `mode: 'onBlur'` राम्रो सन्तुलन हो।",
+            jp: "素朴な useState 方式は毎回全フォームを再レンダーする。RHF は ref を使い必要な部分のみ再レンダー。大規模フォームには `mode: 'onBlur'` がバランス良い。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Memoizing field rows in a 50+ field form", np: "50+ field form मा memoize", jp: "50フィールド超のフォームでの memo 化" },
+          code: `import { memo } from "react";
+import { useForm } from "react-hook-form";
+
+// Naive approach — DO NOT do this for large forms:
+// function BadForm() {
+//   const [values, setValues] = useState({ field1: "", field2: "", /* ...48 more */ });
+//   // Typing in field1 re-renders the WHOLE component, recomputing all 50 inputs' JSX
+// }
+
+// Memoized field row — only re-renders if ITS OWN error changes, not the whole form
+const FieldRow = memo(function FieldRow({
+  name,
+  label,
+  register,
+  error,
+}: {
+  name: string;
+  label: string;
+  register: ReturnType<typeof useForm>["register"];
+  error?: string;
+}) {
+  return (
+    <div>
+      <label>{label}</label>
+      <input {...register(name)} />
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+});
+
+function LargeSettingsForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm({ mode: "onBlur" });
+  const fieldDefs = [
+    { name: "displayName", label: "Display name" },
+    { name: "bio", label: "Bio" },
+    // ...48 more field definitions, driven by an array instead of hand-written JSX
+  ];
+
+  return (
+    <form onSubmit={handleSubmit(data => console.log(data))}>
+      {fieldDefs.map(f => (
+        <FieldRow
+          key={f.name}
+          name={f.name}
+          label={f.label}
+          register={register}
+          error={errors[f.name]?.message as string | undefined}
+        />
+      ))}
+      <button type="submit">Save settings</button>
+    </form>
+  );
+}`,
+        },
+      ],
+    },
   ],
   faq: [
     {
@@ -361,6 +578,22 @@ function AvatarUpload() {
         en: "Yes — use `z.discriminatedUnion` if the schema depends on a field value (e.g. different fields based on `role`). For multi-step forms, each step has its own schema; validate only the current step by using `.pick()` on the full schema and passing a narrower resolver.",
         np: "z.discriminatedUnion वा step अनुसार .pick()।",
         jp: "`z.discriminatedUnion` や `.pick()` でステップごとに対応します。",
+      },
+    },
+    {
+      question: { en: "Why does useFieldArray need field.id instead of my own data's id?", np: "useFieldArray मा field.id किन चाहिन्छ, आफ्नै data id किन होइन?", jp: "useFieldArray で自前の id でなく field.id が必要な理由は？" },
+      answer: {
+        en: "`field.id` is generated and tracked internally by RHF specifically to keep React's reconciliation stable when rows are appended, removed, or reordered — your own data may not have an id yet (e.g. a brand-new row before it's saved), and reusing the array index as a key breaks reconciliation exactly like Day 13 explains for regular lists.",
+        np: "field.id ले rows add/remove/reorder हुँदा React reconciliation स्थिर राख्छ — आफ्नै data मा id नहुन सक्छ।",
+        jp: "field.id は行の追加・削除・並び替え時に reconciliation を安定させるため。自前データには id がまだない場合もあります。",
+      },
+    },
+    {
+      question: { en: "Should I validate on every keystroke for the best UX?", np: "राम्रो UX को लागि हरेक keystroke मा validate गर्ने?", jp: "最高の UX のため毎回のキー入力で検証すべき？" },
+      answer: {
+        en: "Not always. `mode: 'onChange'` gives the fastest feedback but re-renders the most, which matters once a form has 20+ fields. A common middle ground: validate `onBlur` for most fields, but re-enable `onChange` just for the field the user already got wrong once (RHF does this automatically via `reValidateMode: 'onChange'`, which is the default paired with `mode: 'onBlur'`).",
+        np: "सधैं होइन — 20+ fields भएमा `onBlur` राम्रो। RHF को default `reValidateMode: 'onChange'` ले पहिले गल्ती भएको field मात्र onChange validate गर्छ।",
+        jp: "常にではありません。20フィールド以上なら `onBlur` が良い。RHF のデフォルト `reValidateMode: 'onChange'` は一度エラーになったフィールドのみ onChange で再検証します。",
       },
     },
   ],
