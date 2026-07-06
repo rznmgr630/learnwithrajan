@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
+import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { NEXTJS_ROADMAP_WEEKS, NEXTJS_TOTAL_DAYS } from "@/lib/nextjs-learning/nextjs-challenge-data";
@@ -61,7 +62,7 @@ export function NextjsRoadmap() {
             <div className="mb-4 flex items-center gap-3">
               <span className={`h-2 w-2 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                {pickLocalized(week.title, locale)}
+                {stripLessonTimingFromTitle(pickLocalized(week.title, locale))}
               </h2>
               <div className="flex-1 border-t border-[var(--border)]" />
               <span className="text-[10px] tabular-nums text-[var(--faint)]">{week.days.length}</span>
