@@ -13,6 +13,7 @@ Owner: Rajan (git author `rznmgr`, email rajan.magar@carepilot.com). He brings s
 - Provide direct implementation, no long narration. Commit and push without waiting to be asked, unless told otherwise for a specific task.
 - Keep responses concise. No recap sections unless the change spans many files.
 - Comfortable with code but not full-time engineering — surface trade-offs at the UX/workflow level for big decisions, not deep architecture debates.
+- Responses to Rajan should be in plain English and beginner-friendly — avoid unexplained jargon, define terms on first use if needed.
 
 ## Core principles
 - Apply DRY and SOLID on every component:
