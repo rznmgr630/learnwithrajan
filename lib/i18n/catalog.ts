@@ -298,6 +298,36 @@ export const UI_STRINGS = {
     np: "dev server चलाउनुभयो, JSX सम्पादन गर्नुभयो, र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
     jp: "開発サーバを動かし、JSX を編集し、セルフチェックに取り組めたら 1 日目にチェック。",
   },
+  "jsRoadmap.title": {
+    en: "JavaScript · Fundamentals to Senior",
+    np: "JavaScript · आधारदेखि सिनियरसम्म",
+    jp: "JavaScript · 基礎からシニアまで",
+  },
+  "jsRoadmap.subtitle": {
+    en: "25 days covering variables, closures, prototypes, async, event loop, TypeScript, and senior internals.",
+    np: "भेरिएबल, closure, prototype, async, event loop, TypeScript, र सिनियर internals — २५ दिन।",
+    jp: "変数、クロージャ、プロトタイプ、非同期、イベントループ、TypeScript、シニア向け内部仕様までの25日間。",
+  },
+  "jsRoadmap.daysListAria": {
+    en: "JavaScript course days 1 through 25",
+    np: "JavaScript पाठ्यक्रम दिन १ देखि २५",
+    jp: "JavaScript コース 1日目から25日目",
+  },
+  "jsRoadmap.overallProgress": {
+    en: "Overall progress",
+    np: "समग्र प्रगति",
+    jp: "全体の進捗",
+  },
+  "jsRoadmap.percentComplete": {
+    en: "% complete",
+    np: "% पूरा",
+    jp: "% 完了",
+  },
+  "jsRoadmap.bottomBlurb": {
+    en: "Tick Day 1 when you have traced the type coercion examples yourself and answered the self-check without peeking first.",
+    np: "type coercion का उदाहरण आफैं ट्रेस गर्नुभयो र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
+    jp: "型変換の例を自分でたどり、セルフチェックに取り組めたら1日目にチェック。",
+  },
   "laravelRoadmap.title": {
     en: "Laravel 11 · novice to ninja",
     np: "Laravel 11 · शुरुदेखि दक्षसम्म",
