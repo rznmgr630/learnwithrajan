@@ -38,6 +38,7 @@ Owner: Rajan (git author `rznmgr`, email rajan.magar@carepilot.com). He brings s
 - `\n\n` for paragraph breaks, `\n` for line breaks within a paragraph.
 - ASCII-only diagrams using box-drawing chars (`─│↓►←↑`), aligned with spaces.
 - Tone: plain English, beginner-friendly analogies, real-world comparisons.
+- Prefer a proper flow/ASCII diagram over a long numbered list of steps when explaining a process or sequence — diagrams communicate flow faster than prose steps.
 
 ## Active modules
 - **System Design** — `lib/system-design/concepts.ts`, `components/learn/SystemDesign.tsx` — 61 concepts, 8 sections (Foundation → Requirements → Communication → Data Layer → Scaling & Distribution → Reliability → Case Study → Advanced Topics)
