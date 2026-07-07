@@ -3,9 +3,14 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_3_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Scope is the set of rules that determines where a variable can be accessed. Hoisting is what JavaScript does before it runs your code — it moves declarations to the top of their scope. Together, these two concepts explain most of the 'why did that variable come back undefined?' moments you will encounter.",
+      en: "Scope is the set of rules that determines where a variable can be accessed. Hoisting is what JavaScript does before it runs your code — it scans ahead and registers every declaration before the first line executes. Together, these two concepts explain most of the \"why did that variable come back undefined?\" moments you will encounter.",
       np: "Scope ले variable कहाँ access गर्न पाइन्छ भनी निर्धारण गर्छ। Hoisting ले code चलाउनु अगाडि declarations माथि move गर्छ — यी दुई मिलेर 'किन undefined आयो?' भन्ने प्रश्नको उत्तर दिन्छन्।",
       jp: "スコープは変数のアクセス範囲を決めるルール。ホイスティングはコード実行前に宣言を巻き上げるJS固有の動作。この2つで「なぜundefinedが返るのか」という疑問の多くが解決する。",
+    },
+    {
+      en: "In Day 3 we cover:\n• <b>Global, function, and block scope</b> — three nested boundaries a variable can live inside\n• <b>Lexical scoping</b> — why inner functions can always see outer variables\n• <b>Hoisting</b> — what gets moved up, and to what initial value\n• The <b>Temporal Dead Zone (TDZ)</b> — why let/const throw instead of quietly returning undefined",
+      np: "Day 3 मा: global/function/block scope, lexical scoping, hoisting, र Temporal Dead Zone।",
+      jp: "Day 3では: グローバル・関数・ブロックスコープ、レキシカルスコープ、ホイスティング、TDZを学びます。",
     },
   ],
   sections: [
@@ -18,6 +23,35 @@ export const JS_DAY_3_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "The three scope types", np: "तीन scope types", jp: "3種類のスコープ" },
       blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Scope is about visibility — which variables a piece of code is allowed to see. JavaScript nests three kinds of scope inside each other like Russian dolls: whatever is visible at an outer layer stays visible at every layer inside it, but never the other way round.\n\n• <b>Global scope</b> — the outermost doll; visible from anywhere in the file\n• <b>Function scope</b> — a doll inside the global one; visible only inside that function\n• <b>Block scope</b> — the smallest doll, created by any `{ }` (an `if`, `for`, or bare block); visible only inside that block\n  ↳ `var` ignores this smallest doll entirely — it always escapes to the nearest function (or global) layer",
+            np: "Scope भनेको visibility हो — कुन variable कहाँ देखिन्छ। JavaScript मा तीन scope Russian doll जस्तै nested हुन्छन्: बाहिरको भित्र देखिन्छ, भित्रको बाहिर देखिँदैन।",
+            jp: "スコープは可視性のこと。JavaScriptには入れ子になった3種類のスコープがあり、外側は内側から見えるが、内側は外側から見えない。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Scope nesting — global → function → block (visual)", np: "Scope nesting (visual)", jp: "スコープの入れ子（図）" },
+          code: `┌─ Global scope ─────────────────────────────────────┐
+│  const appName = "MyApp";                           │
+│                                                       │
+│  ┌─ Function scope (outer()) ─────────────────────┐  │
+│  │  const secret = "only mine";                    │  │
+│  │                                                   │  │
+│  │  ┌─ Block scope ( if (true) { ... } ) ────────┐  │  │
+│  │  │  let blockOnly = "block";                  │  │  │
+│  │  │  var notBlock  = "leaks out!";  ← escapes ─┼──┼──┘
+│  │  └─────────────────────────────────────────────┘  │
+│  └───────────────────────────────────────────────────┘
+└───────────────────────────────────────────────────────┘
+
+// Inner layers can read outer variables (arrows point outward, always allowed):
+//   block scope    -> can read appName, secret, blockOnly
+//   function scope -> can read appName, secret (not blockOnly — it's a layer down)
+//   global scope   -> can read appName only`,
+        },
         {
           type: "code",
           title: { en: "Global, function, and block scope", np: "Global, function, block scope", jp: "グローバル・関数・ブロックスコープ" },
@@ -64,9 +98,9 @@ counter();  // 3
         {
           type: "paragraph",
           text: {
-            en: "JavaScript uses **lexical scoping** (also called static scoping): the scope of a variable is determined by where it is written in the source code, not by how the function is called. An inner function always has access to the variables of the outer function that contains it — even after the outer function has returned. This is the foundation of closures (Day 4).",
-            np: "JavaScript **lexical scoping** प्रयोग गर्छ: variable को scope कहाँ लेखिएको छ त्यसले निर्धारण गर्छ — function कसरी call हुन्छ त्यसले होइन। Inner function ले outer function को variables access गर्न सक्छ — outer return भएपछि पनि। यही Closure को आधार हो।",
-            jp: "JavaScriptは**レキシカルスコープ**を使う。変数のスコープはコードの書かれた場所で決まる（呼び出し方ではない）。内側の関数は外側の変数にアクセスできる。これがクロージャの基礎。",
+            en: "JavaScript uses <b>lexical scoping</b> (also called static scoping): the scope of a variable is determined by <b>where it is written</b> in the source code, not by how or where the function is later called. An inner function always has access to the variables of the outer function that contains it — even after the outer function has already finished running.\n\nThis \"remembers where it was born, not where it's called from\" rule is the entire foundation of closures, which Day 4 builds on directly.",
+            np: "JavaScript ले lexical scoping प्रयोग गर्छ: variable को scope कहाँ लेखिएको छ त्यसले निर्धारण गर्छ — function कसरी call हुन्छ त्यसले होइन। यही Closure को आधार हो।",
+            jp: "JavaScriptはレキシカルスコープを使う。変数のスコープはコードの書かれた場所で決まる（呼び出し方ではない）。これがクロージャの基礎。",
           },
         },
       ],
@@ -74,6 +108,14 @@ counter();  // 3
     {
       title: { en: "Hoisting in detail", np: "Hoisting विस्तारमा", jp: "ホイスティング詳解" },
       blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Every declaration type hoists differently — some get a placeholder value immediately, others get registered but locked. Knowing which is which turns a confusing `ReferenceError` or unexpected `undefined` into something you can predict before you even run the code.",
+            np: "हरेक declaration type फरक तरिकाले hoist हुन्छ — कोहीलाई placeholder value तुरुन्तै मिल्छ, कोही registered तर locked रहन्छ।",
+            jp: "宣言の種類ごとにホイストの仕方が異なる。どれがどうなるか知っていれば、ReferenceErrorや予期しないundefinedを事前に予測できる。",
+          },
+        },
         {
           type: "code",
           title: { en: "What gets hoisted — and to what value", np: "के hoist हुन्छ र कुन value मा", jp: "何がどの値でホイストされるか" },
@@ -159,9 +201,9 @@ new Animal();      // ✅`,
         {
           type: "paragraph",
           text: {
-            en: "The Temporal Dead Zone is the period between when a `let` or `const` variable is hoisted (the start of its enclosing block) and when it is actually initialised (the line where it is declared). Accessing it during this period throws a ReferenceError. The TDZ exists to help you catch bugs where you accidentally use a variable before you meant to assign it — a class of bug that `var`'s silent `undefined` would hide.",
-            np: "Temporal Dead Zone एउटा `let` वा `const` variable hoist हुनेदेखि (block को सुरु) initialized हुनेसम्म (declaration line) को period हो। यस बीचमा access गर्दा ReferenceError आउँछ। TDZ ले variable लाई assign गर्नु अघि accidentally use गर्ने bugs detect गर्न मद्दत गर्छ।",
-            jp: "TDZとはlet/constがホイストされた時点（ブロック開始）から実際に初期化される（宣言行）までの期間。この間にアクセスするとReferenceError。varのundefined隠蔽によるバグを防ぐために存在する。",
+            en: "The <b>Temporal Dead Zone</b> is the gap between when a `let` or `const` variable is hoisted (the start of its enclosing block) and when it is actually initialised (the line where it is declared). Touching it during that gap throws a `ReferenceError`.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet — the system knows the parcel exists (it's registered), but it refuses to hand it over until the paperwork (the declaration line) is complete. `var`'s silent `undefined` is the opposite: it hands you an empty box and lets you assume it's fine, which is exactly the kind of bug the TDZ was designed to surface loudly instead.",
+            np: "Temporal Dead Zone एउटा `let` वा `const` variable hoist हुनेदेखि (block को सुरु) initialized हुनेसम्म (declaration line) को period हो। यस बीचमा access गर्दा ReferenceError आउँछ।",
+            jp: "TDZとはlet/constがホイストされた時点（ブロック開始）から実際に初期化される（宣言行）までの期間。この間にアクセスするとReferenceError。",
           },
         },
         {
@@ -188,6 +230,17 @@ function testFixed() {
   console.log(x);   // ✅ "local"
 }`,
         },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>The TDZ is a safety net, not a punishment.</b> It exists specifically to catch the moment you reference a variable before you meant to assign it — a mistake `var` would hide behind a quiet `undefined`.",
+              np: "TDZ सजाय होइन, सुरक्षा जाल हो — variable assign गर्नु अघि accidentally access गर्ने bug पत्ता लगाउन बनाइएको हो।",
+              jp: "TDZは罰ではなく安全網。意図せず変数を先に参照してしまうミスを検出するために存在する。",
+            },
+          ],
+        },
       ],
     },
   ],
@@ -206,6 +259,14 @@ function testFixed() {
         en: "var is function-scoped, not block-scoped. JavaScript had only function scope when it was first designed — the concept of block scope (using let and const) was added in ES6 (2015). Before that, the only way to create a new scope was with a function. This is why var ignores if/for/while blocks and is scoped to the nearest enclosing function. It is also why old code used IIFEs (Immediately Invoked Function Expressions) to create private scope.",
         np: "var function-scoped हो, block-scoped होइन। JavaScript सुरुमा केवल function scope थियो — block scope (let/const) ES6 (2015) मा थपियो। त्यसैले var if/for/while blocks ignore गर्छ।",
         jp: "varは関数スコープでありブロックスコープではない。ブロックスコープ(let/const)はES6(2015)で追加。それ以前はIIFEでスコープを作っていた。",
+      },
+    },
+    {
+      question: { en: "How does JavaScript decide which variable to use when names are duplicated across scopes?", np: "same नाम बहु scope मा भएमा JS ले कुन variable छान्छ?", jp: "同名の変数が複数のスコープにある場合、JSはどれを選ぶ？" },
+      answer: {
+        en: "JavaScript looks up the scope chain starting from the innermost scope and stops at the first match — this is called shadowing. If a block declares its own `x`, any code inside that block sees the block's `x`, not the outer one, even though the outer `x` still exists and is untouched. Once you leave that inner block, the outer `x` becomes visible again. This is exactly what happens in the TDZ example above: the inner `let x` shadows the outer `x` for the entire function, even before the inner one is assigned.",
+        np: "JS सबैभन्दा भित्री scope बाट खोज्दै बाहिर जान्छ र पहिलो मिल्ने variable प्रयोग गर्छ — यसलाई shadowing भनिन्छ।",
+        jp: "JSは最も内側のスコープから外側へスコープチェーンを探索し、最初に一致した変数を使う。これをシャドーイングと呼ぶ。",
       },
     },
   ],

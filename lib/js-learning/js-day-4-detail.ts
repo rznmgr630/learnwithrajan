@@ -3,9 +3,14 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Closures are one of the most powerful — and most misunderstood — features in JavaScript. A closure is a function that remembers the variables from the scope it was created in, even after that scope has closed. Higher-order functions and currying are built on this same idea.",
+      en: "Closures are one of the most powerful — and most misunderstood — features in JavaScript. A closure is a function that remembers the variables from the scope it was created in, even after that scope has finished running. Higher-order functions and currying are both built on this same idea: functions that treat other functions as ordinary values.",
       np: "Closure JavaScript को सबभन्दा शक्तिशाली feature हो। Closure एउटा function हो जसले आफू create भएको scope का variables याद राख्छ — scope बन्द भएपछि पनि।",
       jp: "クロージャはJavaScriptで最も強力かつ誤解されやすい機能。クロージャはスコープが閉じた後も、作成時のスコープの変数を覚えている関数のこと。",
+    },
+    {
+      en: "In Day 4 we cover:\n• <b>Closures</b> — how an inner function keeps outer variables alive\n• <b>Higher-order functions</b> — functions that take or return other functions\n• <b>Currying &amp; partial application</b> — turning a multi-argument function into a chain of single-argument ones\n• <b>Function composition</b> — chaining small functions into a pipeline",
+      np: "Day 4 मा: closures, higher-order functions, currying/partial application, र function composition।",
+      jp: "Day 4では: クロージャ、高階関数、カリー化・部分適用、関数合成を学びます。",
     },
   ],
   sections: [
@@ -18,6 +23,14 @@ export const JS_DAY_4_DETAIL: RoadmapDayDetail = {
     {
       title: { en: "Closures — the foundation", np: "Closures — आधार", jp: "クロージャの基礎" },
       blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Picture a function as a person leaving home for a trip. Normally, once they leave, everything back at the house is gone from their perspective. A <b>closure</b> is that person packing a backpack before leaving — a backpack containing direct access to specific things from home, not photocopies. Even far away, they can reach into the backpack and read or change what's inside, and it stays in sync with the original.\n\nThat backpack is exactly what an inner function carries: a live link to the variables of the outer function it was created in, available anytime the inner function is later called — no matter how much later, or from how far away in the code.",
+            np: "Closure लाई यात्रामा जाने व्यक्तिले घरबाटै केही सामान backpack मा राखेको जस्तो सोच्नुहोस् — टाढा पुगे पनि उसले backpack भित्रको सामान access गर्न सक्छ, र त्यो सधैं original सँग sync मा रहन्छ।",
+            jp: "クロージャは、旅に出る人が家から特定のものへの直接アクセスをバックパックに入れて持って行くようなもの。遠くにいてもバックパックの中身を読んだり変更したりでき、常に元と同期している。",
+          },
+        },
         {
           type: "code",
           title: { en: "A closure keeps the outer variable alive", np: "Closure ले outer variable जिउँदो राख्छ", jp: "クロージャは外部変数を保持する" },
@@ -78,8 +91,16 @@ console.log(account.getBalance()); // 120
           type: "list",
           variant: "bullet",
           items: [
-            { en: "A closure is created every time a function is created inside another function. The inner function keeps a live reference to the outer scope's variables — not a copy of their value at creation time.", np: "Closure हरेक पटक inner function create हुँदा बन्छ। Inner function ले outer scope का variables को live reference राख्छ — creation time को copy होइन।", jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく変数への生きた参照を保持する。" },
-            { en: "Memory implication: closures keep outer variables alive as long as the closure exists. Be careful with closures in event listeners or timers — they can prevent garbage collection if not cleaned up.", np: "Memory: closure जबसम्म रहन्छ, outer variables पनि memory मा रहन्छ। Event listener वा timer मा closure हुँदा cleanup गर्न नभुलनुहोस्।", jp: "メモリ: クロージャが存在する限り外部変数はGCされない。イベントリスナーやタイマーのクロージャは注意してクリーンアップする。" },
+            {
+              en: "<b>A closure is created every time a function is created inside another function.</b> The inner function keeps a live reference to the outer scope's variables — not a snapshot copy of their value at creation time.",
+              np: "Closure हरेक पटक inner function create हुँदा बन्छ। Inner function ले outer scope का variables को live reference राख्छ — creation time को copy होइन।",
+              jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく変数への生きた参照を保持する。",
+            },
+            {
+              en: "<b>Memory implication:</b> closures keep outer variables alive for as long as the closure itself exists. Be careful with closures inside event listeners or timers — they can quietly prevent garbage collection if not cleaned up.",
+              np: "Memory: closure जबसम्म रहन्छ, outer variables पनि memory मा रहन्छ। Event listener वा timer मा closure हुँदा cleanup गर्न नभुलनुहोस्।",
+              jp: "メモリ: クロージャが存在する限り外部変数はGCされない。イベントリスナーやタイマーのクロージャは注意してクリーンアップする。",
+            },
           ],
         },
       ],
@@ -90,9 +111,9 @@ console.log(account.getBalance()); // 120
         {
           type: "paragraph",
           text: {
-            en: "A higher-order function is a function that either takes a function as an argument or returns a function (or both). This is possible because functions in JavaScript are first-class values — they can be stored in variables, passed as arguments, and returned from other functions just like any other value.",
-            np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन् — variable मा store, argument को रूपमा pass, र return गर्न सकिन्छ।",
-            jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値なので、変数に格納・引数として渡す・返り値にすることができる。",
+            en: "A <b>higher-order function</b> is a function that either takes a function as an argument, returns a function, or both. This is possible only because functions in JavaScript are <b>first-class values</b> — exactly like a number or a string, they can be stored in a variable, passed as an argument, and returned from another function.\n\n• Passing a function in lets the caller plug in custom behaviour without the higher-order function needing to know the details\n  ↳ `array.map(fn)` doesn't know what `fn` does — it just calls it for every item\n• Returning a function out lets you generate specialised, ready-to-use functions on demand\n  ↳ `createMultiplier(3)` from the closures section above is already a higher-order function — it returns a function",
+            np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन्।",
+            jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値。",
           },
         },
         {
@@ -137,6 +158,14 @@ numbers.sort((a, b) => b - a);         // [5, 4, 3, 2, 1] — descending`,
     {
       title: { en: "Currying & partial application", np: "Currying र partial application", jp: "カリー化と部分適用" },
       blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThink of a vending machine: a normal function is like paying with the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.",
+            np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)। Partial application ले केही arguments अगावै भरेर बाँकीका लागि नयाँ function दिन्छ।",
+            jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。部分適用はより一般的な考え方で、一部の引数を先に埋めて残りを受け取る新しい関数を得る。",
+          },
+        },
         {
           type: "code",
           title: { en: "Currying — converting a multi-argument function into nested single-argument functions", np: "Currying — multi-argument function लाई single-argument functions मा", jp: "カリー化 — 多引数関数を単引数関数の連鎖に変換" },
@@ -185,6 +214,17 @@ const square = x => x * x;
 const transform = pipe(add1, double2, square);
 transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
         },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double2, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
+              np: "Function composition ले साना function हरूलाई pipeline मा जोड्छ — पढ्न बायाँबाट दायाँ, \"यो गर, त्यसपछि यो गर\" जस्तो।",
+              jp: "関数合成は小さな単機能の関数をパイプラインとして連結する。左から右に「これをして、次にこれをして」と読める。",
+            },
+          ],
+        },
       ],
     },
   ],
@@ -203,6 +243,14 @@ transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
         en: "Currying transforms a function that takes multiple arguments into a sequence of functions that each take one argument: f(a, b, c) becomes f(a)(b)(c). Partial application fixes some arguments of a function and returns a new function for the remaining ones. Currying is a special form of partial application. In practice, both are used to create specialised functions from general ones.",
         np: "Currying ले multi-argument function लाई single-argument functions को sequence मा transform गर्छ: f(a,b,c) → f(a)(b)(c)। Partial application केही arguments fix गरेर बाँकीका लागि नयाँ function return गर्छ। Currying partial application को special form हो।",
         jp: "カリー化は多引数関数を一引数関数の連鎖に変換: f(a,b,c) → f(a)(b)(c)。部分適用は引数の一部を固定して残りの関数を返す。カリー化は部分適用の特殊形。",
+      },
+    },
+    {
+      question: { en: "Do closures cause memory leaks?", np: "Closures ले memory leak गराउँछ?", jp: "クロージャはメモリリークを引き起こす？" },
+      answer: {
+        en: "Closures themselves don't leak memory — they behave exactly as designed by keeping referenced variables alive. The risk appears when a closure is attached to something long-lived (a global event listener, a timer that never gets cleared, a cache that never evicts) and nobody ever releases that reference. The fix isn't avoiding closures — it's removing event listeners when a component unmounts, clearing intervals you no longer need, and being deliberate about what a long-lived closure captures.",
+        np: "Closure आफैंले memory leak गराउँदैन — design अनुसार नै variables जिउँदो राख्छ। जोखिम त्यतिखेर आउँछ जब closure लामो समयसम्म रहने चिज (global listener, नरोकिने timer) सँग जोडिन्छ र कहिल्यै release हुँदैन।",
+        jp: "クロージャ自体はメモリリークを引き起こさない。リスクは、クロージャが長寿命のもの（グローバルリスナー、クリアされないタイマー）に結び付き、参照が解放されない場合に生じる。",
       },
     },
   ],
