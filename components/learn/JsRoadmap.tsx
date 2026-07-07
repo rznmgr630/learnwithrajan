@@ -12,6 +12,7 @@ import { useJsProgress } from "@/hooks/use-js-progress";
 import { JS_DAY_1_LESSONS } from "@/lib/js-learning/js-day-1-lessons";
 import { JS_DAY_2_LESSONS } from "@/lib/js-learning/js-day-2-lessons";
 import { JS_DAY_3_LESSONS } from "@/lib/js-learning/js-day-3-lessons";
+import { JS_DAY_4_LESSONS } from "@/lib/js-learning/js-day-4-lessons";
 import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 const TAG_PILL =
@@ -21,6 +22,7 @@ const LESSON_DAYS: Record<number, JsLessonDay> = {
   1: JS_DAY_1_LESSONS,
   2: JS_DAY_2_LESSONS,
   3: JS_DAY_3_LESSONS,
+  4: JS_DAY_4_LESSONS,
 };
 
 export function JsRoadmap() {
