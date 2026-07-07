@@ -9,15 +9,23 @@ import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { JsLessonDayDetail } from "@/components/learn/JsLessonDayDetail";
 import { JS_ROADMAP_WEEKS, JS_TOTAL_DAYS } from "@/lib/js-learning/js-challenge-data";
 import { useJsProgress } from "@/hooks/use-js-progress";
+import { JS_DAY_1_LESSONS } from "@/lib/js-learning/js-day-1-lessons";
+import { JS_DAY_2_LESSONS } from "@/lib/js-learning/js-day-2-lessons";
+import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 const TAG_PILL =
   "rounded-full border border-[var(--border)]/60 bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--faint)]";
+
+const LESSON_DAYS: Record<number, JsLessonDay> = {
+  1: JS_DAY_1_LESSONS,
+  2: JS_DAY_2_LESSONS,
+};
 
 export function JsRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useJsProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
-  const [lessonDayOpen, setLessonDayOpen] = useState(false);
+  const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / JS_TOTAL_DAYS) * 100))}%`,
@@ -123,7 +131,7 @@ export function JsRoadmap() {
                         type="button"
                         aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                         className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                        onClick={() => (d.day === 1 ? setLessonDayOpen(true) : setDetailDay(d.day))}
+                        onClick={() => (LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
                       >
                         <span
                           className={[
@@ -191,7 +199,14 @@ export function JsRoadmap() {
         track="js"
       />
 
-      <JsLessonDayDetail open={lessonDayOpen} onClose={() => setLessonDayOpen(false)} />
+      {lessonDay !== null ? (
+        <JsLessonDayDetail
+          key={`js-lesson-day-${lessonDay}`}
+          open
+          onClose={() => setLessonDay(null)}
+          day={LESSON_DAYS[lessonDay]}
+        />
+      ) : null}
     </div>
   );
 }

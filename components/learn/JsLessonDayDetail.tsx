@@ -5,7 +5,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
-import { JS_DAY_1_LESSONS, type JsLesson, type JsLessonQuizQuestion } from "@/lib/js-learning/js-day-1-lessons";
+import type { JsLesson, JsLessonDay, JsLessonQuizQuestion } from "@/lib/js-learning/js-lesson-types";
 
 type Tab = "explanation" | "diagram" | "code" | "takeaways" | "mistakes" | "quiz";
 
@@ -213,16 +213,18 @@ function LessonAccordionItem({
   locale,
   expanded,
   onToggle,
+  quizIdPrefix,
 }: {
   lesson: JsLesson;
   index: number;
   locale: "en" | "np" | "jp";
   expanded: boolean;
   onToggle: () => void;
+  quizIdPrefix: string;
 }) {
   const [tab, setTab] = useState<Tab>("explanation");
   const { getResult } = useJsLessonQuizProgress();
-  const quizId = `js-day-1.${lesson.id}`;
+  const quizId = `${quizIdPrefix}.${lesson.id}`;
   const quizDone = getResult(quizId);
 
   return (
@@ -333,12 +335,20 @@ function LessonAccordionItem({
   );
 }
 
-export function JsLessonDayDetail({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function JsLessonDayDetail({
+  open,
+  onClose,
+  day,
+}: {
+  open: boolean;
+  onClose: () => void;
+  day: JsLessonDay;
+}) {
   const { locale } = useLocale();
-  const day = JS_DAY_1_LESSONS;
+  const quizIdPrefix = `js-day-${day.day}`;
   const [expandedLesson, setExpandedLesson] = useState<number | null>(0);
   const { getResult } = useJsLessonQuizProgress();
-  const finalResult = getResult("js-day-1.final");
+  const finalResult = getResult(`${quizIdPrefix}.final`);
 
   if (!open) return null;
 
@@ -383,6 +393,7 @@ export function JsLessonDayDetail({ open, onClose }: { open: boolean; onClose: (
               locale={locale}
               expanded={expandedLesson === i}
               onToggle={() => setExpandedLesson((prev) => (prev === i ? null : i))}
+              quizIdPrefix={quizIdPrefix}
             />
           ))}
 
@@ -395,7 +406,7 @@ export function JsLessonDayDetail({ open, onClose }: { open: boolean; onClose: (
               </span>
             </div>
             <div className="mt-4">
-              <QuizBlock quizId="js-day-1.final" questions={day.finalQuiz} locale={locale} />
+              <QuizBlock quizId={`${quizIdPrefix}.final`} questions={day.finalQuiz} locale={locale} />
             </div>
           </div>
         </div>
