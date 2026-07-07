@@ -164,12 +164,6 @@ export function DSABlind75() {
                             <span className={`cursor-pointer font-medium leading-snug ${hasDetail ? "text-[var(--accent)]" : "text-[var(--text)]"}`}>
                               {p.title}
                             </span>
-                            {p.premium && <span className="mt-0.5 shrink-0 text-amber-400" title="Premium">🔒</span>}
-                            {hasDetail && (
-                              <span className="mt-0.5 shrink-0 rounded-full bg-[var(--accent)]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--accent)]">
-                                NEW
-                              </span>
-                            )}
                           </div>
 
                           {/* Pattern */}
@@ -187,11 +181,6 @@ export function DSABlind75() {
             })()}
           </div>
 
-          <p className="mt-8 text-center text-xs text-[var(--faint)]">
-            🔒 Premium problems require a LeetCode subscription · Problems with{" "}
-            <span className="rounded-full bg-[var(--accent)]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--accent)]">NEW</span>{" "}
-            badge have full walkthroughs
-          </p>
         </div>
       </div>
 
