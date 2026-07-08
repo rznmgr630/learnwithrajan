@@ -22,6 +22,7 @@ import { JS_DAY_10_LESSONS } from "@/lib/js-learning/js-day-10-lessons";
 import { JS_DAY_11_LESSONS } from "@/lib/js-learning/js-day-11-lessons";
 import { JS_DAY_12_LESSONS } from "@/lib/js-learning/js-day-12-lessons";
 import { JS_DAY_13_LESSONS } from "@/lib/js-learning/js-day-13-lessons";
+import { JS_DAY_14_LESSONS } from "@/lib/js-learning/js-day-14-lessons";
 import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 const TAG_PILL =
@@ -41,6 +42,7 @@ const LESSON_DAYS: Record<number, JsLessonDay> = {
   11: JS_DAY_11_LESSONS,
   12: JS_DAY_12_LESSONS,
   13: JS_DAY_13_LESSONS,
+  14: JS_DAY_14_LESSONS,
 };
 
 export function JsRoadmap() {
