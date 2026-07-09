@@ -1425,4 +1425,45 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
     ],
   },
+  {
+    day: 18,
+    category: "Festivals & Sightseeing",
+    words: [
+      {
+        word: "はなび",
+        romaji: "hanabi",
+        meaning_en: "Fireworks",
+        meaning_np: "आतिशबाजी",
+        examples: [{ ja: "はなびを見ます。", en: "I watch fireworks.", np: "म आतिशबाजी हेर्छु।" }],
+      },
+      {
+        word: "たいかい",
+        romaji: "taikai",
+        meaning_en: "Display / large gathering / tournament",
+        meaning_np: "महोत्सव / ठूलो जमघट",
+        examples: [{ ja: "はなびたいかいに行きます。", en: "I go to the fireworks display.", np: "म आतिशबाजी महोत्सवमा जान्छु।" }],
+      },
+      {
+        word: "こんしゅう",
+        romaji: "konshū",
+        meaning_en: "This week",
+        meaning_np: "यो हप्ता",
+        examples: [{ ja: "こんしゅうはいそがしいです。", en: "This week is busy.", np: "यो हप्ता व्यस्त छ।" }],
+      },
+      {
+        word: "しゅうまつ",
+        romaji: "shūmatsu",
+        meaning_en: "Weekend",
+        meaning_np: "सप्ताहन्त",
+        examples: [{ ja: "こんしゅうまつに行きます。", en: "I go this weekend.", np: "म यो सप्ताहन्त जान्छु।" }],
+      },
+      {
+        word: "かんこう",
+        romaji: "kankō",
+        meaning_en: "Sightseeing",
+        meaning_np: "पर्यटन / घुमफिर",
+        examples: [{ ja: "かんこうします。", en: "I do sightseeing.", np: "म पर्यटन गर्छु।" }],
+      },
+    ],
+  },
 ];
