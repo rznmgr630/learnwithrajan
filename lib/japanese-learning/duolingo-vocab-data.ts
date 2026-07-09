@@ -1384,4 +1384,45 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
     ],
   },
+  {
+    day: 17,
+    category: "Personality & Shopping",
+    words: [
+      {
+        word: "うでどけい",
+        romaji: "udedokei",
+        meaning_en: "Watch (wristwatch)",
+        meaning_np: "हातघडी",
+        examples: [{ ja: "うでどけいを買います。", en: "I buy a watch.", np: "म हातघडी किन्छु।" }],
+      },
+      {
+        word: "げんき",
+        romaji: "genki",
+        meaning_en: "Lively / energetic / cheerful",
+        meaning_np: "फुर्तिलो / जोसिलो",
+        examples: [{ ja: "げんきなかのじょです。", en: "She's an energetic girlfriend.", np: "उनी फुर्तिलो साथी हुन्।" }],
+      },
+      {
+        word: "やさしい",
+        romaji: "yasashii",
+        meaning_en: "Nice / kind / gentle",
+        meaning_np: "दयालु / नरम",
+        examples: [{ ja: "やさしいかのじょです。", en: "She's a nice girlfriend.", np: "उनी दयालु साथी हुन्।" }],
+      },
+      {
+        word: "コーナー",
+        romaji: "kōnā",
+        meaning_en: "Corner / section",
+        meaning_np: "कुना / सेक्सन",
+        examples: [{ ja: "まんがのコーナーです。", en: "It's the manga section.", np: "यो मंगा सेक्सन हो।" }],
+      },
+      {
+        word: "ほしい",
+        romaji: "hoshii",
+        meaning_en: "To want",
+        meaning_np: "चाहनु",
+        examples: [{ ja: "DVDがほしいです。", en: "I want a DVD.", np: "मलाई DVD चाहिन्छ।" }],
+      },
+    ],
+  },
 ];
