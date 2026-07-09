@@ -1597,4 +1597,38 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
     ],
   },
+  {
+    day: 21,
+    category: "Calendar & Preferences",
+    words: [
+      {
+        word: "十月",
+        romaji: "jūgatsu",
+        meaning_en: "October",
+        meaning_np: "अक्टोबर",
+        examples: [{ ja: "十月です。", en: "It's October.", np: "यो अक्टोबर हो।" }],
+      },
+      {
+        word: "がっき",
+        romaji: "gakki",
+        meaning_en: "Term / semester",
+        meaning_np: "सत्र / शैक्षिक अवधि",
+        examples: [{ ja: "あたらしいがっきです。", en: "It's a new semester.", np: "यो नयाँ सत्र हो।" }],
+      },
+      {
+        word: "すきな",
+        romaji: "sukina",
+        meaning_en: "Favorite / (that one) likes",
+        meaning_np: "मनपर्ने",
+        examples: [{ ja: "すきなアトラクションは何ですか。", en: "What's your favorite attraction?", np: "तपाईंको मनपर्ने आकर्षण के हो?" }],
+      },
+      {
+        word: "三千",
+        romaji: "sanzen",
+        meaning_en: "Three thousand",
+        meaning_np: "तीन हजार",
+        examples: [{ ja: "三千えんです。", en: "It's 3,000 yen.", np: "यो तीन हजार येन हो।" }],
+      },
+    ],
+  },
 ];
