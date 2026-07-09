@@ -1466,4 +1466,45 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
     ],
   },
+  {
+    day: 19,
+    category: "Family & Places",
+    words: [
+      {
+        word: "おこさん",
+        romaji: "okosan",
+        meaning_en: "(Your) child / kid",
+        meaning_np: "(तपाईंको) बच्चा",
+        examples: [{ ja: "おこさんは何さいですか。", en: "How old is your kid?", np: "तपाईंको बच्चा कति वर्षको हो?" }],
+      },
+      {
+        word: "ソウル",
+        romaji: "souru",
+        meaning_en: "Seoul",
+        meaning_np: "सियोल",
+        examples: [{ ja: "ソウルにすんでいます。", en: "I live in Seoul.", np: "म सियोलमा बस्छु।" }],
+      },
+      {
+        word: "マレーシア",
+        romaji: "marēshia",
+        meaning_en: "Malaysia",
+        meaning_np: "मलेसिया",
+        examples: [{ ja: "マレーシアがすきです。", en: "I like Malaysia.", np: "मलाई मलेसिया मन पर्छ।" }],
+      },
+      {
+        word: "ココア",
+        romaji: "kokoa",
+        meaning_en: "Cocoa / hot chocolate",
+        meaning_np: "कोको / हट चकलेट",
+        examples: [{ ja: "ココアがほしいです。", en: "I want cocoa.", np: "मलाई कोको चाहिन्छ।" }],
+      },
+      {
+        word: "はらじゅく",
+        romaji: "harajuku",
+        meaning_en: "Harajuku",
+        meaning_np: "हाराजुकु",
+        examples: [{ ja: "はらじゅくはにぎやかです。", en: "Harajuku is lively.", np: "हाराजुकु चहलपहल छ।" }],
+      },
+    ],
+  },
 ];
