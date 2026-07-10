@@ -631,6 +631,13 @@ For each day include: what to study, specific resources, and a practice problem 
     prompt:
       "Explain [topic] to me in the simplest terms. Then have me re-explain it back. Point out gaps, re-teach what I miss, and repeat until I can explain it clearly on my own.",
   },
+  {
+    id: 48,
+    category: "Learning",
+    title: "GAMIFY LEARNING",
+    prompt:
+      "I'm studying [insert subject]. Turn it into a game — give me characters, a storyline, and challenges based on the topics, so that learning feels like leveling up instead of memorizing facts. Make each level harder than the last and reward me with a \"rank\" as I progress.",
+  },
 
   // ── Self-Improvement ────────────────────────────────────────────────────────
   {
