@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { ENGLISH_MEANING_DAYS } from "@/lib/english-learning/english-meaning-data";
+import { ENGLISH_MEANING_DAYS, ENGLISH_TONGUE_TWISTERS } from "@/lib/english-learning/english-meaning-data";
 
 const TOTAL_WORDS = ENGLISH_MEANING_DAYS.reduce((sum, d) => sum + d.words.length, 0);
 
 export function EnglishMeaningPage() {
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
+  const [showTongueTwisters, setShowTongueTwisters] = useState(false);
 
   function toggle(day: number) {
     setOpenDays((prev) => {
@@ -60,6 +61,55 @@ export function EnglishMeaningPage() {
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-3">
+          <div
+            className={`overflow-hidden rounded-2xl border transition-colors ${
+              showTongueTwisters
+                ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)]"
+                : "border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)]"
+            }`}
+          >
+            <button
+              onClick={() => setShowTongueTwisters((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
+            >
+              <div className="flex items-center gap-3">
+                <span className="rounded-lg bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-bold text-[var(--accent)]">
+                  Bonus
+                </span>
+                <span className="text-sm font-medium text-[var(--text)]">Tongue Twisters</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">
+                  {ENGLISH_TONGUE_TWISTERS.length} twisters
+                </span>
+                <svg
+                  className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${showTongueTwisters ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            {showTongueTwisters && (
+              <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+                {ENGLISH_TONGUE_TWISTERS.map((tw, idx) => (
+                  <div key={tw.id} className="px-5 py-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="w-6 shrink-0 font-mono text-xs text-[var(--faint)]">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm text-[var(--text)]">{tw.text}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {ENGLISH_MEANING_DAYS.map((d) => {
             const isOpen = openDays.has(d.day);
             return (
