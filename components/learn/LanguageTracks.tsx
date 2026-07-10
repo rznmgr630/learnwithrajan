@@ -11,6 +11,7 @@ import { JP_N3_TOTAL_DAYS } from "@/lib/japanese-learning/n3/japanese-n3-data";
 import { DuolingoMeaningCard } from "@/components/learn/DuolingoMeaningCard";
 import { EnglishMeaningCard } from "@/components/learn/EnglishMeaningCard";
 import { TongueTwisterCard } from "@/components/learn/TongueTwisterCard";
+import { SpeakLikeProCard } from "@/components/learn/SpeakLikeProCard";
 
 const subCardClass =
   "group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]";
@@ -140,6 +141,7 @@ export function LanguageTracks() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <EnglishMeaningCard />
           <TongueTwisterCard />
+          <SpeakLikeProCard />
         </div>
       </div>
     </div>
