@@ -1235,17 +1235,23 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
 
 export function AIPrompts() {
   const [active, setActive] = useState<PromptItem | null>(null);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   return (
     <>
       <div className="flex flex-col gap-4">
         {CATEGORIES.map((category) => {
           const items = PROMPTS.filter((p) => p.category === category);
+          const isOpen = openCategory === category;
           return (
             <details
               key={category}
               className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm open:[&_.cat-chevron]:rotate-180"
-              open
+              open={isOpen}
+              onToggle={(e) => {
+                if (e.currentTarget.open) setOpenCategory(category);
+                else setOpenCategory((prev) => (prev === category ? null : prev));
+              }}
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
                 <div className="flex items-center gap-2.5">
