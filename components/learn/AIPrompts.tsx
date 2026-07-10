@@ -631,6 +631,62 @@ For each day include: what to study, specific resources, and a practice problem 
     prompt:
       "Explain [topic] to me in the simplest terms. Then have me re-explain it back. Point out gaps, re-teach what I miss, and repeat until I can explain it clearly on my own.",
   },
+
+  // ── Self-Improvement ────────────────────────────────────────────────────────
+  {
+    id: 44,
+    category: "Self-Improvement",
+    title: "MIND READER PROTOCOL",
+    prompt:
+`Analyze my communication patterns based on our conversation so far.
+
+• Identify my thinking style
+• Decision-making patterns
+• Hidden strengths
+• Blind spots I'm ignoring
+
+Be brutally honest.`,
+  },
+  {
+    id: 45,
+    category: "Self-Improvement",
+    title: "80/20 ACCELERATOR",
+    prompt:
+`I want to master [skill] fast.
+
+• Identify the 20% inputs
+• That generate 80% results
+• Remove unnecessary learning
+• Give unconventional shortcuts
+
+Focus on speed, not theory.`,
+  },
+  {
+    id: 46,
+    category: "Self-Improvement",
+    title: "COMPETITIVE FRAMEWORK",
+    prompt:
+`Help me identify where I'm limiting myself in [area].
+
+• What patterns hold me back?
+• What constraints are self-created?
+• What's the breakthrough move?
+
+Design a strategy to break it.`,
+  },
+  {
+    id: 47,
+    category: "Self-Improvement",
+    title: "FUTURE PROJECTION ENGINE",
+    prompt:
+`Based on my current actions...
+
+• Where will I be in 3 years?
+• What mistakes will cost me most?
+• What should I change immediately?
+
+Be direct. No sugarcoating.`,
+  },
 ];
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
