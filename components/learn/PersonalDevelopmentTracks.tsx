@@ -64,6 +64,20 @@ export function PersonalDevelopmentTracks() {
                 Listen →
               </span>
             </Link>
+
+            <Link href="/learn/exercise" className={subCardClass}>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                  Exercise
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                  5 videos — quick bodyweight routines to stay strong and consistent
+                </p>
+              </div>
+              <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
+                Watch →
+              </span>
+            </Link>
           </div>
         </div>
       </div>
