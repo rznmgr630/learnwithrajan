@@ -673,6 +673,31 @@ export const UI_STRINGS = {
     np: "हेर्नुहोस् →",
     jp: "見る →",
   },
+  "hub.sectionLoksewa": {
+    en: "Loksewa",
+    np: "लोकसेवा",
+    jp: "ロークセワ",
+  },
+  "hub.sectionLoksewaHint": {
+    en: "Nepal public service exam prep",
+    np: "नेपाल लोकसेवा परीक्षा तयारी",
+    jp: "ネパール公務員試験対策",
+  },
+  "hub.loksewaGeography.title": {
+    en: "Geography Q&A",
+    np: "भूगोल प्रश्नोत्तर",
+    jp: "地理 一問一答",
+  },
+  "hub.loksewaGeography.subtitle": {
+    en: "Flip cards — GK questions with English & Nepali answers",
+    np: "फ्लिप कार्ड — अंग्रेजी र नेपाली उत्तर सहितका सामान्य ज्ञान प्रश्नहरू",
+    jp: "フリップカード — 英語とネパール語の解答付き一般常識問題",
+  },
+  "hub.loksewaGeography.cta": {
+    en: "Start practicing →",
+    np: "अभ्यास सुरु गर्नुहोस् →",
+    jp: "練習を始める →",
+  },
   "hub.japanese.title": {
     en: "Japanese · JLPT N5",
     np: "जापानी · JLPT N5",
@@ -712,6 +737,11 @@ export const UI_STRINGS = {
     en: "← N5 Roadmap",
     np: "← N5 रोडम्याप",
     jp: "← N5 ロードマップ",
+  },
+  "learn.backLoksewa": {
+    en: "← Loksewa",
+    np: "← लोकसेवा",
+    jp: "← ロークセワ",
   },
   "backendRoadmap.title": {
     en: "Backend in 30 days",
