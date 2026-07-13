@@ -27,7 +27,7 @@ export function FocusMusicPage() {
       {/* Back nav */}
       <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-4 sm:px-6">
-          <LearnBackNav href="/learn/personal-development" labelKey="learn.back" />
+          <LearnBackNav href="/learn/personal-development" labelKey="learn.backPersonalDevelopment" />
         </div>
       </div>
 

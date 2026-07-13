@@ -703,6 +703,11 @@ export const UI_STRINGS = {
     np: "← भाषा",
     jp: "← 言語",
   },
+  "learn.backPersonalDevelopment": {
+    en: "← Personal Development",
+    np: "← व्यक्तिगत विकास",
+    jp: "← 自己啓発",
+  },
   "learn.backN5": {
     en: "← N5 Roadmap",
     np: "← N5 रोडम्याप",
