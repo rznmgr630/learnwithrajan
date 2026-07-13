@@ -9,6 +9,7 @@ import { JP_TOTAL_DAYS } from "@/lib/japanese-learning/n5/japanese-n5-data";
 import { JP_N4_TOTAL_DAYS } from "@/lib/japanese-learning/n4/japanese-n4-data";
 import { JP_N3_TOTAL_DAYS } from "@/lib/japanese-learning/n3/japanese-n3-data";
 import { DuolingoMeaningCard } from "@/components/learn/DuolingoMeaningCard";
+import { SurvivalPhrasesCard } from "@/components/learn/SurvivalPhrasesCard";
 import { EnglishMeaningCard } from "@/components/learn/EnglishMeaningCard";
 import { TongueTwisterCard } from "@/components/learn/TongueTwisterCard";
 import { SpeakLikeProCard } from "@/components/learn/SpeakLikeProCard";
@@ -131,6 +132,9 @@ export function LanguageTracks() {
 
         {/* Duolingo */}
         <DuolingoMeaningCard />
+
+        {/* Survival Phrases */}
+        <SurvivalPhrasesCard />
       </div>
 
       <div className="mt-8 border-t border-[var(--border)] pt-6">
