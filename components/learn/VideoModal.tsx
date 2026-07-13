@@ -42,7 +42,7 @@ export function VideoModal({
           </svg>
         </button>
 
-        <div className="relative aspect-video w-full overflow-hidden bg-black sm:rounded-2xl">
+        <div className="relative h-full w-full overflow-hidden bg-black sm:aspect-video sm:h-auto sm:rounded-2xl">
           <iframe
             src={src}
             title={title}
