@@ -85,14 +85,14 @@ export function VocabRevealTable({ rows, labels }: { rows: VocabRevealRow[]; lab
             </tr>
           </thead>
           <tbody>
-            {order.map((row) => {
+            {order.map((row, index) => {
               const shown = revealed.has(row.sn);
               return (
                 <tr
                   key={row.sn}
                   className="border-b border-[var(--border)]/70 last:border-0 odd:bg-[color-mix(in_oklab,var(--elevated)_18%,transparent)]"
                 >
-                  <td className="px-3 py-2.5 text-xs text-[var(--faint)]">{row.sn}</td>
+                  <td className="px-3 py-2.5 text-xs text-[var(--faint)]">{index + 1}</td>
                   <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.word}</td>
                   <td className="px-3 py-2.5 font-mono text-xs text-[var(--muted)]">{row.romaji}</td>
                   <td className="px-3 py-2.5 text-base text-[var(--text)]">{row.kanji ?? "—"}</td>

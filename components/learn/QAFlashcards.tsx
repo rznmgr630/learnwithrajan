@@ -15,10 +15,12 @@ function shuffleArray<T>(items: T[]): T[] {
 
 function QuestionCard({
   qa,
+  displayNumber,
   revealed,
   onToggle,
 }: {
   qa: QAFlashcardItem;
+  displayNumber: number;
   revealed: boolean;
   onToggle: () => void;
 }) {
@@ -26,7 +28,7 @@ function QuestionCard({
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 shrink-0 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]">
-          {qa.id}
+          {displayNumber}
         </span>
         <div>
           <p className="text-sm text-[var(--text)]">{qa.questionEn}</p>
@@ -111,8 +113,14 @@ export function QAFlashcards({ title, subtitle, items }: QAFlashcardsProps) {
       </div>
 
       <div className="mt-4 flex flex-col gap-3">
-        {order.map((qa) => (
-          <QuestionCard key={qa.id} qa={qa} revealed={revealed.has(qa.id)} onToggle={() => toggleOne(qa.id)} />
+        {order.map((qa, index) => (
+          <QuestionCard
+            key={qa.id}
+            qa={qa}
+            displayNumber={index + 1}
+            revealed={revealed.has(qa.id)}
+            onToggle={() => toggleOne(qa.id)}
+          />
         ))}
       </div>
     </div>
