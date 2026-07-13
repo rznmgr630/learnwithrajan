@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 import { VideoModal } from "@/components/learn/VideoModal";
+import type { PersonalDevVideo } from "@/lib/personal-development/types";
 
-type DriveVideo = {
-  id: string;
-  label: string;
-};
-
-export function DriveVideoCard({ v, index }: { v: DriveVideo; index: number }) {
+export function DriveVideoCard({ v, index }: { v: PersonalDevVideo; index: number }) {
   const [playing, setPlaying] = useState(false);
 
   return (

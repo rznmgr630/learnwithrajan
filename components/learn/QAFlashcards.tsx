@@ -1,41 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { LoksewaQA } from "@/lib/loksewa-learning/types";
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-      <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-      <path
-        fillRule="evenodd"
-        d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  ) : (
-    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-      <path
-        fillRule="evenodd"
-        d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z"
-        clipRule="evenodd"
-      />
-      <path d="M10.748 13.93l2.523 2.523a10.003 10.003 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
-    </svg>
-  );
-}
-
-function ShuffleIcon() {
-  return (
-    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-      <path
-        fillRule="evenodd"
-        d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
+import type { QAFlashcardItem } from "@/lib/qa-flashcards-types";
+import { EyeIcon, ShuffleIcon } from "@/components/learn/reveal-icons";
 
 function shuffleArray<T>(items: T[]): T[] {
   const arr = [...items];
@@ -51,7 +18,7 @@ function QuestionCard({
   revealed,
   onToggle,
 }: {
-  qa: LoksewaQA;
+  qa: QAFlashcardItem;
   revealed: boolean;
   onToggle: () => void;
 }) {
@@ -89,11 +56,11 @@ function QuestionCard({
 export interface QAFlashcardsProps {
   title: string;
   subtitle: string;
-  items: LoksewaQA[];
+  items: QAFlashcardItem[];
 }
 
 export function QAFlashcards({ title, subtitle, items }: QAFlashcardsProps) {
-  const [order, setOrder] = useState<LoksewaQA[]>(items);
+  const [order, setOrder] = useState<QAFlashcardItem[]>(items);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
 
   const allShown = revealed.size === order.length;

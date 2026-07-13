@@ -2,19 +2,7 @@
 
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DriveVideoCard } from "@/components/learn/DriveVideoCard";
-
-type Video = {
-  id: string;
-  label: string;
-};
-
-const VIDEOS: Video[] = [
-  { id: "1ERkCRGaZve31vg085RgYXLUWYEmCzoWI", label: "3 sets abs" },
-  { id: "1YDTvaLquIIL5AXD9sUMth9ag1GcphpgE", label: "5 sets leg exercise" },
-  { id: "1qeMSvLQKg5BLPVqwUhc6SlEdgE7NiK6A", label: "Boxing" },
-  { id: "14MsJXoIDQ450jd5ybmIDnte6pWB1JX4B", label: "Military pushup" },
-  { id: "1LP-PulFOC9fsbNXPShO-TPQlEwA6sP_6", label: "Pushup" },
-];
+import { EXERCISE_VIDEOS } from "@/lib/personal-development/exercise-data";
 
 export function ExercisePage() {
   return (
@@ -44,7 +32,7 @@ export function ExercisePage() {
             Quick bodyweight routines to stay strong and consistent.
           </p>
           <div className="mt-6 flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 w-fit">
-            <span className="font-mono text-xl font-bold text-[var(--accent)]">{VIDEOS.length}</span>
+            <span className="font-mono text-xl font-bold text-[var(--accent)]">{EXERCISE_VIDEOS.length}</span>
             <span className="text-sm text-[var(--muted)]">videos</span>
           </div>
         </div>
@@ -53,7 +41,7 @@ export function ExercisePage() {
       {/* Video grid */}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {VIDEOS.map((v, i) => (
+          {EXERCISE_VIDEOS.map((v, i) => (
             <DriveVideoCard key={v.id} v={v} index={i} />
           ))}
         </div>

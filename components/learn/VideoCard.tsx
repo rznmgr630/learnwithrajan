@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 import { VideoModal } from "@/components/learn/VideoModal";
+import type { PersonalDevVideo } from "@/lib/personal-development/types";
 
-type Video = {
-  id: string;
-  label: string;
-};
-
-export function VideoCard({ v, index }: { v: Video; index: number }) {
+export function VideoCard({ v, index }: { v: PersonalDevVideo; index: number }) {
   const [playing, setPlaying] = useState(false);
 
   return (

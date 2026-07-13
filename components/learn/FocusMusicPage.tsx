@@ -2,24 +2,7 @@
 
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { VideoCard } from "@/components/learn/VideoCard";
-
-type Video = {
-  id: string;
-  label: string;
-};
-
-const VIDEOS: Video[] = [
-  { id: "dASoYamteBI", label: "Overthinking? Try This Dopamine Reset | Healing Indian Ragas | Shunya Waves" },
-  { id: "fhL67fnDXcU", label: "Coding Music — Synthwave Beats to Program To" },
-  { id: "M5QY2_8704o", label: "Chillstep Music for Programming / Cyber / Coding" },
-  { id: "7NOSDKb0HlU", label: "Lofi Hip Hop Radio — Beats to Study / Relax To" },
-  { id: "JxhBJSJRyqg", label: "4 Hours of Deep Focus Music for Studying" },
-  { id: "gtmzPUmq7XU", label: "4 Hours of Ambient Study Music to Concentrate" },
-  { id: "wGc9A5azn7Q", label: "Deep Focus Music for Studying and Concentration" },
-  { id: "oPVte6aMprI", label: "Deep Focus — Music for Studying, Concentration and Work" },
-  { id: "74cOUSKXMz0", label: "3-Hour Study With Me — Focus Music, Pomodoro 50/10" },
-  { id: "VJhd3hvsMTo", label: "50/10 Pomodoro Timer — Relaxing Lofi, Deep Focus" },
-];
+import { FOCUS_MUSIC_VIDEOS } from "@/lib/personal-development/focus-music-data";
 
 export function FocusMusicPage() {
   return (
@@ -49,7 +32,7 @@ export function FocusMusicPage() {
             Curated music and soundscapes to get into deep focus, reduce overthinking, and study with flow.
           </p>
           <div className="mt-6 flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 w-fit">
-            <span className="font-mono text-xl font-bold text-[var(--accent)]">{VIDEOS.length}</span>
+            <span className="font-mono text-xl font-bold text-[var(--accent)]">{FOCUS_MUSIC_VIDEOS.length}</span>
             <span className="text-sm text-[var(--muted)]">videos</span>
           </div>
         </div>
@@ -58,7 +41,7 @@ export function FocusMusicPage() {
       {/* Video grid */}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {VIDEOS.map((v, i) => (
+          {FOCUS_MUSIC_VIDEOS.map((v, i) => (
             <VideoCard key={v.id} v={v} index={i} />
           ))}
         </div>
