@@ -1,6 +1,6 @@
-import type { LoksewaQA } from "@/lib/loksewa-learning/types";
+import type { QAFlashcardItem } from "@/lib/qa-flashcards-types";
 
-export const LOKSEWA_GEOGRAPHY_QA: LoksewaQA[] = [
+export const LOKSEWA_GEOGRAPHY_QA: QAFlashcardItem[] = [
   {
     id: 1,
     questionEn: "Which is the most explored satellite?",
