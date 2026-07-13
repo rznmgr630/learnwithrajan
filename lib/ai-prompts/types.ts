@@ -2,7 +2,7 @@ export interface PromptItem {
   id: number;
   category: string;
   title: string;
-  image?: string;
+  driveImageId?: string;
   imageAlt?: string;
   prompt: string;
 }

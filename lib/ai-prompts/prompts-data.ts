@@ -6,7 +6,7 @@ export const PROMPTS: PromptItem[] = [
     id: 1,
     category: "Image Effects",
     title: "MS PAINT EFFECT",
-    image: "/prompts/ms-paint.png",
+    driveImageId: "1nUieZIQxt_N2Ji4e5tqhTkQkcZ0tZ9bC",
     imageAlt: "MS Paint style redraw result",
     prompt:
       "Redraw the attached image in the most clumsy, scribbly, and utterly pathetic way possible. Use a white background, and make it look like it was drawn in an old computer painting program with a mouse. It should be vaguely similar but also not really, kind of matching but also off in a confusing, awkward way, with that low-quality pixel-by-pixel feel that really emphasizes how ridiculously bad it is. Actually, you know what, whatever, just draw it however you want. MS paint type",
@@ -15,7 +15,7 @@ export const PROMPTS: PromptItem[] = [
     id: 2,
     category: "Image Effects",
     title: "SKIN ENHANCER",
-    image: "/prompts/skin_enhancer.png",
+    driveImageId: "1Ty7GIjLDqCkOeTtPoOQvA0LyndGsKrw9",
     imageAlt: "Skin enhancer before and after result",
     prompt:
       "Skin enhancement retouch, preserve original identity and structure, refine skin texture without smoothing, maintain pores, freckles, and natural variation, reduce temporary blemishes and redness only, even out tone subtly without flattening depth, retain natural highlights and shadow transitions, keep under-eye detail intact with slight softening not removal, avoid plastic or airbrushed finish, maintain original lighting and color balance, enhance micro-contrast for realistic texture, lips and eyes untouched except for natural clarity, no reshaping of facial features, no artificial glow, no over-sharpening, seamless integration with original image, invisible edit with high realism.",
@@ -24,7 +24,7 @@ export const PROMPTS: PromptItem[] = [
     id: 3,
     category: "Image Effects",
     title: "MINECRAFT EFFECT",
-    image: "/prompts/minecraft.png",
+    driveImageId: "1aMc0dGbW0IEKnh1QZDRaGrqtYgz6qIzP",
     imageAlt: "Minecraft effect before and after result",
     prompt:
       "Keep the human subject 100 percent photorealistic and untouched. No pixel filter, no stylization, no lighting remap on skin. Preserve exact facial detail, pores, fabric weave, hair strands, natural shadows. Expression and posture remain identical. Rebuild the background as a structurally accurate Minecraft voxel replica of the original location. Do not reinterpret. Match the exact layout, spacing, depth, and geometry from the reference image. If there is a path, replicate its exact curve and width using gravel or dirt blocks. If there are trees, match trunk positions, height ratios, canopy spread using appropriate log and leaf blocks. If there are buildings, recreate their silhouette, window placement, roof angle using Minecraft block geometry. If there are rocks, benches, fences, signs, convert them into block equivalents but maintain their exact position and proportion relative to the subject. Perspective must match the original photo perfectly. Horizon line, camera height, focal distance, framing, subject scale all identical. Any object physically touching the subject must convert into Minecraft logic.",
@@ -33,7 +33,7 @@ export const PROMPTS: PromptItem[] = [
     id: 4,
     category: "Image Effects",
     title: "GROUP SELFIE",
-    image: "/prompts/group_selfie.png",
+    driveImageId: "1Gs76NyIIeHjiNkbjIypGJ60yxTybPKkS",
     imageAlt: "Group selfie AI generated result",
     prompt:
       "Raw iPhone selfie, subjects from reference images standing close together, both leaning slightly into frame, casual shoulder-to-shoulder composition, direct gaze into camera with relaxed neutral expressions, handheld at arm's length with slight upward tilt, soft indoor lighting mixed with phone flash causing mild overexposure on highlights and shadow falloff, natural skin texture visible with pores and subtle makeup detail, stray hairs and fabric creases present, background loosely visible with everyday environment elements slightly out of focus, minor motion blur in edges, slight lens distortion from close proximity, off-center framing with imperfect crop, subtle ISO grain and uneven white balance, unpolished, candid realism.",
@@ -42,7 +42,7 @@ export const PROMPTS: PromptItem[] = [
     id: 5,
     category: "Image Effects",
     title: "LEGO EFFECT",
-    image: "/prompts/lego_effect.png",
+    driveImageId: "16DHkHW6q0XP9VnJXnH20Vnj1V8GFSLTF",
     imageAlt: "LEGO effect before and after result",
     prompt:
       "Keep the human subject 100 percent photorealistic and untouched. No pixel filter, no stylization, no lighting remap on skin. Preserve exact facial detail, pores, fabric weave, hair strands, natural shadows. Expression and posture remain identical. Rebuild the background as a structurally accurate LEGO replica of the original location. Do not reinterpret. Match the exact layout, spacing, depth, and geometry from the reference image. If there is a path, replicate its exact curve and width using LEGO tile and plate construction. If there are trees, match trunk positions, height ratios, canopy spread using appropriate LEGO trunk builds and layered foliage elements. If there are buildings, recreate their silhouette, window placement, roof angle using authentic LEGO architecture geometry and brick proportions. If there are rocks, benches, fences, signs, convert them into LEGO-built equivalents but maintain their exact position and proportion relative to the subject. Perspective must match the original photo perfectly. Horizon line, camera height, focal distance, framing, subject scale all identical. Any object physically touching the subject must convert into LEGO logic. Real animal becomes a LEGO animal or molded figure equivalent. Held object becomes a brick-built version scaled correctly to the hand. Objects not touching the subject remain LEGO-built but positioned exactly where they appear in the reference. Lighting recreated as realistic daylight interacting with LEGO plastic materials while matching the direction and intensity of the original photo. Preserve subtle specular highlights on LEGO surfaces, natural shadow falloff, soft environmental reflections, and realistic material response. If fog exists, rebuild it using layered atmospheric haze while preserving the same depth falloff. Maintain recognizable background identity. The location should be immediately identifiable from composition alone, just rendered in detailed LEGO construction. High-resolution cinematic realism. Realistic LEGO material texture with visible seams, studs, injection molding detail, slight surface scuffs, authentic plastic reflections. No UI, no text, no overlays.",
@@ -51,7 +51,7 @@ export const PROMPTS: PromptItem[] = [
     id: 6,
     category: "Image Effects",
     title: "4K EFFECT",
-    image: "/prompts/4k.png",
+    driveImageId: "1cCuK-aU0948nL7NQnkfoBZJPLi4Ug5jJ",
     imageAlt: "4K enhancement before and after result",
     prompt:
       "Ultra-high-resolution 4K enhancement based strictly on the provided reference image. Absolute fidelity to original facial anatomy, proportions, and identity. Preserve expression, gaze, pose, camera angle, framing, and perspective with zero deviation. Clothing, hair, skin, and background elements must remain unchanged in structure, placement, and design. Recover fine-grain detail with natural realism. Enhance pores, fine lines, hair strands, eyelashes, fabric weave, seams, and material edges without introducing stylization. Maintain original color science, white balance, and tonal relationships exactly as captured. Lighting direction, intensity, contrast, and shadow behavior must match the source image precisely, with only improved clarity and expanded dynamic range. No relighting, no reshaping. Remove any grain. Apply controlled sharpening and high-frequency detail reconstruction. Remove compression artifacts and noise while retaining authentic texture. No smoothing, no plastic skin, no artificial gloss. Facial features must remain consistent across the entire image with coherent anatomy and clean, stable edges. Negative constraints: no warping, no facial drift, no added or missing anatomy, no altered hands, no distortions, no perspective shift, no text or graphics, no hallucinated detail, no stylized rendering. Output must read as a true-to-life, photorealistic upscale that matches the reference exactly, only clearer, sharper, and higher resolution.",
@@ -61,7 +61,7 @@ export const PROMPTS: PromptItem[] = [
     id: 27,
     category: "Image Effects",
     title: "CHANGE HAIRSTYLE",
-    image: "/prompts/change_hairstyle.png",
+    driveImageId: "1FY2wAAjgRcfnIw5vjqtNvhbFxLUB7_g8",
     imageAlt: "Change hairstyle before and after result",
     prompt:
       "Change the person's hairstyle in this photo to [DESIRED HAIRSTYLE, SUCH AS LONG WAVY HAIR, SHORT BOB, CURLY HAIR, STRAIGHT HAIR, PONYTAIL, BANGS, BUZZ CUT, LAYERED HAIR, SLICKED-BACK HAIR, OR SHOULDER-LENGTH HAIR]. Keep the person's face, identity, facial features, expression, pose, clothing, skin texture, lighting, shadows, camera angle, and background the same. Make the new hairstyle look natural, with realistic texture, volume, hairline, parting, flyaways, highlights, and shadows that match the original photo. Do not change the face, alter facial proportions, distort the head or ears, over-smooth the skin, or make the hair look fake. The final image should look like a seamless, photo-realistic image of the same person with the requested hairstyle.",
@@ -70,7 +70,7 @@ export const PROMPTS: PromptItem[] = [
     id: 28,
     category: "Image Effects",
     title: "FASHION VISUALIZATION",
-    image: "/prompts/fashion_visualizer.png",
+    driveImageId: "1sZeG6j-7n2oYs_73cIMCWdlx8mCWpVCF",
     imageAlt: "Fashion visualization before and after result",
     prompt:
       "Dress the person in the first image with the clothing from the second image. Keep the person's face, identity, expression, pose, body proportions, skin texture, hairstyle, lighting, shadows, camera angle, background, and overall photo style the same. Preserve the design, color, material, fit, and style of the clothing from the second image as accurately as possible. Make the clothing look naturally worn on the person's body, with realistic fabric draping, folds, seams, wrinkles, texture, colors, and shadows that match the pose and lighting of the first image. Do not change the face, reshape the body, alter the pose, distort hands or limbs, warp the background, or make the clothing look fake or pasted on. The final image should look like a seamless, photo-realistic image of the same person naturally wearing the clothing from the second image.",
@@ -79,7 +79,7 @@ export const PROMPTS: PromptItem[] = [
     id: 29,
     category: "Image Effects",
     title: "CORRECT POSTURE",
-    image: "/prompts/correct_posture.png",
+    driveImageId: "1vMjYWKc_PJcoyNrkuqSzet0H8Vum4-Qi",
     imageAlt: "Correct posture before and after result",
     prompt:
       "Subtle correction of body posture. Shoulders back and down, chest slightly elevated, head naturally aligned over the shoulders. Aligned spine. Maintain natural, confident, and relaxed body language. Clothing: realistic fabric drape adjusted to the new posture. Preserve original face, identity, background, and lighting. Final result: identical photo with improved and natural posture.",
@@ -88,7 +88,7 @@ export const PROMPTS: PromptItem[] = [
     id: 30,
     category: "Image Effects",
     title: "CHANGE EXPRESSION",
-    image: "/prompts/change_expression.png",
+    driveImageId: "1AltbxPMw3Adl6fhGxYL5Mf54z1IM7PMm",
     imageAlt: "Change expression before and after result",
     prompt:
       "Change the facial expression of the person in this photo to [DESIRED EXPRESSION — E.G., SMILING, SURPRISED, LAUGHING, ETC.]. Keep the person's identity, facial features, and overall lighting intact while making the expression look natural and realistic. Ensure the adjustment blends seamlessly with the original image.",
@@ -97,7 +97,7 @@ export const PROMPTS: PromptItem[] = [
     id: 31,
     category: "Image Effects",
     title: "CLOTHING COLOR CHANGE",
-    image: "/prompts/clothing_change.png",
+    driveImageId: "18TsqEY-GHOLJkozHkHxDbyy8uyYJEccZ",
     imageAlt: "Clothing color change before and after result",
     prompt:
       "Change the color of the outfit from [CURRENT] to [TARGET]. 100% preservation of non-clothing elements: face, skin, hair, accessories, and environment. Precise identification of fabric edges. Light interaction: maintain tonal range, highlights, shadows, and texture (denim, silk, cotton). Wrinkles and drape remain unchanged. No color bleeding onto the skin. Result: photorealistic and undetectable.",
@@ -106,7 +106,7 @@ export const PROMPTS: PromptItem[] = [
     id: 32,
     category: "Image Effects",
     title: "ANIME EFFECT",
-    image: "/prompts/anime_effect.png",
+    driveImageId: "1NtsJaNHsS8lHLAcC3jUBcyPM1wbvcWuC",
     imageAlt: "Anime effect before and after result",
     prompt:
       "Anime style transformation, convert the reference image into detailed hand-drawn anime while preserving exact composition, same camera angle, framing, pose, and character proportions unchanged, maintain identical facial structure and expression translated into anime aesthetics, clean linework with controlled variation in line weight, large expressive eyes styled naturally to match original gaze direction, simplified but accurate nose and mouth, hair reinterpreted into defined anime strands while keeping original shape and flow, skin rendered with smooth tonal shading and soft gradients, lighting direction and intensity preserved from original image, colors slightly stylized but faithful to source palette, background converted into anime environment matching original depth and perspective, subtle cel shading with gentle highlights, no distortion of anatomy or perspective, no change in crop or zoom, high fidelity adaptation rather than reinterpretation.",
@@ -115,7 +115,7 @@ export const PROMPTS: PromptItem[] = [
     id: 33,
     category: "Image Effects",
     title: "PRODUCT AD",
-    image: "/prompts/product_ad.png",
+    driveImageId: "1jmDkUi7zVNqeZ5iqm54TySrrAQVIrQ5m",
     imageAlt: "Product ad transformation result",
     prompt:
       "Product studio transformation, isolate the product from the reference image and rebuild as a premium ad composition, hero product centered and sharply in focus, surrounded by its key ingredients arranged with intention and depth, ingredients fresh and tactile, sliced, crushed, or whole depending on context, composition balanced but not perfectly symmetrical, clean surface with subtle reflections, background designed to match the product's color palette and mood, soft gradients or tonal transitions, high-end studio lighting with controlled highlights and gentle shadow falloff, crisp edges with slight natural shadow grounding the product, micro-details visible like condensation, texture on ingredients, and line surface imperfections, minimal but intentional negative space, no clutter beyond ingredients, polished commercial finish without looking artificial, accurate color rendering and realistic material response.",
@@ -124,7 +124,7 @@ export const PROMPTS: PromptItem[] = [
     id: 34,
     category: "Image Effects",
     title: "GTA EFFECT",
-    image: "/prompts/gta_effect.png",
+    driveImageId: "1_jMeVmBfG56DKir3Ivyj5K9JNNfwWT8U",
     imageAlt: "GTA V effect before and after result",
     prompt:
       "Rebuild the entire scene from the reference image as a real-time 3D render inside the GTA V Rage engine. Do not apply a filter. Fully reconstruct all people, vehicles, architecture, terrain, and props as polygonal 3D assets native to GTA V. The result should look like an authentic in-game screenshot captured on a high-end PC, ultra settings enabled. All subjects must be converted into clearly modeled geometry with visible polygon structure, baked normal maps, and game-accurate textures. Faces, bodies, and clothing should follow GTA V character proportions and anatomy, slightly exaggerated, rigid, and digitally sculpted. Skin is matte and textured, no photographic pores. Hair is clumped, card-based, slightly stiff. Clothing uses flat fabric shaders with visible seams and texture repetition. Environment must feel like Los Santos or Blaine County logic. Buildings are modular, edges slightly sharp, surfaces tiled and optimized. Roads, sidewalks, vegetation, street props, and background elements are simplified but dense, clearly game-built constructed. No real-world photographic depth or lens artifacts. Lighting follows GTA V real-time lighting behavior. Strong directional sunlight or overcast skylight depending on scene. Hard shadows with defined edges, subtle ambient occlusion in corners. Reflections are screen-space and imperfect. Colors are slightly saturated with the recognizable GTA V color grading. Contrast is controlled but punchy. Materials must read as video game assets. Asphalt is flat and grainy. Metal has simple specular highlights. Glass is clean with limited reflection depth. Vegetation is slightly stiff and stylized. Nothing should appear physically accurate or cinematic-render realistic. Camera should feel like a gameplay or Rockstar Editor capture. Third-person or free camera perspective. Slight wide-angle distortion. Stable framing. No depth of field blur. No motion blur unless minimal and engine-based. Overall look is unmistakably GTA V. Real-time 3D. Polygon. Textured. Optimized. Stylized realism. Clearly not a photograph.",
@@ -134,7 +134,7 @@ export const PROMPTS: PromptItem[] = [
     id: 23,
     category: "Image Effects",
     title: "HAIRLINE RESTORATION",
-    image: "/prompts/hairline_restoration.png",
+    driveImageId: "1i7Si5AVpCWHJi3Uc2iwFtKjjxMNft7qI",
     imageAlt: "Hairline restoration before and after result",
     prompt:
       "Natural and subtle hair restoration from the base photo. Fill in temples and frontal hairline with identical color, texture, and density. Lower the hairline by 5-15mm to a natural M-shaped or rounded position. Preserve original hairstyle, facial features, and expression. Final image: exact photo, hair subtly denser and more youthful, undetectable editing.",
@@ -143,7 +143,7 @@ export const PROMPTS: PromptItem[] = [
     id: 24,
     category: "Image Effects",
     title: "CHANGE POSE",
-    image: "/prompts/change_pose.png",
+    driveImageId: "1k2K01jwLw5_DykofFoN5XabK7ntXMxCV",
     imageAlt: "Change pose before and after result",
     prompt:
       "Change the person's pose in this photo to [DESIRED POSE, SUCH AS SITTING CROSS-LEGGED, ARMS CROSSED, WALKING FORWARD, JUMPING MID-AIR, LEANING AGAINST A WALL, LOOKING OVER THE SHOULDER, HANDS IN POCKETS, OR HOLDING AN OBJECT]. Keep the person's face, identity, facial features, expression, body proportions, clothing, skin texture, hairstyle, lighting, shadows, camera angle, background, and overall photo style as consistent as possible. Make the new pose look natural, balanced, and anatomically realistic, with believable limb placement, body weight, posture, clothing folds, contact points, and shadows that match the original scene. Do not distort the face, warp the body, create extra fingers or limbs, change the person's identity, alter the background, or make the pose look stiff or artificial. The final image should look like a seamless, photo-realistic image of the same person naturally captured in the requested pose.",
@@ -152,7 +152,7 @@ export const PROMPTS: PromptItem[] = [
     id: 25,
     category: "Image Effects",
     title: "REMOVE DARK CIRCLES",
-    image: "/prompts/dark_spot.png",
+    driveImageId: "1v5I3KYMBHYQZglYo_sMs28CQySQ6nvPl",
     imageAlt: "Remove dark circles before and after result",
     prompt:
       "Subtle reduction of dark circles and eye bags from the base photo. Lighten pigmentation, soften slight puffiness, and dim shadows. Naturally blend the tone of the dark circles with the cheeks. Maintain the natural eye crease, bone structure, and expression lines. Correct only darkness and inflammation. No general beauty filters. Result: bright, rested, and natural eyes.",
@@ -161,7 +161,7 @@ export const PROMPTS: PromptItem[] = [
     id: 26,
     category: "Image Effects",
     title: "EDIT TEXT IN IMAGE",
-    image: "/prompts/edit_text.png",
+    driveImageId: "1Un4ky_0XA12wvB1yId0hAJvJNY2kS98I",
     imageAlt: "Edit text in image before and after result",
     prompt:
       "Edit only the text in this image by replacing [EXISTING TEXT TO REPLACE] with [NEW TEXT]. Keep the original design, layout, font style, font size, letter spacing, color, alignment, perspective, shadows, texture, and placement consistent with the surrounding text and overall image. Make the new text blend naturally into the image as if it was part of the original design. Do not change any other text, objects, people, background elements, colors, lighting, or composition. Preserve the original image style and make the edit clean, realistic, and seamless.",
