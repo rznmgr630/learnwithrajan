@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import type { PromptItem } from "@/lib/ai-prompts/types";
 import { PROMPTS } from "@/lib/ai-prompts/prompts-data";
@@ -8,6 +7,10 @@ import { SLASH_CATEGORIES } from "@/lib/ai-prompts/slash-categories-data";
 import { PROMPT_VISUALS } from "@/components/learn/ai-prompt-visuals";
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
+
+function driveImageUrl(driveImageId: string, size: string): string {
+  return `https://drive.google.com/thumbnail?id=${driveImageId}&sz=${size}`;
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -71,9 +74,13 @@ function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () 
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
-          {item.image ? (
+          {item.driveImageId ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.image} alt={item.imageAlt ?? item.title} className="h-auto w-full rounded-xl border border-[var(--border)]" />
+            <img
+              src={driveImageUrl(item.driveImageId, "w1600")}
+              alt={item.imageAlt ?? item.title}
+              className="h-auto w-full rounded-xl border border-[var(--border)]"
+            />
           ) : PROMPT_VISUALS[item.title] ? (
             <div className={`flex h-48 items-center justify-center rounded-xl bg-gradient-to-br ${PROMPT_VISUALS[item.title].gradient}`}>
               {PROMPT_VISUALS[item.title].icon}
@@ -100,13 +107,12 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
       onClick={onClick}
       className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]"
     >
-      {item.image ? (
+      {item.driveImageId ? (
         <div className="overflow-hidden">
-          <Image
-            src={item.image}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={driveImageUrl(item.driveImageId, "w500")}
             alt={item.imageAlt ?? item.title}
-            width={400}
-            height={280}
             className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </div>
