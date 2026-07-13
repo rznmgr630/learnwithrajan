@@ -1,5 +1,6 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { LoksewaGeographyQA } from "@/components/learn/LoksewaGeographyQA";
+import { QAFlashcards } from "@/components/learn/QAFlashcards";
+import { LOKSEWA_GEOGRAPHY_QA } from "@/lib/loksewa-learning/geography-qa-data";
 
 export const metadata = { title: "Loksewa · Geography Q&A" };
 
@@ -11,7 +12,11 @@ export default function LoksewaGeographyPage() {
           <LearnBackNav href="/learn/loksewa" labelKey="learn.backLoksewa" />
         </div>
       </div>
-      <LoksewaGeographyQA />
+      <QAFlashcards
+        title="Geography Questions & Answer"
+        subtitle="General knowledge Q&A for Loksewa prep — click a question to reveal its answer."
+        items={LOKSEWA_GEOGRAPHY_QA}
+      />
     </div>
   );
 }

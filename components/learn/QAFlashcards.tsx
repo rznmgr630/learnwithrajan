@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LOKSEWA_GEOGRAPHY_QA, type LoksewaQA } from "@/lib/loksewa-learning/geography-qa-data";
+import type { LoksewaQA } from "@/lib/loksewa-learning/types";
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -86,8 +86,14 @@ function QuestionCard({
   );
 }
 
-export function LoksewaGeographyQA() {
-  const [order, setOrder] = useState<LoksewaQA[]>(LOKSEWA_GEOGRAPHY_QA);
+export interface QAFlashcardsProps {
+  title: string;
+  subtitle: string;
+  items: LoksewaQA[];
+}
+
+export function QAFlashcards({ title, subtitle, items }: QAFlashcardsProps) {
+  const [order, setOrder] = useState<LoksewaQA[]>(items);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
 
   const allShown = revealed.size === order.length;
@@ -114,12 +120,8 @@ export function LoksewaGeographyQA() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
-          Geography Questions &amp; Answer
-        </h1>
-        <p className="mt-3 text-[var(--muted)]">
-          General knowledge Q&amp;A for Loksewa prep — click a question to reveal its answer.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">{title}</h1>
+        <p className="mt-3 text-[var(--muted)]">{subtitle}</p>
       </div>
 
       <div className="mt-8 flex items-center justify-end gap-2">

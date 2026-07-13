@@ -1,10 +1,4 @@
-export interface LoksewaQA {
-  id: number;
-  questionEn: string;
-  questionNe: string;
-  answerEn: string;
-  answerNe: string;
-}
+import type { LoksewaQA } from "@/lib/loksewa-learning/types";
 
 export const LOKSEWA_GEOGRAPHY_QA: LoksewaQA[] = [
   {
