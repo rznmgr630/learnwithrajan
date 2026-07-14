@@ -14,6 +14,7 @@ import { InterviewPracticeCard } from "@/components/learn/InterviewPracticeCard"
 import { EnglishMeaningCard } from "@/components/learn/EnglishMeaningCard";
 import { TongueTwisterCard } from "@/components/learn/TongueTwisterCard";
 import { SpeakLikeProCard } from "@/components/learn/SpeakLikeProCard";
+import { PinButton } from "@/components/learn/PinButton";
 
 const subCardClass =
   "group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]";
@@ -41,12 +42,15 @@ export function LanguageTracks() {
               </p>
               <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">{t("hub.japanese.subtitle")}</p>
             </div>
-            <span
-              className="shrink-0 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {jp.percent}%
-            </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {jp.percent}%
+              </span>
+              <PinButton id="japanese-n5" />
+            </div>
           </div>
           <div className="mt-4" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -74,12 +78,15 @@ export function LanguageTracks() {
               </p>
               <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">{t("hub.japaneseN4.subtitle")}</p>
             </div>
-            <span
-              className="shrink-0 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {jpN4.percent}%
-            </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {jpN4.percent}%
+              </span>
+              <PinButton id="japanese-n4" />
+            </div>
           </div>
           <div className="mt-4" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -107,12 +114,15 @@ export function LanguageTracks() {
               </p>
               <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">{t("hub.japaneseN3.subtitle")}</p>
             </div>
-            <span
-              className="shrink-0 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {jpN3.percent}%
-            </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {jpN3.percent}%
+              </span>
+              <PinButton id="japanese-n3" />
+            </div>
           </div>
           <div className="mt-4" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">

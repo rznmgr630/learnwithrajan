@@ -21,6 +21,7 @@ import { NEXTJS_TOTAL_DAYS } from "@/lib/nextjs-learning/nextjs-challenge-data";
 import { NODEJS_TOTAL_DAYS } from "@/lib/nodejs-learning/nodejs-challenge-data";
 import { DEVOPS_TOTAL_DAYS } from "@/lib/devops-learning/devops-challenge-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
+import { PinButton } from "@/components/learn/PinButton";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
@@ -151,12 +152,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.react.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {react.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {react.percent}%
+              </span>
+              <PinButton id="react" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -189,12 +193,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.js.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {js.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {js.percent}%
+              </span>
+              <PinButton id="javascript" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -226,12 +233,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.reactNative.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {reactNative.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {reactNative.percent}%
+              </span>
+              <PinButton id="react-native" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -264,12 +274,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.nextjs.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {nextjs.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {nextjs.percent}%
+              </span>
+              <PinButton id="nextjs" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -307,12 +320,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.backend.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {percent}%
+              </span>
+              <PinButton id="backend-30-days" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -341,12 +357,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.laravel.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {laravel.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {laravel.percent}%
+              </span>
+              <PinButton id="laravel" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -378,12 +397,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.nodejs.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {nodejs.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {nodejs.percent}%
+              </span>
+              <PinButton id="nodejs" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -421,6 +443,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.sql.subtitle")}</p>
             </div>
+            <PinButton id="sql" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Tables", "Joins", "Indexes", "ACID", "SQL"].map((tag) => (
@@ -445,6 +468,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.mongodb.subtitle")}</p>
             </div>
+            <PinButton id="mongodb" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Documents", "Aggregation", "Indexes", "Sharding", "NoSQL"].map((tag) => (
@@ -476,6 +500,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.supabase.subtitle")}</p>
             </div>
+            <PinButton id="supabase" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Auth", "RLS", "Real-time", "Storage", "Edge Functions"].map((tag) => (
@@ -506,6 +531,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Message queues from zero to production</p>
             </div>
+            <PinButton id="rabbitmq" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["AMQP", "Exchanges", "DLX", "Quorum Queues", "Patterns"].map((tag) => (
@@ -530,6 +556,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Event streaming from zero to production</p>
             </div>
+            <PinButton id="kafka" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Topics", "Partitions", "Consumer Groups", "Event Replay", "Exactly-once"].map((tag) => (
@@ -560,12 +587,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.devops.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {devops.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {devops.percent}%
+              </span>
+              <PinButton id="devops" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -600,6 +630,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.dsa.subtitle")}</p>
             </div>
+            <PinButton id="dsa" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {(["Basic", "Medium", "Advanced"] as const).map((level) => (
@@ -636,12 +667,15 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.git.subtitle")}</p>
             </div>
-            <span
-              className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-              suppressHydrationWarning
-            >
-              {git.percent}%
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
+                suppressHydrationWarning
+              >
+                {git.percent}%
+              </span>
+              <PinButton id="git-7-days" />
+            </div>
           </div>
           <div className="mt-6" suppressHydrationWarning>
             <div className="flex items-center justify-between text-xs text-[var(--muted)]">
@@ -762,6 +796,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.systemDesign.subtitle")}</p>
             </div>
+            <PinButton id="system-design" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["API", "Caching", "Sharding", "Kafka", "CAP Theorem"].map((tag) => (
@@ -786,6 +821,7 @@ export function ProgrammingTracks() {
               </h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.backendEngineering.subtitle")}</p>
             </div>
+            <PinButton id="backend-engineering" />
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {["APIs", "Databases", "Caching", "Kafka", "Reliability"].map((tag) => (

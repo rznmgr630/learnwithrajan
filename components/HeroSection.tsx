@@ -35,7 +35,7 @@ export function HeroSection() {
             {t("hero.cta")}
           </Link>
           <Link
-            href="#explore"
+            href="#pinned"
             className="inline-flex items-center justify-center rounded-lg border border-[var(--border)] px-5 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--elevated)]"
           >
             {t("hero.ctaSecondary")}
