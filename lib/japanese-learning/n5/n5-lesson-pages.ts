@@ -1,9 +1,9 @@
 /** Data for the N5 lesson accordion drawer content. */
 
 import { N5_VOCAB_BY_LESSON } from "@/lib/japanese-learning/n5/n5-vocab-data";
+import type { FuriganaString } from "@/lib/japanese-learning/furigana";
 
-/** A string that may contain {kanji|reading} notation for furigana rendering. */
-export type FuriganaString = string;
+export type { FuriganaString };
 
 /** Localized string where only `en` is required; falls back to `en` for missing locales. */
 export type L10n = string | { en: string; np?: string; jp?: string };
