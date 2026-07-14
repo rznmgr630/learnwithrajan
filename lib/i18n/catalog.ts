@@ -698,6 +698,21 @@ export const UI_STRINGS = {
     np: "अभ्यास सुरु गर्नुहोस् →",
     jp: "練習を始める →",
   },
+  "hub.loksewaGK.title": {
+    en: "General Knowledge",
+    np: "सामान्य ज्ञान",
+    jp: "一般常識",
+  },
+  "hub.loksewaGK.subtitle": {
+    en: "GK topics by category — types of doctors, and more",
+    np: "बिषयअनुसार सामान्य ज्ञान — डाक्टरका प्रकार, र थप",
+    jp: "カテゴリ別の一般常識 — 医師の種類など",
+  },
+  "hub.loksewaGK.cta": {
+    en: "Start practicing →",
+    np: "अभ्यास सुरु गर्नुहोस् →",
+    jp: "練習を始める →",
+  },
   "hub.japanese.title": {
     en: "Japanese · JLPT N5",
     np: "जापानी · JLPT N5",
