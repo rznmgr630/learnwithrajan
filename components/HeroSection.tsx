@@ -2,87 +2,49 @@
 
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { pickLocalized } from "@/lib/i18n/pick";
-import { CURRENT_DAY, getAllRoadmapDays, TOTAL_DAYS } from "@/lib/challenge-data";
 
-const allDays = getAllRoadmapDays();
-
-const TOPIC_PILLS = [
+const TOPICS = [
   "Backend", "Frontend", "System Design", "DevOps",
   "Node.js", "Next.js", "React", "JavaScript", "DSA", "Japanese",
 ];
 
 export function HeroSection() {
-  const { locale, t } = useLocale();
-  const pct = Math.round((Math.min(CURRENT_DAY, TOTAL_DAYS) / TOTAL_DAYS) * 100);
-  const todayTitle = allDays.find((d) => d.day === CURRENT_DAY)?.title;
+  const { t } = useLocale();
 
   return (
-    <section className="relative flex flex-1 overflow-hidden border-b border-[var(--border)]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--glow)] blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-16 bottom-4 h-52 w-52 rounded-full bg-[var(--glow)] opacity-40 blur-3xl"
-      />
-      <div className="relative mx-auto flex max-w-5xl flex-1 flex-col px-4 py-16 sm:px-6 sm:py-24">
-        <p className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--elevated)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
+    <section className="border-b border-[var(--border)]">
+      <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-28">
+        <p className="inline-flex w-fit items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--faint)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
           {t("hero.badge")}
         </p>
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl sm:leading-tight">
+
+        <h1 className="mt-6 max-w-2xl text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-6xl sm:leading-[1.1]">
           {t("hero.title")}
         </h1>
+
         <p className="mt-5 max-w-xl text-lg leading-relaxed text-[var(--muted)]">
           {t("hero.body")}
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {TOPIC_PILLS.map((topic) => (
-            <span
-              key={topic}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--muted)]"
-            >
-              {topic}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--faint)]">{t("hero.challengeDay")}</p>
-            <p className="mt-1 font-mono text-3xl font-semibold text-[var(--text)]">
-              {CURRENT_DAY}
-              <span className="text-lg font-normal text-[var(--muted)]">/{TOTAL_DAYS}</span>
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--faint)]">{t("hero.progressSeed")}</p>
-            <p className="mt-1 text-3xl font-semibold text-[var(--text)]">{pct}%</p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--elevated)]">
-              <div
-                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--faint)]">{t("hero.todayTheme")}</p>
-            <p className="mt-2 text-sm font-medium leading-snug text-[var(--text)]">
-              {todayTitle !== undefined ? pickLocalized(todayTitle, locale) : "—"}
-            </p>
-          </div>
-        </div>
-        <div className="mt-auto pt-10">
+        <div className="mt-9 flex flex-wrap items-center gap-3">
           <Link
             href="/learn"
-            className="inline-flex items-center justify-center rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-fg)] shadow-lg shadow-[color-mix(in_oklab,var(--accent)_35%,transparent)] transition hover:brightness-110"
+            className="inline-flex items-center justify-center rounded-lg bg-[var(--text)] px-5 py-2.5 text-sm font-semibold text-[var(--background)] transition hover:brightness-110"
           >
             {t("hero.cta")}
           </Link>
+          <Link
+            href="#explore"
+            className="inline-flex items-center justify-center rounded-lg border border-[var(--border)] px-5 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--elevated)]"
+          >
+            {t("hero.ctaSecondary")}
+          </Link>
         </div>
+
+        <p className="mt-8 max-w-xl text-sm leading-loose text-[var(--faint)]">
+          {TOPICS.join(" · ")}
+        </p>
       </div>
     </section>
   );

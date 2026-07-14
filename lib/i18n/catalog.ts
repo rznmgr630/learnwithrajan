@@ -1058,25 +1058,25 @@ export const UI_STRINGS = {
     np: "ब्याकएन्ड, फ्रन्टएन्ड, DevOps र DSA का प्रोग्रामिङ ट्र्याक — साथमा JLPT जापानी। आफ्नो गतिमा अनुसरण गर्नुहोस्।",
     jp: "バックエンド・フロントエンド・DevOps・DSAのプログラミングトラックと JLPT 日本語コース。自分のペースで進められます。",
   },
-  "hero.challengeDay": {
-    en: "Backend challenge",
-    np: "ब्याकएन्ड चुनौती",
-    jp: "バックエンドチャレンジ",
-  },
-  "hero.progressSeed": {
-    en: "Challenge progress",
-    np: "चुनौती प्रगति",
-    jp: "チャレンジ進捗",
-  },
-  "hero.todayTheme": {
-    en: "Current topic",
-    np: "हालको विषय",
-    jp: "現在のトピック",
-  },
   "hero.cta": {
     en: "Explore all tracks",
     np: "सबै ट्र्याक हेर्नुहोस्",
     jp: "すべてのトラックを見る",
+  },
+  "hero.ctaSecondary": {
+    en: "See categories",
+    np: "श्रेणीहरू हेर्नुहोस्",
+    jp: "カテゴリーを見る",
+  },
+  "home.exploreTitle": {
+    en: "Explore what's here",
+    np: "यहाँ के छ, हेर्नुहोस्",
+    jp: "コンテンツを見る",
+  },
+  "home.exploreSubtitle": {
+    en: "Five tracks, one habit — pick a lane and keep the streak going.",
+    np: "पाँच ट्र्याक, एउटै बानी — एउटा छान्नुहोस् र सिलसिला जारी राख्नुहोस्।",
+    jp: "5つのトラック、1つの習慣。ひとつ選んで継続しましょう。",
   },
   "japaneseDay.trackLabel": {
     en: "JLPT N5 · Minna no Nihongo I track",
