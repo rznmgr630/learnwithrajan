@@ -1064,19 +1064,44 @@ export const UI_STRINGS = {
     jp: "すべてのトラックを見る",
   },
   "hero.ctaSecondary": {
-    en: "See categories",
-    np: "श्रेणीहरू हेर्नुहोस्",
-    jp: "カテゴリーを見る",
+    en: "See pinned",
+    np: "पिन गरिएका हेर्नुहोस्",
+    jp: "ピン留めを見る",
   },
-  "home.exploreTitle": {
-    en: "Explore what's here",
-    np: "यहाँ के छ, हेर्नुहोस्",
-    jp: "コンテンツを見る",
+  "home.pinnedTitle": {
+    en: "Pinned",
+    np: "पिन गरिएका",
+    jp: "ピン留め",
   },
-  "home.exploreSubtitle": {
-    en: "Five tracks, one habit — pick a lane and keep the streak going.",
-    np: "पाँच ट्र्याक, एउटै बानी — एउटा छान्नुहोस् र सिलसिला जारी राख्नुहोस्।",
-    jp: "5つのトラック、1つの習慣。ひとつ選んで継続しましょう。",
+  "home.pinnedSubtitle": {
+    en: "What you're actively learning, one tap away.",
+    np: "तपाईं अहिले सिकिरहनुभएको कुरा, एक क्लिकमा।",
+    jp: "今学んでいることに、ワンタップでアクセス。",
+  },
+  "home.pinnedEmptyTitle": {
+    en: "Nothing pinned yet",
+    np: "अहिलेसम्म केही पिन गरिएको छैन",
+    jp: "まだピン留めがありません",
+  },
+  "home.pinnedEmptyBody": {
+    en: "Open any track and tap the pin icon — it'll show up here so you can jump back in fast.",
+    np: "कुनै पनि ट्र्याक खोल्नुहोस् र पिन आइकनमा थिच्नुहोस् — यो यहाँ देखिनेछ ताकि तपाईं छिटो फर्कन सक्नुहुन्छ।",
+    jp: "好きなトラックを開いてピンアイコンをタップすると、ここに表示されすぐ再開できます。",
+  },
+  "home.pinnedEmptyCta": {
+    en: "Browse tracks",
+    np: "ट्र्याकहरू हेर्नुहोस्",
+    jp: "トラックを見る",
+  },
+  "pin.add": {
+    en: "Pin this track",
+    np: "यो ट्र्याक पिन गर्नुहोस्",
+    jp: "このトラックをピン留め",
+  },
+  "pin.remove": {
+    en: "Unpin this track",
+    np: "पिन हटाउनुहोस्",
+    jp: "ピン留めを解除",
   },
   "japaneseDay.trackLabel": {
     en: "JLPT N5 · Minna no Nihongo I track",

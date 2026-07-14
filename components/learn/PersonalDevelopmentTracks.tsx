@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { PinButton } from "@/components/learn/PinButton";
 
 const subCardClass =
   "group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]";
@@ -24,13 +25,16 @@ export function PersonalDevelopmentTracks() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link href="/learn/focus-goals" className={subCardClass}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
-                  Staying Focused on Goals
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
-                  10 videos — how to stay locked in on what matters
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                    Staying Focused on Goals
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                    10 videos — how to stay locked in on what matters
+                  </p>
+                </div>
+                <PinButton id="focus-goals" />
               </div>
               <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
                 Watch →
@@ -38,13 +42,16 @@ export function PersonalDevelopmentTracks() {
             </Link>
 
             <Link href="/learn/discipline" className={subCardClass}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
-                  Unbreakable Discipline
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
-                  7 videos — Goggins, Jocko, Stoicism, and deep work
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                    Unbreakable Discipline
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                    7 videos — Goggins, Jocko, Stoicism, and deep work
+                  </p>
+                </div>
+                <PinButton id="discipline" />
               </div>
               <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
                 Watch →
@@ -52,13 +59,16 @@ export function PersonalDevelopmentTracks() {
             </Link>
 
             <Link href="/learn/focus-music" className={subCardClass}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
-                  Focus &amp; Learn Music
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
-                  10 videos — lofi, deep focus, ambient and Indian ragas for flow state
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                    Focus &amp; Learn Music
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                    10 videos — lofi, deep focus, ambient and Indian ragas for flow state
+                  </p>
+                </div>
+                <PinButton id="focus-music" />
               </div>
               <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
                 Listen →
@@ -66,13 +76,16 @@ export function PersonalDevelopmentTracks() {
             </Link>
 
             <Link href="/learn/exercise" className={subCardClass}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
-                  Exercise
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
-                  5 videos — quick bodyweight routines to stay strong and consistent
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                    Exercise
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                    5 videos — quick bodyweight routines to stay strong and consistent
+                  </p>
+                </div>
+                <PinButton id="exercise" />
               </div>
               <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
                 Watch →
