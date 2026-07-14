@@ -5,6 +5,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDetailBlockRenderer } from "@/components/learn/JapaneseDetailBlockRenderer";
 import { VocabRevealTable } from "@/components/learn/VocabRevealTable";
 import { McqExerciseBlock } from "@/components/learn/McqExerciseBlock";
+import { FuriganaText } from "@/components/learn/FuriganaText";
 import type {
   ConversationLine,
   FuriganaString,
@@ -21,28 +22,6 @@ import type { Locale } from "@/lib/i18n/types";
 function l(v: L10n, locale: Locale): string {
   if (typeof v === "string") return v;
   return (v as Record<string, string | undefined>)[locale] ?? v.en;
-}
-
-// ─── Furigana ────────────────────────────────────────────────────────────────
-
-function FuriganaText({ text }: { text: FuriganaString }) {
-  const parts = text.split(/(\{[^|{}]+\|[^|{}]+\})/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        const m = part.match(/^\{([^|]+)\|([^}]+)\}$/);
-        if (m) {
-          return (
-            <ruby key={i}>
-              {m[1]}
-              <rt className="text-[10px] leading-none text-[var(--muted)]">{m[2]}</rt>
-            </ruby>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </>
-  );
 }
 
 // ─── Accordion ───────────────────────────────────────────────────────────────

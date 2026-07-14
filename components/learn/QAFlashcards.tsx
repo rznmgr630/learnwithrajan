@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { QAFlashcardItem } from "@/lib/qa-flashcards-types";
 import { EyeIcon, ShuffleIcon } from "@/components/learn/reveal-icons";
+import { FuriganaText } from "@/components/learn/FuriganaText";
 
 function shuffleArray<T>(items: T[]): T[] {
   const arr = [...items];
@@ -31,7 +32,9 @@ function QuestionCard({
           {displayNumber}
         </span>
         <div>
-          <p className="text-sm text-[var(--text)]">{qa.questionEn}</p>
+          <p className="text-sm text-[var(--text)]">
+            <FuriganaText text={qa.questionEn} />
+          </p>
           <p className="mt-0.5 text-sm text-[var(--muted)]">{qa.questionNe}</p>
         </div>
       </div>
@@ -43,7 +46,9 @@ function QuestionCard({
       >
         {revealed ? (
           <span className="flex flex-col">
-            <span className="text-sm font-medium text-[var(--text)]">{qa.answerEn}</span>
+            <span className="text-sm font-medium text-[var(--text)]">
+              <FuriganaText text={qa.answerEn} />
+            </span>
             <span className="text-sm text-[var(--muted)]">{qa.answerNe}</span>
           </span>
         ) : (
