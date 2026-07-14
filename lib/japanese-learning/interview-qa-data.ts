@@ -1,0 +1,111 @@
+import type { QAFlashcardItem } from "@/lib/qa-flashcards-types";
+
+export const JAPANESE_INTERVIEW_QA: QAFlashcardItem[] = [
+  {
+    id: 1,
+    questionEn: "自己紹介をお願いします。(Jiko shōkai o onegai shimasu.)",
+    questionNe: "कृपया आफ्नो परिचय दिनुहोस्।",
+    answerEn: "はじめまして。私の名前は◯◯です。ネパールから来ました。よろしくお願いします。",
+    answerNe: "नमस्ते, मेरो नाम ◯◯ हो। म नेपालबाट आएको हुँ। तपाईंलाई भेट्न पाउँदा खुसी लाग्यो।",
+  },
+  {
+    id: 2,
+    questionEn: "生年月日はいつですか。(Seinengappi wa itsu desu ka.)",
+    questionNe: "तपाईंको जन्ममिति कहिले हो?",
+    answerEn: "◯年◯月◯日です。",
+    answerNe: "◯ साल ◯ महिना ◯ गते हो।",
+  },
+  {
+    id: 3,
+    questionEn: "誕生日はいつですか。(Tanjōbi wa itsu desu ka.)",
+    questionNe: "तपाईंको जन्मदिन कहिले हो?",
+    answerEn: "◯月◯日です。(उदाहरण: 7月17日です。)",
+    answerNe: "◯ महिना ◯ गते हो।",
+  },
+  {
+    id: 4,
+    questionEn: "何歳ですか。（おいくつですか。）(Nansai desu ka. / Oikutsu desu ka.)",
+    questionNe: "तपाईं कति वर्षको हुनुभयो?",
+    answerEn: "私は◯◯歳です。",
+    answerNe: "म ◯◯ वर्षको हुँ।",
+  },
+  {
+    id: 5,
+    questionEn: "ご家族は何人ですか。(Go-kazoku wa nannin desu ka.)",
+    questionNe: "तपाईंको परिवारमा कति जना छन्?",
+    answerEn: "家族は◯人です。",
+    answerNe: "परिवारमा ◯ जना छन्।",
+  },
+  {
+    id: 6,
+    questionEn: "家族に誰がいますか。（誰と住んでいますか。）(Kazoku ni dare ga imasu ka.)",
+    questionNe: "परिवारमा को-को हुनुहुन्छ? (कोसँग बस्नुहुन्छ?)",
+    answerEn: "父と母と兄と…がいます。",
+    answerNe: "बुबा, आमा, दाजु … हुनुहुन्छ।",
+  },
+  {
+    id: 7,
+    questionEn: "結婚していますか。(Kekkon shite imasu ka.)",
+    questionNe: "तपाईंको विवाह भएको छ?",
+    answerEn: "はい、結婚しています。／ いいえ、独身です。",
+    answerNe: "हो, विवाह भएको छ। / छैन, म अविवाहित हुँ।",
+  },
+  {
+    id: 8,
+    questionEn: "子供は何人いますか。(Kodomo wa nannin imasu ka.)",
+    questionNe: "तपाईंका छोराछोरी कति जना छन्?",
+    answerEn: "◯人います。／ いいえ、いません。",
+    answerNe: "◯ जना छन्। / छैनन्।",
+  },
+  {
+    id: 9,
+    questionEn: "今、何をしていますか。(Ima, nani o shite imasu ka.)",
+    questionNe: "अहिले तपाईं के गर्दै हुनुहुन्छ?",
+    answerEn: "日本語を勉強しています。",
+    answerNe: "म जापानी भाषा पढ्दै छु।",
+  },
+  {
+    id: 10,
+    questionEn: "仕事をしたことがありますか。(Shigoto o shita koto ga arimasu ka.)",
+    questionNe: "तपाईंले काम गर्नुभएको अनुभव छ?",
+    answerEn: "はい、あります。／ いいえ、ありません。",
+    answerNe: "छ। / छैन।",
+  },
+  {
+    id: 11,
+    questionEn: "日本語は難しいですか。(Nihongo wa muzukashii desu ka.)",
+    questionNe: "जापानी भाषा सिक्न गाह्रो छ?",
+    answerEn: "少し難しいですが、面白いです。",
+    answerNe: "अलिकति गाह्रो छ, तर रमाइलो छ।",
+  },
+  {
+    id: 12,
+    questionEn: "お父さんの名前は何ですか。(Otōsan no namae wa nan desu ka.)",
+    questionNe: "तपाईंको बुबाको नाम के हो?",
+    answerEn: "父の名前は◯◯です。",
+    answerNe: "मेरो बुबाको नाम ◯◯ हो।",
+  },
+  {
+    id: 13,
+    questionEn: "弟（妹）の名前は何ですか。(Otōto/Imōto no namae wa nan desu ka.)",
+    questionNe: "तपाईंको भाइ/बहिनीको नाम के हो?",
+    answerEn: "弟の名前は◯◯です。",
+    answerNe: "मेरो भाइको नाम ◯◯ हो।",
+  },
+  {
+    id: 14,
+    questionEn: "あなたは大学を卒業しましたか。(Anata wa daigaku o sotsugyō shimashita ka.)",
+    questionNe: "तपाईंले ब्याचलर (कलेज) सक्नुभयो?",
+    answerEn: "はい、卒業しました。／ いいえ、まだです。",
+    answerNe: "हो, सकें। / अझै सकेको छैन।",
+  },
+  {
+    id: 15,
+    questionEn: "なぜ日本へ行きたいですか。(Naze Nihon e ikitai desu ka.)",
+    questionNe: "तपाईं किन जापान जान चाहनुहुन्छ?",
+    answerEn: "日本で勉強して、技術を学びたいからです。",
+    answerNe: "जापानमा पढेर सीप सिक्न चाहन्छु त्यसैले।",
+  },
+];
+
+export const JAPANESE_INTERVIEW_QA_COUNT = JAPANESE_INTERVIEW_QA.length;
