@@ -18,6 +18,16 @@ export function LoksewaTracks() {
           {t("hub.loksewaGeography.cta")}
         </span>
       </Link>
+
+      <Link href="/learn/loksewa/gk" className={learnHubCardClass}>
+        <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+          {t("hub.loksewaGK.title")}
+        </h3>
+        <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.loksewaGK.subtitle")}</p>
+        <span className="mt-6 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+          {t("hub.loksewaGK.cta")}
+        </span>
+      </Link>
     </div>
   );
 }
