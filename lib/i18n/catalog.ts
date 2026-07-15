@@ -713,6 +713,21 @@ export const UI_STRINGS = {
     np: "अभ्यास सुरु गर्नुहोस् →",
     jp: "練習を始める →",
   },
+  "hub.loksewaITOfficer.title": {
+    en: "Master IT Officer Syllabus",
+    np: "मास्टर आइटी अधिकृत पाठ्यक्रम",
+    jp: "マスターITオフィサー・シラバス",
+  },
+  "hub.loksewaITOfficer.subtitle": {
+    en: "Full syllabus by chapter — computers, and more",
+    np: "अध्यायअनुसार पूरा पाठ्यक्रम — कम्प्युटर, र थप",
+    jp: "章別の全シラバス — コンピュータなど",
+  },
+  "hub.loksewaITOfficer.cta": {
+    en: "Start learning →",
+    np: "सिक्न सुरु गर्नुहोस् →",
+    jp: "学習を始める →",
+  },
   "hub.japanese.title": {
     en: "Japanese · JLPT N5",
     np: "जापानी · JLPT N5",
