@@ -31,6 +31,7 @@ export const PINNABLE_TRACKS: PinnableTrackMeta[] = [
   { id: "japanese-n3", href: "/learn/japanese-n3", titleKey: "hub.japaneseN3.title", groupKey: "hub.sectionLanguage" },
   { id: "loksewa-geography", href: "/learn/loksewa/geography", titleKey: "hub.loksewaGeography.title", groupKey: "hub.sectionLoksewa" },
   { id: "loksewa-gk", href: "/learn/loksewa/gk", titleKey: "hub.loksewaGK.title", groupKey: "hub.sectionLoksewa" },
+  { id: "loksewa-it-officer", href: "/learn/loksewa/it-officer", titleKey: "hub.loksewaITOfficer.title", groupKey: "hub.sectionLoksewa" },
   { id: "focus-goals", href: "/learn/focus-goals", title: "Staying Focused on Goals", groupKey: "hub.sectionPersonalDev" },
   { id: "discipline", href: "/learn/discipline", title: "Unbreakable Discipline", groupKey: "hub.sectionPersonalDev" },
   { id: "focus-music", href: "/learn/focus-music", title: "Focus & Learn Music", groupKey: "hub.sectionPersonalDev" },
