@@ -1,125 +1,262 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { IT_OFFICER_SYLLABUS } from "@/lib/loksewa-learning/it-officer-syllabus-data";
+import {
+  IT_OFFICER_CONCEPTS,
+  IT_OFFICER_CONCEPT_COUNT,
+  IT_OFFICER_SECTIONS,
+  type ITOfficerConcept,
+} from "@/lib/loksewa-learning/it-officer-syllabus-data";
 
-const TOTAL_CHAPTERS = IT_OFFICER_SYLLABUS.length;
+function renderLine(text: string) {
+  const parts = text.split(/(<b>[^<]+<\/b>|`[^`]+`)/g);
+  if (parts.length === 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("<b>") && part.endsWith("</b>"))
+          return <strong key={i} className="font-semibold text-[var(--text)]">{part.slice(3, -4)}</strong>;
+        if (part.startsWith("`") && part.endsWith("`"))
+          return <code key={i} className="rounded bg-[var(--elevated)] px-1.5 py-0.5 font-mono text-xs text-[var(--accent)]">{part.slice(1, -1)}</code>;
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
 
-export function LoksewaITOfficerPage() {
-  const [openChapters, setOpenChapters] = useState<Set<number>>(new Set([1]));
-
-  function toggle(id: number) {
-    setOpenChapters((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
+function renderParagraph(text: string, i: number) {
+  const lines = text.split("\n");
+  const elements = lines.map((line, j) => {
+    if (/^\s*↳/.test(line)) {
+      const content = line.replace(/^\s*↳\s*/, "");
+      return (
+        <div key={j} className="flex items-start gap-2 pl-5">
+          <span className="mt-0.5 shrink-0 text-xs text-[var(--accent)]/50">↳</span>
+          <span className="text-sm leading-relaxed text-[var(--muted)]">{renderLine(content)}</span>
+        </div>
+      );
+    }
+    if (line.startsWith("• ")) {
+      return (
+        <div key={j} className="flex items-start gap-2.5">
+          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/50" />
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderLine(line.slice(2))}</span>
+        </div>
+      );
+    }
+    if (!line.trim()) return null;
+    return (
+      <p key={j} className="text-sm leading-relaxed text-[var(--text)]">
+        {renderLine(line)}
+      </p>
+    );
+  });
 
   return (
-    <div>
-      <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4 sm:px-6">
-          <LearnBackNav href="/learn/loksewa" labelKey="learn.backLoksewa" />
+    <div key={i} className="space-y-1.5">
+      {elements}
+    </div>
+  );
+}
+
+function SectionLabel({ label, color = "accent" }: { label: string; color?: "accent" | "blue" }) {
+  const dotColor = color === "blue" ? "bg-blue-400" : "bg-[var(--accent)]";
+  const textColor = color === "blue" ? "text-blue-400" : "text-[var(--accent)]";
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+      <h3 className={`text-xs font-semibold uppercase tracking-widest ${textColor}`}>{label}</h3>
+    </div>
+  );
+}
+
+function ConceptDrawer({ concept, index, onClose }: { concept: ITOfficerConcept | null; index: number; onClose: () => void }) {
+  useEffect(() => {
+    if (!concept) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [concept]);
+
+  if (!concept) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <aside className="relative flex h-full w-full max-w-2xl flex-col bg-[var(--background)] shadow-2xl">
+        <div className="h-[3px] w-full shrink-0 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)]/50 to-transparent" />
+
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] px-6 py-5">
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">
+                {concept.section}
+              </span>
+              <span className="text-[10px] text-[var(--faint)]">#{index}</span>
+            </div>
+            <h2 className="text-2xl font-bold leading-snug text-[var(--text)]">{concept.title}</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">{concept.tagline}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+            aria-label="Close"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto overscroll-y-contain px-6 py-6 flex flex-col gap-7">
+          <div className="flex flex-wrap gap-1.5">
+            {concept.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          <section>
+            <SectionLabel label="Explanation" color="accent" />
+            <div className="space-y-2.5">
+              {concept.description.split("\n\n").map((para, i) => renderParagraph(para, i))}
+            </div>
+          </section>
+
+          {concept.note && (
+            <section className="rounded-xl border border-blue-500/20 border-l-4 border-l-blue-500/60 bg-blue-500/5 p-4">
+              <SectionLabel label="Key Takeaway" color="blue" />
+              <div className="space-y-2.5">
+                {concept.note.split("\n\n").map((para, i) => renderParagraph(para, i))}
+              </div>
+            </section>
+          )}
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function ConceptCard({ concept, index, onClick }: { concept: ITOfficerConcept; index: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex cursor-pointer items-start gap-4 rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] p-4 text-left shadow-sm transition hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:bg-[var(--elevated)]"
+    >
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/10 font-mono text-xs font-bold text-[var(--accent)]">
+        {index}
+      </span>
+      <div className="min-w-0">
+        <p className="font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition">
+          {concept.title}
+        </p>
+        <p className="mt-0.5 text-sm text-[var(--muted)]">{concept.tagline}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {concept.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--faint)]"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
       </div>
+      <svg
+        className="ml-auto mt-1 h-4 w-4 shrink-0 text-[var(--faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent)]"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+      </svg>
+    </button>
+  );
+}
 
-      <div className="relative overflow-hidden border-b border-[var(--border)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[var(--glow)] blur-3xl"
-        />
-        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--elevated)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Loksewa · Master IT Officer
-          </span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
-            Master IT Officer Syllabus
-          </h1>
-          <p className="mt-2 max-w-lg text-[var(--muted)]">
-            Full syllabus broken into chapters — expand a chapter to see its topics.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2">
-              <span className="font-mono text-xl font-bold text-[var(--accent)]">{TOTAL_CHAPTERS}</span>
-              <span className="text-sm text-[var(--muted)]">chapters</span>
+const orderedConcepts = IT_OFFICER_SECTIONS.flatMap(
+  (section) => IT_OFFICER_CONCEPTS.filter((c) => c.section === section)
+);
+const positionOf = new Map(orderedConcepts.map((c, i) => [c.id, i + 1]));
+
+export function LoksewaITOfficerPage() {
+  const [active, setActive] = useState<ITOfficerConcept | null>(null);
+
+  return (
+    <>
+      <div className="min-h-screen">
+        <div className="sticky top-0 z-10 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_80%,transparent)] backdrop-blur-md">
+          <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3 sm:px-6">
+            <LearnBackNav href="/learn/loksewa" labelKey="learn.backLoksewa" />
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl px-4 pb-20 pt-12 sm:px-6">
+          <div className="relative mb-10">
+            <div className="absolute -inset-x-4 -top-4 h-48 bg-gradient-to-b from-[var(--accent)]/5 to-transparent" />
+            <div className="relative">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/8 px-3 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_6px_var(--accent)]" />
+                <span className="text-xs font-medium text-[var(--accent)]">Loksewa Exam Prep</span>
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--text)] sm:text-5xl">
+                Master IT Officer
+                <br />
+                <span className="text-[var(--accent)]">Syllabus</span>
+              </h1>
+              <p className="mt-4 max-w-xl text-[var(--muted)]">
+                The {IT_OFFICER_CONCEPT_COUNT} core topics of the IT Officer syllabus, organized by chapter — with
+                full explanations and exam-focused key takeaways.
+              </p>
             </div>
+          </div>
+
+          <div className="mb-10 flex flex-wrap gap-4">
+            {[
+              { label: "Topics", value: `${IT_OFFICER_CONCEPT_COUNT}` },
+              { label: "Chapters", value: `${IT_OFFICER_SECTIONS.length}` },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-5 py-3">
+                <p className="font-mono text-xl font-bold text-[var(--accent)]">{s.value}</p>
+                <p className="text-xs text-[var(--muted)]">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-8">
+            {IT_OFFICER_SECTIONS.map((section) => {
+              const sectionConcepts = IT_OFFICER_CONCEPTS.filter((c) => c.section === section);
+              if (sectionConcepts.length === 0) return null;
+              return (
+                <div key={section}>
+                  <div className="mb-3 flex items-center gap-3">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">{section}</h2>
+                    <div className="flex-1 border-t border-[var(--border)]" />
+                    <span className="text-[10px] text-[var(--faint)]">{sectionConcepts.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {sectionConcepts.map((concept) => (
+                      <ConceptCard key={concept.id} concept={concept} index={positionOf.get(concept.id)!} onClick={() => setActive(concept)} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <div className="flex flex-col gap-3">
-          {IT_OFFICER_SYLLABUS.map((chapter) => {
-            const isOpen = openChapters.has(chapter.id);
-            return (
-              <div
-                key={chapter.id}
-                className={`overflow-hidden rounded-2xl border transition-colors ${
-                  isOpen
-                    ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)]"
-                    : "border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)]"
-                }`}
-              >
-                <button
-                  onClick={() => toggle(chapter.id)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
-                >
-                  <span className="text-sm font-medium text-[var(--text)]">{chapter.title}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">
-                      {chapter.sections.length} sections
-                    </span>
-                    <svg
-                      className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </button>
-
-                {isOpen && (
-                  <div className="flex flex-col gap-5 border-t border-[var(--border)] px-5 py-4">
-                    {chapter.sections.map((section) => (
-                      <div key={section.title}>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
-                          {section.title}
-                        </h4>
-                        <ul className="mt-2 flex flex-col gap-1.5">
-                          {section.points.map((point) => (
-                            <li key={point.title}>
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-[var(--faint)]">•</span>
-                                <span className="text-sm text-[var(--text)]">{point.title}</span>
-                              </div>
-                              {point.subPoints && (
-                                <ul className="mt-1 flex flex-col gap-1 pl-5">
-                                  {point.subPoints.map((sub) => (
-                                    <li key={sub} className="flex items-baseline gap-2">
-                                      <span className="text-xs text-[var(--faint)]">↳</span>
-                                      <span className="text-sm text-[var(--muted)]">{sub}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+      <ConceptDrawer concept={active} index={active ? positionOf.get(active.id)! : 0} onClose={() => setActive(null)} />
+    </>
   );
 }
