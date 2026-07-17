@@ -728,6 +728,21 @@ export const UI_STRINGS = {
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
   },
+  "hub.loksewaProducts.title": {
+    en: "Products of Nepal",
+    np: "नेपालका प्रसिद्ध उत्पादनहरू",
+    jp: "ネパールの名産品",
+  },
+  "hub.loksewaProducts.subtitle": {
+    en: "Places famous for various products — Q&A for Loksewa prep",
+    np: "विभिन्न उत्पादनका लागि प्रसिद्ध स्थानहरू — लोकसेवा तयारीका लागि प्रश्नोत्तर",
+    jp: "様々な名産品で有名な場所 — ロークセワ対策の一問一答",
+  },
+  "hub.loksewaProducts.cta": {
+    en: "Start practicing →",
+    np: "अभ्यास सुरु गर्नुहोस् →",
+    jp: "練習を始める →",
+  },
   "hub.japanese.title": {
     en: "Japanese · JLPT N5",
     np: "जापानी · JLPT N5",
