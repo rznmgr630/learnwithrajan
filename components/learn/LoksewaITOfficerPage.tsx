@@ -142,6 +142,24 @@ function ConceptDrawer({ concept, index, onClose }: { concept: ITOfficerConcept 
               </div>
             </section>
           )}
+
+          {concept.diagram && (
+            <section>
+              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm1.5 5.81v3.69c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-2.69l-2.22-2.219a.75.75 0 0 0-1.06 0l-1.91 1.909-.48-.479a.75.75 0 0 0-1.06 0L6.22 14.53l-.97-.97a.75.75 0 0 0-1.06 0l-1.69 1.69V11.06Zm14.5-5.81A.75.75 0 0 0 16.75 4.5H3.25a.75.75 0 0 0-.75.75V9.25l1.97-1.97a.75.75 0 0 1 1.06 0l.98.98 1.909-1.91a.75.75 0 0 1 1.06 0l2.219 2.22 1.47-1.47a.75.75 0 0 1 1.061 0L17 8.939V5.25Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Flow Diagram
+              </h3>
+              <pre className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] p-4 font-mono text-xs leading-relaxed text-[var(--text)] overflow-x-auto whitespace-pre">
+                {concept.diagram}
+              </pre>
+            </section>
+          )}
         </div>
       </aside>
     </div>
