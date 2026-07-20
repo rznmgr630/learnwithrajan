@@ -1,5 +1,6 @@
 export interface ITOfficerConcept {
   id: number;
+  slug: string;
   section: string;
   title: string;
   tagline: string;
@@ -17,6 +18,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
   {
     id: 1,
+    slug: "introduction-to-computer",
     section: "Computer Fundamentals",
     title: "Introduction to Computer",
     tagline: "What a computer is, and what makes it a computer",
@@ -28,6 +30,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 2,
+    slug: "history-of-computer",
     section: "Computer Fundamentals",
     title: "History of Computer",
     tagline: "From the abacus to the first electronic computer",
@@ -39,6 +42,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 3,
+    slug: "generation-of-computer",
     section: "Computer Fundamentals",
     title: "Generation of Computer",
     tagline: "Five generations, five core technologies",
@@ -50,6 +54,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 4,
+    slug: "types-of-computer",
     section: "Computer Fundamentals",
     title: "Types of Computer",
     tagline: "Analog, digital, and hybrid — classified by the data they process",
@@ -61,6 +66,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 5,
+    slug: "classification-of-computer",
     section: "Computer Fundamentals",
     title: "Classification of Computer",
     tagline: "By size, purpose, performance, and data handling",
@@ -75,6 +81,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
   {
     id: 6,
+    slug: "cpu",
     section: "Computer Architecture",
     title: "CPU (Central Processing Unit)",
     tagline: "The brain of the computer — ALU, Control Unit, and registers working together",
@@ -86,6 +93,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 7,
+    slug: "instruction-cycle",
     section: "Computer Architecture",
     title: "Instruction Cycle (Fetch → Decode → Execute → Store)",
     tagline: "The repeating four-step loop the CPU uses to run every single instruction",
@@ -99,6 +107,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   },
   {
     id: 8,
+    slug: "cpu-performance",
     section: "Computer Architecture",
     title: "CPU Performance",
     tagline: "Clock speed, CPI, and MIPS — how CPU speed is actually measured",
