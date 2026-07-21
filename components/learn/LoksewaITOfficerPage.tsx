@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { CourseSidebar, type CourseSidebarSection } from "@/components/learn/CourseSidebar";
+import { CodeBlock } from "@/components/learn/CodeBlock";
 import {
   IT_OFFICER_CONCEPTS,
   IT_OFFICER_CONCEPT_COUNT,
@@ -145,6 +146,22 @@ function ConceptDetail({ concept, index }: { concept: ITOfficerConcept; index: n
               <pre className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)] p-4 font-mono text-xs leading-relaxed text-[var(--text)] overflow-x-auto whitespace-pre">
                 {concept.diagram}
               </pre>
+            </section>
+          )}
+
+          {concept.code && (
+            <section>
+              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M12.79 5.23a.75.75 0 0 1 1.06 0l4 4a.75.75 0 0 1 0 1.06l-4 4a.75.75 0 1 1-1.06-1.06L16.13 10l-3.34-3.34a.75.75 0 0 1 0-1.06Zm-5.58 0a.75.75 0 0 1 0 1.06L3.87 10l3.34 3.34a.75.75 0 0 1-1.06 1.06l-4-4a.75.75 0 0 1 0-1.06l4-4a.75.75 0 0 1 1.06 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Code Example
+              </h3>
+              <CodeBlock code={concept.code} language={concept.codeLanguage} />
             </section>
           )}
         </div>
