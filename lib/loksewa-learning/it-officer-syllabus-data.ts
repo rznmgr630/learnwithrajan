@@ -14,7 +14,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -788,6 +788,118 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     diagram:
       "  3-BIT BINARY COUNTER SEQUENCE\n\n  Count:  000 → 001 → 010 → 011 → 100 → 101 → 110 → 111 → 000 (repeats)\n\n  ASYNCHRONOUS (RIPPLE) COUNTER\n  Clock ─►[FF0]─►[FF1]─►[FF2]\n           each flip-flop triggers the next — changes ripple through\n\n  SYNCHRONOUS COUNTER\n  Clock ─┬─►[FF0]\n         ├─►[FF1]\n         └─►[FF2]\n           all flip-flops share the same clock — change together",
     tags: ["Counters", "Asynchronous Counter", "Synchronous Counter", "Ripple Counter", "Digital Circuits", "Flip-Flops"],
+  },
+  // ─────────────────────────────────────────────
+  // PROGRAMMING
+  // ─────────────────────────────────────────────
+  {
+    id: 55,
+    slug: "c-programming",
+    section: "Programming",
+    title: "C Programming",
+    tagline: "A foundational, low-level programming language still taught as the basis for how computers really execute code",
+    description:
+      "<b>What C Is</b>\nC is a general-purpose programming language created by Dennis Ritchie at Bell Labs in 1972. It's considered a \"low-level\" high-level language — it lets a programmer write readable code (unlike raw machine language or assembly), while still staying close to how the computer's hardware actually works, including direct memory access through pointers.\n\n<b>Why C Is Still Taught</b>\nMany modern languages (C++, Java, C#, JavaScript, Python) borrow their basic syntax — curly braces, semicolons, if/for/while loops — directly from C. Learning C first builds a mental model of how a program actually works underneath (memory, compilation, execution) that these newer, more abstracted languages otherwise hide from a beginner.\n\n<b>What You'll Learn Here</b>\n• <b>Basics</b> — the structure of a C program, how it turns into a running executable, and the fundamental building blocks (variables, data types, constants, and keywords) every C program is written from\n  ↳ Each of these building blocks is covered in its own card next.",
+    note:
+      "C is often called \"the mother of all languages\" for good reason — most languages used in exams and in industry today borrow C's syntax directly, so understanding C's basics carries over almost immediately.",
+    tags: ["C Programming", "Programming", "Dennis Ritchie", "Low-Level Language"],
+  },
+  {
+    id: 56,
+    slug: "c-basics",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Basics",
+    tagline: "The structure, compilation process, and fundamental building blocks of a C program",
+    description:
+      "<b>What This Covers</b>\nBefore writing any real logic, every C programmer needs to know how a C program is laid out, how that written code actually turns into a running program, and the basic vocabulary (variables, data types, constants, keywords) every single line of C code is built from.\n\n<b>What You'll Learn Here</b>\n• <b>Structure of C Program</b> — the standard sections every C source file is organized into\n• <b>Compilation Process</b> — the steps that turn human-readable C code into a machine-executable program\n• <b>Variables</b> — named storage locations that hold data a program can use and change\n• <b>Data Types</b> — the different kinds of values a variable can hold, and how much memory each takes\n• <b>Constants</b> — fixed values that don't change while a program runs\n• <b>Keywords</b> — the reserved words built into the C language itself, which can't be used as variable names\n  ↳ These build on each other in order: first how a program is structured and compiled, then the core vocabulary used to write the actual code inside it.",
+    note:
+      "Read these in order: Structure and Compilation Process explain how a C program comes together as a whole; Variables, Data Types, Constants, and Keywords are the actual vocabulary used inside that structure.",
+    tags: ["C Basics", "C Programming", "Structure", "Compilation", "Variables", "Data Types"],
+  },
+  {
+    id: 57,
+    slug: "structure-of-c-program",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Structure of C Program",
+    tagline: "The standard sections every C source file is organized into",
+    description:
+      "<b>The Standard Sections</b>\nEvery C program, no matter how big or small, is generally organized into the same sections, in the same order:\n• <b>Documentation section</b> — comments at the very top (using // or /* */) describing what the program does; ignored entirely by the compiler, purely for humans reading the code.\n• <b>Preprocessor directives</b> — lines starting with #, most commonly #include, which pulls in code from library files (like stdio.h for input/output functions) before compilation actually begins.\n• <b>Global declarations</b> — variables and function prototypes declared outside of any function, visible to every function in the file.\n• <b>main() function</b> — every C program must have exactly one main() function; this is where the program actually starts running, and where execution begins the moment the program is launched.\n• <b>User-defined functions</b> — additional functions the programmer writes, called from main() or from each other, to organize the program's logic into reusable pieces.\n\n<b>A Minimal C Program</b>\n#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\");\n    return 0;\n}\n\n<b>Reading the Minimal Example</b>\n• #include <stdio.h> — a preprocessor directive that pulls in the Standard Input/Output library, giving access to printf().\n• int main() — declares the main function; int means main() returns a whole number back to the operating system when it finishes.\n• printf(\"Hello, World!\") — calls a library function to print text to the screen.\n• return 0 — ends main(), returning 0 to signal the program finished successfully (a non-zero return value conventionally signals an error occurred).",
+    note:
+      "Every valid C program must have exactly one main() function — it's the fixed starting point execution always begins from, no matter how many other functions the file also contains.",
+    diagram:
+      "  STRUCTURE OF A C PROGRAM\n\n  ┌───────────────────────────────┐\n  │ Documentation (comments)      │  ignored by the compiler\n  ├───────────────────────────────┤\n  │ Preprocessor directives       │  #include <stdio.h>\n  ├───────────────────────────────┤\n  │ Global declarations            │  variables/prototypes\n  ├───────────────────────────────┤\n  │ int main() { ... }             │  execution starts here\n  ├───────────────────────────────┤\n  │ User-defined functions         │  called from main()\n  └───────────────────────────────┘",
+    tags: ["Structure of C Program", "main() function", "Preprocessor Directives", "C Basics"],
+  },
+  {
+    id: 58,
+    slug: "compilation-process",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Compilation Process",
+    tagline: "The steps that turn human-readable C code into a machine-executable program",
+    description:
+      "<b>Why Compilation Is Needed</b>\nA CPU only understands machine language (raw binary instructions) — it cannot run C source code directly. Compilation is the process that translates human-readable C code into a machine-executable program, in several distinct stages.\n\n<b>The Four Stages</b>\n• <b>Preprocessing</b> — the preprocessor handles every line starting with #, such as #include (pasting in library file contents) and #define (replacing macros with their defined value), producing a single expanded source file with no # directives left.\n• <b>Compilation</b> — the compiler translates the preprocessed C code into assembly language, checking for syntax errors along the way; if the code doesn't follow C's grammar rules, compilation stops here with an error.\n• <b>Assembly</b> — an assembler translates the assembly code into object code (machine code specific to the target CPU), producing a .o (or .obj) file — but this file isn't runnable yet, since it may still reference functions defined elsewhere (like printf from the C library).\n• <b>Linking</b> — the linker combines the object code with the actual library code it references (such as the Standard I/O library), and any other object files, producing a single, complete, runnable executable file.\n\n<b>Where Errors Show Up</b>\n• A missing semicolon or misspelled keyword is caught at the <b>compilation</b> stage (a syntax error).\n• A missing function definition the linker can't find anywhere is caught at the <b>linking</b> stage (a linker error, e.g. \"undefined reference\").",
+    note:
+      "The exam-favourite order: Preprocessing → Compilation → Assembly → Linking. A syntax error (like a typo) is caught during Compilation; a missing function/library is caught later, during Linking — these are two different kinds of errors from two different stages.",
+    diagram:
+      "  COMPILATION PROCESS\n\n  source.c\n     │\n     ▼\n  PREPROCESSING   (expands #include, #define)\n     │\n     ▼\n  COMPILATION      (C code → assembly code; syntax errors caught here)\n     │\n     ▼\n  ASSEMBLY         (assembly code → object code, e.g. source.o)\n     │\n     ▼\n  LINKING          (object code + library code → final executable;\n     │              missing function errors caught here)\n     ▼\n  a.out / program.exe  (runnable program)",
+    tags: ["Compilation Process", "Preprocessing", "Linking", "Assembler", "C Basics"],
+  },
+  {
+    id: 59,
+    slug: "c-variables",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Variables",
+    tagline: "Named storage locations that hold data a program can use and change",
+    description:
+      "<b>What a Variable Is</b>\nA variable is a named location in memory that holds a value a program can read and change while it runs. Every variable in C must be declared with a data type before it's used, telling the compiler how much memory to reserve and what kind of value it will hold.\n\n<b>Declaring and Initializing a Variable</b>\nint age;          // declaration — reserves memory, no value yet\nage = 25;          // assignment — stores a value into that memory\nint score = 100;   // declaration + initialization in one line\n\n<b>Rules for Naming a Variable</b>\n• Must start with a letter or an underscore (never a digit).\n• Can contain letters, digits, and underscores after the first character.\n• Cannot be a C keyword (like int or return — covered in the \"Keywords\" card).\n• Is case-sensitive — score and Score are two completely different variables.\n\n<b>Local vs. Global Variables</b>\n• <b>Local variable</b> — declared inside a function, only exists and is only accessible while that function is running.\n• <b>Global variable</b> — declared outside every function, exists for the entire time the program runs, and is accessible from any function in the file.",
+    note:
+      "A variable must always be declared with a type before use in C — unlike some newer languages, C never guesses a variable's type from the value assigned to it.",
+    tags: ["Variables", "Declaration", "Local Variable", "Global Variable", "C Basics"],
+  },
+  {
+    id: 60,
+    slug: "c-data-types",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Data Types",
+    tagline: "The different kinds of values a variable can hold, and how much memory each takes",
+    description:
+      "<b>Why Data Types Matter</b>\nA variable's data type tells the compiler exactly how much memory to set aside for it, and how to interpret the bits stored there — the same sequence of bits means something completely different depending on whether it's read as an integer, a character, or a floating-point number.\n\n<b>The Basic Data Types</b>\n• <b>int</b> — a whole number (no decimal point), typically 4 bytes, e.g. 42, -7\n• <b>float</b> — a single-precision decimal number, typically 4 bytes, e.g. 3.14\n• <b>double</b> — a double-precision decimal number (more accurate than float), typically 8 bytes, e.g. 3.14159265\n• <b>char</b> — a single character, typically 1 byte, e.g. 'A' (stored internally as its ASCII numeric value)\n• <b>void</b> — represents \"no value at all\" — used for a function that returns nothing, or a generic pointer type\n\n<b>Modifiers</b>\nType modifiers adjust the size or range of a basic type:\n• <b>short</b> / <b>long</b> — reduce or increase the number of bytes used (e.g. short int, long int)\n• <b>signed</b> / <b>unsigned</b> — signed allows negative numbers (the default); unsigned uses that same space to represent only non-negative numbers, doubling the largest positive value it can hold\n\n<b>Worked Example</b>\nAn unsigned char uses all 8 bits for the magnitude, giving a range of 0 to 255. A signed char uses 1 bit for the sign, giving a range of -128 to 127 — the same 8 bits, interpreted differently.",
+    note:
+      "Exam favourite: signed vs. unsigned doesn't change how many bits are used — it changes how those bits are interpreted, trading the ability to represent negative numbers for a larger positive range.",
+    diagram:
+      "  COMMON C DATA TYPES\n\n  Type     Typical Size   Example\n  ──────────────────────────────────\n  char        1 byte      'A'\n  int         4 bytes      42\n  float       4 bytes      3.14\n  double      8 bytes      3.14159265\n  void        —            (no value)",
+    tags: ["Data Types", "int", "float", "double", "char", "Signed", "Unsigned", "C Basics"],
+  },
+  {
+    id: 61,
+    slug: "c-constants",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Constants",
+    tagline: "Fixed values that don't change while a program runs",
+    description:
+      "<b>What a Constant Is</b>\nA constant is a value that, once set, cannot be changed while the program runs — unlike a variable, which can be reassigned at any time. Constants are used for values that are meant to stay fixed, such as a mathematical constant or a fixed configuration value.\n\n<b>Two Common Ways to Define a Constant</b>\n• <b>const keyword</b> — const float PI = 3.14; declares a normal, typed variable that the compiler then refuses to let any later code modify.\n• <b>#define preprocessor macro</b> — #define PI 3.14 tells the preprocessor to literally replace every occurrence of PI with 3.14 in the source code, before compilation even begins — it isn't a variable at all, just a text substitution.\n\n<b>Types of Constants (Literal Values)</b>\n• <b>Integer constants</b> — whole numbers, e.g. 10, -5\n• <b>Floating-point constants</b> — decimal numbers, e.g. 3.14\n• <b>Character constants</b> — a single character in single quotes, e.g. 'A'\n• <b>String constants</b> — a sequence of characters in double quotes, e.g. \"Hello\"",
+    note:
+      "const vs. #define: const creates a real, typed variable the compiler protects from being changed; #define is a preprocessor text substitution done before compilation, with no type checking at all.",
+    tags: ["Constants", "const", "#define", "Literals", "C Basics"],
+  },
+  {
+    id: 62,
+    slug: "c-keywords",
+    section: "Programming",
+    parentSlug: "c-basics",
+    title: "Keywords",
+    tagline: "The reserved words built into the C language itself",
+    description:
+      "<b>What a Keyword Is</b>\nA keyword is a word that's reserved by the C language itself, with a fixed, built-in meaning to the compiler — it can never be used as the name of a variable, function, or anything else a programmer defines.\n\n<b>Common C Keywords</b>\n• <b>Data type keywords</b> — int, float, double, char, void\n• <b>Control flow keywords</b> — if, else, switch, case, for, while, do, break, continue\n• <b>Storage/qualifier keywords</b> — const, static, extern, volatile\n• <b>Structure/organization keywords</b> — struct, union, enum, typedef\n• <b>Function-related keywords</b> — return, sizeof\n\n<b>The Rule</b>\nC has exactly 32 keywords in the original C standard (a few more were added in later revisions). None of them can ever be redefined or used as an identifier — trying to write int int; would be a compilation error, since int is reserved.",
+    note:
+      "If a question asks whether a given word can be used as a variable name, check whether it's a C keyword first — a keyword always loses that fight, no matter how convenient a name it would otherwise make.",
+    tags: ["Keywords", "Reserved Words", "C Basics"],
   },
 ];
 
