@@ -152,7 +152,12 @@ function buildSidebarItems(sectionConcepts: ITOfficerConcept[], parentSlug: stri
   return sectionConcepts
     .filter((c) => c.parentSlug === parentSlug)
     .map((c) => {
-      const children = buildSidebarItems(sectionConcepts, c.slug);
+      const ownChildren = buildSidebarItems(sectionConcepts, c.slug);
+      const crossLinked = (c.crossLinkSlugs ?? [])
+        .map((slug) => IT_OFFICER_CONCEPTS.find((x) => x.slug === slug))
+        .filter((x): x is ITOfficerConcept => !!x)
+        .map((x) => ({ id: x.id, label: x.title, href: `${BASE_PATH}/${x.slug}` }));
+      const children = [...ownChildren, ...crossLinked];
       return {
         id: c.id,
         label: c.title,
