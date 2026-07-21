@@ -4,6 +4,8 @@ export interface ITOfficerConcept {
   section: string;
   /** Slug of the parent concept, for nested sidebar sub-menus (e.g. SRAM's parent is "ram"). Omit for top-level items within a section. */
   parentSlug?: string;
+  /** Slugs of other existing concepts to also list as sidebar children here, without duplicating their content or changing their own parentSlug. */
+  crossLinkSlugs?: string[];
   title: string;
   tagline: string;
   description: string;
@@ -300,6 +302,49 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     note:
       "Flash memory's signature detail: erased in blocks, not byte-by-byte like classic EEPROM — that trade-off (less fine-grained control, but much faster and cheaper at scale) is exactly why flash memory took over for USB drives, memory cards, and SSDs.",
     tags: ["Flash Memory", "USB Drive", "Memory Card", "EEPROM", "Non-Volatile", "Secondary Storage"],
+  },
+  {
+    id: 22,
+    slug: "memory-hierarchy",
+    section: "Memory Organization",
+    crossLinkSlugs: ["ram", "secondary-storage"],
+    title: "Memory Hierarchy",
+    tagline: "The pyramid of memory — from tiny, blazing-fast registers to huge, slow secondary storage",
+    description:
+      "<b>What Memory Hierarchy Means</b>\nA computer doesn't rely on just one kind of memory — it uses several different kinds arranged in layers, from the tiniest and fastest right down to the largest and slowest. This layered arrangement is called the memory hierarchy, and it exists because of one unavoidable trade-off: memory that is fast and built close to the CPU is also small in capacity and expensive per byte, while memory that is cheap and can hold huge amounts of data is also much slower to access.\n\n<b>The Four Levels, Fastest to Slowest</b>\n• <b>Registers</b> — tiny storage locations built directly inside the CPU, holding the data currently being worked on right this instant. Fastest of all, but there are only a handful of them, each holding just a few bytes.\n• <b>Cache</b> — a small, very fast memory sitting between the CPU and RAM, holding copies of the data and instructions the CPU is likely to need again very soon. Much bigger than registers, but still small compared to RAM.\n• <b>RAM (Primary Memory)</b> — the computer's main working memory, holding whatever programs and data are currently active. Far larger than cache, but noticeably slower to access.\n• <b>Secondary Storage</b> — permanent, non-volatile storage (HDD, SSD, and similar), holding everything not currently in active use. By far the largest capacity, but also by far the slowest of the four.\n  ↳ As you move down this list: speed goes down, capacity goes up, and cost per byte goes down.\n\n<b>Why Build Memory This Way?</b>\nBuilding an entire computer's memory purely out of the fastest technology (like a register or cache) would be far too expensive and physically impossible at any real scale. Building it entirely out of the cheapest, largest technology (like a hard disk) would make every single CPU operation painfully slow, since the CPU would have to wait for the slowest tier every single time.\n  ↳ Instead, the hierarchy keeps only the small amount of data the CPU needs \"right now\" in the fastest tiers, while everything else waits in progressively larger, slower, cheaper tiers, ready to be pulled up only when actually needed.\n\n<b>Principle of Locality — Why This Actually Works</b>\nThe entire hierarchy depends on one observed pattern in how real programs behave, called the principle of locality:\n• <b>Temporal locality</b> — if a piece of data was used recently, it's likely to be used again soon (e.g. a loop counter used over and over).\n• <b>Spatial locality</b> — if one piece of data was used, data stored near it is also likely to be used soon (e.g. reading through an array in order).\n  ↳ Because of locality, keeping recently-used data in a small, fast cache genuinely does save time most of the time — it's not a lucky guess, it's a predictable pattern in how software runs.",
+    note:
+      "Learn the order top to bottom and what changes as you go down: Registers → Cache → RAM → Secondary Storage. Speed and cost per byte fall as you descend; capacity rises. Everything about caching (and why it works) comes back to the principle of locality — recently used data, and data near it, is likely to be needed again soon.",
+    diagram:
+      "        FASTEST, SMALLEST, MOST EXPENSIVE PER BYTE\n                        ▲\n                  ┌───────────┐\n                  │ REGISTERS │   a few bytes, inside the CPU\n                  ├───────────┤\n                  │   CACHE   │   KBs–MBs, L1/L2/L3\n                  ├───────────┤\n                  │    RAM    │   GBs, main memory\n                  ├───────────┤\n                  │ SECONDARY │   TBs, HDD/SSD/etc.\n                  │  STORAGE  │\n                  └───────────┘\n                        ▼\n        SLOWEST, LARGEST, CHEAPEST PER BYTE",
+    tags: ["Memory Hierarchy", "Registers", "Cache", "RAM", "Secondary Storage", "Locality"],
+  },
+  {
+    id: 23,
+    slug: "register",
+    section: "Memory Organization",
+    parentSlug: "memory-hierarchy",
+    title: "Register",
+    tagline: "The CPU's own tiny, built-in storage — the very top of the memory hierarchy",
+    description:
+      "<b>What a Register Is</b>\nA register is a very small storage location built directly inside the CPU itself, holding a single small piece of data — typically 32 or 64 bits, matching the CPU's word size — that the CPU is actively working with right now.\n\n<b>Why Registers Are at the Top of the Hierarchy</b>\nBecause registers are built directly into the CPU's own circuitry, the CPU can access them in a single clock cycle, with no need to travel out to any external memory chip at all. This makes registers, by a wide margin, the fastest memory a computer has — but also the smallest: a typical CPU has only a few dozen general-purpose registers in total.\n\n<b>Common Types of Registers</b>\n• <b>Program Counter (PC)</b> — holds the memory address of the next instruction to fetch\n• <b>Instruction Register (IR)</b> — holds the instruction currently being decoded and executed\n• <b>Accumulator (ACC)</b> — holds the intermediate result of arithmetic and logic operations\n• <b>General-purpose registers</b> — small, flexible storage a program can use for whatever values it's currently working with\n  ↳ These three core registers (PC, IR, ACC) and how they're used every single instruction cycle are covered in full in the \"CPU\" and \"Instruction Cycle\" cards.\n\n<b>Key Characteristics</b>\n• <b>Fastest memory in the entire hierarchy</b> — accessed in a single CPU clock cycle.\n• <b>Extremely small capacity</b> — holds only a handful of individual values at any moment, nowhere near enough for a whole running program.\n• <b>Volatile</b> — loses its contents the instant power is switched off, exactly like RAM.\n• <b>Not directly addressable by a memory address the way RAM is</b> — each register is referred to by name (like \"ACC\" or \"PC\"), not by a memory address.\n\n<b>Where Registers Fit In</b>\nBecause there are so few registers and they're so small, the CPU cannot keep an entire program in them — only the exact handful of values needed for the instruction happening right now. Everything else waits one level down, in cache.",
+    note:
+      "Registers are defined by two extremes at once: the fastest memory that exists, and the smallest. If an exam question describes memory \"built into the CPU\" or accessed \"in a single clock cycle,\" it's describing a register.",
+    tags: ["Register", "Program Counter", "Instruction Register", "Accumulator", "Memory Hierarchy", "Volatile"],
+  },
+  {
+    id: 24,
+    slug: "cache",
+    section: "Memory Organization",
+    parentSlug: "memory-hierarchy",
+    title: "Cache",
+    tagline: "The fast buffer between CPU and RAM — L1, L2, and L3",
+    description:
+      "<b>What Cache Memory Is</b>\nCache memory is a small, very fast memory that sits between the CPU and RAM, storing copies of the data and instructions the CPU has used recently, or is likely to need again soon. It exists purely to bridge the huge speed gap between the CPU's registers and the much slower main RAM.\n\n<b>Why Cache Exists</b>\nA CPU can execute instructions far faster than RAM can supply data. Without cache, the CPU would constantly sit idle, waiting on RAM for nearly every single operation. Cache absorbs most of this wait by keeping a small, frequently-reused subset of data physically much closer to the CPU, built from fast SRAM rather than the slower DRAM used for main RAM.\n  ↳ Cache is built using SRAM technology specifically because SRAM needs no refresh cycle and can be accessed almost instantly — see the \"SRAM\" card for the full technical reason.\n\n<b>The Three Common Cache Levels</b>\n• <b>L1 Cache</b> — the smallest and fastest level, built directly into each individual CPU core, typically holding only tens of kilobytes.\n• <b>L2 Cache</b> — larger than L1 but slightly slower, usually also dedicated to a single core, typically a few hundred kilobytes to a few megabytes.\n• <b>L3 Cache</b> — the largest and slowest of the three, usually shared across all the CPU's cores, typically several megabytes to tens of megabytes.\n  ↳ As you move from L1 → L2 → L3, size goes up and speed goes down — the exact same trade-off pattern seen across the whole memory hierarchy, just repeated in miniature within cache itself.\n\n<b>Cache Hit vs. Cache Miss</b>\n• <b>Cache hit</b> — the CPU asks for a piece of data, and it's already sitting in cache; it's returned almost instantly.\n• <b>Cache miss</b> — the requested data isn't in cache, so the CPU must fetch it from the slower RAM instead (and a copy is usually then stored in cache, in case it's needed again soon).\n  ↳ A program with a high cache hit rate runs noticeably faster, since it spends less time waiting on RAM. This is exactly why the principle of locality (covered in the \"Memory Hierarchy\" card) matters so much in practice.\n\n<b>Key Characteristics</b>\n• <b>Volatile</b> — like RAM and registers, cache loses its contents when power is removed.\n• <b>Much faster than RAM, much smaller</b> — cache trades capacity for speed, exactly as the memory hierarchy predicts.\n• <b>Automatically managed by hardware</b> — a program doesn't explicitly choose what goes into cache; the CPU and memory controller decide this automatically based on what's being accessed.",
+    note:
+      "Keep the cache-level order straight: L1 is smallest and fastest, closest to a single core; L3 is largest and slowest, shared across cores. And remember the vocabulary pair exams love: cache hit (found it, fast) vs. cache miss (not found, fall back to RAM).",
+    diagram:
+      "  CPU ── L1 Cache ── L2 Cache ── L3 Cache ── RAM ── Secondary Storage\n         (smallest,    (bigger,     (biggest,   (much      (largest,\n          fastest,      slower       slowest,    bigger,    slowest)\n          per-core)      than L1)    often        much\n                                     shared)      slower)\n\n  CACHE HIT  → data found in cache → returned almost instantly\n  CACHE MISS → data not in cache  → fetched from RAM instead (slower)",
+    tags: ["Cache", "L1 Cache", "L2 Cache", "L3 Cache", "Cache Hit", "Cache Miss", "SRAM", "Memory Hierarchy"],
   },
 ];
 
