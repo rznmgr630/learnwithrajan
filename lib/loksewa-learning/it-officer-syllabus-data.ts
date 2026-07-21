@@ -907,6 +907,270 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "If a question asks whether a given word can be used as a variable name, check whether it's a C keyword first — a keyword always loses that fight, no matter how convenient a name it would otherwise make.",
     tags: ["Keywords", "Reserved Words", "C Basics"],
   },
+  {
+    id: 63,
+    slug: "operators",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Operators",
+    tagline: "The symbols C uses to perform calculations, comparisons, and logical decisions",
+    description:
+      "<b>What an Operator Is</b>\nAn operator is a symbol that tells the compiler to perform a specific operation on one or more values (called operands) — adding two numbers, comparing two values, or combining true/false conditions.\n\n<b>What You'll Learn Here</b>\n• <b>Arithmetic</b> — the basic math operators: +, -, *, /, %\n• <b>Relational</b> — operators that compare two values and produce a true/false result: ==, !=, >, <, >=, <=\n• <b>Logical</b> — operators that combine true/false conditions: && (AND), || (OR), ! (NOT)\n• <b>Bitwise</b> — operators that work directly on the individual bits of a value: &, |, ^, ~, <<, >>\n• <b>Assignment</b> — operators that store a value into a variable: =, and the shorthand combined forms like +=, -=\n  ↳ Each is covered in its own card next, with a full list of operators and worked examples.",
+    note:
+      "Every operator category answers a different question: Arithmetic asks \"what's the result?\", Relational asks \"is this true or false?\", Logical asks \"how do multiple conditions combine?\", Bitwise asks \"what does this look like at the bit level?\", and Assignment asks \"what gets stored where?\"",
+    tags: ["Operators", "C Programming", "Arithmetic", "Relational", "Logical", "Bitwise", "Assignment"],
+  },
+  {
+    id: 64,
+    slug: "arithmetic-operators",
+    section: "Programming",
+    parentSlug: "operators",
+    title: "Arithmetic Operators",
+    tagline: "The basic math operators: +, -, *, /, %",
+    description:
+      "<b>The Five Arithmetic Operators</b>\n• <b>+</b> (addition) — a + b\n• <b>-</b> (subtraction) — a - b\n• <b>*</b> (multiplication) — a * b\n• <b>/</b> (division) — a / b\n• <b>%</b> (modulus) — a % b, the remainder left over after dividing a by b\n\n<b>Integer Division — a Common Surprise</b>\nWhen both operands of / are integers, C performs integer division, truncating (cutting off) any decimal part rather than rounding — 7 / 2 gives 3, not 3.5. To get a decimal result, at least one operand must be a float or double.\n\n<b>The Modulus Operator (%)</b>\n% only works with integers, and gives the remainder of a division — 7 % 2 gives 1, since 7 divided by 2 is 3 remainder 1. It's commonly used to check if a number is even or odd (n % 2 == 0 means even).",
+    note:
+      "Exam favourite: 7 / 2 = 3 (integer division truncates, doesn't round), but 7 % 2 = 1 (the remainder). Mixing these two up is one of the most common C mistakes.",
+    code: "int a = 7, b = 2;\nprintf(\"%d\\n\", a + b);  // 9\nprintf(\"%d\\n\", a - b);  // 5\nprintf(\"%d\\n\", a * b);  // 14\nprintf(\"%d\\n\", a / b);  // 3  (integer division)\nprintf(\"%d\\n\", a % b);  // 1  (remainder)",
+    codeLanguage: "C",
+    tags: ["Arithmetic Operators", "Operators", "Modulus", "Integer Division", "C Programming"],
+  },
+  {
+    id: 65,
+    slug: "relational-operators",
+    section: "Programming",
+    parentSlug: "operators",
+    title: "Relational Operators",
+    tagline: "Compare two values, producing a true (1) or false (0) result",
+    description:
+      "<b>The Six Relational Operators</b>\n• <b>==</b> — equal to\n• <b>!=</b> — not equal to\n• <b>></b> — greater than\n• <b><</b> — less than\n• <b>>=</b> — greater than or equal to\n• <b><=</b> — less than or equal to\n\n<b>What They Return</b>\nEvery relational operator produces exactly one of two results: 1 (true) or 0 (false) — C has no separate boolean type in its original standard, so true/false is just represented as an integer.\n\n<b>== vs. = — a Classic Beginner Mistake</b>\n== compares two values for equality; = assigns a value to a variable. Writing if (x = 5) instead of if (x == 5) is a very common bug — it assigns 5 to x (which is always \"truthy\" if non-zero) instead of checking whether x equals 5, and the code still compiles without any error.",
+    note:
+      "The single most common C bug this topic causes: confusing = (assignment) with == (comparison) inside an if condition. Both compile fine, but they do completely different things.",
+    code: "int x = 5, y = 10;\nprintf(\"%d\\n\", x == y);  // 0 (false)\nprintf(\"%d\\n\", x != y);  // 1 (true)\nprintf(\"%d\\n\", x < y);   // 1 (true)",
+    codeLanguage: "C",
+    tags: ["Relational Operators", "Operators", "Comparison", "C Programming"],
+  },
+  {
+    id: 66,
+    slug: "logical-operators",
+    section: "Programming",
+    parentSlug: "operators",
+    title: "Logical Operators",
+    tagline: "Combine true/false conditions: && (AND), || (OR), ! (NOT)",
+    description:
+      "<b>The Three Logical Operators</b>\n• <b>&&</b> (logical AND) — true only if both conditions are true\n• <b>||</b> (logical OR) — true if at least one condition is true\n• <b>!</b> (logical NOT) — flips a condition's truth value\n  ↳ These behave exactly like the AND, OR, and NOT logic gates covered in the \"Logic Gates\" card — same truth tables, just written as C operators applied to conditions instead of physical circuit inputs.\n\n<b>Short-Circuit Evaluation</b>\nC stops evaluating a && or || expression as soon as the overall result is already certain, without ever checking the remaining condition(s):\n• In a && b, if a is false, the whole expression is already false, so b is never evaluated.\n• In a || b, if a is true, the whole expression is already true, so b is never evaluated.\n  ↳ This matters in real code: if (ptr != NULL && ptr->value > 0) safely skips checking ptr->value when ptr is NULL, avoiding a crash — the second condition never runs if the first is false.",
+    note:
+      "Short-circuit evaluation isn't just an optimization — it's a safety mechanism programmers rely on, letting a first condition guard against a second condition that would otherwise fail or crash.",
+    code: "int age = 20;\nint hasId = 1;\n\nif (age >= 18 && hasId) {\n    printf(\"Entry allowed\\n\");\n}\n\nif (!hasId) {\n    printf(\"ID required\\n\");\n}",
+    codeLanguage: "C",
+    tags: ["Logical Operators", "Operators", "Short-Circuit Evaluation", "C Programming"],
+  },
+  {
+    id: 67,
+    slug: "bitwise-operators",
+    section: "Programming",
+    parentSlug: "operators",
+    title: "Bitwise Operators",
+    tagline: "Operators that work directly on the individual bits of a value",
+    description:
+      "<b>The Six Bitwise Operators</b>\n• <b>&</b> (bitwise AND) — compares each bit position, giving 1 only where both bits are 1\n• <b>|</b> (bitwise OR) — gives 1 where at least one bit is 1\n• <b>^</b> (bitwise XOR) — gives 1 where the bits are different\n• <b>~</b> (bitwise NOT / complement) — flips every bit\n• <b><<</b> (left shift) — shifts every bit left by a given number of positions, filling with 0s (equivalent to multiplying by a power of 2)\n• <b>>></b> (right shift) — shifts every bit right by a given number of positions (equivalent to dividing by a power of 2, for unsigned/positive values)\n  ↳ These are the exact same operations as the AND/OR/XOR/NOT logic gates, just applied bit-by-bit across an entire integer at once rather than to a single true/false condition.\n\n<b>Worked Example</b>\n5 in binary is 0101, and 3 in binary is 0011.\n5 & 3 = 0001 = 1\n5 | 3 = 0111 = 7\n5 ^ 3 = 0110 = 6\n\n<b>Where Bitwise Operators Are Used</b>\nBitwise operators are common in low-level code: setting or checking individual flag bits in a status register, fast multiplication/division by powers of 2 using shifts, and packing multiple small values into a single integer.",
+    note:
+      "Don't confuse bitwise (&, |) with logical (&&, ||) operators — logical operators produce a single true/false result from whole conditions, while bitwise operators produce a full integer result by operating on individual bits.",
+    code: "int a = 5;   // 0101\nint b = 3;   // 0011\n\nprintf(\"%d\\n\", a & b);   // 1  (0001)\nprintf(\"%d\\n\", a | b);   // 7  (0111)\nprintf(\"%d\\n\", a ^ b);   // 6  (0110)\nprintf(\"%d\\n\", a << 1);  // 10 (shift left = ×2)\nprintf(\"%d\\n\", a >> 1);  // 2  (shift right = ÷2)",
+    codeLanguage: "C",
+    tags: ["Bitwise Operators", "Operators", "Bit Shift", "C Programming"],
+  },
+  {
+    id: 68,
+    slug: "assignment-operators",
+    section: "Programming",
+    parentSlug: "operators",
+    title: "Assignment Operators",
+    tagline: "Store a value into a variable — plain =, and shorthand combined forms",
+    description:
+      "<b>The Basic Assignment Operator</b>\n= stores the value on its right-hand side into the variable on its left — x = 5 stores 5 into x. It's important not to confuse this with == (relational equality, covered in the \"Relational Operators\" card).\n\n<b>Compound (Shorthand) Assignment Operators</b>\nC provides shorthand operators that combine an arithmetic or bitwise operation with assignment in one step:\n• <b>+=</b> — x += 5 means x = x + 5\n• <b>-=</b> — x -= 5 means x = x - 5\n• <b>*=</b> — x *= 5 means x = x * 5\n• <b>/=</b> — x /= 5 means x = x / 5\n• <b>%=</b> — x %= 5 means x = x % 5\n  ↳ The same shorthand pattern also exists for bitwise operators: &=, |=, ^=, <<=, >>=.\n\n<b>Increment and Decrement</b>\nC also provides ++ (increment by 1) and -- (decrement by 1) as an even shorter form of += 1 and -= 1.\n• <b>Prefix</b> (++x) — increments x first, then uses the new value\n• <b>Postfix</b> (x++) — uses the current value first, then increments x",
+    note:
+      "The prefix vs. postfix distinction (++x vs x++) only matters when the result is used immediately in the same expression — used on its own line, both do exactly the same thing.",
+    code: "int x = 10;\nx += 5;   // x is now 15\nx -= 3;   // x is now 12\n\nint a = 5;\nint b = a++;  // b = 5, then a becomes 6\nint c = ++a;  // a becomes 7, then c = 7",
+    codeLanguage: "C",
+    tags: ["Assignment Operators", "Operators", "Increment", "Decrement", "C Programming"],
+  },
+  {
+    id: 69,
+    slug: "control-flow",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Control Flow",
+    tagline: "The statements that decide which code runs, and how many times",
+    description:
+      "<b>What Control Flow Means</b>\nBy default, a C program runs one line after another, top to bottom. Control flow statements let a program branch — running different code depending on a condition — or repeat a block of code multiple times.\n\n<b>What You'll Learn Here</b>\n• <b>if</b> — run a block of code only if a condition is true\n• <b>if-else</b> — run one block if a condition is true, a different block if it's false\n• <b>switch</b> — choose between many possible blocks based on the value of a single variable\n• <b>for loop</b> — repeat a block a set number of times, with a counter\n• <b>while</b> — repeat a block as long as a condition stays true, checked before each run\n• <b>do-while</b> — repeat a block as long as a condition stays true, checked after each run (so it always runs at least once)\n  ↳ Each is covered in its own card next, with syntax and a worked code example.",
+    note:
+      "Split control flow into two families: branching (if, if-else, switch) picks ONE path to run; looping (for, while, do-while) repeats the SAME path multiple times.",
+    tags: ["Control Flow", "C Programming", "if", "switch", "Loops"],
+  },
+  {
+    id: 70,
+    slug: "if-statement",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "if",
+    tagline: "Run a block of code only if a condition is true",
+    description:
+      "<b>What if Does</b>\nAn if statement runs the block of code inside its curly braces only when its condition evaluates to true (any non-zero value); if the condition is false (0), the block is skipped entirely and execution continues after it.\n\n<b>Syntax</b>\nif (condition) {\n    // runs only if condition is true\n}",
+    note:
+      "A condition doesn't have to be a comparison — any expression that evaluates to non-zero counts as true in C, and 0 counts as false. This is why if (x) is valid and means \"if x is non-zero.\"",
+    code: "int age = 20;\n\nif (age >= 18) {\n    printf(\"You can vote.\\n\");\n}",
+    codeLanguage: "C",
+    tags: ["if Statement", "Control Flow", "Conditional", "C Programming"],
+  },
+  {
+    id: 71,
+    slug: "if-else-statement",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "if-else",
+    tagline: "Run one block if a condition is true, a different block if it's false",
+    description:
+      "<b>What if-else Does</b>\nAn if-else statement runs one block of code if its condition is true, and a completely different block if the condition is false — exactly one of the two blocks always runs.\n\n<b>Chaining Multiple Conditions — else if</b>\nMultiple conditions can be chained using else if, checked in order from top to bottom; the first one that's true has its block run, and every later condition is skipped.\n\n<b>Syntax</b>\nif (condition1) {\n    // runs if condition1 is true\n} else if (condition2) {\n    // runs if condition1 is false AND condition2 is true\n} else {\n    // runs if every condition above is false\n}",
+    note:
+      "Only ONE block in an if / else if / else chain ever runs, even if more than one condition would technically be true — C stops checking as soon as it finds the first true condition.",
+    code: "int marks = 75;\n\nif (marks >= 90) {\n    printf(\"Grade A\\n\");\n} else if (marks >= 60) {\n    printf(\"Grade B\\n\");\n} else {\n    printf(\"Grade C\\n\");\n}\n// Output: Grade B",
+    codeLanguage: "C",
+    tags: ["if-else Statement", "else if", "Control Flow", "C Programming"],
+  },
+  {
+    id: 72,
+    slug: "switch-statement",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "switch",
+    tagline: "Choose between many possible blocks based on the value of a single variable",
+    description:
+      "<b>What switch Does</b>\nA switch statement compares one variable's value against a list of possible case values, and runs the block matching whichever case equals that value — a cleaner alternative to a long chain of else if statements, when checking one variable against many exact values.\n\n<b>The Role of break</b>\nWithout a break statement at the end of each case, execution \"falls through\" into the next case's code as well, continuing to run every case below it until a break is hit or the switch ends. This fall-through is legal C, but almost always unintentional if left in by accident.\n\n<b>The default Case</b>\ndefault is optional, and runs if none of the listed case values match — similar to the final else in an if-else chain.\n\n<b>Syntax</b>\nswitch (value) {\n    case 1:\n        // runs if value == 1\n        break;\n    case 2:\n        // runs if value == 2\n        break;\n    default:\n        // runs if no case matched\n}",
+    note:
+      "Forgetting break is one of the most common switch bugs in C — execution silently falls through into the next case's code instead of stopping, unless break (or the switch's final case) is reached.",
+    code: "int day = 3;\n\nswitch (day) {\n    case 1:\n        printf(\"Monday\\n\");\n        break;\n    case 2:\n        printf(\"Tuesday\\n\");\n        break;\n    case 3:\n        printf(\"Wednesday\\n\");\n        break;\n    default:\n        printf(\"Another day\\n\");\n}\n// Output: Wednesday",
+    codeLanguage: "C",
+    tags: ["switch Statement", "break", "default", "Control Flow", "C Programming"],
+  },
+  {
+    id: 73,
+    slug: "for-loop",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "for Loop",
+    tagline: "Repeat a block a set number of times, with a counter",
+    description:
+      "<b>What a for Loop Does</b>\nA for loop repeats a block of code, automatically managing a counter variable across three parts written in one line: an initialization (run once, before the loop starts), a condition (checked before every repeat), and an update (run after every repeat).\n\n<b>Syntax</b>\nfor (initialization; condition; update) {\n    // repeats while condition is true\n}\n\n<b>How It Actually Runs</b>\n1. The initialization runs once, at the very start.\n2. The condition is checked — if false, the loop ends immediately without running its block.\n3. If the condition is true, the block runs.\n4. The update runs.\n5. Back to step 2, and repeat.\n\n<b>When to Use a for Loop</b>\nA for loop is the natural choice whenever the number of repeats is known ahead of time, such as looping through every element of an array.",
+    note:
+      "All three parts of a for loop's header — initialization, condition, update — are optional and can be left blank, but the two semicolons separating them are always required, even when a part is empty.",
+    code: "for (int i = 1; i <= 5; i++) {\n    printf(\"%d \", i);\n}\n// Output: 1 2 3 4 5",
+    codeLanguage: "C",
+    tags: ["for Loop", "Loops", "Control Flow", "C Programming"],
+  },
+  {
+    id: 74,
+    slug: "while-loop",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "while",
+    tagline: "Repeat a block as long as a condition stays true, checked before each run",
+    description:
+      "<b>What a while Loop Does</b>\nA while loop repeats its block of code for as long as its condition stays true, checking that condition BEFORE every single run — including the very first one. If the condition is false from the start, the block never runs at all.\n\n<b>Syntax</b>\nwhile (condition) {\n    // repeats while condition is true\n}\n\n<b>When to Use a while Loop</b>\nA while loop is the natural choice when the number of repeats isn't known ahead of time, and instead depends on some condition that changes while the loop runs — such as reading input until a specific value is entered.",
+    note:
+      "The key difference from a for loop: while doesn't have a built-in counter or update step — the programmer is fully responsible for updating whatever the condition depends on, or the loop never ends (an infinite loop).",
+    code: "int count = 1;\n\nwhile (count <= 5) {\n    printf(\"%d \", count);\n    count++;\n}\n// Output: 1 2 3 4 5",
+    codeLanguage: "C",
+    tags: ["while Loop", "Loops", "Control Flow", "C Programming"],
+  },
+  {
+    id: 75,
+    slug: "do-while-loop",
+    section: "Programming",
+    parentSlug: "control-flow",
+    title: "do-while",
+    tagline: "Repeat a block as long as a condition stays true, checked after each run",
+    description:
+      "<b>What a do-while Loop Does</b>\nA do-while loop is just like a while loop, except its condition is checked AFTER each run of the block, instead of before. This guarantees the block always runs at least once, even if the condition is false from the very start.\n\n<b>Syntax</b>\ndo {\n    // runs at least once\n} while (condition);\n\n<b>Note the Semicolon</b>\nUnlike if, for, and while, a do-while statement ends with a semicolon after its closing while (condition) — a detail that's easy to forget.\n\n<b>When to Use do-while</b>\ndo-while is the natural choice whenever a block genuinely needs to run at least once before checking whether to repeat — a very common example is a menu that must be shown to the user at least one time before asking whether to show it again.",
+    note:
+      "The single fact that separates do-while from while: do-while ALWAYS runs its block at least once, since the condition is checked only after the first run. A plain while loop can run zero times if its condition is false immediately.",
+    code: "int num;\n\ndo {\n    printf(\"Enter a positive number: \");\n    scanf(\"%d\", &num);\n} while (num <= 0);\n// The prompt shows at least once, even before num is checked",
+    codeLanguage: "C",
+    tags: ["do-while Loop", "Loops", "Control Flow", "C Programming"],
+  },
+  {
+    id: 76,
+    slug: "functions",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Functions",
+    tagline: "Named, reusable blocks of code that take input and can send back a result",
+    description:
+      "<b>What a Function Is</b>\nA function is a named, self-contained block of code that performs a specific task, which can be called (run) from anywhere in a program, as many times as needed, instead of rewriting the same logic repeatedly.\n\n<b>What You'll Learn Here</b>\n• <b>Function Declaration</b> — how a function's name, parameters, and return type are defined\n• <b>Parameters</b> — the values passed into a function when it's called\n• <b>Return Values</b> — the single value a function can send back to whoever called it\n• <b>Recursion</b> — a function that calls itself, used to solve problems that break down into smaller versions of themselves\n  ↳ Each is covered in its own card next, with a worked code example.",
+    note:
+      "Functions exist to avoid repeating the same code — every C program you've already seen relies on this, since main() itself is just a function, and printf() is a function from the C standard library.",
+    tags: ["Functions", "C Programming", "Parameters", "Return Values", "Recursion"],
+  },
+  {
+    id: 77,
+    slug: "function-declaration",
+    section: "Programming",
+    parentSlug: "functions",
+    title: "Function Declaration",
+    tagline: "How a function's name, parameters, and return type are defined",
+    description:
+      "<b>The Three Parts of a Function Declaration</b>\nreturnType functionName(parameterList) {\n    // function body\n}\n• <b>Return type</b> — the data type of the value the function sends back (or void, if it sends nothing back)\n• <b>Function name</b> — how the function is referred to when it's called\n• <b>Parameter list</b> — the values the function accepts as input, each with its own data type (covered in full in the \"Parameters\" card)\n\n<b>Function Prototype vs. Function Definition</b>\n• <b>Prototype</b> — a declaration without a body (e.g. int add(int a, int b);), telling the compiler a function exists and what it looks like, before its actual code appears later in the file.\n• <b>Definition</b> — the full function, including its body — the actual code that runs when it's called.\n  ↳ A prototype lets a function be called from code written above where the function is actually defined, since the compiler already knows its signature.\n\n<b>Calling a Function</b>\nOnce declared, a function is called (run) by writing its name followed by parentheses containing any arguments it needs.",
+    note:
+      "A function prototype is essentially a promise to the compiler: \"this function exists, here's its shape\" — the actual code can come later in the file, as long as the prototype comes first.",
+    code: "// Function prototype\nint add(int a, int b);\n\nint main() {\n    int result = add(3, 4);   // calling the function\n    printf(\"%d\\n\", result);   // 7\n    return 0;\n}\n\n// Function definition\nint add(int a, int b) {\n    return a + b;\n}",
+    codeLanguage: "C",
+    tags: ["Function Declaration", "Function Prototype", "Functions", "C Programming"],
+  },
+  {
+    id: 78,
+    slug: "parameters",
+    section: "Programming",
+    parentSlug: "functions",
+    title: "Parameters",
+    tagline: "The values passed into a function when it's called",
+    description:
+      "<b>Parameters vs. Arguments</b>\n• <b>Parameter</b> — the name used inside a function's own definition to refer to an incoming value (e.g. int a in int add(int a, int b)).\n• <b>Argument</b> — the actual value supplied when the function is called (e.g. the 3 in add(3, 4)).\n  ↳ These terms are often used loosely to mean the same thing, but a parameter is the placeholder, and an argument is what actually fills it.\n\n<b>Pass by Value (C's Default)</b>\nIn C, arguments are passed by value — the function receives a COPY of the argument's value, not the original variable itself. Changing a parameter inside the function has no effect on the original variable back where the function was called from.\n\n<b>Passing by Reference (Using Pointers)</b>\nTo let a function actually modify a caller's variable, C requires passing a pointer to that variable instead of the value itself — the function then follows the pointer back to the original memory location to make its change.",
+    note:
+      "The default pass-by-value behavior is the single most commonly tested fact about C parameters: a function can never change the caller's original variable unless it's given a pointer to it.",
+    code: "void increment(int x) {\n    x = x + 1;   // only changes the local copy\n}\n\nvoid incrementByPointer(int *x) {\n    *x = *x + 1;  // changes the original variable\n}\n\nint main() {\n    int num = 5;\n    increment(num);\n    printf(\"%d\\n\", num);          // still 5\n    incrementByPointer(&num);\n    printf(\"%d\\n\", num);          // now 6\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Parameters", "Arguments", "Pass by Value", "Pointers", "Functions", "C Programming"],
+  },
+  {
+    id: 79,
+    slug: "return-values",
+    section: "Programming",
+    parentSlug: "functions",
+    title: "Return Values",
+    tagline: "The single value a function can send back to whoever called it",
+    description:
+      "<b>What a Return Value Is</b>\nA return value is the single result a function sends back to the code that called it, using the return keyword. Once return runs, the function ends immediately — any code written after it inside that function never runs.\n\n<b>The void Return Type</b>\nA function declared with return type void doesn't send back any value at all; it can still use a plain return; (with no value) to end early, but it cannot return a value.\n\n<b>A Function Can Only Return One Value</b>\nUnlike some languages, a C function can only return a single value directly. To send back multiple results, a function typically uses pointers (writing results into variables the caller provides) or bundles multiple values into a single struct.",
+    note:
+      "Once a function hits its return statement, it exits immediately — no code after return inside that function ever executes, even if it looks reachable in the source.",
+    code: "int square(int n) {\n    return n * n;   // function ends here, sending n*n back\n}\n\nint main() {\n    int result = square(5);\n    printf(\"%d\\n\", result);  // 25\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Return Values", "return", "void", "Functions", "C Programming"],
+  },
+  {
+    id: 80,
+    slug: "recursion",
+    section: "Programming",
+    parentSlug: "functions",
+    title: "Recursion",
+    tagline: "A function that calls itself, used to solve problems that break down into smaller versions of themselves",
+    description:
+      "<b>What Recursion Is</b>\nRecursion is when a function calls itself, either directly or indirectly, to solve a problem by breaking it down into a smaller version of the exact same problem — repeating this until the problem becomes small enough to answer directly.\n\n<b>The Two Required Parts</b>\n• <b>Base case</b> — the simplest version of the problem, answered directly without any further recursive call; this is what eventually stops the recursion.\n• <b>Recursive case</b> — the function calls itself again, with input that's one step closer to the base case.\n  ↳ Without a base case (or if it's never actually reached), a recursive function calls itself forever, eventually crashing with a stack overflow once it runs out of memory for all the pending calls.\n\n<b>Worked Example — Factorial</b>\nfactorial(4) = 4 × factorial(3)\n             = 4 × (3 × factorial(2))\n             = 4 × (3 × (2 × factorial(1)))\n             = 4 × (3 × (2 × 1))          [factorial(1) is the base case]\n             = 24\n\n<b>Recursion vs. a Loop</b>\nAnything recursion can do, a loop can also do (and vice versa) — recursion is often more elegant and easier to read for problems that are naturally defined in terms of smaller versions of themselves (like factorials, or traversing a tree), but a loop typically uses less memory, since it doesn't build up a stack of pending function calls.",
+    note:
+      "Every recursive function needs a base case that's actually reachable — forgetting it, or writing a recursive case that never gets closer to it, causes infinite recursion and a stack overflow crash.",
+    code: "int factorial(int n) {\n    if (n == 0) {\n        return 1;          // base case\n    }\n    return n * factorial(n - 1);  // recursive case\n}\n\nint main() {\n    printf(\"%d\\n\", factorial(4));  // 24\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Recursion", "Base Case", "Recursive Case", "Factorial", "Functions", "C Programming"],
+  },
 ];
 
 export const IT_OFFICER_CONCEPT_COUNT = IT_OFFICER_CONCEPTS.length;
