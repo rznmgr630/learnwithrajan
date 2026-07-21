@@ -65,9 +65,10 @@ function SidebarItemRow({
   }, []);
 
   const isActive = activeItemId === item.id;
-  const linkClassName = `flex-1 rounded-md px-2.5 py-1.5 text-left text-sm transition ${
+  const weightClass = depth === 0 ? "font-bold" : depth === 1 ? "font-medium" : "font-normal";
+  const linkClassName = `flex-1 rounded-md px-2.5 py-1.5 text-left text-sm transition ${weightClass} ${
     isActive
-      ? "bg-[var(--accent)]/10 font-medium text-[var(--accent)]"
+      ? "bg-[var(--accent)]/10 text-[var(--accent)]"
       : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"
   }`;
 
@@ -75,11 +76,11 @@ function SidebarItemRow({
     <div style={depth ? { paddingLeft: depth * 14 } : undefined}>
       <div className="flex items-center gap-0.5">
         {item.href ? (
-          <Link key={item.id} href={item.href} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
+          <Link key={item.id} href={item.href} data-nav-item-id={item.id} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
             {item.label}
           </Link>
         ) : (
-          <button key={item.id} type="button" onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
+          <button key={item.id} type="button" data-nav-item-id={item.id} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
             {item.label}
           </button>
         )}
@@ -168,7 +169,7 @@ function SidebarAccordionSection({
       className="open:[&_.course-sidebar-chevron]:rotate-180 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
-        <span className="text-sm font-semibold text-[var(--text)]">{section.label}</span>
+        <span className="text-sm font-extrabold text-[var(--text)]">{section.label}</span>
         <svg
           className="course-sidebar-chevron h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200"
           viewBox="0 0 20 20"
@@ -231,7 +232,7 @@ export function CourseSidebar(props: CourseSidebarProps) {
   const mobileOpen = props.mobileOpen ?? internalOpen;
   const setMobileOpen = props.onMobileOpenChange ?? setInternalOpen;
   const navScrollRef = useRef<HTMLDivElement>(null);
-  const navScrollStorageKey = `${props.storageKeyPrefix}:navScrollTop`;
+  const { activeItemId } = props;
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -242,30 +243,23 @@ export function CourseSidebar(props: CourseSidebarProps) {
     };
   }, [mobileOpen]);
 
-  // Restore the sidebar's own scroll position after a navigation remounts this
+  // Scroll the active item into view after a navigation remounts this
   // component — otherwise clicking a deeply nested item makes the whole menu
-  // snap back to its top instead of only the content pane changing.
+  // snap back to its top instead of only the content pane changing. Keyed off
+  // the active item (not a raw scrollTop) so it never lands on a stale offset
+  // that hides the "Syllabus" heading when the page itself is at the top.
   useEffect(() => {
     const el = navScrollRef.current;
-    if (!el) return;
-    try {
-      const saved = sessionStorage.getItem(navScrollStorageKey);
-      if (saved !== null) el.scrollTop = Number(saved);
-    } catch {}
-  }, [navScrollStorageKey]);
-
-  function handleNavScroll(e: React.UIEvent<HTMLDivElement>) {
-    try {
-      sessionStorage.setItem(navScrollStorageKey, String(e.currentTarget.scrollTop));
-    } catch {}
-  }
+    if (!el || activeItemId == null) return;
+    const target = el.querySelector<HTMLElement>(`[data-nav-item-id="${CSS.escape(String(activeItemId))}"]`);
+    target?.scrollIntoView({ block: "nearest" });
+  }, [activeItemId]);
 
   return (
     <>
       <aside className="hidden shrink-0 md:block md:w-64">
         <div
           ref={navScrollRef}
-          onScroll={handleNavScroll}
           className="sticky overflow-y-auto pr-1"
           style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}
         >
