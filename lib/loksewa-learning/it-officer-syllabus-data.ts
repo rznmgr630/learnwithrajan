@@ -803,7 +803,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "C Programming",
     tagline: "A foundational, low-level programming language still taught as the basis for how computers really execute code",
     description:
-      "<b>What C Is</b>\nC is a general-purpose programming language created by Dennis Ritchie at Bell Labs in 1972. It's considered a \"low-level\" high-level language — it lets a programmer write readable code (unlike raw machine language or assembly), while still staying close to how the computer's hardware actually works, including direct memory access through pointers.\n\n<b>Why C Is Still Taught</b>\nMany modern languages (C++, Java, C#, JavaScript, Python) borrow their basic syntax — curly braces, semicolons, if/for/while loops — directly from C. Learning C first builds a mental model of how a program actually works underneath (memory, compilation, execution) that these newer, more abstracted languages otherwise hide from a beginner.\n\n<b>What You'll Learn Here</b>\n• <b>Basics</b> — the structure of a C program, how it turns into a running executable, and the fundamental building blocks (variables, data types, constants, and keywords) every C program is written from\n  ↳ Each of these building blocks is covered in its own card next.",
+      "<b>What C Is</b>\nC is a general-purpose programming language created by Dennis Ritchie at Bell Labs in 1972. It's considered a \"low-level\" high-level language — it lets a programmer write readable code (unlike raw machine language or assembly), while still staying close to how the computer's hardware actually works, including direct memory access through pointers.\n\n<b>Why C Is Still Taught</b>\nMany modern languages (C++, Java, C#, JavaScript, Python) borrow their basic syntax — curly braces, semicolons, if/for/while loops — directly from C. Learning C first builds a mental model of how a program actually works underneath (memory, compilation, execution) that these newer, more abstracted languages otherwise hide from a beginner.\n\n<b>How This Section Is Organized</b>\n• <b>Basics</b> — the structure of a C program, how it turns into a running executable, and the fundamental building blocks (variables, data types, constants, and keywords) every C program is written from\n  ↳ Each of these building blocks is covered in its own card next.",
     note:
       "C is often called \"the mother of all languages\" for good reason — most languages used in exams and in industry today borrow C's syntax directly, so understanding C's basics carries over almost immediately.",
     tags: ["C Programming", "Programming", "Dennis Ritchie", "Low-Level Language"],
@@ -816,7 +816,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Basics",
     tagline: "The structure, compilation process, and fundamental building blocks of a C program",
     description:
-      "<b>What This Covers</b>\nBefore writing any real logic, every C programmer needs to know how a C program is laid out, how that written code actually turns into a running program, and the basic vocabulary (variables, data types, constants, keywords) every single line of C code is built from.\n\n<b>What You'll Learn Here</b>\n• <b>Structure of C Program</b> — the standard sections every C source file is organized into\n• <b>Compilation Process</b> — the steps that turn human-readable C code into a machine-executable program\n• <b>Variables</b> — named storage locations that hold data a program can use and change\n• <b>Data Types</b> — the different kinds of values a variable can hold, and how much memory each takes\n• <b>Constants</b> — fixed values that don't change while a program runs\n• <b>Keywords</b> — the reserved words built into the C language itself, which can't be used as variable names\n  ↳ These build on each other in order: first how a program is structured and compiled, then the core vocabulary used to write the actual code inside it.",
+      "<b>What This Covers</b>\nBefore writing any real logic, every C programmer needs to know how a C program is laid out, how that written code actually turns into a running program, and the basic vocabulary (variables, data types, constants, keywords) every single line of C code is built from.\n\n<b>Why Start Here</b>\nEvery later topic in C — operators, control flow, functions, and beyond — assumes you already know how to declare a variable, pick the right data type, and recognize a C program's basic shape. Skipping these basics makes everything after them harder to follow.\n\n<b>How This Section Is Organized</b>\n• <b>Structure of C Program</b> — the standard sections every C source file is organized into\n• <b>Compilation Process</b> — the steps that turn human-readable C code into a machine-executable program\n• <b>Variables</b> — named storage locations that hold data a program can use and change\n• <b>Data Types</b> — the different kinds of values a variable can hold, and how much memory each takes\n• <b>Constants</b> — fixed values that don't change while a program runs\n• <b>Keywords</b> — the reserved words built into the C language itself, which can't be used as variable names\n  ↳ These build on each other in order: first how a program is structured and compiled, then the core vocabulary used to write the actual code inside it.",
     note:
       "Read these in order: Structure and Compilation Process explain how a C program comes together as a whole; Variables, Data Types, Constants, and Keywords are the actual vocabulary used inside that structure.",
     tags: ["C Basics", "C Programming", "Structure", "Compilation", "Variables", "Data Types"],
@@ -829,7 +829,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Structure of C Program",
     tagline: "The standard sections every C source file is organized into",
     description:
-      "<b>The Standard Sections</b>\nEvery C program, no matter how big or small, is generally organized into the same sections, in the same order:\n• <b>Documentation section</b> — comments at the very top (using // or /* */) describing what the program does; ignored entirely by the compiler, purely for humans reading the code.\n• <b>Preprocessor directives</b> — lines starting with #, most commonly #include, which pulls in code from library files (like stdio.h for input/output functions) before compilation actually begins.\n• <b>Global declarations</b> — variables and function prototypes declared outside of any function, visible to every function in the file.\n• <b>main() function</b> — every C program must have exactly one main() function; this is where the program actually starts running, and where execution begins the moment the program is launched.\n• <b>User-defined functions</b> — additional functions the programmer writes, called from main() or from each other, to organize the program's logic into reusable pieces.\n\n<b>A Minimal C Program</b>\nThe code example below shows the smallest complete, valid C program.\n\n<b>Reading the Minimal Example</b>\n• #include <stdio.h> — a preprocessor directive that pulls in the Standard Input/Output library, giving access to printf().\n• int main() — declares the main function; int means main() returns a whole number back to the operating system when it finishes.\n• printf(\"Hello, World!\") — calls a library function to print text to the screen.\n• return 0 — ends main(), returning 0 to signal the program finished successfully (a non-zero return value conventionally signals an error occurred).",
+      "<b>What This Structure Is</b>\nEvery C program, no matter how big or small, is generally organized into the same sections, in the same order.\n\n<b>Why It's Structured This Way</b>\nA fixed, predictable layout lets the compiler know exactly where to look for library includes, global data, and the program's actual starting point — and lets any C programmer immediately recognize the shape of a program they've never seen before.\n\n<b>How the Sections Work</b>\n• <b>Documentation section</b> — comments at the very top (using // or /* */) describing what the program does; ignored entirely by the compiler, purely for humans reading the code.\n• <b>Preprocessor directives</b> — lines starting with #, most commonly #include, which pulls in code from library files (like stdio.h for input/output functions) before compilation actually begins.\n• <b>Global declarations</b> — variables and function prototypes declared outside of any function, visible to every function in the file.\n• <b>main() function</b> — every C program must have exactly one main() function; this is where the program actually starts running, and where execution begins the moment the program is launched.\n• <b>User-defined functions</b> — additional functions the programmer writes, called from main() or from each other, to organize the program's logic into reusable pieces.\n\n<b>A Minimal C Program</b>\nThe code example below shows the smallest complete, valid C program.\n\n<b>Reading the Minimal Example</b>\n• #include <stdio.h> — a preprocessor directive that pulls in the Standard Input/Output library, giving access to printf().\n• int main() — declares the main function; int means main() returns a whole number back to the operating system when it finishes.\n• printf(\"Hello, World!\") — calls a library function to print text to the screen.\n• return 0 — ends main(), returning 0 to signal the program finished successfully (a non-zero return value conventionally signals an error occurred).",
     note:
       "Every valid C program must have exactly one main() function — it's the fixed starting point execution always begins from, no matter how many other functions the file also contains.",
     code: "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\");\n    return 0;\n}",
@@ -846,7 +846,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Compilation Process",
     tagline: "The steps that turn human-readable C code into a machine-executable program",
     description:
-      "<b>Why Compilation Is Needed</b>\nA CPU only understands machine language (raw binary instructions) — it cannot run C source code directly. Compilation is the process that translates human-readable C code into a machine-executable program, in several distinct stages.\n\n<b>The Four Stages</b>\n• <b>Preprocessing</b> — the preprocessor handles every line starting with #, such as #include (pasting in library file contents) and #define (replacing macros with their defined value), producing a single expanded source file with no # directives left.\n• <b>Compilation</b> — the compiler translates the preprocessed C code into assembly language, checking for syntax errors along the way; if the code doesn't follow C's grammar rules, compilation stops here with an error.\n• <b>Assembly</b> — an assembler translates the assembly code into object code (machine code specific to the target CPU), producing a .o (or .obj) file — but this file isn't runnable yet, since it may still reference functions defined elsewhere (like printf from the C library).\n• <b>Linking</b> — the linker combines the object code with the actual library code it references (such as the Standard I/O library), and any other object files, producing a single, complete, runnable executable file.\n\n<b>Where Errors Show Up</b>\n• A missing semicolon or misspelled keyword is caught at the <b>compilation</b> stage (a syntax error).\n• A missing function definition the linker can't find anywhere is caught at the <b>linking</b> stage (a linker error, e.g. \"undefined reference\").",
+      "<b>What Compilation Is</b>\nCompilation is the process that translates human-readable C code into a machine-executable program, in several distinct stages.\n\n<b>Why Compilation Is Needed</b>\nA CPU only understands machine language (raw binary instructions) — it cannot run C source code directly, so this translation step is mandatory before any C program can actually run.\n\n<b>How Compilation Works — the Four Stages</b>\n• <b>Preprocessing</b> — the preprocessor handles every line starting with #, such as #include (pasting in library file contents) and #define (replacing macros with their defined value), producing a single expanded source file with no # directives left.\n• <b>Compilation</b> — the compiler translates the preprocessed C code into assembly language, checking for syntax errors along the way; if the code doesn't follow C's grammar rules, compilation stops here with an error.\n• <b>Assembly</b> — an assembler translates the assembly code into object code (machine code specific to the target CPU), producing a .o (or .obj) file — but this file isn't runnable yet, since it may still reference functions defined elsewhere (like printf from the C library).\n• <b>Linking</b> — the linker combines the object code with the actual library code it references (such as the Standard I/O library), and any other object files, producing a single, complete, runnable executable file.\n\n<b>Where Errors Show Up</b>\n• A missing semicolon or misspelled keyword is caught at the <b>compilation</b> stage (a syntax error).\n• A missing function definition the linker can't find anywhere is caught at the <b>linking</b> stage (a linker error, e.g. \"undefined reference\").",
     note:
       "The exam-favourite order: Preprocessing → Compilation → Assembly → Linking. A syntax error (like a typo) is caught during Compilation; a missing function/library is caught later, during Linking — these are two different kinds of errors from two different stages.",
     diagram:
@@ -861,7 +861,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Variables",
     tagline: "Named storage locations that hold data a program can use and change",
     description:
-      "<b>What a Variable Is</b>\nA variable is a named location in memory that holds a value a program can read and change while it runs. Every variable in C must be declared with a data type before it's used, telling the compiler how much memory to reserve and what kind of value it will hold.\n\n<b>Declaring and Initializing a Variable</b>\nint age;          // declaration — reserves memory, no value yet\nage = 25;          // assignment — stores a value into that memory\nint score = 100;   // declaration + initialization in one line\n\n<b>Rules for Naming a Variable</b>\n• Must start with a letter or an underscore (never a digit).\n• Can contain letters, digits, and underscores after the first character.\n• Cannot be a C keyword (like int or return — covered in the \"Keywords\" card).\n• Is case-sensitive — score and Score are two completely different variables.\n\n<b>Local vs. Global Variables</b>\n• <b>Local variable</b> — declared inside a function, only exists and is only accessible while that function is running.\n• <b>Global variable</b> — declared outside every function, exists for the entire time the program runs, and is accessible from any function in the file.",
+      "<b>What a Variable Is</b>\nA variable is a named location in memory that holds a value a program can read and change while it runs. Every variable in C must be declared with a data type before it's used, telling the compiler how much memory to reserve and what kind of value it will hold.\n\n<b>Why Variables Matter</b>\nWithout variables, a program could only work with fixed, hardcoded values. Variables let a program store, change, and reuse data as it runs, which is the basis for literally every computation a program performs.\n\n<b>How to Declare and Use One</b>\nint age;          // declaration — reserves memory, no value yet\nage = 25;          // assignment — stores a value into that memory\nint score = 100;   // declaration + initialization in one line\n\n<b>Rules for Naming a Variable</b>\n• Must start with a letter or an underscore (never a digit).\n• Can contain letters, digits, and underscores after the first character.\n• Cannot be a C keyword (like int or return — covered in the \"Keywords\" card).\n• Is case-sensitive — score and Score are two completely different variables.\n\n<b>Local vs. Global Variables</b>\n• <b>Local variable</b> — declared inside a function, only exists and is only accessible while that function is running.\n• <b>Global variable</b> — declared outside every function, exists for the entire time the program runs, and is accessible from any function in the file.",
     note:
       "A variable must always be declared with a type before use in C — unlike some newer languages, C never guesses a variable's type from the value assigned to it.",
     tags: ["Variables", "Declaration", "Local Variable", "Global Variable", "C Basics"],
@@ -874,7 +874,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Data Types",
     tagline: "The different kinds of values a variable can hold, and how much memory each takes",
     description:
-      "<b>Why Data Types Matter</b>\nA variable's data type tells the compiler exactly how much memory to set aside for it, and how to interpret the bits stored there — the same sequence of bits means something completely different depending on whether it's read as an integer, a character, or a floating-point number.\n\n<b>The Basic Data Types</b>\n• <b>int</b> — a whole number (no decimal point), typically 4 bytes, e.g. 42, -7\n• <b>float</b> — a single-precision decimal number, typically 4 bytes, e.g. 3.14\n• <b>double</b> — a double-precision decimal number (more accurate than float), typically 8 bytes, e.g. 3.14159265\n• <b>char</b> — a single character, typically 1 byte, e.g. 'A' (stored internally as its ASCII numeric value)\n• <b>void</b> — represents \"no value at all\" — used for a function that returns nothing, or a generic pointer type\n\n<b>Modifiers</b>\nType modifiers adjust the size or range of a basic type:\n• <b>short</b> / <b>long</b> — reduce or increase the number of bytes used (e.g. short int, long int)\n• <b>signed</b> / <b>unsigned</b> — signed allows negative numbers (the default); unsigned uses that same space to represent only non-negative numbers, doubling the largest positive value it can hold\n\n<b>Worked Example</b>\nAn unsigned char uses all 8 bits for the magnitude, giving a range of 0 to 255. A signed char uses 1 bit for the sign, giving a range of -128 to 127 — the same 8 bits, interpreted differently.",
+      "<b>What a Data Type Is</b>\nA data type tells the compiler what kind of value a variable will hold — a whole number, a decimal number, a single character, or nothing at all.\n\n<b>Why Data Types Matter</b>\nA variable's data type tells the compiler exactly how much memory to set aside for it, and how to interpret the bits stored there — the same sequence of bits means something completely different depending on whether it's read as an integer, a character, or a floating-point number.\n\n<b>How the Basic Data Types Work</b>\n• <b>int</b> — a whole number (no decimal point), typically 4 bytes, e.g. 42, -7\n• <b>float</b> — a single-precision decimal number, typically 4 bytes, e.g. 3.14\n• <b>double</b> — a double-precision decimal number (more accurate than float), typically 8 bytes, e.g. 3.14159265\n• <b>char</b> — a single character, typically 1 byte, e.g. 'A' (stored internally as its ASCII numeric value)\n• <b>void</b> — represents \"no value at all\" — used for a function that returns nothing, or a generic pointer type\n\n<b>Modifiers</b>\nType modifiers adjust the size or range of a basic type:\n• <b>short</b> / <b>long</b> — reduce or increase the number of bytes used (e.g. short int, long int)\n• <b>signed</b> / <b>unsigned</b> — signed allows negative numbers (the default); unsigned uses that same space to represent only non-negative numbers, doubling the largest positive value it can hold\n\n<b>Worked Example</b>\nAn unsigned char uses all 8 bits for the magnitude, giving a range of 0 to 255. A signed char uses 1 bit for the sign, giving a range of -128 to 127 — the same 8 bits, interpreted differently.",
     note:
       "Exam favourite: signed vs. unsigned doesn't change how many bits are used — it changes how those bits are interpreted, trading the ability to represent negative numbers for a larger positive range.",
     diagram:
@@ -889,7 +889,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Constants",
     tagline: "Fixed values that don't change while a program runs",
     description:
-      "<b>What a Constant Is</b>\nA constant is a value that, once set, cannot be changed while the program runs — unlike a variable, which can be reassigned at any time. Constants are used for values that are meant to stay fixed, such as a mathematical constant or a fixed configuration value.\n\n<b>Two Common Ways to Define a Constant</b>\n• <b>const keyword</b> — const float PI = 3.14; declares a normal, typed variable that the compiler then refuses to let any later code modify.\n• <b>#define preprocessor macro</b> — #define PI 3.14 tells the preprocessor to literally replace every occurrence of PI with 3.14 in the source code, before compilation even begins — it isn't a variable at all, just a text substitution.\n\n<b>Types of Constants (Literal Values)</b>\n• <b>Integer constants</b> — whole numbers, e.g. 10, -5\n• <b>Floating-point constants</b> — decimal numbers, e.g. 3.14\n• <b>Character constants</b> — a single character in single quotes, e.g. 'A'\n• <b>String constants</b> — a sequence of characters in double quotes, e.g. \"Hello\"",
+      "<b>What a Constant Is</b>\nA constant is a value that, once set, cannot be changed while the program runs — unlike a variable, which can be reassigned at any time. Constants are used for values that are meant to stay fixed, such as a mathematical constant or a fixed configuration value.\n\n<b>Why Use Constants</b>\nA fixed value used throughout a program (like PI, or a maximum array size) is easier to update correctly, and harder to accidentally change by mistake, when it's defined once as a constant instead of retyped as a raw number everywhere it's needed.\n\n<b>How to Define One</b>\n• <b>const keyword</b> — const float PI = 3.14; declares a normal, typed variable that the compiler then refuses to let any later code modify.\n• <b>#define preprocessor macro</b> — #define PI 3.14 tells the preprocessor to literally replace every occurrence of PI with 3.14 in the source code, before compilation even begins — it isn't a variable at all, just a text substitution.\n\n<b>Types of Constants (Literal Values)</b>\n• <b>Integer constants</b> — whole numbers, e.g. 10, -5\n• <b>Floating-point constants</b> — decimal numbers, e.g. 3.14\n• <b>Character constants</b> — a single character in single quotes, e.g. 'A'\n• <b>String constants</b> — a sequence of characters in double quotes, e.g. \"Hello\"",
     note:
       "const vs. #define: const creates a real, typed variable the compiler protects from being changed; #define is a preprocessor text substitution done before compilation, with no type checking at all.",
     tags: ["Constants", "const", "#define", "Literals", "C Basics"],
@@ -902,7 +902,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Keywords",
     tagline: "The reserved words built into the C language itself",
     description:
-      "<b>What a Keyword Is</b>\nA keyword is a word that's reserved by the C language itself, with a fixed, built-in meaning to the compiler — it can never be used as the name of a variable, function, or anything else a programmer defines.\n\n<b>Common C Keywords</b>\n• <b>Data type keywords</b> — int, float, double, char, void\n• <b>Control flow keywords</b> — if, else, switch, case, for, while, do, break, continue\n• <b>Storage/qualifier keywords</b> — const, static, extern, volatile\n• <b>Structure/organization keywords</b> — struct, union, enum, typedef\n• <b>Function-related keywords</b> — return, sizeof\n\n<b>The Rule</b>\nC has exactly 32 keywords in the original C standard (a few more were added in later revisions). None of them can ever be redefined or used as an identifier — trying to write int int; would be a compilation error, since int is reserved.",
+      "<b>What a Keyword Is</b>\nA keyword is a word that's reserved by the C language itself, with a fixed, built-in meaning to the compiler — it can never be used as the name of a variable, function, or anything else a programmer defines.\n\n<b>Why Keywords Are Reserved</b>\nIf keywords could be redefined as variable names, the compiler could no longer reliably tell code apart from data — reserving them guarantees every C compiler interprets if, for, int, and the rest exactly the same way, everywhere.\n\n<b>How Keywords Are Grouped</b>\n• <b>Data type keywords</b> — int, float, double, char, void\n• <b>Control flow keywords</b> — if, else, switch, case, for, while, do, break, continue\n• <b>Storage/qualifier keywords</b> — const, static, extern, volatile\n• <b>Structure/organization keywords</b> — struct, union, enum, typedef\n• <b>Function-related keywords</b> — return, sizeof\n\n<b>The Rule</b>\nC has exactly 32 keywords in the original C standard (a few more were added in later revisions). None of them can ever be redefined or used as an identifier — trying to write int int; would be a compilation error, since int is reserved.",
     note:
       "If a question asks whether a given word can be used as a variable name, check whether it's a C keyword first — a keyword always loses that fight, no matter how convenient a name it would otherwise make.",
     tags: ["Keywords", "Reserved Words", "C Basics"],
@@ -915,7 +915,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Operators",
     tagline: "The symbols C uses to perform calculations, comparisons, and logical decisions",
     description:
-      "<b>What an Operator Is</b>\nAn operator is a symbol that tells the compiler to perform a specific operation on one or more values (called operands) — adding two numbers, comparing two values, or combining true/false conditions.\n\n<b>What You'll Learn Here</b>\n• <b>Arithmetic</b> — the basic math operators: +, -, *, /, %\n• <b>Relational</b> — operators that compare two values and produce a true/false result: ==, !=, >, <, >=, <=\n• <b>Logical</b> — operators that combine true/false conditions: && (AND), || (OR), ! (NOT)\n• <b>Bitwise</b> — operators that work directly on the individual bits of a value: &, |, ^, ~, <<, >>\n• <b>Assignment</b> — operators that store a value into a variable: =, and the shorthand combined forms like +=, -=\n  ↳ Each is covered in its own card next, with a full list of operators and worked examples.",
+      "<b>What an Operator Is</b>\nAn operator is a symbol that tells the compiler to perform a specific operation on one or more values (called operands) — adding two numbers, comparing two values, or combining true/false conditions.\n\n<b>Why Operators Matter</b>\nAlmost every useful line of C code involves at least one operator — calculating a total, checking a condition, or combining multiple true/false tests. Operators are the smallest building blocks every larger expression is made from.\n\n<b>How This Section Is Organized</b>\n• <b>Arithmetic</b> — the basic math operators: +, -, *, /, %\n• <b>Relational</b> — operators that compare two values and produce a true/false result: ==, !=, >, <, >=, <=\n• <b>Logical</b> — operators that combine true/false conditions: && (AND), || (OR), ! (NOT)\n• <b>Bitwise</b> — operators that work directly on the individual bits of a value: &, |, ^, ~, <<, >>\n• <b>Assignment</b> — operators that store a value into a variable: =, and the shorthand combined forms like +=, -=\n  ↳ Each is covered in its own card next, with a full list of operators and worked examples.",
     note:
       "Every operator category answers a different question: Arithmetic asks \"what's the result?\", Relational asks \"is this true or false?\", Logical asks \"how do multiple conditions combine?\", Bitwise asks \"what does this look like at the bit level?\", and Assignment asks \"what gets stored where?\"",
     tags: ["Operators", "C Programming", "Arithmetic", "Relational", "Logical", "Bitwise", "Assignment"],
@@ -928,7 +928,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Arithmetic Operators",
     tagline: "The basic math operators: +, -, *, /, %",
     description:
-      "<b>The Five Arithmetic Operators</b>\n• <b>+</b> (addition) — a + b\n• <b>-</b> (subtraction) — a - b\n• <b>*</b> (multiplication) — a * b\n• <b>/</b> (division) — a / b\n• <b>%</b> (modulus) — a % b, the remainder left over after dividing a by b\n\n<b>Integer Division — a Common Surprise</b>\nWhen both operands of / are integers, C performs integer division, truncating (cutting off) any decimal part rather than rounding — 7 / 2 gives 3, not 3.5. To get a decimal result, at least one operand must be a float or double.\n\n<b>The Modulus Operator (%)</b>\n% only works with integers, and gives the remainder of a division — 7 % 2 gives 1, since 7 divided by 2 is 3 remainder 1. It's commonly used to check if a number is even or odd (n % 2 == 0 means even).",
+      "<b>What Arithmetic Operators Are</b>\nArithmetic operators perform the basic math operations on numeric values: addition, subtraction, multiplication, division, and finding a remainder.\n\n<b>Why They Matter</b>\nAny calculation a C program performs — totals, averages, prices, counters — is ultimately built from these five operators.\n\n<b>How to Use Them</b>\n• <b>+</b> (addition) — a + b\n• <b>-</b> (subtraction) — a - b\n• <b>*</b> (multiplication) — a * b\n• <b>/</b> (division) — a / b\n• <b>%</b> (modulus) — a % b, the remainder left over after dividing a by b\n\n<b>Integer Division — a Common Surprise</b>\nWhen both operands of / are integers, C performs integer division, truncating (cutting off) any decimal part rather than rounding — 7 / 2 gives 3, not 3.5. To get a decimal result, at least one operand must be a float or double.\n\n<b>The Modulus Operator (%)</b>\n% only works with integers, and gives the remainder of a division — 7 % 2 gives 1, since 7 divided by 2 is 3 remainder 1. It's commonly used to check if a number is even or odd (n % 2 == 0 means even).",
     note:
       "Exam favourite: 7 / 2 = 3 (integer division truncates, doesn't round), but 7 % 2 = 1 (the remainder). Mixing these two up is one of the most common C mistakes.",
     code: "int a = 7, b = 2;\nprintf(\"%d\\n\", a + b);  // 9\nprintf(\"%d\\n\", a - b);  // 5\nprintf(\"%d\\n\", a * b);  // 14\nprintf(\"%d\\n\", a / b);  // 3  (integer division)\nprintf(\"%d\\n\", a % b);  // 1  (remainder)",
@@ -943,7 +943,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Relational Operators",
     tagline: "Compare two values, producing a true (1) or false (0) result",
     description:
-      "<b>The Six Relational Operators</b>\n• <b>==</b> — equal to\n• <b>!=</b> — not equal to\n• <b>></b> — greater than\n• <b><</b> — less than\n• <b>>=</b> — greater than or equal to\n• <b><=</b> — less than or equal to\n\n<b>What They Return</b>\nEvery relational operator produces exactly one of two results: 1 (true) or 0 (false) — C has no separate boolean type in its original standard, so true/false is just represented as an integer.\n\n<b>== vs. = — a Classic Beginner Mistake</b>\n== compares two values for equality; = assigns a value to a variable. Writing if (x = 5) instead of if (x == 5) is a very common bug — it assigns 5 to x (which is always \"truthy\" if non-zero) instead of checking whether x equals 5, and the code still compiles without any error.",
+      "<b>What Relational Operators Are</b>\nRelational operators compare two values and produce a true/false result, used to test whether one value is equal to, greater than, or less than another.\n\n<b>Why They Matter</b>\nEvery conditional statement in C (if, while, for) relies on a relational operator, or a combination of them, to decide whether its condition is actually true.\n\n<b>How to Use Them</b>\n• <b>==</b> — equal to\n• <b>!=</b> — not equal to\n• <b>></b> — greater than\n• <b><</b> — less than\n• <b>>=</b> — greater than or equal to\n• <b><=</b> — less than or equal to\n\n<b>What They Return</b>\nEvery relational operator produces exactly one of two results: 1 (true) or 0 (false) — C has no separate boolean type in its original standard, so true/false is just represented as an integer.\n\n<b>== vs. = — a Classic Beginner Mistake</b>\n== compares two values for equality; = assigns a value to a variable. Writing if (x = 5) instead of if (x == 5) is a very common bug — it assigns 5 to x (which is always \"truthy\" if non-zero) instead of checking whether x equals 5, and the code still compiles without any error.",
     note:
       "The single most common C bug this topic causes: confusing = (assignment) with == (comparison) inside an if condition. Both compile fine, but they do completely different things.",
     code: "int x = 5, y = 10;\nprintf(\"%d\\n\", x == y);  // 0 (false)\nprintf(\"%d\\n\", x != y);  // 1 (true)\nprintf(\"%d\\n\", x < y);   // 1 (true)",
@@ -958,7 +958,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Logical Operators",
     tagline: "Combine true/false conditions: && (AND), || (OR), ! (NOT)",
     description:
-      "<b>The Three Logical Operators</b>\n• <b>&&</b> (logical AND) — true only if both conditions are true\n• <b>||</b> (logical OR) — true if at least one condition is true\n• <b>!</b> (logical NOT) — flips a condition's truth value\n  ↳ These behave exactly like the AND, OR, and NOT logic gates covered in the \"Logic Gates\" card — same truth tables, just written as C operators applied to conditions instead of physical circuit inputs.\n\n<b>Short-Circuit Evaluation</b>\nC stops evaluating a && or || expression as soon as the overall result is already certain, without ever checking the remaining condition(s):\n• In a && b, if a is false, the whole expression is already false, so b is never evaluated.\n• In a || b, if a is true, the whole expression is already true, so b is never evaluated.\n  ↳ This matters in real code: if (ptr != NULL && ptr->value > 0) safely skips checking ptr->value when ptr is NULL, avoiding a crash — the second condition never runs if the first is false.",
+      "<b>What Logical Operators Are</b>\nLogical operators combine multiple true/false conditions into a single true/false result — used whenever a decision depends on more than one thing being true at once.\n\n<b>Why They Matter</b>\nReal-world conditions are rarely just one check — \"old enough AND has ID\" needs a way to combine two separate relational tests into one overall decision, which is exactly what logical operators do.\n\n<b>How to Use Them</b>\n• <b>&&</b> (logical AND) — true only if both conditions are true\n• <b>||</b> (logical OR) — true if at least one condition is true\n• <b>!</b> (logical NOT) — flips a condition's truth value\n  ↳ These behave exactly like the AND, OR, and NOT logic gates covered in the \"Logic Gates\" card — same truth tables, just written as C operators applied to conditions instead of physical circuit inputs.\n\n<b>Short-Circuit Evaluation</b>\nC stops evaluating a && or || expression as soon as the overall result is already certain, without ever checking the remaining condition(s):\n• In a && b, if a is false, the whole expression is already false, so b is never evaluated.\n• In a || b, if a is true, the whole expression is already true, so b is never evaluated.\n  ↳ This matters in real code: if (ptr != NULL && ptr->value > 0) safely skips checking ptr->value when ptr is NULL, avoiding a crash — the second condition never runs if the first is false.",
     note:
       "Short-circuit evaluation isn't just an optimization — it's a safety mechanism programmers rely on, letting a first condition guard against a second condition that would otherwise fail or crash.",
     code: "int age = 20;\nint hasId = 1;\n\nif (age >= 18 && hasId) {\n    printf(\"Entry allowed\\n\");\n}\n\nif (!hasId) {\n    printf(\"ID required\\n\");\n}",
@@ -973,7 +973,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Bitwise Operators",
     tagline: "Operators that work directly on the individual bits of a value",
     description:
-      "<b>The Six Bitwise Operators</b>\n• <b>&</b> (bitwise AND) — compares each bit position, giving 1 only where both bits are 1\n• <b>|</b> (bitwise OR) — gives 1 where at least one bit is 1\n• <b>^</b> (bitwise XOR) — gives 1 where the bits are different\n• <b>~</b> (bitwise NOT / complement) — flips every bit\n• <b><<</b> (left shift) — shifts every bit left by a given number of positions, filling with 0s (equivalent to multiplying by a power of 2)\n• <b>>></b> (right shift) — shifts every bit right by a given number of positions (equivalent to dividing by a power of 2, for unsigned/positive values)\n  ↳ These are the exact same operations as the AND/OR/XOR/NOT logic gates, just applied bit-by-bit across an entire integer at once rather than to a single true/false condition.\n\n<b>Worked Example</b>\n5 in binary is 0101, and 3 in binary is 0011.\n5 & 3 = 0001 = 1\n5 | 3 = 0111 = 7\n5 ^ 3 = 0110 = 6\n\n<b>Where Bitwise Operators Are Used</b>\nBitwise operators are common in low-level code: setting or checking individual flag bits in a status register, fast multiplication/division by powers of 2 using shifts, and packing multiple small values into a single integer.",
+      "<b>What Bitwise Operators Are</b>\nBitwise operators work directly on the individual bits making up a value, rather than treating it as a single whole number.\n\n<b>Why They Matter</b>\nSetting or checking individual flag bits, packing several small values into one integer, and fast multiplication/division by powers of 2 all rely on manipulating bits directly, which is exactly what bitwise operators are for.\n\n<b>How to Use Them</b>\n• <b>&</b> (bitwise AND) — compares each bit position, giving 1 only where both bits are 1\n• <b>|</b> (bitwise OR) — gives 1 where at least one bit is 1\n• <b>^</b> (bitwise XOR) — gives 1 where the bits are different\n• <b>~</b> (bitwise NOT / complement) — flips every bit\n• <b><<</b> (left shift) — shifts every bit left by a given number of positions, filling with 0s (equivalent to multiplying by a power of 2)\n• <b>>></b> (right shift) — shifts every bit right by a given number of positions (equivalent to dividing by a power of 2, for unsigned/positive values)\n  ↳ These are the exact same operations as the AND/OR/XOR/NOT logic gates, just applied bit-by-bit across an entire integer at once rather than to a single true/false condition.\n\n<b>Worked Example</b>\n5 in binary is 0101, and 3 in binary is 0011.\n5 & 3 = 0001 = 1\n5 | 3 = 0111 = 7\n5 ^ 3 = 0110 = 6\n\n<b>Where Bitwise Operators Are Used</b>\nBitwise operators are common in low-level code: setting or checking individual flag bits in a status register, fast multiplication/division by powers of 2 using shifts, and packing multiple small values into a single integer.",
     note:
       "Don't confuse bitwise (&, |) with logical (&&, ||) operators — logical operators produce a single true/false result from whole conditions, while bitwise operators produce a full integer result by operating on individual bits.",
     code: "int a = 5;   // 0101\nint b = 3;   // 0011\n\nprintf(\"%d\\n\", a & b);   // 1  (0001)\nprintf(\"%d\\n\", a | b);   // 7  (0111)\nprintf(\"%d\\n\", a ^ b);   // 6  (0110)\nprintf(\"%d\\n\", a << 1);  // 10 (shift left = ×2)\nprintf(\"%d\\n\", a >> 1);  // 2  (shift right = ÷2)",
@@ -988,7 +988,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Assignment Operators",
     tagline: "Store a value into a variable — plain =, and shorthand combined forms",
     description:
-      "<b>The Basic Assignment Operator</b>\n= stores the value on its right-hand side into the variable on its left — x = 5 stores 5 into x. It's important not to confuse this with == (relational equality, covered in the \"Relational Operators\" card).\n\n<b>Compound (Shorthand) Assignment Operators</b>\nC provides shorthand operators that combine an arithmetic or bitwise operation with assignment in one step:\n• <b>+=</b> — x += 5 means x = x + 5\n• <b>-=</b> — x -= 5 means x = x - 5\n• <b>*=</b> — x *= 5 means x = x * 5\n• <b>/=</b> — x /= 5 means x = x / 5\n• <b>%=</b> — x %= 5 means x = x % 5\n  ↳ The same shorthand pattern also exists for bitwise operators: &=, |=, ^=, <<=, >>=.\n\n<b>Increment and Decrement</b>\nC also provides ++ (increment by 1) and -- (decrement by 1) as an even shorter form of += 1 and -= 1.\n• <b>Prefix</b> (++x) — increments x first, then uses the new value\n• <b>Postfix</b> (x++) — uses the current value first, then increments x",
+      "<b>What Assignment Operators Are</b>\nAssignment operators store a value into a variable — from the simple = sign, to shorthand combined forms that update a variable based on its own current value.\n\n<b>Why They Matter</b>\nWithout assignment, a variable's value could never change after it's first declared — assignment is the basic operation that lets a program actually update its own state as it runs.\n\n<b>How to Use Them</b>\n= stores the value on its right-hand side into the variable on its left — x = 5 stores 5 into x. It's important not to confuse this with == (relational equality, covered in the \"Relational Operators\" card).\n\n<b>Compound (Shorthand) Assignment Operators</b>\nC provides shorthand operators that combine an arithmetic or bitwise operation with assignment in one step:\n• <b>+=</b> — x += 5 means x = x + 5\n• <b>-=</b> — x -= 5 means x = x - 5\n• <b>*=</b> — x *= 5 means x = x * 5\n• <b>/=</b> — x /= 5 means x = x / 5\n• <b>%=</b> — x %= 5 means x = x % 5\n  ↳ The same shorthand pattern also exists for bitwise operators: &=, |=, ^=, <<=, >>=.\n\n<b>Increment and Decrement</b>\nC also provides ++ (increment by 1) and -- (decrement by 1) as an even shorter form of += 1 and -= 1.\n• <b>Prefix</b> (++x) — increments x first, then uses the new value\n• <b>Postfix</b> (x++) — uses the current value first, then increments x",
     note:
       "The prefix vs. postfix distinction (++x vs x++) only matters when the result is used immediately in the same expression — used on its own line, both do exactly the same thing.",
     code: "int x = 10;\nx += 5;   // x is now 15\nx -= 3;   // x is now 12\n\nint a = 5;\nint b = a++;  // b = 5, then a becomes 6\nint c = ++a;  // a becomes 7, then c = 7",
@@ -1003,7 +1003,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Control Flow",
     tagline: "The statements that decide which code runs, and how many times",
     description:
-      "<b>What Control Flow Means</b>\nBy default, a C program runs one line after another, top to bottom. Control flow statements let a program branch — running different code depending on a condition — or repeat a block of code multiple times.\n\n<b>What You'll Learn Here</b>\n• <b>if</b> — run a block of code only if a condition is true\n• <b>if-else</b> — run one block if a condition is true, a different block if it's false\n• <b>switch</b> — choose between many possible blocks based on the value of a single variable\n• <b>for loop</b> — repeat a block a set number of times, with a counter\n• <b>while</b> — repeat a block as long as a condition stays true, checked before each run\n• <b>do-while</b> — repeat a block as long as a condition stays true, checked after each run (so it always runs at least once)\n  ↳ Each is covered in its own card next, with syntax and a worked code example.",
+      "<b>What Control Flow Means</b>\nBy default, a C program runs one line after another, top to bottom. Control flow statements let a program branch — running different code depending on a condition — or repeat a block of code multiple times.\n\n<b>Why Control Flow Matters</b>\nA program that could only run top-to-bottom, with no branching or repeating, could never react to different input, or process more than a fixed amount of data — control flow is what makes real, useful programs possible.\n\n<b>How This Section Is Organized</b>\n• <b>if</b> — run a block of code only if a condition is true\n• <b>if-else</b> — run one block if a condition is true, a different block if it's false\n• <b>switch</b> — choose between many possible blocks based on the value of a single variable\n• <b>for loop</b> — repeat a block a set number of times, with a counter\n• <b>while</b> — repeat a block as long as a condition stays true, checked before each run\n• <b>do-while</b> — repeat a block as long as a condition stays true, checked after each run (so it always runs at least once)\n  ↳ Each is covered in its own card next, with syntax and a worked code example.",
     note:
       "Split control flow into two families: branching (if, if-else, switch) picks ONE path to run; looping (for, while, do-while) repeats the SAME path multiple times.",
     tags: ["Control Flow", "C Programming", "if", "switch", "Loops"],
@@ -1016,7 +1016,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "if",
     tagline: "Run a block of code only if a condition is true",
     description:
-      "<b>What if Does</b>\nAn if statement runs the block of code inside its curly braces only when its condition evaluates to true (any non-zero value); if the condition is false (0), the block is skipped entirely and execution continues after it.\n\n<b>Syntax</b>\nif (condition) {\n    // runs only if condition is true\n}",
+      "<b>What if Does</b>\nAn if statement runs the block of code inside its curly braces only when its condition evaluates to true (any non-zero value); if the condition is false (0), the block is skipped entirely and execution continues after it.\n\n<b>Why Use if</b>\nA program often needs to behave differently depending on some condition — if is the most basic tool for making that decision, running code only when it's actually needed.\n\n<b>How to Use It</b>\nif (condition) {\n    // runs only if condition is true\n}",
     note:
       "A condition doesn't have to be a comparison — any expression that evaluates to non-zero counts as true in C, and 0 counts as false. This is why if (x) is valid and means \"if x is non-zero.\"",
     code: "int age = 20;\n\nif (age >= 18) {\n    printf(\"You can vote.\\n\");\n}",
@@ -1031,7 +1031,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "if-else",
     tagline: "Run one block if a condition is true, a different block if it's false",
     description:
-      "<b>What if-else Does</b>\nAn if-else statement runs one block of code if its condition is true, and a completely different block if the condition is false — exactly one of the two blocks always runs.\n\n<b>Chaining Multiple Conditions — else if</b>\nMultiple conditions can be chained using else if, checked in order from top to bottom; the first one that's true has its block run, and every later condition is skipped.\n\n<b>Syntax</b>\nif (condition1) {\n    // runs if condition1 is true\n} else if (condition2) {\n    // runs if condition1 is false AND condition2 is true\n} else {\n    // runs if every condition above is false\n}",
+      "<b>What if-else Does</b>\nAn if-else statement runs one block of code if its condition is true, and a completely different block if the condition is false — exactly one of the two blocks always runs.\n\n<b>Why Use if-else</b>\nMany decisions naturally have two or more alternatives, not just one condition to check — if-else guarantees exactly one path runs, covering both the case that's true and the case that isn't.\n\n<b>How to Use It — Chaining Multiple Conditions With else if</b>\nMultiple conditions can be chained using else if, checked in order from top to bottom; the first one that's true has its block run, and every later condition is skipped.\n\n<b>Syntax</b>\nif (condition1) {\n    // runs if condition1 is true\n} else if (condition2) {\n    // runs if condition1 is false AND condition2 is true\n} else {\n    // runs if every condition above is false\n}",
     note:
       "Only ONE block in an if / else if / else chain ever runs, even if more than one condition would technically be true — C stops checking as soon as it finds the first true condition.",
     code: "int marks = 75;\n\nif (marks >= 90) {\n    printf(\"Grade A\\n\");\n} else if (marks >= 60) {\n    printf(\"Grade B\\n\");\n} else {\n    printf(\"Grade C\\n\");\n}\n// Output: Grade B",
@@ -1046,7 +1046,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "switch",
     tagline: "Choose between many possible blocks based on the value of a single variable",
     description:
-      "<b>What switch Does</b>\nA switch statement compares one variable's value against a list of possible case values, and runs the block matching whichever case equals that value — a cleaner alternative to a long chain of else if statements, when checking one variable against many exact values.\n\n<b>The Role of break</b>\nWithout a break statement at the end of each case, execution \"falls through\" into the next case's code as well, continuing to run every case below it until a break is hit or the switch ends. This fall-through is legal C, but almost always unintentional if left in by accident.\n\n<b>The default Case</b>\ndefault is optional, and runs if none of the listed case values match — similar to the final else in an if-else chain.\n\n<b>Syntax</b>\nswitch (value) {\n    case 1:\n        // runs if value == 1\n        break;\n    case 2:\n        // runs if value == 2\n        break;\n    default:\n        // runs if no case matched\n}",
+      "<b>What switch Does</b>\nA switch statement compares one variable's value against a list of possible case values, and runs the block matching whichever case equals that value — a cleaner alternative to a long chain of else if statements, when checking one variable against many exact values.\n\n<b>Why Use switch</b>\nChecking one variable against many possible exact values with a long chain of else if statements gets repetitive and harder to read — switch expresses \"pick the matching case\" far more directly.\n\n<b>How to Use It — the Role of break</b>\nWithout a break statement at the end of each case, execution \"falls through\" into the next case's code as well, continuing to run every case below it until a break is hit or the switch ends. This fall-through is legal C, but almost always unintentional if left in by accident.\n\n<b>The default Case</b>\ndefault is optional, and runs if none of the listed case values match — similar to the final else in an if-else chain.\n\n<b>Syntax</b>\nswitch (value) {\n    case 1:\n        // runs if value == 1\n        break;\n    case 2:\n        // runs if value == 2\n        break;\n    default:\n        // runs if no case matched\n}",
     note:
       "Forgetting break is one of the most common switch bugs in C — execution silently falls through into the next case's code instead of stopping, unless break (or the switch's final case) is reached.",
     code: "int day = 3;\n\nswitch (day) {\n    case 1:\n        printf(\"Monday\\n\");\n        break;\n    case 2:\n        printf(\"Tuesday\\n\");\n        break;\n    case 3:\n        printf(\"Wednesday\\n\");\n        break;\n    default:\n        printf(\"Another day\\n\");\n}\n// Output: Wednesday",
@@ -1061,7 +1061,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "for Loop",
     tagline: "Repeat a block a set number of times, with a counter",
     description:
-      "<b>What a for Loop Does</b>\nA for loop repeats a block of code, automatically managing a counter variable across three parts written in one line: an initialization (run once, before the loop starts), a condition (checked before every repeat), and an update (run after every repeat).\n\n<b>Syntax</b>\nfor (initialization; condition; update) {\n    // repeats while condition is true\n}\n\n<b>How It Actually Runs</b>\n1. The initialization runs once, at the very start.\n2. The condition is checked — if false, the loop ends immediately without running its block.\n3. If the condition is true, the block runs.\n4. The update runs.\n5. Back to step 2, and repeat.\n\n<b>When to Use a for Loop</b>\nA for loop is the natural choice whenever the number of repeats is known ahead of time, such as looping through every element of an array.",
+      "<b>What a for Loop Does</b>\nA for loop repeats a block of code, automatically managing a counter variable across three parts written in one line: an initialization (run once, before the loop starts), a condition (checked before every repeat), and an update (run after every repeat).\n\n<b>Why Use a for Loop</b>\nWhenever the number of repeats is known ahead of time — like looping through every element of an array — a for loop keeps the counter's setup, condition, and update all together in one place, instead of scattered across the code.\n\n<b>How It Works</b>\nfor (initialization; condition; update) {\n    // repeats while condition is true\n}\n\nStep by step:\n1. The initialization runs once, at the very start.\n2. The condition is checked — if false, the loop ends immediately without running its block.\n3. If the condition is true, the block runs.\n4. The update runs.\n5. Back to step 2, and repeat.",
     note:
       "All three parts of a for loop's header — initialization, condition, update — are optional and can be left blank, but the two semicolons separating them are always required, even when a part is empty.",
     code: "for (int i = 1; i <= 5; i++) {\n    printf(\"%d \", i);\n}\n// Output: 1 2 3 4 5",
@@ -1076,7 +1076,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "while",
     tagline: "Repeat a block as long as a condition stays true, checked before each run",
     description:
-      "<b>What a while Loop Does</b>\nA while loop repeats its block of code for as long as its condition stays true, checking that condition BEFORE every single run — including the very first one. If the condition is false from the start, the block never runs at all.\n\n<b>Syntax</b>\nwhile (condition) {\n    // repeats while condition is true\n}\n\n<b>When to Use a while Loop</b>\nA while loop is the natural choice when the number of repeats isn't known ahead of time, and instead depends on some condition that changes while the loop runs — such as reading input until a specific value is entered.",
+      "<b>What a while Loop Does</b>\nA while loop repeats its block of code for as long as its condition stays true, checking that condition BEFORE every single run — including the very first one. If the condition is false from the start, the block never runs at all.\n\n<b>Why Use a while Loop</b>\nWhen the number of repeats isn't known ahead of time, and instead depends on a condition that changes while the loop runs — like reading input until a specific value is entered — a while loop fits naturally, without needing a counter at all.\n\n<b>How to Use It</b>\nwhile (condition) {\n    // repeats while condition is true\n}",
     note:
       "The key difference from a for loop: while doesn't have a built-in counter or update step — the programmer is fully responsible for updating whatever the condition depends on, or the loop never ends (an infinite loop).",
     code: "int count = 1;\n\nwhile (count <= 5) {\n    printf(\"%d \", count);\n    count++;\n}\n// Output: 1 2 3 4 5",
@@ -1091,7 +1091,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "do-while",
     tagline: "Repeat a block as long as a condition stays true, checked after each run",
     description:
-      "<b>What a do-while Loop Does</b>\nA do-while loop is just like a while loop, except its condition is checked AFTER each run of the block, instead of before. This guarantees the block always runs at least once, even if the condition is false from the very start.\n\n<b>Syntax</b>\ndo {\n    // runs at least once\n} while (condition);\n\n<b>Note the Semicolon</b>\nUnlike if, for, and while, a do-while statement ends with a semicolon after its closing while (condition) — a detail that's easy to forget.\n\n<b>When to Use do-while</b>\ndo-while is the natural choice whenever a block genuinely needs to run at least once before checking whether to repeat — a very common example is a menu that must be shown to the user at least one time before asking whether to show it again.",
+      "<b>What a do-while Loop Does</b>\nA do-while loop is just like a while loop, except its condition is checked AFTER each run of the block, instead of before. This guarantees the block always runs at least once, even if the condition is false from the very start.\n\n<b>Why Use do-while</b>\nSome tasks genuinely need to happen at least once before it even makes sense to check whether to repeat — like showing a menu to the user before asking whether to show it again — and do-while is the only loop that guarantees this.\n\n<b>How to Use It</b>\ndo {\n    // runs at least once\n} while (condition);\n\nUnlike if, for, and while, a do-while statement ends with a semicolon after its closing while (condition) — a detail that's easy to forget.",
     note:
       "The single fact that separates do-while from while: do-while ALWAYS runs its block at least once, since the condition is checked only after the first run. A plain while loop can run zero times if its condition is false immediately.",
     code: "int num;\n\ndo {\n    printf(\"Enter a positive number: \");\n    scanf(\"%d\", &num);\n} while (num <= 0);\n// The prompt shows at least once, even before num is checked",
@@ -1106,7 +1106,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Functions",
     tagline: "Named, reusable blocks of code that take input and can send back a result",
     description:
-      "<b>What a Function Is</b>\nA function is a named, self-contained block of code that performs a specific task, which can be called (run) from anywhere in a program, as many times as needed, instead of rewriting the same logic repeatedly.\n\n<b>What You'll Learn Here</b>\n• <b>Function Declaration</b> — how a function's name, parameters, and return type are defined\n• <b>Parameters</b> — the values passed into a function when it's called\n• <b>Return Values</b> — the single value a function can send back to whoever called it\n• <b>Recursion</b> — a function that calls itself, used to solve problems that break down into smaller versions of themselves\n  ↳ Each is covered in its own card next, with a worked code example.",
+      "<b>What a Function Is</b>\nA function is a named, self-contained block of code that performs a specific task, which can be called (run) from anywhere in a program, as many times as needed, instead of rewriting the same logic repeatedly.\n\n<b>Why Functions Matter</b>\nWithout functions, any logic used more than once would need to be copy-pasted everywhere it's needed. Functions let that logic be written once, and reused as many times as needed, from anywhere in the program.\n\n<b>How This Section Is Organized</b>\n• <b>Function Declaration</b> — how a function's name, parameters, and return type are defined\n• <b>Parameters</b> — the values passed into a function when it's called\n• <b>Return Values</b> — the single value a function can send back to whoever called it\n• <b>Recursion</b> — a function that calls itself, used to solve problems that break down into smaller versions of themselves\n  ↳ Each is covered in its own card next, with a worked code example.",
     note:
       "Functions exist to avoid repeating the same code — every C program you've already seen relies on this, since main() itself is just a function, and printf() is a function from the C standard library.",
     tags: ["Functions", "C Programming", "Parameters", "Return Values", "Recursion"],
@@ -1119,7 +1119,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Function Declaration",
     tagline: "How a function's name, parameters, and return type are defined",
     description:
-      "<b>The Three Parts of a Function Declaration</b>\nreturnType functionName(parameterList) {\n    // function body\n}\n• <b>Return type</b> — the data type of the value the function sends back (or void, if it sends nothing back)\n• <b>Function name</b> — how the function is referred to when it's called\n• <b>Parameter list</b> — the values the function accepts as input, each with its own data type (covered in full in the \"Parameters\" card)\n\n<b>Function Prototype vs. Function Definition</b>\n• <b>Prototype</b> — a declaration without a body (e.g. int add(int a, int b);), telling the compiler a function exists and what it looks like, before its actual code appears later in the file.\n• <b>Definition</b> — the full function, including its body — the actual code that runs when it's called.\n  ↳ A prototype lets a function be called from code written above where the function is actually defined, since the compiler already knows its signature.\n\n<b>Calling a Function</b>\nOnce declared, a function is called (run) by writing its name followed by parentheses containing any arguments it needs.",
+      "<b>What a Function Declaration Is</b>\nA function declaration defines a function's name, its return type, and the parameters it accepts — the \"shape\" the compiler needs to know before that function can be called.\n\n<b>Why It Matters</b>\nThe compiler needs to know a function's shape before it can correctly check any call to that function — a declaration is what provides that shape, and lets the compiler catch mistakes like passing the wrong number of arguments.\n\n<b>How to Declare and Define a Function — the Three Parts</b>\nreturnType functionName(parameterList) {\n    // function body\n}\n• <b>Return type</b> — the data type of the value the function sends back (or void, if it sends nothing back)\n• <b>Function name</b> — how the function is referred to when it's called\n• <b>Parameter list</b> — the values the function accepts as input, each with its own data type (covered in full in the \"Parameters\" card)\n\n<b>Function Prototype vs. Function Definition</b>\n• <b>Prototype</b> — a declaration without a body (e.g. int add(int a, int b);), telling the compiler a function exists and what it looks like, before its actual code appears later in the file.\n• <b>Definition</b> — the full function, including its body — the actual code that runs when it's called.\n  ↳ A prototype lets a function be called from code written above where the function is actually defined, since the compiler already knows its signature.\n\n<b>Calling a Function</b>\nOnce declared, a function is called (run) by writing its name followed by parentheses containing any arguments it needs.",
     note:
       "A function prototype is essentially a promise to the compiler: \"this function exists, here's its shape\" — the actual code can come later in the file, as long as the prototype comes first.",
     code: "// Function prototype\nint add(int a, int b);\n\nint main() {\n    int result = add(3, 4);   // calling the function\n    printf(\"%d\\n\", result);   // 7\n    return 0;\n}\n\n// Function definition\nint add(int a, int b) {\n    return a + b;\n}",
@@ -1134,7 +1134,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Parameters",
     tagline: "The values passed into a function when it's called",
     description:
-      "<b>Parameters vs. Arguments</b>\n• <b>Parameter</b> — the name used inside a function's own definition to refer to an incoming value (e.g. int a in int add(int a, int b)).\n• <b>Argument</b> — the actual value supplied when the function is called (e.g. the 3 in add(3, 4)).\n  ↳ These terms are often used loosely to mean the same thing, but a parameter is the placeholder, and an argument is what actually fills it.\n\n<b>Pass by Value (C's Default)</b>\nIn C, arguments are passed by value — the function receives a COPY of the argument's value, not the original variable itself. Changing a parameter inside the function has no effect on the original variable back where the function was called from.\n\n<b>Passing by Reference (Using Pointers)</b>\nTo let a function actually modify a caller's variable, C requires passing a pointer to that variable instead of the value itself — the function then follows the pointer back to the original memory location to make its change.",
+      "<b>What Parameters Are</b>\nParameters are the values a function accepts as input, named inside the function's own definition, filled in with real arguments each time the function is called.\n\n<b>Why Parameters Matter</b>\nWithout parameters, a function could only ever work with fixed, hardcoded values. Parameters are what let the exact same function behave differently depending on what it's given each time it's called.\n\n<b>How Parameters Work</b>\n• <b>Parameter</b> — the name used inside a function's own definition to refer to an incoming value (e.g. int a in int add(int a, int b)).\n• <b>Argument</b> — the actual value supplied when the function is called (e.g. the 3 in add(3, 4)).\n  ↳ These terms are often used loosely to mean the same thing, but a parameter is the placeholder, and an argument is what actually fills it.\n\n<b>Pass by Value (C's Default)</b>\nIn C, arguments are passed by value — the function receives a COPY of the argument's value, not the original variable itself. Changing a parameter inside the function has no effect on the original variable back where the function was called from.\n\n<b>Passing by Reference (Using Pointers)</b>\nTo let a function actually modify a caller's variable, C requires passing a pointer to that variable instead of the value itself — the function then follows the pointer back to the original memory location to make its change.",
     note:
       "The default pass-by-value behavior is the single most commonly tested fact about C parameters: a function can never change the caller's original variable unless it's given a pointer to it.",
     code: "void increment(int x) {\n    x = x + 1;   // only changes the local copy\n}\n\nvoid incrementByPointer(int *x) {\n    *x = *x + 1;  // changes the original variable\n}\n\nint main() {\n    int num = 5;\n    increment(num);\n    printf(\"%d\\n\", num);          // still 5\n    incrementByPointer(&num);\n    printf(\"%d\\n\", num);          // now 6\n    return 0;\n}",
@@ -1149,7 +1149,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Return Values",
     tagline: "The single value a function can send back to whoever called it",
     description:
-      "<b>What a Return Value Is</b>\nA return value is the single result a function sends back to the code that called it, using the return keyword. Once return runs, the function ends immediately — any code written after it inside that function never runs.\n\n<b>The void Return Type</b>\nA function declared with return type void doesn't send back any value at all; it can still use a plain return; (with no value) to end early, but it cannot return a value.\n\n<b>A Function Can Only Return One Value</b>\nUnlike some languages, a C function can only return a single value directly. To send back multiple results, a function typically uses pointers (writing results into variables the caller provides) or bundles multiple values into a single struct.",
+      "<b>What a Return Value Is</b>\nA return value is the single result a function sends back to the code that called it, using the return keyword. Once return runs, the function ends immediately — any code written after it inside that function never runs.\n\n<b>Why Return Values Matter</b>\nA function that only changes things internally, with no way to send a result back, is far less useful than one that can hand its answer directly back to whoever called it — return is what makes a function's result usable by the rest of the program.\n\n<b>How to Use return — the void Return Type</b>\nA function declared with return type void doesn't send back any value at all; it can still use a plain return; (with no value) to end early, but it cannot return a value.\n\n<b>A Function Can Only Return One Value</b>\nUnlike some languages, a C function can only return a single value directly. To send back multiple results, a function typically uses pointers (writing results into variables the caller provides) or bundles multiple values into a single struct.",
     note:
       "Once a function hits its return statement, it exits immediately — no code after return inside that function ever executes, even if it looks reachable in the source.",
     code: "int square(int n) {\n    return n * n;   // function ends here, sending n*n back\n}\n\nint main() {\n    int result = square(5);\n    printf(\"%d\\n\", result);  // 25\n    return 0;\n}",
@@ -1164,12 +1164,375 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Recursion",
     tagline: "A function that calls itself, used to solve problems that break down into smaller versions of themselves",
     description:
-      "<b>What Recursion Is</b>\nRecursion is when a function calls itself, either directly or indirectly, to solve a problem by breaking it down into a smaller version of the exact same problem — repeating this until the problem becomes small enough to answer directly.\n\n<b>The Two Required Parts</b>\n• <b>Base case</b> — the simplest version of the problem, answered directly without any further recursive call; this is what eventually stops the recursion.\n• <b>Recursive case</b> — the function calls itself again, with input that's one step closer to the base case.\n  ↳ Without a base case (or if it's never actually reached), a recursive function calls itself forever, eventually crashing with a stack overflow once it runs out of memory for all the pending calls.\n\n<b>Worked Example — Factorial</b>\nfactorial(4) = 4 × factorial(3)\n             = 4 × (3 × factorial(2))\n             = 4 × (3 × (2 × factorial(1)))\n             = 4 × (3 × (2 × 1))          [factorial(1) is the base case]\n             = 24\n\n<b>Recursion vs. a Loop</b>\nAnything recursion can do, a loop can also do (and vice versa) — recursion is often more elegant and easier to read for problems that are naturally defined in terms of smaller versions of themselves (like factorials, or traversing a tree), but a loop typically uses less memory, since it doesn't build up a stack of pending function calls.",
+      "<b>What Recursion Is</b>\nRecursion is when a function calls itself, either directly or indirectly, to solve a problem by breaking it down into a smaller version of the exact same problem — repeating this until the problem becomes small enough to answer directly.\n\n<b>Why Use Recursion</b>\nSome problems are naturally defined in terms of smaller versions of themselves — a factorial, a tree traversal, a folder full of subfolders — and recursion lets the code mirror that natural, self-similar structure directly, often more clearly than an equivalent loop.\n\n<b>How It Works — the Two Required Parts</b>\n• <b>Base case</b> — the simplest version of the problem, answered directly without any further recursive call; this is what eventually stops the recursion.\n• <b>Recursive case</b> — the function calls itself again, with input that's one step closer to the base case.\n  ↳ Without a base case (or if it's never actually reached), a recursive function calls itself forever, eventually crashing with a stack overflow once it runs out of memory for all the pending calls.\n\n<b>Worked Example — Factorial</b>\nfactorial(4) = 4 × factorial(3)\n             = 4 × (3 × factorial(2))\n             = 4 × (3 × (2 × factorial(1)))\n             = 4 × (3 × (2 × 1))          [factorial(1) is the base case]\n             = 24\n\n<b>Recursion vs. a Loop</b>\nAnything recursion can do, a loop can also do (and vice versa) — recursion is often more elegant and easier to read for problems that are naturally defined in terms of smaller versions of themselves (like factorials, or traversing a tree), but a loop typically uses less memory, since it doesn't build up a stack of pending function calls.",
     note:
       "Every recursive function needs a base case that's actually reachable — forgetting it, or writing a recursive case that never gets closer to it, causes infinite recursion and a stack overflow crash.",
     code: "int factorial(int n) {\n    if (n == 0) {\n        return 1;          // base case\n    }\n    return n * factorial(n - 1);  // recursive case\n}\n\nint main() {\n    printf(\"%d\\n\", factorial(4));  // 24\n    return 0;\n}",
     codeLanguage: "C",
     tags: ["Recursion", "Base Case", "Recursive Case", "Factorial", "Functions", "C Programming"],
+  },
+  {
+    id: 81,
+    slug: "arrays",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Arrays",
+    tagline: "A single variable that holds multiple values of the same type, in a fixed-size, ordered block of memory",
+    description:
+      "<b>What Arrays Are</b>\nAn array is a collection of values, all of the same data type, stored together in memory under a single variable name, and accessed using an index number instead of a separate variable name for each value.\n\n<b>Why Arrays Matter</b>\nWithout arrays, a program needing to store 100 exam scores would need 100 separate variable names, handled individually, with no way to write a loop that processes them. Arrays let a program hold, loop through, and process any number of related values using one variable and a changing index.\n\n<b>How This Section Is Organized</b>\n• <b>One-Dimensional Array</b> — a simple, single list of values, such as a list of exam scores\n• <b>Two-Dimensional Array</b> — a grid of values arranged in rows and columns, such as a table or a matrix\n  ↳ Both are covered in their own cards next, with declaration syntax and worked examples.",
+    note:
+      "An array's size is fixed once it's declared — C does not let an array grow or shrink afterward. Needing a resizable collection is exactly the kind of problem the \"Memory Management\" cards (malloc, realloc) later in this section are built to solve.",
+    tags: ["Arrays", "C Programming", "One-Dimensional Array", "Two-Dimensional Array"],
+  },
+  {
+    id: 82,
+    slug: "one-dimensional-array",
+    section: "Programming",
+    parentSlug: "arrays",
+    title: "One-Dimensional Array",
+    tagline: "A simple, single list of values, accessed by index",
+    description:
+      "<b>What a One-Dimensional Array Is</b>\nA one-dimensional array is a simple, single list of values of the same type, each accessed by one index number, starting from 0.\n\n<b>Why Use One</b>\nStoring 5 exam scores in 5 separate variables (score1, score2, ...) makes it impossible to write a loop that processes them, or to write code that works the same way no matter how many scores there are. A one-dimensional array solves both problems at once.\n\n<b>How to Declare and Use One</b>\nint scores[5];                          // declares an array of 5 ints, values unset\nint scores[5] = {90, 85, 77, 92, 88};   // declares and initializes in one line\n\nEvery element is accessed using an index in square brackets, starting from 0, not 1 — scores[0] is 90 (the first element), and scores[4] is 88 (the fifth and last element); there is no scores[5] in a 5-element array. A for loop is the natural way to visit every element in order, using the loop's counter as the index.\n\n<b>Array Size in Memory</b>\nAn array's total size in memory is simply (number of elements) × (size of one element) — a 5-element int array, where int is typically 4 bytes, uses 20 contiguous bytes total.",
+    note:
+      "The single most common array bug: accessing an index one past the end (like scores[5] in a 5-element array). C does not stop this at compile time or runtime — it silently reads whatever memory happens to sit just past the array, which is undefined behavior.",
+    code: "int scores[5] = {90, 85, 77, 92, 88};\n\nfor (int i = 0; i < 5; i++) {\n    printf(\"%d \", scores[i]);\n}\n// Output: 90 85 77 92 88",
+    codeLanguage: "C",
+    tags: ["One-Dimensional Array", "Arrays", "Indexing", "C Programming"],
+  },
+  {
+    id: 83,
+    slug: "two-dimensional-array",
+    section: "Programming",
+    parentSlug: "arrays",
+    title: "Two-Dimensional Array",
+    tagline: "A grid of values arranged in rows and columns",
+    description:
+      "<b>What a Two-Dimensional Array Is</b>\nA two-dimensional array is a grid of values of the same type, arranged in rows and columns, each element accessed with two index numbers instead of one.\n\n<b>Why Use One</b>\nMany real-world things are naturally grid-shaped — a spreadsheet, a chessboard, a mathematical matrix, a photo's pixels. A two-dimensional array lets a program represent and process that grid directly, using the same row/column shape the data naturally has.\n\n<b>How to Declare and Use One</b>\nint grid[2][3];                              // 2 rows, 3 columns, values unset\nint grid[2][3] = {{1, 2, 3}, {4, 5, 6}};     // declares and initializes in one line\n\nEach element is accessed with two indexes: grid[row][column], both starting from 0 — grid[0][0] is 1 (first row, first column), and grid[1][2] is 6 (second row, third column). A 2D array is normally visited with two nested for loops — the outer loop walks through each row, and the inner loop walks through each column within that row.\n\n<b>How It's Actually Stored</b>\nEven though it looks like a grid, a 2D array is really still stored as one single, contiguous block of memory, laid out row by row (row-major order) — grid[0][0], grid[0][1], grid[0][2], then grid[1][0], and so on.",
+    note:
+      "A 2D array's memory layout is row-major: every element of row 0 comes before any element of row 1. This is why looping with the row index as the OUTER loop and column index as the INNER loop matches memory order, and is usually the more cache-friendly way to visit every element.",
+    code: "int grid[2][3] = {{1, 2, 3}, {4, 5, 6}};\n\nfor (int row = 0; row < 2; row++) {\n    for (int col = 0; col < 3; col++) {\n        printf(\"%d \", grid[row][col]);\n    }\n}\n// Output: 1 2 3 4 5 6",
+    codeLanguage: "C",
+    tags: ["Two-Dimensional Array", "Arrays", "Matrix", "Row-Major Order", "C Programming"],
+  },
+  {
+    id: 84,
+    slug: "strings",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Strings",
+    tagline: "Text in C, stored as a character array ending in a special null terminator",
+    description:
+      "<b>What a String Is in C</b>\nUnlike some languages, C has no dedicated \"string\" data type. A string in C is simply an array of char values, ending with a special null character ('\\0') that marks where the text stops.\n\n<b>Why Strings Need Their Own Section</b>\nBecause C strings are really just character arrays with one extra rule (the null terminator), they behave differently from other arrays in several ways that trip up beginners — sizing them correctly, and using a dedicated set of library functions instead of ordinary array operations.\n\n<b>How This Section Is Organized</b>\n• <b>Character Arrays</b> — how a string is actually declared and stored, including the null terminator\n• <b>String Functions</b> — the standard library functions (strlen, strcpy, strcat, strcmp) used to work with strings\n  ↳ Both are covered in their own cards next.",
+    note:
+      "Every C string ends with a hidden '\\0' character that never gets printed — it's what tells a function like printf where the text actually stops, since a char array has no separate \"length\" stored anywhere else.",
+    tags: ["Strings", "C Programming", "Character Arrays", "String Functions", "Null Terminator"],
+  },
+  {
+    id: 85,
+    slug: "character-arrays",
+    section: "Programming",
+    parentSlug: "strings",
+    title: "Character Arrays",
+    tagline: "How a string is actually declared and stored, including the null terminator",
+    description:
+      "<b>What a Character Array Is</b>\nA character array is a fixed-size block of char values — a string in C is stored exactly this way, with one extra rule: the text must end with a special null character ('\\0') marking where it stops.\n\n<b>Why the Null Terminator Matters</b>\nA char array with no '\\0' isn't treated as a valid string by string functions or printf's %s — they keep reading memory past the array's actual data until they happen to hit a 0 byte somewhere, which is undefined behavior and a common source of crashes or garbage output. The '\\0' is what tells these functions exactly where the real text ends.\n\n<b>How to Declare a String</b>\nchar name[6] = \"Hello\";           // shorthand — the compiler adds '\\0' automatically\nchar name[6] = {'H','e','l','l','o','\\0'};  // the exact same thing, written out manually\n\nThe word \"Hello\" is 5 characters long, but the array is declared with size 6 — the extra slot holds the null terminator. Reading a string with scanf doesn't need the address operator, since an array's name already acts like a pointer to it: scanf(\"%s\", name);",
+    note:
+      "A string of N visible characters always needs an array of at least N+1 — the +1 is for the invisible '\\0' terminator, which is easy to forget when sizing a char array.",
+    code: "char greeting[6] = \"Hello\";\nprintf(\"%s\\n\", greeting);   // Hello\nprintf(\"%d\\n\", greeting[5]); // 0  ('\\0' printed as its numeric value)",
+    codeLanguage: "C",
+    tags: ["Character Arrays", "Strings", "Null Terminator", "C Programming"],
+  },
+  {
+    id: 86,
+    slug: "string-functions",
+    section: "Programming",
+    parentSlug: "strings",
+    title: "String Functions",
+    tagline: "The standard library functions used to measure, copy, join, and compare strings",
+    description:
+      "<b>What String Functions Are</b>\nString functions are ready-made functions, provided by C's standard library, for measuring, copying, joining, and comparing strings — declared in the string.h header, which must be included with #include <string.h> before any of them can be used.\n\n<b>Why Use Library Functions Instead of Writing Your Own</b>\nManually looping through a char array to find its length, or to compare it to another string, is repetitive and easy to get subtly wrong (especially around the null terminator). The standard library's string functions have already solved these problems correctly, and are the version every other C programmer will recognize immediately.\n\n<b>How to Use the Core String Functions</b>\n• <b>strlen(s)</b> — returns the length of string s, NOT counting the null terminator\n• <b>strcpy(dest, src)</b> — copies the string src into dest, overwriting whatever was there\n• <b>strcat(dest, src)</b> — appends (joins) the string src onto the end of dest\n• <b>strcmp(s1, s2)</b> — compares two strings, returning 0 if they're exactly equal, a negative number if s1 comes before s2 alphabetically, or a positive number if it comes after\n\n<b>strcmp Doesn't Return true/false</b>\nA common mistake is checking if (strcmp(s1, s2)) expecting it to mean \"equal\" — but strcmp returns 0 (falsy) when the strings ARE equal, the opposite of what many beginners assume. The correct check for equality is if (strcmp(s1, s2) == 0).",
+    note:
+      "The single most common strcmp mistake: 0 means the strings are equal, not \"false/different.\" Always compare explicitly against 0 rather than treating strcmp's result as a plain true/false.",
+    code: "#include <string.h>\n\nchar a[20] = \"Hello\";\nchar b[] = \" World\";\n\nprintf(\"%lu\\n\", strlen(a));      // 5\nstrcat(a, b);\nprintf(\"%s\\n\", a);               // Hello World\nprintf(\"%d\\n\", strcmp(\"cat\", \"cat\"));  // 0 (equal)",
+    codeLanguage: "C",
+    tags: ["String Functions", "strlen", "strcpy", "strcat", "strcmp", "Strings", "C Programming"],
+  },
+  {
+    id: 87,
+    slug: "pointers",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Pointers",
+    tagline: "Variables that store a memory address instead of an ordinary value",
+    description:
+      "<b>What a Pointer Is</b>\nA pointer is a variable whose value is a memory address — instead of holding a number or a character directly, it holds the location in memory where that value actually lives.\n\n<b>Why Pointers Matter in C</b>\nPointers are what let a function modify a caller's variable (covered in the \"Parameters\" card), let a program manage memory dynamically at runtime (covered in \"Memory Management\"), and let code work efficiently with arrays and strings without copying their entire contents around.\n\n<b>How This Section Is Organized</b>\n• <b>Pointer Variables</b> — how to declare and use a pointer\n• <b>Address Operator (&)</b> — getting the memory address of an existing variable\n• <b>Dereference Operator (*)</b> — following a pointer to read or change the value it points to\n• <b>Pointer Arithmetic</b> — moving a pointer forward or backward through memory, especially through an array\n  ↳ Each is covered in its own card next, in an order that builds on the one before it.",
+    note:
+      "Pointers are widely considered the single hardest concept for C beginners — but every one of these four cards builds on the last, so working through them in order (variables → address → dereference → arithmetic) makes each step much smaller.",
+    tags: ["Pointers", "C Programming", "Address Operator", "Dereference Operator", "Pointer Arithmetic"],
+  },
+  {
+    id: 88,
+    slug: "pointer-variables",
+    section: "Programming",
+    parentSlug: "pointers",
+    title: "Pointer Variables",
+    tagline: "How to declare a variable that holds a memory address",
+    description:
+      "<b>What a Pointer Variable Is</b>\nA pointer variable is a variable declared to hold a memory address rather than an ordinary value — its own stored value is simply a number (typically 8 bytes on a modern 64-bit system), regardless of whether it points to an int, a char, or a whole struct.\n\n<b>Why Pointers Exist</b>\nSome tasks are impossible without a way to refer to a variable's location rather than its value — letting a function change a caller's variable, or letting code work with a large block of data without copying it, both require a pointer.\n\n<b>How to Declare and Initialize One</b>\nint *p;      // p is a pointer that will hold the address of an int\nchar *c;     // c is a pointer that will hold the address of a char\n\nThe asterisk (*) in a declaration marks the variable as a pointer, and the type before it tells the compiler what type of value the pointer will point to. A pointer that isn't pointing at any valid memory should be explicitly set to NULL (int *p = NULL;), and checked before use (if (p != NULL)).",
+    note:
+      "An uninitialized pointer holds garbage — some leftover, meaningless address — not automatically NULL. Always initialize a pointer, either to a real address or explicitly to NULL, before using it.",
+    code: "int age = 25;\nint *p;      // declare a pointer to an int\np = &age;    // p now holds age's memory address\n\nprintf(\"%d\\n\", *p);  // 25 (the value p points to)",
+    codeLanguage: "C",
+    tags: ["Pointer Variables", "Pointers", "NULL", "C Programming"],
+  },
+  {
+    id: 89,
+    slug: "address-operator",
+    section: "Programming",
+    parentSlug: "pointers",
+    title: "Address Operator (&)",
+    tagline: "Gets the memory address of an existing variable",
+    description:
+      "<b>What the Address Operator Is</b>\nThe address operator (&), placed directly before a variable's name, returns that variable's memory address instead of its value — &age doesn't mean \"the value of age,\" it means \"where age lives in memory.\"\n\n<b>Why It's Needed</b>\nA pointer variable needs a real address to point at before it's useful — the address operator is how that address is actually obtained from an existing variable in the first place.\n\n<b>How to Use It</b>\nint age = 25;\nint *p = &age;   // p now holds the address of age\n\nscanf also needs the address of a variable to write into, not its current value, which is exactly why scanf(\"%d\", &age) uses & — without it, scanf would have no way to reach back and actually change age.",
+    note:
+      "& answers \"where does this live?\", while * (covered next) answers \"what's actually stored there?\" — they're opposite operations, and mixing them up is one of the most common pointer mistakes.",
+    code: "int age = 25;\nprintf(\"%p\\n\", &age);  // prints age's memory address, e.g. 0x7ffee3a2b91c",
+    codeLanguage: "C",
+    tags: ["Address Operator", "Pointers", "&", "C Programming"],
+  },
+  {
+    id: 90,
+    slug: "dereference-operator",
+    section: "Programming",
+    parentSlug: "pointers",
+    title: "Dereference Operator (*)",
+    tagline: "Follows a pointer to read or change the value it points to",
+    description:
+      "<b>What the Dereference Operator Is</b>\nOnce a variable is already declared as a pointer, using * before it in an expression means \"go to the address this pointer holds, and give me the value actually stored there\" — this is called dereferencing.\n\n<b>Why It's Needed</b>\nA pointer on its own only holds an address — dereferencing is the operation that actually reaches that address and reads (or changes) the real value sitting there, which is the entire point of having a pointer in the first place.\n\n<b>How to Use It</b>\nint age = 25;\nint *p = &age;\nprintf(\"%d\\n\", *p);   // 25 — follows p to age, and reads its value\n\n*p = 30;              // follows p to age, and changes its value to 30\nprintf(\"%d\\n\", age);  // 30 — age itself has genuinely changed\n\n<b>The Same Symbol, Two Different Meanings</b>\n* means two different things depending on context: in a declaration (int *p), it marks p as a pointer; in an expression (*p), it dereferences an existing pointer to reach the value it points to.",
+    note:
+      "*p = 30; doesn't change p itself — p still holds the same address. It changes whatever p is POINTING AT. This is the exact mechanism that lets a function modify a caller's variable through a pointer parameter.",
+    code: "int age = 25;\nint *p = &age;\n\n*p = 30;              // changes age, through p\nprintf(\"%d\\n\", age);  // 30",
+    codeLanguage: "C",
+    tags: ["Dereference Operator", "Pointers", "*", "C Programming"],
+  },
+  {
+    id: 91,
+    slug: "pointer-arithmetic",
+    section: "Programming",
+    parentSlug: "pointers",
+    title: "Pointer Arithmetic",
+    tagline: "Moving a pointer forward or backward through memory, especially through an array",
+    description:
+      "<b>What Pointer Arithmetic Is</b>\nPointer arithmetic is adding or subtracting a number from a pointer to move it forward or backward through memory — measured in units of whatever type it points to, not in raw bytes.\n\n<b>Why It's Useful</b>\nPointer arithmetic is what lets code walk through an array one element at a time using a pointer instead of index brackets, and is the reason a function can process an array of any length just by being given a starting pointer and a count.\n\n<b>How It Works</b>\nint arr[3] = {10, 20, 30};\nint *p = arr;        // p points to arr[0]\nprintf(\"%d\\n\", *p);     // 10\nprintf(\"%d\\n\", *(p+1)); // 20 — moved forward by 1 int's worth of bytes (usually 4)\nprintf(\"%d\\n\", *(p+2)); // 30\n\nAn array's name, used on its own, decays into a pointer to its first element — this is exactly why arr[i] and *(arr + i) mean the same thing in C.",
+    note:
+      "arr[i] is really just shorthand for *(arr + i) — this identity is exactly why array indexing and pointer arithmetic are two ways of writing the same underlying operation in C.",
+    code: "int arr[3] = {10, 20, 30};\nint *p = arr;\n\nfor (int i = 0; i < 3; i++) {\n    printf(\"%d \", *(p + i));\n}\n// Output: 10 20 30",
+    codeLanguage: "C",
+    tags: ["Pointer Arithmetic", "Pointers", "Arrays", "C Programming"],
+  },
+  {
+    id: 92,
+    slug: "structures",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Structures",
+    tagline: "Ways to group different pieces of data together under one name",
+    description:
+      "<b>What This Group Covers</b>\nArrays only hold multiple values of the SAME type. Structures, unions, and enums are three different ways C lets a program group related pieces of data — often of DIFFERENT types — together as one meaningful unit.\n\n<b>Why These Matter</b>\nReal-world data is rarely just one number or one string — a student has a name AND an age AND a GPA, all at once. Without a way to group these together, a program would need to manage several separately-named variables per \"thing\" it represents, with no way to pass \"one student\" around as a single value.\n\n<b>How This Section Is Organized</b>\n• <b>Structure</b> — groups several different variables together under one name, each keeping its own separate storage\n• <b>Union</b> — groups several different variables together under one name, but all of them share the SAME storage\n• <b>Enum</b> — gives a set of named integer constants readable names, instead of using plain, unlabeled numbers\n  ↳ Each is covered in its own card next.",
+    note:
+      "The one distinction to keep straight: a struct's members each get their OWN memory; a union's members all SHARE the same memory (only one is valid at a time). Enum isn't a data-grouping tool at all — it's just readable names for integer constants.",
+    tags: ["Structures", "Structure", "Union", "Enum", "C Programming"],
+  },
+  {
+    id: 93,
+    slug: "structure",
+    section: "Programming",
+    parentSlug: "structures",
+    title: "Structure",
+    tagline: "Groups several different variables together under one name, each with its own storage",
+    description:
+      "<b>What a Structure Is</b>\nA structure (struct) groups several variables, possibly of different types, together under one name, so they can be treated as a single unit — for example, a Student structure might hold a name, an age, and a grade all in one place.\n\n<b>Why Use One</b>\nWithout a struct, representing \"one student\" would mean juggling separate name, age, and gpa variables (or separate arrays) with no guarantee they stay matched together correctly. A struct bundles them into one real, passable, storable unit.\n\n<b>How to Declare and Use One</b>\nstruct Student {\n    char name[20];\n    int age;\n    float gpa;\n};\n\nstruct Student s1 = {\"Rita\", 20, 3.8};\nprintf(\"%s is %d\\n\", s1.name, s1.age);\n\nAn individual field (called a member) is accessed using the dot (.) operator. If accessing a member through a pointer to a struct, the arrow (->) operator is used instead (ptr->name), which is shorthand for (*ptr).name. Every member of a struct gets its own separate storage, so a Student struct's total size is roughly the sum of all its members' sizes.",
+    note:
+      "Use . when you have the struct variable itself, and -> when you have a POINTER to a struct — ptr->name is just shorthand for (*ptr).name, following the pointer first, then accessing the member.",
+    code: "struct Student {\n    char name[20];\n    int age;\n    float gpa;\n};\n\nint main() {\n    struct Student s1 = {\"Rita\", 20, 3.8};\n    printf(\"%s is %d, GPA %.1f\\n\", s1.name, s1.age, s1.gpa);\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Structure", "struct", "Structures", "C Programming"],
+  },
+  {
+    id: 94,
+    slug: "union",
+    section: "Programming",
+    parentSlug: "structures",
+    title: "Union",
+    tagline: "Groups several different variables together, but all of them share the same storage",
+    description:
+      "<b>What a Union Is</b>\nA union looks almost identical to a struct in how it's declared, but behaves very differently in memory: every member of a union shares the exact same block of memory, so only ONE member holds a valid, meaningful value at any given time.\n\n<b>Why Use One</b>\nWhen a variable only ever needs to hold ONE of several possible types at a time — never more than one simultaneously — a union uses far less memory than a struct with the same members would, since it doesn't need separate space for each one.\n\n<b>How to Declare and Use One</b>\nunion Value {\n    int i;\n    float f;\n    char c;\n};\n\nunion Value v;\nv.i = 65;\nprintf(\"%d\\n\", v.i);   // 65 — valid, i was just set\nv.f = 3.14;\nprintf(\"%d\\n\", v.i);   // garbage — writing to f overwrote i's memory\n\nA union's total size is only as large as its LARGEST single member, since every member overlaps the same memory — unlike a struct, whose size is roughly the sum of every member's size.",
+    note:
+      "The size test is the fastest way to tell struct and union apart on an exam: a struct's size is roughly the SUM of its members' sizes; a union's size is only as big as its LARGEST member, since they all share one space.",
+    code: "union Value {\n    int i;\n    float f;\n};\n\nint main() {\n    union Value v;\n    v.i = 65;\n    printf(\"%d\\n\", v.i);   // 65\n    v.f = 3.14;             // overwrites the same memory i used\n    printf(\"%d\\n\", v.i);   // no longer 65 — garbage\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Union", "Structures", "Memory Sharing", "C Programming"],
+  },
+  {
+    id: 95,
+    slug: "enum",
+    section: "Programming",
+    parentSlug: "structures",
+    title: "Enum",
+    tagline: "Gives a set of named integer constants readable names",
+    description:
+      "<b>What an Enum Is</b>\nAn enum (short for \"enumeration\") defines a set of named integer constants, making code far more readable than using plain, unlabeled numbers to represent a fixed set of options.\n\n<b>Why Use One</b>\nWriting if (today == WEDNESDAY) is far more readable, and far less error-prone, than writing if (today == 2) — the enum name documents its own meaning directly in the code, and the compiler still treats it as a plain integer underneath.\n\n<b>How to Declare and Use One</b>\nenum Day { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };\n\nenum Day today = WEDNESDAY;\nif (today == WEDNESDAY) {\n    printf(\"Midweek!\\n\");\n}\n\nBy default, an enum's first name is assigned 0, and each following name automatically gets the next integer (MONDAY=0, TUESDAY=1, and so on). Specific numbers can also be assigned manually, and any names after a manual value continue counting up from there.",
+    note:
+      "An enum value is really just a named integer constant — it doesn't create a genuinely new type the way a struct does; it exists purely to make numeric constants readable and self-documenting.",
+    code: "enum Day { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };\n\nint main() {\n    enum Day today = WEDNESDAY;\n    printf(\"%d\\n\", today);   // 2\n    return 0;\n}",
+    codeLanguage: "C",
+    tags: ["Enum", "Structures", "Named Constants", "C Programming"],
+  },
+  {
+    id: 96,
+    slug: "memory-management",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "Memory Management",
+    tagline: "Requesting and releasing memory at runtime, instead of only using fixed-size arrays",
+    description:
+      "<b>What Dynamic Memory Management Is</b>\nDynamic memory management is requesting and releasing memory at runtime, based on a program's actual data, instead of only using fixed-size arrays whose size is locked in at compile time.\n\n<b>Why It's Needed</b>\nAn ordinary array's size is fixed the moment it's declared. Dynamic memory lets a program request exactly the amount of memory it needs while it's actually running — for example, sizing an array based on how many records are actually in a file, discovered only once the program is already running.\n\n<b>How This Section Is Organized</b>\n• <b>malloc()</b> — allocates a block of memory of a given size\n• <b>calloc()</b> — allocates a block of memory and initializes every byte to 0\n• <b>realloc()</b> — resizes a block of memory that was already allocated\n• <b>free()</b> — releases previously allocated memory back to the system\n  ↳ Each is covered in its own card next, with a worked code example.\n\n<b>Where This Memory Lives</b>\nMemory allocated this way comes from a region called the heap, separate from a program's normal local variables (which live on the stack) — heap memory persists until it's explicitly freed, even after the function that allocated it has returned.",
+    note:
+      "Every successful malloc/calloc/realloc call must eventually be matched with exactly one free() call — forgetting this causes a memory leak, where memory stays reserved for the rest of the program's life even though nothing uses it anymore.",
+    tags: ["Memory Management", "malloc", "calloc", "realloc", "free", "Heap", "C Programming"],
+  },
+  {
+    id: 97,
+    slug: "malloc",
+    section: "Programming",
+    parentSlug: "memory-management",
+    title: "malloc()",
+    tagline: "Allocates a block of memory of a given size, without initializing it",
+    description:
+      "<b>What malloc() Does</b>\nmalloc(size) requests a block of memory of size bytes from the heap, and returns a pointer to the start of that block — or NULL if the allocation failed.\n\n<b>Why Use It</b>\nmalloc is the most basic way to get memory whose size isn't known until the program is running — for example, allocating exactly enough room for however many records a user says they want to enter.\n\n<b>How to Use It</b>\nint *arr = (int *) malloc(5 * sizeof(int));   // room for 5 ints\nif (arr == NULL) {\n    printf(\"Allocation failed\\n\");\n}\n\nThe sizeof(int) part calculates exactly how many bytes one int actually takes on the current system. Memory from malloc is NOT set to any particular value — it contains whatever leftover data happened to already be there, so reading it before writing to it first gives garbage.",
+    note:
+      "malloc's memory is uninitialized garbage, not zeroed — if you need memory that starts at 0, use calloc (covered next) instead of malloc.",
+    code: "int *arr = (int *) malloc(5 * sizeof(int));\nif (arr == NULL) {\n    printf(\"Allocation failed\\n\");\n    return 1;\n}\n\nfor (int i = 0; i < 5; i++) {\n    arr[i] = i * 10;\n}\nprintf(\"%d\\n\", arr[2]);  // 20\n\nfree(arr);",
+    codeLanguage: "C",
+    tags: ["malloc", "Memory Management", "Heap", "C Programming"],
+  },
+  {
+    id: 98,
+    slug: "calloc",
+    section: "Programming",
+    parentSlug: "memory-management",
+    title: "calloc()",
+    tagline: "Allocates a block of memory and initializes every byte to 0",
+    description:
+      "<b>What calloc() Does</b>\ncalloc(count, size) requests memory for count elements, each size bytes, and — unlike malloc — guarantees every byte of that memory starts out set to 0.\n\n<b>Why Use It Instead of malloc</b>\nWhenever a program needs to be certain memory starts clean (for example, a running total that must begin at 0), calloc removes the risk of accidentally reading malloc's uninitialized garbage before writing a real value.\n\n<b>How to Use It</b>\nint *arr = (int *) calloc(5, sizeof(int));   // 5 ints, all starting at 0\nif (arr == NULL) {\n    return 1;\n}\nprintf(\"%d\\n\", arr[0]);  // 0 — guaranteed by calloc\n\ncalloc takes the element count and element size SEPARATELY (unlike malloc's single total byte count), at a small performance cost for the zeroing step.",
+    note:
+      "The exam-favourite difference: calloc always zero-initializes its memory; malloc never does. Both otherwise serve the same purpose — requesting a block of heap memory.",
+    code: "int *arr = (int *) calloc(5, sizeof(int));\nif (arr == NULL) {\n    return 1;\n}\n\nprintf(\"%d\\n\", arr[0]);  // 0 — guaranteed by calloc\n\nfree(arr);",
+    codeLanguage: "C",
+    tags: ["calloc", "Memory Management", "Heap", "C Programming"],
+  },
+  {
+    id: 99,
+    slug: "realloc",
+    section: "Programming",
+    parentSlug: "memory-management",
+    title: "realloc()",
+    tagline: "Resizes a block of memory that was already allocated",
+    description:
+      "<b>What realloc() Does</b>\nrealloc(ptr, newSize) resizes a previously allocated block of memory (from malloc, calloc, or an earlier realloc) to a new size, and returns a pointer to the resized block — which may or may not be the same address as before.\n\n<b>Why Use It</b>\nWithout realloc, growing a dynamically-sized collection would require manually allocating a whole new block, copying every old value over by hand, and freeing the old block — realloc does all of that in one call.\n\n<b>How to Use It</b>\nint *arr = (int *) malloc(5 * sizeof(int));\n// ...later, need more room...\narr = (int *) realloc(arr, 10 * sizeof(int));\n\nrealloc preserves the existing contents up to the smaller of the old and new sizes. Because realloc may need to move the block to a completely different address, always capture its return value (usually back into the same pointer variable) rather than assuming the address stayed the same.",
+    note:
+      "Never keep using the OLD pointer after calling realloc — if realloc had to move the block, the old pointer may now point to memory that's been freed or reused elsewhere, leading to undefined behavior.",
+    code: "int *arr = (int *) malloc(5 * sizeof(int));\n// ... arr is used, then more space is needed ...\narr = (int *) realloc(arr, 10 * sizeof(int));\nif (arr == NULL) {\n    return 1;\n}\n// arr now has room for 10 ints; the first 5 values are preserved\n\nfree(arr);",
+    codeLanguage: "C",
+    tags: ["realloc", "Memory Management", "Heap", "C Programming"],
+  },
+  {
+    id: 100,
+    slug: "free",
+    section: "Programming",
+    parentSlug: "memory-management",
+    title: "free()",
+    tagline: "Releases previously allocated memory back to the system",
+    description:
+      "<b>What free() Does</b>\nfree(ptr) releases a block of memory that was previously allocated by malloc, calloc, or realloc, returning it to the heap so it can be reused by later allocations.\n\n<b>Why It Matters</b>\nMemory that's never freed stays reserved for the rest of the program's run (a memory leak), which can eventually exhaust all available memory in a long-running program — free is what closes the loop that malloc/calloc/realloc opened.\n\n<b>How to Use It</b>\nint *arr = (int *) malloc(5 * sizeof(int));\nif (arr != NULL) {\n    // ... use arr ...\n    free(arr);\n    arr = NULL;   // avoid accidentally using the freed memory\n}\n\nNever use a pointer again after it's been freed (a \"use-after-free\" bug), and never free the same pointer twice (a \"double free\") — both are undefined behavior.",
+    note:
+      "Three rules to avoid the most common free() bugs: free every block exactly once, never free the same block twice, and never use a pointer again after it's been freed (set it to NULL if there's any chance it might be reused by mistake).",
+    code: "int *arr = (int *) malloc(5 * sizeof(int));\nif (arr != NULL) {\n    // ... use arr ...\n    free(arr);\n    arr = NULL;   // avoid accidentally using the freed memory\n}",
+    codeLanguage: "C",
+    tags: ["free", "Memory Management", "Memory Leak", "Dangling Pointer", "C Programming"],
+  },
+  {
+    id: 101,
+    slug: "file-handling",
+    section: "Programming",
+    parentSlug: "c-programming",
+    title: "File Handling",
+    tagline: "Reading from and writing to files on disk, from inside a C program",
+    description:
+      "<b>What File Handling Is</b>\nFile handling is reading from and writing to files on disk from inside a C program, using a FILE * pointer returned by fopen() to identify exactly which open file every later operation acts on.\n\n<b>Why It's Needed</b>\nEverything a program keeps in ordinary variables disappears the moment the program ends. File handling lets a C program save data permanently to disk, and read it back again later, even after the program has closed and reopened.\n\n<b>How This Section Is Organized</b>\n• <b>fopen()</b> — opens a file, in a chosen mode (read, write, append, etc.)\n• <b>fclose()</b> — closes a file that was previously opened\n• <b>Reading</b> — pulling data out of an already-open file\n• <b>Writing</b> — putting data into an already-open file\n  ↳ Each is covered in its own card next, following the same open → use → close pattern every time.",
+    note:
+      "The standard pattern for every file operation is the same: open it (fopen), check it actually opened (compare to NULL), do the read/write work, then close it (fclose) — skipping the close step can leave data unsaved or the file locked.",
+    tags: ["File Handling", "fopen", "fclose", "Reading", "Writing", "C Programming"],
+  },
+  {
+    id: 102,
+    slug: "fopen",
+    section: "Programming",
+    parentSlug: "file-handling",
+    title: "fopen()",
+    tagline: "Opens a file, in a chosen mode, and returns a pointer used for every later operation",
+    description:
+      "<b>What fopen() Does</b>\nfopen(filename, mode) opens the file named filename in the given mode, and returns a FILE * pointer used for every later read/write/close operation on that file — or NULL if the file couldn't be opened.\n\n<b>Why the Mode Matters</b>\nThe mode decides what's actually allowed to happen to the file, and whether its existing contents survive — picking the wrong mode can silently erase data that was meant to be kept.\n\n<b>How to Use It</b>\nFILE *fp = fopen(\"data.txt\", \"w\");\nif (fp == NULL) {\n    printf(\"Could not open file\\n\");\n    return 1;\n}\n\nCommon modes: \"r\" (read; file must already exist), \"w\" (write; creates a new file or erases an existing one), \"a\" (append; adds to the end without erasing), \"r+\" (read and write; file must already exist). A file might fail to open for many reasons, so fopen's return value should always be checked before it's used.",
+    note:
+      "\"w\" mode silently erases an existing file's contents the moment it's opened — if the goal is to add to a file without losing what's already there, \"a\" (append) is the mode to use instead.",
+    code: "FILE *fp = fopen(\"data.txt\", \"w\");\nif (fp == NULL) {\n    printf(\"Could not open file\\n\");\n    return 1;\n}\n// ... use fp to write, then close it (see fclose) ...",
+    codeLanguage: "C",
+    tags: ["fopen", "File Handling", "FILE pointer", "C Programming"],
+  },
+  {
+    id: 103,
+    slug: "fclose",
+    section: "Programming",
+    parentSlug: "file-handling",
+    title: "fclose()",
+    tagline: "Closes a file that was previously opened, saving any pending writes",
+    description:
+      "<b>What fclose() Does</b>\nfclose(fp) closes a previously opened file, flushing (actually writing out) any data that was still sitting in a temporary buffer, and releasing the file so it can be accessed again.\n\n<b>Why It Matters</b>\nWrites to a file often aren't immediately saved to disk — they can sit buffered in memory for efficiency, and only get written out for real when the file is closed. Skipping fclose() risks losing data that looked like it was written, but never actually made it to disk.\n\n<b>How to Use It</b>\nFILE *fp = fopen(\"data.txt\", \"w\");\nif (fp != NULL) {\n    fprintf(fp, \"Hello, file!\\n\");\n    fclose(fp);   // ensures the write is actually saved\n}\n\nEvery file successfully opened with fopen() should eventually be closed with fclose() exactly once, mirroring the malloc/free pairing pattern for memory.",
+    note:
+      "Forgetting fclose() is the file-handling equivalent of forgetting free() — data can appear to have been written but never actually gets saved to disk if the file is never properly closed.",
+    code: "FILE *fp = fopen(\"data.txt\", \"w\");\nif (fp != NULL) {\n    fprintf(fp, \"Hello, file!\\n\");\n    fclose(fp);   // ensures the write is actually saved\n}",
+    codeLanguage: "C",
+    tags: ["fclose", "File Handling", "C Programming"],
+  },
+  {
+    id: 104,
+    slug: "reading",
+    section: "Programming",
+    parentSlug: "file-handling",
+    title: "Reading",
+    tagline: "Pulling data out of an already-open file",
+    description:
+      "<b>What Reading From a File Means</b>\nReading pulls data out of an already-open file, using functions like fscanf, fgets, or fgetc, until there's no more data left (signaled by a special return value such as EOF or NULL).\n\n<b>Why Different Functions Exist</b>\nDifferent situations call for reading different amounts at a time — a single character, a whole line of text, or specifically-formatted values — so C provides a separate function suited to each case rather than one universal reader.\n\n<b>How to Read a File Line by Line</b>\nFILE *fp = fopen(\"data.txt\", \"r\");\nchar line[100];\nwhile (fgets(line, 100, fp) != NULL) {\n    printf(\"%s\", line);\n}\nfclose(fp);\n\nfgets reads one full line into buffer, stopping at a newline or once size-1 characters have been read, and is generally the safer choice since it takes an explicit buffer size and won't read past it.",
+    note:
+      "fgets is generally the safer choice for reading text a line at a time, since it takes an explicit buffer size and won't read past it — unlike some older functions that can overflow a buffer if a line is longer than expected.",
+    code: "FILE *fp = fopen(\"data.txt\", \"r\");\nif (fp == NULL) {\n    return 1;\n}\n\nchar line[100];\nwhile (fgets(line, 100, fp) != NULL) {\n    printf(\"%s\", line);\n}\n\nfclose(fp);",
+    codeLanguage: "C",
+    tags: ["Reading", "fscanf", "fgets", "File Handling", "C Programming"],
+  },
+  {
+    id: 105,
+    slug: "writing",
+    section: "Programming",
+    parentSlug: "file-handling",
+    title: "Writing",
+    tagline: "Putting data into an already-open file",
+    description:
+      "<b>What Writing To a File Means</b>\nWriting puts data into an already-open file, using functions like fprintf, fputs, or fputc, which work the same way as their console-output equivalents (printf, puts, putchar) but target a file instead of the screen.\n\n<b>Why fprintf Is the Most Common Choice</b>\nfprintf supports the exact same format specifiers as printf (%d, %s, %f), so a programmer already comfortable formatting console output can write formatted data to a file with almost no new syntax to learn.\n\n<b>How to Use It</b>\nFILE *fp = fopen(\"data.txt\", \"w\");\nif (fp == NULL) {\n    return 1;\n}\nfprintf(fp, \"Name: %s, Age: %d\\n\", \"Rita\", 20);\nfclose(fp);\n\nWhich mode the file was opened in determines what writing actually does: \"w\" mode erases any existing content first, while \"a\" mode adds new content to the end without erasing what's already there.",
+    note:
+      "fprintf to a file works exactly like printf to the screen, just redirected to a FILE * instead — anyone comfortable with printf's format specifiers (%d, %s, %f) already knows most of what fprintf needs.",
+    code: "FILE *fp = fopen(\"data.txt\", \"w\");\nif (fp == NULL) {\n    return 1;\n}\n\nfprintf(fp, \"Name: %s, Age: %d\\n\", \"Rita\", 20);\nfclose(fp);",
+    codeLanguage: "C",
+    tags: ["Writing", "fprintf", "fputs", "File Handling", "C Programming"],
   },
 ];
 
