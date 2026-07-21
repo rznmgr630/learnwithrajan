@@ -528,6 +528,268 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "  Convert hexadecimal 1F4 to decimal\n\n  Position:    2      1      0\n  Power:      16²    16¹    16⁰\n  Value:      256     16      1\n  Digit:       1      F=15    4\n               │       │      │\n              256  +  240  +  4   =  500",
     tags: ["Hexadecimal to Decimal", "Conversion", "Number System", "Powers of 16"],
   },
+  {
+    id: 37,
+    slug: "boolean-algebra-digital-logic",
+    section: "Computer Fundamentals",
+    parentSlug: "number-system",
+    title: "Boolean Algebra & Digital Logic",
+    tagline: "The logic (true/false) math behind every digital circuit a computer is built from",
+    description:
+      "<b>What Boolean Algebra Is</b>\nBoolean algebra is a branch of mathematics that works with only two values — true and false, usually written as 1 and 0 — instead of the full range of numbers used in ordinary algebra. It was developed by the mathematician George Boole in the 1800s, long before computers existed, but it turned out to be exactly the mathematics needed to describe how digital circuits behave.\n\n<b>Why It Matters for Computers</b>\nEvery digital circuit inside a computer — from a single logic gate to an entire CPU — is really just Boolean algebra built out of physical hardware. A circuit's output is always some Boolean expression (an AND, an OR, a NOT, or a combination of these) applied to its inputs, and that same expression can equally be written down as a mathematical formula, a truth table, or an actual arrangement of transistors.\n\n<b>What You'll Learn Here</b>\n• <b>Logic Gates</b> — the basic building blocks (AND, OR, NOT, NAND, NOR, XOR, XNOR) that every digital circuit is assembled from\n• <b>Boolean Laws</b> — De Morgan's theorem and Boolean simplification, the rules used to rewrite a Boolean expression into a simpler, equivalent one\n• <b>Digital Circuits</b> — how logic gates combine into genuinely useful building blocks: adders (that do binary arithmetic), flip-flops (that store a single bit), registers, and counters\n  ↳ These build on each other in order: gates first, then the laws used to simplify circuits built from gates, then the actual circuits (adders, flip-flops, registers, counters) that gates combine to create.",
+    note:
+      "Everything in this whole topic reduces to one idea: a digital circuit's output is a Boolean expression of its inputs. Logic gates are the smallest expressions; laws simplify bigger expressions; adders/flip-flops/registers/counters are gates wired together to do something useful (add numbers, store a bit, count).",
+    diagram:
+      "  BOOLEAN ALGEBRA & DIGITAL LOGIC — how the topics build on each other\n\n   Logic Gates          Boolean Laws            Digital Circuits\n  (AND, OR, NOT,   ──►  (De Morgan's,      ──►  (Half/Full Adder,\n   NAND, NOR,            Simplification)         Flip-Flops,\n   XOR, XNOR)                                     Registers, Counters)",
+    tags: ["Boolean Algebra", "Digital Logic", "Logic Gates", "Boolean Laws", "Digital Circuits"],
+  },
+  {
+    id: 38,
+    slug: "logic-gates",
+    section: "Computer Fundamentals",
+    parentSlug: "boolean-algebra-digital-logic",
+    title: "Logic Gates",
+    tagline: "The seven basic building blocks every digital circuit is assembled from",
+    description:
+      "<b>What a Logic Gate Is</b>\nA logic gate is the smallest possible digital circuit — a tiny piece of hardware (built from transistors) that takes one or more binary inputs (0s and 1s) and produces exactly one binary output, based on a fixed rule. Every digital circuit in a computer, no matter how complex, is ultimately built by wiring many logic gates together.\n\n<b>The Seven Gates Covered Here</b>\n• <b>AND</b> — output is 1 only if every input is 1\n• <b>OR</b> — output is 1 if at least one input is 1\n• <b>NOT</b> — flips a single input (the only gate with just one input)\n• <b>NAND</b> — AND, then flipped (NOT-AND)\n• <b>NOR</b> — OR, then flipped (NOT-OR)\n• <b>XOR</b> — output is 1 only if the inputs are different\n• <b>XNOR</b> — XOR, then flipped (output is 1 only if the inputs are the same)\n  ↳ Each gate's full truth table, symbol, and use is covered in its own card next.\n\n<b>Truth Tables — the Universal Way to Define a Gate</b>\nEvery logic gate is fully described by a truth table: a list of every possible combination of inputs, alongside the output the gate produces for each one. Since a gate typically has just 2 inputs, there are only 4 possible input combinations (00, 01, 10, 11) to check.\n\n<b>Why Only These Seven?</b>\nAND, OR, and NOT are considered the three fundamental gates, since every other gate (and every possible digital circuit) can be built purely from combinations of these three. NAND and NOR are each, individually, \"universal\" — either one alone is enough to build any other gate, which is why NAND and NOR gates are so common in real chip manufacturing. XOR and XNOR are especially useful for comparison and arithmetic circuits, such as the adders covered later in this section.",
+    note:
+      "NAND and NOR are called universal gates because either one, by itself, can build every other gate (including AND, OR, and NOT) — this is why real chips are so often built almost entirely out of just NAND or just NOR gates.",
+    tags: ["Logic Gates", "AND", "OR", "NOT", "NAND", "NOR", "XOR", "XNOR", "Truth Table"],
+  },
+  {
+    id: 39,
+    slug: "and-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "AND Gate",
+    tagline: "Output is 1 only if every input is 1",
+    description:
+      "<b>What the AND Gate Does</b>\nAn AND gate takes two (or more) binary inputs and produces an output of 1 only when every single input is 1. If even one input is 0, the output is 0.\n\n<b>Everyday Analogy</b>\nThink of a car that only starts if the driver's seatbelt is buckled AND the key is turned — both conditions have to be true at the same time, or the car doesn't start.\n\n<b>Boolean Notation</b>\nThe AND operation is written as A · B, or simply AB, or sometimes A ∧ B.\n\n<b>Where AND Gates Are Used</b>\nAND gates are used anywhere a result should only happen when multiple conditions are all satisfied at once — for example, inside a full adder's carry logic (covered later in this section), or in an enable circuit that only lets data through when several control signals all agree.",
+    note:
+      "The one fact to remember: AND needs ALL inputs to be 1 to output 1. Even a single 0 input forces the output to 0.",
+    diagram:
+      "  AND Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   0\n  0   1  │   0\n  1   0  │   0\n  1   1  │   1\n\n  A ──┐\n      ├─[AND]── Output\n  B ──┘",
+    tags: ["AND Gate", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 40,
+    slug: "or-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "OR Gate",
+    tagline: "Output is 1 if at least one input is 1",
+    description:
+      "<b>What the OR Gate Does</b>\nAn OR gate takes two (or more) binary inputs and produces an output of 1 if at least one of the inputs is 1. The output is 0 only when every input is 0.\n\n<b>Everyday Analogy</b>\nThink of a room light that turns on if you flip the switch by the door OR the switch by the bed — either one alone is enough to turn the light on.\n\n<b>Boolean Notation</b>\nThe OR operation is written as A + B, or sometimes A ∨ B.\n\n<b>Where OR Gates Are Used</b>\nOR gates are used anywhere a result should happen if any one of several conditions is met — for example, an alarm circuit that should trigger if any one of several sensors detects a problem.",
+    note:
+      "The one fact to remember: OR only needs ONE input to be 1 to output 1. The output is 0 only in the single case where every input is 0.",
+    diagram:
+      "  OR Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   0\n  0   1  │   1\n  1   0  │   1\n  1   1  │   1\n\n  A ──┐\n      ├─[OR]── Output\n  B ──┘",
+    tags: ["OR Gate", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 41,
+    slug: "not-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "NOT Gate",
+    tagline: "Flips a single input — the only gate with just one input",
+    description:
+      "<b>What the NOT Gate Does</b>\nA NOT gate (also called an inverter) takes a single binary input and flips it: a 0 input becomes a 1 output, and a 1 input becomes a 0 output. It's the only gate on this list with just one input instead of two.\n\n<b>Boolean Notation</b>\nThe NOT operation is written as Ā (A with a bar over it), or ¬A, or sometimes A'.\n\n<b>Where NOT Gates Are Used</b>\nA NOT gate is used anywhere a signal needs to be inverted — for example, turning an \"active-low\" enable signal into an \"active-high\" one, or building the NAND and NOR gates covered next, both of which are literally just AND/OR followed by a NOT.",
+    note:
+      "The one fact to remember: NOT is the only single-input gate on this list — it simply flips whatever it's given. NAND = AND + NOT, and NOR = OR + NOT, which is exactly why they're covered right after this card.",
+    diagram:
+      "  NOT Gate (Inverter)\n\n  A  │ Output\n  ───┼───────\n  0  │   1\n  1  │   0\n\n  A ──[NOT]── Output",
+    tags: ["NOT Gate", "Inverter", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 42,
+    slug: "nand-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "NAND Gate",
+    tagline: "AND, then flipped — output is 0 only if every input is 1",
+    description:
+      "<b>What the NAND Gate Does</b>\nA NAND gate (\"NOT-AND\") is an AND gate immediately followed by a NOT gate — it produces the exact opposite output of a plain AND gate for every input combination. The output is 0 only when every input is 1; otherwise the output is 1.\n\n<b>Boolean Notation</b>\nThe NAND operation is written as (A · B)‾, or ¬(A · B).\n\n<b>Why NAND Is Called a Universal Gate</b>\nA NAND gate, wired up in different combinations with itself, can be used to build every other logic gate — AND, OR, NOT, NOR, XOR, and XNOR — which is why it's called a universal gate. Because of this, and because NAND gates are simple and cheap to manufacture using transistors, most real digital chips are built almost entirely out of NAND gates internally, even when the final circuit behaves like an AND, OR, or anything else.\n  ↳ Example: wiring both inputs of a single NAND gate together produces a NOT gate.",
+    note:
+      "The key exam fact: NAND is a universal gate — any other gate can be built from NAND gates alone, which is exactly why real chip manufacturing relies on it so heavily.",
+    diagram:
+      "  NAND Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   1\n  0   1  │   1\n  1   0  │   1\n  1   1  │   0\n\n  A ──┐\n      ├─[AND]──[NOT]── Output\n  B ──┘",
+    tags: ["NAND Gate", "Universal Gate", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 43,
+    slug: "nor-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "NOR Gate",
+    tagline: "OR, then flipped — output is 1 only if every input is 0",
+    description:
+      "<b>What the NOR Gate Does</b>\nA NOR gate (\"NOT-OR\") is an OR gate immediately followed by a NOT gate — it produces the exact opposite output of a plain OR gate for every input combination. The output is 1 only when every input is 0; if any input is 1, the output is 0.\n\n<b>Boolean Notation</b>\nThe NOR operation is written as (A + B)‾, or ¬(A + B).\n\n<b>Why NOR Is Also a Universal Gate</b>\nJust like NAND, a NOR gate, wired up in different combinations with itself, can be used to build every other logic gate. NOR-based chip designs are less common than NAND-based ones in practice, but the principle is exactly the same — either universal gate alone is mathematically enough to build any digital circuit.",
+    note:
+      "NOR is the mirror image of NAND: both are universal gates (either one alone can build every other gate), but NOR outputs 1 only when every input is 0, the exact opposite condition from when NAND outputs 0.",
+    diagram:
+      "  NOR Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   1\n  0   1  │   0\n  1   0  │   0\n  1   1  │   0\n\n  A ──┐\n      ├─[OR]──[NOT]── Output\n  B ──┘",
+    tags: ["NOR Gate", "Universal Gate", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 44,
+    slug: "xor-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "XOR Gate",
+    tagline: "Exclusive OR — output is 1 only if the inputs are different",
+    description:
+      "<b>What the XOR Gate Does</b>\nAn XOR gate (\"exclusive OR\") produces an output of 1 only when its two inputs are different from each other (one is 0 and the other is 1). If both inputs are the same (both 0, or both 1), the output is 0.\n\n<b>How XOR Differs From Plain OR</b>\nA regular OR gate outputs 1 for THREE of the four input combinations (00→0, 01→1, 10→1, 11→1). XOR outputs 1 for only TWO of them (01→1, 10→1), specifically excluding the case where both inputs are 1 — which is exactly why it's called \"exclusive\" OR.\n\n<b>Boolean Notation</b>\nThe XOR operation is written as A ⊕ B.\n\n<b>Where XOR Gates Are Used</b>\nXOR is the natural \"are these two bits different?\" gate, which makes it central to binary addition — adding two bits with XOR gives the correct sum bit, ignoring carry (covered in full in the \"Half Adder\" card next). XOR is also widely used for parity checking (detecting data errors) and simple encryption.",
+    note:
+      "The exam-friendly way to remember XOR: it's OR, minus the \"both are 1\" case. Output is 1 only when the two inputs disagree.",
+    diagram:
+      "  XOR Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   0\n  0   1  │   1\n  1   0  │   1\n  1   1  │   0\n\n  A ──┐\n      ├─[XOR]── Output\n  B ──┘",
+    tags: ["XOR Gate", "Exclusive OR", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 45,
+    slug: "xnor-gate",
+    section: "Computer Fundamentals",
+    parentSlug: "logic-gates",
+    title: "XNOR Gate",
+    tagline: "Exclusive NOR — output is 1 only if the inputs are the same",
+    description:
+      "<b>What the XNOR Gate Does</b>\nAn XNOR gate (\"exclusive NOR\") produces an output of 1 only when its two inputs are the same as each other (both 0, or both 1). If the inputs are different, the output is 0 — the exact opposite of XOR.\n\n<b>Boolean Notation</b>\nThe XNOR operation is written as (A ⊕ B)‾, sometimes shown as A ⊙ B.\n\n<b>Where XNOR Gates Are Used</b>\nBecause XNOR outputs 1 exactly when its two inputs match, it's the natural \"are these two bits equal?\" gate — used to build equality comparators, which check whether two binary numbers are the same, bit by bit.",
+    note:
+      "XNOR is simply XOR flipped: output 1 when inputs match, output 0 when they differ — the mirror image of XOR's \"different inputs\" rule.",
+    diagram:
+      "  XNOR Gate\n\n  A   B  │ Output\n  ───────┼───────\n  0   0  │   1\n  0   1  │   0\n  1   0  │   0\n  1   1  │   1\n\n  A ──┐\n      ├─[XOR]──[NOT]── Output\n  B ──┘",
+    tags: ["XNOR Gate", "Exclusive NOR", "Logic Gates", "Truth Table", "Boolean Algebra"],
+  },
+  {
+    id: 46,
+    slug: "boolean-laws",
+    section: "Computer Fundamentals",
+    parentSlug: "boolean-algebra-digital-logic",
+    title: "Boolean Laws",
+    tagline: "The rules used to rewrite a Boolean expression into a simpler, equivalent one",
+    description:
+      "<b>Why Boolean Laws Matter</b>\nA digital circuit built directly from a raw Boolean expression is often bigger, slower, and more expensive than it needs to be — the same true/false behavior can usually be produced by a much simpler expression, using fewer gates. Boolean laws are the set of proven rules that let you rewrite one Boolean expression into a different, but logically equivalent, expression.\n\n<b>What You'll Learn Here</b>\n• <b>De Morgan's Theorem</b> — two specific rules for rewriting the NOT of an AND or an OR, which are essential for converting a circuit into all-NAND or all-NOR form\n• <b>Boolean Simplification</b> — the broader set of laws (identity, null, idempotent, complement, distributive, absorption, and more) used to reduce any Boolean expression to its simplest equivalent form\n  ↳ De Morgan's theorem is really just the two most famous, most commonly tested simplification laws — covered in its own card first because of how often it comes up on its own.",
+    note:
+      "Simplifying a Boolean expression before building the circuit means fewer gates, less cost, and a faster circuit — all while producing the exact same true/false output for every possible input.",
+    tags: ["Boolean Laws", "De Morgan's Theorem", "Boolean Simplification", "Boolean Algebra"],
+  },
+  {
+    id: 47,
+    slug: "de-morgans-theorem",
+    section: "Computer Fundamentals",
+    parentSlug: "boolean-laws",
+    title: "De Morgan's Theorem",
+    tagline: "Two rules for rewriting the NOT of an AND or an OR",
+    description:
+      "<b>The Two Rules</b>\nDe Morgan's theorem gives two rules for pushing a NOT through an AND or an OR, named after the mathematician Augustus De Morgan.\n• <b>Rule 1</b>: NOT(A AND B) = (NOT A) OR (NOT B) — in symbols, (A·B)‾ = Ā + B̄\n• <b>Rule 2</b>: NOT(A OR B) = (NOT A) AND (NOT B) — in symbols, (A+B)‾ = Ā · B̄\n\n<b>The Pattern to Remember</b>\nIn both rules, three things happen at once: the NOT moves inside onto each individual variable, AND becomes OR (or OR becomes AND), and the overall NOT on the outside disappears.\n  ↳ Simple memory trick: \"break the line, change the sign\" — breaking the bar over (A·B) or (A+B) into separate bars over A and B flips AND to OR (or OR to AND).\n\n<b>Worked Example</b>\nSimplify (A · B)‾ using De Morgan's Rule 1:\n(A · B)‾ = Ā + B̄\n\nSo instead of building \"NOT the AND of A and B\" directly, the exact same result can be built as \"NOT A, OR'd with NOT B\" — useful because it shows a NAND gate (A·B)‾ can be built purely from OR and NOT gates instead.\n\n<b>Why De Morgan's Theorem Matters</b>\nDe Morgan's theorem is the mathematical reason NAND and NOR gates are universal (covered in the \"NAND Gate\" and \"NOR Gate\" cards) — it's what lets any AND/OR/NOT expression be rewritten entirely in terms of NAND, or entirely in terms of NOR, which is exactly how real chips are manufactured.",
+    note:
+      "Memorize the pattern, not just the formula: NOT distributes onto each variable, and AND/OR swap with each other. This single idea answers the vast majority of De Morgan's exam questions, even ones with more than two variables.",
+    diagram:
+      "  DE MORGAN'S THEOREM\n\n  Rule 1:  (A · B)‾   =   Ā + B̄\n           \"NOT(A AND B)\"  =  \"(NOT A) OR (NOT B)\"\n\n  Rule 2:  (A + B)‾   =   Ā · B̄\n           \"NOT(A OR B)\"   =  \"(NOT A) AND (NOT B)\"\n\n  Pattern: break the bar → each variable gets its own NOT\n           AND ↔ OR swap places",
+    tags: ["De Morgan's Theorem", "Boolean Laws", "NAND", "NOR", "Boolean Algebra"],
+  },
+  {
+    id: 48,
+    slug: "boolean-simplification",
+    section: "Computer Fundamentals",
+    parentSlug: "boolean-laws",
+    title: "Boolean Simplification",
+    tagline: "The core laws used to reduce any Boolean expression to its simplest form",
+    description:
+      "<b>Why Simplify</b>\nA Boolean expression written straight from a truth table is often longer and messier than it needs to be. Boolean simplification uses a small set of proven laws to rewrite that expression into an equivalent one that uses fewer terms and fewer gates, without changing its true/false behavior for any input.\n\n<b>The Core Laws</b>\n• <b>Identity Law</b> — A + 0 = A, and A · 1 = A (OR-ing with 0, or AND-ing with 1, changes nothing)\n• <b>Null Law</b> — A + 1 = 1, and A · 0 = 0 (OR-ing with 1 always gives 1; AND-ing with 0 always gives 0)\n• <b>Idempotent Law</b> — A + A = A, and A · A = A (combining a variable with itself changes nothing)\n• <b>Complement Law</b> — A + Ā = 1, and A · Ā = 0 (a variable OR'd with its own opposite is always true; AND'd with its own opposite is always false)\n• <b>Double Negation</b> — (Ā)‾ = A (NOT-ing something twice gets back the original)\n• <b>Commutative Law</b> — A + B = B + A, and A · B = B · A (order doesn't matter)\n• <b>Distributive Law</b> — A · (B + C) = (A · B) + (A · C) (works the same way as multiplying out brackets in ordinary algebra)\n• <b>Absorption Law</b> — A + (A · B) = A, and A · (A + B) = A (a bigger term gets \"absorbed\" into a smaller one already present)\n\n<b>Worked Example</b>\nSimplify Y = A · B + A · B̄:\nY = A · (B + B̄)     [factor out A, using the distributive law]\nY = A · 1            [B + B̄ = 1, by the complement law]\nY = A                 [A · 1 = A, by the identity law]\n\nSo the original 4-term expression (A·B + A·B̄) is exactly equivalent to just A — the same output, built with a far simpler circuit.\n\n<b>How This Connects to De Morgan's Theorem</b>\nDe Morgan's theorem (covered in its own card) is really two more laws in this same family, specifically for pushing a NOT through an AND or OR — it's grouped separately here only because it comes up so often on its own.",
+    note:
+      "Simplification exam questions are almost always solved the same way: spot a pattern that matches one of these laws (often the distributive or absorption law), apply it, and repeat until nothing more can be reduced. Work one step at a time and name the law used at each step.",
+    tags: ["Boolean Simplification", "Boolean Laws", "Distributive Law", "Absorption Law", "Boolean Algebra"],
+  },
+  {
+    id: 49,
+    slug: "digital-circuits",
+    section: "Computer Fundamentals",
+    parentSlug: "boolean-algebra-digital-logic",
+    title: "Digital Circuits",
+    tagline: "Gates wired together into genuinely useful building blocks — adders, flip-flops, registers, and counters",
+    description:
+      "<b>What This Covers</b>\nOnce you know the individual logic gates and the laws used to simplify them, the next step is seeing how gates combine into real, useful circuits — the same building blocks every CPU and digital device is made from.\n\n<b>What You'll Learn Here</b>\n• <b>Half Adder</b> — a small circuit that adds two single bits together\n• <b>Full Adder</b> — an adder that also accepts a carry-in, so many of them can be chained to add much larger binary numbers\n• <b>Flip-Flops</b> — the basic circuit that stores a single bit of data, the building block behind every register, counter, and RAM cell\n• <b>Registers</b> — a group of flip-flops wired together to store multiple bits as one unit\n• <b>Counters</b> — a chain of flip-flops arranged to count in a fixed sequence, such as counting up in binary\n  ↳ These build on each other in order: adders show gates doing arithmetic; flip-flops show gates storing memory; registers and counters then show flip-flops combined into bigger, more useful building blocks.",
+    note:
+      "Notice the progression: adders are gates with no memory (their output only depends on the current input); flip-flops are the opposite — pure memory, storing a bit even after the input changes; registers and counters are just multiple flip-flops wired together for a specific job (holding a group of bits, or counting).",
+    tags: ["Digital Circuits", "Half Adder", "Full Adder", "Flip-Flops", "Registers", "Counters"],
+  },
+  {
+    id: 50,
+    slug: "half-adder",
+    section: "Computer Fundamentals",
+    parentSlug: "digital-circuits",
+    title: "Half Adder",
+    tagline: "A small circuit that adds two single bits together",
+    description:
+      "<b>What a Half Adder Does</b>\nA half adder is a digital circuit that adds two single binary digits (bits) together, producing two outputs: a Sum bit and a Carry bit. It's called \"half\" because it doesn't accept a carry-in from a previous addition — it can only handle the very first, simplest addition step.\n\n<b>How It's Built</b>\nA half adder is built from exactly two gates:\n• An <b>XOR gate</b> produces the Sum: Sum = A ⊕ B\n• An <b>AND gate</b> produces the Carry: Carry = A · B\n\n<b>Why XOR Gives the Sum</b>\nAdding two bits works exactly like ordinary binary addition: 0+0=0, 0+1=1, 1+0=1, 1+1=10 (which is 0 with a carry of 1). Look closely: the Sum column (0,1,1,0) is exactly the XOR truth table, and the Carry column (0,0,0,1) is exactly the AND truth table — which is precisely why a half adder is just one XOR gate and one AND gate.\n\n<b>The Limitation</b>\nA half adder can only add the very first pair of bits in a larger addition — it has no way to also add in a carry coming from a previous, lower-value bit position. Adding two full multi-bit binary numbers needs a chain of adders that CAN accept a carry-in, which is exactly what a full adder (covered next) provides.",
+    note:
+      "The whole half adder can be summarized in two formulas: Sum = A ⊕ B, Carry = A · B. If a question asks which single gate produces the sum bit on its own, the answer is always XOR.",
+    diagram:
+      "  HALF ADDER\n\n  A   B  │ Sum  Carry\n  ───────┼───────────\n  0   0  │  0    0\n  0   1  │  1    0\n  1   0  │  1    0\n  1   1  │  0    1\n\n  A ──┬──[XOR]── Sum\n      │\n  B ──┼──[AND]── Carry\n      │\n      └──(same A, B feed both gates)",
+    tags: ["Half Adder", "Digital Circuits", "XOR", "AND", "Binary Addition"],
+  },
+  {
+    id: 51,
+    slug: "full-adder",
+    section: "Computer Fundamentals",
+    parentSlug: "digital-circuits",
+    title: "Full Adder",
+    tagline: "An adder that also accepts a carry-in, so many can chain together",
+    description:
+      "<b>What a Full Adder Does</b>\nA full adder is a digital circuit that adds three single bits together — two data bits (A and B) plus a Carry-In bit from a previous addition — producing a Sum bit and a Carry-Out bit. Unlike a half adder, it can be chained together with other full adders to add binary numbers of any length, one bit position at a time.\n\n<b>How It's Built</b>\nA full adder can be built from two half adders plus one extra OR gate:\n• The first half adder adds A and B, producing an intermediate sum and an intermediate carry.\n• The second half adder adds that intermediate sum to the Carry-In, producing the final Sum.\n• An OR gate combines the two intermediate carries to produce the final Carry-Out.\n\n<b>The Formulas</b>\nSum = A ⊕ B ⊕ Cin\nCarry-Out = (A · B) + (Cin · (A ⊕ B))\n\n<b>Chaining Full Adders — Adding Real Binary Numbers</b>\nTo add two multi-bit binary numbers, one full adder is used per bit position, with each adder's Carry-Out wired into the next adder's Carry-In — this arrangement is called a ripple carry adder, since the carry \"ripples\" from the lowest bit position up to the highest.\n  ↳ Example: adding two 8-bit numbers needs 8 full adders chained together (the very first one can be a half adder, since there's no carry-in yet at the lowest bit position).",
+    note:
+      "The key difference from a half adder: a full adder has THREE inputs (A, B, and Carry-In), not two, which is exactly what lets multiple full adders be chained together to add numbers of any length — a half adder alone cannot do this.",
+    diagram:
+      "  FULL ADDER\n\n  A  B  Cin │ Sum  Cout\n  ──────────┼───────────\n  0  0   0  │  0    0\n  0  0   1  │  1    0\n  0  1   0  │  1    0\n  0  1   1  │  0    1\n  1  0   0  │  1    0\n  1  0   1  │  0    1\n  1  1   0  │  0    1\n  1  1   1  │  1    1\n\n  RIPPLE CARRY ADDER (chaining full adders)\n\n  A0,B0 ─►[Full Adder]─► Sum0\n              │ Cout\n              ▼\n  A1,B1 ─►[Full Adder]─► Sum1\n              │ Cout\n              ▼\n           ...continues for every bit position",
+    tags: ["Full Adder", "Digital Circuits", "Ripple Carry Adder", "Binary Addition"],
+  },
+  {
+    id: 52,
+    slug: "flip-flops",
+    section: "Computer Fundamentals",
+    parentSlug: "digital-circuits",
+    title: "Flip-Flops",
+    tagline: "The basic circuit that stores a single bit of data",
+    description:
+      "<b>What a Flip-Flop Is</b>\nA flip-flop is a digital circuit that stores a single bit of data (a 0 or a 1) and holds onto it — even after its inputs change — until it's deliberately told to store something new. It's the fundamental building block of computer memory: every register, counter, and even a SRAM cell (covered in the \"SRAM\" card) is ultimately built from flip-flops.\n\n<b>Why Flip-Flops Are Different From Gates Like AND or OR</b>\nA logic gate like AND or OR is purely combinational — its output depends only on its CURRENT inputs, with no memory of the past. A flip-flop is sequential — its output depends on its current input AND its previous stored state, which is exactly what lets it \"remember\" a bit over time.\n\n<b>Common Types of Flip-Flops</b>\n• <b>SR (Set-Reset) Flip-Flop</b> — the simplest type; a Set input forces the stored bit to 1, a Reset input forces it to 0\n• <b>D (Data) Flip-Flop</b> — stores whatever single bit is on its Data input at the moment a clock signal ticks, and holds that value until the next tick\n• <b>JK Flip-Flop</b> — an improved version of the SR flip-flop that also defines a valid behavior for the case SR left undefined (both inputs active at once)\n• <b>T (Toggle) Flip-Flop</b> — flips (toggles) its stored bit every time the clock ticks, provided its Toggle input is 1\n\n<b>Clocked vs. Unclocked</b>\nMany flip-flops are clocked — they only update their stored bit at the exact moment a clock signal ticks (rather than continuously reacting to their inputs), which keeps every part of a larger circuit changing state in careful, predictable sync with each other.",
+    note:
+      "The one distinction that matters most: a gate has no memory (output depends only on current input); a flip-flop has memory (output depends on current input AND whatever was stored before). This is exactly why flip-flops, not gates, are what build registers and counters.",
+    diagram:
+      "  D FLIP-FLOP (most common type)\n\n  Data ──►┌─────────┐\n          │    D   Q ├──► Output (stored bit)\n  Clock ─►│  CLK     │\n          └─────────┘\n\n  On each clock tick: Output (Q) becomes whatever Data currently is,\n  then holds that value steady until the next clock tick.",
+    tags: ["Flip-Flops", "SR Flip-Flop", "D Flip-Flop", "JK Flip-Flop", "T Flip-Flop", "Digital Circuits", "Sequential Circuit"],
+  },
+  {
+    id: 53,
+    slug: "registers-digital-circuit",
+    section: "Computer Fundamentals",
+    parentSlug: "digital-circuits",
+    title: "Registers",
+    tagline: "A group of flip-flops wired together to store multiple bits as one unit",
+    description:
+      "<b>What a Register Is</b>\nA register, in digital circuit terms, is simply a group of flip-flops wired together, with one flip-flop per bit, so the whole group can store and move a multi-bit value as a single unit. An 8-bit register, for example, is just 8 flip-flops sharing one clock signal.\n  ↳ This is the circuit-level view of the same registers already introduced conceptually in the \"Register\" card under Memory Hierarchy (PC, IR, ACC) — this card focuses on how a register is actually built and how data moves in and out of it.\n\n<b>Loading Data Into a Register</b>\n• <b>Parallel load</b> — every bit of the register is loaded at the same time, in a single clock tick; fast, but needs one input wire per bit.\n• <b>Serial load</b> — bits are loaded one at a time, a single bit per clock tick, shifting the previous bits along to make room; slower, but needs only one input wire no matter how many bits the register holds.\n\n<b>Shift Registers</b>\nA shift register is a register specifically built to move its stored bits left or right by one position on every clock tick — useful for converting data between serial (one bit at a time) and parallel (all bits at once) form, which is exactly how much real-world data communication works.\n\n<b>Where Registers Are Used</b>\nEvery CPU register (Program Counter, Instruction Register, Accumulator, and general-purpose registers) is built this way — a set of flip-flops, one per bit, sharing a clock, loaded and read as a single unit each time the CPU needs to use that value.",
+    note:
+      "Circuit-level takeaway: an N-bit register is just N flip-flops, one per bit, sharing a single clock. Parallel load moves all N bits at once; serial load (used in shift registers) moves them one at a time, trading speed for fewer wires.",
+    diagram:
+      "  4-BIT REGISTER (built from 4 D flip-flops)\n\n  Bit 3 ──►[D Flip-Flop]── Q3\n  Bit 2 ──►[D Flip-Flop]── Q2\n  Bit 1 ──►[D Flip-Flop]── Q1\n  Bit 0 ──►[D Flip-Flop]── Q0\n           ▲  ▲  ▲  ▲\n           └──┴──┴──┘\n         all 4 share one Clock signal\n\n  PARALLEL LOAD: all 4 bits loaded in 1 clock tick\n  SERIAL LOAD (shift register): 1 bit loaded per tick, shifting the rest along",
+    tags: ["Registers", "Shift Register", "Flip-Flops", "Digital Circuits", "Parallel Load", "Serial Load"],
+  },
+  {
+    id: 54,
+    slug: "counters",
+    section: "Computer Fundamentals",
+    parentSlug: "digital-circuits",
+    title: "Counters",
+    tagline: "A chain of flip-flops arranged to count in a fixed sequence",
+    description:
+      "<b>What a Counter Is</b>\nA counter is a digital circuit, built from flip-flops, that steps through a fixed sequence of binary values, one step per clock tick — most commonly counting upward in binary (000, 001, 010, 011, ...) before wrapping back around to 000 and repeating.\n\n<b>Asynchronous (Ripple) Counters</b>\nIn an asynchronous counter, only the very first flip-flop is driven directly by the main clock signal; each following flip-flop is triggered by the output of the one before it, so a change has to \"ripple\" through the chain one flip-flop at a time.\n• Simple to build, using very few extra components.\n• Slower for larger counters, since each bit has to wait for every bit before it to finish changing first.\n\n<b>Synchronous Counters</b>\nIn a synchronous counter, every flip-flop shares the exact same clock signal directly, so all bits that need to change, change at the same instant.\n• Needs more wiring/logic than a ripple counter.\n• Much faster and more predictable, since there's no rippling delay — this is why synchronous counters are preferred in most real, high-speed circuits.\n\n<b>Where Counters Are Used</b>\nCounters are used anywhere something needs to be counted or sequenced automatically — clock dividers (producing a slower clock signal from a faster one), digital clocks and timers, and sequencing the steps of more complex digital circuits.",
+    note:
+      "The key exam distinction: asynchronous (ripple) counters are simple but slow, since each flip-flop waits for the one before it; synchronous counters share one clock across every flip-flop, making them faster and used far more often in real high-speed designs.",
+    diagram:
+      "  3-BIT BINARY COUNTER SEQUENCE\n\n  Count:  000 → 001 → 010 → 011 → 100 → 101 → 110 → 111 → 000 (repeats)\n\n  ASYNCHRONOUS (RIPPLE) COUNTER\n  Clock ─►[FF0]─►[FF1]─►[FF2]\n           each flip-flop triggers the next — changes ripple through\n\n  SYNCHRONOUS COUNTER\n  Clock ─┬─►[FF0]\n         ├─►[FF1]\n         └─►[FF2]\n           all flip-flops share the same clock — change together",
+    tags: ["Counters", "Asynchronous Counter", "Synchronous Counter", "Ripple Counter", "Digital Circuits", "Flip-Flops"],
+  },
 ];
 
 export const IT_OFFICER_CONCEPT_COUNT = IT_OFFICER_CONCEPTS.length;
