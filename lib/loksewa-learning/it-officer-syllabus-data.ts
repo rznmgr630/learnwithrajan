@@ -10,7 +10,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Computer Architecture"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Computer Architecture", "Memory Organization"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -118,6 +118,111 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     diagram:
       "  MULTIPROGRAMMING (1 CPU, switching between programs)\n\n  CPU:   [ Program A ][ Program B ][ Program A ][ Program C ]...\n           time slice    time slice   time slice   time slice\n         → only ONE program is actually running at any instant\n\n  ──────────────────────────────────────────────────────────\n\n  MULTIPROCESSING (2+ CPUs, each running a program at once)\n\n  CPU 1:  [ Program A ][ Program A ][ Program A ]...\n  CPU 2:  [ Program B ][ Program B ][ Program B ]...\n         → A and B genuinely run at the same time, on different CPUs\n\n  ──────────────────────────────────────────────────────────\n\n  PARALLEL PROCESSING (1 task split across processors)\n\n  Task: add 1,000,000 numbers\n  CPU 1: adds numbers 1–250,000          ┐\n  CPU 2: adds numbers 250,001–500,000    ├─► combine sub-totals → final result\n  CPU 3: adds numbers 500,001–750,000    │\n  CPU 4: adds numbers 750,001–1,000,000  ┘",
     tags: ["CPU Performance", "Clock Speed", "CPI", "MIPS", "Parallel Processing", "Multiprocessing", "Multiprogramming"],
+  },
+  // ─────────────────────────────────────────────
+  // MEMORY ORGANIZATION
+  // ─────────────────────────────────────────────
+  {
+    id: 9,
+    slug: "primary-memory",
+    section: "Memory Organization",
+    title: "Primary Memory",
+    tagline: "The CPU's direct-access memory — where running programs and data live",
+    description:
+      "<b>What Primary Memory Is</b>\nPrimary memory (also called main memory) is the memory the CPU can access directly and immediately, without going through a slower storage layer like a hard disk or SSD. Whatever program is currently running, and whatever data it's currently working on, lives in primary memory while the CPU uses it.\n  ↳ Contrast this with secondary memory (hard disks, SSDs, pen drives) — the CPU cannot work on data sitting in secondary memory directly; it must first be loaded into primary memory.\n\n<b>Two Types of Primary Memory</b>\nPrimary memory is split into two families based on one key property: whether it loses its data when the power turns off.\n• <b>RAM (Random Access Memory)</b> — volatile memory; the CPU can both read and write to it, and it holds programs and data actively in use. Loses everything the instant power is cut.\n• <b>ROM (Read Only Memory)</b> — non-volatile memory; keeps its contents even when the power is off. Traditionally the CPU could only read from it, not write to it (hence the name), and it typically stores fixed, permanent instructions like the computer's startup firmware.\n\n<b>Volatile vs Non-Volatile — the Core Distinction</b>\n• <b>Volatile</b> — memory that loses all its stored data as soon as power is removed. RAM is volatile.\n  ↳ This is why unsaved work disappears if a computer suddenly loses power — it was sitting only in RAM.\n• <b>Non-volatile</b> — memory that keeps its stored data even without power. ROM is non-volatile.\n  ↳ This is why a computer still \"remembers\" how to start itself up even after being completely unplugged — that startup code sits in ROM, not RAM.\n\n<b>Why This Split Matters</b>\nA computer needs both kinds. It needs RAM so the CPU has fast, changeable working space for whatever program is currently running. And it needs ROM so there is always a fixed, unerasable set of instructions available the moment the machine is switched on — before any operating system has even loaded from disk.\n  ↳ Each of RAM's two internal types (SRAM, DRAM) and each stage in ROM's family (ROM, PROM, EPROM, EEPROM) is covered in its own card next.",
+    note:
+      "If a question asks \"which memory loses data on power-off\", the answer is RAM (volatile). If it asks \"which memory survives a power cut\", the answer is ROM (non-volatile). Primary memory = RAM + ROM together; secondary memory (disks) is a separate topic.",
+    diagram:
+      "                    PRIMARY MEMORY\n                          │\n            ┌─────────────┴─────────────┐\n            │                           │\n           RAM                         ROM\n   (volatile, read/write)      (non-volatile, mostly read-only)\n            │                           │\n      ┌─────┴─────┐         ┌───────────┼────────────┐\n     SRAM        DRAM      ROM        PROM    EPROM  EEPROM\n   (fast,       (slower,  (fixed at  (write   (UV    (electrically\n    cache)       main RAM) factory)   once)    erase) erasable)",
+    tags: ["Primary Memory", "RAM", "ROM", "Volatile", "Non-Volatile", "Main Memory"],
+  },
+  {
+    id: 10,
+    slug: "ram",
+    section: "Memory Organization",
+    title: "RAM (Random Access Memory)",
+    tagline: "The CPU's fast, volatile workspace for active programs and data",
+    description:
+      "<b>What RAM Is</b>\nRAM (Random Access Memory) is the main working memory of a computer. Whatever program is currently running and whatever data it's currently using sits in RAM so the CPU can read and write to it almost instantly.\n  ↳ \"Random access\" means the CPU can jump straight to any memory location in roughly the same amount of time, instead of having to read through memory in order — unlike, say, an old cassette tape.\n\n<b>Key Properties</b>\n• <b>Volatile</b> — RAM loses everything it's holding the instant power is switched off. This is why unsaved work in an open document disappears if the computer suddenly loses power.\n• <b>Read and write</b> — unlike ROM, the CPU can both read data from RAM and write new data into it, constantly, while a program runs.\n• <b>Fast</b> — RAM is dramatically faster to access than secondary storage like a hard disk or SSD, which is exactly why the CPU keeps active data there instead of reading it from disk every time.\n• <b>Directly addressable</b> — every location in RAM has its own address, and the CPU can access any of them directly.\n\n<b>Why More RAM Helps</b>\nThe more RAM a computer has, the more programs and data it can keep ready for the CPU at once, without needing to constantly swap things in and out from the slower disk. This is why \"my computer is slow\" is very often solved by adding more RAM.\n\n<b>The Two Types of RAM</b>\nRAM itself comes in two different technologies, each with different speed, cost, and design trade-offs:\n• <b>SRAM (Static RAM)</b> — faster and more expensive, used for small amounts of memory like CPU cache\n• <b>DRAM (Dynamic RAM)</b> — slower and cheaper, used for a computer's main RAM in bulk\n  ↳ Both are covered in full, with a side-by-side comparison, in their own cards next.",
+    note:
+      "RAM is defined by two words: volatile (loses data on power-off) and read/write (the CPU can change what's stored, not just read it). ROM, covered later in this section, is the opposite on both counts.",
+    tags: ["RAM", "Random Access Memory", "Volatile", "Main Memory", "Read/Write"],
+  },
+  {
+    id: 11,
+    slug: "sram",
+    section: "Memory Organization",
+    title: "SRAM (Static RAM)",
+    tagline: "Fast, expensive RAM built from flip-flops, used for CPU cache",
+    description:
+      "<b>What SRAM Is</b>\nSRAM (Static Random Access Memory) is a type of RAM built from tiny circuits called flip-flops (usually six transistors per bit). A flip-flop holds its bit of data steadily, using continuous power, without needing anything else to keep refreshing it.\n  ↳ \"Static\" refers to this — the data stays put on its own, as long as power is supplied, with no refreshing needed.\n\n<b>Key Characteristics</b>\n• <b>Very fast</b> — SRAM can be read and written much faster than DRAM, since a flip-flop can be accessed immediately without any refresh delay.\n• <b>No refresh needed</b> — the data holds steady by itself as long as power stays on, unlike DRAM which needs constant refreshing.\n• <b>More expensive per bit</b> — each SRAM bit needs about six transistors, versus roughly one transistor plus a capacitor for a DRAM bit, so SRAM takes up more physical chip space and costs more to manufacture for the same amount of storage.\n• <b>Still volatile</b> — like all RAM, SRAM loses its data the instant power is removed.\n\n<b>Where SRAM Is Used</b>\nBecause it's fast but expensive, SRAM is used only in small amounts, exactly where speed matters most — the CPU's cache memory (L1, L2, and often L3 cache), which stores the small chunks of data and instructions the CPU is most likely to need again immediately.\n  ↳ It would be far too expensive to build an entire computer's main memory out of SRAM — that's what the cheaper DRAM, covered next, is for.",
+    note:
+      "Memory trick: Static RAM = Stable, no refresh needed, but more expensive — used for small, fast CPU cache. If an exam question mentions \"cache memory\" or \"no refresh required,\" it's talking about SRAM.",
+    diagram:
+      "  SRAM vs DRAM — quick comparison\n\n  Property             SRAM              DRAM\n  ──────────────────────────────────────────────────\n  Built from           flip-flop (6      capacitor + 1\n                       transistors)      transistor\n  Refresh needed?      No                Yes (constantly)\n  Speed                Faster            Slower\n  Cost per bit         Higher            Lower\n  Typical use          CPU cache         Main system RAM\n  Density (bits/chip)  Lower             Higher",
+    tags: ["SRAM", "Static RAM", "Cache Memory", "Flip-Flop", "Volatile"],
+  },
+  {
+    id: 12,
+    slug: "dram",
+    section: "Memory Organization",
+    title: "DRAM (Dynamic RAM)",
+    tagline: "Cheaper, denser RAM that needs constant refreshing, used as main RAM",
+    description:
+      "<b>What DRAM Is</b>\nDRAM (Dynamic Random Access Memory) is the type of RAM used for a computer's main memory — the RAM sticks/modules installed on the motherboard. Each bit of data is stored as a tiny electric charge in a capacitor, alongside a single transistor that controls access to it.\n  ↳ \"Dynamic\" refers to this — a capacitor's charge naturally leaks away over time, so the data doesn't hold steady on its own the way SRAM's does.\n\n<b>Why DRAM Needs Refreshing</b>\nBecause the capacitor's charge leaks away within milliseconds, DRAM needs to be \"refreshed\" — read and rewritten — thousands of times per second, for every single cell, or the stored data would simply fade away and be lost. This refreshing happens automatically, handled by the memory controller, and is invisible to the user, but it does use up a small amount of time and power that SRAM doesn't need.\n\n<b>Key Characteristics</b>\n• <b>Cheaper per bit</b> — needing only one transistor and one capacitor per bit (versus SRAM's six transistors), DRAM packs far more storage into the same chip space, at a much lower cost.\n• <b>Slower than SRAM</b> — the refresh cycles and the way a capacitor's charge must be read add a small delay that flip-flop-based SRAM doesn't have.\n• <b>Higher density</b> — because each cell is so much smaller, DRAM chips can hold far more total memory than SRAM chips of a similar size.\n• <b>Still volatile</b> — all data is lost the instant power is switched off, refresh or no refresh.\n\n<b>Where DRAM Is Used</b>\nDRAM is what's installed as the main RAM in virtually every desktop, laptop, and phone — the modules specified as \"8GB RAM\" or \"16GB RAM\" are DRAM. Its low cost per bit is what makes it practical to have gigabytes of it, whereas an equivalent amount of SRAM would be far too expensive and physically large.\n  ↳ Common real-world variants: DDR4 and DDR5 (Double Data Rate) are the DRAM types found in most modern computers.",
+    note:
+      "Memory trick: Dynamic RAM = needs constant refreshing (capacitor charge leaks), cheaper, higher density — used for a computer's main RAM. If a question mentions \"needs to be refreshed\" or \"capacitor-based,\" it's talking about DRAM.",
+    tags: ["DRAM", "Dynamic RAM", "Main Memory", "Capacitor", "Refresh Cycle", "Volatile"],
+  },
+  {
+    id: 13,
+    slug: "rom",
+    section: "Memory Organization",
+    title: "ROM (Read Only Memory)",
+    tagline: "Non-volatile memory that stores fixed instructions permanently",
+    description:
+      "<b>What ROM Is</b>\nROM (Read Only Memory) is non-volatile memory — it keeps its stored data permanently, even when the power is switched off. As the name suggests, in its original form the CPU can only read from it, not write new data into it.\n\n<b>Why Computers Need ROM</b>\nWhen a computer is first switched on, it needs some fixed set of instructions to begin with, before an operating system has even been loaded from disk into RAM. ROM holds exactly this — permanent, unchanging startup instructions (commonly called firmware, such as the BIOS or UEFI) that tell the computer how to begin booting up.\n  ↳ Because ROM is non-volatile, this startup code is always there, ready, the instant power is applied — nothing needs to be loaded into it first.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — retains its data indefinitely, with or without power.\n• <b>Read-only (originally)</b> — traditional ROM is written once, at the factory, during manufacturing, and can never be changed afterward.\n• <b>Slower than RAM</b> — ROM is generally slower to access than RAM, which is fine since it's used for small amounts of fixed startup code, not for actively running programs.\n• <b>Stores firmware</b> — used for permanent, low-level instructions rather than user programs or documents.\n\n<b>The Problem With Original ROM</b>\nTraditional (masked) ROM is programmed permanently during manufacturing, using a fixed pattern burned directly into the chip. This means even a single error, or any need to update the code later, requires manufacturing a brand new chip from scratch — there is no way to fix or update the one already in the computer.\n  ↳ This limitation is exactly what led to the family of \"programmable\" ROM variants — PROM, EPROM, and EEPROM — each solving this problem a little better than the last. Covered in the next three cards, in that exact order.",
+    note:
+      "ROM's defining pair: non-volatile (keeps data without power) and, in its original form, read-only (fixed forever at manufacture). Everything about PROM, EPROM, and EEPROM is really the story of engineers finding ways to make that second part less permanent.",
+    diagram:
+      "  THE ROM FAMILY — increasing flexibility over time\n\n  ROM ────────► PROM ────────► EPROM ────────► EEPROM\n  fixed at      written once   erased with     erased and\n  factory       by the user,   UV light,       rewritten\n  (masked)      never again    then rewritten  electrically,\n                                (whole chip)    byte-by-byte,\n                                                no removal needed\n\n  Each step to the right removes one more restriction on\n  \"how do I change what's stored after manufacturing?\"",
+    tags: ["ROM", "Read Only Memory", "Non-Volatile", "Firmware", "BIOS"],
+  },
+  {
+    id: 14,
+    slug: "prom",
+    section: "Memory Organization",
+    title: "PROM (Programmable ROM)",
+    tagline: "Blank ROM chips a user can write to exactly once",
+    description:
+      "<b>What PROM Is</b>\nPROM (Programmable Read Only Memory) is a type of ROM chip that comes blank from the factory, rather than pre-written. A user (or manufacturer) can then write — or \"burn\" — their own data or program into it using a special device called a PROM programmer.\n\n<b>The One Big Rule: Write Once</b>\nOnce data has been burned into a PROM chip, it becomes permanent, exactly like a masked ROM — it cannot be erased or rewritten again, ever. If even one bit needs to change, the entire chip has to be thrown away and a fresh blank one programmed instead.\n  ↳ Physically, this works by literally destroying (\"blowing\") tiny internal fuses in specific positions to represent 0s and 1s — a blown fuse can't grow back, which is exactly why PROM can only ever be written once.\n\n<b>Why PROM Was an Improvement</b>\nBefore PROM, a ROM chip's contents had to be decided at the factory during manufacturing, which meant huge minimum order quantities and no room for last-minute changes. PROM let manufacturers (or even end users) buy generic blank chips and burn in their own custom program afterward, which was faster and cheaper for small production runs or one-off custom devices.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — like all ROM, keeps its data with or without power.\n• <b>Write once</b> — can be programmed by the user, but only a single time.\n• <b>Not reusable</b> — a mistake, or any need for an update, means discarding the chip entirely.\n  ↳ This exact limitation is what led to EPROM next — a ROM chip that actually can be erased and reused.",
+    note:
+      "PROM = blank chip + burn once. Nothing can be undone afterward — that's the one fact exams test most on PROM, since it's the detail that separates PROM from EPROM and EEPROM.",
+    tags: ["PROM", "Programmable ROM", "Write Once", "Fuse", "Non-Volatile"],
+  },
+  {
+    id: 15,
+    slug: "eprom",
+    section: "Memory Organization",
+    title: "EPROM (Erasable PROM)",
+    tagline: "Reusable ROM erased with ultraviolet light through a quartz window",
+    description:
+      "<b>What EPROM Is</b>\nEPROM (Erasable Programmable Read Only Memory) is a ROM chip that solves PROM's biggest weakness — being stuck permanently after one write. An EPROM chip can be erased and reprogrammed many times, not just once.\n\n<b>How Erasing Actually Works</b>\nAn EPROM chip has a small transparent quartz window built into its casing. To erase it, the entire chip is exposed to strong ultraviolet (UV) light through that window, typically for around 15–20 minutes, using a device called a UV EPROM eraser. This UV exposure resets every single memory cell on the chip back to blank, all at once — there is no way to erase just one part of it.\n  ↳ Once erased, the whole chip can then be reprogrammed from scratch, again using a PROM-style programmer device.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — keeps its data indefinitely without power, exactly like every ROM variant.\n• <b>Reusable</b> — unlike PROM, an EPROM chip can go through many erase-and-rewrite cycles over its lifetime.\n• <b>Erased as a whole</b> — erasing is all-or-nothing across the entire chip; individual bytes cannot be erased on their own.\n• <b>Must be physically removed</b> — the chip generally has to be taken out of the circuit and placed under a UV eraser device to be erased; it cannot be erased while still installed and running in the computer.\n\n<b>The Remaining Problem</b>\nHaving to physically remove the chip and shine UV light on it for many minutes is slow and inconvenient — completely impractical for any situation where data needs to be updated often or automatically, while the chip stays installed.\n  ↳ This is exactly the problem EEPROM was built to solve next.",
+    note:
+      "EPROM's signature detail: erased using UV light through a visible quartz window, and always erased entirely, never just part of it. If an exam question mentions a \"quartz window\" or \"UV light,\" it's describing EPROM specifically, not EEPROM.",
+    tags: ["EPROM", "Erasable PROM", "UV Light", "Quartz Window", "Reusable", "Non-Volatile"],
+  },
+  {
+    id: 16,
+    slug: "eeprom",
+    section: "Memory Organization",
+    title: "EEPROM (Electrically Erasable PROM)",
+    tagline: "Reusable ROM erased and rewritten with electrical signals, byte by byte",
+    description:
+      "<b>What EEPROM Is</b>\nEEPROM (Electrically Erasable Programmable Read Only Memory) is the most flexible member of the ROM family. Instead of needing UV light and physical removal like EPROM, an EEPROM chip can be erased and rewritten using ordinary electrical signals, while it stays installed inside the running device.\n\n<b>What Makes It Different From EPROM</b>\n• <b>Electrical erasing, not UV light</b> — erasing is done by applying an electrical voltage, not by exposing the chip to ultraviolet light, so there's no quartz window and no separate eraser device needed.\n• <b>No physical removal needed</b> — an EEPROM chip can be erased and reprogrammed right where it sits on the circuit board, in-system, without ever taking it out.\n• <b>Byte-level erasing</b> — EEPROM can typically erase and rewrite one individual byte at a time, rather than being forced to wipe the entire chip at once like EPROM.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — retains data with or without power, like every ROM variant.\n• <b>Reusable, many times over</b> — supports a large number of erase/write cycles (commonly around 100,000 to a million, depending on the chip), though not truly unlimited.\n• <b>Slower to write than to read</b> — writing/erasing an EEPROM cell takes noticeably longer than simply reading from it, so it isn't used as a substitute for RAM.\n\n<b>Where EEPROM Is Used Today</b>\nEEPROM is commonly used for small amounts of data that need to change occasionally but must survive power loss — such as a computer's BIOS/UEFI settings, configuration data in routers and appliances, and small persistent settings on embedded devices.\n  ↳ Modern flash memory (used in USB drives, SSDs, and memory cards) is actually a direct descendant of EEPROM technology, refined for much higher speed and storage density.",
+    note:
+      "EEPROM's signature detail: erased electrically, in-system, byte by byte — no UV light, no quartz window, no removing the chip. The clean progression to remember: ROM (fixed forever) → PROM (write once) → EPROM (erase with UV, whole chip, chip removed) → EEPROM (erase electrically, byte by byte, no removal).",
+    tags: ["EEPROM", "Electrically Erasable", "Flash Memory", "Byte-Level", "Reusable", "Non-Volatile"],
   },
 ];
 
