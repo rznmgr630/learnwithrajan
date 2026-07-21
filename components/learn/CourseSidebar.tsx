@@ -230,6 +230,8 @@ export function CourseSidebar(props: CourseSidebarProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const mobileOpen = props.mobileOpen ?? internalOpen;
   const setMobileOpen = props.onMobileOpenChange ?? setInternalOpen;
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const navScrollStorageKey = `${props.storageKeyPrefix}:navScrollTop`;
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -240,10 +242,33 @@ export function CourseSidebar(props: CourseSidebarProps) {
     };
   }, [mobileOpen]);
 
+  // Restore the sidebar's own scroll position after a navigation remounts this
+  // component — otherwise clicking a deeply nested item makes the whole menu
+  // snap back to its top instead of only the content pane changing.
+  useEffect(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    try {
+      const saved = sessionStorage.getItem(navScrollStorageKey);
+      if (saved !== null) el.scrollTop = Number(saved);
+    } catch {}
+  }, [navScrollStorageKey]);
+
+  function handleNavScroll(e: React.UIEvent<HTMLDivElement>) {
+    try {
+      sessionStorage.setItem(navScrollStorageKey, String(e.currentTarget.scrollTop));
+    } catch {}
+  }
+
   return (
     <>
       <aside className="hidden shrink-0 md:block md:w-64">
-        <div className="sticky overflow-y-auto pr-1" style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}>
+        <div
+          ref={navScrollRef}
+          onScroll={handleNavScroll}
+          className="sticky overflow-y-auto pr-1"
+          style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}
+        >
           <SidebarNavList {...props} />
         </div>
       </aside>
