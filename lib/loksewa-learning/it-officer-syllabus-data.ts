@@ -532,7 +532,6 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 37,
     slug: "boolean-algebra-digital-logic",
     section: "Computer Fundamentals",
-    parentSlug: "number-system",
     title: "Boolean Algebra & Digital Logic",
     tagline: "The logic (true/false) math behind every digital circuit a computer is built from",
     description:
