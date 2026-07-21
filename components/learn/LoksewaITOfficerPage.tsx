@@ -148,14 +148,24 @@ const orderedConcepts = IT_OFFICER_SECTIONS.flatMap(
 );
 const positionOf = new Map(orderedConcepts.map((c, i) => [c.id, i + 1]));
 
+function buildSidebarItems(sectionConcepts: ITOfficerConcept[], parentSlug: string | undefined): CourseSidebarSection["items"] {
+  return sectionConcepts
+    .filter((c) => c.parentSlug === parentSlug)
+    .map((c) => {
+      const children = buildSidebarItems(sectionConcepts, c.slug);
+      return {
+        id: c.id,
+        label: c.title,
+        href: `${BASE_PATH}/${c.slug}`,
+        ...(children.length ? { children } : {}),
+      };
+    });
+}
+
 const sidebarSections: CourseSidebarSection[] = IT_OFFICER_SECTIONS.map((section) => ({
   id: section,
   label: section,
-  items: IT_OFFICER_CONCEPTS.filter((c) => c.section === section).map((c) => ({
-    id: c.id,
-    label: c.title,
-    href: `${BASE_PATH}/${c.slug}`,
-  })),
+  items: buildSidebarItems(IT_OFFICER_CONCEPTS.filter((c) => c.section === section), undefined),
 }));
 
 export function LoksewaITOfficerPage({ activeConcept }: { activeConcept?: ITOfficerConcept | null }) {

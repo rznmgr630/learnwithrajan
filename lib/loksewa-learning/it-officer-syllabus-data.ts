@@ -2,6 +2,8 @@ export interface ITOfficerConcept {
   id: number;
   slug: string;
   section: string;
+  /** Slug of the parent concept, for nested sidebar sub-menus (e.g. SRAM's parent is "ram"). Omit for top-level items within a section. */
+  parentSlug?: string;
   title: string;
   tagline: string;
   description: string;
@@ -140,6 +142,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 10,
     slug: "ram",
     section: "Memory Organization",
+    parentSlug: "primary-memory",
     title: "RAM (Random Access Memory)",
     tagline: "The CPU's fast, volatile workspace for active programs and data",
     description:
@@ -152,6 +155,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 11,
     slug: "sram",
     section: "Memory Organization",
+    parentSlug: "ram",
     title: "SRAM (Static RAM)",
     tagline: "Fast, expensive RAM built from flip-flops, used for CPU cache",
     description:
@@ -166,6 +170,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 12,
     slug: "dram",
     section: "Memory Organization",
+    parentSlug: "ram",
     title: "DRAM (Dynamic RAM)",
     tagline: "Cheaper, denser RAM that needs constant refreshing, used as main RAM",
     description:
@@ -178,6 +183,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 13,
     slug: "rom",
     section: "Memory Organization",
+    parentSlug: "primary-memory",
     title: "ROM (Read Only Memory)",
     tagline: "Non-volatile memory that stores fixed instructions permanently",
     description:
@@ -192,6 +198,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 14,
     slug: "prom",
     section: "Memory Organization",
+    parentSlug: "rom",
     title: "PROM (Programmable ROM)",
     tagline: "Blank ROM chips a user can write to exactly once",
     description:
@@ -204,6 +211,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 15,
     slug: "eprom",
     section: "Memory Organization",
+    parentSlug: "rom",
     title: "EPROM (Erasable PROM)",
     tagline: "Reusable ROM erased with ultraviolet light through a quartz window",
     description:
@@ -216,6 +224,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 16,
     slug: "eeprom",
     section: "Memory Organization",
+    parentSlug: "rom",
     title: "EEPROM (Electrically Erasable PROM)",
     tagline: "Reusable ROM erased and rewritten with electrical signals, byte by byte",
     description:
