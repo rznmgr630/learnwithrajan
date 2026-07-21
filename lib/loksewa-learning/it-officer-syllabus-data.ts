@@ -233,6 +233,74 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "EEPROM's signature detail: erased electrically, in-system, byte by byte — no UV light, no quartz window, no removing the chip. The clean progression to remember: ROM (fixed forever) → PROM (write once) → EPROM (erase with UV, whole chip, chip removed) → EEPROM (erase electrically, byte by byte, no removal).",
     tags: ["EEPROM", "Electrically Erasable", "Flash Memory", "Byte-Level", "Reusable", "Non-Volatile"],
   },
+  {
+    id: 17,
+    slug: "secondary-storage",
+    section: "Memory Organization",
+    title: "Secondary Storage",
+    tagline: "Permanent, non-volatile storage the CPU cannot access directly",
+    description:
+      "<b>What Secondary Storage Is</b>\nSecondary storage (also called auxiliary storage) is where a computer keeps data and programs permanently — files, documents, installed software, the operating system itself — even when the power is switched off. Unlike primary memory, the CPU cannot work on data sitting in secondary storage directly; it must first be loaded into RAM before the CPU can use it.\n  ↳ This is why opening a large file feels slower the first time (loading it from secondary storage into RAM) but instant the second time if it's still cached in RAM.\n\n<b>Secondary vs Primary Memory</b>\n• <b>Non-volatile</b> — secondary storage keeps its data indefinitely, with or without power, unlike RAM.\n• <b>Much slower</b> — secondary storage is far slower to access than RAM, since data must travel through more layers of hardware (and, for some types, physically moving parts) before reaching the CPU.\n• <b>Much larger capacity</b> — a typical computer has far more secondary storage (hundreds of gigabytes to several terabytes) than primary memory (a few to a few dozen gigabytes of RAM), since it's much cheaper per unit of storage.\n• <b>Not directly addressable by the CPU</b> — the CPU cannot execute instructions or process data straight from secondary storage; everything has to be copied into RAM first.\n\n<b>The Four Common Types</b>\n• <b>HDD (Hard Disk Drive)</b> — traditional magnetic storage using spinning platters, the long-standing default for bulk storage\n• <b>SSD (Solid State Drive)</b> — flash-based storage with no moving parts, now the standard for speed\n• <b>Optical Storage</b> — CDs, DVDs, and Blu-ray discs, read using a laser\n• <b>Flash Memory</b> — small, portable solid-state storage such as USB drives and memory cards\n  ↳ Each is covered in its own card next, with a full comparison of speed, cost, and how it physically stores data.",
+    note:
+      "If a question asks which memory the CPU can use directly, the answer is never secondary storage — data always has to be loaded into RAM first. Secondary storage's whole purpose is permanent, large-capacity storage, not speed.",
+    diagram:
+      "        SECONDARY STORAGE (non-volatile, large capacity, slow)\n                       │\n     ┌─────────┬───────┴────────┬─────────────┐\n    HDD        SSD          Optical         Flash\n (magnetic,  (flash chips, (CD/DVD/         Memory\n  spinning    no moving     Blu-ray,        (USB drives,\n  platters)   parts)        laser read)     memory cards)",
+    tags: ["Secondary Storage", "Non-Volatile", "HDD", "SSD", "Optical Storage", "Flash Memory"],
+  },
+  {
+    id: 18,
+    slug: "hdd",
+    section: "Memory Organization",
+    parentSlug: "secondary-storage",
+    title: "HDD (Hard Disk Drive)",
+    tagline: "Magnetic spinning-platter storage — the traditional workhorse of bulk storage",
+    description:
+      "<b>What an HDD Is</b>\nA Hard Disk Drive (HDD) stores data magnetically on one or more spinning circular platters coated with a magnetic material. A read/write head, mounted on an arm that moves across the platter, reads and writes data as the platter spins beneath it.\n\n<b>How It Works</b>\n• The platters spin at high speed (commonly 5,400 or 7,200 RPM — revolutions per minute).\n• Data is stored as tiny magnetized regions arranged in concentric circular tracks, further divided into sectors.\n• The read/write head physically moves in and out across the platter to reach the correct track, then waits for the platter's rotation to bring the correct sector underneath it — these two delays are called seek time and rotational latency.\n  ↳ Together, seek time and rotational latency are why an HDD is much slower than an SSD, especially for random access to many small, scattered files.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — retains data with the power off, exactly like all secondary storage.\n• <b>Mechanical, moving parts</b> — the spinning platters and moving read/write head make an HDD more fragile and prone to damage from physical shock (drops, bumps) than an SSD.\n• <b>Slower</b> — the physical movement needed to reach data makes an HDD considerably slower than an SSD, especially for random reads/writes.\n• <b>Cheaper per gigabyte</b> — HDDs remain the cheapest way to buy large amounts of storage, which is why they're still common for bulk, archival storage.\n• <b>Noisy and power-hungry (relatively)</b> — the spinning platters and moving head produce audible noise and use more power than a solid-state alternative.\n\n<b>Where HDDs Are Still Used</b>\nDespite SSDs taking over as the default for everyday computers, HDDs remain common in servers, backup systems, network-attached storage (NAS), and anywhere a large amount of storage is needed at the lowest possible cost per gigabyte, and top speed isn't the priority.",
+    note:
+      "HDD's signature detail: physical moving parts — spinning platters and a moving read/write head — which is exactly why it's slower and more fragile than an SSD, but also why it's cheaper per gigabyte.",
+    tags: ["HDD", "Hard Disk Drive", "Magnetic Storage", "Secondary Storage", "Non-Volatile"],
+  },
+  {
+    id: 19,
+    slug: "ssd",
+    section: "Memory Organization",
+    parentSlug: "secondary-storage",
+    title: "SSD (Solid State Drive)",
+    tagline: "Flash-based storage with no moving parts — faster, more durable than an HDD",
+    description:
+      "<b>What an SSD Is</b>\nA Solid State Drive (SSD) stores data electronically in flash memory chips, with no spinning platters and no moving read/write head. Data is stored and retrieved purely through electrical signals, the same underlying technology family as EEPROM and USB flash drives.\n\n<b>Why SSDs Are Faster</b>\nBecause there's nothing to physically move or wait to spin into place, an SSD can access any stored location almost instantly, with none of the seek time or rotational latency that slows an HDD down. This makes SSDs dramatically faster, especially for tasks involving many small files or random access, such as starting up an operating system or launching applications.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — retains data with the power off, like every secondary storage type.\n• <b>No moving parts</b> — makes an SSD more durable and resistant to physical shock than an HDD, and silent in operation.\n• <b>Faster</b> — significantly quicker read and write speeds than an HDD, particularly for random access.\n• <b>More expensive per gigabyte</b> — SSDs still generally cost more than HDDs for the same amount of storage, though the gap has been shrinking.\n• <b>Limited write cycles</b> — like flash memory generally, each cell in an SSD can only be erased and rewritten a limited number of times before it wears out, though modern SSDs are engineered to last for years of normal use through wear-levelling.\n• <b>Lower power consumption</b> — uses less electricity than a spinning HDD, which also helps battery life in laptops.\n\n<b>Where SSDs Are Used</b>\nSSDs are now the standard primary drive in most new laptops and desktops, prized for making an entire operating system feel noticeably faster to boot and use, and are increasingly used in servers too wherever speed matters more than the lowest possible cost per gigabyte.",
+    note:
+      "SSD's signature detail: no moving parts, purely electronic — which is exactly why it's faster, quieter, and more durable than an HDD, but comes at a higher cost per gigabyte.",
+    diagram:
+      "  HDD vs SSD — quick comparison\n\n  Property             HDD                 SSD\n  ─────────────────────────────────────────────────\n  Storage method       magnetic platters   flash memory chips\n  Moving parts?        Yes (spinning,      No\n                       moving head)\n  Speed                Slower              Faster\n  Durability           Less durable        More durable\n                       (shock-sensitive)   (no moving parts)\n  Cost per GB          Lower               Higher\n  Noise                Audible             Silent",
+    tags: ["SSD", "Solid State Drive", "Flash Storage", "Secondary Storage", "Non-Volatile"],
+  },
+  {
+    id: 20,
+    slug: "optical-storage",
+    section: "Memory Organization",
+    parentSlug: "secondary-storage",
+    title: "Optical Storage",
+    tagline: "CDs, DVDs, and Blu-ray — data read and written using a laser",
+    description:
+      "<b>What Optical Storage Is</b>\nOptical storage keeps data on a flat, circular disc as a spiral track of microscopic pits and flat areas (called \"lands\"), which a laser reads by measuring how light reflects off the disc's surface. The pattern of pits and lands is interpreted as binary 0s and 1s.\n\n<b>The Three Common Formats</b>\n• <b>CD (Compact Disc)</b> — the earliest common format, holding around 700 MB, originally designed for audio before being adapted for general data storage.\n• <b>DVD (Digital Versatile Disc)</b> — holds far more than a CD, typically 4.7 GB single-layer or 8.5 GB dual-layer, using a more tightly packed spiral track and a shorter-wavelength laser.\n• <b>Blu-ray Disc</b> — holds even more, commonly 25 GB single-layer or 50 GB dual-layer, using an even shorter-wavelength blue-violet laser (which is where the name comes from) to pack data more densely still.\n  ↳ Pattern to remember: CD → DVD → Blu-ray is a straight line of increasing capacity, achieved mainly by using a laser with a progressively shorter wavelength, which can read and write smaller, more tightly packed pits.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — a written disc keeps its data indefinitely without power, as long as the disc itself isn't damaged.\n• <b>Removable and portable</b> — a disc can be taken out of one drive and read in another compatible drive, making it easy to physically distribute software, movies, or backups.\n• <b>Slower than HDD or SSD</b> — reading and writing via a laser and spinning disc is considerably slower than either magnetic or flash-based storage.\n• <b>Read-only, write-once, or rewritable variants</b> — discs come in different types: pressed-at-the-factory read-only discs (like most movie DVDs), write-once discs (CD-R, DVD-R, burned once by the user), and rewritable discs (CD-RW, DVD-RW, which can be erased and rewritten many times).\n\n<b>Where Optical Storage Is Used Today</b>\nOptical storage has become far less common for everyday computer use, since USB flash drives, cloud storage, and streaming have taken over most of its old roles. It's still used for physical software/game distribution in some regions, official archival copies, and Blu-ray for high-definition video.",
+    note:
+      "Exam favourite: the capacity order is always CD < DVD < Blu-ray, and the reason is the laser's wavelength getting shorter each time, letting it read smaller, more densely packed pits.",
+    tags: ["Optical Storage", "CD", "DVD", "Blu-ray", "Laser", "Secondary Storage"],
+  },
+  {
+    id: 21,
+    slug: "flash-memory",
+    section: "Memory Organization",
+    parentSlug: "secondary-storage",
+    title: "Flash Memory",
+    tagline: "Small, portable, solid-state storage — USB drives, memory cards, and SSDs' foundation",
+    description:
+      "<b>What Flash Memory Is</b>\nFlash memory is a type of non-volatile, electronically erasable storage, built from the same underlying technology family as EEPROM. It stores data in memory cells that can be erased and rewritten in large blocks at once (which is where the name \"flash\" comes from — an entire block is erased in a single, fast operation, rather than one bit at a time).\n\n<b>Flash Memory vs EEPROM</b>\nFlash memory is really a descendant of EEPROM, refined to be faster and denser. The key practical difference is how erasing works: classic EEPROM can typically erase a single byte at a time, while flash memory erases in larger blocks, which is less flexible per-byte but much faster and cheaper to manufacture at large capacities — which is exactly why flash memory, not classic EEPROM, is what ended up inside USB drives, memory cards, and SSDs.\n\n<b>Common Forms of Flash Memory</b>\n• <b>USB flash drive (pen drive)</b> — a small, portable stick that plugs directly into a USB port, commonly used for moving files between computers.\n• <b>Memory card (SD card, microSD card)</b> — small removable flash storage used in cameras, smartphones, and other portable devices.\n• <b>Solid state drive (SSD)</b> — uses flash memory internally as its storage medium, covered in full in its own card.\n• <b>Embedded flash storage</b> — the fixed internal storage built into smartphones, tablets, and many other devices, that isn't a physically removable drive.\n\n<b>Key Characteristics</b>\n• <b>Non-volatile</b> — retains its data indefinitely without power.\n• <b>No moving parts</b> — entirely electronic, making it durable, shock-resistant, and silent.\n• <b>Small and portable</b> — commonly packaged into small chips or sticks, making it easy to physically carry data around.\n• <b>Limited write/erase cycles</b> — like all flash-based storage, each cell can only be erased and rewritten a finite number of times before it wears out, though this limit is high enough for years of normal use.\n• <b>Fast, but erases in blocks</b> — quick to read and write, but an entire block must be erased together, which is why flash storage uses special software (like wear-levelling and garbage collection) to manage this efficiently.\n\n<b>Why Flash Memory Matters</b>\nFlash memory is the technology that made small, fast, durable, portable storage possible — from a tiny USB drive that survives being dropped and thrown in a bag, to the SSD that has replaced the HDD as the default drive in most new computers.",
+    note:
+      "Flash memory's signature detail: erased in blocks, not byte-by-byte like classic EEPROM — that trade-off (less fine-grained control, but much faster and cheaper at scale) is exactly why flash memory took over for USB drives, memory cards, and SSDs.",
+    tags: ["Flash Memory", "USB Drive", "Memory Card", "EEPROM", "Non-Volatile", "Secondary Storage"],
+  },
 ];
 
 export const IT_OFFICER_CONCEPT_COUNT = IT_OFFICER_CONCEPTS.length;
