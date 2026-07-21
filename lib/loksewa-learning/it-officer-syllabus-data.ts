@@ -14,16 +14,31 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Computer Architecture", "Memory Organization", "Number System"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
   // COMPUTER FUNDAMENTALS
   // ─────────────────────────────────────────────
   {
+    id: 34,
+    slug: "computer-basics",
+    section: "Computer Fundamentals",
+    title: "Computer Basics",
+    tagline: "What a computer is, its history, generations, and how it's classified",
+    description:
+      "<b>What This Covers</b>\nComputer Basics is the foundation of the whole syllabus — what a computer actually is, how it evolved over time, and the different ways it can be classified.\n\n<b>What You'll Learn Here</b>\n• <b>Introduction to Computer</b> — the definition of a computer, its core characteristics (speed, accuracy, GIGO, diligence, and more), and its real-world advantages, disadvantages, and applications\n• <b>History of Computer</b> — how calculating devices evolved from the abacus through mechanical calculators to the first electronic computers\n• <b>Generation of Computer</b> — the five generations of computing technology, from vacuum tubes to artificial intelligence\n• <b>Types of Computer</b> — analog, digital, and hybrid computers, classified by the kind of data they process\n• <b>Classification of Computer</b> — how computers are further grouped by size, purpose, performance, and data handling\n  ↳ Each of these is covered in full in its own card next.",
+    note:
+      "This section builds up in order: first what a computer even is, then how it got here (history and generations), then the different ways one can be categorized (types and classification). Exam questions often mix these categories, so know which lens (data type vs. size vs. purpose) each classification uses.",
+    diagram:
+      "  COMPUTER BASICS — how the topics build on each other\n\n  Introduction    History of     Generation of    Types of       Classification\n  to Computer ──► Computer   ──► Computer     ──► Computer   ──► of Computer\n  (what it is)    (how we        (which tech       (analog/         (by size, purpose,\n                   got here)      built each         digital/         performance,\n                                  era)               hybrid)          data handling)",
+    tags: ["Computer Basics", "Computer Fundamentals", "Introduction", "History", "Generations", "Classification"],
+  },
+  {
     id: 1,
     slug: "introduction-to-computer",
     section: "Computer Fundamentals",
+    parentSlug: "computer-basics",
     title: "Introduction to Computer",
     tagline: "What a computer is, and what makes it a computer",
     description:
@@ -36,6 +51,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 2,
     slug: "history-of-computer",
     section: "Computer Fundamentals",
+    parentSlug: "computer-basics",
     title: "History of Computer",
     tagline: "From the abacus to the first electronic computer",
     description:
@@ -48,6 +64,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 3,
     slug: "generation-of-computer",
     section: "Computer Fundamentals",
+    parentSlug: "computer-basics",
     title: "Generation of Computer",
     tagline: "Five generations, five core technologies",
     description:
@@ -60,6 +77,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 4,
     slug: "types-of-computer",
     section: "Computer Fundamentals",
+    parentSlug: "computer-basics",
     title: "Types of Computer",
     tagline: "Analog, digital, and hybrid — classified by the data they process",
     description:
@@ -72,6 +90,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     id: 5,
     slug: "classification-of-computer",
     section: "Computer Fundamentals",
+    parentSlug: "computer-basics",
     title: "Classification of Computer",
     tagline: "By size, purpose, performance, and data handling",
     description:
@@ -84,9 +103,24 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // COMPUTER ARCHITECTURE
   // ─────────────────────────────────────────────
   {
+    id: 35,
+    slug: "computer-architecture",
+    section: "Computer Fundamentals",
+    title: "Computer Architecture",
+    tagline: "Inside the CPU — how it's built, how it runs instructions, and how its speed is measured",
+    description:
+      "<b>What This Covers</b>\nComputer Architecture looks inside the CPU itself — the parts it's built from, the exact sequence it follows to run every instruction, and how its speed is actually measured and compared.\n\n<b>What You'll Learn Here</b>\n• <b>CPU (Central Processing Unit)</b> — the ALU, Control Unit, and registers that make up the CPU, and what each one actually does\n• <b>Instruction Cycle</b> — the Fetch → Decode → Execute → Store loop the CPU repeats for every single instruction, billions of times a second\n• <b>CPU Performance</b> — clock speed, CPI, and MIPS, plus the difference between multiprocessing, multiprogramming, and parallel processing\n  ↳ These three build directly on each other: first the CPU's parts, then how those parts cooperate to run one instruction, then how to measure and compare that speed across different CPUs.",
+    note:
+      "Read these three in order — Instruction Cycle only makes sense once you know what the ALU, Control Unit, and registers (from the CPU card) actually are, and CPU Performance builds on the Instruction Cycle to explain why some CPUs get through instructions faster than others.",
+    diagram:
+      "  COMPUTER ARCHITECTURE — how the topics build on each other\n\n   CPU               Instruction Cycle          CPU Performance\n  (ALU, Control  ──►  (Fetch→Decode→        ──►  (Clock Speed, CPI,\n   Unit, Registers)    Execute→Store loop)         MIPS, Parallel Processing)",
+    tags: ["Computer Architecture", "CPU", "Instruction Cycle", "CPU Performance"],
+  },
+  {
     id: 6,
     slug: "cpu",
-    section: "Computer Architecture",
+    section: "Computer Fundamentals",
+    parentSlug: "computer-architecture",
     title: "CPU (Central Processing Unit)",
     tagline: "The brain of the computer — ALU, Control Unit, and registers working together",
     description:
@@ -98,7 +132,8 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 7,
     slug: "instruction-cycle",
-    section: "Computer Architecture",
+    section: "Computer Fundamentals",
+    parentSlug: "computer-architecture",
     title: "Instruction Cycle (Fetch → Decode → Execute → Store)",
     tagline: "The repeating four-step loop the CPU uses to run every single instruction",
     description:
@@ -112,7 +147,8 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 8,
     slug: "cpu-performance",
-    section: "Computer Architecture",
+    section: "Computer Fundamentals",
+    parentSlug: "computer-architecture",
     title: "CPU Performance",
     tagline: "Clock speed, CPI, and MIPS — how CPU speed is actually measured",
     description:
@@ -127,9 +163,22 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // MEMORY ORGANIZATION
   // ─────────────────────────────────────────────
   {
+    id: 36,
+    slug: "memory-organization",
+    section: "Computer Fundamentals",
+    title: "Memory Organization",
+    tagline: "How a computer stores data — from Primary Memory and Secondary Storage to the full Memory Hierarchy",
+    description:
+      "<b>What This Covers</b>\nMemory Organization looks at every place a computer stores data — the fast, volatile primary memory the CPU works with directly, the permanent secondary storage that survives a power-off, and how all of these layers fit together into one overall hierarchy.\n\n<b>What You'll Learn Here</b>\n• <b>Primary Memory</b> — RAM (including SRAM and DRAM) and ROM (including PROM, EPROM, and EEPROM), the memory the CPU can access directly\n• <b>Secondary Storage</b> — HDD, SSD, optical storage, and flash memory, the non-volatile storage that holds everything permanently\n• <b>Memory Hierarchy</b> — how registers, cache, RAM, and secondary storage all fit together in one pyramid, trading off speed, size, and cost\n  ↳ Each is covered in full in its own card next, working from the fastest, smallest memory down to the largest, slowest storage.",
+    note:
+      "Primary Memory and Secondary Storage each go deep on one layer of the hierarchy; Memory Hierarchy then ties all of those layers together into a single picture, so it's worth reading last of the three.",
+    tags: ["Memory Organization", "Primary Memory", "Secondary Storage", "Memory Hierarchy"],
+  },
+  {
     id: 9,
     slug: "primary-memory",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
+    parentSlug: "memory-organization",
     title: "Primary Memory",
     tagline: "The CPU's direct-access memory — where running programs and data live",
     description:
@@ -143,7 +192,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 10,
     slug: "ram",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "primary-memory",
     title: "RAM (Random Access Memory)",
     tagline: "The CPU's fast, volatile workspace for active programs and data",
@@ -156,7 +205,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 11,
     slug: "sram",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "ram",
     title: "SRAM (Static RAM)",
     tagline: "Fast, expensive RAM built from flip-flops, used for CPU cache",
@@ -171,7 +220,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 12,
     slug: "dram",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "ram",
     title: "DRAM (Dynamic RAM)",
     tagline: "Cheaper, denser RAM that needs constant refreshing, used as main RAM",
@@ -184,7 +233,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 13,
     slug: "rom",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "primary-memory",
     title: "ROM (Read Only Memory)",
     tagline: "Non-volatile memory that stores fixed instructions permanently",
@@ -199,7 +248,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 14,
     slug: "prom",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "rom",
     title: "PROM (Programmable ROM)",
     tagline: "Blank ROM chips a user can write to exactly once",
@@ -212,7 +261,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 15,
     slug: "eprom",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "rom",
     title: "EPROM (Erasable PROM)",
     tagline: "Reusable ROM erased with ultraviolet light through a quartz window",
@@ -225,7 +274,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 16,
     slug: "eeprom",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "rom",
     title: "EEPROM (Electrically Erasable PROM)",
     tagline: "Reusable ROM erased and rewritten with electrical signals, byte by byte",
@@ -238,7 +287,8 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 17,
     slug: "secondary-storage",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
+    parentSlug: "memory-organization",
     title: "Secondary Storage",
     tagline: "Permanent, non-volatile storage the CPU cannot access directly",
     description:
@@ -252,7 +302,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 18,
     slug: "hdd",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "secondary-storage",
     title: "HDD (Hard Disk Drive)",
     tagline: "Magnetic spinning-platter storage — the traditional workhorse of bulk storage",
@@ -265,7 +315,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 19,
     slug: "ssd",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "secondary-storage",
     title: "SSD (Solid State Drive)",
     tagline: "Flash-based storage with no moving parts — faster, more durable than an HDD",
@@ -280,7 +330,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 20,
     slug: "optical-storage",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "secondary-storage",
     title: "Optical Storage",
     tagline: "CDs, DVDs, and Blu-ray — data read and written using a laser",
@@ -293,7 +343,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 21,
     slug: "flash-memory",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "secondary-storage",
     title: "Flash Memory",
     tagline: "Small, portable, solid-state storage — USB drives, memory cards, and SSDs' foundation",
@@ -306,7 +356,8 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 22,
     slug: "memory-hierarchy",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
+    parentSlug: "memory-organization",
     crossLinkSlugs: ["ram", "secondary-storage"],
     title: "Memory Hierarchy",
     tagline: "The pyramid of memory — from tiny, blazing-fast registers to huge, slow secondary storage",
@@ -321,7 +372,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 23,
     slug: "register",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "memory-hierarchy",
     title: "Register",
     tagline: "The CPU's own tiny, built-in storage — the very top of the memory hierarchy",
@@ -334,7 +385,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 24,
     slug: "cache",
-    section: "Memory Organization",
+    section: "Computer Fundamentals",
     parentSlug: "memory-hierarchy",
     title: "Cache",
     tagline: "The fast buffer between CPU and RAM — L1, L2, and L3",
@@ -352,7 +403,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 25,
     slug: "number-system",
-    section: "Number System",
+    section: "Computer Fundamentals",
     title: "Number System",
     tagline: "How computers represent numbers — decimal, binary, octal, and hexadecimal",
     description:
@@ -366,7 +417,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 26,
     slug: "decimal-number-system",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system",
     title: "Decimal",
     tagline: "Base 10 — the everyday number system people use",
@@ -379,7 +430,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 27,
     slug: "binary-number-system",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system",
     title: "Binary",
     tagline: "Base 2 — the only number system a computer's hardware actually understands",
@@ -394,7 +445,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 28,
     slug: "octal-number-system",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system",
     title: "Octal",
     tagline: "Base 8 — a compact, historical stand-in for binary",
@@ -407,7 +458,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 29,
     slug: "hexadecimal-number-system",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system",
     title: "Hexadecimal",
     tagline: "Base 16 — today's compact stand-in for binary, using 0–9 and A–F",
@@ -422,7 +473,8 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 30,
     slug: "number-system-conversions",
-    section: "Number System",
+    section: "Computer Fundamentals",
+    parentSlug: "number-system",
     title: "Conversions",
     tagline: "How to move a number between decimal, binary, octal, and hexadecimal",
     description:
@@ -434,7 +486,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 31,
     slug: "binary-to-decimal",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system-conversions",
     title: "Binary → Decimal",
     tagline: "Multiply each bit by its power of 2, then add",
@@ -449,7 +501,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 32,
     slug: "decimal-to-binary",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system-conversions",
     title: "Decimal → Binary",
     tagline: "Repeatedly divide by 2, then read the remainders backwards",
@@ -464,7 +516,7 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   {
     id: 33,
     slug: "hex-to-decimal",
-    section: "Number System",
+    section: "Computer Fundamentals",
     parentSlug: "number-system-conversions",
     title: "Hexadecimal → Decimal",
     tagline: "Multiply each hex digit by its power of 16, then add",
