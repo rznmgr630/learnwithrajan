@@ -8,6 +8,8 @@ export interface CourseSidebarItem {
   label: string;
   /** When provided, the item renders as a link to this URL instead of firing onSelectItem alone. */
   href?: string;
+  /** Nested sub-items, rendered as a collapsible group indented under this item. */
+  children?: CourseSidebarItem[];
 }
 
 export interface CourseSidebarSection {
@@ -29,6 +31,104 @@ interface CourseSidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
   /** Hide the built-in "Menu" trigger button, e.g. when a page renders its own trigger elsewhere and drives mobileOpen/onMobileOpenChange instead. */
   hideMobileTrigger?: boolean;
+}
+
+function containsActiveId(items: CourseSidebarItem[], activeItemId?: string | number | null): boolean {
+  if (activeItemId == null) return false;
+  return items.some((item) => item.id === activeItemId || (item.children && containsActiveId(item.children, activeItemId)));
+}
+
+function SidebarItemRow({
+  item,
+  depth,
+  storageKeyPrefix,
+  activeItemId,
+  onSelectItem,
+}: {
+  item: CourseSidebarItem;
+  depth: number;
+  storageKeyPrefix: string;
+  activeItemId?: string | number | null;
+  onSelectItem?: (id: string | number) => void;
+}) {
+  const hasChildren = !!item.children?.length;
+  const storageKey = `${storageKeyPrefix}:item:${item.id}`;
+  const [open, setOpen] = useState(() => containsActiveId(item.children ?? [], activeItemId));
+
+  useEffect(() => {
+    if (!hasChildren) return;
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved !== null) setOpen(saved === "1");
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isActive = activeItemId === item.id;
+  const linkClassName = `flex-1 rounded-md px-2.5 py-1.5 text-left text-sm transition ${
+    isActive
+      ? "bg-[var(--accent)]/10 font-medium text-[var(--accent)]"
+      : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+  }`;
+
+  return (
+    <div style={depth ? { paddingLeft: depth * 14 } : undefined}>
+      <div className="flex items-center gap-0.5">
+        {item.href ? (
+          <Link key={item.id} href={item.href} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
+            {item.label}
+          </Link>
+        ) : (
+          <button key={item.id} type="button" onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
+            {item.label}
+          </button>
+        )}
+        {hasChildren && (
+          <button
+            type="button"
+            onClick={() =>
+              setOpen((prev) => {
+                const next = !prev;
+                try {
+                  sessionStorage.setItem(storageKey, next ? "1" : "0");
+                } catch {}
+                return next;
+              })
+            }
+            aria-label={open ? "Collapse" : "Expand"}
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+          >
+            <svg
+              className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+      {hasChildren && open && (
+        <div className="mt-0.5 flex flex-col gap-0.5">
+          {item.children!.map((child) => (
+            <SidebarItemRow
+              key={child.id}
+              item={child}
+              depth={depth + 1}
+              storageKeyPrefix={storageKeyPrefix}
+              activeItemId={activeItemId}
+              onSelectItem={onSelectItem}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SidebarAccordionSection({
@@ -83,26 +183,16 @@ function SidebarAccordionSection({
         </svg>
       </summary>
       <div className="flex flex-col gap-0.5 border-t border-[var(--border)] px-2 py-2">
-        {section.items.map((item) => {
-          const isActive = activeItemId === item.id;
-          const className = `rounded-md px-2.5 py-1.5 text-left text-sm transition ${
-            isActive
-              ? "bg-[var(--accent)]/10 font-medium text-[var(--accent)]"
-              : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"
-          }`;
-          if (item.href) {
-            return (
-              <Link key={item.id} href={item.href} onClick={() => onSelectItem?.(item.id)} className={className}>
-                {item.label}
-              </Link>
-            );
-          }
-          return (
-            <button key={item.id} type="button" onClick={() => onSelectItem?.(item.id)} className={className}>
-              {item.label}
-            </button>
-          );
-        })}
+        {section.items.map((item) => (
+          <SidebarItemRow
+            key={item.id}
+            item={item}
+            depth={0}
+            storageKeyPrefix={storageKeyPrefix}
+            activeItemId={activeItemId}
+            onSelectItem={onSelectItem}
+          />
+        ))}
       </div>
     </details>
   );
