@@ -72,6 +72,18 @@ function SectionLabel({ label, color = "accent" }: { label: string; color?: "acc
   );
 }
 
+const conceptBySlug = new Map(IT_OFFICER_CONCEPTS.map((c) => [c.slug, c]));
+
+function topAncestorTitle(concept: ITOfficerConcept): string {
+  let current = concept;
+  while (current.parentSlug) {
+    const parent = conceptBySlug.get(current.parentSlug);
+    if (!parent) break;
+    current = parent;
+  }
+  return current.title;
+}
+
 function ConceptDetail({ concept, index }: { concept: ITOfficerConcept; index: number }) {
   return (
     <div>
@@ -80,7 +92,7 @@ function ConceptDetail({ concept, index }: { concept: ITOfficerConcept; index: n
         <div className="border-b border-[var(--border)] px-6 py-5">
           <div className="mb-2 flex items-center gap-2">
             <span className="rounded-md bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">
-              {concept.section}
+              {topAncestorTitle(concept)}
             </span>
             <span className="text-[10px] text-[var(--faint)]">#{index}</span>
           </div>
@@ -230,7 +242,7 @@ export function LoksewaITOfficerPage({ activeConcept }: { activeConcept?: ITOffi
                   <div className="mt-8 flex flex-wrap justify-center gap-4">
                     {[
                       { label: "Topics", value: `${IT_OFFICER_CONCEPT_COUNT}` },
-                      { label: "Chapters", value: `${IT_OFFICER_SECTIONS.length}` },
+                      { label: "Chapters", value: `${IT_OFFICER_CONCEPTS.filter((c) => !c.parentSlug).length}` },
                     ].map((s) => (
                       <div key={s.label} className="rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-5 py-3">
                         <p className="font-mono text-xl font-bold text-[var(--accent)]">{s.value}</p>
