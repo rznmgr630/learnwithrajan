@@ -14,7 +14,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Computer Architecture", "Memory Organization"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Computer Architecture", "Memory Organization", "Number System"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -345,6 +345,136 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     diagram:
       "  CPU ── L1 Cache ── L2 Cache ── L3 Cache ── RAM ── Secondary Storage\n         (smallest,    (bigger,     (biggest,   (much      (largest,\n          fastest,      slower       slowest,    bigger,    slowest)\n          per-core)      than L1)    often        much\n                                     shared)      slower)\n\n  CACHE HIT  → data found in cache → returned almost instantly\n  CACHE MISS → data not in cache  → fetched from RAM instead (slower)",
     tags: ["Cache", "L1 Cache", "L2 Cache", "L3 Cache", "Cache Hit", "Cache Miss", "SRAM", "Memory Hierarchy"],
+  },
+  // ─────────────────────────────────────────────
+  // NUMBER SYSTEM
+  // ─────────────────────────────────────────────
+  {
+    id: 25,
+    slug: "number-system",
+    section: "Number System",
+    title: "Number System",
+    tagline: "How computers represent numbers — decimal, binary, octal, and hexadecimal",
+    description:
+      "<b>What a Number System Is</b>\nA number system is simply a way of writing down numbers using a fixed set of symbols (called digits) and a fixed \"base\" (also called the radix) — the count of different digits available before you have to carry over into the next column.\n  ↳ Everyday counting uses the decimal system, base 10, with the ten digits 0–9. Computers, internally, use other bases too — binary, octal, and hexadecimal — because of how their electronic circuits work.\n\n<b>Why Computers Don't Just Use Decimal</b>\nA computer's electronic circuits are built from switches that are only ever in one of two states: on or off, high voltage or low voltage. This naturally maps to exactly two symbols, 0 and 1, which is exactly what the binary number system uses. Every number, letter, image, and instruction inside a computer is ultimately stored and processed as binary, even though humans usually prefer to read numbers in decimal, octal, or hexadecimal instead, since long strings of 0s and 1s are hard for people to read.\n\n<b>Positional Notation — the Idea Behind Every Number System</b>\nIn any number system, the position of a digit determines its value, based on powers of the base. For example, in decimal (base 10), the number 345 means:\n(3 × 10²) + (4 × 10¹) + (5 × 10⁰) = 300 + 40 + 5 = 345\n  ↳ This exact same idea — digit × (base raised to its position) — applies to every number system covered below; only the base changes.\n\n<b>The Four Number Systems Used in Computing</b>\n• <b>Decimal (Base 10)</b> — the number system people use every day, with ten digits: 0–9.\n• <b>Binary (Base 2)</b> — the number system computer hardware actually runs on internally, with just two digits: 0 and 1.\n• <b>Octal (Base 8)</b> — uses eight digits, 0–7; historically used as a shorter, more human-readable stand-in for binary.\n• <b>Hexadecimal (Base 16)</b> — uses sixteen symbols, 0–9 followed by A–F (where A=10, B=11, C=12, D=13, E=14, F=15); widely used today as a compact, human-readable stand-in for binary, especially in memory addresses and color codes.\n  ↳ Each is covered in its own card next, followed by the conversion methods used to move a number between these systems.",
+    note:
+      "The one idea to remember across all four systems: a digit's value = digit × base raised to its position, counting position from 0 on the right. Only the base (10, 2, 8, or 16) and the available digits change.",
+    diagram:
+      "  Number System     Base    Digits Used\n  ─────────────────────────────────────────────\n  Decimal             10     0 1 2 3 4 5 6 7 8 9\n  Binary                2     0 1\n  Octal                 8     0 1 2 3 4 5 6 7\n  Hexadecimal          16     0 1 2 3 4 5 6 7 8 9 A B C D E F",
+    tags: ["Number System", "Decimal", "Binary", "Octal", "Hexadecimal", "Positional Notation", "Base", "Radix"],
+  },
+  {
+    id: 26,
+    slug: "decimal-number-system",
+    section: "Number System",
+    parentSlug: "number-system",
+    title: "Decimal",
+    tagline: "Base 10 — the everyday number system people use",
+    description:
+      "<b>What Decimal Is</b>\nThe decimal number system is the base-10 system used in everyday life, built from ten digits: 0, 1, 2, 3, 4, 5, 6, 7, 8, and 9. \"Deci\" comes from the Latin word for ten, matching the ten digits available.\n\n<b>How Position Gives Each Digit Its Value</b>\nEach digit's actual value depends on its position, using powers of 10, counted from the right starting at position 0.\n  ↳ Example: the number 5,047 breaks down as:\n(5 × 10³) + (0 × 10²) + (4 × 10¹) + (7 × 10⁰) = 5000 + 0 + 40 + 7 = 5047\n\n<b>Why Decimal Is Natural for Humans</b>\nMost historians trace the popularity of base 10 to something very simple — people have ten fingers, which made counting in groups of ten natural long before any formal number system existed.\n\n<b>Decimal's Role Alongside Computers</b>\nEven though a computer's hardware works internally in binary, decimal is still how people enter and read most numbers when interacting with a computer — from typing 250 into a form, to seeing a file size shown as 4.2 GB. The computer silently converts between decimal (for humans) and binary (for its own circuits) behind the scenes.\n  ↳ How that conversion actually works, step by step, is covered in the \"Decimal to Binary\" and \"Binary to Decimal\" cards.",
+    note:
+      "Decimal is simply base 10 — ten digits (0–9), each column worth a power of 10. Every other number system covered here works exactly the same way, just with a different base and a different digit set.",
+    tags: ["Decimal", "Base 10", "Number System", "Positional Notation"],
+  },
+  {
+    id: 27,
+    slug: "binary-number-system",
+    section: "Number System",
+    parentSlug: "number-system",
+    title: "Binary",
+    tagline: "Base 2 — the only number system a computer's hardware actually understands",
+    description:
+      "<b>What Binary Is</b>\nThe binary number system is base-2, built from just two digits: 0 and 1. Each binary digit is called a bit (short for \"binary digit\") — the smallest unit of data a computer can store or process.\n\n<b>Why Computers Use Binary</b>\nA computer's circuits are made of billions of tiny electronic switches, and each switch can only be in one of two physical states — on or off, representing high or low voltage. Binary's two digits, 0 and 1, map directly onto these two states, which is exactly why every single piece of data inside a computer — numbers, text, images, sound, instructions — is ultimately stored as binary, no matter how it's displayed to a human.\n\n<b>How Position Gives Each Digit Its Value</b>\nJust like decimal, each binary digit's value depends on its position, but using powers of 2 instead of powers of 10.\n  ↳ Example: the binary number 1011 breaks down as:\n(1 × 2³) + (0 × 2²) + (1 × 2¹) + (1 × 2⁰) = 8 + 0 + 2 + 1 = 11 (in decimal)\n\n<b>Common Binary Terms</b>\n• <b>Bit</b> — a single binary digit, 0 or 1\n• <b>Nibble</b> — a group of 4 bits\n• <b>Byte</b> — a group of 8 bits, the standard unit computers use to measure most data (a single character of text is commonly stored in 1 byte)\n• <b>Word</b> — the natural chunk of bits a particular CPU processes at once, commonly 32 or 64 bits on modern computers\n\n<b>Why Binary Is Hard for Humans</b>\nBinary numbers get very long very quickly — the decimal number 250, for example, is 11111010 in binary. This is exactly why octal and hexadecimal exist: as shorter, more human-readable stand-ins that still map cleanly onto binary underneath.",
+    note:
+      "Binary is the one number system that isn't just a convenience — it's the literal physical reality of how a computer's hardware works, since a transistor's on/off state has only two possible values. Everything else (decimal for humans, hex for compactness) is a layer of translation on top of it.",
+    diagram:
+      "  BIT SIZES\n\n  1 bit      = 0 or 1\n  4 bits     = 1 nibble          e.g. 1011\n  8 bits     = 1 byte            e.g. 11111010\n  32/64 bits = 1 word (typical CPU word size)",
+    tags: ["Binary", "Base 2", "Bit", "Byte", "Nibble", "Number System"],
+  },
+  {
+    id: 28,
+    slug: "octal-number-system",
+    section: "Number System",
+    parentSlug: "number-system",
+    title: "Octal",
+    tagline: "Base 8 — a compact, historical stand-in for binary",
+    description:
+      "<b>What Octal Is</b>\nThe octal number system is base-8, built from eight digits: 0, 1, 2, 3, 4, 5, 6, and 7. \"Oct\" comes from the Latin/Greek word for eight, matching the eight digits available.\n\n<b>Why Octal Exists</b>\nOctal became popular in early computing because it converts to and from binary very cleanly: exactly 3 binary bits make up 1 octal digit, since 2³ = 8. This let programmers and engineers write and read binary-related values in a shorter, less error-prone form, especially on older computer systems that grouped memory in multiples of 3 bits.\n\n<b>How Position Gives Each Digit Its Value</b>\nEach octal digit's value depends on its position, using powers of 8.\n  ↳ Example: the octal number 372 breaks down as:\n(3 × 8²) + (7 × 8¹) + (2 × 8⁰) = 192 + 56 + 2 = 250 (in decimal)\n\n<b>Octal ↔ Binary — the Quick Grouping Trick</b>\nBecause 1 octal digit always equals exactly 3 binary bits, converting between octal and binary just means grouping bits in 3s, without needing to go through decimal at all.\n  ↳ Binary 011 111 010 → group in 3s → octal 3 7 2\n\n<b>Where Octal Is Used Today</b>\nOctal has mostly been replaced by hexadecimal in modern computing, but it still shows up in a few specific places — most notably Unix/Linux file permission codes (like chmod 755), where each digit represents a combination of read, write, and execute permissions.",
+    note:
+      "The key octal fact exams test: 1 octal digit = exactly 3 binary bits, since 2³ = 8. That relationship is also exactly why grouping binary digits in 3s converts straight to octal, with no decimal step needed.",
+    tags: ["Octal", "Base 8", "Number System", "Unix Permissions"],
+  },
+  {
+    id: 29,
+    slug: "hexadecimal-number-system",
+    section: "Number System",
+    parentSlug: "number-system",
+    title: "Hexadecimal",
+    tagline: "Base 16 — today's compact stand-in for binary, using 0–9 and A–F",
+    description:
+      "<b>What Hexadecimal Is</b>\nThe hexadecimal number system is base-16, built from sixteen symbols: the ten digits 0–9, followed by six letters A–F standing in for the values 10 through 15 (A=10, B=11, C=12, D=13, E=14, F=15). \"Hexa\" is Greek for six, and \"deci\" for ten — six plus ten symbols.\n\n<b>Why Hexadecimal Exists</b>\nHexadecimal is popular in modern computing because it converts to and from binary even more cleanly than octal: exactly 4 binary bits make up 1 hexadecimal digit, since 2⁴ = 16. Since 4 bits is also exactly half a byte (a \"nibble\"), a full byte can always be written as exactly 2 hexadecimal digits — a neat, compact match that modern computer architecture is built around.\n\n<b>How Position Gives Each Digit Its Value</b>\nEach hexadecimal digit's value depends on its position, using powers of 16.\n  ↳ Example: the hexadecimal number 2F breaks down as:\n(2 × 16¹) + (15 × 16⁰) = 32 + 15 = 47 (in decimal, since F = 15)\n\n<b>Hex ↔ Binary — the Quick Grouping Trick</b>\nBecause 1 hex digit always equals exactly 4 binary bits, converting between hex and binary just means grouping bits in 4s.\n  ↳ Binary 0010 1111 → group in 4s → hex 2 F\n\n<b>Where Hexadecimal Is Used Today</b>\n• <b>Memory addresses</b> — displayed in hex because it's far shorter than the equivalent binary\n• <b>Color codes</b> — web colors like #FF5733 are hexadecimal, where each pair of digits represents the amount of red, green, and blue (0–255 each, matching 00–FF in hex)\n• <b>Error codes and debugging</b> — memory dumps, crash reports, and low-level debugging tools commonly display raw data in hex rather than binary, since it's far more compact and easier for a human to scan\n• <b>MAC addresses</b> — a network device's hardware address is written as a series of hex digit pairs",
+    note:
+      "The key hex fact exams test: 1 hex digit = exactly 4 binary bits, since 2⁴ = 16 — and 4 bits is exactly half a byte, so any full byte always converts to exactly 2 hex digits. This is exactly why hex, not octal, has become the modern standard for showing raw computer data.",
+    diagram:
+      "  Hex Digit   Binary (4 bits)   Decimal\n  ───────────────────────────────────\n  0           0000              0\n  1           0001              1\n  ...         ...               ...\n  9           1001              9\n  A           1010              10\n  B           1011              11\n  C           1100              12\n  D           1101              13\n  E           1110              14\n  F           1111              15",
+    tags: ["Hexadecimal", "Base 16", "Number System", "Memory Address", "Color Code"],
+  },
+  {
+    id: 30,
+    slug: "number-system-conversions",
+    section: "Number System",
+    title: "Conversions",
+    tagline: "How to move a number between decimal, binary, octal, and hexadecimal",
+    description:
+      "<b>Why Conversion Matters</b>\nA computer stores everything in binary, but humans usually read and enter numbers in decimal, and often work with hexadecimal or octal for compactness. Being able to convert a number between these systems — by hand, using the base and positional notation covered in the \"Number System\" card — is one of the most commonly tested skills in this syllabus area.\n\n<b>The General Idea</b>\nEvery conversion method below comes down to one of two directions:\n• <b>Converting INTO decimal</b> — multiply each digit by its position's power of the base, and add the results together (the same positional-notation formula used to explain any number system).\n• <b>Converting OUT OF decimal</b> — repeatedly divide the decimal number by the target base, and read the remainders in reverse order.\n\n<b>The Three Conversions Covered Here</b>\n• <b>Binary → Decimal</b> — reading a binary number's true decimal value\n• <b>Decimal → Binary</b> — converting an everyday decimal number into the binary a computer actually stores\n• <b>Hexadecimal → Decimal</b> — reading a hex value's true decimal value\n  ↳ The reverse conversions (Decimal → Hex, Decimal → Octal, Octal → Decimal, and direct Binary ↔ Octal/Hex grouping) all follow the exact same two general methods above — once you understand these three, the rest are the same steps with a different base.",
+    note:
+      "Two directions, two methods: converting INTO decimal always means multiply-and-add by powers of the base; converting OUT OF decimal always means divide-and-read-remainders-backwards. Every conversion in this section is one of these two patterns.",
+    tags: ["Number System Conversion", "Binary to Decimal", "Decimal to Binary", "Hexadecimal to Decimal"],
+  },
+  {
+    id: 31,
+    slug: "binary-to-decimal",
+    section: "Number System",
+    parentSlug: "number-system-conversions",
+    title: "Binary → Decimal",
+    tagline: "Multiply each bit by its power of 2, then add",
+    description:
+      "<b>The Method</b>\nTo convert a binary number to decimal, multiply each bit by 2 raised to its position (counting from 0 on the right), then add every result together.\n\n<b>Worked Example — Converting 101101 to Decimal</b>\nWrite out each bit's position, counting from the right starting at 0:\n\nPosition:   5  4  3  2  1  0\nBit:        1  0  1  1  0  1\n\nNow multiply each bit by 2 raised to its position, and add:\n(1×2⁵) + (0×2⁴) + (1×2³) + (1×2²) + (0×2¹) + (1×2⁰)\n= 32 + 0 + 8 + 4 + 0 + 1\n= 45\n\nSo binary 101101 equals decimal 45.\n\n<b>The Shortcut: Only Add Where the Bit Is 1</b>\nSince multiplying by 0 always gives 0, you only actually need to add up the powers of 2 where the bit is 1 — skip the 0s entirely.\n  ↳ In the example above: 32 + 8 + 4 + 1 = 45 — same answer, fewer steps.\n\n<b>Common Powers of 2 Worth Memorizing</b>\n2⁰=1, 2¹=2, 2²=4, 2³=8, 2⁴=16, 2⁵=32, 2⁶=64, 2⁷=128, 2⁸=256\n  ↳ Knowing these by heart makes binary-to-decimal conversion much faster in an exam setting.",
+    note:
+      "Fastest exam method: write the powers of 2 above each bit, then just add up the powers where the bit is 1 and ignore every 0 bit completely.",
+    diagram:
+      "  Convert binary 101101 to decimal\n\n  Position:   5    4    3    2    1    0\n  Power:     2⁵   2⁴   2³   2²   2¹   2⁰\n  Value:     32   16    8    4    2    1\n  Bit:        1    0    1    1    0    1\n              │         │    │         │\n              32   +    8  + 4    +    1   =  45",
+    tags: ["Binary to Decimal", "Conversion", "Number System", "Powers of 2"],
+  },
+  {
+    id: 32,
+    slug: "decimal-to-binary",
+    section: "Number System",
+    parentSlug: "number-system-conversions",
+    title: "Decimal → Binary",
+    tagline: "Repeatedly divide by 2, then read the remainders backwards",
+    description:
+      "<b>The Method</b>\nTo convert a decimal number to binary, repeatedly divide it by 2, writing down the remainder (0 or 1) at each step, until the number reaches 0. Then read all the remainders from bottom to top (last one first) to get the binary result.\n\n<b>Worked Example — Converting 45 to Binary</b>\n45 ÷ 2 = 22  remainder 1\n22 ÷ 2 = 11  remainder 0\n11 ÷ 2 =  5  remainder 1\n 5 ÷ 2 =  2  remainder 1\n 2 ÷ 2 =  1  remainder 0\n 1 ÷ 2 =  0  remainder 1\n\nReading the remainders from bottom to top: 1 0 1 1 0 1\n\nSo decimal 45 equals binary 101101 — matching the Binary → Decimal example exactly in reverse.\n\n<b>Why You Read the Remainders Backwards</b>\nThe first remainder you calculate corresponds to the smallest place value (2⁰, the rightmost bit), and the last remainder you calculate corresponds to the largest place value. So the very last remainder produced becomes the leftmost (most significant) bit, and the very first remainder produced becomes the rightmost (least significant) bit — which is exactly why you read bottom to top.",
+    note:
+      "The single most common mistake on this method: forgetting to reverse the order of the remainders at the end. Divide-by-2 always produces the least-significant bit first, so the final answer is always read bottom-to-top.",
+    diagram:
+      "  Convert decimal 45 to binary\n\n  45 ÷ 2 = 22   remainder 1   ┐\n  22 ÷ 2 = 11   remainder 0   │\n  11 ÷ 2 =  5   remainder 1   │  read remainders\n   5 ÷ 2 =  2   remainder 1   │  bottom → top\n   2 ÷ 2 =  1   remainder 0   │\n   1 ÷ 2 =  0   remainder 1   ┘\n\n  Result:  1 0 1 1 0 1  =  binary 101101",
+    tags: ["Decimal to Binary", "Conversion", "Number System", "Division Method"],
+  },
+  {
+    id: 33,
+    slug: "hex-to-decimal",
+    section: "Number System",
+    parentSlug: "number-system-conversions",
+    title: "Hexadecimal → Decimal",
+    tagline: "Multiply each hex digit by its power of 16, then add",
+    description:
+      "<b>The Method</b>\nTo convert a hexadecimal number to decimal, multiply each hex digit by 16 raised to its position (counting from 0 on the right), converting any letter digit (A–F) to its decimal value first, then add every result together.\n\n<b>Worked Example — Converting 1F4 to Decimal</b>\nWrite out each digit's position, counting from the right starting at 0:\n\nPosition:   2   1   0\nDigit:      1   F   4\n\nConvert the letter digit to its decimal value first: F = 15.\n\nNow multiply each digit by 16 raised to its position, and add:\n(1×16²) + (15×16¹) + (4×16⁰)\n= 256 + 240 + 4\n= 500\n\nSo hexadecimal 1F4 equals decimal 500.\n\n<b>Letter Digits to Remember</b>\nA=10, B=11, C=12, D=13, E=14, F=15\n  ↳ These six values are worth memorizing outright, since every hex-to-decimal conversion depends on converting any letter digit correctly first.\n\n<b>Common Powers of 16 Worth Memorizing</b>\n16⁰=1, 16¹=16, 16²=256, 16³=4096\n  ↳ Most exam-level hex numbers are 2–3 digits long, so knowing 16⁰, 16¹, and 16² by heart covers the majority of questions.",
+    note:
+      "Two things trip people up on this conversion: forgetting to convert a letter digit (A–F) to its decimal value before multiplying, and misplacing which position is which. Always write the positions out first, right to left starting at 0, before doing any multiplication.",
+    diagram:
+      "  Convert hexadecimal 1F4 to decimal\n\n  Position:    2      1      0\n  Power:      16²    16¹    16⁰\n  Value:      256     16      1\n  Digit:       1      F=15    4\n               │       │      │\n              256  +  240  +  4   =  500",
+    tags: ["Hexadecimal to Decimal", "Conversion", "Number System", "Powers of 16"],
   },
 ];
 
