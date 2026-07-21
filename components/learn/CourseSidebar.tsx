@@ -65,7 +65,7 @@ function SidebarItemRow({
   }, []);
 
   const isActive = activeItemId === item.id;
-  const weightClass = depth === 0 ? "font-bold" : depth === 1 ? "font-medium" : "font-normal";
+  const weightClass = depth === 0 ? "font-semibold" : depth === 1 ? "font-medium" : "font-normal";
   const linkClassName = `flex-1 rounded-md px-2.5 py-1.5 text-left text-sm transition ${weightClass} ${
     isActive
       ? "bg-[var(--accent)]/10 text-[var(--accent)]"
@@ -169,7 +169,7 @@ function SidebarAccordionSection({
       className="open:[&_.course-sidebar-chevron]:rotate-180 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
-        <span className="text-sm font-extrabold text-[var(--text)]">{section.label}</span>
+        <span className="text-sm font-bold text-[var(--text)]">{section.label}</span>
         <svg
           className="course-sidebar-chevron h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200"
           viewBox="0 0 20 20"
