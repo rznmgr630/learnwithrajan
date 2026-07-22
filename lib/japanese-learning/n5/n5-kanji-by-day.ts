@@ -88,11 +88,12 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 10 — います/あります, existence & location ─────────────────────
-  // Weather / sky  |  Animal  |  Land
+  // Weather / sky  |  Animal  |  Land  |  Family (自分/家族)
   10: [
     "天", "気", "雨",  // weather / sky
     "犬",              // dog (animal)
     "田",              // rice field / land
+    "自", "家", "族",  // family — self, house, clan (自分 家族)
   ],
 
   // ── Lesson 11 — counters & time ───────────────────────────────────────────

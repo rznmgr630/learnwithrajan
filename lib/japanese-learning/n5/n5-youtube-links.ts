@@ -45,6 +45,20 @@ const MINNA_LESSON: Record<number, YoutubeClip[]> = {
       title: "Nepali explanation · Minna no Nihongo · Lesson 9",
     },
   ],
+  10: [
+    {
+      url: "https://www.youtube.com/watch?v=Ifbb1XZAxWk",
+      title: "English explanation · Minna no Nihongo · Lesson 10",
+    },
+    {
+      url: "https://www.youtube.com/watch?v=Os9NkBSNYqU",
+      title: "English explanation (playlist) · Minna no Nihongo · Lesson 10",
+    },
+    {
+      url: "https://www.youtube.com/watch?v=aeUcyryXSyA",
+      title: "Nepali explanation · Minna no Nihongo · Lesson 10",
+    },
+  ],
 };
 
 function minnaSearch(lesson: number, jpTitle: string): YoutubeClip {
