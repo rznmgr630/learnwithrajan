@@ -3025,8 +3025,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "Noun अगाडि: い-adj सिधै जोडिन्छ (あたらしいかばん), तर な-adj ले な चाहिन्छ (きれいなへや)। 'धेरै' को लागि とても, नकारसँग 'त्यति होइन' को लागि あまり।",
       },
     ],
-    youtubeVideoId: { en: "J6E5VTFtXAs" },
-    youtubeVideoIdPart2: { en: "6HCkKy_VTFU" },
+    youtubeVideoId: { en: "MlBZrOmq88c", np: "fgqCQs75xi0" },
+    youtubeVideoIdPart2: { en: "ZGokWhz3CAI" },
     youtubeTitle: "Minna no Nihongo · Lesson 8 — Grammar",
     conversation: [
       {
