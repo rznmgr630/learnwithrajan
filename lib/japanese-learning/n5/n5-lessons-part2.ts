@@ -17,9 +17,35 @@ export const JP_N5_PART2: N5LessonSpec[] = [
       { particle: "は", note: "Contrasts topics when comparing items." },
     ],
     grammarBullets: [
-      "い-adjectives: あたらしい／おいしい — inflect with くない／かった.",
-      "な-adjectives + な before nouns: きれいな／しずかな.",
+      { en: "い-adjectives end in い (たかい／やすい／おおきい) and go straight before a noun — no change needed.", np: "い-adjective हरू い मा अन्त्य हुन्छन् (たかい／やすい／おおきい) र नामको अगाडि जस्ताको तस्तै जान्छन् — फेरबदल चाहिँदैन।", jp: "い形容詞は「い」で終わり（たかい／やすい／おおきい）、名詞の前にそのまま置きます。" },
+      { en: "な-adjectives don't naturally end in い (しずか／げんき／ハンサム) — add な before a noun: しずかな まち.", np: "な-adjective हरू स्वाभाविक रूपमा い मा अन्त्य हुँदैनन् (しずか／げんき／ハンサム) — नामको अगाडि な थप्नुपर्छ: しずかな まち。", jp: "な形容詞は本来「い」で終わりません（しずか／げんき／ハンサム）。名詞の前には「な」を入れます：しずかな まち。" },
+      { en: "Exceptions: きれい, きらい, and ハンサム look like い-adjectives (end in い) but are actually な-adjectives.", np: "अपवाद: きれい, きらい, र ハンサム हेर्दा い-adjective जस्तो देखिन्छ (い मा अन्त्य हुन्छ) तर वास्तवमा な-adjective हुन्।", jp: "例外：きれい・きらい・ハンサムは「い」で終わるのでい形容詞に見えますが、実はな形容詞です。" },
+      { en: "Before です both types attach directly — い-adj: たかいです; な-adj: しずかです (no な before です).", np: "です अगाडि दुबै प्रकार सिधै जोडिन्छन् — い-adj: たかいです; な-adj: しずかです (です अगाडि な राख्दैन)।", jp: "「です」の前ではどちらもそのまま接続します——い形容詞：たかいです／な形容詞：しずかです（「です」の前に「な」は不要）。" },
+      { en: "い-adjective negative: drop い, add くないです — たかい → たかくないです.", np: "い-adjective को negative: い हटाएर くないです थप्ने — たかい → たかくないです。", jp: "い形容詞の否定形：「い」を取って「くないです」——たかい→たかくないです。" },
+      { en: "な-adjective negative: add じゃないです／じゃありません — しずかです → しずかじゃないです.", np: "な-adjective को negative: じゃないです／じゃありません थप्ने — しずかです → しずかじゃないです。", jp: "な形容詞の否定形：「じゃないです／じゃありません」を付ける——しずかです→しずかじゃないです。" },
+      { en: "い-adjective past: drop い, add かったです — たかい → たかかったです.", np: "い-adjective को past: い हटाएर かったです थप्ने — たかい → たかかったです。", jp: "い形容詞の過去形：「い」を取って「かったです」——たかい→たかかったです。" },
+      { en: "い-adjective past negative: drop い, add くなかったです — たかい → たかくなかったです.", np: "い-adjective को past negative: い हटाएर くなかったです थप्ने — たかい → たかくなかったです。", jp: "い形容詞の過去否定形：「い」を取って「くなかったです」——たかい→たかくなかったです。" },
+      { en: "な-adjective past: でした — しずかです → しずかでした.", np: "な-adjective को past: でした — しずかです → しずかでした。", jp: "な形容詞の過去形：「でした」——しずかです→しずかでした。" },
+      { en: "な-adjective past negative: じゃなかったです／じゃありませんでした — しずかです → しずかじゃなかったです.", np: "な-adjective को past negative: じゃなかったです／じゃありませんでした — しずかです → しずかじゃなかったです。", jp: "な形容詞の過去否定形：「じゃなかったです／じゃありませんでした」——しずかです→しずかじゃなかったです。" },
+      { en: "Joining two positive qualities: い-adj drops い and adds くて; な-adj adds で — これはたかくて、あれはやすいです。", np: "दुई सकारात्मक गुण जोड्दा: い-adj को い हटाएर くて थप्ने; な-adj मा で थप्ने — これはたかくて、あれはやすいです。", jp: "2つの肯定的な性質をつなぐとき：い形容詞は「い」を取って「くて」、な形容詞は「で」を付けます——これはたかくて、あれはやすいです。" },
+      { en: "が connects a contrasting pair, like 'but' — たかいですが、おいしいです。", np: "が ले विपरीत भाव जोड्छ, 'तर' जस्तै — たかいですが、おいしいです。", jp: "「が」は「たかいですが、おいしいです」のように対照的な内容をつなぎます（＝しかし）。" },
     ],
+    grammarTable: {
+      caption: { en: "い-adjective vs な-adjective conjugation", np: "い-adjective र な-adjective को रूपान्तरण", jp: "い形容詞・な形容詞の活用" },
+      headers: [
+        { en: "Form", np: "रूप", jp: "形" },
+        { en: "い-adjective (たかい)", np: "い-adjective (たかい)", jp: "い形容詞（たかい）" },
+        { en: "な-adjective (しずか)", np: "な-adjective (しずか)", jp: "な形容詞（しずか）" },
+      ],
+      rows: [
+        [{ en: "Present affirmative", np: "वर्तमान सकारात्मक", jp: "現在肯定" }, "たかいです", "しずかです"],
+        [{ en: "Present negative", np: "वर्तमान नकारात्मक", jp: "現在否定" }, "たかくないです", "しずかじゃないです"],
+        [{ en: "Past affirmative", np: "भूतकाल सकारात्मक", jp: "過去肯定" }, "たかかったです", "しずかでした"],
+        [{ en: "Past negative", np: "भूतकाल नकारात्मक", jp: "過去否定" }, "たかくなかったです", "しずかじゃなかったです"],
+        [{ en: "Connective (and/te-form)", np: "जोड्ने रूप (て／で)", jp: "接続形（て／で）" }, "たかくて", "しずかで"],
+        [{ en: "+ Noun", np: "+ Noun", jp: "＋名詞" }, "たかい まち", "しずかな まち"],
+      ],
+    },
     mcqs: [
       {
         question: "Beautiful town:",
