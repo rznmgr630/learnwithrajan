@@ -79,11 +79,12 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 9 — すき/じょうず/わかる, preferences & hobbies ────────────────
-  // Language  |  Geography / nature  |  Body / strength
+  // Language  |  Geography / nature  |  Body / strength  |  Places (Tokyo / Kyoto)
   9: [
     "語",              // language (日本語 英語)
     "山", "川", "花",  // geography / nature
     "耳", "足", "力",  // body parts / strength
+    "京", "都",        // places — capital (東京 Tōkyō, 京都 Kyōto)
   ],
 
   // ── Lesson 10 — います/あります, existence & location ─────────────────────

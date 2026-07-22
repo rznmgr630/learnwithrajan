@@ -114,6 +114,8 @@ const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "足", r: "あし・ソク", m: "foot / suffice", s: 7 },
   { k: "力", r: "ちから・リキ", m: "power / strength", s: 2 },
   { k: "犬", r: "いぬ・ケン", m: "dog", s: 4 },
+  { k: "京", r: "きょう", m: "capital", s: 8 },
+  { k: "都", r: "と・みやこ", m: "metropolis / capital city", s: 11 },
 ];
 
 /** Deduplicate by character (table above may repeat for teaching overlap). */

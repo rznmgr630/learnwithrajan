@@ -3928,8 +3928,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "नोट: じょうずです क्षमता वस्तुनिष्ठ रूपमा बताउँछ। श्रोताको तारिफ गर्दा お上手ですね भन्नुस् — आफ्नो बारेमा じょうずです स्वाभाविक, तर श्रोताको बारेमा घमण्डी लाग्न सक्छ।",
       },
     ],
-    youtubeVideoId: { en: "dFfEMWr_4kE" },
-    youtubeVideoIdPart2: { en: "g4LHsVU4TrY" },
+    youtubeVideoId: { en: "woDD58GJpQ8", np: "HojyUmMkJik" },
+    youtubeVideoIdPart2: { en: "r1KkPVYa_C8" },
     youtubeTitle: "Minna no Nihongo · Lesson 9 — Grammar",
     conversation: [
       {

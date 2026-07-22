@@ -78,9 +78,28 @@ export const JP_N5_PART2: N5LessonSpec[] = [
       { particle: "から", note: "Reason clause before result (because)." },
     ],
     grammarBullets: [
-      "すき／きらい／じょうず／へた／わかる prefer が over は for neutral statements.",
-      "Reason ので / から patterns preview N5 exam frequency.",
+      { en: "わかります (understand) marks the thing understood with が, not を — にほんごがわかります.", np: "わかります (बुझ्नु) ले बुझिने कुरालाई が ले चिन्ह गर्छ, を ले होइन — にほんごがわかります।", jp: "「わかります」は理解する対象を「を」ではなく「が」で示します——にほんごがわかります。" },
+      { en: "Negative: わかりません — にほんごがわかりません (I don't understand Japanese).", np: "नकार: わかりません — にほんごがわかりません (जापानी भाषा बुझ्दिनँ)।", jp: "否定形：わかりません——にほんごがわかりません。" },
+      { en: "すき (like) ／ きらい (dislike) ／ じょうず (good at) ／ へた (poor at) all mark the liked/disliked/skilled thing with が, not は.", np: "すき (मन पर्नु) ／ きらい (मन नपर्नु) ／ じょうず (जान्नु) ／ へた (नजान्नु) — यी सबैले मन पर्ने/नपर्ने/जान्ने कुरालाई が ले चिन्ह गर्छन्, は ले होइन।", jp: "すき・きらい・じょうず・へたは、好き嫌いや得意不得意の対象を「は」ではなく「が」で示します。" },
+      { en: "Pattern: [Person]は [Noun]が [すき／きらい／じょうず／へた]です — サパナさんはピザがすきです (Sapana likes pizza).", np: "ढाँचा: [व्यक्ति]は [Noun]が [すき／きらい／じょうず／へた]です — サパナさんはピザがすきです (सपनालाई पिज्जा मन पर्छ)।", jp: "パターン：[人]は[名詞]が[すき・きらい・じょうず・へた]です——サパナさんはピザがすきです。" },
+      { en: "から (because) connects a reason to a result: [Reason clause]から、[Result clause]。", np: "から (किनभने) ले कारणलाई नतिजासँग जोड्छ: [कारण]から、[नतिजा]。", jp: "「から」は理由と結果をつなぎます：[理由の文]から、[結果の文]。" },
+      { en: "Example: にほんへいきたいから、にほんごをべんきょうします (Because I want to go to Japan, I study Japanese) — the から clause comes first.", np: "उदाहरण: にほんへいきたいから、にほんごをべんきょうします (जापान जान चाहेकोले, जापानी भाषा पढ्छु) — から भएको खण्ड पहिले आउँछ।", jp: "例：にほんへいきたいから、にほんごをべんきょうします——「から」の節が先に来ます。" },
     ],
+    grammarTable: {
+      caption: { en: "が-marked preference/ability verbs", np: "が ले चिन्ह गरिने रुचि/क्षमताका क्रियापद", jp: "「が」で示す好み・能力の動詞" },
+      headers: [
+        { en: "Word", np: "शब्द", jp: "単語" },
+        { en: "Meaning", np: "अर्थ", jp: "意味" },
+        { en: "Pattern", np: "ढाँचा", jp: "パターン" },
+      ],
+      rows: [
+        ["わかります", { en: "understand", np: "बुझ्नु", jp: "分かる" }, "にほんごがわかります。"],
+        ["すきです", { en: "like", np: "मन पर्नु", jp: "好き" }, "ピザがすきです。"],
+        ["きらいです", { en: "dislike", np: "मन नपर्नु", jp: "嫌い" }, "べんきょうがきらいです。"],
+        ["じょうずです", { en: "good at", np: "जान्नु", jp: "上手" }, "うたがじょうずです。"],
+        ["へたです", { en: "poor at", np: "नजान्नु", jp: "下手" }, "ダンスがへたです。"],
+      ],
+    },
     mcqs: [
       {
         question: "Natural: “I dislike crowded trains.”",
