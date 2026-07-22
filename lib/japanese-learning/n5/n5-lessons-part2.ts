@@ -137,9 +137,27 @@ export const JP_N5_PART2: N5LessonSpec[] = [
       { particle: "に", note: "Location of animate/inanimate existence." },
     ],
     grammarBullets: [
-      "います animate / あります inanimate — exam favourite distinction.",
-      "Question forms: だれがいますか · なにがありますか.",
+      { en: "います is for living/animate things (people, animals) — ひとがいます／いぬがいます.", np: "います सजीव कुराका लागि (मान्छे, जनावर) — ひとがいます／いぬがいます।", jp: "「います」は生き物（人・動物）に使います——ひとがいます／いぬがいます。" },
+      { en: "あります is for non-living/inanimate things (objects, plants, buildings) — つくえがあります／きがあります.", np: "あります निर्जीव कुराका लागि (सामान, बिरुवा, भवन) — つくえがあります／きがあります।", jp: "「あります」は生き物ではないもの（物・植物・建物）に使います——つくえがあります／きがあります。" },
+      { en: "Pattern: [Place]に [Thing/Person]が います／あります — にわにひとがいます (There is a person in the yard).", np: "ढाँचा: [ठाउँ]に [वस्तु/व्यक्ति]が います／あります — にわにひとがいます (बगैंचामा एकजना मान्छे छ)।", jp: "パターン：[場所]に[人・物]が います・あります——にわにひとがいます。" },
+      { en: "Question forms drop が for か: だれがいますか (who is there?) · なにがありますか (what is there?).", np: "प्रश्न बनाउँदा が लाई が नै राखेर か थपिन्छ: だれがいますか (को छ?) · なにがありますか (के छ?)।", jp: "疑問文：だれがいますか・なにがありますか。" },
+      { en: "や〜など lists 2+ items as examples, not the complete list (unlike と) — れいぞうこにパンやハムなどがあります (there's bread, ham, and so on in the fridge).", np: "や〜など ले २ वा बढी कुराहरू उदाहरणका रूपमा सूचीबद्ध गर्छ, पूरा सूची होइन (と भन्दा फरक) — れいぞうこにパンやハムなどがあります (फ्रिजमा रोटी, ह्याम आदि छन्)।", jp: "「や〜など」は2つ以上の例を挙げ、全部ではないことを示します（「と」との違い）——れいぞうこにパンやハムなどがあります。" },
+      { en: "Position words attach after [Noun]の: つくえのうえ (on the desk), えきのちかく (near the station), がっこうのとなり (next to the school), AとBのあいだ (between A and B).", np: "स्थान बताउने शब्दहरू [Noun]の पछि जोडिन्छन्: つくえのうえ (टेबलमाथि), えきのちかく (स्टेसन नजिक), がっこうのとなり (स्कूलको छेउमा), AとBのあいだ (A र B को बीचमा)।", jp: "位置を表す言葉は[名詞]のの後に置きます：つくえのうえ・えきのちかく・がっこうのとなり・AとBのあいだ。" },
     ],
+    grammarTable: {
+      caption: { en: "います vs あります + position words", np: "います र あります + स्थान शब्दहरू", jp: "います・あります と位置の言葉" },
+      headers: [
+        { en: "Pattern", np: "ढाँचा", jp: "パターン" },
+        { en: "Meaning", np: "अर्थ", jp: "意味" },
+      ],
+      rows: [
+        ["[場所]に[人]がいます。", { en: "There is a person at [place].", np: "[ठाउँ]मा मान्छे छ।", jp: "[場所]に人がいます。" }],
+        ["[場所]に[物]があります。", { en: "There is a thing at [place].", np: "[ठाउँ]मा वस्तु छ।", jp: "[場所]に物があります。" }],
+        ["[Noun]の うえ／した／まえ／うしろ", { en: "on / under / in front of / behind [Noun]", np: "[Noun] को माथि／तल／अगाडि／पछाडि", jp: "[名詞]の上・下・前・後ろ" }],
+        ["[Noun]の となり／ちかく／あいだ", { en: "next to / near / between [Noun]", np: "[Noun] को छेउमा／नजिक／बिचमा", jp: "[名詞]の隣・近く・間" }],
+        ["AやBなどがいます／あります。", { en: "There's A, B, and so on.", np: "A, B आदि छन्।", jp: "AやBなどがいます・あります。" }],
+      ],
+    },
     mcqs: [
       {
         question: "Dog in park (animate):",

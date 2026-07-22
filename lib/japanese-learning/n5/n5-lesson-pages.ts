@@ -4277,8 +4277,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "Existence को static location को लागि に (वस्तु कहाँ छ)। で (जहाँ कार्य हुन्छ) सँग नमिसाउनुस्।",
       },
     ],
-    youtubeVideoId: { en: "U4nHSu5oa90" },
-    youtubeVideoIdPart2: { en: "oVCkv9CYGCA" },
+    youtubeVideoId: { en: "Ifbb1XZAxWk", np: "aeUcyryXSyA" },
+    youtubeVideoIdPart2: { en: "Os9NkBSNYqU" },
     youtubeTitle: "Minna no Nihongo · Lesson 10 — Grammar",
     conversation: [
       {
