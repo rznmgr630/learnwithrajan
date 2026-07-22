@@ -69,11 +69,13 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 8 — い/な adjectives ───────────────────────────────────────────
-  // New / old  |  Man  |  Stone
+  // New / old  |  Man  |  Stone  |  Time & calendar  |  Places
   8: [
-    "新", "古",  // age — new / old
-    "男",        // man (contrast with 女 from Day 7)
-    "石",        // stone
+    "新", "古",              // age — new / old
+    "男",                    // man (contrast with 女 from Day 7)
+    "石",                    // stone
+    "月", "年", "秒", "歳",  // time & calendar (month/moon, year, second, age-counter)
+    "寺", "刀",              // places / objects (temple, katana)
   ],
 
   // ── Lesson 9 — すき/じょうず/わかる, preferences & hobbies ────────────────
