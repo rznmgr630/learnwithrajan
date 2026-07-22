@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDayDetailPanel } from "@/components/learn/JapaneseDayDetailPanel";
 import { JapaneseWeeklyTestPanel } from "@/components/learn/JapaneseWeeklyTestPanel";
@@ -34,6 +34,19 @@ export function JapaneseRoadmap() {
   const [openWeekId, setOpenWeekId] = useState<string | null>("jn5-w1");
   const [detailDay, setDetailDay] = useState<number | null>(null);
   const [weeklyTestWeekId, setWeeklyTestWeekId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("jpRoadmap:openWeek");
+      if (saved !== null) setOpenWeekId(saved === "" ? null : saved);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("jpRoadmap:openWeek", openWeekId ?? "");
+    } catch {}
+  }, [openWeekId]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / JP_TOTAL_DAYS) * 100))}%`,
