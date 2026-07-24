@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -1638,6 +1638,302 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     code: "class Shape {\n    constructor() {\n        if (new.target === Shape) {\n            throw new Error(\"Shape is abstract and cannot be instantiated directly\");\n        }\n    }\n\n    draw() {\n        throw new Error(\"draw() must be implemented\");   // \"pure virtual\" method\n    }\n}\n\nclass Circle extends Shape {\n    draw() {\n        console.log(\"Drawing a circle\");   // must implement draw()\n    }\n}\n\nconst s = new Circle();\ns.draw();          // Drawing a circle\n// new Shape();    // throws — Shape is abstract",
     codeLanguage: "JavaScript",
     tags: ["Abstraction", "Abstract Class", "Object-Oriented Programming", "Pillars of OOP"],
+  },
+  // ─────────────────────────────────────────────
+  // DATA STRUCTURES & ALGORITHMS
+  // ─────────────────────────────────────────────
+  {
+    id: 113,
+    slug: "data-structures",
+    section: "Data Structures & Algorithms",
+    title: "Data Structures & Algorithms",
+    tagline: "Ways of organizing and storing data so it can be accessed and changed efficiently, plus the step-by-step procedures that work on it",
+    description:
+      "<b>What Data Structures & Algorithms (DSA) Is, in Plain English</b>\nImagine you own a small shop. A <b>data structure</b> is simply how you organize your stock — everything piled in one big heap on the floor, versus everything sorted onto labeled shelves. An <b>algorithm</b> is the exact set of steps you follow to do something with that stock, like finding one specific item. The same task (finding an item) is fast or painfully slow depending entirely on how the stock was organized in the first place — that's the whole idea behind DSA.\n\n<b>Why DSA Matters</b>\nThe same task — searching for a value, adding an item, removing an item — can take wildly different amounts of time depending on how the underlying data is organized. Picking the right data structure is often the single biggest factor in whether a program runs instantly or grinds to a halt as the amount of data grows.\n\n<b>Linear vs. Non-Linear Data Structures</b>\n• <b>Linear</b> — elements are arranged in a sequence, one after another, with a single path from the first element to the last (Array, Linked List, Stack, Queue).\n• <b>Non-linear</b> — elements branch out or connect in more complex ways, with no single sequential path (Tree, Graph).\n  ↳ This module covers the linear data structures — the ones most commonly asked about in the exam.\n\n<b>How This Section Is Organized</b>\n• <b>Linear Data Structure</b> — Array, Linked List, Stack, and Queue, each covered with their own operations and applications\n  ↳ Covered in its own card next, with every sub-topic broken out.",
+    note:
+      "Exam favourite: a data structure is about *how data is stored*; an algorithm is about *what steps operate on it* — the two terms aren't interchangeable, even though they're always taught together.",
+    tags: ["Data Structures", "Algorithms", "DSA", "Linear Data Structure"],
+  },
+  {
+    id: 114,
+    slug: "linear-data-structures",
+    section: "Data Structures & Algorithms",
+    parentSlug: "data-structures",
+    title: "Linear Data Structure",
+    tagline: "Data structures where every element is arranged sequentially, one after another, with a single path from the first element to the last",
+    description:
+      "<b>What a Linear Data Structure Is, in Plain English</b>\nThink of people standing in a single-file line — one behind the other, in one straight path. That's a linear data structure: every element has exactly one \"next\" element (except the last one), with no branching off in different directions.\n\n<b>Why Linear Structures Matter</b>\nMost of the data structures asked about in the exam — Array, Linked List, Stack, Queue — are linear, and each one exists to solve a different practical limitation of the others (fixed size, slow insertion, needing a specific order like LIFO or FIFO).\n\n<b>How This Section Is Organized</b>\n• <b>Array</b> — a fixed-size collection of elements stored in contiguous memory, accessed by index, like numbered lockers in a row\n• <b>Linked List</b> — a chain of nodes, each pointing to the next, like a treasure hunt where every clue points to the next location\n• <b>Stack</b> — a LIFO (Last In, First Out) structure, like a stack of plates\n• <b>Queue</b> — a FIFO (First In, First Out) structure, like a line of people waiting at a shop counter\n  ↳ Each is covered in its own card next, along with the specific operations and variations the exam asks about.",
+    note:
+      "Exam favourite: \"linear\" doesn't mean \"simple\" — Stack and Queue are still linear data structures, they just restrict *which end* elements can be added or removed from.",
+    tags: ["Linear Data Structure", "Array", "Linked List", "Stack", "Queue", "Data Structures"],
+  },
+  {
+    id: 115,
+    slug: "array",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linear-data-structures",
+    title: "Array",
+    tagline: "A collection of elements of the same type, stored in contiguous memory and accessed directly by index",
+    description:
+      "<b>What an Array Is, in Plain English</b>\nPicture a row of numbered lockers, side by side, all the same size. An array is exactly that: a collection of same-type values, stored right next to each other in memory, each one labeled with a number (its index) starting from 0 — locker 0, locker 1, locker 2, and so on.\n\n<b>Why Arrays Matter</b>\nBecause every element sits in one contiguous block of memory, an array gives direct, constant-time access to any element just by its index — arr[7] is exactly as fast to read as arr[0], no matter how large the array is, the same way you can walk straight to locker #7 without checking lockers 0 through 6 first.\n\n<b>How This Section Is Organized</b>\n• <b>Traversal</b> — visiting every element once, to read or process each value\n• <b>Searching</b> — finding whether a target value exists in the array, and where\n• <b>Sorting</b> — arranging the array's elements into a defined order\n  ↳ Each is covered in its own card next.\n\n<b>Array in JavaScript</b>\nUnlike a fixed-size array in C, a JavaScript array can grow or shrink dynamically — but the exam's array questions (indexing, traversal, searching, sorting) work exactly the same way regardless of language.",
+    note:
+      "Exam favourite: direct index access (arr[i]) is O(1) — constant time — because the array's contiguous memory layout lets the computer calculate any element's exact address directly, without walking through the elements before it.",
+    diagram:
+      "  AN ARRAY IS A ROW OF NUMBERED LOCKERS\n\n  Index:   0    1    2    3    4\n         ┌────┬────┬────┬────┬────┐\n  Value: │ 90 │ 85 │ 77 │ 92 │ 88 │\n         └────┴────┴────┴────┴────┘\n           ▲                   ▲\n        scores[0]           scores[4]",
+    code: "const scores = [90, 85, 77, 92, 88];\n\nconsole.log(scores[0]);     // 90 — first element\nconsole.log(scores[4]);     // 88 — last element\nconsole.log(scores.length); // 5",
+    codeLanguage: "JavaScript",
+    tags: ["Array", "Indexing", "Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 116,
+    slug: "traversal",
+    section: "Data Structures & Algorithms",
+    parentSlug: "array",
+    title: "Traversal",
+    tagline: "Visiting every element of an array exactly once, typically to read or process each value",
+    description:
+      "<b>What Traversal Is, in Plain English</b>\nTraversal is simply walking down the row of lockers, opening each one in order and looking inside — locker 0, then locker 1, then locker 2, and so on, until every locker has been checked exactly once.\n\n<b>Why Traversal Matters</b>\nAlmost every array-based task — finding a total, printing a list, checking every value against a condition — starts with a traversal. Without a way to visit every element, an array's data is not being used, no matter how it's stored.\n\n<b>How to Traverse an Array</b>\nA for loop is the standard way to traverse an array, using the loop's counter as the index — starting at 0, and continuing while the counter is less than the array's length.\n\n<b>Time Complexity</b>\nTraversal always takes O(n) time — visiting n elements always takes n steps, no matter how the elements are arranged; there's no way to visit every element faster than one at a time.",
+    note:
+      "Exam favourite: traversal is always O(n) — one of the few operations whose time complexity never changes, since every element must be visited at least once by definition.",
+    diagram:
+      "  TRAVERSING [90, 85, 77, 92, 88] LEFT TO RIGHT\n\n  →90   85   77   92   88\n   ↓\n     →85   77   92   88\n          ↓\n            →77   92   88   ... and so on, one step at a time",
+    code: "const scores = [90, 85, 77, 92, 88];\n\nfor (let i = 0; i < scores.length; i++) {\n    console.log(scores[i]);\n}\n// Or, using JS's built-in iterator:\nfor (const score of scores) {\n    console.log(score);\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Traversal", "Array", "for loop", "Data Structures"],
+  },
+  {
+    id: 117,
+    slug: "searching",
+    section: "Data Structures & Algorithms",
+    parentSlug: "array",
+    title: "Searching",
+    tagline: "Finding whether a target value exists in an array, and at which index",
+    description:
+      "<b>What Searching Is, in Plain English</b>\nSearching is looking for one specific item among many. Think of two ways to find a name in a phone book: flipping through every single page from the start (slow), or opening to the middle, deciding which half the name must be in, and repeating that trick on just that half (much faster) — those are exactly the two searching methods below.\n\n<b>Why Searching Matters</b>\nLooking something up by value, rather than by a known index, is one of the most common things a program needs to do with a collection of data — how that lookup is done has a huge effect on performance as the array grows large.\n\n<b>Linear Search</b>\nLinear search checks every element one by one, from the start, until it finds the target or reaches the end — like flipping through the phone book page by page. It works on any array, sorted or not, but takes O(n) time in the worst case.\n\n<b>Binary Search</b>\nBinary search only works on a sorted array. It repeatedly checks the middle element, and — since the array is sorted — immediately discards the entire half that can't contain the target, cutting the remaining search space in half every step. This gives it O(log n) time, dramatically faster than linear search on a large array.",
+    note:
+      "Exam favourite: binary search's O(log n) speed is only possible because the array is sorted first — the moment the array isn't sorted, binary search cannot be used at all, and linear search (O(n)) is the only option.",
+    diagram:
+      "  BINARY SEARCH FOR 23 IN [4, 8, 15, 16, 23, 42, 50]\n\n  Step 1: low=0 high=6 mid=3 → arr[3]=16 < 23 → search right half\n  Step 2: low=4 high=6 mid=5 → arr[5]=42 > 23 → search left half\n  Step 3: low=4 high=4 mid=4 → arr[4]=23 = 23 → found at index 4",
+    code: "function linearSearch(arr, target) {\n    for (let i = 0; i < arr.length; i++) {\n        if (arr[i] === target) return i;\n    }\n    return -1;\n}\n\nfunction binarySearch(arr, target) {   // arr must already be sorted\n    let low = 0, high = arr.length - 1;\n    while (low <= high) {\n        const mid = Math.floor((low + high) / 2);\n        if (arr[mid] === target) return mid;\n        if (arr[mid] < target) low = mid + 1;\n        else high = mid - 1;\n    }\n    return -1;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Searching", "Linear Search", "Binary Search", "Array", "Data Structures"],
+  },
+  {
+    id: 118,
+    slug: "sorting",
+    section: "Data Structures & Algorithms",
+    parentSlug: "array",
+    title: "Sorting",
+    tagline: "Arranging an array's elements into a defined order, usually ascending or descending",
+    description:
+      "<b>What Sorting Is, in Plain English</b>\nSorting is arranging things into order — like lining up a shelf of books from shortest to tallest, or arranging playing cards in your hand from lowest to highest.\n\n<b>Why Sorting Matters</b>\nMany other operations depend on data already being sorted (binary search is the clearest example) — and sorted data is simply easier for people to read and compare.\n\n<b>Simple Sorts — O(n²)</b>\n• <b>Bubble Sort</b> — repeatedly compares adjacent elements and swaps them if they're in the wrong order, letting the largest unsorted value \"bubble up\" to its correct position each pass.\n• <b>Selection Sort</b> — repeatedly finds the smallest remaining element and swaps it into its correct position at the front.\n• <b>Insertion Sort</b> — builds the sorted array one element at a time, inserting each new element into its correct position among the already-sorted elements, the way a card player sorts new cards into an already-sorted hand.\n\n<b>Efficient Sorts — O(n log n)</b>\n• <b>Merge Sort</b> — splits the array in half repeatedly until each piece has one element, then merges the pieces back together in sorted order.\n• <b>Quick Sort</b> — picks a \"pivot\" element, partitions the array so smaller elements come before it and larger elements come after, then sorts each partition the same way.",
+    note:
+      "Exam favourite complexity table: Bubble/Selection/Insertion Sort are all O(n²) in the worst case; Merge Sort and Quick Sort are O(n log n) — the reason \"efficient\" sorts are preferred for large datasets.",
+    diagram:
+      "  SORTING ALGORITHM COMPLEXITY (WORST CASE)\n\n  Algorithm         Time        Space\n  ───────────────────────────────────\n  Bubble Sort       O(n²)       O(1)\n  Selection Sort    O(n²)       O(1)\n  Insertion Sort    O(n²)       O(1)\n  Merge Sort        O(n log n)  O(n)\n  Quick Sort        O(n²)*      O(log n)\n                    *O(n log n) average case",
+    code: "function bubbleSort(arr) {\n    for (let i = 0; i < arr.length - 1; i++) {\n        for (let j = 0; j < arr.length - 1 - i; j++) {\n            if (arr[j] > arr[j + 1]) {\n                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];   // swap\n            }\n        }\n    }\n    return arr;\n}\n\nconsole.log(bubbleSort([5, 2, 9, 1, 5]));   // [1, 2, 5, 5, 9]",
+    codeLanguage: "JavaScript",
+    tags: ["Sorting", "Bubble Sort", "Merge Sort", "Quick Sort", "Array", "Data Structures"],
+  },
+  {
+    id: 119,
+    slug: "linked-list",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linear-data-structures",
+    title: "Linked List",
+    tagline: "A chain of nodes, each pointing to the next, that can grow or shrink without needing contiguous memory",
+    description:
+      "<b>What a Linked List Is, in Plain English</b>\nImagine a treasure hunt: each clue you find doesn't tell you the location of every remaining clue — it only tells you where to find the very next one. A linked list works the same way. It's a chain of nodes, where each node holds a value and a reference (pointer) to the next node in the chain — unlike an array, its nodes don't need to sit next to each other in memory.\n\n<b>Why Linked Lists Matter</b>\nAn array has a fixed size and requires contiguous memory, which makes inserting or removing an element from the middle expensive (every following element has to shift). A linked list can grow or shrink one node at a time, and inserting or removing a node (once you're already at that position) only means updating a couple of pointers — like re-writing one clue to point to a new location, instead of moving every treasure box in the hunt.\n\n<b>How This Section Is Organized</b>\n• <b>Singly Linked List</b> — each node points to only the next node\n• <b>Doubly Linked List</b> — each node points to both the next and the previous node\n• <b>Circular Linked List</b> — the last node points back to the first, forming a loop\n  ↳ Each is covered in its own card next.\n\n<b>Array vs. Linked List — the Core Trade-Off</b>\nAn array gives O(1) direct access by index, but O(n) insertion/deletion in the middle (shifting required). A linked list gives O(n) access (must walk from the head), but O(1) insertion/deletion once you're already at the right node.",
+    note:
+      "Exam favourite: a linked list has no fixed size and needs no contiguous memory block — the trade-off is that finding the nth element always takes O(n), since there's no way to jump directly to it the way an array's index can.",
+    diagram:
+      "  SINGLY LINKED LIST — LIKE A TREASURE HUNT'S CHAIN OF CLUES\n\n  HEAD\n   │\n   ▼\n  [10 | •]──▶[20 | •]──▶[30 | null]\n  (each clue only reveals where the next one is)",
+    code: "class Node {\n    constructor(value) {\n        this.value = value;\n        this.next = null;\n    }\n}\n\nconst head = new Node(10);\nhead.next = new Node(20);\nhead.next.next = new Node(30);",
+    codeLanguage: "JavaScript",
+    tags: ["Linked List", "Node", "Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 120,
+    slug: "singly-linked-list",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linked-list",
+    title: "Singly Linked List",
+    tagline: "Each node points to only the next node in the list, in one direction",
+    description:
+      "<b>What a Singly Linked List Is, in Plain English</b>\nThe simplest version of the treasure hunt: every clue points forward to exactly one next clue, and the very last clue simply says \"the end\" — there's no way to go backward once you've moved past a clue.\n\n<b>Why It's the Simplest Form</b>\nA singly linked list uses the least memory per node (only one pointer), making it the default choice whenever a linked list only ever needs to be walked in one direction.\n\n<b>How to Traverse One</b>\nStarting from head, keep following .next until reaching null — this visits every node in the list exactly once, the same O(n) traversal cost as an array.",
+    note:
+      "Exam favourite: the last node's next is always null — that's the signal a traversal loop checks for to know it has reached the end of the list, since a linked list doesn't have a fixed \"length\" property the way an array does.",
+    diagram:
+      "  head ──▶ [10|•] ──▶ [20|•] ──▶ [30|null]\n           (one-way arrows only — forward, never back)",
+    code: "class Node {\n    constructor(value) {\n        this.value = value;\n        this.next = null;\n    }\n}\n\nfunction traverse(head) {\n    let current = head;\n    while (current !== null) {\n        console.log(current.value);\n        current = current.next;\n    }\n}\n\nconst head = new Node(10);\nhead.next = new Node(20);\nhead.next.next = new Node(30);\ntraverse(head);   // 10, 20, 30",
+    codeLanguage: "JavaScript",
+    tags: ["Singly Linked List", "Linked List", "Node", "Data Structures"],
+  },
+  {
+    id: 121,
+    slug: "doubly-linked-list",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linked-list",
+    title: "Doubly Linked List",
+    tagline: "Each node points to both the next AND the previous node, allowing traversal in both directions",
+    description:
+      "<b>What a Doubly Linked List Is, in Plain English</b>\nNow imagine each clue in the treasure hunt tells you where the next clue is AND where the previous clue was — a doubly linked list's nodes each hold two references, one to the next node and one to the previous node, so the chain can be walked forward or backward from any point.\n\n<b>Why the Extra Pointer Matters</b>\nWith only a next reference (as in a singly linked list), deleting a node requires walking from the head just to find the PREVIOUS node (needed to reroute its next pointer). With a prev reference already available, that lookup is skipped entirely — deletion given a node reference becomes O(1) instead of O(n).\n\n<b>The Trade-Off</b>\nEvery node in a doubly linked list uses extra memory for its second pointer, compared to a singly linked list — a direct trade-off of memory for traversal flexibility and faster deletion.",
+    note:
+      "Exam favourite: a doubly linked list trades extra memory (one more pointer per node) for the ability to traverse backward and delete a known node in O(1), without needing to search for its predecessor first.",
+    diagram:
+      "  null ⟵── [10] ⟷ [20] ⟷ [30] ──⟶ null\n           each node points both forward and backward",
+    code: "class Node {\n    constructor(value) {\n        this.value = value;\n        this.next = null;\n        this.prev = null;\n    }\n}\n\nconst first = new Node(10);\nconst second = new Node(20);\nfirst.next = second;\nsecond.prev = first;   // the extra link a singly linked list doesn't have",
+    codeLanguage: "JavaScript",
+    tags: ["Doubly Linked List", "Linked List", "Node", "Data Structures"],
+  },
+  {
+    id: 122,
+    slug: "circular-linked-list",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linked-list",
+    title: "Circular Linked List",
+    tagline: "The last node points back to the first node instead of to null, forming a loop",
+    description:
+      "<b>What a Circular Linked List Is, in Plain English</b>\nImagine a group of kids playing musical chairs in a circle — after the last kid, play continues back at the first kid, not off into nowhere. A circular linked list works the same way: the last node's next reference points back to the first node (the head) instead of to null, so there is no \"end,\" just a continuous loop.\n\n<b>Why Use One</b>\nA circular linked list is a natural fit for anything that needs to cycle through a fixed set of items repeatedly and predictably — round-robin CPU task scheduling, or looping through players taking turns in a game, are classic examples.\n\n<b>The Traversal Trap</b>\nBecause there's no null to signal the end, a traversal loop written the same way as a singly linked list's (\"keep going until next is null\") never stops — it must instead stop after returning to the starting node, or after a known number of steps.",
+    note:
+      "Exam favourite: traversing a circular linked list the same way as a normal linked list (checking for null) causes an infinite loop — the stopping condition must instead check \"have I gotten back to the node I started at?\"",
+    diagram:
+      "        ┌────────────────────────┐\n        ▼                        │\n  head [10|•]──▶[20|•]──▶[30|•]──┘\n   (the last node points back to the first, not to null)",
+    code: "class Node {\n    constructor(value) {\n        this.value = value;\n        this.next = null;\n    }\n}\n\nfunction traverseCircular(head) {\n    let current = head;\n    do {\n        console.log(current.value);\n        current = current.next;\n    } while (current !== head);   // stop when we're back at the start\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Circular Linked List", "Linked List", "Round-Robin", "Data Structures"],
+  },
+  {
+    id: 123,
+    slug: "stack",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linear-data-structures",
+    title: "Stack",
+    tagline: "A linear data structure that follows LIFO (Last In, First Out) — the last element added is the first removed",
+    description:
+      "<b>What a Stack Is, in Plain English</b>\nThink of a stack of plates on a kitchen counter: you always add a new plate to the top, and you always take a plate off the top too — never from the middle or the bottom. A stack (the data structure) works exactly the same way, following LIFO order (Last In, First Out): the most recently added element is always the first one removed.\n\n<b>Why Stacks Matter</b>\nA huge number of real problems are naturally \"undo the most recent thing first\" — undoing an action, backtracking out of a dead end, or unwinding function calls when a program returns — and a stack models that exactly.\n\n<b>How This Section Is Organized</b>\n• <b>Push</b> — adds a new element to the top of the stack\n• <b>Pop</b> — removes and returns the top element of the stack\n• <b>Applications</b> — real problems solved using a stack's LIFO behavior\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: LIFO (Last In, First Out) is the one term that defines a stack — if a question describes \"the most recently added item comes out first,\" it's describing a stack.",
+    diagram:
+      "  A STACK OF PLATES\n\n  push ──▶ ┌──────────┐\n           │ 30 (top) │ ◀── pop removes this one first\n           ├──────────┤\n           │    20     │\n           ├──────────┤\n           │    10     │\n           └──────────┘",
+    tags: ["Stack", "LIFO", "Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 124,
+    slug: "push",
+    section: "Data Structures & Algorithms",
+    parentSlug: "stack",
+    title: "Push",
+    tagline: "Adds a new element to the top of the stack",
+    description:
+      "<b>What Push Does, in Plain English</b>\nPush is placing a new plate on top of the stack — it adds a new element to the top, making it the new \"most recently added\" element, the next one that pop will remove.\n\n<b>Why Push Matters</b>\nPush is how anything gets onto a stack in the first place — every stack-based algorithm starts by pushing elements on, in whatever order they need to come back off in reverse.\n\n<b>How to Implement It</b>\nA stack is commonly implemented using a plain array, where push adds to the end of the array — JavaScript's built-in Array.prototype.push() already does exactly this, on the same end an array-based stack treats as its \"top.\"\n\n<b>Stack Overflow</b>\nIf a stack has a fixed maximum size (common in low-level or embedded implementations) and is already full, attempting to push further causes a <b>stack overflow</b> — the same term used when too many nested function calls exhaust the call stack's memory.",
+    note:
+      "Exam favourite: JavaScript's array push()/pop() naturally behave like a stack already, since both operate on the same end (the end of the array) — no extra bookkeeping needed to track \"the top.\"",
+    diagram:
+      "  BEFORE push(30)      AFTER push(30)\n  ┌────┐               ┌────┐\n  │ 20 │ ◀ top          │ 30 │ ◀ new top\n  ├────┤               ├────┤\n  │ 10 │               │ 20 │\n  └────┘               ├────┤\n                        │ 10 │\n                        └────┘",
+    code: "class Stack {\n    #items = [];\n\n    push(value) {\n        this.#items.push(value);   // adds to the top\n    }\n\n    peek() {\n        return this.#items[this.#items.length - 1];\n    }\n}\n\nconst s = new Stack();\ns.push(10);\ns.push(20);\ns.push(30);\nconsole.log(s.peek());   // 30 — the top of the stack",
+    codeLanguage: "JavaScript",
+    tags: ["Push", "Stack", "LIFO", "Data Structures"],
+  },
+  {
+    id: 125,
+    slug: "pop",
+    section: "Data Structures & Algorithms",
+    parentSlug: "stack",
+    title: "Pop",
+    tagline: "Removes and returns the top element of the stack",
+    description:
+      "<b>What Pop Does, in Plain English</b>\nPop is lifting the top plate off the stack — it removes the top element (the most recently pushed one) and returns its value; after a pop, the plate that was second-from-top becomes the new top.\n\n<b>Why Pop Matters</b>\nPop is how a stack-based algorithm retrieves elements back out, always in the reverse order they were pushed in — this reversal is exactly what makes a stack useful for undo operations and for unwinding nested calls.\n\n<b>How to Implement It</b>\nJavaScript's built-in Array.prototype.pop() removes and returns the last element of an array — the same end push() adds to, making array push()/pop() a ready-made stack.\n\n<b>Stack Underflow</b>\nCalling pop on an already-empty stack is called <b>stack underflow</b> — a well-behaved stack implementation should check isEmpty() first and handle this case explicitly, rather than letting it silently return undefined or crash.",
+    note:
+      "Exam favourite: stack overflow happens when pushing onto a full stack; stack underflow happens when popping an empty stack — the two failure modes are opposites, and easy to mix up under exam pressure.",
+    diagram:
+      "  BEFORE pop()         AFTER pop() → returns 30\n  ┌────┐               ┌────┐\n  │ 30 │ ◀ top          │ 20 │ ◀ new top\n  ├────┤               ├────┤\n  │ 20 │               │ 10 │\n  ├────┤               └────┘\n  │ 10 │\n  └────┘",
+    code: "class Stack {\n    #items = [];\n\n    push(value) {\n        this.#items.push(value);\n    }\n\n    pop() {\n        if (this.#items.length === 0) {\n            throw new Error(\"Stack underflow\");\n        }\n        return this.#items.pop();\n    }\n\n    isEmpty() {\n        return this.#items.length === 0;\n    }\n}\n\nconst s = new Stack();\ns.push(10);\ns.push(20);\nconsole.log(s.pop());   // 20 — the most recently pushed element",
+    codeLanguage: "JavaScript",
+    tags: ["Pop", "Stack", "LIFO", "Stack Underflow", "Data Structures"],
+  },
+  {
+    id: 126,
+    slug: "applications",
+    section: "Data Structures & Algorithms",
+    parentSlug: "stack",
+    title: "Applications",
+    tagline: "Real-world and programming problems solved using a stack's LIFO behavior",
+    description:
+      "<b>What This Covers, in Plain English</b>\nA stack's LIFO behavior — \"undo the most recent thing first\" — turns out to model a surprising number of everyday problems directly, not just plates on a counter.\n\n<b>Common Applications</b>\n• <b>Undo/Redo</b> — each action is pushed onto a stack; undo pops the most recent action off and reverses it.\n• <b>Function call stack & recursion</b> — every function call is pushed onto the call stack, and popped off when it returns; this is literally how recursion (a function calling itself) is managed by the language runtime.\n• <b>Balanced parentheses / brackets checking</b> — push every opening bracket seen; on a closing bracket, pop and check it matches. If the stack isn't empty at the end, or a pop doesn't match, the brackets are unbalanced.\n• <b>Expression evaluation</b> — converting and evaluating infix expressions (like 3 + 4 * 2) commonly uses a stack to track operators and operands.\n• <b>Backtracking algorithms</b> — exploring a maze or puzzle and undoing the last move when hitting a dead end.\n• <b>Browser back button</b> — each visited page is pushed onto a history stack; the back button pops the most recent one, taking you back one page at a time.",
+    note:
+      "Exam favourite: \"checking balanced parentheses\" is the single most commonly asked stack application question — the algorithm is always the same: push opening brackets, pop and match on closing brackets.",
+    diagram:
+      "  BROWSER BACK BUTTON, AS A STACK OF VISITED PAGES\n\n  push(Home) → push(Search) → push(Article)\n\n  ┌─────────┐\n  │ Article │ ◀ current page\n  ├─────────┤\n  │ Search  │\n  ├─────────┤\n  │ Home    │\n  └─────────┘\n  Clicking \"Back\" pops \"Article\" off, returning you to \"Search\".",
+    code: "function isBalanced(expr) {\n    const stack = [];\n    const pairs = { \")\": \"(\", \"]\": \"[\", \"}\": \"{\" };\n\n    for (const char of expr) {\n        if (char === \"(\" || char === \"[\" || char === \"{\") {\n            stack.push(char);\n        } else if (char === \")\" || char === \"]\" || char === \"}\") {\n            if (stack.pop() !== pairs[char]) return false;\n        }\n    }\n    return stack.length === 0;\n}\n\nconsole.log(isBalanced(\"{[()]}\"));   // true\nconsole.log(isBalanced(\"{[(])}\"));   // false",
+    codeLanguage: "JavaScript",
+    tags: ["Applications", "Stack", "Balanced Parentheses", "Recursion", "Data Structures"],
+  },
+  {
+    id: 127,
+    slug: "queue",
+    section: "Data Structures & Algorithms",
+    parentSlug: "linear-data-structures",
+    title: "Queue",
+    tagline: "A linear data structure that follows FIFO (First In, First Out) — the first element added is the first removed",
+    description:
+      "<b>What a Queue Is, in Plain English</b>\nThink of people lining up at a shop counter: whoever joined the line first gets served first, and everyone new joins at the back — nobody cuts in line. A queue (the data structure) works exactly the same way, adding elements at one end (the rear) and removing them from the other end (the front), following FIFO order (First In, First Out).\n\n<b>Why Queues Matter</b>\nAnything that needs to be processed in the exact order it arrived — print jobs, requests waiting for a server, people in a line — is naturally modeled by a queue.\n\n<b>How This Section Is Organized</b>\n• <b>Simple Queue</b> — the basic form; strict first-arrived, first-served order\n• <b>Circular Queue</b> — wraps the rear pointer back to the front of the storage array, reusing freed space\n• <b>Priority Queue</b> — the highest-priority element is served first, regardless of arrival order\n  ↳ Each is covered in its own card next.\n\n<b>Stack vs. Queue — a Common Mix-Up</b>\nA stack removes the most recently added element (LIFO), like a stack of plates; a queue removes the least recently added element (FIFO), like a line at a shop — both only allow adding/removing from restricted ends, but from opposite ends of \"most recent.\"",
+    note:
+      "Exam favourite: FIFO (First In, First Out) defines a queue, exactly the opposite of a stack's LIFO — a line of people waiting is a queue; a stack of plates is a stack.",
+    diagram:
+      "  A LINE AT A SHOP COUNTER\n\n  new customers ──▶ [10] [20] [30] ──▶ served next\n                    rear           front\n                    (10 joined first, so 10 is served first — FIFO)",
+    tags: ["Queue", "FIFO", "Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 128,
+    slug: "simple-queue",
+    section: "Data Structures & Algorithms",
+    parentSlug: "queue",
+    title: "Simple Queue",
+    tagline: "The basic form of a queue — elements are added at the rear and removed from the front, in strict arrival order",
+    description:
+      "<b>What a Simple Queue Is, in Plain English</b>\nThis is the plain, ordinary line at a shop counter — every new person joins at the back (enqueue), and only the person at the front is ever served and leaves (dequeue), in the exact order they arrived. No cutting in line, no priorities.\n\n<b>Why It's the Default Form</b>\nMost real-world \"waiting in line\" scenarios are exactly this: strict arrival order, no cutting in line, no reprioritizing — a simple queue models that directly with no extra rules.\n\n<b>How to Implement One</b>\nA simple queue is commonly implemented with a plain array — enqueue adds to the end (push), and dequeue removes from the front. JavaScript's Array.prototype.shift() removes the first element, but has to shift every remaining element down by one, making it O(n) rather than the O(1) a queue's dequeue ideally should be.",
+    note:
+      "Exam favourite: a naive array-based queue's dequeue (using shift()) is O(n), not O(1), because every remaining element has to shift down — this inefficiency is exactly the problem a circular queue is built to solve.",
+    diagram:
+      "  enqueue(40) ──▶ [10] [20] [30] ──▶ dequeue() returns 10\n                  front           rear\n\n  after: dequeue() removed 10, enqueue(40) added 40\n         [20] [30] [40]\n         front       rear",
+    code: "class SimpleQueue {\n    #items = [];\n\n    enqueue(value) {\n        this.#items.push(value);        // add to the rear\n    }\n\n    dequeue() {\n        return this.#items.shift();     // remove from the front — O(n)\n    }\n}\n\nconst q = new SimpleQueue();\nq.enqueue(10);\nq.enqueue(20);\nconsole.log(q.dequeue());   // 10 — the first one enqueued, leaves first",
+    codeLanguage: "JavaScript",
+    tags: ["Simple Queue", "Queue", "FIFO", "Data Structures"],
+  },
+  {
+    id: 129,
+    slug: "circular-queue",
+    section: "Data Structures & Algorithms",
+    parentSlug: "queue",
+    title: "Circular Queue",
+    tagline: "A queue that treats its storage array as circular, wrapping the rear pointer back to index 0 once it reaches the end",
+    description:
+      "<b>What a Circular Queue Is, in Plain English</b>\nImagine a circular buffet table with numbered plates — once you reach the last plate position and walk past it, you loop back around to plate #1 instead of walking off into a dead end. A circular queue works the same way: it's a queue implemented on a fixed-size array where the rear pointer wraps back around to index 0 once it reaches the end of the array.\n\n<b>Why Circular Queues Matter</b>\nIn a plain array-based queue, once elements have been dequeued from the front, that freed space at the beginning of the array just sits unused — the rear pointer keeps moving forward and eventually \"runs out of room,\" even though there's free space at the start. A circular queue reuses that freed space instead of wasting it.\n\n<b>How the Wraparound Works</b>\nThe rear (and front) pointer is advanced using the modulo operator: rear = (rear + 1) % size. Once rear reaches size - 1 and advances again, the modulo wraps it back to 0 — landing exactly on the freed slot at the start of the array, as long as it isn't still occupied.",
+    note:
+      "Exam favourite: the % (modulo) operator is what makes a circular queue \"circular\" — rear = (rear + 1) % size is the standard formula for wrapping an index back to 0 once it passes the last valid index.",
+    diagram:
+      "  CIRCULAR QUEUE (size 5), after some enqueues/dequeues\n\n        [ _ ][ _ ][30][40][50]\n index:   0    1    2   3   4\n                 ▲              ▲\n               front           rear\n\n  Next enqueue wraps rear to index 0 (freed by earlier dequeues),\n  instead of reporting the queue as full.",
+    code: "class CircularQueue {\n    #items;\n    #front = 0;\n    #rear = 0;\n    #size = 0;\n\n    constructor(capacity) {\n        this.#items = new Array(capacity);\n    }\n\n    enqueue(value) {\n        if (this.#size === this.#items.length) throw new Error(\"Queue is full\");\n        this.#items[this.#rear] = value;\n        this.#rear = (this.#rear + 1) % this.#items.length;   // wraps around\n        this.#size++;\n    }\n\n    dequeue() {\n        if (this.#size === 0) throw new Error(\"Queue is empty\");\n        const value = this.#items[this.#front];\n        this.#front = (this.#front + 1) % this.#items.length;\n        this.#size--;\n        return value;\n    }\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Circular Queue", "Queue", "Modulo", "Data Structures"],
+  },
+  {
+    id: 130,
+    slug: "priority-queue",
+    section: "Data Structures & Algorithms",
+    parentSlug: "queue",
+    title: "Priority Queue",
+    tagline: "A queue where each element has a priority, and the highest-priority element is served first, regardless of arrival order",
+    description:
+      "<b>What a Priority Queue Is, in Plain English</b>\nThink of a hospital emergency room: patients aren't treated strictly in the order they walked in — the most critical patient is seen first, even if they arrived last. A priority queue works the same way: every element is given a priority, and the element with the highest priority is always removed first, with arrival order only used as a tie-breaker.\n\n<b>Why Priority Queues Matter</b>\nMany real scheduling problems aren't strictly first-come-first-served — an operating system may need to run an urgent task before an older, low-priority one.\n\n<b>How to Implement One</b>\n• <b>Sorted array/list</b> — insert each new element into its correct sorted position; simple, but insertion takes O(n) since elements may need to shift.\n• <b>Heap (binary heap)</b> — the standard, efficient implementation; keeps the highest (or lowest) priority element easily accessible at the root, giving O(log n) insertion and removal instead of a sorted list's O(n).\n\n<b>Where Priority Queues Are Used</b>\nCPU task scheduling, Dijkstra's shortest-path algorithm, and Huffman coding (data compression) all rely on a priority queue to always process the most urgent/nearest/most-frequent item next.",
+    note:
+      "Exam favourite: a naive sorted-array priority queue has O(n) insertion; a heap-based priority queue reduces that to O(log n) — this is why the heap is described as the \"standard\" way to implement a priority queue.",
+    diagram:
+      "  EMERGENCY ROOM, AS A PRIORITY QUEUE\n\n  Arrived: Ticket#1 (priority 1) → Ticket#2 (priority 5) → Ticket#3 (priority 2)\n\n  Served in priority order, not arrival order:\n  Ticket#2 (priority 5) → Ticket#3 (priority 2) → Ticket#1 (priority 1)",
+    code: "class PriorityQueue {\n    #items = [];   // each item: { value, priority }\n\n    enqueue(value, priority) {\n        this.#items.push({ value, priority });\n        this.#items.sort((a, b) => b.priority - a.priority);   // highest priority first\n    }\n\n    dequeue() {\n        return this.#items.shift()?.value;   // removes the highest-priority element\n    }\n}\n\nconst pq = new PriorityQueue();\npq.enqueue(\"Low-priority ticket\", 1);\npq.enqueue(\"Server down!\", 5);\npq.enqueue(\"Typo fix\", 2);\nconsole.log(pq.dequeue());   // \"Server down!\" — highest priority, served first",
+    codeLanguage: "JavaScript",
+    tags: ["Priority Queue", "Queue", "Heap", "Dijkstra", "Data Structures"],
   },
 ];
 
