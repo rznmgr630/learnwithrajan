@@ -59,7 +59,14 @@ function SidebarItemRow({
     if (!hasChildren) return;
     try {
       const saved = sessionStorage.getItem(storageKey);
-      if (saved !== null) setOpen(saved === "1");
+      if (saved !== null) {
+        setOpen(saved === "1");
+      } else if (containsActiveId(item.children ?? [], activeItemId)) {
+        // First time this group auto-opens because it contains the active item —
+        // remember that choice so it stays open on later navigations instead of
+        // silently collapsing once the active item moves to a different branch.
+        sessionStorage.setItem(storageKey, "1");
+      }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
