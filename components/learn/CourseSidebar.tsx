@@ -83,7 +83,7 @@ function SidebarItemRow({
     <div style={depth ? { paddingLeft: depth * 14 } : undefined}>
       <div className="flex items-center gap-0.5">
         {item.href ? (
-          <Link key={item.id} href={item.href} data-nav-item-id={item.id} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
+          <Link key={item.id} href={item.href} scroll={false} data-nav-item-id={item.id} onClick={() => onSelectItem?.(item.id)} className={linkClassName}>
             {item.label}
           </Link>
         ) : (
@@ -258,8 +258,15 @@ export function CourseSidebar(props: CourseSidebarProps) {
   useEffect(() => {
     const el = navScrollRef.current;
     if (!el || activeItemId == null) return;
-    const target = el.querySelector<HTMLElement>(`[data-nav-item-id="${CSS.escape(String(activeItemId))}"]`);
-    target?.scrollIntoView({ block: "nearest" });
+    // Deferred a frame: sibling item rows restore their own open/closed state from
+    // sessionStorage in their own mount effects, which can still be pending when this
+    // effect first runs — scrolling immediately can land against a layout where those
+    // groups haven't reopened yet, leaving the target at the wrong offset.
+    const rafId = requestAnimationFrame(() => {
+      const target = el.querySelector<HTMLElement>(`[data-nav-item-id="${CSS.escape(String(activeItemId))}"]`);
+      target?.scrollIntoView({ block: "nearest" });
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [activeItemId]);
 
   return (
