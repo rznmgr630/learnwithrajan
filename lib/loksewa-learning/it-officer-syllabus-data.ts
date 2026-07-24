@@ -1534,6 +1534,111 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     codeLanguage: "C",
     tags: ["Writing", "fprintf", "fputs", "File Handling", "C Programming"],
   },
+  // ─────────────────────────────────────────────
+  // OBJECT-ORIENTED PROGRAMMING
+  // ─────────────────────────────────────────────
+  {
+    id: 106,
+    slug: "object-oriented-programming",
+    section: "Programming",
+    title: "Object-Oriented Programming",
+    tagline: "A programming style that models a program as a set of interacting objects, each bundling its own data and behavior together",
+    description:
+      "<b>What OOP Is</b>\nObject-Oriented Programming (OOP) is a programming style built around objects — self-contained units that bundle data (attributes) and the behavior that acts on that data (methods) together, instead of keeping data and the functions that operate on it completely separate, the way plain C does.\n\n<b>Why OOP Is Taught After C</b>\nC has no built-in concept of a class or object — it only has structs (pure data) and separate functions. OOP languages (C++, Java, C#) add classes and objects on top of that same basic syntax, letting a program group related data and logic into one reusable unit that models a real-world thing directly.\n\n<b>How This Section Is Organized</b>\n• <b>Class</b> — the blueprint that defines what data and behavior every object built from it will have\n• <b>Object</b> — an actual instance created from a class, with its own real values\n• <b>Encapsulation</b> — bundling data and methods together, and hiding internal details from outside code\n• <b>Inheritance</b> — letting one class reuse and extend another class's data and behavior\n• <b>Polymorphism</b> — letting the same method call behave differently depending on which object it's actually called on\n• <b>Abstraction</b> — showing only the essential details of an object, hiding the complex implementation behind a simple interface\n  ↳ These four — Encapsulation, Inheritance, Polymorphism, Abstraction — are the four pillars of OOP, an exam-favourite list to have memorized in order.",
+    note:
+      "The four pillars of OOP, in the order they're usually asked: Encapsulation, Inheritance, Polymorphism, Abstraction (easy to remember as \"EIPA\"). Class and Object come first because every one of the four pillars is explained in terms of them.",
+    tags: ["Object-Oriented Programming", "OOP", "Programming", "Class", "Object", "C++"],
+  },
+  {
+    id: 107,
+    slug: "class",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Class",
+    tagline: "The blueprint that defines what data and behavior every object built from it will have",
+    description:
+      "<b>What a Class Is</b>\nA class is a blueprint (or template) that defines what data (attributes) and behavior (methods) any object created from it will have — the class itself doesn't hold any real values, it just describes the shape every object of that type will follow.\n\n<b>Why Classes Matter</b>\nWithout a class, a program modeling many similar things (many students, many bank accounts) would need to repeat the same set of variables and functions for each one. A class lets that shared shape be written once, and reused to create as many objects as needed.\n\n<b>How to Define One</b>\nclass Student {\n    public:\n        string name;   // attribute\n        int age;       // attribute\n\n        void display() {   // method\n            cout << name << \" is \" << age << \" years old\";\n        }\n};\n\n<b>Class vs. struct in C</b>\nA C struct can only hold data (attributes) — it has no way to attach functions (methods) to that data directly. A class extends that same idea by bundling attributes and methods together in one definition, which is exactly what a struct in plain C cannot do.",
+    note:
+      "A class defines the shape; it doesn't exist as real, usable data by itself — no memory is set aside for a class's attributes until an actual object is created from it (see the \"Object\" card next).",
+    code: "class Student {\n    public:\n        string name;\n        int age;\n\n        void display() {\n            cout << name << \" is \" << age << \" years old\" << endl;\n        }\n};",
+    codeLanguage: "C++",
+    tags: ["Class", "Object-Oriented Programming", "Blueprint", "Attributes", "Methods"],
+  },
+  {
+    id: 108,
+    slug: "object",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Object",
+    tagline: "An actual instance created from a class, with its own real values",
+    description:
+      "<b>What an Object Is</b>\nAn object is an actual instance created from a class — where the class is just a blueprint, an object is a real, usable thing built from that blueprint, with its own actual values stored in memory.\n\n<b>Why Objects Matter</b>\nA class alone can't do anything — a program needs at least one object before it has any real data to work with. Many separate objects can be created from the exact same class, each with its own independent set of values.\n\n<b>How to Create and Use One</b>\nStudent s1;              // creates an object named s1 from the Student class\ns1.name = \"Rita\";        // sets s1's own name attribute\ns1.age = 20;\ns1.display();            // calls display() using s1's own data\n\nStudent s2;              // a second, completely separate object\ns2.name = \"Hari\";\ns2.age = 22;\ns2.display();            // uses s2's own data, independent of s1\n\n<b>Class vs. Object — the Core Distinction</b>\nA class is the blueprint (e.g. \"Student\"); an object is one specific instance built from it (e.g. s1, holding the actual values \"Rita\", 20). Any number of independent objects can be created from a single class, each with its own separate copy of the class's attributes.",
+    note:
+      "Exam favourite: a class is declared once, but many objects can be instantiated from it, each with its own independent attribute values — changing s1.age never affects s2.age.",
+    code: "Student s1;\ns1.name = \"Rita\";\ns1.age = 20;\ns1.display();   // Rita is 20 years old\n\nStudent s2;\ns2.name = \"Hari\";\ns2.age = 22;\ns2.display();   // Hari is 22 years old",
+    codeLanguage: "C++",
+    tags: ["Object", "Instance", "Object-Oriented Programming", "Class"],
+  },
+  {
+    id: 109,
+    slug: "encapsulation",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Encapsulation",
+    tagline: "Bundling data and methods together, and hiding internal details from outside code",
+    description:
+      "<b>What Encapsulation Is</b>\nEncapsulation is bundling an object's data (attributes) and the methods that operate on that data together into one class, while hiding the data's internal details from code outside the class — outside code can only interact with that data through the class's own methods.\n\n<b>Why Encapsulation Matters</b>\nWithout encapsulation, any part of a program could directly change an object's data in an invalid way (like setting a negative age). Encapsulation forces all changes to go through controlled methods, which can validate a value before accepting it, protecting the object's data from being put into an invalid state.\n\n<b>How to Encapsulate Data — Access Specifiers</b>\n• <b>private</b> — the attribute or method can only be accessed from inside the class itself; this is where sensitive data is normally kept hidden.\n• <b>public</b> — the attribute or method can be accessed from anywhere the object is visible; this is normally used for the methods that provide controlled access to private data.\n• <b>protected</b> — like private, but also accessible from a derived class (covered in \"Inheritance\").\n\n<b>Getter and Setter Methods</b>\nA getter method reads a private attribute's value; a setter method changes it, usually after validating the new value first — this is the standard, controlled way outside code is allowed to interact with private data.",
+    note:
+      "Exam favourite: encapsulation is often summarized as \"data hiding\" — making attributes private and only exposing them through public getter/setter methods that can validate every change.",
+    code: "class Account {\n    private:\n        double balance;   // hidden from outside code\n\n    public:\n        void deposit(double amount) {\n            if (amount > 0) {\n                balance += amount;   // validated before changing\n            }\n        }\n\n        double getBalance() {   // getter\n            return balance;\n        }\n};",
+    codeLanguage: "C++",
+    tags: ["Encapsulation", "Data Hiding", "private", "public", "Object-Oriented Programming", "Pillars of OOP"],
+  },
+  {
+    id: 110,
+    slug: "inheritance",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Inheritance",
+    tagline: "Letting one class reuse and extend another class's data and behavior",
+    description:
+      "<b>What Inheritance Is</b>\nInheritance lets one class (the <b>derived</b> or <b>child</b> class) reuse the attributes and methods of another class (the <b>base</b> or <b>parent</b> class), while also adding its own new attributes and methods, or overriding existing ones.\n\n<b>Why Inheritance Matters</b>\nMany real-world things are naturally specialized versions of a more general thing — a Car and a Truck are both specialized kinds of Vehicle, sharing common attributes (speed, fuel) while each also having their own. Inheritance lets that shared part be written once in the base class, instead of duplicated in every derived class.\n\n<b>How to Inherit — Syntax</b>\nclass Vehicle {\n    public:\n        int speed;\n        void move() { cout << \"Moving\"; }\n};\n\nclass Car : public Vehicle {   // Car inherits from Vehicle\n    public:\n        int numDoors;\n};\n\nCar c;\nc.speed = 100;     // inherited from Vehicle\nc.numDoors = 4;     // Car's own attribute\nc.move();           // inherited method, works on Car too\n\n<b>Types of Inheritance</b>\n• <b>Single</b> — one derived class, one base class\n• <b>Multilevel</b> — a chain, e.g. Vehicle → Car → SportsCar\n• <b>Hierarchical</b> — multiple derived classes share one base class, e.g. Car and Truck both inherit from Vehicle\n• <b>Multiple</b> — one derived class inherits from more than one base class at once (supported in C++, not in languages like Java)",
+    note:
+      "Exam favourite: the syntax class Car : public Vehicle means Car is the derived class inheriting from Vehicle, the base class — get the direction right, since it's easy to mix up which side is the parent.",
+    code: "class Vehicle {\n    public:\n        int speed;\n        void move() { cout << \"Moving\" << endl; }\n};\n\nclass Car : public Vehicle {\n    public:\n        int numDoors;\n};\n\nint main() {\n    Car c;\n    c.speed = 100;\n    c.numDoors = 4;\n    c.move();   // inherited from Vehicle\n}",
+    codeLanguage: "C++",
+    tags: ["Inheritance", "Base Class", "Derived Class", "Object-Oriented Programming", "Pillars of OOP"],
+  },
+  {
+    id: 111,
+    slug: "polymorphism",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Polymorphism",
+    tagline: "Letting the same method call behave differently depending on which object it's actually called on",
+    description:
+      "<b>What Polymorphism Is</b>\nPolymorphism (\"many forms\") lets the same method name behave differently depending on which object it's called on, or what arguments it's called with — the same call, sound(), can produce completely different behavior for a Dog object versus a Cat object.\n\n<b>Why Polymorphism Matters</b>\nIt lets code written once (like a loop that calls sound() on a list of different Animal objects) automatically work correctly for every specific kind of animal, without needing a separate if/else check for each one.\n\n<b>How Polymorphism Works — Two Kinds</b>\n• <b>Compile-time (static) polymorphism — function overloading</b>: multiple methods with the same name but different parameters, in the same class; the compiler decides which one to call based on the arguments given, before the program even runs.\n• <b>Run-time (dynamic) polymorphism — function overriding</b>: a derived class redefines a method already defined in its base class; which version actually runs is decided while the program is running, based on the actual object's type — this requires the base class method to be declared virtual in C++.\n\n<b>Worked Example — Overriding</b>\nclass Animal {\n    public:\n        virtual void sound() { cout << \"Some sound\"; }\n};\nclass Dog : public Animal {\n    public:\n        void sound() override { cout << \"Bark\"; }   // overrides Animal's version\n};",
+    note:
+      "Exam favourite: overloading (same method name, different parameters, same class) happens at compile-time; overriding (derived class redefines a base class's virtual method) is decided at run-time, based on the actual object.",
+    code: "class Animal {\n    public:\n        virtual void sound() { cout << \"Some sound\" << endl; }\n};\n\nclass Dog : public Animal {\n    public:\n        void sound() override { cout << \"Bark\" << endl; }\n};\n\nclass Cat : public Animal {\n    public:\n        void sound() override { cout << \"Meow\" << endl; }\n};\n\nvoid makeSound(Animal *a) {\n    a->sound();   // calls the correct version based on the actual object\n}",
+    codeLanguage: "C++",
+    tags: ["Polymorphism", "Overloading", "Overriding", "virtual", "Object-Oriented Programming", "Pillars of OOP"],
+  },
+  {
+    id: 112,
+    slug: "abstraction",
+    section: "Programming",
+    parentSlug: "object-oriented-programming",
+    title: "Abstraction",
+    tagline: "Showing only the essential details of an object, hiding the complex implementation behind a simple interface",
+    description:
+      "<b>What Abstraction Is</b>\nAbstraction means showing only the essential, relevant details of an object to the outside world, while hiding the complex implementation behind a simple interface — a driver uses a car's steering wheel and pedals without needing to know how the engine actually works internally.\n\n<b>Why Abstraction Matters</b>\nIt lets code that uses a class stay simple and stable, even if the class's internal implementation later changes — as long as the public interface (the method names and what they do) stays the same, code calling those methods doesn't need to change at all.\n\n<b>How Abstraction Is Achieved in C++</b>\n• <b>Abstract class</b> — a class containing at least one pure virtual function (a method declared but never given a body in that class); an abstract class can never be instantiated directly, only inherited from.\n• <b>Pure virtual function</b> — declared as virtual void draw() = 0;, forcing every derived class to provide its own actual implementation of draw().\n\n<b>Worked Example</b>\nclass Shape {\n    public:\n        virtual void draw() = 0;   // pure virtual — no body here\n};\nclass Circle : public Shape {\n    public:\n        void draw() override { cout << \"Drawing a circle\"; }   // must implement draw()\n};\n\n<b>Abstraction vs. Encapsulation — a Common Mix-Up</b>\nEncapsulation hides an object's data (making attributes private); abstraction hides an object's implementation complexity (exposing only a simple set of methods, regardless of how complicated the internal code behind them actually is).",
+    note:
+      "Exam favourite: a class with even one pure virtual function (= 0) becomes an abstract class, and can never be instantiated with new Shape() directly — only through a derived class that implements every pure virtual function.",
+    code: "class Shape {\n    public:\n        virtual void draw() = 0;   // pure virtual function\n};\n\nclass Circle : public Shape {\n    public:\n        void draw() override {\n            cout << \"Drawing a circle\" << endl;\n        }\n};\n\nint main() {\n    Shape *s = new Circle();\n    s->draw();   // Drawing a circle\n}",
+    codeLanguage: "C++",
+    tags: ["Abstraction", "Abstract Class", "Pure Virtual Function", "Object-Oriented Programming", "Pillars of OOP"],
+  },
 ];
 
 export const IT_OFFICER_CONCEPT_COUNT = IT_OFFICER_CONCEPTS.length;
