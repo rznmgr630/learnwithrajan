@@ -394,7 +394,7 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
           </div>
         ) : null}
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain p-5">
           <p className="text-sm leading-relaxed text-[var(--muted)]">
             <RichText text={introBlurb} />
           </p>

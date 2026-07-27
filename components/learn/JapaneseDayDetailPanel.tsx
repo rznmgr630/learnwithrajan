@@ -104,7 +104,7 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col overflow-y-auto overscroll-y-contain p-5">
           {lessonPage ? (
             <N5LessonDrawerContent lesson={lessonPage} kanjiItems={kanjiItems} />
           ) : (

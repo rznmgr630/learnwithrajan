@@ -299,6 +299,15 @@ export function DSAFundamentalsDrawer({ topicId, onClose }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [topicId, onClose]);
 
+  useEffect(() => {
+    if (!topicId) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [topicId]);
+
   if (!topicId) return null;
   const topic = TOPIC_CONTENT[topicId];
 
@@ -338,7 +347,7 @@ export function DSAFundamentalsDrawer({ topicId, onClose }: Props) {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col gap-8 overflow-y-auto overscroll-y-contain p-5">
           {topic.sections.map((sec) => (
             <SectionBlock key={sec.heading} heading={sec.heading}>
               {sec.body}

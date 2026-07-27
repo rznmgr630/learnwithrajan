@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PromptItem } from "@/lib/ai-prompts/types";
 import { PROMPTS } from "@/lib/ai-prompts/prompts-data";
 import { SLASH_CATEGORIES } from "@/lib/ai-prompts/slash-categories-data";
@@ -50,6 +50,15 @@ function CopyButton({ text }: { text: string }) {
 function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!item) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [item]);
+
   if (!item) return null;
 
   return (
@@ -73,7 +82,7 @@ function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () 
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain p-5 flex flex-col gap-6">
           {item.driveImageId ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
