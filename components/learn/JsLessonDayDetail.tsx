@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { pickLocalized } from "@/lib/i18n/pick";
@@ -350,6 +350,15 @@ export function JsLessonDayDetail({
   const { getResult } = useJsLessonQuizProgress();
   const finalResult = getResult(`${quizIdPrefix}.final`);
 
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -384,7 +393,7 @@ export function JsLessonDayDetail({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain p-5">
           {day.lessons.map((lesson, i) => (
             <LessonAccordionItem
               key={lesson.id}

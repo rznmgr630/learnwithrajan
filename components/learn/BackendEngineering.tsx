@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import {
   BACKEND_CONCEPTS,
@@ -75,6 +75,15 @@ function renderBody(text: string) {
 }
 
 function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!concept) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [concept]);
+
   if (!concept) return null;
 
   return (

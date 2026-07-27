@@ -161,35 +161,51 @@ numbers.sort((a, b) => b - a);         // [5, 4, 3, 2, 1] — descending`,
         {
           type: "paragraph",
           text: {
-            en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThink of a vending machine: a normal function is like paying with the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.",
-            np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)। Partial application ले केही arguments अगावै भरेर बाँकीका लागि नयाँ function दिन्छ।",
-            jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。部分適用はより一般的な考え方で、一部の引数を先に埋めて残りを受け取る新しい関数を得る。",
+            en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThe usual reason to reach for currying: you want a function to run only once every argument is available, but the arguments show up from different places at different times — one from an API response, one from user input, one from a database lookup. You could collect them into a few variables and call the function manually once all of them exist, but that stops working once a function needs many arguments instead of three.\n\nThink of a vending machine: a normal function is like paying the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.",
+            np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)। Partial application ले केही arguments अगावै भरेर बाँकीका लागि नयाँ function दिन्छ। Currying चाहिने सामान्य कारण: तीनवटै argument फरक-फरक ठाउँबाट (API, user input, database) आउँछ र सबै नआएसम्म function चलाउनु हुँदैन।",
+            jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。部分適用はより一般的な考え方で、一部の引数を先に埋めて残りを受け取る新しい関数を得る。よくある動機は、引数がAPI・ユーザー入力・DBなど別々の場所から届き、全部揃うまで実行したくない場合。",
           },
         },
         {
           type: "code",
           title: { en: "Currying — converting a multi-argument function into nested single-argument functions", np: "Currying — multi-argument function लाई single-argument functions मा", jp: "カリー化 — 多引数関数を単引数関数の連鎖に変換" },
           code: `// ── Regular (uncurried) function ─────────────────────────────────
-const add = (a, b) => a + b;
-add(2, 3);  // 5
+const add = (a, b, c) => a + b + c;
+add(2, 5, 3);  // 10
 
-// ── Curried version ───────────────────────────────────────────────
-const curriedAdd = (a) => (b) => a + b;
-// Calling it one argument at a time:
-curriedAdd(2)(3);  // 5
-// Or partially applying:
-const add2 = curriedAdd(2);   // returns (b) => 2 + b
-add2(3);  // 5
-add2(10); // 12
+// ── The problem currying solves ──────────────────────────────────
+// You only want to run add() once all three values are available —
+// say the first comes from one place, the second from an API, the
+// third from user input. Collecting them into variables and calling
+// add() manually once all three exist works, but it stops scaling
+// once a function needs many arguments instead of three.
+
+// ── Curried version — nest one function per argument ─────────────
+const curriedAdd = (a) => (b) => (c) => a + b + c;
+// Nothing executes until the last argument arrives:
+curriedAdd(2);        // a function still waiting for 'b'
+curriedAdd(2)(5);     // a function still waiting for 'c'
+curriedAdd(2)(5)(3);  // 10 — only now does it actually run
 
 // ── Why currying is useful — creating specialised functions ───────
 const multiply = (a) => (b) => a * b;
 const double  = multiply(2);
 const triple  = multiply(3);
-const tenX    = multiply(10);
 
 [1, 2, 3].map(double);  // [2, 4, 6]
 [1, 2, 3].map(triple);  // [3, 6, 9]
+
+// ── Real-world use — splitting work across independent steps ─────
+// Curry sendEmail(to)(subject)(body) and each argument can be filled
+// in by a different part of the system, one step at a time, without
+// any step needing to know about the others.
+const sendEmail = (to) => (subject) => (body) =>
+  console.log(\`Sending to \${to} — [\${subject}] \${body}\`);
+
+const step1 = sendEmail("user@example.com");        // resolves the recipient
+const step2 = step1("New order confirmation");       // adds the subject
+step2("Your order has shipped!");                    // finally sends
+// Sending to user@example.com — [New order confirmation] Your order has shipped!
 
 // ── Partial application — pre-filling some arguments ──────────────
 function log(level, message) {
@@ -218,6 +234,11 @@ transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
           type: "list",
           variant: "bullet",
           items: [
+            {
+              en: "<b>Splitting responsibility across steps:</b> because each curried call just returns a plain function, you can hand that function off to a completely different piece of code — even one owned by a different developer — that only supplies its own argument and doesn't need to know what happens before or after. `sendEmail(to)` can be resolved by one service, `(subject)` filled in by another, and `(body)` supplied by whichever code finally has the message — nothing sends until the last piece arrives.",
+              np: "काम बाँड्ने: curried call ले जहिले पनि एउटा plain function फर्काउने भएकोले, त्यो function लाई अर्को (फरक developer को) code लाई दिन सकिन्छ, जसले आफ्नो मात्र argument थप्छ। `sendEmail(to)` एउटा service ले हल गर्छ, `(subject)` अर्कोले थप्छ, `(body)` अन्तिममा जोसँग message छ उसले दिन्छ — अन्तिम टुक्रा नआएसम्म पठाइँदैन।",
+              jp: "責務の分割: カリー化された呼び出しは常にただの関数を返すので、その関数を別のコード（別の開発者が担当する部分）に渡せる。`sendEmail(to)`はあるサービスが解決し、`(subject)`は別の部分が追加し、`(body)`は最後にメッセージを持つコードが渡す — 最後の引数が届くまで送信されない。",
+            },
             {
               en: "<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double2, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
               np: "Function composition ले साना function हरूलाई pipeline मा जोड्छ — पढ्न बायाँबाट दायाँ, \"यो गर, त्यसपछि यो गर\" जस्तो।",

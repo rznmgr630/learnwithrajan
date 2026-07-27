@@ -302,7 +302,7 @@ export function CourseSidebar(props: CourseSidebarProps) {
             aria-label="Close menu"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative flex h-full w-full max-w-xs flex-col overflow-y-auto bg-[var(--background)] p-5 shadow-2xl">
+          <div className="relative flex h-full w-full max-w-xs flex-col overflow-y-auto overscroll-y-contain bg-[var(--background)] p-5 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold text-[var(--text)]">{props.heading}</span>
               <button

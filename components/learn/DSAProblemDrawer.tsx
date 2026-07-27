@@ -230,6 +230,15 @@ export function DSAProblemDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [problem, onClose]);
 
+  useEffect(() => {
+    if (!problem) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [problem]);
+
   if (!problem) return null;
 
   return (
@@ -273,7 +282,7 @@ export function DSAProblemDrawer({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain">
           <ProblemContent problem={problem} />
         </div>
       </aside>

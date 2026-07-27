@@ -99,7 +99,7 @@ export function JapaneseN3DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-5">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain p-5">
           <div className="flex flex-wrap gap-2">
             {ctx.day.tags.map((tag) => (
               <span

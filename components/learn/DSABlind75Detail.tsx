@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Blind75Problem, Blind75Language } from "@/lib/dsa/blind75";
 import {
   BLIND75_DIFFICULTY_COLOR,
@@ -103,6 +103,15 @@ export function DSABlind75Detail({
 }) {
   const [activeLang, setActiveLang] = useState<Blind75Language>("javascript");
 
+  useEffect(() => {
+    if (!problem) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [problem]);
+
   if (!problem) return null;
 
   const hasDetail = !!problem.solutions?.length;
@@ -158,7 +167,7 @@ export function DSABlind75Detail({
         </div>
 
         {/* ── body ── */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain p-5">
           {hasDetail ? (
             <div className="flex flex-col gap-8">
               {/* Problem */}
