@@ -1649,10 +1649,10 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     title: "Data Structures & Algorithms",
     tagline: "Ways of organizing and storing data so it can be accessed and changed efficiently, plus the step-by-step procedures that work on it",
     description:
-      "<b>What Data Structures & Algorithms (DSA) Is, in Plain English</b>\nImagine you own a small shop. A <b>data structure</b> is simply how you organize your stock — everything piled in one big heap on the floor, versus everything sorted onto labeled shelves. An <b>algorithm</b> is the exact set of steps you follow to do something with that stock, like finding one specific item. The same task (finding an item) is fast or painfully slow depending entirely on how the stock was organized in the first place — that's the whole idea behind DSA.\n\n<b>Why DSA Matters</b>\nThe same task — searching for a value, adding an item, removing an item — can take wildly different amounts of time depending on how the underlying data is organized. Picking the right data structure is often the single biggest factor in whether a program runs instantly or grinds to a halt as the amount of data grows.\n\n<b>Linear vs. Non-Linear Data Structures</b>\n• <b>Linear</b> — elements are arranged in a sequence, one after another, with a single path from the first element to the last (Array, Linked List, Stack, Queue).\n• <b>Non-linear</b> — elements branch out or connect in more complex ways, with no single sequential path (Tree, Graph).\n  ↳ This module covers the linear data structures — the ones most commonly asked about in the exam.\n\n<b>How This Section Is Organized</b>\n• <b>Linear Data Structure</b> — Array, Linked List, Stack, and Queue, each covered with their own operations and applications\n  ↳ Covered in its own card next, with every sub-topic broken out.",
+      "<b>What Data Structures & Algorithms (DSA) Is, in Plain English</b>\nImagine you own a small shop. A <b>data structure</b> is simply how you organize your stock — everything piled in one big heap on the floor, versus everything sorted onto labeled shelves. An <b>algorithm</b> is the exact set of steps you follow to do something with that stock, like finding one specific item. The same task (finding an item) is fast or painfully slow depending entirely on how the stock was organized in the first place — that's the whole idea behind DSA.\n\n<b>Why DSA Matters</b>\nThe same task — searching for a value, adding an item, removing an item — can take wildly different amounts of time depending on how the underlying data is organized. Picking the right data structure is often the single biggest factor in whether a program runs instantly or grinds to a halt as the amount of data grows.\n\n<b>Linear vs. Non-Linear Data Structures</b>\n• <b>Linear</b> — elements are arranged in a sequence, one after another, with a single path from the first element to the last (Array, Linked List, Stack, Queue).\n• <b>Non-linear</b> — elements branch out or connect in more complex ways, with no single sequential path (Tree, Heap, Graph).\n\n<b>How This Section Is Organized</b>\n• <b>Linear Data Structure</b> — Array, Linked List, Stack, and Queue, each covered with their own operations and applications\n• <b>Non-Linear Data Structure</b> — Tree (Binary Tree, BST, AVL Tree), Heap, and Graph (with BFS, DFS, and shortest-path algorithms)\n• <b>Algorithms</b> — Searching, Sorting, and Complexity analysis (Big O, time, and space)\n  ↳ Each is covered in its own card next, with every sub-topic broken out.",
     note:
       "Exam favourite: a data structure is about *how data is stored*; an algorithm is about *what steps operate on it* — the two terms aren't interchangeable, even though they're always taught together.",
-    tags: ["Data Structures", "Algorithms", "DSA", "Linear Data Structure"],
+    tags: ["Data Structures", "Algorithms", "DSA", "Linear Data Structure", "Non-Linear Data Structure"],
   },
   {
     id: 114,
@@ -1934,6 +1934,374 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     code: "class PriorityQueue {\n    #items = [];   // each item: { value, priority }\n\n    enqueue(value, priority) {\n        this.#items.push({ value, priority });\n        this.#items.sort((a, b) => b.priority - a.priority);   // highest priority first\n    }\n\n    dequeue() {\n        return this.#items.shift()?.value;   // removes the highest-priority element\n    }\n}\n\nconst pq = new PriorityQueue();\npq.enqueue(\"Low-priority ticket\", 1);\npq.enqueue(\"Server down!\", 5);\npq.enqueue(\"Typo fix\", 2);\nconsole.log(pq.dequeue());   // \"Server down!\" — highest priority, served first",
     codeLanguage: "JavaScript",
     tags: ["Priority Queue", "Queue", "Heap", "Dijkstra", "Data Structures"],
+  },
+  {
+    id: 131,
+    slug: "non-linear-data-structures",
+    section: "Data Structures & Algorithms",
+    parentSlug: "data-structures",
+    title: "Non-Linear Data Structure",
+    tagline: "Data structures where elements branch out or connect in multiple directions, with no single sequential path from first to last",
+    description:
+      "<b>What a Non-Linear Data Structure Is, in Plain English</b>\nThink of a family tree instead of a queue at a shop counter — one person can have several children, and those children have children of their own, branching outward instead of forming one straight line. That's a non-linear data structure: an element can connect to more than one other element, so there's no single \"next\" that gets you from the first element to the last.\n\n<b>Why Non-Linear Structures Matter</b>\nMany real problems aren't naturally sequential — a file system's folders, a company's org chart, a social network's friendships, or a road map's cities and routes. Linear structures like Array or Linked List can't represent these relationships efficiently; Tree, Heap, and Graph exist specifically to model branching and many-to-many connections.\n\n<b>How This Section Is Organized</b>\n• <b>Tree</b> — a hierarchical structure where each element (node) has exactly one parent and any number of children, like Binary Tree, BST, and AVL Tree\n• <b>Heap</b> — a special tree-shaped structure that always keeps the smallest or largest element easy to find at the root\n• <b>Graph</b> — the most general structure, where any node can connect to any other node, with algorithms like BFS, DFS, and shortest path used to explore and analyse it\n  ↳ Each is covered in its own card next, with every sub-topic broken out.",
+    note:
+      "Exam favourite: a Tree is actually a restricted kind of Graph — one with no cycles and exactly one path between any two nodes. Every tree is a graph, but not every graph is a tree.",
+    tags: ["Non-Linear Data Structure", "Tree", "Heap", "Graph", "Data Structures"],
+  },
+  {
+    id: 132,
+    slug: "tree",
+    section: "Data Structures & Algorithms",
+    parentSlug: "non-linear-data-structures",
+    title: "Tree",
+    tagline: "A hierarchical structure of nodes, where each node has one parent (except the root) and any number of children",
+    description:
+      "<b>What a Tree Is, in Plain English</b>\nA tree is exactly like a family tree turned upside down — one ancestor at the top (the root), branching down into children, and those children branching into their own children, and so on. Every node has exactly one parent (except the topmost node, the root, which has none), but can have any number of children.\n\n<b>Key Terms</b>\n• <b>Root</b> — the single topmost node, with no parent\n• <b>Parent / Child</b> — a node directly above / below another, connected by an edge\n• <b>Leaf</b> — a node with no children\n• <b>Height</b> — the number of edges on the longest path from the root down to a leaf\n\n<b>Why Trees Matter</b>\nTrees model naturally hierarchical data — file systems, HTML/DOM structure, organization charts, and decision-making processes — and specialised trees like BST and AVL Tree let a program search, insert, and delete data far faster than scanning through a list.\n\n<b>How This Section Is Organized</b>\n• <b>Binary Tree</b> — a tree where every node has at most two children\n• <b>Binary Search Tree (BST)</b> — a binary tree that keeps its values in sorted order, enabling fast search\n• <b>AVL Tree</b> — a self-balancing BST that keeps operations fast even in the worst case\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: a tree with n nodes always has exactly n − 1 edges — one edge for every node except the root.",
+    diagram:
+      "  A TREE, ROOTED AT THE TOP\n\n           A          ← root\n         /   \\\n        B     C\n       / \\     \\\n      D   E     F     ← D, E, F are leaves (no children)",
+    tags: ["Tree", "Root", "Leaf", "Height", "Non-Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 133,
+    slug: "binary-tree",
+    section: "Data Structures & Algorithms",
+    parentSlug: "tree",
+    title: "Binary Tree",
+    tagline: "A tree in which every node has at most two children, conventionally called the left child and the right child",
+    description:
+      "<b>What a Binary Tree Is, in Plain English</b>\nA binary tree is a tree with a strict rule: every node can have at most two children — a left child and a right child, either of which may be missing.\n\n<b>Why Binary Trees Matter</b>\nRestricting each node to two children makes a binary tree simple to reason about and traverse, and it's the foundation every more advanced tree (BST, AVL Tree, Heap) builds on top of.\n\n<b>Types of Binary Tree</b>\n• <b>Full binary tree</b> — every node has either 0 or 2 children, never exactly 1\n• <b>Complete binary tree</b> — every level is completely filled except possibly the last, which fills left to right\n• <b>Perfect binary tree</b> — every internal node has exactly 2 children and every leaf is at the same depth\n\n<b>Traversal Orders</b>\n• <b>Pre-order</b> (root → left → right) — visit the node first, then its subtrees\n• <b>In-order</b> (left → root → right) — visits nodes in sorted order for a BST\n• <b>Post-order</b> (left → right → root) — visit both subtrees before the node itself\n• <b>Level-order</b> — visit node by node, level by level, using a queue (this is a breadth-first traversal)",
+    note:
+      "Exam favourite: in-order traversal of a Binary Search Tree always produces the values in ascending sorted order — a detail exams love to test directly.",
+    diagram:
+      "  IN-ORDER TRAVERSAL VISITS: LEFT → ROOT → RIGHT\n\n         2\n       /   \\\n      1     3\n\n  In-order: 1, 2, 3",
+    code: "class Node {\n    constructor(value) {\n        this.value = value;\n        this.left = null;\n        this.right = null;\n    }\n}\n\nfunction inOrder(node, result = []) {\n    if (!node) return result;\n    inOrder(node.left, result);\n    result.push(node.value);\n    inOrder(node.right, result);\n    return result;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Binary Tree", "Tree Traversal", "In-order", "Pre-order", "Post-order", "Data Structures"],
+  },
+  {
+    id: 134,
+    slug: "binary-search-tree",
+    section: "Data Structures & Algorithms",
+    parentSlug: "tree",
+    title: "Binary Search Tree (BST)",
+    tagline: "A binary tree where every node's left subtree holds smaller values and its right subtree holds larger values",
+    description:
+      "<b>What a BST Is, in Plain English</b>\nA Binary Search Tree is a binary tree with one extra rule that makes searching fast: for every node, everything in its left subtree is smaller, and everything in its right subtree is larger. That one rule is what lets a search skip half the remaining nodes at every step, the same trick binary search uses on a sorted array.\n\n<b>Why BSTs Matter</b>\nA BST gives average O(log n) search, insertion, and deletion — much faster than a linear structure's O(n) — while still allowing values to be inserted and removed one at a time, unlike a plain sorted array where insertion means shifting elements.\n\n<b>How Searching Works</b>\nStart at the root. If the target is smaller, go left; if larger, go right; if equal, found it. Repeat until found or a null child is reached.\n\n<b>The Worst Case</b>\nIf values are inserted in already-sorted order, a BST degenerates into a straight line (essentially a linked list), and every operation drops to O(n). This is exactly the weakness an AVL Tree is built to fix.",
+    note:
+      "Exam favourite: a BST's O(log n) speed depends entirely on the tree staying roughly balanced — an unbalanced BST offers no speed advantage over a linked list at all.",
+    diagram:
+      "  A VALID BST\n\n           8\n         /   \\\n        3     10\n       / \\      \\\n      1   6      14\n\n  Left subtree of 8 (1, 3, 6) — all < 8\n  Right subtree of 8 (10, 14) — all > 8",
+    code: "function insert(node, value) {\n    if (!node) return { value, left: null, right: null };\n    if (value < node.value) node.left = insert(node.left, value);\n    else node.right = insert(node.right, value);\n    return node;\n}\n\nfunction search(node, target) {\n    if (!node) return false;\n    if (node.value === target) return true;\n    return target < node.value ? search(node.left, target) : search(node.right, target);\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Binary Search Tree", "BST", "Tree", "Searching", "Data Structures"],
+  },
+  {
+    id: 135,
+    slug: "avl-tree",
+    section: "Data Structures & Algorithms",
+    parentSlug: "tree",
+    title: "AVL Tree",
+    tagline: "A self-balancing Binary Search Tree that automatically re-balances itself after every insertion or deletion",
+    description:
+      "<b>What an AVL Tree Is, in Plain English</b>\nAn AVL Tree is a Binary Search Tree with a built-in fix for the BST's biggest weakness: it never lets itself become lopsided. After every insertion or deletion, it checks whether it's become unbalanced and, if so, immediately rotates a few nodes to straighten itself back out.\n\n<b>The Balance Factor</b>\nEvery node tracks a balance factor: the height of its left subtree minus the height of its right subtree. An AVL Tree requires this to always be −1, 0, or 1 for every node — the moment it goes outside that range, a rotation is triggered.\n\n<b>Rotations</b>\nFour rotation cases fix an imbalance: Left-Left, Right-Right, Left-Right, and Right-Left, named after which side became too heavy. A rotation rearranges a small number of nodes locally, in O(1) time, without rebuilding the whole tree.\n\n<b>Why AVL Trees Matter</b>\nBy staying balanced at all times, an AVL Tree guarantees O(log n) search, insertion, and deletion in every case — not just on average — solving the plain BST's worst-case O(n) problem.",
+    note:
+      "Exam favourite: AVL stands for Adelson-Velsky and Landis, the two Soviet inventors who introduced it in 1962 — the first self-balancing binary search tree ever described.",
+    diagram:
+      "  BALANCE FACTOR = height(left) − height(right), must stay in {-1, 0, 1}\n\n  Unbalanced (factor = 2)        After Left-Left rotation (balanced)\n        3                                2\n       /                                / \\\n      2                4               1   3\n     /\n    1",
+    tags: ["AVL Tree", "Self-Balancing", "Binary Search Tree", "Rotation", "Data Structures"],
+  },
+  {
+    id: 136,
+    slug: "heap",
+    section: "Data Structures & Algorithms",
+    parentSlug: "non-linear-data-structures",
+    title: "Heap",
+    tagline: "A tree-shaped structure that always keeps the smallest (or largest) element instantly accessible at the root",
+    description:
+      "<b>What a Heap Is, in Plain English</b>\nA heap is a complete binary tree with one guarantee: every parent is always smaller (or always larger) than its children. That guarantee means the smallest — or largest — value in the entire structure is always sitting right at the root, ready to be read in O(1) time.\n\n<b>Min-Heap vs. Max-Heap</b>\n• <b>Min-heap</b> — every parent is ≤ its children, so the minimum value is always at the root\n• <b>Max-heap</b> — every parent is ≥ its children, so the maximum value is always at the root\n\n<b>Core Operations</b>\n• <b>Insert</b> — add the new value at the end, then repeatedly swap it upward (\"heapify up\") until the heap property is restored — O(log n)\n• <b>Extract (remove root)</b> — remove the root, move the last element into its place, then repeatedly swap it downward (\"heapify down\") — O(log n)\n\n<b>Why Heaps Matter</b>\nA heap is the standard way to implement a Priority Queue, and it powers algorithms like heap sort and Dijkstra's shortest path, wherever the \"next smallest/largest item\" needs to be found and removed repeatedly and efficiently.",
+    note:
+      "Exam favourite: a heap is NOT a Binary Search Tree — it only guarantees parent-vs-child ordering, not left-vs-right ordering, so in-order traversal of a heap does not produce sorted output.",
+    diagram:
+      "  A MIN-HEAP — every parent ≤ its children\n\n           1\n         /   \\\n        3     5\n       / \\\n      4   8\n\n  Root (1) is always the minimum value in the heap",
+    tags: ["Heap", "Min-Heap", "Max-Heap", "Priority Queue", "Non-Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 137,
+    slug: "graph",
+    section: "Data Structures & Algorithms",
+    parentSlug: "non-linear-data-structures",
+    title: "Graph",
+    tagline: "A collection of nodes (vertices) connected by edges, where any node can connect to any number of other nodes",
+    description:
+      "<b>What a Graph Is, in Plain English</b>\nA graph is the most flexible data structure of them all: a set of points (vertices, or nodes) connected by lines (edges), with no rule at all about how many connections a node can have or in what pattern. A road map, a social network, and the internet's link structure are all graphs.\n\n<b>Key Terms</b>\n• <b>Vertex (node)</b> — a single point in the graph\n• <b>Edge</b> — a connection between two vertices\n• <b>Directed graph</b> — edges have a direction (A → B doesn't mean B → A), like a one-way street\n• <b>Undirected graph</b> — edges go both ways, like a two-way friendship\n• <b>Weighted graph</b> — each edge carries a cost or distance, like the length of a road\n\n<b>How Graphs Are Stored</b>\n• <b>Adjacency matrix</b> — a grid of size V×V, where cell [i][j] marks whether an edge exists between vertex i and j; simple, but wastes space on sparse graphs\n• <b>Adjacency list</b> — each vertex keeps a list of the vertices it directly connects to; the standard choice, since most real graphs are sparse\n\n<b>How This Section Is Organized</b>\n• <b>BFS</b> — explores a graph level by level, outward from a starting node\n• <b>DFS</b> — explores a graph by going as deep as possible down one path before backtracking\n• <b>Shortest Path</b> — algorithms that find the lowest-cost route between two nodes\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: a tree is just a graph with no cycles and exactly one path between any two nodes — every tree is a graph, but a graph is not necessarily a tree.",
+    diagram:
+      "  AN UNDIRECTED, WEIGHTED GRAPH\n\n      A ──5── B\n      │       │\n      2       1\n      │       │\n      C ──3── D",
+    tags: ["Graph", "Vertex", "Edge", "Adjacency List", "Non-Linear Data Structure", "Data Structures"],
+  },
+  {
+    id: 138,
+    slug: "bfs",
+    section: "Data Structures & Algorithms",
+    parentSlug: "graph",
+    title: "BFS (Breadth-First Search)",
+    tagline: "Explores a graph level by level, visiting every neighbour of the current node before moving deeper",
+    description:
+      "<b>What BFS Is, in Plain English</b>\nBFS explores a graph the way ripples spread across a pond — it visits everything one step away first, then everything two steps away, then three, and so on, expanding outward in complete rings rather than shooting off down one path.\n\n<b>How It Works</b>\nStart at a source node, mark it visited, and add it to a queue. Then repeatedly: remove a node from the front of the queue, and add each of its unvisited neighbours to the back of the queue, marking them visited immediately so they aren't queued twice.\n\n<b>Why It Uses a Queue</b>\nA queue (FIFO) guarantees nodes are processed in the order they were discovered — which is exactly what makes BFS explore level by level instead of diving deep down one branch.\n\n<b>Why BFS Matters</b>\nBFS is the standard way to find the shortest path between two nodes when every edge has the same weight (or no weight at all), because the first time it reaches a node, it's guaranteed to be by the fewest possible edges.",
+    note:
+      "Exam favourite: BFS uses a Queue; DFS uses a Stack (or recursion, which behaves like a stack) — this single distinction is one of the most commonly tested facts about graph traversal.",
+    diagram:
+      "  BFS FROM A — visits level by level\n\n        A            Level 0: A\n       / \\           Level 1: B, C\n      B   C          Level 2: D, E\n      |   |\n      D   E\n\n  Visit order: A, B, C, D, E",
+    code: "function bfs(graph, start) {\n    const visited = new Set([start]);\n    const queue = [start];\n    const order = [];\n\n    while (queue.length > 0) {\n        const node = queue.shift();\n        order.push(node);\n        for (const neighbour of graph[node]) {\n            if (!visited.has(neighbour)) {\n                visited.add(neighbour);\n                queue.push(neighbour);\n            }\n        }\n    }\n    return order;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["BFS", "Breadth-First Search", "Graph", "Queue", "Shortest Path", "Data Structures"],
+  },
+  {
+    id: 139,
+    slug: "dfs",
+    section: "Data Structures & Algorithms",
+    parentSlug: "graph",
+    title: "DFS (Depth-First Search)",
+    tagline: "Explores a graph by going as far as possible down one path before backtracking to try another",
+    description:
+      "<b>What DFS Is, in Plain English</b>\nDFS explores a graph the way someone solving a maze might: pick a direction and keep going as deep as possible, and only turn back (backtrack) once you hit a dead end, then try the next unexplored direction.\n\n<b>How It Works</b>\nStart at a source node, mark it visited, then recursively visit an unvisited neighbour, going as deep as possible before returning to try the next neighbour. This can be written recursively, or iteratively using an explicit stack instead of the call stack.\n\n<b>Why It Uses a Stack</b>\nA stack (LIFO) always processes the most recently discovered node next, which is exactly what sends DFS deeper down one path instead of spreading outward level by level like BFS.\n\n<b>Why DFS Matters</b>\nDFS is used to detect cycles, check whether a graph is connected, find connected components, and perform topological sorting — problems where exploring an entire path fully matters more than finding the shortest one.",
+    note:
+      "Exam favourite: DFS is naturally written with recursion because a function's own call stack behaves exactly like an explicit stack — this is why DFS pseudocode looks so much shorter than BFS's.",
+    diagram:
+      "  DFS FROM A — goes deep before backtracking\n\n        A\n       / \\\n      B   C\n      |\n      D\n\n  Visit order: A, B, D (dead end, backtrack), C",
+    code: "function dfs(graph, start, visited = new Set(), order = []) {\n    visited.add(start);\n    order.push(start);\n    for (const neighbour of graph[start]) {\n        if (!visited.has(neighbour)) {\n            dfs(graph, neighbour, visited, order);\n        }\n    }\n    return order;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["DFS", "Depth-First Search", "Graph", "Stack", "Recursion", "Data Structures"],
+  },
+  {
+    id: 140,
+    slug: "shortest-path",
+    section: "Data Structures & Algorithms",
+    parentSlug: "graph",
+    title: "Shortest Path",
+    tagline: "Algorithms that find the lowest-cost route between two nodes in a graph",
+    description:
+      "<b>What Shortest Path Means, in Plain English</b>\nGiven a starting point and a destination on a map, the shortest path problem asks: what's the cheapest way to get from one to the other, where \"cheapest\" might mean fewest roads, shortest distance, or least time, depending on what each edge's weight represents?\n\n<b>Unweighted Graphs — Use BFS</b>\nWhen every edge counts the same (no weights), BFS alone finds the shortest path, since it always reaches a node by the fewest possible edges first.\n\n<b>Weighted Graphs — Dijkstra's Algorithm</b>\nWhen edges have different weights (e.g. real distances), Dijkstra's algorithm finds the shortest path from a single source to every other node. It repeatedly picks the closest unvisited node (using a Priority Queue for efficiency), then updates its neighbours' distances if going through that node is cheaper than what's currently known.\n  ↳ Dijkstra's algorithm requires all edge weights to be non-negative — it fails on graphs with negative weights.\n\n<b>Negative Weights — Bellman-Ford Algorithm</b>\nWhen a graph can have negative edge weights, Bellman-Ford is used instead — slower than Dijkstra's (O(V·E) vs O((V+E) log V)), but able to also detect negative-weight cycles, which would otherwise make \"shortest path\" undefined.",
+    note:
+      "Exam favourite: Dijkstra's algorithm is a greedy algorithm — at every step it commits to the closest node found so far and never reconsiders that choice, which is exactly why it breaks on negative weights.",
+    diagram:
+      "  DIJKSTRA FROM A — shortest distance to each node\n\n      A ──4── B          Distances from A:\n      │       │          A = 0\n      2       1          C = 2\n      │       │          D = 2 + 3 = 5\n      C ──3── D           (cheaper than A→B→D = 4+1=5, tie; picks lower total)",
+    tags: ["Shortest Path", "Dijkstra", "Bellman-Ford", "Graph", "BFS", "Priority Queue", "Data Structures"],
+  },
+  {
+    id: 141,
+    slug: "algorithms",
+    section: "Data Structures & Algorithms",
+    parentSlug: "data-structures",
+    title: "Algorithms",
+    tagline: "The core searching, sorting, and complexity-analysis techniques every data structure question builds on",
+    description:
+      "<b>What This Covers</b>\nWhile Linear and Non-Linear Data Structures cover how data is organized, this section covers what you actually do with that data — finding a value, putting it in order, and measuring how efficient an approach is compared to another.\n\n<b>Why Algorithms Matter</b>\nThe same data structure can be searched or sorted many different ways, and each way has a real, measurable cost. Knowing which algorithm to reach for — and being able to state its time and space complexity — is one of the most heavily tested skills in the DSA portion of the exam.\n\n<b>How This Section Is Organized</b>\n• <b>Searching</b> — Linear Search and Binary Search, the two standard ways to find a value\n• <b>Sorting</b> — Bubble, Selection, Insertion, Merge, and Quick Sort, the five sorting algorithms most commonly asked about\n• <b>Complexity</b> — Big O notation, time complexity, and space complexity, the language used to measure and compare every algorithm above\n  ↳ Each is covered in its own card next, with every sub-topic broken out.",
+    note:
+      "Exam favourite: always be ready to state an algorithm's best, average, and worst-case time complexity separately — Quick Sort, for example, is O(n log n) on average but degrades to O(n²) in the worst case.",
+    tags: ["Algorithms", "Searching", "Sorting", "Complexity", "Data Structures"],
+  },
+  {
+    id: 142,
+    slug: "searching-algorithms",
+    section: "Data Structures & Algorithms",
+    parentSlug: "algorithms",
+    title: "Searching",
+    tagline: "Finding whether a target value exists within a collection, and where",
+    description:
+      "<b>What Searching Is, in Plain English</b>\nSearching answers one question: is this value present, and if so, where? The two standard approaches trade off simplicity against speed, depending on whether the data is already sorted.\n\n<b>Why Searching Matters</b>\nLooking a value up is one of the most frequent operations any program performs, and the exam consistently tests the difference in speed, requirements, and use case between the two core searching algorithms.\n\n<b>How This Section Is Organized</b>\n• <b>Linear Search</b> — checks every element one by one; works on any collection, sorted or not\n• <b>Binary Search</b> — repeatedly halves the search space; requires the collection to already be sorted\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: binary search's O(log n) speed is only possible because the data is sorted first — sorting itself costs at least O(n log n), so binary search only pays off when the same sorted data will be searched many times.",
+    tags: ["Searching", "Linear Search", "Binary Search", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 143,
+    slug: "linear-search",
+    section: "Data Structures & Algorithms",
+    parentSlug: "searching-algorithms",
+    title: "Linear Search",
+    tagline: "Checks every element one by one, from the start, until it finds the target or reaches the end",
+    description:
+      "<b>What Linear Search Is, in Plain English</b>\nLinear search is the most straightforward way to find something: start at the first element and check it, then the next, then the next, stopping the moment the target is found — exactly like flipping through a phone book page by page from the very first page.\n\n<b>How It Works</b>\nCompare the target against each element in order. If a match is found, return its index. If the end of the collection is reached with no match, the target isn't present.\n\n<b>Time and Space Complexity</b>\n• Best case — O(1), the target is the very first element\n• Worst case / average case — O(n), the target is last, or absent entirely\n• Space — O(1), no extra memory is needed beyond the input itself\n\n<b>Why Use Linear Search</b>\nIt's the only option when the data isn't sorted, and it's simple enough that for small collections, its O(n) cost barely matters in practice.",
+    note:
+      "Exam favourite: linear search works on any collection, sorted or not — that flexibility is exactly what binary search trades away for speed.",
+    diagram:
+      "  LINEAR SEARCH FOR 23 IN [4, 8, 15, 16, 23, 42]\n\n  Check 4≠23 → check 8≠23 → check 15≠23 → check 16≠23 → check 23=23 ✓ found at index 4",
+    code: "function linearSearch(arr, target) {\n    for (let i = 0; i < arr.length; i++) {\n        if (arr[i] === target) return i;\n    }\n    return -1;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Linear Search", "Searching", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 144,
+    slug: "binary-search",
+    section: "Data Structures & Algorithms",
+    parentSlug: "searching-algorithms",
+    title: "Binary Search",
+    tagline: "Repeatedly checks the middle of a sorted collection, discarding the half that can't contain the target",
+    description:
+      "<b>What Binary Search Is, in Plain English</b>\nBinary search is the phone-book trick: open to the middle, decide which half the name must be in based on alphabetical order, then repeat that same trick on just that half — throwing away half the remaining possibilities at every single step.\n\n<b>How It Works</b>\nCompare the target to the middle element. If they're equal, done. If the target is smaller, discard the right half and search the left half; if larger, discard the left half and search the right half. Repeat until found or the search space is empty.\n\n<b>Requirement</b>\nBinary search only works on a sorted collection — the moment the data isn't sorted, this halving trick no longer guarantees which side the target is on.\n\n<b>Time and Space Complexity</b>\n• Time — O(log n), since the search space is cut in half every step\n• Space — O(1) for the iterative version, or O(log n) for a recursive version, due to the call stack",
+    note:
+      "Exam favourite: doubling the size of the input only adds one extra step to binary search — this is the defining property of logarithmic time, and a favourite exam trick question.",
+    diagram:
+      "  BINARY SEARCH FOR 23 IN [4, 8, 15, 16, 23, 42, 50]\n\n  Step 1: low=0 high=6 mid=3 → arr[3]=16 < 23 → search right half\n  Step 2: low=4 high=6 mid=5 → arr[5]=42 > 23 → search left half\n  Step 3: low=4 high=4 mid=4 → arr[4]=23 = 23 → found at index 4",
+    code: "function binarySearch(arr, target) {   // arr must already be sorted\n    let low = 0, high = arr.length - 1;\n    while (low <= high) {\n        const mid = Math.floor((low + high) / 2);\n        if (arr[mid] === target) return mid;\n        if (arr[mid] < target) low = mid + 1;\n        else high = mid - 1;\n    }\n    return -1;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Binary Search", "Searching", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 145,
+    slug: "sorting-algorithms",
+    section: "Data Structures & Algorithms",
+    parentSlug: "algorithms",
+    title: "Sorting",
+    tagline: "Arranging a collection's elements into a defined order, using one of several algorithms with different trade-offs",
+    description:
+      "<b>What Sorting Is, in Plain English</b>\nSorting means rearranging a collection so its elements go from smallest to largest (or largest to smallest). It sounds like one problem, but there are many different ways to do it, and each one trades off speed, memory use, and simplicity differently.\n\n<b>Why Sorting Matters</b>\nSorted data unlocks faster algorithms elsewhere — binary search, for one — and comparing the five algorithms below by time complexity, space complexity, and whether they're stable is one of the most exam-tested topics in all of DSA.\n\n<b>How This Section Is Organized</b>\n• <b>Bubble Sort</b> — repeatedly swaps adjacent out-of-order pairs; simplest, but slowest\n• <b>Selection Sort</b> — repeatedly picks the smallest remaining element and places it\n• <b>Insertion Sort</b> — builds the sorted portion one element at a time, like sorting a hand of playing cards\n• <b>Merge Sort</b> — splits the collection in half repeatedly, sorts each half, then merges them back together\n• <b>Quick Sort</b> — picks a pivot and partitions the rest around it, recursively\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: Bubble, Selection, and Insertion Sort are all O(n²) in the worst case; Merge Sort and Quick Sort are the O(n log n) upgrades — know which category each algorithm falls into.",
+    tags: ["Sorting", "Bubble Sort", "Selection Sort", "Insertion Sort", "Merge Sort", "Quick Sort", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 146,
+    slug: "bubble-sort",
+    section: "Data Structures & Algorithms",
+    parentSlug: "sorting-algorithms",
+    title: "Bubble Sort",
+    tagline: "Repeatedly steps through the collection, swapping adjacent elements that are in the wrong order",
+    description:
+      "<b>What Bubble Sort Is, in Plain English</b>\nBubble sort compares each pair of neighbouring elements and swaps them if they're in the wrong order, then moves to the next pair — repeating full passes over the collection until nothing needs swapping anymore. Larger values \"bubble up\" toward the end with each pass, which is where the name comes from.\n\n<b>How It Works</b>\nOn each pass, compare every adjacent pair left to right, swapping when the left element is bigger than the right. After each full pass, the largest unsorted element is guaranteed to be in its final position, so the next pass can ignore it.\n\n<b>Time and Space Complexity</b>\n• Best case — O(n), if the collection is already sorted and an early-exit check is used\n• Worst case / average case — O(n²)\n• Space — O(1), sorts in place\n\n<b>Why It's Rarely Used in Practice</b>\nBubble sort is almost always the slowest of the O(n²) sorts in practice, despite sharing the same worst-case complexity as Selection and Insertion Sort — it's taught mainly because it's the simplest sort to understand and trace by hand.",
+    note:
+      "Exam favourite: adding an early-exit flag (stop if no swaps happened in a pass) is what gives bubble sort its best-case O(n) — without it, bubble sort is always O(n²), even on already-sorted input.",
+    diagram:
+      "  ONE PASS OF BUBBLE SORT ON [5, 1, 4, 2]\n\n  [5,1,4,2] → compare 5,1 → swap → [1,5,4,2]\n  → compare 5,4 → swap → [1,4,5,2]\n  → compare 5,2 → swap → [1,4,2,5]   ← 5 is now in its final position",
+    code: "function bubbleSort(arr) {\n    for (let i = 0; i < arr.length - 1; i++) {\n        for (let j = 0; j < arr.length - 1 - i; j++) {\n            if (arr[j] > arr[j + 1]) {\n                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];\n            }\n        }\n    }\n    return arr;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Bubble Sort", "Sorting", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 147,
+    slug: "selection-sort",
+    section: "Data Structures & Algorithms",
+    parentSlug: "sorting-algorithms",
+    title: "Selection Sort",
+    tagline: "Repeatedly finds the smallest remaining element and moves it into its correct position",
+    description:
+      "<b>What Selection Sort Is, in Plain English</b>\nSelection sort divides the collection into a sorted part (at the front, initially empty) and an unsorted part. On each pass, it scans the entire unsorted part to find the smallest value, then swaps it into the next open slot at the end of the sorted part.\n\n<b>How It Works</b>\nFor each position, scan the rest of the collection to find the minimum value, then swap it into the current position. Move to the next position and repeat, scanning one fewer element each time.\n\n<b>Time and Space Complexity</b>\n• All cases — O(n²), since a full scan for the minimum is required on every pass, even if the collection is already sorted\n• Space — O(1), sorts in place\n\n<b>Selection Sort vs. Bubble Sort</b>\nBoth are O(n²), but selection sort makes far fewer swaps — at most n − 1 total swaps, versus bubble sort's potentially many swaps per pass — which matters when swapping is an expensive operation.",
+    note:
+      "Exam favourite: selection sort's worst case, best case, and average case are all O(n²) — unlike bubble or insertion sort, it has no best-case speedup for already-sorted input, since it always scans the full remaining unsorted portion.",
+    diagram:
+      "  ONE PASS OF SELECTION SORT ON [5, 1, 4, 2]\n\n  Scan all → smallest is 1 (index 1) → swap with index 0 → [1, 5, 4, 2]\n  Next pass scans [5, 4, 2] → smallest is 2 → swap → [1, 2, 4, 5]",
+    code: "function selectionSort(arr) {\n    for (let i = 0; i < arr.length - 1; i++) {\n        let minIndex = i;\n        for (let j = i + 1; j < arr.length; j++) {\n            if (arr[j] < arr[minIndex]) minIndex = j;\n        }\n        [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];\n    }\n    return arr;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Selection Sort", "Sorting", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 148,
+    slug: "insertion-sort",
+    section: "Data Structures & Algorithms",
+    parentSlug: "sorting-algorithms",
+    title: "Insertion Sort",
+    tagline: "Builds the sorted portion one element at a time, inserting each new element into its correct position",
+    description:
+      "<b>What Insertion Sort Is, in Plain English</b>\nInsertion sort works the way most people sort a hand of playing cards: pick up one card at a time from the unsorted pile, and slide it into its correct position among the cards already sorted in your hand.\n\n<b>How It Works</b>\nStarting from the second element, compare it to the elements before it, shifting larger elements one position to the right, until the correct spot is found for the current element to be inserted.\n\n<b>Time and Space Complexity</b>\n• Best case — O(n), if the collection is already sorted, since each element only needs to be compared once before it's confirmed in place\n• Worst case / average case — O(n²)\n• Space — O(1), sorts in place\n\n<b>Why It's Actually Useful</b>\nUnlike bubble and selection sort, insertion sort's best-case O(n) makes it genuinely fast on nearly-sorted data, and it's the algorithm many real sorting libraries fall back to for small sub-arrays inside a larger merge sort or quick sort.",
+    note:
+      "Exam favourite: insertion sort is stable (it never reorders equal elements relative to each other) and adaptive (it speeds up on nearly-sorted input) — two properties bubble and selection sort don't both guarantee as reliably.",
+    diagram:
+      "  INSERTING 2 INTO THE SORTED PORTION [1, 4, 5]\n\n  [1, 4, 5 | 2, 3]   ← 2 is the next card to insert\n  Shift 5 right, shift 4 right, insert 2 → [1, 2, 4, 5 | 3]",
+    code: "function insertionSort(arr) {\n    for (let i = 1; i < arr.length; i++) {\n        const current = arr[i];\n        let j = i - 1;\n        while (j >= 0 && arr[j] > current) {\n            arr[j + 1] = arr[j];\n            j--;\n        }\n        arr[j + 1] = current;\n    }\n    return arr;\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Insertion Sort", "Sorting", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 149,
+    slug: "merge-sort",
+    section: "Data Structures & Algorithms",
+    parentSlug: "sorting-algorithms",
+    title: "Merge Sort",
+    tagline: "Splits the collection in half recursively, sorts each half, then merges the sorted halves back together",
+    description:
+      "<b>What Merge Sort Is, in Plain English</b>\nMerge sort follows the classic \"divide and conquer\" idea: split the collection in half, split each half in half again, and keep going until each piece is a single element (trivially sorted) — then merge pairs of sorted pieces back together, in sorted order, all the way back up.\n\n<b>How It Works</b>\n• <b>Divide</b> — split the collection into two halves, recursively, until each piece has one element\n• <b>Merge</b> — repeatedly combine two sorted pieces into one sorted piece, by comparing their front elements and taking the smaller one each time\n\n<b>Time and Space Complexity</b>\n• All cases — O(n log n), since splitting takes log n levels and merging at each level costs O(n) total\n• Space — O(n), since merging needs a separate array to build each merged result\n\n<b>Why Merge Sort Matters</b>\nMerge sort's O(n log n) holds in every case, not just on average — unlike quick sort — making it a reliable choice when worst-case performance matters, at the cost of using extra memory.",
+    note:
+      "Exam favourite: merge sort is stable and has a guaranteed O(n log n) worst case, but needs O(n) extra space — this space cost is exactly what quick sort avoids by sorting in place.",
+    diagram:
+      "  MERGE SORT ON [5, 1, 4, 2]\n\n  Divide:  [5,1,4,2] → [5,1] [4,2] → [5][1] [4][2]\n  Merge:   [5][1] → [1,5]     [4][2] → [2,4]\n  Merge:   [1,5] + [2,4] → [1,2,4,5]",
+    code: "function mergeSort(arr) {\n    if (arr.length <= 1) return arr;\n    const mid = Math.floor(arr.length / 2);\n    const left = mergeSort(arr.slice(0, mid));\n    const right = mergeSort(arr.slice(mid));\n    return merge(left, right);\n}\n\nfunction merge(left, right) {\n    const result = [];\n    let i = 0, j = 0;\n    while (i < left.length && j < right.length) {\n        result.push(left[i] <= right[j] ? left[i++] : right[j++]);\n    }\n    return [...result, ...left.slice(i), ...right.slice(j)];\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Merge Sort", "Sorting", "Divide and Conquer", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 150,
+    slug: "quick-sort",
+    section: "Data Structures & Algorithms",
+    parentSlug: "sorting-algorithms",
+    title: "Quick Sort",
+    tagline: "Picks a pivot element and partitions the rest around it, then recursively sorts each partition",
+    description:
+      "<b>What Quick Sort Is, in Plain English</b>\nQuick sort picks one element (the pivot), then rearranges the rest so everything smaller than the pivot ends up on its left and everything larger ends up on its right — after which the pivot itself is already in its final sorted position. It then repeats the same trick on the left and right partitions independently.\n\n<b>How It Works</b>\n• <b>Choose a pivot</b> — commonly the last element, first element, or a random one\n• <b>Partition</b> — rearrange elements so everything smaller than the pivot comes before it, everything larger comes after\n• <b>Recurse</b> — apply the same process to the left and right partitions\n\n<b>Time and Space Complexity</b>\n• Best case / average case — O(n log n)\n• Worst case — O(n²), if the pivot chosen is repeatedly the smallest or largest element (e.g. an already-sorted array with a naive pivot choice)\n• Space — O(log n) for the recursion stack, since it sorts in place rather than allocating new arrays\n\n<b>Why Quick Sort Matters</b>\nQuick sort is usually faster in practice than merge sort despite having a worse worst case, because it sorts in place (less memory allocation overhead) and its average case is very close to its best case for most real-world data. A random or median pivot choice makes the O(n²) worst case extremely unlikely.",
+    note:
+      "Exam favourite: quick sort's worst case (O(n²)) happens specifically when the pivot is always the smallest or largest remaining element — this is why a poor pivot choice on an already-sorted array is a classic exam trap.",
+    diagram:
+      "  QUICK SORT ON [5, 1, 4, 2], PIVOT = LAST ELEMENT (2)\n\n  Partition around 2 → [1] 2 [5, 4]   ← 2 is now in its final position\n  Recurse left  [1] → already sorted\n  Recurse right [5,4] → pivot 4 → [4] then [5] → [4,5]\n  Result: [1, 2, 4, 5]",
+    code: "function quickSort(arr) {\n    if (arr.length <= 1) return arr;\n    const pivot = arr[arr.length - 1];\n    const left = [], right = [];\n    for (let i = 0; i < arr.length - 1; i++) {\n        (arr[i] < pivot ? left : right).push(arr[i]);\n    }\n    return [...quickSort(left), pivot, ...quickSort(right)];\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Quick Sort", "Sorting", "Divide and Conquer", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 151,
+    slug: "complexity",
+    section: "Data Structures & Algorithms",
+    parentSlug: "algorithms",
+    title: "Complexity",
+    tagline: "The language used to describe how an algorithm's runtime and memory use grow as the input size grows",
+    description:
+      "<b>What Complexity Means, in Plain English</b>\nComplexity answers one question: if the input gets bigger, how much slower (or more memory-hungry) does the algorithm get? It's not about how fast an algorithm runs on one specific machine — it's about the growth pattern, which stays true regardless of hardware.\n\n<b>Why Complexity Matters</b>\nComparing two algorithms by complexity, rather than by a single timed run, is what lets you predict which one will still be usable when the input grows from 100 items to 10 million — a linear search that feels instant on 100 items can take minutes on 10 million.\n\n<b>How This Section Is Organized</b>\n• <b>Big O Notation</b> — the notation used to express complexity, describing the worst-case growth rate\n• <b>Time Complexity</b> — how an algorithm's runtime grows with input size\n• <b>Space Complexity</b> — how much extra memory an algorithm needs as input size grows\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: Big O describes growth rate, not exact runtime — two algorithms can both be O(n), yet one is consistently twice as fast as the other, because Big O ignores constant factors.",
+    tags: ["Complexity", "Big O Notation", "Time Complexity", "Space Complexity", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 152,
+    slug: "big-o-notation",
+    section: "Data Structures & Algorithms",
+    parentSlug: "complexity",
+    title: "Big O Notation",
+    tagline: "A notation that describes an algorithm's worst-case growth rate as input size approaches infinity",
+    description:
+      "<b>What Big O Notation Is, in Plain English</b>\nBig O notation is a shorthand for answering \"how does this algorithm's cost scale?\" — written as O(something), where the something describes how the cost grows relative to the input size n, ignoring constant factors and smaller lower-order terms.\n\n<b>Common Complexity Classes, Fastest to Slowest</b>\n• <b>O(1)</b> — constant time; cost doesn't change with input size (e.g. array index access)\n• <b>O(log n)</b> — logarithmic; cost grows very slowly as input doubles (e.g. binary search)\n• <b>O(n)</b> — linear; cost grows directly proportional to input size (e.g. traversal)\n• <b>O(n log n)</b> — linearithmic; typical of efficient sorting algorithms (e.g. merge sort)\n• <b>O(n²)</b> — quadratic; typical of simple sorting algorithms with nested loops (e.g. bubble sort)\n• <b>O(2ⁿ)</b> — exponential; cost doubles with every additional input element (e.g. naive recursive Fibonacci)\n\n<b>Why It Ignores Constants</b>\nO(3n) and O(n) are both just written O(n), because as n grows large enough, the constant factor (3) becomes irrelevant compared to how the algorithm scales — Big O cares about the shape of the growth curve, not one specific number.",
+    note:
+      "Exam favourite: know this order by heart, since exams frequently ask you to rank algorithms: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ).",
+    diagram:
+      "  GROWTH RATE AS INPUT SIZE (n) INCREASES\n\n  Cost\n   ↑                                          O(2ⁿ)\n   │                                    O(n²)\n   │                          O(n log n)\n   │                O(n)\n   │        O(log n)\n   │ O(1)\n   └──────────────────────────────────────────→ n",
+    tags: ["Big O Notation", "Complexity", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 153,
+    slug: "time-complexity",
+    section: "Data Structures & Algorithms",
+    parentSlug: "complexity",
+    title: "Time Complexity",
+    tagline: "A measure of how an algorithm's execution time grows as the size of its input grows",
+    description:
+      "<b>What Time Complexity Is, in Plain English</b>\nTime complexity measures how many steps an algorithm takes, relative to its input size, not how many seconds it takes on a particular computer — the same algorithm run on a faster machine still has the same time complexity, just a smaller constant factor.\n\n<b>Best, Average, and Worst Case</b>\n• <b>Best case</b> — the fewest steps possible, given the most favourable input (e.g. linear search finding the target immediately at index 0)\n• <b>Average case</b> — the expected number of steps across typical inputs\n• <b>Worst case</b> — the most steps possible, given the least favourable input; this is what Big O notation almost always describes\n\n<b>Why Worst Case Is the Default</b>\nExams and interviews default to worst-case complexity because it's a guarantee — you know an algorithm will never be slower than its worst case, which matters far more for reliability than knowing how fast it usually runs.\n\n<b>Examples Across This Syllabus</b>\n• Linear Search — O(n) worst case\n• Binary Search — O(log n)\n• Bubble/Selection/Insertion Sort — O(n²) worst case\n• Merge Sort — O(n log n), guaranteed in every case\n• Quick Sort — O(n log n) average, O(n²) worst case",
+    note:
+      "Exam favourite: Quick Sort's average-case O(n log n) versus worst-case O(n²) is one of the single most repeated complexity facts across DSA exams.",
+    tags: ["Time Complexity", "Big O Notation", "Complexity", "Algorithms", "Data Structures"],
+  },
+  {
+    id: 154,
+    slug: "space-complexity",
+    section: "Data Structures & Algorithms",
+    parentSlug: "complexity",
+    title: "Space Complexity",
+    tagline: "A measure of how much extra memory an algorithm needs as the size of its input grows",
+    description:
+      "<b>What Space Complexity Is, in Plain English</b>\nSpace complexity measures how much additional memory an algorithm needs beyond the input itself — extra arrays, recursion call stacks, or any other working memory it allocates while running.\n\n<b>In-Place vs. Extra Memory</b>\n• <b>In-place algorithms</b> — sort or process data using only the original input's memory (or a small constant amount extra), giving O(1) space; Bubble, Selection, Insertion, and Quick Sort (excluding its recursion stack) all sort in place\n• <b>Extra-memory algorithms</b> — need additional space proportional to the input; Merge Sort needs O(n) extra space to hold the arrays being merged\n\n<b>Recursion's Hidden Cost</b>\nA recursive algorithm's space complexity includes its call stack, since every recursive call adds a frame to memory until it returns — this is why Quick Sort's recursive implementation is O(log n) space, not O(1), even though it partitions in place.\n\n<b>Why Space Complexity Matters</b>\nTwo algorithms with identical time complexity can have very different space costs — Merge Sort's guaranteed O(n log n) time comes at the cost of O(n) extra space, while Quick Sort achieves the same average time with only O(log n) space, which is exactly why quick sort is often preferred in memory-constrained environments.",
+    note:
+      "Exam favourite: don't forget recursive call-stack space when asked for an algorithm's space complexity — it's the most commonly missed part of the answer.",
+    tags: ["Space Complexity", "Big O Notation", "Complexity", "Algorithms", "Data Structures"],
   },
 ];
 
