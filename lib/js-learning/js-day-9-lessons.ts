@@ -11,59 +11,83 @@ export const JS_DAY_9_LESSONS: JsLessonDay = {
       title: { en: "Class Basics", np: "Class Basics", jp: "クラスの基本" },
       durationMinutes: 9,
       explanation: {
-        en: "An ES6 `class` is <b>syntactic sugar</b> over the exact same prototype system from Day 8 — it compiles down to a constructor function with methods on its `.prototype`, nothing more. `typeof MyClass` is literally `\"function\"`, and `Object.getPrototypeOf(instance) === MyClass.prototype` is `true`, exactly as it was for the constructor-function pattern.\n\nWhat changes is purely the syntax: the `constructor(...)` method replaces the constructor function's body, and every other method written inside the class body is automatically placed onto the prototype — no more manually writing `User.prototype.greet = function() {...}` by hand.",
-        np: "ES6 `class` Day 8 को उही prototype system माथिको syntactic sugar हो — यो constructor function मा नै compile हुन्छ। `typeof MyClass` वास्तवमा `\"function\"` हो। बदलिने कुरा केवल syntax हो — `constructor()` र भित्रका methods automatically prototype मा जान्छन्।",
-        jp: "ES6のクラスはDay 8と同じプロトタイプシステム上の糖衣構文で、コンストラクタ関数にコンパイルされる。`typeof MyClass`は実際に`\"function\"`。変わるのは構文だけ — `constructor()`と内部のメソッドは自動的にプロトタイプに配置される。",
+        en: "A <b>class</b> is a blueprint for creating objects — like a house blueprint, the class itself isn't an object, it just describes what one should look like. `class User {}` doesn't create a user; it defines the shape every `User` object will have.\n\nBefore ES6, JavaScript already had object-oriented programming via constructor functions and `.prototype` (`function User(name) { this.name = name; } User.prototype.greet = function() {...}`) — it worked, but many developers found the syntax hard to read. ES6 classes didn't replace that system; they are <b>syntactic sugar</b> — a nicer way to write the exact same prototype-based mechanism. Proof: `typeof User` is still `\"function\"`, because JavaScript still creates a constructor function behind the scenes.\n\nWhen you write `new User(\"John\")`, JavaScript automatically calls the class's `constructor(...)`, which is responsible for initializing the object's properties (`this.name = name`). Methods written inside the class body — like `greet()` — are NOT copied into every object; they're stored once on `User.prototype` and shared by every instance, which is what saves memory.",
+        np: "Class भनेको objects बनाउने blueprint हो — house blueprint जस्तै, class आफैं object होइन, यसले object कस्तो देखिनुपर्छ भनेर बताउँछ। `class User {}` ले user बनाउँदैन, यसले shape define गर्छ। ES6 अघि constructor functions र `.prototype` प्रयोग हुन्थ्यो — काम गथ्र्यो तर पढ्न गाह्रो थियो। ES6 classes ले त्यो system replace गरेन, यो syntactic sugar मात्र हो — उही prototype-based mechanism लेख्ने राम्रो तरिका। प्रमाण: `typeof User` अझै `\"function\"` हो। `new User(\"John\")` लेख्दा JavaScript ले class को `constructor(...)` call गर्छ, जसले properties initialize गर्छ। Class body भित्रका methods हरेक object मा copy हुँदैनन् — तिनी `User.prototype` मा एकपल्ट रहन्छन् र सबै instances ले share गर्छन्, यसले memory बचाउँछ।",
+        jp: "クラスはオブジェクトを作るための設計図 — 家の設計図のように、クラス自体はオブジェクトではなく、どんな形であるべきかを説明するだけ。`class User {}`はユーザーを作らず、形を定義するだけ。ES6以前はコンストラクタ関数と`.prototype`でオブジェクト指向プログラミングをしていた — 動作したが読みにくかった。ES6クラスはそのシステムを置き換えたのではなく、糖衣構文 — 同じプロトタイプベースの仕組みを書く良い方法。証拠: `typeof User`は今も`\"function\"`。`new User(\"John\")`と書くと、JavaScriptはクラスの`constructor(...)`を自動的に呼び、プロパティを初期化する。クラス本体内のメソッドは各オブジェクトにコピーされず、`User.prototype`に一度だけ保存され、すべてのインスタンスで共有される。これによりメモリが節約される。",
       },
-      diagram: `class User {                      function UserOld(name) {
-  constructor(name) {                 this.name = name;
-    this.name = name;               }
-  }                                  UserOld.prototype.greet = function() {
-  greet() { return this.name; }         return this.name;
-}                                    };
+      diagram: `Cookie cutter analogy: the class is the cutter, not the cookie —
+it stamps out objects that all share the same shape.
 
-  ── COMPILE TO THE EXACT SAME THING ──
+           class User
 
-typeof User === "function"                       ✅ classes ARE functions
-Object.getPrototypeOf(new User()) === User.prototype   ✅ same mechanism`,
+      constructor(name)      ← runs once per 'new', sets up the object
+            │
+        greet()              ← NOT copied per object
+            │
+            ▼
+      User.prototype         ← greet() lives here ONCE, shared by all
+            │
+     new User("John")
+            │
+            ▼
+      john object            ← has its own 'name', but borrows greet()`,
       codeExample: {
-        title: { en: "Class syntax vs the equivalent prototype syntax", np: "Class syntax vs equivalent prototype syntax", jp: "クラス構文と等価なプロトタイプ構文" },
-        code: `// ── Prototype way (Day 8) ───────────────────────────────────────────
-function UserOld(name, age) {
-  this.name = name;
-  this.age  = age;
-}
-UserOld.prototype.greet = function () { return \`Hi, I'm \${this.name}\`; };
-
-// ── Class way (exactly equivalent under the hood) ────────────────────
+        title: { en: "Class basics — constructor, methods, and the equivalent prototype code", np: "Class basics — constructor, methods, prototype equivalent", jp: "クラスの基本 — コンストラクタ・メソッド・等価なプロトタイプコード" },
+        code: `// ── Basic class ───────────────────────────────────────────────────
 class User {
-  constructor(name, age) {   // called automatically when you use 'new User(...)'
-    this.name = name;
-    this.age  = age;
+  constructor(name) {
+    this.name = name;      // runs once per 'new', sets up this object
   }
 
-  // Instance methods — added to User.prototype automatically, no manual wiring
-  greet() { return \`Hi, I'm \${this.name}\`; }
-  isAdult() { return this.age >= 18; }
+  greet() {
+    return \`Hello \${this.name}\`;
+  }
 }
 
-const alice = new User("Alice", 30);
-alice.greet();     // "Hi, I'm Alice"
-alice.isAdult();   // true
+const john = new User("John");
+john.greet();   // "Hello John"
 
-// ── Proof that classes compile to prototypes ────────────────────────
-typeof User;                                       // "function" — classes ARE functions
-Object.getPrototypeOf(alice) === User.prototype;   // true — same mechanism as Day 8`,
+// ── Behind the scenes — the exact equivalent without 'class' ─────────
+function UserOld(name) {
+  this.name = name;
+}
+UserOld.prototype.greet = function () {
+  return \`Hello \${this.name}\`;
+};
+
+const jane = new UserOld("Jane");
+jane.greet();   // "Hello Jane" — identical result, just older syntax
+
+// ── Real-world example ────────────────────────────────────────────────
+class Product {
+  constructor(name, price) {
+    this.name = name;
+    this.price = price;
+  }
+
+  display() {
+    return \`\${this.name} - $\${this.price}\`;
+  }
+}
+
+const laptop = new Product("Laptop", 999);
+laptop.display();   // "Laptop - $999"
+
+// ── Proof classes are still functions under the hood ──────────────────
+typeof User;                                       // "function"
+Object.getPrototypeOf(john) === User.prototype;    // true — same mechanism as UserOld`,
       },
       keyTakeaways: [
-        { en: "A `class` is syntactic sugar over a constructor function plus its `.prototype` — under the hood it's exactly the same mechanism covered on Day 8.", np: "`class` constructor function र त्यसको `.prototype` माथिको syntactic sugar हो — भित्री रूपमा Day 8 को उही mechanism हो।", jp: "クラスはコンストラクタ関数とその`.prototype`の上の糖衣構文。内部的にはDay 8で学んだのと同じ仕組み。" },
-        { en: "`typeof MyClass` is `\"function\"`, and instances still relate to the class through `Object.getPrototypeOf()`, exactly like the constructor-function pattern.", np: "`typeof MyClass` `\"function\"` हो, र instances अझै `Object.getPrototypeOf()` मार्फत class सँग सम्बन्धित हुन्छन्, constructor-function pattern जस्तै।", jp: "`typeof MyClass`は`\"function\"`。インスタンスは`Object.getPrototypeOf()`を通じてクラスと関連する。コンストラクタ関数パターンと同じ。" },
-        { en: "Methods written inside a class body are automatically placed on the class's `.prototype` — you never have to write `ClassName.prototype.method = ...` by hand.", np: "Class body भित्र लेखिएका methods automatically class को `.prototype` मा जान्छन् — `ClassName.prototype.method = ...` manually लेख्नु पर्दैन।", jp: "クラス本体内に書かれたメソッドは自動的にクラスの`.prototype`に配置される。`ClassName.prototype.method = ...`を手動で書く必要はない。" },
+        { en: "A class is a blueprint for creating objects — it doesn't create anything by itself, it just describes what instances should look like.", np: "Class भनेको objects बनाउने blueprint हो — यसले आफैं केही बनाउँदैन, instances कस्तो देखिनुपर्छ भनेर मात्र describe गर्छ।", jp: "クラスはオブジェクトを作るための設計図。それ自体は何も作らず、インスタンスがどう見えるべきかを説明するだけ。" },
+        { en: "Classes are syntactic sugar over constructor functions and `.prototype` — they didn't replace that system, they just made it easier to write.", np: "Classes constructor functions र `.prototype` माथिको syntactic sugar हुन् — यिनले त्यो system replace गरेनन्, केवल लेख्न सजिलो बनाए।", jp: "クラスはコンストラクタ関数と`.prototype`の上の糖衣構文。そのシステムを置き換えたのではなく、書きやすくしただけ。" },
+        { en: "A class is still a function internally (`typeof MyClass` is `\"function\"`); the `constructor(...)` runs once per `new` call to initialize the object's own properties.", np: "Class भित्री रूपमा अझै function हो (`typeof MyClass` `\"function\"` हो); `constructor(...)` हरेक `new` call मा एकपल्ट चली object का properties initialize गर्छ।", jp: "クラスは内部的には今も関数（`typeof MyClass`は`\"function\"`）。`constructor(...)`は`new`が呼ばれるたびに一度実行され、オブジェクト自身のプロパティを初期化する。" },
+        { en: "Methods written in a class body are stored once on the prototype and shared by every instance, not copied into each object — this is what makes them memory efficient.", np: "Class body भित्रका methods prototype मा एकपल्ट मात्र रहन्छन् र हरेक instance ले share गर्छन्, हरेक object मा copy हुँदैनन् — यसैले memory efficient हुन्छ।", jp: "クラス本体内のメソッドはプロトタイプに一度だけ保存され、すべてのインスタンスで共有される。各オブジェクトにコピーされない。これがメモリ効率が良い理由。" },
       ],
       commonMistakes: [
+        { en: "Calling a class like a normal function without `new` (`User(\"John\")`) — class constructors always throw a TypeError when called this way.", np: "`new` बिना class लाई normal function जस्तै call गर्नु (`User(\"John\")`) — class constructors यसरी call गर्दा सधैं TypeError throw गर्छन्।", jp: "`new`なしでクラスを通常の関数のように呼ぶこと（`User(\"John\")`）。クラスのコンストラクタはこのように呼ばれると常にTypeErrorをスローする。" },
+        { en: "Defining methods inside the constructor (`this.greet = function() {}`) instead of as class methods — every instance then gets its own separate copy instead of sharing one on the prototype.", np: "Methods लाई class methods को रूपमा नभई constructor भित्र define गर्नु (`this.greet = function() {}`) — प्रत्येक instance ले prototype मा एउटा share गर्नुको सट्टा आफ्नै छुट्टै copy पाउँछ।", jp: "メソッドをクラスメソッドとしてではなくコンストラクタ内で定義すること（`this.greet = function() {}`）。各インスタンスがプロトタイプで1つ共有する代わりに、それぞれ独自のコピーを持つことになる。" },
+        { en: "Believing every class must have a `constructor` — if there's no initialization to do, a class is perfectly valid without one.", np: "हरेक class मा `constructor` हुनैपर्छ भन्ने ठान्नु — initialization गर्नु नपरे, constructor बिना पनि class पूर्ण रूपमा valid हुन्छ।", jp: "すべてのクラスに`constructor`が必要だと思い込むこと。初期化することがなければ、constructorなしでもクラスは完全に有効。" },
         { en: "Believing classes are a fundamentally different, \"real\" OOP mechanism unrelated to prototypes — they are the same mechanism with nicer syntax on top.", np: "Classes prototypes सँग सम्बन्ध नभएको fundamentally फरक, 'real' OOP mechanism हो भन्ने विश्वास गर्नु — यिनी उही mechanism हुन्, राम्रो syntax मात्र थपिएको।", jp: "クラスはプロトタイプとは無関係な根本的に異なる「本物の」OOP機構だと信じること。実際は同じ機構の上に見やすい構文を乗せたもの。" },
-        { en: "Trying to call a class as a plain function without `new` (`User(\"Alice\")`) — class constructors throw a TypeError if called this way, unlike ordinary constructor functions.", np: "`new` बिना class लाई plain function जस्तै call गर्ने प्रयास गर्नु (`User(\"Alice\")`) — यसरी call गर्दा class constructors ले TypeError throw गर्छन्।", jp: "`new`なしでクラスをプレーンな関数として呼び出そうとすること（`User(\"Alice\")`）。クラスコンストラクタはこのように呼ばれるとTypeErrorをスローする。" },
-        { en: "Forgetting that methods inside a class body are non-enumerable by default (unlike properties assigned with `obj.method = fn`), which can surprise code relying on `Object.keys()` or `for...in`.", np: "Class body भित्रका methods default रूपमा non-enumerable हुन्छन् भन्ने बिर्सनु (`obj.method = fn` जस्तो होइन), `Object.keys()` वा `for...in` मा भर पर्ने code अचम्मित हुन सक्छ।", jp: "クラス本体内のメソッドがデフォルトで列挙不可であることを忘れること（`obj.method = fn`とは異なる）。`Object.keys()`や`for...in`に依存するコードを驚かせることがある。" },
       ],
       quiz: [
         {
