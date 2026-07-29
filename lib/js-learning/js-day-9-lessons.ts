@@ -100,75 +100,85 @@ Object.getPrototypeOf(alice) === User.prototype;   // true — same mechanism as
       title: { en: "Inheritance with extends and super", np: "extends र super सँग Inheritance", jp: "extendsとsuperによる継承" },
       durationMinutes: 9,
       explanation: {
-        en: "`class Dog extends Animal` sets up the entire prototype chain from Day 8 in one line — no more manual `Object.create()` or fixing `.constructor`. Inside `Dog`'s constructor, `super(name)` calls `Animal`'s constructor, and it MUST be called before you touch `this` anywhere in the constructor, or JavaScript throws a `ReferenceError`.\n\n`super.method()` (without `new` or parentheses after `super`) lets a child class call the PARENT's version of a method it has overridden — useful when you want to extend the parent's behaviour rather than fully replace it. `instanceof` naturally reflects the whole chain: a `Dog` instance is `instanceof Dog` AND `instanceof Animal`.",
-        np: "`class Dog extends Animal` ले एक लाइनमा पूरै prototype chain सेटअप गर्छ। `super(name)` ले parent constructor call गर्छ, र `this` touch गर्नुअघि call गर्नैपर्छ। `super.method()` ले parent को overridden method call गर्छ।",
-        jp: "`class Dog extends Animal`は1行でプロトタイプチェーン全体を設定する。`super(name)`は親のコンストラクタを呼び、thisに触れる前に必ず呼ぶ必要がある。`super.method()`は親のオーバーライドされたメソッドを呼ぶ。",
+        en: "<b>Inheritance</b> lets one class reuse another class's properties and methods instead of duplicating the same code across multiple classes. The class holding the shared logic is called the <b>parent</b> (or base) class; the class that reuses it is the <b>child</b> (or derived) class, connected with the `extends` keyword — e.g. `class Student extends Person {}` gives `Student` everything `Person` has, without rewriting a single line. Under the hood this sets up the entire prototype chain from Day 8 in one line, which is also why `instanceof` reflects the whole chain: a `Student` instance is `instanceof Student` AND `instanceof Person`.\n\nWhen the child defines its own `constructor(...)`, it must call `super(...)` first to run the parent's constructor and set up the inherited properties — using `this` before `super(...)` throws a `ReferenceError`, because the object doesn't exist yet until the parent has initialized it.\n\nA child can also <b>override</b> a method by redefining it with the same name — JavaScript then uses the child's version instead of the parent's. If the child still wants the parent's behaviour too, `super.method()` (no `new`, no parentheses after `super`) calls the parent's original implementation from inside the override. If a method isn't found directly on the child at all, JavaScript walks up to the parent's prototype and keeps looking until it finds it or reaches `Object` — this lookup is called the prototype chain.",
+        np: "Inheritance ले एउटा class को properties/methods अर्को class ले reuse गर्न दिन्छ, code duplicate नगरी। Parent class मा shared logic हुन्छ, child class ले `extends` प्रयोग गरेर त्यो inherit गर्छ — यसैले `instanceof` ले पूरै chain (parent + child दुवै) चिन्छ। Child को आफ्नै constructor भए `super(...)` पहिले call गर्नुपर्छ — नत्र `this` प्रयोग गर्दा ReferenceError हुन्छ। Child ले method override गर्न सक्छ, र `super.method()` ले parent को version पनि call गर्न सकिन्छ। भित्री रूपमा यो अझै prototype chain lookup नै हो।",
+        jp: "継承は、あるクラスのプロパティやメソッドを別のクラスが再利用できるようにする仕組みで、コードの重複を避けられる。共有ロジックを持つのが親クラス、`extends`で継承するのが子クラス — そのため`instanceof`はチェーン全体（親と子の両方）を認識する。子が独自のコンストラクタを持つ場合、まず`super(...)`を呼ぶ必要がある — それより前に`this`を使うとReferenceErrorになる。子はメソッドをオーバーライドでき、`super.method()`で親のバージョンも呼び出せる。内部的にはこれもプロトタイプチェーンによるルックアップ。",
       },
-      diagram: `class Dog extends Animal {
-  constructor(name, breed) {
-    super(name);         ← MUST run before using 'this' — calls Animal's constructor
-    this.breed = breed;
-  }
-  speak() { return \`\${this.name} barks!\`; }        ← overrides Animal.speak
-  full()  { return super.speak() + " " + this.speak(); }  ← calls PARENT's version too
-}
+      diagram: `Person (parent)                       Student extends Person (child)
+  constructor(name, age)                 constructor(name, age, grade) {
+  introduce() { ... }                      super(name, age);   ← MUST run before 'this'
+                                            this.grade = grade;
+                                          }
+                                          study() { ... }
 
-rex = new Dog("Rex", "Lab")
-rex instanceof Dog     → true
-rex instanceof Animal  → true   ← chain includes Animal.prototype`,
+john = new Student("John", 20, "A")
+
+john.study()          → found on Student                    ✅
+john.introduce()      → not on Student, look up the chain
+                      → found on Person (prototype lookup)  ✅
+
+john instanceof Student  → true
+john instanceof Person   → true   ← chain includes Person.prototype`,
       codeExample: {
-        title: { en: "extends, super(), and overriding methods", np: "extends, super(), method override", jp: "extends・super()・メソッドのオーバーライド" },
-        code: `class Animal {
+        title: { en: "extends, super(), overriding, and calling the parent's method", np: "extends, super(), method override", jp: "extends・super()・メソッドのオーバーライド" },
+        code: `// ── Basic inheritance — reuse without rewriting ──────────────────────
+class Animal {
+  speak() { return "Animal makes a sound"; }
+}
+class Dog extends Animal {}   // Dog gets speak() for free, no code duplication
+
+const dog = new Dog();
+dog.speak();   // "Animal makes a sound" — inherited, not redefined
+
+// ── super() — initialize the inherited properties first ──────────────
+class Person {
   constructor(name) { this.name = name; }
-  speak() { return \`\${this.name} makes a sound\`; }
-  toString() { return \`Animal(\${this.name})\`; }
 }
-
-class Dog extends Animal {
-  constructor(name, breed) {
-    super(name);          // MUST call super() before accessing 'this'
-    this.breed = breed;
+class Student extends Person {
+  constructor(name, course) {
+    super(name);          // MUST run before touching 'this'
+    this.course = course;
   }
-
-  // Override the parent method
-  speak() { return \`\${this.name} barks!\`; }
-
-  // Call the parent's version via super.method()
-  fullDescription() { return \`\${super.speak()} — specifically, \${this.name} barks!\`; }
 }
+const student = new Student("Alice", "JavaScript");
+student.name;    // "Alice" — set up by Person's constructor
+student.course;  // "JavaScript"
 
-const rex = new Dog("Rex", "Labrador");
-rex.speak();            // "Rex barks!" — overridden method wins
-rex.fullDescription();  // "Rex makes a sound — specifically, Rex barks!"
-rex.toString();         // "Animal(Rex)" — inherited unchanged from Animal
-
-rex instanceof Dog;     // true
-rex instanceof Animal;  // true — Dog's chain includes Animal.prototype
-
-// ── Abstract-like base class ────────────────────────────────────────
-class Shape {
-  constructor(color) {
-    if (new.target === Shape) throw new Error("Shape is abstract — use a subclass");
-    this.color = color;
-  }
-  area() { throw new Error("area() must be implemented"); }
+// ── Overriding a method ────────────────────────────────────────────────
+class Cat extends Animal {
+  speak() { return "Meow!"; }   // replaces Animal's speak()
 }
-class Circle extends Shape {
-  constructor(color, radius) { super(color); this.radius = radius; }
-  area() { return Math.PI * this.radius ** 2; }
+new Cat().speak();   // "Meow!" — Cat's own version wins
+
+// ── Calling the parent's version too, via super.method() ─────────────
+class Puppy extends Animal {
+  speak() { return super.speak() + " ... and also, Woof!"; }
 }
-new Circle("red", 5).area();  // ~78.54
-// new Shape("blue");          // Error: Shape is abstract`,
+new Puppy().speak();   // "Animal makes a sound ... and also, Woof!"
+
+// ── Real-world example ──────────────────────────────────────────────────
+class Employee {
+  constructor(name) { this.name = name; }
+  login() { return \`\${this.name} logged in.\`; }
+}
+class Manager extends Employee {
+  approveLeave() { return \`\${this.name} approved leave.\`; }
+}
+const manager = new Manager("Sarah");
+manager.login();         // "Sarah logged in." — inherited from Employee
+manager.approveLeave();  // "Sarah approved leave." — Manager's own method`,
       },
       keyTakeaways: [
-        { en: "`extends` sets up the full prototype chain in one keyword — no more manually calling `Object.create()` and fixing `.constructor` like on Day 8.", np: "`extends` ले एक keyword मा पूरै prototype chain सेटअप गर्छ — Day 8 जस्तो manually `Object.create()` र `.constructor` fix गर्नु पर्दैन।", jp: "`extends`は1つのキーワードでプロトタイプチェーン全体を設定する。Day 8のように手動で`Object.create()`や`.constructor`修正は不要。" },
-        { en: "In a derived class's constructor, `super(...)` calls the parent's constructor and MUST run before any use of `this` — accessing `this` before it throws a ReferenceError.", np: "Derived class को constructor मा `super(...)` ले parent constructor call गर्छ र `this` प्रयोग गर्नुअघि चलाउनु पर्छ — नत्र ReferenceError।", jp: "派生クラスのコンストラクタでは`super(...)`が親のコンストラクタを呼び、thisを使う前に実行する必要がある。それ以前にthisにアクセスするとReferenceErrorをスローする。" },
-        { en: "`super.method()` calls the parent's version of an overridden method, letting the child extend rather than fully replace the parent's behaviour.", np: "`super.method()` ले overridden method को parent version call गर्छ, child ले parent को behaviour पूर्ण रूपमा replace नगरी extend गर्न मिल्छ।", jp: "`super.method()`はオーバーライドされたメソッドの親バージョンを呼び、子が親の動作を完全に置き換えずに拡張できるようにする。" },
+        { en: "Inheritance lets a child class reuse a parent class's properties and methods via `extends`, instead of duplicating the same code in multiple classes.", np: "Inheritance ले child class लाई `extends` मार्फत parent class को properties/methods reuse गर्न दिन्छ, धेरै classes मा उही code duplicate नगरी।", jp: "継承は`extends`を通じて子クラスが親クラスのプロパティやメソッドを再利用できるようにし、複数のクラスで同じコードを重複させずに済む。" },
+        { en: "`super(...)` calls the parent's constructor and must run before any use of `this` in the child's constructor — using `this` first throws a ReferenceError.", np: "`super(...)` ले parent को constructor call गर्छ र child को constructor मा `this` प्रयोग गर्नुअघि चल्नुपर्छ — पहिले `this` प्रयोग गर्दा ReferenceError हुन्छ।", jp: "`super(...)`は親のコンストラクタを呼び、子のコンストラクタでthisを使う前に実行する必要がある。先にthisを使うとReferenceErrorになる。" },
+        { en: "A child class can override an inherited method by redefining it with the same name; `super.method()` lets it also call the parent's original version.", np: "Child class ले inherited method लाई उही नामले redefine गरेर override गर्न सक्छ; `super.method()` ले parent को original version पनि call गर्न दिन्छ।", jp: "子クラスは同じ名前で再定義することで継承したメソッドをオーバーライドできる。`super.method()`で親の元のバージョンも呼び出せる。" },
+        { en: "Behind the scenes, method lookup still walks the prototype chain from Day 8 — if a method isn't found on the child, JavaScript looks up to the parent, then further up until it's found.", np: "भित्री रूपमा method lookup अझै Day 8 को prototype chain मार्फत हुन्छ — child मा method नभेटिए JS ले parent मा, त्यसपछि माथि खोज्छ।", jp: "内部的にはメソッドの検索はDay 8のプロトタイプチェーンをたどる。子に見つからなければ親、さらに上へと探す。" },
       ],
       commonMistakes: [
+        { en: "Forgetting `extends` entirely, so the child class doesn't inherit anything from the intended parent class.", np: "`extends` नै बिर्सनु, त्यसले child class ले चाहिएको parent class बाट केही inherit गर्दैन।", jp: "`extends`自体を書き忘れること。その結果、子クラスは意図した親クラスから何も継承しない。" },
         { en: "Trying to use `this` in a derived class's constructor before calling `super(...)` — this always throws a ReferenceError.", np: "Derived class को constructor मा `super(...)` call गर्नुअघि `this` प्रयोग गर्ने प्रयास गर्नु — यसले सधैं ReferenceError throw गर्छ।", jp: "`super(...)`を呼ぶ前に派生クラスのコンストラクタでthisを使おうとすること。これは常にReferenceErrorをスローする。" },
-        { en: "Forgetting to call `super(...)` at all in a derived class's constructor when the parent constructor also needs to run.", np: "Parent constructor पनि चलाउनुपर्दा derived class को constructor मा `super(...)` call नै गर्न बिर्सनु।", jp: "親コンストラクタも実行する必要がある場合に、派生クラスのコンストラクタで`super(...)`を呼ぶこと自体を忘れること。" },
-        { en: "Calling `super.method()` outside of an overriding method or misunderstanding it as invoking the parent CONSTRUCTOR rather than a parent method.", np: "`super.method()` लाई overriding method बाहिर call गर्नु वा parent CONSTRUCTOR call गरेको ठान्नु, parent method होइन।", jp: "オーバーライドメソッドの外で`super.method()`を呼ぶこと、または親のメソッドではなく親のコンストラクタを呼び出すものと誤解すること。" },
+        { en: "Confusing inheritance with copying — a child doesn't get its own copy of the parent's methods, it accesses them through the prototype chain, which is memory efficient.", np: "Inheritance लाई copying सँग confuse गर्नु — child ले parent को methods को आफ्नै copy पाउँदैन, prototype chain मार्फत access गर्छ, जुन memory efficient छ।", jp: "継承をコピーと混同すること。子は親のメソッドの独自コピーを持たず、プロトタイプチェーンを通じてアクセスする。これはメモリ効率が良い。" },
+        { en: "Rewriting a method that's identical to the parent's version instead of simply letting the child inherit it unchanged.", np: "Parent को version सँग उस्तै method फेरि लेख्नु, child ले त्यसलाई unchanged inherit गर्न दिनुको सट्टा।", jp: "親のバージョンと同一のメソッドを書き直すこと。子にそのまま継承させれば十分な場合。" },
       ],
       quiz: [
         {
@@ -205,75 +215,81 @@ new Circle("red", 5).area();  // ~78.54
       title: { en: "Static Methods, Getters/Setters & Private Fields", np: "Static Methods, Getters/Setters, Private Fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
       durationMinutes: 9,
       explanation: {
-        en: "Classes add several ES2022+ features in a syntax that reads naturally:\n\n• <b>Private fields (#name)</b> — declared with a `#` prefix, accessible ONLY from inside the class body. This is enforced at the language level, not just a naming convention like `_name` — code outside the class gets a `SyntaxError` for even trying `obj.#balance`.\n• <b>Getters/setters (`get`/`set`)</b> — same idea as Day 8's `defineProperty`, but with cleaner class syntax; accessed like plain properties, no `()`.\n• <b>Static methods</b> — belong to the CLASS itself (`ClassName.method()`), not to instances; ideal for factory functions and utilities related to the class as a whole.\n\nOne more subtlety: unlike function declarations, <b>classes are not hoisted</b> the same way — they exist in the Temporal Dead Zone (Day 3) until their declaration line runs, so you cannot use a class before it's declared.",
-        np: "Private fields (#name) class body भित्र मात्र accessible छन् — language level मा enforce हुन्छ। Getters/setters property जस्तै access हुन्छ। Static methods class को हो, instances को होइन। Classes hoist हुँदैनन् — TDZ मा रहन्छन्।",
-        jp: "プライベートフィールド(#name)はクラス本体内のみアクセス可能で言語レベルで強制される。getter/setterはプロパティのようにアクセスする。staticメソッドはクラス自体に属す。クラスはホイストされずTDZにある。",
+        en: "<b>Static methods</b> belong to the class itself, not to any instance — you call them as `ClassName.method()` without ever creating an object, which is perfect for utilities and factory functions (e.g. `Calculator.add(2, 3)`). Calling a static method on an instance (`instance.staticMethod()`) throws, because static members only exist on the class.\n\n<b>Getters (`get`)</b> and <b>setters (`set`)</b> let a method be accessed like a plain property — no `()` — while still running code behind the scenes. A getter is handy for computed values (`get area() { return this.width * this.height; }`, read as `rect.area`), and a setter is handy for validating or transforming a value before it's stored, such as trimming whitespace or rejecting a negative age.\n\n<b>Private fields (`#name`)</b> take this further: a field declared with a `#` prefix is only accessible from inside that class's own body — accessing `obj.#balance` from outside code is a `SyntaxError`, not just a convention like `_balance`. Combining private fields with public methods (`deposit()`, `getBalance()`) lets the class fully control how its internal state is read or changed — this is the essence of <b>encapsulation</b>. One more subtlety: unlike function declarations, classes are not hoisted the same way — they sit in the Temporal Dead Zone (Day 3) until their declaration line runs, so a class can't be used before it's declared.",
+        np: "Static methods class को आफ्नै हो, instance को होइन — `ClassName.method()` बाट call हुन्छ, object नबनाई। Instance मा static method call गर्दा throw हुन्छ। Getter/setter ले method लाई property जस्तै access गर्न दिन्छ — getter ले computed value दिन्छ, setter ले store गर्नुअघि value validate/transform गर्छ। Private fields (`#name`) class body भित्र मात्र accessible हुन्छन् — बाहिरबाट access गर्दा SyntaxError, `_name` convention भन्दा बलियो — यसैले encapsulation सम्भव हुन्छ। Classes पनि function जस्तो hoist हुँदैनन्, declaration नचलुन्जेल Temporal Dead Zone मा रहन्छन्।",
+        jp: "staticメソッドはインスタンスではなくクラス自体に属し、オブジェクトを作らずに`ClassName.method()`として呼べる。インスタンスでstaticメソッドを呼ぶとスローする。getter/setterはメソッドをプロパティのようにアクセスさせる — getterは計算値を返し、setterは保存前に値を検証・変換する。プライベートフィールド(`#name`)はクラス本体内のみアクセス可能で、外部からアクセスするとSyntaxErrorになる（`_name`という慣習より強力）。これによりカプセル化が実現する。クラスも関数のようにはホイストされず、宣言されるまでTemporal Dead Zoneにある。",
       },
-      diagram: `class BankAccount {
-  #balance;                      ← private, only usable inside THIS class
+      diagram: `Calculator                            BankAccount
+  static add(a, b)                       #balance             ← private, class-only
+                                          get balance()         ← read like a property
+Calculator.add(5, 3)  → 8                set nickname(v)       ← write like a property
+(no 'new' needed)                        deposit(amount)
 
-  get balance() { return this.#balance; }        ← read like a property, no ()
-  set nickname(v) { ...validate... }              ← write like a property
+const acc = new BankAccount(...)
 
-  static createSavingsAccount(owner) { ... }      ← called as BankAccount.createSavingsAccount()
-}
-
-account.balance;              ✅ getter — reads #balance
-account.#balance;              ❌ SyntaxError — outside the class body
-BankAccount.createSavingsAccount("Bob");   ← static — on the CLASS, not an instance`,
+acc.balance             ✅ getter runs, returns #balance
+acc.#balance             ❌ SyntaxError — outside the class body
+acc.deposit(500)         → updates #balance internally`,
       codeExample: {
-        title: { en: "Private fields, getters/setters, and static methods together", np: "Private fields, getters/setters, static methods", jp: "プライベートフィールド・getter/setter・staticメソッド" },
-        code: `class BankAccount {
-  // ── Private fields (#) — only accessible inside the class ─────────────
-  #balance;
-  #owner;
+        title: { en: "Static methods, getters/setters, and private fields together", np: "Static methods, getters/setters, private fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
+        code: `// ── Static methods — belong to the class, not an instance ────────────
+class MathHelper {
+  static square(n) { return n * n; }
+}
+MathHelper.square(4);        // 16 — called on the class directly
 
-  constructor(owner, initialBalance = 0) {
-    this.#owner   = owner;
-    this.#balance = initialBalance;
+class User {
+  constructor(name) { this.name = name; }
+  static createGuest() { return new User("Guest"); }   // factory pattern
+}
+const guest = User.createGuest();
+guest.name;   // "Guest"
+
+// ── Getters — read like a property, no () ─────────────────────────────
+class Rectangle {
+  constructor(width, height) { this.width = width; this.height = height; }
+  get area() { return this.width * this.height; }
+}
+const rect = new Rectangle(5, 4);
+rect.area;    // 20 — not rect.area()
+
+// ── Setters — validate before storing ───────────────────────────────────
+class Person {
+  set age(value) {
+    if (value < 0) { console.log("Invalid age"); return; }
+    this._age = value;
   }
+}
+const person = new Person();
+person.age = -5;   // "Invalid age" — setter rejected it
 
-  // ── Getter — accessed like a property, not a method call ───────────────
-  get balance() { return this.#balance; }
+// ── Private fields (#) — real encapsulation ─────────────────────────────
+class BankAccount {
+  #balance = 0;                       // only this class can touch #balance
 
-  // ── Setter — validates before assignment ──────────────────────────────
-  set nickname(value) {
-    if (typeof value !== "string" || value.length < 2) {
-      throw new Error("Nickname must be at least 2 characters");
-    }
-    this.#owner = value;
-  }
-
-  deposit(amount) {
-    if (amount <= 0) throw new Error("Amount must be positive");
-    this.#balance += amount;
-    return this;  // return 'this' to allow method chaining
-  }
-
-  // ── Static methods — called on the class, not instances ───────────────
-  static createSavingsAccount(owner) { return new BankAccount(owner, 0); }
-  static isValidAmount(amount) { return typeof amount === "number" && amount > 0; }
+  deposit(amount) { this.#balance += amount; }
+  withdraw(amount) { if (amount <= this.#balance) this.#balance -= amount; }
+  getBalance() { return this.#balance; }
 }
 
-const account = new BankAccount("Alice", 1000);
-account.balance;              // 1000 — getter, no ()
-account.deposit(500).deposit(200);  // method chaining (each returns 'this')
-account.balance;              // 1700
+const account = new BankAccount();
+account.deposit(500);
+account.withdraw(200);
+account.getBalance();     // 300
 
-// account.#balance;           // SyntaxError: Private field '#balance' must be declared
-
-BankAccount.isValidAmount(100);            // true — called on the class
-const savings = BankAccount.createSavingsAccount("Bob");`,
+// account.#balance;      // SyntaxError — private fields can't be read from outside`,
       },
       keyTakeaways: [
-        { en: "Private fields (`#name`) are enforced by the language itself — accessing `obj.#field` from outside the class always throws a SyntaxError, unlike a `_name` naming convention.", np: "Private fields (`#name`) language ले नै enforce गर्छ — class बाहिरबाट `obj.#field` access गर्दा सधैं SyntaxError, `_name` convention जस्तो होइन।", jp: "プライベートフィールド（`#name`）は言語自体によって強制される。クラス外から`obj.#field`にアクセスすると常にSyntaxErrorをスローする。`_name`という命名規則とは異なる。" },
-        { en: "Static methods (`static method()`) belong to the class itself, called as `ClassName.method()` — not on instances — and are ideal for factory functions.", np: "Static methods (`static method()`) class को नै हो, `ClassName.method()` को रूपमा call हुन्छ — instances मा होइन — factory functions का लागि उत्तम।", jp: "staticメソッド（`static method()`）はクラス自体に属し、`ClassName.method()`として呼ばれる（インスタンスではない）。ファクトリ関数に最適。" },
-        { en: "Classes are not hoisted like function declarations — they remain in the Temporal Dead Zone until their declaration executes, so using one before its declaration throws.", np: "Classes function declarations जस्तो hoist हुँदैनन् — declaration नचलुन्जेल Temporal Dead Zone मा रहन्छन्, declaration अगाडि प्रयोग गर्दा throw हुन्छ।", jp: "クラスは関数宣言のようにホイストされない。宣言が実行されるまでTemporal Dead Zoneに留まり、宣言前に使うとスローする。" },
+        { en: "Static methods and properties belong to the class itself — call them as `ClassName.method()`, never on an instance.", np: "Static methods/properties class को आफ्नै हुन् — `ClassName.method()` को रूपमा call गर्ने, instance मा होइन।", jp: "staticメソッドとプロパティはクラス自体に属する。`ClassName.method()`として呼び、インスタンスでは呼ばない。" },
+        { en: "Getters (`get`) let you read a computed value like a plain property, with no `()`.", np: "Getters (`get`) ले computed value लाई plain property जस्तै पढ्न दिन्छ, `()` बिना।", jp: "getter（`get`）は計算値を`()`なしで通常のプロパティのように読ませる。" },
+        { en: "Setters (`set`) run validation or transformation logic before a value is actually stored.", np: "Setters (`set`) ले value वास्तवमा store हुनुअघि validation वा transformation logic चलाउँछ।", jp: "setter（`set`）は値が実際に保存される前に検証や変換ロジックを実行する。" },
+        { en: "Private fields (`#name`) are enforced by the language itself — accessing them outside the class throws a SyntaxError, giving real encapsulation rather than just a naming convention.", np: "Private fields (`#name`) language ले नै enforce गर्छ — class बाहिरबाट access गर्दा SyntaxError, यसैले real encapsulation हुन्छ, केवल naming convention होइन।", jp: "プライベートフィールド（`#name`）は言語自体によって強制される。クラス外からアクセスするとSyntaxErrorになり、単なる命名規則ではなく本物のカプセル化になる。" },
       ],
       commonMistakes: [
-        { en: "Trying to access `obj.#field` from outside the class, or copy-pasting a `#field` name between unrelated classes expecting it to work the same way.", np: "Class बाहिरबाट `obj.#field` access गर्ने प्रयास गर्नु, वा असम्बन्धित classes बीच `#field` नाम copy-paste गरेर उस्तै काम गर्छ भन्ने आशा गर्नु।", jp: "クラス外から`obj.#field`にアクセスしようとすること、または無関係なクラス間で`#field`という名前をコピーして同じように動作すると期待すること。" },
-        { en: "Calling a static method on an instance (`account.createSavingsAccount()`) instead of on the class (`BankAccount.createSavingsAccount()`) — instances don't have static methods on them.", np: "Static method लाई instance मा call गर्नु (`account.createSavingsAccount()`) class मा नभई (`BankAccount.createSavingsAccount()`) — instances मा static methods हुँदैनन्।", jp: "staticメソッドをクラス（`BankAccount.createSavingsAccount()`）ではなくインスタンス（`account.createSavingsAccount()`）で呼ぶこと。インスタンスにはstaticメソッドがない。" },
-        { en: "Referencing a class before its declaration line in the same module scope, expecting hoisting to work like it does for `function` declarations.", np: "Function declarations जस्तै hoisting काम गर्छ भनी आशा गरेर, class को declaration अगाडि नै त्यसलाई reference गर्नु।", jp: "関数宣言のようにホイストが機能すると期待して、宣言行より前に同じモジュールスコープでクラスを参照すること。" },
+        { en: "Calling a static method on an instance (`new MathHelper().square(4)`) instead of on the class (`MathHelper.square(4)`).", np: "Static method लाई instance मा call गर्नु (`new MathHelper().square(4)`) class मा नभई (`MathHelper.square(4)`)।", jp: "staticメソッドをクラス（`MathHelper.square(4)`）ではなくインスタンス（`new MathHelper().square(4)`）で呼ぶこと。" },
+        { en: "Calling a getter like a function (`user.fullName()`) — getters are accessed as plain properties, with no parentheses.", np: "Getter लाई function जस्तै call गर्नु (`user.fullName()`) — getters plain property जस्तै access हुन्छन्, parentheses बिना।", jp: "getterを関数のように呼ぶこと（`user.fullName()`）。getterは括弧なしで通常のプロパティとしてアクセスする。" },
+        { en: "Writing a setter with no validation at all, which defeats the purpose of using a setter in the first place.", np: "Setter मा कुनै validation नै नराख्नु, जसले setter प्रयोग गर्ने उद्देश्य नै हराउँछ।", jp: "検証を全く行わないsetterを書くこと。そもそもsetterを使う意味がなくなる。" },
+        { en: "Forgetting the `#` when referencing a private field inside a class method (`this.balance` instead of `this.#balance`), which silently reads or creates a different, non-private property.", np: "Class method भित्र private field reference गर्दा `#` बिर्सनु (`this.#balance` को सट्टा `this.balance`), जसले silently फरक, non-private property पढ्छ वा बनाउँछ।", jp: "クラスメソッド内でプライベートフィールドを参照する際に`#`を忘れること（`this.#balance`ではなく`this.balance`）。これは別の非プライベートなプロパティを黙って読み書きしてしまう。" },
       ],
       quiz: [
         {
