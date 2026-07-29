@@ -11,91 +11,111 @@ export const JS_DAY_10_LESSONS: JsLessonDay = {
       title: { en: "try, catch, finally & Custom Errors", np: "try, catch, finally, Custom Errors", jp: "try・catch・finallyとカスタムエラー" },
       durationMinutes: 9,
       explanation: {
-        en: "`try { ... } catch (err) { ... } finally { ... }` is JavaScript's structured way to run risky code and recover from failure instead of crashing. The `catch` block receives an `Error` object with `.name`, `.message`, and `.stack`; `finally` always runs — whether the try block succeeded, failed, or even returned early — making it the right place for cleanup that must happen no matter what.\n\nBuilt-in error types (`TypeError`, `ReferenceError`, `SyntaxError`, `RangeError`) tell you roughly what went wrong, but for your own application logic, you can <b>extend Error</b> to create custom error classes carrying extra context (a field name, a status code). Catching with `instanceof` lets you branch on the specific error type — and any error you don't recognise should be <b>re-thrown</b>, not silently swallowed, so it doesn't disappear unnoticed.",
-        np: "`try/catch/finally` ले risky code चलाउने र crash नहुने structured तरिका दिन्छ। `finally` सधैं चल्छ। Custom error classes ले Error extend गरी extra context राख्छन्। `instanceof` ले specific error type अनुसार branch गर्न दिन्छ — नचिनेको error लाई rethrow गर्नुपर्छ, silently swallow गर्नु हुँदैन।",
-        jp: "try/catch/finallyはリスクのあるコードを実行しクラッシュせずに回復する構造化された方法。finallyは常に実行される。カスタムエラークラスはErrorを拡張して追加コンテキストを持つ。instanceofで特定のエラータイプに分岐できる。認識しないエラーは再スローすべきで、黙って握りつぶしてはいけない。" ,
+        en: "An <b>error</b> happens when something goes wrong while your code runs — e.g. `null.name` throws because `null` means there's no object to read from. Errors aren't rare edge cases: they come from bad user input, failed database calls, unavailable APIs, and other external services breaking, so the goal isn't to prevent every error, it's to <b>handle them gracefully</b> instead of letting the whole program crash.\n\n`try { ... } catch (err) { ... } finally { ... }` is JavaScript's structured way to do that. Code that might fail goes in `try`; if it throws, execution jumps straight to `catch`, which receives an `Error` object with `.name` (the error type), `.message` (what went wrong), and `.stack` (where it happened — invaluable for debugging). `finally` always runs — after success, after a caught error, and even after an early `return` inside try/catch — which makes it the right place for cleanup that must happen no matter what, like closing a database connection.\n\nBuilt-in error types like `TypeError`, `ReferenceError`, `SyntaxError`, and `RangeError` describe generic problems, but real applications also raise their own errors on purpose with `throw` when a business rule is broken, and define <b>custom error classes</b> by extending `Error` (`class ValidationError extends Error`) to attach extra context like a field name or an HTTP status code. Catching with `instanceof` lets you branch on the specific error type — and any error you don't recognise should be re-thrown, never silently swallowed.",
+        np: "Error तब हुन्छ जब code चल्दा केही गलत हुन्छ — जस्तै `null.name` ले throw गर्छ किनकि `null` को अर्थ त्यहाँ object नै छैन। Errors bad user input, failed database calls, वा external services fail हुँदा आउँछन् — लक्ष्य सबै errors रोक्नु होइन, gracefully handle गर्नु हो। `try/catch/finally` ले यही structured तरिका दिन्छ। `finally` सधैं चल्छ, try/catch भित्रको early `return` पछि पनि। Custom error classes ले Error extend गरी extra context राख्छन्। `instanceof` ले specific error type अनुसार branch गर्न दिन्छ — नचिनेको error लाई rethrow गर्नुपर्छ, silently swallow गर्नु हुँदैन।",
+        jp: "エラーとは、コード実行中に何か問題が起きること — 例えば`null.name`はnullが読み取るオブジェクトがないことを意味するためスローする。エラーは不正な入力、失敗したデータベース呼び出し、利用できない外部サービスなどから発生する。目標はすべてのエラーを防ぐことではなく、優雅に処理すること。try/catch/finallyはそのための構造化された方法。finallyは常に実行される、try/catch内の早期returnの後でも。カスタムエラークラスはErrorを拡張して追加コンテキストを持つ。instanceofで特定のエラータイプに分岐できる。認識しないエラーは再スローすべきで、黙って握りつぶしてはいけない。",
       },
-      diagram: `try {
-  riskyOperation();
-} catch (err) {
-  if (err instanceof ValidationError)  { ... }   ← specific, known error
-  else if (err instanceof NotFoundError) { ... } ← another known error
-  else { throw err; }                             ← unknown — RETHROW, don't swallow
-} finally {
-  cleanup();   ← ALWAYS runs — success, failure, or early return`,
+      diagram: `             Start
+               |
+               v
+          Run try block
+               |
+        +------+------+
+        |             |
+        v             v
+     Success        Error thrown
+        |             |
+        |             v
+        |        catch(err) { ... }   ← err.name / err.message / err.stack
+        |             |
+        +------+------+
+               |
+               v
+          finally { ... }   ← ALWAYS runs, even after try's own 'return'
+               |
+               v
+              End`,
       codeExample: {
         title: { en: "Robust error handling with custom error classes", np: "Robust error handling, custom error classes", jp: "カスタムエラークラスによる堅牢なエラー処理" },
-        code: `// ── Basic try/catch/finally ────────────────────────────────────────
+        code: `// ── Basic try/catch — recovering instead of crashing ─────────────────
 function parseConfig(jsonString) {
   try {
     return JSON.parse(jsonString);       // might throw SyntaxError
   } catch (err) {
-    console.error("Failed to parse config:", err.message);
+    console.error("Invalid JSON:", err.message);
     return null;
-  } finally {
-    console.log("parseConfig attempted"); // always runs, even if catch returns
   }
 }
+parseConfig("invalid json");   // logs "Invalid JSON: ..." instead of crashing
 
 // ── The Error object ─────────────────────────────────────────────────
 try {
-  null.property;   // TypeError: Cannot read properties of null
+  null.name;   // TypeError: Cannot read properties of null
 } catch (err) {
   err.name;     // "TypeError"
-  err.message;  // "Cannot read properties of null (reading 'property')"
-  err.stack;    // full stack trace string
+  err.message;  // "Cannot read properties of null (reading 'name')"
+  err.stack;    // full stack trace — where it happened
 }
 
-// ── Custom error classes ─────────────────────────────────────────────
+// ── finally always runs — even after a 'return' inside try ───────────
+function test() {
+  try {
+    return "Success";
+  } finally {
+    console.log("Finally runs");   // logs BEFORE the function actually returns
+  }
+}
+test();   // logs "Finally runs", then returns "Success"
+
+// ── Throwing your own errors on purpose ───────────────────────────────
+function withdraw(amount) {
+  if (amount > 1000) throw new Error("Withdrawal limit exceeded");
+  return amount;
+}
+
+// ── Custom error classes — extend Error for extra context ─────────────
 class ValidationError extends Error {
-  constructor(field, message) {
-    super(message);            // sets this.message
+  constructor(message, field) {
+    super(message);            // sets this.message and this.stack correctly
     this.name = "ValidationError";
     this.field = field;        // extra context
   }
 }
-class NotFoundError extends Error {
-  constructor(resource, id) {
-    super(\`\${resource} with id \${id} not found\`);
-    this.name = "NotFoundError";
-    this.statusCode = 404;
+class AuthenticationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AuthenticationError";
+    this.statusCode = 401;
   }
 }
 
-function createUser(data) {
-  if (!data.email) throw new ValidationError("email", "Email is required");
-  // ... create user
+function login(password) {
+  if (password !== "123456") throw new AuthenticationError("Invalid password");
 }
 
-// ── Catching specific error types ─────────────────────────────────────
+// ── Catching specific error types with instanceof ─────────────────────
 try {
-  createUser({ name: "Alice" });  // missing email
+  login("wrong-password");
 } catch (err) {
-  if (err instanceof ValidationError) {
-    console.error(\`Validation failed on '\${err.field}': \${err.message}\`);
+  if (err instanceof AuthenticationError) {
+    console.log({ statusCode: err.statusCode, message: err.message });
+    // { statusCode: 401, message: "Invalid password" }
   } else {
-    throw err;  // rethrow unknown errors — never swallow them silently
-  }
-}
-
-// ── Error chaining (cause) — ES2022 ─────────────────────────────────
-function fetchUser(id) {
-  try {
-    // ... database query
-  } catch (dbError) {
-    throw new Error("Failed to fetch user", { cause: dbError });  // preserves original
+    throw err;   // unrecognised error — never swallow it silently
   }
 }`,
       },
       keyTakeaways: [
-        { en: "`finally` always runs — after a successful try, after a caught error, or even after an early `return` inside try/catch — making it the right place for guaranteed cleanup.", np: "`finally` सधैं चल्छ — try success भए पनि, error catch भए पनि, वा try/catch भित्रको early `return` पछि पनि — यो cleanup का लागि सहि ठाउँ हो।", jp: "finallyは常に実行される — try成功後、エラーキャッチ後、try/catch内の早期returnの後でも — 確実なクリーンアップの適切な場所。" },
-        { en: "Custom error classes (`class ValidationError extends Error`) let you attach extra context — a field name, a status code — and branch on the specific type later with `instanceof`.", np: "Custom error classes (`class ValidationError extends Error`) ले extra context (field name, status code) राख्न दिन्छ र पछि `instanceof` ले specific type अनुसार branch गर्न दिन्छ।", jp: "カスタムエラークラス（`class ValidationError extends Error`）は追加コンテキスト（フィールド名、ステータスコード）を付加でき、後で`instanceof`で特定の型に分岐できる。" },
-        { en: "Errors you don't recognise inside a `catch` block should be re-thrown (`throw err`), never silently swallowed — an unhandled bug should be visible, not hidden.", np: "`catch` भित्र नचिनेको error re-throw गर्नुपर्छ (`throw err`), silently swallow गर्नु हुँदैन — unhandled bug दृश्य हुनुपर्छ, लुकाइनु हुँदैन।", jp: "catchブロック内で認識しないエラーは再スロー（`throw err`）すべきで、黙って握りつぶしてはいけない。未処理のバグは見えるべきで隠すべきではない。" },
+        { en: "Errors are a normal part of real applications (bad input, failed network calls, unavailable services) — the goal is to handle them gracefully, not to prevent them entirely.", np: "Errors real applications को normal भाग हो (bad input, failed network calls, unavailable services) — लक्ष्य gracefully handle गर्नु हो, पूर्ण रूपमा रोक्नु होइन।", jp: "エラーは実際のアプリケーションの通常の一部（不正な入力、失敗したネットワーク呼び出し、利用できないサービス）。目標は完全に防ぐことではなく優雅に処理すること。" },
+        { en: "`try` holds risky code, `catch(err)` handles the failure with an Error object (`.name`, `.message`, `.stack`), and `finally` always runs — even after a `return` inside try/catch — making it the right place for guaranteed cleanup.", np: "`try` मा risky code राखिन्छ, `catch(err)` ले Error object (`.name`, `.message`, `.stack`) सँग failure handle गर्छ, र `finally` सधैं चल्छ — try/catch भित्रको `return` पछि पनि — यो guaranteed cleanup का लागि सहि ठाउँ हो।", jp: "tryにリスクのあるコードを置き、catch(err)がErrorオブジェクト（.name, .message, .stack）で失敗を処理し、finallyは常に実行される — try/catch内のreturnの後でも — 確実なクリーンアップの適切な場所。" },
+        { en: "`throw` lets you raise your own errors when a business rule is violated, even if the code is technically valid — e.g. rejecting a withdrawal over the allowed limit.", np: "`throw` ले business rule violate भएमा आफ्नै errors raise गर्न दिन्छ, code technically valid भए पनि — जस्तै allowed limit भन्दा माथिको withdrawal reject गर्नु।", jp: "throwを使うと、コードが技術的には有効でもビジネスルールに違反した場合に独自のエラーを発生させられる — 許可された上限を超える引き出しを拒否する例。" },
+        { en: "Custom error classes (`class ValidationError extends Error`) attach extra context — a field name, a status code — and let you branch on the specific type later with `instanceof`; unrecognised errors should be re-thrown, never silently swallowed.", np: "Custom error classes (`class ValidationError extends Error`) ले extra context (field name, status code) राख्न दिन्छ र पछि `instanceof` ले specific type अनुसार branch गर्न दिन्छ; नचिनेको error re-throw गर्नुपर्छ, silently swallow गर्नु हुँदैन।", jp: "カスタムエラークラス（`class ValidationError extends Error`）は追加コンテキスト（フィールド名、ステータスコード）を付加でき、後で`instanceof`で特定の型に分岐できる。認識しないエラーは再スローすべきで、黙って握りつぶしてはいけない。" },
       ],
       commonMistakes: [
-        { en: "Catching every error broadly and swallowing it (an empty `catch` block or just `console.log`) instead of re-throwing errors you don't specifically handle.", np: "हरेक error लाई broadly catch गरेर swallow गर्नु (empty `catch` block वा केवल `console.log`) specifically handle नगरेका errors re-throw गर्नुको सट्टा।", jp: "特定して処理していないエラーを再スローする代わりに、すべてのエラーを広くキャッチして握りつぶすこと（空のcatchブロックや単なるconsole.log）。" },
-        { en: "Forgetting to call `super(message)` in a custom error class constructor — without it, `err.message` is never set correctly.", np: "Custom error class को constructor मा `super(message)` call गर्न बिर्सनु — यसबिना `err.message` सहि सेट हुँदैन।", jp: "カスタムエラークラスのコンストラクタで`super(message)`を呼び忘れること。これがないと`err.message`が正しく設定されない。" },
-        { en: "Assuming `finally` only runs on success, and putting cleanup logic only in the `try` block instead — cleanup that must always happen belongs in `finally`.", np: "`finally` केवल success मा चल्छ भन्ने ठान्नु, र cleanup logic `try` block मा मात्र राख्नु — सधैं हुनुपर्ने cleanup `finally` मा हुनुपर्छ।", jp: "finallyは成功時のみ実行されると思い込み、クリーンアップロジックをtryブロックにのみ置くこと。常に発生すべきクリーンアップはfinallyに属する。" },
+        { en: "Leaving a `catch` block empty, which swallows the error entirely — you never learn what failed, where it failed, or why.", np: "`catch` block खाली छोड्नु, जसले error लाई पूर्ण रूपमा swallow गर्छ — के, कहाँ, र किन fail भयो भन्ने कहिल्यै थाहा हुँदैन।", jp: "catchブロックを空のままにすること。エラーを完全に握りつぶし、何が・どこで・なぜ失敗したか分からなくなる。" },
+        { en: "Catching every error broadly and just returning `null` or ignoring it, instead of re-throwing errors you don't specifically handle — this hides real problems from the caller.", np: "हरेक error लाई broadly catch गरेर केवल `null` फर्काउनु वा ignore गर्नु, specifically handle नगरेका errors re-throw गर्नुको सट्टा — यसले real problems caller बाट लुकाउँछ।", jp: "特定して処理していないエラーを再スローする代わりに、すべてのエラーを広くキャッチして単にnullを返すか無視すること。これは呼び出し元から本当の問題を隠す。" },
+        { en: "Using `error.message` string comparisons for logic (`if (error.message === \"User missing\")`) instead of `instanceof` — messages can change wording and silently break the check.", np: "Logic का लागि `error.message` string comparison प्रयोग गर्नु (`if (error.message === \"User missing\")`) `instanceof` को सट्टा — messages को wording बदलिन सक्छ र check silently बिग्रन्छ।", jp: "instanceofの代わりにerror.messageの文字列比較をロジックに使うこと（`if (error.message === \"User missing\")`）。メッセージの文言が変わるとチェックが黙って壊れる。" },
+        { en: "Forgetting `finally` cleanup (e.g. closing a database connection) and only putting that logic in `try`, so it never runs when an error happens partway through.", np: "`finally` cleanup बिर्सनु (जस्तै database connection close गर्नु) र त्यो logic `try` मा मात्र राख्नु, जसले error हुँदा त्यो कहिल्यै चल्दैन।", jp: "finallyでのクリーンアップ（データベース接続のクローズなど）を忘れ、そのロジックをtryにのみ置くこと。途中でエラーが起きると実行されない。" },
       ],
       quiz: [
         {
@@ -132,14 +152,17 @@ function fetchUser(id) {
       title: { en: "CommonJS Modules (require / module.exports)", np: "CommonJS Modules (require / module.exports)", jp: "CommonJSモジュール（require/module.exports）" },
       durationMinutes: 9,
       explanation: {
-        en: "CommonJS is Node.js's original module system. You export values by attaching them to `module.exports` (either individually, `module.exports.add = ...`, or by replacing the whole object at once), and import them with `require(\"./path\")`.\n\nThree behaviours define how it works: (1) `require` is <b>synchronous</b> — it blocks execution until the file is fully loaded and parsed; (2) a module is <b>cached</b> after its first `require` — every subsequent `require` of the same path returns the exact same object, not a fresh copy; (3) `require()` is just a normal function call, so unlike ES Modules' `import`, it can be called <b>conditionally</b> or inside a function body.",
-        np: "CommonJS Node.js को original module system हो। `module.exports` मा value attach गरी export गरिन्छ, `require(\"./path\")` ले import गरिन्छ। require synchronous छ, module cache हुन्छ (पहिलो require पछि उही object फिर्ता), र require() लाई conditionally call गर्न सकिन्छ।",
-        jp: "CommonJSはNode.jsのオリジナルのモジュールシステム。module.exportsに値を付けてエクスポートし、require(\"./path\")でインポートする。requireは同期的、モジュールはキャッシュされ、require()は条件付きで呼べる。",
+        en: "A <b>module</b> is a separate file containing related functionality — instead of cramming an entire application (users, payments, database, email) into one giant file, you split it into smaller files, each with one clear responsibility, and share code between them. <b>CommonJS</b> is Node.js's original module system for doing this: a file shares code by attaching it to `module.exports` (either individually, `module.exports.add = ...`, or by replacing the whole object at once), and another file pulls it in with `require(\"./path\")`.\n\nThree behaviours define how it works: (1) `require` is <b>synchronous</b> — it blocks execution until the file is fully loaded and parsed; (2) a module is <b>cached</b> after its first `require` — every subsequent `require` of the same path returns the exact same object, not a fresh copy, so its top-level code only ever runs once; (3) `require()` is just a normal function call, so unlike ES Modules' `import`, it can be called <b>conditionally</b> or inside a function body.",
+        np: "Module भनेको related functionality भएको छुट्टै file हो — पूरै application एउटै file मा नराखी, धेरै साना files मा भाग लगाइन्छ, हरेकको एउटा clear responsibility हुन्छ। CommonJS Node.js को original module system हो — `module.exports` मा value attach गरी export गरिन्छ, `require(\"./path\")` ले import गरिन्छ। require synchronous छ, module cache हुन्छ (top-level code एकपल्ट मात्र चल्छ), र require() लाई conditionally call गर्न सकिन्छ।",
+        jp: "モジュールとは関連する機能を持つ別ファイルのこと — アプリケーション全体を1つの巨大ファイルに詰め込む代わりに、それぞれ明確な責任を持つ小さなファイルに分割し、コードを共有する。CommonJSはNode.jsのオリジナルのモジュールシステムで、module.exportsに値を付けてエクスポートし、require(\"./path\")でインポートする。requireは同期的、モジュールはキャッシュされ（トップレベルコードは一度だけ実行される）、require()は条件付きで呼べる。",
       },
       diagram: `math.js                              app.js
 ────────────────────                 ────────────────────
 module.exports.add = (a,b)=>a+b      const math = require("./math");
 module.exports.PI = 3.14159          math.add(2, 3);   // 5
+
+Mental model: module.exports = "what's in the toolbox I hand out"
+              require()      = "go get that toolbox"
 
 require() behaviour:
   1. SYNCHRONOUS   — blocks until the file is fully loaded
@@ -147,48 +170,59 @@ require() behaviour:
   3. CONDITIONAL OK — if (x) { require("./y") } is valid CJS`,
       codeExample: {
         title: { en: "Exporting and importing with CommonJS", np: "CommonJS सँग export/import", jp: "CommonJSでのエクスポート・インポート" },
-        code: `// ── Exporting — math.js ─────────────────────────────────────────────
-module.exports.add = (a, b) => a + b;
-module.exports.sub = (a, b) => a - b;
+        code: `// ── Exporting a single function — math.js ────────────────────────────
+function add(a, b) { return a + b; }
+module.exports = add;
 
-// Or assign the whole exports object at once:
-module.exports = {
-  add: (a, b) => a + b,
-  sub: (a, b) => a - b,
-  PI: 3.14159,
-};
+// ── Importing it — app.js ─────────────────────────────────────────────
+const add = require("./math");
+add(5, 3);   // 8
 
-// Default export (exporting a single thing):
-// module.exports = function createServer(port) { /* ... */ };
+// ── Exporting multiple functions as an object ──────────────────────────
+function subtract(a, b) { return a - b; }
+module.exports = { add, subtract };
 
-// ── Importing — app.js ───────────────────────────────────────────────
-const math = require("./math");    // relative path (same directory)
-math.add(2, 3);                    // 5
+const math = require("./math");
+math.add(10, 5);        // 15
+math.subtract(10, 5);   // 5
 
-const { add, sub } = require("./math");   // destructured import
+// ── Destructured import — cleaner call sites ────────────────────────────
+const { add, subtract } = require("./math");
+add(5, 2);        // 7
+subtract(5, 2);   // 3
 
-const path = require("path");   // core Node module, no path needed
-const fs   = require("fs");
+// ── Real backend example ────────────────────────────────────────────────
+// database.js
+function connectDatabase() { console.log("Database connected"); }
+function closeDatabase() { console.log("Database closed"); }
+module.exports = { connectDatabase, closeDatabase };
 
+// server.js
+const database = require("./database");
+database.connectDatabase();   // "Database connected"
+console.log("Server running");
+
+// ── Built-in and third-party modules ────────────────────────────────────
+const path = require("path");        // core Node module, no ./ needed
 // const express = require("express");  // third-party package (node_modules)
 
-// ── Key behaviours ────────────────────────────────────────────────────
-// 1. require() is SYNCHRONOUS — it blocks until the module fully loads
-// 2. Modules are CACHED after the first require — same object every time
-// 3. require() is a normal function call — can be conditional
+// ── require() is just a function call — can be conditional ─────────────
 if (process.env.DEBUG) {
-  const debugTools = require("./debug");  // valid — conditional import in CJS
+  const debugTools = require("./debug");   // valid in CJS, not in ES Modules
 }`,
       },
       keyTakeaways: [
+        { en: "A module is a separate file with one clear responsibility; splitting a large app into modules makes code organized, reusable, and easier for multiple people to work on.", np: "Module भनेको एउटा clear responsibility भएको छुट्टै file हो; ठूलो app लाई modules मा बाँड्दा code organized, reusable, र धेरैले काम गर्न सजिलो हुन्छ।", jp: "モジュールとは1つの明確な責任を持つ別ファイル。大きなアプリをモジュールに分割すると、コードが整理され、再利用可能になり、複数人での作業がしやすくなる。" },
         { en: "You export from a CommonJS module by attaching properties to `module.exports` (or replacing it entirely), and import with `require(\"./path\")`.", np: "CommonJS module मा `module.exports` मा properties attach गरेर (वा पूर्ण replace गरेर) export गरिन्छ, र `require(\"./path\")` ले import गरिन्छ।", jp: "CommonJSモジュールでは`module.exports`にプロパティを付ける（または完全に置き換える）ことでエクスポートし、`require(\"./path\")`でインポートする。" },
-        { en: "`require()` is synchronous — it blocks execution until the target file has fully loaded, unlike ES Modules' asynchronous `import`.", np: "`require()` synchronous छ — target file पूर्ण load नभएसम्म execution block गर्छ, ES Modules को asynchronous `import` भन्दा फरक।", jp: "`require()`は同期的で、対象ファイルが完全にロードされるまで実行をブロックする。ESモジュールの非同期importとは異なる。" },
+        { en: "`require()` is synchronous — it blocks execution until the target file has fully loaded, unlike ES Modules' asynchronous dynamic import.", np: "`require()` synchronous छ — target file पूर्ण load नभएसम्म execution block गर्छ, ES Modules को asynchronous dynamic import भन्दा फरक।", jp: "`require()`は同期的で、対象ファイルが完全にロードされるまで実行をブロックする。ESモジュールの非同期な動的importとは異なる。" },
         { en: "A module is only executed once and cached after its first `require` — every later `require(\"./same-path\")` returns the exact same object, not a fresh copy.", np: "Module पहिलो `require` पछि एकपल्ट मात्र execute हुन्छ र cache हुन्छ — पछिका सबै `require(\"./same-path\")` ले उही object फिर्ता दिन्छ।", jp: "モジュールは最初のrequire後に一度だけ実行されキャッシュされる。以降のrequire（同じパス）はすべて同じオブジェクトを返す。" },
       ],
       commonMistakes: [
-        { en: "Expecting `require(\"./same-module\")` called twice to run the module's top-level code twice — it only runs once; the cached result is reused.", np: "`require(\"./same-module\")` दुई पटक call गर्दा module को top-level code दुई पटक चल्छ भन्ने आशा गर्नु — यो एकपल्ट मात्र चल्छ, cached result reuse हुन्छ।", jp: "`require(\"./same-module\")`を2回呼ぶとモジュールのトップレベルコードが2回実行されると期待すること。実際は一度だけ実行され、キャッシュされた結果が再利用される。" },
-        { en: "Mixing `module.exports.x = ...` (adding to the exports object) with `module.exports = { ... }` (replacing it entirely) in the same file and losing earlier exports.", np: "Same file मा `module.exports.x = ...` (exports मा थप्नु) र `module.exports = { ... }` (पूर्ण replace) मिलाउनु, पहिलेका exports हराउनु।", jp: "同じファイルで`module.exports.x = ...`（追加）と`module.exports = { ... }`（完全置換）を混ぜて、以前のエクスポートを失うこと。" },
-        { en: "Forgetting the relative path prefix (`./` or `../`) when requiring a local file, causing Node to look for it as a package in `node_modules` instead.", np: "Local file require गर्दा relative path prefix (`./` वा `../`) बिर्सनु, Node ले `node_modules` मा package को रूपमा खोज्ने कारण बन्नु।", jp: "ローカルファイルをrequireする際に相対パスの接頭辞（`./`や`../`）を忘れ、Nodeがnode_modulesのパッケージとして探すことになること。" },
+        { en: "Writing a function in a file but forgetting to attach it to `module.exports` — it stays private to that file, and `require()` in another file returns nothing useful.", np: "File मा function लेखेर `module.exports` मा attach गर्न बिर्सनु — त्यो त्यही file मा मात्र private रहन्छ, अर्को file को `require()` ले केही useful फिर्ता दिँदैन।", jp: "ファイルに関数を書いたが`module.exports`に付けるのを忘れること。その関数はそのファイル内だけのプライベートなままで、他ファイルのrequire()は何も有用なものを返さない。" },
+        { en: "Requiring a local file without the `./` prefix (`require(\"math\")` instead of `require(\"./math\")`) — Node then looks for an installed package named `math` instead of your file.", np: "Local file require गर्दा `./` prefix बिर्सनु (`require(\"./math\")` को सट्टा `require(\"math\")`) — Node ले तिम्रो file को सट्टा `math` नामको installed package खोज्छ।", jp: "ローカルファイルをrequireする際に`./`接頭辞を忘れること（`require(\"./math\")`ではなく`require(\"math\")`）。Nodeは自分のファイルの代わりに`math`という名前のインストール済みパッケージを探してしまう。" },
+        { en: "Mixing `module.exports.x = ...` (adding to the exports object) with `module.exports = { ... }` (replacing it entirely) in the same file — the replacement wipes out the earlier additions.", np: "Same file मा `module.exports.x = ...` (exports मा थप्नु) र `module.exports = { ... }` (पूर्ण replace) मिलाउनु — replacement ले पहिलेका additions हराउँछ।", jp: "同じファイルで`module.exports.x = ...`（追加）と`module.exports = { ... }`（完全置換）を混ぜること。置換により以前の追加が消える。" },
+        { en: "Mixing CommonJS (`require`/`module.exports`) and ES Modules (`import`/`export`) syntax in the same file — they are different module systems, so pick one style per project.", np: "Same file मा CommonJS (`require`/`module.exports`) र ES Modules (`import`/`export`) syntax मिलाउनु — यी फरक module systems हुन्, project प्रति एउटा style मात्र छान्ने।", jp: "同じファイルでCommonJS（require/module.exports）とESモジュール（import/export）の構文を混ぜること。異なるモジュールシステムなので、プロジェクトごとに1つの方式を選ぶ。" },
+        { en: "Writing `module.exports.add()` (which calls the function immediately) instead of `module.exports.add = add` (which exports the function reference).", np: "`module.exports.add = add` (function reference export) को सट्टा `module.exports.add()` (जसले function तुरुन्तै call गर्छ) लेख्नु।", jp: "`module.exports.add = add`（関数の参照をエクスポート）の代わりに`module.exports.add()`（関数を即座に呼び出してしまう）と書くこと。" },
       ],
       quiz: [
         {
@@ -225,15 +259,18 @@ if (process.env.DEBUG) {
       title: { en: "ES Modules (import / export)", np: "ES Modules (import / export)", jp: "ESモジュール（import/export）" },
       durationMinutes: 9,
       explanation: {
-        en: "ES Modules are the modern, standard module syntax — supported natively in browsers and Node.js (12+, with `\"type\": \"module\"` in `package.json`). A file can export multiple <b>named exports</b> (`export const PI = ...`) and up to one <b>default export</b> (`export default class Calculator {}`) at the same time.\n\nUnlike `require()`, `import` statements are <b>statically analysed</b> at build/parse time (must sit at the top level, never inside an `if`), which is exactly what allows bundlers to perform <b>tree-shaking</b> — safely removing exports that are never imported anywhere. For loading a module conditionally or lazily, ES Modules offer <b>dynamic import</b> — `await import(\"./path.js\")` — which returns a Promise instead of blocking.",
-        np: "ES Modules आधुनिक standard module syntax हो — browser र Node.js दुवैमा native support। एक file मा multiple named exports र एक default export हुन सक्छ। `import` statically analyse हुन्छ (top-level मात्र), जसले tree-shaking सम्भव बनाउँछ। Dynamic import (`await import(...)`) ले lazy loading दिन्छ।",
-        jp: "ESモジュールはモダンな標準モジュール構文で、ブラウザとNode.jsの両方でネイティブサポートされる。1つのファイルに複数の名前付きエクスポートと1つのデフォルトエクスポートを持てる。importは静的に解析される（トップレベルのみ）。動的import（await import(...)）で遅延読み込みができる。",
+        en: "ES Modules (ESM) are JavaScript's official, standard module system — supported natively in browsers and in Node.js (12+, with `\"type\": \"module\"` in `package.json`), and used throughout modern frameworks like React and Next.js. `export` shares code from a file; `import` brings code from another file in. A file can have any number of <b>named exports</b> (`export const PI = ...`, `export function add() {}`) plus up to one <b>default export</b> (`export default class Calculator {}`) at the same time — named imports must match the exported name exactly (`import { add }`, unless renamed with `as`), while a default import can be given any local name (`import Calculator from \"./math.js\"`).\n\nUnlike CommonJS's `require()`, `import` statements are <b>statically analysed</b> at build/parse time — they must sit at the top level of a file, never inside an `if` — and this is exactly what lets bundlers perform <b>tree-shaking</b>: safely removing exports that are never imported anywhere, since the whole dependency graph is knowable without running any code. For loading a module conditionally or lazily, ES Modules offer <b>dynamic import</b> — `await import(\"./path.js\")` — which returns a Promise instead of blocking.",
+        np: "ES Modules JavaScript को official standard module system हो — browser र Node.js दुवैमा native support, र React/Next.js जस्ता modern frameworks मा प्रयोग हुन्छ। `export` ले code share गर्छ, `import` ले अर्को file बाट ल्याउँछ। एउटा file मा धेरै named exports र एउटा default export हुन सक्छ — named import ले exported name सँग exactly मिल्नुपर्छ, default import जुनसुकै नामले import गर्न सकिन्छ। `import` statically analyse हुन्छ (top-level मात्र), जसले tree-shaking सम्भव बनाउँछ। Dynamic import (`await import(...)`) ले lazy loading दिन्छ।",
+        jp: "ESモジュールはJavaScriptの公式標準モジュールシステムで、ブラウザとNode.jsの両方でネイティブサポートされ、ReactやNext.jsなどのモダンなフレームワークで使われる。exportはコードを共有し、importは別ファイルから取り込む。1つのファイルに複数の名前付きエクスポートと1つのデフォルトエクスポートを持てる。名前付きインポートはエクスポート名と正確に一致する必要があるが、デフォルトインポートはどんなローカル名でも良い。importは静的に解析される（トップレベルのみ）。これによりツリーシェイキングが可能になる。動的import（await import(...)）で遅延読み込みができる。",
       },
       diagram: `math.js                                    app.js
 ──────────────────────                     ──────────────────────
 export const PI = 3.14159;                 import { PI, add } from "./math.js";
 export function add(a,b) {...}             import * as math from "./math.js";
 export default class Calculator {}         import Calculator from "./math.js";
+
+Mental model: export = "place this item in the library"
+              import = "borrow this item from the library"
 
 STATIC import   → top-level only    → enables tree-shaking (bundler removes unused)
 DYNAMIC import  → await import(...) → returns a Promise, usable anywhere (lazy loading)`,
@@ -242,45 +279,53 @@ DYNAMIC import  → await import(...) → returns a Promise, usable anywhere (la
         code: `// ── Named exports — math.js ─────────────────────────────────────────
 export const PI = 3.14159;
 export function add(a, b) { return a + b; }
+export function multiply(a, b) { return a * b; }
 
-const multiply = (a, b) => a * b;
-export { multiply };                       // export at the bottom
-export { multiply as times };              // export with rename
-
-// ── Default export — one per file ────────────────────────────────────
+// ── Default export — one per file, alongside named exports ────────────
 export default class Calculator {
   add(a, b) { return a + b; }
 }
-// A file can have both a default export and named exports
 
 // ── Named imports — app.js ───────────────────────────────────────────
-import { add, PI } from "./math.js";        // file extension required in native ESM
-import { multiply as times } from "./math.js"; // renamed import
+import { add, multiply } from "./math.js";   // names must match exactly
+add(2, 3);        // 5
+multiply(2, 3);   // 6
 
-import * as math from "./math.js";          // import all named exports as a namespace
-math.add(2, 3);  // 5
+// ── Default import — any local name works ─────────────────────────────
+import Calculator from "./math.js";     // no curly braces
+import MyCalc from "./math.js";         // this name works too — default exports aren't named
 
-import Calculator from "./math.js";          // import default export, any local name
-import Calculator2, { PI as PiValue } from "./math.js"; // default + named together
+// ── Real backend example ────────────────────────────────────────────────
+// user.service.js
+export function findUser(userId) { return { id: userId, name: "Alex" }; }
+export function deleteUser(userId) { console.log("Deleting user", userId); }
 
-// ── Dynamic import — load a module on demand (async) ─────────────────
-const heavy = await import("./heavy-module.js");  // returns a Promise
-heavy.doSomething();
+// user.controller.js
+import { findUser, deleteUser } from "./user.service.js";
+const user = findUser(10);   // { id: 10, name: "Alex" }
+deleteUser(10);               // "Deleting user 10"
 
+// ── Dynamic import — load a module on demand (async) ────────────────────
 button.addEventListener("click", async () => {
-  const { renderChart } = await import("./chart-library.js");  // lazy-load on click
+  const { renderChart } = await import("./chart-library.js");  // lazy-loaded, returns a Promise
   renderChart(data);
-});`,
+});
+
+// ── Enabling ESM in Node.js — package.json ──────────────────────────────
+// { "type": "module" }`,
       },
       keyTakeaways: [
-        { en: "A file can have multiple named exports (`export const x`) plus exactly one default export (`export default ...`) at the same time.", np: "एउटा file मा multiple named exports (`export const x`) र exactly एउटा default export (`export default ...`) एकैसाथ हुन सक्छ।", jp: "1つのファイルは複数の名前付きエクスポート（`export const x`）とちょうど1つのデフォルトエクスポート（`export default ...`）を同時に持てる。" },
+        { en: "`export` shares code from a file, `import` brings it into another — a file can have multiple named exports plus exactly one default export at the same time.", np: "`export` ले file बाट code share गर्छ, `import` ले अर्को file मा ल्याउँछ — एउटा file मा multiple named exports र exactly एउटा default export एकैसाथ हुन सक्छ।", jp: "exportはファイルからコードを共有し、importはそれを別のファイルに取り込む。1つのファイルは複数の名前付きエクスポートとちょうど1つのデフォルトエクスポートを同時に持てる。" },
+        { en: "Named imports must match the exported name exactly (`import { add }`, unless renamed with `as`); a default import can be given any local name (`import Calculator from \"./math.js\"`).", np: "Named imports ले exported name सँग exactly मिल्नुपर्छ (`import { add }`, `as` ले renamed नगरेसम्म); default import जुनसुकै local नामले import गर्न सकिन्छ।", jp: "名前付きインポートはエクスポート名と正確に一致する必要がある（`import { add }`、asで改名しない限り）。デフォルトインポートはどんなローカル名でも良い。" },
         { en: "Static `import` statements must sit at the top level of a file (never inside a conditional), which is exactly what lets bundlers tree-shake unused exports away.", np: "Static `import` statements file को top level मा नै हुनुपर्छ (conditional भित्र होइन), यही ले bundlers लाई unused exports tree-shake गर्न दिन्छ।", jp: "静的なimport文はファイルのトップレベルに置く必要がある（条件文の中は不可）。これがバンドラーが未使用のエクスポートをツリーシェイクできる理由。" },
         { en: "`await import(\"./path.js\")` is a dynamic import — it returns a Promise, can be called conditionally or lazily anywhere in code, unlike static import.", np: "`await import(\"./path.js\")` dynamic import हो — यसले Promise फर्काउँछ, static import भन्दा फरक जहाँसुकै conditionally call गर्न सकिन्छ।", jp: "`await import(\"./path.js\")`は動的importで、Promiseを返す。静的importとは異なり、コードのどこでも条件付きで呼べる。" },
       ],
       commonMistakes: [
-        { en: "Forgetting the file extension in an import path (`import x from \"./math\"` instead of `\"./math.js\"`) — native ESM in the browser requires it, unlike bundler-based setups.", np: "Import path मा file extension बिर्सनु (`\"./math\"` को सट्टा `\"./math.js\"`) — browser को native ESM मा यो required हुन्छ।", jp: "importパスでファイル拡張子を忘れること（`\"./math\"`ではなく`\"./math.js\"`）。ブラウザのネイティブESMではこれが必要。" },
-        { en: "Trying to write `import` inside an `if` block or function body, expecting it to behave like `require()` — static import is only valid at the top level of a module.", np: "`import` लाई `if` block वा function body भित्र लेख्ने प्रयास गर्नु, `require()` जस्तै behave गर्छ भन्ने आशा गर्नु — static import module को top level मा मात्र valid हुन्छ।", jp: "`if`ブロックや関数本体内で`import`を書き、`require()`のように動作すると期待すること。静的importはモジュールのトップレベルでのみ有効。" },
-        { en: "Mixing up a default import's naming freedom with named imports — `import Foo from \"./x.js\"` can be named anything, but `import { add }` must match the exported name exactly (unless renamed with `as`).", np: "Default import को naming freedom र named imports मिलाउनु — `import Foo from \"./x.js\"` जुनसुकै नाम राख्न सकिन्छ, तर `import { add }` ले exported name सँग exactly मिलाउनुपर्छ।", jp: "デフォルトインポートの命名の自由と名前付きインポートを混同すること。`import Foo from \"./x.js\"`はどんな名前でもよいが、`import { add }`はエクスポートされた名前と正確に一致する必要がある（asで改名しない限り）。" },
+        { en: "Forgetting curly braces on a named import (`import add from \"./math.js\"` instead of `import { add } from \"./math.js\"`).", np: "Named import मा curly braces बिर्सनु (`import { add } from \"./math.js\"` को सट्टा `import add from \"./math.js\"`)।", jp: "名前付きインポートで波括弧を忘れること（`import { add } from \"./math.js\"`ではなく`import add from \"./math.js\"`）。" },
+        { en: "Using curly braces on a default import (`import { User } from \"./User.js\"` instead of `import User from \"./User.js\"`) — default exports don't have a name to match.", np: "Default import मा curly braces प्रयोग गर्नु (`import User from \"./User.js\"` को सट्टा `import { User } from \"./User.js\"`) — default exports सँग match गर्ने name नै हुँदैन।", jp: "デフォルトインポートで波括弧を使うこと（`import User from \"./User.js\"`ではなく`import { User } from \"./User.js\"`）。デフォルトエクスポートには一致させる名前がない。" },
+        { en: "Trying to write more than one default export in the same file — a file can only have one; use named exports for anything beyond that.", np: "Same file मा एक भन्दा बढी default export लेख्ने प्रयास गर्नु — एउटा file मा एउटा मात्र हुन सक्छ; बाँकीका लागि named exports प्रयोग गर्ने।", jp: "同じファイルに2つ以上のデフォルトエクスポートを書こうとすること。1ファイルに1つしか持てない。それ以外は名前付きエクスポートを使う。" },
+        { en: "Forgetting the file extension in an import path (`\"./math\"` instead of `\"./math.js\"`) — native ESM in the browser requires it, unlike bundler-based setups.", np: "Import path मा file extension बिर्सनु (`\"./math.js\"` को सट्टा `\"./math\"`) — browser को native ESM मा यो required हुन्छ।", jp: "importパスでファイル拡張子を忘れること（`\"./math.js\"`ではなく`\"./math\"`）。ブラウザのネイティブESMではこれが必要。" },
+        { en: "Mixing CommonJS (`module.exports`) and ES Modules (`import`/`export`) syntax in the same file — they are different module systems, so pick one style per project.", np: "Same file मा CommonJS (`module.exports`) र ES Modules (`import`/`export`) syntax मिलाउनु — यी फरक module systems हुन्, project प्रति एउटा style मात्र छान्ने।", jp: "同じファイルでCommonJS（module.exports）とESモジュール（import/export）の構文を混ぜること。異なるモジュールシステムなので、プロジェクトごとに1つの方式を選ぶ。" },
       ],
       quiz: [
         {
