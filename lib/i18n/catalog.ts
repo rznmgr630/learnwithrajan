@@ -508,16 +508,6 @@ export const UI_STRINGS = {
     np: "आधारभूत देखि उन्नत सम्म LeetCode-शैलीका समस्याहरू।",
     jp: "基礎から応用まで LeetCode スタイルの問題集。",
   },
-  "hub.programming.groupDbms": {
-    en: "DBMS",
-    np: "DBMS",
-    jp: "DBMS",
-  },
-  "hub.programming.groupDbmsHint": {
-    en: "Database fundamentals, data models, ER modeling, SQL, and advanced DB topics.",
-    np: "डाटाबेस आधारभूत, डेटा मोडेल, ER मोडेलिङ, SQL र उन्नत DB विषयहरू।",
-    jp: "データベースの基礎・データモデル・ER設計・SQL・DB応用トピック。",
-  },
   "hub.programming.groupInterview": {
     en: "Interview Prep",
     np: "अन्तर्वार्ता तयारी",
@@ -629,21 +619,6 @@ export const UI_STRINGS = {
     jp: "初級から上級 — データベース・認証・RLS・リアルタイム・ストレージ",
   },
   "hub.supabase.cta": {
-    en: "Start learning →",
-    np: "सिक्न सुरु गर्नुहोस् →",
-    jp: "学習を始める →",
-  },
-  "hub.dbms.title": {
-    en: "Database Management System",
-    np: "डाटाबेस व्यवस्थापन प्रणाली",
-    jp: "データベース管理システム",
-  },
-  "hub.dbms.subtitle": {
-    en: "32 concepts — data models, ER modeling, SQL, and advanced database topics",
-    np: "३२ अवधारणाहरू — डेटा मोडेल, ER मोडेलिङ, SQL र उन्नत डाटाबेस विषयहरू",
-    jp: "32のコンセプト — データモデル・ER設計・SQL・DB応用トピック",
-  },
-  "hub.dbms.cta": {
     en: "Start learning →",
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
