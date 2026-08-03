@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -2302,6 +2302,680 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     note:
       "Exam favourite: don't forget recursive call-stack space when asked for an algorithm's space complexity — it's the most commonly missed part of the answer.",
     tags: ["Space Complexity", "Big O Notation", "Complexity", "Algorithms", "Data Structures"],
+  },
+  // ─────────────────────────────────────────────
+  // DATABASE MANAGEMENT SYSTEM
+  // ─────────────────────────────────────────────
+  {
+    id: 155,
+    slug: "dbms",
+    section: "Database Management System",
+    title: "DBMS",
+    tagline: "Where database theory begins — the vocabulary every other topic in this section builds on",
+    description:
+      "<b>What This Covers</b>\nDBMS is the foundation of this whole syllabus section — before touching data models, ER diagrams, SQL, or advanced topics, you need to be precise about the handful of terms that get mixed up constantly on exams: database, DBMS, RDBMS, schema, and instance.\n\n<b>How This Section Is Organized</b>\n• <b>Database Basics</b> — Database, DBMS, RDBMS, Schema, and Instance — the five foundational terms\n• <b>Data Models</b> — the different ways data has been structured over time (hierarchical, network, relational, object-oriented)\n  ↳ Each is covered in its own card next, always contrasted against the term or model right before it.",
+    note:
+      "Exam favourite: database vs DBMS is the single most repeated confusion in this chapter — database is the organized data itself, DBMS is the software that manages it.",
+    diagram:
+      "  DBMS TERMINOLOGY — HOW THE PIECES FIT TOGETHER\n\n  Application\n      │\n      ▼\n  DBMS   (the software — MySQL, PostgreSQL...)\n      │   RDBMS = a DBMS that is specifically relational (tables + SQL)\n      ▼\n  Database  (the organized data itself)\n      │\n      ├── Schema    = the structure/blueprint (rarely changes)\n      └── Instance  = the actual data right now (changes constantly)",
+    tags: ["DBMS", "Database", "RDBMS", "Schema", "Instance"],
+  },
+  {
+    id: 156,
+    slug: "database-basics",
+    section: "Database Management System",
+    parentSlug: "dbms",
+    title: "Database Basics",
+    tagline: "Five terms exams love to mix up: database, DBMS, RDBMS, schema, and instance",
+    description:
+      "<b>What This Covers</b>\nDatabase Basics nails down the five terms most exams test right at the start of any DBMS syllabus — the difference between the data itself, the software managing it, its relational flavour, its blueprint, and its live content.\n\n<b>How This Section Is Organized</b>\n• <b>Database</b> — the organized data itself\n• <b>DBMS</b> — the software layer that manages that data\n• <b>RDBMS</b> — a DBMS that specifically stores data as related tables\n• <b>Schema</b> — the structural blueprint the data follows\n• <b>Instance</b> — the actual data present at one specific moment\n  ↳ Each is covered in its own card next, always contrasted against the term before it.",
+    note:
+      "Exam favourite: schema vs instance is the second most repeated confusion here — schema is the design (changes rarely, via migrations), instance is the data snapshot right now (changes with every insert/update/delete).",
+    tags: ["Database Basics", "DBMS", "Fundamentals"],
+  },
+  {
+    id: 157,
+    slug: "database",
+    section: "Database Management System",
+    parentSlug: "database-basics",
+    title: "Database",
+    tagline: "An organized collection of related data stored for easy access, management, and updates",
+    description:
+      "<b>What a Database Is, in Plain English</b>\nA database is a digital filing cabinet: instead of paper folders, data lives in structured files on a disk; instead of searching drawer by drawer, you query directly for the record you need; and multiple people can read and update the same cabinet at the same time, safely.\n\n<b>Why Not Just Use a Spreadsheet or a Text File?</b>\n• Files do not enforce structure — anyone can type anything anywhere\n• Files do not handle multiple simultaneous writers safely\n• Files have no built-in way to search, filter, or relate data across tables\n• Files cannot easily enforce rules like \"age must be a number\" or \"email must be unique\"\n\n<b>Common Examples</b>\n• A banking app storing account balances and transactions\n• An e-commerce site storing products, orders, and customers\n• A social app storing users, posts, and comments",
+    note:
+      "Exam favourite: a database is just the data itself. The software that lets you create, read, update, and delete that data is a separate thing, called a DBMS — don't collapse the two words into one idea.",
+    code:
+      "-- A tiny slice of a real database: one table, two rows\n\nCREATE TABLE customers (\n  id    INT PRIMARY KEY,\n  name  VARCHAR(100),\n  email VARCHAR(100) UNIQUE\n);\n\nINSERT INTO customers (id, name, email) VALUES\n  (1, 'Asha Gurung', 'asha@example.com'),\n  (2, 'Bikash Rai',  'bikash@example.com');\n\n-- The DATABASE is the stored data (the customers table + its rows).\n-- The software that ran these commands is the DBMS.",
+    codeLanguage: "SQL",
+    tags: ["Database", "Data Storage", "Fundamentals"],
+  },
+  {
+    id: 158,
+    slug: "dbms-definition",
+    section: "Database Management System",
+    parentSlug: "database-basics",
+    title: "DBMS",
+    tagline: "The software layer that creates, reads, updates, deletes, and protects a database",
+    description:
+      "<b>What a DBMS Is, in Plain English</b>\nA DBMS (Database Management System) is the software that sits between users/applications and the actual data files, handling every operation safely and efficiently — the engine that runs the filing cabinet from the previous card.\n\n<b>What a DBMS Actually Does</b>\n• Stores and organizes data on disk\n• Lets applications create, read, update, and delete records (CRUD)\n• Enforces rules — data types, uniqueness, required fields\n• Controls who can access what (security and permissions)\n• Manages multiple users reading/writing at the same time without corrupting data\n• Recovers data after a crash (backups, logs)\n\n<b>Why It Matters</b>\nWithout a DBMS, every application would need to write its own file-reading, locking, and validation logic from scratch — and two users updating the same record at once could easily corrupt it.\n\n<b>Examples of DBMS Software</b>\n• MySQL, PostgreSQL, Oracle, SQL Server → relational (RDBMS)\n• MongoDB, Redis, Cassandra → non-relational (NoSQL)",
+    note:
+      "Exam favourite: don't just say 'software that stores data' — mention the four things a DBMS guarantees: structure enforcement, concurrent access control, security, and recovery.",
+    diagram:
+      "  Application\n      │\n      │  SQL query / API call\n      ▼\n  ┌──────────────────────────┐\n  │           DBMS            │  ← enforces rules, manages access,\n  │  (MySQL / PostgreSQL...)   │    handles concurrency, recovery\n  └──────────────────────────┘\n      │\n      ▼\n  Database files on disk",
+    tags: ["DBMS", "CRUD", "Concurrency", "Data Integrity"],
+  },
+  {
+    id: 159,
+    slug: "rdbms",
+    section: "Database Management System",
+    parentSlug: "database-basics",
+    title: "RDBMS",
+    tagline: "A DBMS that organizes data into related tables, enforced by rules and keys",
+    description:
+      "<b>What an RDBMS Is, in Plain English</b>\nAn RDBMS (Relational Database Management System) is a DBMS that stores data in tables (relations) made of rows and columns, and lets those tables reference each other through keys — every RDBMS is a DBMS, but not every DBMS is relational.\n\n<b>What Makes It \"Relational\"</b>\n• Data lives in tables — each table represents one type of entity (customers, orders, products)\n• Tables relate to each other through foreign keys (an order references a customer)\n• Every RDBMS enforces schema rules: fixed columns, defined data types, constraints\n\n<b>RDBMS vs Plain DBMS</b>\n• MongoDB is a DBMS but not an RDBMS — it stores flexible JSON-like documents, not related tables\n• MySQL, PostgreSQL, Oracle, SQL Server are RDBMS — they speak SQL and enforce table relationships\n\n<b>Why RDBMS Became the Industry Default</b>\n• Strong consistency — the same customer id always means the same customer\n• Powerful querying across related tables via JOINs\n• Decades of tooling, transactions, and standardization around SQL",
+    note:
+      "Exam favourite litmus test: 'Does it store data as tables linked by foreign keys and enforce a fixed schema?' If yes → RDBMS. If it stores flexible documents/key-value pairs without enforced relationships → NoSQL DBMS.",
+    diagram:
+      "  customers                  orders\n  ┌────┬─────────┐           ┌────┬─────────────┬────────┐\n  │ id │ name    │           │ id │ customer_id │ total  │\n  ├────┼─────────┤           ├────┼─────────────┼────────┤\n  │ 1  │ Asha    │ ◄─────────┤101 │      1      │ 49.99  │\n  │ 2  │ Bikash  │ ◄─────────┤102 │      2      │ 19.50  │\n  └────┴─────────┘  foreign  └────┴─────────────┴────────┘\n                      key",
+    code:
+      "CREATE TABLE customers (\n  id   INT PRIMARY KEY,\n  name VARCHAR(100)\n);\n\nCREATE TABLE orders (\n  id          INT PRIMARY KEY,\n  customer_id INT REFERENCES customers(id),  -- foreign key: the 'relational' part\n  total       DECIMAL(10,2)\n);\n\n-- JOIN across the relationship\nSELECT c.name, o.total\nFROM orders o\nJOIN customers c ON o.customer_id = c.id;",
+    codeLanguage: "SQL",
+    tags: ["RDBMS", "Tables", "Foreign Key", "SQL"],
+  },
+  {
+    id: 160,
+    slug: "schema",
+    section: "Database Management System",
+    parentSlug: "database-basics",
+    title: "Schema",
+    tagline: "The blueprint that defines what tables, columns, types, and rules a database has",
+    description:
+      "<b>What a Schema Is, in Plain English</b>\nA schema is the structural blueprint of a database, like the floor plan of a house: the floor plan shows where each room is and what it's for, while the furniture and people inside (the actual data) can change every day. The floor plan itself changes rarely, and only through deliberate renovation.\n\n<b>What a Schema Includes</b>\n• Table names and their columns\n• Data types per column (`INT`, `VARCHAR`, `DATE`, ...)\n• Constraints (`NOT NULL`, `UNIQUE`, `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`)\n• Relationships between tables\n\n<b>Schema vs Data</b>\n• Schema = structure (rarely changes)\n• Data = the actual rows stored inside that structure (changes constantly)\n• Changing a schema (adding a column, renaming a table) is called a migration",
+    note:
+      "Exam favourite: contrast schema with instance directly — schema is the design (changes rarely, via migrations); instance is the data snapshot at a given moment (changes constantly). This pairing is a classic DBMS question.",
+    diagram:
+      "  SCHEMA (structure — defined once)\n  Table: users\n  ┌──────────┬──────────────┬──────────┐\n  │ column   │ type         │ rule     │\n  ├──────────┼──────────────┼──────────┤\n  │ id       │ INT          │ PRIMARY  │\n  │ email    │ VARCHAR(255) │ UNIQUE   │\n  │ created  │ DATE         │ NOT NULL │\n  └──────────┴──────────────┴──────────┘\n\n  DATA (rows — changes constantly)\n  1 | asha@example.com   | 2026-01-04\n  2 | bikash@example.com | 2026-02-11",
+    code:
+      "-- This CREATE TABLE statement defines the schema\nCREATE TABLE users (\n  id      INT PRIMARY KEY,\n  email   VARCHAR(255) UNIQUE NOT NULL,\n  created DATE NOT NULL DEFAULT CURRENT_DATE\n);\n\n-- Altering the schema later (a migration)\nALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT true;",
+    codeLanguage: "SQL",
+    tags: ["Schema", "Constraints", "Migration", "Structure"],
+  },
+  {
+    id: 161,
+    slug: "instance",
+    section: "Database Management System",
+    parentSlug: "database-basics",
+    title: "Instance",
+    tagline: "The actual data stored in a database at one specific moment in time",
+    description:
+      "<b>What an Instance Is, in Plain English</b>\nUsing the floor-plan analogy again: schema is the floor plan (fixed structure), and instance is a photo of the house right now, with people and furniture in their current positions.\n\n<b>Why the Distinction Matters</b>\n• The schema for a `users` table never changes just because someone signs up\n• But the instance changes every single time a row is inserted, updated, or deleted\n• Two databases can share the exact same schema but have completely different instances (e.g. a production database and a test database with the same table structure but different rows)\n\n<b>Instance in Practice</b>\n• `SELECT * FROM users;` returns the current instance of that table\n• Backups capture an instance at a specific timestamp\n• \"Restore to yesterday\" means going back to yesterday's instance under today's schema",
+    note:
+      "Exam favourite trap: 'what changes more often, schema or instance?' Answer instance — schema changes are deliberate migrations, instance changes with every ordinary insert/update/delete.",
+    diagram:
+      "  Schema (fixed):  users(id, name, email)\n\n  Instance at 9:00am:         Instance at 9:05am:\n  1 | Asha   | asha@...       1 | Asha   | asha@...\n  2 | Bikash | bikash@...     2 | Bikash | bikash@...\n                              3 | Kiran  | kiran@...   ← new row inserted\n\n  Same schema, different instance.",
+    code:
+      "-- Schema stays the same, instance changes with every write\nINSERT INTO users (id, name, email) VALUES (3, 'Kiran Thapa', 'kiran@example.com');\n\n-- The instance right now:\nSELECT * FROM users;\n-- returns whatever rows currently exist -- this result set IS the instance",
+    codeLanguage: "SQL",
+    tags: ["Instance", "Schema", "Data Snapshot"],
+  },
+  {
+    id: 162,
+    slug: "data-models",
+    section: "Database Management System",
+    parentSlug: "dbms",
+    title: "Data Models",
+    tagline: "The different ways database designers have structured data over time — trees, graphs, tables, and objects",
+    description:
+      "<b>What This Covers</b>\nBefore the relational model became the industry standard, database designers experimented with different ways to structure data — as a tree, as a graph, as related tables, and as objects. This section covers all four, and why the relational model won.\n\n<b>How This Section Is Organized</b>\n• <b>Hierarchical Model</b> — data organized as a tree, one parent per child\n• <b>Network Model</b> — data organized as a graph, multiple parents allowed\n• <b>Relational Model</b> — data organized as tables linked by key values, not pointers\n• <b>Object-Oriented Model</b> — data stored as objects with classes and inheritance\n  ↳ Each model solved a limitation of the one before it — read them in order to see the progression.",
+    note:
+      "Exam favourite: know the ONE limitation each model fixed — hierarchical's one-parent rule, network's manual pointer navigation, and object-oriented's impedance mismatch with relational storage.",
+    diagram:
+      "  EVOLUTION OF DATA MODELS\n\n  Hierarchical  ──►  Network  ──►  Relational  ──►  Object-Oriented\n  (tree, 1 parent)   (graph,        (tables,          (objects, classes,\n                      many parents)  key values)       inheritance)",
+    tags: ["Data Models", "Hierarchical Model", "Network Model", "Relational Model"],
+  },
+  {
+    id: 163,
+    slug: "hierarchical-model",
+    section: "Database Management System",
+    parentSlug: "data-models",
+    title: "Hierarchical Model",
+    tagline: "Data organized as a tree — each child has exactly one parent",
+    description:
+      "<b>What the Hierarchical Model Is, in Plain English</b>\nThink of a company org chart: the CEO is the root, each manager reports to exactly one person above them, and each employee has exactly one manager. The hierarchical model organizes data the same way — as a tree, where each record (child) has exactly one parent record, and a parent can have many children.\n\n<b>How It Works</b>\n• Data is linked with parent-child pointers, like a file system with folders and subfolders\n• To find a record, you traverse the tree from the root down\n\n<b>Limitations</b>\n• A child can only have one parent — real-world relationships are often many-to-many (a student takes many courses, a course has many students), which trees cannot represent naturally\n• Restructuring the tree requires touching many linked records\n\n<b>Where It's Still Used</b>\n• File systems (folders and files)\n• XML and JSON document structures\n• IBM's IMS (Information Management System), one of the earliest DBMS products",
+    note:
+      "Exam favourite: if asked to name a real system still using the hierarchical model, say 'file systems' — folders and files are a textbook hierarchical structure everyone already understands.",
+    diagram:
+      "              [Company]\n              /        \\\n       [Engineering]   [Sales]\n         /      \\           \\\n   [Backend]  [Frontend]   [Sales Rep]\n\n  Each box has exactly ONE parent above it.",
+    tags: ["Hierarchical Model", "Tree Structure", "Data Model"],
+  },
+  {
+    id: 164,
+    slug: "network-model",
+    section: "Database Management System",
+    parentSlug: "data-models",
+    title: "Network Model",
+    tagline: "Data organized as a graph — a child can have multiple parents",
+    description:
+      "<b>What the Network Model Is, in Plain English</b>\nThe network model is an extension of the hierarchical model that allows a child record to have multiple parent records, forming a graph instead of a strict tree — the hierarchical model's one-parent rule couldn't represent real relationships like 'a student enrolls in many courses, and a course has many students.'\n\n<b>How It Works</b>\n• Records are connected through explicit pointers called 'sets'\n• A single record can participate as a child in multiple sets — i.e. have multiple parents\n\n<b>Limitations</b>\n• Navigating the graph requires following pointer chains manually in application code — there's no simple query language like SQL\n• Any structural change means updating pointers throughout the graph\n\n<b>Where It's Used Today</b>\n• Mostly historical (CODASYL databases from the 1970s)\n• Conceptually lives on in graph databases (Neo4j), which solved the same many-to-many problem with a modern query language",
+    note:
+      "Exam favourite: what problem did the network model solve that hierarchical couldn't? Many-to-many relationships. What replaced it? The relational model, using junction tables instead of manual pointers.",
+    diagram:
+      "  [Course: Math]     [Course: Physics]\n        \\                /\n         \\              /\n        [Student: Asha]\n         /              \\\n        /                \\\n  [Course: Chemistry]  [Student: Bikash]\n\n  Asha (a child record) has TWO parent courses — not possible in a strict tree.",
+    tags: ["Network Model", "Many-to-Many", "Graph Structure", "CODASYL"],
+  },
+  {
+    id: 165,
+    slug: "relational-model",
+    section: "Database Management System",
+    parentSlug: "data-models",
+    title: "Relational Model",
+    tagline: "Data organized as tables of rows and columns, connected through keys",
+    description:
+      "<b>What the Relational Model Is, in Plain English</b>\nThe relational model, introduced by Edgar F. Codd in 1970, organizes data into tables (relations) made of rows (tuples) and columns (attributes), with relationships expressed through shared key values rather than physical pointers.\n\n<b>Why It Was Revolutionary</b>\n• No pointers to navigate manually — you query by value using a declarative language (SQL): \"give me all orders where customer_id = 1\"\n• Any table can relate to any other table simply by matching key values\n• Adding a new relationship doesn't require rewiring pointers, just adding a foreign key column\n\n<b>Core Building Blocks</b>\n• Table (relation) — a named collection of rows about one entity type\n• Row (tuple) — one record\n• Column (attribute) — one field of that record\n• Primary key — uniquely identifies a row\n• Foreign key — links a row to a row in another table\n\n<b>Why It Won</b>\n• Simpler mental model than trees/graphs\n• SQL gave a standard, powerful query language\n• Strong mathematical foundation (set theory, relational algebra) made it provably consistent",
+    note:
+      "Exam favourite: who invented the relational model and why it matters — Edgar F. Codd, 1970. The key insight was relating data by value (matching keys via SQL) instead of by physical pointer.",
+    diagram:
+      "  students             enrollments               courses\n  ┌────┬───────┐       ┌────────────┬───────────┐  ┌────┬─────────┐\n  │ id │ name  │       │ student_id │ course_id │  │ id │ name    │\n  ├────┼───────┤       ├────────────┼───────────┤  ├────┼─────────┤\n  │ 1  │ Asha  │◄──────┤     1      │    10     ├─►│ 10 │ Math    │\n  │ 2  │Bikash │◄──────┤     1      │    20     ├─►│ 20 │ Physics │\n  └────┴───────┘       └────────────┴───────────┘  └────┴─────────┘\n\n  No pointers — just matching key VALUES across tables.",
+    code:
+      "CREATE TABLE students (id INT PRIMARY KEY, name VARCHAR(100));\nCREATE TABLE courses  (id INT PRIMARY KEY, name VARCHAR(100));\nCREATE TABLE enrollments (\n  student_id INT REFERENCES students(id),\n  course_id  INT REFERENCES courses(id),\n  PRIMARY KEY (student_id, course_id)\n);\n\n-- Query the relationship by VALUE, not by pointer traversal\nSELECT s.name, c.name AS course\nFROM enrollments e\nJOIN students s ON e.student_id = s.id\nJOIN courses  c ON e.course_id  = c.id;",
+    codeLanguage: "SQL",
+    tags: ["Relational Model", "Codd", "SQL", "Tables", "Keys"],
+  },
+  {
+    id: 166,
+    slug: "object-oriented-model",
+    section: "Database Management System",
+    parentSlug: "data-models",
+    title: "Object-Oriented Model",
+    tagline: "Data stored as objects, with classes, inheritance, and behavior bundled together",
+    description:
+      "<b>What the Object-Oriented Model Is, in Plain English</b>\nThe object-oriented model stores data as objects — the same kind of object you'd use in OOP code — bundling both the data (attributes) and the behavior (methods) together, and supporting inheritance between object types.\n\n<b>How It Differs From the Relational Model</b>\n• Relational: data is flat rows in tables; there is no built-in inheritance or behavior\n• Object-oriented: data is stored as objects with classes, and a `Manager` class can inherit from an `Employee` class, reusing its structure\n\n<b>Why It Appeared</b>\n• In the 1980s–90s, applications were increasingly written in object-oriented languages (C++, Java)\n• Every time an object was saved to a relational database, it had to be manually flattened into rows — the 'object-relational impedance mismatch'\n• Object-oriented databases aimed to store objects directly, with no translation step\n\n<b>Where the Idea Lives On Today</b>\n• Rarely used as a standalone DBMS today (db4o, ObjectDB are niche)\n• The core idea survives in ORMs (Object-Relational Mappers) like Prisma, Sequelize, Hibernate — they let you code against objects while the ORM handles translating to relational tables underneath",
+    note:
+      "Exam favourite: why didn't object-oriented databases replace relational ones? The relational model's mathematical simplicity, SQL, and tooling ecosystem won — the impedance mismatch is instead solved today with ORMs layered on relational databases.",
+    diagram:
+      "  class Employee { name; salary; }\n  class Manager extends Employee { teamSize; }   ← inheritance\n\n  Object-oriented DB stores the OBJECT directly:\n  Manager { name: 'Asha', salary: 90000, teamSize: 5 }\n\n  vs. relational model needing it split across flat tables:\n  employees(id, name, salary) + managers(employee_id, team_size)",
+    tags: ["Object-Oriented Model", "Inheritance", "ORM", "Impedance Mismatch"],
+  },
+  {
+    id: 167,
+    slug: "er-model",
+    section: "Database Management System",
+    title: "ER Model",
+    tagline: "The visual planning stage before any table gets created — entities, attributes, relationships, and cardinality",
+    description:
+      "<b>What This Covers</b>\nBefore any table gets created, a database designer sketches out an Entity-Relationship (ER) diagram — a visual plan of what real-world things need storing, what describes them, and how they connect to each other.\n\n<b>How This Section Is Organized</b>\n• <b>Entity</b> — a real-world thing or concept to store data about\n• <b>Attribute</b> — a property that describes an entity\n• <b>Relationship</b> — how two or more entities connect\n• <b>Cardinality</b> — how many instances of one entity relate to instances of another\n  ↳ Each concept builds on the one before it: entities have attributes, entities connect via relationships, and cardinality defines the numbers in that relationship.",
+    note:
+      "Exam favourite: the ER-to-schema translation is a guaranteed question type — entity becomes a table, attribute becomes a column, relationship becomes a foreign key or a junction table.",
+    diagram:
+      "  ER MODEL — HOW THE PIECES FIT TOGETHER\n\n  ┌──────────┐  attribute\n  │ Entity A │◄──────────  (describes the entity)\n  └────┬─────┘\n       │ relationship (diamond)\n       ▼            cardinality (1:1, 1:N, M:N)\n  ┌──────────┐\n  │ Entity B │\n  └──────────┘",
+    tags: ["ER Model", "Entity", "Attribute", "Relationship", "Cardinality"],
+  },
+  {
+    id: 168,
+    slug: "entity",
+    section: "Database Management System",
+    parentSlug: "er-model",
+    title: "Entity",
+    tagline: "A real-world thing or concept that a database stores information about",
+    description:
+      "<b>What an Entity Is, in Plain English</b>\nAn entity is a real-world object or concept that you want to store data about — a student, a product, an order, a car. In a relational database, each entity typically becomes one table.\n\n<b>Entity vs Entity Instance</b>\n• Entity = the general concept, e.g. \"Student\"\n• Entity instance = one specific occurrence, e.g. \"Asha Gurung, id 1\"\n• A table represents the entity type; each row represents one entity instance\n\n<b>Strong vs Weak Entities</b>\n• Strong entity — has its own primary key and can exist independently (e.g. `Student`)\n• Weak entity — depends on another entity for identification (e.g. `Dependent` of an employee, identified only in combination with the employee's key)\n\n<b>In an ER Diagram</b>\n• Entities are typically drawn as rectangles",
+    note:
+      "Exam favourite: state the ER-to-schema rule directly — entity → table, attribute → column, entity instance → row.",
+    diagram:
+      "  ┌───────────┐        ┌───────────┐\n  │  Student  │        │  Course   │   ← entities (rectangles)\n  └───────────┘        └───────────┘\n\n  Entity instance: Student(id=1, name='Asha')",
+    code:
+      "-- The Student entity becomes a table; each row is an entity instance\nCREATE TABLE students (\n  id   INT PRIMARY KEY,\n  name VARCHAR(100)\n);\n\nINSERT INTO students (id, name) VALUES (1, 'Asha Gurung');  -- one entity instance",
+    codeLanguage: "SQL",
+    tags: ["Entity", "ER Model", "Strong Entity", "Weak Entity"],
+  },
+  {
+    id: 169,
+    slug: "er-attribute",
+    section: "Database Management System",
+    parentSlug: "er-model",
+    title: "Attribute",
+    tagline: "A property or characteristic that describes an entity",
+    description:
+      "<b>What an Attribute Is, in Plain English</b>\nAn attribute is a specific piece of data that describes an entity — a Student entity might have attributes like name, age, and email.\n\n<b>Types of Attributes</b>\n• Simple attribute — cannot be divided further (e.g. `age`)\n• Composite attribute — can be split into smaller parts (e.g. `name` → `first_name` + `last_name`)\n• Single-valued attribute — holds one value (e.g. one `date_of_birth`)\n• Multi-valued attribute — can hold multiple values (e.g. a person can have several `phone_numbers`)\n• Derived attribute — calculated from another attribute, not stored directly (e.g. `age` derived from `date_of_birth`)\n\n<b>In an ER Diagram</b>\n• Attributes are typically drawn as ovals connected to their entity\n• Multi-valued attributes get a double oval; derived attributes get a dashed oval",
+    note:
+      "Exam favourite: how do you store a multi-valued attribute in a relational table? Not 'comma-separated in one column' — the correct answer is a separate linked table, keeping the design in proper normal form.",
+    diagram:
+      "        (name)   (age)\n           \\       /\n         ┌───────────┐\n         │  Student  │\n         └───────────┘\n           /        \\\n     (email)   ((phone_numbers))  ← double oval = multi-valued",
+    code:
+      "-- Simple + single-valued attributes map directly to columns\nCREATE TABLE students (\n  id    INT PRIMARY KEY,\n  name  VARCHAR(100),\n  age   INT\n);\n\n-- A multi-valued attribute (phone_numbers) needs its own table\nCREATE TABLE student_phones (\n  student_id INT REFERENCES students(id),\n  phone      VARCHAR(20)\n);",
+    codeLanguage: "SQL",
+    tags: ["Attribute", "ER Model", "Multi-valued", "Derived Attribute"],
+  },
+  {
+    id: 170,
+    slug: "relationship",
+    section: "Database Management System",
+    parentSlug: "er-model",
+    title: "Relationship",
+    tagline: "How two or more entities are connected to each other",
+    description:
+      "<b>What a Relationship Is, in Plain English</b>\nA relationship describes how two or more entities are associated with each other — a Student enrolls in a Course, an Employee manages a Department.\n\n<b>Degree of a Relationship</b>\n• Unary (degree 1) — an entity relates to itself (an Employee supervises another Employee)\n• Binary (degree 2) — the most common — two entities relate (Student enrolls in Course)\n• Ternary (degree 3) — three entities participate together (Supplier supplies Part to Project)\n\n<b>Participation</b>\n• Total participation — every instance of the entity must participate in the relationship (every Order must have a Customer)\n• Partial participation — participation is optional (not every Employee manages a Department)\n\n<b>In an ER Diagram</b>\n• Relationships are drawn as diamonds connecting the related entities",
+    note:
+      "Exam favourite: in the final relational schema, a relationship usually becomes a foreign key (for one-to-many) or an entirely separate junction table (for many-to-many).",
+    diagram:
+      "  ┌──────────┐        ┌───────────┐        ┌──────────┐\n  │ Student  ├──────< │ enrolls in │ >──────┤  Course  │\n  └──────────┘        └───────────┘        └──────────┘\n                        (diamond)",
+    code:
+      "-- Binary relationship 'enrolls in' between Student and Course\n-- becomes a junction table for many-to-many\nCREATE TABLE enrollments (\n  student_id INT REFERENCES students(id),\n  course_id  INT REFERENCES courses(id),\n  PRIMARY KEY (student_id, course_id)\n);",
+    codeLanguage: "SQL",
+    tags: ["Relationship", "ER Model", "Participation", "Degree"],
+  },
+  {
+    id: 171,
+    slug: "cardinality",
+    section: "Database Management System",
+    parentSlug: "er-model",
+    title: "Cardinality",
+    tagline: "How many instances of one entity can relate to instances of another",
+    description:
+      "<b>What Cardinality Is, in Plain English</b>\nCardinality defines the numerical relationship between two entities — how many instances of Entity A can be associated with how many instances of Entity B.\n\n<b>The Four Cardinality Types</b>\n• One-to-One (1:1) — one Employee has one Parking Spot, one Parking Spot belongs to one Employee\n• One-to-Many (1:N) — one Customer places many Orders, but each Order belongs to one Customer\n• Many-to-One (N:1) — the reverse view of the same 1:N relationship, seen from the 'many' side\n• Many-to-Many (M:N) — many Students enroll in many Courses, and vice versa\n\n<b>How Cardinality Is Implemented in Tables</b>\n• 1:1 — foreign key on either table (often with a UNIQUE constraint)\n• 1:N — foreign key placed on the 'many' side table\n• M:N — needs a separate junction/bridge table, since neither table alone can hold multiple foreign keys per row cleanly",
+    note:
+      "Exam favourite: 'where does the foreign key go?' Rule — the foreign key goes on the 'many' side in a 1:N relationship; many-to-many always needs its own junction table.",
+    diagram:
+      "  1:1     Employee ──────── ParkingSpot\n  1:N     Customer ───────< Order          (FK lives on Order)\n  M:N     Student  >─────── Course          (needs a junction table)",
+    code:
+      "-- 1:N — foreign key on the 'many' side (orders)\nCREATE TABLE orders (\n  id          INT PRIMARY KEY,\n  customer_id INT REFERENCES customers(id)\n);\n\n-- M:N — needs a junction table, no single FK column works\nCREATE TABLE enrollments (\n  student_id INT REFERENCES students(id),\n  course_id  INT REFERENCES courses(id),\n  PRIMARY KEY (student_id, course_id)\n);",
+    codeLanguage: "SQL",
+    tags: ["Cardinality", "One-to-Many", "Many-to-Many", "ER Model"],
+  },
+  {
+    id: 172,
+    slug: "relational-database",
+    section: "Database Management System",
+    title: "Relational Database",
+    tagline: "The formal vocabulary of relational theory — relation, tuple, attribute, and domain",
+    description:
+      "<b>What This Covers</b>\nOnce an ER diagram is translated into tables, the vocabulary shifts to the formal terms relational database theory actually uses — relation, tuple, attribute, and domain — the same ideas as \"table\", \"row\", and \"column\", but with the mathematical precision Codd's original model defined.\n\n<b>How This Section Is Organized</b>\n• <b>Relation</b> — the formal name for a table\n• <b>Tuple</b> — the formal name for a row\n• <b>Attribute</b> — a named column of a relation\n• <b>Domain</b> — the set of valid values an attribute may hold\n  ↳ Each of these formal terms maps directly onto something you already know from writing SQL — this section just gives it the exact textbook name.",
+    note:
+      "Exam favourite: relation = table, tuple = row, attribute = column. If a question uses the formal term, translate it mentally before answering.",
+    tags: ["Relational Database", "Relation", "Tuple", "Domain"],
+  },
+  {
+    id: 173,
+    slug: "relation",
+    section: "Database Management System",
+    parentSlug: "relational-database",
+    title: "Relation",
+    tagline: "The formal name for a table — a set of tuples sharing the same attributes",
+    description:
+      "<b>What a Relation Is, in Plain English</b>\nIn relational database theory, a relation is the formal term for what we casually call a table — a set of tuples (rows), each having the same set of attributes (columns).\n\n<b>Properties of a Relation</b>\n• Each row (tuple) is unique — no two rows are entirely identical\n• The order of rows does not matter\n• The order of columns does not matter\n• Each cell holds a single, atomic value (no lists or nested tables inside a cell)\n\n<b>Relation vs Table</b>\n• 'Relation' is the mathematical/theoretical term from Codd's original 1970 paper\n• 'Table' is the everyday, practical term used in SQL and by developers\n• They mean the same thing in day-to-day work",
+    note:
+      "Exam favourite: where does the term 'relational database' come from? A 'relation' is the formal name for a table, from Codd's 1970 paper — not because tables 'relate' to each other via foreign keys, a common misconception.",
+    diagram:
+      "  Relation: students\n  ┌────┬─────────┐\n  │ id │ name    │   ← attributes (columns)\n  ├────┼─────────┤\n  │ 1  │ Asha    │   ← tuple (row)\n  │ 2  │ Bikash  │   ← tuple (row)\n  └────┴─────────┘",
+    code:
+      "-- This CREATE TABLE defines a relation named 'students'\nCREATE TABLE students (\n  id   INT PRIMARY KEY,\n  name VARCHAR(100)\n);",
+    codeLanguage: "SQL",
+    tags: ["Relation", "Table", "Relational Model"],
+  },
+  {
+    id: 174,
+    slug: "tuple",
+    section: "Database Management System",
+    parentSlug: "relational-database",
+    title: "Tuple",
+    tagline: "The formal name for a single row in a relation",
+    description:
+      "<b>What a Tuple Is, in Plain English</b>\nA tuple is the formal term for a single row in a relation (table) — one complete record, holding one value for each attribute.\n\n<b>Key Properties</b>\n• A tuple represents one entity instance — e.g. one specific student\n• Every tuple in a relation must be unique (no two identical rows)\n• The values within a tuple are ordered according to the relation's attribute order, but the tuples themselves have no inherent order\n\n<b>Tuple vs Row</b>\n• 'Tuple' is the formal relational-algebra term\n• 'Row' or 'record' is the everyday SQL term for the same thing",
+    note:
+      "Exam favourite: a table with zero tuples is still a valid relation — an empty table. The schema (attributes/columns) can exist before any tuples (rows) are inserted.",
+    diagram:
+      "  students\n  ┌────┬─────────┬────────────────────┐\n  │ id │ name    │ email              │\n  ├────┼─────────┼────────────────────┤\n  │ 1  │ Asha    │ asha@example.com   │  ← one tuple\n  │ 2  │ Bikash  │ bikash@example.com │  ← another tuple\n  └────┴─────────┴────────────────────┘",
+    code:
+      "INSERT INTO students (id, name, email)\nVALUES (1, 'Asha Gurung', 'asha@example.com');  -- inserts one tuple",
+    codeLanguage: "SQL",
+    tags: ["Tuple", "Row", "Relational Model"],
+  },
+  {
+    id: 175,
+    slug: "relation-attribute",
+    section: "Database Management System",
+    parentSlug: "relational-database",
+    title: "Attribute",
+    tagline: "A named column of a relation, holding one type of value per tuple",
+    description:
+      "<b>What an Attribute Is, in Plain English</b>\nIn relational database theory, an attribute is a named column of a relation — a single property that every tuple in that relation has a value for.\n\n<b>Key Properties</b>\n• Every attribute has a name and a defined domain (the set of allowed values)\n• Every tuple supplies exactly one value per attribute (or NULL, if allowed)\n• Attributes are what you SELECT, filter with WHERE, and JOIN across tables\n\n<b>Attribute vs Column</b>\n• 'Attribute' is the formal relational-model term\n• 'Column' or 'field' is the everyday SQL term for the same thing\n\n<b>Why Attributes Must Be Atomic</b>\n• The relational model requires each attribute value to be a single, indivisible value (this is the basis of First Normal Form) — no storing a list of values inside one cell",
+    note:
+      "Exam favourite: this is the same underlying concept as the 'Attribute' card under ER Model — an ER diagram's attribute becomes a relational database's attribute (column) once the design is implemented as tables, and must hold atomic values to satisfy 1NF.",
+    diagram:
+      "  Relation: orders\n  ┌────┬─────────────┬────────┐\n  │ id │ customer_id │ total  │  ← attributes\n  └────┴─────────────┴────────┘",
+    code:
+      "SELECT id, customer_id, total   -- selecting specific attributes\nFROM orders\nWHERE total > 100;              -- filtering by an attribute's value",
+    codeLanguage: "SQL",
+    tags: ["Attribute", "Column", "Domain", "Relational Model"],
+  },
+  {
+    id: 176,
+    slug: "domain",
+    section: "Database Management System",
+    parentSlug: "relational-database",
+    title: "Domain",
+    tagline: "The set of valid values that an attribute is allowed to hold",
+    description:
+      "<b>What a Domain Is, in Plain English</b>\nA domain is the complete set of legal, allowed values for a given attribute. Every attribute is defined over exactly one domain.\n\n<b>Examples of Domains</b>\n• `age` → domain is positive integers, typically 0–120\n• `gender` → domain might be a fixed enum like {'M', 'F', 'Other'}\n• `email` → domain is strings matching a valid email pattern\n• `status` → domain might be {'pending', 'shipped', 'delivered'}\n\n<b>How Domains Are Enforced in SQL</b>\n• Data types (`INT`, `VARCHAR`, `DATE`) enforce the broad shape of the domain\n• `CHECK` constraints narrow the domain further (e.g. `CHECK (age >= 0)`)\n• `ENUM` types or foreign keys to a lookup table restrict values to an exact allowed set\n\n<b>Why Domains Matter</b>\n• They stop invalid data from ever entering the database\n• Two attributes are 'domain-compatible' only if they share the same domain — this matters for operations like UNION in relational algebra, which requires matching domains",
+    note:
+      "Exam favourite: a domain is stricter than just a data type. `INT` is a data type; 'an integer between 0 and 120' is the actual domain — CHECK constraints are how you express the full domain, not just the type.",
+    diagram:
+      "  Attribute: age        Domain: integers 0-120\n  Attribute: status     Domain: {'pending','shipped','delivered'}\n  Attribute: email      Domain: strings matching a valid email format",
+    code:
+      "CREATE TABLE students (\n  id     INT PRIMARY KEY,\n  age    INT CHECK (age BETWEEN 0 AND 120),      -- domain enforced\n  status VARCHAR(20) CHECK (status IN ('pending','shipped','delivered'))\n);",
+    codeLanguage: "SQL",
+    tags: ["Domain", "Constraints", "Data Integrity", "CHECK"],
+  },
+  {
+    id: 177,
+    slug: "sql",
+    section: "Database Management System",
+    title: "SQL",
+    tagline: "The language every relational database is operated with — five command categories, one job each",
+    description:
+      "<b>What This Covers</b>\nSQL (Structured Query Language) is how every relational database is actually operated — creating structure, changing data, reading data, controlling access, and managing transactions. Its commands are grouped into five categories, each with a distinct job.\n\n<b>How This Section Is Organized</b>\n• <b>Commands</b> — the five SQL command categories: DDL, DML, DQL, DCL, and TCL, and exactly which commands belong to each\n  ↳ Covered in full, one category per card, in the next section.",
+    note:
+      "Exam favourite: examiners love asking you to sort a list of commands (CREATE, SELECT, GRANT, COMMIT, DELETE...) into their correct category — know all five groups cold.",
+    diagram:
+      "  SQL COMMAND CATEGORIES\n\n  DDL  → structure    (CREATE, ALTER, DROP)\n  DML  → data         (INSERT, UPDATE, DELETE)\n  DQL  → read data    (SELECT)\n  DCL  → permissions  (GRANT, REVOKE)\n  TCL  → transactions (COMMIT, ROLLBACK)",
+    tags: ["SQL", "DDL", "DML", "DQL", "DCL", "TCL"],
+  },
+  {
+    id: 178,
+    slug: "sql-commands",
+    section: "Database Management System",
+    parentSlug: "sql",
+    title: "Commands",
+    tagline: "The five SQL command categories, grouped by what they actually do",
+    description:
+      "<b>What This Covers</b>\nEvery SQL statement you'll ever write belongs to one of five categories, based on what it actually does — defining structure, manipulating data, querying data, controlling access, or managing transactions.\n\n<b>How This Section Is Organized</b>\n• <b>DDL</b> — CREATE, ALTER, DROP — defines the database's structure\n• <b>DML</b> — INSERT, UPDATE, DELETE — manipulates the data inside tables\n• <b>DQL</b> — SELECT — reads data without modifying it\n• <b>DCL</b> — GRANT, REVOKE — controls who can access what\n• <b>TCL</b> — COMMIT, ROLLBACK — manages transaction boundaries\n  ↳ Each is covered in its own card next, with its full command list and an example.",
+    note:
+      "Exam favourite: DQL has only one command (SELECT) — the easiest category to remember for exactly that reason.",
+    tags: ["SQL Commands", "DDL", "DML", "DQL", "DCL", "TCL"],
+  },
+  {
+    id: 179,
+    slug: "ddl",
+    section: "Database Management System",
+    parentSlug: "sql-commands",
+    title: "DDL — Data Definition Language",
+    tagline: "SQL commands that define and modify the structure of the database itself",
+    description:
+      "<b>What DDL Is, in Plain English</b>\nDDL (Data Definition Language) is the group of SQL commands used to define, modify, and remove the structure of database objects — tables, schemas, indexes — not the data inside them.\n\n<b>The Three Core DDL Commands</b>\n• `CREATE` — builds a new database object (table, index, view, schema)\n• `ALTER` — modifies the structure of an existing object (add/drop/rename a column, change a data type)\n• `DROP` — permanently deletes an object and all the data inside it\n\n<b>Key Trait: Auto-Commit</b>\n• In most databases, DDL statements auto-commit immediately — you generally cannot roll back a `DROP TABLE` the way you can roll back a data change\n\n<b>DDL vs DML</b>\n• DDL changes the shape of the database (the schema)\n• DML changes the data living inside that shape",
+    note:
+      "Exam favourite: remember DDL with the phrase 'shapes the schema' — if a command changes what a table looks like (its columns, types, or existence) rather than the rows inside it, it's DDL.",
+    diagram:
+      "  DDL — changes STRUCTURE\n\n  CREATE  → build a new table/index/schema\n  ALTER   → modify an existing table's structure\n  DROP    → permanently remove a table/object",
+    code:
+      "-- CREATE: define a new table's structure\nCREATE TABLE products (\n  id    INT PRIMARY KEY,\n  name  VARCHAR(100),\n  price DECIMAL(10,2)\n);\n\n-- ALTER: modify the structure\nALTER TABLE products ADD COLUMN in_stock BOOLEAN DEFAULT true;\n\n-- DROP: remove the object entirely\nDROP TABLE products;",
+    codeLanguage: "SQL",
+    tags: ["DDL", "CREATE", "ALTER", "DROP", "SQL Commands"],
+  },
+  {
+    id: 180,
+    slug: "dml",
+    section: "Database Management System",
+    parentSlug: "sql-commands",
+    title: "DML — Data Manipulation Language",
+    tagline: "SQL commands that insert, update, and delete the data inside existing tables",
+    description:
+      "<b>What DML Is, in Plain English</b>\nDML (Data Manipulation Language) is the group of SQL commands used to manipulate the actual data stored inside tables — without changing the table's structure.\n\n<b>The Three Core DML Commands</b>\n• `INSERT` — adds new rows to a table\n• `UPDATE` — modifies values in existing rows\n• `DELETE` — removes existing rows\n\n<b>Key Trait: Transactional</b>\n• Unlike DDL, DML statements are typically part of a transaction and can be rolled back with `ROLLBACK` before being made permanent with `COMMIT`\n\n<b>DML vs DDL</b>\n• DML changes what's inside the table (the rows)\n• DDL changes the table's shape itself (columns, types, existence)",
+    note:
+      "Exam favourite: always run `UPDATE`/`DELETE` with a tested `WHERE` clause — omitting it modifies or deletes every row in the table. Wrapping the statement in a transaction lets you `ROLLBACK` if something looks wrong.",
+    diagram:
+      "  DML — changes DATA inside existing tables\n\n  INSERT  → add new rows\n  UPDATE  → modify existing rows\n  DELETE  → remove existing rows",
+    code:
+      "-- INSERT: add a new row\nINSERT INTO products (id, name, price) VALUES (1, 'Keyboard', 29.99);\n\n-- UPDATE: modify existing rows\nUPDATE products SET price = 24.99 WHERE id = 1;\n\n-- DELETE: remove rows\nDELETE FROM products WHERE id = 1;",
+    codeLanguage: "SQL",
+    tags: ["DML", "INSERT", "UPDATE", "DELETE", "SQL Commands"],
+  },
+  {
+    id: 181,
+    slug: "dql",
+    section: "Database Management System",
+    parentSlug: "sql-commands",
+    title: "DQL — Data Query Language",
+    tagline: "The single SQL command used to read and retrieve data — SELECT",
+    description:
+      "<b>What DQL Is, in Plain English</b>\nDQL (Data Query Language) consists of a single command — `SELECT` — used purely to retrieve data from one or more tables without modifying it.\n\n<b>Why SELECT Gets Its Own Category</b>\n• Unlike DDL (structure) and DML (write operations), `SELECT` is read-only\n• It is by far the most frequently used SQL command in everyday application code\n\n<b>What SELECT Can Do</b>\n• Choose specific columns to return\n• Filter rows with `WHERE`\n• Combine data across tables with `JOIN`\n• Group and summarize with `GROUP BY` and aggregate functions (`COUNT`, `SUM`, `AVG`)\n• Sort results with `ORDER BY`, limit results with `LIMIT`\n\n<b>DQL vs DML</b>\n• Some textbooks fold `SELECT` into DML since it's technically 'manipulating' a result set\n• Most modern courses separate it into its own DQL category because it never writes data",
+    note:
+      "Exam favourite: 'which SQL category has only one command?' Answer: DQL — just SELECT. It's the easiest of the five categories to remember for exactly that reason.",
+    diagram:
+      "  DQL — reads DATA, never modifies it\n\n  SELECT columns\n  FROM table\n  WHERE condition\n  JOIN other_table\n  GROUP BY column\n  ORDER BY column",
+    code:
+      "SELECT p.name, p.price\nFROM products p\nWHERE p.price > 20\nORDER BY p.price DESC\nLIMIT 10;",
+    codeLanguage: "SQL",
+    tags: ["DQL", "SELECT", "SQL Commands"],
+  },
+  {
+    id: 182,
+    slug: "dcl",
+    section: "Database Management System",
+    parentSlug: "sql-commands",
+    title: "DCL — Data Control Language",
+    tagline: "SQL commands that grant or revoke access permissions on database objects",
+    description:
+      "<b>What DCL Is, in Plain English</b>\nDCL (Data Control Language) is the group of SQL commands used to control who is allowed to access or modify specific database objects — permissions and security, not data or structure.\n\n<b>The Two Core DCL Commands</b>\n• `GRANT` — gives a user or role a specific permission (e.g. SELECT, INSERT, UPDATE on a table)\n• `REVOKE` — removes a previously granted permission\n\n<b>Why DCL Matters</b>\n• Not every application or user should be able to do everything — a reporting dashboard might only need `SELECT`, never `DELETE`\n• Following the principle of least privilege (only grant the minimum access needed) reduces the damage a bug or compromised credential can do",
+    note:
+      "Exam favourite: mention the principle of least privilege — grant only the exact permissions a role needs, and use REVOKE to tighten access as requirements change.",
+    diagram:
+      "  DCL — controls WHO can do WHAT\n\n  GRANT   → give a permission to a user/role\n  REVOKE  → take a permission away",
+    code:
+      "-- Give a reporting user read-only access\nGRANT SELECT ON products TO reporting_user;\n\n-- Give an app user full data access, but not structural changes\nGRANT SELECT, INSERT, UPDATE, DELETE ON products TO app_user;\n\n-- Revoke a permission that's no longer needed\nREVOKE DELETE ON products FROM app_user;",
+    codeLanguage: "SQL",
+    tags: ["DCL", "GRANT", "REVOKE", "Permissions", "Security"],
+  },
+  {
+    id: 183,
+    slug: "tcl",
+    section: "Database Management System",
+    parentSlug: "sql-commands",
+    title: "TCL — Transaction Control Language",
+    tagline: "SQL commands that manage the boundaries of a transaction",
+    description:
+      "<b>What TCL Is, in Plain English</b>\nTCL (Transaction Control Language) is the group of SQL commands used to manage transactions — grouping multiple DML statements so they succeed or fail together.\n\n<b>The Two Core TCL Commands</b>\n• `COMMIT` — permanently saves all changes made in the current transaction\n• `ROLLBACK` — undoes all changes made in the current transaction, reverting to the state before it began\n\n<b>Why TCL Matters</b>\n• Some operations require multiple steps to be atomic — e.g. transferring money means debiting one account and crediting another; both must succeed, or neither should\n• Without TCL, a crash halfway through could leave the database in an inconsistent state (money deducted but never credited)\n\n<b>Related Command</b>\n• `SAVEPOINT` — marks an intermediate point inside a transaction that you can roll back to, without undoing the entire transaction",
+    note:
+      "Exam favourite: the money-transfer example is the classic way to explain TCL — debit account A, credit account B, COMMIT only if both succeed, ROLLBACK if either fails, so money is never lost or duplicated.",
+    diagram:
+      "  BEGIN TRANSACTION\n      │\n      ├── UPDATE accounts SET balance = balance - 100 WHERE id = 1;  (debit)\n      ├── UPDATE accounts SET balance = balance + 100 WHERE id = 2;  (credit)\n      │\n      ├── all good?  → COMMIT    (both changes saved permanently)\n      └── error?     → ROLLBACK  (both changes undone, as if nothing happened)",
+    code:
+      "BEGIN TRANSACTION;\n\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\n\n-- If both updates succeeded:\nCOMMIT;\n\n-- If something went wrong instead:\n-- ROLLBACK;",
+    codeLanguage: "SQL",
+    tags: ["TCL", "COMMIT", "ROLLBACK", "Transactions", "SQL Commands"],
+  },
+  {
+    id: 184,
+    slug: "advanced-database",
+    section: "Database Management System",
+    title: "Advanced Database",
+    tagline: "Beyond CRUD — normalization, performance, automation, and safety under concurrent load",
+    description:
+      "<b>What This Covers</b>\nAdvanced Database moves past basic CRUD into the topics that separate a working database from a well-designed, reliable, and performant one — normalization, performance tools like indexes and views, automation like stored procedures and triggers, and the guarantees transactions provide under concurrent load.\n\n<b>How This Section Is Organized</b>\n• <b>Normalization</b> — organizing tables to remove redundancy (1NF through BCNF)\n• <b>Indexing</b> — speeding up reads without scanning every row\n• <b>Views</b> — saved, virtual tables built from a query\n• <b>Stored Procedures & Triggers</b> — logic that lives inside the database itself\n• <b>Transactions & ACID Properties</b> — the all-or-nothing guarantee behind every safe multi-step change\n• <b>Concurrency Control, Locking & Deadlock</b> — how multiple transactions run at once without corrupting data\n  ↳ Each is covered in its own card next.",
+    note:
+      "Exam favourite: ACID properties and normalization forms (1NF/2NF/3NF/BCNF) are the two most frequently tested topics in this entire chapter — know both cold.",
+    diagram:
+      "  ADVANCED DATABASE — HOW THE TOPICS RELATE\n\n  Normalization                          ──► clean table design\n  Indexing, Views                        ──► faster reads\n  Stored Procedures, Triggers            ──► logic inside the database\n  Transactions, ACID                     ──► safety guarantees\n  Concurrency Control, Locking, Deadlock ──► safety under simultaneous access",
+    tags: ["Advanced Database", "Normalization", "ACID", "Transactions", "Concurrency Control"],
+  },
+  {
+    id: 185,
+    slug: "normalization",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Normalization",
+    tagline: "The process of organizing tables to reduce redundancy and avoid data anomalies",
+    description:
+      "<b>What Normalization Is, in Plain English</b>\nNormalization is the step-by-step process of structuring tables to minimize data redundancy and prevent update, insert, and delete anomalies. It progresses through a series of 'normal forms,' each stricter than the last.\n\n<b>First Normal Form (1NF)</b>\n• Every column must hold a single, atomic value — no lists or repeating groups in one cell\n• Fix: split multi-valued data into its own row or table\n\n<b>Second Normal Form (2NF)</b>\n• Must already be in 1NF\n• Every non-key column must depend on the entire primary key, not just part of it (only matters with composite primary keys)\n• Fix: move columns that depend on only part of the key into their own table\n\n<b>Third Normal Form (3NF)</b>\n• Must already be in 2NF\n• No non-key column may depend on another non-key column (no 'transitive dependency')\n• Fix: move the transitively dependent column into its own table\n\n<b>Boyce-Codd Normal Form (BCNF)</b>\n• A stricter version of 3NF\n• Every determinant (a column that determines another column's value) must be a candidate key\n• Handles rare edge cases 3NF misses, usually involving overlapping candidate keys\n\n<b>Why Normalize</b>\n• Prevents the same fact from being stored in multiple places, which could go out of sync\n• Makes updates safer — change a fact in exactly one place",
+    note:
+      "Exam favourite: define each normal form by the anomaly it fixes — 1NF fixes repeating groups, 2NF fixes partial key dependency, 3NF fixes transitive dependency, BCNF fixes edge cases with overlapping candidate keys.",
+    diagram:
+      "  UNNORMALIZED (repeating group)          1NF (atomic rows)         3NF (price moved out)\n  order:1, items:                         id | item | price          orders(order_id, item)\n   ['pen,$1','pad,$3']      ───split──►    1  | pen  | $1     ──►    items(item, price)\n                                           1  | pad  | $3            no repeated price fact",
+    code:
+      "-- BEFORE (violates 1NF): items stored as a comma list in one column\n-- orders(id, items_and_prices)  ->  1, 'pen:$1, pad:$3'\n\n-- AFTER 1NF: atomic values, one row per item\nCREATE TABLE order_items (\n  order_id INT,\n  item     VARCHAR(50),\n  price    DECIMAL(10,2)\n);\n\n-- AFTER 3NF: price depends only on the item, not the order,\n-- so it moves to its own table to avoid repeating/inconsistent prices\nCREATE TABLE items (\n  name  VARCHAR(50) PRIMARY KEY,\n  price DECIMAL(10,2)\n);\nCREATE TABLE order_items (\n  order_id INT REFERENCES orders(id),\n  item     VARCHAR(50) REFERENCES items(name)\n);",
+    codeLanguage: "SQL",
+    tags: ["Normalization", "1NF", "2NF", "3NF", "BCNF", "Redundancy"],
+  },
+  {
+    id: 186,
+    slug: "indexing",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Indexing",
+    tagline: "A lookup structure that lets the database find rows without scanning the whole table",
+    description:
+      "<b>What Indexing Is, in Plain English</b>\nAn index is an auxiliary data structure (usually a B-tree) built on one or more columns that lets the database jump directly to matching rows instead of scanning every row — like a book's index at the back: without it, finding \"quantum physics\" means reading every page; with it, you jump straight to page 214.\n\n<b>How It Works</b>\n• The database maintains a sorted structure mapping column values to row locations\n• A query filtering on an indexed column can binary-search the index instead of scanning every row (a full table scan)\n\n<b>The Trade-Off</b>\n• Reads (`SELECT ... WHERE`) become much faster on indexed columns\n• Writes (`INSERT`/`UPDATE`/`DELETE`) become slightly slower, since every index on the table must also be updated\n• Indexes use extra disk space\n\n<b>What to Index</b>\n• Columns frequently used in `WHERE`, `JOIN`, and `ORDER BY` clauses\n• Avoid over-indexing tables that are written to far more often than they're read",
+    note:
+      "Exam favourite: 'why not index every column?' Answer with the write cost — every index must be updated on every INSERT/UPDATE/DELETE, so indexing a rarely-queried, frequently-written column wastes performance for no read benefit.",
+    diagram:
+      "  WITHOUT INDEX (full table scan)\n  Row1 → Row2 → Row3 → ... → Row10000   (check every row for a match)\n\n  WITH INDEX (B-tree on 'email')\n            [m]\n          /     \\\n       [b-l]   [n-z]\n       /   \\     /   \\\n    ...    ...  ...   ...\n  → jump directly to the matching branch, skip everything else",
+    code:
+      "-- Without an index, this scans every row in a large table\nSELECT * FROM users WHERE email = 'asha@example.com';\n\n-- Add an index to make that lookup fast\nCREATE INDEX idx_users_email ON users(email);\n\n-- Now the same query can use the index instead of a full scan\nEXPLAIN SELECT * FROM users WHERE email = 'asha@example.com';",
+    codeLanguage: "SQL",
+    tags: ["Indexing", "B-Tree", "Performance", "Query Optimization"],
+  },
+  {
+    id: 187,
+    slug: "views",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Views",
+    tagline: "A saved, virtual table defined by a query — computed on the fly, not stored",
+    description:
+      "<b>What a View Is, in Plain English</b>\nA view is a saved SQL query that behaves like a virtual table. It doesn't store data itself — every time you query the view, the underlying query runs fresh against the real tables.\n\n<b>Why Use a View</b>\n• Simplify a complex, frequently-used JOIN into a single simple `SELECT * FROM view_name`\n• Restrict access — expose only certain columns/rows to a user, without giving them the base table's full contents\n• Provide a stable interface — the view's shape stays the same even if the underlying table structure changes internally\n\n<b>Regular View vs Materialized View</b>\n• Regular view — no data stored, runs the query every time (always up to date, but no faster than the underlying query)\n• Materialized view — the query result IS physically stored and must be refreshed periodically; faster to read, but can be stale until refreshed",
+    note:
+      "Exam favourite: a view is not a performance optimization by itself — only a materialized view actually caches results, at the cost of the data being potentially stale until the next refresh.",
+    diagram:
+      "  CREATE VIEW → stores the QUERY, not the data\n\n  active_customers VIEW\n      │\n      │  defined as: SELECT * FROM customers WHERE status = 'active'\n      ▼\n  Querying the view re-runs that SELECT against the real customers table",
+    code:
+      "-- Create a view hiding inactive customers and sensitive columns\nCREATE VIEW active_customers AS\nSELECT id, name, email\nFROM customers\nWHERE status = 'active';\n\n-- Query it exactly like a table\nSELECT * FROM active_customers WHERE name LIKE 'A%';\n\n-- A materialized view, refreshed on demand (PostgreSQL)\nCREATE MATERIALIZED VIEW customer_totals AS\nSELECT customer_id, SUM(total) AS lifetime_spend FROM orders GROUP BY customer_id;\n\nREFRESH MATERIALIZED VIEW customer_totals;",
+    codeLanguage: "SQL",
+    tags: ["Views", "Materialized View", "Query Abstraction"],
+  },
+  {
+    id: 188,
+    slug: "stored-procedures",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Stored Procedures",
+    tagline: "Precompiled SQL logic saved in the database and executed on demand",
+    description:
+      "<b>What a Stored Procedure Is, in Plain English</b>\nA stored procedure is a named block of SQL (and often procedural logic like loops and conditionals) saved inside the database itself and executed with a single call.\n\n<b>Why Use Them</b>\n• Bundle multi-step logic (several INSERTs/UPDATEs, validation, conditionals) into one reusable unit\n• Reduce network round-trips — the application sends one call instead of several separate queries\n• Precompiled and optimized by the database, often faster than sending equivalent ad-hoc queries repeatedly\n• Centralize business logic that must run consistently regardless of which application calls it\n\n<b>Trade-Offs</b>\n• Harder to version control and test compared to application code\n• Ties business logic to a specific database vendor's procedural SQL dialect\n• Many modern teams prefer keeping business logic in the application layer, reserving stored procedures for tight, database-specific operations",
+    note:
+      "Exam favourite: use a stored procedure when several statements must run as a single fast, atomic unit close to the data — keep general business logic in the application layer for easier testing and portability.",
+    diagram:
+      "  Application\n      │\n      │  CALL transfer_funds(1, 2, 100);   ← one call\n      ▼\n  ┌──────────────────────────────┐\n  │  Stored Procedure (in DB)      │\n  │  1. debit account 1             │\n  │  2. credit account 2            │\n  │  3. log the transaction          │\n  └──────────────────────────────┘\n  All three steps run inside the database, as one unit.",
+    code:
+      "CREATE PROCEDURE transfer_funds(sender_id INT, receiver_id INT, amount DECIMAL)\nLANGUAGE plpgsql AS $$\nBEGIN\n  UPDATE accounts SET balance = balance - amount WHERE id = sender_id;\n  UPDATE accounts SET balance = balance + amount WHERE id = receiver_id;\n  INSERT INTO transaction_log (sender_id, receiver_id, amount) VALUES (sender_id, receiver_id, amount);\nEND;\n$$;\n\n-- Calling it from the application\nCALL transfer_funds(1, 2, 100);",
+    codeLanguage: "SQL",
+    tags: ["Stored Procedures", "Business Logic", "Performance"],
+  },
+  {
+    id: 189,
+    slug: "triggers",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Triggers",
+    tagline: "Code that automatically runs in response to an INSERT, UPDATE, or DELETE",
+    description:
+      "<b>What a Trigger Is, in Plain English</b>\nA trigger is a block of code attached to a table that automatically executes when a specific event happens — before or after an `INSERT`, `UPDATE`, or `DELETE`.\n\n<b>Common Uses</b>\n• Auditing — automatically log every change to a sensitive table\n• Enforcing complex business rules that a simple `CHECK` constraint can't express\n• Keeping a derived/summary value in sync (e.g. updating a `product_count` whenever a row is inserted or deleted)\n• Preventing invalid changes (e.g. blocking a `DELETE` on a record that still has active dependents)\n\n<b>BEFORE vs AFTER Triggers</b>\n• `BEFORE` trigger — runs before the change is applied; can validate or modify the incoming data\n• `AFTER` trigger — runs after the change is applied; typically used for logging or cascading updates\n\n<b>Caution</b>\n• Triggers run silently and automatically — they can make debugging harder if a developer doesn't know a trigger exists and is modifying data behind the scenes",
+    note:
+      "Exam favourite real-world example: audit logging is the safest, most universally-accepted trigger use case — an AFTER trigger on UPDATE/DELETE that writes the old row values into an audit_log table, with zero risk of blocking the original operation.",
+    diagram:
+      "  INSERT INTO orders (...) VALUES (...);\n      │\n      ▼\n  Trigger fires automatically (AFTER INSERT)\n      │\n      ▼\n  UPDATE customers SET order_count = order_count + 1 WHERE id = NEW.customer_id;\n\n  The application never explicitly ran that UPDATE — the trigger did it.",
+    code:
+      "CREATE TRIGGER increment_order_count\nAFTER INSERT ON orders\nFOR EACH ROW\nEXECUTE FUNCTION bump_customer_order_count();\n\nCREATE FUNCTION bump_customer_order_count() RETURNS TRIGGER AS $$\nBEGIN\n  UPDATE customers SET order_count = order_count + 1 WHERE id = NEW.customer_id;\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;",
+    codeLanguage: "SQL",
+    tags: ["Triggers", "Automation", "Auditing", "BEFORE/AFTER"],
+  },
+  {
+    id: 190,
+    slug: "transactions",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Transactions",
+    tagline: "A group of one or more SQL operations executed as a single, all-or-nothing unit",
+    description:
+      "<b>What a Transaction Is, in Plain English</b>\nA transaction is a sequence of one or more SQL operations grouped together so they either all succeed or all fail — there is no in-between, partially-applied state. Transferring money between two bank accounts requires two updates: debit account A, credit account B — if only the debit succeeds and the credit fails (e.g. a crash), money disappears, which is exactly what a transaction prevents.\n\n<b>Lifecycle of a Transaction</b>\n• `BEGIN` (or `START TRANSACTION`) — marks the start\n• One or more DML statements\n• `COMMIT` — makes all changes permanent\n• `ROLLBACK` — undoes all changes since `BEGIN`, as if none of it happened\n\n<b>Why Transactions Matter</b>\n• They are the mechanism that makes ACID guarantees possible in practice\n• Without transactions, a crash or error partway through a multi-step operation can leave the database in an inconsistent state",
+    note:
+      "Exam favourite: define a transaction with 'all-or-nothing' — partial completion is never an acceptable outcome, enforced through COMMIT and ROLLBACK.",
+    diagram:
+      "  BEGIN\n    │\n    ├── UPDATE accounts SET balance = balance - 100 WHERE id = 1;\n    ├── UPDATE accounts SET balance = balance + 100 WHERE id = 2;\n    │\n    ▼\n  COMMIT   ← both changes become permanent together\n  (or ROLLBACK → both changes undone together)",
+    code:
+      "BEGIN;\n\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\n\nCOMMIT;  -- both updates are now permanent, or neither happened if it failed before this line",
+    codeLanguage: "SQL",
+    tags: ["Transactions", "ACID", "COMMIT", "ROLLBACK"],
+  },
+  {
+    id: 191,
+    slug: "acid-properties",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "ACID Properties",
+    tagline: "The four guarantees that make database transactions safe and reliable",
+    description:
+      "<b>What ACID Is, in Plain English</b>\nACID is an acronym for the four properties that guarantee a database transaction behaves safely and predictably, even under failures or concurrent access.\n\n<b>Atomicity</b>\n• A transaction is all-or-nothing — either every operation inside it succeeds, or none of them take effect\n• Example: a money transfer's debit and credit either both happen or neither does\n\n<b>Consistency</b>\n• A transaction can only move the database from one valid state to another valid state, never violating defined rules (constraints, keys, triggers)\n• Example: a `CHECK (balance >= 0)` constraint prevents a transaction from ever leaving an account negative\n\n<b>Isolation</b>\n• Concurrent transactions do not interfere with each other's intermediate state — each transaction behaves as if it were running alone\n• Example: two people transferring money at the same time should not see each other's half-finished updates\n\n<b>Durability</b>\n• Once a transaction is committed, its changes survive permanently — even a power failure or crash immediately after\n• Example: after `COMMIT` returns success, that data is written to durable storage, not just held in memory",
+    note:
+      "Exam favourite: remember ACID with the money-transfer example for all four letters at once — Atomicity (both legs happen or neither), Consistency (balances never go invalid), Isolation (concurrent transfers don't see each other's half-done state), Durability (once confirmed, it survives a crash).",
+    diagram:
+      "  A — Atomicity     : all steps succeed, or none do\n  C — Consistency   : constraints/rules always hold, before and after\n  I — Isolation      : concurrent transactions don't see each other's half-done work\n  D — Durability     : once committed, survives crashes/power loss",
+    code:
+      "BEGIN;\n\n-- Atomicity: both updates commit together or not at all\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\n\n-- Consistency: a CHECK constraint on the table (e.g. CHECK (balance >= 0))\n-- would reject this transaction if it drove a balance negative\n\nCOMMIT;  -- Durability: guaranteed to survive a crash right after this line",
+    codeLanguage: "SQL",
+    tags: ["ACID", "Atomicity", "Consistency", "Isolation", "Durability"],
+  },
+  {
+    id: 192,
+    slug: "concurrency-control",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Concurrency Control",
+    tagline: "The mechanisms that let multiple transactions run at once without corrupting data",
+    description:
+      "<b>What Concurrency Control Is, in Plain English</b>\nConcurrency control is the set of techniques a DBMS uses to let multiple transactions execute at the same time while still preserving correctness — no lost updates, no reading half-finished changes from another transaction.\n\n<b>Problems Concurrency Control Prevents</b>\n• <b>Lost update</b> — two transactions read the same value, both update it, and one update silently overwrites the other\n• <b>Dirty read</b> — a transaction reads data written by another transaction that hasn't committed yet, and that data later gets rolled back\n• <b>Non-repeatable read</b> — a transaction reads the same row twice and gets different values because another transaction updated it in between\n• <b>Phantom read</b> — a transaction re-runs the same query and sees new rows that appeared due to another transaction's insert\n\n<b>Main Techniques</b>\n• Locking — transactions acquire locks on the data they touch (see: Locking)\n• Optimistic concurrency control — proceed without locks, then check for conflicts before committing (used when conflicts are rare)\n• Multi-Version Concurrency Control (MVCC) — keep multiple versions of a row so readers never block writers (used by PostgreSQL, MySQL InnoDB)\n\n<b>Isolation Levels</b>\n• Databases let you choose how strictly to prevent these problems via isolation levels: Read Uncommitted, Read Committed, Repeatable Read, Serializable — each trading some performance for stricter correctness",
+    note:
+      "Exam favourite: list the four classic concurrency anomalies in severity order — dirty read (worst), non-repeatable read, phantom read, lost update — then map each to which isolation level prevents it.",
+    diagram:
+      "  Without concurrency control (LOST UPDATE):\n  T1: read balance = 100\n  T2: read balance = 100\n  T1: write balance = 100 - 30 = 70\n  T2: write balance = 100 - 50 = 50   ← overwrites T1's update, $30 debit is lost!\n\n  With concurrency control (locking):\n  T1: lock row → read 100 → write 70 → unlock\n  T2: (waits for lock) → read 70 → write 20 → unlock   ← correct final balance",
+    code:
+      "-- Isolation level controls how strictly anomalies are prevented\nSET TRANSACTION ISOLATION LEVEL SERIALIZABLE;\n\nBEGIN;\nSELECT balance FROM accounts WHERE id = 1;   -- read\nUPDATE accounts SET balance = balance - 30 WHERE id = 1;\nCOMMIT;\n\n-- Under SERIALIZABLE, a concurrent conflicting transaction\n-- would be forced to retry rather than silently lose this update",
+    codeLanguage: "SQL",
+    tags: ["Concurrency Control", "Isolation Levels", "MVCC", "Lost Update"],
+  },
+  {
+    id: 193,
+    slug: "locking",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Locking",
+    tagline: "Reserving access to data so other transactions must wait before touching it",
+    description:
+      "<b>What Locking Is, in Plain English</b>\nLocking is the mechanism where a transaction reserves a piece of data (a row, page, or table) so that other transactions cannot conflict with it until the lock is released.\n\n<b>Types of Locks</b>\n• Shared lock (read lock) — multiple transactions can hold a shared lock on the same data at once; used for reading\n• Exclusive lock (write lock) — only one transaction can hold it at a time; used for writing; blocks both reads and writes from others\n\n<b>Lock Granularity</b>\n• Row-level locking — locks only the specific rows touched; allows high concurrency\n• Table-level locking — locks the entire table; simpler, but blocks far more concurrent work\n\n<b>Two-Phase Locking (2PL)</b>\n• Growing phase — a transaction acquires all the locks it needs\n• Shrinking phase — once it starts releasing locks, it cannot acquire any new ones\n• This protocol guarantees the transaction schedule is serializable (behaves as if transactions ran one at a time)\n\n<b>The Cost of Locking</b>\n• Locks prevent corruption, but they also make other transactions wait — too much locking, or locks held too long, causes contention and slows the whole system down",
+    note:
+      "Exam favourite: `SELECT ... FOR UPDATE` is the go-to example of explicit row-level locking — it tells the database 'I'm about to modify this row, block anyone else from touching it until I commit.'",
+    diagram:
+      "  T1: BEGIN; UPDATE accounts SET balance = balance - 100 WHERE id = 1;\n      → acquires EXCLUSIVE lock on row id=1\n\n  T2: UPDATE accounts SET balance = balance + 50 WHERE id = 1;\n      → BLOCKS, waiting for T1's lock to release\n\n  T1: COMMIT;  → lock released\n  T2: → now proceeds with its update",
+    code:
+      "-- Explicitly lock a row for update, blocking other writers until COMMIT\nBEGIN;\nSELECT * FROM accounts WHERE id = 1 FOR UPDATE;  -- exclusive row lock\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nCOMMIT;  -- lock released here",
+    codeLanguage: "SQL",
+    tags: ["Locking", "Shared Lock", "Exclusive Lock", "Two-Phase Locking"],
+  },
+  {
+    id: 194,
+    slug: "deadlock",
+    section: "Database Management System",
+    parentSlug: "advanced-database",
+    title: "Deadlock",
+    tagline: "Two transactions each waiting on a lock the other is holding — neither can proceed",
+    description:
+      "<b>What a Deadlock Is, in Plain English</b>\nA deadlock happens when two (or more) transactions each hold a lock the other one needs, and each is waiting for the other to release it — neither can ever proceed on its own.\n\n<b>The Classic Scenario</b>\n• Transaction 1 locks Row A, then tries to lock Row B\n• Transaction 2 locks Row B, then tries to lock Row A\n• T1 waits for T2's lock on B; T2 waits for T1's lock on A — permanent standstill\n\n<b>How Databases Handle It</b>\n• Most DBMSs run a deadlock detection algorithm that periodically checks for these circular waits\n• When found, the database picks one transaction as the 'victim,' forcibly rolls it back, and lets the other proceed\n• The application receives a deadlock error on the rolled-back transaction and should retry it\n\n<b>How to Avoid Deadlocks in Application Design</b>\n• Always acquire locks on multiple rows/tables in a consistent, agreed order across all parts of the application\n• Keep transactions as short as possible — the shorter the window, the less chance of overlapping lock requests\n• Use appropriate isolation levels rather than over-locking manually",
+    note:
+      "Exam favourite: how do you prevent deadlocks at the application level? Consistent lock ordering — always acquire locks on resources in the same fixed order (e.g. always the lower account id first) across every code path.",
+    diagram:
+      "  T1: locks Row A ──┐              T2: locks Row B ──┐\n                      │                                 │\n  T1: wants Row B ◄───┼── held by T2                    │\n                      │                                 │\n  T2: wants Row A ◄───┴─────────────────────────────────┘  held by T1\n\n  T1 waits on T2, T2 waits on T1 — circular wait = DEADLOCK\n  Database detects this and rolls back one transaction (the 'victim').",
+    code:
+      "-- Transaction 1                             -- Transaction 2\nBEGIN;                                        BEGIN;\nUPDATE accounts SET balance = balance - 10    UPDATE accounts SET balance = balance - 5\n  WHERE id = 1;   -- locks row 1                 WHERE id = 2;   -- locks row 2\nUPDATE accounts SET balance = balance + 10    UPDATE accounts SET balance = balance + 5\n  WHERE id = 2;   -- waits for T2's lock          WHERE id = 1;   -- waits for T1's lock\n                                               -- DEADLOCK: database rolls back one, e.g. T2\nCOMMIT;                                       -- app catches the error and retries T2",
+    codeLanguage: "SQL",
+    tags: ["Deadlock", "Locking", "Concurrency", "Lock Ordering"],
   },
 ];
 
