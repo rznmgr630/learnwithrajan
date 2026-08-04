@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -2976,6 +2976,535 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "-- Transaction 1                             -- Transaction 2\nBEGIN;                                        BEGIN;\nUPDATE accounts SET balance = balance - 10    UPDATE accounts SET balance = balance - 5\n  WHERE id = 1;   -- locks row 1                 WHERE id = 2;   -- locks row 2\nUPDATE accounts SET balance = balance + 10    UPDATE accounts SET balance = balance + 5\n  WHERE id = 2;   -- waits for T2's lock          WHERE id = 1;   -- waits for T1's lock\n                                               -- DEADLOCK: database rolls back one, e.g. T2\nCOMMIT;                                       -- app catches the error and retries T2",
     codeLanguage: "SQL",
     tags: ["Deadlock", "Locking", "Concurrency", "Lock Ordering"],
+  },
+  // ─────────────────────────────────────────────
+  // OPERATING SYSTEMS
+  // ─────────────────────────────────────────────
+  {
+    id: 195,
+    slug: "os-basics",
+    section: "Operating Systems",
+    title: "OS Basics",
+    tagline: "What an operating system is, what it does, and the different types of OS in use",
+    description:
+      "<b>What This Covers</b>\nOS Basics is the foundation of this whole syllabus section — what an operating system actually is, the jobs it performs behind every program you run, and the different ways an OS can be built depending on what it needs to optimize for.\n\n<b>What You'll Learn Here</b>\n• <b>OS Functions</b> — the core responsibilities every operating system handles: process management, memory management, file management, device management, security, and the user interface\n• <b>Types of OS</b> — Batch, Time-Sharing, Distributed, and Real-Time operating systems, each built around a different priority (throughput, fairness, scale, or deadlines)\n  ↳ Once these two are clear, the rest of the syllabus — Process Management, Deadlock, Memory Management, and File System — is really just zooming into one OS function at a time.",
+    note:
+      "Think of an OS as a resource manager first, and an interface second. Exams often ask 'what is an OS' expecting the manager definition — a program that manages hardware resources and provides a platform for applications to run on — not just 'the software you see on screen.'",
+    diagram:
+      "  WHERE THE OS SITS\n\n   User\n    │\n    ▼\n  Application Software   (browser, word processor, games)\n    │\n    ▼\n  OPERATING SYSTEM   ← manages everything below, serves everything above\n    │\n    ▼\n  Hardware   (CPU, RAM, disk, keyboard, screen, network card)",
+    tags: ["Operating System", "OS Basics", "OS Functions", "Types of OS"],
+  },
+  {
+    id: 196,
+    slug: "os-functions",
+    section: "Operating Systems",
+    parentSlug: "os-basics",
+    title: "OS Functions",
+    tagline: "The core jobs every operating system does behind the scenes",
+    description:
+      "<b>What an OS Is, in Plain English</b>\nAn operating system (OS) is the software layer that sits between the raw hardware of a computer and every application you run — it manages the hardware's resources and gives programs a consistent, simplified way to use them, so a developer never has to write code that talks directly to a physical disk head or a specific keyboard chip.\n  ↳ Analogy: think of the OS as the manager of a busy hotel — it doesn't cook the food or clean the rooms itself, but it schedules staff, allocates rooms, and makes sure guests (programs) never collide with each other while sharing the same building (hardware).\n\n<b>Core Functions of an OS</b>\n• <b>Process Management</b> — decides which program gets the CPU and for how long, creates and terminates processes, and switches between them so multiple programs appear to run at once\n  ↳ Covered in full in the Process Management chapter\n• <b>Memory Management</b> — allocates RAM to running programs, keeps one program's memory from being overwritten by another, and moves data between RAM and disk when memory runs low\n  ↳ Covered in full in the Memory Management chapter\n• <b>File Management</b> — organizes data into files and directories on storage devices, and controls how programs create, read, write, and delete them\n  ↳ Covered in full in the File System chapter\n• <b>Device Management</b> — controls communication with hardware devices (keyboard, mouse, printer, disk) through device drivers, so applications don't need device-specific code\n• <b>Security and Access Control</b> — authenticates users, and controls which users and programs are allowed to read, write, or execute which files and resources\n• <b>User Interface</b> — provides a way for humans to interact with the computer, either a Command Line Interface (CLI, typed commands) or a Graphical User Interface (GUI, windows/icons/menus)\n\n<b>Real-World Example</b>\nWhen you double-click a video file: the OS's file management locates the file on disk, device management reads the data through the disk driver, memory management loads chunks of the video into RAM, and process management gives the video player enough CPU time to decode and play it smoothly — all six functions working together for one click.",
+    note:
+      "Exam favourite: if a question lists 'process, memory, file, device, security, UI' and asks which is NOT an OS function, watch for compiler, linker, or application software slipped into the list — those are separate software, not OS responsibilities.",
+    diagram:
+      "  ONE OS, SIX JOBS\n\n           ┌─────────────────────────┐\n           │     Operating System     │\n           └─────────────────────────┘\n              │      │      │      │\n        Process  Memory  File   Device\n        Mgmt     Mgmt    Mgmt   Mgmt\n              │      │      │      │\n           Security      User Interface\n           & Access      (CLI / GUI)\n           Control",
+    tags: ["OS Functions", "Process Management", "Memory Management", "File Management", "Device Management", "Security"],
+  },
+  {
+    id: 197,
+    slug: "types-of-os",
+    section: "Operating Systems",
+    parentSlug: "os-basics",
+    title: "Types of OS",
+    tagline: "Batch, Time-Sharing, Distributed, and Real-Time — each optimized for a different priority",
+    description:
+      "<b>Why There's More Than One Type</b>\nNot every computer needs the same thing from its OS — a bank's overnight payroll run cares about total throughput, a university's shared server cares about fairness between users, a global company cares about coordinating machines across locations, and a heart monitor cares about never missing a deadline. Each of the four types below is an OS built around one of those priorities.\n\n<b>The Four Types, at a Glance</b>\n• <b>Batch OS</b> — collects jobs and runs them one after another with no user interaction, optimized for maximum throughput\n• <b>Time-Sharing OS</b> — rapidly switches the CPU between multiple users so each feels like they have the whole machine to themselves, optimized for fairness and responsiveness\n• <b>Distributed OS</b> — manages a group of separate, networked computers so they behave like one single system, optimized for scale and resource sharing\n• <b>Real-Time OS (RTOS)</b> — guarantees that a task completes within a strict time limit, optimized for predictability over raw speed\n  ↳ Each is covered in full in its own card next, with real-world examples.",
+    note:
+      "A simple way to remember all four: Batch = no user waiting, run it all together. Time-Sharing = many users, one CPU, switched fast. Distributed = many computers, one system. Real-Time = a deadline that must never be missed.",
+    diagram:
+      "  TYPES OF OS — what each one optimizes for\n\n  Batch OS            Time-Sharing OS        Distributed OS        Real-Time OS\n  (throughput,    vs  (fairness across   vs  (many machines,   vs  (strict deadlines,\n   no interaction)     many users)             one system)          predictability)",
+    tags: ["Types of OS", "Batch OS", "Time-Sharing OS", "Distributed OS", "Real-Time OS"],
+  },
+  {
+    id: 198,
+    slug: "batch-os",
+    section: "Operating Systems",
+    parentSlug: "types-of-os",
+    title: "Batch OS",
+    tagline: "Jobs are grouped into batches and run one after another, with no user sitting at the machine",
+    description:
+      "<b>What a Batch OS Is, in Plain English</b>\nA Batch Operating System collects similar jobs into a group (a batch) and executes them one after another without any user interaction in between — a human sets up the batch in advance, and the computer works through the whole pile on its own.\n\n<b>How It Works</b>\n• Jobs with similar needs (e.g. all needing the same compiler, or all reading from tape) are grouped together by an operator\n• A special program called the batch monitor (or resident monitor) loads and runs each job in sequence, with no user present to respond to prompts\n• Once a job finishes, the next one in the batch starts automatically — there is no interactive back-and-forth\n\n<b>Why It Was Used</b>\n• Reduced CPU idle time between jobs, since the operator didn't need to manually load and configure each one\n• Made sense when computers were extremely expensive and had to be kept as busy as possible around the clock\n\n<b>Drawbacks</b>\n• No interaction — if a job has an error, the whole batch may need to be re-run from scratch\n• A single long job can block every job behind it in the queue\n• Poor response time makes it completely unsuitable for anything needing quick user feedback\n  ↳ Real-world examples: payroll processing, bank statement generation, end-of-day transaction batches, printing utility bills — all cases where a large volume of similar work is queued up and run overnight with no one watching.",
+    note:
+      "Exam favourite: the defining trait of Batch OS is 'no user interaction during execution' — if a question describes any interactivity at all, it's not a pure batch system.",
+    diagram:
+      "  BATCH OS — jobs run one after another, unattended\n\n  Job 1 ──► Job 2 ──► Job 3 ──► Job 4\n  (payroll)  (statements) (billing)  (reports)\n\n  Operator queues all 4 jobs in advance,\n  then the batch monitor runs them straight through — no user waits in between.",
+    tags: ["Batch OS", "Batch Processing", "Batch Monitor", "Throughput"],
+  },
+  {
+    id: 199,
+    slug: "time-sharing-os",
+    section: "Operating Systems",
+    parentSlug: "types-of-os",
+    title: "Time-Sharing OS",
+    tagline: "The CPU is rapidly switched between users so each one feels like they have the machine to themselves",
+    description:
+      "<b>What a Time-Sharing OS Is, in Plain English</b>\nA Time-Sharing Operating System lets multiple users share one computer at the same time by giving each user a very small slice of CPU time in rapid rotation — the switching happens so fast that every user feels like they have the entire machine's undivided attention, even though dozens of others are logged in at once.\n\n<b>How It Works</b>\n• Each user (or task) is given a small unit of CPU time called a time slice or quantum\n• The OS switches rapidly from one user's task to the next, giving the illusion of simultaneous execution\n• This constant switching between tasks is called multitasking, and it's built on the same context switching mechanism covered in the Process Management chapter\n\n<b>Why It's an Improvement Over Batch OS</b>\n• Interactive — a user gets to see results and respond immediately, unlike batch systems where you wait for the whole batch to finish\n• Fair — every user gets a turn on the CPU in a predictable rotation, instead of one long job blocking everyone else\n\n<b>Trade-offs</b>\n• More overhead than Batch OS — the constant switching between tasks itself consumes CPU time\n• Response time depends on how many users are sharing the system; too many users slow everyone down\n  ↳ Real-world examples: multiple students logged into a shared university server, each editing and running their own programs simultaneously; modern multi-user Linux/UNIX systems accessed by many people over a network.",
+    note:
+      "Exam favourite: don't confuse Time-Sharing with Real-Time. Time-Sharing optimizes for fairness among multiple users; Real-Time optimizes for meeting a strict deadline for one critical task. A system can feel 'fast' without being real-time.",
+    diagram:
+      "  TIME-SHARING OS — rapid rotation gives the illusion of 'all at once'\n\n  CPU time:  [User A][User B][User C][User A][User B][User C]...\n              10ms    10ms    10ms    10ms    10ms    10ms\n\n  Each slice is so short every user feels like they have\n  the whole CPU to themselves.",
+    tags: ["Time-Sharing OS", "Multitasking", "Time Slice", "Multi-User"],
+  },
+  {
+    id: 200,
+    slug: "distributed-os",
+    section: "Operating Systems",
+    parentSlug: "types-of-os",
+    title: "Distributed OS",
+    tagline: "Multiple independent computers, connected over a network, working together as one system",
+    description:
+      "<b>What a Distributed OS Is, in Plain English</b>\nA Distributed Operating System manages a group of physically separate computers connected by a network so that, from a user's point of view, they behave like a single unified system — the user doesn't need to know or care which physical machine actually does the work.\n\n<b>How It Works</b>\n• Multiple autonomous computers (nodes), each with its own CPU and memory, are connected over a network\n• The distributed OS coordinates communication and resource sharing between nodes, and can move a task from an overloaded node to a free one\n• Resources like files, printers, and processing power are shared transparently across the whole network\n\n<b>Why It's Used</b>\n• Scalability — more nodes can be added to handle more load, rather than being limited by one machine's hardware ceiling\n• Fault tolerance — if one node fails, the system can often continue running using the remaining nodes\n• Resource sharing — expensive resources (storage, specialized processors) can be shared across many users instead of duplicated on every machine\n\n<b>Trade-offs</b>\n• Much more complex to design and manage than a single-machine OS — coordinating many machines over a network introduces communication delays and failure scenarios a single-machine OS never has to deal with\n• Network failures can affect the whole system's ability to function\n  ↳ Real-world examples: cloud computing platforms (Google, AWS) that spread workloads across thousands of machines; large-scale search engines where a single query is processed by many machines in parallel.",
+    note:
+      "Exam favourite: the defining trait of Distributed OS is transparency — the user issues one request and never has to know which of the many physical machines actually served it.",
+    diagram:
+      "  DISTRIBUTED OS — many machines, one logical system\n\n   Node A ── Node B ── Node C ── Node D\n     │         │         │         │\n     └─────────┴────network─┴─────────┘\n                    │\n              User sees ONE system,\n              not four separate computers",
+    tags: ["Distributed OS", "Distributed Systems", "Scalability", "Fault Tolerance"],
+  },
+  {
+    id: 201,
+    slug: "real-time-os",
+    section: "Operating Systems",
+    parentSlug: "types-of-os",
+    title: "Real-Time OS",
+    tagline: "Guarantees a task finishes within a strict deadline — predictability matters more than raw speed",
+    description:
+      "<b>What a Real-Time OS Is, in Plain English</b>\nA Real-Time Operating System (RTOS) is built to guarantee that a specific task completes within a fixed, predictable time limit (a deadline) — being predictable matters more than being fast on average, because in a real-time system, a late result can be as bad as a wrong one.\n\n<b>Hard vs. Soft Real-Time</b>\n• <b>Hard real-time</b> — missing a deadline causes total system failure or is unacceptable; there is no tolerance at all\n  ↳ Examples: airbag deployment systems, pacemakers, aircraft flight-control systems\n• <b>Soft real-time</b> — missing a deadline degrades quality but the system keeps working; occasional lateness is tolerated\n  ↳ Examples: video streaming (a dropped frame is annoying, not catastrophic), online gaming\n\n<b>How It Achieves Predictability</b>\n• Uses priority-based scheduling so the most time-critical task always preempts less urgent ones (see Priority Scheduling in the Process Management chapter)\n• Minimizes unpredictable delays — interrupt handling and task switching are kept as fast and consistent as possible\n• Trades away some average-case throughput in exchange for a guarantee on worst-case response time\n\n<b>RTOS vs. a Regular OS</b>\n• A regular desktop OS (Windows, general Linux) optimizes for good average performance across many tasks, with no hard guarantee on any single task's timing\n• An RTOS is willing to sacrifice average throughput specifically to guarantee that the most critical task never misses its deadline\n  ↳ Real-world examples: air traffic control systems, industrial robotic arms on an assembly line, medical monitoring equipment, anti-lock braking systems (ABS) in cars.",
+    note:
+      "Exam favourite: if a scenario says missing the deadline is catastrophic or unacceptable, it's hard real-time. If it says missing the deadline just degrades quality, it's soft real-time. Both still need an RTOS — the difference is the cost of being late.",
+    diagram:
+      "  REAL-TIME OS — the deadline is the whole point\n\n  Task arrives ──► Must finish by deadline T ──► Result delivered\n                        │\n                        ▼\n              Missed deadline?\n              Hard RT: system failure (e.g. airbag too late)\n              Soft RT: degraded quality (e.g. dropped video frame)",
+    tags: ["Real-Time OS", "RTOS", "Hard Real-Time", "Soft Real-Time", "Deadline"],
+  },
+  {
+    id: 202,
+    slug: "process-management",
+    section: "Operating Systems",
+    title: "Process Management",
+    tagline: "How the OS represents, tracks, and shares the CPU across every running program",
+    description:
+      "<b>What This Covers</b>\nProcess Management looks at how the OS keeps track of every running program, switches the CPU between them, and decides who gets to run next — the machinery that makes multitasking possible.\n\n<b>What You'll Learn Here</b>\n• <b>Process</b> — a program in execution, and the states it moves through from creation to termination\n• <b>Thread</b> — a lighter-weight unit of execution living inside a process\n• <b>PCB (Process Control Block)</b> — the data structure the OS uses to remember everything about a process\n• <b>Context Switching</b> — how the CPU saves one process's state and loads another's\n• <b>CPU Scheduling</b> — the algorithms that decide which process runs next (FCFS, SJF, Round Robin, Priority Scheduling)\n  ↳ These build on each other in order: first what a process and thread actually are, then how the OS remembers a process's state (PCB), then how it swaps between processes (context switching), then the rules it uses to decide who goes next (scheduling algorithms).",
+    note:
+      "Read this chapter in order — Context Switching only makes sense once you know what's stored in a PCB, and CPU Scheduling only makes sense once you understand that a context switch is what actually happens every time the scheduler picks a new process.",
+    diagram:
+      "  PROCESS MANAGEMENT — how the topics build on each other\n\n  Process /      PCB              Context           CPU\n  Thread    ──►  (state saved  ──►  Switching   ──►  Scheduling\n  (the unit)      per process)      (swap in/out)     (who's next?)",
+    tags: ["Process Management", "Process", "Thread", "PCB", "Context Switching", "CPU Scheduling"],
+  },
+  {
+    id: 203,
+    slug: "process",
+    section: "Operating Systems",
+    parentSlug: "process-management",
+    title: "Process",
+    tagline: "A program in execution — code that's actually running, not just sitting on disk",
+    description:
+      "<b>What a Process Is, in Plain English</b>\nA process is a program in execution. A program is just a passive file sitting on disk (like an .exe or a compiled binary); the moment you run it, the OS creates a process for it — an active entity with its own memory, its own state, and its own place in line for the CPU.\n  ↳ Analogy: a program is like a recipe written on paper — it doesn't do anything by itself. A process is that recipe actually being cooked right now, with ingredients (memory) laid out and a specific step (instruction) currently underway.\n\n<b>What a Process Contains</b>\n• <b>Program code (text section)</b> — the actual instructions being executed\n• <b>Program counter</b> — tracks which instruction is currently being run\n• <b>Process stack</b> — holds temporary data like function parameters, return addresses, and local variables\n• <b>Data section</b> — holds global variables\n• <b>Heap</b> — memory dynamically allocated while the process runs\n\n<b>Process States</b>\nEvery process moves through a well-defined set of states during its lifetime:\n• <b>New</b> — the process is being created\n• <b>Ready</b> — the process is loaded into memory and waiting for the CPU, but isn't running yet\n• <b>Running</b> — the process's instructions are currently being executed by the CPU\n• <b>Waiting (blocked)</b> — the process is paused, waiting for some event (like I/O completion) before it can continue\n• <b>Terminated</b> — the process has finished execution and is being removed\n\n<b>One Program, Many Processes</b>\nA single program can be run multiple times, creating multiple independent processes — opening three browser tabs of the same browser executable creates three separate processes, each with its own memory and state, even though they all started from the identical program file.",
+    note:
+      "Exam favourite: 'program vs process' is a top confusion. A program is a passive file on disk (static); a process is that program actively running in memory (dynamic), with its own state and resources.",
+    diagram:
+      "  PROCESS STATE DIAGRAM\n\n        ┌────┐  admitted   ┌───────┐  scheduler dispatch   ┌─────────┐\n        │ New│────────────►│ Ready │──────────────────────►│ Running │\n        └────┘              └───────┘◄──────────────────────└─────────┘\n                                ▲       time-out / preempted        │\n                                │                                    │ I/O or event wait\n                                │           I/O or event complete    ▼\n                                └───────────────────────────────┌─────────┐\n                                                                 │ Waiting │\n                                                                 └─────────┘\n                                                                      │\n                        Running ──► exit ──► ┌────────────┐          │\n                                              │ Terminated │◄─────────┘ (rare direct path)\n                                              └────────────┘",
+    tags: ["Process", "Process States", "Program Counter", "Ready Queue", "Multitasking"],
+  },
+  {
+    id: 204,
+    slug: "thread",
+    section: "Operating Systems",
+    parentSlug: "process-management",
+    title: "Thread",
+    tagline: "A lightweight unit of execution inside a process — multiple threads can share the same memory",
+    description:
+      "<b>What a Thread Is, in Plain English</b>\nA thread is the smallest unit of execution within a process. A single process can contain multiple threads, and all of them share the same memory space (code, data, heap) belonging to that process, while each thread keeps its own program counter, stack, and set of registers.\n  ↳ Analogy: if a process is a whole restaurant kitchen, threads are the individual chefs working in it — they share the same ingredients, counters, and equipment (the process's memory), but each chef is independently working on their own dish (their own instruction stream) at the same time.\n\n<b>Why Threads Exist</b>\n• Creating a new process is expensive — it needs its own separate memory space allocated and set up\n• Creating a new thread inside an existing process is much cheaper, since it reuses the process's already-allocated memory\n• Threads let a single application do several things concurrently — for example, a word processor might use one thread to accept keystrokes and another to run spell-check in the background, without either one freezing the other\n\n<b>Process vs. Thread</b>\n• A process has its own independent memory space; threads within one process share that same memory space\n• Switching between processes is expensive (a full context switch, including memory mapping); switching between threads of the same process is cheaper, since memory doesn't need to be re-mapped\n• If one process crashes, it generally doesn't affect other processes; if one thread crashes badly enough, it can bring down the whole process (and every thread in it) since they share memory\n\n<b>Multithreading</b>\nRunning multiple threads within a single process, allowing several tasks to progress at once — used heavily in web servers (each client request handled by its own thread while sharing the same loaded application code) and in modern applications like browsers (one thread per tab, sharing the same browser process resources).",
+    note:
+      "Exam favourite: 'threads of the same process share memory, but each has its own stack and program counter.' If a question says two execution units crash independently of each other, that points to separate processes, not threads of the same process.",
+    diagram:
+      "  ONE PROCESS, MULTIPLE THREADS\n\n  ┌─────────────────────────── Process ───────────────────────────┐\n  │  Shared: Code, Data, Heap, Open Files                           │\n  │                                                                  │\n  │   Thread 1          Thread 2          Thread 3                  │\n  │   own stack         own stack         own stack                 │\n  │   own registers      own registers     own registers             │\n  │   own program        own program       own program               │\n  │   counter             counter           counter                  │\n  └──────────────────────────────────────────────────────────────┘",
+    tags: ["Thread", "Multithreading", "Process vs Thread", "Concurrency"],
+  },
+  {
+    id: 205,
+    slug: "pcb",
+    section: "Operating Systems",
+    parentSlug: "process-management",
+    title: "PCB (Process Control Block)",
+    tagline: "The data structure the OS uses to remember absolutely everything about a process",
+    description:
+      "<b>What a PCB Is, in Plain English</b>\nA Process Control Block (PCB) is a data structure the operating system maintains for every single process — it's essentially the process's identity card and memory of itself, holding all the information the OS needs to pause a process and later resume it exactly where it left off.\n\n<b>What's Stored in a PCB</b>\n• <b>Process ID (PID)</b> — a unique number identifying the process\n• <b>Process state</b> — whether it's currently New, Ready, Running, Waiting, or Terminated\n• <b>Program counter</b> — the address of the next instruction to execute for this specific process\n• <b>CPU registers</b> — the exact values held in the CPU's registers when this process was last paused, so they can be restored precisely\n• <b>CPU scheduling information</b> — the process's priority, and pointers to scheduling queues it belongs to\n• <b>Memory management information</b> — the base and limit registers, page tables, or segment tables belonging to this process\n• <b>Accounting information</b> — CPU time used so far, time limits, process ID of its parent\n• <b>I/O status information</b> — the list of I/O devices allocated to this process, and any open files\n\n<b>Why the PCB Matters</b>\nThe PCB is exactly what makes context switching possible — when the OS pauses Process A to run Process B, it saves every piece of Process A's current state into Process A's PCB. Later, when Process A is scheduled to run again, the OS reloads the CPU with the exact values stored in that PCB, so Process A resumes as if it was never interrupted at all.",
+    note:
+      "Exam favourite: the PCB is the single source of truth the OS uses during a context switch — 'save state into the old process's PCB, load state from the new process's PCB' is the exact two-step description examiners look for.",
+    diagram:
+      "  PROCESS CONTROL BLOCK (PCB)\n\n  ┌───────────────────────────────┐\n  │ Process ID (PID)               │\n  │ Process State (Ready/Running..)│\n  │ Program Counter                │\n  │ CPU Registers                  │\n  │ CPU Scheduling Info (priority) │\n  │ Memory Management Info         │\n  │ Accounting Info (CPU time used)│\n  │ I/O Status Info (open files)   │\n  └───────────────────────────────┘\n     ↑ one of these exists per process,\n       maintained by the OS the entire time it exists",
+    tags: ["PCB", "Process Control Block", "Process State", "Context Switching"],
+  },
+  {
+    id: 206,
+    slug: "context-switching",
+    section: "Operating Systems",
+    parentSlug: "process-management",
+    title: "Context Switching",
+    tagline: "How the CPU saves one process's state and loads another's, so multitasking is possible",
+    description:
+      "<b>What Context Switching Is, in Plain English</b>\nContext switching is the process of saving the state of a currently running process (into its PCB) and loading the previously saved state of another process, so the CPU can switch from running one process to running another. This is the exact mechanism that makes multitasking work — the CPU is really only ever running one process at a time (per core), but switches between them fast enough that it looks simultaneous.\n\n<b>What Happens During a Context Switch, Step by Step</b>\n1. The scheduler decides Process A must be paused (its time slice ended, it's blocked waiting on I/O, or a higher-priority process arrived)\n2. The OS saves Process A's current CPU register values and program counter into Process A's PCB\n3. The OS loads Process B's previously saved register values and program counter from Process B's PCB\n4. The CPU resumes execution of Process B, continuing exactly where it last left off\n\n<b>Why Context Switching Has a Real Cost</b>\n• No useful work gets done during the switch itself — it's pure overhead, spent purely on saving and restoring state\n• Frequent, unnecessary context switching (called thrashing at the scheduling level) can waste enough CPU time that overall system throughput actually drops\n• This overhead is exactly why an OS doesn't switch processes constantly for no reason — schedulers try to balance responsiveness against the cost of switching too often\n\n<b>Where This Connects</b>\nEvery context switch is a change of the process's state (see Process) and is driven by the OS reading from and writing to the PCB — and it happens every single time the CPU Scheduling algorithm decides a different process should run next.",
+    note:
+      "Exam favourite: context switching itself does zero useful computation — it's pure overhead. If a question asks 'what is lost during a context switch,' the answer is CPU time that could have gone to actual process execution.",
+    diagram:
+      "  CONTEXT SWITCH — from Process A to Process B\n\n  Process A running ──► interrupt / time slice ends\n         │\n         ▼\n  Save Process A's state → Process A's PCB\n         │\n         ▼\n  Load Process B's state ← Process B's PCB\n         │\n         ▼\n  Process B resumes running exactly where it left off\n\n  (No useful work happens during the save/load — pure overhead.)",
+    tags: ["Context Switching", "PCB", "Multitasking", "Scheduler", "Overhead"],
+  },
+  {
+    id: 207,
+    slug: "cpu-scheduling",
+    section: "Operating Systems",
+    parentSlug: "process-management",
+    title: "CPU Scheduling",
+    tagline: "The rules the OS uses to decide which ready process gets the CPU next",
+    description:
+      "<b>What CPU Scheduling Is, in Plain English</b>\nCPU scheduling is the set of rules the OS uses to decide, among all the processes currently in the Ready state, which one gets the CPU next. Since there's usually only one CPU (or a small number of cores) and many more processes wanting to run than there are CPUs available, the scheduler's job is to pick fairly and efficiently.\n\n<b>Key Terms Used to Measure Scheduling</b>\n• <b>Arrival time</b> — when a process enters the ready queue\n• <b>Burst time</b> — how much CPU time a process actually needs to finish\n• <b>Completion time</b> — when a process finishes execution\n• <b>Turnaround time</b> — completion time minus arrival time (the total time from arrival to finishing)\n• <b>Waiting time</b> — turnaround time minus burst time (the time a process spent waiting in the ready queue, not actually running)\n• <b>Response time</b> — the time from arrival until the process gets the CPU for the very first time\n\n<b>Preemptive vs. Non-Preemptive Scheduling</b>\n• <b>Non-preemptive</b> — once a process starts running, it keeps the CPU until it finishes or voluntarily gives it up (e.g. to wait for I/O); the scheduler can't interrupt it\n• <b>Preemptive</b> — the scheduler can forcibly pause a running process (e.g. because its time slice ran out, or a higher-priority process arrived) and give the CPU to someone else\n\n<b>The Algorithms Covered Next</b>\n• <b>FCFS (First Come, First Served)</b> — simplest possible rule: whoever arrived first runs first, non-preemptive\n• <b>SJF (Shortest Job First)</b> — the process with the shortest burst time runs first\n• <b>Round Robin</b> — every process gets a fixed, small time slice in rotation, preemptive by design\n• <b>Priority Scheduling</b> — the process with the highest priority runs first\n  ↳ Each is worked through with a full example (arrival times, burst times, a Gantt chart, and the resulting average waiting/turnaround times) in its own card next.",
+    note:
+      "Exam favourite: memorize the formulas — Turnaround Time = Completion Time − Arrival Time, and Waiting Time = Turnaround Time − Burst Time. Nearly every scheduling numerical question is built entirely on these two formulas.",
+    diagram:
+      "  SCHEDULING TIMELINE VOCABULARY\n\n  Arrival ────wait in ready queue────► Start running ────burst time────► Completion\n     │                                       │                                │\n     └──────────────── Waiting Time ─────────┘                                │\n     │                                                                        │\n     └───────────────────────── Turnaround Time ─────────────────────────────┘",
+    tags: ["CPU Scheduling", "Burst Time", "Waiting Time", "Turnaround Time", "Preemptive", "Non-Preemptive"],
+  },
+  {
+    id: 208,
+    slug: "fcfs-scheduling",
+    section: "Operating Systems",
+    parentSlug: "cpu-scheduling",
+    title: "FCFS (First Come, First Served)",
+    tagline: "Whoever arrives first runs first — the simplest scheduling rule, but far from the fairest",
+    description:
+      "<b>What FCFS Is, in Plain English</b>\nFirst Come, First Served is the simplest CPU scheduling algorithm: processes are executed strictly in the order they arrive in the ready queue, exactly like a single-line queue at a bank counter — whoever joined the line first gets served first, and once someone reaches the counter they aren't interrupted until they're done.\n• Non-preemptive — once a process starts running, it keeps the CPU until it finishes completely\n• Implemented using a simple FIFO (First In, First Out) queue\n\n<b>The Convoy Effect — FCFS's Biggest Weakness</b>\nIf a long process arrives first, every short process behind it must wait for the entire long process to finish, even though each of them individually needs very little CPU time — this pileup of short jobs stuck behind one long job is called the convoy effect, and it's the single most common criticism of FCFS on exams.\n\n<b>Worked Example</b>\nThree processes arrive at the ready queue:\n• P1: arrival time 0, burst time 5\n• P2: arrival time 1, burst time 3\n• P3: arrival time 2, burst time 8\n\nSince FCFS runs strictly in arrival order:\n• P1 runs from 0 to 5\n• P2 runs from 5 to 8 (even though it arrived at 1, it waits for P1)\n• P3 runs from 8 to 16\n\nCompletion times: P1 = 5, P2 = 8, P3 = 16\nTurnaround time (Completion − Arrival): P1 = 5−0 = 5, P2 = 8−1 = 7, P3 = 16−2 = 14\nWaiting time (Turnaround − Burst): P1 = 5−5 = 0, P2 = 7−3 = 4, P3 = 14−8 = 6\nAverage waiting time = (0 + 4 + 6) / 3 = 3.33",
+    note:
+      "Exam favourite: FCFS has the simplest logic of all scheduling algorithms but tends to produce a poor average waiting time whenever a long job arrives early — that pileup effect is called the convoy effect, and examiners love asking you to name it.",
+    diagram:
+      "  FCFS GANTT CHART (P1 arr=0 burst=5, P2 arr=1 burst=3, P3 arr=2 burst=8)\n\n  |----- P1 -----|--- P2 ---|-------- P3 --------|\n  0              5          8                    16\n\n  P2 arrived at time 1 but had to wait until time 5 —\n  it sat behind P1 the whole time, even though its own burst is short.",
+    code:
+      "// FCFS: sort by arrival time, run each to completion in that order\nstruct Process { int pid, arrival, burst; };\n\nvoid fcfs(struct Process p[], int n) {\n    // sort processes by arrival time first\n    int time = 0;\n    for (int i = 0; i < n; i++) {\n        if (time < p[i].arrival) time = p[i].arrival;\n        int start = time;\n        time += p[i].burst;              // process runs to completion\n        int completion = time;\n        int turnaround = completion - p[i].arrival;\n        int waiting = turnaround - p[i].burst;\n        printf(\"P%d: waiting=%d turnaround=%d\\n\", p[i].pid, waiting, turnaround);\n    }\n}",
+    codeLanguage: "C",
+    tags: ["FCFS", "CPU Scheduling", "Convoy Effect", "Non-Preemptive"],
+  },
+  {
+    id: 209,
+    slug: "sjf-scheduling",
+    section: "Operating Systems",
+    parentSlug: "cpu-scheduling",
+    title: "SJF (Shortest Job First)",
+    tagline: "The process with the shortest burst time runs first — provably optimal for average waiting time",
+    description:
+      "<b>What SJF Is, in Plain English</b>\nShortest Job First always picks the ready process with the smallest burst time (the least CPU time needed) to run next. Among all algorithms that don't use priorities, SJF gives the lowest possible average waiting time — mathematically, running short jobs first minimizes how long, on average, everyone waits.\n\n<b>Non-Preemptive vs. Preemptive SJF</b>\n• <b>Non-preemptive SJF</b> — once the shortest available job starts, it runs to completion, even if a shorter job arrives while it's running\n• <b>Preemptive SJF (also called Shortest Remaining Time First, SRTF)</b> — if a new process arrives with a burst time shorter than the remaining time of the currently running process, the CPU is immediately taken away and given to the new, shorter process\n\n<b>The Big Catch — It Needs to Know the Future</b>\nSJF requires knowing each process's burst time in advance, which is rarely possible in a real system — the OS can only estimate future burst time based on a process's past behavior, so pure SJF is mostly a theoretical benchmark rather than something used exactly as-is in production schedulers.\n\n<b>Worked Example (Non-Preemptive)</b>\nFour processes, all considered as if arriving at time 0 for simplicity:\n• P1: burst 6, P2: burst 8, P3: burst 7, P4: burst 3\n\nSJF runs shortest burst first: P4 (3) → P1 (6) → P3 (7) → P2 (8)\n• P4: 0 to 3\n• P1: 3 to 9\n• P3: 9 to 16\n• P2: 16 to 24\n\nWaiting time = start time (since all arrived at 0): P4 = 0, P1 = 3, P3 = 9, P2 = 16\nAverage waiting time = (0 + 3 + 9 + 16) / 4 = 7",
+    note:
+      "Exam favourite: SJF minimizes average waiting time among non-preemptive algorithms — but it can cause starvation, where a long process keeps getting pushed back forever because shorter processes keep arriving and jumping ahead of it.",
+    diagram:
+      "  SJF GANTT CHART (all arrive at t=0: P1=6, P2=8, P3=7, P4=3)\n\n  |-- P4 --|----- P1 -----|------ P3 ------|-------- P2 --------|\n  0        3              9               16                   24\n\n  Shortest burst (P4=3) always goes first, longest (P2=8) goes last.",
+    code:
+      "// Non-preemptive SJF: pick the ready process with smallest burst time each time\nstruct Process { int pid, arrival, burst, done; };\n\nvoid sjf(struct Process p[], int n) {\n    int time = 0, completed = 0;\n    while (completed < n) {\n        int idx = -1, minBurst = 999999;\n        for (int i = 0; i < n; i++) {\n            if (!p[i].done && p[i].arrival <= time && p[i].burst < minBurst) {\n                minBurst = p[i].burst;\n                idx = i;\n            }\n        }\n        if (idx == -1) { time++; continue; }   // no process ready yet\n        time += p[idx].burst;                  // run to completion\n        p[idx].done = 1;\n        completed++;\n    }\n}",
+    codeLanguage: "C",
+    tags: ["SJF", "SRTF", "CPU Scheduling", "Starvation", "Optimal Waiting Time"],
+  },
+  {
+    id: 210,
+    slug: "round-robin-scheduling",
+    section: "Operating Systems",
+    parentSlug: "cpu-scheduling",
+    title: "Round Robin",
+    tagline: "Every process gets a fixed time slice in rotation — fair, preemptive, and the basis of Time-Sharing OS",
+    description:
+      "<b>What Round Robin Is, in Plain English</b>\nRound Robin gives every process in the ready queue a fixed, small unit of CPU time called a time quantum, in strict rotation. If a process doesn't finish within its quantum, it's paused (preempted), placed at the back of the ready queue, and the next process in line gets its turn — the CPU keeps cycling through the queue this way until every process finishes.\n\n<b>Why It's Fair</b>\n• Every process gets guaranteed, regular access to the CPU — no process can be starved forever, unlike SJF or Priority Scheduling\n• This is the scheduling algorithm behind Time-Sharing OS — the rapid rotation between users described there is exactly Round Robin in action\n\n<b>Choosing the Time Quantum</b>\n• Too small — the system spends too much time context switching relative to actual work done, hurting overall throughput\n• Too large — Round Robin starts behaving just like FCFS, since most processes finish within one long quantum anyway, losing its fairness advantage\n• A well-chosen quantum balances responsiveness against context-switching overhead\n\n<b>Worked Example (Time Quantum = 4)</b>\nThree processes, all arriving at time 0:\n• P1: burst 10, P2: burst 5, P3: burst 8\n\n• P1 runs 0→4 (6 remaining), P2 runs 4→8 (1 remaining), P3 runs 8→12 (4 remaining)\n• P1 runs 12→16 (2 remaining), P2 runs 16→17 (0 remaining, done), P3 runs 17→21 (0 remaining, done)\n• P1 runs 21→23 (0 remaining, done)\n\nCompletion times: P1 = 23, P2 = 17, P3 = 21\nTurnaround time: P1 = 23, P2 = 17, P3 = 21\nWaiting time: P1 = 23−10 = 13, P2 = 17−5 = 12, P3 = 21−8 = 13\nAverage waiting time = (13 + 12 + 13) / 3 = 12.67",
+    note:
+      "Exam favourite: Round Robin's defining trait is preemptive fairness via a fixed time quantum. If a question says every process gets a repeated, bounded turn regardless of length, that's Round Robin — the classic Time-Sharing OS scheduler.",
+    diagram:
+      "  ROUND ROBIN GANTT CHART (quantum = 4; P1=10, P2=5, P3=8, all arrive t=0)\n\n  |P1(4)|P2(4)|P3(4)|P1(4)|P2(1)|P3(4)|P1(2)|\n  0     4     8    12    16    17    21    23\n\n  Every process gets a bounded slice, cycles back to the queue if unfinished,\n  and eventually every process completes — no one waits forever.",
+    code:
+      "// Round Robin: each process gets `quantum` time, then cycles to the back of the queue\nstruct Process { int pid, remaining; };\n\nvoid roundRobin(struct Process p[], int n, int quantum) {\n    int time = 0, completed = 0;\n    while (completed < n) {\n        for (int i = 0; i < n; i++) {\n            if (p[i].remaining <= 0) continue;\n            int slice = (p[i].remaining < quantum) ? p[i].remaining : quantum;\n            time += slice;\n            p[i].remaining -= slice;\n            if (p[i].remaining == 0) completed++;  // finished within/at this slice\n        }\n    }\n}",
+    codeLanguage: "C",
+    tags: ["Round Robin", "Time Quantum", "CPU Scheduling", "Preemptive", "Time-Sharing OS"],
+  },
+  {
+    id: 211,
+    slug: "priority-scheduling",
+    section: "Operating Systems",
+    parentSlug: "cpu-scheduling",
+    title: "Priority Scheduling",
+    tagline: "The highest-priority process runs first — powerful, but prone to starving low-priority work",
+    description:
+      "<b>What Priority Scheduling Is, in Plain English</b>\nPriority Scheduling assigns every process a priority number, and the CPU always goes to the ready process with the highest priority. Lower numbers usually mean higher priority in most textbook conventions (priority 1 runs before priority 5), though the opposite convention is also used depending on the system — always check which direction a given question uses.\n\n<b>Preemptive vs. Non-Preemptive Priority Scheduling</b>\n• <b>Non-preemptive</b> — once a process starts running, it keeps the CPU until it finishes, even if a higher-priority process arrives afterward\n• <b>Preemptive</b> — if a new process arrives with higher priority than the one currently running, the CPU is immediately taken away and given to the new arrival\n\n<b>The Big Problem — Starvation</b>\nA low-priority process can wait indefinitely if higher-priority processes keep arriving ahead of it — in the worst case, it may never get the CPU at all. This is called starvation.\n• <b>Fix — Aging</b> — the OS gradually increases the priority of a process the longer it waits in the ready queue, guaranteeing that even a low-priority process will eventually become the highest-priority one and get its turn\n\n<b>Worked Example</b>\nFour processes, all arriving at time 0 (lower number = higher priority):\n• P1: burst 4, priority 2\n• P2: burst 3, priority 1\n• P3: burst 2, priority 4\n• P4: burst 5, priority 3\n\nRun order by priority (1 → 4): P2 (priority 1, burst 3) → P1 (priority 2, burst 4) → P4 (priority 3, burst 5) → P3 (priority 4, burst 2)\n• P2 runs 0→3, P1 runs 3→7, P4 runs 7→12, P3 runs 12→14\n\nWaiting time (start time, since all arrive at 0): P2 = 0, P1 = 3, P4 = 7, P3 = 12\nAverage waiting time = (0 + 3 + 7 + 12) / 4 = 5.5\n  ↳ Notice P3 has the shortest burst (2) but the lowest priority (4), so it's forced to wait the longest — exactly the starvation risk this algorithm carries.",
+    note:
+      "Exam favourite: priority scheduling can starve low-priority processes indefinitely. The named fix is aging — gradually raising the priority of processes that have waited a long time so they eventually get scheduled.",
+    diagram:
+      "  PRIORITY SCHEDULING GANTT CHART (lower number = higher priority, all arrive t=0)\n\n  |---- P2(pri 1) ----|------- P1(pri 2) -------|---------- P4(pri 3) ----------|-- P3(pri 4) --|\n  0                    3                         7                              12               14\n\n  P3 has the shortest burst time (2) but the lowest priority — it runs dead last.",
+    code:
+      "// Priority scheduling: always pick the ready process with the highest priority (lowest number)\nstruct Process { int pid, arrival, burst, priority, done; };\n\nvoid priorityScheduling(struct Process p[], int n) {\n    int time = 0, completed = 0;\n    while (completed < n) {\n        int idx = -1, bestPriority = 999999;\n        for (int i = 0; i < n; i++) {\n            if (!p[i].done && p[i].arrival <= time && p[i].priority < bestPriority) {\n                bestPriority = p[i].priority;\n                idx = i;\n            }\n        }\n        if (idx == -1) { time++; continue; }\n        time += p[idx].burst;      // non-preemptive: runs to completion\n        p[idx].done = 1;\n        completed++;\n    }\n}",
+    codeLanguage: "C",
+    tags: ["Priority Scheduling", "Starvation", "Aging", "CPU Scheduling", "Preemptive"],
+  },
+  {
+    id: 212,
+    slug: "os-deadlock",
+    section: "Operating Systems",
+    title: "Deadlock",
+    tagline: "Multiple processes stuck forever, each waiting for a resource another one is holding",
+    description:
+      "<b>What This Covers</b>\nDeadlock looks at what happens when multiple processes each hold a resource another one needs, creating a standstill that never resolves on its own — and the four different strategies an OS can use to deal with it.\n\n<b>What You'll Learn Here</b>\n• <b>Conditions for Deadlock</b> — the four conditions (Coffman conditions) that must all hold at once for a deadlock to be possible\n• <b>Deadlock Prevention</b> — designing the system so at least one of those four conditions can never occur\n• <b>Deadlock Avoidance</b> — allowing all four conditions to be possible, but carefully checking every resource request in advance to avoid an unsafe state\n• <b>Deadlock Detection</b> — allowing deadlocks to happen, then detecting and recovering from them after the fact\n  ↳ These four represent an escalating spectrum: prevent it from being possible at all → avoid it dynamically → detect and recover after it's already happened. Each trades some performance or flexibility for a stronger guarantee.",
+    note:
+      "This is a different 'deadlock' from the one covered in the Database Management System section (transaction locks) — the underlying idea (circular waiting) is the same, but here it's about OS-level resources like memory, printers, and files, not database rows.",
+    diagram:
+      "  DEADLOCK — a spectrum of strategies\n\n  Prevention        Avoidance             Detection\n  (make deadlock ──► (allow conditions ──► (let it happen,\n   impossible by       but check every       then find and\n   design)              request first)       recover from it)",
+    tags: ["Deadlock", "Coffman Conditions", "Deadlock Prevention", "Deadlock Avoidance", "Deadlock Detection"],
+  },
+  {
+    id: 213,
+    slug: "deadlock-conditions",
+    section: "Operating Systems",
+    parentSlug: "os-deadlock",
+    title: "Conditions for Deadlock",
+    tagline: "The four conditions (Coffman conditions) that must ALL hold at once for a deadlock to occur",
+    description:
+      "<b>What a Deadlock Actually Is</b>\nA deadlock is a situation where a group of processes are each waiting for a resource that another process in the same group is holding, and none of them can proceed — a permanent standstill with no external intervention.\n\n<b>The Four Necessary Conditions (Coffman Conditions)</b>\nAll four of these must be true at the same time for a deadlock to be possible — if even one is broken, deadlock cannot occur.\n• <b>Mutual Exclusion</b> — at least one resource must be held in a non-shareable way; only one process can use that resource at a time\n  ↳ Example: a printer can only be used by one process at a time\n• <b>Hold and Wait</b> — a process is holding at least one resource while simultaneously waiting to acquire additional resources currently held by other processes\n  ↳ Example: Process A holds a printer and is waiting for a scanner, while still refusing to give up the printer\n• <b>No Preemption</b> — a resource can only be released voluntarily by the process holding it; the OS cannot forcibly take it away\n  ↳ Example: the OS cannot forcibly grab the printer back from Process A — Process A must release it on its own\n• <b>Circular Wait</b> — there exists a circular chain of two or more processes, where each is waiting for a resource held by the next process in the chain\n  ↳ Example: Process A waits for a resource held by Process B, Process B waits for a resource held by Process C, and Process C waits for a resource held by Process A\n\n<b>Worked Example — Putting All Four Together</b>\nProcess A holds Printer 1 and wants Scanner 1. Process B holds Scanner 1 and wants Printer 1.\n• Mutual exclusion — both the printer and scanner can only be used by one process at a time ✓\n• Hold and wait — each process holds one resource while waiting for the other ✓\n• No preemption — neither the OS nor the other process can force a release ✓\n• Circular wait — A waits on B, B waits on A — a cycle of exactly two ✓\nAll four hold at once — this is a genuine deadlock; neither process can ever proceed.",
+    note:
+      "Exam favourite: all four conditions must hold simultaneously — memorize them as Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait (often abbreviated MHNC or remembered as 'a process holds one thing, waits for another, can't be forced to give it up, in a circle').",
+    diagram:
+      "  CIRCULAR WAIT — the simplest deadlock, two processes\n\n  Process A ── holds ──► Printer\n      │                              ▲\n      │ wants                        │ held by\n      ▼                              │\n   Scanner ──────── holds ──── Process B\n\n  A holds Printer, wants Scanner (held by B).\n  B holds Scanner, wants Printer (held by A).\n  Neither can proceed — circular wait.",
+    tags: ["Deadlock Conditions", "Coffman Conditions", "Mutual Exclusion", "Hold and Wait", "Circular Wait", "No Preemption"],
+  },
+  {
+    id: 214,
+    slug: "deadlock-prevention",
+    section: "Operating Systems",
+    parentSlug: "os-deadlock",
+    title: "Deadlock Prevention",
+    tagline: "Design the system so at least one of the four necessary conditions can never actually occur",
+    description:
+      "<b>What Deadlock Prevention Is, in Plain English</b>\nDeadlock prevention works by designing the system so that at least one of the four necessary conditions for deadlock (see Conditions for Deadlock) is structurally impossible — since all four must hold at once for a deadlock to happen, removing even one guarantees deadlock can never occur.\n\n<b>Attacking Each Condition</b>\n• <b>Attacking Mutual Exclusion</b> — make resources shareable wherever possible (e.g. read-only files can be opened by many processes at once); not always possible, since some resources (a printer) are inherently exclusive by nature\n• <b>Attacking Hold and Wait</b> — require a process to request and be granted all the resources it will ever need before it starts running, or require it to release everything it currently holds before requesting anything new\n  ↳ Downside: leads to low resource utilization, since a process might reserve resources it won't use until much later\n• <b>Attacking No Preemption</b> — if a process holding some resources requests another that isn't available, forcibly take away (preempt) its current resources instead of making it wait\n  ↳ Downside: only works cleanly for resources whose state can be easily saved and restored (like CPU registers), not for resources like a partially-printed document\n• <b>Attacking Circular Wait</b> — impose a strict, fixed numerical ordering on all resource types, and require every process to request resources only in increasing order\n  ↳ Example: if printers are numbered lower than scanners, a process must always request its printer before its scanner, never the reverse — this makes a circular chain of waiting mathematically impossible\n\n<b>The Most Practical Fix</b>\nAttacking Circular Wait through resource ordering is generally considered the most practical and widely-used prevention technique, since it doesn't waste resources the way 'grab everything up front' does, and it applies cleanly to almost any resource type.",
+    note:
+      "Exam favourite: 'how do you prevent deadlock without giving up too much resource efficiency?' Answer: enforce a strict resource ordering, breaking circular wait — the same principle used to prevent deadlock in database locking (see Locking in the Database Management System section).",
+    diagram:
+      "  PREVENTING DEADLOCK BY BREAKING CIRCULAR WAIT\n\n  Rule: resources must always be requested in increasing numeric order\n  (e.g. Printer = 1, Scanner = 2)\n\n  Process A: request Printer(1) → request Scanner(2)   ✓ increasing order\n  Process B: request Printer(1) → request Scanner(2)   ✓ same order for everyone\n\n  Neither process can ever request Scanner before Printer,\n  so the circular 'A waits for B, B waits for A' chain can never form.",
+    tags: ["Deadlock Prevention", "Circular Wait", "Hold and Wait", "Resource Ordering"],
+  },
+  {
+    id: 215,
+    slug: "deadlock-avoidance",
+    section: "Operating Systems",
+    parentSlug: "os-deadlock",
+    title: "Deadlock Avoidance",
+    tagline: "Allow all four conditions to be possible, but check every resource request in advance to stay in a safe state",
+    description:
+      "<b>What Deadlock Avoidance Is, in Plain English</b>\nUnlike prevention (which removes a condition entirely), deadlock avoidance allows all four necessary conditions to remain possible, but the OS carefully evaluates every resource request in advance and only grants it if doing so keeps the system in a safe state — a state from which every process can still eventually finish, no matter what order they request resources in.\n\n<b>Safe State vs. Unsafe State</b>\n• <b>Safe state</b> — there exists at least one order in which every process could finish, even if all of them requested their maximum resource needs\n• <b>Unsafe state</b> — no such guaranteed order exists; the system might or might not deadlock depending on what happens next\n  ↳ An unsafe state doesn't necessarily mean deadlock has happened yet — it means deadlock has become possible, so the avoidance algorithm refuses to enter it in the first place.\n\n<b>The Banker's Algorithm</b>\nThe most famous deadlock avoidance algorithm, named after how a bank manages loans so it never lends out more than it can safely cover:\n• Each process declares its maximum possible resource need up front\n• Before granting any resource request, the OS pretends to grant it, then checks whether the system would still be in a safe state afterward\n• If granting the request would leave the system in a safe state, it's approved; if it would lead to an unsafe state, the request is denied (or delayed) even though the resource is currently available\n\n<b>Worked Example</b>\nA bank has 10 units of a resource. Three processes have declared these maximum needs: P1 needs up to 7, P2 needs up to 5, P3 needs up to 3.\n• Currently allocated: P1 has 3, P2 has 2, P3 has 2 (7 units allocated, 3 free)\n• Remaining need: P1 needs 4 more, P2 needs 3 more, P3 needs 1 more\n• With 3 units free, the OS checks: can any process finish with what's currently free? P3 needs only 1 more — yes, P3 can finish, releasing its 2 units back (making 5 free)\n• With 5 free, P2 needs 3 more — P2 can finish, releasing its resources (making 7 free)\n• With 7 free, P1 needs 4 more — P1 can finish\n• Since a completion order (P3 → P2 → P1) exists, this is a safe state, and any request that keeps this ordering possible is granted.",
+    note:
+      "Exam favourite: the Banker's Algorithm's whole point is to answer one question before granting any request — 'if I approve this, does at least one safe completion order still exist?' If yes, grant it; if no, deny it, even if the resource is technically available right now.",
+    diagram:
+      "  BANKER'S ALGORITHM — check before granting\n\n  New resource request arrives\n         │\n         ▼\n  Pretend to grant it (simulate)\n         │\n         ▼\n  Is there still an order in which\n  every process can finish?\n     │             │\n    YES            NO\n     │             │\n  GRANT it     DENY / DELAY it\n  (safe state)  (would be unsafe state)",
+    tags: ["Deadlock Avoidance", "Banker's Algorithm", "Safe State", "Unsafe State"],
+  },
+  {
+    id: 216,
+    slug: "deadlock-detection",
+    section: "Operating Systems",
+    parentSlug: "os-deadlock",
+    title: "Deadlock Detection",
+    tagline: "Allow deadlocks to happen, then find and recover from them after the fact",
+    description:
+      "<b>What Deadlock Detection Is, in Plain English</b>\nDeadlock detection takes the most permissive approach of all: it doesn't prevent or avoid deadlocks at all — it lets the system run freely, periodically checks whether a deadlock has actually occurred, and if one is found, recovers from it. This trades a small amount of ongoing overhead (avoidance's constant request-checking) for the risk of occasionally having to recover after the fact.\n\n<b>How Detection Works — The Wait-For Graph</b>\n• The OS builds a wait-for graph: each process is a node, and an edge from Process A to Process B means 'A is waiting for a resource held by B'\n• If this graph contains a cycle, a deadlock exists among the processes in that cycle\n• The OS runs a cycle-detection algorithm over this graph periodically (or whenever a resource request would have to wait)\n\n<b>Recovery Once a Deadlock Is Detected</b>\n• <b>Process termination</b> — kill one or more processes in the deadlock cycle to break it, either killing all of them at once, or killing them one at a time until the cycle is broken\n• <b>Resource preemption</b> — forcibly take a resource away from one of the deadlocked processes and give it to another, rolling that process back to a safe earlier point so it can be restarted later\n\n<b>Choosing a Victim</b>\nWhen only one process needs to be terminated or have its resources preempted, the OS typically picks a victim based on factors like: how much CPU time it's already used (minimizing wasted work), how many resources it holds, and how many more resources it still needs — trying to pick the process whose rollback costs the least.\n\n<b>Detection vs. Avoidance vs. Prevention</b>\n• Prevention — removes a condition, deadlock is structurally impossible, but can waste resources\n• Avoidance — checks every request in advance (Banker's Algorithm), deadlock never happens, but has ongoing per-request overhead\n• Detection — allows deadlock to happen, checks for it periodically, and recovers when found — lowest overhead during normal operation, but recovery (killing a process) can be costly when it does occur",
+    note:
+      "Exam favourite: a cycle in the wait-for graph is the textbook signal of deadlock in a single-instance-per-resource-type system. If asked for the two recovery options once detected, the answer is always process termination or resource preemption.",
+    diagram:
+      "  WAIT-FOR GRAPH — a cycle means deadlock\n\n  Process A ──waits for──► Process B\n      ▲                         │\n      │                         │ waits for\n      └────── Process C ◄───────┘\n\n  A waits for B, B waits for C, C waits for A — a cycle.\n  The OS's cycle-detection algorithm finds this and\n  either kills one process or preempts one of its resources.",
+    tags: ["Deadlock Detection", "Wait-For Graph", "Recovery", "Process Termination", "Resource Preemption"],
+  },
+  {
+    id: 217,
+    slug: "os-memory-management",
+    section: "Operating Systems",
+    title: "Memory Management",
+    tagline: "How the OS divides, tracks, and extends RAM across every running process",
+    description:
+      "<b>What This Covers</b>\nMemory Management looks at how the OS gives every process the memory it needs, keeps processes from overwriting each other's memory, and stretches limited physical RAM to make it look bigger than it really is.\n\n<b>What You'll Learn Here</b>\n• <b>Paging</b> — dividing memory into fixed-size blocks (pages and frames) so a process's memory doesn't need to sit in one continuous chunk\n• <b>Segmentation</b> — dividing memory into variable-size logical chunks (segments) that match how a program is actually structured\n• <b>Virtual Memory</b> — using disk space to make a system behave as if it has more RAM than it physically does\n• <b>Page Replacement</b> — the algorithms (FIFO, LRU, Optimal) that decide which page to evict from RAM when it's full and a new page needs to be brought in\n  ↳ These build on each other: paging and segmentation are two different ways to divide memory up, virtual memory is what lets a system run programs bigger than physical RAM, and page replacement is the decision virtual memory has to make constantly once RAM fills up.",
+    note:
+      "Paging and Segmentation are often compared side by side on exams: paging divides memory into fixed-size blocks (simpler, avoids external fragmentation, but has internal fragmentation), while segmentation divides memory into variable-size logical blocks that match a program's structure (no internal fragmentation, but has external fragmentation).",
+    diagram:
+      "  MEMORY MANAGEMENT — how the topics connect\n\n  Paging /              Virtual Memory           Page Replacement\n  Segmentation   ──►    (disk extends      ──►   (which page to evict\n  (dividing memory)      RAM's limit)              when RAM is full)",
+    tags: ["Memory Management", "Paging", "Segmentation", "Virtual Memory", "Page Replacement"],
+  },
+  {
+    id: 218,
+    slug: "paging",
+    section: "Operating Systems",
+    parentSlug: "os-memory-management",
+    title: "Paging",
+    tagline: "Dividing memory into fixed-size blocks so a process's memory never needs to be one continuous chunk",
+    description:
+      "<b>What Paging Is, in Plain English</b>\nPaging is a memory management scheme that divides a process's logical memory into fixed-size blocks called pages, and divides physical RAM into equal-size blocks called frames. A process's pages can be scattered across any free frames in RAM, in any order — they don't need to sit next to each other — because the OS keeps a page table that maps each page to whichever frame it's actually stored in.\n  ↳ Analogy: think of a book split into individually numbered pages that can be stored in any drawer of a filing cabinet, in any order — as long as there's an index card (the page table) recording which drawer holds page 1, which holds page 2, and so on, you can still read the book in the right order.\n\n<b>How Address Translation Works</b>\n• A logical (virtual) address a program uses is split into a page number and an offset within that page\n• The CPU looks up the page number in the page table to find which physical frame it's stored in\n• The offset is added to the frame's starting address to get the actual physical address in RAM\n\n<b>Internal Fragmentation</b>\nBecause pages are a fixed size, a process's last page is rarely completely full — the unused leftover space inside that final page is wasted, and this wasted space inside an allocated block is called internal fragmentation.\n  ↳ Example: if a page is 4 KB and a process's last page only uses 1 KB of actual data, the remaining 3 KB inside that page is wasted (internal fragmentation) — it can't be given to any other process.\n\n<b>Why Paging Solves External Fragmentation</b>\nSince any page can go into any free frame, there's never a situation where a process can't run just because free memory isn't contiguous — free frames scattered all over RAM can still all be used, unlike schemes that require one continuous block.",
+    note:
+      "Exam favourite: paging trades external fragmentation (which it eliminates, since pages don't need to be contiguous) for internal fragmentation (wasted space inside the last, partially-used page). This is the exact opposite trade-off from Segmentation.",
+    diagram:
+      "  PAGING — logical pages map to scattered physical frames\n\n  Process's Logical Memory        Physical RAM (Frames)\n  ┌──────────┐                    ┌──────────┐\n  │ Page 0   │──────────────────► │ Frame 2  │\n  ├──────────┤          ┌───────► │ Frame 5  │\n  │ Page 1   │──────────┘         ├──────────┤\n  ├──────────┤                    │ Frame 0  │ ← used by another process\n  │ Page 2   │────────────────────► Frame 7  │\n  └──────────┘                    └──────────┘\n\n  Page Table: Page 0→Frame 2, Page 1→Frame 5, Page 2→Frame 7\n  (Pages don't need to be next to each other in physical RAM.)",
+    tags: ["Paging", "Page Table", "Frames", "Internal Fragmentation", "Address Translation"],
+  },
+  {
+    id: 219,
+    slug: "segmentation",
+    section: "Operating Systems",
+    parentSlug: "os-memory-management",
+    title: "Segmentation",
+    tagline: "Dividing memory into variable-size logical chunks that match how a program is actually structured",
+    description:
+      "<b>What Segmentation Is, in Plain English</b>\nSegmentation is a memory management scheme that divides a process's memory into variable-size logical units called segments, where each segment represents a meaningful part of the program — for example, one segment for its code, one for its global data, one for its stack, and one for each major function or module. Unlike paging's uniform fixed-size blocks, segments can be as large or small as the piece of the program they represent actually needs.\n  ↳ Analogy: instead of chopping a book into identical-size pages regardless of content, segmentation is like keeping the book split by chapter — each chapter (segment) is exactly as long as it needs to be, rather than forced into a fixed page count.\n\n<b>How Address Translation Works</b>\n• A logical address is split into a segment number and an offset within that segment\n• The OS keeps a segment table listing, for each segment, its base address (where it starts in physical memory) and its limit (how large it is)\n• The CPU looks up the segment number to find its base address, then adds the offset (after checking it doesn't exceed the limit) to get the physical address\n\n<b>External Fragmentation</b>\nBecause segments are variable in size, as segments are allocated and freed over time, physical memory ends up with small, scattered free gaps between segments that are individually too small to fit a new segment, even though the total free memory might be enough — this wasted memory between allocated blocks is called external fragmentation.\n\n<b>Segmentation vs. Paging</b>\n• Segmentation divides memory by logical meaning (code, stack, a specific function) — paging divides memory by fixed physical size with no regard for what's inside\n• Segmentation suffers from external fragmentation (gaps between segments); paging suffers from internal fragmentation (wasted space inside a page)\n• Some systems combine both, using segments made up of multiple pages, getting logical structure and avoiding pure external fragmentation at the same time",
+    note:
+      "Exam favourite: segmentation matches the programmer's logical view of a program (code, data, stack as separate segments) and suffers from external fragmentation — the direct opposite of paging, which matches physical memory's fixed-size view and suffers from internal fragmentation instead.",
+    diagram:
+      "  SEGMENTATION — variable-size logical segments\n\n  Process's Segments                Segment Table\n  ┌───────────────┐                 Segment | Base | Limit\n  │ Code segment  │  (large)        --------|------|------\n  ├───────────────┤                 Code    | 1000 | 2500\n  │ Stack segment │  (small)        Data    | 6000 |  800\n  ├───────────────┤                 Stack   | 4200 |  300\n  │ Data segment  │  (medium)\n  └───────────────┘\n\n  Each segment maps to its own base address + limit in physical memory —\n  segments don't need to be the same size like pages do.",
+    tags: ["Segmentation", "Segment Table", "External Fragmentation", "Logical Memory"],
+  },
+  {
+    id: 220,
+    slug: "virtual-memory",
+    section: "Operating Systems",
+    parentSlug: "os-memory-management",
+    title: "Virtual Memory",
+    tagline: "Using disk space to let a system run programs bigger than the physical RAM it actually has",
+    description:
+      "<b>What Virtual Memory Is, in Plain English</b>\nVirtual memory is a technique that lets a computer run programs whose total memory needs exceed the amount of physical RAM actually installed, by using space on the disk as an extension of RAM — from a program's point of view, it appears to have access to a huge, continuous block of memory, even though only a portion of it is really sitting in physical RAM at any given moment.\n\n<b>Demand Paging</b>\nVirtual memory is typically implemented through demand paging — instead of loading a process's entire memory into RAM the moment it starts, the OS only loads a page when it's actually needed (referenced by an instruction).\n• If the CPU tries to access a page that isn't currently in RAM, this triggers a page fault\n• On a page fault, the OS pauses the process, fetches the required page from disk into a free RAM frame, updates the page table, and resumes the process at the exact instruction that caused the fault\n\n<b>Swapping</b>\nWhen RAM is full and a new page needs to come in, the OS may need to swap out (write back to disk) a page that's currently in RAM to free up a frame — this is exactly the decision that Page Replacement algorithms are responsible for making.\n\n<b>Why Virtual Memory Matters</b>\n• Lets a system run more, and larger, programs than physical RAM alone would allow\n• Lets each process believe it has its own private, large address space, isolated from every other process\n• Comes at a real performance cost — disk access is dramatically slower than RAM access, so too many page faults in a row (a condition called thrashing) can slow a system down far more than if it simply had more physical RAM to begin with",
+    note:
+      "Exam favourite: a page fault is not an error in the everyday sense — it's the normal, expected trigger that tells the OS 'go fetch this page from disk into RAM now.' Only excessive, back-to-back page faults (thrashing) indicate a real performance problem.",
+    diagram:
+      "  VIRTUAL MEMORY — RAM extended by disk\n\n  Process's Virtual Address Space (looks huge and continuous)\n  ┌───────────────────────────────────────────┐\n  │ Page A (in RAM) │ Page B (on disk) │ Page C (in RAM) │ ...\n  └───────────────────────────────────────────┘\n         │                    │                    │\n         ▼                    ▼                    ▼\n     Physical RAM         PAGE FAULT!          Physical RAM\n     (fast access)     OS fetches Page B      (fast access)\n                       from disk into RAM",
+    tags: ["Virtual Memory", "Demand Paging", "Page Fault", "Swapping", "Thrashing"],
+  },
+  {
+    id: 221,
+    slug: "page-replacement",
+    section: "Operating Systems",
+    parentSlug: "os-memory-management",
+    title: "Page Replacement",
+    tagline: "Deciding which page to evict from RAM when it's full and a new page must be brought in",
+    description:
+      "<b>What Page Replacement Is, in Plain English</b>\nPage replacement is the decision the OS has to make when a page fault occurs but RAM has no free frames left — it must choose an existing page currently in RAM to evict (write back to disk if it's been modified, or simply discard if not) to make room for the page that's actually needed right now. The algorithm chosen for this decision directly affects how often future page faults happen.\n\n<b>The Shared Worked Example</b>\nAll three algorithms covered next (FIFO, LRU, Optimal) are worked through using the exact same reference string and the exact same number of frames, so their results can be compared directly:\n• Reference string (the sequence of pages requested, in order): 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2\n• Number of available frames: 3\n\n<b>What a 'Page Fault' Means Here</b>\nEvery time a requested page is not currently held in one of the 3 frames, that's a page fault, and the algorithm must decide which of the 3 currently-held pages to evict to make room for it. If the requested page is already in a frame, that's a hit, and no eviction is needed.\n\n<b>Comparing the Three</b>\n• <b>FIFO</b> — evicts whichever page has been in RAM the longest, regardless of how recently or often it was used\n• <b>LRU (Least Recently Used)</b> — evicts the page that hasn't been used for the longest time, on the theory that recently-used pages are likely to be used again soon\n• <b>Optimal</b> — evicts the page that won't be needed again for the longest time in the future; this needs to know the future, so it's used only as a theoretical best-case benchmark to measure the other algorithms against\n  ↳ Each is worked through fully, frame-by-frame, in its own card next.",
+    note:
+      "Exam favourite: Optimal always produces the fewest (or tied-fewest) page faults of any algorithm on the same reference string, since it has perfect future knowledge — it's the ceiling every real algorithm is compared against, not something you can actually implement.",
+    diagram:
+      "  PAGE REPLACEMENT — same reference string, three strategies\n\n  Reference string: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2   (3 frames)\n\n  FIFO      — evict the OLDEST page in RAM\n  LRU       — evict the page unused for the LONGEST time\n  Optimal   — evict the page needed FURTHEST in the future",
+    tags: ["Page Replacement", "Page Fault", "FIFO", "LRU", "Optimal Page Replacement"],
+  },
+  {
+    id: 222,
+    slug: "fifo-page-replacement",
+    section: "Operating Systems",
+    parentSlug: "page-replacement",
+    title: "FIFO Page Replacement",
+    tagline: "Evicts whichever page has been sitting in RAM the longest, regardless of how it's actually being used",
+    description:
+      "<b>What FIFO Page Replacement Is, in Plain English</b>\nFIFO (First In, First Out) page replacement evicts the page that has been in RAM the longest, treating all frames like a simple queue — the very first page that was loaded in is the very first one evicted when room is needed, no matter how recently or frequently it's actually been used since.\n\n<b>Worked Example</b>\nReference string: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 — with 3 frames.\n\n• 7 → fault, frames: [7, _, _]\n• 0 → fault, frames: [7, 0, _]\n• 1 → fault, frames: [7, 0, 1]\n• 2 → fault, evict 7 (oldest), frames: [2, 0, 1]\n• 0 → hit (0 is in frames), frames: [2, 0, 1]\n• 3 → fault, evict 0 (oldest now), frames: [2, 3, 1]\n• 0 → fault, evict 1 (oldest now), frames: [2, 3, 0]\n• 4 → fault, evict 2 (oldest now), frames: [4, 3, 0]\n• 2 → fault, evict 3 (oldest now), frames: [4, 2, 0]\n• 3 → fault, evict 0 (oldest now), frames: [4, 2, 3]\n• 0 → fault, evict 4 (oldest now), frames: [0, 2, 3]\n• 3 → hit, frames: [0, 2, 3]\n• 2 → hit, frames: [0, 2, 3]\n\nTotal page faults: 10 (out of 13 requests)\n\n<b>Belady's Anomaly</b>\nFIFO has a famously counter-intuitive flaw: for some reference strings, adding MORE frames can actually increase the number of page faults, instead of decreasing it as you'd expect. This surprising behavior is called Belady's Anomaly, and FIFO is the classic example used to demonstrate it — most other algorithms (like LRU) don't have this problem.",
+    note:
+      "Exam favourite: FIFO is the only algorithm here prone to Belady's Anomaly (more frames → more faults, counter-intuitively). If a question mentions 'more frames caused more page faults,' the answer is always FIFO.",
+    diagram:
+      "  FIFO — reference string 7,0,1,2,0,3,0,4,2,3,0,3,2 (3 frames)\n\n  Ref:    7   0   1   2   0   3   0   4   2   3   0   3   2\n  Frame1: 7   7   7   2   2   2   2   4   4   4   0   0   0\n  Frame2: -   0   0   0   0   3   3   3   2   2   2   2   2\n  Frame3: -   -   1   1   1   1   0   0   0   3   3   3   3\n  Fault:  F   F   F   F   .   F   F   F   F   F   F   .   .\n\n  Total faults = 10   (evicts the OLDEST page in the frame each time)",
+    code:
+      "// FIFO page replacement using a queue of frame indices\nint frames[3] = {-1, -1, -1};\nint queueOrder[3];   // tracks insertion order (oldest at index 0)\nint faults = 0, nextEvict = 0;\n\nvoid accessPage(int page) {\n    for (int i = 0; i < 3; i++)\n        if (frames[i] == page) return;      // hit, nothing to do\n\n    frames[nextEvict] = page;               // evict the oldest slot\n    nextEvict = (nextEvict + 1) % 3;         // rotate to the next oldest\n    faults++;\n}",
+    codeLanguage: "C",
+    tags: ["FIFO", "Page Replacement", "Belady's Anomaly", "Page Fault"],
+  },
+  {
+    id: 223,
+    slug: "lru-page-replacement",
+    section: "Operating Systems",
+    parentSlug: "page-replacement",
+    title: "LRU (Least Recently Used) Page Replacement",
+    tagline: "Evicts the page that hasn't been used for the longest time — recently-used pages are likely needed again soon",
+    description:
+      "<b>What LRU Is, in Plain English</b>\nLRU (Least Recently Used) page replacement evicts the page that hasn't been accessed for the longest stretch of time, based on the reasonable real-world assumption that a page used recently is likely to be used again soon (this pattern is called locality of reference), while a page that hasn't been touched in a long time probably won't be needed again soon either.\n\n<b>Worked Example</b>\nReference string: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 — with 3 frames.\n\n• 7 → fault, frames: [7, _, _]\n• 0 → fault, frames: [7, 0, _]\n• 1 → fault, frames: [7, 0, 1]\n• 2 → fault, evict 7 (least recently used), frames: [2, 0, 1]\n• 0 → hit, frames: [2, 0, 1] (0's last-used time updates)\n• 3 → fault, evict 1 (least recently used — 7 already gone, 1 unused longest), frames: [2, 0, 3]\n• 0 → hit, frames: [2, 0, 3]\n• 4 → fault, evict 2 (least recently used), frames: [4, 0, 3]\n• 2 → fault, evict 3 (least recently used), frames: [4, 0, 2]\n• 3 → fault, evict 4 (least recently used), frames: [3, 0, 2]\n• 0 → hit, frames: [3, 0, 2]\n• 3 → hit, frames: [3, 0, 2]\n• 2 → hit, frames: [3, 0, 2]\n\nTotal page faults: 8 (out of 13 requests) — fewer than FIFO's 10 on this same reference string, because LRU keeps page 0 in RAM the whole time once it notices how frequently it's reused, while FIFO evicted it purely because of when it first arrived.\n\n<b>The Cost of LRU</b>\nLRU needs to track exactly when each page was last used, which requires extra bookkeeping — either a counter/timestamp updated on every access, or a linked list that moves a page to the front every time it's touched. This makes LRU more expensive to implement precisely than FIFO, though it usually performs noticeably better in practice.",
+    note:
+      "Exam favourite: LRU does NOT suffer from Belady's Anomaly — it belongs to a class of algorithms (called stack algorithms) that are mathematically guaranteed to never get worse when given more frames. That's the key contrast with FIFO.",
+    diagram:
+      "  LRU — reference string 7,0,1,2,0,3,0,4,2,3,0,3,2 (3 frames)\n\n  Ref:    7   0   1   2   0   3   0   4   2   3   0   3   2\n  Frame1: 7   7   7   2   2   2   2   4   4   4   0   0   0\n  Frame2: -   0   0   0   0   0   0   0   2   2   2   2   2\n  Frame3: -   -   1   1   1   3   3   3   3   3   3   3   3\n  Fault:  F   F   F   F   .   F   .   F   F   F   .   .   .\n\n  Total faults = 8   (evicts the page unused for the LONGEST time — page 0 survives\n  because it keeps getting re-used, unlike in FIFO)",
+    code:
+      "// LRU page replacement using a 'last used' timestamp per frame\nint frames[3] = {-1, -1, -1};\nint lastUsed[3] = {0, 0, 0};\nint faults = 0, clock = 0;\n\nvoid accessPage(int page) {\n    clock++;\n    for (int i = 0; i < 3; i++) {\n        if (frames[i] == page) { lastUsed[i] = clock; return; }   // hit\n    }\n    int evictIdx = 0;\n    for (int i = 1; i < 3; i++)\n        if (lastUsed[i] < lastUsed[evictIdx]) evictIdx = i;        // find LRU frame\n\n    frames[evictIdx] = page;\n    lastUsed[evictIdx] = clock;\n    faults++;\n}",
+    codeLanguage: "C",
+    tags: ["LRU", "Page Replacement", "Locality of Reference", "Page Fault"],
+  },
+  {
+    id: 224,
+    slug: "optimal-page-replacement",
+    section: "Operating Systems",
+    parentSlug: "page-replacement",
+    title: "Optimal Page Replacement",
+    tagline: "Evicts the page that won't be needed for the longest time in the future — the theoretical best case",
+    description:
+      "<b>What Optimal Page Replacement Is, in Plain English</b>\nOptimal page replacement evicts whichever page in RAM will not be used again for the longest time in the future, guaranteeing the fewest possible page faults for a given reference string and number of frames. It requires knowing the entire future sequence of page requests in advance, which is impossible in a real running system — Optimal exists purely as a benchmark to measure how close a real algorithm (like FIFO or LRU) comes to the best possible result.\n\n<b>Worked Example</b>\nReference string: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 — with 3 frames.\n\n• 7 → fault, frames: [7, _, _]\n• 0 → fault, frames: [7, 0, _]\n• 1 → fault, frames: [7, 0, 1]\n• 2 → fault — look ahead: 7 is never used again, 0 is used again soon, 1 is never used again → evict 7 (or 1; both never reused, pick either), evict 7, frames: [2, 0, 1]\n• 0 → hit, frames: [2, 0, 1]\n• 3 → fault — look ahead: 2 is used again (at position 9), 0 is used again very soon, 1 is never used again → evict 1, frames: [2, 0, 3]\n• 0 → hit, frames: [2, 0, 3]\n• 4 → fault — look ahead: 2 is used again soon (position 9), 0 is used again very soon, 3 is used again soon too, but 2's next use is furthest away among them → evict 2, frames: [4, 0, 3]\n• 2 → fault — look ahead: 4 is never used again, 0 is used again soon, 3 is used again soon → evict 4, frames: [2, 0, 3]\n• 3 → hit, frames: [2, 0, 3]\n• 0 → hit, frames: [2, 0, 3]\n• 3 → hit, frames: [2, 0, 3]\n• 2 → hit, frames: [2, 0, 3]\n\nTotal page faults: 7 (out of 13 requests) — fewer than both FIFO (10) and LRU (8) on the exact same reference string, confirming Optimal really is the best possible result.",
+    note:
+      "Exam favourite: Optimal is never actually implemented in a real OS — it's purely a yardstick used to evaluate how well a real, implementable algorithm (FIFO, LRU) performs compared to the theoretical best case on the same reference string.",
+    diagram:
+      "  OPTIMAL — reference string 7,0,1,2,0,3,0,4,2,3,0,3,2 (3 frames)\n\n  Ref:    7   0   1   2   0   3   0   4   2   3   0   3   2\n  Frame1: 7   7   7   2   2   2   2   2   2   2   2   2   2\n  Frame2: -   0   0   0   0   0   0   0   0   0   0   0   0\n  Frame3: -   -   1   1   1   3   3   4   4   3   3   3   3\n  Fault:  F   F   F   F   .   F   .   F   F   .   .   .   .\n\n  Total faults = 7   (fewest of all three — evicts whichever page is\n  needed FURTHEST in the future, or never again)",
+    tags: ["Optimal Page Replacement", "Page Replacement", "Page Fault", "Belady's Anomaly"],
+  },
+  {
+    id: 225,
+    slug: "file-system",
+    section: "Operating Systems",
+    title: "File System",
+    tagline: "How the OS organizes, allocates, and protects data stored on disk",
+    description:
+      "<b>What This Covers</b>\nFile System looks at how the OS turns a raw storage disk into organized, named files and folders that applications and users can actually work with — how space on disk is handed out to files, how those files are organized into a browsable structure, and how access to them is controlled.\n\n<b>What You'll Learn Here</b>\n• <b>File Allocation Methods</b> — contiguous, linked, and indexed allocation: the different ways disk blocks belonging to one file can be arranged on disk\n• <b>Directory Structure</b> — single-level, two-level, tree-structured, and acyclic-graph directory structures: the different ways files can be organized and found\n• <b>File Permissions</b> — read, write, and execute permissions for the owner, group, and others, controlling who can do what to a file\n  ↳ These three cover the full lifecycle: how a file's data is physically laid out on disk, how it's found and organized logically, and who's allowed to touch it once found.",
+    note:
+      "Exam favourite: don't confuse a file allocation method (how a single file's own blocks are arranged on disk) with a directory structure (how many different files and folders are organized so users can browse and find them) — they solve two completely different problems.",
+    diagram:
+      "  FILE SYSTEM — how the topics divide up the job\n\n  File Allocation        Directory Structure       File Permissions\n  (how ONE file's   ──►  (how MANY files/folders──►  (who can read/write/\n   blocks sit on disk)    are organized to be found)   execute a file)",
+    tags: ["File System", "File Allocation", "Directory Structure", "File Permissions"],
+  },
+  {
+    id: 226,
+    slug: "file-allocation-methods",
+    section: "Operating Systems",
+    parentSlug: "file-system",
+    title: "File Allocation Methods",
+    tagline: "Contiguous, linked, and indexed — three different ways a file's blocks can be arranged on disk",
+    description:
+      "<b>What File Allocation Is, in Plain English</b>\nA file on disk is really stored as a set of individual disk blocks, and a file allocation method is the strategy the OS uses to decide how those blocks are arranged and linked together on the physical disk.\n\n<b>Contiguous Allocation</b>\nEach file is stored as one single continuous run of blocks on disk, back to back, like a single unbroken shelf of books.\n• <b>Advantage</b> — very fast to read, since the disk head doesn't need to jump around; also very simple, since only the starting block and the length need to be recorded\n• <b>Disadvantage</b> — suffers from external fragmentation, since files are created and deleted over time leaving disk space in scattered gaps; also makes it hard for a file to grow if the blocks right after it are already taken by another file\n\n<b>Linked Allocation</b>\nEach file is stored as a linked list of blocks scattered anywhere on disk, where every block holds a pointer to the location of the next block in the file.\n• <b>Advantage</b> — no external fragmentation, since blocks can be scattered anywhere on disk; files can also grow freely by simply linking on a new block wherever one is free\n• <b>Disadvantage</b> — slow for random access, since reaching block 100 of a file means following 99 pointers in sequence from the start; also risky, since a single corrupted pointer can break the whole chain from that point onward\n\n<b>Indexed Allocation</b>\nEach file gets its own dedicated index block, which simply stores a list of pointers to every block that belongs to the file — no chaining between data blocks at all.\n• <b>Advantage</b> — supports fast direct/random access (just look up the Nth entry in the index block, no need to follow a chain); also avoids external fragmentation, like linked allocation\n• <b>Disadvantage</b> — the index block itself uses extra disk space, and for very large files a single index block might not be able to hold pointers to every block the file needs\n\n<b>Which One Real File Systems Use</b>\nMost modern file systems (like NTFS, ext4) use indexed allocation or a close variant of it, because it gives fast random access without contiguous allocation's fragmentation problem.",
+    note:
+      "Exam favourite: match each method to its defining weakness — Contiguous → external fragmentation. Linked → slow random access (must follow pointers one by one). Indexed → extra space for the index block itself. Most real file systems today are indexed-based.",
+    diagram:
+      "  THREE FILE ALLOCATION METHODS\n\n  CONTIGUOUS:  [Block5][Block6][Block7][Block8]   ← one continuous run\n\n  LINKED:      [Block2 → Block9] → [Block9 → Block3] → [Block3 → NULL]\n               (scattered, each block points to the next)\n\n  INDEXED:     [Index Block: →5, →2, →9, →3]   ← one block just lists pointers\n                   │    │    │    │\n                   ▼    ▼    ▼    ▼\n                [B5] [B2] [B9] [B3]   (scattered, no chaining between them)",
+    tags: ["File Allocation", "Contiguous Allocation", "Linked Allocation", "Indexed Allocation", "External Fragmentation"],
+  },
+  {
+    id: 227,
+    slug: "directory-structure",
+    section: "Operating Systems",
+    parentSlug: "file-system",
+    title: "Directory Structure",
+    tagline: "Single-level, two-level, tree-structured, and acyclic-graph — how files get organized so they can be found",
+    description:
+      "<b>What a Directory Structure Is, in Plain English</b>\nA directory structure is the way an OS organizes files into a browsable hierarchy, so users and applications can locate a specific file among potentially millions on a disk without knowing its exact physical location.\n\n<b>Single-Level Directory</b>\nAll files for every user sit in one single, flat directory with no subfolders at all.\n• <b>Limitation</b> — no two files anywhere on the system can share the same name, which becomes completely impractical once there's more than one user or more than a handful of files.\n\n<b>Two-Level Directory</b>\nEach user gets their own separate directory, with all of that user's files inside it — one level of separation between users.\n• <b>Improvement</b> — two different users can now each have a file with the same name, since they live in separate per-user directories\n• <b>Limitation</b> — still doesn't let a single user organize their own files into further subfolders\n\n<b>Tree-Structured Directory</b>\nDirectories can contain both files and other directories (subdirectories), nested to any depth — exactly like the folder structure on a modern computer.\n• <b>Advantage</b> — users can organize files into as many nested subfolders as they like (e.g. Documents → Projects → 2026 → report.docx)\n• <b>Limitation</b> — in a strict tree, each file or subdirectory can only have exactly one parent — there's no way for one file to legitimately appear in two different folders at once\n\n<b>Acyclic-Graph Directory</b>\nAllows directories to share subdirectories or files, so the same file can appear in more than one folder (through links or shortcuts) without being duplicated — as long as no cycle is created (a folder can't eventually contain itself).\n• <b>Advantage</b> — lets multiple users or multiple locations share the exact same file without wasteful, hard-to-keep-in-sync duplicate copies\n• <b>Limitation</b> — more complex bookkeeping is needed (like reference counting) to know when a file can actually be deleted, since it might still be linked from another location",
+    note:
+      "Exam favourite: the four types build in complexity — single-level (no folders at all) → two-level (one folder per user) → tree (folders inside folders, one parent each) → acyclic graph (folders/files can be shared/linked from multiple places, no cycles allowed).",
+    diagram:
+      "  DIRECTORY STRUCTURES — increasing flexibility\n\n  Single-Level:     [file1] [file2] [file3]   ← all in one flat list\n\n  Two-Level:        UserA/[f1][f2]   UserB/[f1][f3]   ← one folder per user\n\n  Tree-Structured:  root/ → Docs/ → Projects/ → report.docx\n                         → Photos/ → 2026/\n\n  Acyclic-Graph:    root/ → Docs/ → shared.txt\n                         → Team/ → shared.txt  ← SAME file, linked from two places",
+    tags: ["Directory Structure", "Single-Level Directory", "Tree-Structured Directory", "Acyclic-Graph Directory"],
+  },
+  {
+    id: 228,
+    slug: "file-permissions",
+    section: "Operating Systems",
+    parentSlug: "file-system",
+    title: "File Permissions",
+    tagline: "Read, write, and execute rights, controlled separately for the owner, the group, and everyone else",
+    description:
+      "<b>What File Permissions Are, in Plain English</b>\nFile permissions are the rules the OS enforces to control which users are allowed to read, modify, or run a given file. In UNIX/Linux-style systems, permissions are grouped into three categories of access, each with three types of rights.\n\n<b>Three Rights</b>\n• <b>Read (r)</b> — view the file's contents\n• <b>Write (w)</b> — modify or delete the file's contents\n• <b>Execute (x)</b> — run the file as a program (or, for a directory, enter and list it)\n\n<b>Three Categories of Users</b>\n• <b>Owner</b> — the specific user who owns the file\n• <b>Group</b> — other users who belong to the same group as the file\n• <b>Others</b> — every other user on the system\n\n<b>Reading a Permission String</b>\nA UNIX permission string like `-rwxr-xr--` breaks down as: the type (`-` for a regular file, `d` for directory), then three groups of `rwx` for owner, group, and others in that order.\n• `rwx` for owner — the owner can read, write, and execute\n• `r-x` for group — the group can read and execute, but not write\n• `r--` for others — everyone else can only read\n\n<b>Numeric (Octal) Permission Notation</b>\nEach right is assigned a number — read = 4, write = 2, execute = 1 — and they're added together per category: full permission (rwx) = 4+2+1 = 7, read+execute (r-x) = 4+1 = 5, read-only (r--) = 4.\n• `chmod 755 file.sh` sets owner = 7 (rwx), group = 5 (r-x), others = 5 (r-x) — a very common setting for a script the owner can edit and everyone can run\n• `chmod 644 file.txt` sets owner = 6 (rw-), group = 4 (r--), others = 4 (r--) — a common setting for a regular document only the owner can edit",
+    note:
+      "Exam favourite: memorize the numeric values — read=4, write=2, execute=1 — and be able to add them per category. `chmod 755` and `chmod 644` are the two most commonly tested numeric examples.",
+    diagram:
+      "  READING: -rwxr-xr--\n\n   -     rwx      r-x      r--\n   │      │        │        │\n  type  OWNER    GROUP    OTHERS\n        (r+w+x)  (r+x)    (r only)\n\n  Numeric:  rwx=4+2+1=7   r-x=4+0+1=5   r--=4+0+0=4\n  So -rwxr-xr-- is written as: chmod 754",
+    code:
+      "# Give the owner full control, group and others read+execute only\nchmod 755 deploy.sh\n\n# Give the owner read+write, group and others read-only\nchmod 644 report.txt\n\n# View a file's current permissions\nls -l deploy.sh\n# -rwxr-xr-x  1 rajan  staff  1240 Aug  4 10:00 deploy.sh",
+    codeLanguage: "Bash",
+    tags: ["File Permissions", "chmod", "Read Write Execute", "Owner Group Others"],
   },
 ];
 
