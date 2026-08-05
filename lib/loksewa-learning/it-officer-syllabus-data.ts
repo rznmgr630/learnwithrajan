@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -3505,6 +3505,615 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "# Give the owner full control, group and others read+execute only\nchmod 755 deploy.sh\n\n# Give the owner read+write, group and others read-only\nchmod 644 report.txt\n\n# View a file's current permissions\nls -l deploy.sh\n# -rwxr-xr-x  1 rajan  staff  1240 Aug  4 10:00 deploy.sh",
     codeLanguage: "Bash",
     tags: ["File Permissions", "chmod", "Read Write Execute", "Owner Group Others"],
+  },
+  // ─────────────────────────────────────────────
+  // COMPUTER NETWORKS
+  // ─────────────────────────────────────────────
+  {
+    id: 229,
+    slug: "network-basics",
+    section: "Computer Networks",
+    title: "Network Basics",
+    tagline: "What a computer network is, and the four types classified by how far they reach",
+    description:
+      "<b>What This Covers</b>\nNetwork Basics introduces what a computer network actually is, then classifies networks by one simple lens: geographic scale — how far apart the connected devices actually are.\n\n<b>What a Computer Network Is, in Plain English</b>\nA computer network is a group of two or more computers (or other devices) connected together so they can share data, resources (like a printer or an internet connection), and communicate with each other — from two laptops sharing a home Wi-Fi router, to the entire global internet connecting billions of devices.\n\n<b>What You'll Learn Here</b>\n• <b>LAN</b> — Local Area Network, covering a single building or campus\n• <b>MAN</b> — Metropolitan Area Network, covering a city\n• <b>WAN</b> — Wide Area Network, covering countries or continents\n• <b>PAN</b> — Personal Area Network, covering just a few meters around one person\n  ↳ Each is covered in full next, ordered from smallest geographic reach to largest.",
+    note:
+      "A simple ladder to remember scale: PAN (a few meters) < LAN (one building) < MAN (one city) < WAN (countries/continents). Exams frequently ask you to classify a described scenario into one of these four.",
+    diagram:
+      "  NETWORK TYPES — smallest to largest reach\n\n  PAN          LAN              MAN              WAN\n  (a few   <   (one building/ <  (one city)   <   (countries/\n   meters)      campus)                             continents)",
+    tags: ["Computer Network", "Network Basics", "LAN", "MAN", "WAN", "PAN"],
+  },
+  {
+    id: 230,
+    slug: "lan",
+    section: "Computer Networks",
+    parentSlug: "network-basics",
+    title: "LAN (Local Area Network)",
+    tagline: "A network confined to a single building or campus, usually owned and managed by one organization",
+    description:
+      "<b>What a LAN Is, in Plain English</b>\nA Local Area Network (LAN) connects computers and devices within a limited physical area — a single office, home, school, or campus — usually owned, controlled, and maintained by one organization rather than a public telecom provider.\n\n<b>Key Characteristics</b>\n• Covers a small geographic area, typically up to a few kilometers\n• Very high data transfer speeds (commonly 100 Mbps to several Gbps) because connections are short and privately owned\n• Low latency and low cost per connection, since the organization owns the cabling and equipment\n• Typically built using Ethernet cables or Wi-Fi, connected through switches\n\n<b>Real-World Example</b>\nAll the computers, printers, and Wi-Fi-connected laptops inside one office building, connected to the same switch and sharing the same office internet connection, form a single LAN.",
+    note:
+      "Exam favourite: LAN is defined by ownership and scale together — a single organization owns the infrastructure, and it fits within one building or campus. If a question describes multiple cities or a public carrier's infrastructure, it's no longer a LAN.",
+    diagram:
+      "  LAN — one building, one owner\n\n  [PC1]──┐\n  [PC2]──┼──[Switch]──[Router]──► Internet\n  [PC3]──┘      │\n              [Printer]",
+    tags: ["LAN", "Local Area Network", "Ethernet", "Network Basics"],
+  },
+  {
+    id: 231,
+    slug: "man",
+    section: "Computer Networks",
+    parentSlug: "network-basics",
+    title: "MAN (Metropolitan Area Network)",
+    tagline: "A network spanning a city, often connecting multiple LANs together",
+    description:
+      "<b>What a MAN Is, in Plain English</b>\nA Metropolitan Area Network (MAN) spans a larger area than a LAN — typically a whole city or a large campus spread across several buildings — and often works by connecting multiple separate LANs together into one larger network.\n\n<b>Key Characteristics</b>\n• Covers a city-sized area, larger than a LAN but smaller than a WAN\n• Often built and operated by a single organization, a consortium of organizations, or a telecom provider, using technologies like fiber-optic cables\n• Moderate to high data transfer speeds, though generally not as fast as a private LAN, since distances are much greater\n\n<b>Real-World Example</b>\nA city government connecting all of its municipal offices, libraries, and schools across the city into one shared network, or a cable TV network that also provides internet across an entire metropolitan area.",
+    note:
+      "Exam favourite: MAN sits between LAN and WAN — if a question describes a network confined to one city (not one building, not multiple countries), the answer is MAN.",
+    diagram:
+      "  MAN — connects multiple LANs across one city\n\n  [LAN: Office A]───┐\n  [LAN: Office B]───┼───[Metropolitan Backbone]\n  [LAN: Office C]───┘",
+    tags: ["MAN", "Metropolitan Area Network", "Network Basics"],
+  },
+  {
+    id: 232,
+    slug: "wan",
+    section: "Computer Networks",
+    parentSlug: "network-basics",
+    title: "WAN (Wide Area Network)",
+    tagline: "A network spanning countries or continents — the internet itself is the largest WAN",
+    description:
+      "<b>What a WAN Is, in Plain English</b>\nA Wide Area Network (WAN) spans a very large geographic area — countries, or even continents — usually connecting multiple LANs and MANs together over long distances using infrastructure leased from telecom providers, satellites, or undersea cables.\n\n<b>Key Characteristics</b>\n• Covers the largest geographic area of all four types, with no real upper limit — the internet itself is the largest WAN in existence\n• Typically slower and higher-latency than a LAN, since data travels much further, often through many intermediate networks\n• Usually more expensive to build and maintain, and often relies on third-party telecom infrastructure rather than privately owned cabling\n\n<b>Real-World Example</b>\nA multinational company connecting its offices in Kathmandu, Tokyo, and New York into one private network over leased lines or VPN links, so employees in every office can access the same internal systems — and, at the largest scale, the global internet connecting billions of devices worldwide.",
+    note:
+      "Exam favourite: 'the internet is the largest example of a WAN' is one of the most frequently tested one-liners in this whole topic.",
+    diagram:
+      "  WAN — connects networks across countries/continents\n\n  [LAN: Kathmandu Office]───┐\n  [LAN: Tokyo Office]───────┼───[Wide Area Network / Internet]\n  [LAN: New York Office]────┘",
+    tags: ["WAN", "Wide Area Network", "Internet", "Network Basics"],
+  },
+  {
+    id: 233,
+    slug: "pan",
+    section: "Computer Networks",
+    parentSlug: "network-basics",
+    title: "PAN (Personal Area Network)",
+    tagline: "The smallest network of all — devices connected within just a few meters of one person",
+    description:
+      "<b>What a PAN Is, in Plain English</b>\nA Personal Area Network (PAN) is the smallest type of network, connecting devices within just a few meters of a single person — typically the devices someone carries or wears themselves.\n\n<b>Key Characteristics</b>\n• Very short range — usually no more than about 10 meters\n• Often wireless, built on technologies like Bluetooth, Infrared, or NFC (Near Field Communication), though it can also be a short wired connection\n• Connects a small number of personal devices, rather than serving an organization or building\n\n<b>Real-World Example</b>\nA smartphone connected via Bluetooth to a wireless earbud and a smartwatch at the same time — all three devices, owned by one person, communicating over a few meters, form a PAN.",
+    note:
+      "Exam favourite: if a scenario describes Bluetooth, a smartwatch, or wireless earbuds paired to a phone, that's a PAN — the smallest of the four network types by far.",
+    diagram:
+      "  PAN — devices within a few meters of one person\n\n     [Smartwatch]\n          \\\n           \\ Bluetooth\n  [Earbuds]──[Phone]──Bluetooth──[Laptop]",
+    tags: ["PAN", "Personal Area Network", "Bluetooth", "Network Basics"],
+  },
+  {
+    id: 234,
+    slug: "osi-model",
+    section: "Computer Networks",
+    title: "OSI Model",
+    tagline: "The 7-layer reference model describing how data travels from one computer to another",
+    description:
+      "<b>What the OSI Model Is, in Plain English</b>\nThe OSI (Open Systems Interconnection) Model is a conceptual, 7-layer framework that describes how data moves from one application, through a network, to another application on a different device — each layer has one clearly defined job, and only talks to the layers directly above and below it.\n\n<b>Why It's Layered</b>\n• Splitting networking into layers means each layer can be designed, understood, and troubleshot independently — a hardware engineer can focus purely on the Physical layer without needing to understand how HTTP works at the Application layer\n• Standardizing these layers means equipment and software from completely different vendors can still work together, as long as each side implements the same layer's responsibilities correctly\n\n<b>The 7 Layers, Top to Bottom</b>\n• <b>Layer 7 — Application</b> — where the user-facing software lives (browsers, email clients)\n• <b>Layer 6 — Presentation</b> — formats, encrypts, and compresses data for the application\n• <b>Layer 5 — Session</b> — establishes, manages, and ends communication sessions\n• <b>Layer 4 — Transport</b> — reliable end-to-end delivery, using TCP or UDP\n• <b>Layer 3 — Network</b> — logical addressing (IP) and routing between networks\n• <b>Layer 2 — Data Link</b> — physical addressing (MAC) and framing on the local network\n• <b>Layer 1 — Physical</b> — the actual electrical signals, light pulses, or radio waves on the wire or air\n  ↳ Each layer is covered in full in its own card next, top-to-bottom order (7 → 1) matching how data is wrapped as it's sent, and bottom-to-top (1 → 7) matching how it's unwrapped as it's received.",
+    note:
+      "The classic memory trick, top to bottom (7→1): 'All People Seem To Need Data Processing' → Application, Presentation, Session, Transport, Network, Data Link, Physical.",
+    diagram:
+      "  OSI MODEL — 7 layers\n\n  7  Application    ┐\n  6  Presentation   │ Upper layers — deal with data/user-facing concerns\n  5  Session        ┘\n  4  Transport       ← where TCP/UDP live\n  3  Network         ← where IP addressing/routing live\n  2  Data Link       ┐\n  1  Physical        ┘ Lower layers — deal with hardware/wires/signals",
+    tags: ["OSI Model", "7 Layers", "Networking Fundamentals"],
+  },
+  {
+    id: 235,
+    slug: "osi-physical-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Physical Layer (Layer 1)",
+    tagline: "The actual electrical signals, light pulses, or radio waves that carry raw bits over the medium",
+    description:
+      "<b>What the Physical Layer Does, in Plain English</b>\nThe Physical layer is the lowest layer of the OSI model — it's responsible for transmitting raw bits (0s and 1s) as actual physical signals over a transmission medium, without understanding anything about what those bits mean.\n\n<b>What It Defines</b>\n• The physical medium itself — copper cables, fiber-optic cables, or wireless radio frequencies\n• How a bit (0 or 1) is represented physically — as a voltage level on a wire, a light pulse in fiber, or a radio wave frequency in wireless\n• Physical characteristics like cable types, connector shapes (e.g. RJ-45), and transmission rates\n\n<b>What It Doesn't Care About</b>\nThe Physical layer has no concept of 'where this data is going' or 'what this data means' — it simply moves a stream of bits from one end of a physical connection to the other; addressing and meaning are handled entirely by higher layers.\n\n<b>Devices Operating at This Layer</b>\nHubs and repeaters operate purely at the Physical layer — they work with raw electrical signals and have no awareness of addresses or data structure at all.\n  ↳ Real-world example: an Ethernet cable carrying electrical pulses between a laptop and a switch, or a Wi-Fi radio signal carrying data between a phone and a router.",
+    note:
+      "Exam favourite: the Physical layer deals only with raw bits and physical signals — no addressing at all happens here. If a question mentions MAC addresses, that's already one layer up, at Data Link.",
+    diagram:
+      "  PHYSICAL LAYER — bits as physical signals\n\n  Data Link layer's bits: 1 0 1 1 0 0 1 0\n           │\n           ▼\n  Physical layer converts to:\n  Copper:  voltage HIGH-LOW-HIGH-HIGH-LOW-LOW-HIGH-LOW\n  Fiber:   light PULSE-off-PULSE-PULSE-off-off-PULSE-off\n  Wireless: radio wave frequency/amplitude changes",
+    tags: ["Physical Layer", "OSI Model", "Bits", "Hub", "Repeater"],
+  },
+  {
+    id: 236,
+    slug: "osi-data-link-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Data Link Layer (Layer 2)",
+    tagline: "Packages bits into frames, adds MAC addresses, and moves data across one local network hop",
+    description:
+      "<b>What the Data Link Layer Does, in Plain English</b>\nThe Data Link layer takes the raw bit stream from the Physical layer and organizes it into structured units called frames, and is responsible for reliably moving those frames between two devices on the same local network (one 'hop'), using physical (MAC) addresses rather than IP addresses.\n\n<b>Key Responsibilities</b>\n• <b>Framing</b> — groups bits into frames, each with a clear start and end, so the receiver knows where one unit of data ends and the next begins\n• <b>Physical (MAC) addressing</b> — every network interface has a unique MAC (Media Access Control) address burned into its hardware, and Data Link uses these addresses to deliver a frame to the correct device on the local network\n• <b>Error detection</b> — adds a checksum (like a CRC, Cyclic Redundancy Check) to each frame so the receiver can detect if the frame was corrupted in transit\n• <b>Access control</b> — manages how multiple devices sharing the same physical medium (like Wi-Fi) take turns transmitting without constantly colliding\n\n<b>Devices Operating at This Layer</b>\nSwitches operate at the Data Link layer — they read the destination MAC address in each frame and forward it only to the correct port, unlike a hub which blindly broadcasts to every port.\n  ↳ Real-world example: Ethernet and Wi-Fi (802.11) are both Data Link layer technologies, defining exactly how frames are structured and addressed.",
+    note:
+      "Exam favourite: Data Link uses MAC addresses (physical, hardware-based), while the layer right above it (Network) uses IP addresses (logical, software-assigned). Don't mix the two up.",
+    diagram:
+      "  DATA LINK LAYER — bits become addressed frames\n\n  ┌──────────┬──────────────┬─────────┬─────┐\n  │ Dest MAC │ Source MAC   │  Data   │ CRC │  ← one Ethernet frame\n  └──────────┴──────────────┴─────────┴─────┘\n\n  Switch reads Dest MAC → forwards frame only to the port\n  where that MAC address lives (not to every port, unlike a hub)",
+    tags: ["Data Link Layer", "OSI Model", "MAC Address", "Frame", "Switch", "Ethernet"],
+  },
+  {
+    id: 237,
+    slug: "osi-network-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Network Layer (Layer 3)",
+    tagline: "Logical (IP) addressing and routing — getting a packet across multiple networks to its destination",
+    description:
+      "<b>What the Network Layer Does, in Plain English</b>\nThe Network layer is responsible for moving data (organized into packets) from a source device to a destination device that may be on a completely different network, potentially across many intermediate networks — this is where routing decisions actually happen.\n\n<b>Key Responsibilities</b>\n• <b>Logical (IP) addressing</b> — assigns and uses IP addresses, which (unlike MAC addresses) are organized hierarchically by network, making it possible to figure out roughly where an address lives without a global lookup table\n  ↳ Covered in full in the IP Addressing chapter\n• <b>Routing</b> — determines the best path for a packet to travel from source to destination across multiple interconnected networks, often through many intermediate hops\n• <b>Packet forwarding</b> — each router along the path examines a packet's destination IP address and forwards it toward the next hop on the best available path\n\n<b>Devices Operating at This Layer</b>\nRouters operate at the Network layer — they connect entirely different networks together and make forwarding decisions based on IP addresses and routing tables, unlike switches, which only operate within a single local network using MAC addresses.\n  ↳ Real-world example: when you load a website hosted in another country, the Network layer is what routes your request through dozens of intermediate routers across the internet to reach that server, and routes the response back.",
+    note:
+      "Exam favourite: Network layer = IP addresses + routing across multiple networks. Data Link layer = MAC addresses + delivery within one local network. A router works at Layer 3; a switch works at Layer 2.",
+    diagram:
+      "  NETWORK LAYER — routing across multiple networks\n\n  [Your PC] ──► [Router 1] ──► [Router 2] ──► [Router 3] ──► [Destination Server]\n\n  Each router reads the packet's destination IP address\n  and forwards it toward the next hop on the best path.",
+    tags: ["Network Layer", "OSI Model", "IP Address", "Routing", "Router", "Packet"],
+  },
+  {
+    id: 238,
+    slug: "osi-transport-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Transport Layer (Layer 4)",
+    tagline: "End-to-end delivery between applications — reliable (TCP) or fast-and-simple (UDP)",
+    description:
+      "<b>What the Transport Layer Does, in Plain English</b>\nThe Transport layer is responsible for end-to-end communication between the actual applications running on the source and destination devices, not just device-to-device like the layers below it. It breaks data into segments, and decides whether that delivery needs to be reliable or just fast.\n\n<b>Key Responsibilities</b>\n• <b>Segmentation</b> — breaks data from the upper layers into smaller segments for transmission, and reassembles them correctly at the destination\n• <b>Port numbers</b> — uses port numbers to identify exactly which application on a device a piece of data is meant for (e.g. port 80 for a web server, port 25 for a mail server), letting one device run many network applications at once\n• <b>Reliability (when needed)</b> — can guarantee data arrives completely, in order, and without corruption, using acknowledgments and retransmission\n• <b>Flow control</b> — prevents a fast sender from overwhelming a slower receiver\n\n<b>TCP vs. UDP</b>\nThe Transport layer offers two very different protocols, covered in full in the Protocols chapter:\n• <b>TCP</b> — connection-oriented and reliable, used when correctness matters more than speed\n• <b>UDP</b> — connectionless and fast, used when speed matters more than guaranteed delivery\n\n<b>Real-World Example</b>\nWhen a browser (destination port 443 for HTTPS) and a mail client (destination port 25 for SMTP) are both running on the same laptop at the same time, the Transport layer's port numbers are exactly what let incoming data reach the correct application instead of getting confused between the two.",
+    note:
+      "Exam favourite: the Transport layer is the first layer that's truly 'end-to-end between applications,' not just device-to-device — and port numbers are what make that application-level addressing possible.",
+    diagram:
+      "  TRANSPORT LAYER — port numbers route data to the right app\n\n  Same laptop, one IP address, many apps:\n  Browser  ── listening on port 443 (HTTPS)\n  Mail app ── listening on port 25  (SMTP)\n  Game     ── listening on port 27015 (UDP)\n\n  Incoming data + destination port number → delivered to the correct app",
+    tags: ["Transport Layer", "OSI Model", "TCP", "UDP", "Port Numbers", "Segmentation"],
+  },
+  {
+    id: 239,
+    slug: "osi-session-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Session Layer (Layer 5)",
+    tagline: "Establishes, manages, and cleanly ends the communication session between two applications",
+    description:
+      "<b>What the Session Layer Does, in Plain English</b>\nThe Session layer manages sessions — a session being the ongoing conversation between two applications for as long as they need to keep exchanging data. It's responsible for opening that conversation, keeping it organized and synchronized while it's active, and closing it down cleanly when it's done.\n\n<b>Key Responsibilities</b>\n• <b>Session establishment</b> — sets up a session between two communicating applications before any real data exchange begins\n• <b>Session maintenance</b> — keeps track of whose turn it is to transmit (in systems where communication is one direction at a time) and keeps the session organized over time\n• <b>Synchronization</b> — inserts checkpoints into a long data exchange, so if the connection drops partway through, the session can resume from the last checkpoint instead of starting completely over\n• <b>Session termination</b> — properly closes the session once the applications are done communicating, releasing any resources held for it\n\n<b>Why This Layer Is Often Overlooked</b>\nIn practice, many modern applications handle session-like behavior themselves at the Application layer (e.g. login sessions in a web app), which is why the Session layer is one of the least visible layers day-to-day — but conceptually, it's still the layer responsible for the idea of a 'session' in the OSI model.\n  ↳ Real-world example: a video call staying connected for an hour, with the Session layer conceptually responsible for keeping that one continuous session alive and organized from start to end.",
+    note:
+      "Exam favourite: Session, Presentation, and Application (layers 5, 6, 7) are the three 'upper layers' that deal with data and user-facing concerns, as opposed to the four 'lower layers' that deal with actually moving bits across a network.",
+    diagram:
+      "  SESSION LAYER — manages one ongoing conversation\n\n  Establish session ──► exchange data (with sync checkpoints) ──► Terminate session\n       │                        │                                      │\n   'let's talk'          keeps things organized                 'we're done talking'\n                         if connection drops mid-way,\n                         can resume from last checkpoint",
+    tags: ["Session Layer", "OSI Model", "Session Management"],
+  },
+  {
+    id: 240,
+    slug: "osi-presentation-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Presentation Layer (Layer 6)",
+    tagline: "Translates, encrypts, and compresses data so the Application layer receives it in a usable format",
+    description:
+      "<b>What the Presentation Layer Does, in Plain English</b>\nThe Presentation layer acts as a translator between the data format an application uses and the format used for transmission over the network — it makes sure data sent by one application, possibly using a completely different internal data representation, arrives in a format the receiving application can actually understand.\n\n<b>Key Responsibilities</b>\n• <b>Translation</b> — converts data between different formats or character encodings (e.g. between ASCII and Unicode) so systems using different internal representations can still communicate\n• <b>Encryption and decryption</b> — encrypts data before sending it and decrypts it upon arrival, so data can travel securely across an otherwise untrusted network\n• <b>Compression</b> — reduces the size of data before transmission (and decompresses it on arrival), so it takes up less bandwidth and transmits faster\n\n<b>Real-World Example</b>\nTLS/SSL encryption (the 'S' in HTTPS) is a Presentation-layer concept — it encrypts the data before it leaves your browser, and decrypts it once it reaches the destination server, so anyone intercepting the traffic in between only sees scrambled data.\n  ↳ Image and video formats like JPEG and MP4 also represent Presentation-layer thinking — they define a standard, agreed-upon format so data encoded on one system can be correctly decoded and displayed on a completely different one.",
+    note:
+      "Exam favourite: 'encryption, compression, and format translation' — if a question describes any of these three, it's describing the Presentation layer, not the Session layer above it or the Application layer below it in the description order.",
+    diagram:
+      "  PRESENTATION LAYER — translate, encrypt, compress\n\n  Application's raw data\n         │\n         ▼\n  Presentation layer: encode format, encrypt (TLS), compress\n         │\n         ▼\n  Sent over the network ──► received ──► decrypt, decompress, decode\n         │\n         ▼\n  Delivered to the receiving Application in a usable format",
+    tags: ["Presentation Layer", "OSI Model", "Encryption", "Compression", "TLS/SSL"],
+  },
+  {
+    id: 241,
+    slug: "osi-application-layer",
+    section: "Computer Networks",
+    parentSlug: "osi-model",
+    title: "Application Layer (Layer 7)",
+    tagline: "The topmost layer — where user-facing software and network protocols like HTTP and DNS live",
+    description:
+      "<b>What the Application Layer Does, in Plain English</b>\nThe Application layer is the topmost layer of the OSI model, and the one closest to the actual user — it's where network-aware software (browsers, email clients, file-transfer tools) and the protocols they rely on actually live.\n\n<b>What It's Responsible For</b>\n• Provides the network services that applications directly use — requesting a web page, sending an email, transferring a file, looking up a domain name\n• Defines the protocols that structure exactly how those requests and responses are formatted, so a browser from one vendor can talk to a web server from a completely different vendor without issue\n\n<b>Important Clarification</b>\nThe Application layer is not the application itself (like a specific browser) — it's the layer that defines the network protocols the application uses to communicate. A browser is software that uses the Application-layer protocol HTTP/HTTPS; DNS resolution, file transfer, and email delivery follow the same idea with their own protocols.\n\n<b>The Protocols Covered Next</b>\nHTTP, HTTPS, FTP, SMTP, DNS, and DHCP are all Application-layer protocols, each covered in full detail in the Protocols chapter — this is exactly where the OSI model's most visible, everyday layer connects to real-world tools you use constantly.",
+    note:
+      "Exam favourite: don't confuse 'the Application layer' with 'an application.' The layer defines protocols (HTTP, DNS, FTP); the application (a specific browser or email client) is software that implements and uses those protocols.",
+    diagram:
+      "  APPLICATION LAYER — where everyday protocols live\n\n  Browser  ──uses──► HTTP / HTTPS\n  Mail app ──uses──► SMTP\n  File tool──uses──► FTP\n  Every device──uses──► DNS (to resolve names), DHCP (to get an IP)",
+    tags: ["Application Layer", "OSI Model", "HTTP", "DNS", "Protocols"],
+  },
+  {
+    id: 242,
+    slug: "tcp-ip-model",
+    section: "Computer Networks",
+    title: "TCP/IP Model",
+    tagline: "The 4-layer model the real internet is actually built on, simpler and older than OSI",
+    description:
+      "<b>What the TCP/IP Model Is, in Plain English</b>\nThe TCP/IP Model is a 4-layer networking framework that predates the OSI Model and is what the actual internet runs on today — while OSI is mostly used as a teaching and reference framework, TCP/IP is the model real-world protocols were built around from the start.\n\n<b>The 4 Layers, Top to Bottom</b>\n• <b>Application</b> — combines OSI's Application, Presentation, and Session layers into one; where protocols like HTTP, FTP, SMTP, and DNS live\n• <b>Transport</b> — matches OSI's Transport layer exactly; TCP and UDP live here\n• <b>Internet</b> — matches OSI's Network layer; handles IP addressing and routing\n• <b>Network Access</b> — combines OSI's Data Link and Physical layers into one; handles MAC addressing, framing, and the physical transmission of bits\n\n<b>Why Two Different Models Exist</b>\n• OSI is a general-purpose, 7-layer theoretical reference model, designed to describe networking conceptually and independently of any specific protocol\n• TCP/IP is a practical, 4-layer model designed around the protocols that actually run the internet — it came first, historically, and OSI was developed afterward as a more detailed, protocol-independent teaching framework\n  ↳ Each of TCP/IP's 4 layers is covered in its own card next.",
+    note:
+      "Exam favourite: TCP/IP has 4 layers, OSI has 7 — but they describe the same real communication process at different levels of detail. Being able to map OSI's 7 layers onto TCP/IP's 4 is one of the most commonly tested skills in this whole networking section.",
+    diagram:
+      "  OSI (7 layers)  vs  TCP/IP (4 layers)\n\n  7  Application    ┐\n  6  Presentation   ├──►  Application\n  5  Session        ┘\n  4  Transport       ──►  Transport\n  3  Network         ──►  Internet\n  2  Data Link       ┐\n  1  Physical        ┴──►  Network Access",
+    tags: ["TCP/IP Model", "Networking Fundamentals", "OSI Model"],
+  },
+  {
+    id: 243,
+    slug: "tcpip-network-access-layer",
+    section: "Computer Networks",
+    parentSlug: "tcp-ip-model",
+    title: "Network Access Layer",
+    tagline: "TCP/IP's bottom layer — combines OSI's Physical and Data Link layers into one",
+    description:
+      "<b>What the Network Access Layer Does, in Plain English</b>\nThe Network Access layer (sometimes called the Link layer) is the lowest layer of the TCP/IP model, and it takes on the combined responsibilities of OSI's Physical and Data Link layers together: getting raw bits physically transmitted, and organizing them into addressed frames on the local network.\n\n<b>What It Handles</b>\n• Physical transmission of bits over cables, fiber, or radio waves (matching OSI's Physical layer)\n• Framing and MAC (physical hardware) addressing on the local network (matching OSI's Data Link layer)\n• Technologies like Ethernet and Wi-Fi are defined at this combined layer\n\n<b>Why TCP/IP Merges These Two</b>\nTCP/IP was designed with practical simplicity in mind — from an internet protocol design point of view, 'get bits onto the local wire correctly addressed' is really one job, so TCP/IP treats it as one layer instead of OSI's more theoretically separated two.",
+    note:
+      "Exam favourite: Network Access = Physical + Data Link combined. If a question asks what OSI layers TCP/IP's Network Access layer covers, the answer is exactly those two.",
+    diagram:
+      "  NETWORK ACCESS LAYER = Physical + Data Link combined\n\n  OSI:     Layer 2 (Data Link)  +  Layer 1 (Physical)\n  TCP/IP:            Network Access Layer",
+    tags: ["Network Access Layer", "TCP/IP Model", "Ethernet", "MAC Address"],
+  },
+  {
+    id: 244,
+    slug: "tcpip-internet-layer",
+    section: "Computer Networks",
+    parentSlug: "tcp-ip-model",
+    title: "Internet Layer",
+    tagline: "TCP/IP's layer for IP addressing and routing — matches OSI's Network layer exactly",
+    description:
+      "<b>What the Internet Layer Does, in Plain English</b>\nThe Internet layer handles logical (IP) addressing and routing — deciding how a packet gets from a source device to a destination device, potentially across many different networks. This layer maps directly onto OSI's Network layer, with no real difference in responsibility between the two models here.\n\n<b>What It Handles</b>\n• Assigns and interprets IP addresses (IPv4 and IPv6, covered in full in the IP Addressing chapter)\n• Routes packets across multiple interconnected networks toward their destination\n• The IP protocol itself lives at this layer — it's literally where the 'IP' in TCP/IP comes from\n\n<b>Why It's Named 'Internet'</b>\nThis layer is called the Internet layer specifically because it's what makes internetworking possible — connecting separate, independent networks together into one larger network (an 'internet' in the general sense, of which the public Internet is the largest example).",
+    note:
+      "Exam favourite: Internet Layer = Network Layer (OSI), one-to-one — this is the cleanest, most direct mapping between the two models, unlike the Application and Network Access layers which each combine multiple OSI layers.",
+    diagram:
+      "  INTERNET LAYER = Network Layer (OSI), one-to-one match\n\n  OSI:     Layer 3 (Network) — IP addressing, routing\n  TCP/IP:            Internet Layer — same job, same name change only",
+    tags: ["Internet Layer", "TCP/IP Model", "IP Address", "Routing"],
+  },
+  {
+    id: 245,
+    slug: "tcpip-transport-layer",
+    section: "Computer Networks",
+    parentSlug: "tcp-ip-model",
+    title: "Transport Layer",
+    tagline: "TCP/IP's layer for end-to-end delivery between applications — matches OSI's Transport layer exactly",
+    description:
+      "<b>What the Transport Layer Does, in Plain English</b>\nJust like in the OSI model, TCP/IP's Transport layer handles end-to-end communication between applications on the source and destination devices — breaking data into segments, using port numbers to identify the right application, and choosing between reliable or fast-and-simple delivery.\n\n<b>What It Handles</b>\n• <b>TCP (Transmission Control Protocol)</b> — connection-oriented, reliable delivery with acknowledgments and retransmission\n• <b>UDP (User Datagram Protocol)</b> — connectionless, fast delivery with no delivery guarantee\n  ↳ Both are covered in full detail in the Protocols chapter\n• Port numbers, which identify exactly which application on a device a segment is destined for\n\n<b>Why This Layer Maps Directly to OSI</b>\nUnlike Network Access (which merges two OSI layers) and Application (which merges three), TCP/IP's Transport layer is a direct, one-to-one match with OSI's Transport layer — both models agree this is exactly where reliable/fast end-to-end delivery decisions belong.",
+    note:
+      "Exam favourite: TCP/IP's name literally comes from its two most important protocols — TCP at the Transport layer, and IP at the Internet layer, one from each of the model's two middle layers.",
+    diagram:
+      "  TRANSPORT LAYER = Transport Layer (OSI), one-to-one match\n\n  OSI:     Layer 4 (Transport) — TCP / UDP, ports, segmentation\n  TCP/IP:            Transport Layer — identical job, identical name",
+    tags: ["Transport Layer", "TCP/IP Model", "TCP", "UDP", "Port Numbers"],
+  },
+  {
+    id: 246,
+    slug: "tcpip-application-layer",
+    section: "Computer Networks",
+    parentSlug: "tcp-ip-model",
+    title: "Application Layer",
+    tagline: "TCP/IP's top layer — combines OSI's Session, Presentation, and Application layers into one",
+    description:
+      "<b>What the Application Layer Does, in Plain English</b>\nTCP/IP's Application layer is the topmost layer, and it takes on the combined responsibilities of OSI's Session, Presentation, and Application layers all in one — session management, data formatting/encryption, and the actual user-facing network protocols are all treated as a single layer.\n\n<b>What It Handles</b>\n• All the everyday network protocols: HTTP, HTTPS, FTP, SMTP, DNS, DHCP (each covered in full in the Protocols chapter)\n• Session-like behavior (matching OSI's Session layer) — in practice, handled by the specific protocol or application itself (e.g. a web session token)\n• Data formatting and encryption (matching OSI's Presentation layer) — e.g. TLS encryption for HTTPS is considered part of this combined Application layer in the TCP/IP model\n\n<b>Why TCP/IP Merges These Three</b>\nIn practice, real-world protocols like HTTP handle session behavior, data formatting, and application logic all together within the same protocol design, rather than as cleanly separated concerns — so TCP/IP's simpler, protocol-driven model reflects that by treating all three as one layer.",
+    note:
+      "Exam favourite: TCP/IP's Application layer = OSI's Session + Presentation + Application (layers 5, 6, and 7) combined. This is the most-tested layer mapping between the two models, alongside Network Access = Physical + Data Link.",
+    diagram:
+      "  APPLICATION LAYER = Session + Presentation + Application combined\n\n  OSI:     Layer 7 (Application) + Layer 6 (Presentation) + Layer 5 (Session)\n  TCP/IP:                    Application Layer",
+    tags: ["Application Layer", "TCP/IP Model", "HTTP", "DNS"],
+  },
+  {
+    id: 247,
+    slug: "protocols",
+    section: "Computer Networks",
+    title: "Protocols",
+    tagline: "The agreed-upon rules that let two different devices communicate correctly",
+    description:
+      "<b>What This Covers</b>\nProtocols covers the actual named rulebooks that make networking work in practice — grouped by which layer of the TCP/IP model each one operates at.\n\n<b>What a Protocol Is, in Plain English</b>\nA protocol is a set of agreed-upon rules that defines exactly how two devices should format, send, and interpret data, so that devices built by completely different manufacturers, running completely different software, can still understand each other perfectly.\n\n<b>What You'll Learn Here</b>\n• <b>Application Layer Protocols</b> — HTTP, HTTPS, FTP, SMTP, DNS, DHCP\n• <b>Transport Layer Protocols</b> — TCP, UDP\n  ↳ Each protocol is covered in its own card next, with what it's for, its port number, and a concrete real-world example.",
+    note:
+      "A protocol's port number is one of the most tested details in this chapter — memorize the well-known ports: HTTP=80, HTTPS=443, FTP=20/21, SMTP=25, DNS=53, DHCP=67/68.",
+    diagram:
+      "  PROTOCOLS BY LAYER\n\n  Application Layer:  HTTP · HTTPS · FTP · SMTP · DNS · DHCP\n  Transport Layer:    TCP · UDP",
+    tags: ["Protocols", "Application Layer", "Transport Layer", "Networking Fundamentals"],
+  },
+  {
+    id: 248,
+    slug: "application-layer-protocols",
+    section: "Computer Networks",
+    parentSlug: "protocols",
+    title: "Application Layer Protocols",
+    tagline: "HTTP, HTTPS, FTP, SMTP, DNS, and DHCP — the protocols behind everyday internet use",
+    description:
+      "<b>What This Covers</b>\nApplication Layer Protocols are the rules behind the everyday things you do on the internet — loading a webpage, sending an email, getting an IP address automatically, or turning a domain name into a server's actual address.\n\n<b>The Six Protocols Covered Next</b>\n• <b>HTTP</b> — loads regular (unencrypted) web pages, port 80\n• <b>HTTPS</b> — loads web pages securely, encrypted with TLS, port 443\n• <b>FTP</b> — transfers files between a client and a server, ports 20/21\n• <b>SMTP</b> — sends email from a client to a mail server (and between mail servers), port 25\n• <b>DNS</b> — translates human-readable domain names into IP addresses, port 53\n• <b>DHCP</b> — automatically assigns an IP address to a device joining a network, ports 67/68\n  ↳ Each is covered in full in its own card next.",
+    note:
+      "Group these by what they actually do: HTTP/HTTPS = viewing content, FTP = moving files, SMTP = sending mail, DNS = name-to-address lookup, DHCP = automatic address assignment. Grouping by purpose, not just memorizing names, makes exam recall far easier.",
+    diagram:
+      "  APPLICATION LAYER PROTOCOLS — grouped by purpose\n\n  View content:    HTTP (80)  ·  HTTPS (443)\n  Move files:      FTP (20/21)\n  Send mail:       SMTP (25)\n  Name lookup:     DNS (53)\n  Auto-assign IP:  DHCP (67/68)",
+    tags: ["Application Layer Protocols", "HTTP", "HTTPS", "FTP", "SMTP", "DNS", "DHCP"],
+  },
+  {
+    id: 249,
+    slug: "http-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "HTTP (HyperText Transfer Protocol)",
+    tagline: "The protocol that loads a webpage — a request from a client, a response from a server, unencrypted",
+    description:
+      "<b>What HTTP Is, in Plain English</b>\nHTTP (HyperText Transfer Protocol) is the protocol web browsers use to request web pages from web servers, and the protocol servers use to send those pages back. It runs on port 80 by default and, critically, sends its data in plain text — anyone intercepting the traffic in between can read exactly what was sent.\n\n<b>How It Works</b>\n• The client (a browser) sends an HTTP request specifying a method (like `GET` to retrieve a page, or `POST` to submit data) and a URL\n• The server processes the request and sends back an HTTP response, including a status code (like `200 OK`, `404 Not Found`, or `500 Internal Server Error`) and the requested content\n• HTTP is stateless — each request is handled independently, with no memory of previous requests, unless the application layers something like cookies or sessions on top\n\n<b>Why HTTPS Exists</b>\nBecause HTTP sends everything in plain text, anyone on the same network (a shared Wi-Fi, an ISP, an attacker) can potentially read or tamper with the data in transit — this is exactly the gap HTTPS closes by adding encryption on top of the same request/response model.",
+    note:
+      "Exam favourite: HTTP is stateless and unencrypted, running on port 80 by default. If a question describes secure, encrypted web traffic, that's HTTPS (port 443), not plain HTTP.",
+    diagram:
+      "  HTTP — request/response, plain text, port 80\n\n  Browser ──GET /index.html──► Web Server\n  Browser ◄──200 OK + HTML content────Web Server\n\n  (Anyone intercepting this traffic can read it — no encryption.)",
+    code:
+      "GET /index.html HTTP/1.1\nHost: example.com\n\nHTTP/1.1 200 OK\nContent-Type: text/html\n\n<html>...</html>",
+    codeLanguage: "HTTP",
+    tags: ["HTTP", "Application Layer Protocols", "Port 80", "Stateless"],
+  },
+  {
+    id: 250,
+    slug: "https-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "HTTPS (HTTP Secure)",
+    tagline: "HTTP with a layer of encryption (TLS) added, so data can't be read or tampered with in transit",
+    description:
+      "<b>What HTTPS Is, in Plain English</b>\nHTTPS (HTTP Secure) is exactly the same request/response model as HTTP, but wrapped in an encryption layer called TLS (Transport Layer Security) — every request and response is encrypted before it's sent, so anyone intercepting the traffic in between only sees scrambled, unreadable data. It runs on port 443 by default.\n\n<b>What TLS Adds on Top of HTTP</b>\n• <b>Encryption</b> — data is unreadable to anyone except the intended sender and receiver\n• <b>Integrity</b> — TLS detects if data was tampered with in transit\n• <b>Authentication</b> — a TLS certificate proves the server is actually who it claims to be (e.g. that you're really talking to your bank's server, not an impostor), which is why browsers show a padlock icon for HTTPS sites\n\n<b>Why It Matters</b>\nAny time sensitive data is sent — passwords, credit card numbers, personal information — HTTPS is essential, since plain HTTP would expose that data to anyone able to intercept network traffic between the browser and the server. Modern browsers now actively warn users when a site is served over plain HTTP instead of HTTPS.",
+    note:
+      "Exam favourite: HTTPS = HTTP + TLS encryption, port 443. The 'S' stands for Secure, and the security is provided by TLS (which itself lives conceptually at the Presentation layer of the OSI model).",
+    diagram:
+      "  HTTPS — HTTP wrapped in TLS encryption, port 443\n\n  Browser ──[TLS handshake: verify server's certificate]──► Web Server\n  Browser ──[ENCRYPTED] GET /login──► Web Server\n  Browser ◄──[ENCRYPTED] 200 OK + page────Web Server\n\n  (Anyone intercepting this only sees encrypted, unreadable data.)",
+    tags: ["HTTPS", "TLS/SSL", "Application Layer Protocols", "Port 443", "Encryption"],
+  },
+  {
+    id: 251,
+    slug: "ftp-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "FTP (File Transfer Protocol)",
+    tagline: "Transfers files between a client and a server, using separate connections for commands and data",
+    description:
+      "<b>What FTP Is, in Plain English</b>\nFTP (File Transfer Protocol) is a protocol specifically designed to upload and download files between a client and a server over a network — built for moving whole files efficiently, rather than viewing content like HTTP.\n\n<b>Two Separate Connections</b>\n• <b>Control connection (port 21)</b> — used to send commands (like login credentials, or 'list files in this folder') and receive responses\n• <b>Data connection (port 20)</b> — used purely to transfer the actual file content\n  ↳ Keeping these separate means commands and file data never interfere with each other on the same channel.\n\n<b>Authentication</b>\nFTP typically requires a username and password to log in before any file operations are allowed, though 'anonymous FTP' servers exist that allow public, unauthenticated downloads for some files.\n\n<b>A Security Weakness</b>\nStandard FTP sends both login credentials and file data in plain text, just like HTTP — this is why more secure variants like FTPS (FTP over TLS) or SFTP (a completely different protocol built on SSH) are preferred for anything sensitive.\n  ↳ Real-world example: a web developer uploading updated website files to a hosting server using an FTP client.",
+    note:
+      "Exam favourite: FTP uses two ports — 21 for control (commands/login) and 20 for the actual data transfer. Also remember plain FTP is unencrypted, just like plain HTTP.",
+    diagram:
+      "  FTP — two separate connections\n\n  Client ──Control connection (port 21): login, LIST, GET──► Server\n  Client ◄──Data connection (port 20): actual file bytes────Server",
+    tags: ["FTP", "Application Layer Protocols", "Port 21", "Port 20", "File Transfer"],
+  },
+  {
+    id: 252,
+    slug: "smtp-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "SMTP (Simple Mail Transfer Protocol)",
+    tagline: "Sends email from a client to a mail server, and relays it between mail servers",
+    description:
+      "<b>What SMTP Is, in Plain English</b>\nSMTP (Simple Mail Transfer Protocol) is the protocol used to send email — from an email client (or app) to its mail server, and then between mail servers as the message is relayed toward the recipient's mail server. It runs on port 25 by default (with port 587 commonly used for authenticated client submission today).\n\n<b>Why SMTP Is Only for Sending</b>\nSMTP handles the outgoing/sending side of email exclusively — it does not retrieve or read email. Retrieving email from a mailbox uses entirely separate protocols like IMAP or POP3, which SMTP doesn't handle at all.\n\n<b>How It Works, Roughly</b>\n1. Your email client connects to your outgoing mail server via SMTP and hands off the message\n2. Your mail server looks up the recipient's mail server (using DNS) and relays the message to it, again via SMTP\n3. The message sits in the recipient's mailbox until they retrieve it (via IMAP or POP3, not SMTP)\n  ↳ Real-world example: hitting 'send' on an email is the moment your client hands the message to your mail provider's server over SMTP.",
+    note:
+      "Exam favourite: SMTP sends email; IMAP and POP3 retrieve it. If a question describes reading or downloading email into an inbox, that's not SMTP — it's IMAP or POP3.",
+    diagram:
+      "  SMTP — sending and relaying email\n\n  Your Email Client ──SMTP──► Your Mail Server ──SMTP──► Recipient's Mail Server\n                                                                  │\n                                                     (message waits here until\n                                                      recipient retrieves it via\n                                                      IMAP/POP3 — not SMTP)",
+    tags: ["SMTP", "Application Layer Protocols", "Port 25", "Email"],
+  },
+  {
+    id: 253,
+    slug: "dns-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "DNS (Domain Name System)",
+    tagline: "Translates human-readable domain names into the IP addresses computers actually use",
+    description:
+      "<b>What DNS Is, in Plain English</b>\nDNS (Domain Name System) is the protocol and system that translates human-friendly domain names (like `example.com`) into the numeric IP addresses computers actually use to find each other on a network — it's essentially the internet's phone book, letting people type memorable names instead of having to remember an IP address for every website. It runs on port 53.\n\n<b>How a DNS Lookup Works, Step by Step</b>\n1. You type `example.com` into your browser\n2. Your device asks a DNS resolver (usually run by your ISP or a public service) 'what's the IP address for example.com?'\n3. The resolver checks its cache first; if it doesn't already know, it queries a hierarchy of DNS servers (root servers → top-level domain servers → the domain's own authoritative name server) until it finds the answer\n4. The resolver returns the IP address to your device, and your browser connects directly to that IP address to load the actual page\n\n<b>Why This Hierarchy Exists</b>\nNo single server could possibly hold the address of every domain on the internet — splitting the lookup into root → top-level domain (.com, .org, .np) → authoritative server for that specific domain lets the system scale to handle every domain name in existence.",
+    note:
+      "Exam favourite: DNS runs on port 53 and its whole job is name-to-IP-address translation. If a question describes 'turning a domain name into an IP address,' the answer is always DNS.",
+    diagram:
+      "  DNS LOOKUP — turning a name into an address\n\n  Browser: \"What's the IP for example.com?\"\n       │\n       ▼\n  DNS Resolver ──► Root Server ──► .com TLD Server ──► example.com's Authoritative Server\n       │                                                          │\n       └──────────────── \"It's 93.184.216.34\" ◄───────────────────┘\n       │\n       ▼\n  Browser connects directly to 93.184.216.34",
+    code:
+      "# Look up the IP address behind a domain name\ndig example.com\n\n# or, on many systems:\nnslookup example.com",
+    codeLanguage: "Bash",
+    tags: ["DNS", "Application Layer Protocols", "Port 53", "Domain Name"],
+  },
+  {
+    id: 254,
+    slug: "dhcp-protocol",
+    section: "Computer Networks",
+    parentSlug: "application-layer-protocols",
+    title: "DHCP (Dynamic Host Configuration Protocol)",
+    tagline: "Automatically assigns an IP address to a device the moment it joins a network",
+    description:
+      "<b>What DHCP Is, in Plain English</b>\nDHCP (Dynamic Host Configuration Protocol) automatically assigns an IP address (along with other network settings) to a device the moment it connects to a network, so no one has to manually type in an IP address every time a laptop, phone, or printer joins a Wi-Fi network. It uses ports 67 (server) and 68 (client).\n\n<b>How It Works — DORA</b>\nThe DHCP process is often remembered as DORA:\n• <b>Discover</b> — the new device broadcasts a message asking 'is there a DHCP server that can give me an IP address?'\n• <b>Offer</b> — a DHCP server on the network responds, offering an available IP address\n• <b>Request</b> — the device replies, formally requesting to use that specific offered address\n• <b>Acknowledge</b> — the DHCP server confirms the assignment, and the device is now configured with that IP address (plus settings like the subnet mask, default gateway, and DNS server)\n\n<b>Why This Matters</b>\nWithout DHCP, every device joining a network would need someone to manually assign it a unique, non-conflicting IP address — completely impractical on any network with more than a handful of devices, especially one where phones and laptops constantly join and leave (like a home or office Wi-Fi network).\n  ↳ Real-world example: connecting a new phone to a coffee shop's Wi-Fi and automatically getting internet access within seconds, with no manual network configuration at all — that's DHCP working in the background.",
+    note:
+      "Exam favourite: memorize the four DHCP steps in order — Discover, Offer, Request, Acknowledge (DORA). This exact sequence is one of the most frequently tested details in networking.",
+    diagram:
+      "  DHCP — DORA sequence\n\n  New Device                          DHCP Server\n     │──DISCOVER (broadcast)──────────────►│\n     │◄─────────────OFFER (an IP)──────────│\n     │──REQUEST (I'll take that IP)───────►│\n     │◄─────────ACKNOWLEDGE (confirmed)─────│\n\n  Device is now configured: IP address, subnet mask,\n  default gateway, and DNS server — all automatic.",
+    tags: ["DHCP", "Application Layer Protocols", "Port 67", "Port 68", "DORA", "IP Address"],
+  },
+  {
+    id: 255,
+    slug: "transport-layer-protocols",
+    section: "Computer Networks",
+    parentSlug: "protocols",
+    title: "Transport Layer Protocols",
+    tagline: "TCP and UDP — the two ways data can travel end-to-end between applications",
+    description:
+      "<b>What This Covers</b>\nTransport Layer Protocols covers the two fundamentally different approaches to end-to-end delivery between applications: TCP's reliable, connection-based approach, and UDP's fast, connectionless approach.\n\n<b>The Two Protocols, at a Glance</b>\n• <b>TCP (Transmission Control Protocol)</b> — connection-oriented, guarantees reliable, in-order, error-checked delivery, at the cost of extra overhead\n• <b>UDP (User Datagram Protocol)</b> — connectionless, no delivery guarantee, no ordering guarantee, but very low overhead and low latency\n  ↳ Each is covered in full in its own card next, including exactly which real-world applications choose each one and why.",
+    note:
+      "The core trade-off to remember: TCP trades speed for reliability; UDP trades reliability for speed. Neither one is universally 'better' — the right choice depends entirely on whether the application can tolerate lost or out-of-order data.",
+    diagram:
+      "  TCP vs UDP — the core trade-off\n\n  TCP: reliable, ordered, connection-based   ──  slower, more overhead\n  UDP: unreliable, unordered, connectionless ──  faster, less overhead",
+    tags: ["Transport Layer Protocols", "TCP", "UDP"],
+  },
+  {
+    id: 256,
+    slug: "tcp-protocol",
+    section: "Computer Networks",
+    parentSlug: "transport-layer-protocols",
+    title: "TCP (Transmission Control Protocol)",
+    tagline: "Connection-oriented and reliable — guarantees data arrives complete, in order, and error-free",
+    description:
+      "<b>What TCP Is, in Plain English</b>\nTCP (Transmission Control Protocol) is a connection-oriented transport protocol that guarantees reliable delivery — every piece of data sent is acknowledged by the receiver, lost data is automatically retransmitted, and data arrives at the application in the exact order it was sent, even if individual packets took different paths or arrived out of order over the network.\n\n<b>The Three-Way Handshake</b>\nBefore any actual data is exchanged, TCP establishes a connection using a three-step handshake:\n1. <b>SYN</b> — the client sends a SYN (synchronize) message to the server, proposing to start a connection\n2. <b>SYN-ACK</b> — the server responds with a SYN-ACK, acknowledging the client's request and proposing its own synchronization\n3. <b>ACK</b> — the client sends a final ACK, confirming the connection is now established\n  ↳ Only after this handshake completes does actual application data start flowing.\n\n<b>How Reliability Is Achieved</b>\n• Every segment sent is acknowledged by the receiver; if an acknowledgment isn't received within an expected time, the sender retransmits\n• Segments carry sequence numbers, so the receiver can reorder them correctly even if they arrive out of sequence, and detect if any are missing\n• Flow control prevents a fast sender from overwhelming a slow receiver's buffer\n\n<b>When TCP Is Used</b>\nAny time correctness matters more than raw speed — web browsing (HTTP/HTTPS), email (SMTP), and file transfer (FTP) all run over TCP, since a corrupted or missing webpage, email, or file is unacceptable.",
+    note:
+      "Exam favourite: memorize the three-way handshake in order — SYN → SYN-ACK → ACK. This exact sequence is one of the most frequently tested details in the entire networking section.",
+    diagram:
+      "  TCP THREE-WAY HANDSHAKE\n\n  Client                          Server\n    │────────── SYN ─────────────►│   \"Let's connect\"\n    │◄──────── SYN-ACK ───────────│   \"OK, let's connect\"\n    │────────── ACK ──────────────►│   \"Confirmed, connection open\"\n    │                              │\n    │◄════ reliable data flow ════►│   (retransmits anything lost,\n    │                              │    reorders anything out of sequence)",
+    tags: ["TCP", "Transport Layer Protocols", "Three-Way Handshake", "Connection-Oriented", "Reliable Delivery"],
+  },
+  {
+    id: 257,
+    slug: "udp-protocol",
+    section: "Computer Networks",
+    parentSlug: "transport-layer-protocols",
+    title: "UDP (User Datagram Protocol)",
+    tagline: "Connectionless and unreliable by design — trades guarantees for speed and low overhead",
+    description:
+      "<b>What UDP Is, in Plain English</b>\nUDP (User Datagram Protocol) is a connectionless transport protocol that sends data (as datagrams) without establishing a connection first, without acknowledging receipt, and without guaranteeing delivery, order, or error correction — it fires data out as fast as possible and trusts the application above it to handle any problems, if it cares to at all.\n\n<b>Why 'Unreliable' Isn't Automatically Bad</b>\nUDP's lack of guarantees means far less overhead than TCP — no handshake delay, no waiting for acknowledgments, no retransmission delays. For applications where a little lost data is fine, or where an old, retransmitted packet would actually be worse than just skipping it, this trade-off is exactly right.\n\n<b>When UDP Is Used</b>\n• <b>Video/audio streaming and voice/video calls</b> — a dropped frame or a moment of static is far less disruptive than the call freezing to wait for a retransmitted packet that's now outdated anyway\n• <b>Online gaming</b> — an old position update, retransmitted after a delay, is worse than useless; the game needs the newest data now, not a guaranteed-but-late one\n• <b>DNS queries</b> — a DNS lookup is small and quick; if the response is lost, the client can just ask again far faster than TCP's connection setup would take\n\n<b>TCP vs. UDP, Side by Side</b>\n• TCP: connection-oriented, reliable, ordered, higher overhead — web pages, email, file transfer\n• UDP: connectionless, unreliable, unordered, low overhead — streaming, gaming, DNS",
+    note:
+      "Exam favourite: UDP is preferred exactly when speed matters more than perfect delivery — streaming, gaming, and DNS are the three classic examples examiners expect. Don't say UDP is 'worse' than TCP — it's a deliberate trade-off, not a limitation.",
+    diagram:
+      "  UDP — fire and forget, no handshake\n\n  Client ──datagram──► Server   (no handshake, no acknowledgment expected)\n  Client ──datagram──► Server   (if this one is lost, no automatic retransmission)\n  Client ──datagram──► Server\n\n  Much lower overhead than TCP — no connection setup delay,\n  no waiting on acknowledgments — but no delivery guarantee either.",
+    tags: ["UDP", "Transport Layer Protocols", "Connectionless", "Streaming", "Gaming", "DNS"],
+  },
+  {
+    id: 258,
+    slug: "networking-devices",
+    section: "Computer Networks",
+    title: "Networking Devices",
+    tagline: "The physical hardware that actually moves data through a network — Hub, Switch, Router, Gateway, Firewall",
+    description:
+      "<b>What This Covers</b>\nNetworking Devices covers the actual physical (or virtual) hardware responsible for moving data around a network, connecting different networks together, and protecting a network from unwanted traffic.\n\n<b>What You'll Learn Here</b>\n• <b>Hub</b> — the simplest, dumbest device; broadcasts to every port with no intelligence at all\n• <b>Switch</b> — smarter than a hub; forwards data only to the correct port using MAC addresses\n• <b>Router</b> — connects entirely different networks together using IP addresses and routing\n• <b>Gateway</b> — connects networks that use completely different protocols or architectures\n• <b>Firewall</b> — filters traffic based on security rules, blocking unwanted or dangerous traffic\n  ↳ These are ordered roughly by which OSI layer they operate at, and by increasing intelligence — a hub has none, a firewall actively makes security decisions.",
+    note:
+      "A good way to remember these: Hub = no intelligence, broadcasts everywhere. Switch = local intelligence, uses MAC addresses. Router = connects networks, uses IP addresses. Gateway = protocol translator between different network types. Firewall = security filter.",
+    diagram:
+      "  NETWORKING DEVICES — increasing intelligence\n\n  Hub          Switch           Router            Gateway            Firewall\n  (broadcasts  (MAC address  ►  (IP address,   ►   (translates    ►   (security\n   to all)      table)           routing)          protocols)          filtering)",
+    tags: ["Networking Devices", "Hub", "Switch", "Router", "Gateway", "Firewall"],
+  },
+  {
+    id: 259,
+    slug: "hub-device",
+    section: "Computer Networks",
+    parentSlug: "networking-devices",
+    title: "Hub",
+    tagline: "The simplest networking device — broadcasts every incoming signal to every other port, with no intelligence",
+    description:
+      "<b>What a Hub Is, in Plain English</b>\nA hub is the simplest networking device — a basic connector for multiple devices on a local network that has zero intelligence: whenever it receives data on one port, it blindly broadcasts that data out to every other port, whether or not that data was actually meant for the device on that port.\n\n<b>Why This Is a Problem</b>\n• <b>Wasted bandwidth</b> — every device connected to the hub receives every single piece of traffic, even data meant for someone else, wasting bandwidth and forcing every device to filter out data that isn't meant for it\n• <b>Collisions</b> — since a hub creates one shared 'collision domain,' if two devices happen to transmit at the same moment, their signals collide and both have to retransmit, which gets worse as more devices are added\n• <b>No security or addressing awareness</b> — a hub operates purely at the Physical layer (Layer 1) — it has no concept of MAC addresses or IP addresses at all, so it cannot make any intelligent forwarding decision\n\n<b>Why Hubs Are Rarely Used Today</b>\nSwitches solve every one of these problems (targeted forwarding using MAC addresses, no unnecessary collisions) at a similar cost, which is why hubs have been almost entirely replaced by switches in modern networks.",
+    note:
+      "Exam favourite: a hub operates at the Physical layer (Layer 1) and has no addressing intelligence at all — it simply repeats a signal to every port. This is the single biggest contrast with a switch, which is intelligent and operates at Layer 2.",
+    diagram:
+      "  HUB — broadcasts to every port, no intelligence\n\n  [PC1]──┐\n  [PC2]──┼──[HUB]   Data from PC1 to PC3 is ALSO sent to PC2 and PC4\n  [PC3]──┤          (PC2 and PC4 just ignore data not addressed to them)\n  [PC4]──┘",
+    tags: ["Hub", "Networking Devices", "Physical Layer", "Collision Domain"],
+  },
+  {
+    id: 260,
+    slug: "switch-device",
+    section: "Computer Networks",
+    parentSlug: "networking-devices",
+    title: "Switch",
+    tagline: "Forwards data only to the port where the destination device actually lives, using MAC addresses",
+    description:
+      "<b>What a Switch Is, in Plain English</b>\nA switch connects multiple devices on a local network, just like a hub, but with real intelligence — it learns which MAC address lives on which port, and forwards incoming data only to the specific port where the destination device actually is, instead of broadcasting to everyone.\n\n<b>How a Switch Learns</b>\n• A switch maintains a MAC address table, mapping each MAC address it has seen to the port it arrived from\n• When a frame arrives, the switch checks the destination MAC address against this table and forwards the frame only out the correct port\n• If the destination MAC isn't in the table yet (the switch hasn't 'learned' it), it floods the frame to every port just once, but records the reply's source port to learn that address for next time\n\n<b>Why Switches Replaced Hubs</b>\n• Massively reduces wasted bandwidth, since traffic between two devices no longer reaches every other device on the network\n• Eliminates most collisions, since each connection effectively gets its own dedicated path rather than sharing one collision domain across every port\n• Operates at the Data Link layer (Layer 2), giving it MAC-address-based intelligence a hub simply doesn't have\n\n<b>Real-World Example</b>\nAn office network where 20 computers are all plugged into one switch — when Computer 1 sends a file to Computer 2, only Computer 2's port carries that traffic; the other 18 computers never see it at all.",
+    note:
+      "Exam favourite: switch = Layer 2 device, uses a MAC address table, forwards only to the correct port. This is the exact contrast to a hub (Layer 1, broadcasts to all) and the exact contrast to a router (Layer 3, uses IP addresses instead of MAC addresses).",
+    diagram:
+      "  SWITCH — forwards only to the correct port\n\n  [PC1]──┐                         MAC Address Table:\n  [PC2]──┼──[SWITCH]                Port 1 → PC1's MAC\n  [PC3]──┤                          Port 2 → PC2's MAC\n  [PC4]──┘                          Port 3 → PC3's MAC\n\n  Data from PC1 to PC3 is sent ONLY out Port 3 —\n  PC2 and PC4 never see this traffic at all.",
+    tags: ["Switch", "Networking Devices", "Data Link Layer", "MAC Address Table"],
+  },
+  {
+    id: 261,
+    slug: "router-device",
+    section: "Computer Networks",
+    parentSlug: "networking-devices",
+    title: "Router",
+    tagline: "Connects entirely different networks together and forwards traffic between them using IP addresses",
+    description:
+      "<b>What a Router Is, in Plain English</b>\nA router connects two or more different networks together — most commonly, it's what connects your home or office's local network (LAN) to the wider internet (WAN). Unlike a switch, which forwards traffic within a single local network using MAC addresses, a router forwards traffic between different networks using IP addresses.\n\n<b>What a Router Does</b>\n• <b>Routing</b> — examines a packet's destination IP address and consults a routing table to decide the best path to forward it toward that destination, potentially through several other routers along the way\n• <b>Connecting different networks</b> — a home router, for example, connects your private local network (using private IP addresses like `192.168.1.x`) to your ISP's public network\n• <b>NAT (Network Address Translation)</b> — most home/office routers also translate the many private IP addresses on the local network into one shared public IP address when talking to the internet, and vice versa\n\n<b>Router vs. Switch</b>\n• A switch operates within one local network (Layer 2, MAC addresses) — a router operates between different networks (Layer 3, IP addresses)\n• A home 'router' you buy is usually actually a combo device — router + switch + Wi-Fi access point all in one box, which is why the distinction can get confusing in casual conversation\n\n<b>Real-World Example</b>\nThe device sitting in your home connecting all your Wi-Fi devices to your internet provider is a router — it routes traffic between your home's private local network and the wider public internet.",
+    note:
+      "Exam favourite: a router operates at the Network layer (Layer 3), using IP addresses and routing tables — a switch operates at the Data Link layer (Layer 2), using MAC addresses. If a question describes connecting two DIFFERENT networks, that's a router's job, not a switch's.",
+    diagram:
+      "  ROUTER — connects two DIFFERENT networks\n\n  [Home LAN: 192.168.1.x]───[ROUTER]───[ISP's Network]───► Internet\n\n  Router examines destination IP address,\n  checks its routing table, forwards toward the internet.",
+    tags: ["Router", "Networking Devices", "Network Layer", "Routing Table", "NAT"],
+  },
+  {
+    id: 262,
+    slug: "gateway-device",
+    section: "Computer Networks",
+    parentSlug: "networking-devices",
+    title: "Gateway",
+    tagline: "Connects networks that use completely different protocols or architectures, translating between them",
+    description:
+      "<b>What a Gateway Is, in Plain English</b>\nA gateway is a networking device (or software) that connects two networks using entirely different protocols or architectures, translating data between them so devices on each side can still communicate — it's a broader, more general-purpose translator than a router, which typically connects networks that already speak the same protocol family (IP).\n\n<b>Gateway vs. Router</b>\n• A router connects networks that use the same underlying protocol (IP) and simply forwards packets between them based on IP addresses\n• A gateway can connect networks using entirely different protocols altogether, actively translating data formats so the two sides can understand each other — a router forwards, a gateway translates\n\n<b>The 'Default Gateway'</b>\nIn everyday networking, the term 'default gateway' refers to the device (usually your router) that a computer sends traffic to whenever the destination is outside its own local network — every device on a LAN is configured with a default gateway IP address, and any traffic not meant for the local network gets sent there first.\n  ↳ This is why, in practice, a home router is often casually called 'the gateway' — it's the router acting in the role of a gateway between your local network and everything outside it.\n\n<b>Real-World Example</b>\nAn email gateway that translates between two completely different email systems using different internal formats, or a VoIP gateway that converts a regular telephone call into digital data packets so it can travel over an internet connection.",
+    note:
+      "Exam favourite: 'default gateway' is a heavily tested networking term — it's the IP address a device sends traffic to whenever the destination is outside its own local network, almost always your router's local IP address.",
+    diagram:
+      "  DEFAULT GATEWAY — the exit point out of your local network\n\n  [Your PC: 192.168.1.10]\n         │  \"destination is outside my network — send to my gateway\"\n         ▼\n  [Default Gateway: 192.168.1.1]  (usually your router)\n         │\n         ▼\n  Onward to the internet / another network",
+    tags: ["Gateway", "Default Gateway", "Networking Devices", "Protocol Translation"],
+  },
+  {
+    id: 263,
+    slug: "firewall-device",
+    section: "Computer Networks",
+    parentSlug: "networking-devices",
+    title: "Firewall",
+    tagline: "Filters network traffic based on security rules, blocking anything that doesn't meet policy",
+    description:
+      "<b>What a Firewall Is, in Plain English</b>\nA firewall is a security device (which can be hardware, software, or both) that monitors and controls incoming and outgoing network traffic based on a defined set of security rules, acting as a barrier between a trusted internal network and untrusted external networks (like the public internet).\n\n<b>How a Firewall Decides What to Allow</b>\n• <b>Packet filtering</b> — the simplest approach; examines each packet's source/destination IP address and port number against a set of rules, and allows or blocks it accordingly, with no memory of past packets\n• <b>Stateful inspection</b> — a smarter approach that tracks the state of active connections, and only allows incoming traffic that's a legitimate response to a connection the internal network itself initiated\n• <b>Application-level filtering</b> — the most granular approach; inspects traffic at the Application layer, able to block or allow based on the specific application or content involved, not just IP/port\n\n<b>What a Firewall Protects Against</b>\n• Unauthorized access attempts from outside the network\n• Malicious traffic patterns associated with known attacks\n• Restricting which internal services are exposed to the outside world at all (e.g. blocking every port except 80 and 443 on a public web server)\n\n<b>Real-World Example</b>\nA company's firewall configured to allow outgoing web traffic (port 443) from employee computers, but block any unsolicited incoming connection attempts from the internet toward those same computers — letting employees browse freely while protecting them from external attacks.",
+    note:
+      "Exam favourite: a firewall's core job is to filter traffic based on rules — packet filtering (simplest, per-packet, no memory) vs. stateful inspection (smarter, tracks connection state) is the most commonly tested distinction.",
+    diagram:
+      "  FIREWALL — filters traffic at the network boundary\n\n  Internet (untrusted) ────► [FIREWALL: checks rules] ────► Internal Network (trusted)\n\n  ALLOWED:  outgoing web requests, replies to connections we started\n  BLOCKED:  unsolicited incoming connection attempts, traffic on disallowed ports",
+    tags: ["Firewall", "Networking Devices", "Packet Filtering", "Stateful Inspection", "Network Security"],
+  },
+  {
+    id: 264,
+    slug: "ip-addressing",
+    section: "Computer Networks",
+    title: "IP Addressing",
+    tagline: "How every device on a network gets a unique address, and how that address space is divided up",
+    description:
+      "<b>What This Covers</b>\nIP Addressing looks at how devices are actually identified and located on a network — the two IP address formats in use today, and the two techniques used to divide a large address space into smaller, manageable, efficiently-allocated pieces.\n\n<b>What You'll Learn Here</b>\n• <b>IPv4</b> — the original, 32-bit addressing scheme still in widespread use, and its looming shortage of available addresses\n• <b>IPv6</b> — the 128-bit successor designed specifically to solve that shortage\n• <b>Subnetting</b> — dividing one network into multiple smaller sub-networks\n• <b>CIDR</b> — the modern, flexible slash-notation system for allocating address blocks of any size\n  ↳ These build on each other: IPv4 and IPv6 are the two address formats in use, and Subnetting/CIDR are both techniques for dividing and allocating those addresses efficiently.",
+    note:
+      "Exam favourite: IPv4 (32-bit, ~4.3 billion addresses) is running out; IPv6 (128-bit, effectively unlimited) is the fix. Subnetting and CIDR are both about dividing address space efficiently — subnetting is the general technique, CIDR is the modern notation/system for doing it flexibly.",
+    diagram:
+      "  IP ADDRESSING — formats and allocation techniques\n\n  Address formats:      IPv4 (32-bit)   vs   IPv6 (128-bit)\n  Allocation techniques: Subnetting   +   CIDR (slash notation)",
+    tags: ["IP Addressing", "IPv4", "IPv6", "Subnetting", "CIDR"],
+  },
+  {
+    id: 265,
+    slug: "ipv4",
+    section: "Computer Networks",
+    parentSlug: "ip-addressing",
+    title: "IPv4",
+    tagline: "The original 32-bit addressing scheme, written as four dotted decimal numbers, now running out of addresses",
+    description:
+      "<b>What IPv4 Is, in Plain English</b>\nIPv4 (Internet Protocol version 4) is the original, still most widely used IP addressing scheme — every IPv4 address is 32 bits long, written as four decimal numbers separated by dots (dotted-decimal notation), like `192.168.1.1`.\n\n<b>How an IPv4 Address Is Structured</b>\n• 32 bits total, split into four 8-bit sections called octets\n• Each octet is written as a decimal number from 0 to 255 (since 8 bits can represent 256 different values, 0 through 255)\n• Example: `192.168.1.1` in binary is `11000000.10101000.00000001.00000001`\n\n<b>Network Portion vs. Host Portion</b>\nEvery IPv4 address is conceptually split into a network portion (identifying which network the address belongs to) and a host portion (identifying which specific device within that network) — where exactly that split happens is determined by the subnet mask, covered in the Subnetting card.\n\n<b>Public vs. Private Addresses</b>\n• <b>Public IP addresses</b> — globally unique, routable directly on the internet\n• <b>Private IP addresses</b> — reserved ranges (like `192.168.0.0`–`192.168.255.255`, or `10.0.0.0`–`10.255.255.255`) used inside local networks, not directly routable on the public internet, and reused independently by millions of separate private networks\n\n<b>The Address Exhaustion Problem</b>\nWith 32 bits, IPv4 provides about 4.3 billion possible addresses (2³² ≈ 4,294,967,296) — a number that seemed enormous decades ago, but has since been essentially exhausted given how many devices (phones, laptops, IoT devices) now need an address, which is exactly the problem IPv6 was designed to solve.",
+    note:
+      "Exam favourite: IPv4 = 32 bits, four dotted-decimal octets, roughly 4.3 billion total addresses (2³²). Memorize that exact number and the reason IPv6 exists — running out of IPv4 addresses.",
+    diagram:
+      "  IPv4 ADDRESS STRUCTURE — 32 bits, four octets\n\n  192   .  168   .   1   .   1\n   │        │        │       │\n  8 bits   8 bits   8 bits  8 bits   = 32 bits total\n\n  Binary: 11000000.10101000.00000001.00000001",
+    tags: ["IPv4", "IP Addressing", "Dotted Decimal Notation", "Public IP", "Private IP"],
+  },
+  {
+    id: 266,
+    slug: "ipv6",
+    section: "Computer Networks",
+    parentSlug: "ip-addressing",
+    title: "IPv6",
+    tagline: "The 128-bit successor to IPv4, providing an effectively unlimited number of addresses",
+    description:
+      "<b>What IPv6 Is, in Plain English</b>\nIPv6 (Internet Protocol version 6) is the newer addressing scheme designed specifically to replace IPv4 and solve its address exhaustion problem — every IPv6 address is 128 bits long, written as eight groups of four hexadecimal digits, separated by colons, like `2001:0db8:85a3:0000:0000:8a2e:0370:7334`.\n\n<b>Why 128 Bits Solves the Shortage</b>\n128 bits provides 2¹²⁸ possible addresses — an almost incomprehensibly large number (about 340 undecillion, or 3.4 × 10³⁸), compared to IPv4's roughly 4.3 billion (2³²). This is enough addresses to assign a unique one to every grain of sand on Earth many times over, permanently solving the exhaustion problem IPv4 ran into.\n\n<b>Shorthand Notation</b>\nBecause IPv6 addresses are long, two shortcuts are allowed to make them easier to write:\n• Leading zeros within a group can be dropped (`0db8` can be written as `db8`)\n• One single run of consecutive all-zero groups can be replaced with `::`, but only once per address (to avoid ambiguity)\n  ↳ Example: `2001:0db8:0000:0000:0000:0000:1428:57ab` shortens to `2001:db8::1428:57ab`\n\n<b>IPv6 vs. IPv4</b>\n• IPv4: 32-bit, dotted-decimal, ~4.3 billion addresses, running low\n• IPv6: 128-bit, hexadecimal-colon notation, ~340 undecillion addresses, effectively unlimited\n• Both continue to run side by side today (called dual-stack), since not every network and device has fully transitioned to IPv6 yet",
+    note:
+      "Exam favourite: IPv6 = 128 bits, hexadecimal groups separated by colons, addresses the IPv4 exhaustion problem. Also know the `::` shorthand rule — it can only be used once in a single address, since using it twice would make the number of zero groups ambiguous.",
+    diagram:
+      "  IPv6 ADDRESS — 128 bits, eight hex groups\n\n  2001 : 0db8 : 85a3 : 0000 : 0000 : 8a2e : 0370 : 7334\n\n  Shortened form (one run of zero groups → ::):\n  2001:0db8:85a3::8a2e:0370:7334",
+    tags: ["IPv6", "IP Addressing", "Hexadecimal Notation", "Address Exhaustion"],
+  },
+  {
+    id: 267,
+    slug: "subnetting",
+    section: "Computer Networks",
+    parentSlug: "ip-addressing",
+    title: "Subnetting",
+    tagline: "Dividing one large network into smaller sub-networks, using a subnet mask to mark the split",
+    description:
+      "<b>What Subnetting Is, in Plain English</b>\nSubnetting is the technique of dividing one large IP network into multiple smaller sub-networks (subnets), each capable of holding a smaller group of devices — instead of one huge network with thousands of devices all in one broadcast domain, an organization can split it into logically separate, more manageable pieces (e.g. one subnet per department or per floor).\n\n<b>The Subnet Mask</b>\nA subnet mask is a 32-bit number (just like an IPv4 address) that marks which bits of an IP address belong to the network portion, and which belong to the host portion — written the same dotted-decimal way as an IP address, like `255.255.255.0`.\n• Bits set to `1` in the mask mark the network portion\n• Bits set to `0` in the mask mark the host portion\n\n<b>Worked Example</b>\nTake the network `192.168.1.0` with subnet mask `255.255.255.0` (commonly written as `/24`, since 24 bits are set to 1):\n• Network portion: `192.168.1` (the first 24 bits)\n• Host portion: the last 8 bits — meaning 2⁸ = 256 possible host addresses\n• Of those 256, the first address (`192.168.1.0`) is reserved as the network address, and the last (`192.168.1.255`) is reserved as the broadcast address — leaving 254 usable addresses for actual devices\n\n<b>Why Organizations Subnet</b>\n• Reduces broadcast traffic — broadcasts stay within a subnet instead of flooding an entire large network\n• Improves security — subnets can be isolated from each other with firewall rules between them\n• Uses address space more efficiently — a department needing only 10 devices doesn't need to be handed a full 254-address subnet",
+    note:
+      "Exam favourite: for a /24 network, host bits = 8, giving 2⁸ = 256 total addresses, minus 2 reserved (network address + broadcast address) = 254 usable host addresses. This exact formula (2^host_bits − 2) is the single most tested calculation in this whole chapter.",
+    diagram:
+      "  SUBNETTING — 192.168.1.0/24\n\n  192  .  168  .   1   .   0\n  └──────Network (24 bits)──────┘└─Host (8 bits)─┘\n\n  192.168.1.0    → Network address (reserved)\n  192.168.1.1    → first usable host\n  ...\n  192.168.1.254  → last usable host\n  192.168.1.255  → Broadcast address (reserved)\n\n  Usable hosts = 2^8 − 2 = 254",
+    code:
+      "Network:      192.168.1.0\nSubnet Mask:  255.255.255.0   (/24)\nTotal addresses:  2^8 = 256\nReserved:         network (.0) + broadcast (.255) = 2\nUsable hosts:     256 - 2 = 254",
+    codeLanguage: "Text",
+    tags: ["Subnetting", "Subnet Mask", "IP Addressing", "Network Address", "Broadcast Address"],
+  },
+  {
+    id: 268,
+    slug: "cidr",
+    section: "Computer Networks",
+    parentSlug: "ip-addressing",
+    title: "CIDR (Classless Inter-Domain Routing)",
+    tagline: "The modern slash-notation system that lets address blocks be sized flexibly, not locked into fixed classes",
+    description:
+      "<b>What CIDR Is, in Plain English</b>\nCIDR (Classless Inter-Domain Routing) is the modern system for allocating and writing IP address ranges, using a flexible slash notation like `192.168.1.0/24` — the number after the slash states exactly how many bits are the network portion, letting a network be sized to exactly however many addresses it actually needs, instead of being locked into old, rigid, fixed-size classes.\n\n<b>The Old, Rigid Class System CIDR Replaced</b>\nBefore CIDR, IPv4 addresses were divided into fixed classes — Class A (huge networks, millions of hosts each), Class B (medium networks), and Class C (small networks, 254 hosts each) — with no size in between. An organization needing 2,000 addresses had no good option: a Class C network was far too small, but the next size up (Class B) wasted hundreds of thousands of unused addresses.\n\n<b>How CIDR Fixes This</b>\n• The `/n` notation directly states the number of network bits, so a network can be exactly the size needed — `/25` gives 128 addresses, `/26` gives 64, `/27` gives 32, and so on — completely independent of the old fixed classes\n• This is the exact same idea as subnetting's subnet mask, just written in a more compact, flexible, universally-adopted format\n\n<b>Worked Example — Comparing Sizes</b>\n• `/24` → 8 host bits → 256 addresses (254 usable)\n• `/25` → 7 host bits → 128 addresses (126 usable)\n• `/26` → 6 host bits → 64 addresses (62 usable)\n  ↳ An organization needing exactly 60 devices can be allocated a `/26` block instead of wasting an entire `/24`, since 62 usable addresses fits their need almost exactly.\n\n<b>CIDR and Routing</b>\nCIDR also lets routers group together multiple smaller, adjacent networks into one larger routing table entry (called route aggregation or supernetting), reducing the size of routing tables across the internet.",
+    note:
+      "Exam favourite: CIDR's `/n` notation directly states the number of network bits — memorize that fewer host bits means fewer usable addresses (2^host_bits − 2), and that CIDR exists specifically to replace the old, wasteful fixed Class A/B/C system.",
+    diagram:
+      "  CIDR — flexible sizing vs the old rigid classes\n\n  Old system:  Class A (huge)  Class B (medium)  Class C (254 hosts)  ← big gaps, no in-between\n\n  CIDR:  /24 (254 hosts)  /25 (126 hosts)  /26 (62 hosts)  /27 (30 hosts) ...\n         ← any size in between is possible, no wasted address blocks",
+    code:
+      "/24  → 2^8  - 2 = 254 usable hosts\n/25  → 2^7  - 2 = 126 usable hosts\n/26  → 2^6  - 2 = 62  usable hosts\n/27  → 2^5  - 2 = 30  usable hosts\n/28  → 2^4  - 2 = 14  usable hosts",
+    codeLanguage: "Text",
+    tags: ["CIDR", "IP Addressing", "Classless Routing", "Subnetting", "Route Aggregation"],
   },
 ];
 
