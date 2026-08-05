@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -4541,6 +4541,237 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "Effort (person-months) = a × (KLOC)^b\n\nExample — Organic project, 10 KLOC:\nEffort = 2.4 × (10)^1.05\nEffort ≈ 2.4 × 11.22\nEffort ≈ 26.9 person-months",
     codeLanguage: "Text",
     tags: ["COCOMO", "Cost Estimation", "Project Management", "KLOC", "Barry Boehm"],
+  },
+  // ─────────────────────────────────────────────
+  // WEB TECHNOLOGY
+  // ─────────────────────────────────────────────
+  {
+    id: 297,
+    slug: "frontend",
+    section: "Web Technology",
+    title: "Frontend",
+    tagline: "The part of a website a user actually sees and interacts with, built from HTML, CSS, and JavaScript",
+    description:
+      "<b>What This Covers</b>\nFrontend (also called client-side development) is everything that runs in the user's own browser — the structure, appearance, and interactivity of a webpage — built on the same three foundational technologies every website on the internet uses.\n\n<b>What 'Frontend' Means, in Plain English</b>\nThe frontend is whatever the user directly sees and touches: the layout of a page, the colors and fonts, the buttons that respond when clicked. It runs entirely inside the user's own browser, on the user's own device, as opposed to the backend, which runs on a separate server the user never directly sees.\n\n<b>What You'll Learn Here</b>\n• <b>HTML</b> — the markup language that defines a page's structure and content\n• <b>CSS</b> — the styling language that controls a page's visual appearance and layout\n• <b>JavaScript</b> — the programming language that adds interactivity and dynamic behavior to a page\n  ↳ These three work together in layers: HTML provides the content and structure, CSS styles that structure, and JavaScript makes it interactive and dynamic. Each is covered in full in its own card next.",
+    note:
+      "Exam favourite: the classic analogy — HTML is a house's skeleton (walls, rooms), CSS is the paint and decoration, JavaScript is the electricity and plumbing that makes things actually work when you flip a switch or turn a tap.",
+    diagram:
+      "  FRONTEND — three layers working together\n\n  HTML (structure)  ──►  CSS (appearance)  ──►  JavaScript (behavior)\n  <div>, <p>, <button>    colors, layout,          click handlers,\n                          fonts, spacing            dynamic updates",
+    tags: ["Frontend", "Client-Side", "HTML", "CSS", "JavaScript"],
+  },
+  {
+    id: 298,
+    slug: "html",
+    section: "Web Technology",
+    parentSlug: "frontend",
+    title: "HTML (HyperText Markup Language)",
+    tagline: "The markup language that defines a webpage's structure and content, using nested tags",
+    description:
+      "<b>What HTML Is, in Plain English</b>\nHTML (HyperText Markup Language) is the language used to structure the content of a webpage — every heading, paragraph, image, link, and button on a page is defined using HTML elements (tags), which the browser reads and renders into the visible page.\n\n<b>How HTML Is Structured</b>\n• An HTML document is a tree of nested elements, each wrapped in an opening and closing tag, like `<p>some text</p>`\n• Elements can be nested inside other elements, building up the page's structure hierarchically (a `<div>` containing a `<h1>` and a `<p>`, for example)\n• Attributes add extra information to a tag, like `<img src=\"photo.jpg\" alt=\"A photo\">`, where `src` and `alt` are attributes\n\n<b>Common HTML Elements</b>\n• `<h1>`–`<h6>` — headings, from most important (h1) to least (h6)\n• `<p>` — a paragraph of text\n• `<a>` — a hyperlink to another page or section\n• `<img>` — an embedded image\n• `<div>` and `<span>` — generic containers used to group content for styling or scripting, with no meaning of their own\n• `<form>`, `<input>`, `<button>` — elements for collecting user input\n\n<b>Semantic HTML</b>\nModern HTML encourages using elements that describe their actual meaning, not just their appearance — `<nav>` for navigation, `<header>` and `<footer>` for page sections, `<article>` for a self-contained piece of content — instead of generic `<div>`s for everything. Semantic HTML helps browsers, screen readers, and search engines understand a page's structure, not just how it looks.",
+    note:
+      "Exam favourite: HTML defines structure and content only — it has no concept of color, layout, or interactivity on its own. Those are CSS's and JavaScript's jobs respectively; HTML is purely the skeleton.",
+    diagram:
+      "  HTML DOCUMENT — a tree of nested elements\n\n  <html>\n    <head><title>My Page</title></head>\n    <body>\n      <header><nav>...</nav></header>\n      <main>\n        <h1>Welcome</h1>\n        <p>Some text here.</p>\n      </main>\n      <footer>...</footer>\n    </body>\n  </html>",
+    code:
+      "<!DOCTYPE html>\n<html>\n  <head>\n    <title>My Page</title>\n  </head>\n  <body>\n    <h1>Welcome</h1>\n    <p>This is a paragraph of text.</p>\n    <a href=\"https://example.com\">Visit example.com</a>\n  </body>\n</html>",
+    codeLanguage: "HTML",
+    tags: ["HTML", "Frontend", "Markup Language", "Semantic HTML"],
+  },
+  {
+    id: 299,
+    slug: "css",
+    section: "Web Technology",
+    parentSlug: "frontend",
+    title: "CSS (Cascading Style Sheets)",
+    tagline: "The styling language that controls how HTML elements actually look and are laid out on the page",
+    description:
+      "<b>What CSS Is, in Plain English</b>\nCSS (Cascading Style Sheets) is the language used to style HTML — controlling colors, fonts, spacing, sizing, and how elements are positioned and laid out on the page. Without CSS, every webpage would appear as plain, unstyled black text on a white background.\n\n<b>How CSS Targets Elements — Selectors</b>\n• <b>Element selector</b> — targets every element of a given tag, e.g. `p { color: blue; }` styles every paragraph\n• <b>Class selector</b> — targets elements with a specific `class` attribute, e.g. `.highlight { background: yellow; }`\n• <b>ID selector</b> — targets the one specific element with a given `id` attribute, e.g. `#header { font-size: 24px; }`\n\n<b>Why It's Called 'Cascading'</b>\nMultiple CSS rules can apply to the same element at once, and CSS follows a defined set of rules (specificity and order) to decide which rule wins when there's a conflict — more specific selectors (like an ID) generally override less specific ones (like an element selector), and later rules override earlier ones of equal specificity.\n\n<b>The Box Model</b>\nEvery HTML element is treated as a rectangular box made of four layers, from inside out: content, padding (space inside the border), border, and margin (space outside the border) — understanding this box model is essential to controlling spacing and layout correctly.\n\n<b>Responsive Design</b>\nCSS media queries let a page apply different styles depending on the screen size, letting the same webpage adapt its layout for a large desktop monitor and a small phone screen without needing two separate pages.",
+    note:
+      "Exam favourite: know the box model layers in order from the inside out — content → padding → border → margin — and know that a more specific selector (ID) beats a less specific one (element) when both target the same element.",
+    diagram:
+      "  CSS BOX MODEL — one element, four layers\n\n  ┌─────────────── margin ───────────────┐\n  │ ┌───────────── border ─────────────┐ │\n  │ │ ┌─────────── padding ──────────┐ │ │\n  │ │ │        content (text/image)   │ │ │\n  │ │ └───────────────────────────────┘ │ │\n  │ └─────────────────────────────────┘ │\n  └───────────────────────────────────────┘",
+    code:
+      "/* Element selector — every paragraph */\np {\n  color: #333;\n  font-size: 16px;\n}\n\n/* Class selector — only elements with class=\"highlight\" */\n.highlight {\n  background-color: yellow;\n}\n\n/* Responsive: stack items vertically on small screens */\n@media (max-width: 600px) {\n  .container {\n    flex-direction: column;\n  }\n}",
+    codeLanguage: "CSS",
+    tags: ["CSS", "Frontend", "Box Model", "Selectors", "Responsive Design"],
+  },
+  {
+    id: 300,
+    slug: "javascript-web",
+    section: "Web Technology",
+    parentSlug: "frontend",
+    title: "JavaScript",
+    tagline: "The programming language that adds interactivity and dynamic behavior to a webpage",
+    description:
+      "<b>What JavaScript Is, in Plain English</b>\nJavaScript is a programming language that runs directly in the browser, letting a webpage respond to user actions, update its own content without reloading, and communicate with a server in the background — it's what turns a static page (HTML + CSS alone) into an interactive application.\n\n<b>What JavaScript Can Do in the Browser</b>\n• <b>DOM manipulation</b> — read and change the page's HTML structure and content after it's already loaded (e.g. adding a new item to a list when a button is clicked)\n• <b>Event handling</b> — run code in response to user actions like clicks, key presses, form submissions, or scrolling\n• <b>Communicating with a server</b> — send and receive data from a backend server in the background (using `fetch`), without requiring a full page reload\n• <b>Form validation</b> — check that a form's input is valid before it's submitted, giving the user immediate feedback\n\n<b>Why It Matters</b>\nWithout JavaScript, a webpage can only ever show whatever HTML/CSS was originally sent by the server — clicking a button couldn't change anything on the page, and every single interaction would require a full page reload from the server. JavaScript is what allows a page to update itself instantly in response to what the user does.\n\n<b>Real-World Example</b>\nClicking 'Add to Cart' on a shopping site without the page reloading, and instantly seeing the cart icon's item count update — that instant, in-place update is JavaScript reading the click event, updating the page's content, and often also sending the new cart data to the server in the background.",
+    note:
+      "Exam favourite: HTML/CSS alone produce a static page; JavaScript is what makes a page dynamic and interactive, capable of responding to user actions without a full page reload.",
+    diagram:
+      "  JAVASCRIPT — reacting to a user action\n\n  User clicks 'Add to Cart' button\n         │\n         ▼\n  JavaScript event handler runs\n         │\n         ├──► Updates the page's HTML (cart count changes instantly)\n         └──► Sends the new cart data to the server in the background",
+    code:
+      "// Listen for a click, then update the page without reloading it\nconst button = document.getElementById(\"add-to-cart\");\nlet cartCount = 0;\n\nbutton.addEventListener(\"click\", () => {\n  cartCount++;\n  document.getElementById(\"cart-badge\").textContent = cartCount;\n});",
+    codeLanguage: "JavaScript",
+    tags: ["JavaScript", "Frontend", "DOM Manipulation", "Event Handling"],
+  },
+  {
+    id: 301,
+    slug: "backend",
+    section: "Web Technology",
+    title: "Backend",
+    tagline: "The server-side part of a web application — the logic, data, and services a user never sees directly",
+    description:
+      "<b>What This Covers</b>\nBackend (also called server-side development) is everything that runs on a server rather than in the user's own browser — the actual business logic, data storage, and the way different systems communicate with each other to serve what the frontend eventually displays.\n\n<b>What 'Backend' Means, in Plain English</b>\nThe backend is the part of a web application the user never sees directly — it processes requests, applies business rules, talks to a database, and sends back a response. When a user's browser (the frontend) asks for data or submits a form, it's the backend that actually does the work behind the scenes.\n\n<b>What You'll Learn Here</b>\n• <b>Server</b> — the machine (and software) that receives requests and sends back responses\n• <b>API</b> — the defined way a frontend (or another system) communicates with a backend, covering the two major styles: REST and SOAP\n  ↳ These build directly on each other: a Server is the machine actually doing the work, and an API is the agreed contract client code uses to talk to it.",
+    note:
+      "Exam favourite: frontend runs in the user's browser; backend runs on a server the user never directly sees. If a question describes database access, business logic, or authentication happening 'behind the scenes,' that's backend, not frontend.",
+    diagram:
+      "  FRONTEND vs BACKEND\n\n  [Browser: Frontend]  ──HTTP request──►  [Server: Backend]  ──queries──►  [Database]\n  (HTML/CSS/JS)                          (business logic, API)\n  [Browser: Frontend]  ◄──HTTP response──  [Server: Backend]  ◄──data────  [Database]",
+    tags: ["Backend", "Server-Side", "Server", "API"],
+  },
+  {
+    id: 302,
+    slug: "server",
+    section: "Web Technology",
+    parentSlug: "backend",
+    title: "Server",
+    tagline: "The machine (and software) that listens for requests and sends back responses",
+    description:
+      "<b>What a Server Is, in Plain English</b>\nA server, in the context of the web, is a combination of hardware (a physical or virtual machine) and software that listens for incoming requests over a network and sends back an appropriate response — a web server specifically listens for HTTP requests and responds with web content (HTML pages, JSON data, images, and so on).\n\n<b>How a Web Server Handles a Request</b>\n1. A client (a browser, or another program) sends an HTTP request to the server, specifying a URL and a method (e.g. `GET /products`)\n2. The server's software receives the request, and either serves a static file directly, or hands the request off to backend application code to be processed\n3. The application code runs any needed logic (checking a database, applying business rules)\n4. The server sends back an HTTP response, including a status code and the actual content\n\n<b>Common Web Server Software</b>\n• <b>Nginx</b> and <b>Apache</b> — widely used web servers, often used to serve static files directly and to forward dynamic requests to an application\n• <b>Node.js</b> — lets JavaScript itself run a web server directly, handling requests using the same language often used on the frontend\n\n<b>Static vs. Dynamic Content</b>\n• <b>Static content</b> — files that are exactly the same for every request (images, plain HTML files, CSS files) — the server just sends the file as-is\n• <b>Dynamic content</b> — content generated fresh for each request, often based on a database lookup or the specific user making the request (e.g. a personalized dashboard page)",
+    note:
+      "Exam favourite: a server is both hardware and software together — the physical/virtual machine, plus the software (like Nginx, Apache, or a Node.js app) actually listening for and handling requests.",
+    diagram:
+      "  WEB SERVER — handling a request\n\n  Client ──GET /products──► Web Server\n                                │\n                        static file? ──► send it directly\n                                │\n                        dynamic request? ──► run app code ──► query database\n                                                                     │\n  Client ◄────────── HTTP response (HTML / JSON) ◄──────────────────┘",
+    tags: ["Server", "Backend", "Web Server", "Nginx", "Apache", "Node.js"],
+  },
+  {
+    id: 303,
+    slug: "api",
+    section: "Web Technology",
+    parentSlug: "backend",
+    title: "API (Application Programming Interface)",
+    tagline: "The agreed contract that lets one piece of software ask another for data or actions, without needing its internals",
+    description:
+      "<b>What an API Is, in Plain English</b>\nAn API (Application Programming Interface) is a defined set of rules that lets one piece of software communicate with another — specifying exactly what requests can be made, what data needs to be sent, and what response will come back, without either side needing to know how the other is actually implemented internally.\n  ↳ Analogy: an API is like a restaurant menu — you don't need to know how the kitchen actually cooks the food; you just need to know what you're allowed to order and what you'll get back.\n\n<b>Why APIs Matter for the Web</b>\nA web application's frontend (running in the browser) and backend (running on a server) almost always communicate through an API — the frontend sends a request to a specific API endpoint (like `/api/products`), and the backend responds with the requested data, usually formatted as JSON.\n\n<b>Two Major API Styles</b>\n• <b>REST</b> — the modern, lightweight, most widely used style for web APIs today, built directly on top of standard HTTP\n• <b>SOAP</b> — an older, more rigid, XML-based protocol, still used in some enterprise and legacy systems\n  ↳ Each is covered in full in its own card next.\n\n<b>Real-World Example</b>\nA weather app on your phone doesn't calculate weather itself — it calls a weather service's API, sends a request like 'give me the forecast for Kathmandu,' and displays whatever data the API sends back.",
+    note:
+      "Exam favourite: an API is a contract/interface, not the implementation itself — two completely different backend implementations can expose the exact same API, and client code calling that API wouldn't need to change at all.",
+    diagram:
+      "  API — the contract between two systems\n\n  Frontend (or another app)\n         │  \"GET /api/products\"\n         ▼\n  ┌─────────────── API ───────────────┐\n  │  defines: what requests are valid, │\n  │  what data to send, what comes back│\n  └────────────────────────────────────┘\n         │\n         ▼\n  Backend (implementation hidden from the caller)",
+    tags: ["API", "Backend", "REST", "SOAP", "JSON"],
+  },
+  {
+    id: 304,
+    slug: "rest-api",
+    section: "Web Technology",
+    parentSlug: "api",
+    title: "REST (Representational State Transfer)",
+    tagline: "The lightweight, HTTP-native API style behind most modern web and mobile applications",
+    description:
+      "<b>What REST Is, in Plain English</b>\nREST (Representational State Transfer) is an architectural style for designing APIs, built directly on top of standard HTTP — instead of inventing a new protocol, REST reuses HTTP's existing methods (GET, POST, PUT, DELETE) and status codes to represent operations on resources, identified by URLs.\n\n<b>Core REST Principles</b>\n• <b>Resources identified by URLs</b> — every 'thing' the API exposes (a user, a product, an order) has its own URL, e.g. `/api/products/42` refers to product 42 specifically\n• <b>HTTP methods represent actions</b> — `GET` retrieves a resource, `POST` creates one, `PUT`/`PATCH` updates one, `DELETE` removes one (covered in full in the HTTP Methods card)\n• <b>Statelessness</b> — each request contains everything the server needs to process it; the server doesn't keep track of a client's previous requests between calls, making REST APIs simpler to scale\n• <b>JSON as the typical data format</b> — REST APIs almost always exchange data as JSON today, since it's lightweight and natively understood by JavaScript\n\n<b>Why REST Became the Default</b>\n• Simple to understand and use — it reuses HTTP, which every web developer already knows\n• Lightweight compared to SOAP, with much less overhead per request\n• Works naturally with JSON, the data format JavaScript (and most modern languages) handle easily\n\n<b>Real-World Example</b>\n`GET /api/products/42` retrieves product 42's details; `POST /api/products` with a JSON body creates a new product; `DELETE /api/products/42` removes product 42 — each operation maps directly onto a standard HTTP method and a resource URL.",
+    note:
+      "Exam favourite: REST is an architectural style built on standard HTTP, not a strict protocol — it's defined by principles (statelessness, resource-based URLs, using HTTP methods correctly) rather than a rigid, formally-specified format like SOAP.",
+    diagram:
+      "  REST — HTTP methods map to actions on a resource\n\n  GET    /api/products/42   → retrieve product 42\n  POST   /api/products      → create a new product\n  PUT    /api/products/42   → replace product 42 entirely\n  DELETE /api/products/42   → delete product 42\n\n  Response body: JSON, e.g. { \"id\": 42, \"name\": \"Keyboard\", \"price\": 25 }",
+    code:
+      "// A REST API request from the frontend, using fetch\nconst response = await fetch(\"/api/products/42\");\nconst product = await response.json();\nconsole.log(product);\n// { id: 42, name: \"Keyboard\", price: 25 }",
+    codeLanguage: "JavaScript",
+    tags: ["REST", "API", "HTTP Methods", "JSON", "Stateless"],
+  },
+  {
+    id: 305,
+    slug: "soap-api",
+    section: "Web Technology",
+    parentSlug: "api",
+    title: "SOAP (Simple Object Access Protocol)",
+    tagline: "An older, strict, XML-based protocol for exchanging structured data, still common in enterprise systems",
+    description:
+      "<b>What SOAP Is, in Plain English</b>\nSOAP (Simple Object Access Protocol) is a formal, strictly-defined protocol for exchanging structured information between systems, using XML for every single message. Unlike REST (a flexible architectural style), SOAP is a rigid, precisely specified standard, with strict rules about message format.\n\n<b>Key Characteristics</b>\n• <b>XML-only</b> — every SOAP message is XML, both the request and the response, which is more verbose than REST's typical JSON\n• <b>WSDL (Web Services Description Language)</b> — a SOAP API is described by a formal WSDL document, which precisely defines every available operation, its expected inputs, and its outputs, in a machine-readable contract\n• <b>Built-in standards for security and reliability</b> — SOAP has formal, standardized extensions (like WS-Security) for things like message-level encryption and guaranteed delivery, which REST leaves entirely up to the developer to implement\n• <b>Protocol-independent</b> — SOAP can technically run over HTTP, SMTP, or other protocols, whereas REST is built specifically on top of HTTP\n\n<b>Why SOAP Is Less Common Today</b>\n• Much more verbose than REST — every message carries significant XML overhead\n• More rigid and complex to work with, requiring specialized tooling to generate and parse the strict XML format\n\n<b>Why SOAP Is Still Used</b>\nSOAP's strict standards for security, reliability, and formal contracts (via WSDL) still make it a common choice in enterprise environments — like banking and financial systems, or government systems — where formal guarantees around security and message delivery matter more than simplicity or lightness.",
+    note:
+      "Exam favourite: SOAP = strict protocol, XML-only, formally described by WSDL, common in enterprise/banking systems. REST = flexible architectural style, usually JSON, the default for modern public web/mobile APIs. If a question emphasizes strict formal contracts and built-in enterprise security standards, that's SOAP.",
+    diagram:
+      "  SOAP MESSAGE — always XML, wrapped in a formal envelope\n\n  <soap:Envelope>\n    <soap:Header>...</soap:Header>\n    <soap:Body>\n      <GetProduct>\n        <ProductId>42</ProductId>\n      </GetProduct>\n    </soap:Body>\n  </soap:Envelope>\n\n  Described formally by a WSDL document, listing every\n  available operation and its exact expected input/output.",
+    code:
+      "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <GetProductRequest>\n      <ProductId>42</ProductId>\n    </GetProductRequest>\n  </soap:Body>\n</soap:Envelope>",
+    codeLanguage: "XML",
+    tags: ["SOAP", "API", "XML", "WSDL", "Enterprise Systems"],
+  },
+  {
+    id: 306,
+    slug: "web-concepts",
+    section: "Web Technology",
+    title: "Web Concepts",
+    tagline: "How requests are made, how the web remembers who you are, and how it verifies your identity",
+    description:
+      "<b>What This Covers</b>\nWeb Concepts pulls together the everyday mechanics that make the modern web actually work as an interactive, personalized experience — how requests express intent, and how a fundamentally stateless protocol like HTTP is made to remember who a user is across multiple requests.\n\n<b>What You'll Learn Here</b>\n• <b>HTTP Methods</b> — GET, POST, PUT, PATCH, DELETE, and what each one is meant to express\n• <b>Cookies</b> — small pieces of data a server asks the browser to store and send back on every future request\n• <b>Sessions</b> — server-side state tied to one specific user, typically identified using a cookie\n• <b>Authentication</b> — verifying that a user actually is who they claim to be\n  ↳ These build directly on each other: HTTP itself has no memory between requests, cookies are the mechanism that lets a server ask the browser to remember something, sessions are what a server actually remembers using that cookie, and authentication is the specific, most important thing sessions are typically used to remember: who's logged in.",
+    note:
+      "Exam favourite: HTTP is stateless by design (each request is independent, with no memory of previous ones) — cookies and sessions are exactly the mechanism built on top of HTTP to work around that limitation and give the web 'memory.'",
+    diagram:
+      "  WEB CONCEPTS — how the topics connect\n\n  HTTP Methods       Cookies                Sessions              Authentication\n  (express intent ──► (small stored data ──► (server remembers ──► (verifying who\n   per request)         sent every request)    who you are)          you actually are)",
+    tags: ["Web Concepts", "HTTP Methods", "Cookies", "Sessions", "Authentication"],
+  },
+  {
+    id: 307,
+    slug: "http-methods",
+    section: "Web Technology",
+    parentSlug: "web-concepts",
+    title: "HTTP Methods",
+    tagline: "GET, POST, PUT, PATCH, DELETE — the standard verbs that express what a request is meant to do",
+    description:
+      "<b>What HTTP Methods Are, in Plain English</b>\nHTTP methods (also called HTTP verbs) tell a server what kind of operation a request wants to perform on a given resource — the same URL can support several different methods, each meaning something different.\n\n<b>The Core Methods</b>\n• <b>GET</b> — retrieve a resource, without changing anything on the server; safe to call repeatedly with no side effects\n• <b>POST</b> — create a new resource, or submit data to be processed (like submitting a form); each call typically creates something new\n• <b>PUT</b> — replace an existing resource entirely with the data provided\n• <b>PATCH</b> — partially update an existing resource, changing only the specific fields provided, leaving the rest untouched\n• <b>DELETE</b> — remove a resource\n\n<b>Idempotency — A Key Distinction</b>\nA method is idempotent if calling it multiple times with the same input produces the same result as calling it once (no extra side effects from repeating it).\n• <b>Idempotent</b> — GET, PUT, DELETE (deleting the same resource twice leaves it deleted either way; replacing a resource with the same data twice leaves it in the same state)\n• <b>Not idempotent</b> — POST (submitting the same 'create a new order' request twice typically creates two separate orders, not one)\n\n<b>PUT vs. PATCH</b>\nPUT replaces the entire resource (any fields not included are typically reset or removed); PATCH only changes the specific fields sent, leaving everything else exactly as it was — a common exam distinction, since both 'update' a resource but behave very differently if the request body is incomplete.",
+    note:
+      "Exam favourite: memorize which methods are idempotent (GET, PUT, DELETE — safe to repeat) versus which aren't (POST — repeating it can create duplicates). Also know PUT replaces the whole resource, while PATCH updates only the given fields.",
+    diagram:
+      "  HTTP METHODS — mapped to CRUD actions on /api/products/42\n\n  GET    /api/products/42   → Read     (idempotent)\n  POST   /api/products      → Create   (NOT idempotent — repeats create duplicates)\n  PUT    /api/products/42   → Replace  (idempotent — whole resource)\n  PATCH  /api/products/42   → Update   (idempotent — only given fields)\n  DELETE /api/products/42   → Delete   (idempotent)",
+    tags: ["HTTP Methods", "GET", "POST", "PUT", "PATCH", "DELETE", "Idempotency"],
+  },
+  {
+    id: 308,
+    slug: "cookies",
+    section: "Web Technology",
+    parentSlug: "web-concepts",
+    title: "Cookies",
+    tagline: "Small pieces of data a server asks the browser to store and automatically send back on every future request",
+    description:
+      "<b>What a Cookie Is, in Plain English</b>\nA cookie is a small piece of data that a server sends to a browser, which the browser then stores and automatically sends back to that same server with every future request — cookies are the basic mechanism that lets an otherwise stateless protocol (HTTP) carry small bits of memory between separate requests.\n\n<b>How Cookies Are Set and Sent</b>\n1. A server includes a `Set-Cookie` header in its HTTP response, containing a name and value (e.g. `Set-Cookie: theme=dark`)\n2. The browser stores this cookie\n3. On every subsequent request to that same server, the browser automatically includes a `Cookie` header containing that stored value, without the developer needing to do anything extra\n\n<b>What Cookies Are Commonly Used For</b>\n• <b>Session identification</b> — storing a session ID so the server can recognize a returning logged-in user (covered fully in the Sessions card)\n• <b>Preferences</b> — remembering a user's chosen settings, like a dark/light theme\n• <b>Tracking</b> — remembering a visitor across multiple pages or visits, commonly used by analytics and advertising\n\n<b>Cookie Attributes That Matter for Security</b>\n• <b>Expires/Max-Age</b> — how long the cookie should be kept before the browser deletes it automatically\n• <b>HttpOnly</b> — prevents JavaScript from reading the cookie's value, protecting it from certain attacks that try to steal cookies through injected scripts\n• <b>Secure</b> — tells the browser to only send this cookie over HTTPS, never over plain, unencrypted HTTP",
+    note:
+      "Exam favourite: cookies are what make HTTP feel stateful, even though HTTP itself is stateless — the browser does all the remembering and automatic resending; the server just reads whatever cookie comes back with each request.",
+    diagram:
+      "  COOKIES — browser remembers, server just reads\n\n  Request 1: Browser ──► Server\n             Server ──Set-Cookie: session=abc123──► Browser (stores it)\n\n  Request 2: Browser ──Cookie: session=abc123──► Server\n             (browser sends it automatically, every time, with no extra code)",
+    code:
+      "# Server response — asking the browser to store a cookie\nSet-Cookie: session=abc123; HttpOnly; Secure; Max-Age=3600\n\n# Every later request from that browser automatically includes:\nCookie: session=abc123",
+    codeLanguage: "HTTP",
+    tags: ["Cookies", "Web Concepts", "HttpOnly", "Secure Cookie", "Stateless"],
+  },
+  {
+    id: 309,
+    slug: "sessions",
+    section: "Web Technology",
+    parentSlug: "web-concepts",
+    title: "Sessions",
+    tagline: "Server-side state tied to one specific user, usually identified using a cookie holding a session ID",
+    description:
+      "<b>What a Session Is, in Plain English</b>\nA session is a way for a server to remember information about a specific user across multiple requests — for example, remembering that a user is logged in — by storing that information on the server itself, and giving the browser a small session ID (via a cookie) to identify which stored session belongs to it.\n\n<b>How a Typical Session Works, Step by Step</b>\n1. A user logs in successfully; the server creates a session record (e.g. containing their user ID) and stores it in server-side memory or a database, tagged with a unique, random session ID\n2. The server sends that session ID back to the browser as a cookie (e.g. `Set-Cookie: sessionId=xyz789`)\n3. On every future request, the browser automatically sends that cookie back\n4. The server looks up the session ID in its own storage, finds the associated user data, and knows exactly who's making the request — without the user needing to log in again on every single page\n\n<b>Why the Data Lives on the Server, Not in the Cookie</b>\nThe cookie itself only holds a short, random session ID — not the actual user data. The real data (who the user is, what's in their session) is safely stored on the server, where it can't be read or tampered with by the browser, and is only ever exposed if a request presents the matching session ID.\n\n<b>Session Expiry</b>\nSessions are typically set to expire after a period of inactivity (e.g. logging a user out automatically after 30 minutes of no activity), both for security and to free up server-side storage no longer being used.",
+    note:
+      "Exam favourite: a session's actual data lives on the SERVER, not inside the cookie itself — the cookie only carries a session ID used to look that data up. This is the key distinction between a plain cookie (client-side data) and a session (server-side data, referenced by a cookie).",
+    diagram:
+      "  SESSION — data lives on the server, cookie just holds the ID\n\n  Browser                              Server\n     │──login (username/password)─────►│\n     │                                  │  creates session: { userId: 7 }\n     │                                  │  stores it under sessionId = xyz789\n     │◄──Set-Cookie: sessionId=xyz789──│\n     │                                  │\n     │──Cookie: sessionId=xyz789──────►│  looks up xyz789 → finds { userId: 7 }\n     │                                  │  → knows exactly who's asking",
+    tags: ["Sessions", "Web Concepts", "Session ID", "Cookies", "Server-Side State"],
+  },
+  {
+    id: 310,
+    slug: "authentication",
+    section: "Web Technology",
+    parentSlug: "web-concepts",
+    title: "Authentication",
+    tagline: "Verifying that a user actually is who they claim to be, before granting access to anything",
+    description:
+      "<b>What Authentication Is, in Plain English</b>\nAuthentication is the process of verifying a user's identity — confirming that whoever is making a request really is who they claim to be, typically by checking a username and password, or some other proof of identity, before granting access to protected resources.\n\n<b>Common Authentication Approaches</b>\n• <b>Session-based authentication</b> — after a successful login, the server creates a session (see Sessions) and gives the browser a session ID cookie; every later request is authenticated by looking up that session on the server\n• <b>Token-based authentication (e.g. JWT)</b> — after login, the server issues a signed token (a JSON Web Token) containing the user's identity, which the client stores and sends with every request (often in an `Authorization` header rather than a cookie); the server verifies the token's signature without needing to look anything up in its own storage, making this approach easier to scale across many servers\n• <b>OAuth</b> — lets a user log in using an existing account from another trusted provider (e.g. 'Sign in with Google'), without ever sharing their Google password directly with the site they're logging into\n\n<b>Authentication vs. Authorization — A Frequently Confused Pair</b>\n• <b>Authentication</b> — answers 'who are you?' (verifying identity)\n• <b>Authorization</b> — answers 'what are you allowed to do?' (checking permissions), and always happens after authentication has already confirmed who the user is\n  ↳ Example: logging in with a correct password is authentication; being blocked from an admin page because your account isn't an admin is authorization — you were correctly identified, just not permitted.\n\n<b>Multi-Factor Authentication (MFA)</b>\nRequires more than one form of proof — typically something the user knows (a password) plus something they have (a one-time code sent to their phone) — making it much harder for an attacker to gain access even if they've stolen the password alone.",
+    note:
+      "Exam favourite: authentication (verifying WHO you are) and authorization (verifying WHAT you're allowed to do) are two distinct, sequential steps — authentication always happens first, and authorization decisions are made based on the identity authentication already confirmed.",
+    diagram:
+      "  AUTHENTICATION vs AUTHORIZATION\n\n  Login attempt ──► AUTHENTICATION: 'are you really Rajan?' ──► Yes\n                                                                  │\n                                                                  ▼\n  Request 'delete this user' ──► AUTHORIZATION: 'is Rajan allowed to delete users?'\n                                                    │                    │\n                                                   Yes                  No\n                                              action proceeds     403 Forbidden",
+    code:
+      "// Token-based (JWT) authentication — a typical request\nfetch(\"/api/profile\", {\n  headers: {\n    Authorization: \"Bearer eyJhbGciOiJIUzI1NiIs...\",  // signed token proving identity\n  },\n});\n\n// Server verifies the token's signature — no session lookup needed",
+    codeLanguage: "JavaScript",
+    tags: ["Authentication", "Authorization", "JWT", "OAuth", "MFA", "Web Concepts"],
   },
 ];
 
