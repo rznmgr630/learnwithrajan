@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -4114,6 +4114,433 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "/24  → 2^8  - 2 = 254 usable hosts\n/25  → 2^7  - 2 = 126 usable hosts\n/26  → 2^6  - 2 = 62  usable hosts\n/27  → 2^5  - 2 = 30  usable hosts\n/28  → 2^4  - 2 = 14  usable hosts",
     codeLanguage: "Text",
     tags: ["CIDR", "IP Addressing", "Classless Routing", "Subnetting", "Route Aggregation"],
+  },
+  // ─────────────────────────────────────────────
+  // SOFTWARE ENGINEERING
+  // ─────────────────────────────────────────────
+  {
+    id: 269,
+    slug: "sdlc-models",
+    section: "Software Engineering",
+    title: "SDLC Models",
+    tagline: "Five different ways to structure the process of building software, from strictly linear to fully iterative",
+    description:
+      "<b>What This Covers</b>\nSDLC Models looks at the Software Development Life Cycle — the sequence of phases every software project moves through (requirements, design, implementation, testing, deployment, maintenance) — and the five different ways that sequence can actually be organized in practice.\n\n<b>What SDLC Is, in Plain English</b>\nThe Software Development Life Cycle (SDLC) is the overall process a team follows to plan, build, test, and deliver software. Every model covered here goes through the same basic phases — the difference between them is entirely in the order, repetition, and flexibility of those phases.\n\n<b>What You'll Learn Here</b>\n• <b>Waterfall</b> — strictly linear, one phase fully finishes before the next begins\n• <b>Agile</b> — iterative, delivers working software in short cycles with constant customer feedback\n• <b>Spiral</b> — risk-driven, repeats the full cycle in loops that grow the software incrementally while managing risk\n• <b>Prototype</b> — builds a working mock-up early to nail down unclear requirements before building the real system\n• <b>Incremental</b> — builds and delivers the system in successive functional pieces (increments)\n  ↳ Each is covered in full next, with its own diagram and a real-world scenario for when it fits best.",
+    note:
+      "Exam favourite: the single biggest differentiator between all five models is how they handle changing requirements. Waterfall assumes requirements are fixed and known upfront; Agile, Spiral, Prototype, and Incremental all exist specifically because real-world requirements often aren't.",
+    diagram:
+      "  SDLC MODELS — from rigid to flexible\n\n  Waterfall          Incremental        Prototype         Spiral            Agile\n  (fully linear, ──► (delivered in ──►  (mock-up      ──►  (risk-driven ──► (short iterative\n   fixed upfront)     working pieces)   first, then         loops)          sprints, constant\n                                        build for real)                      feedback)",
+    tags: ["SDLC", "SDLC Models", "Waterfall", "Agile", "Spiral", "Prototype", "Incremental"],
+  },
+  {
+    id: 270,
+    slug: "waterfall-model",
+    section: "Software Engineering",
+    parentSlug: "sdlc-models",
+    title: "Waterfall Model",
+    tagline: "Strictly linear and sequential — each phase must fully finish before the next one begins",
+    description:
+      "<b>What the Waterfall Model Is, in Plain English</b>\nThe Waterfall Model is the oldest and simplest SDLC model — it moves through a fixed sequence of phases in strict order, like water flowing downhill over a series of steps, and once a phase is complete, the project moves on to the next one without going back.\n\n<b>The Phases, in Order</b>\n• <b>Requirements</b> — gather and document everything the system must do, completely, before any design work starts\n• <b>Design</b> — plan the system's architecture and detailed design based on those fixed requirements\n• <b>Implementation</b> — write the actual code according to the design\n• <b>Testing</b> — verify the completed system works correctly against the original requirements\n• <b>Deployment</b> — release the finished system to users\n• <b>Maintenance</b> — fix bugs and make small updates after release\n\n<b>Why It's Rarely Used Alone Today</b>\n• There's no going back — if a requirement is discovered to be wrong or missing during testing, fixing it means reopening the requirements phase, redoing design, and redoing implementation, all at significant cost\n• Working software isn't seen by the customer until very late in the project, so a fundamental misunderstanding of what was needed might not surface until it's expensive to fix\n\n<b>When It Still Makes Sense</b>\nWaterfall works well when requirements are very well understood, unlikely to change, and the project is small or has strict regulatory documentation needs — e.g. building a small, clearly-specified internal tool where the client already knows exactly what they want.",
+    note:
+      "Exam favourite: Waterfall's defining trait is 'no phase overlap, no going back' — if a question describes rigid, sequential phases where testing only happens at the very end, that's Waterfall.",
+    diagram:
+      "  WATERFALL MODEL — strictly one direction\n\n  Requirements ──► Design ──► Implementation ──► Testing ──► Deployment ──► Maintenance\n\n  Each phase must fully complete before the next starts.\n  No formal step back to an earlier phase once it's done.",
+    tags: ["Waterfall Model", "SDLC Models", "Linear Process", "Requirements"],
+  },
+  {
+    id: 271,
+    slug: "agile-model",
+    section: "Software Engineering",
+    parentSlug: "sdlc-models",
+    title: "Agile Model",
+    tagline: "Delivers working software in short, repeated cycles, adapting constantly to feedback and changing requirements",
+    description:
+      "<b>What the Agile Model Is, in Plain English</b>\nAgile is an iterative approach to building software, where instead of planning the entire project upfront, the work is broken into short cycles (commonly called sprints, typically 1–4 weeks each), and at the end of every cycle a small, working piece of the software is delivered and reviewed with the customer.\n\n<b>Core Principles (from the Agile Manifesto)</b>\n• Individuals and interactions over rigid processes and tools\n• Working software over exhaustive documentation\n• Customer collaboration over strict contract negotiation\n• Responding to change over following a fixed plan\n\n<b>How a Sprint Typically Works</b>\n1. The team picks a small set of requirements (user stories) to build in the upcoming sprint\n2. The team designs, builds, and tests just that slice of functionality\n3. At the end of the sprint, working software is demonstrated to the customer/stakeholders\n4. Feedback from that demo directly shapes what gets built in the next sprint\n\n<b>Common Agile Frameworks</b>\n• <b>Scrum</b> — organizes work into fixed-length sprints, with defined roles (Product Owner, Scrum Master, Development Team) and ceremonies (daily stand-up, sprint review, retrospective)\n• <b>Kanban</b> — visualizes work as cards moving across a board (To Do → In Progress → Done), with a continuous flow rather than fixed sprint boundaries\n\n<b>Why Agile Fits Uncertain Requirements</b>\nSince the customer sees working software every few weeks instead of only at the very end, misunderstandings get caught and corrected early and cheaply, rather than after months of work built on a wrong assumption.",
+    note:
+      "Exam favourite: Agile's whole point is embracing changing requirements through constant customer feedback and short iterations — this is the direct opposite of Waterfall, which assumes requirements are fixed from day one.",
+    diagram:
+      "  AGILE — repeated short cycles (sprints)\n\n  ┌─► Plan ──► Design ──► Build ──► Test ──► Review with customer ──┐\n  │                                                                    │\n  └────────────────── feedback shapes next sprint ◄───────────────────┘\n\n  Working software is delivered at the end of every sprint (1–4 weeks),\n  not just once at the very end of the whole project.",
+    tags: ["Agile Model", "SDLC Models", "Scrum", "Kanban", "Sprint", "Iterative"],
+  },
+  {
+    id: 272,
+    slug: "spiral-model",
+    section: "Software Engineering",
+    parentSlug: "sdlc-models",
+    title: "Spiral Model",
+    tagline: "A risk-driven model that repeats the full development cycle in expanding loops, managing risk at every turn",
+    description:
+      "<b>What the Spiral Model Is, in Plain English</b>\nThe Spiral Model (developed by Barry Boehm) combines the structure of Waterfall with the repetition of iterative development, but adds one distinctive extra step to every single loop: a dedicated risk analysis phase. Each pass through the spiral produces a more complete version of the system, and every pass starts by explicitly identifying and addressing the biggest risks before doing any real building.\n\n<b>The Four Quadrants, Repeated Every Loop</b>\n• <b>Planning</b> — determine objectives, alternatives, and constraints for this iteration\n• <b>Risk Analysis</b> — identify and evaluate the biggest risks in this iteration, and figure out how to reduce or eliminate them (this is the step that makes the Spiral Model distinct)\n• <b>Engineering</b> — design, build, and test the software for this iteration\n• <b>Evaluation</b> — review the result with the customer, and plan the next, larger loop around the spiral\n\n<b>Why It's Drawn as a Spiral</b>\nEach loop around the spiral represents one iteration, and the spiral grows outward with every loop — meaning the project literally gets bigger and more complete each time around, rather than starting from scratch or jumping straight to a finished product.\n\n<b>When It's Used</b>\nThe Spiral Model is best suited for large, complex, high-risk projects where getting requirements or technical feasibility wrong would be extremely costly — for example, large government or aerospace software systems, where the up-front cost of a dedicated risk-analysis phase every iteration is easily justified by the cost of failure.",
+    note:
+      "Exam favourite: the Spiral Model's one defining, unique phase compared to every other model here is Risk Analysis, repeated on every single loop. If a question emphasizes risk assessment built directly into the process, that's Spiral.",
+    diagram:
+      "  SPIRAL MODEL — four quadrants, repeated in growing loops\n\n           Planning\n              │\n  Evaluation ◄┼► Risk Analysis\n              │\n          Engineering\n\n  Loop 1 (small) → Loop 2 (bigger) → Loop 3 (bigger still) → ... → finished system\n  Every loop repeats all four quadrants; the spiral grows outward each time.",
+    tags: ["Spiral Model", "SDLC Models", "Risk Analysis", "Iterative", "Boehm"],
+  },
+  {
+    id: 273,
+    slug: "prototype-model",
+    section: "Software Engineering",
+    parentSlug: "sdlc-models",
+    title: "Prototype Model",
+    tagline: "Build a working mock-up first, gather feedback on it, then build the real system based on what was learned",
+    description:
+      "<b>What the Prototype Model Is, in Plain English</b>\nThe Prototype Model handles unclear or incomplete requirements by building a quick, working mock-up (a prototype) of the system first — something the customer can actually see and interact with — before committing to building the real, final system. The prototype is refined based on customer feedback until the requirements are clear enough to build the actual product properly.\n\n<b>How It Works, Step by Step</b>\n1. Gather rough, initial requirements — enough to start, even if incomplete\n2. Build a quick prototype demonstrating the key functionality or user interface, without worrying about performance, security, or full correctness\n3. Show the prototype to the customer and gather feedback\n4. Refine the prototype based on that feedback, and repeat steps 3–4 until the customer is satisfied the prototype captures what they actually want\n5. Use the now-clarified requirements to design and build the real, production-quality system, often discarding the rough prototype code entirely (a 'throwaway' prototype)\n\n<b>Why It's Different from Agile</b>\nWhile both involve iteration and feedback, the Prototype Model's iterations are specifically about clarifying requirements before real development begins — the prototype itself is often not meant to become the final product. Agile's iterations, in contrast, build the actual working product incrementally from the very first sprint.\n\n<b>When It's Used</b>\nBest suited for projects where the customer isn't fully sure what they want, or where a new, unfamiliar user interface needs to be validated with real users before investing heavily in building it for real — for example, a completely new kind of mobile app where the team needs to validate the interaction design before writing production code.",
+    note:
+      "Exam favourite: the Prototype Model's core purpose is clarifying unclear requirements through a quick, disposable mock-up — don't confuse the prototype itself with the final production system; often the prototype's code is thrown away entirely once requirements are clear.",
+    diagram:
+      "  PROTOTYPE MODEL — refine before building for real\n\n  Rough requirements ──► Build quick prototype ──► Customer reviews it\n         ▲                                                  │\n         │                                                  ▼\n         └────────── refine prototype ◄──── feedback: 'not quite, but closer'\n\n  Once requirements are clear enough → build the real, production system",
+    tags: ["Prototype Model", "SDLC Models", "Requirements Clarification", "Throwaway Prototype"],
+  },
+  {
+    id: 274,
+    slug: "incremental-model",
+    section: "Software Engineering",
+    parentSlug: "sdlc-models",
+    title: "Incremental Model",
+    tagline: "Builds and delivers the system in successive, functional pieces, each one adding on top of the last",
+    description:
+      "<b>What the Incremental Model Is, in Plain English</b>\nThe Incremental Model breaks the whole system down into smaller functional pieces (increments), and builds, tests, and delivers each increment one after another — each increment adds new, working functionality on top of what was delivered before, until the full system is complete.\n\n<b>How It Works, Step by Step</b>\n1. The overall requirements are gathered upfront and split into logical increments (e.g. Increment 1: user login, Increment 2: product catalog, Increment 3: checkout)\n2. Each increment goes through its own mini requirements → design → build → test cycle (essentially a small Waterfall for just that piece)\n3. Each finished increment is delivered and put into use, adding to the increments already delivered\n4. This repeats until every planned increment has been built and the full system is complete\n\n<b>Why It's Different from Agile</b>\nIncremental development is about delivering the whole system's pre-planned pieces one at a time, with each increment usually still following a fairly structured, upfront-planned mini life cycle. Agile goes further by constantly re-prioritizing what to build next based on ongoing feedback, rather than working through a fixed, pre-defined list of increments.\n\n<b>Why It's Useful</b>\n• Users get real, usable functionality much earlier than with pure Waterfall, since Increment 1 can go live long before the whole system is finished\n• Problems in an early increment are caught and fixed before later increments are built on top of it\n• Easier to manage risk, since each increment is a smaller, more contained unit of work than the entire system at once\n  ↳ Real-world example: an e-commerce site launching with just browsing and login first (Increment 1), adding a shopping cart in Increment 2, and adding payment processing in Increment 3 — each one delivered and usable before the next begins.",
+    note:
+      "Exam favourite: Incremental delivers the system in pre-planned, working pieces (increments) that stack on top of each other. Contrast this with Agile, which continuously re-prioritizes what to build next based on ongoing feedback rather than a fixed increment plan.",
+    diagram:
+      "  INCREMENTAL MODEL — pieces stack up into the full system\n\n  Increment 1: Login          [built, tested, delivered]\n  Increment 2: Catalog                     [built, tested, delivered] ← adds on top of Increment 1\n  Increment 3: Checkout                                [built, tested, delivered] ← adds on top of 1+2\n\n  Each increment is fully working software, live and usable,\n  before the next increment is even started.",
+    tags: ["Incremental Model", "SDLC Models", "Increments", "Modular Delivery"],
+  },
+  {
+    id: 275,
+    slug: "requirement-engineering",
+    section: "Software Engineering",
+    title: "Requirement Engineering",
+    tagline: "Turning a vague idea of what's needed into a precise, agreed, written specification",
+    description:
+      "<b>What This Covers</b>\nRequirement Engineering is the process of figuring out exactly what a piece of software needs to do, before any design or coding begins — arguably the single most important phase in the whole SDLC, since almost every downstream problem in a project (rework, missed deadlines, an unhappy customer) traces back to a requirement that was missed, misunderstood, or never actually written down clearly.\n\n<b>What You'll Learn Here</b>\n• <b>Requirement Gathering</b> — the techniques used to collect requirements from stakeholders (interviews, questionnaires, observation, brainstorming)\n• <b>Analysis</b> — organizing, prioritizing, and modeling the gathered requirements, and checking they're actually feasible\n• <b>Documentation</b> — writing everything down formally in a Software Requirements Specification (SRS), the single agreed reference document everyone works from\n  ↳ These happen roughly in this order: first gather what stakeholders say they need, then analyze and refine it into something coherent and buildable, then write it all down formally so there's one shared source of truth.",
+    note:
+      "Exam favourite: requirement engineering is where the majority of project failures actually originate — a bug found in testing is cheap to fix; a requirement misunderstood from day one and only discovered at delivery is enormously expensive to fix.",
+    diagram:
+      "  REQUIREMENT ENGINEERING — from vague idea to written spec\n\n  Requirement          Analysis              Documentation\n  Gathering      ──►   (organize,      ──►   (write the formal\n  (talk to             prioritize,           SRS document —\n   stakeholders)        check feasibility)    the shared source of truth)",
+    tags: ["Requirement Engineering", "Requirement Gathering", "Analysis", "Documentation", "SRS"],
+  },
+  {
+    id: 276,
+    slug: "requirement-gathering",
+    section: "Software Engineering",
+    parentSlug: "requirement-engineering",
+    title: "Requirement Gathering",
+    tagline: "The techniques used to collect what stakeholders actually need from the software",
+    description:
+      "<b>What Requirement Gathering Is, in Plain English</b>\nRequirement gathering (also called elicitation) is the process of actively collecting information from stakeholders — clients, end users, managers, domain experts — about what the software needs to do, and what constraints it needs to work within.\n\n<b>Common Techniques</b>\n• <b>Interviews</b> — one-on-one or small-group conversations with stakeholders, asking directly what they need and why; good for depth, but only reaches a few people at a time\n• <b>Questionnaires/Surveys</b> — written questions sent to a large number of stakeholders at once; good for reaching many people quickly, but gives less depth than an interview\n• <b>Observation</b> — watching how people actually do their current work (before the new software exists), which often reveals real needs and workarounds that people wouldn't think to mention in an interview\n• <b>Brainstorming</b> — group sessions where stakeholders and the development team generate and discuss ideas together, useful early on when requirements are still very rough\n• <b>Document analysis</b> — reviewing existing documentation, forms, reports, or old systems to understand current processes and rules that the new system needs to replicate or improve\n\n<b>Why Multiple Techniques Are Usually Combined</b>\nDifferent techniques surface different kinds of information — an interview might reveal what a manager thinks the process is, while observation reveals what employees actually do in practice, which are sometimes surprisingly different. Combining several techniques catches gaps that any single one would miss.\n  ↳ Real-world example: before building a new hospital patient-management system, the team might interview doctors and administrators, observe nurses during a shift to see their actual workflow, and review the paper forms currently in use — combining all three to build a complete picture.",
+    note:
+      "Exam favourite: interviews give depth but reach few people; questionnaires reach many people but with less depth; observation reveals what people actually do, not just what they say they do. Pick the technique based on what kind of information you're missing.",
+    diagram:
+      "  REQUIREMENT GATHERING TECHNIQUES\n\n  Interviews        → deep, one-on-one, but slow to scale\n  Questionnaires    → wide reach, fast, but shallow\n  Observation       → reveals real behavior, not just stated opinion\n  Brainstorming     → good for generating rough, early ideas as a group\n  Document analysis → understands existing rules/processes already in place",
+    tags: ["Requirement Gathering", "Elicitation", "Requirement Engineering", "Interviews", "Observation"],
+  },
+  {
+    id: 277,
+    slug: "requirement-analysis",
+    section: "Software Engineering",
+    parentSlug: "requirement-engineering",
+    title: "Analysis",
+    tagline: "Organizing, prioritizing, and validating gathered requirements before anything gets written down formally",
+    description:
+      "<b>What Requirement Analysis Is, in Plain English</b>\nRequirement analysis takes the raw, often messy list of things stakeholders said they need (from Requirement Gathering) and turns it into an organized, consistent, and feasible set of requirements — resolving conflicts, filling gaps, and checking that what's being asked for is actually possible to build.\n\n<b>Key Activities</b>\n• <b>Classification</b> — sorting requirements into functional requirements (what the system must do, e.g. 'users can reset their password') and non-functional requirements (qualities the system must have, e.g. 'the page must load in under 2 seconds')\n• <b>Prioritization</b> — deciding which requirements are essential (must-have) versus nice-to-have, since almost no project can build everything requested at once\n• <b>Conflict resolution</b> — different stakeholders often want contradictory things (e.g. sales wants faster checkout with fewer security checks, security wants more verification steps); analysis is where these conflicts get surfaced and negotiated\n• <b>Feasibility checking</b> — verifying a requirement is actually achievable given the team's technical capability, budget, and timeline, before it gets locked into the specification\n• <b>Modeling</b> — representing requirements visually (e.g. as use case diagrams or data flow diagrams) to make them easier to review and validate with stakeholders\n\n<b>Why This Step Can't Be Skipped</b>\nSkipping straight from a raw wish-list to writing code means conflicting or infeasible requirements only get discovered mid-build, when fixing them is far more expensive than catching them on paper during analysis.",
+    note:
+      "Exam favourite: know the functional vs. non-functional requirement distinction cold — functional describes what the system does (a feature); non-functional describes a quality attribute of how it does it (performance, security, usability, reliability).",
+    diagram:
+      "  REQUIREMENT ANALYSIS — messy input, organized output\n\n  Raw stakeholder wish-list\n         │\n         ▼\n  Classify (functional vs non-functional)\n         │\n         ▼\n  Prioritize (must-have vs nice-to-have)\n         │\n         ▼\n  Resolve conflicts + check feasibility\n         │\n         ▼\n  Clean, agreed, buildable requirement set",
+    tags: ["Requirement Analysis", "Functional Requirements", "Non-Functional Requirements", "Requirement Engineering"],
+  },
+  {
+    id: 278,
+    slug: "requirement-documentation",
+    section: "Software Engineering",
+    parentSlug: "requirement-engineering",
+    title: "Documentation",
+    tagline: "Writing every agreed requirement down formally into the Software Requirements Specification (SRS)",
+    description:
+      "<b>What Requirement Documentation Is, in Plain English</b>\nRequirement documentation is the process of writing down every analyzed, agreed-upon requirement into a formal, structured document — most commonly called the Software Requirements Specification (SRS) — which becomes the single shared reference every stakeholder, designer, developer, and tester works from for the rest of the project.\n\n<b>What an SRS Typically Contains</b>\n• <b>Introduction</b> — the purpose and scope of the system being built\n• <b>Functional requirements</b> — a detailed, itemized list of everything the system must do\n• <b>Non-functional requirements</b> — performance, security, usability, and reliability expectations\n• <b>Constraints</b> — technical, budget, or timeline limitations the project must work within\n• <b>Use cases or user stories</b> — concrete scenarios describing how a user will actually interact with the system to accomplish a goal\n\n<b>Why Documentation Matters</b>\n• It gives every stakeholder (client, designer, developer, tester) one shared, agreed-upon source of truth, instead of everyone working from their own memory or assumptions of a verbal conversation\n• It's what testing is later validated against — a tester checks the finished system against the documented requirements, not against whatever they personally remember being discussed\n• It provides a paper trail if there's ever a dispute later about whether a particular feature was actually part of the agreed scope\n\n<b>The Trade-off With Agile</b>\nHeavily-documented SRS documents are more associated with Waterfall-style projects. Agile projects still document requirements, but typically in a lighter-weight form (like user stories: 'As a [user], I want to [do something], so that [benefit]'), favoring working software and conversation over an exhaustive upfront document.",
+    note:
+      "Exam favourite: the SRS document is what testing is measured against later — if the finished system does something the SRS never specified, that's technically 'scope creep,' not a bug; if it fails to do something the SRS specified, that's a genuine defect.",
+    diagram:
+      "  SOFTWARE REQUIREMENTS SPECIFICATION (SRS)\n\n  ┌─────────────────────────────────┐\n  │ Introduction (purpose, scope)    │\n  │ Functional Requirements          │\n  │ Non-Functional Requirements      │\n  │ Constraints                      │\n  │ Use Cases / User Stories         │\n  └─────────────────────────────────┘\n     ↑ the single shared source of truth\n       every later phase (design, build, test) refers back to",
+    tags: ["Requirement Documentation", "SRS", "Software Requirements Specification", "Requirement Engineering"],
+  },
+  {
+    id: 279,
+    slug: "software-design",
+    section: "Software Engineering",
+    title: "Software Design",
+    tagline: "Turning agreed requirements into a concrete blueprint for how the system will actually be built",
+    description:
+      "<b>What This Covers</b>\nSoftware Design is the phase where the requirements gathered and documented earlier get translated into an actual technical blueprint — how the system is visually modeled, how its major pieces are structured and organized, and the proven, reusable solutions (design patterns) commonly used to solve recurring design problems.\n\n<b>What You'll Learn Here</b>\n• <b>UML</b> — the Unified Modeling Language, a standard set of diagrams used to visually model a system's structure and behavior\n• <b>Architecture</b> — the high-level structure of a system: how its major components are organized and how they interact\n• <b>Design Patterns</b> — proven, reusable solution templates for common design problems, categorized as creational, structural, or behavioral\n  ↳ These build on each other: UML is how designs are communicated and visualized, Architecture is the high-level shape those diagrams describe, and Design Patterns are the specific, battle-tested solutions used within that architecture to solve recurring problems.",
+    note:
+      "Exam favourite: don't confuse Architecture (the big-picture structure of the whole system, e.g. client-server vs microservices) with Design Patterns (small, specific, reusable solutions to individual design problems within that structure, e.g. Singleton or Observer).",
+    diagram:
+      "  SOFTWARE DESIGN — how the topics connect\n\n  UML                Architecture              Design Patterns\n  (diagrams to  ──►  (the big-picture     ──►   (specific, reusable\n   visualize the      structure of the           solutions used\n   design)             whole system)              within that structure)",
+    tags: ["Software Design", "UML", "Software Architecture", "Design Patterns"],
+  },
+  {
+    id: 280,
+    slug: "uml",
+    section: "Software Engineering",
+    parentSlug: "software-design",
+    title: "UML (Unified Modeling Language)",
+    tagline: "A standard set of diagrams used to visually model a system's structure and behavior",
+    description:
+      "<b>What UML Is, in Plain English</b>\nUML (Unified Modeling Language) is a standardized visual language for describing the design of a software system — instead of every team inventing its own diagramming style, UML gives a common set of diagram types and notation that any developer familiar with UML can read and understand, regardless of what team or company they work for.\n\n<b>Key UML Diagram Types</b>\n• <b>Class diagram</b> — shows the classes in a system, their attributes, their methods, and the relationships between them (inheritance, association, composition); the most commonly used UML diagram for object-oriented design\n• <b>Use case diagram</b> — shows the system's functionality from the point of view of its users (actors), depicting which actions (use cases) each type of user can perform\n• <b>Sequence diagram</b> — shows the order in which objects interact over time to complete a specific operation, useful for understanding the exact flow of a particular scenario\n• <b>Activity diagram</b> — shows the flow of control through a process or workflow, similar in spirit to a flowchart, useful for modeling business logic or a multi-step process\n\n<b>Why Diagrams Instead of Just Prose</b>\nA class diagram communicates a design's structure far faster and more precisely than a paragraph describing the same thing — relationships between classes (which one inherits from which, which one contains which) are immediately visible in a diagram in a way that's much harder to follow in plain text.\n\n<b>Real-World Example</b>\nBefore writing any code for an e-commerce system, a team might draw a class diagram showing `Customer`, `Order`, and `Product` classes and how they relate (a Customer places many Orders, an Order contains many Products), giving everyone a shared, precise picture of the data model before implementation begins.",
+    note:
+      "Exam favourite: know which diagram fits which purpose — class diagram = static structure (classes and relationships), use case diagram = user-facing functionality, sequence diagram = order of interactions over time, activity diagram = workflow/process flow.",
+    diagram:
+      "  UML CLASS DIAGRAM — example\n\n  ┌───────────────┐        places        ┌───────────────┐\n  │   Customer    │ ───────1───────► *  │     Order     │\n  ├───────────────┤                      ├───────────────┤\n  │ - name         │                      │ - orderDate    │\n  │ - email        │                      │ - total        │\n  ├───────────────┤                      ├───────────────┤\n  │ + placeOrder() │                      │ + calculateTotal() │\n  └───────────────┘                      └───────────────┘\n                                                 │ contains\n                                                 ▼ *\n                                          ┌───────────────┐\n                                          │    Product    │\n                                          └───────────────┘",
+    tags: ["UML", "Software Design", "Class Diagram", "Use Case Diagram", "Sequence Diagram"],
+  },
+  {
+    id: 281,
+    slug: "software-architecture",
+    section: "Software Engineering",
+    parentSlug: "software-design",
+    title: "Architecture",
+    tagline: "The high-level structure of a system — how its major components are organized and how they interact",
+    description:
+      "<b>What Software Architecture Is, in Plain English</b>\nSoftware architecture is the high-level structure of a system — the major components it's divided into, and how those components communicate and depend on each other. It's decided early and is expensive to change later, since every subsequent design and implementation decision builds on top of it.\n\n<b>Common Architectural Styles</b>\n• <b>Layered (n-tier) architecture</b> — organizes the system into horizontal layers (e.g. presentation layer, business logic layer, data access layer), where each layer only talks to the layer directly below it; simple and widely understood, but can become rigid at large scale\n• <b>Client-Server architecture</b> — splits the system into a client (requests services/data) and a server (provides them); the classic model behind most web applications\n• <b>Microservices architecture</b> — splits the system into many small, independently deployable services, each responsible for one specific business capability, communicating over a network (often via APIs); scales and deploys flexibly, but adds real coordination complexity\n• <b>MVC (Model-View-Controller)</b> — separates an application into Model (data and business logic), View (what the user sees), and Controller (handles user input and coordinates Model and View); very common in web application frameworks\n\n<b>Why the Choice Matters</b>\nA layered architecture might be perfectly fine for a small internal tool with one small team, but the same choice could become a serious bottleneck for a large product needing dozens of teams to deploy independently — which is exactly the kind of scenario microservices architecture is designed to handle instead.",
+    note:
+      "Exam favourite: architecture decisions are made early and are expensive to reverse — unlike choosing a specific design pattern (a smaller, more local decision), choosing the wrong overall architecture can require redesigning the entire system.",
+    diagram:
+      "  COMMON ARCHITECTURAL STYLES\n\n  Layered:        [Presentation] → [Business Logic] → [Data Access]\n\n  Client-Server:  [Client] ──requests──► [Server] ──data/response──► [Client]\n\n  Microservices:  [Auth Service] [Orders Service] [Payments Service]  ← independent, communicate over network\n\n  MVC:            [Controller] ──updates──► [Model] ──notifies──► [View]",
+    tags: ["Software Architecture", "Software Design", "Layered Architecture", "Client-Server", "Microservices", "MVC"],
+  },
+  {
+    id: 282,
+    slug: "design-patterns",
+    section: "Software Engineering",
+    parentSlug: "software-design",
+    title: "Design Patterns",
+    tagline: "Proven, reusable solution templates for design problems that come up again and again",
+    description:
+      "<b>What Design Patterns Are, in Plain English</b>\nA design pattern is a general, reusable solution to a design problem that comes up repeatedly across many different projects — not finished code to copy-paste, but a proven template or approach that's been refined and battle-tested by countless developers solving the same underlying problem before.\n\n<b>The Three Categories</b>\n• <b>Creational patterns</b> — deal with how objects are created\n  ↳ Example: <b>Singleton</b> — ensures a class has only one instance, and provides one global point of access to it (e.g. a single shared database connection manager)\n• <b>Structural patterns</b> — deal with how classes and objects are composed into larger structures\n  ↳ Example: a facade pattern provides a simple, unified interface to a complex set of underlying subsystems, hiding that complexity from the code that uses it\n• <b>Behavioral patterns</b> — deal with how objects communicate and distribute responsibility\n  ↳ Example: <b>Observer</b> — lets one object (the subject) notify multiple other objects (observers) automatically whenever its state changes, without the subject needing to know exactly who's listening\n\n<b>Why Design Patterns Matter</b>\nUsing a well-known, named pattern means other developers immediately recognize the intent behind the code just from its shape — saying 'this uses the Observer pattern' communicates far more, far faster, than describing the same mechanism from scratch every time.\n\n<b>Worked Example — Singleton Pattern</b>\nA Singleton guarantees only one instance of a class is ever created, no matter how many times the rest of the code asks for one — commonly used for things like a single shared configuration object or a single shared database connection pool.",
+    note:
+      "Exam favourite: know the three categories (Creational, Structural, Behavioral) and at least one named example of each — Singleton (creational), Facade (structural), Observer (behavioral) are the three most frequently tested examples.",
+    diagram:
+      "  DESIGN PATTERN CATEGORIES\n\n  Creational    → how objects get CREATED       (e.g. Singleton, Factory)\n  Structural    → how objects are COMPOSED      (e.g. Facade, Adapter)\n  Behavioral    → how objects COMMUNICATE        (e.g. Observer, Strategy)",
+    code:
+      "class DatabaseConnection {\n  private static instance: DatabaseConnection;\n\n  private constructor() {\n    // expensive setup happens only once\n  }\n\n  static getInstance(): DatabaseConnection {\n    if (!DatabaseConnection.instance) {\n      DatabaseConnection.instance = new DatabaseConnection();\n    }\n    return DatabaseConnection.instance;\n  }\n}\n\n// Every call returns the SAME single instance\nconst db1 = DatabaseConnection.getInstance();\nconst db2 = DatabaseConnection.getInstance();\n// db1 === db2  → true",
+    codeLanguage: "TypeScript",
+    tags: ["Design Patterns", "Singleton", "Observer", "Software Design", "Creational Patterns"],
+  },
+  {
+    id: 283,
+    slug: "software-testing",
+    section: "Software Engineering",
+    title: "Testing",
+    tagline: "Verifying the software actually works — at every level, and from every angle",
+    description:
+      "<b>What This Covers</b>\nTesting looks at the different levels at which software gets verified (from a single function up to the whole finished product) and the two fundamentally different approaches testers can take when writing those tests.\n\n<b>What You'll Learn Here</b>\n• <b>Types</b> — Unit, Integration, System, and Acceptance testing: four levels, tested in increasing scope, from a single function up to the whole product accepted by the customer\n• <b>Testing Methods</b> — Black Box and White Box testing: two fundamentally different approaches to writing tests, based on whether the tester can see the code's internals or not\n  ↳ 'Types' answers 'what scope of the system am I testing right now?' while 'Methods' answers 'am I testing based on what the code should do, or based on how the code actually works internally?' — these are two independent dimensions, and any type of testing can use either method.",
+    note:
+      "Exam favourite: testing types (Unit/Integration/System/Acceptance) and testing methods (Black Box/White Box) are two separate, independent classifications — a question might ask you to combine them (e.g. 'unit testing is most often done using White Box techniques, since the developer already has the code in front of them').",
+    diagram:
+      "  TESTING — two independent dimensions\n\n  Types (scope):     Unit → Integration → System → Acceptance   (smallest to largest)\n  Methods (approach): Black Box (no code visibility)  vs  White Box (full code visibility)",
+    tags: ["Software Testing", "Unit Testing", "Integration Testing", "System Testing", "Acceptance Testing", "Black Box", "White Box"],
+  },
+  {
+    id: 284,
+    slug: "testing-types",
+    section: "Software Engineering",
+    parentSlug: "software-testing",
+    title: "Types of Testing",
+    tagline: "Unit, Integration, System, and Acceptance testing — four levels, tested in increasing scope",
+    description:
+      "<b>What This Covers</b>\nTypes of Testing groups tests by scope — how much of the system is being verified at once, ranging from a single isolated function all the way up to the entire finished product being validated by the customer.\n\n<b>The Four Levels, Smallest to Largest</b>\n• <b>Unit testing</b> — tests a single function, method, or class in complete isolation\n• <b>Integration testing</b> — tests how multiple already-unit-tested modules work together when combined\n• <b>System testing</b> — tests the entire, fully integrated system as a whole, against the original requirements\n• <b>Acceptance testing</b> — the customer or end users verify the finished system actually meets their business needs, before final delivery\n  ↳ Each is covered in full in its own card next, in this exact order — the order they're normally performed in during a real project.",
+    note:
+      "Exam favourite: the four types form a strict progression in scope — Unit (smallest, one function) → Integration (a few connected modules) → System (the whole application) → Acceptance (the whole application, judged by the customer against real business needs).",
+    diagram:
+      "  TESTING TYPES — increasing scope\n\n  Unit          Integration        System              Acceptance\n  (one       ►  (a few modules  ►  (the whole      ►   (customer signs off,\n   function)     working together)   application)         'this is what we needed')",
+    tags: ["Testing Types", "Unit Testing", "Integration Testing", "System Testing", "Acceptance Testing"],
+  },
+  {
+    id: 285,
+    slug: "unit-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-types",
+    title: "Unit Testing",
+    tagline: "Testing a single function, method, or class in complete isolation from the rest of the system",
+    description:
+      "<b>What Unit Testing Is, in Plain English</b>\nUnit testing verifies that a single, small piece of code — usually one function or one method — behaves correctly on its own, completely isolated from the rest of the system. It's the smallest, most fine-grained level of testing, and normally the very first kind of test written for any piece of new code.\n\n<b>Why Isolation Matters</b>\nTo truly isolate the unit being tested, any other code it depends on (a database call, another function, an external API) is typically replaced with a mock or stub — a fake stand-in that returns a controlled, predictable value — so a test failure can only mean the unit itself is broken, not some other unrelated piece of the system.\n\n<b>Why Unit Tests Are Written First</b>\n• They run extremely fast, since there's no real database, network, or file system involved — just the isolated logic\n• A failing unit test points precisely to the exact function that's broken, rather than a vague 'something in the system is wrong'\n• They're normally written by the developer who wrote the code itself, since they already have the code's internal logic in front of them (this is why unit testing is most commonly done using White Box techniques)\n\n<b>Worked Example</b>\nA function that calculates a shopping cart's total price after a discount is unit tested by calling it directly with known inputs (e.g. a cart worth $100 with a 10% discount) and asserting the exact expected output ($90), with no real database or checkout process involved at all.",
+    note:
+      "Exam favourite: unit testing isolates the smallest testable piece of code, typically using mocks/stubs to fake out any dependencies, and is normally written by the same developer who wrote the code, using White Box techniques (since they can see the code directly).",
+    diagram:
+      "  UNIT TESTING — one function, in isolation\n\n  function calculateTotal(price, discountPercent) {\n    return price - (price * discountPercent / 100);\n  }\n\n  Test: calculateTotal(100, 10) → expect 90\n  Test: calculateTotal(50, 0)   → expect 50\n\n  No real database, network, or other modules involved —\n  just this one function, tested directly.",
+    code:
+      "function calculateTotal(price, discountPercent) {\n  return price - (price * discountPercent) / 100;\n}\n\n// Unit tests — isolated, fast, no external dependencies\ntest(\"applies a 10% discount correctly\", () => {\n  expect(calculateTotal(100, 10)).toBe(90);\n});\n\ntest(\"handles zero discount\", () => {\n  expect(calculateTotal(50, 0)).toBe(50);\n});",
+    codeLanguage: "JavaScript",
+    tags: ["Unit Testing", "Testing Types", "Mocks", "White Box Testing"],
+  },
+  {
+    id: 286,
+    slug: "integration-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-types",
+    title: "Integration Testing",
+    tagline: "Testing how multiple already-unit-tested modules behave once they're actually combined",
+    description:
+      "<b>What Integration Testing Is, in Plain English</b>\nIntegration testing verifies that multiple modules — each of which may already pass its own individual unit tests perfectly — actually work correctly once combined together. A module can be flawless on its own and still fail once connected to another module, if the two don't correctly agree on how they exchange data.\n\n<b>Why Modules Can Pass Unit Tests but Fail Integration</b>\n• A payment module might expect an amount as a whole number of cents; an order module might send it as a decimal dollar amount — each module's own unit tests pass, since each was tested using the input format its own developer assumed, but combining them produces a wrong result\n• A database module might work perfectly against a test database, but fail once connected to the real production database's actual schema\n\n<b>Common Integration Testing Approaches</b>\n• <b>Big Bang</b> — combine all modules at once and test the whole integrated group together; simple to set up, but a failure gives little indication of which specific module combination is at fault\n• <b>Incremental</b> — integrate and test modules one at a time, in small groups, adding one more module at each step; slower to set up, but pinpoints the source of a failure far more precisely, since only one new module was added since the last passing test\n\n<b>Real-World Example</b>\nAn order-processing module and a payment-processing module might each pass their own unit tests individually, but integration testing is what catches the case where the order module sends the payment module a customer ID in the wrong format, causing every real checkout attempt to fail.",
+    note:
+      "Exam favourite: integration testing exists specifically to catch interface/interaction bugs between modules that unit testing, by design, cannot catch — since unit testing deliberately isolates each module from the others.",
+    diagram:
+      "  INTEGRATION TESTING — catching interface mismatches\n\n  Order Module          Payment Module\n  (unit tests pass) ──► (unit tests pass)\n         │                      │\n         └── sends customerId ──┘\n              as a NUMBER              but Payment Module expects\n                                        customerId as a STRING\n\n  Integration test catches this mismatch — even though\n  BOTH modules passed their own unit tests individually.",
+    tags: ["Integration Testing", "Testing Types", "Big Bang Integration", "Incremental Integration"],
+  },
+  {
+    id: 287,
+    slug: "system-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-types",
+    title: "System Testing",
+    tagline: "Testing the entire, fully integrated application as a whole, against the original requirements",
+    description:
+      "<b>What System Testing Is, in Plain English</b>\nSystem testing verifies the entire, fully integrated software application — every module combined together, running as one complete product — against the original requirements documented earlier in the SDLC. It's the first point in testing where the software is evaluated as a whole finished product, rather than piece by piece.\n\n<b>What System Testing Checks</b>\n• <b>Functional correctness</b> — does the complete system do everything the requirements say it should?\n• <b>Non-functional requirements</b> — performance under expected load, security against common attacks, usability of the overall user experience\n• <b>End-to-end workflows</b> — complete real-world scenarios from start to finish (e.g. a customer browsing, adding items to a cart, checking out, and receiving a confirmation email — testing the whole journey, not just one step)\n\n<b>Who Performs It</b>\nSystem testing is typically carried out by a dedicated QA (Quality Assurance) team, separate from the developers who wrote the code — a different team is less likely to unconsciously assume the same things the original developers assumed, and tests strictly against what was written in the requirements document.\n\n<b>System Testing vs. Integration Testing</b>\nIntegration testing checks that a handful of specific modules work correctly together; system testing checks the entire application, fully assembled, against the complete set of requirements — a broader, product-level check rather than a module-interaction check.",
+    note:
+      "Exam favourite: system testing is performed against the documented requirements (the SRS), by a team independent from development, and evaluates the software as one complete, whole product — not module by module.",
+    diagram:
+      "  SYSTEM TESTING — the whole product, against requirements\n\n  [All modules integrated: Login + Catalog + Cart + Checkout + Email]\n                       │\n                       ▼\n           QA team tests the WHOLE application\n           against the original SRS requirements\n                       │\n                       ▼\n     Full end-to-end scenario: browse → add to cart → checkout → confirmation email",
+    tags: ["System Testing", "Testing Types", "QA", "Requirements", "End-to-End"],
+  },
+  {
+    id: 288,
+    slug: "acceptance-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-types",
+    title: "Acceptance Testing",
+    tagline: "The customer or end users verify the finished system actually meets their real business needs",
+    description:
+      "<b>What Acceptance Testing Is, in Plain English</b>\nAcceptance testing is the final level of testing, where the customer (or real end users, standing in for the customer) verify that the finished, fully-tested system actually meets their real business needs — this is the last checkpoint before the software is formally accepted and delivered.\n\n<b>User Acceptance Testing (UAT)</b>\nThe most common form of acceptance testing is UAT (User Acceptance Testing), where actual end users try the system doing their real day-to-day tasks, checking not just 'does this technically work' but 'does this actually solve my problem, in a way that fits how I really work.'\n\n<b>Why This Is Different From System Testing</b>\n• System testing is performed by a QA team checking the software against the written requirements document\n• Acceptance testing is performed by the actual customer/users checking the software against their real-world needs, which sometimes reveals gaps even a perfectly written requirements document missed\n  ↳ It's possible for software to pass every system test (matching the written spec exactly) and still fail acceptance testing, if the written spec itself didn't fully capture what the customer actually needed.\n\n<b>What Happens After Acceptance Testing</b>\nIf the customer accepts the system, it moves to deployment/release. If issues are found, they're documented and typically addressed before a final sign-off, sometimes going through another round of acceptance testing afterward.",
+    note:
+      "Exam favourite: acceptance testing is performed by the customer/end users (not developers or QA), and it's specifically checking real business needs, not just the written spec — a system can pass every prior test level and still fail acceptance if the written requirements missed something important.",
+    diagram:
+      "  ACCEPTANCE TESTING — the final checkpoint\n\n  Unit ──► Integration ──► System ──► ACCEPTANCE (by the customer)\n                                            │\n                              ┌─────────────┴─────────────┐\n                        Accepted                    Issues found\n                    → deployment                 → fix, re-test before sign-off",
+    tags: ["Acceptance Testing", "UAT", "Testing Types", "Customer Sign-off"],
+  },
+  {
+    id: 289,
+    slug: "testing-methods",
+    section: "Software Engineering",
+    parentSlug: "software-testing",
+    title: "Testing Methods",
+    tagline: "Black Box and White Box testing — two fundamentally different approaches based on code visibility",
+    description:
+      "<b>What This Covers</b>\nTesting Methods groups tests by approach rather than by scope — specifically, by whether the person writing the test can see the code's internal logic or not.\n\n<b>The Two Methods, at a Glance</b>\n• <b>Black Box testing</b> — the tester has no visibility into the code's internal logic, and tests purely based on inputs and expected outputs, as specified by the requirements\n• <b>White Box testing</b> — the tester has full visibility into the code's internal structure, and designs tests specifically to exercise particular logic paths, branches, and conditions inside the code\n  ↳ Each is covered in full in its own card next.\n\n<b>How This Relates to Testing Types</b>\nAny of the four testing types (Unit, Integration, System, Acceptance) can use either method — in practice, Unit testing is most often done with White Box techniques (the developer already has the code open), while Acceptance and System testing lean more toward Black Box techniques (the tester focuses on requirements and real-world behavior, not implementation detail).",
+    note:
+      "Exam favourite: Black Box = tests based on specification/inputs-outputs, no code visibility. White Box = tests based on internal code structure/logic paths, full code visibility. Method (Black/White Box) and Type (Unit/Integration/System/Acceptance) are two separate, independent classifications.",
+    diagram:
+      "  BLACK BOX vs WHITE BOX\n\n  Black Box:  [ Input ] ──► ┌─── ??? ───┐ ──► [ Output ]\n                              (internals hidden — test the outside behavior only)\n\n  White Box:  [ Input ] ──► ┌─ if/else, loops, branches — all visible ─┐ ──► [ Output ]\n                              (test specific internal logic paths directly)",
+    tags: ["Testing Methods", "Black Box Testing", "White Box Testing"],
+  },
+  {
+    id: 290,
+    slug: "black-box-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-methods",
+    title: "Black Box Testing",
+    tagline: "Testing based purely on inputs and expected outputs, with zero visibility into the code's internals",
+    description:
+      "<b>What Black Box Testing Is, in Plain English</b>\nBlack Box testing treats the software as a sealed 'black box' — the tester cannot see (and doesn't need to see) any of the internal code, logic, or structure. Tests are designed purely from the outside: given this input, according to the requirements, what output should come out?\n\n<b>How Tests Are Designed</b>\n• Test cases are derived entirely from the requirements specification or the user's expected behavior, not from reading the source code\n• A common technique is equivalence partitioning — grouping inputs into classes that should behave the same way (e.g. 'any age between 18 and 65' as one class), and testing just one representative value from each class instead of every possible value\n• Another common technique is boundary value analysis — specifically testing the edges of valid ranges (e.g. exactly 18, exactly 65, 17, and 66), since bugs disproportionately cluster right at boundary conditions\n\n<b>Who Typically Performs It</b>\nBlack Box testing is well suited to independent QA testers and end users, since it requires no programming knowledge or access to the source code at all — only an understanding of what the software is supposed to do.\n\n<b>Real-World Example</b>\nTesting a login form by trying a correct username/password (expect success), a wrong password (expect a clear error message), and an empty field (expect a validation message) — all without ever looking at the actual authentication code behind the form.",
+    note:
+      "Exam favourite: know the two classic Black Box techniques by name — equivalence partitioning (test one representative value per input group) and boundary value analysis (test the edges of valid ranges, where bugs cluster most often).",
+    diagram:
+      "  BLACK BOX TESTING — no internal visibility\n\n         ┌─────────────────────┐\n  Input ──►│   ???  (hidden)     │──► Output\n         └─────────────────────┘\n\n  Test based only on: 'given this input, per the spec,\n  what output SHOULD I get?' — never looking inside.",
+    tags: ["Black Box Testing", "Testing Methods", "Equivalence Partitioning", "Boundary Value Analysis"],
+  },
+  {
+    id: 291,
+    slug: "white-box-testing",
+    section: "Software Engineering",
+    parentSlug: "testing-methods",
+    title: "White Box Testing",
+    tagline: "Testing based on the code's internal structure — every branch, loop, and condition visible to the tester",
+    description:
+      "<b>What White Box Testing Is, in Plain English</b>\nWhite Box testing (also called clear box or glass box testing) requires full visibility into the code's internal logic — the tester can see every branch, loop, and condition, and designs tests specifically to exercise particular paths through that internal structure, not just the visible inputs and outputs.\n\n<b>How Tests Are Designed</b>\n• Tests are written by examining the actual source code, and are designed to exercise specific logic paths — for example, making sure both the `if` branch and the `else` branch of a condition are each tested at least once\n• <b>Code coverage</b> is the standard metric used to measure how thoroughly White Box testing has exercised the code — e.g. 'branch coverage' measures the percentage of all possible branches that were actually executed by at least one test\n• Common coverage goals include statement coverage (every line executed at least once), branch coverage (every branch taken at least once), and path coverage (every possible route through the code executed at least once — the most thorough, and hardest to fully achieve)\n\n<b>Who Typically Performs It</b>\nWhite Box testing is typically performed by developers themselves, since it requires reading and understanding the actual source code — this is exactly why unit testing (usually written by the developer who wrote the function) is most commonly a White Box activity.\n\n<b>Real-World Example</b>\nFor a function with an `if/else` branch handling a discount, White Box testing would deliberately write one test case that triggers the `if` branch (a valid discount code) and a separate test case that triggers the `else` branch (an invalid discount code), specifically to ensure both internal paths are actually exercised, not just the two outcomes a Black Box tester might think to try.",
+    note:
+      "Exam favourite: White Box testing is measured using code coverage metrics (statement, branch, path coverage) — this is the key detail that separates it from Black Box testing, which has no concept of 'coverage' since it never looks at the code at all.",
+    diagram:
+      "  WHITE BOX TESTING — internal logic fully visible\n\n  function applyDiscount(code) {\n    if (isValid(code)) {        ← Test 1: exercise this branch\n      return price * 0.9;\n    } else {                     ← Test 2: exercise this branch too\n      return price;\n    }\n  }\n\n  Coverage goal: every branch (if AND else) executed\n  by at least one test — not just 'does it work in general.'",
+    tags: ["White Box Testing", "Testing Methods", "Code Coverage", "Branch Coverage", "Path Coverage"],
+  },
+  {
+    id: 292,
+    slug: "project-management",
+    section: "Software Engineering",
+    title: "Project Management",
+    tagline: "Planning, tracking, and controlling a software project so it's delivered on time, on budget, and with acceptable risk",
+    description:
+      "<b>What This Covers</b>\nProject Management looks at the planning and control activities that run alongside the technical SDLC work — estimating how much a project will cost, scheduling when things will get done, and identifying and managing risk before it turns into a real problem.\n\n<b>What You'll Learn Here</b>\n• <b>Risk Management</b> — identifying, analyzing, and mitigating things that could go wrong before they actually do\n• <b>Cost Estimation</b> — predicting how much time, effort, and money a project will require\n• <b>Scheduling</b> — planning when each piece of work will happen, and tracking progress against that plan\n• <b>COCOMO Model</b> — a specific, formula-based algorithmic model for estimating a software project's effort and cost from its estimated size\n  ↳ These are deeply connected: cost estimation and scheduling both depend heavily on understanding project risk, and COCOMO is one concrete, widely-taught technique for actually producing a cost estimate.",
+    note:
+      "Exam favourite: project management runs in parallel with the technical SDLC phases, not after them — risk management, cost estimation, and scheduling all start during planning and continue being revisited throughout the entire project, not just once at the very beginning.",
+    diagram:
+      "  PROJECT MANAGEMENT — how the topics connect\n\n  Risk              Cost                  Scheduling\n  Management  ──►   Estimation      ──►   (turn the estimate into\n  (what could        (how much time/         a concrete timeline,\n   go wrong?)         effort/money?)          track progress against it)\n\n  COCOMO Model → one specific, formula-based technique used for Cost Estimation",
+    tags: ["Project Management", "Risk Management", "Cost Estimation", "Scheduling", "COCOMO"],
+  },
+  {
+    id: 293,
+    slug: "risk-management",
+    section: "Software Engineering",
+    parentSlug: "project-management",
+    title: "Risk Management",
+    tagline: "Identifying, analyzing, and mitigating things that could threaten a project before they actually happen",
+    description:
+      "<b>What Risk Management Is, in Plain English</b>\nRisk management is the ongoing process of identifying things that could go wrong in a project, judging how likely and how damaging each one would be, and deciding what to do about the most significant ones before they actually happen — rather than only reacting after a problem has already caused damage.\n\n<b>The Risk Management Process</b>\n• <b>Risk identification</b> — brainstorming and listing everything that could realistically threaten the project (a key team member leaving, a critical vendor delay, an underestimated technical challenge)\n• <b>Risk analysis</b> — for each identified risk, estimating its probability of occurring and the severity of its impact if it does, often combined into a simple risk score (probability × impact)\n• <b>Risk prioritization</b> — focusing the most attention and mitigation effort on high-probability, high-impact risks first, rather than spreading effort evenly across every risk regardless of severity\n• <b>Risk mitigation</b> — taking action to reduce a risk's probability, its impact, or both (e.g. cross-training a second team member on a critical system to reduce the impact of one key person leaving)\n• <b>Risk monitoring</b> — continuously tracking known risks throughout the project, since their probability and impact can change over time, and new risks can emerge\n\n<b>Common Categories of Project Risk</b>\n• <b>Technical risk</b> — a chosen technology might not scale, or a technical approach might turn out to be infeasible\n• <b>Schedule risk</b> — a task might take significantly longer than estimated, delaying the whole project\n• <b>Budget risk</b> — costs might exceed what was allocated\n• <b>Resource risk</b> — a key team member might leave or become unavailable mid-project",
+    note:
+      "Exam favourite: risk management is a continuous process throughout the whole project (identify → analyze → prioritize → mitigate → monitor, on repeat), not a one-time activity done only during planning.",
+    diagram:
+      "  RISK MANAGEMENT CYCLE\n\n  Identify ──► Analyze (probability × impact) ──► Prioritize ──► Mitigate\n     ▲                                                                │\n     └────────────────── Monitor (ongoing) ◄─────────────────────────┘",
+    tags: ["Risk Management", "Project Management", "Risk Analysis", "Risk Mitigation"],
+  },
+  {
+    id: 294,
+    slug: "cost-estimation",
+    section: "Software Engineering",
+    parentSlug: "project-management",
+    title: "Cost Estimation",
+    tagline: "Predicting how much time, effort, and money a software project will actually require",
+    description:
+      "<b>What Cost Estimation Is, in Plain English</b>\nCost estimation is the process of predicting, as early and as accurately as possible, how much effort (usually measured in person-months), time, and money a software project will need — a critical input to scheduling, budgeting, and deciding whether a project is even worth pursuing in the first place.\n\n<b>Why It's Genuinely Difficult</b>\n• Software projects are estimated before most of the detailed work is actually understood, since detailed understanding usually only comes from doing the work itself\n• Requirements often change during the project, invalidating an estimate that was accurate for the original, different scope\n• Different developers can take wildly different amounts of time to complete the exact same task\n\n<b>Common Estimation Techniques</b>\n• <b>Expert judgment</b> — experienced team members or managers estimate based on their past experience with similar projects; fast, but can vary a lot between different estimators\n• <b>Analogy-based estimation</b> — comparing the new project to a similar past project whose actual cost is already known, and adjusting for differences\n• <b>Function Point Analysis</b> — estimating size based on counting the system's functional features (inputs, outputs, user interactions, data stored) rather than lines of code, useful because it can be estimated even before any code is written\n• <b>Algorithmic models</b> — formula-based models (like COCOMO) that take a size estimate and mathematically compute effort and cost, covered in full in its own card\n\n<b>Why Estimates Are Given as Ranges</b>\nBecause of the inherent uncertainty involved, mature cost estimates are usually given as a range (e.g. '8 to 12 person-months') rather than a single precise number, and are expected to be refined and narrowed as the project progresses and more is learned.",
+    note:
+      "Exam favourite: cost is most commonly measured in person-months (or person-hours) — the amount of work one person could do in a month, multiplied across however many people and however much time is actually needed.",
+    diagram:
+      "  COST ESTIMATION TECHNIQUES\n\n  Expert Judgment       → fast, based on experience, but varies between people\n  Analogy-Based         → compare to a similar past project's known actual cost\n  Function Point        → estimate size from features/functionality, not code\n  Algorithmic (COCOMO)  → formula: size estimate → effort/cost, mathematically",
+    tags: ["Cost Estimation", "Project Management", "Function Point Analysis", "Person-Months"],
+  },
+  {
+    id: 295,
+    slug: "project-scheduling",
+    section: "Software Engineering",
+    parentSlug: "project-management",
+    title: "Scheduling",
+    tagline: "Turning a cost/effort estimate into a concrete timeline of tasks, milestones, and deadlines",
+    description:
+      "<b>What Scheduling Is, in Plain English</b>\nProject scheduling takes the overall effort estimate (from Cost Estimation) and turns it into a concrete plan of when each specific task will start and finish, who's responsible for it, and how individual tasks depend on each other — the difference between knowing a project will take '10 person-months' in total and actually knowing what needs to happen, in what order, by which dates.\n\n<b>Key Scheduling Concepts</b>\n• <b>Task dependencies</b> — some tasks can't start until another finishes (e.g. testing can't begin until at least some implementation is done); scheduling has to account for this ordering, not just list tasks independently\n• <b>Milestones</b> — significant checkpoints in the schedule marking a major deliverable or decision point (e.g. 'requirements sign-off,' 'first working prototype delivered'), used to track whether the project is on pace\n• <b>Critical path</b> — the longest chain of dependent tasks in the whole schedule, which directly determines the earliest possible completion date for the entire project; any delay on the critical path delays the whole project, while some delay on tasks not on the critical path may not affect the final date at all\n\n<b>Common Scheduling Tools</b>\n• <b>Gantt chart</b> — a horizontal bar chart showing every task, when it starts and ends, and how tasks overlap or depend on each other, giving a clear visual timeline for the whole project\n• <b>PERT chart</b> — a network diagram of tasks and their dependencies, often used together with critical path analysis to formally calculate the shortest possible overall project duration\n\n<b>Why the Critical Path Matters Most</b>\nA project manager watching every task equally is watching the wrong things — tasks with slack time (room to slip without affecting the final deadline) matter far less than tasks sitting directly on the critical path, where any delay pushes back the entire project's delivery date.",
+    note:
+      "Exam favourite: the critical path is the longest sequence of dependent tasks, and it directly sets the project's minimum possible completion date. A delay on a task NOT on the critical path might not delay the project at all; a delay on a task ON the critical path always does.",
+    diagram:
+      "  GANTT CHART — tasks over time, showing dependencies\n\n  Requirements  ██████\n  Design               ██████\n  Implementation              ████████████\n  Testing                                  ██████\n  Deployment                                       ██\n\n  CRITICAL PATH: Requirements → Design → Implementation → Testing → Deployment\n  (any delay anywhere on this chain delays the whole project's finish date)",
+    tags: ["Scheduling", "Project Management", "Gantt Chart", "Critical Path", "Milestones"],
+  },
+  {
+    id: 296,
+    slug: "cocomo-model",
+    section: "Software Engineering",
+    parentSlug: "project-management",
+    title: "COCOMO Model",
+    tagline: "A formula-based model (by Barry Boehm) that estimates effort and cost directly from a project's estimated size",
+    description:
+      "<b>What the COCOMO Model Is, in Plain English</b>\nCOCOMO (COnstructive COst MOdel), developed by Barry Boehm, is an algorithmic cost estimation model that calculates the estimated effort (in person-months) needed to build a software project directly from an estimate of its size, measured in KLOC (thousands of Lines of Code).\n\n<b>The Basic COCOMO Formula</b>\nEffort (in person-months) = a × (KLOC)^b\nWhere `a` and `b` are constants that depend on which of three project categories the project falls into.\n\n<b>The Three Project Modes</b>\n• <b>Organic</b> — small, relatively simple projects, built by a small, experienced team in a familiar environment (a = 2.4, b = 1.05)\n• <b>Semi-detached</b> — medium-sized projects, with a team of mixed experience levels, moderate complexity (a = 3.0, b = 1.12)\n• <b>Embedded</b> — large, highly complex projects, often with tight hardware or regulatory constraints, needing a highly experienced team (a = 3.6, b = 1.20)\n\n<b>Worked Example</b>\nEstimate the effort for an Organic-mode project estimated at 10 KLOC (10,000 lines of code):\nEffort = 2.4 × (10)^1.05\nEffort ≈ 2.4 × 11.22\nEffort ≈ 26.9 person-months\n\nSo a team estimating this project needs roughly 27 person-months of total effort — which could mean about 5 people working for a little over 5 months, or a smaller team working longer, depending on how the work is actually staffed.\n\n<b>Why the Exponent (b) Matters</b>\nNotice `b` is always slightly above 1.0, meaning effort grows slightly faster than the code size itself — doubling a project's size doesn't just double the effort required, it more than doubles it, since larger projects also need proportionally more coordination, integration, and management overhead.",
+    note:
+      "Exam favourite: memorize the formula Effort = a × (KLOC)^b, and be ready to identify which of the three modes (Organic, Semi-detached, Embedded) a described scenario falls into — small/simple/experienced team = Organic, large/complex/tight-constraints = Embedded.",
+    diagram:
+      "  COCOMO — from KLOC to person-months\n\n  Estimated size (KLOC) ──► Effort = a × (KLOC)^b ──► Effort (person-months)\n\n  Organic (a=2.4, b=1.05)        → small, simple, experienced team\n  Semi-detached (a=3.0, b=1.12)  → medium size, mixed experience\n  Embedded (a=3.6, b=1.20)       → large, complex, tight constraints",
+    code:
+      "Effort (person-months) = a × (KLOC)^b\n\nExample — Organic project, 10 KLOC:\nEffort = 2.4 × (10)^1.05\nEffort ≈ 2.4 × 11.22\nEffort ≈ 26.9 person-months",
+    codeLanguage: "Text",
+    tags: ["COCOMO", "Cost Estimation", "Project Management", "KLOC", "Barry Boehm"],
   },
 ];
 
