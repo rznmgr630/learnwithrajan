@@ -142,40 +142,33 @@ function SidebarItemRow({
 function SidebarAccordionSection({
   section,
   storageKeyPrefix,
+  isOpen,
+  onToggle,
   activeItemId,
   onSelectItem,
 }: {
   section: CourseSidebarSection;
   storageKeyPrefix: string;
+  isOpen: boolean;
+  onToggle: () => void;
   activeItemId?: string | number | null;
   onSelectItem?: (id: string | number) => void;
 }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  const storageKey = `${storageKeyPrefix}:${section.id}`;
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved !== null) el.open = saved === "1";
-    } catch {}
-    function onToggle() {
-      try {
-        sessionStorage.setItem(storageKey, el!.open ? "1" : "0");
-      } catch {}
-    }
-    el.addEventListener("toggle", onToggle);
-    return () => el.removeEventListener("toggle", onToggle);
-  }, [storageKey]);
-
   return (
     <details
-      ref={ref}
-      open
+      open={isOpen}
       className="open:[&_.course-sidebar-chevron]:rotate-180 overflow-hidden rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)]"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
+      <summary
+        onClick={(e) => {
+          // Only one section should ever be open at a time, so toggling is
+          // driven entirely by our own state instead of the browser's default
+          // per-<details> toggle behavior.
+          e.preventDefault();
+          onToggle();
+        }}
+        className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden"
+      >
         <span className="text-sm font-bold text-[var(--text)]">{section.label}</span>
         <svg
           className="course-sidebar-chevron h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200"
@@ -213,7 +206,13 @@ function SidebarNavList({
   onSelectItem,
   storageKeyPrefix,
   onItemClick,
-}: CourseSidebarProps & { onItemClick?: () => void }) {
+  openSectionId,
+  onToggleSection,
+}: CourseSidebarProps & {
+  onItemClick?: () => void;
+  openSectionId: string | null;
+  onToggleSection: (id: string) => void;
+}) {
   return (
     <nav className="flex flex-col gap-3">
       <h2 className="px-1 text-xs font-semibold uppercase tracking-widest text-[var(--faint)]">{heading}</h2>
@@ -222,6 +221,8 @@ function SidebarNavList({
           key={section.id}
           section={section}
           storageKeyPrefix={storageKeyPrefix}
+          isOpen={openSectionId === section.id}
+          onToggle={() => onToggleSection(section.id)}
           activeItemId={activeItemId}
           onSelectItem={(id) => {
             onSelectItem?.(id);
@@ -234,12 +235,36 @@ function SidebarNavList({
 }
 
 export function CourseSidebar(props: CourseSidebarProps) {
-  const { stickyTop = 101 } = props;
+  const { stickyTop = 101, sections, storageKeyPrefix } = props;
   const [internalOpen, setInternalOpen] = useState(false);
   const mobileOpen = props.mobileOpen ?? internalOpen;
   const setMobileOpen = props.onMobileOpenChange ?? setInternalOpen;
   const navScrollRef = useRef<HTMLDivElement>(null);
   const { activeItemId } = props;
+
+  // Only one top-level section is ever open at once. A deep link into a
+  // specific concept opens the section containing it; otherwise the last
+  // section the user had open is restored; a first-time visit (nothing saved
+  // yet) opens just the first section, with everything else collapsed.
+  const [openSectionId, setOpenSectionId] = useState<string | null>(() => {
+    const activeSection = sections.find((s) => containsActiveId(s.items, activeItemId));
+    if (activeSection) return activeSection.id;
+    try {
+      const saved = sessionStorage.getItem(`${storageKeyPrefix}:openSection`);
+      if (saved && sections.some((s) => s.id === saved)) return saved;
+    } catch {}
+    return sections[0]?.id ?? null;
+  });
+
+  function handleToggleSection(id: string) {
+    setOpenSectionId((prev) => {
+      const next = prev === id ? null : id;
+      try {
+        sessionStorage.setItem(`${storageKeyPrefix}:openSection`, next ?? "");
+      } catch {}
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -277,7 +302,7 @@ export function CourseSidebar(props: CourseSidebarProps) {
           className="sticky overflow-y-auto pr-1"
           style={{ top: stickyTop, maxHeight: `calc(100vh - ${stickyTop + 16}px)` }}
         >
-          <SidebarNavList {...props} />
+          <SidebarNavList {...props} openSectionId={openSectionId} onToggleSection={handleToggleSection} />
         </div>
       </aside>
 
@@ -316,7 +341,12 @@ export function CourseSidebar(props: CourseSidebarProps) {
                 </svg>
               </button>
             </div>
-            <SidebarNavList {...props} onItemClick={() => setMobileOpen(false)} />
+            <SidebarNavList
+              {...props}
+              openSectionId={openSectionId}
+              onToggleSection={handleToggleSection}
+              onItemClick={() => setMobileOpen(false)}
+            />
           </div>
         </div>
       )}
