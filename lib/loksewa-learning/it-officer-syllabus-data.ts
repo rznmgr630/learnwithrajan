@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology", "Cyber Security"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology", "Cyber Security", "Cloud Computing", "Emerging Technologies"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -5162,6 +5162,276 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
       "<!-- The malicious page's hidden, auto-submitting form -->\n<form action=\"https://bank.com/transfer\" method=\"POST\" id=\"csrf-form\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker-account\">\n  <input type=\"hidden\" name=\"amount\" value=\"5000\">\n</form>\n<script>document.getElementById(\"csrf-form\").submit();</script>\n\n<!-- Defense: the real bank.com form includes a secret CSRF token\n     the attacker's page has no way to know or guess -->\n<input type=\"hidden\" name=\"csrf_token\" value=\"9f8a3b7c...\">",
     codeLanguage: "HTML",
     tags: ["CSRF", "Attacks", "CSRF Token", "SameSite Cookies", "Session Hijacking"],
+  },
+  // ─────────────────────────────────────────────
+  // CLOUD COMPUTING
+  // ─────────────────────────────────────────────
+  {
+    id: 336,
+    slug: "cloud-concepts",
+    section: "Cloud Computing",
+    title: "Cloud Concepts",
+    tagline: "What cloud computing actually is, and the two technologies that make it possible: virtualization and containers",
+    description:
+      "<b>What This Covers</b>\nCloud Concepts introduces cloud computing itself, and the two foundational technologies that let a cloud provider run enormous numbers of independent customer workloads efficiently on shared physical hardware.\n\n<b>What Cloud Computing Is, in Plain English</b>\nCloud computing means renting computing resources (servers, storage, databases, networking) on-demand over the internet from a provider, instead of buying and maintaining your own physical hardware — you pay only for what you actually use, and can scale up or down almost instantly as your needs change.\n\n<b>What You'll Learn Here</b>\n• <b>Virtualization</b> — the technology that lets one physical machine be split into many independent virtual machines\n• <b>Containers</b> — a lighter-weight alternative to a full virtual machine, packaging an application with just what it needs to run\n  ↳ Both exist to solve the same underlying problem — running many independent, isolated workloads efficiently on shared hardware — just at different levels of isolation and overhead, covered in full in their own cards next.",
+    note:
+      "Exam favourite: virtualization and containers both solve 'how do I run many isolated things on one machine,' but at different levels — virtualization virtualizes the hardware (each VM gets its own full OS), containers virtualize the operating system itself (containers share one OS kernel).",
+    diagram:
+      "  CLOUD COMPUTING — renting resources on demand\n\n  Traditional: buy your own servers, maintain them yourself, fixed capacity\n  Cloud:       rent exactly what you need, from a provider, over the internet,\n               scale up or down on demand, pay only for what you use",
+    tags: ["Cloud Computing", "Cloud Concepts", "Virtualization", "Containers"],
+  },
+  {
+    id: 337,
+    slug: "virtualization",
+    section: "Cloud Computing",
+    parentSlug: "cloud-concepts",
+    title: "Virtualization",
+    tagline: "Splitting one physical machine into many independent virtual machines, each with its own full operating system",
+    description:
+      "<b>What Virtualization Is, in Plain English</b>\nVirtualization is the technology that lets one physical computer be divided into multiple independent virtual machines (VMs), each behaving like its own separate, complete computer — with its own operating system, its own allocated CPU/memory/storage, and no direct awareness of the other VMs sharing the same physical hardware.\n\n<b>The Hypervisor — What Makes This Possible</b>\nA hypervisor is the software layer that creates and manages virtual machines, allocating a share of the physical machine's actual hardware resources to each VM, and keeping them isolated from each other.\n• <b>Type 1 (bare-metal) hypervisor</b> — runs directly on the physical hardware, with no underlying host operating system beneath it (e.g. VMware ESXi, Microsoft Hyper-V); typically used in data centers and cloud infrastructure for maximum performance\n• <b>Type 2 (hosted) hypervisor</b> — runs as an application on top of an existing host operating system (e.g. VirtualBox, VMware Workstation running on top of Windows or macOS); commonly used on personal computers for testing or running a second OS\n\n<b>Why Cloud Providers Rely on Virtualization</b>\nVirtualization is exactly what lets a cloud provider sell many separate customers their own private, isolated virtual servers, all running on the same shared pool of physical hardware — dramatically improving how efficiently that expensive physical hardware gets used, since one physical machine can host dozens of independent virtual machines instead of sitting mostly idle running just one workload.\n\n<b>Real-World Example</b>\nRenting a 'virtual server' from a cloud provider is really renting one virtual machine, running alongside many other customers' completely separate virtual machines, all on the same underlying physical hardware, invisible to any of them.",
+    note:
+      "Exam favourite: virtualization creates full virtual machines, each with its own complete guest operating system, managed by a hypervisor. This is the key contrast with containers, which share a single host OS kernel instead of each running a full separate OS.",
+    diagram:
+      "  VIRTUALIZATION — one physical machine, many virtual machines\n\n  ┌──────────────────────── Physical Server ────────────────────────┐\n  │                          Hypervisor                              │\n  │  ┌──────────┐   ┌──────────┐   ┌──────────┐                     │\n  │  │   VM 1   │   │   VM 2   │   │   VM 3   │                     │\n  │  │ own OS   │   │ own OS   │   │ own OS   │                     │\n  │  │ own apps │   │ own apps │   │ own apps │                     │\n  │  └──────────┘   └──────────┘   └──────────┘                     │\n  └───────────────────────────────────────────────────────────────────┘\n  Each VM believes it has its own dedicated computer.",
+    tags: ["Virtualization", "Hypervisor", "Virtual Machine", "Cloud Computing"],
+  },
+  {
+    id: 338,
+    slug: "containers",
+    section: "Cloud Computing",
+    parentSlug: "cloud-concepts",
+    title: "Containers",
+    tagline: "A lightweight way to package an application with just what it needs, sharing the host's OS kernel instead of duplicating it",
+    description:
+      "<b>What a Container Is, in Plain English</b>\nA container packages an application together with everything it needs to run (its code, libraries, and dependencies) into one self-contained, portable unit — but unlike a virtual machine, a container does not include its own full operating system; it shares the host machine's OS kernel with every other container running alongside it.\n\n<b>Why Containers Are Lighter Than VMs</b>\n• Since containers share the host's OS kernel instead of each running a full separate guest OS, they start up in seconds (sometimes milliseconds) instead of the minutes a full VM typically needs to boot\n• Containers use far less memory and disk space per instance, since there's no duplicated operating system inside each one — only the application and its specific dependencies\n• This lower overhead means a single physical (or virtual) machine can run far more containers than it could full VMs\n\n<b>What Containers Solve — 'It Works on My Machine'</b>\nA container bundles the exact versions of every library and dependency an application needs, so it runs identically no matter what machine it's deployed on — solving the classic problem where an application works perfectly on a developer's laptop but breaks once deployed to a different server with slightly different installed software versions.\n\n<b>Containers vs. Virtual Machines</b>\n• <b>VM</b> — full isolation, its own complete OS, heavier, slower to start, stronger security boundary\n• <b>Container</b> — shares the host OS kernel, lighter, starts almost instantly, less overhead, but a slightly less strict isolation boundary than a full VM\n\n<b>Docker — The Most Common Container Technology</b>\nDocker is by far the most widely used tool for building, running, and managing containers, covered in full in its own card next.",
+    note:
+      "Exam favourite: containers share the HOST machine's OS kernel — this is the single detail that explains why they're so much faster to start and lighter than a full virtual machine, which always needs its own complete guest OS.",
+    diagram:
+      "  CONTAINERS — share ONE host OS kernel, no duplicated OS per container\n\n  ┌──────────────────────── Physical/Virtual Machine ────────────────────────┐\n  │                     Host Operating System (ONE kernel, shared)            │\n  │  ┌──────────┐   ┌──────────┐   ┌──────────┐                              │\n  │  │Container1│   │Container2│   │Container3│                              │\n  │  │ app + libs│  │ app + libs│  │ app + libs│    ← NO separate OS per box   │\n  │  └──────────┘   └──────────┘   └──────────┘                              │\n  └────────────────────────────────────────────────────────────────────────────┘",
+    tags: ["Containers", "Docker", "Cloud Computing", "Virtualization"],
+  },
+  {
+    id: 339,
+    slug: "docker-basics",
+    section: "Cloud Computing",
+    parentSlug: "containers",
+    title: "Docker Basics",
+    tagline: "The most widely used tool for building, running, and sharing containers",
+    description:
+      "<b>What Docker Is, in Plain English</b>\nDocker is a platform for building, running, and sharing containers — it provides the tools to package an application into a container image, run that image as a running container, and share that image with others so they can run the exact same, identically-configured application.\n\n<b>Image vs. Container — A Key Distinction</b>\n• <b>Image</b> — a read-only template/blueprint containing an application and everything it needs (like a class in programming); images can be shared and reused\n• <b>Container</b> — a running instance created from an image (like an object instantiated from that class); you can run multiple, independent containers from the exact same image at once\n\n<b>The Dockerfile</b>\nA Dockerfile is a plain text file containing step-by-step instructions for building a Docker image — what base operating system to start from, what dependencies to install, what files to copy in, and what command to run when a container starts from it.\n\n<b>Common Docker Commands</b>\n• `docker build` — builds a new image from a Dockerfile\n• `docker run` — starts a new container from an image\n• `docker ps` — lists currently running containers\n• `docker stop` — stops a running container\n\n<b>Real-World Example</b>\nA developer writes a Dockerfile describing exactly how to set up their web application, builds an image from it, and shares that image with their team — everyone on the team, and the production server, then runs the exact same image, guaranteeing the application behaves identically everywhere.",
+    note:
+      "Exam favourite: an image is the static, reusable blueprint; a container is a running instance of that image — the same relationship as a class and an object. You can run many independent containers from one single image.",
+    diagram:
+      "  DOCKER — image (blueprint) vs container (running instance)\n\n  Dockerfile ──docker build──► Image  (reusable blueprint)\n                                  │\n                    ┌─────────────┼─────────────┐\n              docker run    docker run     docker run\n                    │             │             │\n              Container A   Container B   Container C\n              (running)     (running)     (running)",
+    code:
+      "# Dockerfile — instructions to build an image\nFROM node:20\nWORKDIR /app\nCOPY package.json .\nRUN npm install\nCOPY . .\nCMD [\"node\", \"server.js\"]\n\n# Build an image from the Dockerfile, then run it\ndocker build -t my-app .\ndocker run -p 3000:3000 my-app",
+    codeLanguage: "Dockerfile",
+    tags: ["Docker", "Docker Basics", "Containers", "Dockerfile", "Image"],
+  },
+  {
+    id: 340,
+    slug: "cloud-service-models",
+    section: "Cloud Computing",
+    title: "Cloud Service Models",
+    tagline: "IaaS, PaaS, and SaaS — three levels of what the provider manages for you, versus what you manage yourself",
+    description:
+      "<b>What This Covers</b>\nCloud Service Models classifies cloud offerings by exactly how much a customer manages themselves versus how much the cloud provider manages on their behalf — from renting raw infrastructure to simply using a finished, ready-made application.\n\n<b>What You'll Learn Here</b>\n• <b>IaaS (Infrastructure as a Service)</b> — rent raw computing infrastructure; you manage almost everything above the hardware yourself\n• <b>PaaS (Platform as a Service)</b> — rent a ready-to-use platform; you just deploy your own application code\n• <b>SaaS (Software as a Service)</b> — use a complete, finished application; you manage nothing at all\n  ↳ Each is covered in full in its own card next, moving in order from 'you manage the most' (IaaS) to 'you manage the least' (SaaS).",
+    note:
+      "Exam favourite: the classic pizza analogy — IaaS is buying raw ingredients and cooking it yourself at home (you control everything, provider just supplies the ingredients/infrastructure); PaaS is ordering a pizza kit that's mostly prepared, you just bake it (provider handles more, you just add your specific code); SaaS is ordering a finished pizza delivered to your door (provider handles everything, you just consume it).",
+    diagram:
+      "  CLOUD SERVICE MODELS — who manages what\n\n                 IaaS            PaaS             SaaS\n  Application    YOU manage      YOU manage        Provider manages\n  Runtime         YOU manage      Provider manages  Provider manages\n  OS              YOU manage      Provider manages  Provider manages\n  Infrastructure  Provider manages Provider manages  Provider manages\n\n  ← more control, more responsibility        less control, less responsibility →",
+    tags: ["Cloud Service Models", "IaaS", "PaaS", "SaaS", "Cloud Computing"],
+  },
+  {
+    id: 341,
+    slug: "iaas",
+    section: "Cloud Computing",
+    parentSlug: "cloud-service-models",
+    title: "IaaS (Infrastructure as a Service)",
+    tagline: "Rent raw computing infrastructure — virtual machines, storage, networking — and manage everything above it yourself",
+    description:
+      "<b>What IaaS Is, in Plain English</b>\nIaaS (Infrastructure as a Service) provides the most basic building blocks of computing — virtual machines, storage, and networking — over the internet, on demand. The provider manages the physical hardware and virtualization; the customer is responsible for everything running on top of it: the operating system, runtime, and the actual application.\n\n<b>What the Provider Manages vs. What You Manage</b>\n• <b>Provider manages</b> — the physical data center, physical servers, storage hardware, networking hardware, and the virtualization layer\n• <b>You manage</b> — the operating system you install on your virtual machine, any runtime environments, your application code, and configuration/security within that VM\n\n<b>Why Organizations Choose IaaS</b>\nIaaS gives the most flexibility and control of the three models — since you're essentially renting a virtual machine that behaves like your own server, you can install and configure literally anything you need on it, at the cost of also being responsible for maintaining and securing all of that yourself.\n\n<b>Real-World Example</b>\nRenting an AWS EC2 virtual machine and installing your own choice of operating system, web server software, and application on it, exactly as you would on a physical server you owned yourself, is a classic IaaS use case.",
+    note:
+      "Exam favourite: IaaS gives you the most control (and the most responsibility) of the three models — you're managing everything from the operating system upward. AWS EC2 is the single most commonly cited real-world IaaS example.",
+    diagram:
+      "  IaaS — you manage everything above the raw infrastructure\n\n  ┌─────────────────┐\n  │  Your App        │  ← you manage\n  │  Your Runtime     │  ← you manage\n  │  Your OS          │  ← you manage\n  ├─────────────────┤\n  │  Virtualization   │  ← provider manages\n  │  Physical Hardware│  ← provider manages\n  └─────────────────┘",
+    tags: ["IaaS", "Cloud Service Models", "AWS EC2", "Virtual Machine"],
+  },
+  {
+    id: 342,
+    slug: "paas",
+    section: "Cloud Computing",
+    parentSlug: "cloud-service-models",
+    title: "PaaS (Platform as a Service)",
+    tagline: "Rent a ready-to-use platform — infrastructure, OS, and runtime already handled — and just deploy your own code",
+    description:
+      "<b>What PaaS Is, in Plain English</b>\nPaaS (Platform as a Service) provides a ready-made platform for building and running applications — the provider manages the underlying infrastructure, operating system, and runtime environment, so a developer can focus purely on writing and deploying their own application code, without ever having to configure a server themselves.\n\n<b>What the Provider Manages vs. What You Manage</b>\n• <b>Provider manages</b> — everything IaaS covers, plus the operating system, runtime environment (like the specific Node.js or Python version), and often scaling and load balancing too\n• <b>You manage</b> — your own application code, and typically some application-level configuration\n\n<b>Why Organizations Choose PaaS</b>\nPaaS trades away some of the fine-grained control IaaS offers (you can't customize the underlying OS the way you could with your own VM) in exchange for much faster, simpler deployment — a developer can push their code and have it running live within minutes, without ever thinking about server setup, patching, or scaling infrastructure.\n\n<b>Real-World Example</b>\nDeploying a web application to a platform like Heroku or AWS Elastic Beanstalk: you push your application's code, and the platform automatically handles provisioning servers, installing the right runtime, and even scaling up if traffic increases, without you ever touching a server directly.",
+    note:
+      "Exam favourite: PaaS's whole value proposition is 'just deploy your code, we handle the rest' — Heroku and AWS Elastic Beanstalk are the classic exam examples. Contrast this directly with IaaS, where you'd have to set up the OS and runtime yourself.",
+    diagram:
+      "  PaaS — you only manage your own application code\n\n  ┌─────────────────┐\n  │  Your App        │  ← you manage (just deploy your code)\n  ├─────────────────┤\n  │  Runtime          │  ← provider manages\n  │  OS               │  ← provider manages\n  │  Virtualization   │  ← provider manages\n  │  Physical Hardware│  ← provider manages\n  └─────────────────┘",
+    tags: ["PaaS", "Cloud Service Models", "Heroku", "Elastic Beanstalk"],
+  },
+  {
+    id: 343,
+    slug: "saas",
+    section: "Cloud Computing",
+    parentSlug: "cloud-service-models",
+    title: "SaaS (Software as a Service)",
+    tagline: "Use a complete, finished application over the internet — the provider manages absolutely everything",
+    description:
+      "<b>What SaaS Is, in Plain English</b>\nSaaS (Software as a Service) delivers a complete, ready-to-use application over the internet, typically accessed through a web browser — the provider manages every single layer, from the physical hardware all the way up to the application itself; the end user simply logs in and uses it, with nothing at all to install, configure, or maintain.\n\n<b>What the Provider Manages vs. What You Manage</b>\n• <b>Provider manages</b> — literally everything: infrastructure, OS, runtime, the application itself, updates, security patches, and availability\n• <b>You manage</b> — nothing technical at all; at most, your own account settings and the data you put into the application\n\n<b>Why SaaS Is So Widely Used</b>\nSaaS requires zero technical setup from the end user — no servers, no installation, no maintenance — which is exactly why it's the model behind almost every everyday consumer and business application people use directly.\n\n<b>Real-World Examples</b>\nGmail, Google Docs, Salesforce, Slack, and Dropbox are all SaaS — you simply log in through your browser and start using the finished application immediately, with the provider handling every technical detail behind the scenes, invisible to you.",
+    note:
+      "Exam favourite: SaaS is the model where the user manages nothing technical at all — just uses the finished product directly. Gmail and Salesforce are the classic exam examples; if a scenario describes 'just logging in and using an app with nothing to install,' that's SaaS.",
+    diagram:
+      "  SaaS — provider manages everything, you just use it\n\n  ┌─────────────────┐\n  │  Application      │  ← provider manages (you just USE it)\n  │  Runtime           │  ← provider manages\n  │  OS                │  ← provider manages\n  │  Virtualization    │  ← provider manages\n  │  Physical Hardware │  ← provider manages\n  └─────────────────┘\n  You: just log in through a browser and use it.",
+    tags: ["SaaS", "Cloud Service Models", "Gmail", "Salesforce"],
+  },
+  {
+    id: 344,
+    slug: "cloud-providers",
+    section: "Cloud Computing",
+    title: "Cloud Providers",
+    tagline: "The three dominant public cloud vendors — AWS, Azure, and Google Cloud — and what each is best known for",
+    description:
+      "<b>What This Covers</b>\nCloud Providers covers the three largest public cloud vendors in the world, each offering the full range of cloud service models (IaaS, PaaS, SaaS) at massive global scale, but each also carrying its own particular strengths and typical customer base.\n\n<b>What You'll Learn Here</b>\n• <b>AWS (Amazon Web Services)</b> — the largest, oldest, and most widely adopted public cloud provider\n• <b>Azure (Microsoft Azure)</b> — Microsoft's cloud platform, especially strong for organizations already invested in Microsoft's enterprise ecosystem\n• <b>Google Cloud (GCP)</b> — Google's cloud platform, especially strong in data analytics and machine learning\n  ↳ Each is covered in full in its own card next, including a few of its most well-known services.",
+    note:
+      "Exam favourite: all three providers can technically do the same broad range of things (compute, storage, databases, AI), but each has a reputation and particular strength worth remembering — AWS for market leadership and breadth, Azure for enterprise/Microsoft integration, Google Cloud for data and AI/ML tooling.",
+    diagram:
+      "  CLOUD PROVIDERS — same broad categories, different strengths\n\n  AWS           → largest market share, broadest range of services\n  Azure         → deep integration with Microsoft's enterprise tools\n  Google Cloud  → strong in data analytics and machine learning",
+    tags: ["Cloud Providers", "AWS", "Azure", "Google Cloud", "Cloud Computing"],
+  },
+  {
+    id: 345,
+    slug: "aws",
+    section: "Cloud Computing",
+    parentSlug: "cloud-providers",
+    title: "AWS (Amazon Web Services)",
+    tagline: "The largest and oldest major public cloud provider, offering the broadest range of cloud services",
+    description:
+      "<b>What AWS Is, in Plain English</b>\nAWS (Amazon Web Services) is Amazon's cloud computing platform, and the largest public cloud provider in the world by market share — it offers an enormous, constantly growing catalog of cloud services covering computing, storage, databases, networking, AI/ML, and much more.\n\n<b>Key AWS Services Worth Knowing</b>\n• <b>EC2 (Elastic Compute Cloud)</b> — rentable virtual machines, the classic IaaS building block\n• <b>S3 (Simple Storage Service)</b> — highly durable, scalable object storage for files of any kind\n• <b>RDS (Relational Database Service)</b> — managed relational databases (MySQL, PostgreSQL, and others), where AWS handles backups, patching, and maintenance\n• <b>Lambda</b> — serverless computing, where you run code without provisioning or managing any servers at all, paying only for the exact compute time your code actually uses\n\n<b>Why AWS Became the Market Leader</b>\nAWS launched years before its major competitors and used that early lead to build out an unmatched breadth of services and global infrastructure, which is a large part of why it remains the most widely adopted cloud provider today, especially among startups and tech-native companies.",
+    note:
+      "Exam favourite: EC2 (virtual machines), S3 (object storage), RDS (managed databases), and Lambda (serverless) are the four AWS services most likely to appear by name — know what category each falls into.",
+    diagram:
+      "  AWS — a few of its best-known services\n\n  EC2     → virtual machines            (IaaS)\n  S3      → object storage\n  RDS     → managed relational databases\n  Lambda  → serverless compute (no servers to manage at all)",
+    tags: ["AWS", "Amazon Web Services", "Cloud Providers", "EC2", "S3", "Lambda"],
+  },
+  {
+    id: 346,
+    slug: "azure",
+    section: "Cloud Computing",
+    parentSlug: "cloud-providers",
+    title: "Azure (Microsoft Azure)",
+    tagline: "Microsoft's cloud platform, with deep integration into Microsoft's existing enterprise software ecosystem",
+    description:
+      "<b>What Azure Is, in Plain English</b>\nAzure is Microsoft's public cloud computing platform, offering the same broad range of computing, storage, database, and AI services as its competitors, with a particular strength in integrating smoothly with the Microsoft enterprise tools (Windows Server, Active Directory, Microsoft 365) that many established organizations already rely on.\n\n<b>Key Azure Services Worth Knowing</b>\n• <b>Azure Virtual Machines</b> — Azure's equivalent to AWS EC2, rentable virtual machines\n• <b>Azure Blob Storage</b> — Azure's equivalent to AWS S3, scalable object storage\n• <b>Azure Functions</b> — Azure's serverless compute offering, equivalent to AWS Lambda\n• <b>Azure Active Directory</b> — identity and access management, tightly integrated with the same Active Directory many enterprises already use for managing employee accounts on their own internal networks\n\n<b>Why Organizations Choose Azure</b>\nOrganizations that already run heavily on Microsoft software (Windows Server, .NET applications, existing Active Directory infrastructure) often find Azure integrates especially smoothly with what they already have, making it a particularly common choice for larger, established enterprises.",
+    note:
+      "Exam favourite: Azure's strongest differentiator is enterprise/Microsoft ecosystem integration — if a question describes an organization already deeply invested in Windows Server or Active Directory, Azure is the natural cloud fit.",
+    diagram:
+      "  AZURE — a few of its best-known services\n\n  Azure Virtual Machines  → virtual machines           (equivalent to AWS EC2)\n  Azure Blob Storage      → object storage              (equivalent to AWS S3)\n  Azure Functions         → serverless compute          (equivalent to AWS Lambda)\n  Azure Active Directory  → identity & access management, tied into existing enterprise AD",
+    tags: ["Azure", "Microsoft Azure", "Cloud Providers", "Active Directory"],
+  },
+  {
+    id: 347,
+    slug: "google-cloud",
+    section: "Cloud Computing",
+    parentSlug: "cloud-providers",
+    title: "Google Cloud (GCP)",
+    tagline: "Google's cloud platform, particularly strong in data analytics, machine learning, and containerized workloads",
+    description:
+      "<b>What Google Cloud Is, in Plain English</b>\nGoogle Cloud (GCP, Google Cloud Platform) is Google's public cloud computing platform, offering the same broad categories of services as its competitors, with a particular reputation for strength in data analytics, machine learning, and container orchestration — areas Google has deep internal expertise in from running its own massive-scale services like Google Search and YouTube.\n\n<b>Key Google Cloud Services Worth Knowing</b>\n• <b>Compute Engine</b> — Google Cloud's equivalent to AWS EC2, rentable virtual machines\n• <b>Cloud Storage</b> — Google Cloud's equivalent to AWS S3, scalable object storage\n• <b>BigQuery</b> — a fully managed data warehouse built for extremely fast analysis of massive datasets, one of GCP's most distinctive and well-known services\n• <b>Kubernetes</b> — Google originally created and open-sourced Kubernetes (the industry-standard tool for orchestrating containers at scale), and Google Cloud's managed Kubernetes offering (GKE) is widely considered one of the most mature in the industry\n\n<b>Why Organizations Choose Google Cloud</b>\nOrganizations with data-heavy or machine-learning-heavy workloads, or teams already deeply invested in Kubernetes and containerized applications, often gravitate toward Google Cloud specifically because of its particular strength and polish in exactly those areas.",
+    note:
+      "Exam favourite: Google Cloud's strongest differentiators are data analytics (BigQuery) and container orchestration (Kubernetes, which Google itself created) — if a question emphasizes big data analysis or advanced container/Kubernetes tooling, Google Cloud is the natural fit.",
+    diagram:
+      "  GOOGLE CLOUD — a few of its best-known services\n\n  Compute Engine  → virtual machines        (equivalent to AWS EC2)\n  Cloud Storage   → object storage           (equivalent to AWS S3)\n  BigQuery        → fast analytics over massive datasets\n  GKE             → managed Kubernetes (Google created Kubernetes itself)",
+    tags: ["Google Cloud", "GCP", "Cloud Providers", "BigQuery", "Kubernetes"],
+  },
+  // ─────────────────────────────────────────────
+  // EMERGING TECHNOLOGIES
+  // ─────────────────────────────────────────────
+  {
+    id: 348,
+    slug: "artificial-intelligence",
+    section: "Emerging Technologies",
+    title: "Artificial Intelligence",
+    tagline: "Building systems that can perform tasks which normally require human intelligence",
+    description:
+      "<b>What Artificial Intelligence Is, in Plain English</b>\nArtificial Intelligence (AI) is the field of computer science focused on building systems that can perform tasks normally thought to require human intelligence — understanding language, recognizing images, making decisions, or learning from experience — rather than following one narrow, explicitly hand-coded set of instructions for every possible situation.\n\n<b>Narrow AI vs. General AI</b>\n• <b>Narrow AI (weak AI)</b> — designed to perform one specific task very well (recognizing faces in photos, recommending videos, translating text), and cannot do anything outside that specific task; every AI system in real-world use today is narrow AI\n• <b>General AI (strong AI)</b> — a hypothetical AI with human-level intelligence across essentially any task, able to reason and learn as flexibly as a human across completely different domains; this remains an unrealized, long-term research goal, not something that exists today\n\n<b>Major Subfields of AI</b>\n• <b>Machine Learning</b> — systems that learn patterns from data instead of being explicitly programmed with rules (covered in full in its own card next)\n• <b>Natural Language Processing (NLP)</b> — enabling computers to understand, interpret, and generate human language\n• <b>Computer Vision</b> — enabling computers to interpret and understand visual information from images or video\n• <b>Robotics</b> — combining AI with physical machines that can sense and act in the real world\n\n<b>Real-World Examples</b>\nVoice assistants (Siri, Alexa) understanding spoken commands (NLP), a phone unlocking by recognizing your face (computer vision), and a streaming service recommending what to watch next (machine learning) are all everyday examples of narrow AI already in wide use.",
+    note:
+      "Exam favourite: every AI system actually in use today is narrow AI, built for one specific task — general AI (human-level intelligence across any task) remains a research goal, not a reality. Don't confuse the two if a question asks about current AI capabilities.",
+    diagram:
+      "  ARTIFICIAL INTELLIGENCE — major subfields\n\n  AI\n  ├── Machine Learning       → learns patterns from data\n  ├── Natural Language Processing → understands/generates human language\n  ├── Computer Vision        → interprets images and video\n  └── Robotics               → AI combined with physical, sensing machines",
+    tags: ["Artificial Intelligence", "AI", "Machine Learning", "NLP", "Computer Vision", "Narrow AI"],
+  },
+  {
+    id: 349,
+    slug: "machine-learning-basics",
+    section: "Emerging Technologies",
+    title: "Machine Learning Basics",
+    tagline: "Teaching a system to recognize patterns from data, instead of hand-coding every rule it should follow",
+    description:
+      "<b>What Machine Learning Is, in Plain English</b>\nMachine Learning (ML) is a subfield of AI where a system learns to recognize patterns and make predictions directly from data, rather than a human explicitly programming every rule it should follow — instead of writing 'if this exact pattern, then that exact answer' for every possible case, you show the system many examples and let it work out the underlying pattern itself.\n\n<b>The Three Main Types of Machine Learning</b>\n• <b>Supervised learning</b> — the system learns from labeled examples (input paired with the correct answer), like being shown thousands of emails already marked 'spam' or 'not spam,' and learning to predict that label for new, unseen emails\n• <b>Unsupervised learning</b> — the system finds patterns or groupings in data with no labeled answers provided at all, like automatically grouping customers into clusters based on their purchasing behavior, with no predefined categories given upfront\n• <b>Reinforcement learning</b> — the system learns through trial and error, receiving rewards for good decisions and penalties for bad ones, gradually improving its strategy over time (commonly used to train systems that play games, or control robots)\n\n<b>Why This Matters</b>\nMany real-world problems (recognizing spam, recommending products, detecting fraud) are far too complex and varied for a human to hand-write explicit rules covering every case — machine learning instead lets the pattern be learned directly from real examples, and that pattern often generalizes well to new cases the system has never seen before.\n\n<b>Real-World Example</b>\nA spam filter trained on thousands of emails already labeled 'spam' or 'not spam' (supervised learning) learns which words, sender patterns, and formatting tend to appear in spam, and then applies that learned pattern to correctly classify brand new emails it's never seen before.",
+    note:
+      "Exam favourite: know the three types by what data they're given — supervised (labeled examples with known correct answers), unsupervised (no labels, finds patterns/groupings on its own), reinforcement (learns via rewards and penalties through trial and error).",
+    diagram:
+      "  MACHINE LEARNING — three types, by what data is given\n\n  Supervised     → labeled examples (input + correct answer)      → e.g. spam filter\n  Unsupervised   → no labels, finds patterns/groupings on its own  → e.g. customer segmentation\n  Reinforcement  → trial and error, rewards and penalties          → e.g. game-playing agents",
+    tags: ["Machine Learning", "Supervised Learning", "Unsupervised Learning", "Reinforcement Learning", "AI"],
+  },
+  {
+    id: 350,
+    slug: "big-data",
+    section: "Emerging Technologies",
+    title: "Big Data",
+    tagline: "Datasets so large, fast-moving, or varied that traditional tools can't handle them",
+    description:
+      "<b>What Big Data Is, in Plain English</b>\nBig Data refers to datasets so large, so fast-arriving, or so varied in format that traditional data processing tools and databases can't efficiently store, process, or analyze them — handling big data requires specialized tools and distributed systems built specifically for that scale.\n\n<b>The Defining Characteristics — The 3 (or 4) Vs</b>\n• <b>Volume</b> — the sheer amount of data, often measured in terabytes or petabytes, far beyond what a single traditional database server could reasonably store or query\n• <b>Velocity</b> — the speed at which new data is generated and needs to be processed, sometimes requiring real-time or near-real-time analysis (e.g. tracking millions of live sensor readings per second)\n• <b>Variety</b> — the mix of different data formats and structures involved — structured data (neat rows and columns), unstructured data (text, images, video), and everything in between, often all needing to be handled together\n• <b>Veracity</b> (often added as a fourth V) — the trustworthiness and quality of the data, since large, fast-moving datasets often contain noise, errors, or inconsistencies that need to be accounted for\n\n<b>Common Big Data Tools</b>\n• <b>Hadoop</b> — an open-source framework for distributed storage and processing of very large datasets, spreading both the data and the computation itself across many machines\n• <b>Apache Spark</b> — a fast, distributed data processing engine, often used alongside or instead of Hadoop's original processing model, especially for workloads needing speed\n\n<b>Real-World Example</b>\nA social media platform processing billions of posts, likes, and comments generated every single day, across text, images, and video, needing near-real-time analysis for things like trending topics — a textbook big data problem, hitting all three (or four) Vs at once.",
+    note:
+      "Exam favourite: memorize the 3 Vs (Volume, Velocity, Variety), with Veracity as a commonly added fourth. If a scenario mentions huge data size, fast incoming data streams, or a mix of very different data formats, that maps directly onto one of these V's.",
+    diagram:
+      "  BIG DATA — the defining characteristics\n\n  Volume    → HOW MUCH data (terabytes, petabytes)\n  Velocity  → HOW FAST it arrives and needs processing\n  Variety   → HOW MANY different formats (structured, text, images, video)\n  Veracity  → HOW TRUSTWORTHY / clean the data actually is",
+    tags: ["Big Data", "Hadoop", "Apache Spark", "Volume Velocity Variety"],
+  },
+  {
+    id: 351,
+    slug: "iot",
+    section: "Emerging Technologies",
+    title: "IoT (Internet of Things)",
+    tagline: "Everyday physical devices embedded with sensors and connectivity, collecting and exchanging data over the internet",
+    description:
+      "<b>What IoT Is, in Plain English</b>\nThe Internet of Things (IoT) refers to everyday physical devices — not just traditional computers and phones — embedded with sensors, software, and network connectivity, letting them collect data from the real world and exchange it with other devices or the cloud over the internet.\n\n<b>How a Typical IoT System Works</b>\n1. <b>Sensor</b> — a physical device measures something in the real world (temperature, motion, location, heart rate)\n2. <b>Connectivity</b> — the device sends that measured data over a network (Wi-Fi, Bluetooth, or a cellular connection) to the cloud or another system\n3. <b>Processing</b> — the collected data is analyzed, often in the cloud, sometimes combined with data from many other devices\n4. <b>Action</b> — based on that analysis, an action might be triggered automatically (adjusting a thermostat, sending an alert, unlocking a door)\n\n<b>Real-World Examples</b>\n• <b>Smart home devices</b> — a smart thermostat that learns your schedule and adjusts temperature automatically, or a smart doorbell that sends a phone notification when someone's at the door\n• <b>Wearables</b> — a fitness tracker or smartwatch continuously monitoring heart rate and activity, syncing that data to a phone app\n• <b>Industrial IoT</b> — sensors on factory equipment continuously monitoring for signs of wear, predicting maintenance needs before a breakdown actually happens\n\n<b>Why IoT Matters</b>\nIoT connects the physical world directly to computing and data analysis in a way that wasn't previously possible — instead of a human manually checking and recording a measurement, a connected sensor does it continuously, automatically, and often triggers useful action without any human involvement at all.",
+    note:
+      "Exam favourite: the defining trait of IoT is 'everyday physical objects, not traditional computers, embedded with sensors and internet connectivity.' If a scenario describes a physical device (a thermostat, a wearable, a factory sensor) sending data over a network, that's IoT.",
+    diagram:
+      "  IoT — sensor to action\n\n  Physical device (sensor) ──measures something real-world──►\n         │\n         ▼  sends data over Wi-Fi/Bluetooth/cellular\n  Cloud / another system ──analyzes the data──►\n         │\n         ▼\n  Automatic action (adjust thermostat, send alert, unlock door)",
+    tags: ["IoT", "Internet of Things", "Sensors", "Smart Devices", "Wearables"],
+  },
+  {
+    id: 352,
+    slug: "blockchain",
+    section: "Emerging Technologies",
+    title: "Blockchain",
+    tagline: "A shared, tamper-resistant digital ledger, maintained by many participants instead of one central authority",
+    description:
+      "<b>What Blockchain Is, in Plain English</b>\nA blockchain is a distributed digital ledger — a continuously growing list of records (blocks) — shared across many participants at once instead of being controlled by any single central authority, where each block is cryptographically linked to the one before it, making the entire chain extremely difficult to alter after the fact.\n\n<b>How a Blockchain Is Structured</b>\n• Each block contains a set of transactions or records, plus a cryptographic hash of the previous block\n• Because each block's hash depends on the block before it, changing any single past block would change its hash, which would break the link to every block after it — making tampering with historical data immediately detectable across the whole chain\n\n<b>Decentralization</b>\nInstead of one central server holding the official copy of the ledger, a blockchain is maintained by many independent participants (nodes), each holding their own copy — for a change to be accepted, participants must generally reach agreement (consensus) that it's valid, rather than trusting one single party's word for it.\n\n<b>Why This Matters — Immutability and Trust Without a Middleman</b>\nBecause altering historical data is so difficult, and no single party controls the ledger, blockchain enables trust between parties who don't necessarily trust each other directly, without needing a traditional central authority (like a bank) to vouch for every transaction.\n\n<b>Real-World Example</b>\nCryptocurrencies like Bitcoin use a blockchain to record every transaction ever made, maintained collectively by thousands of independent participants across the world, with no single bank or company controlling the ledger.",
+    note:
+      "Exam favourite: blockchain's core properties are decentralization (no single controlling party) and immutability (past records are extremely difficult to alter without it being detected) — both come directly from each block being cryptographically linked to the one before it.",
+    diagram:
+      "  BLOCKCHAIN — each block links to the one before it\n\n  Block 1 ──hash──► Block 2 ──hash──► Block 3 ──hash──► Block 4\n  (genesis)          contains          contains          contains\n                     hash of            hash of           hash of\n                     Block 1            Block 2           Block 3\n\n  Changing Block 2 would change its hash, breaking the\n  link that Block 3 and Block 4 depend on — tampering is detectable.",
+    tags: ["Blockchain", "Decentralization", "Cryptocurrency", "Distributed Ledger", "Immutability"],
+  },
+  {
+    id: 353,
+    slug: "quantum-computing-basics",
+    section: "Emerging Technologies",
+    title: "Quantum Computing Basics",
+    tagline: "Computing built on qubits instead of bits, exploiting quantum physics to explore many possibilities at once",
+    description:
+      "<b>What Quantum Computing Is, in Plain English</b>\nQuantum computing is a fundamentally different approach to computing, built on the principles of quantum physics rather than the classical, deterministic bits (0s and 1s) every traditional computer relies on — quantum computers use qubits, which behave in ways that let them represent and process information very differently from classical bits.\n\n<b>Qubit vs. Bit</b>\n• <b>Classical bit</b> — always in exactly one definite state at a time: either 0 or 1\n• <b>Qubit</b> — through a quantum property called superposition, a qubit can exist in a combination of both 0 and 1 at the same time, until it's actually measured\n\n<b>Two Key Quantum Properties</b>\n• <b>Superposition</b> — a qubit can represent multiple possible states simultaneously, rather than being locked into just one value at a time, in principle letting a quantum computer explore many possible solutions to a problem in parallel\n• <b>Entanglement</b> — two or more qubits can become linked in such a way that the state of one is directly correlated with the state of another, even though each qubit still individually appears random on its own\n\n<b>Why This Matters — Potential, Not Yet a Replacement</b>\nFor certain specific kinds of problems (like factoring extremely large numbers, or simulating complex molecules for drug discovery), a sufficiently powerful quantum computer could in theory solve them dramatically faster than any classical computer ever could. Quantum computers are not, however, a general replacement for classical computers — for most everyday computing tasks, classical computers remain far more practical, reliable, and cost-effective.\n\n<b>Where Quantum Computing Stands Today</b>\nQuantum computing is still a very early, actively developing field — current quantum computers are limited in the number of stable qubits they can maintain, and remain mostly confined to research and specialized experimental use, not everyday practical deployment.",
+    note:
+      "Exam favourite: know the two key quantum properties by name — superposition (a qubit can be both 0 and 1 at once, until measured) and entanglement (linked qubits whose states are correlated with each other). Also remember quantum computing is still early-stage research, not a general-purpose replacement for classical computers today.",
+    diagram:
+      "  CLASSICAL BIT vs QUBIT\n\n  Classical bit:  always exactly 0  OR  exactly 1\n\n  Qubit:          0 AND 1 at once (superposition), until measured\n                  ──► collapses to either 0 or 1 only when observed",
+    tags: ["Quantum Computing", "Qubit", "Superposition", "Entanglement", "Emerging Technologies"],
   },
 ];
 
