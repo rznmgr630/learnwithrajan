@@ -18,7 +18,7 @@ export interface ITOfficerConcept {
   tags: string[];
 }
 
-export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology", "Cyber Security", "Cloud Computing", "Emerging Technologies"] as const;
+export const IT_OFFICER_SECTIONS = ["Computer Fundamentals", "Programming", "Data Structures & Algorithms", "Database Management System", "Operating Systems", "Computer Networks", "Software Engineering", "Web Technology", "Cyber Security", "Cloud Computing", "Emerging Technologies", "Information Systems"] as const;
 
 export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
   // ─────────────────────────────────────────────
@@ -5432,6 +5432,79 @@ export const IT_OFFICER_CONCEPTS: ITOfficerConcept[] = [
     diagram:
       "  CLASSICAL BIT vs QUBIT\n\n  Classical bit:  always exactly 0  OR  exactly 1\n\n  Qubit:          0 AND 1 at once (superposition), until measured\n                  ──► collapses to either 0 or 1 only when observed",
     tags: ["Quantum Computing", "Qubit", "Superposition", "Entanglement", "Emerging Technologies"],
+  },
+  // ─────────────────────────────────────────────
+  // INFORMATION SYSTEMS
+  // ─────────────────────────────────────────────
+  {
+    id: 354,
+    slug: "mis",
+    section: "Information Systems",
+    title: "MIS (Management Information System)",
+    tagline: "A system that turns an organization's raw operational data into the routine reports managers actually use to decide",
+    description:
+      "<b>What MIS Is, in Plain English</b>\nA Management Information System (MIS) collects data from an organization's day-to-day operations and turns it into organized, summarized reports that managers use to plan, monitor, and make decisions — rather than managers having to dig through raw operational records themselves, MIS packages exactly the summary they need, on a regular basis.\n\n<b>The Three Levels of Management MIS Serves</b>\n• <b>Operational management</b> — needs detailed, day-to-day information (e.g. today's exact stock levels) to keep daily operations running smoothly\n• <b>Middle/tactical management</b> — needs summarized, periodic reports (e.g. this month's sales by region) to plan and monitor performance against targets\n• <b>Top/strategic management</b> — needs high-level, aggregated trends (e.g. year-over-year growth) to make long-term strategic decisions\n  ↳ An MIS is most closely associated with serving middle management's periodic, summarized reporting needs, sitting between the detailed daily data operational systems generate and the high-level trends top executives care about.\n\n<b>Components of an MIS</b>\n• <b>People</b> — the users and IT staff who operate and maintain the system\n• <b>Hardware</b> — the physical computers and devices the system runs on\n• <b>Software</b> — the programs that process data into reports\n• <b>Data</b> — the raw operational facts and figures the system draws from\n• <b>Procedures</b> — the defined processes for how data is collected, processed, and distributed as reports\n\n<b>MIS vs. Related Systems</b>\n• A Transaction Processing System (TPS) records the raw, individual operational transactions (a single sale, a single shipment) as they happen\n• An MIS takes that same raw transaction data and summarizes it into regular reports for managers\n• A Decision Support System (DSS) goes further, helping managers analyze specific, non-routine problems with modeling and 'what-if' analysis, rather than just producing routine, scheduled reports\n\n<b>Real-World Example</b>\nA retail chain's MIS automatically compiles each store's daily sales transactions into a weekly summary report showing sales by product category and by branch, which regional managers review every Monday to spot underperforming stores.",
+    note:
+      "Exam favourite: know where MIS sits in the hierarchy — TPS records raw transactions, MIS summarizes them into routine reports for middle management, DSS supports specific non-routine decisions, and ESS (Executive Support System) gives top executives high-level strategic trends.",
+    diagram:
+      "  INFORMATION SYSTEMS BY MANAGEMENT LEVEL\n\n  Top Management       ← ESS: high-level strategic trends\n  Middle Management     ← MIS: routine, periodic summary reports\n  Operational Management ← TPS: detailed, day-to-day transaction records\n\n  Raw transactions (TPS) flow UP and get summarized into MIS reports.",
+    tags: ["MIS", "Management Information System", "Information Systems", "TPS", "DSS"],
+  },
+  {
+    id: 355,
+    slug: "erp",
+    section: "Information Systems",
+    title: "ERP (Enterprise Resource Planning)",
+    tagline: "One integrated system managing an organization's core processes — finance, HR, inventory, and more — instead of separate, disconnected tools",
+    description:
+      "<b>What ERP Is, in Plain English</b>\nERP (Enterprise Resource Planning) is an integrated software system that manages and automates an organization's core business processes — finance, human resources, procurement, inventory, manufacturing, sales — all within one unified system, sharing one common database, instead of each department running its own separate, disconnected software.\n\n<b>The Problem ERP Solves</b>\nWithout ERP, different departments often each use their own separate systems (finance has its own software, inventory has another, sales has a third), and keeping data consistent between them requires manual re-entry or fragile custom integrations — leading to duplicated data, inconsistent numbers between departments, and slow, error-prone coordination.\n\n<b>Common ERP Modules</b>\n• <b>Finance and Accounting</b> — tracks revenue, expenses, budgets, and financial reporting\n• <b>Human Resources</b> — manages employee records, payroll, and recruitment\n• <b>Inventory and Supply Chain</b> — tracks stock levels, purchasing, and supplier relationships\n• <b>Manufacturing/Production</b> — plans and tracks the production process\n• <b>Sales and CRM</b> — manages customer orders and relationships\n\n<b>Why Organizations Adopt ERP</b>\n• <b>Single source of truth</b> — every department works from the same underlying data, so a sales figure in the finance module always matches the same figure in the sales module\n• <b>Improved efficiency</b> — automates and connects processes that would otherwise require manual coordination between separate systems\n• <b>Better visibility</b> — management can see an accurate, real-time, organization-wide picture instead of piecing together reports from several disconnected systems\n\n<b>Real-World Example</b>\nA manufacturing company using an ERP system like SAP or Oracle ERP: when a sales order is entered, the system automatically checks inventory, triggers a purchase order if stock is low, updates the production schedule, and reflects the expected revenue in financial reports — all from that one single order entry, across every connected department.",
+    note:
+      "Exam favourite: ERP's defining trait is integration across departments on one shared database — contrast this with running several separate, disconnected software systems (one per department), which is exactly the fragmented setup ERP exists to replace.",
+    diagram:
+      "  ERP — one shared database, many connected modules\n\n  ┌─────────────────────── ERP System ───────────────────────┐\n  │                    Shared Database                        │\n  │  Finance   HR   Inventory   Manufacturing   Sales/CRM     │\n  └─────────────────────────────────────────────────────────────┘\n\n  One sales order updates inventory, production, and finance\n  all at once — no separate, disconnected systems to reconcile.",
+    tags: ["ERP", "Enterprise Resource Planning", "Information Systems", "SAP"],
+  },
+  {
+    id: 356,
+    slug: "e-governance",
+    section: "Information Systems",
+    title: "E-Governance",
+    tagline: "Using ICT to deliver government services and information to citizens, businesses, and other agencies",
+    description:
+      "<b>What E-Governance Is, in Plain English</b>\nE-Governance is the use of information and communication technology (ICT) by government to deliver services, share information, and enable transactions with citizens, businesses, and other parts of government itself — moving processes that traditionally required an in-person visit and paper forms onto digital platforms instead.\n\n<b>The Four Common Categories of E-Governance</b>\n• <b>G2C (Government to Citizen)</b> — services delivered directly to individual citizens, like applying for a citizenship certificate or passport online\n• <b>G2B (Government to Business)</b> — services delivered to businesses, like online business registration or tax filing\n• <b>G2G (Government to Government)</b> — information and services exchanged between different government agencies or levels of government, like sharing citizen records between departments\n• <b>G2E (Government to Employee)</b> — internal services for government employees themselves, like online payroll or leave management systems\n\n<b>Benefits of E-Governance</b>\n• <b>Transparency</b> — digital records and processes are easier to track and audit than paper-based ones, reducing opportunities for corruption\n• <b>Efficiency</b> — reduces the time and effort needed for both citizens and government staff to complete a service\n• <b>Accessibility</b> — lets citizens access services remotely, without needing to physically travel to a government office\n\n<b>Real-World Example — E-Governance in Nepal</b>\nNepal's Nagarik App lets citizens access various government services and information from their phone, and systems like online passport applications and the Election Commission's online voter registration are examples of Nepal's ongoing G2C e-governance efforts, alongside broader initiatives guided by the Digital Nepal Framework and ICT Policy.\n\n<b>Common Challenges in Nepal's Context</b>\n• <b>Digital divide</b> — uneven internet access and device availability between urban and rural areas\n• <b>Digital literacy</b> — not every citizen is equally comfortable using digital services\n• <b>Infrastructure</b> — reliable internet connectivity and interoperable systems across different government agencies still need continued investment",
+    note:
+      "Exam favourite: know the four categories by who's on each end — G2C (citizen), G2B (business), G2G (another government agency), G2E (government's own employees). A question describing an online tax filing system is G2B; a shared citizen database between two ministries is G2G.",
+    diagram:
+      "  E-GOVERNANCE — four directions\n\n  Government ──► Citizen    (G2C)  e.g. online passport application\n  Government ──► Business   (G2B)  e.g. online business registration\n  Government ──► Government (G2G)  e.g. shared records between ministries\n  Government ──► Employee   (G2E)  e.g. internal payroll system",
+    tags: ["E-Governance", "Information Systems", "G2C", "G2B", "G2G", "Nepal"],
+  },
+  {
+    id: 357,
+    slug: "digital-nepal-framework",
+    section: "Information Systems",
+    title: "Digital Nepal Framework",
+    tagline: "Nepal's national roadmap for digital transformation, built around 8 sectors and dozens of concrete digital initiatives",
+    description:
+      "<b>What the Digital Nepal Framework Is, in Plain English</b>\nThe Digital Nepal Framework (DNF) is a national roadmap released by Nepal's Ministry of Communication and Information Technology (MoCIT) in 2019, laying out a coordinated plan to use ICT to accelerate Nepal's overall development, under the vision of building a 'Digitally Empowered Nepali Society.'\n\n<b>The 8 Sectors the Framework Is Built Around</b>\n• <b>Digital Foundation</b> — the underlying digital infrastructure, connectivity, and enabling policy environment everything else depends on\n• <b>Agriculture</b> — digital tools to support farmers, from market information to crop planning\n• <b>Health</b> — digital health records and telemedicine-style services\n• <b>Education</b> — digital learning resources and access to education technology\n• <b>Energy</b> — smart, digitally monitored energy infrastructure\n• <b>Tourism</b> — digital platforms supporting Nepal's tourism sector\n• <b>Finance</b> — digital financial services and payment systems\n• <b>Urban Infrastructure</b> — smart city and digitally managed urban services\n\n<b>Concrete, Actionable Initiatives</b>\nRather than staying purely abstract, the Digital Nepal Framework identifies a large set of specific digital initiatives (commonly cited as around 80) spread across these 8 sectors, each meant to be a concrete, implementable project — not just a broad policy statement.\n\n<b>How It Relates to Other Topics in This Chapter</b>\nThe Digital Nepal Framework is the overarching implementation roadmap that many of Nepal's e-governance initiatives fall under, and it operates within the broader direction set by Nepal's ICT Policy — think of ICT Policy as setting the long-term vision and legal/regulatory direction, and the Digital Nepal Framework as the concrete, sector-by-sector action plan built to move toward that vision.",
+    note:
+      "Exam favourite: remember the vision phrase 'Digitally Empowered Nepali Society,' the issuing body (Ministry of Communication and Information Technology, MoCIT), the year (2019), and that it's organized around 8 sectors with a large set of concrete digital initiatives (commonly cited as around 80), not just abstract goals.",
+    diagram:
+      "  DIGITAL NEPAL FRAMEWORK (2019) — 8 sectors\n\n  Digital Foundation\n  Agriculture   Health       Education\n  Energy        Tourism      Finance\n  Urban Infrastructure\n\n  Vision: \"Digitally Empowered Nepali Society\"\n  Issued by: Ministry of Communication and Information Technology (MoCIT)",
+    tags: ["Digital Nepal Framework", "Information Systems", "Nepal", "MoCIT", "E-Governance"],
+  },
+  {
+    id: 358,
+    slug: "ict-policy-nepal",
+    section: "Information Systems",
+    title: "ICT Policy Nepal",
+    tagline: "Nepal's evolving national policy direction for ICT — from the first IT Policy in 2000 to today's Digital Nepal era",
+    description:
+      "<b>What ICT Policy Nepal Is, in Plain English</b>\nICT Policy Nepal refers to the sequence of national policy documents Nepal's government has issued to set the country's overall direction, goals, and priorities for information and communication technology — covering infrastructure development, e-governance, IT industry growth, human resource development, and the legal/regulatory framework needed to support all of it.\n\n<b>How Nepal's ICT Policy Has Evolved</b>\n• <b>IT Policy 2000</b> — Nepal's first formal information technology policy, focused on establishing IT as a priority sector and encouraging basic IT infrastructure and industry growth\n• <b>IT Policy 2004</b> — a revised policy building on the first, further encouraging IT industry development and early e-governance efforts\n• <b>National ICT Policy 2015</b> — broadened the scope from just 'IT' to full 'ICT,' with a stronger emphasis on e-governance, ICT-enabled service delivery, and mainstreaming ICT across every sector of the economy and government\n  ↳ These earlier policies set the direction that the Digital Nepal Framework (2019) later turned into a concrete, sector-by-sector implementation roadmap.\n\n<b>Key Focus Areas Across Nepal's ICT Policies</b>\n• <b>Infrastructure development</b> — expanding internet and telecommunications access, including to rural areas\n• <b>E-governance</b> — using ICT to deliver government services more efficiently and transparently\n• <b>IT industry and economy</b> — supporting Nepal's domestic IT industry and encouraging IT-related investment and exports\n• <b>Human resource development</b> — building the country's ICT skills and workforce\n• <b>Legal and regulatory framework</b> — supporting laws like the Electronic Transaction Act, which gives legal recognition to digital signatures and electronic transactions in Nepal\n\n<b>How This Connects to the Rest of This Chapter</b>\nICT Policy sets the long-term national vision and legal groundwork; the Digital Nepal Framework is the concrete action plan built on top of that vision; and E-Governance, MIS, and ERP are all examples of the kinds of systems that vision and action plan are trying to get built and adopted across government and industry.",
+    note:
+      "Exam favourite: know the rough policy timeline — IT Policy 2000 (first) → IT Policy 2004 (revised) → National ICT Policy 2015 (broadened to full ICT, stronger e-governance focus) → Digital Nepal Framework 2019 (concrete implementation roadmap building on that policy direction).",
+    diagram:
+      "  NEPAL'S ICT POLICY TIMELINE\n\n  IT Policy 2000  ──►  IT Policy 2004  ──►  National ICT Policy 2015  ──►  Digital Nepal Framework 2019\n  (first policy,        (revised,             (broadened to full ICT,        (concrete sector-by-sector\n   basic IT focus)       early e-governance)    stronger e-governance focus)   implementation roadmap)",
+    tags: ["ICT Policy Nepal", "Information Systems", "Nepal", "E-Governance", "Digital Nepal Framework"],
   },
 ];
 
