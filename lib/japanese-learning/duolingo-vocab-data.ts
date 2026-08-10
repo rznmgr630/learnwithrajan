@@ -11,6 +11,7 @@ export type DuolingoWord = {
   meaning_en: string;
   meaning_np: string;
   examples: DuolingoExample[];
+  note?: string;
 };
 
 export type DuolingoDay = {
@@ -179,6 +180,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "क्याफे",
         examples: [{ ja: "カフェでコーヒーを飲みます。", en: "I drink coffee at a cafe.", np: "क्याफेमा कफी पिउँछु।" }],
       },
+      {
+        word: "茶碗",
+        romaji: "chawan",
+        reading: "ちゃわん",
+        meaning_en: "Tea bowl",
+        meaning_np: "चिया कचौरा",
+        examples: [{ ja: "これは私の茶碗です。", en: "This is my tea bowl.", np: "यो मेरो चिया कचौरा हो।" }],
+      },
     ],
   },
   {
@@ -245,6 +254,22 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Make sure / properly",
         meaning_np: "राम्ररी / ध्यानपूर्वक",
         examples: [{ ja: "ちゃんと昼ごはんも食べよう。", en: "Make sure to eat lunch too.", np: "दिउँसोको खाना पनि राम्ररी खाऊ।" }],
+      },
+      {
+        word: "駐車場",
+        romaji: "chūshajō",
+        reading: "ちゅうしゃじょう",
+        meaning_en: "Parking lot",
+        meaning_np: "पार्किंग स्थल",
+        examples: [{ ja: "駐車場は病院のとなりです。", en: "The parking lot is next to the hospital.", np: "पार्किंग स्थल अस्पतालको छेउमा छ।" }],
+      },
+      {
+        word: "診察室",
+        romaji: "shinsatsushitsu",
+        reading: "しんさつしつ",
+        meaning_en: "Examination room",
+        meaning_np: "जाँच कक्ष",
+        examples: [{ ja: "診察室はどこですか。", en: "Where is the examination room?", np: "जाँच कक्ष कहाँ छ?" }],
       },
     ],
   },
@@ -548,6 +573,30 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "अलिकति पर्खनुहोस्",
         examples: [{ ja: "ちょっと待ってください、すぐいきます。", en: "Wait a sec, I'll be right there.", np: "अलिकति पर्खनुहोस्, अहिलै आउँछु।" }],
       },
+      {
+        word: "はじめまして",
+        romaji: "hajimemashite",
+        meaning_en: "How do you do?",
+        meaning_np: "कसरी हुनुहुन्छ? (पहिलो पटक चिनजान गराउँदा भनिने)",
+        examples: [{ ja: "はじめまして。", en: "How do you do?", np: "कसरी हुनुहुन्छ? (पहिलो चोटि भेट्दा भनिने)" }],
+        note: "Translates to 'How do you do?', used only when getting introduced to someone for the first time.",
+      },
+      {
+        word: "です",
+        romaji: "desu",
+        meaning_en: "Is / am / are",
+        meaning_np: "हो / छ",
+        examples: [{ ja: "わたしはがくせいです。", en: "I am a student.", np: "म विद्यार्थी हुँ।" }],
+        note: "Functions similar to 'is', 'am', and 'are' in English. It is pronounced as de-ss. In Japan, people sometimes point to their nose instead of their chest to mean 'me' when introducing themselves — a casual, natural habit rather than a strict rule, but a charming cultural detail worth knowing.",
+      },
+      {
+        word: "さん",
+        romaji: "san",
+        meaning_en: "Mr. / Ms. (honorific suffix)",
+        meaning_np: "श्री / सुश्री (सम्मानजनक प्रत्यय)",
+        examples: [{ ja: "たなかさん、こんにちは。", en: "Hello, Mr./Ms. Tanaka.", np: "नमस्ते, श्री/सुश्री तानाका।" }],
+        note: "Added to people's names to address them. It is similar to 'Mr.' or 'Ms.' in English.",
+      },
     ],
   },
   {
@@ -679,6 +728,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "I'm home",
         meaning_np: "म आएँ",
         examples: [{ ja: "ただいま！おかえり。", en: "I'm home! Welcome back.", np: "म आएँ! स्वागत छ।" }],
+      },
+      {
+        word: "たばこをすいます",
+        romaji: "tabako o suimasu",
+        meaning_en: "To smoke",
+        meaning_np: "चुरोट खानु",
+        examples: [{ ja: "ここでたばこをすわないでください。", en: "Please don't smoke here.", np: "यहाँ चुरोट नखानुहोस्।" }],
       },
     ],
   },
@@ -964,6 +1020,20 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "एनिमे संगीत",
         examples: [{ ja: "アニソンはすきです。", en: "I like anime music.", np: "मलाई एनिमे संगीत मन पर्छ।" }],
       },
+      {
+        word: "チェス",
+        romaji: "chesu",
+        meaning_en: "Chess",
+        meaning_np: "चेस",
+        examples: [{ ja: "週末にチェスをします。", en: "I play chess on weekends.", np: "म सप्ताहन्तमा चेस खेल्छु।" }],
+      },
+      {
+        word: "バレエ",
+        romaji: "baree",
+        meaning_en: "Ballet",
+        meaning_np: "ब्यालेट",
+        examples: [{ ja: "木曜日にバレエのレッスンはありますか。", en: "Do you have a ballet lesson on Thursday?", np: "के बिहीबार ब्यालेटको पाठ छ?" }],
+      },
     ],
   },
   {
@@ -1071,6 +1141,20 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Egg",
         meaning_np: "अण्डा",
         examples: [{ ja: "もっと卵を買いましょう。", en: "We should buy more eggs.", np: "अझ धेरै अण्डा किनौँ।" }],
+      },
+      {
+        word: "ファーストフード",
+        romaji: "fāsuto fūdo",
+        meaning_en: "Fast food",
+        meaning_np: "फास्ट फूड",
+        examples: [{ ja: "ファーストフードは体にあまりよくないです。", en: "Fast food isn't very good for the body.", np: "फास्ट फूड शरीरका लागि त्यति राम्रो हुँदैन।" }],
+      },
+      {
+        word: "にんじん",
+        romaji: "ninjin",
+        meaning_en: "Carrot",
+        meaning_np: "गाजर",
+        examples: [{ ja: "にんじんは体にいいです。", en: "Carrots are good for the body.", np: "गाजर शरीरका लागि राम्रो हुन्छ।" }],
       },
     ],
   },
@@ -1242,6 +1326,22 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Yellow",
         meaning_np: "पहेँलो",
         examples: [{ ja: "きいろいかばんです。", en: "It's a yellow bag.", np: "पहेँलो झोला छ।" }],
+      },
+      {
+        word: "少し",
+        romaji: "sukoshi",
+        reading: "すこし",
+        meaning_en: "A little",
+        meaning_np: "अलिकति",
+        examples: [{ ja: "少しうんどうします。", en: "I'll do a little exercise.", np: "म अलिकति व्यायाम गर्छु।" }],
+      },
+      {
+        word: "中",
+        romaji: "naka / chū",
+        reading: "なか／ちゅう",
+        meaning_en: "During / inside",
+        meaning_np: "भित्र, बीचमा",
+        examples: [{ ja: "授業の中はねないでください。", en: "Please don't sleep during class.", np: "कक्षा भित्र नसुनुहोस्।" }],
       },
     ],
   },
@@ -1423,6 +1523,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "चाहनु",
         examples: [{ ja: "DVDがほしいです。", en: "I want a DVD.", np: "मलाई DVD चाहिन्छ।" }],
       },
+      {
+        word: "かご",
+        romaji: "kago",
+        meaning_en: "Basket",
+        meaning_np: "डालो",
+        examples: [{ ja: "かごに野菜を入れます。", en: "I put vegetables in the basket.", np: "म डालोमा तरकारी राख्छु।" }],
+      },
     ],
   },
   {
@@ -1511,6 +1618,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Cousin",
         meaning_np: "कजिन",
         examples: [{ ja: "いとこの家までバスで行きましょうか。", en: "Shall we take the bus to my cousin's house?", np: "कजिनको घरसम्म बसमा जाऔं?" }],
+      },
+      {
+        word: "タガログご",
+        romaji: "Tagarogo",
+        meaning_en: "Tagalog",
+        meaning_np: "टागालोग भाषा",
+        examples: [{ ja: "彼女はタガログごを話します。", en: "She speaks Tagalog.", np: "उनी टागालोग भाषा बोल्छिन्।" }],
       },
     ],
   },
@@ -1890,6 +2004,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Love",
         meaning_np: "माया",
         examples: [{ ja: "あいはたいせつです。", en: "Love is important.", np: "माया महत्त्वपूर्ण छ।" }],
+        note: "Pronounced as aa-ee.",
       },
       {
         word: "ゆめ",

@@ -142,6 +142,10 @@ export function DuolingoPage() {
                             ))}
                           </div>
                         )}
+
+                        {w.note && (
+                          <p className="mt-1.5 ml-9 text-xs italic text-[var(--faint)]">{w.note}</p>
+                        )}
                       </div>
                     ))}
                   </div>
