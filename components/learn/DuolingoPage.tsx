@@ -4,9 +4,22 @@ import { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import type { Locale } from "@/lib/i18n/types";
-import { DUOLINGO_DAYS } from "@/lib/japanese-learning/duolingo-vocab-data";
+import { DUOLINGO_DAYS, DUOLINGO_NOTES } from "@/lib/japanese-learning/duolingo-vocab-data";
 
 const TOTAL_WORDS = DUOLINGO_DAYS.reduce((sum, d) => sum + d.words.length, 0);
+
+const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
+  d.words
+    .filter((w) => w.note)
+    .map((w) => ({
+      day: d.day,
+      category: d.category,
+      word: w.word,
+      romaji: w.romaji,
+      reading: w.reading,
+      note: w.note as string,
+    })),
+);
 
 function exampleMeaning(en: string, np: string, locale: Locale): string {
   if (locale === "np" && np) return np;
@@ -15,6 +28,7 @@ function exampleMeaning(en: string, np: string, locale: Locale): string {
 
 export function DuolingoPage() {
   const { locale } = useLocale();
+  const [tab, setTab] = useState<"words" | "notes">("words");
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
 
   function toggle(day: number) {
@@ -64,7 +78,30 @@ export function DuolingoPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
+        <div className="inline-flex gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
+          <button
+            onClick={() => setTab("words")}
+            className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
+              tab === "words" ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            Vocabulary
+          </button>
+          <button
+            onClick={() => setTab("notes")}
+            className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
+              tab === "notes" ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            Notes
+          </button>
+        </div>
+      </div>
+
       {/* Accordion list */}
+      {tab === "words" && (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-3">
           {DUOLINGO_DAYS.map((d) => {
@@ -155,6 +192,54 @@ export function DuolingoPage() {
           })}
         </div>
       </div>
+      )}
+
+      {/* Notes list */}
+      {tab === "notes" && (
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col gap-8">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--muted)]">Word Notes</h2>
+            <p className="mt-1 text-xs text-[var(--faint)]">Grammar and usage notes attached to specific vocabulary.</p>
+            <div className="mt-4 flex flex-col gap-3">
+              {WORD_NOTES.map((n, idx) => (
+                <div key={idx} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-base font-semibold text-[var(--text)]">{n.word}</span>
+                    {n.reading && <span className="text-sm text-[var(--muted)]">（{n.reading}）</span>}
+                    <span className="text-xs text-[var(--faint)] font-mono">· {n.romaji}</span>
+                    <span className="ml-auto rounded-full border border-[var(--border)] bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--faint)]">
+                      Day {n.day}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--muted)]">Culture & Grammar Notes</h2>
+            <p className="mt-1 text-xs text-[var(--faint)]">Standalone notes not tied to a single vocabulary word.</p>
+            <div className="mt-4 flex flex-col gap-3">
+              {DUOLINGO_NOTES.map((n, idx) => (
+                <div key={idx} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-base font-semibold text-[var(--text)]">{n.title}</span>
+                    {n.japanese && (
+                      <span className="ml-auto rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
+                        {n.japanese}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
     </div>
   );
 }
