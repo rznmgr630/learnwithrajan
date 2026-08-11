@@ -119,6 +119,8 @@ const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "自", r: "じ・みずから", m: "self", s: 6 },
   { k: "家", r: "いえ・カ", m: "house / family", s: 10 },
   { k: "族", r: "ゾク", m: "family / clan", s: 11 },
+  { k: "週", r: "しゅう", m: "week", s: 11 },
+  { k: "末", r: "まつ・バツ", m: "end", s: 5 },
 ];
 
 /** Deduplicate by character (table above may repeat for teaching overlap). */

@@ -4,7 +4,7 @@ import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool"
 /**
  * Strict no-repeat kanji assignment across lesson days.
  *
- * Days 1–11  — all 98 pool kanji distributed exactly once, grouped by theme.
+ * Days 1–11  — all 100 pool kanji distributed exactly once, grouped by theme.
  * Days 12–25 — empty (grammar-focus lessons; kanji section is hidden by the component).
  * Days 26–30 — curated review sets for sprint/mock-exam prep (intentional re-exposure).
  *
@@ -53,9 +53,10 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 6 — transitive verbs, food, weekday context ────────────────────
-  // Five-element / weekday kanji (月曜〜土曜)
+  // Five-element / weekday kanji (月曜〜土曜)  |  Week / weekend (週末)
   6: [
     "水", "火", "木", "金", "土",  // water, fire, wood, gold, earth (weekdays)
+    "週", "末",                    // week / end (週末 = weekend)
   ],
 
   // ── Lesson 7 — あげる/もらう, giving/receiving, family ────────────────────
@@ -103,7 +104,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lessons 12–25 — grammar-focus lessons (no new kanji) ──────────────────
-  // All 98 pool kanji have been introduced by Day 11.
+  // All 100 pool kanji have been introduced by Day 11.
   // The kanji accordion is hidden by the component when this array is empty.
   12: [], 13: [], 14: [], 15: [], 16: [], 17: [], 18: [], 19: [],
   20: [], 21: [], 22: [], 23: [], 24: [], 25: [],
