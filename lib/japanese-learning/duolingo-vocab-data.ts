@@ -20,6 +20,12 @@ export type DuolingoDay = {
   words: DuolingoWord[];
 };
 
+export type DuolingoNote = {
+  title: string;
+  japanese?: string;
+  note: string;
+};
+
 export const DUOLINGO_DAYS: DuolingoDay[] = [
   {
     day: 1,
@@ -2964,5 +2970,43 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         examples: [{ ja: "サークルに入りました。", en: "I joined a club.", np: "मैले क्लब जोइन गरें।" }],
       },
     ],
+  },
+];
+
+export const DUOLINGO_NOTES: DuolingoNote[] = [
+  {
+    title: "Counting People: Seven",
+    japanese: "しちにん / ななにん",
+    note: "しちにん (shichi-nin) or ななにん (nana-nin) = seven people; しちじ (shichi-ji) = seven o'clock; しちがつ (shichi-gatsu) = July (seventh month).",
+  },
+  {
+    title: "Unlucky Number Four",
+    japanese: "四（し）",
+    note: "In Japan, the number 'four' (shi) is considered unlucky due to its similarity to the word for 'death'. This results in the omission of 'four' in hospital rooms, floor numbers, and product packaging.",
+  },
+  {
+    title: "Formal Thanks After a Meal",
+    japanese: "ごちそうさまでした",
+    note: "A more formal and polite way to say ごちそうさま (gochisōsama) is ごちそうさまでした (gochisōsama deshita), used to show greater respect, particularly when dining with guests or in formal settings.",
+  },
+  {
+    title: "Gratitude Before a Meal",
+    japanese: "いただきます",
+    note: "いただきます (itadakimasu) expresses gratitude before a meal, acknowledging the food and those who contributed to it. It reflects Japanese values of humility.",
+  },
+  {
+    title: "The Tea Ceremony",
+    japanese: "茶道（さどう）",
+    note: "The tea ceremony known as Sadō is a traditional ritual where green tea is ceremoniously prepared and enjoyed in a serene tatami-floored tearoom. It highlights the host's hospitality and emphasises mindfulness.",
+  },
+  {
+    title: "Asking for an Order",
+    japanese: "ごちゅうもんは",
+    note: "ごちゅうもんは (go-chūmon wa) is a shortened form of a longer question that literally translates to 'What is your order?'. ちゅうもん (chūmon) means 'order', and ご (go) is an honorific prefix.",
+  },
+  {
+    title: "The Beckoning Cat",
+    japanese: "まねきねこ",
+    note: "Maneki-neko (まねきねこ), the 'beckoning cat', is a popular Japanese figurine believed to bring good luck and fortune. With one paw raised, it invites prosperity and is commonly seen in shops.",
   },
 ];
