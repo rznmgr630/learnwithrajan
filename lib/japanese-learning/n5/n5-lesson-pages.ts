@@ -4634,8 +4634,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "'कति?' सोध्न: मौलिक गणनाको लागि いくつ, वा counter-specific प्रश्न शब्द: 何本/何枚/何台/何匹।",
       },
     ],
-    youtubeVideoId: { en: "nqUVYQwOkIY" },
-    youtubeVideoIdPart2: { en: "qhX1YEKQC28" },
+    youtubeVideoId: { en: "RVXFYPsUgPc", np: "ILMa8RO7P7Y" },
+    youtubeVideoIdPart2: { en: "PvQUrAXH6Gs" },
     youtubeTitle: "Minna no Nihongo · Lesson 11 — Grammar",
     conversation: [
       {
@@ -4838,6 +4838,105 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Kitte o gomai to fūtō o sanmai kudasai.",
             english: { en: "Five stamps and three envelopes please.", np: "पाँच टिकट र तीन खाम दिनुस्।" },
             scenario: { en: "Multiple items with と", np: "と ले धेरै वस्तु" },
+          },
+        ],
+      },
+      {
+        number: 6,
+        name: { en: "〜人 (にん) — counter for people", np: "〜人 (にん) — मान्छे गन्ने counter" },
+        meaning: {
+          en: "〜人 counts people. 1 and 2 are irregular: 一人 = ひとり、二人 = ふたり. From 3 onwards it's regular にん, but 4 is よにん (not よんにん). Question word: 何人 = なんにん.",
+          np: "〜人 ले मान्छे गन्छ। १ र २ अनियमित: 一人 = ひとり、二人 = ふたり। ३ देखि नियमित にん, तर ४ = よにん (よんにん होइन)। प्रश्न: 何人 = なんにん।",
+        },
+        whereWeUse: [
+          { en: "Family size: かぞくはよにんです (my family is four people)", np: "परिवार: かぞくはよにんです" },
+          { en: "Alone: ひとりでりょこうします (I travel alone)", np: "एक्लै: ひとりでりょこうします" },
+          { en: "Question: なんにんいますか (how many people are there?)", np: "प्रश्न: なんにんいますか" },
+        ],
+        examples: [
+          {
+            japanese: "かぞくはなんにんですか。よにんです。",
+            reading: "Kazoku wa nannin desu ka? — Yonin desu.",
+            english: { en: "How many people in your family? — Four.", np: "तपाईंको परिवारमा कति जना? — चार जना।" },
+            scenario: { en: "Asking family size", np: "परिवारको सदस्य सोध्दा" },
+          },
+          {
+            japanese: "きょうしつにがくせいがじゅうにんいます。",
+            reading: "Kyōshitsu ni gakusei ga jūnin imasu.",
+            english: { en: "There are ten students in the classroom.", np: "कक्षाकोठामा दस जना विद्यार्थी छन्।" },
+            scenario: { en: "Counting people in a place", np: "ठाउँमा मान्छे गन्दा" },
+          },
+          {
+            japanese: "ひとりでいきます。",
+            reading: "Hitori de ikimasu.",
+            english: { en: "I'll go alone.", np: "म एक्लै जान्छु।" },
+            scenario: { en: "ひとり used idiomatically for 'alone'", np: "ひとり ले 'एक्लै' भन्ने अर्थ" },
+          },
+        ],
+      },
+      {
+        number: 7,
+        name: { en: "Duration counters — 〜年・〜か月・〜週間・〜日・〜時間・〜分", np: "अवधि counter — 〜年・〜か月・〜週間・〜日・〜時間・〜分" },
+        meaning: {
+          en: "These counters express how long something lasts: 〜年 (years), 〜か月 (months), 〜週間 (weeks), 〜日 (days), 〜時間 (hours), 〜分 (minutes). Ask 'how long' with どのくらい, or add 〜ぐらい after a duration to mean 'about'.",
+          np: "यी counterले कति समय लाग्यो भन्छन्: 〜年 (वर्ष), 〜か月 (महिना), 〜週間 (हप्ता), 〜日 (दिन), 〜時間 (घण्टा), 〜分 (मिनेट)। 'कति समय' सोध्न どのくらい, अवधि पछि 〜ぐらい थपे 'जति' अर्थ हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "Staying: にほんにいちねんいます (I'll be in Japan for one year)", np: "बस्ने: にほんにいちねんいます" },
+          { en: "Studying: ろっかげつにほんごをべんきょうしました (studied Japanese for six months)", np: "पढ्ने: ろっかげつにほんごをべんきょうしました" },
+          { en: "Question: どのくらいかかりますか (how long does it take?)", np: "प्रश्न: どのくらいかかりますか" },
+        ],
+        examples: [
+          {
+            japanese: "にほんにいちねんいます。",
+            reading: "Nihon ni ichinen imasu.",
+            english: { en: "I will be in Japan for one year.", np: "म जापानमा एक वर्ष बस्छु।" },
+            scenario: { en: "〜年 duration", np: "〜年 अवधि" },
+          },
+          {
+            japanese: "かいしゃをいっしゅうかんやすみます。",
+            reading: "Kaisha o isshūkan yasumimasu.",
+            english: { en: "I will take a week off work.", np: "म एक हप्ता कामबाट बिदा बस्छु।" },
+            scenario: { en: "〜週間 duration", np: "〜週間 अवधि" },
+          },
+          {
+            japanese: "どのくらいかかりますか。さんじかんぐらいかかります。",
+            reading: "Dono kurai kakarimasu ka? — Sanjikan gurai kakarimasu.",
+            english: { en: "How long does it take? — About three hours.", np: "कति समय लाग्छ? — तीन घण्टा जति लाग्छ।" },
+            scenario: { en: "どのくらい + 〜ぐらい", np: "どのくらい + 〜ぐらい" },
+          },
+        ],
+      },
+      {
+        number: 8,
+        name: { en: "〜階 (かい) and 〜回 (かい) — floors and times", np: "〜階 (かい) र 〜回 (かい) — तला र पटक" },
+        meaning: {
+          en: "〜階 counts building floors; 〜回 counts occurrences (times). Both share the かい reading but have the same irregular sound change: 何階 = なんがい, 何回 = なんかい. 一階/一回 = いっかい.",
+          np: "〜階 ले भवनको तला गन्छ; 〜回 ले पटक गन्छ। दुवैको पढाइ かい हो तर प्रश्नमा फरक: 何階 = なんがい, 何回 = なんかい। 一階/一回 = いっかい।",
+        },
+        whereWeUse: [
+          { en: "Floor: としょかんはさんがいです (the library is on the 3rd floor)", np: "तला: としょかんはさんがいです" },
+          { en: "Asking floor: なんがいですか (which floor?)", np: "तला सोध्दा: なんがいですか" },
+          { en: "Times: にほんへにかいいきました (I've been to Japan twice)", np: "पटक: にほんへにかいいきました" },
+        ],
+        examples: [
+          {
+            japanese: "としょかんはさんがいです。",
+            reading: "Toshokan wa sangai desu.",
+            english: { en: "The library is on the third floor.", np: "पुस्तकालय तेस्रो तलामा छ।" },
+            scenario: { en: "〜階 for floors", np: "तलाका लागि 〜階" },
+          },
+          {
+            japanese: "なんがいですか。ごかいです。",
+            reading: "Nangai desu ka? — Gokai desu.",
+            english: { en: "Which floor? — Fifth floor.", np: "कुन तला? — पाँचौं तला।" },
+            scenario: { en: "Question なんがい", np: "प्रश्न なんがい" },
+          },
+          {
+            japanese: "にほんへにかいいきました。",
+            reading: "Nihon e nikai ikimashita.",
+            english: { en: "I have been to Japan twice.", np: "म जापान दुई पटक गएको छु।" },
+            scenario: { en: "〜回 for times", np: "पटकका लागि 〜回" },
           },
         ],
       },
