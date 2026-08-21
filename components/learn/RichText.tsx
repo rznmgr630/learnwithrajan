@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 type Segment =
   | { kind: "text"; value: string }
@@ -155,8 +155,15 @@ function renderInlineLine(text: string) {
   return parts.map((part, i) => renderSegment(part, i));
 }
 
+const headingClass: Record<number, string> = {
+  1: "mt-4 text-base font-bold text-[var(--text)]",
+  2: "mt-4 text-[15px] font-bold text-[var(--text)]",
+  3: "mt-3 text-sm font-semibold text-[var(--text)]",
+};
+
 /**
- * Renders multi-line text with • bullet points, ↳ sub-items, and inline formatting.
+ * Renders multi-line text with markdown-style headings, ``` fenced blocks,
+ * > quotes, bullet points, ↳ sub-items, and inline formatting.
  * Matches the System Design module's rendering style.
  */
 export function RichParagraph({ text, className }: RichTextProps) {
@@ -164,41 +171,91 @@ export function RichParagraph({ text, className }: RichTextProps) {
     return <span className={className}>{renderInlineLine(text)}</span>;
   }
   const lines = text.split("\n");
-  const nodes = lines.map((line, j) => {
+  const nodes: ReactNode[] = [];
+
+  for (let j = 0; j < lines.length; j++) {
+    const line = lines[j];
+
+    if (line.trimStart().startsWith("```")) {
+      const body: string[] = [];
+      j++;
+      while (j < lines.length && !lines[j].trimStart().startsWith("```")) {
+        body.push(lines[j]);
+        j++;
+      }
+      nodes.push(
+        <div key={j} className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
+          <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{body.join("\n")}</pre>
+        </div>,
+      );
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      nodes.push(
+        <p key={j} className={headingClass[headingMatch[1].length]}>
+          {renderInlineLine(headingMatch[2])}
+        </p>,
+      );
+      continue;
+    }
+
+    if (/^>\s?/.test(line)) {
+      nodes.push(
+        <p
+          key={j}
+          className="border-l-2 border-[var(--accent)]/40 pl-3 text-sm italic leading-relaxed text-[var(--muted)]"
+        >
+          {renderInlineLine(line.replace(/^>\s?/, ""))}
+        </p>,
+      );
+      continue;
+    }
+
     if (/^\s*↳/.test(line)) {
       const content = line.replace(/^\s*↳\s*/, "");
-      return (
+      nodes.push(
         <div key={j} className="flex items-start gap-2 pl-5">
           <span className="mt-0.5 shrink-0 text-xs text-[var(--accent)]/50">↳</span>
           <span className="text-sm leading-relaxed text-[var(--muted)]">{renderInlineLine(content)}</span>
-        </div>
+        </div>,
       );
+      continue;
     }
-    if (line.startsWith("• ")) {
-      return (
+
+    const bulletMatch = line.match(/^[•*-]\s(.+)$/);
+    if (bulletMatch) {
+      nodes.push(
         <div key={j} className="flex items-start gap-2.5">
           <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/50" />
-          <span className="text-sm leading-relaxed text-[var(--text)]">{renderInlineLine(line.slice(2))}</span>
-        </div>
+          <span className="text-sm leading-relaxed text-[var(--text)]">{renderInlineLine(bulletMatch[1])}</span>
+        </div>,
       );
+      continue;
     }
+
     const numMatch = line.match(/^(\d+)\.\s(.+)$/);
     if (numMatch) {
-      return (
+      nodes.push(
         <div key={j} className="flex items-start gap-3">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 font-mono text-[10px] font-bold text-[var(--accent)]">
             {numMatch[1]}
           </span>
           <span className="text-sm leading-relaxed text-[var(--text)]">{renderInlineLine(numMatch[2])}</span>
-        </div>
+        </div>,
       );
+      continue;
     }
-    if (!line.trim()) return null;
-    return (
+
+    if (!line.trim()) continue;
+
+    nodes.push(
       <p key={j} className="text-sm leading-relaxed text-[var(--muted)]">
         {renderInlineLine(line)}
-      </p>
+      </p>,
     );
-  });
+  }
+
   return <div className={`space-y-1.5 ${className ?? ""}`}>{nodes}</div>;
 }
