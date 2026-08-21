@@ -191,6 +191,11 @@ export function RichParagraph({ text, className }: RichTextProps) {
       continue;
     }
 
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      nodes.push(<hr key={j} className="my-3 border-t border-[var(--border)]" />);
+      continue;
+    }
+
     const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
     if (headingMatch) {
       nodes.push(
