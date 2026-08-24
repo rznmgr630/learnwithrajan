@@ -253,71 +253,102 @@ const welcome = () => {
       title: { en: "The Temporal Dead Zone (TDZ)", np: "Temporal Dead Zone (TDZ)", jp: "一時的デッドゾーン (TDZ)" },
       durationMinutes: 9,
       explanation: {
-        en: "The <b>Temporal Dead Zone</b> is the gap between when a `let` or `const` variable is hoisted (the start of its enclosing block) and when it is actually initialised (the line where it is declared). Touching it during that gap throws a `ReferenceError`.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet — the system knows the parcel exists (it's registered), but it refuses to hand it over until the paperwork (the declaration line) is complete. `var`'s silent `undefined` is the opposite: it hands you an empty box and lets you assume it's fine, which is exactly the kind of bug the TDZ was designed to surface loudly instead.\n\n<b>The TDZ is a safety net, not a punishment.</b> It exists specifically to catch the moment you reference a variable before you meant to assign it.",
-        np: "Temporal Dead Zone एउटा `let` वा `const` variable hoist हुनेदेखि initialized हुनेसम्मको period हो। यस बीचमा access गर्दा ReferenceError आउँछ — यो सुरक्षा जाल हो, सजाय होइन।",
-        jp: "TDZとはlet/constがホイストされた時点から実際に初期化されるまでの期間。この間にアクセスするとReferenceError。これは罰ではなく安全網。",
+        en: "<b>Temporal Dead Zone (TDZ)</b> (the period when a `let` or `const` variable exists but cannot be used yet) starts when the block begins and ends when the variable is declared.\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScript already knows that `age` exists, but you cannot use it until the declaration is reached.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet.\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` vs `let` / `const`\n\n`var` behaves differently:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` gives you `undefined` (no value yet).\n\nBut `let` and `const` throw an error:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThis makes mistakes easier to notice.\n\n---\n\n### TDZ with `const`\n\n`const` also has a TDZ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nThe variable cannot be used until its declaration is reached.\n\n---\n\n### TDZ Exists Inside Blocks\n\nThe TDZ applies to the variable's scope.\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nThe TDZ starts when the block begins and ends at:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### Quick Comparison\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
+        np: "<b>Temporal Dead Zone (TDZ)</b> (`let` वा `const` variable अस्तित्वमा भए पनि अझै प्रयोग गर्न नमिल्ने अवधि) block सुरु हुँदा सुरु हुन्छ र variable declare हुँदा सकिन्छ।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScript लाई `age` अस्तित्वमा छ भन्ने पहिले नै थाहा हुन्छ, तर declaration नपुग्दासम्म तपाईं यसलाई प्रयोग गर्न सक्नुहुन्न।\n\nयसलाई depot मा आइपुगेको तर अझै हस्ताक्षर नगरिएको पार्सल जस्तै सोच्नुहोस्।\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` vs `let` / `const`\n\n`var` फरक व्यवहार गर्छ:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` ले तपाईंलाई `undefined` (अझै value छैन) दिन्छ।\n\nतर `let` र `const` ले error दिन्छन्:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nयसले गल्ती छिटो देख्न सजिलो बनाउँछ।\n\n---\n\n### `const` सँग TDZ\n\n`const` को पनि TDZ हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nDeclaration नपुग्दासम्म variable प्रयोग गर्न सकिँदैन।\n\n---\n\n### TDZ Block भित्र पनि हुन्छ\n\nTDZ variable को scope मा लागू हुन्छ।\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nTDZ block सुरु हुँदा सुरु हुन्छ र यहाँ सकिन्छ:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### छिटो तुलना\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
+        jp: "<b>一時的デッドゾーン（TDZ）</b>（`let` や `const` の変数が存在するのにまだ使えない期間）は、ブロックが始まったときに始まり、その変数が宣言されたときに終わります。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScriptは `age` の存在をすでに知っていますが、宣言に到達するまで使うことはできません。\n\n集配所に届いてはいるが、まだ受け取りのサインをしていない荷物のようなものだと考えてください。\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` と `let` / `const`\n\n`var` は動きが違います:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` は `undefined`（まだ値がない）を返します。\n\nしかし `let` と `const` はエラーを投げます:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nそのおかげで間違いに気づきやすくなります。\n\n---\n\n### `const` のTDZ\n\n`const` にもTDZがあります:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\n宣言に到達するまで、その変数は使えません。\n\n---\n\n### TDZはブロックの中にもある\n\nTDZはその変数のスコープに対して働きます。\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nTDZはブロックの開始時に始まり、ここで終わります:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### かんたん比較\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
       },
-      diagram: `let x = "global";
-
-function test() {
-  console.log(x);   // ❌ ReferenceError — NOT "global"
-  ▲
-  │ x is in the TDZ here — hoisted but not yet initialised
-  let x = "local";  // ← TDZ ends here, x becomes "local"
+      diagram: `{
+    ↓
+    ↓  TDZ
+    ↓  Cannot access age
+    ↓
+let age = 30;
+    ↓
+    ↓  TDZ ends
+    ↓
+console.log(age); // 30
 }
 
-The inner "let x" shadows the outer x for the WHOLE function,
-even before its own declaration line runs.`,
+
+Quick Comparison
+
+var                     let / const
+ ↓                       ↓
+Hoisted                 Hoisted
+ ↓                       ↓
+undefined               TDZ
+ ↓                       ↓
+Can be accessed early   ReferenceError if accessed early
+                         ↓
+                        Declaration
+                         ↓
+                        Can be accessed`,
       codeExample: {
-        title: { en: "TDZ example — surprising but predictable once you know the rule", np: "TDZ उदाहरण", jp: "TDZの例" },
-        code: `// This looks like it should work but doesn't
-let x = "global";
+        title: { en: "var reads early, let throws in the TDZ", np: "var चाँडै पढिन्छ, let ले TDZ मा error दिन्छ", jp: "varは早く読めるが、letはTDZでエラー" },
+        code: `function test() {
+  console.log(a); // undefined
+  var a = 10;
 
-function test() {
-  console.log(x);  // ❌ ReferenceError — NOT "global"
-  let x = "local"; // x is in TDZ from the top of this block until here
+  console.log(b); // ReferenceError
+  let b = 20;
 }
 
-test();
-
-// Why? Because let x inside test() is hoisted to the top of test's block.
-// The x inside test() shadows the outer x immediately —
-// but it's in the TDZ until the let x = "local" line is reached.
-
-// ── The fix: always declare before use ────────────────────────────
-function testFixed() {
-  let x = "local";  // declare first
-  console.log(x);   // ✅ "local"
-}`,
+test();`,
       },
       keyTakeaways: [
-        { en: "The TDZ runs from the start of a `let`/`const` variable's block until its declaration line — accessing it in that window throws a ReferenceError.", np: "TDZ block को सुरुदेखि declaration line सम्म रहन्छ — यस बीचमा access गर्दा ReferenceError आउँछ।", jp: "TDZはブロックの開始から宣言行までの間で、この間にアクセスするとReferenceErrorになる。" },
-        { en: "A variable shadows an outer variable of the same name for the entire enclosing block, even before its own declaration line runs.", np: "Same नाम भएको variable ले outer variable लाई पूरै block भर shadow गर्छ, आफ्नो declaration अघि नै।", jp: "同名の変数は、自身の宣言行が実行される前でも、囲むブロック全体で外側の変数をシャドーイングする。" },
-        { en: "The TDZ exists to catch accidental early use of a variable — a bug that `var`'s silent `undefined` would otherwise hide.", np: "TDZ ले variable को accidental early use पत्ता लगाउन बनाइएको हो — var को silent undefined ले लुकाउने bug।", jp: "TDZは変数の意図しない早期使用を検出するために存在する。varの静かなundefinedが隠すバグ。" },
+        { en: "<b>TDZ</b> → period where `let` / `const` exist but cannot be accessed.", np: "<b>TDZ</b> → `let` / `const` अस्तित्वमा भए पनि पहुँच गर्न नमिल्ने अवधि।", jp: "<b>TDZ</b> → `let` / `const` は存在するがアクセスできない期間。" },
+        { en: "TDZ starts at the beginning of the variable's scope.", np: "TDZ variable को scope सुरु हुँदा सुरु हुन्छ।", jp: "TDZはその変数のスコープの始まりから始まる。" },
+        { en: "TDZ ends when the declaration is reached.", np: "Declaration पुगेपछि TDZ सकिन्छ।", jp: "宣言に到達した時点でTDZは終わる。" },
+        { en: "Accessing a variable during the TDZ causes a `ReferenceError`.", np: "TDZ मा variable पहुँच गर्दा `ReferenceError` आउँछ।", jp: "TDZ中に変数へアクセスすると `ReferenceError` になる。" },
+        { en: "`var` does not have a TDZ.", np: "`var` को TDZ हुँदैन।", jp: "`var` にはTDZがない。" },
+        { en: "TDZ helps catch mistakes early.", np: "TDZ ले गल्ती चाँडै समात्न मद्दत गर्छ।", jp: "TDZは間違いを早く見つける助けになる。" },
+        { en: "The TDZ is a safety feature, not a punishment.", np: "TDZ सुरक्षा सुविधा हो, सजाय होइन।", jp: "TDZは罰ではなく、安全のための仕組み。" },
       ],
       commonMistakes: [
-        { en: "Expecting `console.log(x)` inside a function to read an outer `x` when the function also declares its own `x` later — the inner one shadows immediately.", np: "Function भित्र पछि आफ्नै `x` declare गरिए पनि `console.log(x)` ले outer x पढ्छ भन्ने ठान्नु — inner ले तुरुन्तै shadow गर्छ।", jp: "関数が後で自身の`x`を宣言していても、`console.log(x)`が外側のxを読むと期待すること（実際は即座にシャドーされる）。" },
-        { en: "Treating a TDZ ReferenceError the same as an \"undeclared variable\" error — they're different: the TDZ variable already exists, just locked.", np: "TDZ ReferenceError लाई 'undeclared variable' error जस्तै ठान्नु — फरक हो: TDZ variable अस्तित्वमा छ, locked मात्र।", jp: "TDZのReferenceErrorを「未宣言変数」エラーと同じと考えること。実際は異なり、TDZの変数は既に存在し、ロックされているだけ。" },
-        { en: "Not realizing `typeof` also throws inside the TDZ for that variable, unlike a truly undeclared variable where `typeof` safely returns \"undefined\".", np: "TDZ भित्र `typeof` ले पनि error दिन्छ भन्ने कुरा नबुझ्नु — truly undeclared variable मा `typeof` सुरक्षित रूपमा 'undefined' दिन्छ।", jp: "TDZ内では`typeof`もエラーになることに気づかないこと。本当に未宣言の変数では`typeof`は安全に'undefined'を返す。" },
+        { en: "<b>Thinking the TDZ starts at the declaration line</b> — it starts when the variable's scope begins, so a read anywhere above `let age = 30;` inside that block already throws.", np: "<b>TDZ declaration line मा सुरु हुन्छ भन्ने ठान्नु</b> — यो variable को scope सुरु हुँदा सुरु हुन्छ, त्यसैले त्यो block भित्र `let age = 30;` माथि जहाँ पढे पनि error आउँछ।", jp: "<b>TDZは宣言の行から始まると思う</b> — 始まるのは変数のスコープの開始時なので、そのブロック内で `let age = 30;` より上のどこで読んでもエラーになる。" },
+        { en: "<b>Thinking `const` is different from `let`</b> — both have a TDZ; reading either before its declaration throws a `ReferenceError`.", np: "<b>`const` `let` भन्दा फरक छ भन्ने ठान्नु</b> — दुबैको TDZ हुन्छ; कुनै पनि लाई declaration अघि पढ्दा `ReferenceError` आउँछ।", jp: "<b>`const` は `let` と違うと思う</b> — どちらにもTDZがあり、宣言前に読めば `ReferenceError` になる。" },
+        { en: "<b>Thinking hoisting means you can always use a variable early</b> — hoisting only means the declaration is prepared. `let` and `const` are prepared but stay unavailable during the TDZ.", np: "<b>Hoisting को अर्थ variable सधैं चाँडै प्रयोग गर्न सकिन्छ भन्ने ठान्नु</b> — hoisting को अर्थ declaration तयार गरिन्छ भन्ने मात्र हो। `let` र `const` तयार हुन्छन् तर TDZ भर अनुपलब्ध रहन्छन्।", jp: "<b>ホイスティング＝いつでも早く使えると思う</b> — ホイスティングは宣言が準備されるという意味だけ。`let` と `const` は準備されてもTDZの間は使えない。" },
       ],
       quiz: [
         {
-          question: { en: "What happens if you access a `let` variable before its declaration line, in the same block?", np: "Same block मा declaration अघि `let` variable access गर्दा के हुन्छ?", jp: "同じブロック内で宣言前に`let`変数にアクセスすると？" },
-          options: [{ en: "Returns undefined", np: "undefined फर्काउँछ", jp: "undefinedを返す" }, { en: "Throws a ReferenceError (TDZ)", np: "ReferenceError (TDZ) आउँछ", jp: "ReferenceError（TDZ）が発生する" }],
+          question: { en: "What is the TDZ?", np: "TDZ के हो?", jp: "TDZとは何か?" },
+          options: [
+            { en: "A JavaScript error type", np: "JavaScript को एक error type", jp: "JavaScriptのエラーの種類" },
+            { en: "The period when `let` / `const` cannot be accessed", np: "`let` / `const` पहुँच गर्न नमिल्ने अवधि", jp: "`let` / `const` にアクセスできない期間" },
+            { en: "A type of loop", np: "एक प्रकारको loop", jp: "ループの一種" },
+          ],
           correctIndex: 1,
-          explanation: { en: "let is hoisted but stays in the Temporal Dead Zone until its declaration line runs.", np: "let hoist हुन्छ तर declaration नआउँदासम्म TDZ मा रहन्छ।", jp: "letはホイストされるが宣言行までTDZに留まる。" },
+          explanation: { en: "It runs from the start of the variable's scope until its declaration is reached.", np: "यो variable को scope सुरु भएदेखि declaration पुग्नेसम्म रहन्छ।", jp: "変数のスコープの開始から、その宣言に到達するまでの期間。" },
         },
         {
-          question: { en: "Is a TDZ ReferenceError the same thing as an \"undeclared variable\" error?", np: "TDZ ReferenceError र 'undeclared variable' error उस्तै हो?", jp: "TDZのReferenceErrorは「未宣言変数」エラーと同じ？" },
-          options: [{ en: "Yes, identical", np: "हो, उस्तै", jp: "はい、同一" }, { en: "No — the TDZ variable already exists, just locked until its declaration", np: "होइन — TDZ variable अस्तित्वमा छ, declaration सम्म locked मात्र", jp: "いいえ — TDZの変数は既に存在し、宣言まで単にロックされている" }],
-          correctIndex: 1,
-          explanation: { en: "The TDZ variable has already been registered by the engine — it exists, but the engine refuses access until the declaration line runs.", np: "TDZ variable engine ले registered भइसकेको हुन्छ — अस्तित्वमा छ, तर declaration नआउँदासम्म access दिइँदैन।", jp: "TDZの変数はエンジンによって既に登録されているが、宣言行が実行されるまでアクセスが拒否される。" },
+          question: { en: "What happens when you access a `let` variable inside the TDZ?", np: "TDZ भित्र `let` variable पहुँच गर्दा के हुन्छ?", jp: "TDZの中で `let` の変数にアクセスするとどうなるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "Unlike `var`, it does not quietly return `undefined` — the error tells you at once.", np: "`var` भन्दा फरक, यसले चुपचाप `undefined` फर्काउँदैन — error ले तुरुन्तै बताउँछ।", jp: "`var` と違って黙って `undefined` を返さない。エラーがすぐ知らせてくれる。" },
         },
         {
-          question: { en: "In the TDZ example, why does `console.log(x)` throw instead of printing \"global\"?", np: "TDZ example मा `console.log(x)` ले किन 'global' print नगरी error दिन्छ?", jp: "TDZの例で`console.log(x)`が'global'を出力せずエラーになる理由は？" },
-          options: [{ en: "Because the inner `let x` shadows the outer x for the whole function, even before its declaration line", np: "किनकि inner `let x` ले outer x लाई पूरै function भर shadow गर्छ, declaration अघि नै", jp: "内側の`let x`が宣言行前でも関数全体で外側のxをシャドーイングするため" }, { en: "Because the outer x was deleted", np: "किनकि outer x delete भयो", jp: "外側のxが削除されたため" }],
-          correctIndex: 0,
-          explanation: { en: "Shadowing happens for the entire block/function scope, not just after the shadowing declaration's line.", np: "Shadowing पूरै block/function scope भर हुन्छ, declaration line पछि मात्र होइन।", jp: "シャドーイングはブロック/関数スコープ全体で発生し、宣言行の後だけではない。" },
+          question: { en: "Which variables have a TDZ?", np: "कुन variable का TDZ हुन्छ?", jp: "TDZがあるのはどの変数か?" },
+          options: [
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let` and `const`", np: "`let` र `const`", jp: "`let` と `const`" },
+            { en: "Function declarations", np: "Function declaration", jp: "関数宣言" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`var` is initialised to `undefined` instead, and a function declaration is fully available.", np: "`var` को साटो `undefined` मा initialise हुन्छ, र function declaration पूर्ण रूपमा उपलब्ध हुन्छ।", jp: "`var` は代わりに `undefined` で初期化され、関数宣言は完全に使える。" },
+        },
+        {
+          question: { en: "Why does the TDZ exist?", np: "TDZ किन छ?", jp: "なぜTDZがあるのか?" },
+          options: [
+            { en: "To make JavaScript slower", np: "JavaScript लाई ढिलो बनाउन", jp: "JavaScriptを遅くするため" },
+            { en: "To catch accidental early access to variables", np: "Variable लाई गल्तिले चाँडै पहुँच गरेको समात्न", jp: "変数への意図しない早いアクセスを捕まえるため" },
+            { en: "To prevent functions from running", np: "Function चल्नबाट रोक्न", jp: "関数の実行を防ぐため" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It turns a silent `undefined` bug into an immediate, obvious error.", np: "यसले चुपचापको `undefined` bug लाई तुरुन्तै देखिने स्पष्ट error मा बदल्छ।", jp: "静かな `undefined` のバグを、すぐ分かる明確なエラーに変えてくれる。" },
         },
       ],
     },
