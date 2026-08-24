@@ -9,6 +9,7 @@ import {
   BLIND75_LANG_DOT,
   BLIND75_LANGUAGE_ORDER,
 } from "@/lib/dsa/blind75";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -97,9 +98,15 @@ function CodeBlock({ code, language }: { code: string; language: Blind75Language
 export function DSABlind75Detail({
   problem,
   onClose,
+  previous,
+  next,
+  onNavigate,
 }: {
   problem: Blind75Problem | null;
   onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
 }) {
   const [activeLang, setActiveLang] = useState<Blind75Language>("javascript");
 
@@ -277,6 +284,8 @@ export function DSABlind75Detail({
               </div>
             </div>
           )}
+
+          <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
       </aside>
     </div>

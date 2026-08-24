@@ -5,6 +5,7 @@ import type { DsaProblem } from "@/lib/dsa/dsa-problems";
 import { DIFFICULTY_COLOR, DIFFICULTY_LABEL, DSA_BASIC_CATEGORIES } from "@/lib/dsa/dsa-problems";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSAProblemDrawer } from "@/components/learn/DSAProblemDrawer";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   arrays: (
@@ -163,6 +164,14 @@ export function DSAProblemList({
     problems: problems.filter((p) => p.category === cat.id),
   }));
 
+  const orderedProblems = problemsByCategory.flatMap((group) => group.problems);
+
+  const neighbourOf = (problem: DsaProblem | null, offset: -1 | 1): LessonNavTarget | null => {
+    if (!problem) return null;
+    const neighbour = orderedProblems[orderedProblems.findIndex((p) => p.slug === problem.slug) + offset];
+    return neighbour ? { id: neighbour.slug, title: neighbour.title } : null;
+  };
+
   return (
     <div className="min-h-screen">
       {/* Sticky top nav */}
@@ -216,7 +225,14 @@ export function DSAProblemList({
         </div>
       </div>
 
-      <DSAProblemDrawer problem={openProblem} onClose={() => setOpenProblem(null)} />
+      <DSAProblemDrawer
+        key={openProblem?.slug ?? "none"}
+        problem={openProblem}
+        onClose={() => setOpenProblem(null)}
+        previous={neighbourOf(openProblem, -1)}
+        next={neighbourOf(openProblem, 1)}
+        onNavigate={(target) => setOpenProblem(orderedProblems.find((p) => p.slug === target.id) ?? null)}
+      />
     </div>
   );
 }

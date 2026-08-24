@@ -5,6 +5,7 @@ import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { DSABlind75Detail } from "@/components/learn/DSABlind75Detail";
 import { DSAFundamentalsDrawer, type FundamentalTopicId } from "@/components/learn/DSAFundamentalsDrawer";
 import { BLIND75_CATEGORIES, BLIND75_TOTAL, type Blind75Problem } from "@/lib/dsa/blind75";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
 
 const CATEGORY_COLORS: Record<string, { badge: string; dot: string; border: string }> = {
   array:                { badge: "text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/25", dot: "bg-emerald-400", border: "border-emerald-500/20" },
@@ -26,6 +27,14 @@ const FUNDAMENTAL_TOPICS = [
 
 export function DSABlind75() {
   const [active, setActive] = useState<Blind75Problem | null>(null);
+
+  const orderedProblems = BLIND75_CATEGORIES.flatMap((cat) => cat.problems);
+
+  const neighbourOf = (problem: Blind75Problem | null, offset: -1 | 1): LessonNavTarget | null => {
+    if (!problem) return null;
+    const neighbour = orderedProblems[orderedProblems.findIndex((p) => p.slug === problem.slug) + offset];
+    return neighbour ? { id: neighbour.slug, title: neighbour.title } : null;
+  };
   const [openTopic, setOpenTopic] = useState<FundamentalTopicId | null>(null);
 
   return (
@@ -184,8 +193,20 @@ export function DSABlind75() {
         </div>
       </div>
 
-      <DSABlind75Detail problem={active} onClose={() => setActive(null)} />
-      <DSAFundamentalsDrawer topicId={openTopic} onClose={() => setOpenTopic(null)} />
+      <DSABlind75Detail
+        key={active?.slug ?? "none"}
+        problem={active}
+        onClose={() => setActive(null)}
+        previous={neighbourOf(active, -1)}
+        next={neighbourOf(active, 1)}
+        onNavigate={(target) => setActive(orderedProblems.find((p) => p.slug === target.id) ?? null)}
+      />
+      <DSAFundamentalsDrawer
+        key={openTopic ?? "none"}
+        topicId={openTopic}
+        onClose={() => setOpenTopic(null)}
+        onNavigate={setOpenTopic}
+      />
     </>
   );
 }

@@ -145,7 +145,12 @@ export function DSAHub() {
         </div>
       </div>
 
-      <DSAFundamentalsDrawer topicId={openTopic} onClose={() => setOpenTopic(null)} />
+      <DSAFundamentalsDrawer
+        key={openTopic ?? "none"}
+        topicId={openTopic}
+        onClose={() => setOpenTopic(null)}
+        onNavigate={setOpenTopic}
+      />
     </div>
   );
 }
