@@ -329,72 +329,101 @@ for (const key in user) {
       title: { en: "Function Types", np: "Function Types", jp: "関数の種類" },
       durationMinutes: 9,
       explanation: {
-        en: "A function is just a named block of reusable code, but JavaScript gives you three syntaxes to create one — and the choice affects two things: whether the function is <b>hoisted</b>, and what `this` means inside it.\n\n• <b>Function declaration</b> — `function greet() {}` — fully hoisted, has its own `this`\n  ↳ Best for top-level, named, reusable utilities\n• <b>Function expression</b> — `const greet = function() {}` — not hoisted, has its own `this`\n  ↳ Useful when you need to pass a function around or create it conditionally\n• <b>Arrow function</b> — `const greet = () => {}` — not hoisted, borrows `this` from where it's written\n  ↳ The safe default for callbacks — no surprise `this`, no `arguments`, can't be used as a constructor",
-        np: "Function declaration पूरै hoisted, आफ्नै this। Function expression hoisted हुँदैन। Arrow function ले this लाई surrounding context बाट borrow गर्छ — callback को लागि default।",
-        jp: "関数宣言は完全にホイストされ独自のthisを持つ。関数式はホイストされない。アロー関数は周囲のthisを継承し、コールバックの安全なデフォルト。",
+        en: "A <b>function</b> (a reusable block of code) lets you write code once and use it many times.\n\nJavaScript has three common ways to create functions:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\nThe main differences are <b>hoisting</b> (whether you can use the function before its definition) and <b>`this`</b> (the value that a regular function gets based on how it is called).\n\n---\n\n### 1. Function Declaration\n\n<b>Function declaration</b> (a function created with the `function` keyword) is fully hoisted.\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nThis works because the entire function is available before execution reaches its definition.\n\nA function declaration has its own <b>`this`</b> (a value determined by how the function is called).\n\nUse it for named, reusable functions.\n\n---\n\n### 2. Function Expression\n\n<b>Function expression</b> (a function stored inside a variable) is created as part of an assignment.\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\nIt is not available before the assignment:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nLike a function declaration, it has its own <b>`this`</b>.\n\nFunction expressions are useful when you want to:\n\n• Store a function in a variable\n• Pass a function to another function\n• Create a function conditionally\n\n---\n\n### 3. Arrow Function\n\n<b>Arrow function</b> (a shorter function syntax that uses `=>`) looks like this:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nArrow functions are not hoisted:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nThe important difference is `this`.\n\nAn arrow function does not create its own <b>`this`</b>. It uses `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nArrow functions are commonly used for callbacks:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
+        np: "<b>Function</b> (पुनः प्रयोग गर्न मिल्ने code block) ले तपाईंलाई code एक पटक लेखी धेरै पटक प्रयोग गर्न दिन्छ।\n\nJavaScript मा function बनाउने तीन सामान्य तरिका छन्:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\nमुख्य फरक हुन् <b>hoisting</b> (definition अघि function प्रयोग गर्न मिल्छ कि मिल्दैन) र <b>`this`</b> (सामान्य function कसरी call भयो त्यसका आधारमा पाउने value)।\n\n---\n\n### 1. Function Declaration\n\n<b>Function declaration</b> (`function` keyword ले बनाइएको function) पूर्ण रूपमा hoist हुन्छ।\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ किनकि execution यसको definition मा पुग्नुअघि नै पूरै function उपलब्ध हुन्छ।\n\nFunction declaration को आफ्नै <b>`this`</b> (function कसरी call भयो त्यसले निर्धारण गर्ने value) हुन्छ।\n\nनाम भएका, पुनः प्रयोग गर्न मिल्ने function का लागि यो प्रयोग गर्नुहोस्।\n\n---\n\n### 2. Function Expression\n\n<b>Function expression</b> (variable भित्र राखिएको function) assignment को भाग रूपमा बनाइन्छ।\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\nAssignment अघि यो उपलब्ध हुँदैन:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nFunction declaration जस्तै, यसको आफ्नै <b>`this`</b> हुन्छ।\n\nFunction expression यस्ता बेला उपयोगी हुन्छन्:\n\n• Function लाई variable मा राख्न\n• Function लाई अर्को function मा पठाउन\n• Condition अनुसार function बनाउन\n\n---\n\n### 3. Arrow Function\n\n<b>Arrow function</b> (`=>` प्रयोग गर्ने छोटो function syntax) यस्तो देखिन्छ:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nArrow function hoist हुँदैनन्:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nमहत्वपूर्ण फरक `this` हो।\n\nArrow function आफ्नै <b>`this`</b> बनाउँदैन। यो वरिपरिको code बाट `this` लिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nArrow function सामान्यतया callback का लागि प्रयोग हुन्छन्:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
+        jp: "<b>関数</b>（再利用できるコードのかたまり）を使うと、一度書いたコードを何度も使えます。\n\nJavaScriptで関数を作る一般的な方法は3つあります:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\n主な違いは<b>ホイスティング</b>（定義より前に関数を使えるか）と<b>`this`</b>（通常の関数が呼び出し方に応じて受け取る値）です。\n\n---\n\n### 1. 関数宣言\n\n<b>関数宣言</b>（`function` キーワードで作る関数）は完全にホイスティングされます。\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\n実行が定義に達する前から関数全体が使えるので、これは動きます。\n\n関数宣言は自分の<b>`this`</b>（呼び出し方によって決まる値）を持ちます。\n\n名前付きで再利用する関数にはこれを使いましょう。\n\n---\n\n### 2. 関数式\n\n<b>関数式</b>（変数に入れた関数）は代入の一部として作られます。\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\n代入より前には使えません:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n関数宣言と同じく、自分の<b>`this`</b>を持ちます。\n\n関数式は次のようなときに役立ちます:\n\n• 関数を変数に入れる\n• 関数を別の関数に渡す\n• 条件に応じて関数を作る\n\n---\n\n### 3. アロー関数\n\n<b>アロー関数</b>（`=>` を使う短い関数構文）はこう書きます:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nアロー関数はホイスティングされません:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\n重要な違いは `this` です。\n\nアロー関数は自分の<b>`this`</b>を作りません。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nアロー関数はコールバックによく使われます:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
       },
-      diagram: `function greet(){}         hoisted: YES    own 'this': YES
-const g = function(){}    hoisted: NO     own 'this': YES
-const g = () => {}        hoisted: NO     own 'this': NO (borrows from surrounding scope)`,
+      diagram: `                    Function Types
+                         |
+          +--------------+--------------+
+          |              |              |
+     Declaration     Expression       Arrow
+          |              |              |
+     function x()    const x =      const x =
+                    function()      () =>
+          |              |              |
+       Hoisted?        No             No
+          |              |              |
+      Own this         Own this     Borrows this`,
       codeExample: {
-        title: { en: "Three ways to write a function and the 'this' difference", np: "Function को तीन तरिका र 'this' को फरक", jp: "3種類の関数と'this'の違い" },
-        code: `// ── Function Declaration — hoisted, has its own 'this' ─────
-function greet(name) {
-  return \`Hello, \${name}!\`;
+        title: { en: "Declaration, expression and arrow side by side", np: "Declaration, expression र arrow सँगसँगै", jp: "宣言・関数式・アローを並べて比較" },
+        code: `// Function declaration
+function add(a, b) {
+  return a + b;
 }
-// You can call greet() BEFORE this line because it's fully hoisted
 
-// ── Function Expression — NOT hoisted ────────
-const greet2 = function (name) {
-  return \`Hello, \${name}!\`;
+// Function expression
+const subtract = function (a, b) {
+  return a - b;
 };
 
-// ── Arrow Function — concise, no own 'this' ─
-const greet3 = (name) => \`Hello, \${name}!\`;
+// Arrow function
+const multiply = (a, b) => {
+  return a * b;
+};
 
-// ── Key difference: 'this' binding ─────────────────────────────────
-const timer = {
-  seconds: 0,
-  startRegular: function () {
-    setInterval(function () {
-      this.seconds++;          // ❌ 'this' is undefined/window, not timer
-    }, 1000);
-  },
-  startArrow: function () {
-    setInterval(() => {
-      this.seconds++;          // ✅ 'this' is the timer object
-    }, 1000);
-  },
-};`,
+console.log(add(5, 2));       // 7
+console.log(subtract(5, 2));  // 3
+console.log(multiply(5, 2));   // 10
+
+// A one-line arrow function can be shorter
+const double = (a) => a * 2;`,
       },
       keyTakeaways: [
-        { en: "Function declarations are hoisted with their full body — you can call them before the line where they're written.", np: "Function declaration पूरै body सहित hoist हुन्छ — declaration अघि call गर्न मिल्छ।", jp: "関数宣言は本体ごとホイストされ、宣言前に呼び出せる。" },
-        { en: "Arrow functions don't have their own `this` — they borrow it from the surrounding scope, which is exactly what you want inside callbacks like `setInterval`.", np: "Arrow function को आफ्नै this हुँदैन — surrounding scope बाट borrow गर्छ, callback भित्र यही चाहिने हो।", jp: "アロー関数は独自のthisを持たず、周囲のスコープから借用する。setIntervalのようなコールバック内で有用。" },
-        { en: "Arrow functions can't be used as constructors (`new Fn()` throws) and have no `arguments` object.", np: "Arrow function लाई constructor को रूपमा प्रयोग गर्न मिल्दैन र यसमा `arguments` हुँदैन।", jp: "アロー関数はコンストラクタとして使えず、argumentsオブジェクトを持たない。" },
+        { en: "<b>Function declaration</b> → fully hoisted and has its own `this`.", np: "<b>Function declaration</b> → पूर्ण रूपमा hoist हुन्छ र आफ्नै `this` हुन्छ।", jp: "<b>関数宣言</b> → 完全にホイスティングされ、自分の `this` を持つ。" },
+        { en: "<b>Function expression</b> → not hoisted and has its own `this`.", np: "<b>Function expression</b> → hoist हुँदैन र आफ्नै `this` हुन्छ।", jp: "<b>関数式</b> → ホイスティングされず、自分の `this` を持つ。" },
+        { en: "<b>Arrow function</b> → not hoisted and borrows `this` from the surrounding code.", np: "<b>Arrow function</b> → hoist हुँदैन र वरिपरिको code बाट `this` लिन्छ।", jp: "<b>アロー関数</b> → ホイスティングされず、周囲のコードから `this` を借りる。" },
+        { en: "Function declarations are good for named, reusable functions.", np: "Function declaration नाम भएका, पुनः प्रयोग गर्न मिल्ने function का लागि राम्रो छन्।", jp: "関数宣言は名前付きで再利用する関数に向く。" },
+        { en: "Function expressions are useful when storing or passing functions.", np: "Function expression function राख्दा वा पठाउँदा उपयोगी हुन्छन्।", jp: "関数式は関数を保存したり渡したりするときに役立つ。" },
+        { en: "Arrow functions are commonly used for callbacks.", np: "Arrow function सामान्यतया callback का लागि प्रयोग हुन्छन्।", jp: "アロー関数はコールバックによく使われる。" },
+        { en: "Arrow functions do not have their own `this` or `arguments`.", np: "Arrow function का आफ्नै `this` वा `arguments` हुँदैनन्।", jp: "アロー関数は自分の `this` も `arguments` も持たない。" },
+        { en: "Arrow functions cannot be used with `new` as constructors.", np: "Arrow function लाई `new` सँग constructor रूपमा प्रयोग गर्न मिल्दैन।", jp: "アロー関数は `new` を使ってコンストラクタとして使えない。" },
       ],
       commonMistakes: [
-        { en: "Using a regular `function` as a callback and being surprised that `this` isn't what you expected inside it.", np: "Regular function लाई callback को रूपमा प्रयोग गर्दा `this` अनपेक्षित हुनु।", jp: "通常のfunctionをコールバックに使い、内部の`this`が期待通りでないこと。" },
-        { en: "Trying to call a function expression or arrow function before its declaration line, expecting it to behave like a hoisted function declaration.", np: "Function expression/arrow function लाई declaration अघि call गर्ने प्रयास गर्नु।", jp: "関数式やアロー関数を宣言前に呼び出そうとすること。" },
-        { en: "Using an arrow function as an object method when you actually need `this` to refer to the object itself.", np: "Object method मा arrow function प्रयोग गर्दा `this` ले object लाई point नगर्नु।", jp: "オブジェクトメソッドにアロー関数を使い、thisがオブジェクトを指さないこと。" },
+        { en: "<b>Calling a function expression too early</b> — `greet()` above `const greet = function () {}` throws an error, because the function is created only when execution reaches the assignment.", np: "<b>Function expression धेरै चाँडै call गर्नु</b> — `const greet = function () {}` माथि `greet()` ले error दिन्छ, किनकि function execution assignment मा पुगेपछि मात्र बन्छ।", jp: "<b>関数式を早すぎるタイミングで呼ぶ</b> — `const greet = function () {}` より前の `greet()` はエラーになる。関数は実行が代入に達したときに初めて作られる。" },
+        { en: "<b>Expecting arrow functions to have their own `this`</b> — an object method written as `greet: () => { console.log(this.name); }` usually logs `undefined`. For object methods use a regular function: `greet() { console.log(this.name); }`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने आशा गर्नु</b> — `greet: () => { console.log(this.name); }` लेखिएको object method सामान्यतया `undefined` देखाउँछ। Object method का लागि सामान्य function प्रयोग गर्नुहोस्: `greet() { console.log(this.name); }`।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — `greet: () => { console.log(this.name); }` と書いたオブジェクトのメソッドは通常 `undefined` を出す。オブジェクトのメソッドには通常の関数 `greet() { console.log(this.name); }` を使う。" },
+        { en: "<b>Assuming arrow functions are just shorter regular functions</b> — they look similar, but their behaviour with `this`, `arguments` and `new` is different.", np: "<b>Arrow function केवल छोटो सामान्य function हो भन्ने ठान्नु</b> — यी मिल्दो देखिन्छन्, तर `this`, `arguments` र `new` सँगको व्यवहार फरक छ।", jp: "<b>アロー関数は通常の関数の短縮形にすぎないと思う</b> — 見た目は似ているが、`this`・`arguments`・`new` に対する振る舞いが違う。" },
       ],
       quiz: [
         {
-          question: { en: "Which function type is fully hoisted with its body, letting you call it before its declaration?", np: "कुन function type पूरै body सहित hoist हुन्छ?", jp: "本体ごと完全にホイストされ、宣言前に呼び出せる関数の種類は？" },
-          options: [{ en: "Function declaration", np: "Function declaration", jp: "関数宣言" }, { en: "Function expression", np: "Function expression", jp: "関数式" }, { en: "Arrow function", np: "Arrow function", jp: "アロー関数" }],
+          question: { en: "Which function type is fully hoisted?", np: "कुन function type पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされる関数の種類はどれか?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "Function expression", np: "Function expression", jp: "関数式" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "A function declaration is hoisted with its whole body, so it can be called before its definition.", np: "Function declaration आफ्नो पूरै body सँग hoist हुन्छ, त्यसैले यसलाई definition अघि call गर्न सकिन्छ।", jp: "関数宣言は本体ごとホイスティングされるので、定義より前に呼び出せる。" },
+        },
+        {
+          question: { en: "Which function borrows `this` from its surrounding code?", np: "कुन function ले वरिपरिको code बाट `this` लिन्छ?", jp: "周囲のコードから `this` を借りる関数はどれか?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+            { en: "Function expression", np: "Function expression", jp: "関数式" },
+          ],
           correctIndex: 0,
-          explanation: { en: "Only function declarations get full hoisting with their body; expressions and arrow functions are just variable assignments.", np: "Function declaration मात्र body सहित पूरै hoist हुन्छ।", jp: "関数宣言のみが本体ごと完全にホイストされる。" },
+          explanation: { en: "An arrow function never creates its own `this`, which is what makes it handy inside a method but wrong as a method.", np: "Arrow function आफ्नै `this` कहिल्यै बनाउँदैन, यसैले यो method भित्र उपयोगी छ तर method रूपमा गलत।", jp: "アロー関数は自分の `this` を作らない。だからメソッドの内側では便利だが、メソッド自体には不向き。" },
         },
         {
-          question: { en: "Why are arrow functions the safe default for callbacks like setInterval?", np: "setInterval जस्ता callback मा arrow function किन default?", jp: "setIntervalのようなコールバックでアロー関数がデフォルトの理由は？" },
-          options: [{ en: "They run faster", np: "छिटो चल्छ", jp: "実行が速い" }, { en: "They borrow `this` from the surrounding scope instead of losing it", np: "यिनले surrounding scope बाट this borrow गर्छन्, गुमाउँदैनन्", jp: "周囲のスコープからthisを借用し、失わない" }],
-          correctIndex: 1,
-          explanation: { en: "A regular function() loses the intended this inside callbacks; an arrow function keeps the outer this intact.", np: "Regular function() ले callback भित्र intended this गुमाउँछ; arrow function ले outer this कायम राख्छ।", jp: "通常のfunction()はコールバック内で意図したthisを失う。アロー関数は外側のthisを保持する。" },
+          question: { en: "Which is commonly used for callbacks?", np: "Callback का लागि सामान्यतया कुन प्रयोग हुन्छ?", jp: "コールバックによく使われるのはどれか?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "`var` function", np: "`var` function", jp: "`var` の関数" },
+            { en: "Constructor function only", np: "Constructor function मात्र", jp: "コンストラクタ関数だけ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Short arrow syntax reads well inline, as in `numbers.map((n) => n * 2)`.", np: "छोटो arrow syntax inline राम्रो पढिन्छ, जस्तै `numbers.map((n) => n * 2)`।", jp: "短いアロー構文はインラインで読みやすい。例: `numbers.map((n) => n * 2)`。" },
         },
         {
-          question: { en: "Can an arrow function be used with `new` as a constructor?", np: "Arrow function लाई `new` सँग constructor को रूपमा प्रयोग गर्न मिल्छ?", jp: "アロー関数を`new`でコンストラクタとして使える？" },
-          options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — it throws a TypeError", np: "होइन — TypeError आउँछ", jp: "いいえ — TypeErrorが発生する" }],
+          question: { en: "Which function type can be used with `new`?", np: "कुन function type `new` सँग प्रयोग गर्न मिल्छ?", jp: "`new` と一緒に使えるのはどの関数か?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "Regular function", np: "सामान्य function", jp: "通常の関数" },
+            { en: "Both", np: "दुबै", jp: "両方" },
+          ],
           correctIndex: 1,
-          explanation: { en: "Arrow functions are not constructable — attempting new arrowFn() throws a TypeError.", np: "Arrow function constructable छैन — new arrowFn() ले TypeError दिन्छ।", jp: "アロー関数はコンストラクタとして使えず、new arrowFn()はTypeErrorになる。" },
+          explanation: { en: "Arrow functions have no `[[Construct]]` behaviour, so `new` on one throws a TypeError.", np: "Arrow function मा `[[Construct]]` व्यवहार हुँदैन, त्यसैले यसमा `new` गर्दा TypeError आउँछ।", jp: "アロー関数には `[[Construct]]` の振る舞いがないため、`new` を使うとTypeErrorになる。" },
         },
       ],
     },
