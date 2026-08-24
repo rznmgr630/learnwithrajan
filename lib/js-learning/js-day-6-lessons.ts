@@ -98,87 +98,106 @@ console.log(Object.entries(user));
       title: { en: "Destructuring, Spread & Rest", np: "Destructuring, Spread र Rest", jp: "分割代入・スプレッド・rest" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Destructuring</b> unpacks values out of an object or array by name or position, instead of reaching in one property at a time — `const { name, age } = user` reads exactly like the shape of the data itself. It works with renaming (`{ name: userName }`), default values (`{ country = \"Unknown\" }`), nested shapes, and directly inside function parameters.\n\n<b>Spread</b> (`...`) expands an iterable's items into a new array or object — `{...obj1, ...obj2}` merges objects left to right, with later keys overwriting earlier ones. <b>Rest</b> (`...`) does the opposite: it collects whatever remaining items are left into a real array, and can only appear as the very last item in a destructuring pattern or function parameter list.",
-        np: "Destructuring ले object/array बाट value लाई नाम वा position अनुसार unpack गर्छ। Spread (`...`) ले iterable लाई नयाँ array/object मा फिँजाउँछ; Rest (`...`) ले बाँकी सबै items लाई array मा collect गर्छ।",
-        jp: "分割代入はオブジェクトや配列から名前や位置で値を取り出す。スプレッド(`...`)はイテラブルを新しい配列/オブジェクトに展開する。rest(`...`)は残りの項目を配列に集める。",
+        en: "<b>Destructuring</b> (taking values out of an object or array) lets you get the data you need without accessing each property separately.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst { name, age } = user;\n\nconsole.log(name); // Rajan\nconsole.log(age);  // 30\n```\n\nYou can also <b>rename</b> properties and provide <b>default values</b>:\n\n```javascript\nconst { name: userName, country = \"Unknown\" } = user;\n```\n\nWith arrays, destructuring uses the <b>position</b> of each value:\n\n```javascript\nconst numbers = [10, 20, 30];\n\nconst [first, second] = numbers;\n\nconsole.log(first);  // 10\nconsole.log(second); // 20\n```\n\n---\n\n### Spread\n\n<b>Spread</b> (`...`) expands values into a new array or object.\n\n```javascript\nconst user = { name: \"Rajan\", age: 30 };\n\nconst updatedUser = {\n  ...user,\n  age: 31\n};\n\nconsole.log(updatedUser);\n// { name: \"Rajan\", age: 31 }\n```\n\nWhen spreading objects, later properties <b>overwrite</b> earlier ones.\n\n---\n\n### Rest\n\n<b>Rest</b> (`...`) does the opposite of spread — it collects the remaining values into an array.\n\n```javascript\nconst [first, ...rest] = [10, 20, 30, 40];\n\nconsole.log(first); // 10\nconsole.log(rest);  // [20, 30, 40]\n```\n\nThe same idea works with function parameters:\n\n```javascript\nfunction add(...numbers) {\n  return numbers.reduce((sum, n) => sum + n, 0);\n}\n\nconsole.log(add(1, 2, 3)); // 6\n```",
+        np: "<b>Destructuring</b> (object वा array बाट value निकाल्नु) ले हरेक property छुट्टै पहुँच नगरी चाहिने data लिन दिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst { name, age } = user;\n\nconsole.log(name); // Rajan\nconsole.log(age);  // 30\n```\n\nतपाईं property लाई <b>rename</b> गर्न र <b>default value</b> दिन पनि सक्नुहुन्छ:\n\n```javascript\nconst { name: userName, country = \"Unknown\" } = user;\n```\n\nArray सँग, destructuring ले हरेक value को <b>स्थान</b> प्रयोग गर्छ:\n\n```javascript\nconst numbers = [10, 20, 30];\n\nconst [first, second] = numbers;\n\nconsole.log(first);  // 10\nconsole.log(second); // 20\n```\n\n---\n\n### Spread\n\n<b>Spread</b> (`...`) ले value लाई नयाँ array वा object मा फैलाउँछ।\n\n```javascript\nconst user = { name: \"Rajan\", age: 30 };\n\nconst updatedUser = {\n  ...user,\n  age: 31\n};\n\nconsole.log(updatedUser);\n// { name: \"Rajan\", age: 31 }\n```\n\nObject spread गर्दा, पछिका property ले अघिल्लालाई <b>overwrite</b> गर्छन्।\n\n---\n\n### Rest\n\n<b>Rest</b> (`...`) ले spread को उल्टो गर्छ — यसले बाँकी value लाई array मा जम्मा गर्छ।\n\n```javascript\nconst [first, ...rest] = [10, 20, 30, 40];\n\nconsole.log(first); // 10\nconsole.log(rest);  // [20, 30, 40]\n```\n\nयही विचार function parameter सँग पनि काम गर्छ:\n\n```javascript\nfunction add(...numbers) {\n  return numbers.reduce((sum, n) => sum + n, 0);\n}\n\nconsole.log(add(1, 2, 3)); // 6\n```",
+        jp: "<b>分割代入（Destructuring）</b>（オブジェクトや配列から値を取り出すこと）を使うと、プロパティを1つずつ参照せずに必要なデータを取り出せます。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst { name, age } = user;\n\nconsole.log(name); // Rajan\nconsole.log(age);  // 30\n```\n\nプロパティの<b>名前を変える</b>ことや<b>既定値</b>を与えることもできます:\n\n```javascript\nconst { name: userName, country = \"Unknown\" } = user;\n```\n\n配列では、分割代入は各値の<b>位置</b>を使います:\n\n```javascript\nconst numbers = [10, 20, 30];\n\nconst [first, second] = numbers;\n\nconsole.log(first);  // 10\nconsole.log(second); // 20\n```\n\n---\n\n### スプレッド\n\n<b>スプレッド</b>（`...`）は値を新しい配列やオブジェクトに展開します。\n\n```javascript\nconst user = { name: \"Rajan\", age: 30 };\n\nconst updatedUser = {\n  ...user,\n  age: 31\n};\n\nconsole.log(updatedUser);\n// { name: \"Rajan\", age: 31 }\n```\n\nオブジェクトを展開するとき、後のプロパティが前のものを<b>上書き</b>します。\n\n---\n\n### レスト\n\n<b>レスト</b>（`...`）はスプレッドの逆で、残りの値を配列にまとめます。\n\n```javascript\nconst [first, ...rest] = [10, 20, 30, 40];\n\nconsole.log(first); // 10\nconsole.log(rest);  // [20, 30, 40]\n```\n\n同じ考え方が関数の引数にも使えます:\n\n```javascript\nfunction add(...numbers) {\n  return numbers.reduce((sum, n) => sum + n, 0);\n}\n\nconsole.log(add(1, 2, 3)); // 6\n```",
       },
-      diagram: `const { name, age } = user;              ← object destructuring
-const [first, , third] = [10, 20, 30];   ← array destructuring (skip with ,)
-const [head, ...tail] = [1, 2, 3, 4];    ← rest collects [2, 3, 4]
+      diagram: `Destructuring
+Object/Array
+    ↓
+Take values out
+    ↓
+Variables
 
-{ ...obj1, ...obj2 }    ← spread MERGES, later keys win
-function f(...args) {}  ← rest COLLECTS all arguments into an array
+Spread
+[1, 2, 3]
+    ↓  ...
+1, 2, 3
 
-     spread  →  expands   ...arr  into  a, b, c
-     rest    →  collects  a, b, c  into ...arr`,
+Rest
+1, 2, 3
+    ↓  ...
+[1, 2, 3]`,
       codeExample: {
-        title: { en: "Destructuring, spread, and rest in practice", np: "Destructuring, spread, rest व्यवहारमा", jp: "分割代入・スプレッド・restの実践" },
-        code: `const user = { name: "Alice", age: 30, address: { city: "Kathmandu" } };
+        title: { en: "Destructuring, spread and rest together", np: "Destructuring, spread र rest सँगै", jp: "分割代入・スプレッド・レストをまとめて" },
+        code: `const user = { name: "Rajan", age: 30 };
 
-// ── Object destructuring — rename, default, nested ────────────────
+// Destructuring, with a rename and a default
 const { name, age } = user;
-const { name: userName } = user;             // rename while destructuring
-const { country = "Unknown" } = user;        // default (user has no country)
-const { address: { city } } = user;          // nested destructuring
+const { name: userName, country = "Unknown" } = user;
 
-// In function parameters — very common in React/Express:
-function greet({ name, age }) { return \`\${name} is \${age}\`; }
+// Array destructuring works by position
+const [first, second] = [10, 20, 30];
 
-// ── Array destructuring — skip items, swap variables ───────────────
-const [first, , third] = [10, 20, 30];   // skip index 1 with an empty slot
-let a = 1, b = 2;
-[a, b] = [b, a];                          // swap: a = 2, b = 1
+// Spread expands — later properties win
+const updatedUser = { ...user, age: 31 };
+console.log(updatedUser); // { name: "Rajan", age: 31 }
 
-// ── Spread — expanding into a new array/object ──────────────────────
-const merged   = [...[1, 2], ...[3, 4]];        // [1, 2, 3, 4]
-const combined = { ...{ a: 1 }, ...{ a: 2, b: 3 } };  // { a: 2, b: 3 } — last wins
+// Rest collects the remainder
+const [head, ...rest] = [10, 20, 30, 40];
+console.log(head); // 10
+console.log(rest); // [20, 30, 40]
 
-// ── Rest — collecting the remainder ─────────────────────────────────
-function sum(...numbers) {                 // rest gathers all args into an array
-  return numbers.reduce((acc, n) => acc + n, 0);
+function add(...numbers) {
+  return numbers.reduce((sum, n) => sum + n, 0);
 }
-sum(1, 2, 3, 4, 5);  // 15
 
-const [head, ...tail] = [1, 2, 3, 4];   // head = 1, tail = [2, 3, 4]
-const { name: n, ...rest } = user;      // n = "Alice", rest = { age: 30, address: {...} }`,
+console.log(add(1, 2, 3)); // 6`,
       },
       keyTakeaways: [
-        { en: "Destructuring pulls values out by name or position and works directly in function parameters — no manual `.property` or `[index]` access needed.", np: "Destructuring ले नाम वा position अनुसार value निकाल्छ, function parameters मा सिधै काम गर्छ — manual property/index access चाहिँदैन।", jp: "分割代入は名前や位置で値を取り出し、関数パラメータで直接機能する。手動のプロパティ/インデックスアクセスは不要。" },
-        { en: "Spread always creates a NEW array/object; when merging objects, later spread sources overwrite earlier ones for duplicate keys.", np: "Spread ले सधैं नयाँ array/object बनाउँछ; object merge गर्दा duplicate key मा पछिल्लो source ले अगाडिको overwrite गर्छ।", jp: "スプレッドは常に新しい配列/オブジェクトを作る。オブジェクトをマージする際、重複キーは後のソースが前のものを上書きする。" },
-        { en: "Rest collects \"everything else\" into a real array, but it must be the LAST element in the pattern — you can't have anything after it.", np: "Rest ले 'बाँकी सबै' लाई एक real array मा collect गर्छ, तर यो pattern को अन्तिम element हुनुपर्छ।", jp: "restは「残り全部」を実際の配列に集めるが、パターンの最後の要素でなければならない。" },
+        { en: "<b>Destructuring</b> takes values out of objects or arrays.", np: "<b>Destructuring</b> ले object वा array बाट value निकाल्छ।", jp: "<b>分割代入</b>はオブジェクトや配列から値を取り出す。" },
+        { en: "Object destructuring uses <b>property names</b>.", np: "Object destructuring ले <b>property नाम</b> प्रयोग गर्छ।", jp: "オブジェクトの分割代入は<b>プロパティ名</b>を使う。" },
+        { en: "Array destructuring uses <b>position</b>.", np: "Array destructuring ले <b>स्थान</b> प्रयोग गर्छ।", jp: "配列の分割代入は<b>位置</b>を使う。" },
+        { en: "<b>Spread</b> (`...`) expands values.", np: "<b>Spread</b> (`...`) ले value फैलाउँछ।", jp: "<b>スプレッド</b>（`...`）は値を展開する。" },
+        { en: "<b>Rest</b> (`...`) collects remaining values into an array.", np: "<b>Rest</b> (`...`) ले बाँकी value array मा जम्मा गर्छ।", jp: "<b>レスト</b>（`...`）は残りの値を配列にまとめる。" },
+        { en: "With objects, later spread properties overwrite earlier ones.", np: "Object मा, पछिका spread property ले अघिल्लालाई overwrite गर्छन्।", jp: "オブジェクトでは、後に展開したプロパティが前のものを上書きする。" },
+        { en: "Rest must be the <b>last item</b> in a destructuring pattern or function parameter list.", np: "Rest destructuring pattern वा function parameter सूचीको <b>अन्तिम item</b> हुनुपर्छ।", jp: "レストは分割代入パターンや引数リストの<b>最後</b>でなければならない。" },
       ],
       commonMistakes: [
-        { en: "Confusing spread and rest because they share the same `...` syntax — spread EXPANDS an existing iterable, rest COLLECTS remaining values into one.", np: "Spread र rest दुवैले `...` syntax प्रयोग गर्ने भएर मिलाउनु — spread ले फिँजाउँछ, rest ले collect गर्छ।", jp: "同じ`...`構文を使うためスプレッドとrestを混同すること。スプレッドは展開し、restは収集する。" },
-        { en: "Assuming `{...obj}` performs a deep copy — it only copies top-level keys; nested objects/arrays inside are still shared references.", np: "`{...obj}` ले deep copy गर्छ भन्ने ठान्नु — यसले top-level keys मात्र copy गर्छ, nested object/array अझै shared रहन्छ।", jp: "`{...obj}`が深いコピーを行うと思い込むこと。トップレベルのキーのみをコピーし、ネストされた参照は共有されたまま。" },
-        { en: "Destructuring a property that doesn't exist without a default value and being surprised it silently returns `undefined` instead of throwing.", np: "Default value बिना नभएको property destructure गरेर error आउनुको सट्टा `undefined` आउँदा अनौठो मान्नु।", jp: "存在しないプロパティをデフォルト値なしで分割代入し、エラーではなく黙って`undefined`が返されて驚くこと。" },
+        { en: "<b>Confusing spread and rest</b> — they share the `...` syntax, but spread <b>expands</b> values while rest <b>collects</b> them.", np: "<b>Spread र rest भ्रममा पार्नु</b> — दुबैले `...` syntax प्रयोग गर्छन्, तर spread ले value <b>फैलाउँछ</b> जब कि rest ले <b>जम्मा</b> गर्छ।", jp: "<b>スプレッドとレストを混同する</b> — 記法は同じ `...` だが、スプレッドは<b>展開</b>し、レストは<b>まとめる</b>。" },
+        { en: "<b>Putting rest before another item</b> — `const [first, ...rest, last] = numbers;` is an error. Rest must come last.", np: "<b>Rest लाई अर्को item अघि राख्नु</b> — `const [first, ...rest, last] = numbers;` error हो। Rest अन्तिममा आउनुपर्छ।", jp: "<b>レストを他の要素の前に置く</b> — `const [first, ...rest, last] = numbers;` はエラー。レストは最後に置く。" },
+        { en: "<b>Forgetting that object spread uses the later value</b> — `const user = { age: 30, ...{ age: 31 } };` leaves `user.age` as `31`.", np: "<b>Object spread ले पछिल्लो value लिन्छ भनी बिर्सनु</b> — `const user = { age: 30, ...{ age: 31 } };` ले `user.age` लाई `31` बनाउँछ।", jp: "<b>オブジェクト展開では後の値が勝つことを忘れる</b> — `const user = { age: 30, ...{ age: 31 } };` では `user.age` は `31` になる。" },
       ],
       quiz: [
         {
-          question: { en: "In `const { country = \"Unknown\" } = user`, what happens if `user.country` is `undefined`?", np: "`const { country = \"Unknown\" } = user` मा `user.country` `undefined` भएमा के हुन्छ?", jp: "`const { country = \"Unknown\" } = user`で`user.country`が`undefined`の場合どうなる？" },
+          question: { en: "What does destructuring do?", np: "Destructuring ले के गर्छ?", jp: "分割代入は何をするか?" },
           options: [
-            { en: "It throws an error", np: "Error throw हुन्छ", jp: "エラーがスローされる" },
-            { en: "`country` becomes `\"Unknown\"`", np: "`country` `\"Unknown\"` हुन्छ", jp: "`country`は`\"Unknown\"`になる" },
+            { en: "Deletes an object", np: "Object मेटाउँछ", jp: "オブジェクトを削除する" },
+            { en: "Takes values out of an object or array", np: "Object वा array बाट value निकाल्छ", jp: "オブジェクトや配列から値を取り出す" },
+            { en: "Converts an object into a string", np: "Object लाई string मा बदल्छ", jp: "オブジェクトを文字列に変換する" },
           ],
           correctIndex: 1,
-          explanation: { en: "Destructuring defaults apply whenever the extracted value is exactly `undefined`, not just when the key is missing entirely.", np: "Extract भएको value ठ्याक्कै `undefined` भएमा destructuring default apply हुन्छ, key नभएको बेला मात्र होइन।", jp: "分割代入のデフォルトは、抽出された値がまさに`undefined`である場合に適用される。キーが完全に欠けている場合だけではない。" },
+          explanation: { en: "Objects destructure by property name, arrays by position.", np: "Object property नामले, array स्थानले destructure हुन्छन्।", jp: "オブジェクトはプロパティ名で、配列は位置で分割代入する。" },
         },
         {
-          question: { en: "What does `const [head, ...tail] = [1, 2, 3]` produce?", np: "`const [head, ...tail] = [1, 2, 3]` ले के दिन्छ?", jp: "`const [head, ...tail] = [1, 2, 3]`は何を生成する？" },
+          question: { en: "What does spread (`...`) do?", np: "Spread (`...`) ले के गर्छ?", jp: "スプレッド（`...`）は何をするか?" },
           options: [
-            { en: "`head = 1`, `tail = [2, 3]`", np: "`head = 1`, `tail = [2, 3]`", jp: "`head = 1`、`tail = [2, 3]`" },
-            { en: "`head = [1, 2, 3]`, `tail = undefined`", np: "`head = [1, 2, 3]`, `tail = undefined`", jp: "`head = [1, 2, 3]`、`tail = undefined`" },
+            { en: "Collects remaining values", np: "बाँकी value जम्मा गर्छ", jp: "残りの値をまとめる" },
+            { en: "Expands values", np: "Value फैलाउँछ", jp: "値を展開する" },
+            { en: "Deletes values", np: "Value मेटाउँछ", jp: "値を削除する" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It copies the items out into a new array or object literal.", np: "यसले item लाई नयाँ array वा object literal मा निकाल्छ।", jp: "要素を新しい配列やオブジェクトリテラルに取り出す。" },
+        },
+        {
+          question: { en: "What does rest (`...`) do?", np: "Rest (`...`) ले के गर्छ?", jp: "レスト（`...`）は何をするか?" },
+          options: [
+            { en: "Collects remaining values", np: "बाँकी value जम्मा गर्छ", jp: "残りの値をまとめる" },
+            { en: "Expands an array", np: "Array फैलाउँछ", jp: "配列を展開する" },
+            { en: "Copies only the first value", np: "पहिलो value मात्र copy गर्छ", jp: "最初の値だけをコピーする" },
           ],
           correctIndex: 0,
-          explanation: { en: "The rest pattern collects everything after the first matched element into a new array.", np: "Rest pattern ले पहिलो matched element पछिका सबैलाई नयाँ array मा collect गर्छ।", jp: "restパターンは最初にマッチした要素以降のすべてを新しい配列に集める。" },
+          explanation: { en: "Whatever is left over after the named items goes into one array.", np: "नाम दिइएका item पछि बाँकी रहेको सबै एउटा array मा जान्छ।", jp: "名前を付けた要素の後に残ったものが1つの配列に入る。" },
         },
         {
-          question: { en: "Does `{...obj1, ...obj2}` deep copy nested objects inside `obj1` or `obj2`?", np: "`{...obj1, ...obj2}` ले `obj1` वा `obj2` भित्रका nested objects deep copy गर्छ?", jp: "`{...obj1, ...obj2}`は`obj1`や`obj2`内のネストされたオブジェクトを深くコピーする？" },
+          question: { en: "Which must be last?", np: "कुन अन्तिममा हुनुपर्छ?", jp: "最後に置かなければならないのはどれか?" },
           options: [
-            { en: "Yes, the result is fully independent at every level", np: "हो, result हरेक level मा पूर्ण independent हुन्छ", jp: "はい、結果はすべてのレベルで完全に独立している" },
-            { en: "No — only top-level keys are copied; nested objects/arrays remain shared references", np: "होइन — top-level keys मात्र copy हुन्छ; nested objects/arrays shared reference नै रहन्छ", jp: "いいえ — トップレベルのキーのみコピーされ、ネストされたオブジェクト/配列は共有参照のまま" },
+            { en: "Spread", np: "Spread", jp: "スプレッド" },
+            { en: "Rest", np: "Rest", jp: "レスト" },
+            { en: "Destructuring", np: "Destructuring", jp: "分割代入" },
           ],
           correctIndex: 1,
-          explanation: { en: "Spread is a shallow copy operation, exactly like `Object.assign`. Mutating a nested value through the copy will also change the original.", np: "Spread एक shallow copy operation हो, `Object.assign` जस्तै। Copy मार्फत nested value mutate गर्दा original पनि बदलिन्छ।", jp: "スプレッドは`Object.assign`と同様に浅いコピー操作。コピー経由でネストされた値を変更すると元も変わる。" },
+          explanation: { en: "Rest has to be final because it swallows everything remaining.", np: "Rest ले बाँकी सबै निल्ने हुनाले यो अन्तिम हुनैपर्छ।", jp: "レストは残りをすべて取り込むので最後でなければならない。" },
         },
       ],
     },
