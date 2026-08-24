@@ -120,78 +120,96 @@ console.log(user?.name);
       title: { en: "Conditionals", np: "Conditionals", jp: "条件分岐" },
       durationMinutes: 9,
       explanation: {
-        en: "Conditionals let your program take different paths depending on data. `if/else` reads like plain English for a handful of branches; `switch` reads cleaner once you have many exact-match cases; and the <b>guard clause</b> pattern — returning early on invalid input — flattens code that would otherwise nest three or four `if` blocks deep.\n\nThink of guard clauses as a bouncer at the door: reject anyone who doesn't meet the requirements immediately, so the code inside the venue never has to double-check who's allowed to be there.",
-        np: "if/else थोरै branches मा राम्रो। switch धेरै exact-match cases मा सफा। Guard clause ले invalid input लाई सुरुमै return गरी nesting हटाउँछ।",
-        jp: "if/elseは少数の分岐に向く。switchは多数の完全一致に向く。ガード節は無効な入力を早期returnし、ネストを減らす。",
+        en: "<b>Conditionals</b> (statements that let your program make decisions) allow code to take different paths depending on a value.\n\nThe main ways to write conditions are:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b> (runs code when a condition is true) is the most common way to make a decision.\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\nYou can also use `else if` (checks another condition when the previous one was false):\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\nUse `if / else` when you have a few different conditions.\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b> (checks one value against several exact values) is useful when you have many fixed choices.\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b> (stops the `switch` from continuing to the next case) is usually needed after each case.\n\n<b>`default`</b> (runs when no case matches) handles everything else.\n\n---\n\n### 3. Guard Clauses\n\nA <b>guard clause</b> (returning early when a condition is not valid) helps keep code simple and avoids deep nesting.\n\nWithout a guard clause:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nThis becomes deeply nested and harder to read.\n\nWith a guard clause:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\nThe invalid cases are handled immediately.\n\nThink of a guard clause like a <b>bouncer</b>:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
+        np: "<b>Conditional</b> (तपाईंको program लाई निर्णय गर्न दिने statement) ले value अनुसार code लाई फरक बाटो लिन दिन्छ।\n\nCondition लेख्ने मुख्य तरिका:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b> (condition सही हुँदा code चलाउने) निर्णय गर्ने सबैभन्दा सामान्य तरिका हो।\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\nतपाईं `else if` (अघिल्लो condition गलत हुँदा अर्को condition जाँच्ने) पनि प्रयोग गर्न सक्नुहुन्छ:\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\nकेही फरक condition हुँदा `if / else` प्रयोग गर्नुहोस्।\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b> (एउटा value लाई धेरै ठ्याक्कै मिल्ने value सँग जाँच्ने) धेरै निश्चित विकल्प हुँदा उपयोगी छ।\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b> (`switch` लाई अर्को case मा जान रोक्ने) सामान्यतया हरेक case पछि चाहिन्छ।\n\n<b>`default`</b> (कुनै case मिल्दा नमिलेमा चल्ने) बाँकी सबै सम्हाल्छ।\n\n---\n\n### 3. Guard Clauses\n\n<b>Guard clause</b> (condition मान्य नभएमा चाँडै return गर्नु) ले code सरल राख्न मद्दत गर्छ र गहिरो nesting बचाउँछ।\n\nGuard clause बिना:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nयो गहिरो रूपमा nested र पढ्न कठिन हुन्छ।\n\nGuard clause सँग:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\nअमान्य case तुरुन्तै सम्हालिन्छन्।\n\nGuard clause लाई <b>bouncer</b> जस्तै सोच्नुहोस्:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
+        jp: "<b>条件分岐（Conditionals）</b>（プログラムに判断をさせる文）は、値に応じてコードが別の道を通れるようにします。\n\n条件の主な書き方:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b>（条件が真のときコードを実行する）は、最も一般的な判断の方法です。\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\n`else if`（前の条件が偽のとき別の条件を調べる）も使えます:\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\n条件がいくつかあるときは `if / else` を使いましょう。\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b>（1つの値を複数の厳密な値と照合する）は、決まった選択肢が多いときに便利です。\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b>（`switch` が次のcaseへ進むのを止める）は通常、各caseの後に必要です。\n\n<b>`default`</b>（どのcaseにも一致しないときに実行される）が残りすべてを受け持ちます。\n\n---\n\n### 3. ガード節\n\n<b>ガード節（guard clause）</b>（条件が妥当でないとき早く返す）は、コードを単純に保ち、深いネストを避けます。\n\nガード節なし:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nこれは深くネストして読みにくくなります。\n\nガード節あり:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\n妥当でないケースをすぐに処理します。\n\nガード節は<b>入口の係員</b>のようなものだと考えてください:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
       },
-      diagram: `Nested (hard to read)          Guard clauses (flat, easy to read)
-──────────────────────         ───────────────────────────────────
-if (order) {                   if (!order) return;
-  if (order.items.length) {    if (!order.items.length) return;
-    if (order.isPaid) {        if (!order.isPaid) return;
-      ship(order);             ship(order);
-    }                          // ← actual logic stays at top level
-  }
-}`,
+      diagram: `                  Conditionals
+                       |
+          +------------+------------+
+          |            |            |
+        if/else      switch      Guard Clause
+          |            |            |
+    Conditions     Exact values   Exit early
+          |            |            |
+       if true      case match    return
+       if false    default        continue`,
       codeExample: {
-        title: { en: "if/else, switch and guard clauses", np: "if/else, switch र guard clauses", jp: "if/else・switch・ガード節" },
-        code: `// ── if / else if / else ──────────────────────────────────────────
-const score = 75;
-if (score >= 90) {
-  console.log("A");
-} else if (score >= 70) {
-  console.log("C");
-} else {
-  console.log("F");
+        title: { en: "Guard clauses keeping a function flat", np: "Guard clause ले function सम्म राख्नु", jp: "ガード節で関数をフラットに保つ" },
+        code: `function checkAccess(user) {
+  if (!user) return "No user";
+  if (!user.isActive) return "Account inactive";
+
+  if (user.isAdmin) {
+    return "Admin access";
+  }
+
+  return "User access";
 }
 
-// ── switch — cleaner for many discrete values ─────────────────────
-const day = "Monday";
-switch (day) {
-  case "Monday":
-  case "Tuesday":
-    console.log("Early week");
-    break;        // without break, execution falls through to the next case
-  default:
-    console.log("Mid week");
-}
+console.log(
+  checkAccess({
+    isActive: true,
+    isAdmin: false
+  })
+);
 
-// ── Guard clauses — return early instead of deep nesting ──────────
-function processOrder(order) {
-  if (!order) return;                      // bail early
-  if (order.items.length === 0) return;    // bail early
-  if (!order.isPaid) return;              // bail early
-  ship(order);                             // actual logic at top level
-}`,
+// "User access"`,
       },
       keyTakeaways: [
-        { en: "Use `if/else` for a handful of branches; `switch` once you have many exact-match cases against the same value.", np: "थोरै branches मा if/else; एउटै value सँग धेरै exact-match cases मा switch।", jp: "分岐が少数ならif/else、同じ値に対する完全一致が多いならswitch。" },
-        { en: "Guard clauses (early `return` on invalid input) flatten deep nesting and keep the main logic at the top level.", np: "Guard clause (invalid input मा early return) ले nesting हटाई main logic लाई top level मा राख्छ।", jp: "ガード節（無効入力での早期return）はネストを平らにし、主要ロジックをトップレベルに保つ。" },
-        { en: "A `switch` case without `break` falls through to the next case — often unintentional, sometimes used deliberately (as in the Monday/Tuesday example).", np: "`break` नभएको switch case अर्को case मा fall-through हुन्छ — कहिलेकाहीं जानाजानी प्रयोग गरिन्छ।", jp: "`break`のないswitchケースは次のケースにフォールスルーする。意図的に使うこともある。" },
+        { en: "<b>Conditionals</b> → let your program make decisions.", np: "<b>Conditional</b> → तपाईंको program लाई निर्णय गर्न दिन्छन्।", jp: "<b>条件分岐</b> → プログラムに判断をさせる。" },
+        { en: "<b>`if / else`</b> → best for normal conditions.", np: "<b>`if / else`</b> → सामान्य condition का लागि उत्तम।", jp: "<b>`if / else`</b> → 通常の条件に最適。" },
+        { en: "<b>`switch`</b> → useful for many exact-value choices.", np: "<b>`switch`</b> → धेरै ठ्याक्कै मिल्ने value का विकल्पका लागि उपयोगी।", jp: "<b>`switch`</b> → 厳密な値の選択肢が多いときに便利。" },
+        { en: "<b>Guard clause</b> → handles invalid cases early with `return`.", np: "<b>Guard clause</b> → अमान्य case लाई `return` ले चाँडै सम्हाल्छ।", jp: "<b>ガード節</b> → 妥当でないケースを `return` で早く処理する。" },
+        { en: "Guard clauses reduce deeply nested code.", np: "Guard clause ले गहिरो nested code घटाउँछ।", jp: "ガード節は深くネストしたコードを減らす。" },
+        { en: "Use `break` in `switch` to stop after a matching case.", np: "मिल्ने case पछि रोक्न `switch` मा `break` प्रयोग गर्नुहोस्।", jp: "一致したcaseの後で止めるために `switch` では `break` を使う。" },
+        { en: "Use `default` when no `switch` case matches.", np: "कुनै `switch` case मिल्दा नमिलेमा `default` प्रयोग गर्नुहोस्।", jp: "`switch` のどのcaseにも一致しないときは `default` を使う。" },
       ],
       commonMistakes: [
-        { en: "Forgetting `break` in a `switch` statement, causing unintended fall-through into the next case.", np: "`switch` मा `break` बिर्सनु, अनपेक्षित fall-through हुनु।", jp: "switch文で`break`を忘れ、意図しないフォールスルーが起きること。" },
-        { en: "Nesting `if` blocks 3-4 levels deep instead of using guard clauses, making the logic hard to follow.", np: "Guard clause प्रयोग नगरी if block ३-४ level सम्म nest गर्नु।", jp: "ガード節を使わずif文を3〜4段ネストし、ロジックが追いにくくなること。" },
-        { en: "Using `switch` with `===`-style exact matching when the actual need is range checks (`score >= 90`) — `switch` can't express ranges directly.", np: "Range check चाहिँदा (score >= 90) switch प्रयोग गर्नु — switch ले range express गर्न सक्दैन।", jp: "範囲チェックが必要な場合にswitchを使うこと。switchは範囲を直接表現できない。" },
+        { en: "<b>Forgetting `break` in `switch`</b> — without it, JavaScript falls through and keeps running the next case as well. Add `break;` at the end of each case.", np: "<b>`switch` मा `break` बिर्सनु</b> — यसबिना, JavaScript तल झर्छ र अर्को case पनि चलाइरहन्छ। हरेक case को अन्तमा `break;` थप्नुहोस्।", jp: "<b>`switch` で `break` を忘れる</b> — なければJavaScriptは次のcaseへ流れ落ちて実行を続ける。各caseの最後に `break;` を付ける。" },
+        { en: "<b>Creating deeply nested conditions</b> — three levels of `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` is better written as three guard clauses that `return` early.", np: "<b>गहिरो nested condition बनाउनु</b> — `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` जस्ता तीन तह लाई चाँडै `return` गर्ने तीन guard clause ले लेख्नु राम्रो।", jp: "<b>深くネストした条件を作る</b> — `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` の3階層は、早く `return` する3つのガード節に書き換える方がよい。" },
+        { en: "<b>Forgetting `else if`</b> — when only one result should run, chain the conditions with `else if` instead of writing separate unrelated `if` statements.", np: "<b>`else if` बिर्सनु</b> — एउटै नतिजा मात्र चल्नुपर्ने बेला, छुट्टाछुट्टै असम्बन्धित `if` लेख्नुको साटो condition लाई `else if` ले chain गर्नुहोस्।", jp: "<b>`else if` を忘れる</b> — 実行される結果が1つだけであるべきときは、無関係な `if` を並べるのではなく `else if` でつなぐ。" },
       ],
       quiz: [
         {
-          question: { en: "What happens if a `switch` case is missing its `break`?", np: "`switch` case मा `break` नभएमा के हुन्छ?", jp: "switchケースに`break`がないと？" },
-          options: [{ en: "A SyntaxError is thrown", np: "SyntaxError आउँछ", jp: "SyntaxErrorが発生する" }, { en: "Execution falls through to the next case", np: "Execution अर्को case मा fall-through हुन्छ", jp: "実行が次のケースにフォールスルーする" }, { en: "Nothing happens", np: "केही हुँदैन", jp: "何も起こらない" }],
-          correctIndex: 1,
-          explanation: { en: "Without break, the switch keeps executing the following case's code too.", np: "break बिना switch ले अर्को case को code पनि चलाउँछ।", jp: "breakがないとswitchは次のケースのコードも実行し続ける。" },
-        },
-        {
-          question: { en: "What is the main benefit of guard clauses over deeply nested if blocks?", np: "Guard clause को मुख्य फायदा के हो?", jp: "ガード節の主な利点は？" },
-          options: [{ en: "They run faster", np: "छिटो चल्छ", jp: "実行が速い" }, { en: "They keep the main logic flat and easier to read", np: "Main logic flat र पढ्न सजिलो बनाउँछ", jp: "主要ロジックを平坦にし読みやすくする" }],
-          correctIndex: 1,
-          explanation: { en: "Guard clauses are about readability and maintainability, not performance.", np: "Guard clause readability र maintainability का लागि हो, performance होइन।", jp: "ガード節はパフォーマンスではなく可読性・保守性のためのもの。" },
-        },
-        {
-          question: { en: "When is `switch` a better choice than a chain of `if/else if`?", np: "`if/else if` को chain भन्दा `switch` कहिले राम्रो?", jp: "`if/else if`の連鎖より`switch`が良いのはいつ？" },
-          options: [{ en: "When checking many exact values of the same variable", np: "एउटै variable का धेरै exact value check गर्दा", jp: "同じ変数の多数の完全一致値を確認するとき" }, { en: "When checking numeric ranges", np: "Numeric range check गर्दा", jp: "数値範囲を確認するとき" }],
+          question: { en: "Which is best for checking several exact values?", np: "धेरै ठ्याक्कै मिल्ने value जाँच्न कुन उत्तम हो?", jp: "厳密な値を複数調べるのに最適なのはどれか?" },
+          options: [
+            { en: "`switch`", np: "`switch`", jp: "`switch`" },
+            { en: "`for`", np: "`for`", jp: "`for`" },
+            { en: "`while`", np: "`while`", jp: "`while`" },
+          ],
           correctIndex: 0,
-          explanation: { en: "switch shines for many exact-match cases against one value; ranges still need if/else.", np: "switch एउटै value का धेरै exact-match cases मा राम्रो; range का लागि if/else चाहिन्छ।", jp: "switchは1つの値に対する多数の完全一致に向く。範囲比較にはif/elseが必要。" },
+          explanation: { en: "`switch` compares one value against a list of fixed cases; `for` and `while` are loops, not decisions.", np: "`switch` ले एउटा value लाई निश्चित case को सूची सँग तुलना गर्छ; `for` र `while` loop हुन्, निर्णय होइनन्।", jp: "`switch` は1つの値を固定のcase一覧と照合する。`for` と `while` はループで、判断ではない。" },
+        },
+        {
+          question: { en: "What is a guard clause?", np: "Guard clause के हो?", jp: "ガード節とは何か?" },
+          options: [
+            { en: "A loop", np: "एउटा loop", jp: "ループ" },
+            { en: "An early exit when a condition is not valid", np: "Condition मान्य नभएमा चाँडै बाहिरिनु", jp: "条件が妥当でないときの早期リターン" },
+            { en: "A type of variable", np: "Variable को एक प्रकार", jp: "変数の一種" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It `return`s as soon as an input is invalid, so the main logic below stays flat.", np: "Input अमान्य भएको बित्तिकै यो `return` गर्छ, त्यसैले तलको मुख्य logic सम्म रहन्छ।", jp: "入力が妥当でないとすぐ `return` するので、下の主要なロジックがフラットに保たれる。" },
+        },
+        {
+          question: { en: "What does `break` do in a `switch`?", np: "`switch` मा `break` ले के गर्छ?", jp: "`switch` の中で `break` は何をするか?" },
+          options: [
+            { en: "Starts the next case", np: "अर्को case सुरु गर्छ", jp: "次のcaseを始める" },
+            { en: "Stops the switch", np: "Switch रोक्छ", jp: "switchを止める" },
+            { en: "Repeats the case", np: "Case दोहोर्याउँछ", jp: "caseを繰り返す" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Without `break`, execution falls through into the following cases.", np: "`break` बिना, execution तलका case मा झर्छ।", jp: "`break` がないと、実行は後続のcaseへ流れ落ちる。" },
+        },
+        {
+          question: { en: "Why use guard clauses?", np: "Guard clause किन प्रयोग गर्ने?", jp: "なぜガード節を使うのか?" },
+          options: [
+            { en: "To make code more deeply nested", np: "Code अझ गहिरो nested बनाउन", jp: "コードをもっと深くネストさせるため" },
+            { en: "To avoid checking conditions", np: "Condition जाँच्न बच्न", jp: "条件を調べずに済ませるため" },
+            { en: "To keep code flatter and easier to read", np: "Code सम्म र पढ्न सजिलो राख्न", jp: "コードをフラットで読みやすく保つため" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "The invalid cases are dealt with up front, leaving the real logic at one indentation level.", np: "अमान्य case पहिले सम्हालिन्छन्, र वास्तविक logic एउटै indentation तहमा रहन्छ।", jp: "妥当でないケースを先に片付けることで、本来のロジックが1段のインデントに収まる。" },
         },
       ],
     },
