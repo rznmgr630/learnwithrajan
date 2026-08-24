@@ -11,103 +11,85 @@ export const JS_DAY_6_LESSONS: JsLessonDay = {
       title: { en: "Object Fundamentals & Built-in Methods", np: "Object आधारभूत कुरा र Built-in Methods", jp: "オブジェクトの基礎と組み込みメソッド" },
       durationMinutes: 9,
       explanation: {
-        en: "An object is a collection of key-value pairs — think of it as a labelled filing cabinet where each drawer (property) has a name and holds a value, which can be a string, number, function, or even another object.\n\n<b>Creating and accessing</b>\n• Object literals `{ key: value }` are the most common way to create one\n• Dot notation (`user.name`) is for known, fixed keys; bracket notation (`user[key]`) is required when the key is dynamic or stored in a variable\n• ES6 shorthand lets you write `{ name, age }` instead of `{ name: name, age: age }` when a variable's name matches the property name\n\n<b>Reading many properties at once</b>\n• `Object.keys()`, `Object.values()`, and `Object.entries()` turn an object into arrays you can loop over, `.map()`, or `.filter()` — exactly like a real array\n• `Object.fromEntries()` reverses `Object.entries()` — it's how you \"map\" or \"filter\" an object, since objects don't have their own `.map()`/`.filter()`\n• `Object.freeze()` makes an object's top-level properties read-only; `Object.hasOwn(obj, key)` is the modern way to check a property exists directly on the object.",
-        np: "Object भनेको key-value pairs को collection हो — labelled filing cabinet जस्तै जहाँ हरेक drawer (property) को नाम हुन्छ र मान (value) राखिन्छ। Dot notation fixed keys का लागि, bracket notation dynamic keys का लागि। Object.keys/values/entries ले object लाई array मा बदल्छ ताकि map/filter प्रयोग गर्न सकिन्छ।",
-        jp: "オブジェクトはキーと値のペアの集合 — ラベル付きファイルキャビネットのようなもの。ドット記法は固定キー、ブラケット記法は動的キーに使う。Object.keys/values/entriesはオブジェクトを配列に変換しmap/filterを可能にする。",
+        en: "An <b>object</b> is a collection of <b>key-value pairs</b> (a named property and its value).\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n```\n\nHere, `name` and `age` are <b>keys</b>, while `\"Rajan\"` and `30` are their values.\n\n---\n\n### Accessing properties\n\n• <b>Dot notation</b> — use when you know the property name: `user.name`\n• <b>Bracket notation</b> — use when the property name is stored in a variable: `user[key]`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(user.name); // Rajan\n\nconst key = \"age\";\nconsole.log(user[key]); // 30\n```\n\n---\n\n### Object shorthand\n\n<b>Object shorthand</b> lets you write `{ name, age }` instead of `{ name: name, age: age }` when the variable and property have the same name.\n\n---\n\n### Useful object methods\n\n• `Object.keys()` → returns all keys as an array\n• `Object.values()` → returns all values as an array\n• `Object.entries()` → returns key-value pairs as an array\n• `Object.fromEntries()` → turns key-value pairs back into an object\n• `Object.freeze()` → prevents top-level properties from being changed\n• `Object.hasOwn()` → checks whether an object directly has a property\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(Object.keys(user));\n// [\"name\", \"age\"]\n\nconsole.log(Object.entries(user));\n// [[\"name\", \"Rajan\"], [\"age\", 30]]\n```",
+        np: "<b>Object</b> भनेको <b>key-value जोडी</b> (नाम दिइएको property र यसको value) को संग्रह हो।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n```\n\nयहाँ, `name` र `age` <b>key</b> हुन्, जब कि `\"Rajan\"` र `30` तिनका value हुन्।\n\n---\n\n### Property पहुँच गर्नु\n\n• <b>Dot notation</b> — property को नाम थाहा हुँदा प्रयोग गर्नुहोस्: `user.name`\n• <b>Bracket notation</b> — property को नाम variable मा राखिएको बेला प्रयोग गर्नुहोस्: `user[key]`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(user.name); // Rajan\n\nconst key = \"age\";\nconsole.log(user[key]); // 30\n```\n\n---\n\n### Object shorthand\n\n<b>Object shorthand</b> ले variable र property को नाम उही हुँदा `{ name: name, age: age }` को साटो `{ name, age }` लेख्न दिन्छ।\n\n---\n\n### उपयोगी object method\n\n• `Object.keys()` → सबै key array रूपमा फर्काउँछ\n• `Object.values()` → सबै value array रूपमा फर्काउँछ\n• `Object.entries()` → key-value जोडी array रूपमा फर्काउँछ\n• `Object.fromEntries()` → key-value जोडीलाई फेरि object बनाउँछ\n• `Object.freeze()` → top-level property बदलिनबाट रोक्छ\n• `Object.hasOwn()` → object सँग सिधै property छ कि छैन जाँच्छ\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(Object.keys(user));\n// [\"name\", \"age\"]\n\nconsole.log(Object.entries(user));\n// [[\"name\", \"Rajan\"], [\"age\", 30]]\n```",
+        jp: "<b>オブジェクト</b>とは<b>キーと値の組</b>（名前の付いたプロパティとその値）の集まりです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n```\n\nここでは `name` と `age` が<b>キー</b>、`\"Rajan\"` と `30` がその値です。\n\n---\n\n### プロパティへのアクセス\n\n• <b>ドット記法</b> — プロパティ名が分かっているとき: `user.name`\n• <b>ブラケット記法</b> — プロパティ名が変数に入っているとき: `user[key]`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(user.name); // Rajan\n\nconst key = \"age\";\nconsole.log(user[key]); // 30\n```\n\n---\n\n### オブジェクトの短縮記法\n\n<b>短縮記法</b>を使うと、変数名とプロパティ名が同じとき `{ name: name, age: age }` の代わりに `{ name, age }` と書けます。\n\n---\n\n### よく使うオブジェクトのメソッド\n\n• `Object.keys()` → すべてのキーを配列で返す\n• `Object.values()` → すべての値を配列で返す\n• `Object.entries()` → キーと値の組を配列で返す\n• `Object.fromEntries()` → キーと値の組をオブジェクトに戻す\n• `Object.freeze()` → トップレベルのプロパティの変更を防ぐ\n• `Object.hasOwn()` → そのオブジェクトが直接そのプロパティを持つか調べる\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconsole.log(Object.keys(user));\n// [\"name\", \"age\"]\n\nconsole.log(Object.entries(user));\n// [[\"name\", \"Rajan\"], [\"age\", 30]]\n```",
       },
-      diagram: `const user = { name: "Alice", age: 30 };
-                    │              │
-                    ▼              ▼
-              key/property       value
+      diagram: `Object
+│
+├── name  → "Rajan"
+├── age   → 30
+└── role  → "Developer"
 
-user.name         ← dot notation (fixed key)
-user["age"]       ← bracket notation (dynamic/computed key)
+Object.keys()
+      ↓
+["name", "age", "role"]
 
-Object.entries(user)                   →  [["name","Alice"], ["age",30]]
-                                                     │
-                                    now a real array — map/filter it
-                                                     │
-Object.fromEntries( ...mapped/filtered... )  →  back to a plain object`,
+Object.values()
+      ↓
+["Rajan", 30, "Developer"]`,
       codeExample: {
-        title: { en: "Object literals, property access, and useful Object methods", np: "Object literals, property access र Object methods", jp: "オブジェクトリテラル・プロパティアクセス・Objectメソッド" },
-        code: `// ── Object literal + shorthand method ────────────────────────────
-const user = {
-  name: "Alice",
-  age: 30,
-  greet() { return \`Hi, I'm \${this.name}\`; },   // shorthand method (ES6)
+        title: { en: "Reading properties and listing them", np: "Property पढ्नु र सूचीबद्ध गर्नु", jp: "プロパティの読み取りと一覧化" },
+        code: `const user = {
+  name: "Rajan",
+  age: 30
 };
 
-// ── Property access ───────────────────────────────────────────────
-user.name;              // "Alice" — dot notation
+console.log(user.name); // Rajan
+
 const key = "age";
-user[key];               // 30 — bracket notation (dynamic key)
+console.log(user[key]); // 30
 
-// ── Add / update / delete ─────────────────────────────────────────
-user.email = "alice@example.com";   // add
-user.age = 31;                       // update
-delete user.email;                   // remove entirely
+console.log(Object.keys(user));
+// ["name", "age"]
 
-// ── Property shorthand + computed keys ────────────────────────────
-const name = "Bob", age = 25;
-const person = { name, age };        // same as { name: name, age: age }
-const field = "score";
-const result = { [field]: 100 };     // { score: 100 }
-
-// ── Checking existence ────────────────────────────────────────────
-Object.hasOwn(user, "name");    // true — modern, preferred check
-
-// ── Object.keys / values / entries / fromEntries ──────────────────
-const scores = { alice: 95, bob: 87, carol: 92 };
-Object.keys(scores);     // ["alice", "bob", "carol"]
-Object.values(scores);   // [95, 87, 92]
-Object.entries(scores);  // [["alice", 95], ["bob", 87], ["carol", 92]]
-
-const passing = Object.fromEntries(
-  Object.entries(scores).filter(([, score]) => score >= 90)
-);
-// { alice: 95, carol: 92 }
-
-// ── freeze — shallow, top-level only ──────────────────────────────
-const config = Object.freeze({ apiUrl: "https://api.example.com" });
-// config.apiUrl = "x";  // silently ignored (TypeError in strict mode)`,
+console.log(Object.entries(user));
+// [["name", "Rajan"], ["age", 30]]`,
       },
       keyTakeaways: [
-        { en: "Use dot notation for known, fixed keys; use bracket notation when the key is dynamic, computed, or stored in a variable.", np: "थाहा भएको fixed key का लागि dot notation; dynamic/computed key वा variable मा रहेको key का लागि bracket notation प्रयोग गर्नुहोस्।", jp: "既知の固定キーにはドット記法、動的・計算されたキーや変数に格納されたキーにはブラケット記法を使う。" },
-        { en: "`Object.keys/values/entries` convert an object into an array so you can use array methods on it; `Object.fromEntries` converts the result back into an object.", np: "`Object.keys/values/entries` ले object लाई array मा बदल्छ ताकि array methods प्रयोग गर्न सकिन्छ; `Object.fromEntries` ले फेरि object मा फिर्ता बदल्छ।", jp: "`Object.keys/values/entries`はオブジェクトを配列に変換し配列メソッドを使えるようにする。`Object.fromEntries`は結果を再びオブジェクトに戻す。" },
-        { en: "`Object.freeze()` only freezes top-level properties — any nested object or array inside it is still fully mutable.", np: "`Object.freeze()` ले top-level properties मात्र freeze गर्छ — भित्रको nested object/array अझै mutable नै रहन्छ।", jp: "`Object.freeze()`はトップレベルのプロパティのみを凍結する。内部のネストされたオブジェクト/配列は依然として変更可能。" },
+        { en: "Objects store data as <b>key-value pairs</b>.", np: "Object ले data लाई <b>key-value जोडी</b> रूपमा राख्छ।", jp: "オブジェクトはデータを<b>キーと値の組</b>で保存する。" },
+        { en: "Use <b>dot notation</b> for known property names.", np: "थाहा भएका property नामका लागि <b>dot notation</b> प्रयोग गर्नुहोस्।", jp: "分かっているプロパティ名には<b>ドット記法</b>を使う。" },
+        { en: "Use <b>bracket notation</b> for dynamic property names.", np: "Dynamic property नामका लागि <b>bracket notation</b> प्रयोग गर्नुहोस्।", jp: "動的なプロパティ名には<b>ブラケット記法</b>を使う。" },
+        { en: "`Object.keys()`, `values()`, and `entries()` turn object data into arrays.", np: "`Object.keys()`, `values()`, र `entries()` ले object को data लाई array मा बदल्छन्।", jp: "`Object.keys()`・`values()`・`entries()` はオブジェクトのデータを配列に変える。" },
+        { en: "`Object.fromEntries()` converts entries back into an object.", np: "`Object.fromEntries()` ले entries लाई फेरि object मा बदल्छ।", jp: "`Object.fromEntries()` はエントリをオブジェクトに戻す。" },
+        { en: "`Object.freeze()` prevents changes to top-level properties.", np: "`Object.freeze()` ले top-level property मा परिवर्तन हुनबाट रोक्छ।", jp: "`Object.freeze()` はトップレベルのプロパティの変更を防ぐ。" },
+        { en: "`Object.hasOwn()` checks for a property's direct existence.", np: "`Object.hasOwn()` ले property सिधै छ कि छैन जाँच्छ।", jp: "`Object.hasOwn()` はプロパティが直接存在するかを調べる。" },
       ],
       commonMistakes: [
-        { en: "Writing `user[name]` when you meant the literal string key `\"name\"` — without quotes, JavaScript looks up a variable called `name`, not the property `name`.", np: "`\"name\"` literal key चाहेको ठाउँमा `user[name]` लेख्नु — quotes बिना JS ले `name` नामको variable खोज्छ, property होइन।", jp: "文字列キー`\"name\"`のつもりで`user[name]`と書くこと。引用符がないとJSは`name`という変数を探してしまう。" },
-        { en: "Assuming `Object.freeze()` deep-freezes an object — mutating a nested object inside a frozen one still works.", np: "`Object.freeze()` ले deep freeze गर्छ भन्ने ठान्नु — frozen object भित्रको nested object अझै mutate गर्न सकिन्छ।", jp: "`Object.freeze()`が深く凍結すると思い込むこと。凍結されたオブジェクト内のネストされたオブジェクトはまだ変更可能。" },
-        { en: "Using `\"key\" in obj` when you only want the object's own properties — `in` also checks inherited properties up the prototype chain, unlike `Object.hasOwn()`.", np: "Object आफ्नै property मात्र चाहिँदा `\"key\" in obj` प्रयोग गर्नु — `in` ले prototype chain का inherited properties पनि check गर्छ, `Object.hasOwn()` ले गर्दैन।", jp: "自身のプロパティだけを確認したいのに`\"key\" in obj`を使うこと。`in`はプロトタイプチェーンの継承プロパティも確認するが`Object.hasOwn()`はしない。" },
+        { en: "<b>Using `user.key` when `key` is a variable</b> — that looks for a property literally named `key`. Use `user[key]` instead.", np: "<b>`key` variable हुँदा `user.key` प्रयोग गर्नु</b> — यसले ठ्याक्कै `key` नामको property खोज्छ। बरु `user[key]` प्रयोग गर्नुहोस्।", jp: "<b>`key` が変数なのに `user.key` と書く</b> — それは文字どおり `key` という名前のプロパティを探す。`user[key]` を使う。" },
+        { en: "<b>Assuming objects have `.map()` or `.filter()`</b> — they don't. Convert with `Object.entries()` first, then map over the pairs.", np: "<b>Object सँग `.map()` वा `.filter()` छ भन्ने ठान्नु</b> — छैन। पहिले `Object.entries()` ले बदल्नुहोस्, त्यसपछि जोडीमा map गर्नुहोस्।", jp: "<b>オブジェクトに `.map()` や `.filter()` があると思う</b> — ない。まず `Object.entries()` で変換してから組をmapする。" },
+        { en: "<b>Thinking `Object.freeze()` deeply freezes nested objects</b> — it only freezes the top level, so nested objects can still be changed.", np: "<b>`Object.freeze()` ले nested object पनि गहिरो रूपमा freeze गर्छ भन्ने ठान्नु</b> — यसले top level मात्र freeze गर्छ, त्यसैले nested object अझै बदल्न सकिन्छ।", jp: "<b>`Object.freeze()` が入れ子まで凍結すると思う</b> — トップレベルだけを凍結するので、入れ子のオブジェクトは変更できる。" },
       ],
       quiz: [
         {
-          question: { en: "Which notation must you use when the property key is stored in a variable?", np: "Property key variable मा राखिएको बेला कुन notation प्रयोग गर्नुपर्छ?", jp: "プロパティキーが変数に格納されている場合、どちらの記法を使うべき？" },
+          question: { en: "How do you access a dynamic property?", np: "Dynamic property कसरी पहुँच गर्नुहुन्छ?", jp: "動的なプロパティにはどうアクセスするか?" },
           options: [
-            { en: "Dot notation, e.g. `obj.key`", np: "Dot notation, जस्तै `obj.key`", jp: "ドット記法、例: `obj.key`" },
-            { en: "Bracket notation, e.g. `obj[key]`", np: "Bracket notation, जस्तै `obj[key]`", jp: "ブラケット記法、例: `obj[key]`" },
+            { en: "`user.key`", np: "`user.key`", jp: "`user.key`" },
+            { en: "`user[key]`", np: "`user[key]`", jp: "`user[key]`" },
+            { en: "`user->key`", np: "`user->key`", jp: "`user->key`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Dot notation only works with a literal, fixed property name; bracket notation evaluates the expression inside it, so it works with variables.", np: "Dot notation ले literal, fixed property name मात्र काम गर्छ; bracket notation ले भित्रको expression evaluate गर्छ, त्यसैले variable सँग काम गर्छ।", jp: "ドット記法はリテラルの固定プロパティ名でのみ機能する。ブラケット記法は内部の式を評価するため変数でも機能する。" },
+          explanation: { en: "Bracket notation evaluates the variable; dot notation would look for a property literally called `key`.", np: "Bracket notation ले variable evaluate गर्छ; dot notation ले ठ्याक्कै `key` नामको property खोज्छ।", jp: "ブラケット記法は変数を評価する。ドット記法は文字どおり `key` というプロパティを探してしまう。" },
         },
         {
-          question: { en: "What does `Object.freeze()` protect against for nested objects?", np: "Nested objects का लागि `Object.freeze()` ले केबाट सुरक्षा दिन्छ?", jp: "`Object.freeze()`はネストされたオブジェクトに対して何を保護する？" },
+          question: { en: "What does `Object.keys(user)` return?", np: "`Object.keys(user)` ले के फर्काउँछ?", jp: "`Object.keys(user)` は何を返すか?" },
           options: [
-            { en: "It deep-freezes everything, including nested objects", np: "यसले nested objects समेत सबै deep-freeze गर्छ", jp: "ネストされたオブジェクトを含め、すべてを深く凍結する" },
-            { en: "Nothing — it only freezes top-level properties; nested objects remain mutable", np: "केही होइन — यसले top-level properties मात्र freeze गर्छ; nested objects mutable नै रहन्छ", jp: "何もない — トップレベルのプロパティのみを凍結し、ネストされたオブジェクトは変更可能なまま" },
+            { en: "An array of keys", np: "Key को array", jp: "キーの配列" },
+            { en: "An array of values", np: "Value को array", jp: "値の配列" },
+            { en: "A new object", np: "नयाँ object", jp: "新しいオブジェクト" },
           ],
-          correctIndex: 1,
-          explanation: { en: "Object.freeze() is shallow. To fully lock a nested structure you'd need to recursively freeze every nested object yourself.", np: "Object.freeze() shallow हो। Nested structure पूर्ण रूपमा lock गर्न हरेक nested object recursively freeze गर्नुपर्छ।", jp: "Object.freeze()は浅い。ネストされた構造を完全にロックするには各ネストされたオブジェクトを再帰的に凍結する必要がある。" },
+          correctIndex: 0,
+          explanation: { en: "`Object.values()` gives the values and `Object.entries()` gives both as pairs.", np: "`Object.values()` ले value दिन्छ र `Object.entries()` ले दुबै जोडीमा दिन्छ।", jp: "`Object.values()` は値を、`Object.entries()` は両方を組で返す。" },
         },
         {
-          question: { en: "What is the key difference between `\"key\" in obj` and `Object.hasOwn(obj, \"key\")`?", np: "`\"key\" in obj` र `Object.hasOwn(obj, \"key\")` बीचको मुख्य फरक के हो?", jp: "`\"key\" in obj`と`Object.hasOwn(obj, \"key\")`の主な違いは？" },
+          question: { en: "Which method converts entries back into an object?", np: "कुन method ले entries लाई फेरि object मा बदल्छ?", jp: "エントリをオブジェクトに戻すのはどのメソッドか?" },
           options: [
-            { en: "There is no difference — they always return the same result", np: "फरक छैन — दुवैले सधैं उस्तै result दिन्छन्", jp: "違いはない — 常に同じ結果を返す" },
-            { en: "`in` also checks properties inherited via the prototype chain; `Object.hasOwn` checks only the object's own properties", np: "`in` ले prototype chain बाट inherit भएका properties पनि check गर्छ; `Object.hasOwn` ले object का आफ्नै properties मात्र check गर्छ", jp: "`in`はプロトタイプチェーン経由で継承されたプロパティも確認する。`Object.hasOwn`はオブジェクト自身のプロパティのみ確認する" },
+            { en: "`Object.keys()`", np: "`Object.keys()`", jp: "`Object.keys()`" },
+            { en: "`Object.entries()`", np: "`Object.entries()`", jp: "`Object.entries()`" },
+            { en: "`Object.fromEntries()`", np: "`Object.fromEntries()`", jp: "`Object.fromEntries()`" },
           ],
-          correctIndex: 1,
-          explanation: { en: "`in` walks up the prototype chain, so it can return true for inherited methods like `toString`. `Object.hasOwn` is the precise, own-property-only check.", np: "`in` prototype chain माथि walk गर्छ, त्यसैले inherited method जस्तै `toString` का लागि पनि true फर्काउन सक्छ। `Object.hasOwn` precise, own-property-only check हो।", jp: "`in`はプロトタイプチェーンを遡るため、`toString`のような継承メソッドにもtrueを返せる。`Object.hasOwn`は自身のプロパティのみを正確に確認する。" },
+          correctIndex: 2,
+          explanation: { en: "It is the inverse of `Object.entries()`, which is handy after mapping over pairs.", np: "यो `Object.entries()` को उल्टो हो, जो जोडीमा map गरेपछि उपयोगी हुन्छ।", jp: "`Object.entries()` の逆。組をmapした後に便利。" },
         },
       ],
     },
