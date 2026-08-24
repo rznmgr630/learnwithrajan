@@ -11,84 +11,74 @@ export const JS_DAY_1_LESSONS: JsLessonDay = {
       title: { en: "Variables", np: "Variables", jp: "変数" },
       durationMinutes: 8,
       explanation: {
-        en: "A variable is a labelled storage box. JavaScript gives you three kinds of boxes — `var`, `let`, and `const` — and they disagree on three things: <b>where</b> the variable is visible (scope), <b>whether</b> you can declare it again, and <b>whether</b> you can point it at a new value later.\n\n• <b>var</b> — function-scoped, leaks out of `if`/`for` blocks, can be re-declared\n  ↳ Like writing a name on a whiteboard for the whole classroom to see, even if you only meant it for one desk\n• <b>let</b> — block-scoped, cannot be re-declared, can be reassigned\n  ↳ Like a sticky note on one desk — only visible inside that `{ }` block\n• <b>const</b> — block-scoped, must be given a value immediately, the binding can never change\n  ↳ Like a nameplate glued to the desk — permanent label, but if the desk holds a box of items, you can still swap what's inside",
-        np: "Variable भनेको labelled storage box हो। var function-scoped, let/const block-scoped। const को binding change हुँदैन तर भित्रको content change हुन सक्छ।",
-        jp: "変数はラベル付きの保存箱。varは関数スコープ、let/constはブロックスコープ。constは再代入不可だが中身は変更可能。",
+        en: "A <b>variable</b> (a named place to store a value) lets us save and use data.\n\nJavaScript has three ways to create variables:\n\n```javascript\nvar\nlet\nconst\n```\n\nThe main differences are <b>scope</b> (where the variable can be used), <b>re-declaration</b> (creating the same variable again), and <b>reassignment</b> (giving a variable a new value).\n\n---\n\n## `var`\n\n<b>`var`</b> (an older way to create variables) is <b>function-scoped</b> (available throughout the function).\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\nIt can also be re-declared:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\nGenerally, avoid `var` in modern JavaScript.\n\n---\n\n## `let`\n\n<b>`let`</b> (a variable whose value can change) is <b>block-scoped</b> (available only inside its `{ }` block).\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\nYou cannot re-declare it in the same scope:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b> (a variable that cannot be reassigned) is also block-scoped.\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\nIt must have a value when created:\n\n```javascript\nconst age = 30;\n```",
+        np: "<b>Variable</b> (value राख्ने नाम दिइएको ठाउँ) ले हामीलाई data सेभ गर्न र प्रयोग गर्न दिन्छ।\n\nJavaScript मा variable बनाउने तीन तरिका छन्:\n\n```javascript\nvar\nlet\nconst\n```\n\nमुख्य फरक हुन् <b>scope</b> (variable कहाँ प्रयोग गर्न सकिन्छ), <b>re-declaration</b> (उही variable फेरि बनाउनु), र <b>reassignment</b> (variable लाई नयाँ value दिनु)।\n\n---\n\n## `var`\n\n<b>`var`</b> (variable बनाउने पुरानो तरिका) <b>function-scoped</b> (पूरै function भर उपलब्ध) हुन्छ।\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\nयसलाई फेरि declare पनि गर्न सकिन्छ:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\nसामान्यतया, आधुनिक JavaScript मा `var` बच्नुहोस्।\n\n---\n\n## `let`\n\n<b>`let`</b> (value बदल्न सकिने variable) <b>block-scoped</b> (आफ्नो `{ }` block भित्र मात्र उपलब्ध) हुन्छ।\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\nउही scope मा यसलाई फेरि declare गर्न सक्नुहुन्न:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b> (reassign गर्न नमिल्ने variable) पनि block-scoped हुन्छ।\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\nबनाउँदै गर्दा यसको value हुनै पर्छ:\n\n```javascript\nconst age = 30;\n```",
+        jp: "<b>変数</b>（値を保存する名前付きの場所）を使うと、データを保存して利用できます。\n\nJavaScriptには変数を作る方法が3つあります:\n\n```javascript\nvar\nlet\nconst\n```\n\n主な違いは<b>スコープ</b>（変数を使える範囲）、<b>再宣言</b>（同じ変数をもう一度作ること）、<b>再代入</b>（変数に新しい値を入れること）です。\n\n---\n\n## `var`\n\n<b>`var`</b>（変数を作る古い方法）は<b>関数スコープ</b>（関数全体で使える）です。\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\n再宣言もできます:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\n現代のJavaScriptでは、基本的に `var` は避けましょう。\n\n---\n\n## `let`\n\n<b>`let`</b>（値を変えられる変数）は<b>ブロックスコープ</b>（その `{ }` ブロックの中でだけ使える）です。\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\n同じスコープで再宣言はできません:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b>（再代入できない変数）もブロックスコープです。\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\n作るときに値を持たせなければなりません:\n\n```javascript\nconst age = 30;\n```",
       },
-      diagram: `┌─ var ──────────────┐   ┌─ let ──────────────┐   ┌─ const ────────────┐
-│ function-scoped    │   │ block-scoped        │   │ block-scoped        │
-│ re-declarable       │   │ not re-declarable    │   │ not re-declarable    │
-│ reassignable         │   │ reassignable         │   │ NOT reassignable     │
-│ leaks out of { }    │   │ stays inside { }     │   │ stays inside { }     │
-└─────────────────────┘   └─────────────────────┘   └─────────────────────┘
-        avoid                  reassign later?             default choice`,
+      diagram: `              Variables
+                  |
+       +----------+----------+
+       |          |          |
+      var        let       const
+       |          |          |
+ Function       Block      Block
+  scoped        scoped     scoped
+       |          |          |
+ Reassign ✓   Reassign ✓  Reassign ✗
+ Re-declare ✓ Re-declare ✗ Re-declare ✗`,
       codeExample: {
-        title: { en: "Scope and re-assignment behaviour", np: "Scope र re-assignment", jp: "スコープと再代入" },
-        code: `// var — function-scoped, hoisted, can be re-declared (avoid in modern code)
-var name = "Alice";
-var name = "Bob";  // no error — re-declaration is allowed with var
+        title: { en: "Declaring with const and let", np: "const र let ले declare गर्नु", jp: "constとletで宣言する" },
+        code: `const name = "Rajan";
+let age = 29;
 
-// let — block-scoped, not re-declarable, can be reassigned
-let count = 0;
-count = 1;          // ✅ reassign is fine
+age = 30;
 
-// const — block-scoped, must be initialised, cannot be reassigned
-const PI = 3.14;
-// PI = 3;          // ❌ TypeError: Assignment to constant variable
-
-// const does NOT make objects immutable — the binding is fixed, not the value
-const user = { name: "Alice" };
-user.name = "Bob";  // ✅ this works — the object itself is mutable
-// user = {};       // ❌ this fails — cannot reassign the binding
-
-// Block scope in action
-{
-  let blockVar = "inside";
-  var funcVar  = "also inside";
-}
-// console.log(blockVar); // ❌ ReferenceError — not accessible
-console.log(funcVar);     // ✅ "also inside" — var leaks out of the block`,
+console.log(name); // Rajan
+console.log(age);  // 30`,
       },
       keyTakeaways: [
-        { en: "Default to `const`. Switch to `let` only when you need to reassign. Avoid `var` in new code.", np: "Default मा `const` प्रयोग गर्नुहोस्। Reassign चाहिएमा `let`। `var` नयाँ code मा नचलाउनुहोस्।", jp: "デフォルトは`const`。再代入が必要なら`let`。新しいコードで`var`は避ける。" },
-        { en: "`const` freezes the binding, not the value — objects and arrays declared with `const` can still be mutated.", np: "`const` ले binding लाई freeze गर्छ, value लाई होइन — object/array भित्रको content बदलिन सक्छ।", jp: "`const`は束縛を固定するだけで値は固定しない。オブジェクトや配列の中身は変更できる。" },
-        { en: "`var` ignores block boundaries (`if`, `for`) and is scoped to the nearest function — this is the single biggest source of `var`-related bugs.", np: "`var` ले block boundary (if, for) लाई ignore गर्छ र nearest function मा scoped हुन्छ।", jp: "`var`はブロック境界（if・for）を無視し、最も近い関数にスコープされる。" },
+        { en: "<b>`var`</b> → old, function-scoped, can be reassigned and re-declared.", np: "<b>`var`</b> → पुरानो, function-scoped, reassign र re-declare गर्न मिल्छ।", jp: "<b>`var`</b> → 古い、関数スコープ、再代入も再宣言もできる。" },
+        { en: "<b>`let`</b> → block-scoped, can be reassigned.", np: "<b>`let`</b> → block-scoped, reassign गर्न मिल्छ।", jp: "<b>`let`</b> → ブロックスコープ、再代入できる。" },
+        { en: "<b>`const`</b> → block-scoped, cannot be reassigned.", np: "<b>`const`</b> → block-scoped, reassign गर्न मिल्दैन।", jp: "<b>`const`</b> → ブロックスコープ、再代入できない。" },
+        { en: "Use <b>`const`</b> by default.", np: "Default मा <b>`const`</b> प्रयोग गर्नुहोस्।", jp: "既定では<b>`const`</b>を使う。" },
+        { en: "Use <b>`let`</b> when the value needs to change.", np: "Value बदल्नुपर्ने बेला <b>`let`</b> प्रयोग गर्नुहोस्।", jp: "値を変える必要があるときは<b>`let`</b>を使う。" },
+        { en: "Avoid <b>`var`</b> in modern JavaScript.", np: "आधुनिक JavaScript मा <b>`var`</b> बच्नुहोस्।", jp: "現代のJavaScriptでは<b>`var`</b>を避ける。" },
       ],
       commonMistakes: [
-        { en: "Using `var` inside a loop and expecting each iteration to get its own copy — it doesn't; all iterations share the same `var`.", np: "Loop भित्र `var` प्रयोग गरेर हरेक iteration ले आफ्नै copy पाउने आशा गर्नु — त्यसो हुँदैन।", jp: "ループ内で`var`を使い、各繰り返しが独自のコピーを持つと期待すること（実際は共有される）。" },
-        { en: "Assuming `const` makes an object fully immutable, then being surprised when `obj.prop = x` works fine.", np: "`const` ले object पूरै immutable बनाउँछ भन्ने ठान्नु, त्यसपछि `obj.prop = x` काम गर्दा अचम्मित हुनु।", jp: "`const`がオブジェクトを完全に不変にすると思い込み、`obj.prop = x`が動くことに驚くこと。" },
-        { en: "Re-declaring a `var` by accident (e.g. copy-pasted code) and not noticing, because JavaScript allows it silently.", np: "गल्तिले `var` फेरि declare गर्नु (जस्तै copy-paste code बाट) र JS ले silently allow गर्ने भएकाले नोटिस नगर्नु।", jp: "誤って`var`を再宣言し（コピペなどで）、JSが黙って許可するため気づかないこと。" },
+        { en: "<b>Reassigning a `const`</b> — `const age = 20; age = 30;` throws an error. Use `let` if the value needs to change.", np: "<b>`const` लाई reassign गर्नु</b> — `const age = 20; age = 30;` ले error दिन्छ। Value बदल्नुपर्ने भए `let` प्रयोग गर्नुहोस्।", jp: "<b>`const` に再代入する</b> — `const age = 20; age = 30;` はエラーになる。値を変える必要があるなら `let` を使う。" },
+        { en: "<b>Re-declaring a `let`</b> — `let name = \"Rajan\"; let name = \"John\";` is an error in the same scope.", np: "<b>`let` लाई फेरि declare गर्नु</b> — उही scope मा `let name = \"Rajan\"; let name = \"John\";` error हो।", jp: "<b>`let` を再宣言する</b> — 同じスコープでの `let name = \"Rajan\"; let name = \"John\";` はエラー。" },
+        { en: "<b>Assuming `const` makes objects completely unchangeable</b> — with `const user = { name: \"Rajan\" }`, `user.name = \"John\"` works but `user = {}` fails. `const` prevents reassignment of the variable, not changes inside the object.", np: "<b>`const` ले object पूरै अपरिवर्तनीय बनाउँछ भन्ने ठान्नु</b> — `const user = { name: \"Rajan\" }` सँग, `user.name = \"John\"` काम गर्छ तर `user = {}` fail हुन्छ। `const` ले variable को reassignment रोक्छ, object भित्रको परिवर्तन होइन।", jp: "<b>`const` はオブジェクトを完全に変更不可にすると思い込む</b> — `const user = { name: \"Rajan\" }` で `user.name = \"John\"` は動くが `user = {}` は失敗する。`const` が防ぐのは変数の再代入であり、オブジェクト内部の変更ではない。" },
       ],
       quiz: [
         {
-          question: { en: "Which declaration keyword allows you to re-declare the same variable name in the same scope without an error?", np: "कुन keyword ले same scope मा same नाम फेरि declare गर्दा error नदिने?", jp: "同じスコープで同じ変数名を再宣言してもエラーにならないキーワードは？" },
+          question: { en: "Which should you normally use when a value doesn't need to change?", np: "Value बदल्नु पर्दैन भन्ने बेला सामान्यतया कुन प्रयोग गर्नुपर्छ?", jp: "値を変える必要がないとき、通常はどれを使うべきか?" },
           options: [
-            { en: "let", np: "let", jp: "let" },
-            { en: "const", np: "const", jp: "const" },
-            { en: "var", np: "var", jp: "var" },
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
           ],
           correctIndex: 2,
-          explanation: { en: "`var` allows re-declaration in the same scope with no error — one of the reasons it's easy to introduce accidental bugs with it.", np: "`var` ले same scope मा फेरि declare गर्दा error दिँदैन।", jp: "`var`は同じスコープでの再宣言をエラーなしで許可する。" },
+          explanation: { en: "`const` is the default choice — it says the binding will never be reassigned.", np: "`const` default छनोट हो — यसले binding कहिल्यै reassign हुँदैन भन्ने जनाउँछ।", jp: "`const` が既定の選択 — この束縛は再代入されないことを示す。" },
         },
         {
-          question: { en: "What happens when you run `const user = { name: \"A\" }; user.name = \"B\";`?", np: "`const user = { name: \"A\" }; user.name = \"B\";` चलाउँदा के हुन्छ?", jp: "`const user = { name: \"A\" }; user.name = \"B\";` を実行すると？" },
+          question: { en: "Which one can be reassigned?", np: "कुनलाई reassign गर्न मिल्छ?", jp: "再代入できるのはどれか?" },
           options: [
-            { en: "TypeError — const cannot be modified", np: "TypeError — const modify हुँदैन", jp: "TypeError — constは変更不可" },
-            { en: "Works fine — the object's property is updated", np: "ठीकसँग चल्छ — object को property update हुन्छ", jp: "正常に動作 — オブジェクトのプロパティが更新される" },
-            { en: "SyntaxError at declaration", np: "Declaration मा SyntaxError", jp: "宣言時にSyntaxError" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "Both", np: "दुबै", jp: "両方" },
           ],
           correctIndex: 1,
-          explanation: { en: "const only locks the binding (the variable name cannot point to a new object). Mutating a property on the existing object is allowed.", np: "const ले binding मात्र lock गर्छ। Existing object को property मुटेट गर्न मिल्छ।", jp: "constは束縛のみを固定する。既存オブジェクトのプロパティ変更は許可される。" },
+          explanation: { en: "`let` can be reassigned; `const` cannot.", np: "`let` लाई reassign गर्न मिल्छ; `const` लाई मिल्दैन।", jp: "`let` は再代入できるが、`const` はできない。" },
         },
         {
-          question: { en: "A `var` declared inside an `if` block — where is it accessible from?", np: "`if` block भित्र declare गरिएको `var` कहाँबाट access गर्न मिल्छ?", jp: "`if`ブロック内で宣言された`var`はどこからアクセスできる？" },
+          question: { en: "Which one is function-scoped?", np: "कुन function-scoped हो?", jp: "関数スコープなのはどれか?" },
           options: [
-            { en: "Only inside the if block", np: "if block भित्र मात्र", jp: "ifブロック内のみ" },
-            { en: "The entire enclosing function (or global scope)", np: "सम्पूर्ण enclosing function (वा global scope)", jp: "囲む関数全体（またはグローバルスコープ）" },
-            { en: "Nowhere — it throws an error", np: "कहीं पनि — error आउँछ", jp: "どこからも — エラーになる" },
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
           ],
-          correctIndex: 1,
-          explanation: { en: "var is function-scoped, so it ignores the if block's boundaries and leaks out to the whole enclosing function.", np: "var function-scoped हो, त्यसैले if block को boundary ignore गरेर पूरै function मा leak हुन्छ।", jp: "varは関数スコープなので、ifブロックの境界を無視して関数全体に漏れる。" },
+          correctIndex: 0,
+          explanation: { en: "`var` is function-scoped, so it ignores `{ }` block boundaries. `let` and `const` are block-scoped.", np: "`var` function-scoped हो, त्यसैले यो `{ }` block boundary बेवास्ता गर्छ। `let` र `const` block-scoped हुन्।", jp: "`var` は関数スコープなので `{ }` のブロック境界を無視する。`let` と `const` はブロックスコープ。" },
         },
       ],
     },
