@@ -120,6 +120,7 @@ greet();`,
           explanation: { en: "The function keeps the scope of the place it was written, no matter where it is later called.", np: "Function पछि जहाँ call भए पनि आफू लेखिएको ठाउँको scope राख्छ।", jp: "関数は後でどこで呼ばれても、書かれた場所のスコープを保つ。" },
         },
       ],
+      youtubeIds: ["uH-tVP8MUs8"],
     },
     {
       id: "hoisting-detail",
