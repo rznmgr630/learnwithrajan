@@ -218,75 +218,109 @@ console.log(
       title: { en: "Loops", np: "Loops", jp: "ループ" },
       durationMinutes: 9,
       explanation: {
-        en: "All loops repeat a block of code — they differ in <b>what</b> drives the repetition and <b>what</b> they can iterate over.\n\n• <b>for</b> — use when you need a counter or an index\n• <b>while</b> — use when the stopping condition isn't a simple count\n• <b>for...of</b> — use to walk through values in arrays, strings, Sets, and Maps\n  ↳ Gives you the value directly, no index bookkeeping\n• <b>for...in</b> — use to walk through an object's own keys\n  ↳ Not for arrays — it also visits inherited properties, which arrays rarely want",
-        np: "for = counter चाहिँदा। while = simple count नभएको exit condition। for...of = array/string/Set/Map को value। for...in = object को key — array को लागि होइन।",
-        jp: "for＝カウンタが必要な時。while＝単純なカウントでない終了条件。for...of＝配列・文字列・Set・Mapの値。for...in＝オブジェクトのキー（配列には不向き）。",
+        en: "<b>Loops</b> (a way to repeat code) let you run the same block of code multiple times.\n\nJavaScript has several types of loops:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b> (a loop commonly used with a counter or index) is useful when you know how many times you want to repeat something.\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\nOutput:\n\n```text\n0\n1\n2\n3\n4\n```\n\nUse `for` when you need the index or a counter.\n\n---\n\n### 2. `while`\n\n<b>`while`</b> (a loop that continues while a condition is true) is useful when you don't know exactly how many times the loop will run.\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nThe loop stops when:\n\n```text\ncount < 5\n```\n\nbecomes false.\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b> (a loop that gives you each value directly) is useful for arrays, strings, Sets, and Maps.\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nOutput:\n\n```text\napple\nbanana\norange\n```\n\nYou don't need to manage the index yourself.\n\nCompare:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nwith:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n`for...of` is usually cleaner when you only need the values.\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b> (a loop that gives you object keys) is mainly used for objects.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\nOutput:\n\n```text\nname\nage\n```\n\nYou can use the key to get the value:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\nOutput:\n\n```text\nRajan\n30\n```\n\nAvoid using `for...in` for arrays because it is designed for object keys and can include inherited properties.",
+        np: "<b>Loop</b> (code दोहोर्याउने तरिका) ले तपाईंलाई उही code block धेरै पटक चलाउन दिन्छ।\n\nJavaScript मा केही प्रकारका loop छन्:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b> (counter वा index सँग सामान्यतया प्रयोग हुने loop) कति पटक दोहोर्याउने थाहा हुँदा उपयोगी छ।\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\nOutput:\n\n```text\n0\n1\n2\n3\n4\n```\n\nIndex वा counter चाहिँदा `for` प्रयोग गर्नुहोस्।\n\n---\n\n### 2. `while`\n\n<b>`while`</b> (condition सही रहेसम्म चलिरहने loop) loop कति पटक चल्छ ठ्याक्कै थाहा नहुँदा उपयोगी छ।\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nLoop रोकिन्छ जब:\n\n```text\ncount < 5\n```\n\nगलत बन्छ।\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b> (हरेक value सिधै दिने loop) array, string, Set, र Map का लागि उपयोगी छ।\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nOutput:\n\n```text\napple\nbanana\norange\n```\n\nतपाईंले आफैं index व्यवस्थापन गर्नु पर्दैन।\n\nतुलना गर्नुहोस्:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nयो सँग:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nvalue मात्र चाहिँदा `for...of` सामान्यतया सफा हुन्छ।\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b> (object का key दिने loop) मुख्यतया object का लागि प्रयोग हुन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\nOutput:\n\n```text\nname\nage\n```\n\nValue लिन key प्रयोग गर्न सक्नुहुन्छ:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\nOutput:\n\n```text\nRajan\n30\n```\n\nArray का लागि `for...in` प्रयोग नगर्नुहोस्, किनकि यो object का key का लागि बनाइएको हो र inherited property पनि समेट्न सक्छ।",
+        jp: "<b>ループ</b>（コードを繰り返す方法）を使うと、同じコードのかたまりを何度も実行できます。\n\nJavaScriptにはいくつかの種類のループがあります:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b>（カウンタや添字と一緒によく使うループ）は、繰り返す回数が分かっているときに便利です。\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\n出力:\n\n```text\n0\n1\n2\n3\n4\n```\n\n添字やカウンタが必要なときは `for` を使いましょう。\n\n---\n\n### 2. `while`\n\n<b>`while`</b>（条件が真である間続くループ）は、何回繰り返すか正確には分からないときに便利です。\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nループが止まるのは:\n\n```text\ncount < 5\n```\n\nが偽になったときです。\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b>（各値を直接渡してくれるループ）は、配列・文字列・Set・Mapに便利です。\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n出力:\n\n```text\napple\nbanana\norange\n```\n\n添字を自分で管理する必要はありません。\n\n比べてみてください:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nと:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n値だけが必要なときは、たいてい `for...of` の方がすっきりします。\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b>（オブジェクトのキーを渡すループ）は主にオブジェクトに使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\n出力:\n\n```text\nname\nage\n```\n\nキーを使って値を取り出せます:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\n出力:\n\n```text\nRajan\n30\n```\n\n`for...in` は配列には使わないでください。オブジェクトのキーのために設計されており、継承したプロパティも含みうるからです。",
       },
-      diagram: `for            ── needs a counter/index ──────────▶  for (let i = 0; i < 5; i++)
-while          ── condition isn't a simple count ──▶  while (attempts < 3)
-for...of       ── values of an iterable ───────────▶  for (const x of arr)
-for...in       ── an object's own keys ─────────────▶  for (const k in obj)
-                  (avoid on arrays — visits inherited props too)`,
+      diagram: `                       Loops
+                         |
+        +----------------+----------------+
+        |                |                |
+       for             while          for...of
+        |                |                |
+ Counter / index     Condition          Values
+        |                |                |
+        +----------------+----------------+
+                         |
+                     for...in
+                         |
+                      Object keys`,
       codeExample: {
-        title: { en: "for, while, for...of, for...in — when to use each", np: "Loops — कहिले कुन?", jp: "各ループの使い分け" },
-        code: `// ── for — when you need the index or a counted loop ───────────────
-for (let i = 0; i < 5; i++) {
-  console.log(i);  // 0 1 2 3 4
+        title: { en: "The four loop forms side by side", np: "चारै loop रूप सँगसँगै", jp: "4つのループを並べて比較" },
+        code: `const fruits = ["apple", "banana", "orange"];
+
+// for
+for (let i = 0; i < fruits.length; i++) {
+  console.log(fruits[i]);
 }
 
-// ── while — when the exit condition is not a simple counter ────────
-let attempts = 0;
-while (attempts < 3) {
-  attempts++;
+// while
+let i = 0;
+
+while (i < fruits.length) {
+  console.log(fruits[i]);
+  i++;
 }
 
-// ── for...of — iterate over iterable values (arrays, strings, Sets, Maps)
-const fruits = ["apple", "banana", "cherry"];
+// for...of
 for (const fruit of fruits) {
-  console.log(fruit);     // apple / banana / cherry
+  console.log(fruit);
 }
 
-// ── for...in — iterate over object keys (not for arrays!)
-const person = { name: "Alice", age: 30 };
-for (const key in person) {
-  console.log(key, person[key]);  // name Alice / age 30
-}
+// for...in
+const user = {
+  name: "Rajan",
+  age: 30
+};
 
-// ── break and continue ───────────────────────────────────────────
-for (let i = 0; i < 10; i++) {
-  if (i === 3) continue;  // skip 3
-  if (i === 7) break;     // stop at 7
-  console.log(i);         // 0 1 2 4 5 6
+for (const key in user) {
+  console.log(key, user[key]);
 }`,
       },
       keyTakeaways: [
-        { en: "Use `for...of` for array/string/Set/Map values — it gives you the value directly with no index bookkeeping.", np: "Array/string/Set/Map को value का लागि for...of प्रयोग गर्नुहोस् — index चाहिँदैन।", jp: "配列・文字列・Set・Mapの値には`for...of`を使う。インデックス管理が不要。" },
-        { en: "Never use `for...in` on arrays — it also visits inherited properties, which is almost never what you want.", np: "Array मा for...in कहिल्यै प्रयोग नगर्नुहोस् — inherited properties पनि visit गर्छ।", jp: "配列に`for...in`は使わない。継承プロパティも巡回してしまう。" },
-        { en: "`break` exits the loop entirely; `continue` skips only the current iteration and moves to the next one.", np: "`break` ले loop पूरै छोड्छ; `continue` ले current iteration मात्र skip गर्छ।", jp: "`break`はループを完全に終了。`continue`は現在の反復のみスキップして次へ進む。" },
+        { en: "<b>Loop</b> → repeats a block of code.", np: "<b>Loop</b> → code को block दोहोर्याउँछ।", jp: "<b>ループ</b> → コードのかたまりを繰り返す。" },
+        { en: "<b>`for`</b> → use when you need a counter or index.", np: "<b>`for`</b> → counter वा index चाहिँदा प्रयोग गर्नुहोस्।", jp: "<b>`for`</b> → カウンタや添字が必要なときに使う。" },
+        { en: "<b>`while`</b> → use when repetition depends on a condition.", np: "<b>`while`</b> → दोहोरिने काम condition मा निर्भर हुँदा प्रयोग गर्नुहोस्।", jp: "<b>`while`</b> → 繰り返しが条件に依存するときに使う。" },
+        { en: "<b>`for...of`</b> → use to get values from arrays, strings, Sets, and Maps.", np: "<b>`for...of`</b> → array, string, Set, र Map बाट value लिन प्रयोग गर्नुहोस्।", jp: "<b>`for...of`</b> → 配列・文字列・Set・Mapから値を取り出すのに使う。" },
+        { en: "<b>`for...in`</b> → use to get keys from objects.", np: "<b>`for...in`</b> → object बाट key लिन प्रयोग गर्नुहोस्।", jp: "<b>`for...in`</b> → オブジェクトからキーを取り出すのに使う。" },
+        { en: "Avoid `for...in` for arrays.", np: "Array का लागि `for...in` प्रयोग नगर्नुहोस्।", jp: "配列に `for...in` は使わない。" },
+        { en: "`for...of` gives you the value directly, so you don't need index management.", np: "`for...of` ले value सिधै दिन्छ, त्यसैले index व्यवस्थापन चाहिँदैन।", jp: "`for...of` は値を直接くれるので、添字の管理が不要。" },
       ],
       commonMistakes: [
-        { en: "Using `for...in` to loop over an array, accidentally picking up inherited properties or getting keys as strings instead of numbers.", np: "Array loop गर्न for...in प्रयोग गर्दा inherited properties वा string keys आउनु।", jp: "配列のループに`for...in`を使い、継承プロパティや文字列キーを誤って取得すること。" },
-        { en: "Forgetting the increment (`i++`) in a `for` loop, causing an infinite loop that freezes the page.", np: "`for` loop मा increment (`i++`) बिर्सनु, infinite loop बन्नु।", jp: "for文で`i++`を忘れ、無限ループでページが固まること。" },
-        { en: "Confusing `break` and `continue` — using `break` when you only meant to skip the current item.", np: "`break` र `continue` मिलाउनु — current item मात्र skip गर्ने चाहिँदा break प्रयोग गर्नु।", jp: "`break`と`continue`を混同すること。現在の項目だけスキップしたいのにbreakを使う。" },
+        { en: "<b>Creating an infinite `while` loop</b> — if `count` never changes inside `while (count < 5)`, the condition never becomes false. Remember `count++` in the body.", np: "<b>अनन्त `while` loop बनाउनु</b> — `while (count < 5)` भित्र `count` कहिल्यै बदलिँदैन भने, condition कहिल्यै गलत बन्दैन। Body मा `count++` सम्झनुहोस्।", jp: "<b>無限 `while` ループを作る</b> — `while (count < 5)` の中で `count` が変わらなければ条件は偽にならない。本体に `count++` を忘れないこと。" },
+        { en: "<b>Using `for...in` for arrays</b> — it iterates keys (and can include inherited properties). Use `for...of` when you want the values.", np: "<b>Array का लागि `for...in` प्रयोग गर्नु</b> — यो key मा घुम्छ (र inherited property पनि समेट्न सक्छ)। Value चाहिँदा `for...of` प्रयोग गर्नुहोस्।", jp: "<b>配列に `for...in` を使う</b> — キーを反復し（継承したプロパティも含みうる）。値が欲しいなら `for...of` を使う。" },
+        { en: "<b>Forgetting that `for...in` gives keys</b> — `for (const value in user)` logs `name`, not `\"Rajan\"`. Read the value with `user[key]`.", np: "<b>`for...in` ले key दिन्छ भनी बिर्सनु</b> — `for (const value in user)` ले `\"Rajan\"` होइन `name` देखाउँछ। Value `user[key]` ले पढ्नुहोस्।", jp: "<b>`for...in` がキーを渡すことを忘れる</b> — `for (const value in user)` は `\"Rajan\"` ではなく `name` を出す。値は `user[key]` で読む。" },
       ],
       quiz: [
         {
-          question: { en: "Which loop type gives you array values directly without manual indexing?", np: "कुन loop ले manual indexing बिना array value दिन्छ?", jp: "手動インデックス管理なしで配列の値を直接得られるループは？" },
-          options: [{ en: "for...in", np: "for...in", jp: "for...in" }, { en: "for...of", np: "for...of", jp: "for...of" }, { en: "while", np: "while", jp: "while" }],
+          question: { en: "Which loop is best when you need an index?", np: "Index चाहिँदा कुन loop उत्तम हो?", jp: "添字が必要なときに最適なループはどれか?" },
+          options: [
+            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+            { en: "`for`", np: "`for`", jp: "`for`" },
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+          ],
           correctIndex: 1,
-          explanation: { en: "for...of iterates over the values of an iterable directly — no index bookkeeping needed.", np: "for...of ले iterable का values सिधै दिन्छ — index चाहिँदैन।", jp: "for...ofはイテラブルの値を直接反復し、インデックス管理が不要。" },
+          explanation: { en: "A classic `for` loop owns the counter, so the index is available in the body.", np: "Classic `for` loop सँग counter हुन्छ, त्यसैले body मा index उपलब्ध हुन्छ।", jp: "従来の `for` ループはカウンタを持つので、本体で添字が使える。" },
         },
         {
-          question: { en: "What does `continue` do inside a loop?", np: "Loop भित्र `continue` ले के गर्छ?", jp: "ループ内の`continue`は何をする？" },
-          options: [{ en: "Exits the loop entirely", np: "Loop पूरै छोड्छ", jp: "ループを完全に終了する" }, { en: "Skips the rest of the current iteration and moves to the next", np: "Current iteration को बाँकी skip गरी अर्कोमा जान्छ", jp: "現在の反復の残りをスキップして次に進む" }],
-          correctIndex: 1,
-          explanation: { en: "continue moves to the next iteration; break is what exits the loop entirely.", np: "continue ले अर्को iteration मा लैजान्छ; break ले loop पूरै छोड्छ।", jp: "continueは次の反復に進む。ループ全体を終了するのはbreak。" },
+          question: { en: "Which loop gives you array values directly?", np: "कुन loop ले array का value सिधै दिन्छ?", jp: "配列の値を直接くれるループはどれか?" },
+          options: [
+            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+            { en: "`while`", np: "`while`", jp: "`while`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`for...of` hands you each value, so there is no `arr[i]` lookup to manage.", np: "`for...of` ले हरेक value दिन्छ, त्यसैले `arr[i]` को खोजी व्यवस्थापन गर्नु पर्दैन।", jp: "`for...of` は各値を渡してくれるので、`arr[i]` の参照を管理する必要がない。" },
         },
         {
-          question: { en: "Why should you avoid `for...in` on arrays?", np: "Array मा `for...in` किन नगर्ने?", jp: "配列で`for...in`を避けるべき理由は？" },
-          options: [{ en: "It's slower than for...of", np: "for...of भन्दा ढिलो", jp: "for...ofより遅い" }, { en: "It also visits inherited properties, not just array items", np: "यसले array items मात्र होइन inherited properties पनि visit गर्छ", jp: "配列要素だけでなく継承プロパティも巡回してしまう" }],
-          correctIndex: 1,
-          explanation: { en: "for...in enumerates all enumerable properties, including inherited ones, which is rarely what you want on an array.", np: "for...in ले सबै enumerable properties (inherited सहित) enumerate गर्छ।", jp: "for...inは継承分を含むすべての列挙可能プロパティを列挙する。" },
+          question: { en: "Which loop is mainly used for object keys?", np: "मुख्यतया object का key का लागि कुन loop प्रयोग हुन्छ?", jp: "主にオブジェクトのキーに使うループはどれか?" },
+          options: [
+            { en: "`for`", np: "`for`", jp: "`for`" },
+            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`for...in` iterates the keys of an object, which is why it is the wrong tool for arrays.", np: "`for...in` object का key मा घुम्छ, त्यसैले यो array का लागि गलत उपकरण हो।", jp: "`for...in` はオブジェクトのキーを反復する。だから配列には不向き。" },
+        },
+        {
+          question: { en: "When is `while` useful?", np: "`while` कहिले उपयोगी हुन्छ?", jp: "`while` はどんなときに便利か?" },
+          options: [
+            { en: "When repetition depends on a condition", np: "दोहोरिने काम condition मा निर्भर हुँदा", jp: "繰り返しが条件に依存するとき" },
+            { en: "Only for arrays", np: "Array का लागि मात्र", jp: "配列のときだけ" },
+            { en: "Only for objects", np: "Object का लागि मात्र", jp: "オブジェクトのときだけ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Use `while` when you don't know the number of iterations up front, only the condition that ends them.", np: "कति पटक घुम्ने अगावै थाहा नहुँदा, अन्त्य गर्ने condition मात्र थाहा हुँदा `while` प्रयोग गर्नुहोस्।", jp: "反復回数が事前に分からず、終了条件だけが分かっているときに `while` を使う。" },
         },
       ],
     },
