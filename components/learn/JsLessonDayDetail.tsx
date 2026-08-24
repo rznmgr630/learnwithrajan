@@ -342,6 +342,21 @@ function LessonAccordionItem({
 
             {tab === "quiz" ? <QuizBlock quizId={quizId} questions={lesson.quiz} locale={locale} /> : null}
           </div>
+
+          {lesson.youtubeId ? (
+            <div className="mt-4 overflow-hidden rounded-xl border border-[var(--border)]">
+              <div className="relative w-full pb-[56.25%]">
+                <iframe
+                  className="absolute inset-0 h-full w-full"
+                  src={`https://www.youtube.com/embed/${lesson.youtubeId}`}
+                  title={pickLocalized(lesson.title, locale)}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

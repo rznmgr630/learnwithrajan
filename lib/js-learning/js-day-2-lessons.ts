@@ -2,492 +2,474 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_2_LESSONS: JsLessonDay = {
   day: 2,
-  title: { en: "Operators, Conditionals & Functions", np: "Operators, Conditionals र Functions", jp: "演算子・条件分岐・関数" },
-  totalMinutes: 36,
+  title: { en: "Variables, Types & Hoisting", np: "Variables, Types र Hoisting", jp: "変数・型・ホイスティング" },
+  totalMinutes: 35,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "operators",
-      title: { en: "Operators", np: "Operators", jp: "演算子" },
-      durationMinutes: 9,
+      id: "variables",
+      title: { en: "Variables", np: "Variables", jp: "変数" },
+      durationMinutes: 8,
       explanation: {
-        en: "<b>Operators</b> (symbols that perform an operation on values) are used to calculate, compare, or combine values.\n\nExamples:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nMost operators are straightforward, but three are especially useful to understand:\n\n• `||` → OR\n• `??` → nullish coalescing\n• `?.` → optional chaining\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b> (OR operator that uses a fallback when the left value is falsy) returns the right side when the left side is <b>falsy</b>.\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nRemember, these values are falsy:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nThis can cause problems with numbers:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\nThe `0` was a real value, but `||` treated it as falsy.\n\n---\n\n### 2. `??` — Nullish Coalescing\n\n<b>Nullish coalescing</b> (using a fallback only when a value is `null` or `undefined`) uses the right side only when the left side is `null` or `undefined`.\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nThis is different from `||`.\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nThink:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — Optional Chaining\n\n<b>Optional chaining</b> (safely accessing a value that might not exist) prevents an error when part of an object is `null` or `undefined`.\n\nWithout `?.`:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\nWith `?.`:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nIf JavaScript finds `null` or `undefined` while following the chain, it stops and returns `undefined`.\n\nExample:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nInstead of:\n\n```javascript\nuser.name;\n// Error\n```",
-        np: "<b>Operator</b> (value माथि काम गर्ने चिन्ह) value गणना गर्न, तुलना गर्न, वा जोड्न प्रयोग हुन्छन्।\n\nउदाहरण:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nधेरैजसो operator सरल छन्, तर तीन ओटा बुझ्न विशेष उपयोगी छन्:\n\n• `||` → OR\n• `??` → nullish coalescing\n• `?.` → optional chaining\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b> (बायाँ value falsy भएमा fallback प्रयोग गर्ने OR operator) बायाँ पट्टि <b>falsy</b> भएमा दायाँ पट्टि फर्काउँछ।\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nसम्झनुहोस्, यी value falsy हुन्:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nयसले संख्यासँग समस्या ल्याउन सक्छ:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\n`0` वास्तविक value थियो, तर `||` ले यसलाई falsy मानिदियो।\n\n---\n\n### 2. `??` — Nullish Coalescing\n\n<b>Nullish coalescing</b> (value `null` वा `undefined` हुँदा मात्र fallback प्रयोग गर्नु) ले बायाँ पट्टि `null` वा `undefined` हुँदा मात्र दायाँ पट्टि प्रयोग गर्छ।\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nयो `||` भन्दा फरक छ।\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nसोच्नुहोस्:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — Optional Chaining\n\n<b>Optional chaining</b> (अवस्थित नहुन सक्ने value सुरक्षित रूपमा पहुँच गर्नु) ले object को कुनै भाग `null` वा `undefined` हुँदा error आउनबाट रोक्छ।\n\n`?.` बिना:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\n`?.` सँग:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nChain पछ्याउँदै जाँदा JavaScript ले `null` वा `undefined` भेट्यो भने, यो रोकिन्छ र `undefined` फर्काउँछ।\n\nउदाहरण:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nयसको साटो:\n\n```javascript\nuser.name;\n// Error\n```",
-        jp: "<b>演算子</b>（値に対して操作を行う記号）は、値を計算・比較・結合するために使います。\n\n例:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nほとんどの演算子は分かりやすいですが、特に理解しておくと役立つものが3つあります:\n\n• `||` → OR\n• `??` → null合体（nullish coalescing）\n• `?.` → オプショナルチェーン\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b>（左の値がfalsyのときフォールバックを使うOR演算子）は、左側が<b>falsy</b>のときに右側を返します。\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nfalsyな値は次のとおりです:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nこれは数値で問題を起こすことがあります:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\n`0` は本物の値でしたが、`||` はそれをfalsyとして扱いました。\n\n---\n\n### 2. `??` — null合体\n\n<b>null合体（Nullish coalescing）</b>（値が `null` か `undefined` のときだけフォールバックを使う）は、左側が `null` か `undefined` のときだけ右側を使います。\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nこれは `||` とは違います。\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nこう考えてください:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — オプショナルチェーン\n\n<b>オプショナルチェーン</b>（存在しないかもしれない値に安全にアクセスする）は、オブジェクトの一部が `null` や `undefined` のときにエラーを防ぎます。\n\n`?.` なし:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\n`?.` あり:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nチェーンをたどる途中で `null` か `undefined` を見つけると、JavaScriptはそこで止まって `undefined` を返します。\n\n例:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nこう書く代わりに:\n\n```javascript\nuser.name;\n// Error\n```",
+        en: "A <b>variable</b> (a named place to store a value) lets us save and use data.\n\nJavaScript has three ways to create variables:\n\n```javascript\nvar\nlet\nconst\n```\n\nThe main differences are <b>scope</b> (where the variable can be used), <b>re-declaration</b> (creating the same variable again), and <b>reassignment</b> (giving a variable a new value).\n\n---\n\n## `var`\n\n<b>`var`</b> (an older way to create variables) is <b>function-scoped</b> (available throughout the function).\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\nIt can also be re-declared:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\nGenerally, avoid `var` in modern JavaScript.\n\n---\n\n## `let`\n\n<b>`let`</b> (a variable whose value can change) is <b>block-scoped</b> (available only inside its `{ }` block).\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\nYou cannot re-declare it in the same scope:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b> (a variable that cannot be reassigned) is also block-scoped.\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\nIt must have a value when created:\n\n```javascript\nconst age = 30;\n```",
+        np: "<b>Variable</b> (value राख्ने नाम दिइएको ठाउँ) ले हामीलाई data सेभ गर्न र प्रयोग गर्न दिन्छ।\n\nJavaScript मा variable बनाउने तीन तरिका छन्:\n\n```javascript\nvar\nlet\nconst\n```\n\nमुख्य फरक हुन् <b>scope</b> (variable कहाँ प्रयोग गर्न सकिन्छ), <b>re-declaration</b> (उही variable फेरि बनाउनु), र <b>reassignment</b> (variable लाई नयाँ value दिनु)।\n\n---\n\n## `var`\n\n<b>`var`</b> (variable बनाउने पुरानो तरिका) <b>function-scoped</b> (पूरै function भर उपलब्ध) हुन्छ।\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\nयसलाई फेरि declare पनि गर्न सकिन्छ:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\nसामान्यतया, आधुनिक JavaScript मा `var` बच्नुहोस्।\n\n---\n\n## `let`\n\n<b>`let`</b> (value बदल्न सकिने variable) <b>block-scoped</b> (आफ्नो `{ }` block भित्र मात्र उपलब्ध) हुन्छ।\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\nउही scope मा यसलाई फेरि declare गर्न सक्नुहुन्न:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b> (reassign गर्न नमिल्ने variable) पनि block-scoped हुन्छ।\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\nबनाउँदै गर्दा यसको value हुनै पर्छ:\n\n```javascript\nconst age = 30;\n```",
+        jp: "<b>変数</b>（値を保存する名前付きの場所）を使うと、データを保存して利用できます。\n\nJavaScriptには変数を作る方法が3つあります:\n\n```javascript\nvar\nlet\nconst\n```\n\n主な違いは<b>スコープ</b>（変数を使える範囲）、<b>再宣言</b>（同じ変数をもう一度作ること）、<b>再代入</b>（変数に新しい値を入れること）です。\n\n---\n\n## `var`\n\n<b>`var`</b>（変数を作る古い方法）は<b>関数スコープ</b>（関数全体で使える）です。\n\n```javascript\nif (true) {\n  var name = \"Rajan\";\n}\n\nconsole.log(name); // Rajan\n```\n\n再宣言もできます:\n\n```javascript\nvar age = 20;\nvar age = 30;\n```\n\n現代のJavaScriptでは、基本的に `var` は避けましょう。\n\n---\n\n## `let`\n\n<b>`let`</b>（値を変えられる変数）は<b>ブロックスコープ</b>（その `{ }` ブロックの中でだけ使える）です。\n\n```javascript\nlet age = 20;\n\nage = 30;\n```\n\n同じスコープで再宣言はできません:\n\n```javascript\nlet age = 20;\nlet age = 30; // Error\n```\n\n---\n\n## `const`\n\n<b>`const`</b>（再代入できない変数）もブロックスコープです。\n\n```javascript\nconst name = \"Rajan\";\n\nname = \"John\"; // Error\n```\n\n作るときに値を持たせなければなりません:\n\n```javascript\nconst age = 30;\n```",
       },
-      diagram: `                    Operators
-                        |
-        +---------------+---------------+
-        |               |               |
-       ||              ??              ?.
-      OR          Nullish fallback   Safe access
-        |               |               |
-   Any falsy       null / undefined   Stops safely
-   → fallback       → fallback       → undefined
-
-
-|| vs ??
-
-count = 0
-
-count || 10
-    ↓
-0 is falsy
-    ↓
-10
-
-count ?? 10
-    ↓
-0 is NOT null/undefined
-    ↓
-0`,
+      diagram: `              Variables
+                  |
+       +----------+----------+
+       |          |          |
+      var        let       const
+       |          |          |
+ Function       Block      Block
+  scoped        scoped     scoped
+       |          |          |
+ Reassign ✓   Reassign ✓  Reassign ✗
+ Re-declare ✓ Re-declare ✗ Re-declare ✗`,
       codeExample: {
-        title: { en: "OR, nullish coalescing and optional chaining", np: "OR, nullish coalescing र optional chaining", jp: "OR・null合体・オプショナルチェーン" },
-        code: `const count = 0;
-const name = "";
-const user = null;
+        title: { en: "Declaring with const and let", np: "const र let ले declare गर्नु", jp: "constとletで宣言する" },
+        code: `const name = "Rajan";
+let age = 29;
 
-// OR
-console.log(count || 10);
-// 10
+age = 30;
 
-// Nullish coalescing
-console.log(count ?? 10);
-// 0
-
-// Optional chaining
-console.log(user?.name);
-// undefined`,
+console.log(name); // Rajan
+console.log(age);  // 30`,
       },
       keyTakeaways: [
-        { en: "<b>Operators</b> → symbols that perform operations on values.", np: "<b>Operator</b> → value माथि काम गर्ने चिन्ह।", jp: "<b>演算子</b> → 値に対して操作を行う記号。" },
-        { en: "`||` → uses the right side when the left side is falsy.", np: "`||` → बायाँ पट्टि falsy हुँदा दायाँ पट्टि प्रयोग गर्छ।", jp: "`||` → 左側がfalsyのとき右側を使う。" },
-        { en: "`??` → uses the right side only for `null` or `undefined`.", np: "`??` → `null` वा `undefined` का लागि मात्र दायाँ पट्टि प्रयोग गर्छ।", jp: "`??` → `null` か `undefined` のときだけ右側を使う。" },
-        { en: "`?.` → safely accesses properties that might not exist.", np: "`?.` → अवस्थित नहुन सक्ने property सुरक्षित रूपमा पहुँच गर्छ।", jp: "`?.` → 存在しないかもしれないプロパティに安全にアクセスする。" },
-        { en: "Use `??` when `0`, `\"\"`, or `false` are valid values.", np: "`0`, `\"\"`, वा `false` मान्य value हुँदा `??` प्रयोग गर्नुहोस्।", jp: "`0`、`\"\"`、`false` が有効な値のときは `??` を使う。" },
-        { en: "Use `?.` to avoid errors when accessing nested data.", np: "Nested data पहुँच गर्दा error बच्न `?.` प्रयोग गर्नुहोस्।", jp: "入れ子のデータにアクセスするときは `?.` でエラーを避ける。" },
+        { en: "<b>`var`</b> → old, function-scoped, can be reassigned and re-declared.", np: "<b>`var`</b> → पुरानो, function-scoped, reassign र re-declare गर्न मिल्छ।", jp: "<b>`var`</b> → 古い、関数スコープ、再代入も再宣言もできる。" },
+        { en: "<b>`let`</b> → block-scoped, can be reassigned.", np: "<b>`let`</b> → block-scoped, reassign गर्न मिल्छ।", jp: "<b>`let`</b> → ブロックスコープ、再代入できる。" },
+        { en: "<b>`const`</b> → block-scoped, cannot be reassigned.", np: "<b>`const`</b> → block-scoped, reassign गर्न मिल्दैन।", jp: "<b>`const`</b> → ブロックスコープ、再代入できない。" },
+        { en: "Use <b>`const`</b> by default.", np: "Default मा <b>`const`</b> प्रयोग गर्नुहोस्।", jp: "既定では<b>`const`</b>を使う。" },
+        { en: "Use <b>`let`</b> when the value needs to change.", np: "Value बदल्नुपर्ने बेला <b>`let`</b> प्रयोग गर्नुहोस्।", jp: "値を変える必要があるときは<b>`let`</b>を使う。" },
+        { en: "Avoid <b>`var`</b> in modern JavaScript.", np: "आधुनिक JavaScript मा <b>`var`</b> बच्नुहोस्।", jp: "現代のJavaScriptでは<b>`var`</b>を避ける。" },
       ],
       commonMistakes: [
-        { en: "<b>Using `||` when `0` is a valid value</b> — `const count = 0; count || 10` gives `10`. If `0` is valid, use `count ?? 10`, which gives `0`.", np: "<b>`0` मान्य value हुँदा `||` प्रयोग गर्नु</b> — `const count = 0; count || 10` ले `10` दिन्छ। `0` मान्य भए `count ?? 10` प्रयोग गर्नुहोस्, जो `0` दिन्छ।", jp: "<b>`0` が有効な値なのに `||` を使う</b> — `const count = 0; count || 10` は `10` になる。`0` が有効なら `count ?? 10` を使えば `0` になる。" },
-        { en: "<b>Thinking `??` handles every falsy value</b> — `false ?? true` is `false`, `0 ?? 10` is `0`, `\"\" ?? \"Hello\"` is `\"\"`. `??` only checks for `null` and `undefined`.", np: "<b>`??` ले हरेक falsy value सम्हाल्छ भन्ने ठान्नु</b> — `false ?? true` `false` हो, `0 ?? 10` `0` हो, `\"\" ?? \"Hello\"` `\"\"` हो। `??` ले `null` र `undefined` मात्र जाँच्छ।", jp: "<b>`??` がすべてのfalsyな値を扱うと思う</b> — `false ?? true` は `false`、`0 ?? 10` は `0`、`\"\" ?? \"Hello\"` は `\"\"`。`??` が見るのは `null` と `undefined` だけ。" },
-        { en: "<b>Forgetting optional chaining</b> — with `const user = null`, `user.name` throws an error while `user?.name` returns `undefined`.", np: "<b>Optional chaining बिर्सनु</b> — `const user = null` सँग, `user.name` ले error दिन्छ जब कि `user?.name` ले `undefined` फर्काउँछ।", jp: "<b>オプショナルチェーンを忘れる</b> — `const user = null` のとき `user.name` はエラーになるが、`user?.name` は `undefined` を返す。" },
+        { en: "<b>Reassigning a `const`</b> — `const age = 20; age = 30;` throws an error. Use `let` if the value needs to change.", np: "<b>`const` लाई reassign गर्नु</b> — `const age = 20; age = 30;` ले error दिन्छ। Value बदल्नुपर्ने भए `let` प्रयोग गर्नुहोस्।", jp: "<b>`const` に再代入する</b> — `const age = 20; age = 30;` はエラーになる。値を変える必要があるなら `let` を使う。" },
+        { en: "<b>Re-declaring a `let`</b> — `let name = \"Rajan\"; let name = \"John\";` is an error in the same scope.", np: "<b>`let` लाई फेरि declare गर्नु</b> — उही scope मा `let name = \"Rajan\"; let name = \"John\";` error हो।", jp: "<b>`let` を再宣言する</b> — 同じスコープでの `let name = \"Rajan\"; let name = \"John\";` はエラー。" },
+        { en: "<b>Assuming `const` makes objects completely unchangeable</b> — with `const user = { name: \"Rajan\" }`, `user.name = \"John\"` works but `user = {}` fails. `const` prevents reassignment of the variable, not changes inside the object.", np: "<b>`const` ले object पूरै अपरिवर्तनीय बनाउँछ भन्ने ठान्नु</b> — `const user = { name: \"Rajan\" }` सँग, `user.name = \"John\"` काम गर्छ तर `user = {}` fail हुन्छ। `const` ले variable को reassignment रोक्छ, object भित्रको परिवर्तन होइन।", jp: "<b>`const` はオブジェクトを完全に変更不可にすると思い込む</b> — `const user = { name: \"Rajan\" }` で `user.name = \"John\"` は動くが `user = {}` は失敗する。`const` が防ぐのは変数の再代入であり、オブジェクト内部の変更ではない。" },
       ],
       quiz: [
         {
-          question: { en: "What does `0 || 10` return?", np: "`0 || 10` ले के फर्काउँछ?", jp: "`0 || 10` は何を返すか?" },
+          question: { en: "Which should you normally use when a value doesn't need to change?", np: "Value बदल्नु पर्दैन भन्ने बेला सामान्यतया कुन प्रयोग गर्नुपर्छ?", jp: "値を変える必要がないとき、通常はどれを使うべきか?" },
           options: [
-            { en: "`0`", np: "`0`", jp: "`0`" },
-            { en: "`10`", np: "`10`", jp: "`10`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`0` is falsy, so `||` falls back to the right side.", np: "`0` falsy हो, त्यसैले `||` दायाँ पट्टि fallback गर्छ।", jp: "`0` はfalsyなので `||` は右側にフォールバックする。" },
-        },
-        {
-          question: { en: "What does `0 ?? 10` return?", np: "`0 ?? 10` ले के फर्काउँछ?", jp: "`0 ?? 10` は何を返すか?" },
-          options: [
-            { en: "`0`", np: "`0`", jp: "`0`" },
-            { en: "`10`", np: "`10`", jp: "`10`" },
-            { en: "`null`", np: "`null`", jp: "`null`" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`0` is neither `null` nor `undefined`, so `??` keeps it.", np: "`0` न `null` न `undefined` हो, त्यसैले `??` ले यसलाई राख्छ।", jp: "`0` は `null` でも `undefined` でもないので `??` はそのまま残す。" },
-        },
-        {
-          question: { en: "What does `user?.name` do?", np: "`user?.name` ले के गर्छ?", jp: "`user?.name` は何をするか?" },
-          options: [
-            { en: "Always throws an error", np: "सधैं error दिन्छ", jp: "常にエラーを投げる" },
-            { en: "Safely accesses `name`", np: "`name` लाई सुरक्षित रूपमा पहुँच गर्छ", jp: "`name` に安全にアクセスする" },
-            { en: "Deletes `name`", np: "`name` मेटाउँछ", jp: "`name` を削除する" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "If `user` is `null` or `undefined`, the chain stops and returns `undefined` instead of throwing.", np: "`user` `null` वा `undefined` भए, chain रोकिन्छ र error दिनुको साटो `undefined` फर्काउँछ।", jp: "`user` が `null` か `undefined` なら、チェーンは止まりエラーを投げずに `undefined` を返す。" },
-        },
-        {
-          question: { en: "Which operator should you use when `0` is a valid value and you only want a fallback for missing values?", np: "`0` मान्य value हुँदा र हराएका value का लागि मात्र fallback चाहिँदा कुन operator प्रयोग गर्नुपर्छ?", jp: "`0` が有効な値で、欠けている値だけにフォールバックしたいときはどの演算子を使うべきか?" },
-          options: [
-            { en: "`||`", np: "`||`", jp: "`||`" },
-            { en: "`??`", np: "`??`", jp: "`??`" },
-            { en: "`&&`", np: "`&&`", jp: "`&&`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`??` only falls back for `null` and `undefined`, so a real `0` survives.", np: "`??` ले `null` र `undefined` का लागि मात्र fallback गर्छ, त्यसैले वास्तविक `0` बाँच्छ।", jp: "`??` は `null` と `undefined` のときだけフォールバックするので、本物の `0` は残る。" },
-        },
-      ],
-    },
-    {
-      id: "conditionals",
-      title: { en: "Conditionals", np: "Conditionals", jp: "条件分岐" },
-      durationMinutes: 9,
-      explanation: {
-        en: "<b>Conditionals</b> (statements that let your program make decisions) allow code to take different paths depending on a value.\n\nThe main ways to write conditions are:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b> (runs code when a condition is true) is the most common way to make a decision.\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\nYou can also use `else if` (checks another condition when the previous one was false):\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\nUse `if / else` when you have a few different conditions.\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b> (checks one value against several exact values) is useful when you have many fixed choices.\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b> (stops the `switch` from continuing to the next case) is usually needed after each case.\n\n<b>`default`</b> (runs when no case matches) handles everything else.\n\n---\n\n### 3. Guard Clauses\n\nA <b>guard clause</b> (returning early when a condition is not valid) helps keep code simple and avoids deep nesting.\n\nWithout a guard clause:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nThis becomes deeply nested and harder to read.\n\nWith a guard clause:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\nThe invalid cases are handled immediately.\n\nThink of a guard clause like a <b>bouncer</b>:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
-        np: "<b>Conditional</b> (तपाईंको program लाई निर्णय गर्न दिने statement) ले value अनुसार code लाई फरक बाटो लिन दिन्छ।\n\nCondition लेख्ने मुख्य तरिका:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b> (condition सही हुँदा code चलाउने) निर्णय गर्ने सबैभन्दा सामान्य तरिका हो।\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\nतपाईं `else if` (अघिल्लो condition गलत हुँदा अर्को condition जाँच्ने) पनि प्रयोग गर्न सक्नुहुन्छ:\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\nकेही फरक condition हुँदा `if / else` प्रयोग गर्नुहोस्।\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b> (एउटा value लाई धेरै ठ्याक्कै मिल्ने value सँग जाँच्ने) धेरै निश्चित विकल्प हुँदा उपयोगी छ।\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b> (`switch` लाई अर्को case मा जान रोक्ने) सामान्यतया हरेक case पछि चाहिन्छ।\n\n<b>`default`</b> (कुनै case मिल्दा नमिलेमा चल्ने) बाँकी सबै सम्हाल्छ।\n\n---\n\n### 3. Guard Clauses\n\n<b>Guard clause</b> (condition मान्य नभएमा चाँडै return गर्नु) ले code सरल राख्न मद्दत गर्छ र गहिरो nesting बचाउँछ।\n\nGuard clause बिना:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nयो गहिरो रूपमा nested र पढ्न कठिन हुन्छ।\n\nGuard clause सँग:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\nअमान्य case तुरुन्तै सम्हालिन्छन्।\n\nGuard clause लाई <b>bouncer</b> जस्तै सोच्नुहोस्:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
-        jp: "<b>条件分岐（Conditionals）</b>（プログラムに判断をさせる文）は、値に応じてコードが別の道を通れるようにします。\n\n条件の主な書き方:\n\n```javascript\nif / else\nswitch\nguard clauses\n```\n\n---\n\n### 1. `if / else`\n\n<b>`if`</b>（条件が真のときコードを実行する）は、最も一般的な判断の方法です。\n\n```javascript\nconst age = 20;\n\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}\n```\n\n`else if`（前の条件が偽のとき別の条件を調べる）も使えます:\n\n```javascript\nconst score = 75;\n\nif (score >= 90) {\n  console.log(\"A\");\n} else if (score >= 70) {\n  console.log(\"B\");\n} else {\n  console.log(\"C\");\n}\n```\n\n条件がいくつかあるときは `if / else` を使いましょう。\n\n---\n\n### 2. `switch`\n\n<b>`switch`</b>（1つの値を複数の厳密な値と照合する）は、決まった選択肢が多いときに便利です。\n\n```javascript\nconst day = \"Monday\";\n\nswitch (day) {\n  case \"Monday\":\n    console.log(\"Start of the week\");\n    break;\n\n  case \"Friday\":\n    console.log(\"Almost weekend\");\n    break;\n\n  default:\n    console.log(\"Normal day\");\n}\n```\n\n<b>`break`</b>（`switch` が次のcaseへ進むのを止める）は通常、各caseの後に必要です。\n\n<b>`default`</b>（どのcaseにも一致しないときに実行される）が残りすべてを受け持ちます。\n\n---\n\n### 3. ガード節\n\n<b>ガード節（guard clause）</b>（条件が妥当でないとき早く返す）は、コードを単純に保ち、深いネストを避けます。\n\nガード節なし:\n\n```javascript\nfunction processUser(user) {\n  if (user) {\n    if (user.isActive) {\n      if (user.isAdmin) {\n        console.log(\"Process user\");\n      }\n    }\n  }\n}\n```\n\nこれは深くネストして読みにくくなります。\n\nガード節あり:\n\n```javascript\nfunction processUser(user) {\n  if (!user) return;\n  if (!user.isActive) return;\n  if (!user.isAdmin) return;\n\n  console.log(\"Process user\");\n}\n```\n\n妥当でないケースをすぐに処理します。\n\nガード節は<b>入口の係員</b>のようなものだと考えてください:\n\n```text\nUser arrives\n     ↓\nValid user?\n   No → Leave\n   Yes\n     ↓\nActive?\n   No → Leave\n   Yes\n     ↓\nAdmin?\n   No → Leave\n   Yes\n     ↓\nProcess user\n```",
-      },
-      diagram: `                  Conditionals
-                       |
-          +------------+------------+
-          |            |            |
-        if/else      switch      Guard Clause
-          |            |            |
-    Conditions     Exact values   Exit early
-          |            |            |
-       if true      case match    return
-       if false    default        continue`,
-      codeExample: {
-        title: { en: "Guard clauses keeping a function flat", np: "Guard clause ले function सम्म राख्नु", jp: "ガード節で関数をフラットに保つ" },
-        code: `function checkAccess(user) {
-  if (!user) return "No user";
-  if (!user.isActive) return "Account inactive";
-
-  if (user.isAdmin) {
-    return "Admin access";
-  }
-
-  return "User access";
-}
-
-console.log(
-  checkAccess({
-    isActive: true,
-    isAdmin: false
-  })
-);
-
-// "User access"`,
-      },
-      keyTakeaways: [
-        { en: "<b>Conditionals</b> → let your program make decisions.", np: "<b>Conditional</b> → तपाईंको program लाई निर्णय गर्न दिन्छन्।", jp: "<b>条件分岐</b> → プログラムに判断をさせる。" },
-        { en: "<b>`if / else`</b> → best for normal conditions.", np: "<b>`if / else`</b> → सामान्य condition का लागि उत्तम।", jp: "<b>`if / else`</b> → 通常の条件に最適。" },
-        { en: "<b>`switch`</b> → useful for many exact-value choices.", np: "<b>`switch`</b> → धेरै ठ्याक्कै मिल्ने value का विकल्पका लागि उपयोगी।", jp: "<b>`switch`</b> → 厳密な値の選択肢が多いときに便利。" },
-        { en: "<b>Guard clause</b> → handles invalid cases early with `return`.", np: "<b>Guard clause</b> → अमान्य case लाई `return` ले चाँडै सम्हाल्छ।", jp: "<b>ガード節</b> → 妥当でないケースを `return` で早く処理する。" },
-        { en: "Guard clauses reduce deeply nested code.", np: "Guard clause ले गहिरो nested code घटाउँछ।", jp: "ガード節は深くネストしたコードを減らす。" },
-        { en: "Use `break` in `switch` to stop after a matching case.", np: "मिल्ने case पछि रोक्न `switch` मा `break` प्रयोग गर्नुहोस्।", jp: "一致したcaseの後で止めるために `switch` では `break` を使う。" },
-        { en: "Use `default` when no `switch` case matches.", np: "कुनै `switch` case मिल्दा नमिलेमा `default` प्रयोग गर्नुहोस्।", jp: "`switch` のどのcaseにも一致しないときは `default` を使う。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Forgetting `break` in `switch`</b> — without it, JavaScript falls through and keeps running the next case as well. Add `break;` at the end of each case.", np: "<b>`switch` मा `break` बिर्सनु</b> — यसबिना, JavaScript तल झर्छ र अर्को case पनि चलाइरहन्छ। हरेक case को अन्तमा `break;` थप्नुहोस्।", jp: "<b>`switch` で `break` を忘れる</b> — なければJavaScriptは次のcaseへ流れ落ちて実行を続ける。各caseの最後に `break;` を付ける。" },
-        { en: "<b>Creating deeply nested conditions</b> — three levels of `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` is better written as three guard clauses that `return` early.", np: "<b>गहिरो nested condition बनाउनु</b> — `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` जस्ता तीन तह लाई चाँडै `return` गर्ने तीन guard clause ले लेख्नु राम्रो।", jp: "<b>深くネストした条件を作る</b> — `if (user) { if (user.isActive) { if (user.isAdmin) { ... } } }` の3階層は、早く `return` する3つのガード節に書き換える方がよい。" },
-        { en: "<b>Forgetting `else if`</b> — when only one result should run, chain the conditions with `else if` instead of writing separate unrelated `if` statements.", np: "<b>`else if` बिर्सनु</b> — एउटै नतिजा मात्र चल्नुपर्ने बेला, छुट्टाछुट्टै असम्बन्धित `if` लेख्नुको साटो condition लाई `else if` ले chain गर्नुहोस्।", jp: "<b>`else if` を忘れる</b> — 実行される結果が1つだけであるべきときは、無関係な `if` を並べるのではなく `else if` でつなぐ。" },
-      ],
-      quiz: [
-        {
-          question: { en: "Which is best for checking several exact values?", np: "धेरै ठ्याक्कै मिल्ने value जाँच्न कुन उत्तम हो?", jp: "厳密な値を複数調べるのに最適なのはどれか?" },
-          options: [
-            { en: "`switch`", np: "`switch`", jp: "`switch`" },
-            { en: "`for`", np: "`for`", jp: "`for`" },
-            { en: "`while`", np: "`while`", jp: "`while`" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`switch` compares one value against a list of fixed cases; `for` and `while` are loops, not decisions.", np: "`switch` ले एउटा value लाई निश्चित case को सूची सँग तुलना गर्छ; `for` र `while` loop हुन्, निर्णय होइनन्।", jp: "`switch` は1つの値を固定のcase一覧と照合する。`for` と `while` はループで、判断ではない。" },
-        },
-        {
-          question: { en: "What is a guard clause?", np: "Guard clause के हो?", jp: "ガード節とは何か?" },
-          options: [
-            { en: "A loop", np: "एउटा loop", jp: "ループ" },
-            { en: "An early exit when a condition is not valid", np: "Condition मान्य नभएमा चाँडै बाहिरिनु", jp: "条件が妥当でないときの早期リターン" },
-            { en: "A type of variable", np: "Variable को एक प्रकार", jp: "変数の一種" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "It `return`s as soon as an input is invalid, so the main logic below stays flat.", np: "Input अमान्य भएको बित्तिकै यो `return` गर्छ, त्यसैले तलको मुख्य logic सम्म रहन्छ।", jp: "入力が妥当でないとすぐ `return` するので、下の主要なロジックがフラットに保たれる。" },
-        },
-        {
-          question: { en: "What does `break` do in a `switch`?", np: "`switch` मा `break` ले के गर्छ?", jp: "`switch` の中で `break` は何をするか?" },
-          options: [
-            { en: "Starts the next case", np: "अर्को case सुरु गर्छ", jp: "次のcaseを始める" },
-            { en: "Stops the switch", np: "Switch रोक्छ", jp: "switchを止める" },
-            { en: "Repeats the case", np: "Case दोहोर्याउँछ", jp: "caseを繰り返す" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "Without `break`, execution falls through into the following cases.", np: "`break` बिना, execution तलका case मा झर्छ।", jp: "`break` がないと、実行は後続のcaseへ流れ落ちる。" },
-        },
-        {
-          question: { en: "Why use guard clauses?", np: "Guard clause किन प्रयोग गर्ने?", jp: "なぜガード節を使うのか?" },
-          options: [
-            { en: "To make code more deeply nested", np: "Code अझ गहिरो nested बनाउन", jp: "コードをもっと深くネストさせるため" },
-            { en: "To avoid checking conditions", np: "Condition जाँच्न बच्न", jp: "条件を調べずに済ませるため" },
-            { en: "To keep code flatter and easier to read", np: "Code सम्म र पढ्न सजिलो राख्न", jp: "コードをフラットで読みやすく保つため" },
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
           ],
           correctIndex: 2,
-          explanation: { en: "The invalid cases are dealt with up front, leaving the real logic at one indentation level.", np: "अमान्य case पहिले सम्हालिन्छन्, र वास्तविक logic एउटै indentation तहमा रहन्छ।", jp: "妥当でないケースを先に片付けることで、本来のロジックが1段のインデントに収まる。" },
-        },
-      ],
-    },
-    {
-      id: "loops",
-      title: { en: "Loops", np: "Loops", jp: "ループ" },
-      durationMinutes: 9,
-      explanation: {
-        en: "<b>Loops</b> (a way to repeat code) let you run the same block of code multiple times.\n\nJavaScript has several types of loops:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b> (a loop commonly used with a counter or index) is useful when you know how many times you want to repeat something.\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\nOutput:\n\n```text\n0\n1\n2\n3\n4\n```\n\nUse `for` when you need the index or a counter.\n\n---\n\n### 2. `while`\n\n<b>`while`</b> (a loop that continues while a condition is true) is useful when you don't know exactly how many times the loop will run.\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nThe loop stops when:\n\n```text\ncount < 5\n```\n\nbecomes false.\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b> (a loop that gives you each value directly) is useful for arrays, strings, Sets, and Maps.\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nOutput:\n\n```text\napple\nbanana\norange\n```\n\nYou don't need to manage the index yourself.\n\nCompare:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nwith:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n`for...of` is usually cleaner when you only need the values.\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b> (a loop that gives you object keys) is mainly used for objects.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\nOutput:\n\n```text\nname\nage\n```\n\nYou can use the key to get the value:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\nOutput:\n\n```text\nRajan\n30\n```\n\nAvoid using `for...in` for arrays because it is designed for object keys and can include inherited properties.",
-        np: "<b>Loop</b> (code दोहोर्याउने तरिका) ले तपाईंलाई उही code block धेरै पटक चलाउन दिन्छ।\n\nJavaScript मा केही प्रकारका loop छन्:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b> (counter वा index सँग सामान्यतया प्रयोग हुने loop) कति पटक दोहोर्याउने थाहा हुँदा उपयोगी छ।\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\nOutput:\n\n```text\n0\n1\n2\n3\n4\n```\n\nIndex वा counter चाहिँदा `for` प्रयोग गर्नुहोस्।\n\n---\n\n### 2. `while`\n\n<b>`while`</b> (condition सही रहेसम्म चलिरहने loop) loop कति पटक चल्छ ठ्याक्कै थाहा नहुँदा उपयोगी छ।\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nLoop रोकिन्छ जब:\n\n```text\ncount < 5\n```\n\nगलत बन्छ।\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b> (हरेक value सिधै दिने loop) array, string, Set, र Map का लागि उपयोगी छ।\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nOutput:\n\n```text\napple\nbanana\norange\n```\n\nतपाईंले आफैं index व्यवस्थापन गर्नु पर्दैन।\n\nतुलना गर्नुहोस्:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nयो सँग:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\nvalue मात्र चाहिँदा `for...of` सामान्यतया सफा हुन्छ।\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b> (object का key दिने loop) मुख्यतया object का लागि प्रयोग हुन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\nOutput:\n\n```text\nname\nage\n```\n\nValue लिन key प्रयोग गर्न सक्नुहुन्छ:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\nOutput:\n\n```text\nRajan\n30\n```\n\nArray का लागि `for...in` प्रयोग नगर्नुहोस्, किनकि यो object का key का लागि बनाइएको हो र inherited property पनि समेट्न सक्छ।",
-        jp: "<b>ループ</b>（コードを繰り返す方法）を使うと、同じコードのかたまりを何度も実行できます。\n\nJavaScriptにはいくつかの種類のループがあります:\n\n```javascript\nfor\nwhile\nfor...of\nfor...in\n```\n\n---\n\n### 1. `for`\n\n<b>`for`</b>（カウンタや添字と一緒によく使うループ）は、繰り返す回数が分かっているときに便利です。\n\n```javascript\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}\n```\n\n出力:\n\n```text\n0\n1\n2\n3\n4\n```\n\n添字やカウンタが必要なときは `for` を使いましょう。\n\n---\n\n### 2. `while`\n\n<b>`while`</b>（条件が真である間続くループ）は、何回繰り返すか正確には分からないときに便利です。\n\n```javascript\nlet count = 0;\n\nwhile (count < 5) {\n  console.log(count);\n  count++;\n}\n```\n\nループが止まるのは:\n\n```text\ncount < 5\n```\n\nが偽になったときです。\n\n---\n\n### 3. `for...of`\n\n<b>`for...of`</b>（各値を直接渡してくれるループ）は、配列・文字列・Set・Mapに便利です。\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n出力:\n\n```text\napple\nbanana\norange\n```\n\n添字を自分で管理する必要はありません。\n\n比べてみてください:\n\n```javascript\nfor (let i = 0; i < fruits.length; i++) {\n  console.log(fruits[i]);\n}\n```\n\nと:\n\n```javascript\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n```\n\n値だけが必要なときは、たいてい `for...of` の方がすっきりします。\n\n---\n\n### 4. `for...in`\n\n<b>`for...in`</b>（オブジェクトのキーを渡すループ）は主にオブジェクトに使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key);\n}\n```\n\n出力:\n\n```text\nname\nage\n```\n\nキーを使って値を取り出せます:\n\n```javascript\nfor (const key in user) {\n  console.log(user[key]);\n}\n```\n\n出力:\n\n```text\nRajan\n30\n```\n\n`for...in` は配列には使わないでください。オブジェクトのキーのために設計されており、継承したプロパティも含みうるからです。",
-      },
-      diagram: `                       Loops
-                         |
-        +----------------+----------------+
-        |                |                |
-       for             while          for...of
-        |                |                |
- Counter / index     Condition          Values
-        |                |                |
-        +----------------+----------------+
-                         |
-                     for...in
-                         |
-                      Object keys`,
-      codeExample: {
-        title: { en: "The four loop forms side by side", np: "चारै loop रूप सँगसँगै", jp: "4つのループを並べて比較" },
-        code: `const fruits = ["apple", "banana", "orange"];
-
-// for
-for (let i = 0; i < fruits.length; i++) {
-  console.log(fruits[i]);
-}
-
-// while
-let i = 0;
-
-while (i < fruits.length) {
-  console.log(fruits[i]);
-  i++;
-}
-
-// for...of
-for (const fruit of fruits) {
-  console.log(fruit);
-}
-
-// for...in
-const user = {
-  name: "Rajan",
-  age: 30
-};
-
-for (const key in user) {
-  console.log(key, user[key]);
-}`,
-      },
-      keyTakeaways: [
-        { en: "<b>Loop</b> → repeats a block of code.", np: "<b>Loop</b> → code को block दोहोर्याउँछ।", jp: "<b>ループ</b> → コードのかたまりを繰り返す。" },
-        { en: "<b>`for`</b> → use when you need a counter or index.", np: "<b>`for`</b> → counter वा index चाहिँदा प्रयोग गर्नुहोस्।", jp: "<b>`for`</b> → カウンタや添字が必要なときに使う。" },
-        { en: "<b>`while`</b> → use when repetition depends on a condition.", np: "<b>`while`</b> → दोहोरिने काम condition मा निर्भर हुँदा प्रयोग गर्नुहोस्।", jp: "<b>`while`</b> → 繰り返しが条件に依存するときに使う。" },
-        { en: "<b>`for...of`</b> → use to get values from arrays, strings, Sets, and Maps.", np: "<b>`for...of`</b> → array, string, Set, र Map बाट value लिन प्रयोग गर्नुहोस्।", jp: "<b>`for...of`</b> → 配列・文字列・Set・Mapから値を取り出すのに使う。" },
-        { en: "<b>`for...in`</b> → use to get keys from objects.", np: "<b>`for...in`</b> → object बाट key लिन प्रयोग गर्नुहोस्।", jp: "<b>`for...in`</b> → オブジェクトからキーを取り出すのに使う。" },
-        { en: "Avoid `for...in` for arrays.", np: "Array का लागि `for...in` प्रयोग नगर्नुहोस्।", jp: "配列に `for...in` は使わない。" },
-        { en: "`for...of` gives you the value directly, so you don't need index management.", np: "`for...of` ले value सिधै दिन्छ, त्यसैले index व्यवस्थापन चाहिँदैन।", jp: "`for...of` は値を直接くれるので、添字の管理が不要。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Creating an infinite `while` loop</b> — if `count` never changes inside `while (count < 5)`, the condition never becomes false. Remember `count++` in the body.", np: "<b>अनन्त `while` loop बनाउनु</b> — `while (count < 5)` भित्र `count` कहिल्यै बदलिँदैन भने, condition कहिल्यै गलत बन्दैन। Body मा `count++` सम्झनुहोस्।", jp: "<b>無限 `while` ループを作る</b> — `while (count < 5)` の中で `count` が変わらなければ条件は偽にならない。本体に `count++` を忘れないこと。" },
-        { en: "<b>Using `for...in` for arrays</b> — it iterates keys (and can include inherited properties). Use `for...of` when you want the values.", np: "<b>Array का लागि `for...in` प्रयोग गर्नु</b> — यो key मा घुम्छ (र inherited property पनि समेट्न सक्छ)। Value चाहिँदा `for...of` प्रयोग गर्नुहोस्।", jp: "<b>配列に `for...in` を使う</b> — キーを反復し（継承したプロパティも含みうる）。値が欲しいなら `for...of` を使う。" },
-        { en: "<b>Forgetting that `for...in` gives keys</b> — `for (const value in user)` logs `name`, not `\"Rajan\"`. Read the value with `user[key]`.", np: "<b>`for...in` ले key दिन्छ भनी बिर्सनु</b> — `for (const value in user)` ले `\"Rajan\"` होइन `name` देखाउँछ। Value `user[key]` ले पढ्नुहोस्।", jp: "<b>`for...in` がキーを渡すことを忘れる</b> — `for (const value in user)` は `\"Rajan\"` ではなく `name` を出す。値は `user[key]` で読む。" },
-      ],
-      quiz: [
-        {
-          question: { en: "Which loop is best when you need an index?", np: "Index चाहिँदा कुन loop उत्तम हो?", jp: "添字が必要なときに最適なループはどれか?" },
-          options: [
-            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
-            { en: "`for`", np: "`for`", jp: "`for`" },
-            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "A classic `for` loop owns the counter, so the index is available in the body.", np: "Classic `for` loop सँग counter हुन्छ, त्यसैले body मा index उपलब्ध हुन्छ।", jp: "従来の `for` ループはカウンタを持つので、本体で添字が使える。" },
+          explanation: { en: "`const` is the default choice — it says the binding will never be reassigned.", np: "`const` default छनोट हो — यसले binding कहिल्यै reassign हुँदैन भन्ने जनाउँछ।", jp: "`const` が既定の選択 — この束縛は再代入されないことを示す。" },
         },
         {
-          question: { en: "Which loop gives you array values directly?", np: "कुन loop ले array का value सिधै दिन्छ?", jp: "配列の値を直接くれるループはどれか?" },
+          question: { en: "Which one can be reassigned?", np: "कुनलाई reassign गर्न मिल्छ?", jp: "再代入できるのはどれか?" },
           options: [
-            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
-            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
-            { en: "`while`", np: "`while`", jp: "`while`" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`for...of` hands you each value, so there is no `arr[i]` lookup to manage.", np: "`for...of` ले हरेक value दिन्छ, त्यसैले `arr[i]` को खोजी व्यवस्थापन गर्नु पर्दैन।", jp: "`for...of` は各値を渡してくれるので、`arr[i]` の参照を管理する必要がない。" },
-        },
-        {
-          question: { en: "Which loop is mainly used for object keys?", np: "मुख्यतया object का key का लागि कुन loop प्रयोग हुन्छ?", jp: "主にオブジェクトのキーに使うループはどれか?" },
-          options: [
-            { en: "`for`", np: "`for`", jp: "`for`" },
-            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
-            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "`for...in` iterates the keys of an object, which is why it is the wrong tool for arrays.", np: "`for...in` object का key मा घुम्छ, त्यसैले यो array का लागि गलत उपकरण हो।", jp: "`for...in` はオブジェクトのキーを反復する。だから配列には不向き。" },
-        },
-        {
-          question: { en: "When is `while` useful?", np: "`while` कहिले उपयोगी हुन्छ?", jp: "`while` はどんなときに便利か?" },
-          options: [
-            { en: "When repetition depends on a condition", np: "दोहोरिने काम condition मा निर्भर हुँदा", jp: "繰り返しが条件に依存するとき" },
-            { en: "Only for arrays", np: "Array का लागि मात्र", jp: "配列のときだけ" },
-            { en: "Only for objects", np: "Object का लागि मात्र", jp: "オブジェクトのときだけ" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Use `while` when you don't know the number of iterations up front, only the condition that ends them.", np: "कति पटक घुम्ने अगावै थाहा नहुँदा, अन्त्य गर्ने condition मात्र थाहा हुँदा `while` प्रयोग गर्नुहोस्।", jp: "反復回数が事前に分からず、終了条件だけが分かっているときに `while` を使う。" },
-        },
-      ],
-    },
-    {
-      id: "function-types",
-      title: { en: "Function Types", np: "Function Types", jp: "関数の種類" },
-      durationMinutes: 9,
-      explanation: {
-        en: "A <b>function</b> (a reusable block of code) lets you write code once and use it many times.\n\nJavaScript has three common ways to create functions:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\nThe main differences are <b>hoisting</b> (whether you can use the function before its definition) and <b>`this`</b> (the value that a regular function gets based on how it is called).\n\n---\n\n### 1. Function Declaration\n\n<b>Function declaration</b> (a function created with the `function` keyword) is fully hoisted.\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nThis works because the entire function is available before execution reaches its definition.\n\nA function declaration has its own <b>`this`</b> (a value determined by how the function is called).\n\nUse it for named, reusable functions.\n\n---\n\n### 2. Function Expression\n\n<b>Function expression</b> (a function stored inside a variable) is created as part of an assignment.\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\nIt is not available before the assignment:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nLike a function declaration, it has its own <b>`this`</b>.\n\nFunction expressions are useful when you want to:\n\n• Store a function in a variable\n• Pass a function to another function\n• Create a function conditionally\n\n---\n\n### 3. Arrow Function\n\n<b>Arrow function</b> (a shorter function syntax that uses `=>`) looks like this:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nArrow functions are not hoisted:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nThe important difference is `this`.\n\nAn arrow function does not create its own <b>`this`</b>. It uses `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nArrow functions are commonly used for callbacks:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
-        np: "<b>Function</b> (पुनः प्रयोग गर्न मिल्ने code block) ले तपाईंलाई code एक पटक लेखी धेरै पटक प्रयोग गर्न दिन्छ।\n\nJavaScript मा function बनाउने तीन सामान्य तरिका छन्:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\nमुख्य फरक हुन् <b>hoisting</b> (definition अघि function प्रयोग गर्न मिल्छ कि मिल्दैन) र <b>`this`</b> (सामान्य function कसरी call भयो त्यसका आधारमा पाउने value)।\n\n---\n\n### 1. Function Declaration\n\n<b>Function declaration</b> (`function` keyword ले बनाइएको function) पूर्ण रूपमा hoist हुन्छ।\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ किनकि execution यसको definition मा पुग्नुअघि नै पूरै function उपलब्ध हुन्छ।\n\nFunction declaration को आफ्नै <b>`this`</b> (function कसरी call भयो त्यसले निर्धारण गर्ने value) हुन्छ।\n\nनाम भएका, पुनः प्रयोग गर्न मिल्ने function का लागि यो प्रयोग गर्नुहोस्।\n\n---\n\n### 2. Function Expression\n\n<b>Function expression</b> (variable भित्र राखिएको function) assignment को भाग रूपमा बनाइन्छ।\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\nAssignment अघि यो उपलब्ध हुँदैन:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nFunction declaration जस्तै, यसको आफ्नै <b>`this`</b> हुन्छ।\n\nFunction expression यस्ता बेला उपयोगी हुन्छन्:\n\n• Function लाई variable मा राख्न\n• Function लाई अर्को function मा पठाउन\n• Condition अनुसार function बनाउन\n\n---\n\n### 3. Arrow Function\n\n<b>Arrow function</b> (`=>` प्रयोग गर्ने छोटो function syntax) यस्तो देखिन्छ:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nArrow function hoist हुँदैनन्:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nमहत्वपूर्ण फरक `this` हो।\n\nArrow function आफ्नै <b>`this`</b> बनाउँदैन। यो वरिपरिको code बाट `this` लिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nArrow function सामान्यतया callback का लागि प्रयोग हुन्छन्:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
-        jp: "<b>関数</b>（再利用できるコードのかたまり）を使うと、一度書いたコードを何度も使えます。\n\nJavaScriptで関数を作る一般的な方法は3つあります:\n\n```javascript\nFunction declaration\nFunction expression\nArrow function\n```\n\n主な違いは<b>ホイスティング</b>（定義より前に関数を使えるか）と<b>`this`</b>（通常の関数が呼び出し方に応じて受け取る値）です。\n\n---\n\n### 1. 関数宣言\n\n<b>関数宣言</b>（`function` キーワードで作る関数）は完全にホイスティングされます。\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\n実行が定義に達する前から関数全体が使えるので、これは動きます。\n\n関数宣言は自分の<b>`this`</b>（呼び出し方によって決まる値）を持ちます。\n\n名前付きで再利用する関数にはこれを使いましょう。\n\n---\n\n### 2. 関数式\n\n<b>関数式</b>（変数に入れた関数）は代入の一部として作られます。\n\n```javascript\nconst greet = function () {\n  console.log(\"Hello\");\n};\n\ngreet();\n```\n\n代入より前には使えません:\n\n```javascript\ngreet(); // Error\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n関数宣言と同じく、自分の<b>`this`</b>を持ちます。\n\n関数式は次のようなときに役立ちます:\n\n• 関数を変数に入れる\n• 関数を別の関数に渡す\n• 条件に応じて関数を作る\n\n---\n\n### 3. アロー関数\n\n<b>アロー関数</b>（`=>` を使う短い関数構文）はこう書きます:\n\n```javascript\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nアロー関数はホイスティングされません:\n\n```javascript\ngreet(); // Error\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\n重要な違いは `this` です。\n\nアロー関数は自分の<b>`this`</b>を作りません。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nアロー関数はコールバックによく使われます:\n\n```javascript\nconst numbers = [1, 2, 3];\n\nnumbers.map((number) => number * 2);\n```",
-      },
-      diagram: `                    Function Types
-                         |
-          +--------------+--------------+
-          |              |              |
-     Declaration     Expression       Arrow
-          |              |              |
-     function x()    const x =      const x =
-                    function()      () =>
-          |              |              |
-       Hoisted?        No             No
-          |              |              |
-      Own this         Own this     Borrows this`,
-      codeExample: {
-        title: { en: "Declaration, expression and arrow side by side", np: "Declaration, expression र arrow सँगसँगै", jp: "宣言・関数式・アローを並べて比較" },
-        code: `// Function declaration
-function add(a, b) {
-  return a + b;
-}
-
-// Function expression
-const subtract = function (a, b) {
-  return a - b;
-};
-
-// Arrow function
-const multiply = (a, b) => {
-  return a * b;
-};
-
-console.log(add(5, 2));       // 7
-console.log(subtract(5, 2));  // 3
-console.log(multiply(5, 2));   // 10
-
-// A one-line arrow function can be shorter
-const double = (a) => a * 2;`,
-      },
-      keyTakeaways: [
-        { en: "<b>Function declaration</b> → fully hoisted and has its own `this`.", np: "<b>Function declaration</b> → पूर्ण रूपमा hoist हुन्छ र आफ्नै `this` हुन्छ।", jp: "<b>関数宣言</b> → 完全にホイスティングされ、自分の `this` を持つ。" },
-        { en: "<b>Function expression</b> → not hoisted and has its own `this`.", np: "<b>Function expression</b> → hoist हुँदैन र आफ्नै `this` हुन्छ।", jp: "<b>関数式</b> → ホイスティングされず、自分の `this` を持つ。" },
-        { en: "<b>Arrow function</b> → not hoisted and borrows `this` from the surrounding code.", np: "<b>Arrow function</b> → hoist हुँदैन र वरिपरिको code बाट `this` लिन्छ।", jp: "<b>アロー関数</b> → ホイスティングされず、周囲のコードから `this` を借りる。" },
-        { en: "Function declarations are good for named, reusable functions.", np: "Function declaration नाम भएका, पुनः प्रयोग गर्न मिल्ने function का लागि राम्रो छन्।", jp: "関数宣言は名前付きで再利用する関数に向く。" },
-        { en: "Function expressions are useful when storing or passing functions.", np: "Function expression function राख्दा वा पठाउँदा उपयोगी हुन्छन्।", jp: "関数式は関数を保存したり渡したりするときに役立つ。" },
-        { en: "Arrow functions are commonly used for callbacks.", np: "Arrow function सामान्यतया callback का लागि प्रयोग हुन्छन्।", jp: "アロー関数はコールバックによく使われる。" },
-        { en: "Arrow functions do not have their own `this` or `arguments`.", np: "Arrow function का आफ्नै `this` वा `arguments` हुँदैनन्।", jp: "アロー関数は自分の `this` も `arguments` も持たない。" },
-        { en: "Arrow functions cannot be used with `new` as constructors.", np: "Arrow function लाई `new` सँग constructor रूपमा प्रयोग गर्न मिल्दैन।", jp: "アロー関数は `new` を使ってコンストラクタとして使えない。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Calling a function expression too early</b> — `greet()` above `const greet = function () {}` throws an error, because the function is created only when execution reaches the assignment.", np: "<b>Function expression धेरै चाँडै call गर्नु</b> — `const greet = function () {}` माथि `greet()` ले error दिन्छ, किनकि function execution assignment मा पुगेपछि मात्र बन्छ।", jp: "<b>関数式を早すぎるタイミングで呼ぶ</b> — `const greet = function () {}` より前の `greet()` はエラーになる。関数は実行が代入に達したときに初めて作られる。" },
-        { en: "<b>Expecting arrow functions to have their own `this`</b> — an object method written as `greet: () => { console.log(this.name); }` usually logs `undefined`. For object methods use a regular function: `greet() { console.log(this.name); }`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने आशा गर्नु</b> — `greet: () => { console.log(this.name); }` लेखिएको object method सामान्यतया `undefined` देखाउँछ। Object method का लागि सामान्य function प्रयोग गर्नुहोस्: `greet() { console.log(this.name); }`।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — `greet: () => { console.log(this.name); }` と書いたオブジェクトのメソッドは通常 `undefined` を出す。オブジェクトのメソッドには通常の関数 `greet() { console.log(this.name); }` を使う。" },
-        { en: "<b>Assuming arrow functions are just shorter regular functions</b> — they look similar, but their behaviour with `this`, `arguments` and `new` is different.", np: "<b>Arrow function केवल छोटो सामान्य function हो भन्ने ठान्नु</b> — यी मिल्दो देखिन्छन्, तर `this`, `arguments` र `new` सँगको व्यवहार फरक छ।", jp: "<b>アロー関数は通常の関数の短縮形にすぎないと思う</b> — 見た目は似ているが、`this`・`arguments`・`new` に対する振る舞いが違う。" },
-      ],
-      quiz: [
-        {
-          question: { en: "Which function type is fully hoisted?", np: "कुन function type पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされる関数の種類はどれか?" },
-          options: [
-            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
-            { en: "Function expression", np: "Function expression", jp: "関数式" },
-            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "A function declaration is hoisted with its whole body, so it can be called before its definition.", np: "Function declaration आफ्नो पूरै body सँग hoist हुन्छ, त्यसैले यसलाई definition अघि call गर्न सकिन्छ।", jp: "関数宣言は本体ごとホイスティングされるので、定義より前に呼び出せる。" },
-        },
-        {
-          question: { en: "Which function borrows `this` from its surrounding code?", np: "कुन function ले वरिपरिको code बाट `this` लिन्छ?", jp: "周囲のコードから `this` を借りる関数はどれか?" },
-          options: [
-            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
-            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
-            { en: "Function expression", np: "Function expression", jp: "関数式" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "An arrow function never creates its own `this`, which is what makes it handy inside a method but wrong as a method.", np: "Arrow function आफ्नै `this` कहिल्यै बनाउँदैन, यसैले यो method भित्र उपयोगी छ तर method रूपमा गलत।", jp: "アロー関数は自分の `this` を作らない。だからメソッドの内側では便利だが、メソッド自体には不向き。" },
-        },
-        {
-          question: { en: "Which is commonly used for callbacks?", np: "Callback का लागि सामान्यतया कुन प्रयोग हुन्छ?", jp: "コールバックによく使われるのはどれか?" },
-          options: [
-            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
-            { en: "`var` function", np: "`var` function", jp: "`var` の関数" },
-            { en: "Constructor function only", np: "Constructor function मात्र", jp: "コンストラクタ関数だけ" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Short arrow syntax reads well inline, as in `numbers.map((n) => n * 2)`.", np: "छोटो arrow syntax inline राम्रो पढिन्छ, जस्तै `numbers.map((n) => n * 2)`।", jp: "短いアロー構文はインラインで読みやすい。例: `numbers.map((n) => n * 2)`。" },
-        },
-        {
-          question: { en: "Which function type can be used with `new`?", np: "कुन function type `new` सँग प्रयोग गर्न मिल्छ?", jp: "`new` と一緒に使えるのはどの関数か?" },
-          options: [
-            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
-            { en: "Regular function", np: "सामान्य function", jp: "通常の関数" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
             { en: "Both", np: "दुबै", jp: "両方" },
           ],
           correctIndex: 1,
-          explanation: { en: "Arrow functions have no `[[Construct]]` behaviour, so `new` on one throws a TypeError.", np: "Arrow function मा `[[Construct]]` व्यवहार हुँदैन, त्यसैले यसमा `new` गर्दा TypeError आउँछ।", jp: "アロー関数には `[[Construct]]` の振る舞いがないため、`new` を使うとTypeErrorになる。" },
+          explanation: { en: "`let` can be reassigned; `const` cannot.", np: "`let` लाई reassign गर्न मिल्छ; `const` लाई मिल्दैन।", jp: "`let` は再代入できるが、`const` はできない。" },
+        },
+        {
+          question: { en: "Which one is function-scoped?", np: "कुन function-scoped हो?", jp: "関数スコープなのはどれか?" },
+          options: [
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`var` is function-scoped, so it ignores `{ }` block boundaries. `let` and `const` are block-scoped.", np: "`var` function-scoped हो, त्यसैले यो `{ }` block boundary बेवास्ता गर्छ। `let` र `const` block-scoped हुन्।", jp: "`var` は関数スコープなので `{ }` のブロック境界を無視する。`let` と `const` はブロックスコープ。" },
+        },
+      ],
+    },
+    {
+      id: "primitive-types",
+      title: { en: "Primitive Types", np: "Primitive Types", jp: "プリミティブ型" },
+      durationMinutes: 9,
+      explanation: {
+        en: "A <b>primitive</b> (a simple value that is not an object) is one of JavaScript's basic value types.\n\nJavaScript has <b>7 primitive types</b>:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nEverything else is an <b>object</b> (a value that can contain more data or behavior).\n\n---\n\n### 1. `string`\n\n<b>String</b> (text) is used for words and characters.\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>Number</b> (numeric value) is used for integers and decimals.\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScript uses the same `number` type for both.\n\n---\n\n### 3. `boolean`\n\n<b>Boolean</b> (true or false value) has only two possible values:\n\n```javascript\ntrue\nfalse\n```\n\nExample:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b> (intentionally no value) means the developer deliberately says:\n\n> \"There is currently no value.\"\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b> (no value has been assigned yet) usually means a value hasn't been set.\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>Symbol</b> (a guaranteed unique value) is mainly used when we need a unique identifier.\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\nTwo Symbols are always different:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b> (a number type for very large integers) is used when numbers are larger than JavaScript's safe `number` limit.\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\nThe `n` at the end makes it a BigInt.\n\n---\n\n### 8. The `typeof` Operator\n\n<b>`typeof`</b> (an operator that tells you the type of a value) can be used to check a value's type.\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nThere is one famous JavaScript mistake:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` is actually a primitive, but `typeof null` returns `\"object\"` because of an old JavaScript bug that cannot be changed without breaking existing code.",
+        np: "<b>Primitive</b> (object नभएको साधारण value) JavaScript का आधारभूत value type मध्ये एक हो।\n\nJavaScript मा <b>7 primitive type</b> छन्:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nबाँकी सबै <b>object</b> (थप data वा behavior राख्न सक्ने value) हो।\n\n---\n\n### 1. `string`\n\n<b>String</b> (text) शब्द र अक्षरका लागि प्रयोग हुन्छ।\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>Number</b> (संख्यात्मक value) integer र decimal का लागि प्रयोग हुन्छ।\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScript ले दुबैका लागि उही `number` type प्रयोग गर्छ।\n\n---\n\n### 3. `boolean`\n\n<b>Boolean</b> (true वा false value) का दुई मात्र सम्भावित value हुन्छन्:\n\n```javascript\ntrue\nfalse\n```\n\nउदाहरण:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b> (जानाजानी कुनै value नराख्नु) को अर्थ developer ले जानाजानी यो भन्नु हो:\n\n> \"अहिले कुनै value छैन।\"\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b> (अझै कुनै value assign गरिएको छैन) को अर्थ सामान्यतया value सेट नै गरिएको छैन भन्ने हो।\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>Symbol</b> (सधैं अद्वितीय हुने value) मुख्यतया unique identifier चाहिने बेला प्रयोग हुन्छ।\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\nदुई Symbol सधैं फरक हुन्छन्:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b> (धेरै ठूला integer का लागि number type) JavaScript को safe `number` सीमा भन्दा ठूला संख्याका लागि प्रयोग हुन्छ।\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\nअन्तको `n` ले यसलाई BigInt बनाउँछ।\n\n---\n\n### 8. `typeof` Operator\n\n<b>`typeof`</b> (value को type बताउने operator) ले value को type जाँच्न प्रयोग गर्न सकिन्छ।\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nJavaScript को एउटा प्रसिद्ध गल्ती छ:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` वास्तवमा primitive हो, तर पुरानो JavaScript bug ले `typeof null` ले `\"object\"` फर्काउँछ, जो अवस्थित code नभाँचिकन बदल्न सकिँदैन।",
+        jp: "<b>プリミティブ</b>（オブジェクトではない単純な値）は、JavaScriptの基本的な値の型の1つです。\n\nJavaScriptには<b>7つのプリミティブ型</b>があります:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nそれ以外はすべて<b>オブジェクト</b>（より多くのデータや振る舞いを持てる値）です。\n\n---\n\n### 1. `string`\n\n<b>文字列（String）</b>（テキスト）は単語や文字に使います。\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>数値（Number）</b>は整数と小数に使います。\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScriptはどちらにも同じ `number` 型を使います。\n\n---\n\n### 3. `boolean`\n\n<b>真偽値（Boolean）</b>（trueかfalse）が取りうる値は2つだけです:\n\n```javascript\ntrue\nfalse\n```\n\n例:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b>（意図的に値がない）は、開発者が意図してこう言っている状態です:\n\n> 「現在、値はありません。」\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b>（まだ値が代入されていない）は、通常まだ値が設定されていないことを意味します。\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>シンボル（Symbol）</b>（必ず一意になる値）は、主に一意の識別子が必要なときに使います。\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\n2つのSymbolは常に別物です:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b>（非常に大きな整数のための数値型）は、JavaScriptの安全な `number` の限界を超える数に使います。\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\n末尾の `n` がBigIntにします。\n\n---\n\n### 8. `typeof` 演算子\n\n<b>`typeof`</b>（値の型を教えてくれる演算子）で値の型を調べられます。\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nJavaScriptには有名な間違いが1つあります:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` は実際にはプリミティブですが、既存のコードを壊さずには変えられない古いJavaScriptのバグのため、`typeof null` は `\"object\"` を返します。",
+      },
+      diagram: `                    JavaScript Values
+                           |
+              +------------+------------+
+              |                         |
+          Primitives                 Objects
+              |                         |
+    +---------+---------+               |
+    |         |         |               |
+  string   number   boolean          Array
+    |         |         |             Function
+   null   undefined   symbol          Date
+             |         |              ...
+           bigint`,
+      codeExample: {
+        title: { en: "All seven primitives with typeof", np: "सातै primitive typeof सहित", jp: "7つのプリミティブとtypeof" },
+        code: `const name = "Rajan";       // string
+const age = 30;             // number
+const isActive = true;      // boolean
+const user = null;          // null
+let address;                // undefined
+const id = Symbol("id");    // symbol
+const big = 1234567890123n; // bigint
+
+console.log(typeof name);      // "string"
+console.log(typeof age);       // "number"
+console.log(typeof isActive);  // "boolean"
+console.log(typeof user);      // "object"
+console.log(typeof address);   // "undefined"
+console.log(typeof id);        // "symbol"
+console.log(typeof big);       // "bigint"`,
+      },
+      keyTakeaways: [
+        { en: "JavaScript has <b>7 primitive types</b>.", np: "JavaScript मा <b>7 primitive type</b> छन्।", jp: "JavaScriptには<b>7つのプリミティブ型</b>がある。" },
+        { en: "`string` → text.", np: "`string` → text।", jp: "`string` → テキスト。" },
+        { en: "`number` → numbers and decimals.", np: "`number` → संख्या र decimal।", jp: "`number` → 数値と小数。" },
+        { en: "`boolean` → `true` or `false`.", np: "`boolean` → `true` वा `false`।", jp: "`boolean` → `true` か `false`。" },
+        { en: "`null` → intentionally no value.", np: "`null` → जानाजानी कुनै value छैन।", jp: "`null` → 意図的に値がない。" },
+        { en: "`undefined` → value hasn't been assigned.", np: "`undefined` → value assign गरिएको छैन।", jp: "`undefined` → 値が代入されていない。" },
+        { en: "`symbol` → unique identifier.", np: "`symbol` → unique identifier।", jp: "`symbol` → 一意の識別子。" },
+        { en: "`bigint` → very large integers.", np: "`bigint` → धेरै ठूला integer।", jp: "`bigint` → 非常に大きな整数。" },
+        { en: "Everything else is an <b>object</b>.", np: "बाँकी सबै <b>object</b> हो।", jp: "それ以外はすべて<b>オブジェクト</b>。" },
+        { en: "`typeof null` returns `\"object\"` because of a historical JavaScript bug.", np: "पुरानो JavaScript bug का कारण `typeof null` ले `\"object\"` फर्काउँछ।", jp: "歴史的なJavaScriptのバグにより `typeof null` は `\"object\"` を返す。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Confusing `null` and `undefined`</b> — `let a;` is `undefined` (\"no value was assigned\"), while `let b = null;` is intentionally no value.", np: "<b>`null` र `undefined` भ्रममा पार्नु</b> — `let a;` `undefined` हो (\"कुनै value assign भएको छैन\"), जब कि `let b = null;` जानाजानी कुनै value नराखेको हो।", jp: "<b>`null` と `undefined` を混同する</b> — `let a;` は `undefined`（「値が代入されていない」）、`let b = null;` は意図的に値がない状態。" },
+        { en: "<b>Thinking arrays are primitives</b> — `typeof [1, 2, 3]` is `\"object\"`. Arrays are objects.", np: "<b>Array primitive हो भन्ने ठान्नु</b> — `typeof [1, 2, 3]` `\"object\"` हो। Array object हुन्।", jp: "<b>配列をプリミティブだと思う</b> — `typeof [1, 2, 3]` は `\"object\"`。配列はオブジェクト。" },
+        { en: "<b>Being surprised by `typeof null`</b> — it returns `\"object\"`, but `null` is still a primitive; `typeof` reports it incorrectly.", np: "<b>`typeof null` देखेर अचम्म पर्नु</b> — यो `\"object\"` फर्काउँछ, तर `null` अझै primitive हो; `typeof` ले गलत रिपोर्ट गर्छ।", jp: "<b>`typeof null` に驚く</b> — `\"object\"` を返すが `null` はプリミティブのまま。`typeof` の報告が誤っている。" },
+      ],
+      quiz: [
+        {
+          question: { en: "How many primitive types does JavaScript have?", np: "JavaScript मा कति primitive type छन्?", jp: "JavaScriptのプリミティブ型はいくつあるか?" },
+          options: [
+            { en: "5", np: "5", jp: "5" },
+            { en: "7", np: "7", jp: "7" },
+            { en: "8", np: "8", jp: "8" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "There are 7: string, number, boolean, null, undefined, symbol and bigint. Everything else is an object.", np: "7 छन्: string, number, boolean, null, undefined, symbol र bigint। बाँकी सबै object हो।", jp: "7つ: string、number、boolean、null、undefined、symbol、bigint。それ以外はすべてオブジェクト。" },
+        },
+        {
+          question: { en: "What does `null` mean?", np: "`null` को अर्थ के हो?", jp: "`null` は何を意味するか?" },
+          options: [
+            { en: "A value was never created", np: "Value कहिल्यै बनेको थिएन", jp: "値が作られたことがない" },
+            { en: "Intentionally no value", np: "जानाजानी कुनै value छैन", jp: "意図的に値がない" },
+            { en: "An error", np: "एउटा error", jp: "エラー" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`null` is the developer saying \"there is currently no value\", unlike `undefined`, which means nothing was assigned yet.", np: "`null` भनेको developer ले \"अहिले कुनै value छैन\" भन्नु हो, `undefined` भन्दा फरक, जसको अर्थ अझै केही assign गरिएको छैन।", jp: "`null` は開発者が「現在値がない」と示すもの。まだ何も代入されていない `undefined` とは異なる。" },
+        },
+        {
+          question: { en: "What is the type of `42`?", np: "`42` को type के हो?", jp: "`42` の型は?" },
+          options: [
+            { en: "`string`", np: "`string`", jp: "`string`" },
+            { en: "`number`", np: "`number`", jp: "`number`" },
+            { en: "`bigint`", np: "`bigint`", jp: "`bigint`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "JavaScript uses `number` for both integers and decimals; `bigint` is only for values beyond the safe number limit.", np: "JavaScript ले integer र decimal दुबैका लागि `number` प्रयोग गर्छ; `bigint` safe number सीमा नाघेका value का लागि मात्र हो।", jp: "JavaScriptは整数も小数も `number` を使う。`bigint` は安全な数値の限界を超える値のためだけ。" },
+        },
+        {
+          question: { en: "What does `typeof null` return?", np: "`typeof null` ले के फर्काउँछ?", jp: "`typeof null` は何を返すか?" },
+          options: [
+            { en: "`\"null\"`", np: "`\"null\"`", jp: "`\"null\"`" },
+            { en: "`\"undefined\"`", np: "`\"undefined\"`", jp: "`\"undefined\"`" },
+            { en: "`\"object\"`", np: "`\"object\"`", jp: "`\"object\"`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "It returns `\"object\"` because of an old JavaScript bug that cannot be fixed without breaking existing code.", np: "पुरानो JavaScript bug का कारण यो `\"object\"` फर्काउँछ, जो अवस्थित code नभाँचिकन ठीक गर्न सकिँदैन।", jp: "既存のコードを壊さずには直せない古いJavaScriptのバグのため `\"object\"` を返す。" },
+        },
+      ],
+    },
+    {
+      id: "hoisting",
+      title: { en: "Hoisting", np: "Hoisting", jp: "ホイスティング" },
+      durationMinutes: 9,
+      explanation: {
+        en: "<b>Hoisting</b> (JavaScript registering variables and functions before running the code) happens before your code starts executing.\n\nJavaScript roughly has two phases:\n\n1. <b>Creation phase</b> (JavaScript prepares variables and functions)\n2. <b>Execution phase</b> (JavaScript runs the code from top to bottom)\n\nThink of it like a restaurant reading the entire order before starting to cook. The kitchen already knows what is coming.\n\n---\n\n### 1. Function Declarations\n\n<b>Function declarations</b> (functions created with the `function` keyword) are completely hoisted.\n\nYou can call the function before it appears in the code:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\nThis works because JavaScript already knows about the function during the creation phase.\n\n---\n\n### 2. `var`\n\n<b>`var`</b> (an older way to create variables) is hoisted and automatically given `undefined` (a value meaning nothing has been assigned yet).\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript roughly treats it like:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\nThe declaration is hoisted, but the value is not.\n\n---\n\n### 3. `let` and `const`\n\n<b>`let`</b> and <b>`const`</b> are also hoisted, but they cannot be accessed before their declaration.\n\nThe time between entering the scope and reaching the declaration is called the <b>Temporal Dead Zone (TDZ)</b> (the period where `let` or `const` exists but cannot be used yet).\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThe same happens with `const`:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
+        np: "<b>Hoisting</b> (JavaScript ले code चलाउनुअघि variable र function दर्ता गर्नु) तपाईंको code चल्न सुरु हुनुअघि हुन्छ।\n\nJavaScript मा मोटामोटी दुई phase हुन्छन्:\n\n1. <b>Creation phase</b> (JavaScript ले variable र function तयार गर्छ)\n2. <b>Execution phase</b> (JavaScript ले code माथिबाट तल चलाउँछ)\n\nयसलाई restaurant ले पकाउन सुरु गर्नुअघि पूरै order पढेको जस्तै सोच्नुहोस्। Kitchen लाई के आउँदै छ पहिले नै थाहा हुन्छ।\n\n---\n\n### 1. Function Declarations\n\n<b>Function declaration</b> (`function` keyword ले बनाइएका function) पूर्ण रूपमा hoist हुन्छन्।\n\nतपाईं function code मा देखिनुअघि नै यसलाई call गर्न सक्नुहुन्छ:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ किनकि creation phase मा JavaScript लाई function बारे पहिले नै थाहा हुन्छ।\n\n---\n\n### 2. `var`\n\n<b>`var`</b> (variable बनाउने पुरानो तरिका) hoist हुन्छ र स्वतः `undefined` (केही assign गरिएको छैन भन्ने अर्थ दिने value) पाउँछ।\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript ले यसलाई मोटामोटी यसो व्यवहार गर्छ:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\nDeclaration hoist हुन्छ, तर value हुँदैन।\n\n---\n\n### 3. `let` र `const`\n\n<b>`let`</b> र <b>`const`</b> पनि hoist हुन्छन्, तर declaration अघि तिनलाई पहुँच गर्न सकिँदैन।\n\nScope भित्र प्रवेश गरेदेखि declaration पुग्नेसम्मको समयलाई <b>Temporal Dead Zone (TDZ)</b> (`let` वा `const` अस्तित्वमा छ तर अझै प्रयोग गर्न नमिल्ने अवधि) भनिन्छ।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` सँग पनि उही हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
+        jp: "<b>ホイスティング</b>（JavaScriptがコードを実行する前に変数と関数を登録すること）は、コードが動き出す前に起こります。\n\nJavaScriptにはおおまかに2つのフェーズがあります:\n\n1. <b>作成フェーズ</b>（JavaScriptが変数と関数を準備する）\n2. <b>実行フェーズ</b>（JavaScriptがコードを上から下へ実行する）\n\nレストランが料理を始める前に注文全体を読むのに似ています。厨房は何が来るかをすでに知っています。\n\n---\n\n### 1. 関数宣言\n\n<b>関数宣言</b>（`function` キーワードで作る関数）は完全にホイスティングされます。\n\nコード上に現れる前に関数を呼び出せます:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\n作成フェーズの時点でJavaScriptがその関数を知っているので、これは動きます。\n\n---\n\n### 2. `var`\n\n<b>`var`</b>（変数を作る古い方法）はホイスティングされ、自動的に `undefined`（まだ何も代入されていないことを意味する値）が入ります。\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScriptはおおよそこう扱います:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n宣言はホイスティングされますが、値はされません。\n\n---\n\n### 3. `let` と `const`\n\n<b>`let`</b> と <b>`const`</b> もホイスティングされますが、宣言より前にアクセスすることはできません。\n\nスコープに入ってから宣言に到達するまでの期間を<b>一時的デッドゾーン（TDZ）</b>（`let` や `const` は存在するがまだ使えない期間）と呼びます。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` でも同じです:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
+      },
+      diagram: `              JavaScript starts
+                     |
+                     ↓
+              Creation Phase
+         (prepare variables/functions)
+                     |
+          +----------+----------+
+          |          |          |
+       function     var      let/const
+          |          |          |
+      Full body   undefined     TDZ
+          |          |          |
+          +----------+----------+
+                     |
+                     ↓
+              Execution Phase
+           (run code top to bottom)`,
+      codeExample: {
+        title: { en: "Hoisting behaviour of each declaration", np: "हरेक declaration को hoisting व्यवहार", jp: "宣言ごとのホイスティングの挙動" },
+        code: `// Function declaration
+sayHello();
+
+function sayHello() {
+  console.log("Hello");
+}
+
+// var
+console.log(age); // undefined
+
+var age = 30;
+
+// let
+console.log(name); // ReferenceError
+
+let name = "Rajan";`,
+      },
+      keyTakeaways: [
+        { en: "<b>Hoisting</b> → JavaScript prepares declarations before execution.", np: "<b>Hoisting</b> → JavaScript ले execution अघि declaration तयार गर्छ।", jp: "<b>ホイスティング</b> → JavaScriptは実行前に宣言を準備する。" },
+        { en: "<b>Creation phase</b> → variables and functions are prepared.", np: "<b>Creation phase</b> → variable र function तयार गरिन्छन्।", jp: "<b>作成フェーズ</b> → 変数と関数が準備される。" },
+        { en: "<b>Execution phase</b> → code runs from top to bottom.", np: "<b>Execution phase</b> → code माथिबाट तल चल्छ।", jp: "<b>実行フェーズ</b> → コードが上から下へ実行される。" },
+        { en: "<b>Function declarations</b> → fully hoisted.", np: "<b>Function declaration</b> → पूर्ण रूपमा hoist हुन्छन्।", jp: "<b>関数宣言</b> → 完全にホイスティングされる。" },
+        { en: "<b>`var`</b> → hoisted with `undefined`.", np: "<b>`var`</b> → `undefined` सँग hoist हुन्छ।", jp: "<b>`var`</b> → `undefined` の状態でホイスティングされる。" },
+        { en: "<b>`let` / `const`</b> → hoisted but stay in the <b>TDZ</b>.", np: "<b>`let` / `const`</b> → hoist हुन्छन् तर <b>TDZ</b> मा रहन्छन्।", jp: "<b>`let` / `const`</b> → ホイスティングされるが<b>TDZ</b>に留まる。" },
+        { en: "Accessing `let` or `const` before declaration causes a `ReferenceError`.", np: "Declaration अघि `let` वा `const` पहुँच गर्दा `ReferenceError` आउँछ।", jp: "宣言前に `let` や `const` にアクセスすると `ReferenceError` になる。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Thinking `var` gets its value during hoisting</b> — `console.log(age)` before `var age = 30;` logs `undefined`. Only the declaration is hoisted, not the value.", np: "<b>Hoisting मा `var` ले value पाउँछ भन्ने ठान्नु</b> — `var age = 30;` अघि `console.log(age)` ले `undefined` देखाउँछ। Declaration मात्र hoist हुन्छ, value होइन।", jp: "<b>ホイスティングで `var` に値が入ると思う</b> — `var age = 30;` の前の `console.log(age)` は `undefined` を出す。ホイスティングされるのは宣言だけで値ではない。" },
+        { en: "<b>Thinking `let` and `const` are not hoisted</b> — they are, but they remain in the <b>TDZ</b> until their declaration is reached, so `console.log(age)` before `let age = 30;` throws a `ReferenceError`.", np: "<b>`let` र `const` hoist हुँदैनन् भन्ने ठान्नु</b> — हुन्छन्, तर declaration पुग्नेसम्म <b>TDZ</b> मा रहन्छन्, त्यसैले `let age = 30;` अघि `console.log(age)` ले `ReferenceError` दिन्छ।", jp: "<b>`let` と `const` はホイスティングされないと思う</b> — されるが宣言に到達するまで<b>TDZ</b>に留まるので、`let age = 30;` の前の `console.log(age)` は `ReferenceError` を投げる。" },
+        { en: "<b>Confusing function declarations with function expressions</b> — calling `sayHello()` above `function sayHello() {}` works, but above `var sayHello = function () {}` throws a `TypeError`: the `var` is hoisted as `undefined` and the function value is assigned only when execution reaches that line.", np: "<b>Function declaration र function expression भ्रममा पार्नु</b> — `function sayHello() {}` माथि `sayHello()` call गर्दा काम गर्छ, तर `var sayHello = function () {}` माथि `TypeError` दिन्छ: `var` `undefined` भई hoist हुन्छ र function value execution त्यो line मा पुगेपछि मात्र assign हुन्छ।", jp: "<b>関数宣言と関数式を混同する</b> — `function sayHello() {}` より前の `sayHello()` は動くが、`var sayHello = function () {}` より前では `TypeError` になる。`var` は `undefined` としてホイスティングされ、関数の値は実行がその行に達したときに初めて代入される。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What is hoisting?", np: "Hoisting के हो?", jp: "ホイスティングとは何か?" },
+          options: [
+            { en: "Moving code to the top of the file", np: "Code लाई file को सबैभन्दा माथि सार्नु", jp: "コードをファイルの先頭に移動すること" },
+            { en: "Preparing declarations before execution", np: "Execution अघि declaration तयार गर्नु", jp: "実行前に宣言を準備すること" },
+            { en: "Running code twice", np: "Code दुई पटक चलाउनु", jp: "コードを2回実行すること" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Nothing physically moves — JavaScript registers declarations during the creation phase, before executing the code.", np: "कुनै चीज भौतिक रूपमा सर्दैन — JavaScript ले code चलाउनुअघि creation phase मा declaration दर्ता गर्छ।", jp: "実際に移動するものはない — JavaScriptはコード実行前の作成フェーズで宣言を登録する。" },
+        },
+        {
+          question: { en: "What happens to `var` during hoisting?", np: "Hoisting मा `var` लाई के हुन्छ?", jp: "ホイスティングのとき `var` はどうなるか?" },
+          options: [
+            { en: "It gets its final value", np: "यसले आफ्नो अन्तिम value पाउँछ", jp: "最終的な値が入る" },
+            { en: "It becomes `undefined`", np: "यो `undefined` बन्छ", jp: "`undefined` になる" },
+            { en: "It is ignored", np: "यसलाई बेवास्ता गरिन्छ", jp: "無視される" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The declaration is hoisted and initialised to `undefined`; the assignment happens only when execution reaches that line.", np: "Declaration hoist भई `undefined` मा initialise हुन्छ; assignment execution त्यो line मा पुगेपछि मात्र हुन्छ।", jp: "宣言がホイスティングされ `undefined` で初期化される。代入は実行がその行に達したときだけ起こる。" },
+        },
+        {
+          question: { en: "What happens when you access `let` before its declaration?", np: "Declaration अघि `let` पहुँच गर्दा के हुन्छ?", jp: "宣言より前に `let` にアクセスするとどうなるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`let` is hoisted but sits in the Temporal Dead Zone until its declaration is reached, so reading it early throws a `ReferenceError`.", np: "`let` hoist हुन्छ तर declaration पुग्नेसम्म Temporal Dead Zone मा रहन्छ, त्यसैले चाँडै पढ्दा `ReferenceError` आउँछ।", jp: "`let` はホイスティングされるが宣言に到達するまで一時的デッドゾーンにあるため、早く読むと `ReferenceError` を投げる。" },
+        },
+        {
+          question: { en: "Which is fully hoisted?", np: "कुन पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされるのはどれか?" },
+          options: [
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "A function declaration is hoisted with its whole body, which is why it can be called before it appears in the code.", np: "Function declaration आफ्नो पूरै body सँग hoist हुन्छ, त्यसैले यसलाई code मा देखिनुअघि call गर्न सकिन्छ।", jp: "関数宣言は本体ごとホイスティングされるので、コード上に現れる前に呼び出せる。" },
+        },
+      ],
+    },
+    {
+      id: "type-coercion",
+      title: { en: "Type Coercion", np: "Type Coercion", jp: "型変換" },
+      durationMinutes: 9,
+      explanation: {
+        en: "<b>Type coercion</b> (changing a value from one type to another) happens often in JavaScript.\n\nThere are two types:\n\n### Explicit Coercion\n\n<b>Explicit coercion</b> (you intentionally convert a value yourself) happens when you use functions like:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\nExamples:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### Implicit Coercion\n\n<b>Implicit coercion</b> (JavaScript automatically converts a value) happens when JavaScript needs to work with different types.\n\nFor example:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` can be used for text, so JavaScript converts `3` to a string.\n\nBut:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` only works with numbers, so JavaScript converts `\"5\"` to a number.\n\nThink:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### Truthy and Falsy\n\n<b>Falsy</b> (a value that becomes `false` in a condition) has exactly six values:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nEverything else is <b>truthy</b> (a value that becomes `true` in a condition).\n\nFor example:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\nEven though they may look empty or false-like, they are truthy.\n\n---\n\n### `==` vs `===`\n\n<b>`==`</b> (loose equality that allows type conversion) can convert values before comparing them.\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b> (strict equality that checks both value and type) does not perform this conversion.\n\n```javascript\n5 === \"5\"; // false\n```\n\nUse `===` by default.\n\nThere is one useful exception:\n\n```javascript\nvalue == null\n```\n\nThis checks for both:\n\n```javascript\nnull\nundefined\n```",
+        np: "<b>Type coercion</b> (value लाई एक type बाट अर्को type मा बदल्नु) JavaScript मा प्रायः हुन्छ।\n\nयसका दुई प्रकार छन्:\n\n### Explicit Coercion\n\n<b>Explicit coercion</b> (तपाईं आफैं जानाजानी value बदल्नु) यस्ता function प्रयोग गर्दा हुन्छ:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\nउदाहरण:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### Implicit Coercion\n\n<b>Implicit coercion</b> (JavaScript ले स्वतः value बदल्नु) JavaScript लाई फरक type सँग काम गर्नुपर्दा हुन्छ।\n\nउदाहरणका लागि:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` text का लागि पनि प्रयोग हुन सक्छ, त्यसैले JavaScript ले `3` लाई string मा बदल्छ।\n\nतर:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` संख्या सँग मात्र काम गर्छ, त्यसैले JavaScript ले `\"5\"` लाई number मा बदल्छ।\n\nसोच्नुहोस्:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### Truthy र Falsy\n\n<b>Falsy</b> (condition मा `false` बन्ने value) का ठ्याक्कै छ value छन्:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nबाँकी सबै <b>truthy</b> (condition मा `true` बन्ने value) हुन्।\n\nउदाहरणका लागि:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\nखाली वा false जस्तै देखिए पनि, यी truthy हुन्।\n\n---\n\n### `==` vs `===`\n\n<b>`==`</b> (type conversion हुन दिने loose equality) तुलना गर्नुअघि value बदल्न सक्छ।\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b> (value र type दुबै जाँच्ने strict equality) यो conversion गर्दैन।\n\n```javascript\n5 === \"5\"; // false\n```\n\nDefault मा `===` प्रयोग गर्नुहोस्।\n\nएउटा उपयोगी अपवाद छ:\n\n```javascript\nvalue == null\n```\n\nयसले दुबै जाँच्छ:\n\n```javascript\nnull\nundefined\n```",
+        jp: "<b>型変換（Type coercion）</b>（値をある型から別の型に変えること）はJavaScriptで頻繁に起こります。\n\n2種類あります:\n\n### 明示的な変換\n\n<b>明示的な変換</b>（自分で意図して値を変換する）は、次のような関数を使うときに起こります:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\n例:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### 暗黙的な変換\n\n<b>暗黙的な変換</b>（JavaScriptが自動的に値を変換する）は、異なる型を一緒に扱う必要があるときに起こります。\n\nたとえば:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` は文字列にも使えるので、JavaScriptは `3` を文字列に変換します。\n\nしかし:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` は数値にしか使えないので、JavaScriptは `\"5\"` を数値に変換します。\n\nこう考えてください:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### TruthyとFalsy\n\n<b>Falsy</b>（条件の中で `false` になる値）はちょうど6つです:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nそれ以外はすべて<b>truthy</b>（条件の中で `true` になる値）です。\n\nたとえば:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\n空っぽに見えたりfalseらしく見えても、これらはtruthyです。\n\n---\n\n### `==` と `===`\n\n<b>`==`</b>（型変換を許す緩い等価）は、比較する前に値を変換することがあります。\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b>（値と型の両方を調べる厳密な等価）はこの変換を行いません。\n\n```javascript\n5 === \"5\"; // false\n```\n\n既定では `===` を使いましょう。\n\n役に立つ例外が1つあります:\n\n```javascript\nvalue == null\n```\n\nこれは次の両方を調べます:\n\n```javascript\nnull\nundefined\n```",
+      },
+      diagram: `                 Type Coercion
+                      |
+          +-----------+-----------+
+          |                       |
+       Explicit                Implicit
+    (you convert)          (JavaScript converts)
+          |                       |
+    Number("5")              "5" + 3
+    String(5)                "53"
+    Boolean(1)               "5" - 3
+    parseInt("5")             2
+
+
+Falsy Values
+     |
+     +-- false
+     +-- 0
+     +-- ""
+     +-- null
+     +-- undefined
+     +-- NaN
+
+Everything else → Truthy`,
+      codeExample: {
+        title: { en: "Explicit and implicit conversion in action", np: "Explicit र implicit conversion व्यवहारमा", jp: "明示的・暗黙的な変換の実例" },
+        code: `// Explicit coercion
+const age = Number("30");
+
+console.log(age);        // 30
+console.log(typeof age); // "number"
+
+// Implicit coercion
+console.log("5" + 3); // "53"
+console.log("5" - 3); // 2
+
+// Truthy / Falsy
+if ("0") {
+  console.log("Truthy");
+}
+
+if (0) {
+  console.log("This won't run");
+}
+
+// Equality
+console.log(5 == "5");  // true
+console.log(5 === "5"); // false`,
+      },
+      keyTakeaways: [
+        { en: "<b>Type coercion</b> → converting a value from one type to another.", np: "<b>Type coercion</b> → value लाई एक type बाट अर्को type मा बदल्नु।", jp: "<b>型変換</b> → 値をある型から別の型に変えること。" },
+        { en: "<b>Explicit coercion</b> → you convert the value yourself.", np: "<b>Explicit coercion</b> → तपाईं आफैं value बदल्नुहुन्छ।", jp: "<b>明示的な変換</b> → 自分で値を変換する。" },
+        { en: "<b>Implicit coercion</b> → JavaScript converts it automatically.", np: "<b>Implicit coercion</b> → JavaScript ले स्वतः बदल्छ।", jp: "<b>暗黙的な変換</b> → JavaScriptが自動的に変換する。" },
+        { en: "`+` can convert values to strings.", np: "`+` ले value लाई string मा बदल्न सक्छ।", jp: "`+` は値を文字列に変換することがある。" },
+        { en: "`-`, `*`, and `/` usually convert values to numbers.", np: "`-`, `*`, र `/` ले सामान्यतया value लाई number मा बदल्छन्।", jp: "`-`、`*`、`/` は通常、値を数値に変換する。" },
+        { en: "There are exactly <b>6 falsy values</b>: `false`, `0`, `\"\"`, `null`, `undefined`, `NaN`.", np: "ठ्याक्कै <b>6 falsy value</b> छन्: `false`, `0`, `\"\"`, `null`, `undefined`, `NaN`।", jp: "falsyな値はちょうど<b>6つ</b>: `false`、`0`、`\"\"`、`null`、`undefined`、`NaN`。" },
+        { en: "Everything else is truthy.", np: "बाँकी सबै truthy हुन्।", jp: "それ以外はすべてtruthy。" },
+        { en: "Use <b>`===`</b> by default.", np: "Default मा <b>`===`</b> प्रयोग गर्नुहोस्।", jp: "既定では<b>`===`</b>を使う。" },
+        { en: "Use `== null` only when you intentionally want to match both `null` and `undefined`.", np: "`null` र `undefined` दुबै match गराउन जानाजानी चाहेको बेला मात्र `== null` प्रयोग गर्नुहोस्।", jp: "`null` と `undefined` の両方に意図して一致させたいときだけ `== null` を使う。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Expecting `+` to always perform addition</b> — `\"10\" + 5` is `\"105\"`, because `+` can also join strings.", np: "<b>`+` सधैं जोड्ने काम गर्छ भन्ने आशा गर्नु</b> — `\"10\" + 5` `\"105\"` हो, किनकि `+` ले string जोड्न पनि सक्छ।", jp: "<b>`+` が常に足し算だと思う</b> — `+` は文字列の連結にも使えるため、`\"10\" + 5` は `\"105\"` になる。" },
+        { en: "<b>Assuming `\"0\"` is falsy</b> — `Boolean(\"0\")` is `true`. A non-empty string is truthy.", np: "<b>`\"0\"` falsy हो भन्ने ठान्नु</b> — `Boolean(\"0\")` `true` हो। खाली नभएको string truthy हुन्छ।", jp: "<b>`\"0\"` がfalsyだと思う</b> — `Boolean(\"0\")` は `true`。空でない文字列はtruthy。" },
+        { en: "<b>Using `==` everywhere</b> — `5 == \"5\"` is `true`, which hides type differences. Prefer `5 === \"5\"`, which is `false`.", np: "<b>सबैतिर `==` प्रयोग गर्नु</b> — `5 == \"5\"` `true` हो, जसले type को फरक लुकाउँछ। `5 === \"5\"` प्रयोग गर्नुहोस्, जो `false` हो।", jp: "<b>どこでも `==` を使う</b> — `5 == \"5\"` は `true` で型の違いを隠す。`false` になる `5 === \"5\"` を使うべき。" },
+        { en: "<b>Forgetting that arrays and objects are truthy</b> — `Boolean([])` and `Boolean({})` are both `true`.", np: "<b>Array र object truthy हुन्छन् भनी बिर्सनु</b> — `Boolean([])` र `Boolean({})` दुबै `true` हुन्।", jp: "<b>配列とオブジェクトがtruthyであることを忘れる</b> — `Boolean([])` も `Boolean({})` もどちらも `true`。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What is `\"5\" + 3`?", np: "`\"5\" + 3` के हो?", jp: "`\"5\" + 3` は何か?" },
+          options: [
+            { en: "`8`", np: "`8`", jp: "`8`" },
+            { en: "`\"53\"`", np: "`\"53\"`", jp: "`\"53\"`" },
+            { en: "Error", np: "Error", jp: "エラー" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`+` also joins strings, so `3` is converted to a string and the two are concatenated.", np: "`+` ले string पनि जोड्छ, त्यसैले `3` string मा बदलिन्छ र दुबै जोडिन्छन्।", jp: "`+` は文字列の連結にも使えるので、`3` が文字列に変換されて連結される。" },
+        },
+        {
+          question: { en: "What is `\"5\" - 3`?", np: "`\"5\" - 3` के हो?", jp: "`\"5\" - 3` は何か?" },
+          options: [
+            { en: "`\"53\"`", np: "`\"53\"`", jp: "`\"53\"`" },
+            { en: "`2`", np: "`2`", jp: "`2`" },
+            { en: "Error", np: "Error", jp: "エラー" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`-` only works with numbers, so `\"5\"` is converted to a number first.", np: "`-` संख्या सँग मात्र काम गर्छ, त्यसैले `\"5\"` पहिले number मा बदलिन्छ।", jp: "`-` は数値にしか使えないので、まず `\"5\"` が数値に変換される。" },
+        },
+        {
+          question: { en: "Which one is falsy?", np: "कुन falsy हो?", jp: "falsyなのはどれか?" },
+          options: [
+            { en: "`\"0\"`", np: "`\"0\"`", jp: "`\"0\"`" },
+            { en: "`[]`", np: "`[]`", jp: "`[]`" },
+            { en: "`0`", np: "`0`", jp: "`0`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`0` is one of the six falsy values; a non-empty string and an empty array are both truthy.", np: "`0` छ falsy value मध्ये एक हो; खाली नभएको string र खाली array दुबै truthy हुन्।", jp: "`0` は6つのfalsyな値の1つ。空でない文字列も空の配列もtruthy。" },
+        },
+        {
+          question: { en: "What is `5 === \"5\"`?", np: "`5 === \"5\"` के हो?", jp: "`5 === \"5\"` は何か?" },
+          options: [
+            { en: "`true`", np: "`true`", jp: "`true`" },
+            { en: "`false`", np: "`false`", jp: "`false`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`===` compares value and type without converting, and a number is not a string.", np: "`===` ले conversion नगरी value र type तुलना गर्छ, र number string होइन।", jp: "`===` は変換せずに値と型を比較する。数値は文字列ではない。" },
+        },
+        {
+          question: { en: "What should you normally use for equality?", np: "Equality का लागि सामान्यतया कुन प्रयोग गर्नुपर्छ?", jp: "等価比較には通常どれを使うべきか?" },
+          options: [
+            { en: "`==`", np: "`==`", jp: "`==`" },
+            { en: "`===`", np: "`===`", jp: "`===`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`===` avoids surprises from implicit conversion; `== null` is the one useful exception.", np: "`===` ले implicit conversion का अचम्मबाट बचाउँछ; `== null` एउटै उपयोगी अपवाद हो।", jp: "`===` は暗黙的な変換による驚きを避けられる。`== null` だけが有用な例外。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "If `count` is `0`, what does `count ?? 10` evaluate to?", np: "`count` 0 भएमा `count ?? 10` को नतिजा के हो?", jp: "`count`が0のとき`count ?? 10`は何になる？" },
-      options: [{ en: "10", np: "10", jp: "10" }, { en: "0", np: "0", jp: "0" }],
-      correctIndex: 1,
-      explanation: { en: "?? only falls back on null/undefined, not on 0.", np: "?? ले null/undefined मा मात्र fallback गर्छ, 0 मा होइन।", jp: "??はnull/undefinedのみでフォールバックし、0では動作しない。" },
+      question: { en: "Which keyword should you use by default for a variable you never plan to reassign?", np: "Reassign नगर्ने variable का लागि default मा कुन keyword?", jp: "再代入しない変数にデフォルトで使うキーワードは？" },
+      options: [{ en: "var", np: "var", jp: "var" }, { en: "let", np: "let", jp: "let" }, { en: "const", np: "const", jp: "const" }],
+      correctIndex: 2,
+      explanation: { en: "const should be your default — it signals intent and prevents accidental reassignment.", np: "const default हुनुपर्छ — यसले intent देखाउँछ र गल्तिले reassignment हुनबाट जोगाउँछ।", jp: "constをデフォルトにすべき — 意図を示し誤った再代入を防ぐ。" },
     },
     {
-      question: { en: "What does `user?.name` return when `user` is `null`?", np: "`user` null भएमा `user?.name` ले के फर्काउँछ?", jp: "`user`がnullのとき`user?.name`は何を返す？" },
-      options: [{ en: "Throws an error", np: "Error आउँछ", jp: "エラーが発生する" }, { en: "undefined", np: "undefined", jp: "undefined" }],
+      question: { en: "Does `const` prevent an object's properties from being changed?", np: "`const` ले object को property change हुनबाट रोक्छ?", jp: "`const`はオブジェクトのプロパティ変更を防ぐ？" },
+      options: [{ en: "Yes, fully immutable", np: "हो, पूरै immutable", jp: "はい、完全に不変" }, { en: "No, only the binding is fixed", np: "होइन, binding मात्र fixed हुन्छ", jp: "いいえ、束縛のみ固定される" }],
       correctIndex: 1,
-      explanation: { en: "Optional chaining returns undefined instead of throwing when it hits a null link.", np: "Optional chaining ले null भेटिए error नफाली undefined दिन्छ।", jp: "オプショナルチェーンはnullに当たるとエラーを投げずundefinedを返す。" },
+      explanation: { en: "const fixes the variable binding, not the value — object properties can still be mutated.", np: "const ले variable binding fix गर्छ, value होइन — property मुटेट गर्न मिल्छ।", jp: "constは変数の束縛を固定するだけで値は固定しない。プロパティは変更可能。" },
     },
     {
-      question: { en: "Which comparison operator avoids implicit type coercion?", np: "कुन comparison operator ले implicit coercion avoid गर्छ?", jp: "暗黙の型変換を避ける比較演算子は？" },
+      question: { en: "Which of these is NOT one of JavaScript's primitive types?", np: "यीमध्ये कुन JavaScript को primitive type होइन?", jp: "次のうちJavaScriptのプリミティブ型でないものは？" },
+      options: [{ en: "symbol", np: "symbol", jp: "symbol" }, { en: "array", np: "array", jp: "array" }, { en: "bigint", np: "bigint", jp: "bigint" }],
+      correctIndex: 1,
+      explanation: { en: "Arrays are objects, not primitives. typeof [] returns \"object\".", np: "Array object हो, primitive होइन। typeof [] ले 'object' दिन्छ।", jp: "配列はオブジェクトであり、プリミティブではない。typeof []は'object'を返す。" },
+    },
+    {
+      question: { en: "What does `typeof null` return?", np: "`typeof null` ले के फर्काउँछ?", jp: "`typeof null`は何を返す？" },
+      options: [{ en: "\"null\"", np: "\"null\"", jp: "\"null\"" }, { en: "\"object\"", np: "\"object\"", jp: "\"object\"" }, { en: "\"undefined\"", np: "\"undefined\"", jp: "\"undefined\"" }],
+      correctIndex: 1,
+      explanation: { en: "A historic bug from JavaScript's 1995 implementation, never fixed for backwards compatibility.", np: "1995 देखिको bug, compatibility कारणले fix गरिएन।", jp: "1995年からのバグ。互換性のため修正されなかった。" },
+    },
+    {
+      question: { en: "What is the practical difference between `null` and `undefined`?", np: "`null` र `undefined` को व्यावहारिक फरक के हो?", jp: "`null`と`undefined`の実用的な違いは？" },
+      options: [{ en: "No difference, they're interchangeable", np: "कुनै फरक छैन, interchangeable छन्", jp: "違いはなく、互換可能" }, { en: "null is explicit \"no value\"; undefined is JS's default for unset", np: "null explicit 'no value' हो; undefined JS को default हो", jp: "nullは明示的な「値なし」、undefinedはJSのデフォルト" }],
+      correctIndex: 1,
+      explanation: { en: "You choose null deliberately; JavaScript assigns undefined automatically when nothing has been set.", np: "null तपाईंले आफैं छान्नुहुन्छ; JS ले केही set नभएमा आफैं undefined दिन्छ।", jp: "nullは意図的に選ぶ。undefinedは何も設定されていない場合にJSが自動で割り当てる。" },
+    },
+    {
+      question: { en: "What gets printed by `console.log(a); var a = 5;`?", np: "`console.log(a); var a = 5;` ले के print गर्छ?", jp: "`console.log(a); var a = 5;` は何を出力する？" },
+      options: [{ en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" }, { en: "undefined", np: "undefined", jp: "undefined" }, { en: "5", np: "5", jp: "5" }],
+      correctIndex: 1,
+      explanation: { en: "var is hoisted and pre-filled with undefined before the code runs.", np: "var hoist भई code चल्नु अघि undefined ले pre-fill हुन्छ।", jp: "varはコード実行前にホイストされundefinedで初期化される。" },
+    },
+    {
+      question: { en: "What happens when you access a `let` variable before its declaration line in the same block?", np: "Same block मा declaration अघि `let` access गर्दा के हुन्छ?", jp: "同じブロックで宣言前に`let`にアクセスすると？" },
+      options: [{ en: "undefined", np: "undefined", jp: "undefined" }, { en: "ReferenceError (Temporal Dead Zone)", np: "ReferenceError (TDZ)", jp: "ReferenceError（TDZ）" }],
+      correctIndex: 1,
+      explanation: { en: "let is hoisted but sits in the Temporal Dead Zone until its declaration runs — early access throws.", np: "let hoist हुन्छ तर declaration नआउँदासम्म TDZ मा रहन्छ — early access मा error आउँछ।", jp: "letはホイストされるが宣言までTDZに留まり、早期アクセスはエラーになる。" },
+    },
+    {
+      question: { en: "Are function declarations hoisted with their full body, or just the name?", np: "Function declaration पूरै body सहित hoist हुन्छ कि नाम मात्र?", jp: "関数宣言は本体ごとホイストされる、それとも名前だけ？" },
+      options: [{ en: "Just the name", np: "नाम मात्र", jp: "名前だけ" }, { en: "Name and full body", np: "नाम र पूरै body", jp: "名前と本体全体" }],
+      correctIndex: 1,
+      explanation: { en: "Function declarations are the only construct hoisted completely — you can call them before the line they're written on.", np: "Function declaration एक मात्र construct हो जो पूरै hoist हुन्छ।", jp: "関数宣言は完全にホイストされる唯一の構文で、宣言前に呼び出せる。" },
+    },
+    {
+      question: { en: "What is the result of `\"5\" + 3`?", np: "`\"5\" + 3` को नतिजा के हो?", jp: "`\"5\" + 3` の結果は？" },
+      options: [{ en: "\"53\"", np: "\"53\"", jp: "\"53\"" }, { en: "8", np: "8", jp: "8" }, { en: "NaN", np: "NaN", jp: "NaN" }],
+      correctIndex: 0,
+      explanation: { en: "+ prefers string concatenation when either operand is a string.", np: "एक side string भएमा `+` ले concatenation गर्छ।", jp: "一方が文字列なら`+`は連結を優先する。" },
+    },
+    {
+      question: { en: "Which comparison operator should you use by default in JavaScript?", np: "JavaScript मा default मा कुन comparison operator प्रयोग गर्ने?", jp: "JavaScriptでデフォルトに使うべき比較演算子は？" },
       options: [{ en: "==", np: "==", jp: "==" }, { en: "===", np: "===", jp: "===" }],
       correctIndex: 1,
-      explanation: { en: "=== never coerces types before comparing.", np: "=== ले comparison अघि कहिल्यै coerce गर्दैन।", jp: "===は比較前に型変換を行わない。" },
-    },
-    {
-      question: { en: "What happens when a switch case is missing its break?", np: "Switch case मा break नभएमा के हुन्छ?", jp: "switchケースにbreakがないと？" },
-      options: [{ en: "Falls through to the next case", np: "अर्को case मा fall-through हुन्छ", jp: "次のケースにフォールスルーする" }, { en: "Throws a SyntaxError", np: "SyntaxError आउँछ", jp: "SyntaxErrorが発生する" }],
-      correctIndex: 0,
-      explanation: { en: "Execution continues into the next case's code without break.", np: "break बिना execution अर्को case को code मा जान्छ।", jp: "breakがないと実行は次のケースのコードに続く。" },
-    },
-    {
-      question: { en: "What is the main benefit of guard clauses?", np: "Guard clause को मुख्य फायदा के हो?", jp: "ガード節の主な利点は？" },
-      options: [{ en: "Faster execution", np: "छिटो execution", jp: "実行の高速化" }, { en: "Flatter, more readable code instead of deep nesting", np: "Deep nesting भन्दा flat, पढ्न सजिलो code", jp: "深いネストの代わりに平坦で読みやすいコード" }],
-      correctIndex: 1,
-      explanation: { en: "Guard clauses are a readability pattern, not a performance optimization.", np: "Guard clause readability pattern हो, performance optimization होइन।", jp: "ガード節は可読性のパターンであり、パフォーマンス最適化ではない。" },
-    },
-    {
-      question: { en: "Which loop should you use to get array values directly, without manual indexing?", np: "Manual indexing बिना array value पाउन कुन loop?", jp: "手動インデックスなしで配列の値を得るループは？" },
-      options: [{ en: "for...in", np: "for...in", jp: "for...in" }, { en: "for...of", np: "for...of", jp: "for...of" }],
-      correctIndex: 1,
-      explanation: { en: "for...of iterates values directly; for...in iterates keys and also picks up inherited properties.", np: "for...of ले values सिधै दिन्छ; for...in ले keys दिन्छ र inherited properties पनि लिन्छ।", jp: "for...ofは値を直接反復。for...inはキーを反復し継承プロパティも取得してしまう。" },
-    },
-    {
-      question: { en: "What does continue do inside a loop, as opposed to break?", np: "Loop भित्र `continue` ले break भन्दा फरक के गर्छ?", jp: "ループ内でcontinueはbreakと違い何をする？" },
-      options: [{ en: "Exits the loop entirely", np: "Loop पूरै छोड्छ", jp: "ループを完全に終了する" }, { en: "Skips to the next iteration", np: "अर्को iteration मा जान्छ", jp: "次の反復にスキップする" }],
-      correctIndex: 1,
-      explanation: { en: "continue skips the rest of the current iteration; break exits the loop entirely.", np: "continue ले current iteration मात्र skip गर्छ; break ले loop पूरै छोड्छ।", jp: "continueは現在の反復のみスキップ。breakはループ全体を終了する。" },
-    },
-    {
-      question: { en: "Which function type is fully hoisted with its body?", np: "कुन function type पूरै body सहित hoist हुन्छ?", jp: "本体ごと完全にホイストされる関数の種類は？" },
-      options: [{ en: "Function declaration", np: "Function declaration", jp: "関数宣言" }, { en: "Arrow function", np: "Arrow function", jp: "アロー関数" }],
-      correctIndex: 0,
-      explanation: { en: "Only function declarations get full hoisting; arrow functions are just variable assignments.", np: "Function declaration मात्र पूरै hoist हुन्छ; arrow function त variable assignment मात्र हो।", jp: "関数宣言のみが完全にホイストされる。アロー関数は単なる変数代入。" },
-    },
-    {
-      question: { en: "Why are arrow functions the safer default inside callbacks?", np: "Callback भित्र arrow function किन safer default हो?", jp: "コールバック内でアロー関数がより安全なデフォルトである理由は？" },
-      options: [{ en: "They have no own `this`, so they inherit it from the surrounding scope", np: "यिनको आफ्नै this हुँदैन, surrounding scope बाट inherit गर्छन्", jp: "独自のthisを持たず、周囲のスコープから継承する" }, { en: "They execute asynchronously", np: "Asynchronously execute हुन्छन्", jp: "非同期で実行される" }],
-      correctIndex: 0,
-      explanation: { en: "Regular functions get a new this inside callbacks, which is often not what you want; arrow functions keep the outer this.", np: "Regular function ले callback भित्र नयाँ this पाउँछ; arrow function ले outer this कायम राख्छ।", jp: "通常の関数はコールバック内で新しいthisを持つ。アロー関数は外側のthisを保持する。" },
-    },
-    {
-      question: { en: "Can an arrow function be used as a constructor with `new`?", np: "Arrow function लाई `new` सँग constructor को रूपमा प्रयोग गर्न मिल्छ?", jp: "アロー関数を`new`でコンストラクタとして使える？" },
-      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No", np: "होइन", jp: "いいえ" }],
-      correctIndex: 1,
-      explanation: { en: "Arrow functions are not constructable — new arrowFn() throws a TypeError.", np: "Arrow function constructable छैन — TypeError आउँछ।", jp: "アロー関数はコンストラクタとして使えず、TypeErrorになる。" },
+      explanation: { en: "=== avoids implicit coercion surprises. == should only be used deliberately, e.g. `value == null`.", np: "=== ले implicit coercion का अनपेक्षित नतिजाबाट बचाउँछ। == लाई जानाजानी मात्र प्रयोग गर्नुहोस्।", jp: "===は暗黙の変換による驚きを避ける。==は`value == null`など意図的な場合のみ使う。" },
     },
   ],
 };

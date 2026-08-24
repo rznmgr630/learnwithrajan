@@ -3,207 +3,194 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_8_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "The prototype system is the engine under the hood of every object in JavaScript. Classes (Day 9) are just a cleaner syntax on top of prototypes — understanding prototypes first means classes will make complete sense. Most developers skip this and then spend years confused about why things work the way they do.",
-      np: "Prototype system JavaScript को हरेक object को engine हो। Classes (Day 9) केवल prototypes माथि cleaner syntax हो — prototype पहिले बुझ्नाले classes पूरै sense गर्छन्। धेरैजसो developers यो skip गर्छन् र वर्षौंसम्म confused हुन्छन्।",
-      jp: "プロトタイプシステムはJavaScriptの全オブジェクトを動かすエンジン。クラス（Day 9）はプロトタイプの上に乗った糖衣構文。プロトタイプを先に理解するとクラスが完全に腑に落ちる。",
+      en: "`this` is one of the most confusing parts of JavaScript because its value is determined by **how** a function is called, not where it is defined (unless it is an arrow function). Once you understand the four rules — and the three methods that let you override them — `this` stops being mysterious.",
+      np: "`this` JavaScript को सबभन्दा confusing भाग हो किनभने यसको value function कहाँ define गरिएको छ त्यसले होइन, **कसरी** call हुन्छ त्यसले निर्धारण गर्छ (arrow function बाहेक)। चार rules र तीन override methods सिकेपछि `this` रहस्यमय हुँदैन।",
+      jp: "`this`はJavaScriptで最も混乱しやすい部分の一つ。定義場所ではなく**呼び出し方**によって値が決まる（アロー関数を除く）。4つのルールと3つのオーバーライドメソッドを理解すれば謎ではなくなる。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "wstwjQ1yqWQ", title: "JavaScript Prototype and Prototype Chain" },
+        { type: "youtube", videoId: "NV9sHLX-jZU", title: "JavaScript this Keyword Explained" },
       ],
     },
     {
-      title: { en: "The prototype chain", np: "Prototype chain", jp: "プロトタイプチェーン" },
+      title: { en: "The four rules of this", np: "this का चार rules", jp: "thisの4つのルール" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "How this is determined in each context", np: "हरेक context मा this कसरी निर्धारण हुन्छ", jp: "各コンテキストでのthisの決まり方" },
+          code: `// ── Rule 1: Default binding — called as a plain function ─────────────
+function showThis() {
+  console.log(this);
+}
+showThis();
+// In strict mode ("use strict"): undefined
+// In sloppy mode (non-strict): window (browser) or global (Node.js)
+
+// ── Rule 2: Implicit binding — called as an object method ──────────
+const user = {
+  name: "Alice",
+  greet() {
+    console.log(this.name);  // 'this' is the object to the left of the dot
+  },
+};
+user.greet();  // "Alice" — 'this' is user
+
+// ── Implicit binding lost (common gotcha) ──────────────────────────
+const fn = user.greet;   // extract the function from the object
+fn();                    // undefined — 'this' is no longer bound to user
+
+setTimeout(user.greet, 1000);  // also loses binding — setTimeout calls fn without object context
+
+// ── Rule 3: Explicit binding — call(), apply(), bind() ─────────────
+function introduce(greeting, punctuation) {
+  console.log(\`\${greeting}, I'm \${this.name}\${punctuation}\`);
+}
+
+const alice = { name: "Alice" };
+const bob   = { name: "Bob" };
+
+// call — pass 'this' and arguments one by one
+introduce.call(alice, "Hello", "!");   // "Hello, I'm Alice!"
+introduce.call(bob,   "Hi", ".");      // "Hi, I'm Bob."
+
+// apply — pass 'this' and arguments as an array
+introduce.apply(alice, ["Hey", "?"]);  // "Hey, I'm Alice?"
+
+// bind — returns a NEW function with 'this' permanently fixed
+const aliceIntro = introduce.bind(alice, "Howdy");  // pre-fill first arg too
+aliceIntro("!");  // "Howdy, I'm Alice!"
+aliceIntro("?");  // "Howdy, I'm Alice?"
+
+// ── Rule 4: new binding — called with new ─────────────────────────
+function Person(name) {
+  // When called with 'new', 'this' is a brand new empty object
+  this.name = name;
+  // 'this' is automatically returned (no need for explicit return)
+}
+const alice2 = new Person("Alice");
+alice2.name;  // "Alice"`,
+        },
+      ],
+    },
+    {
+      title: { en: "Arrow functions & this", np: "Arrow functions र this", jp: "アロー関数とthis" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every JavaScript object has an internal link to another object called its **prototype**. When you try to access a property on an object and it is not found, JavaScript automatically looks up the prototype chain — checking the prototype's prototype, and so on, until it reaches `null`. This is how inheritance works in JavaScript.",
-            np: "JavaScript को हरेक object सँग आफ्नो **prototype** भनिने अर्को object को internal link हुन्छ। Property access गर्दा नभेटेमा JavaScript automatically prototype chain मा माथि खोज्छ — prototype को prototype, र यसरी `null` सम्म। यही JavaScript को inheritance हो।",
-            jp: "JavaScriptのすべてのオブジェクトは**プロトタイプ**と呼ばれる別のオブジェクトへの内部リンクを持つ。プロパティが見つからないとJSは自動的にプロトタイプチェーンをたどり`null`まで検索する。これがJSの継承の仕組み。",
+            en: "Arrow functions do NOT have their own `this`. Instead, they capture the `this` value from the surrounding lexical context — the `this` of the function or class that contains them at the time they are created. This makes them ideal for callbacks and methods on class instances, but wrong for object methods where you want `this` to refer to the object.",
+            np: "Arrow functions को आफ्नै `this` हुँदैन। बरु यिनले surrounding lexical context बाट `this` capture गर्छन् — create हुँदाको containing function वा class को `this`। Callbacks र class instance methods का लागि ideal, तर object methods का लागि गलत।",
+            jp: "アロー関数には独自の`this`がない。代わりに作成時の周囲のレキシカルコンテキストの`this`をキャプチャする。コールバックやクラスインスタンスメソッドに最適だが、オブジェクトのメソッドには不向き。",
           },
         },
         {
           type: "code",
-          title: { en: "prototype, __proto__, and Object.getPrototypeOf", np: "prototype, __proto__, Object.getPrototypeOf", jp: "prototype・__proto__・Object.getPrototypeOf" },
-          code: `// ── Constructor functions (pre-ES6 way to create objects with shared methods) ─
-function User(name, age) {
-  this.name = name;    // instance property — unique per object
-  this.age  = age;
+          title: { en: "Arrow functions capture this from their lexical context", np: "Arrow functions ले lexical context बाट this capture गर्छ", jp: "アロー関数はレキシカルコンテキストのthisをキャプチャする" },
+          code: `// ── Problem: losing 'this' in a callback ─────────────────────────
+class Timer {
+  constructor() {
+    this.seconds = 0;
+  }
+
+  // ❌ Regular function — 'this' is undefined inside the callback
+  startBroken() {
+    setInterval(function () {
+      this.seconds++;   // TypeError: Cannot set property 'seconds' of undefined
+    }, 1000);
+  }
+
+  // ✅ Arrow function — captures 'this' from startFixed's context (the Timer instance)
+  startFixed() {
+    setInterval(() => {
+      this.seconds++;   // 'this' is the Timer instance
+    }, 1000);
+  }
 }
 
-// Methods added to the prototype are shared across ALL instances (memory efficient)
-User.prototype.greet = function () {
-  return \`Hi, I'm \${this.name}\`;
-};
-
-User.prototype.isAdult = function () {
-  return this.age >= 18;
-};
-
-const alice = new User("Alice", 30);
-const bob   = new User("Bob",   17);
-
-alice.greet();    // "Hi, I'm Alice" — found on User.prototype
-alice.isAdult();  // true
-
-// ── The prototype chain ─────────────────────────────────────────────────
-// alice's own properties: { name: "Alice", age: 30 }
-// alice.__proto__  → User.prototype { greet, isAdult }
-// User.prototype.__proto__ → Object.prototype { toString, hasOwnProperty, ... }
-// Object.prototype.__proto__ → null
-
-// Property lookup order:
-// 1. alice's own properties — found? use it
-// 2. User.prototype — found? use it
-// 3. Object.prototype — found? use it
-// 4. null — not found, return undefined
-
-alice.hasOwnProperty("name");  // true  — own property
-alice.hasOwnProperty("greet"); // false — on prototype, not own
-
-// ── The right way to check the prototype chain (not __proto__) ────────────
-Object.getPrototypeOf(alice) === User.prototype;  // true
-Object.getPrototypeOf(User.prototype) === Object.prototype;  // true
-
-// ── instanceof — checks if prototype is in the chain ──────────────────────
-alice instanceof User;   // true
-alice instanceof Object; // true — everything inherits from Object
-
-// ── Object.create — create an object with a specific prototype ─────────────
-const animal = {
-  speak() { return \`\${this.name} makes a sound\`; },
-};
-
-const dog = Object.create(animal);
-dog.name = "Rex";
-dog.speak();  // "Rex makes a sound" — found on animal (its prototype)
-
-Object.getPrototypeOf(dog) === animal;  // true`,
-        },
-      ],
-    },
-    {
-      title: { en: "Prototype inheritance", np: "Prototype inheritance", jp: "プロトタイプ継承" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Extending a constructor function with prototypal inheritance", np: "Constructor function prototype inheritance सहित extend गर्नु", jp: "コンストラクタ関数のプロトタイプ継承" },
-          code: `// ── Base constructor ────────────────────────────────────────────────
-function Animal(name) {
-  this.name = name;
-}
-Animal.prototype.speak = function () {
-  return \`\${this.name} makes a sound\`;
-};
-
-// ── Derived constructor ───────────────────────────────────────────────
-function Dog(name, breed) {
-  Animal.call(this, name);    // 1. call parent constructor to initialise 'name'
-  this.breed = breed;
-}
-
-// 2. Set up the prototype chain so Dog instances inherit from Animal.prototype
-Dog.prototype = Object.create(Animal.prototype);
-
-// 3. Fix the constructor reference (Object.create breaks it)
-Dog.prototype.constructor = Dog;
-
-// 4. Add Dog-specific methods
-Dog.prototype.bark = function () {
-  return "Woof!";
-};
-
-const rex = new Dog("Rex", "Labrador");
-rex.speak();  // "Rex makes a sound" — from Animal.prototype
-rex.bark();   // "Woof!" — from Dog.prototype
-rex instanceof Dog;    // true
-rex instanceof Animal; // true — Dog.prototype chain includes Animal.prototype
-
-// ── Modern alternative: Object.create for clean prototypal inheritance ───
-const animalProto = {
-  init(name) { this.name = name; return this; },
-  speak()    { return \`\${this.name} makes a sound\`; },
-};
-
-const dogProto = Object.create(animalProto);
-dogProto.initDog = function(name, breed) {
-  this.init(name);
-  this.breed = breed;
-  return this;
-};
-dogProto.bark = function() { return "Woof!"; };
-
-const buddy = Object.create(dogProto).initDog("Buddy", "Poodle");
-buddy.speak(); // "Buddy makes a sound"
-buddy.bark();  // "Woof!"`,
-        },
-      ],
-    },
-    {
-      title: { en: "Property descriptors & Object.defineProperty", np: "Property descriptors र Object.defineProperty", jp: "プロパティディスクリプタとObject.defineProperty" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Controlling property behaviour with descriptors", np: "Descriptors सँग property behaviour control", jp: "ディスクリプタでプロパティ動作を制御" },
-          code: `// Every property has three hidden flags:
-// writable   — can the value be changed?
-// enumerable — does it show in for...in loops and Object.keys()?
-// configurable — can the descriptor itself be changed or the property deleted?
-
-const obj = {};
-Object.defineProperty(obj, "id", {
-  value:        42,
-  writable:     false,  // obj.id = 99 will silently fail (or throw in strict mode)
-  enumerable:   false,  // won't appear in for...in or Object.keys()
-  configurable: false,  // cannot delete obj.id or redefine this descriptor
-});
-
-obj.id;           // 42
-obj.id = 99;      // silently ignored in sloppy mode
-Object.keys(obj); // [] — id is not enumerable
-
-// ── Reading a property's descriptor ───────────────────────────────
-Object.getOwnPropertyDescriptor(obj, "id");
-// { value: 42, writable: false, enumerable: false, configurable: false }
-
-// ── getters and setters via defineProperty ────────────────────────
-const person = { firstName: "John", lastName: "Doe" };
-
-Object.defineProperty(person, "fullName", {
-  get() { return \`\${this.firstName} \${this.lastName}\`; },
-  set(value) {
-    [this.firstName, this.lastName] = value.split(" ");
+// ── Arrow function as object method — wrong! ──────────────────────
+const counter = {
+  count: 0,
+  // ❌ Arrow function captures 'this' from the module scope (not the object)
+  increment: () => {
+    this.count++;   // 'this' is undefined (module scope) or global — not counter
   },
-  enumerable: true,
-  configurable: true,
-});
+  // ✅ Regular method — 'this' is the object when called as counter.increment()
+  incrementFixed() {
+    this.count++;
+  },
+};
 
-person.fullName;        // "John Doe"
-person.fullName = "Jane Smith";
-person.firstName;       // "Jane"`,
+// ── Class methods + callbacks — the canonical pattern ─────────────
+class UserList {
+  constructor(users) {
+    this.users = users;
+  }
+
+  getNames() {
+    // Arrow function in map: 'this' refers to the UserList instance
+    return this.users.map(user => \`\${user.name} (id: \${this.id})\`);
+  }
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "call, apply, and bind in depth", np: "call, apply, bind विस्तारमा", jp: "call・apply・bindの詳細" },
+      blocks: [
+        {
+          type: "table",
+          headers: [
+            { en: "Method", np: "Method", jp: "メソッド" },
+            { en: "Calls immediately?", np: "तुरन्त call?", jp: "即座に呼び出す?" },
+            { en: "Arguments passed as", np: "Arguments कसरी?", jp: "引数の渡し方" },
+            { en: "Returns", np: "Return", jp: "戻り値" },
+            { en: "Main use case", np: "मुख्य use", jp: "主な用途" },
+          ],
+          rows: [
+            [
+              { en: "`call(thisArg, arg1, arg2, ...)`", np: "call", jp: "call" },
+              { en: "Yes", np: "हो", jp: "はい" },
+              { en: "Individual arguments", np: "Individual args", jp: "個別の引数" },
+              { en: "Return value of fn", np: "fn को return value", jp: "fnの戻り値" },
+              { en: "Borrow a method from another object", np: "अर्को object बाट method borrow", jp: "別オブジェクトのメソッドを借用" },
+            ],
+            [
+              { en: "`apply(thisArg, [arg1, arg2])`", np: "apply", jp: "apply" },
+              { en: "Yes", np: "हो", jp: "はい" },
+              { en: "Array of arguments", np: "Array", jp: "配列" },
+              { en: "Return value of fn", np: "fn को return value", jp: "fnの戻り値" },
+              { en: "When arguments are already in an array", np: "Arguments array मा छन् भने", jp: "引数が配列にある場合" },
+            ],
+            [
+              { en: "`bind(thisArg, arg1, arg2, ...)`", np: "bind", jp: "bind" },
+              { en: "No", np: "होइन", jp: "いいえ" },
+              { en: "Pre-filled arguments (partial application)", np: "Pre-fill arguments", jp: "事前埋め込み引数" },
+              { en: "New function", np: "नयाँ function", jp: "新しい関数" },
+              { en: "Event handlers, partial application, fixing context", np: "Event handler, partial application", jp: "イベントハンドラ・部分適用・コンテキスト固定" },
+            ],
+          ],
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between prototype and __proto__?", np: "prototype र __proto__ मा के फरक?", jp: "prototypeと__proto__の違いは？" },
+      question: { en: "What does 'this' refer to inside a class method?", np: "Class method भित्र 'this' ले के बुझाउँछ?", jp: "クラスメソッド内のthisは何を指すか？" },
       answer: {
-        en: "`prototype` is a property on **constructor functions**. When you call `new MyFunction()`, the newly created object's internal `[[Prototype]]` is set to `MyFunction.prototype`. `__proto__` (and its modern equivalent `Object.getPrototypeOf()`) is a property on **instances** that gives you access to the object's prototype. Use `Object.getPrototypeOf(obj)` instead of `obj.__proto__` — `__proto__` is deprecated and not recommended.",
-        np: "`prototype` **constructor functions** मा property हो। `new MyFunction()` call गर्दा नयाँ object को `[[Prototype]]` = `MyFunction.prototype` हुन्छ। `__proto__` **instances** मा property हो जसले object को prototype access दिन्छ। `obj.__proto__` deprecated छ — `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस्।",
-        jp: "`prototype`は**コンストラクタ関数**のプロパティ。`new`で作られたオブジェクトの`[[Prototype]]`がこれになる。`__proto__`は**インスタンス**のプロパティで、オブジェクトのプロトタイプにアクセスする。`__proto__`はdeprecated、`Object.getPrototypeOf()`を使う。",
+        en: "Inside a class method called on an instance, `this` refers to the instance. When you do `const obj = new MyClass()` and then `obj.myMethod()`, `this` inside `myMethod` is `obj`. However, if you extract the method and call it without the object (`const fn = obj.myMethod; fn()`), `this` is undefined in strict mode. This is why you sometimes need to use arrow functions or bind in React class components to ensure `this` stays bound.",
+        np: "Instance मा call भएको class method भित्र `this` ले instance नै बुझाउँछ। तर method extract गरेर object बिना call गर्दा (`const fn = obj.myMethod; fn()`) `this` strict mode मा undefined हुन्छ। त्यसैले React class components मा arrow functions वा bind प्रयोग गरिन्छ।",
+        jp: "インスタンスで呼び出されたクラスメソッド内の`this`はそのインスタンスを指す。しかしメソッドを取り出してオブジェクトなしで呼ぶと、strictモードではundefinedになる。Reactクラスコンポーネントでアローやbindが使われる理由。",
       },
     },
     {
-      question: { en: "Do all objects inherit from Object.prototype?", np: "सबै objects Object.prototype बाट inherit गर्छन्?", jp: "すべてのオブジェクトはObject.prototypeを継承するか？" },
+      question: { en: "What is the difference between call() and apply()?", np: "call() र apply() मा के फरक?", jp: "call()とapply()の違いは？" },
       answer: {
-        en: "Almost all objects do. The prototype chain of most objects ends at `Object.prototype`, which provides methods like `hasOwnProperty`, `toString`, `valueOf`, and `isPrototypeOf`. The exception is objects created with `Object.create(null)`, which have no prototype at all — useful for creating pure dictionaries with no inherited properties.",
-        np: "लगभग सबैले गर्छन्। अधिकांश objects को prototype chain `Object.prototype` मा समाप्त हुन्छ जसले `hasOwnProperty`, `toString` आदि दिन्छ। Exception: `Object.create(null)` ले prototype नै नभएको objects बनाउँछ — pure dictionaries का लागि उपयोगी।",
-        jp: "ほぼすべてのオブジェクトが継承する。ほとんどのオブジェクトのプロトタイプチェーンは`Object.prototype`で終わり、`hasOwnProperty`・`toString`などを提供する。例外は`Object.create(null)`で作られたオブジェクト（継承なし）。",
+        en: "Both invoke a function immediately with a specified `this` value. The difference is how arguments are passed: `call` takes individual arguments separated by commas (`fn.call(thisArg, a, b, c)`), while `apply` takes an array of arguments (`fn.apply(thisArg, [a, b, c])`). With the spread operator available in modern JS, `apply` is rarely needed — `fn.call(thisArg, ...args)` achieves the same thing.",
+        np: "दुवैले function तुरन्त call गर्छन् specified `this` सहित। फरक arguments pass गर्ने तरिका हो: `call` individual arguments (`fn.call(thisArg, a, b, c)`), `apply` array (`fn.apply(thisArg, [a, b, c])`। Modern JS मा spread operator छ भनेपछि `apply` कम प्रयोग हुन्छ।",
+        jp: "どちらも指定したthisで関数をすぐに呼び出す。違いは引数の渡し方: callはカンマ区切り、applyは配列。モダンJSではスプレッド演算子があるのでapplyの使用頻度は低い。",
       },
     },
   ],

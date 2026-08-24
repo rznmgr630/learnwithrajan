@@ -2,305 +2,417 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_4_LESSONS: JsLessonDay = {
   day: 4,
-  title: { en: "Closures, Higher-Order Functions & Currying", np: "Closures, Higher-Order Functions र Currying", jp: "クロージャ・高階関数・カリー化" },
+  title: { en: "Scope, Hoisting & the Temporal Dead Zone", np: "Scope, Hoisting र Temporal Dead Zone", jp: "スコープ・ホイスティング・TDZ" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "closures",
-      title: { en: "Closures — the Foundation", np: "Closures — आधार", jp: "クロージャの基礎" },
+      id: "scope-types",
+      title: { en: "The Three Scope Types", np: "तीन Scope Types", jp: "3種類のスコープ" },
       durationMinutes: 9,
       explanation: {
-        en: "Picture a function as a person leaving home for a trip. Normally, once they leave, everything back at the house is gone from their perspective. A <b>closure</b> is that person packing a backpack before leaving — a backpack containing direct access to specific things from home, not photocopies. Even far away, they can reach into the backpack and read or change what's inside, and it stays in sync with the original.\n\nThat backpack is exactly what an inner function carries: a live link to the variables of the outer function it was created in, available anytime the inner function is later called — no matter how much later, or from how far away in the code.\n\n• <b>A closure is created every time a function is created inside another function.</b> The inner function keeps a live reference, not a snapshot copy.\n• <b>Memory implication:</b> closures keep outer variables alive as long as the closure exists — be careful with closures inside event listeners or timers.",
-        np: "Closure लाई यात्रामा जाने व्यक्तिले घरबाटै केही सामान backpack मा राखेको जस्तो सोच्नुहोस् — टाढा पुगे पनि backpack भित्रको सामान access गर्न सक्छ।",
-        jp: "クロージャは、旅に出る人が家から特定のものへの直接アクセスをバックパックに入れて持って行くようなもの。遠くにいてもバックパックの中身にアクセスできる。",
+        en: "<b>Scope</b> (where a variable can be accessed) controls which parts of your code can see a variable.\n\nJavaScript has three main types of scope:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nThink of scope like boxes inside other boxes:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\nA variable in an outer scope can usually be accessed by code inside it, but an inner variable cannot be accessed from outside.\n\n---\n\n### 1. Global Scope\n\n<b>Global scope</b> (the outermost scope, available throughout the program) is created outside functions and blocks.\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nThe function can access `name` because `name` is in the outer scope.\n\n---\n\n### 2. Function Scope\n\n<b>Function scope</b> (variables that are available only inside a function) is created when a function is defined.\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` exists only inside `greet()`.\n\n---\n\n### 3. Block Scope\n\n<b>Block scope</b> (variables available only inside `{ }`) is created by blocks such as:\n\n```javascript\nif\nfor\nwhile\n```\n\nExample:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` and `const` are block-scoped.\n\n---\n\n### `var` and Block Scope\n\n<b>`var`</b> (the older variable declaration) does not respect block scope.\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` escapes the block and belongs to the nearest function scope.\n\nThis is one reason modern JavaScript prefers `let` and `const`.\n\n---\n\n### 4. Lexical Scoping\n\n<b>Lexical scoping</b> (scope determined by where code is written) means JavaScript decides what variables a function can access based on where the function was created.\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` can access `name` because it was written inside `outer()`.\n\nThis is true even if the function is called somewhere else.\n\nThis behavior is the foundation of <b>closures</b> (functions that remember variables from where they were created).\n\n---\n\n### Visibility Rule\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\nExample:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
+        np: "<b>Scope</b> (variable कहाँ पहुँच गर्न सकिन्छ) ले तपाईंको code का कुन भागले variable देख्न सक्छ भन्ने नियन्त्रण गर्छ।\n\nJavaScript मा तीन मुख्य प्रकारका scope छन्:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nScope लाई बाकसभित्र बाकस जस्तै सोच्नुहोस्:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\nबाहिरी scope को variable भित्रको code ले सामान्यतया पहुँच गर्न सक्छ, तर भित्री variable लाई बाहिरबाट पहुँच गर्न सकिँदैन।\n\n---\n\n### 1. Global Scope\n\n<b>Global scope</b> (सबैभन्दा बाहिरी scope, पूरै program भर उपलब्ध) function र block बाहिर बन्छ।\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nFunction ले `name` पहुँच गर्न सक्छ किनकि `name` बाहिरी scope मा छ।\n\n---\n\n### 2. Function Scope\n\n<b>Function scope</b> (function भित्र मात्र उपलब्ध हुने variable) function परिभाषित हुँदा बन्छ।\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` `greet()` भित्र मात्र अस्तित्वमा हुन्छ।\n\n---\n\n### 3. Block Scope\n\n<b>Block scope</b> (`{ }` भित्र मात्र उपलब्ध हुने variable) यस्ता block ले बनाउँछन्:\n\n```javascript\nif\nfor\nwhile\n```\n\nउदाहरण:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` र `const` block-scoped हुन्।\n\n---\n\n### `var` र Block Scope\n\n<b>`var`</b> (पुरानो variable declaration) ले block scope मान्दैन।\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` block बाट उम्किन्छ र नजिकको function scope मा पर्छ।\n\nआधुनिक JavaScript ले `let` र `const` मन पराउनुको यो एक कारण हो।\n\n---\n\n### 4. Lexical Scoping\n\n<b>Lexical scoping</b> (code कहाँ लेखिएको छ त्यसले तय गर्ने scope) को अर्थ JavaScript ले function कहाँ बनाइएको थियो त्यसका आधारमा त्यसले कुन variable पहुँच गर्न सक्छ भन्ने निर्णय गर्छ।\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` ले `name` पहुँच गर्न सक्छ किनकि यो `outer()` भित्र लेखिएको थियो।\n\nFunction अन्त कतै call गरिए पनि यो सत्य हुन्छ।\n\nयो व्यवहार <b>closures</b> (आफू बनेको ठाउँका variable सम्झने function) को जग हो।\n\n---\n\n### दृश्यता नियम\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\nउदाहरण:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
+        jp: "<b>スコープ</b>（変数にアクセスできる範囲）は、コードのどの部分がその変数を見られるかを決めます。\n\nJavaScriptには主に3種類のスコープがあります:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nスコープは箱の中の箱のようなものだと考えてください:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\n外側のスコープの変数は内側のコードから使えますが、内側の変数を外側から使うことはできません。\n\n---\n\n### 1. グローバルスコープ\n\n<b>グローバルスコープ</b>（最も外側のスコープ。プログラム全体で使える）は、関数やブロックの外に作られます。\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\n`name` が外側のスコープにあるので、関数から使えます。\n\n---\n\n### 2. 関数スコープ\n\n<b>関数スコープ</b>（関数の中でだけ使える変数）は、関数を定義したときに作られます。\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` は `greet()` の中にだけ存在します。\n\n---\n\n### 3. ブロックスコープ\n\n<b>ブロックスコープ</b>（`{ }` の中でだけ使える変数）は、次のようなブロックが作ります:\n\n```javascript\nif\nfor\nwhile\n```\n\n例:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` と `const` はブロックスコープです。\n\n---\n\n### `var` とブロックスコープ\n\n<b>`var`</b>（古い変数宣言）はブロックスコープを尊重しません。\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` はブロックから抜け出し、最も近い関数スコープに属します。\n\n現代のJavaScriptが `let` と `const` を好む理由の1つがこれです。\n\n---\n\n### 4. レキシカルスコープ\n\n<b>レキシカルスコープ</b>（コードが書かれた場所で決まるスコープ）とは、関数がどこで作られたかに基づいて、その関数が使える変数をJavaScriptが決めるという意味です。\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` は `outer()` の中に書かれているので `name` を使えます。\n\nこれは関数が別の場所で呼ばれても変わりません。\n\nこの性質が<b>クロージャ</b>（作られた場所の変数を覚えている関数）の土台になります。\n\n---\n\n### 見え方のルール\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\n例:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
       },
-      diagram: `function outer() {
-  let count = 0;              ← lives in outer's scope
-  return function inner() {
-    count++;                  ← inner "closes over" count (backpack)
-    return count;
-  };
-}
-const increment = outer();    ← outer() has finished running...
-increment();  // 1             ...but 'count' is still alive via the backpack
-increment();  // 2
-increment();  // 3`,
+      diagram: `                    Global Scope
+                  const global = ...
+                         |
+             +-----------+-----------+
+             |                       |
+       Function Scope           Other code
+       const user = ...             |
+             |                      |
+       +-----+-----+                |
+       |           |                |
+   Block Scope  Block Scope         |
+   let x = ...  const y = ...       |
+
+
+Visibility Rule
+
+Outer scope
+     ↓
+Inner scope can see it
+
+Inner scope
+     ↓
+Outer scope cannot see it`,
       codeExample: {
-        title: { en: "A closure keeps the outer variable alive", np: "Closure ले outer variable जिउँदो राख्छ", jp: "クロージャは外部変数を保持する" },
-        code: `function outer() {
-  let count = 0;        // this variable lives in outer's scope
-  return function inner() {
-    count++;            // inner "closes over" count
-    return count;
-  };
-}
+        title: { en: "Global, function and block scope together", np: "Global, function र block scope सँगै", jp: "グローバル・関数・ブロックスコープを一度に" },
+        code: `const globalName = "Rajan";
 
-const increment = outer(); // outer() runs and returns inner
-console.log(increment()); // 1
-console.log(increment()); // 2
+function greet() {
+  const message = "Hello";
 
-// Each call to outer() creates a separate closure with its own 'count'
-const incrementA = outer();
-const incrementB = outer();
-incrementA(); // 1
-incrementB(); // 1  — completely separate count
+  if (true) {
+    const age = 30;
 
-// ── Practical use case: private state via a factory function ──────
-function createBankAccount(initialBalance) {
-  let balance = initialBalance;  // private — not accessible from outside
-  return {
-    deposit:    (amount) => { balance += amount; },
-    getBalance: ()       => balance,
-  };
-}
-const account = createBankAccount(100);
-account.deposit(50);
-console.log(account.getBalance()); // 150`,
-      },
-      keyTakeaways: [
-        { en: "A closure is created every time a function is created inside another function — the inner function keeps a live reference, not a snapshot.", np: "Closure हरेक पटक inner function create हुँदा बन्छ — यसले live reference राख्छ, snapshot होइन।", jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく生きた参照を保持する。" },
-        { en: "Each call to the outer function creates a fresh, independent closure — separate calls never share the same captured variable.", np: "Outer function को हरेक call ले नयाँ, independent closure बनाउँछ — captured variable share हुँदैन।", jp: "外側の関数を呼ぶたびに独立した新しいクロージャが生成され、キャプチャした変数を共有しない。" },
-        { en: "Closures are the standard way to create private state in JavaScript, without needing a class.", np: "Class बिना private state बनाउने standard तरिका closure हो।", jp: "クラスなしでプライベートな状態を作る標準的な方法がクロージャ。" },
-      ],
-      commonMistakes: [
-        { en: "Assuming multiple calls to the same factory function share the captured variable — each call gets its own independent copy.", np: "एउटै factory function को धेरै call ले captured variable share गर्छ भन्ने ठान्नु — हरेक call को आफ्नै independent copy हुन्छ।", jp: "同じファクトリ関数の複数呼び出しがキャプチャした変数を共有すると思うこと。実際は各呼び出しが独立したコピーを持つ。" },
-        { en: "Forgetting that closures keep referenced variables alive in memory, causing quiet memory growth in long-lived event listeners or timers.", np: "Closure ले reference गरिएको variable memory मा जिउँदो राख्छ भन्ने बिर्सनु, event listener/timer मा memory growth हुनु।", jp: "クロージャが参照する変数をメモリに保持し続けることを忘れ、長寿命のイベントリスナーやタイマーで静かにメモリが増えること。" },
-        { en: "Trying to read a closure's captured variable from outside the returned function — it's only reachable through that function's own logic.", np: "Return भएको function बाहिरबाट closure को captured variable पढ्ने प्रयास गर्नु — त्यो function को logic बाट मात्र पुग्न सकिन्छ।", jp: "返された関数の外からクロージャのキャプチャした変数を読もうとすること。その関数のロジックを通してのみ到達できる。" },
-      ],
-      quiz: [
-        {
-          question: { en: "After `const increment = outer();` runs and `outer`'s call finishes, is the local variable `count` inside `outer` gone?", np: "`outer()` call सकिएपछि `outer` भित्रको `count` हराउँछ?", jp: "`outer`の呼び出しが終わった後、内部の`count`は消える？" },
-          options: [{ en: "Yes, it's garbage collected immediately", np: "हो, तुरुन्तै garbage collect हुन्छ", jp: "はい、すぐにガベージコレクトされる" }, { en: "No — the returned inner function keeps it alive via a closure", np: "होइन — return भएको inner function ले closure मार्फत जिउँदो राख्छ", jp: "いいえ — 返された内側の関数がクロージャで保持し続ける" }],
-          correctIndex: 1,
-          explanation: { en: "As long as something still references count (the inner function), it stays alive in memory.", np: "count लाई कोहीले (inner function) reference गरेसम्म यो memory मा जिउँदो रहन्छ।", jp: "何か（内側の関数）がcountを参照し続ける限り、メモリ内で生き続ける。" },
-        },
-        {
-          question: { en: "Do two separate calls to `outer()` share the same closed-over variable?", np: "`outer()` का दुई फरक call ले same closed-over variable share गर्छन्?", jp: "`outer()`の2つの別の呼び出しは同じクロージャ変数を共有する？" },
-          options: [{ en: "Yes, they share one variable", np: "हो, एउटै variable share गर्छन्", jp: "はい、1つの変数を共有する" }, { en: "No, each call gets its own independent copy", np: "होइन, हरेक call को आफ्नै independent copy हुन्छ", jp: "いいえ、各呼び出しは独立したコピーを持つ" }],
-          correctIndex: 1,
-          explanation: { en: "Each invocation of outer() creates a brand new scope and a brand new closure.", np: "`outer()` को हरेक invocation ले नयाँ scope र नयाँ closure बनाउँछ।", jp: "outer()を呼び出すたびに新しいスコープと新しいクロージャが作られる。" },
-        },
-        {
-          question: { en: "What is one common risk of closures?", np: "Closure को एक सामान्य जोखिम के हो?", jp: "クロージャの一般的なリスクの1つは？" },
-          options: [{ en: "They run slower than regular functions", np: "Regular function भन्दा ढिलो चल्छ", jp: "通常の関数より実行が遅い" }, { en: "They can keep variables alive in memory longer than expected if not cleaned up", np: "Cleanup नगरेमा variable अनुमान भन्दा बढी समय memory मा जिउँदो रहन सक्छ", jp: "クリーンアップしないと変数が予想より長くメモリに残ることがある" }],
-          correctIndex: 1,
-          explanation: { en: "Closures attached to long-lived listeners or timers can quietly prevent garbage collection.", np: "लामो समयसम्म रहने listener/timer मा जोडिएको closure ले garbage collection रोक्न सक्छ।", jp: "長寿命のリスナーやタイマーに結び付いたクロージャはガベージコレクションを静かに妨げることがある。" },
-        },
-      ],
-    },
-    {
-      id: "higher-order-functions",
-      title: { en: "Higher-Order Functions", np: "Higher-Order Functions", jp: "高階関数" },
-      durationMinutes: 9,
-      explanation: {
-        en: "A <b>higher-order function</b> is a function that either takes a function as an argument, returns a function, or both. This is possible only because functions in JavaScript are <b>first-class values</b> — exactly like a number or a string, they can be stored in a variable, passed as an argument, and returned from another function.\n\n• Passing a function in lets the caller plug in custom behaviour without the higher-order function needing to know the details\n  ↳ `array.map(fn)` doesn't know what `fn` does — it just calls it for every item\n• Returning a function out lets you generate specialised, ready-to-use functions on demand\n  ↳ A closure factory (like `createMultiplier` from Day 3/4's closures section) is already a higher-order function",
-        np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन्।",
-        jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値。",
-      },
-      diagram: `Function IN                          Function OUT
-──────────────────                   ──────────────────
-numbers.map(fn)      ← fn passed in   function withLogging(fn) {
-numbers.filter(fn)                       return function(...args) { ... }
-numbers.reduce(fn)                    }  ← a NEW function returned
-                                       "higher-order" = either direction (or both)`,
-      codeExample: {
-        title: { en: "Functions as arguments and return values", np: "Argument र return value को रूपमा function", jp: "引数と戻り値としての関数" },
-        code: `// ── Functions as arguments ───────────────────────────────────────
-function repeat(n, action) {
-  for (let i = 0; i < n; i++) {
-    action(i);           // call the passed function
+    console.log(globalName); // Works
+    console.log(message);    // Works
+    console.log(age);        // Works
   }
-}
-repeat(3, (i) => console.log(\`Step \${i}\`));
-// Step 0 / Step 1 / Step 2
 
-// ── Functions returning functions ────────────────────────────────
-function withLogging(fn) {
-  return function (...args) {
-    console.log("Calling with", args);
-    const result = fn(...args);
-    console.log("Result:", result);
-    return result;
-  };
+  console.log(globalName); // Works
+  console.log(message);    // Works
+  console.log(age);        // Error
 }
-const addLogged = withLogging((a, b) => a + b);
-addLogged(2, 3);  // logs "Calling with [2, 3]" and "Result: 5"
 
-// ── Common built-in higher-order functions you use every day ──────
-const numbers = [1, 2, 3, 4, 5];
-numbers.filter(n => n % 2 === 0);      // [2, 4]
-numbers.map(n => n * 2);               // [2, 4, 6, 8, 10]
-numbers.reduce((acc, n) => acc + n, 0); // 15`,
+greet();`,
       },
       keyTakeaways: [
-        { en: "A higher-order function takes a function as an argument, returns one, or both — this is only possible because functions are first-class values in JavaScript.", np: "Higher-order function ले function लिन्छ, return गर्छ, वा दुवै गर्छ — JS मा functions first-class values भएकाले सम्भव हुन्छ।", jp: "高階関数は関数を引数に取るか返すか、または両方を行う。JavaScriptの関数がファーストクラス値だからこそ可能。" },
-        { en: "Built-in array methods like `.map()`, `.filter()`, and `.reduce()` are higher-order functions you already use daily.", np: "`.map()`, `.filter()`, `.reduce()` जस्ता built-in array methods दिनहुँ प्रयोग गरिने higher-order functions हुन्।", jp: "`.map()`・`.filter()`・`.reduce()`のような組み込み配列メソッドは日常的に使う高階関数。" },
-        { en: "Passing a function in decouples the \"what to loop over\" from the \"what to do with each item\" — the caller supplies the behaviour.", np: "Function pass गर्नाले 'के loop गर्ने' र 'हरेक item मा के गर्ने' छुट्टिन्छ — caller ले behaviour दिन्छ।", jp: "関数を渡すことで「何をループするか」と「各項目に何をするか」が分離される。呼び出し側が動作を提供する。" },
+        { en: "<b>Scope</b> → determines where a variable can be accessed.", np: "<b>Scope</b> → variable कहाँ पहुँच गर्न सकिन्छ भन्ने तय गर्छ।", jp: "<b>スコープ</b> → 変数にアクセスできる範囲を決める。" },
+        { en: "<b>Global scope</b> → available throughout the program.", np: "<b>Global scope</b> → पूरै program भर उपलब्ध।", jp: "<b>グローバルスコープ</b> → プログラム全体で使える。" },
+        { en: "<b>Function scope</b> → available only inside a function.", np: "<b>Function scope</b> → function भित्र मात्र उपलब्ध।", jp: "<b>関数スコープ</b> → 関数の中でだけ使える。" },
+        { en: "<b>Block scope</b> → available only inside `{ }`.", np: "<b>Block scope</b> → `{ }` भित्र मात्र उपलब्ध।", jp: "<b>ブロックスコープ</b> → `{ }` の中でだけ使える。" },
+        { en: "`let` and `const` are block-scoped.", np: "`let` र `const` block-scoped हुन्।", jp: "`let` と `const` はブロックスコープ。" },
+        { en: "`var` ignores block scope and uses function scope.", np: "`var` ले block scope बेवास्ता गरी function scope प्रयोग गर्छ।", jp: "`var` はブロックスコープを無視して関数スコープを使う。" },
+        { en: "<b>Lexical scoping</b> → scope is decided by where the code is written.", np: "<b>Lexical scoping</b> → code कहाँ लेखिएको छ त्यसले scope तय गर्छ।", jp: "<b>レキシカルスコープ</b> → スコープはコードが書かれた場所で決まる。" },
+        { en: "Inner scopes can access outer variables.", np: "भित्री scope ले बाहिरी variable पहुँच गर्न सक्छ।", jp: "内側のスコープは外側の変数にアクセスできる。" },
+        { en: "Outer scopes cannot access variables inside inner scopes.", np: "बाहिरी scope ले भित्री scope का variable पहुँच गर्न सक्दैन।", jp: "外側のスコープは内側のスコープの変数にアクセスできない。" },
+        { en: "Lexical scoping is the foundation of <b>closures</b>.", np: "Lexical scoping <b>closures</b> को जग हो।", jp: "レキシカルスコープは<b>クロージャ</b>の土台。" },
       ],
       commonMistakes: [
-        { en: "Passing a function call (`fn()`) instead of a function reference (`fn`) to a higher-order function — this calls it immediately instead of passing it along.", np: "Higher-order function मा function reference (`fn`) को सट्टा function call (`fn()`) pass गर्नु — यसले तुरुन्तै call गर्छ।", jp: "高階関数に関数参照（`fn`）ではなく関数呼び出し（`fn()`）を渡すこと。即座に呼び出されてしまう。" },
-        { en: "Forgetting that `.map()`/`.filter()` return NEW arrays and don't mutate the original.", np: "`.map()`/`.filter()` ले नयाँ array फर्काउँछ र original मुटेट गर्दैन भन्ने बिर्सनु।", jp: "`.map()`/`.filter()`が新しい配列を返し、元を変更しないことを忘れること。" },
-        { en: "Using `.forEach()` when you actually need a returned value — forEach always returns undefined, unlike map/filter/reduce.", np: "Return value चाहिँदा `.forEach()` प्रयोग गर्नु — forEach ले सधैं undefined फर्काउँछ।", jp: "戻り値が必要なのに`.forEach()`を使うこと。forEachは常にundefinedを返す。" },
+        { en: "<b>Trying to access a block variable outside the block</b> — `if (true) { let name = \"Rajan\"; }` then `console.log(name)` throws, because `name` only exists inside the block.", np: "<b>Block बाहिर block variable पहुँच गर्न खोज्नु</b> — `if (true) { let name = \"Rajan\"; }` पछि `console.log(name)` ले error दिन्छ, किनकि `name` block भित्र मात्र अस्तित्वमा हुन्छ।", jp: "<b>ブロックの外からブロック変数にアクセスしようとする</b> — `if (true) { let name = \"Rajan\"; }` の後の `console.log(name)` はエラーになる。`name` はブロックの中にしか存在しない。" },
+        { en: "<b>Thinking `var` is block-scoped</b> — `if (true) { var age = 30; }` then `console.log(age)` prints `30`, because `var` escapes the block.", np: "<b>`var` block-scoped हो भन्ने ठान्नु</b> — `if (true) { var age = 30; }` पछि `console.log(age)` ले `30` देखाउँछ, किनकि `var` block बाट उम्किन्छ।", jp: "<b>`var` がブロックスコープだと思う</b> — `if (true) { var age = 30; }` の後の `console.log(age)` は `30` を出す。`var` はブロックから抜け出すから。" },
+        { en: "<b>Thinking an inner variable is available outside</b> — a `const message` declared inside `greet()` belongs to that function scope and cannot be read after the call.", np: "<b>भित्री variable बाहिर उपलब्ध छ भन्ने ठान्नु</b> — `greet()` भित्र declare गरिएको `const message` त्यही function scope को हो र call पछि पढ्न सकिँदैन।", jp: "<b>内側の変数が外でも使えると思う</b> — `greet()` の中で宣言した `const message` はその関数スコープのものなので、呼び出し後に読むことはできない。" },
+        { en: "<b>Confusing where a function is called with where it gets its scope</b> — a function uses the scope where it was <b>created</b>, not where it is called. That is lexical scoping.", np: "<b>Function कहाँ call भयो र यसले scope कहाँबाट पायो भन्ने भ्रममा पर्नु</b> — function ले आफू <b>बनेको</b> ठाउँको scope प्रयोग गर्छ, call भएको ठाउँको होइन। यही lexical scoping हो।", jp: "<b>関数が呼ばれた場所とスコープを得た場所を混同する</b> — 関数は<b>作られた</b>場所のスコープを使い、呼ばれた場所のものは使わない。それがレキシカルスコープ。" },
       ],
       quiz: [
         {
-          question: { en: "What makes a function a \"higher-order function\"?", np: "कुन कुराले function लाई 'higher-order function' बनाउँछ?", jp: "何が関数を「高階関数」にする？" },
-          options: [{ en: "It runs faster than normal functions", np: "Normal function भन्दा छिटो चल्छ", jp: "通常の関数より速く実行される" }, { en: "It takes a function as an argument, returns one, or both", np: "यसले function argument को रूपमा लिन्छ, return गर्छ, वा दुवै गर्छ", jp: "関数を引数に取るか返すか、または両方を行う" }],
+          question: { en: "What does scope determine?", np: "Scope ले के तय गर्छ?", jp: "スコープは何を決めるか?" },
+          options: [
+            { en: "How fast code runs", np: "Code कति छिटो चल्छ", jp: "コードの実行速度" },
+            { en: "Where a variable can be accessed", np: "Variable कहाँ पहुँच गर्न सकिन्छ", jp: "変数にアクセスできる範囲" },
+            { en: "The variable's data type", np: "Variable को data type", jp: "変数のデータ型" },
+          ],
           correctIndex: 1,
-          explanation: { en: "The defining trait is treating functions as values passed in or returned.", np: "Function लाई value को रूपमा pass वा return गर्नु नै defining trait हो।", jp: "関数を値として渡すか返すことが定義的な特徴。" },
+          explanation: { en: "Scope is about visibility: which parts of the code can see a given variable.", np: "Scope दृश्यताको कुरा हो: code का कुन भागले दिइएको variable देख्न सक्छ।", jp: "スコープは可視性の話。コードのどの部分がその変数を見られるか。" },
         },
         {
-          question: { en: "Which of these is a built-in higher-order function you use daily?", np: "यीमध्ये कुन दिनहुँ प्रयोग गरिने built-in higher-order function हो?", jp: "次のうち日常的に使う組み込み高階関数はどれ？" },
-          options: [{ en: "Array.prototype.map", np: "Array.prototype.map", jp: "Array.prototype.map" }, { en: "Number.parseInt", np: "Number.parseInt", jp: "Number.parseInt" }],
+          question: { en: "Which variables are block-scoped?", np: "कुन variable block-scoped हुन्?", jp: "ブロックスコープなのはどれか?" },
+          options: [
+            { en: "`var` only", np: "`var` मात्र", jp: "`var` だけ" },
+            { en: "`let` and `const`", np: "`let` र `const`", jp: "`let` と `const`" },
+            { en: "All variables", np: "सबै variable", jp: "すべての変数" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`let` and `const` stay inside their `{ }`; `var` does not.", np: "`let` र `const` आफ्नो `{ }` भित्रै रहन्छन्; `var` रहँदैन।", jp: "`let` と `const` は `{ }` の中に留まるが、`var` は留まらない。" },
+        },
+        {
+          question: { en: "Which scope does `var` use?", np: "`var` ले कुन scope प्रयोग गर्छ?", jp: "`var` はどのスコープを使うか?" },
+          options: [
+            { en: "Block scope", np: "Block scope", jp: "ブロックスコープ" },
+            { en: "Function scope", np: "Function scope", jp: "関数スコープ" },
+            { en: "Only global scope", np: "Global scope मात्र", jp: "グローバルスコープだけ" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "A `var` declared inside an `if` block belongs to the nearest enclosing function.", np: "`if` block भित्र declare गरिएको `var` नजिकको enclosing function को हो।", jp: "`if` ブロックの中で宣言した `var` は、最も近い外側の関数に属する。" },
+        },
+        {
+          question: { en: "What does lexical scoping mean?", np: "Lexical scoping को अर्थ के हो?", jp: "レキシカルスコープとはどういう意味か?" },
+          options: [
+            { en: "Scope is decided by where code is written", np: "Code कहाँ लेखिएको छ त्यसले scope तय गर्छ", jp: "スコープはコードが書かれた場所で決まる" },
+            { en: "Scope changes every time a function is called", np: "Function call हुँदा हरेक पटक scope बदलिन्छ", jp: "関数が呼ばれるたびにスコープが変わる" },
+            { en: "All variables are global", np: "सबै variable global हुन्छन्", jp: "すべての変数がグローバルになる" },
+          ],
           correctIndex: 0,
-          explanation: { en: "map() takes a function as an argument and calls it for each array item — a classic higher-order function.", np: "map() ले function argument लिन्छ र हरेक array item मा call गर्छ — classic higher-order function.", jp: "map()は関数を引数に取り各配列要素に対して呼び出す — 典型的な高階関数。" },
-        },
-        {
-          question: { en: "What's wrong with passing `doThing()` instead of `doThing` to a higher-order function like `repeat(3, doThing())`?", np: "`repeat(3, doThing())` मा `doThing` को सट्टा `doThing()` pass गर्दा के गल्ती हुन्छ?", jp: "`repeat(3, doThing())`のように`doThing`ではなく`doThing()`を渡すと何が問題？" },
-          options: [{ en: "Nothing, they're identical", np: "केही छैन, उस्तै हो", jp: "問題ない、同じ" }, { en: "doThing() calls the function immediately, passing its RESULT instead of the function itself", np: "doThing() ले तुरुन्तै function call गर्छ, function आफैं होइन इसको result pass गर्छ", jp: "doThing()は即座に関数を呼び出し、関数自体ではなく結果を渡す" }],
-          correctIndex: 1,
-          explanation: { en: "You must pass a function reference, not the result of calling it, so the higher-order function can call it later.", np: "Function reference pass गर्नुपर्छ, call गरेको result होइन, ताकि higher-order function ले पछि call गर्न सकोस्।", jp: "後で高階関数が呼び出せるように、呼び出し結果ではなく関数参照を渡す必要がある。" },
+          explanation: { en: "The function keeps the scope of the place it was written, no matter where it is later called.", np: "Function पछि जहाँ call भए पनि आफू लेखिएको ठाउँको scope राख्छ।", jp: "関数は後でどこで呼ばれても、書かれた場所のスコープを保つ。" },
         },
       ],
     },
     {
-      id: "currying-composition",
-      title: { en: "Currying & Composition", np: "Currying र Composition", jp: "カリー化と合成" },
+      id: "hoisting-detail",
+      title: { en: "Hoisting in Detail", np: "Hoisting विस्तारमा", jp: "ホイスティング詳解" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThink of a vending machine: a normal function is like paying with the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.\n\n<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
-        np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)।",
-        jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。",
+        en: "<b>Hoisting</b> (JavaScript preparing declarations before running the code) works differently for each type of declaration.\n\nThe important question is:\n\n> What can I use before its declaration?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> is hoisted and automatically gets `undefined` (no value assigned yet).\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript roughly treats it like:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` and `const`\n\n<b>`let`</b> and <b>`const`</b> are hoisted, but they stay in the <b>Temporal Dead Zone (TDZ)</b> (the period where the variable exists but cannot be accessed).\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThe same applies to `const`:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nSo:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. Function Declarations\n\n<b>Function declarations</b> (functions written with `function`) are completely hoisted.\n\nThe function name and its body are available before the function appears in the code.\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nThis works.\n\n---\n\n### 4. Function Expressions\n\n<b>Function expressions</b> (functions stored in variables) follow the hoisting rules of the variable holding them.\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `ReferenceError` because `greet` is a `const` and is still in the TDZ.\n\nWith `var`:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `TypeError` because `greet` is `undefined` when called.\n\n---\n\n### 5. Arrow Functions\n\n<b>Arrow functions</b> (functions written with `=>`) also follow the rules of the variable holding them.\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `ReferenceError` because `greet` is a `const` in the TDZ.\n\nThe arrow function itself is not available before the assignment.\n\n---\n\n### Quick Comparison\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
+        np: "<b>Hoisting</b> (JavaScript ले code चलाउनुअघि declaration तयार गर्नु) हरेक प्रकारको declaration का लागि फरक तरिकाले काम गर्छ।\n\nमहत्वपूर्ण प्रश्न यो हो:\n\n> Declaration अघि म के प्रयोग गर्न सक्छु?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> hoist हुन्छ र स्वतः `undefined` (अझै कुनै value assign गरिएको छैन) पाउँछ।\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript ले यसलाई मोटामोटी यसो व्यवहार गर्छ:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` र `const`\n\n<b>`let`</b> र <b>`const`</b> hoist हुन्छन्, तर तिनी <b>Temporal Dead Zone (TDZ)</b> (variable अस्तित्वमा छ तर पहुँच गर्न नमिल्ने अवधि) मा रहन्छन्।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` मा पनि उही लागू हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nत्यसैले:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. Function Declarations\n\n<b>Function declaration</b> (`function` ले लेखिएका function) पूर्ण रूपमा hoist हुन्छन्।\n\nFunction को नाम र यसको body code मा function देखिनुअघि नै उपलब्ध हुन्छन्।\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ।\n\n---\n\n### 4. Function Expressions\n\n<b>Function expression</b> (variable मा राखिएका function) आफूलाई बोक्ने variable का hoisting नियम पछ्याउँछन्।\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nयसले `ReferenceError` दिन्छ किनकि `greet` `const` हो र अझै TDZ मा छ।\n\n`var` सँग:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nयसले `TypeError` दिन्छ किनकि call गर्दा `greet` `undefined` हुन्छ।\n\n---\n\n### 5. Arrow Functions\n\n<b>Arrow function</b> (`=>` ले लेखिएका function) पनि आफूलाई बोक्ने variable का नियम पछ्याउँछन्।\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nयसले `ReferenceError` दिन्छ किनकि `greet` TDZ मा रहेको `const` हो।\n\nArrow function आफैं assignment अघि उपलब्ध हुँदैन।\n\n---\n\n### छिटो तुलना\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
+        jp: "<b>ホイスティング</b>（JavaScriptがコード実行前に宣言を準備すること）は、宣言の種類ごとに動きが違います。\n\n大事な問いはこれです:\n\n> 宣言より前に何が使えるのか?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> はホイスティングされ、自動的に `undefined`（まだ値が代入されていない）になります。\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScriptはおおよそこう扱います:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` と `const`\n\n<b>`let`</b> と <b>`const`</b> はホイスティングされますが、<b>一時的デッドゾーン（TDZ）</b>（変数は存在するがアクセスできない期間）に留まります。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` でも同じです:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nつまり:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. 関数宣言\n\n<b>関数宣言</b>（`function` で書く関数）は完全にホイスティングされます。\n\n関数名と本体が、コード上に現れる前から使えます。\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nこれは動きます。\n\n---\n\n### 4. 関数式\n\n<b>関数式</b>（変数に入れた関数）は、それを持つ変数のホイスティング規則に従います。\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n`greet` は `const` でまだTDZにあるため、`ReferenceError` になります。\n\n`var` の場合:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n呼び出し時に `greet` が `undefined` なので `TypeError` になります。\n\n---\n\n### 5. アロー関数\n\n<b>アロー関数</b>（`=>` で書く関数）も、それを持つ変数の規則に従います。\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\n`greet` はTDZにある `const` なので `ReferenceError` になります。\n\nアロー関数そのものは代入より前には使えません。\n\n---\n\n### かんたん比較\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
       },
-      diagram: `add(2, 3)                       curriedAdd(2)(3)
-──────────────                  ──────────────────────
-one call, all args at once      curriedAdd(2) ──▶ returns (b) => 2 + b
-                                 (b) => 2+b (3) ──▶ 5
+      diagram: `                    Hoisting
+                       |
+        +--------------+--------------+
+        |              |              |
+       var          let / const    Functions
+        |              |              |
+    undefined          TDZ        +---+---+
+                                  |       |
+                             declaration  expression/
+                                  |        arrow
+                                 Full     follows
+                                hoisting  var/let/const
 
-pipe(add1, double, square)(3)
-  3 → add1 → 4 → double → 8 → square → 64`,
+
+Quick Comparison
+
+Declaration              Before declaration
+------------------------------------------------
+var                       undefined
+let                       ReferenceError
+const                     ReferenceError
+function declaration      Works
+function expression       Depends on var/let/const
+arrow function            Depends on var/let/const`,
       codeExample: {
-        title: { en: "Currying, partial application, and composition", np: "Currying, partial application, composition", jp: "カリー化・部分適用・合成" },
-        code: `// ── Curried version ───────────────────────────────────────────────
-const curriedAdd = (a) => (b) => a + b;
-curriedAdd(2)(3);  // 5
-const add2 = curriedAdd(2);   // returns (b) => 2 + b
-add2(3);  // 5
+        title: { en: "What each declaration does before its line", np: "हरेक declaration ले आफ्नो line अघि के गर्छ", jp: "各宣言が自分の行より前で何をするか" },
+        code: `// var
+console.log(a); // undefined
+var a = 10;
 
-// ── Why currying is useful — creating specialised functions ───────
-const multiply = (a) => (b) => a * b;
-const double  = multiply(2);
-const triple  = multiply(3);
-[1, 2, 3].map(double);  // [2, 4, 6]
 
-// ── Partial application with bind() ───────────────────────────────
-function log(level, message) {
-  console.log(\`[\${level.toUpperCase()}] \${message}\`);
+// let
+console.log(b); // ReferenceError
+let b = 20;
+
+
+// const
+console.log(c); // ReferenceError
+const c = 30;
+
+
+// Function declaration
+sayHello(); // Works
+
+function sayHello() {
+  console.log("Hello");
 }
-const logError = log.bind(null, "error");
-logError("Database connection failed");   // [ERROR] Database connection failed
 
-// ── Function composition — combining functions ───────────────────
-const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
-const add1   = x => x + 1;
-const double2 = x => x * 2;
-const square = x => x * x;
-const transform = pipe(add1, double2, square);
-transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
+
+// Function expression
+const greet = function () {
+  console.log("Hi");
+};
+
+
+// Arrow function
+const welcome = () => {
+  console.log("Welcome");
+};`,
       },
       keyTakeaways: [
-        { en: "Currying converts `f(a, b, c)` into `f(a)(b)(c)` — a chain of single-argument functions instead of one multi-argument call.", np: "Currying ले `f(a,b,c)` लाई `f(a)(b)(c)` मा बदल्छ — single-argument functions को chain।", jp: "カリー化は`f(a,b,c)`を`f(a)(b)(c)`に変換する — 単一引数関数の連鎖。" },
-        { en: "Partial application (e.g. via `.bind()`) pre-fills some arguments now and returns a new function needing only the rest.", np: "Partial application (जस्तै `.bind()` मार्फत) ले केही arguments अगावै भर्छ र बाँकीका लागि नयाँ function दिन्छ।", jp: "部分適用（例: `.bind()`）は一部の引数を先に埋め、残りだけを必要とする新しい関数を返す。" },
-        { en: "Function composition (`pipe`/`compose`) chains small single-purpose functions left-to-right (or right-to-left) into a readable pipeline.", np: "Function composition (`pipe`/`compose`) ले साना function हरूलाई बायाँबाट दायाँ (वा उल्टो) pipeline मा जोड्छ।", jp: "関数合成（`pipe`/`compose`）は小さな単機能関数を左から右（または逆）にパイプラインとして連結する。" },
+        { en: "<b>Hoisting</b> → declarations are prepared before execution.", np: "<b>Hoisting</b> → execution अघि declaration तयार गरिन्छन्।", jp: "<b>ホイスティング</b> → 実行前に宣言が準備される。" },
+        { en: "`var` → hoisted with `undefined`.", np: "`var` → `undefined` सँग hoist हुन्छ।", jp: "`var` → `undefined` の状態でホイスティングされる。" },
+        { en: "`let` / `const` → hoisted but stay in the <b>TDZ</b>.", np: "`let` / `const` → hoist हुन्छन् तर <b>TDZ</b> मा रहन्छन्।", jp: "`let` / `const` → ホイスティングされるが<b>TDZ</b>に留まる。" },
+        { en: "Function declarations → completely hoisted.", np: "Function declaration → पूर्ण रूपमा hoist हुन्छन्।", jp: "関数宣言 → 完全にホイスティングされる。" },
+        { en: "Function expressions → follow their variable's rules.", np: "Function expression → आफ्नो variable का नियम पछ्याउँछन्।", jp: "関数式 → それを持つ変数の規則に従う。" },
+        { en: "Arrow functions → follow their variable's rules.", np: "Arrow function → आफ्नो variable का नियम पछ्याउँछन्।", jp: "アロー関数 → それを持つ変数の規則に従う。" },
+        { en: "`const` and `let` accessed too early → `ReferenceError`.", np: "`const` र `let` लाई धेरै चाँडै पहुँच गर्दा → `ReferenceError`।", jp: "`const` と `let` に早くアクセスしすぎると → `ReferenceError`。" },
+        { en: "A `var` function called too early → usually `TypeError`, because the variable is `undefined`.", np: "`var` function लाई धेरै चाँडै call गर्दा → सामान्यतया `TypeError`, किनकि variable `undefined` हुन्छ।", jp: "`var` の関数を早く呼びすぎると → 変数が `undefined` なので通常 `TypeError`。" },
       ],
       commonMistakes: [
-        { en: "Confusing currying with partial application — currying always produces single-argument steps; partial application can fill any number of arguments at once.", np: "Currying र partial application मिलाउनु — currying ले सधैं single-argument steps दिन्छ; partial application ले जुनसुकै संख्याको argument भर्न सक्छ।", jp: "カリー化と部分適用を混同すること。カリー化は常に単一引数のステップを生む。部分適用は任意数の引数を一度に埋められる。" },
-        { en: "Mixing up the order in `pipe` (left-to-right) vs `compose` (right-to-left) and getting the wrong transformation order.", np: "`pipe` (बायाँबाट दायाँ) र `compose` (दायाँबाट बायाँ) को order मिलाउनु।", jp: "`pipe`（左から右）と`compose`（右から左）の順序を混同すること。" },
-        { en: "Over-currying every function in a codebase \"just in case\" — it adds indirection that isn't worth it unless you actually reuse partially-applied versions.", np: "पूरै codebase मा हरेक function लाई 'just in case' curry गर्नु — यसले अनावश्यक indirection थप्छ।", jp: "「念のため」コードベースのすべての関数をカリー化すること。実際に部分適用版を再利用しない限り価値のない間接化を加える。" },
+        { en: "<b>Thinking `let` and `const` are not hoisted</b> — they are, but they cannot be accessed before their declaration, so `console.log(age)` above `let age = 30;` throws a `ReferenceError`.", np: "<b>`let` र `const` hoist हुँदैनन् भन्ने ठान्नु</b> — हुन्छन्, तर declaration अघि पहुँच गर्न सकिँदैन, त्यसैले `let age = 30;` माथिको `console.log(age)` ले `ReferenceError` दिन्छ।", jp: "<b>`let` と `const` はホイスティングされないと思う</b> — される。ただし宣言前にはアクセスできないので、`let age = 30;` の上の `console.log(age)` は `ReferenceError` になる。" },
+        { en: "<b>Thinking function expressions work like declarations</b> — calling `greet()` above `function greet() {}` works, but above `const greet = function () {}` it throws.", np: "<b>Function expression declaration जस्तै काम गर्छ भन्ने ठान्नु</b> — `function greet() {}` माथि `greet()` call गर्दा काम गर्छ, तर `const greet = function () {}` माथि error दिन्छ।", jp: "<b>関数式が関数宣言と同じに動くと思う</b> — `function greet() {}` より前の `greet()` は動くが、`const greet = function () {}` より前ではエラーになる。" },
+        { en: "<b>Forgetting that the variable controls function-expression hoisting</b> — `var greet = function () {}` follows `var`'s rules, `const greet = function () {}` follows `const`'s.", np: "<b>Function expression को hoisting variable ले नियन्त्रण गर्छ भनी बिर्सनु</b> — `var greet = function () {}` ले `var` का नियम पछ्याउँछ, `const greet = function () {}` ले `const` का।", jp: "<b>関数式のホイスティングを決めるのは変数だと忘れる</b> — `var greet = function () {}` は `var` の規則に、`const greet = function () {}` は `const` の規則に従う。" },
       ],
       quiz: [
         {
-          question: { en: "What does currying turn `f(a, b, c)` into?", np: "Currying ले `f(a, b, c)` लाई केमा बदल्छ?", jp: "カリー化は`f(a, b, c)`を何に変換する？" },
-          options: [{ en: "f(a)(b)(c)", np: "f(a)(b)(c)", jp: "f(a)(b)(c)" }, { en: "f(a, b, c, d)", np: "f(a, b, c, d)", jp: "f(a, b, c, d)" }],
-          correctIndex: 0,
-          explanation: { en: "Currying converts a multi-argument call into a chain of single-argument function calls.", np: "Currying ले multi-argument call लाई single-argument function calls को chain मा बदल्छ।", jp: "カリー化は多引数呼び出しを単一引数関数呼び出しの連鎖に変換する。" },
-        },
-        {
-          question: { en: "In `pipe(add1, double, square)(3)`, in what order do the functions run?", np: "`pipe(add1, double, square)(3)` मा function हरू कुन order मा चल्छन्?", jp: "`pipe(add1, double, square)(3)`で関数はどの順序で実行される？" },
-          options: [{ en: "Left to right: add1, then double, then square", np: "बायाँबाट दायाँ: add1, double, square", jp: "左から右: add1、double、square" }, { en: "Right to left: square, then double, then add1", np: "दायाँबाट बायाँ: square, double, add1", jp: "右から左: square、double、add1" }],
-          correctIndex: 0,
-          explanation: { en: "pipe runs functions left-to-right, in the order listed; compose runs right-to-left.", np: "pipe ले listed order मा बायाँबाट दायाँ चलाउँछ; compose ले दायाँबाट बायाँ चलाउँछ।", jp: "pipeは記載順に左から右へ実行。composeは右から左へ実行。" },
-        },
-        {
-          question: { en: "What does `.bind(null, \"error\")` do to a two-argument function `log(level, message)`?", np: "`.bind(null, \"error\")` ले `log(level, message)` मा के गर्छ?", jp: "`.bind(null, \"error\")`は2引数関数`log(level, message)`に何をする？" },
-          options: [{ en: "Calls log immediately with level=\"error\"", np: "level='error' सँग log तुरुन्तै call गर्छ", jp: "level=\"error\"で即座にlogを呼び出す" }, { en: "Returns a new function that only needs the remaining `message` argument", np: "बाँकी `message` argument मात्र चाहिने नयाँ function फर्काउँछ", jp: "残りの`message`引数だけを必要とする新しい関数を返す" }],
+          question: { en: "What is the value of `var` before its assignment?", np: "Assignment अघि `var` को value के हुन्छ?", jp: "代入より前の `var` の値は?" },
+          options: [
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
           correctIndex: 1,
-          explanation: { en: "This is partial application — level is pre-filled, and the returned function only needs message.", np: "यो partial application हो — level pre-filled हुन्छ, return भएको function लाई message मात्र चाहिन्छ।", jp: "これは部分適用 — levelは先に埋められ、返された関数はmessageだけを必要とする。" },
+          explanation: { en: "The declaration is hoisted and initialised to `undefined`; only the assignment waits for its line.", np: "Declaration hoist भई `undefined` मा initialise हुन्छ; assignment मात्र आफ्नो line कुर्छ।", jp: "宣言はホイスティングされ `undefined` で初期化される。待つのは代入だけ。" },
+        },
+        {
+          question: { en: "What happens when `let` is accessed before its declaration?", np: "Declaration अघि `let` पहुँच गर्दा के हुन्छ?", jp: "宣言より前に `let` にアクセスするとどうなるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "It is hoisted but sits in the TDZ until its declaration is reached.", np: "यो hoist हुन्छ तर declaration पुग्नेसम्म TDZ मा रहन्छ।", jp: "ホイスティングはされるが、宣言に到達するまでTDZにある。" },
+        },
+        {
+          question: { en: "Which function is completely hoisted?", np: "कुन function पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされる関数はどれか?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+            { en: "Function expression", np: "Function expression", jp: "関数式" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Only a function declaration is hoisted with its body, so it can be called above its definition.", np: "Function declaration मात्र आफ्नो body सँग hoist हुन्छ, त्यसैले यसलाई definition माथि call गर्न सकिन्छ।", jp: "本体ごとホイスティングされるのは関数宣言だけなので、定義より上で呼び出せる。" },
+        },
+        {
+          question: { en: "What determines how a function expression is hoisted?", np: "Function expression कसरी hoist हुन्छ भन्ने के ले तय गर्छ?", jp: "関数式のホイスティングを決めるのは何か?" },
+          options: [
+            { en: "The function name", np: "Function को नाम", jp: "関数名" },
+            { en: "The variable keyword holding it", np: "यसलाई बोक्ने variable keyword", jp: "それを持つ変数のキーワード" },
+            { en: "The function body", np: "Function को body", jp: "関数の本体" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`var` gives `undefined` and a `TypeError` on an early call; `let`/`const` give a `ReferenceError`.", np: "`var` ले `undefined` दिन्छ र चाँडै call गर्दा `TypeError`; `let`/`const` ले `ReferenceError` दिन्छन्।", jp: "`var` は `undefined` になり早い呼び出しで `TypeError`、`let`/`const` は `ReferenceError` になる。" },
+        },
+      ],
+    },
+    {
+      id: "temporal-dead-zone",
+      title: { en: "The Temporal Dead Zone (TDZ)", np: "Temporal Dead Zone (TDZ)", jp: "一時的デッドゾーン (TDZ)" },
+      durationMinutes: 9,
+      explanation: {
+        en: "<b>Temporal Dead Zone (TDZ)</b> (the period when a `let` or `const` variable exists but cannot be used yet) starts when the block begins and ends when the variable is declared.\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScript already knows that `age` exists, but you cannot use it until the declaration is reached.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet.\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` vs `let` / `const`\n\n`var` behaves differently:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` gives you `undefined` (no value yet).\n\nBut `let` and `const` throw an error:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThis makes mistakes easier to notice.\n\n---\n\n### TDZ with `const`\n\n`const` also has a TDZ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nThe variable cannot be used until its declaration is reached.\n\n---\n\n### TDZ Exists Inside Blocks\n\nThe TDZ applies to the variable's scope.\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nThe TDZ starts when the block begins and ends at:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### Quick Comparison\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
+        np: "<b>Temporal Dead Zone (TDZ)</b> (`let` वा `const` variable अस्तित्वमा भए पनि अझै प्रयोग गर्न नमिल्ने अवधि) block सुरु हुँदा सुरु हुन्छ र variable declare हुँदा सकिन्छ।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScript लाई `age` अस्तित्वमा छ भन्ने पहिले नै थाहा हुन्छ, तर declaration नपुग्दासम्म तपाईं यसलाई प्रयोग गर्न सक्नुहुन्न।\n\nयसलाई depot मा आइपुगेको तर अझै हस्ताक्षर नगरिएको पार्सल जस्तै सोच्नुहोस्।\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` vs `let` / `const`\n\n`var` फरक व्यवहार गर्छ:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` ले तपाईंलाई `undefined` (अझै value छैन) दिन्छ।\n\nतर `let` र `const` ले error दिन्छन्:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nयसले गल्ती छिटो देख्न सजिलो बनाउँछ।\n\n---\n\n### `const` सँग TDZ\n\n`const` को पनि TDZ हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nDeclaration नपुग्दासम्म variable प्रयोग गर्न सकिँदैन।\n\n---\n\n### TDZ Block भित्र पनि हुन्छ\n\nTDZ variable को scope मा लागू हुन्छ।\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nTDZ block सुरु हुँदा सुरु हुन्छ र यहाँ सकिन्छ:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### छिटो तुलना\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
+        jp: "<b>一時的デッドゾーン（TDZ）</b>（`let` や `const` の変数が存在するのにまだ使えない期間）は、ブロックが始まったときに始まり、その変数が宣言されたときに終わります。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nJavaScriptは `age` の存在をすでに知っていますが、宣言に到達するまで使うことはできません。\n\n集配所に届いてはいるが、まだ受け取りのサインをしていない荷物のようなものだと考えてください。\n\n```text\nBlock starts\n     ↓\n   TDZ\n     ↓\nlet age = 30\n     ↓\nVariable can now be used\n```\n\n---\n\n### `var` と `let` / `const`\n\n`var` は動きが違います:\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\n`var` は `undefined`（まだ値がない）を返します。\n\nしかし `let` と `const` はエラーを投げます:\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nそのおかげで間違いに気づきやすくなります。\n\n---\n\n### `const` のTDZ\n\n`const` にもTDZがあります:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\n宣言に到達するまで、その変数は使えません。\n\n---\n\n### TDZはブロックの中にもある\n\nTDZはその変数のスコープに対して働きます。\n\n```javascript\n{\n  console.log(age); // ReferenceError\n\n  let age = 30;\n}\n```\n\nTDZはブロックの開始時に始まり、ここで終わります:\n\n```javascript\nlet age = 30;\n```\n\n---\n\n### かんたん比較\n\n```text\nvar\n ↓\nHoisted\n ↓\nundefined\n ↓\nCan be accessed early\n\n\nlet / const\n ↓\nHoisted\n ↓\nTDZ\n ↓\nReferenceError if accessed early\n ↓\nDeclaration\n ↓\nCan be accessed\n```",
+      },
+      diagram: `{
+    ↓
+    ↓  TDZ
+    ↓  Cannot access age
+    ↓
+let age = 30;
+    ↓
+    ↓  TDZ ends
+    ↓
+console.log(age); // 30
+}
+
+
+Quick Comparison
+
+var                     let / const
+ ↓                       ↓
+Hoisted                 Hoisted
+ ↓                       ↓
+undefined               TDZ
+ ↓                       ↓
+Can be accessed early   ReferenceError if accessed early
+                         ↓
+                        Declaration
+                         ↓
+                        Can be accessed`,
+      codeExample: {
+        title: { en: "var reads early, let throws in the TDZ", np: "var चाँडै पढिन्छ, let ले TDZ मा error दिन्छ", jp: "varは早く読めるが、letはTDZでエラー" },
+        code: `function test() {
+  console.log(a); // undefined
+  var a = 10;
+
+  console.log(b); // ReferenceError
+  let b = 20;
+}
+
+test();`,
+      },
+      keyTakeaways: [
+        { en: "<b>TDZ</b> → period where `let` / `const` exist but cannot be accessed.", np: "<b>TDZ</b> → `let` / `const` अस्तित्वमा भए पनि पहुँच गर्न नमिल्ने अवधि।", jp: "<b>TDZ</b> → `let` / `const` は存在するがアクセスできない期間。" },
+        { en: "TDZ starts at the beginning of the variable's scope.", np: "TDZ variable को scope सुरु हुँदा सुरु हुन्छ।", jp: "TDZはその変数のスコープの始まりから始まる。" },
+        { en: "TDZ ends when the declaration is reached.", np: "Declaration पुगेपछि TDZ सकिन्छ।", jp: "宣言に到達した時点でTDZは終わる。" },
+        { en: "Accessing a variable during the TDZ causes a `ReferenceError`.", np: "TDZ मा variable पहुँच गर्दा `ReferenceError` आउँछ।", jp: "TDZ中に変数へアクセスすると `ReferenceError` になる。" },
+        { en: "`var` does not have a TDZ.", np: "`var` को TDZ हुँदैन।", jp: "`var` にはTDZがない。" },
+        { en: "TDZ helps catch mistakes early.", np: "TDZ ले गल्ती चाँडै समात्न मद्दत गर्छ।", jp: "TDZは間違いを早く見つける助けになる。" },
+        { en: "The TDZ is a safety feature, not a punishment.", np: "TDZ सुरक्षा सुविधा हो, सजाय होइन।", jp: "TDZは罰ではなく、安全のための仕組み。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Thinking the TDZ starts at the declaration line</b> — it starts when the variable's scope begins, so a read anywhere above `let age = 30;` inside that block already throws.", np: "<b>TDZ declaration line मा सुरु हुन्छ भन्ने ठान्नु</b> — यो variable को scope सुरु हुँदा सुरु हुन्छ, त्यसैले त्यो block भित्र `let age = 30;` माथि जहाँ पढे पनि error आउँछ।", jp: "<b>TDZは宣言の行から始まると思う</b> — 始まるのは変数のスコープの開始時なので、そのブロック内で `let age = 30;` より上のどこで読んでもエラーになる。" },
+        { en: "<b>Thinking `const` is different from `let`</b> — both have a TDZ; reading either before its declaration throws a `ReferenceError`.", np: "<b>`const` `let` भन्दा फरक छ भन्ने ठान्नु</b> — दुबैको TDZ हुन्छ; कुनै पनि लाई declaration अघि पढ्दा `ReferenceError` आउँछ।", jp: "<b>`const` は `let` と違うと思う</b> — どちらにもTDZがあり、宣言前に読めば `ReferenceError` になる。" },
+        { en: "<b>Thinking hoisting means you can always use a variable early</b> — hoisting only means the declaration is prepared. `let` and `const` are prepared but stay unavailable during the TDZ.", np: "<b>Hoisting को अर्थ variable सधैं चाँडै प्रयोग गर्न सकिन्छ भन्ने ठान्नु</b> — hoisting को अर्थ declaration तयार गरिन्छ भन्ने मात्र हो। `let` र `const` तयार हुन्छन् तर TDZ भर अनुपलब्ध रहन्छन्।", jp: "<b>ホイスティング＝いつでも早く使えると思う</b> — ホイスティングは宣言が準備されるという意味だけ。`let` と `const` は準備されてもTDZの間は使えない。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What is the TDZ?", np: "TDZ के हो?", jp: "TDZとは何か?" },
+          options: [
+            { en: "A JavaScript error type", np: "JavaScript को एक error type", jp: "JavaScriptのエラーの種類" },
+            { en: "The period when `let` / `const` cannot be accessed", np: "`let` / `const` पहुँच गर्न नमिल्ने अवधि", jp: "`let` / `const` にアクセスできない期間" },
+            { en: "A type of loop", np: "एक प्रकारको loop", jp: "ループの一種" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It runs from the start of the variable's scope until its declaration is reached.", np: "यो variable को scope सुरु भएदेखि declaration पुग्नेसम्म रहन्छ।", jp: "変数のスコープの開始から、その宣言に到達するまでの期間。" },
+        },
+        {
+          question: { en: "What happens when you access a `let` variable inside the TDZ?", np: "TDZ भित्र `let` variable पहुँच गर्दा के हुन्छ?", jp: "TDZの中で `let` の変数にアクセスするとどうなるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "Unlike `var`, it does not quietly return `undefined` — the error tells you at once.", np: "`var` भन्दा फरक, यसले चुपचाप `undefined` फर्काउँदैन — error ले तुरुन्तै बताउँछ।", jp: "`var` と違って黙って `undefined` を返さない。エラーがすぐ知らせてくれる。" },
+        },
+        {
+          question: { en: "Which variables have a TDZ?", np: "कुन variable का TDZ हुन्छ?", jp: "TDZがあるのはどの変数か?" },
+          options: [
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "`let` and `const`", np: "`let` र `const`", jp: "`let` と `const`" },
+            { en: "Function declarations", np: "Function declaration", jp: "関数宣言" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`var` is initialised to `undefined` instead, and a function declaration is fully available.", np: "`var` को साटो `undefined` मा initialise हुन्छ, र function declaration पूर्ण रूपमा उपलब्ध हुन्छ।", jp: "`var` は代わりに `undefined` で初期化され、関数宣言は完全に使える。" },
+        },
+        {
+          question: { en: "Why does the TDZ exist?", np: "TDZ किन छ?", jp: "なぜTDZがあるのか?" },
+          options: [
+            { en: "To make JavaScript slower", np: "JavaScript लाई ढिलो बनाउन", jp: "JavaScriptを遅くするため" },
+            { en: "To catch accidental early access to variables", np: "Variable लाई गल्तिले चाँडै पहुँच गरेको समात्न", jp: "変数への意図しない早いアクセスを捕まえるため" },
+            { en: "To prevent functions from running", np: "Function चल्नबाट रोक्न", jp: "関数の実行を防ぐため" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It turns a silent `undefined` bug into an immediate, obvious error.", np: "यसले चुपचापको `undefined` bug लाई तुरुन्तै देखिने स्पष्ट error मा बदल्छ।", jp: "静かな `undefined` のバグを、すぐ分かる明確なエラーに変えてくれる。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "After `outer()` finishes running, does its local variable captured by a returned inner function disappear?", np: "`outer()` सकिएपछि return भएको inner function ले captured गरेको local variable हराउँछ?", jp: "`outer()`の実行後、返された内側の関数がキャプチャしたローカル変数は消える？" },
-      options: [{ en: "Yes, immediately", np: "हो, तुरुन्तै", jp: "はい、すぐに" }, { en: "No — the closure keeps it alive", np: "होइन — closure ले जिउँदो राख्छ", jp: "いいえ — クロージャが保持し続ける" }],
+      question: { en: "A `var` declared inside an `if` block — where is it accessible from?", np: "`if` block भित्र declare गरिएको `var` कहाँबाट access गर्न मिल्छ?", jp: "`if`ブロック内で宣言された`var`はどこからアクセスできる？" },
+      options: [{ en: "Only inside the if block", np: "if block भित्र मात्र", jp: "ifブロック内のみ" }, { en: "The entire enclosing function", np: "सम्पूर्ण enclosing function", jp: "囲む関数全体" }],
       correctIndex: 1,
-      explanation: { en: "As long as the inner function still references it, the variable stays alive.", np: "Inner function ले reference गरेसम्म variable जिउँदो रहन्छ।", jp: "内側の関数が参照し続ける限り変数は生き続ける。" },
+      explanation: { en: "var is function-scoped and ignores block boundaries.", np: "var function-scoped हो र block boundary ignore गर्छ।", jp: "varは関数スコープでブロック境界を無視する。" },
     },
     {
-      question: { en: "Do two separate calls to the same closure factory share the captured variable?", np: "एउटै closure factory का दुई फरक call ले captured variable share गर्छन्?", jp: "同じクロージャファクトリの2つの呼び出しはキャプチャした変数を共有する？" },
-      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — each call gets an independent copy", np: "होइन — हरेक call को independent copy हुन्छ", jp: "いいえ — 各呼び出しは独立したコピーを持つ" }],
+      question: { en: "What determines a variable's scope under lexical scoping?", np: "Lexical scoping मा variable को scope केले तय गर्छ?", jp: "レキシカルスコープで変数のスコープを決めるものは？" },
+      options: [{ en: "Where it's called from", np: "कहाँबाट call भयो", jp: "呼び出し元" }, { en: "Where it's written in the source", np: "Source मा कहाँ लेखियो", jp: "ソースの記述位置" }],
       correctIndex: 1,
-      explanation: { en: "Each call creates a fresh scope and a fresh closure.", np: "हरेक call ले नयाँ scope र नयाँ closure बनाउँछ।", jp: "各呼び出しは新しいスコープと新しいクロージャを作る。" },
+      explanation: { en: "Lexical scope is fixed by source location, not call location.", np: "Lexical scope source location ले तय हुन्छ, call location होइन।", jp: "レキシカルスコープはソースの位置で決まり、呼び出し位置では決まらない。" },
     },
     {
-      question: { en: "What is a common risk of closures if not cleaned up?", np: "Cleanup नगरेमा closure को सामान्य जोखिम के हो?", jp: "クリーンアップしない場合のクロージャの一般的なリスクは？" },
-      options: [{ en: "Slower execution", np: "ढिलो execution", jp: "実行が遅くなる" }, { en: "Variables staying alive in memory longer than needed", np: "Variable अनुमान भन्दा बढी समय memory मा रहनु", jp: "変数が必要以上に長くメモリに残る" }],
+      question: { en: "Can a closure still access an outer function's variables after that function has returned?", np: "Outer function return भएपछि पनि closure ले variables access गर्न सक्छ?", jp: "外側の関数がreturnした後もクロージャは変数にアクセスできる？" },
+      options: [{ en: "No", np: "होइन", jp: "いいえ" }, { en: "Yes", np: "हो", jp: "はい" }],
       correctIndex: 1,
-      explanation: { en: "Closures attached to long-lived listeners/timers can quietly block garbage collection.", np: "लामो समय रहने listener/timer मा जोडिएको closure ले garbage collection रोक्न सक्छ।", jp: "長寿命のリスナー・タイマーに結び付いたクロージャはガベージコレクションを妨げることがある。" },
+      explanation: { en: "This is exactly what a closure is — a live link to outer variables that outlives the outer function call.", np: "यही closure हो — outer function call भन्दा बढी टिक्ने live link।", jp: "これがクロージャの本質 — 外側の関数呼び出しより長生きするライブなリンク。" },
     },
     {
-      question: { en: "What makes a function \"higher-order\"?", np: "कुन कुराले function लाई 'higher-order' बनाउँछ?", jp: "何が関数を「高階」にする？" },
-      options: [{ en: "It takes or returns a function", np: "यसले function लिन्छ वा return गर्छ", jp: "関数を受け取るか返す" }, { en: "It runs asynchronously", np: "Asynchronously चल्छ", jp: "非同期で実行される" }],
+      question: { en: "What does `console.log(x); var x = 5;` print?", np: "`console.log(x); var x = 5;` ले के print गर्छ?", jp: "`console.log(x); var x = 5;` は何を出力する？" },
+      options: [{ en: "undefined", np: "undefined", jp: "undefined" }, { en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" }],
       correctIndex: 0,
-      explanation: { en: "Taking a function as an argument or returning one is the defining trait.", np: "Function argument को रूपमा लिनु वा return गर्नु नै defining trait हो।", jp: "関数を引数に取るか返すことが定義的な特徴。" },
+      explanation: { en: "var is hoisted and pre-filled with undefined.", np: "var hoist भई undefined ले pre-fill हुन्छ।", jp: "varはホイストされundefinedで初期化される。" },
     },
     {
-      question: { en: "Which of these is a built-in higher-order function?", np: "यीमध्ये कुन built-in higher-order function हो?", jp: "次のうち組み込み高階関数はどれ？" },
-      options: [{ en: "Array.prototype.map", np: "Array.prototype.map", jp: "Array.prototype.map" }, { en: "String.prototype.trim", np: "String.prototype.trim", jp: "String.prototype.trim" }],
+      question: { en: "Which construct is hoisted with its full body?", np: "कुन construct पूरै body सहित hoist हुन्छ?", jp: "本体ごとホイストされる構文は？" },
+      options: [{ en: "Function declaration", np: "Function declaration", jp: "関数宣言" }, { en: "Arrow function", np: "Arrow function", jp: "アロー関数" }],
       correctIndex: 0,
-      explanation: { en: "map() takes a function argument and calls it per item.", np: "map() ले function argument लिन्छ र हरेक item मा call गर्छ।", jp: "map()は関数引数を受け取り各要素に対して呼び出す。" },
+      explanation: { en: "Only function declarations get full hoisting with their body.", np: "Function declaration मात्र पूरै body सहित hoist हुन्छ।", jp: "関数宣言のみが本体ごと完全にホイストされる。" },
     },
     {
-      question: { en: "What's wrong with passing `doThing()` instead of `doThing` as a callback?", np: "Callback को रूपमा `doThing` को सट्टा `doThing()` pass गर्दा के गल्ती?", jp: "コールバックとして`doThing`ではなく`doThing()`を渡すと何が問題？" },
-      options: [{ en: "Nothing", np: "केही छैन", jp: "問題ない" }, { en: "It calls the function immediately, passing its result instead of the function", np: "यसले function तुरुन्तै call गर्छ, function को सट्टा result pass गर्छ", jp: "即座に関数を呼び出し、関数の代わりに結果を渡す" }],
+      question: { en: "Are arrow functions assigned to const hoisted like function declarations?", np: "Const मा arrow function function declaration जस्तै hoist हुन्छ?", jp: "constのアロー関数は関数宣言のようにホイストされる？" },
+      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — they follow const's TDZ rules", np: "होइन — const को TDZ rule पालना गर्छ", jp: "いいえ — constのTDZルールに従う" }],
       correctIndex: 1,
-      explanation: { en: "You must pass a function reference so it can be called later, not the result of calling it now.", np: "पछि call गर्न function reference pass गर्नुपर्छ, अहिले call गरेको result होइन।", jp: "後で呼び出せるように関数参照を渡す必要がある。今呼び出した結果ではない。" },
+      explanation: { en: "An arrow function in a const is just a variable assignment following TDZ rules.", np: "Const मा arrow function variable assignment मात्र हो, TDZ rule पालना गर्छ।", jp: "constのアロー関数は単なる変数代入でTDZルールに従う。" },
     },
     {
-      question: { en: "What does currying turn `f(a, b, c)` into?", np: "Currying ले `f(a, b, c)` लाई केमा बदल्छ?", jp: "カリー化は`f(a, b, c)`を何に変換する？" },
-      options: [{ en: "f(a)(b)(c)", np: "f(a)(b)(c)", jp: "f(a)(b)(c)" }, { en: "f(c, b, a)", np: "f(c, b, a)", jp: "f(c, b, a)" }],
-      correctIndex: 0,
-      explanation: { en: "Currying chains single-argument function calls.", np: "Currying ले single-argument function calls को chain बनाउँछ।", jp: "カリー化は単一引数関数呼び出しの連鎖を作る。" },
-    },
-    {
-      question: { en: "In `pipe(add1, double, square)(3)`, what order do the functions run in?", np: "`pipe(add1, double, square)(3)` मा function हरू कुन order मा चल्छन्?", jp: "`pipe(add1, double, square)(3)`の実行順序は？" },
-      options: [{ en: "Left to right", np: "बायाँबाट दायाँ", jp: "左から右" }, { en: "Right to left", np: "दायाँबाट बायाँ", jp: "右から左" }],
-      correctIndex: 0,
-      explanation: { en: "pipe runs functions in the order listed, left to right; compose is the right-to-left version.", np: "pipe ले listed order मा बायाँबाट दायाँ चलाउँछ; compose उल्टो हो।", jp: "pipeは記載順に左から右へ実行。composeは逆。" },
-    },
-    {
-      question: { en: "What does `.bind(null, \"error\")` do to `log(level, message)`?", np: "`.bind(null, \"error\")` ले `log(level, message)` मा के गर्छ?", jp: "`.bind(null, \"error\")`は`log(level, message)`に何をする？" },
-      options: [{ en: "Returns a new function needing only `message`", np: "बाँकी `message` मात्र चाहिने नयाँ function फर्काउँछ", jp: "残りの`message`だけを必要とする新しい関数を返す" }, { en: "Calls log immediately", np: "log तुरुन्तै call गर्छ", jp: "即座にlogを呼び出す" }],
-      correctIndex: 0,
-      explanation: { en: "bind() with a leading argument performs partial application, pre-filling level.", np: "bind() ले leading argument सहित partial application गर्छ, level pre-fill हुन्छ।", jp: "先頭引数付きのbind()は部分適用を行い、levelを先に埋める。" },
-    },
-    {
-      question: { en: "Is currying the same thing as partial application?", np: "Currying र partial application उस्तै हो?", jp: "カリー化と部分適用は同じ？" },
-      options: [{ en: "Yes, identical", np: "हो, उस्तै", jp: "はい、同一" }, { en: "No — currying is a special, always-single-argument form of the more general partial application", np: "होइन — currying partial application को special, सधैं single-argument form हो", jp: "いいえ — カリー化はより一般的な部分適用の特殊で常に単一引数の形" }],
+      question: { en: "What happens when you access a `let` variable before its declaration line in the same block?", np: "Same block मा declaration अघि `let` access गर्दा के हुन्छ?", jp: "同じブロックで宣言前に`let`にアクセスすると？" },
+      options: [{ en: "undefined", np: "undefined", jp: "undefined" }, { en: "ReferenceError (TDZ)", np: "ReferenceError (TDZ)", jp: "ReferenceError（TDZ）" }],
       correctIndex: 1,
-      explanation: { en: "Currying always produces single-argument steps; partial application can fill any number of arguments at once.", np: "Currying ले सधैं single-argument steps दिन्छ; partial application ले जुनसुकै संख्याको argument भर्न सक्छ।", jp: "カリー化は常に単一引数のステップを生む。部分適用は任意数の引数を一度に埋められる。" },
+      explanation: { en: "let is hoisted but locked in the TDZ until its declaration runs.", np: "let hoist हुन्छ तर declaration नआउँदासम्म TDZ मा locked रहन्छ।", jp: "letはホイストされるが宣言までTDZにロックされる。" },
+    },
+    {
+      question: { en: "Is a TDZ ReferenceError the same as an \"undeclared variable\" error?", np: "TDZ ReferenceError 'undeclared variable' error उस्तै हो?", jp: "TDZのReferenceErrorは「未宣言変数」エラーと同じ？" },
+      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — the TDZ variable already exists, just locked", np: "होइन — TDZ variable अस्तित्वमा छ, locked मात्र", jp: "いいえ — TDZの変数は既に存在し、ロックされているだけ" }],
+      correctIndex: 1,
+      explanation: { en: "The engine already registered the TDZ variable; it just refuses access until the declaration line.", np: "Engine ले TDZ variable registered गरिसकेको हुन्छ; declaration नआउँदासम्म access दिँदैन मात्र।", jp: "エンジンはTDZの変数を既に登録しているが、宣言行までアクセスを拒否するだけ。" },
+    },
+    {
+      question: { en: "Why does `var` leak out of `if`/`for` blocks?", np: "`var` किन `if`/`for` blocks बाट leak हुन्छ?", jp: "`var`が`if`/`for`ブロックから漏れる理由は？" },
+      options: [{ en: "Because var is function-scoped, not block-scoped", np: "किनकि var function-scoped हो, block-scoped होइन", jp: "varはブロックスコープでなく関数スコープだから" }, { en: "Because of a browser bug", np: "Browser bug को कारणले", jp: "ブラウザのバグのため" }],
+      correctIndex: 0,
+      explanation: { en: "var predates block scope (added later with let/const in ES6) and remains function-scoped by design.", np: "Block scope (let/const) पछि ES6 मा थपियो — var डिजाइन अनुसार function-scoped नै रहन्छ।", jp: "ブロックスコープ（let/const）は後でES6で追加された。varは設計上関数スコープのまま。" },
+    },
+    {
+      question: { en: "In the TDZ example, does the inner `let x` shadow the outer `x` even before its own declaration line runs?", np: "TDZ example मा inner `let x` ले आफ्नो declaration अघि नै outer x लाई shadow गर्छ?", jp: "TDZの例で内側の`let x`は自身の宣言行前でも外側のxをシャドーイングする？" },
+      options: [{ en: "Yes — shadowing applies to the whole enclosing block", np: "हो — shadowing पूरै enclosing block मा लागू हुन्छ", jp: "はい — シャドーイングは囲むブロック全体に適用される" }, { en: "No — shadowing only starts after the declaration line", np: "होइन — shadowing declaration line पछि मात्र सुरु हुन्छ", jp: "いいえ — シャドーイングは宣言行の後にのみ始まる" }],
+      correctIndex: 0,
+      explanation: { en: "Shadowing is determined at the block level for the whole scope, which is exactly why the TDZ error happens.", np: "Shadowing पूरै scope को block level मा तय हुन्छ — यही TDZ error को कारण हो।", jp: "シャドーイングはスコープ全体のブロックレベルで決まる。これがTDZエラーが起きる理由。" },
     },
   ],
 };

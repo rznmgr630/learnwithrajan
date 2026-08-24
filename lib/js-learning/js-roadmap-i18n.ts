@@ -44,43 +44,44 @@ export function jsTags(slugs: [string, string]): RoadmapTag[] {
 
 const JS_DAY_TITLE: Record<number, LocalizedString> = {
   // Week 1 — Core Syntax
-  1:  { en: "Variables, data types & type coercion", np: "Variables, data types र type coercion", jp: "変数・型・型変換" },
-  2:  { en: "Operators, conditionals, loops & function types", np: "Operators, conditionals, loops र function", jp: "演算子・条件・ループ・関数" },
+  1:  { en: "What JavaScript is, why it is used & how it runs", np: "JavaScript के हो, किन प्रयोग हुन्छ र कसरी चल्छ", jp: "JavaScriptとは・なぜ使うか・どう動くか" },
+  2:  { en: "Variables, data types & type coercion", np: "Variables, data types र type coercion", jp: "変数・型・型変換" },
+  3:  { en: "Operators, conditionals, loops & function types", np: "Operators, conditionals, loops र function", jp: "演算子・条件・ループ・関数" },
   // Week 2 — Functions
-  3:  { en: "Scope, hoisting & the temporal dead zone", np: "Scope, hoisting र temporal dead zone", jp: "スコープ・ホイスティング" },
-  4:  { en: "Closures, higher-order functions & currying", np: "Closure, higher-order functions र currying", jp: "クロージャ・高階関数・カリー化" },
+  4:  { en: "Scope, hoisting & the temporal dead zone", np: "Scope, hoisting र temporal dead zone", jp: "スコープ・ホイスティング" },
+  5:  { en: "Closures, higher-order functions & currying", np: "Closure, higher-order functions र currying", jp: "クロージャ・高階関数・カリー化" },
   // Week 3 — Objects & Arrays
-  5:  { en: "Objects — creation, methods, destructuring & spread", np: "Objects — creation, methods, destructuring", jp: "オブジェクト・メソッド・分割代入" },
-  6:  { en: "Arrays — map, filter, reduce & all key methods", np: "Arrays — map, filter, reduce र key methods", jp: "配列 — map・filter・reduce・主要メソッド" },
+  6:  { en: "Objects — creation, methods, destructuring & spread", np: "Objects — creation, methods, destructuring", jp: "オブジェクト・メソッド・分割代入" },
+  7:  { en: "Arrays — map, filter, reduce & all key methods", np: "Arrays — map, filter, reduce र key methods", jp: "配列 — map・filter・reduce・主要メソッド" },
   // Week 4 — this & OOP
-  7:  { en: "The this keyword — contexts, call, apply & bind", np: "this keyword — contexts, call, apply, bind", jp: "this・call・apply・bind" },
-  8:  { en: "Prototype system & prototype chain", np: "Prototype system र prototype chain", jp: "プロトタイプシステムと継承チェーン" },
-  9:  { en: "ES6 classes — inheritance, static & private fields", np: "ES6 classes — inheritance, static, private", jp: "ES6クラス・継承・static・プライベート" },
+  8:  { en: "The this keyword — contexts, call, apply & bind", np: "this keyword — contexts, call, apply, bind", jp: "this・call・apply・bind" },
+  9:  { en: "Prototype system & prototype chain", np: "Prototype system र prototype chain", jp: "プロトタイプシステムと継承チェーン" },
+  10:  { en: "ES6 classes — inheritance, static & private fields", np: "ES6 classes — inheritance, static, private", jp: "ES6クラス・継承・static・プライベート" },
   // Week 5 — Error Handling & Modules
-  10: { en: "Error handling, CommonJS & ES Modules", np: "Error handling, CommonJS र ES Modules", jp: "エラー処理・CommonJS・ESモジュール" },
+  11: { en: "Error handling, CommonJS & ES Modules", np: "Error handling, CommonJS र ES Modules", jp: "エラー処理・CommonJS・ESモジュール" },
   // Week 6 — Async
-  11: { en: "Callbacks & Promises — creation, states & chaining", np: "Callbacks र Promises", jp: "コールバック・Promise・チェーン" },
-  12: { en: "Promise APIs & async/await patterns", np: "Promise APIs र async/await", jp: "Promise API・async/await" },
+  12: { en: "Callbacks & Promises — creation, states & chaining", np: "Callbacks र Promises", jp: "コールバック・Promise・チェーン" },
+  13: { en: "Promise APIs & async/await patterns", np: "Promise APIs र async/await", jp: "Promise API・async/await" },
   // Week 7 — Event Loop
-  13: { en: "The browser event loop — call stack, queues & microtasks", np: "Browser event loop", jp: "ブラウザのイベントループ" },
-  14: { en: "Node.js event loop phases — nextTick & setImmediate", np: "Node.js event loop phases", jp: "Node.jsのイベントループフェーズ" },
+  14: { en: "The browser event loop — call stack, queues & microtasks", np: "Browser event loop", jp: "ブラウザのイベントループ" },
+  15: { en: "Node.js event loop phases — nextTick & setImmediate", np: "Node.js event loop phases", jp: "Node.jsのイベントループフェーズ" },
   // Week 8 — Browser
-  15: { en: "DOM, events, event bubbling & delegation", np: "DOM, events, bubbling र delegation", jp: "DOM・イベント・バブリング・委譲" },
-  16: { en: "Modern web APIs — Fetch, Storage & AbortController", np: "Modern Web APIs — Fetch, Storage", jp: "Fetch・Storage・AbortController" },
+  16: { en: "DOM, events, event bubbling & delegation", np: "DOM, events, bubbling र delegation", jp: "DOM・イベント・バブリング・委譲" },
+  17: { en: "Modern web APIs — Fetch, Storage & AbortController", np: "Modern Web APIs — Fetch, Storage", jp: "Fetch・Storage・AbortController" },
   // Week 9 — Advanced Patterns
-  17: { en: "Advanced promise patterns — retry, timeout & concurrency", np: "Advanced Promise patterns", jp: "Promise応用パターン" },
-  18: { en: "Generators, iterators & async generators", np: "Generators, iterators र async generators", jp: "ジェネレータ・イテレータ" },
+  18: { en: "Advanced promise patterns — retry, timeout & concurrency", np: "Advanced Promise patterns", jp: "Promise応用パターン" },
+  19: { en: "Generators, iterators & async generators", np: "Generators, iterators र async generators", jp: "ジェネレータ・イテレータ" },
   // Week 10 — Memory & Performance
-  19: { en: "Memory management — stack, heap, GC & leak detection", np: "Memory management", jp: "メモリ管理・GC・リーク検出" },
-  20: { en: "Performance — debounce, throttle, memoization & workers", np: "Performance — debounce, throttle, memoization", jp: "パフォーマンス最適化" },
+  20: { en: "Memory management — stack, heap, GC & leak detection", np: "Memory management", jp: "メモリ管理・GC・リーク検出" },
+  21: { en: "Performance — debounce, throttle, memoization & workers", np: "Performance — debounce, throttle, memoization", jp: "パフォーマンス最適化" },
   // Week 11 — TypeScript
-  21: { en: "TypeScript — types, interfaces, generics & utility types", np: "TypeScript essentials", jp: "TypeScript基礎" },
+  22: { en: "TypeScript — types, interfaces, generics & utility types", np: "TypeScript essentials", jp: "TypeScript基礎" },
   // Week 12 — Advanced JS
-  22: { en: "Advanced JS — Proxy, Reflect, Symbols & WeakMap", np: "Advanced JS APIs", jp: "Proxy・Reflect・Symbol・WeakMap" },
-  23: { en: "Design patterns — Singleton, Observer, Factory & more", np: "Design patterns", jp: "デザインパターン" },
+  23: { en: "Advanced JS — Proxy, Reflect, Symbols & WeakMap", np: "Advanced JS APIs", jp: "Proxy・Reflect・Symbol・WeakMap" },
+  24: { en: "Design patterns — Singleton, Observer, Factory & more", np: "Design patterns", jp: "デザインパターン" },
   // Week 13 — Node.js & Senior
-  24: { en: "Node.js advanced — streams, Buffer & worker threads", np: "Node.js advanced", jp: "Node.js応用 — ストリーム・Buffer" },
-  25: { en: "Senior internals — V8, hidden classes & profiling", np: "Senior internals — V8, hidden classes", jp: "上級内部構造・V8・プロファイリング" },
+  25: { en: "Node.js advanced — streams, Buffer & worker threads", np: "Node.js advanced", jp: "Node.js応用 — ストリーム・Buffer" },
+  26: { en: "Senior internals — V8, hidden classes & profiling", np: "Senior internals — V8, hidden classes", jp: "上級内部構造・V8・プロファイリング" },
 };
 
 const JS_WEEK_TITLE: Record<string, LocalizedString> = {

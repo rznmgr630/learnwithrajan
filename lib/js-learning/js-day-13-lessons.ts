@@ -2,413 +2,394 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_13_LESSONS: JsLessonDay = {
   day: 13,
-  title: { en: "The browser event loop — call stack, queues & microtasks", np: "Browser event loop — call stack, queues र microtasks", jp: "ブラウザのイベントループ — コールスタック・キュー・マイクロタスク" },
+  title: { en: "Promise APIs & async/await patterns", np: "Promise APIs र async/await patterns", jp: "Promise API・async/awaitパターン" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "the-call-stack",
-      title: { en: "The Call Stack", np: "The Call Stack", jp: "コールスタック" },
+      id: "async-await-basics",
+      title: { en: "async/await — Syntactic Sugar over Promises", np: "async/await — Promises माथिको Syntactic Sugar", jp: "async/await — Promiseの糖衣構文" },
       durationMinutes: 9,
       explanation: {
-        en: "The <b>call stack</b> is the data structure JavaScript uses to track which function is currently running. It works <b>LIFO</b> — Last In, First Out — like a stack of plates: whichever function was called most recently is the one on top, and it must finish (return) before the function below it can continue. Every function call <b>pushes</b> a new frame onto the stack; every `return` <b>pops</b> that frame off.\n\nBecause JavaScript has exactly one call stack, it can only ever do <b>one thing at a time</b> — this is what \"single-threaded\" means in practice. If the stack is busy running synchronous code (a big loop, a slow calculation), nothing else can run: no click handlers, no timers, no rendering. And since each nested call adds another frame, calling a function that keeps calling itself without ever returning (unbounded recursion) keeps growing the stack until it runs out of space — a `RangeError: Maximum call stack size exceeded`, better known as a <b>stack overflow</b>.",
-        np: "<b>Call stack</b> भनेको JavaScript ले हाल कुन function चलिरहेको छ भनेर track गर्ने data structure हो। यो <b>LIFO</b> (Last In, First Out) तरिकाले काम गर्छ — plates को stack जस्तै: सबैभन्दा पछि call भएको function माथि हुन्छ, र तल भएको function जारी हुनु अघि यसले finish (return) गर्नुपर्छ। हरेक function call ले stack मा नयाँ frame <b>push</b> गर्छ; हरेक `return` ले त्यो frame <b>pop</b> गर्छ।\n\nJavaScript मा exactly एउटा मात्र call stack भएकोले, यसले एक पटकमा <b>एउटा मात्र काम</b> गर्न सक्छ — यही नै \"single-threaded\" को व्यावहारिक अर्थ हो। Stack synchronous code (ठूलो loop, slow calculation) चलाउन busy भएको बेला अरू केही चल्दैन — न click handlers, न timers, न rendering। अनि हरेक nested call ले थप frame add गर्ने भएकोले, कहिल्यै return नगरी आफैंलाई बारम्बार call गर्ने function (unbounded recursion) ले stack लाई space सकिन्जेल बढाउँदै लान्छ — `RangeError: Maximum call stack size exceeded`, जसलाई <b>stack overflow</b> भनिन्छ।",
-        jp: "<b>コールスタック</b>は、JavaScriptが現在実行中の関数を追跡するために使うデータ構造。<b>LIFO</b>（Last In, First Out、後入れ先出し）方式で動作する — 皿を積み重ねたスタックのように、最後に呼ばれた関数が一番上にあり、その下の関数が続行できるのはそれが終了（return）してからだ。関数を呼び出すたびに新しいフレームがスタックに<b>push</b>され、`return`のたびにそのフレームが<b>pop</b>される。\n\nJavaScriptにはコールスタックが1つしかないため、常に<b>一度に一つのこと</b>しかできない — これが「シングルスレッド」の実際の意味だ。スタックが同期コード（大きなループ、重い計算）の実行でふさがっている間は、クリックハンドラもタイマーも描画も何も動かない。さらに、ネストした呼び出しはフレームを増やし続けるため、決してreturnせずに自分自身を呼び続ける関数（無限再帰）はスタックの空きがなくなるまで積み上がり続け、`RangeError: Maximum call stack size exceeded`、いわゆる<b>スタックオーバーフロー</b>になる。",
+        en: "`async`/`await` is not a new concurrency model — it's <b>syntactic sugar</b> over Promises that lets asynchronous code read top-to-bottom like synchronous code, without `.then()` chains. Two rules define it: an `async function` <b>always returns a Promise</b>, even if you write `return \"Hello\"` inside it (it gets auto-wrapped in `Promise.resolve(...)`); and `await` <b>pauses only the current async function</b> — it does not block the JavaScript engine or the rest of the program, which keeps running while that function waits.\n\nBecause `await` just unwraps a Promise's resolved value, a `.then()` chain can always be rewritten as a sequence of `await` statements inside a `try` block. Error handling shifts from `.catch()` to a plain <b>`try`/`catch`</b> wrapped around the `await` calls — any rejection anywhere in the `try` block jumps straight to `catch`, exactly like a thrown exception.",
+        np: "`async`/`await` नयाँ concurrency model होइन — यो Promises माथिको <b>syntactic sugar</b> हो जसले async code लाई `.then()` chain बिना top-to-bottom, sync जस्तै पढ्न दिन्छ। दुई नियम: `async function` ले <b>सधैं Promise return गर्छ</b>, `return \"Hello\"` लेखे पनि (यो auto `Promise.resolve(...)` मा wrap हुन्छ); र `await` ले <b>केवल current async function मात्र pause गर्छ</b> — JavaScript engine वा बाँकी program block हुँदैन, त्यो चलिरहन्छ।\n\n`await` ले Promise को resolved value unwrap मात्र गर्ने भएकाले, `.then()` chain लाई सधैं `try` block भित्रको sequential `await` statements मा rewrite गर्न सकिन्छ। Error handling `.catch()` बाट plain <b>`try`/`catch`</b> मा सर्छ — `try` block भित्र कहीं पनि rejection भयो भने सिधै `catch` मा जान्छ, thrown exception जस्तै।",
+        jp: "`async`/`await`は新しい並行処理モデルではなく、Promiseの上に成り立つ<b>糖衣構文</b>であり、`.then()`チェーンなしで非同期コードを上から下へ同期的に読めるようにする。2つのルールが本質：`async function`は<b>常にPromiseを返す</b>。`return \"Hello\"`と書いても自動的に`Promise.resolve(...)`でラップされる。そして`await`は<b>現在のasync関数のみを一時停止</b>する — JavaScriptエンジンやプログラムの他の部分はブロックされず、その関数が待っている間も実行を続ける。\n\n`await`はPromiseの解決値を取り出すだけなので、`.then()`チェーンは常に`try`ブロック内の逐次的な`await`文に書き換えられる。エラー処理は`.catch()`から普通の<b>`try`/`catch`</b>に移る — `try`ブロック内のどこかでrejectが起きると、投げられた例外と同じようにそのまま`catch`へ飛ぶ。",
       },
-      diagram: `Call stack while running a();  (bottom → top)
+      diagram: `async function run() {
+  console.log("start");                    ← runs immediately
+  const result = await someAsyncTask();    ← run() PAUSES here...
+  console.log("after await:", result);     ← ...resumes only when the Promise settles
+  console.log("end");
+}
 
-┌─────────────┐
-│   c()       │  ← top of stack — currently running, logs "c", then returns
-├─────────────┤
-│   b()       │  ← called c(), waiting for it to return
-├─────────────┤
-│   a()       │  ← called b(), waiting for it to return
-├─────────────┤
-│ (global)    │  ← bottom of stack — where execution started
-└─────────────┘
+run();                    ← call starts run(), which pauses partway through
+console.log("outside");   ← this line does NOT wait — it runs while run() is paused!
 
-push order: a() → b() → c()      pop order: c() → b() → a()   (LIFO)
-
-Unbounded recursion:
-┌─────────────┐
-│ recurse()   │
-│ recurse()   │  ← stack keeps growing, never pops
-│ recurse()   │
-│    ...      │
-└─────────────┘
-→ RangeError: Maximum call stack size exceeded`,
+Output order:  "start"  →  "outside"  →  "after await: ..."  →  "end"
+               (only run() paused — the rest of the program kept going)`,
       codeExample: {
-        title: { en: "Watching frames push and pop, and triggering a stack overflow", np: "Frames push/pop हेर्ने, र stack overflow ल्याउने", jp: "フレームのpush/popの観察とスタックオーバーフローの発生" },
-        code: `// ── Call stack in action ─────────────────────────────────────────
-function c() { console.log("c"); }
-function b() { c(); }
-function a() { b(); }
-
-a();
-// Stack frames (bottom to top) as a() runs:
-//   a()  → calls b()
-//   b()  → calls c()
-//   c()  → logs "c", returns → popped
-//   b()  → returns → popped
-//   a()  → returns → popped
-// Stack is empty again once a() finishes
-
-// ── Each call adds a frame, each return removes one ────────────────
-function square(n) {
-  return n * n;          // this frame is popped as soon as it returns
+        title: { en: "Rewriting a Promise chain as async/await", np: "Promise chain लाई async/await मा rewrite गर्नु", jp: "Promiseチェーンをasync/awaitに書き直す" },
+        code: `// ── Promise chain version ──────────────────────────────────────────
+function getUserData(id) {
+  return fetchUser(id)
+    .then(user => fetchOrders(user.id))
+    .then(orders => ({ user, orders }))
+    .catch(err => console.error(err));
 }
-function sumOfSquares(a, b) {
-  return square(a) + square(b);   // square() is pushed, runs, pops — twice
-}
-sumOfSquares(3, 4); // 25
 
-// ── Stack overflow — unbounded recursion ────────────────────────────
-function recurse() {
-  return recurse();  // calls itself forever, never returns, never pops
+// ── Same logic with async/await — reads top to bottom ────────────────
+async function getUserData(id) {
+  try {
+    const user = await fetchUser(id);         // pause until fetchUser resolves
+    const orders = await fetchOrders(user.id); // pause until fetchOrders resolves
+    return { user, orders };                   // return value is auto-wrapped in a Promise
+  } catch (err) {
+    console.error(err);
+  }
 }
-// recurse();  // Uncaught RangeError: Maximum call stack size exceeded
 
-// ── A correct base case keeps the stack bounded ─────────────────────
-function countdown(n) {
-  if (n <= 0) return;   // base case — stops pushing new frames
-  console.log(n);
-  countdown(n - 1);     // each call pops before the stack gets too deep
+// ── An async function ALWAYS returns a Promise ────────────────────────
+async function greet() {
+  return "Hello";   // implicitly becomes Promise.resolve("Hello")
 }
-countdown(5); // 5, 4, 3, 2, 1
 
-// ── Synchronous code blocks the stack ────────────────────────────
-// While this runs, NOTHING else can happen — no clicks, no timers
-function blockFor3Seconds() {
-  const end = Date.now() + 3000;
-  while (Date.now() < end) {}  // busy loop — stack never empties
-  console.log("Done blocking");
+greet().then(msg => console.log(msg));  // "Hello"
+// or, inside another async function:
+const msg = await greet();              // "Hello"
+
+// ── await pauses the CURRENT function only, not the whole program ────
+async function run() {
+  console.log("start");
+  const result = await someAsyncTask();  // pauses run() while the task runs
+  console.log("after await:", result);   // resumes when the task settles
 }
-// blockFor3Seconds();  // UI freezes for 3 seconds — CPU work on the main thread is bad`,
+run();
+console.log("outside"); // this still runs while run() is paused — proof await isn't blocking
+
+// ── Error handling with try/catch instead of .catch() ─────────────────
+async function fetchData(url) {
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    // Network errors and HTTP errors both land here
+    console.error("Fetch failed:", err.message);
+    throw err;   // rethrow so the caller can also handle it
+  }
+}
+
+// ── Forgetting await is a classic bug ─────────────────────────────────
+console.log(fetchUser(1));        // Promise { <pending> } — NOT the user!
+console.log(await fetchUser(1));  // the actual user object`,
       },
       keyTakeaways: [
-        { en: "The call stack is <b>LIFO</b> — the most recently called function is the one currently running, and it must return before the function that called it can continue.", np: "Call stack <b>LIFO</b> हो — सबैभन्दा पछि call भएको function नै हाल चलिरहेको हुन्छ, र यसलाई call गर्ने function जारी रहनु अघि यो return हुनुपर्छ।", jp: "コールスタックは<b>LIFO</b>（後入れ先出し）— 最後に呼ばれた関数が現在実行中で、それを呼んだ関数が続くにはそれがreturnする必要がある。" },
-        { en: "JavaScript has exactly one call stack, so it can only run one thing at a time — this single-threaded nature is why long-running synchronous code freezes everything else.", np: "JavaScript मा exactly एउटा मात्र call stack छ, त्यसैले एक पटकमा एउटा मात्र काम गर्न सक्छ — यही single-threaded nature ले गर्दा लामो synchronous code ले बाँकी सबै freeze गराउँछ।", jp: "JavaScriptにはコールスタックが1つしかないため、一度に1つのことしか実行できない — このシングルスレッドの性質が、長時間の同期コードが他のすべてを凍結させる理由。" },
-        { en: "Unbounded recursion (a function that calls itself without a base case that stops it) keeps pushing frames until the stack runs out of space, throwing a `RangeError: Maximum call stack size exceeded`.", np: "Unbounded recursion (आफैंलाई रोक्ने base case नभएको function) ले stack को space सकिन्जेल frames push गर्दै जान्छ, र `RangeError: Maximum call stack size exceeded` throw गर्छ।", jp: "無限再帰（それを止める基底ケースなしに自分自身を呼び続ける関数）はスタックの空きがなくなるまでフレームを積み続け、`RangeError: Maximum call stack size exceeded`をスローする。" },
+        { en: "An `async function` always returns a Promise — even `return \"plain value\"` gets auto-wrapped in `Promise.resolve(...)`.", np: "`async function` ले सधैं Promise return गर्छ — `return \"plain value\"` लेखे पनि यो auto `Promise.resolve(...)` मा wrap हुन्छ।", jp: "`async function`は常にPromiseを返す — `return \"plain value\"`と書いても自動的に`Promise.resolve(...)`でラップされる。" },
+        { en: "`await` pauses only the <b>current</b> async function — it doesn't block the JS engine, so other code keeps running while it waits.", np: "`await` ले <b>current</b> async function मात्र pause गर्छ — JS engine block हुँदैन, त्यसैले अन्य code चलिरहन्छ।", jp: "`await`は<b>現在の</b>async関数のみを一時停止する — JSエンジンをブロックしないので、待っている間も他のコードは実行を続ける。" },
+        { en: "`try`/`catch` wraps `await` calls to handle rejections — any Promise that rejects inside the `try` block jumps straight to `catch`, just like a thrown exception.", np: "`try`/`catch` ले `await` calls लाई wrap गरी rejections handle गर्छ — `try` block भित्र कुनै Promise reject भयो भने सिधै `catch` मा जान्छ।", jp: "`try`/`catch`は`await`呼び出しをラップしてrejectを処理する — `try`ブロック内で拒否されたPromiseは投げられた例外のように直接`catch`へ飛ぶ。" },
       ],
       commonMistakes: [
-        { en: "Writing a recursive function without a base case, so it never stops calling itself and eventually causes a stack overflow.", np: "Base case नराखी recursive function लेख्नु, जसले गर्दा यसले आफैंलाई कहिल्यै रोक्दैन र stack overflow निम्त्याउँछ।", jp: "基底ケースなしに再帰関数を書き、自分自身の呼び出しを止められず最終的にスタックオーバーフローを引き起こすこと。" },
-        { en: "Assuming that running a slow synchronous loop won't affect anything else — in reality it fully blocks the call stack, freezing clicks, timers, and rendering until it finishes.", np: "Slow synchronous loop चलाउँदा अरू केहीमा असर पर्दैन भन्ने ठान्नु — वास्तवमा यसले call stack लाई पूर्ण रूपमा block गर्छ, नसकिन्जेल clicks, timers, र rendering सबै freeze हुन्छ।", jp: "遅い同期ループを実行しても他に影響しないと思い込むこと — 実際にはコールスタックを完全にブロックし、終わるまでクリック・タイマー・描画がすべて凍結する。" },
-        { en: "Confusing the call stack (which tracks synchronous function execution) with the task/microtask queues — the stack has nothing to do with async scheduling by itself.", np: "Call stack (जसले synchronous function execution track गर्छ) र task/microtask queues बीच confuse हुनु — stack आफैंले async scheduling सँग कुनै सम्बन्ध राख्दैन।", jp: "コールスタック（同期的な関数実行を追跡する）とタスク/マイクロタスクキューを混同すること — スタック自体は非同期スケジューリングとは無関係。" },
+        { en: "Forgetting `await` — you get a pending Promise object back (`Promise { <pending> }`), not the resolved value.", np: "`await` भुल्नु — resolved value होइन, pending Promise object (`Promise { <pending> }`) फर्किन्छ।", jp: "`await`を忘れること — 解決された値ではなく保留中のPromiseオブジェクト（`Promise { <pending> }`）が返る。" },
+        { en: "Trying to use `await` outside an `async` function (or outside a module's top level), which is a syntax error.", np: "`async` function बाहिर (वा module को top level बाहिर) `await` use गर्ने प्रयास गर्नु, जुन syntax error हो।", jp: "`async`関数の外（またはモジュールのトップレベル以外）で`await`を使おうとすること。これは構文エラーになる。" },
+        { en: "Leaving `await` calls unwrapped in `try`/`catch`, so a rejection becomes an unhandled promise rejection instead of being caught and dealt with.", np: "`await` calls लाई `try`/`catch` मा नराख्नु, जसले गर्दा rejection catch नभई unhandled promise rejection बन्छ।", jp: "`await`呼び出しを`try`/`catch`で包まないこと。その結果rejectがキャッチされず未処理のPromise拒否になる。" },
       ],
       quiz: [
         {
-          question: { en: "In which order does the call stack process function calls?", np: "Call stack ले function calls लाई कुन order मा process गर्छ?", jp: "コールスタックはどの順序で関数呼び出しを処理する？" },
+          question: { en: "What does an `async function` always return, even if it returns a plain string?", np: "`async function` ले plain string return गरे पनि सधैं के return गर्छ?", jp: "`async function`はプレーンな文字列を返しても、常に何を返す？" },
           options: [
-            { en: "LIFO — the most recently called function returns first", np: "LIFO — सबैभन्दा पछि call भएको function पहिले return हुन्छ", jp: "LIFO — 最後に呼ばれた関数が最初にreturnする" },
-            { en: "FIFO — the first called function returns first", np: "FIFO — सबैभन्दा पहिले call भएको function पहिले return हुन्छ", jp: "FIFO — 最初に呼ばれた関数が最初にreturnする" },
+            { en: "A Promise, auto-wrapping the returned value", np: "एउटा Promise, return गरेको value auto-wrap गरेर", jp: "返された値を自動でラップしたPromise" },
+            { en: "The plain value itself, unchanged", np: "Plain value आफैं, अपरिवर्तित", jp: "プレーンな値そのもの、変更なし" },
           ],
           correctIndex: 0,
-          explanation: { en: "The call stack is Last In, First Out — like a stack of plates, the top (most recent) frame is popped first.", np: "Call stack Last In, First Out हो — plates को stack जस्तै, माथिको (सबैभन्दा पछिको) frame पहिले pop हुन्छ।", jp: "コールスタックはLast In, First Out — 皿の山のように、一番上（最新）のフレームが最初にpopされる。" },
+          explanation: { en: "Every async function returns a Promise; a plain returned value is automatically wrapped in Promise.resolve(...).", np: "हरेक async function ले Promise return गर्छ; plain returned value auto Promise.resolve(...) मा wrap हुन्छ।", jp: "すべてのasync関数はPromiseを返す。プレーンな戻り値は自動的にPromise.resolve(...)でラップされる。" },
         },
         {
-          question: { en: "Why can JavaScript only run one thing at a time?", np: "JavaScript ले किन एक पटकमा एउटा मात्र काम गर्न सक्छ?", jp: "JavaScriptが一度に一つのことしか実行できないのはなぜ？" },
+          question: { en: "When `await someAsyncTask()` pauses inside `run()`, does the rest of the program (outside `run()`) also stop?", np: "`run()` भित्र `await someAsyncTask()` pause हुँदा, `run()` बाहिरको बाँकी program पनि रुक्छ?", jp: "`run()`内で`await someAsyncTask()`が一時停止すると、`run()`の外のプログラムも止まる？" },
           options: [
-            { en: "It has exactly one call stack, so only one function frame can execute at a time", np: "यसमा exactly एउटा मात्र call stack छ, त्यसैले एक पटकमा एउटा मात्र function frame execute हुन्छ", jp: "コールスタックが1つしかないため、一度に1つの関数フレームしか実行できない" },
-            { en: "It has multiple stacks but they are locked one at a time", np: "यसमा multiple stacks छन् तर एक पटकमा एउटा lock हुन्छ", jp: "複数のスタックがあるが一度に1つずつロックされる" },
+            { en: "No — only run() pauses; other code keeps executing", np: "होइन — केवल run() pause हुन्छ; अन्य code चलिरहन्छ", jp: "いいえ — run()のみが一時停止し、他のコードは実行を続ける" },
+            { en: "Yes — await blocks the entire JavaScript engine", np: "हो — await ले पूरै JavaScript engine block गर्छ", jp: "はい — awaitはJavaScriptエンジン全体をブロックする" },
           ],
           correctIndex: 0,
-          explanation: { en: "JavaScript's single call stack is exactly what makes it single-threaded — only one function frame can be the 'currently running' one.", np: "JavaScript को एउटै call stack ले नै यसलाई single-threaded बनाउँछ — एक पटकमा एउटा मात्र function frame 'currently running' हुन सक्छ।", jp: "JavaScriptの1つのコールスタックこそがシングルスレッドたらしめる理由 — 一度に1つの関数フレームしか「実行中」になれない。" },
+          explanation: { en: "await only suspends the async function it's written in — it never blocks the JS engine or other running code.", np: "await ले त्यो लेखिएको async function मात्र suspend गर्छ — JS engine वा अन्य code कहिल्यै block गर्दैन।", jp: "awaitはそれが書かれたasync関数のみを一時停止する — JSエンジンや他の実行中のコードをブロックすることは決してない。" },
         },
         {
-          question: { en: "What causes a `RangeError: Maximum call stack size exceeded`?", np: "`RangeError: Maximum call stack size exceeded` को कारण के हो?", jp: "`RangeError: Maximum call stack size exceeded`の原因は？" },
+          question: { en: "What should you use to handle a rejected Promise when using `await`, instead of a `.catch()` chain?", np: "`await` use गर्दा `.catch()` chain को सट्टा rejected Promise handle गर्न के use गर्नुपर्छ?", jp: "`await`使用時に`.catch()`チェーンの代わりに拒否されたPromiseを処理するために何を使うべき？" },
           options: [
-            { en: "A recursive function with no base case, pushing frames forever without popping", np: "Base case नभएको recursive function, जसले pop नगरी frames बारम्बार push गर्छ", jp: "基底ケースのない再帰関数が、popせずにフレームを永遠にpushし続ける" },
-            { en: "Calling too many unrelated functions one after another in sequence", np: "क्रमशः धेरै असम्बन्धित functions call गर्नु", jp: "無関係な関数を次々と順番に呼び出しすぎること" },
+            { en: "A `try`/`catch` block wrapped around the `await` call", np: "`await` call वरिपरि wrap गरिएको `try`/`catch` block", jp: "`await`呼び出しを囲む`try`/`catch`ブロック" },
+            { en: "There is no way to catch errors with await", np: "await सँग errors catch गर्ने कुनै तरिका छैन", jp: "awaitでエラーをキャッチする方法はない" },
           ],
           correctIndex: 0,
-          explanation: { en: "Unbounded recursion keeps pushing new frames without ever popping them off, until the stack exhausts its allotted space.", np: "Unbounded recursion ले pop नगरी नयाँ frames push गर्दै जान्छ, जबसम्म stack को space सकिँदैन।", jp: "無限再帰はフレームをpopせずに新しく積み続け、スタックに割り当てられた空間を使い果たす。" },
+          explanation: { en: "A rejection during await inside a try block behaves like a thrown exception and jumps straight to the matching catch.", np: "try block भित्र await बेला rejection भयो भने thrown exception जस्तै behave गर्छ र सिधै catch मा जान्छ।", jp: "tryブロック内でのawait中のrejectは投げられた例外のように振る舞い、対応するcatchへ直接飛ぶ。" },
         },
       ],
     },
     {
-      id: "web-apis-callback-queue",
-      title: { en: "Web APIs & the Callback Queue", np: "Web APIs र Callback Queue", jp: "Web APIとコールバックキュー" },
+      id: "promise-utility-methods",
+      title: { en: "Promise.all, allSettled, race & any", np: "Promise.all, allSettled, race, any", jp: "Promise.all・allSettled・race・any" },
       durationMinutes: 9,
       explanation: {
-        en: "When you call `setTimeout`, register a DOM event listener, or start a `fetch`, JavaScript itself does not sit around waiting. Instead, it hands that work off to the browser's <b>Web APIs</b> — timers, network stack, DOM — which live outside the JS engine and run independently. Once the timer fires, the event happens, or the network response arrives, the Web API places the associated callback into the <b>callback queue</b> (also called the task queue or macrotask queue), ready to run.\n\nThe <b>event loop</b> has one simple, constantly repeating job: check whether the call stack is empty, and if it is, take the next callback from the queue and push it onto the stack to run. This is exactly why `setTimeout(fn, 0)` does <b>not</b> run immediately — \"0ms\" only tells the Web API when to move the callback into the queue; the callback still has to wait its turn until the call stack is completely empty and the event loop picks it up. If synchronous code is still running, the callback waits, no matter how short its delay was.",
-        np: "`setTimeout` call गर्दा, DOM event listener register गर्दा, वा `fetch` सुरु गर्दा, JavaScript आफैं बसेर पर्खिँदैन। बरु त्यो काम browser को <b>Web APIs</b> — timers, network stack, DOM — लाई दिन्छ, जुन JS engine बाहिर independently चल्छन्। Timer fire भएपछि, event भएपछि, वा network response आएपछि, Web API ले सम्बन्धित callback लाई <b>callback queue</b> (task queue वा macrotask queue) मा राख्छ, चल्न तयार।\n\n<b>Event loop</b> को एउटै simple, बारम्बार दोहोरिने काम छ: call stack empty छ कि छैन check गर्नु, र भए queue बाट अर्को callback लिएर stack मा push गर्नु। यही कारणले `setTimeout(fn, 0)` तुरुन्तै run <b>हुँदैन</b> — \"0ms\" ले Web API लाई callback कहिले queue मा सार्ने भन्छ मात्र; call stack पूर्ण रूपमा खाली नभएसम्म र event loop ले pick नगरेसम्म callback ले आफ्नो पालो पर्खनुपर्छ। Synchronous code अझै चलिरहेको छ भने, delay जति सानो भए पनि callback पर्खिरहन्छ।",
-        jp: "`setTimeout`を呼ぶ、DOMイベントリスナーを登録する、`fetch`を開始するとき、JavaScript自身は待ち続けたりしない。その代わり、その作業をブラウザの<b>Web API</b>（タイマー、ネットワークスタック、DOM）に渡す。これらはJSエンジンの外に存在し、独立して動作する。タイマーが発火する、イベントが起きる、ネットワーク応答が届くと、Web APIは対応するコールバックを<b>コールバックキュー</b>（タスクキューまたはマクロタスクキューとも呼ばれる）に入れ、実行準備を整える。\n\n<b>イベントループ</b>の仕事はシンプルで、絶えず繰り返される — コールスタックが空かどうかを確認し、空ならキューから次のコールバックを取り出してスタックにpushして実行する。これこそが`setTimeout(fn, 0)`が即座に<b>実行されない</b>理由だ。「0ms」はWeb APIにコールバックをいつキューに移すかを伝えるだけで、コールバックはコールスタックが完全に空になりイベントループに拾われるまで自分の順番を待たなければならない。同期コードがまだ実行中なら、遅延がどれだけ短くてもコールバックは待たされる。",
+        en: "When you need to run several Promises together, four static methods each give you a different waiting strategy. `Promise.all()` runs everything in parallel and resolves with an array of results only when <b>all</b> succeed — but it <b>fails fast</b>: the moment any single Promise rejects, `Promise.all` rejects immediately too, discarding the results of the ones that already succeeded. `Promise.allSettled()` never rejects — it always waits for <b>every</b> Promise to settle (fulfilled or rejected) and gives you back an array of `{ status, value }` or `{ status, reason }` objects, so partial failure is visible instead of losing everything.\n\n`Promise.race()` settles as soon as the <b>first</b> Promise settles, whether that's a success or a failure — a classic use is racing a real request against a `setTimeout` rejection to implement a timeout. `Promise.any()` is the optimistic cousin: it resolves as soon as the <b>first</b> Promise fulfills and simply ignores rejections, only rejecting itself (with an `AggregateError`) if <b>every</b> Promise rejects — useful for querying several redundant sources and taking whichever answers first.",
+        np: "धेरै Promises एकैसाथ run गर्नुपर्दा, चार static methods ले फरक-फरक waiting strategy दिन्छन्। `Promise.all()` ले सबै parallel मा चलाउँछ र <b>सबै</b> succeed भएमा मात्र results को array सँग resolve हुन्छ — तर यो <b>fail fast</b> हुन्छ: कुनै एक Promise reject भएको क्षण `Promise.all` पनि तुरुन्तै reject हुन्छ, अघि succeed भएका results हराउँछन्। `Promise.allSettled()` कहिल्यै reject हुँदैन — यसले <b>हरेक</b> Promise settle (fulfilled वा rejected) नभएसम्म पर्खिन्छ र `{ status, value }` वा `{ status, reason }` objects को array फर्काउँछ, त्यसैले partial failure देखिन्छ, सबै नहराई।\n\n`Promise.race()` <b>पहिलो</b> Promise settle हुनासाथ settle हुन्छ, success होस् वा failure — timeout implement गर्न वास्तविक request लाई `setTimeout` rejection सँग race गराउनु classic use हो। `Promise.any()` optimistic cousin हो: <b>पहिलो</b> Promise fulfill हुनासाथ resolve हुन्छ र rejections लाई simply ignore गर्छ, <b>सबै</b> Promise reject भएमा मात्र आफैं reject हुन्छ (`AggregateError` सँग) — धेरै redundant sources query गरी जुनसुकैले पहिले जवाफ दिन्छ त्यो लिन उपयोगी।",
+        jp: "複数のPromiseを一緒に実行する必要があるとき、4つの静的メソッドがそれぞれ異なる待ち方の戦略を提供する。`Promise.all()`はすべてを並列実行し、<b>全て</b>成功したときのみ結果の配列で解決する — ただし<b>フェイルファスト</b>：どれか1つでも拒否された瞬間に`Promise.all`も即座に拒否され、すでに成功していた結果は破棄される。`Promise.allSettled()`は決して拒否せず、常に<b>すべての</b>Promiseが確定する（成功でも失敗でも）まで待ち、`{ status, value }`または`{ status, reason }`オブジェクトの配列を返すので、全てを失うことなく部分的な失敗が見える。\n\n`Promise.race()`は<b>最初の</b>Promiseが確定した時点で確定する。成功でも失敗でも構わない — 典型的な使い方は実際のリクエストを`setTimeout`のrejectと競わせてタイムアウトを実装すること。`Promise.any()`は楽観的ないとこで、<b>最初の</b>Promiseが成功した時点で解決し、rejectは単純に無視する。<b>すべての</b>Promiseが拒否された場合のみ自身も拒否される（`AggregateError`で）— 複数の冗長なソースに問い合わせ、最初に答えたものを採用するのに便利。",
       },
-      diagram: `┌─────────────┐   setTimeout/fetch/addEventListener   ┌───────────────┐
-│ Call Stack  │ ─────────────────────────────────────▶ │   Web APIs    │
-│  (JS engine)│                                         │ (timer, net,  │
-└─────────────┘                                         │  DOM — outside│
-       ▲                                                │  the JS engine)│
-       │  event loop pushes callback                    └───────┬───────┘
-       │  ONLY when stack is empty                               │ timer fires /
-       │                                                          │ response arrives
-┌──────┴──────┐                                          ┌───────▼───────┐
-│ Event Loop  │ ◀──────── picks next callback ────────── │ Callback Queue│
-│ "Is stack   │            when stack is empty            │ (macrotask/   │
-│  empty?"    │                                            │  task queue)  │
-└─────────────┘                                            └───────────────┘
+      diagram: `Promise.all([A, B, C])         Promise.allSettled([A, B, C])
+  A ✓  B ✗  C ✓                   A ✓  B ✗  C ✓
+  → REJECTS immediately            → always resolves with:
+    (B's rejection wins,              [{fulfilled,A}, {rejected,B}, {fulfilled,C}]
+     A and C results are lost)
 
-console.log("1")           →  runs immediately (sync, on the stack)
-setTimeout(fn, 0)          →  handed to Web APIs, fn queued once timer fires
-console.log("3")           →  runs immediately (sync, on the stack)
-[stack now empty]          →  event loop moves fn from queue → stack → runs
-Output: 1, 3, 2   (NOT 1, 2, 3)`,
+Promise.race([A, B, C])         Promise.any([A, B, C])
+  first to SETTLE wins            first to FULFILL wins
+  (success OR failure)            (rejections ignored unless ALL reject)
+  A settles first → race is A     B rejects, A fulfills → any is A`,
       codeExample: {
-        title: { en: "setTimeout(fn, 0) still waits for the call stack to empty", np: "setTimeout(fn, 0) पनि call stack खाली हुने पर्खन्छ", jp: "setTimeout(fn, 0)もコールスタックが空になるのを待つ" },
-        code: `// ── Classic event loop output puzzle ──────────────────────────────
-console.log("1");          // sync — runs immediately, straight on the stack
+        title: { en: "Choosing the right Promise utility method", np: "सही Promise utility method छान्नु", jp: "適切なPromiseユーティリティメソッドの選択" },
+        code: `// ── Promise.all — run in parallel, fail fast ───────────────────────
+// Resolves only when ALL succeed. Rejects immediately if ANY one rejects.
+const [user, posts, comments] = await Promise.all([
+  fetchUser(1),
+  fetchPosts(1),
+  fetchComments(1),
+]);
+// wall-clock time ≈ max(fetchUser, fetchPosts, fetchComments)
+// If fetchPosts rejects, the whole Promise.all rejects — fetchUser's result is lost too
 
-setTimeout(() => {
-  console.log("2");        // async — handed to Web APIs, then queued
-}, 0);
+// ── Promise.allSettled — always wait for all, capture failures ─────
+// Never rejects — waits for every Promise to settle, success or failure.
+const results = await Promise.allSettled([
+  sendEmailTo("alice@example.com"),
+  sendEmailTo("bob@invalid"),   // will fail
+  sendEmailTo("carol@example.com"),
+]);
 
-console.log("3");          // sync — runs immediately, straight on the stack
+for (const result of results) {
+  if (result.status === "fulfilled") {
+    console.log("Sent:", result.value);
+  } else {
+    console.error("Failed:", result.reason.message);
+  }
+}
+// Use when partial success is fine — bulk notifications, batch jobs
 
-// Output: 1, 3, 2
-// Why? "2"'s callback sits in the callback queue. The event loop only
-// moves it onto the stack after the stack is empty — i.e. after "3" runs.
+// ── Promise.race — first to SETTLE wins (success or failure) ───────
+// Classic use: adding a timeout to any Promise
+const withTimeout = (promise, ms) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(\`Timed out after \${ms}ms\`)), ms)
+    ),
+  ]);
 
-// ── "0ms" means "as soon as possible", not "right now" ────────────
-// setTimeout(fn, 0) tells the Web API: start a 0ms timer, then queue fn.
-// fn still has to wait for:
-//   1. all remaining synchronous code to finish
-//   2. its turn in the callback queue
+const fastUser = await withTimeout(fetchUser(1), 5000);
 
-// ── Multiple timers — order depends on delay and queue position ───
-setTimeout(() => console.log("A"), 0);
-setTimeout(() => console.log("B"), 0);
-setTimeout(() => console.log("C"), 100);
-// Output order: A, B, (~100ms pause), C
-// A and B enter the queue almost immediately (0ms delay, but still async)
-// C's timer takes longer to fire, so it enters the queue much later
-
-// ── fetch works the same way — network I/O happens in the Web APIs ──
-console.log("start");
-fetch("/api/data").then((res) => console.log("got response"));
-console.log("end");
-// Output: "start", "end", then "got response" whenever the network responds
-// The fetch itself runs entirely outside the JS call stack`,
+// ── Promise.any — first FULFILLMENT wins, rejections ignored ───────
+// Only rejects (AggregateError) if EVERY Promise rejects.
+const data = await Promise.any([
+  fetchFromCDN1(url),
+  fetchFromCDN2(url),
+  fetchFromOrigin(url),
+]);
+// Whichever source answers first wins — the others are simply ignored`,
       },
       keyTakeaways: [
-        { en: "`setTimeout`, DOM events, and `fetch` are handled by the browser's <b>Web APIs</b>, not the JS engine itself — JavaScript hands off the waiting and moves on.", np: "`setTimeout`, DOM events, र `fetch` लाई browser को <b>Web APIs</b> ले handle गर्छ, JS engine आफैंले होइन — JavaScript ले पर्खने काम अरूलाई दिएर अगाडि बढ्छ।", jp: "`setTimeout`・DOMイベント・`fetch`はJSエンジン自体ではなくブラウザの<b>Web API</b>が処理する — JavaScriptは待つ作業を渡して先に進む。" },
-        { en: "Once a Web API's work is done, its callback is placed in the <b>callback queue</b>, and the event loop only moves it onto the call stack when the stack is completely empty.", np: "Web API को काम सकिएपछि, यसको callback <b>callback queue</b> मा राखिन्छ, र event loop ले stack पूर्ण खाली भएमा मात्र यसलाई call stack मा सार्छ।", jp: "Web APIの作業が終わると、そのコールバックは<b>コールバックキュー</b>に置かれ、スタックが完全に空になったときにのみイベントループがコールスタックへ移す。" },
-        { en: "`setTimeout(fn, 0)` does not run immediately — the delay only controls when the callback enters the queue; it still waits for the current call stack to empty.", np: "`setTimeout(fn, 0)` तुरुन्तै run हुँदैन — delay ले callback कहिले queue मा पस्ने मात्र control गर्छ; यसले अझै हालको call stack खाली हुने पर्खनुपर्छ।", jp: "`setTimeout(fn, 0)`は即座に実行されない — 遅延はコールバックがいつキューに入るかを制御するだけで、現在のコールスタックが空になるのを待つ。" },
+        { en: "`Promise.all()` fails fast — one rejection anywhere rejects the whole thing immediately, discarding results that already succeeded.", np: "`Promise.all()` fail fast हुन्छ — जहाँ पनि एक rejection भयो भने तुरुन्तै पूरै reject हुन्छ, succeed भइसकेका results हराउँछन्।", jp: "`Promise.all()`はフェイルファスト — どこかで1つでも拒否されると即座に全体が拒否され、すでに成功していた結果も破棄される。" },
+        { en: "`Promise.allSettled()` never rejects — it waits for every Promise and returns per-item `{ status, value|reason }` objects, so you can act on both successes and failures.", np: "`Promise.allSettled()` कहिल्यै reject हुँदैन — हरेक Promise पर्खी per-item `{ status, value|reason }` objects फर्काउँछ, successes र failures दुवैमा action लिन सकिन्छ।", jp: "`Promise.allSettled()`は決して拒否せず、すべてのPromiseを待って項目ごとの`{ status, value|reason }`オブジェクトを返すので、成功と失敗の両方に対応できる。" },
+        { en: "`Promise.race()` settles on the first Promise to settle either way (success or failure); `Promise.any()` settles on the first success and only rejects if all reject.", np: "`Promise.race()` पहिलो settle हुने Promise मा settle हुन्छ (success वा failure जुनसुकै); `Promise.any()` पहिलो success मा settle हुन्छ र सबै reject भएमा मात्र reject हुन्छ।", jp: "`Promise.race()`は最初に確定したPromiseで確定する（成功でも失敗でも）。`Promise.any()`は最初の成功で確定し、全て拒否された場合のみ拒否する。" },
       ],
       commonMistakes: [
-        { en: "Believing `setTimeout(fn, 0)` runs synchronously or 'right now' — it always waits for the current call stack to fully empty first, no matter how small the delay.", np: "`setTimeout(fn, 0)` synchronously वा 'अहिले नै' चल्छ भन्ने ठान्नु — यसले सधैं हालको call stack पूर्ण खाली हुने पहिले पर्खन्छ, delay जति सानो भए पनि।", jp: "`setTimeout(fn, 0)`が同期的または「今すぐ」実行されると思い込むこと — 遅延がどれだけ小さくても必ず現在のコールスタックが完全に空になるのを待つ。" },
-        { en: "Thinking JavaScript itself performs the waiting for timers or network requests — the waiting actually happens in the browser's Web APIs, outside the JS engine.", np: "Timers वा network requests को पर्खाइ JavaScript आफैंले गर्छ भन्ने सोच्नु — त्यो पर्खाइ वास्तवमा JS engine बाहिर browser को Web APIs मा हुन्छ।", jp: "タイマーやネットワークリクエストの待機自体をJavaScriptが行っていると考えること — 実際の待機はJSエンジンの外、ブラウザのWeb APIで行われる。" },
-        { en: "Assuming callbacks in the callback queue run the instant they're queued — they still have to wait for the call stack to be empty and for the event loop to pick them up.", np: "Callback queue मा भएका callbacks queue मा पर्नासाथ तुरुन्तै चल्छन् भन्ने ठान्नु — तिनले अझै call stack खाली हुने र event loop ले pick गर्ने पर्खनुपर्छ।", jp: "コールバックキュー内のコールバックがキューに入った瞬間に実行されると思い込むこと — コールスタックが空になりイベントループに拾われるのを待つ必要がある。" },
+        { en: "Reaching for `Promise.all()` when partial success is actually acceptable, and losing every already-succeeded result to a single rejection.", np: "Partial success ठिकै हुँदा पनि `Promise.all()` use गर्नु, एउटा मात्र rejection ले सबै succeed भएका results हराउनु।", jp: "部分的な成功が実際には許容されるのに`Promise.all()`を使い、1つの拒否によってすでに成功していたすべての結果を失うこと。" },
+        { en: "Confusing `race` with `any` — `race` settles on the first Promise to settle at all (even a failure can \"win\"), while `any` only cares about the first success.", np: "`race` र `any` लाई घुलाउनु — `race` पहिलो settle हुने मा settle हुन्छ (failure ले पनि \"जित्न\" सक्छ), जबकि `any` ले पहिलो success मात्र हेर्छ।", jp: "`race`と`any`を混同すること — `race`は最初に確定したもの（失敗でも「勝てる」）で確定するが、`any`は最初の成功だけを気にする。" },
+        { en: "Reading `.value` directly off a `Promise.allSettled()` result without first checking `.status`, which breaks for the rejected entries that only have `.reason`.", np: "`.status` नजाँची `Promise.allSettled()` को result बाट सिधै `.value` पढ्नु, rejected entries मा `.reason` मात्र हुने भएकाले यो टुट्छ।", jp: "`.status`を確認せずに`Promise.allSettled()`の結果から直接`.value`を読むこと。拒否されたエントリには`.reason`しかないため壊れる。" },
       ],
       quiz: [
         {
-          question: { en: "Where does the actual waiting for a `setTimeout` timer happen?", np: "`setTimeout` timer को actual पर्खाइ कहाँ हुन्छ?", jp: "`setTimeout`タイマーの実際の待機はどこで行われる？" },
+          question: { en: "If one Promise out of three passed to `Promise.all()` rejects, what happens to the results of the other two that already succeeded?", np: "`Promise.all()` मा दिइएका तीनमध्ये एउटा Promise reject भयो भने, succeed भइसकेका बाँकी दुईको results को के हुन्छ?", jp: "`Promise.all()`に渡した3つのうち1つが拒否された場合、すでに成功していた残り2つの結果はどうなる？" },
           options: [
-            { en: "In the browser's Web APIs, outside the JS engine's call stack", np: "Browser को Web APIs मा, JS engine को call stack बाहिर", jp: "JSエンジンのコールスタックの外、ブラウザのWeb API内" },
-            { en: "On the call stack itself, blocking other code", np: "Call stack मै, अरू code block गर्दै", jp: "コールスタック自体、他のコードをブロックしながら" },
+            { en: "They are discarded — Promise.all rejects immediately, losing them", np: "ती हराउँछन् — Promise.all तुरुन्तै reject हुन्छ, ती हराउँदै", jp: "破棄される — Promise.allは即座に拒否され、それらを失う" },
+            { en: "They are still returned alongside the rejection reason", np: "ती rejection reason सँगै फेरि पनि फर्किन्छन्", jp: "拒否理由と一緒にそれらも返される" },
           ],
           correctIndex: 0,
-          explanation: { en: "The Web APIs handle timers independently of the JS engine, freeing the call stack to keep running other synchronous code.", np: "Web APIs ले JS engine बाट independently timers handle गर्छ, call stack लाई अरू synchronous code चलाउन खाली राख्छ।", jp: "Web APIはJSエンジンとは独立してタイマーを処理し、コールスタックを他の同期コードの実行のために解放する。" },
+          explanation: { en: "Promise.all is fail-fast — the first rejection immediately rejects the combined Promise, and any already-fulfilled results are discarded.", np: "Promise.all fail-fast हो — पहिलो rejection ले तुरुन्तै combined Promise reject गर्छ, अघि succeed भएका results हराउँछन्।", jp: "Promise.allはフェイルファストであり、最初の拒否が即座に結合されたPromiseを拒否し、すでに成功していた結果は破棄される。" },
         },
         {
-          question: { en: "Does `setTimeout(fn, 0)` run `fn` immediately, before any remaining synchronous code?", np: "`setTimeout(fn, 0)` ले `fn` लाई बाँकी synchronous code भन्दा पहिले तुरुन्तै run गर्छ?", jp: "`setTimeout(fn, 0)`は残りの同期コードより前に`fn`をすぐに実行する？" },
+          question: { en: "Which method should you reach for when you want to send emails to 100 recipients and still know which ones failed, without losing the successful sends?", np: "100 recipients लाई email पठाउँदा succeed भएका नहराई कुन fail भयो भन्ने पनि जान्न कुन method use गर्नुपर्छ?", jp: "100人の受信者にメールを送り、成功した送信を失わずにどれが失敗したかも知りたい場合、どのメソッドを使うべき？" },
           options: [
-            { en: "No — it waits for the call stack to empty first, then waits its turn in the queue", np: "होइन — यसले पहिले call stack खाली हुने पर्खन्छ, अनि queue मा आफ्नो पालो", jp: "いいえ — まずコールスタックが空になるのを待ち、その後キューで順番を待つ" },
-            { en: "Yes — a 0ms delay means it always runs before any other code", np: "हो — 0ms delay ले सधैं अरू code भन्दा पहिले चल्छ भन्ने अर्थ दिन्छ", jp: "はい — 0msの遅延は常に他のコードより先に実行されることを意味する" },
+            { en: "Promise.allSettled — waits for all and reports each outcome", np: "Promise.allSettled — सबै पर्खी हरेकको outcome report गर्छ", jp: "Promise.allSettled — 全てを待って各結果を報告する" },
+            { en: "Promise.all — fails fast on the first failure", np: "Promise.all — पहिलो failure मा fail fast हुन्छ", jp: "Promise.all — 最初の失敗でフェイルファストする" },
           ],
           correctIndex: 0,
-          explanation: { en: "A 0ms delay only controls when the callback is queued; it always runs after the currently executing synchronous code finishes.", np: "0ms delay ले callback कहिले queue हुने मात्र control गर्छ; यो सधैं हाल चलिरहेको synchronous code सकिएपछि मात्र चल्छ।", jp: "0msの遅延はコールバックがいつキューに入るかを制御するだけで、現在実行中の同期コードが終わった後に必ず実行される。" },
+          explanation: { en: "Promise.allSettled never rejects and gives per-item status, exactly matching a bulk-send scenario where partial failure is acceptable.", np: "Promise.allSettled कहिल्यै reject हुँदैन र per-item status दिन्छ, partial failure ठिकै हुने bulk-send scenario मा एकदम मिल्छ।", jp: "Promise.allSettledは決して拒否せず項目ごとのステータスを返すので、部分的な失敗が許容されるバルク送信のシナリオにぴったり合う。" },
         },
         {
-          question: { en: "What is the event loop's core job?", np: "Event loop को core काम के हो?", jp: "イベントループの中心的な仕事は何？" },
+          question: { en: "When does `Promise.any()` reject, as opposed to `Promise.race()`?", np: "`Promise.race()` को तुलनामा `Promise.any()` कहिले reject हुन्छ?", jp: "`Promise.race()`と比べて`Promise.any()`はいつ拒否される？" },
           options: [
-            { en: "Check if the call stack is empty, and if so, move the next queued callback onto it", np: "Call stack खाली छ कि छैन check गर्नु, र भए queue बाट अर्को callback त्यसमा सार्नु", jp: "コールスタックが空かを確認し、空なら次のキューにあるコールバックをそこに移すこと" },
-            { en: "Execute all Web API requests directly on the call stack", np: "सबै Web API requests लाई call stack मै direct execute गर्नु", jp: "すべてのWeb APIリクエストをコールスタック上で直接実行すること" },
+            { en: "Only when every Promise passed to it rejects (throws AggregateError)", np: "यसमा दिइएका सबै Promises reject भएमा मात्र (AggregateError throw गर्छ)", jp: "渡されたすべてのPromiseが拒否されたときのみ（AggregateErrorを投げる）" },
+            { en: "As soon as any single Promise passed to it rejects", np: "यसमा दिइएको कुनै एक Promise reject हुनासाथ", jp: "渡された1つのPromiseでも拒否された時点ですぐに" },
           ],
           correctIndex: 0,
-          explanation: { en: "The event loop constantly checks stack emptiness and, when empty, pulls the next callback from the queue onto the stack to run.", np: "Event loop ले लगातार stack खाली छ कि छैन check गर्छ, र खाली भएमा queue बाट अर्को callback stack मा ल्याई चलाउँछ।", jp: "イベントループはスタックが空かを常に確認し、空であればキューから次のコールバックをスタックに移して実行する。" },
+          explanation: { en: "Promise.any ignores individual rejections and only fails when there are no successes left — i.e. all of them rejected.", np: "Promise.any ले individual rejections लाई ignore गर्छ र कुनै success नबाँकी रहेमा मात्र fail हुन्छ — अर्थात् सबै reject भएमा।", jp: "Promise.anyは個々の拒否を無視し、成功が1つも残っていない場合、つまり全て拒否された場合のみ失敗する。" },
         },
       ],
     },
     {
-      id: "microtask-vs-macrotask",
-      title: { en: "Microtask vs Macrotask Queue", np: "Microtask vs Macrotask Queue", jp: "マイクロタスクとマクロタスクの違い" },
+      id: "parallel-vs-sequential",
+      title: { en: "Parallel vs Sequential await", np: "Parallel vs Sequential await", jp: "並列awaitと逐次await" },
       durationMinutes: 9,
       explanation: {
-        en: "Not everything async goes into the same queue. Promises (`.then`, `.catch`, `.finally`) and `queueMicrotask` schedule their callbacks in a separate, higher-priority <b>microtask queue</b>, while `setTimeout`, `setInterval`, and UI rendering go into the (lower-priority) <b>macrotask queue</b> — the callback queue from the previous lesson. The rule that decides the order: after the currently running script finishes, and after each macrotask completes, the event loop <b>fully drains the entire microtask queue</b> — running every microtask, including any new ones scheduled while draining — before it is allowed to pick up the next macrotask.\n\nThis is the classic interview question. Given `console.log(\"1\")`, then `setTimeout(() => console.log(\"2\"), 0)`, then `Promise.resolve().then(() => console.log(\"3\"))`, then `console.log(\"4\")` — the output is `1, 4, 3, 2`. `\"1\"` and `\"4\"` run synchronously first. Once the stack is empty, the event loop checks the microtask queue before the macrotask queue, so the Promise's `.then` (`\"3\"`) runs before the `setTimeout` callback (`\"2\"`), even though the timer was scheduled first and had a 0ms delay.",
-        np: "हरेक async काम एउटै queue मा जाँदैन। Promises (`.then`, `.catch`, `.finally`) र `queueMicrotask` ले आफ्ना callbacks छुट्टै, higher-priority <b>microtask queue</b> मा schedule गर्छन्, जबकि `setTimeout`, `setInterval`, र UI rendering (lower-priority) <b>macrotask queue</b> मा जान्छन् — अघिल्लो lesson को callback queue। Order तय गर्ने नियम यही हो: हाल चलिरहेको script सकिएपछि, र हरेक macrotask सकिएपछि, event loop ले <b>पूरै microtask queue drain गर्छ</b> — draining गर्दा schedule भएका नयाँ microtasks समेत — अनि मात्र अर्को macrotask लिन पाउँछ।\n\nयो classic interview question हो। `console.log(\"1\")`, त्यसपछि `setTimeout(() => console.log(\"2\"), 0)`, त्यसपछि `Promise.resolve().then(() => console.log(\"3\"))`, त्यसपछि `console.log(\"4\")` दिइएमा — output `1, 4, 3, 2` हुन्छ। `\"1\"` र `\"4\"` synchronously पहिले चल्छन्। Stack खाली भएपछि, event loop ले macrotask queue भन्दा पहिले microtask queue check गर्छ, त्यसैले Promise को `.then` (`\"3\"`) `setTimeout` callback (`\"2\"`) भन्दा पहिले चल्छ, timer पहिले schedule भई 0ms delay भए पनि।",
-        jp: "すべての非同期処理が同じキューに入るわけではない。Promise（`.then`・`.catch`・`.finally`）と`queueMicrotask`は、優先度の高い別の<b>マイクロタスクキュー</b>にコールバックをスケジュールする。一方`setTimeout`・`setInterval`・UIレンダリングは（優先度の低い）<b>マクロタスクキュー</b>、つまり前のレッスンのコールバックキューに入る。順序を決めるルールはこうだ — 現在実行中のスクリプトが終わった後、そして各マクロタスクが完了するたびに、イベントループは次のマクロタスクを取り出す前に<b>マイクロタスクキュー全体を完全に処理する</b>（処理中に新しくスケジュールされたものも含めて）。\n\nこれは定番の面接問題だ。`console.log(\"1\")`、次に`setTimeout(() => console.log(\"2\"), 0)`、次に`Promise.resolve().then(() => console.log(\"3\"))`、次に`console.log(\"4\")`とすると、出力は`1, 4, 3, 2`になる。「1」と「4」はまず同期的に実行される。スタックが空になると、イベントループはマクロタスクキューより先にマイクロタスクキューを確認するため、Promiseの`.then`（「3」）は`setTimeout`のコールバック（「2」）より先に実行される。タイマーが先にスケジュールされ、遅延が0msであってもだ。",
+        en: "One of the most common `async`/`await` performance bugs is putting `await` directly inside a `for` loop when the iterations are independent of each other. Each `await fetchUser(id)` pauses the whole loop until that one request finishes before even <b>starting</b> the next one — five independent requests end up running one after another, so total time becomes roughly <b>5 × single-request time</b> instead of running concurrently.\n\nThe fix is to separate <b>starting</b> a Promise from <b>waiting</b> on it: use `.map()` to call the async function for every item first (this kicks off all the requests immediately, since calling an async function starts running it right away), collect the resulting array of Promises, and only then `await Promise.all(promises)` to wait for all of them together. Total time drops to roughly the <b>slowest single request</b>. Sequential `await` in a loop is still the <b>correct</b> choice, though, whenever step N genuinely needs the result of step N-1 before it can even begin.",
+        np: "सबैभन्दा common `async`/`await` performance bug भनेको independent iterations हुँदा पनि `for` loop भित्र सिधै `await` राख्नु हो। हरेक `await fetchUser(id)` ले अर्को request सुरु नै नहुँदै त्यो एउटा नसकिएसम्म पूरै loop pause गर्छ — पाँच independent requests एक-एक गरी क्रमैसँग चल्छन्, त्यसैले total time concurrently चल्नुको सट्टा लगभग <b>5 × single-request time</b> हुन्छ।\n\nसमाधान भनेको Promise <b>सुरु गर्नु</b> र त्यसमा <b>पर्खनु</b> लाई छुट्याउनु हो: पहिले हरेक item का लागि async function call गर्न `.map()` use गर्नुहोस् (async function call गर्नासाथ यो तुरुन्तै चल्न सुरु हुन्छ, त्यसैले सबै requests तुरुन्तै सुरु हुन्छन्), Promises को resulting array collect गर्नुहोस्, र त्यसपछि मात्र सबैलाई सँगै पर्खन `await Promise.all(promises)` गर्नुहोस्। Total time लगभग <b>सबैभन्दा ढिलो single request</b> बराबर घट्छ। Step N लाई साँच्चै step N-1 को result चाहिने भएमा भने loop भित्रको sequential `await` अझै <b>सहि</b> choice हो।",
+        jp: "最も一般的な`async`/`await`のパフォーマンスバグの1つは、反復が互いに独立しているのに`for`ループ内に直接`await`を置くこと。各`await fetchUser(id)`はその1件のリクエストが終わるまでループ全体を一時停止させ、次のリクエストを<b>開始する</b>ことすらできない。5件の独立したリクエストが結局1つずつ順番に実行されるため、合計時間は並行実行の場合ではなく、およそ<b>単一リクエスト時間の5倍</b>になってしまう。\n\n解決策はPromiseの<b>開始</b>と<b>待機</b>を分けること：まず`.map()`を使ってすべての項目に対してasync関数を呼び出す（async関数は呼び出した瞬間に実行が始まるため、これによってすべてのリクエストが即座に開始される）、結果として得られるPromiseの配列を集め、その後で初めて`await Promise.all(promises)`ですべてをまとめて待つ。合計時間はおよそ<b>最も遅い単一リクエスト</b>の時間まで下がる。ただし、ステップNが本当にステップN-1の結果を必要としてからでないと開始できない場合は、ループ内の逐次的な`await`が依然として<b>正しい</b>選択である。",
       },
-      diagram: `Priority order the event loop always follows:
+      diagram: `SEQUENTIAL (await inside the loop) — independent requests, wasted time
+  fetchUser(1) ████
+                   fetchUser(2) ████
+                                    fetchUser(3) ████
+  |----|----|----|----|----|----|----|----|----|----|----|----   time
+  total ≈ 3 × single request time
 
-  1. SYNCHRONOUS CODE   (call stack)          — runs first, top to bottom
-  2. MICROTASK QUEUE     (Promise.then/catch/finally, queueMicrotask)
-       → drained COMPLETELY, including new microtasks added while draining
-  3. MACROTASK QUEUE     (setTimeout, setInterval, UI rendering, I/O)
-       → only ONE macrotask runs per event loop turn
-       → then the loop goes back to step 2 and drains microtasks again
-
-console.log("1")                                   → sync, runs now
-setTimeout(() => console.log("2"), 0)              → queued as MACROTASK
-Promise.resolve().then(() => console.log("3"))     → queued as MICROTASK
-console.log("4")                                   → sync, runs now
-
-Timeline:
-sync:        1, 4
-stack empty  → drain microtasks:  3
-              → next macrotask:   2
-
-Output: 1, 4, 3, 2`,
+PARALLEL (start all first, then Promise.all) — same independent requests
+  fetchUser(1) ████
+  fetchUser(2) ████
+  fetchUser(3) ████
+  |----|----|----|----                                            time
+  total ≈ slowest single request time`,
       codeExample: {
-        title: { en: "Predict the output — the classic microtask vs macrotask puzzle", np: "Output predict गर्नुहोस् — classic microtask vs macrotask puzzle", jp: "出力を予測する — 定番のマイクロタスク対マクロタスク問題" },
-        code: `// ── The classic interview puzzle ───────────────────────────────────
-console.log("1");                                       // sync
+        title: { en: "await in a loop vs Promise.all — a common performance mistake", np: "Loop मा await vs Promise.all", jp: "ループ内のawait対Promise.all" },
+        code: `const userIds = [1, 2, 3, 4, 5];
 
-setTimeout(() => console.log("2"), 0);                   // macrotask
+// ❌ Sequential — each fetch waits for the previous one to fully finish
+// Total time ≈ 5 × fetchUser time, even though the requests don't depend on each other
+async function getSequential() {
+  const users = [];
+  for (const id of userIds) {
+    const user = await fetchUser(id);  // pauses the whole loop here, every time
+    users.push(user);
+  }
+  return users;
+}
 
-Promise.resolve().then(() => console.log("3"));           // microtask
+// ✅ Parallel — all requests start at once, then wait together
+// Total time ≈ slowest single fetchUser call
+async function getParallel() {
+  const promises = userIds.map(id => fetchUser(id));  // starts ALL requests immediately
+  return Promise.all(promises);                         // now wait for all of them
+}
 
-console.log("4");                                        // sync
+// ✅ Same idea, more compact
+async function getParallelAlt() {
+  return Promise.all(userIds.map(fetchUser));
+}
 
-// Output: 1, 4, 3, 2
-//
-// Why?
-// 1. Call stack runs console.log("1")               → logs "1"
-// 2. setTimeout callback → goes to the MACROTASK queue (waits)
-// 3. Promise.resolve().then() → callback goes to the MICROTASK queue
-// 4. Call stack runs console.log("4")               → logs "4"
-// 5. Call stack is now empty
-// 6. Event loop drains the microtask queue FIRST    → logs "3"
-// 7. Only now does it check the macrotask queue      → logs "2"
-
-// ── Chained .then() — all microtasks drain before the next macrotask ──
-console.log("1 — sync");
-
-setTimeout(() => console.log("5 — macrotask (setTimeout)"), 0);
-
-Promise.resolve()
-  .then(() => console.log("3 — microtask (Promise.then)"))
-  .then(() => console.log("4 — microtask (chained .then)"));
-
-console.log("2 — sync");
-
-// Output:
-// 1 — sync
-// 2 — sync
-// 3 — microtask (Promise.then)
-// 4 — microtask (chained .then)
-// 5 — macrotask (setTimeout)
-//
-// Even the SECOND .then() (a NEW microtask scheduled while draining)
-// still runs before the setTimeout callback — the microtask queue is
-// drained completely, however many microtasks get added along the way.
-
-// ── queueMicrotask — schedule a microtask directly ───────────────────
-console.log("start");
-queueMicrotask(() => console.log("microtask"));
-setTimeout(() => console.log("macrotask"), 0);
-console.log("end");
-// Output: start, end, microtask, macrotask
-
-// ── Priority summary (highest to lowest) ──────────────────────────────
-// 1. Synchronous code (call stack)
-// 2. Microtasks   — Promise.then/catch/finally, queueMicrotask, MutationObserver
-// 3. Macrotasks   — setTimeout, setInterval, UI rendering, I/O callbacks`,
+// ── When sequential IS the correct choice ─────────────────────────
+// Use it when step N genuinely depends on the result of step N-1
+async function processInOrder() {
+  const user    = await fetchUser(1);           // need the user first
+  const orders  = await fetchOrders(user.id);   // needs user.id
+  const invoice = await createInvoice(orders);  // needs orders
+  return invoice;
+}`,
       },
       keyTakeaways: [
-        { en: "Promises (`.then`/`.catch`/`.finally`) and `queueMicrotask` schedule callbacks in the <b>microtask queue</b>, which has higher priority than the macrotask (`setTimeout`/`setInterval`) queue.", np: "Promises (`.then`/`.catch`/`.finally`) र `queueMicrotask` ले callbacks लाई <b>microtask queue</b> मा schedule गर्छन्, जसको priority macrotask (`setTimeout`/`setInterval`) queue भन्दा उच्च हुन्छ।", jp: "Promise（`.then`/`.catch`/`.finally`）と`queueMicrotask`はコールバックを<b>マイクロタスクキュー</b>にスケジュールし、これはマクロタスク（`setTimeout`/`setInterval`）キューより優先度が高い。" },
-        { en: "The event loop always <b>fully drains the microtask queue</b> — including any new microtasks scheduled while draining — before it picks up the next macrotask.", np: "Event loop ले सधैं <b>microtask queue पूर्ण drain</b> गर्छ — draining गर्दा schedule भएका नयाँ microtasks सहित — अर्को macrotask लिनु अघि।", jp: "イベントループは次のマクロタスクを取り出す前に、必ず<b>マイクロタスクキューを完全に処理する</b>（処理中に新しくスケジュールされたものも含めて）。" },
-        { en: "This is why `.then` callbacks always run before a `setTimeout(fn, 0)` callback scheduled earlier — microtasks win over macrotasks regardless of timer delay.", np: "यही कारणले `.then` callbacks सधैं पहिले schedule भएको `setTimeout(fn, 0)` callback भन्दा पहिले चल्छन् — timer delay जे भए पनि microtasks ले macrotasks लाई जित्छन्।", jp: "これが`.then`コールバックが先にスケジュールされた`setTimeout(fn, 0)`コールバックより常に先に実行される理由 — タイマーの遅延に関わらずマイクロタスクがマクロタスクに勝つ。" },
+        { en: "`await` inside a `for` loop runs independent async calls one at a time — total time grows to roughly N × single-call time instead of running them together.", np: "`for` loop भित्रको `await` ले independent async calls लाई एक-एक गरी चलाउँछ — total time सँगै चलाउनुको सट्टा लगभग N × single-call time हुन्छ।", jp: "`for`ループ内の`await`は独立した非同期呼び出しを1つずつ実行する — 合計時間はまとめて実行する代わりにおよそN×単一呼び出し時間まで増える。" },
+        { en: "Starting all Promises first with `.map()` and then `await Promise.all(promises)` runs them concurrently — total time drops to roughly the slowest single call.", np: "पहिले `.map()` सँग सबै Promises सुरु गरी त्यसपछि `await Promise.all(promises)` गर्दा ती concurrently चल्छन् — total time लगभग सबैभन्दा ढिलो single call बराबर हुन्छ।", jp: "まず`.map()`ですべてのPromiseを開始し、その後`await Promise.all(promises)`することで並行実行される — 合計時間はおよそ最も遅い単一呼び出しまで下がる。" },
+        { en: "Sequential `await` inside a loop is still correct when step N truly needs the output of step N-1 before it can start.", np: "Step N ले साँच्चै step N-1 को output चाहिने भएमा loop भित्रको sequential `await` अझै सहि हुन्छ।", jp: "ステップNが開始前に本当にステップN-1の出力を必要とする場合、ループ内の逐次的な`await`は依然として正しい。" },
       ],
       commonMistakes: [
-        { en: "Assuming code order alone determines output order — `setTimeout` scheduled before a Promise's `.then` can still run *after* it, because microtasks always drain before the next macrotask.", np: "Code को order ले मात्र output order तय गर्छ भन्ने ठान्नु — Promise को `.then` भन्दा पहिले schedule भएको `setTimeout` पनि *पछि* चल्न सक्छ, किनभने microtasks सधैं अर्को macrotask भन्दा पहिले drain हुन्छन्।", jp: "コードの順序だけが出力順序を決めると思い込むこと — Promiseの`.then`より先にスケジュールされた`setTimeout`でも、マイクロタスクは常に次のマクロタスクより前に処理されるため*後に*実行されることがある。" },
-        { en: "Forgetting that a microtask which schedules another microtask (a chained `.then`) still runs before the next macrotask — the queue keeps draining until it's truly empty.", np: "अर्को microtask schedule गर्ने microtask (chained `.then`) पनि अर्को macrotask भन्दा पहिले चल्छ भन्ने बिर्सनु — queue साँच्चै खाली नभएसम्म drain भइरहन्छ।", jp: "別のマイクロタスクをスケジュールするマイクロタスク（連鎖した`.then`）も次のマクロタスクより前に実行されることを忘れること — キューは本当に空になるまで処理され続ける。" },
-        { en: "Treating `setInterval`/`setTimeout` and Promise callbacks as if they share one queue with equal priority — they are two distinct queues with different priority levels.", np: "`setInterval`/`setTimeout` र Promise callbacks लाई एउटै equal-priority queue साझा गरेको जस्तो ठान्नु — तिनी फरक priority भएका दुई छुट्टाछुट्टै queues हुन्।", jp: "`setInterval`/`setTimeout`とPromiseコールバックが同等の優先度で1つのキューを共有していると扱うこと — 実際は優先度の異なる2つの別々のキュー。" },
+        { en: "Writing `for (const id of ids) { await fetchUser(id); }` for independent requests, accidentally serialising work that could run in parallel.", np: "Independent requests का लागि `for (const id of ids) { await fetchUser(id); }` लेख्नु, parallel चल्न सक्ने काम गल्तिले serialise गर्नु।", jp: "独立したリクエストに対して`for (const id of ids) { await fetchUser(id); }`と書き、並列実行できる作業を誤って直列化してしまうこと。" },
+        { en: "Reaching for `Promise.all(items.map(...))` even when each step actually depends on the previous step's result, producing wrong or undefined inputs.", np: "हरेक step अघिल्लो step को result मा साँच्चै depend गर्दा पनि `Promise.all(items.map(...))` use गर्नु, गलत वा undefined inputs निस्कने।", jp: "各ステップが実際には前のステップの結果に依存しているのに`Promise.all(items.map(...))`を使い、誤った、あるいはundefinedな入力を生み出すこと。" },
+        { en: "Assuming `userIds.map(id => fetchUser(id))` doesn't start any requests until it's awaited — calling an async function begins running it immediately, `.map()` alone already kicks everything off.", np: "`userIds.map(id => fetchUser(id))` ले await नहुँदासम्म कुनै request सुरु गर्दैन भन्ने ठान्नु — async function call गर्नासाथ यो तुरुन्तै चल्न सुरु हुन्छ, `.map()` ले नै सबै सुरु गरिसक्छ।", jp: "`userIds.map(id => fetchUser(id))`はawaitされるまでリクエストを開始しないと思い込むこと — async関数の呼び出しは即座に実行を開始し、`.map()`だけですでにすべてが始まっている。" },
       ],
       quiz: [
         {
-          question: { en: "Which queue does a Promise's `.then()` callback go into?", np: "Promise को `.then()` callback कुन queue मा जान्छ?", jp: "Promiseの`.then()`コールバックはどのキューに入る？" },
+          question: { en: "If five independent `fetchUser(id)` calls are each `await`-ed one at a time inside a `for` loop, roughly how long does the total operation take compared to a single call?", np: "पाँच independent `fetchUser(id)` calls लाई `for` loop भित्र एक-एक गरी `await` गरियो भने, total operation एउटा single call को तुलनामा लगभग कति समय लिन्छ?", jp: "5つの独立した`fetchUser(id)`呼び出しを`for`ループ内で1つずつawaitすると、合計操作は単一呼び出しに比べておよそどれくらい時間がかかる？" },
           options: [
-            { en: "The microtask queue — higher priority than macrotasks", np: "Microtask queue — macrotasks भन्दा उच्च priority", jp: "マイクロタスクキュー — マクロタスクより優先度が高い" },
-            { en: "The same macrotask queue as setTimeout", np: "setTimeout जस्तै macrotask queue", jp: "setTimeoutと同じマクロタスクキュー" },
+            { en: "Roughly 5× a single call's time — they run one after another", np: "लगभग एउटा single call को 5× समय — ती एक पछि अर्को चल्छन्", jp: "単一呼び出しのおよそ5倍 — 1つずつ順番に実行される" },
+            { en: "Roughly the same as a single call — they run together", np: "लगभग एउटा single call जत्तिकै — ती सँगै चल्छन्", jp: "単一呼び出しとほぼ同じ — まとめて実行される" },
           ],
           correctIndex: 0,
-          explanation: { en: "Promise callbacks (.then/.catch/.finally) and queueMicrotask are scheduled in the microtask queue, a separate, higher-priority queue.", np: "Promise callbacks (.then/.catch/.finally) र queueMicrotask microtask queue मा schedule हुन्छन्, जुन छुट्टै र उच्च-priority queue हो।", jp: "Promiseコールバック（.then/.catch/.finally）とqueueMicrotaskはマイクロタスクキューという別の優先度の高いキューにスケジュールされる。" },
+          explanation: { en: "Awaiting inside the loop makes each request wait for the previous one to fully finish before starting, serialising independent work.", np: "Loop भित्र await गर्दा हरेक request अघिल्लो पूर्ण नसकिएसम्म सुरु हुँदैन, independent काम serialise हुन्छ।", jp: "ループ内でawaitすると各リクエストは前のものが完全に終わるまで開始せず、独立した作業が直列化される。" },
         },
         {
-          question: { en: "Given `setTimeout(() => console.log(\"a\"), 0)` followed by `Promise.resolve().then(() => console.log(\"b\"))`, which logs first?", np: "`setTimeout(() => console.log(\"a\"), 0)` पछि `Promise.resolve().then(() => console.log(\"b\"))` दिइएमा, कुन पहिले log हुन्छ?", jp: "`setTimeout(() => console.log(\"a\"), 0)`の後に`Promise.resolve().then(() => console.log(\"b\"))`があるとき、どちらが先にログされる？" },
+          question: { en: "What is the fix for the loop-await performance bug when the requests are independent?", np: "Requests independent हुँदा loop-await performance bug को समाधान के हो?", jp: "リクエストが独立している場合、ループawaitのパフォーマンスバグの修正方法は？" },
           options: [
-            { en: "\"b\" — the microtask queue always drains before the next macrotask", np: "\"b\" — microtask queue ले सधैं अर्को macrotask भन्दा पहिले drain हुन्छ", jp: "「b」— マイクロタスクキューは常に次のマクロタスクより先に処理される" },
-            { en: "\"a\" — setTimeout was scheduled first, so it wins", np: "\"a\" — setTimeout पहिले schedule भएको हुनाले यसले जित्छ", jp: "「a」— setTimeoutが先にスケジュールされたので勝つ" },
+            { en: "Start all Promises first (e.g. with .map()), then await them together with Promise.all", np: "पहिले सबै Promises सुरु गर्नुहोस् (जस्तै .map() सँग), त्यसपछि Promise.all सँग सँगै await गर्नुहोस्", jp: "まず（例えば.map()で）すべてのPromiseを開始し、その後Promise.allでまとめてawaitする" },
+            { en: "There is no fix — sequential is always the only option in a loop", np: "कुनै समाधान छैन — loop मा sequential नै एक मात्र option हो", jp: "修正方法はない — ループでは逐次実行だけが唯一の選択肢" },
           ],
           correctIndex: 0,
-          explanation: { en: "Regardless of scheduling order, the event loop always fully drains the microtask queue before touching the next macrotask.", np: "Scheduling order जे भए पनि, event loop ले सधैं अर्को macrotask छुनु अघि microtask queue पूर्ण drain गर्छ।", jp: "スケジュール順序に関わらず、イベントループは次のマクロタスクに触れる前に必ずマイクロタスクキューを完全に処理する。" },
+          explanation: { en: "Starting every Promise immediately with .map() and awaiting the whole batch with Promise.all lets independent requests run concurrently.", np: ".map() सँग हरेक Promise तुरुन्तै सुरु गरी Promise.all सँग सम्पूर्ण batch await गर्दा independent requests concurrently चल्छन्।", jp: ".map()ですべてのPromiseを即座に開始し、Promise.allでバッチ全体をawaitすることで、独立したリクエストを並行実行できる。" },
         },
         {
-          question: { en: "If a microtask schedules another microtask (e.g. a chained `.then`) while the queue is draining, does the new one still run before the next macrotask?", np: "Queue drain भइरहँदा एउटा microtask ले अर्को microtask (जस्तै chained `.then`) schedule गऱ्यो भने, नयाँ वाला अर्को macrotask भन्दा पहिले नै चल्छ?", jp: "キューの処理中にマイクロタスクが別のマイクロタスク（連鎖した`.then`など）をスケジュールした場合、新しいものは次のマクロタスクより前に実行される？" },
+          question: { en: "Is sequential `await` inside a loop ever the correct choice?", np: "Loop भित्र sequential `await` कहिल्यै सहि choice हुन्छ?", jp: "ループ内の逐次的なawaitが正しい選択になることはある？" },
           options: [
-            { en: "Yes — the microtask queue keeps draining until it is completely empty", np: "हो — microtask queue पूर्ण खाली नभएसम्म drain भइरहन्छ", jp: "はい — マイクロタスクキューは完全に空になるまで処理され続ける" },
-            { en: "No — only microtasks that existed before draining started will run first", np: "होइन — drain सुरु हुनु अघिका microtasks मात्र पहिले चल्छन्", jp: "いいえ — 処理開始前に存在していたマイクロタスクのみが先に実行される" },
+            { en: "Yes — when each step genuinely needs the previous step's result before it can start", np: "हो — हरेक step ले साँच्चै अघिल्लो step को result सुरु हुनु अघि नै चाहिँदा", jp: "はい — 各ステップが開始前に本当に前のステップの結果を必要とする場合" },
+            { en: "No — parallel with Promise.all is always strictly better", np: "होइन — Promise.all सँग parallel सधैं strictly राम्रो हुन्छ", jp: "いいえ — Promise.allでの並列実行が常に厳密に優れている" },
           ],
           correctIndex: 0,
-          explanation: { en: "The microtask queue is drained completely each time, including microtasks scheduled by other microtasks during the drain — none of them are deferred to the next macrotask cycle.", np: "हरेक पटक microtask queue पूर्ण रूपमा drain हुन्छ, draining बेला अरू microtasks ले schedule गरेका समेत — कुनैलाई पनि अर्को macrotask cycle मा टार्दैन।", jp: "マイクロタスクキューは毎回完全に処理される。処理中に他のマイクロタスクによってスケジュールされたものも含めて — どれも次のマクロタスクサイクルに先送りされない。" },
+          explanation: { en: "When operations are truly dependent on each other's output, they cannot be parallelised safely — sequential await is the correct pattern there.", np: "Operations साँच्चै एक-अर्काको output मा dependent हुँदा safely parallelise गर्न सकिँदैन — त्यहाँ sequential await नै सहि pattern हो।", jp: "操作が本当に互いの出力に依存している場合、安全に並列化することはできない — そこでは逐次的なawaitが正しいパターンとなる。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "What data structure does JavaScript use to track the currently running function?", np: "JavaScript ले हाल चलिरहेको function track गर्न कुन data structure प्रयोग गर्छ?", jp: "JavaScriptは現在実行中の関数を追跡するのに何のデータ構造を使う？" },
-      options: [{ en: "The call stack (LIFO)", np: "Call stack (LIFO)", jp: "コールスタック（LIFO）" }, { en: "A FIFO queue", np: "FIFO queue", jp: "FIFOキュー" }],
+      question: { en: "Does an `async function` always return a Promise, even when it returns a plain value?", np: "`async function` ले plain value return गरे पनि सधैं Promise return गर्छ?", jp: "`async function`はプレーンな値を返しても常にPromiseを返す？" },
+      options: [{ en: "Yes — the value is auto-wrapped in a Promise", np: "हो — value auto Promise मा wrap हुन्छ", jp: "はい — 値は自動的にPromiseでラップされる" }, { en: "No — only if you explicitly return a Promise", np: "होइन — explicitly Promise return गरेमा मात्र", jp: "いいえ — 明示的にPromiseを返した場合のみ" }],
       correctIndex: 0,
-      explanation: { en: "The call stack is LIFO — the most recently called function runs and returns first.", np: "Call stack LIFO हो — सबैभन्दा पछि call भएको function पहिले चल्छ र return हुन्छ।", jp: "コールスタックはLIFOで、最後に呼ばれた関数が最初に実行・returnする。" },
+      explanation: { en: "Every async function's return value, plain or not, is wrapped in Promise.resolve(...) automatically.", np: "हरेक async function को return value, plain होस् वा नहोस्, auto Promise.resolve(...) मा wrap हुन्छ।", jp: "async関数の戻り値はプレーンであってもなくても自動的にPromise.resolve(...)でラップされる。" },
     },
     {
-      question: { en: "Why does unbounded recursion eventually throw a RangeError?", np: "Unbounded recursion ले किन अन्तत: RangeError throw गर्छ?", jp: "無限再帰が最終的にRangeErrorをスローするのはなぜ？" },
-      options: [{ en: "It keeps pushing frames onto the call stack without popping any off", np: "यसले pop नगरी call stack मा frames थप्दै जान्छ", jp: "popすることなくコールスタックにフレームを積み続けるから" }, { en: "It runs too many separate, unrelated function calls", np: "यसले धेरै असम्बन्धित function calls चलाउँछ", jp: "無関係な関数呼び出しを多く実行しすぎるから" }],
+      question: { en: "Does `await` block the entire JavaScript engine, or only the current async function?", np: "`await` ले पूरै JavaScript engine block गर्छ कि केवल current async function मात्र?", jp: "`await`はJavaScriptエンジン全体をブロックする？それとも現在のasync関数のみ？" },
+      options: [{ en: "Only the current async function pauses", np: "केवल current async function मात्र pause हुन्छ", jp: "現在のasync関数のみが一時停止する" }, { en: "It blocks the whole engine and all other code", np: "यसले पूरै engine र अन्य सबै code block गर्छ", jp: "エンジン全体と他のすべてのコードをブロックする" }],
       correctIndex: 0,
-      explanation: { en: "Each recursive call adds a frame; without a base case to stop it, the stack overflows its allotted space.", np: "हरेक recursive call ले frame थप्छ; रोक्ने base case नभए, stack ले आफ्नो space overflow गर्छ।", jp: "各再帰呼び出しはフレームを追加する。止める基底ケースがなければ、スタックは割り当てられた空間を超える。" },
+      explanation: { en: "await only suspends the function it's written inside; other code keeps running normally.", np: "await ले त्यो लेखिएको function मात्र suspend गर्छ; अन्य code सामान्य रूपमा चलिरहन्छ।", jp: "awaitはそれが書かれた関数のみを一時停止させる。他のコードは正常に実行を続ける。" },
     },
     {
-      question: { en: "Why does synchronous code freeze the UI while it runs?", np: "Synchronous code चलिरहँदा UI किन freeze हुन्छ?", jp: "同期コードの実行中にUIがフリーズするのはなぜ？" },
-      options: [{ en: "It occupies the single call stack, so nothing else — clicks, timers, rendering — can run", np: "यसले एउटै call stack ओगट्छ, त्यसैले clicks, timers, rendering केही पनि चल्न सक्दैन", jp: "唯一のコールスタックを占有し、クリック・タイマー・描画など他の何も実行できなくなるから" }, { en: "It pauses the Web APIs from accepting new work", np: "यसले Web APIs लाई नयाँ काम स्वीकार गर्नबाट रोक्छ", jp: "Web APIが新しい作業を受け付けるのを止めるから" }],
+      question: { en: "What construct replaces `.catch()` for handling errors with `await`?", np: "`await` सँग errors handle गर्न `.catch()` को सट्टा कुन construct प्रयोग हुन्छ?", jp: "`await`でエラーを処理するために`.catch()`の代わりに使う構文は？" },
+      options: [{ en: "A try/catch block wrapped around the await call", np: "await call वरिपरि wrap गरिएको try/catch block", jp: "await呼び出しを囲むtry/catchブロック" }, { en: "There is no replacement, errors are unhandled", np: "कुनै replacement छैन, errors unhandled रहन्छन्", jp: "代替はなく、エラーは未処理のままになる" }],
       correctIndex: 0,
-      explanation: { en: "JavaScript has one call stack; while it's busy with synchronous code, the event loop cannot push any queued callback onto it.", np: "JavaScript मा एउटै call stack छ; synchronous code मा busy भएको बेला event loop ले कुनै queued callback त्यसमा push गर्न सक्दैन।", jp: "JavaScriptにはコールスタックが1つしかない。同期コードで忙しい間、イベントループはキューにあるコールバックをそこにpushできない。" },
+      explanation: { en: "A rejection during await inside try jumps to the matching catch, just like a thrown exception.", np: "try भित्र await बेला rejection भयो भने thrown exception जस्तै matching catch मा जान्छ।", jp: "try内でのawait中のrejectは投げられた例外と同様に対応するcatchへ飛ぶ。" },
     },
     {
-      question: { en: "Where does the actual waiting for a `setTimeout` or `fetch` happen?", np: "`setTimeout` वा `fetch` को actual पर्खाइ कहाँ हुन्छ?", jp: "`setTimeout`や`fetch`の実際の待機はどこで行われる？" },
-      options: [{ en: "In the browser's Web APIs, outside the JS engine", np: "Browser को Web APIs मा, JS engine बाहिर", jp: "JSエンジンの外、ブラウザのWeb API内" }, { en: "On the JS call stack itself", np: "JS call stack मै", jp: "JSコールスタック自体" }],
+      question: { en: "If one of three Promises passed to Promise.all() rejects, what happens?", np: "Promise.all() मा दिइएका तीनमध्ये एउटा reject भयो भने के हुन्छ?", jp: "Promise.all()に渡された3つのうち1つが拒否されるとどうなる？" },
+      options: [{ en: "Promise.all rejects immediately, discarding successful results", np: "Promise.all तुरुन्तै reject हुन्छ, succeed भएका results हराउँछन्", jp: "Promise.allは即座に拒否され、成功した結果は破棄される" }, { en: "Promise.all resolves with the two successful results", np: "Promise.all succeed भएका दुई results सँग resolve हुन्छ", jp: "Promise.allは成功した2つの結果で解決する" }],
       correctIndex: 0,
-      explanation: { en: "Web APIs handle timers and network requests independently, freeing the call stack to keep running other code.", np: "Web APIs ले timers र network requests लाई independently handle गर्छ, call stack लाई अरू code चलाउन खाली राख्छ।", jp: "Web APIはタイマーとネットワークリクエストを独立して処理し、コールスタックを他のコードの実行のために解放する。" },
+      explanation: { en: "Promise.all is fail-fast — a single rejection rejects the whole combined Promise immediately.", np: "Promise.all fail-fast हो — एउटा rejection ले तुरुन्तै पूरै combined Promise reject गर्छ।", jp: "Promise.allはフェイルファストであり、1つの拒否が即座に結合されたPromise全体を拒否する。" },
     },
     {
-      question: { en: "Does `setTimeout(fn, 0)` run `fn` immediately?", np: "`setTimeout(fn, 0)` ले `fn` तुरुन्तै चलाउँछ?", jp: "`setTimeout(fn, 0)`は`fn`をすぐに実行する？" },
-      options: [{ en: "No — it still waits for the call stack to empty and its turn in the queue", np: "होइन — यसले अझै call stack खाली हुने र queue मा आफ्नो पालो पर्खन्छ", jp: "いいえ — コールスタックが空になりキューでの順番を待つ" }, { en: "Yes — 0ms means it always runs before other code", np: "हो — 0ms ले सधैं अरू code भन्दा पहिले चल्छ भन्ने अर्थ दिन्छ", jp: "はい — 0msは常に他のコードより先に実行されることを意味する" }],
+      question: { en: "Which method should you use when you want the outcome of every operation, including which ones failed, without losing successes?", np: "Succeed भएका नहराई हरेक operation को outcome (कुन fail भयो सहित) चाहिँदा कुन method use गर्नुपर्छ?", jp: "成功を失うことなく、どれが失敗したかを含めすべての操作の結果を知りたい場合、どのメソッドを使うべき？" },
+      options: [{ en: "Promise.allSettled", np: "Promise.allSettled", jp: "Promise.allSettled" }, { en: "Promise.race", np: "Promise.race", jp: "Promise.race" }],
       correctIndex: 0,
-      explanation: { en: "A 0ms delay only decides when the callback enters the callback queue — it still waits for the stack to be empty.", np: "0ms delay ले callback कहिले callback queue मा पस्ने मात्र तय गर्छ — यसले अझै stack खाली हुने पर्खनुपर्छ।", jp: "0msの遅延はコールバックがいつコールバックキューに入るかを決めるだけで、スタックが空になるのを待つ。" },
+      explanation: { en: "Promise.allSettled never rejects and reports a status per item, keeping every outcome visible.", np: "Promise.allSettled कहिल्यै reject हुँदैन र per-item status report गर्छ, हरेक outcome देखिन्छ।", jp: "Promise.allSettledは決して拒否せず項目ごとのステータスを報告し、すべての結果を可視化する。" },
     },
     {
-      question: { en: "What is the event loop's core job?", np: "Event loop को core काम के हो?", jp: "イベントループの中心的な仕事は何？" },
-      options: [{ en: "Check if the call stack is empty, then move the next queued callback onto it", np: "Call stack खाली छ कि छैन check गर्नु, अनि queue बाट अर्को callback त्यसमा सार्नु", jp: "コールスタックが空かを確認し、次のキューのコールバックをそこに移すこと" }, { en: "Execute Web API requests directly on the call stack", np: "Web API requests लाई call stack मै direct execute गर्नु", jp: "Web APIリクエストをコールスタック上で直接実行すること" }],
+      question: { en: "What is the key difference between Promise.race() and Promise.any()?", np: "Promise.race() र Promise.any() बीचको key फरक के हो?", jp: "Promise.race()とPromise.any()の主な違いは何？" },
+      options: [{ en: "race settles on the first settle (success or failure); any settles on the first success only", np: "race पहिलो settle (success वा failure) मा settle हुन्छ; any पहिलो success मा मात्र", jp: "raceは最初の確定（成功か失敗）で確定し、anyは最初の成功でのみ確定する" }, { en: "They behave identically in every case", np: "ती हरेक अवस्थामा उस्तै behave गर्छन्", jp: "両者はすべてのケースで同じように振る舞う" }],
       correctIndex: 0,
-      explanation: { en: "The event loop repeatedly checks whether the stack is empty and, if so, pulls the next callback from the queue.", np: "Event loop ले लगातार stack खाली छ कि छैन check गर्छ, र भए queue बाट अर्को callback ल्याउँछ।", jp: "イベントループはスタックが空かを繰り返し確認し、空なら次のコールバックをキューから取り出す。" },
+      explanation: { en: "race cares about whichever settles first regardless of outcome, while any ignores rejections until every Promise has rejected.", np: "race ले outcome जे भए पनि पहिलो settle हुनेलाई हेर्छ, जबकि any ले सबै Promise reject नभएसम्म rejections लाई ignore गर्छ।", jp: "raceは結果に関わらず最初に確定したものを気にするが、anyはすべてのPromiseが拒否されるまでrejectを無視する。" },
     },
     {
-      question: { en: "Which queue does a Promise's `.then()` callback go into?", np: "Promise को `.then()` callback कुन queue मा जान्छ?", jp: "Promiseの`.then()`コールバックはどのキューに入る？" },
-      options: [{ en: "The microtask queue", np: "Microtask queue", jp: "マイクロタスクキュー" }, { en: "The same macrotask queue as setTimeout", np: "setTimeout जस्तै macrotask queue", jp: "setTimeoutと同じマクロタスクキュー" }],
+      question: { en: "Why does await-ing inside a for loop hurt performance for independent async calls?", np: "Independent async calls का लागि for loop भित्र await गर्दा किन performance बिग्रन्छ?", jp: "独立した非同期呼び出しに対してforループ内でawaitするとなぜパフォーマンスが悪化する？" },
+      options: [{ en: "Each call waits for the previous one to finish before starting, serialising them", np: "हरेक call ले अघिल्लो नसकिएसम्म सुरु हुँदैन, serialise हुन्छ", jp: "各呼び出しは前のものが終わるまで開始せず、直列化される" }, { en: "It doesn't — loops always run concurrently by default", np: "यसले बिग्रँदैन — loops default मा सधैं concurrently चल्छन्", jp: "悪化しない — ループはデフォルトで常に並行実行される" }],
       correctIndex: 0,
-      explanation: { en: "Promise callbacks and queueMicrotask are scheduled in the separate, higher-priority microtask queue.", np: "Promise callbacks र queueMicrotask छुट्टै, उच्च-priority microtask queue मा schedule हुन्छन्।", jp: "Promiseコールバックとqueue Microtaskは別の優先度の高いマイクロタスクキューにスケジュールされる。" },
+      explanation: { en: "Awaiting inside the loop body forces each iteration's request to fully complete before the next one even begins.", np: "Loop body भित्र await गर्दा हरेक iteration को request अघिल्लो पूर्ण नभई अर्को सुरु हुँदैन।", jp: "ループ本体内でawaitすると、各反復のリクエストは次が開始する前に完全に完了しなければならない。" },
     },
     {
-      question: { en: "Given `setTimeout(() => console.log(\"a\"), 0)` then `Promise.resolve().then(() => console.log(\"b\"))`, which logs first?", np: "`setTimeout(() => console.log(\"a\"), 0)` पछि `Promise.resolve().then(() => console.log(\"b\"))` दिइएमा कुन पहिले log हुन्छ?", jp: "`setTimeout(() => console.log(\"a\"), 0)`の後に`Promise.resolve().then(() => console.log(\"b\"))`、どちらが先にログされる？" },
-      options: [{ en: "\"b\" — microtasks always drain before the next macrotask", np: "\"b\" — microtasks सधैं अर्को macrotask भन्दा पहिले drain हुन्छ", jp: "「b」— マイクロタスクは常に次のマクロタスクより先に処理される" }, { en: "\"a\" — it was scheduled first", np: "\"a\" — यो पहिले schedule भएको थियो", jp: "「a」— 先にスケジュールされたから" }],
+      question: { en: "How do you fix the sequential-await-in-a-loop bug for independent operations?", np: "Independent operations का लागि loop भित्रको sequential-await bug कसरी fix गर्ने?", jp: "独立した操作に対してループ内の逐次的なawaitのバグをどう修正する？" },
+      options: [{ en: "Start every Promise first with .map(), then await them all with Promise.all", np: ".map() सँग पहिले सबै Promise सुरु गरी Promise.all सँग सबैलाई await गर्नुहोस्", jp: "まず.map()ですべてのPromiseを開始し、Promise.allでまとめてawaitする" }, { en: "Add more await keywords inside the loop", np: "Loop भित्र थप await keywords थप्नुहोस्", jp: "ループ内にawaitキーワードをさらに追加する" }],
       correctIndex: 0,
-      explanation: { en: "No matter the scheduling order, the event loop fully drains the microtask queue before touching the next macrotask.", np: "Scheduling order जे भए पनि, event loop ले अर्को macrotask छुनु अघि microtask queue पूर्ण drain गर्छ।", jp: "スケジュール順序に関わらず、イベントループは次のマクロタスクに触れる前にマイクロタスクキューを完全に処理する。" },
+      explanation: { en: "Kicking off all Promises immediately via .map(), then awaiting the batch together, lets independent work run concurrently.", np: ".map() मार्फत सबै Promise तुरुन्तै सुरु गरी batch लाई सँगै await गर्दा independent काम concurrently चल्छ।", jp: ".map()ですべてのPromiseを即座に開始し、バッチをまとめてawaitすることで、独立した作業を並行実行できる。" },
     },
     {
-      question: { en: "If a microtask schedules another microtask while the queue is draining, does the new one still run before the next macrotask?", np: "Queue drain हुँदा एउटा microtask ले अर्को microtask schedule गऱ्यो भने, नयाँ वाला अर्को macrotask भन्दा पहिले चल्छ?", jp: "処理中にマイクロタスクが別のマイクロタスクをスケジュールしたら、新しいものは次のマクロタスクより先に実行される？" },
-      options: [{ en: "Yes — the microtask queue keeps draining until completely empty", np: "हो — microtask queue पूर्ण खाली नभएसम्म drain भइरहन्छ", jp: "はい — マイクロタスクキューは完全に空になるまで処理され続ける" }, { en: "No — it's deferred until after the next macrotask", np: "होइन — यो अर्को macrotask पछिसम्म पर्खिन्छ", jp: "いいえ — 次のマクロタスクの後まで先送りされる" }],
+      question: { en: "Is Promise.all() ever the wrong tool, even for a loop of async calls?", np: "Async calls को loop का लागि पनि Promise.all() कहिल्यै गलत tool हुन्छ?", jp: "非同期呼び出しのループに対しても、Promise.all()が間違ったツールになることはある？" },
+      options: [{ en: "Yes — when each step genuinely depends on the previous step's result", np: "हो — हरेक step ले साँच्चै अघिल्लो step को result मा depend गर्दा", jp: "はい — 各ステップが本当に前のステップの結果に依存している場合" }, { en: "No — Promise.all is always the correct choice for any loop", np: "होइन — जुनसुकै loop का लागि Promise.all सधैं सहि choice हो", jp: "いいえ — Promise.allはどんなループに対しても常に正しい選択" }],
       correctIndex: 0,
-      explanation: { en: "The microtask queue drains completely each turn, including newly scheduled microtasks — none are pushed to the next macrotask cycle.", np: "हरेक turn मा microtask queue पूर्ण drain हुन्छ, नयाँ schedule भएका समेत — कुनैलाई अर्को macrotask cycle मा धकेलिँदैन।", jp: "マイクロタスクキューは毎回完全に処理される。新しくスケジュールされたものも含めて — 次のマクロタスクサイクルに先送りされるものはない。" },
+      explanation: { en: "When operations have a real dependency chain, they must run sequentially with await, not blindly parallelised with Promise.all.", np: "Operations मा real dependency chain हुँदा, Promise.all सँग blindly parallelise नगरी await सँग sequentially चलाउनुपर्छ।", jp: "操作に本当の依存関係の連鎖がある場合、Promise.allで無闇に並列化するのではなく、awaitで逐次実行しなければならない。" },
     },
   ],
 };

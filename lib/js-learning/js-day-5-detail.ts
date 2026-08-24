@@ -3,228 +3,275 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_5_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Objects are the fundamental building block of JavaScript — almost everything is an object or behaves like one. Understanding how to create, read, update, and delete properties, how destructuring works, and how to clone objects correctly will save you hours of debugging.",
-      np: "Objects JavaScript को fundamental building block हो — लगभग सबै कुरा object हो वा object जस्तो व्यवहार गर्छ। Create, read, update, delete — र destructuring तथा cloning सहि ढंगले गर्न सिक्नु जरुरी छ।",
-      jp: "オブジェクトはJavaScriptの基本構成要素。CRUD・分割代入・クローニングを正しく理解するとデバッグ時間が大幅に減る。",
+      en: "Closures are one of the most powerful — and most misunderstood — features in JavaScript. A closure is a function that remembers the variables from the scope it was created in, even after that scope has finished running. Higher-order functions and currying are both built on this same idea: functions that treat other functions as ordinary values.",
+      np: "Closure JavaScript को सबभन्दा शक्तिशाली feature हो। Closure एउटा function हो जसले आफू create भएको scope का variables याद राख्छ — scope बन्द भएपछि पनि।",
+      jp: "クロージャはJavaScriptで最も強力かつ誤解されやすい機能。クロージャはスコープが閉じた後も、作成時のスコープの変数を覚えている関数のこと。",
+    },
+    {
+      en: "In Day 4 we cover:\n• <b>Closures</b> — how an inner function keeps outer variables alive\n• <b>Higher-order functions</b> — functions that take or return other functions\n• <b>Currying &amp; partial application</b> — turning a multi-argument function into a chain of single-argument ones\n• <b>Function composition</b> — chaining small functions into a pipeline",
+      np: "Day 4 मा: closures, higher-order functions, currying/partial application, र function composition।",
+      jp: "Day 4では: クロージャ、高階関数、カリー化・部分適用、関数合成を学びます。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "PFmuCDHHpwk", title: "JavaScript Objects and Prototypes" },
+        { type: "youtube", videoId: "vKJpN5FAeF4", title: "JavaScript Closures Explained" },
       ],
     },
     {
-      title: { en: "Creating and working with objects", np: "Objects सिर्जना र प्रयोग", jp: "オブジェクトの作成と操作" },
+      title: { en: "Closures — the foundation", np: "Closures — आधार", jp: "クロージャの基礎" },
       blocks: [
         {
-          type: "code",
-          title: { en: "Object literals, property access, and mutation", np: "Object literals, property access र mutation", jp: "オブジェクトリテラル・プロパティアクセス・変更" },
-          code: `// ── Object literal ────────────────────────────────────────────────
-const user = {
-  name: "Alice",
-  age: 30,
-  address: {
-    city: "Kathmandu",
-    country: "Nepal",
-  },
-  greet() {                     // shorthand method syntax (ES6)
-    return \`Hi, I'm \${this.name}\`;
-  },
-};
-
-// ── Property access ───────────────────────────────────────────────
-user.name;                      // "Alice" — dot notation
-user["age"];                    // 30 — bracket notation (use when key is dynamic)
-user.address.city;              // "Kathmandu" — nested access
-
-const key = "name";
-user[key];                      // "Alice" — dynamic key access
-
-// ── Adding / updating properties ───────────────────────────────────
-user.email = "alice@example.com";   // add new property
-user.age = 31;                       // update existing
-user["hobbies"] = ["reading", "coding"];
-
-// ── Deleting properties ────────────────────────────────────────────
-delete user.email;              // removes the property entirely
-
-// ── Checking if a property exists ─────────────────────────────────
-"name" in user;                 // true — checks own AND inherited properties
-user.hasOwnProperty("name");    // true — checks own properties only
-Object.hasOwn(user, "name");    // true — modern, preferred over hasOwnProperty
-
-// ── Property shorthand (ES6) ───────────────────────────────────────
-const name = "Bob";
-const age  = 25;
-const person = { name, age };   // same as { name: name, age: age }
-
-// ── Computed property names ───────────────────────────────────────
-const field = "score";
-const result = { [field]: 100 };  // { score: 100 }`,
+          type: "paragraph",
+          text: {
+            en: "Picture a function as a person leaving home for a trip. Normally, once they leave, everything back at the house is gone from their perspective. A <b>closure</b> is that person packing a backpack before leaving — a backpack containing direct access to specific things from home, not photocopies. Even far away, they can reach into the backpack and read or change what's inside, and it stays in sync with the original.\n\nThat backpack is exactly what an inner function carries: a live link to the variables of the outer function it was created in, available anytime the inner function is later called — no matter how much later, or from how far away in the code.",
+            np: "Closure लाई यात्रामा जाने व्यक्तिले घरबाटै केही सामान backpack मा राखेको जस्तो सोच्नुहोस् — टाढा पुगे पनि उसले backpack भित्रको सामान access गर्न सक्छ, र त्यो सधैं original सँग sync मा रहन्छ।",
+            jp: "クロージャは、旅に出る人が家から特定のものへの直接アクセスをバックパックに入れて持って行くようなもの。遠くにいてもバックパックの中身を読んだり変更したりでき、常に元と同期している。",
+          },
         },
-      ],
-    },
-    {
-      title: { en: "Destructuring, spread & rest", np: "Destructuring, spread र rest", jp: "分割代入・スプレッド・rest" },
-      blocks: [
         {
           type: "code",
-          title: { en: "Unpacking objects and arrays cleanly", np: "Objects र arrays clearly unpack गर्नु", jp: "オブジェクトと配列を簡潔に展開する" },
-          code: `// ── Object destructuring ─────────────────────────────────────────
-const { name, age } = user;          // extract name and age
-console.log(name, age);              // "Alice" 30
+          title: { en: "A closure keeps the outer variable alive", np: "Closure ले outer variable जिउँदो राख्छ", jp: "クロージャは外部変数を保持する" },
+          code: `// ── Basic closure ───────────────────────────────────────────────
+function outer() {
+  let count = 0;        // this variable lives in outer's scope
 
-// Rename while destructuring:
-const { name: userName, age: userAge } = user;
-
-// Default values (used when the property is undefined):
-const { country = "Unknown" } = user;  // "Unknown" — user has no country
-
-// Nested destructuring:
-const { address: { city } } = user;    // "Kathmandu"
-
-// In function parameters — very common in React/Express:
-function greet({ name, age }) {
-  return \`\${name} is \${age}\`;
+  return function inner() {
+    count++;            // inner "closes over" count
+    return count;
+  };
 }
 
-// ── Array destructuring ───────────────────────────────────────────
-const [first, second, , fourth] = [10, 20, 30, 40];  // skip third with empty comma
-console.log(first, second, fourth);   // 10 20 40
+const increment = outer(); // outer() runs and returns inner
+// outer's execution context is gone, but 'count' is still alive
+// because 'inner' holds a reference to it
 
-// Swapping variables:
-let a = 1, b = 2;
-[a, b] = [b, a];   // a = 2, b = 1
+console.log(increment()); // 1
+console.log(increment()); // 2
+console.log(increment()); // 3
 
-// ── Spread operator — expanding an iterable ───────────────────────
-const arr1 = [1, 2, 3];
-const arr2 = [4, 5, 6];
-const merged = [...arr1, ...arr2];      // [1, 2, 3, 4, 5, 6]
+// Each call to outer() creates a separate closure with its own 'count'
+const incrementA = outer();
+const incrementB = outer();
+incrementA(); // 1
+incrementA(); // 2
+incrementB(); // 1  — completely separate count
 
-const obj1 = { a: 1, b: 2 };
-const obj2 = { c: 3 };
-const combined = { ...obj1, ...obj2 };  // { a: 1, b: 2, c: 3 }
-
-// Overriding with spread (last one wins for duplicate keys):
-const updated = { ...user, age: 31 };  // shallow copy with age updated
-
-// ── Rest parameters — collect remaining items ─────────────────────
-function sum(...numbers) {              // rest collects all arguments into an array
-  return numbers.reduce((acc, n) => acc + n, 0);
+// ── Practical use case: factory functions ────────────────────────
+function createMultiplier(factor) {
+  return (number) => number * factor;   // 'factor' is closed over
 }
-sum(1, 2, 3, 4, 5);  // 15
 
-const [head, ...tail] = [1, 2, 3, 4];  // head = 1, tail = [2, 3, 4]
-const { name: n, ...rest } = user;     // n = "Alice", rest = { age: 30, address: ... }`,
-        },
-      ],
-    },
-    {
-      title: { en: "Cloning objects — shallow vs deep", np: "Objects clone — shallow vs deep", jp: "オブジェクトのクローン — 浅いvs深い" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Shallow copy vs deep clone — the interview question", np: "Shallow copy vs deep clone — interview question", jp: "浅いコピーと深いクローン" },
-          code: `const original = {
-  name: "Alice",
-  hobbies: ["reading", "coding"],   // nested reference type
-  address: { city: "Kathmandu" },   // another nested object
-};
+const double = createMultiplier(2);
+const triple = createMultiplier(3);
 
-// ── Shallow copy — copies top-level properties only ────────────────
-const shallow1 = Object.assign({}, original);
-const shallow2 = { ...original };                // same result
+double(5);  // 10
+triple(5);  // 15
 
-// The top-level 'name' is independent:
-shallow1.name = "Bob";
-console.log(original.name);  // "Alice" — not affected
+// ── Closures in module pattern (private state) ────────────────────
+function createBankAccount(initialBalance) {
+  let balance = initialBalance;  // private — not accessible from outside
 
-// But nested objects are STILL shared references:
-shallow1.hobbies.push("gaming");
-console.log(original.hobbies);  // ["reading", "coding", "gaming"] — affected!
+  return {
+    deposit:    (amount) => { balance += amount; },
+    withdraw:   (amount) => { balance = Math.max(0, balance - amount); },
+    getBalance: ()       => balance,
+  };
+}
 
-shallow1.address.city = "Pokhara";
-console.log(original.address.city);  // "Pokhara" — affected!
-
-// ── Deep clone — creates fully independent copy ───────────────────
-
-// Option 1: JSON (fast, but lossy — loses functions, undefined, Date, Symbol)
-const deep1 = JSON.parse(JSON.stringify(original));
-deep1.hobbies.push("gaming");
-console.log(original.hobbies);  // not affected ✅
-
-// Option 2: structuredClone (modern, native, handles more types)
-const deep2 = structuredClone(original);  // ES2022, Node 17+
-deep2.address.city = "Pokhara";
-console.log(original.address.city);  // "Kathmandu" — not affected ✅
-
-// Option 3: Lodash cloneDeep (for maximum compatibility or complex objects)
-// import { cloneDeep } from "lodash";
-// const deep3 = cloneDeep(original);
-
-// Rule: use structuredClone for deep cloning — it handles Date, RegExp, Map, Set`,
+const account = createBankAccount(100);
+account.deposit(50);
+account.withdraw(30);
+console.log(account.getBalance()); // 120
+// balance is not directly readable or writable from outside`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
-            { en: "**Shallow copy** (`{...obj}` or `Object.assign`) is fine for flat objects. Any nested objects or arrays are still shared between the original and the copy.", np: "**Shallow copy** flat objects का लागि ठीक। Nested objects/arrays original र copy दुवैमा shared रहन्छ।", jp: "**浅いコピー**はフラットなオブジェクトなら問題なし。ネストされた参照は共有されたまま。" },
-            { en: "**Deep clone** with `structuredClone()` creates a completely independent copy. Use it when you need to mutate a nested structure without affecting the original.", np: "**Deep clone** `structuredClone()` ले पूरै independent copy बनाउँछ। Nested structure mutate गर्दा original affect हुनु हुँदैन भने प्रयोग गर्नुहोस्।", jp: "**深いクローン** `structuredClone()`は完全に独立したコピーを作る。ネストされた構造を変更する際に使う。" },
-            { en: "**Object.assign(target, source)** is equivalent to spreading: it copies own enumerable properties from source to target. The target is mutated in place.", np: "**Object.assign(target, source)** spread जस्तै। Source बाट target मा own enumerable properties copy गर्छ। Target mutate हुन्छ।", jp: "**Object.assign**はスプレッドと同等。sourceのownかつenumerableなプロパティをtargetにコピー（targetは変更される）。" },
+            {
+              en: "<b>A closure is created every time a function is created inside another function.</b> The inner function keeps a live reference to the outer scope's variables — not a snapshot copy of their value at creation time.",
+              np: "Closure हरेक पटक inner function create हुँदा बन्छ। Inner function ले outer scope का variables को live reference राख्छ — creation time को copy होइन।",
+              jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく変数への生きた参照を保持する。",
+            },
+            {
+              en: "<b>Memory implication:</b> closures keep outer variables alive for as long as the closure itself exists. Be careful with closures inside event listeners or timers — they can quietly prevent garbage collection if not cleaned up.",
+              np: "Memory: closure जबसम्म रहन्छ, outer variables पनि memory मा रहन्छ। Event listener वा timer मा closure हुँदा cleanup गर्न नभुलनुहोस्।",
+              jp: "メモリ: クロージャが存在する限り外部変数はGCされない。イベントリスナーやタイマーのクロージャは注意してクリーンアップする。",
+            },
           ],
         },
       ],
     },
     {
-      title: { en: "Useful Object methods", np: "उपयोगी Object methods", jp: "便利なObjectメソッド" },
+      title: { en: "Higher-order functions", np: "Higher-order functions", jp: "高階関数" },
       blocks: [
         {
+          type: "paragraph",
+          text: {
+            en: "A <b>higher-order function</b> is a function that either takes a function as an argument, returns a function, or both. This is possible only because functions in JavaScript are <b>first-class values</b> — exactly like a number or a string, they can be stored in a variable, passed as an argument, and returned from another function.\n\n• Passing a function in lets the caller plug in custom behaviour without the higher-order function needing to know the details\n  ↳ `array.map(fn)` doesn't know what `fn` does — it just calls it for every item\n• Returning a function out lets you generate specialised, ready-to-use functions on demand\n  ↳ `createMultiplier(3)` from the closures section above is already a higher-order function — it returns a function",
+            np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन्।",
+            jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値。",
+          },
+        },
+        {
           type: "code",
-          title: { en: "Object.keys, values, entries, fromEntries, freeze", np: "Object methods", jp: "Objectメソッド" },
-          code: `const scores = { alice: 95, bob: 87, carol: 92 };
+          title: { en: "Functions as arguments and return values", np: "Argument र return value को रूपमा function", jp: "引数と戻り値としての関数" },
+          code: `// ── Functions as arguments ───────────────────────────────────────
+function repeat(n, action) {
+  for (let i = 0; i < n; i++) {
+    action(i);           // call the passed function
+  }
+}
 
-Object.keys(scores);     // ["alice", "bob", "carol"]
-Object.values(scores);   // [95, 87, 92]
-Object.entries(scores);  // [["alice", 95], ["bob", 87], ["carol", 92]]
+repeat(3, (i) => console.log(\`Step \${i}\`));
+// Step 0 / Step 1 / Step 2
 
-// Transform an object (like map but for objects):
-const doubled = Object.fromEntries(
-  Object.entries(scores).map(([key, val]) => [key, val * 2])
-);
-// { alice: 190, bob: 174, carol: 184 }
+// ── Functions returning functions ────────────────────────────────
+function withLogging(fn) {
+  return function (...args) {      // spread to accept any number of arguments
+    console.log("Calling with", args);
+    const result = fn(...args);
+    console.log("Result:", result);
+    return result;
+  };
+}
 
-// Filter an object:
-const passing = Object.fromEntries(
-  Object.entries(scores).filter(([, score]) => score >= 90)
-);
-// { alice: 95, carol: 92 }
+const addLogged = withLogging((a, b) => a + b);
+addLogged(2, 3);  // logs "Calling with [2, 3]" and "Result: 5"
 
-// Freeze — prevent modifications (shallow — does not deep-freeze)
-const config = Object.freeze({ apiUrl: "https://api.example.com", timeout: 5000 });
-// config.timeout = 10000;  // silently ignored in sloppy mode, TypeError in strict
+// ── Common built-in higher-order functions you use every day ──────
+const numbers = [1, 2, 3, 4, 5];
 
-// Object.isFrozen(config);  // true`,
+numbers.filter(n => n % 2 === 0);      // [2, 4]
+numbers.map(n => n * 2);               // [2, 4, 6, 8, 10]
+numbers.reduce((acc, n) => acc + n, 0); // 15
+numbers.find(n => n > 3);              // 4
+numbers.every(n => n > 0);             // true
+numbers.some(n => n > 4);              // true
+numbers.sort((a, b) => b - a);         // [5, 4, 3, 2, 1] — descending`,
+        },
+      ],
+    },
+    {
+      title: { en: "Currying & partial application", np: "Currying र partial application", jp: "カリー化と部分適用" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThe usual reason to reach for currying: you want a function to run only once every argument is available, but the arguments show up from different places at different times — one from an API response, one from user input, one from a database lookup. You could collect them into a few variables and call the function manually once all of them exist, but that stops working once a function needs many arguments instead of three.\n\nThink of a vending machine: a normal function is like paying the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.",
+            np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)। Partial application ले केही arguments अगावै भरेर बाँकीका लागि नयाँ function दिन्छ। Currying चाहिने सामान्य कारण: तीनवटै argument फरक-फरक ठाउँबाट (API, user input, database) आउँछ र सबै नआएसम्म function चलाउनु हुँदैन।",
+            jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。部分適用はより一般的な考え方で、一部の引数を先に埋めて残りを受け取る新しい関数を得る。よくある動機は、引数がAPI・ユーザー入力・DBなど別々の場所から届き、全部揃うまで実行したくない場合。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Currying — converting a multi-argument function into nested single-argument functions", np: "Currying — multi-argument function लाई single-argument functions मा", jp: "カリー化 — 多引数関数を単引数関数の連鎖に変換" },
+          code: `// ── Regular (uncurried) function ─────────────────────────────────
+const add = (a, b, c) => a + b + c;
+add(2, 5, 3);  // 10
+
+// ── The problem currying solves ──────────────────────────────────
+// You only want to run add() once all three values are available —
+// say the first comes from one place, the second from an API, the
+// third from user input. Collecting them into variables and calling
+// add() manually once all three exist works, but it stops scaling
+// once a function needs many arguments instead of three.
+
+// ── Curried version — nest one function per argument ─────────────
+const curriedAdd = (a) => (b) => (c) => a + b + c;
+// Nothing executes until the last argument arrives:
+curriedAdd(2);        // a function still waiting for 'b'
+curriedAdd(2)(5);     // a function still waiting for 'c'
+curriedAdd(2)(5)(3);  // 10 — only now does it actually run
+
+// ── Why currying is useful — creating specialised functions ───────
+const multiply = (a) => (b) => a * b;
+const double  = multiply(2);
+const triple  = multiply(3);
+
+[1, 2, 3].map(double);  // [2, 4, 6]
+[1, 2, 3].map(triple);  // [3, 6, 9]
+
+// ── Real-world use — splitting work across independent steps ─────
+// Curry sendEmail(to)(subject)(body) and each argument can be filled
+// in by a different part of the system, one step at a time, without
+// any step needing to know about the others.
+const sendEmail = (to) => (subject) => (body) =>
+  console.log(\`Sending to \${to} — [\${subject}] \${body}\`);
+
+const step1 = sendEmail("user@example.com");        // resolves the recipient
+const step2 = step1("New order confirmation");       // adds the subject
+step2("Your order has shipped!");                    // finally sends
+// Sending to user@example.com — [New order confirmation] Your order has shipped!
+
+// ── Partial application — pre-filling some arguments ──────────────
+function log(level, message) {
+  console.log(\`[\${level.toUpperCase()}] \${message}\`);
+}
+
+// bind() creates a partially applied function
+const logError = log.bind(null, "error");
+const logInfo  = log.bind(null, "info");
+
+logError("Database connection failed");   // [ERROR] Database connection failed
+logInfo("Server started on port 3000");   // [INFO] Server started on port 3000
+
+// ── Function composition — combining functions ───────────────────
+const compose = (...fns) => (x) => fns.reduceRight((v, f) => f(v), x);
+const pipe    = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
+
+const add1   = x => x + 1;
+const double2 = x => x * 2;
+const square = x => x * x;
+
+const transform = pipe(add1, double2, square);
+transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>Splitting responsibility across steps:</b> because each curried call just returns a plain function, you can hand that function off to a completely different piece of code — even one owned by a different developer — that only supplies its own argument and doesn't need to know what happens before or after. `sendEmail(to)` can be resolved by one service, `(subject)` filled in by another, and `(body)` supplied by whichever code finally has the message — nothing sends until the last piece arrives.",
+              np: "काम बाँड्ने: curried call ले जहिले पनि एउटा plain function फर्काउने भएकोले, त्यो function लाई अर्को (फरक developer को) code लाई दिन सकिन्छ, जसले आफ्नो मात्र argument थप्छ। `sendEmail(to)` एउटा service ले हल गर्छ, `(subject)` अर्कोले थप्छ, `(body)` अन्तिममा जोसँग message छ उसले दिन्छ — अन्तिम टुक्रा नआएसम्म पठाइँदैन।",
+              jp: "責務の分割: カリー化された呼び出しは常にただの関数を返すので、その関数を別のコード（別の開発者が担当する部分）に渡せる。`sendEmail(to)`はあるサービスが解決し、`(subject)`は別の部分が追加し、`(body)`は最後にメッセージを持つコードが渡す — 最後の引数が届くまで送信されない。",
+            },
+            {
+              en: "<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double2, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
+              np: "Function composition ले साना function हरूलाई pipeline मा जोड्छ — पढ्न बायाँबाट दायाँ, \"यो गर, त्यसपछि यो गर\" जस्तो।",
+              jp: "関数合成は小さな単機能の関数をパイプラインとして連結する。左から右に「これをして、次にこれをして」と読める。",
+            },
+          ],
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between spread and Object.assign?", np: "Spread र Object.assign मा के फरक?", jp: "スプレッドとObject.assignの違いは？" },
+      question: { en: "Why are closures useful?", np: "Closures किन उपयोगी छन्?", jp: "クロージャが有用な理由は？" },
       answer: {
-        en: "They are functionally equivalent for creating a shallow copy. The main differences: `Object.assign` mutates the target object and returns it (so `Object.assign({}, source)` creates a new object only because the first argument is a new `{}`). Spread always creates a new object/array. Spread is more readable for simple merges. `Object.assign` is useful when you want to merge into an existing object in place.",
-        np: "दुवैले shallow copy बनाउँछन्। `Object.assign` target object mutate गर्छ। Spread हमेशा नयाँ object बनाउँछ। Simple merge का लागि spread बढी readable। Existing object मा merge गर्न `Object.assign` उपयोगी।",
-        jp: "どちらも浅いコピーを作成。`Object.assign`はターゲットを変更して返す。スプレッドは常に新しいオブジェクトを作る。単純なマージはスプレッドの方が読みやすい。既存のオブジェクトに直接マージする場合は`Object.assign`が便利。",
+        en: "Closures are useful for three main reasons: (1) data privacy — variables inside a closure are not accessible from outside, so you can create private state without classes; (2) factory functions — you can create multiple independent copies of a function, each with its own private state; (3) callbacks and event handlers — closures let a callback access variables from the scope where it was defined, not just the scope where it runs.",
+        np: "Closures तीन कारणले उपयोगी: (1) data privacy — closure भित्रका variables बाहिरबाट access हुँदैन; (2) factory functions — आफ्नै private state सहित independent copies; (3) callbacks — callback ले आफू define भएको scope का variables access गर्न सक्छ।",
+        jp: "クロージャが有用な理由: (1)データプライバシー — 外部からアクセス不可の状態; (2)ファクトリ関数 — 独立した状態を持つ複数の関数; (3)コールバック — 定義されたスコープの変数にアクセスできる。",
       },
     },
     {
-      question: { en: "How do you deep clone an object?", np: "Object deep clone कसरी गर्ने?", jp: "オブジェクトを深くクローンするには？" },
+      question: { en: "What is the difference between currying and partial application?", np: "Currying र partial application मा के फरक?", jp: "カリー化と部分適用の違いは？" },
       answer: {
-        en: "Use `structuredClone(obj)` — it is built into modern JavaScript (Node 17+, all modern browsers) and handles Date, RegExp, Map, Set, ArrayBuffer, and more. For older environments or complex class instances, use Lodash's `cloneDeep`. Avoid `JSON.parse(JSON.stringify(obj))` — it loses functions, `undefined` values, `Symbol` keys, `Date` objects become strings, and it cannot handle circular references.",
-        np: "Modern JS मा `structuredClone(obj)` प्रयोग गर्नुहोस् — Node 17+, modern browsers मा available र Date, Map, Set पनि handle गर्छ। पुरानो environment का लागि Lodash `cloneDeep`। `JSON.parse(JSON.stringify)` avoid गर्नुहोस् — functions, undefined, Symbol, Date हराउँछ।",
-        jp: "`structuredClone(obj)`を使う（Node 17+・モダンブラウザ対応、Date・Map・Setも処理可能）。古い環境ではLodash `cloneDeep`。`JSON.parse(JSON.stringify)`は関数・undefined・Symbol・Dateが失われるので避ける。",
+        en: "Currying transforms a function that takes multiple arguments into a sequence of functions that each take one argument: f(a, b, c) becomes f(a)(b)(c). Partial application fixes some arguments of a function and returns a new function for the remaining ones. Currying is a special form of partial application. In practice, both are used to create specialised functions from general ones.",
+        np: "Currying ले multi-argument function लाई single-argument functions को sequence मा transform गर्छ: f(a,b,c) → f(a)(b)(c)। Partial application केही arguments fix गरेर बाँकीका लागि नयाँ function return गर्छ। Currying partial application को special form हो।",
+        jp: "カリー化は多引数関数を一引数関数の連鎖に変換: f(a,b,c) → f(a)(b)(c)。部分適用は引数の一部を固定して残りの関数を返す。カリー化は部分適用の特殊形。",
+      },
+    },
+    {
+      question: { en: "Do closures cause memory leaks?", np: "Closures ले memory leak गराउँछ?", jp: "クロージャはメモリリークを引き起こす？" },
+      answer: {
+        en: "Closures themselves don't leak memory — they behave exactly as designed by keeping referenced variables alive. The risk appears when a closure is attached to something long-lived (a global event listener, a timer that never gets cleared, a cache that never evicts) and nobody ever releases that reference. The fix isn't avoiding closures — it's removing event listeners when a component unmounts, clearing intervals you no longer need, and being deliberate about what a long-lived closure captures.",
+        np: "Closure आफैंले memory leak गराउँदैन — design अनुसार नै variables जिउँदो राख्छ। जोखिम त्यतिखेर आउँछ जब closure लामो समयसम्म रहने चिज (global listener, नरोकिने timer) सँग जोडिन्छ र कहिल्यै release हुँदैन।",
+        jp: "クロージャ自体はメモリリークを引き起こさない。リスクは、クロージャが長寿命のもの（グローバルリスナー、クリアされないタイマー）に結び付き、参照が解放されない場合に生じる。",
       },
     },
   ],

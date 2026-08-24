@@ -2,416 +2,404 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_10_LESSONS: JsLessonDay = {
   day: 10,
-  title: { en: "Error Handling, CommonJS & ES Modules", np: "Error Handling, CommonJS र ES Modules", jp: "エラー処理・CommonJS・ESモジュール" },
+  title: { en: "ES6 Classes — Inheritance, Static & Private Fields", np: "ES6 Classes — Inheritance, Static, Private", jp: "ES6クラス・継承・static・プライベート" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "try-catch-custom-errors",
-      title: { en: "try, catch, finally & Custom Errors", np: "try, catch, finally, Custom Errors", jp: "try・catch・finallyとカスタムエラー" },
+      id: "class-basics",
+      title: { en: "Class Basics", np: "Class Basics", jp: "クラスの基本" },
       durationMinutes: 9,
       explanation: {
-        en: "An <b>error</b> happens when something goes wrong while your program is running.\n\nFor example:\n\n```javascript\nconst user = null;\n\nconsole.log(user.name);\n```\n\nThis causes an error because `null` means <b>there is no object</b> to read from.\n\nErrors can happen for many reasons:\n\n• User enters invalid data\n• Database request fails\n• API is unavailable\n• Network connection fails\n• A file cannot be found\n• Your code has a bug\n\nWe can't prevent every error.\n\nThe goal is to <b>handle errors properly instead of letting the whole application crash</b>.\n\n---\n\n## 1. `try...catch`\n\nJavaScript gives us `try...catch` to handle errors.\n\n```javascript\ntry {\n  // Code that might fail\n} catch (err) {\n  // Handle the error\n}\n```\n\nFor example:\n\n```javascript\ntry {\n  const user = null;\n  console.log(user.name);\n} catch (err) {\n  console.log(\"Something went wrong\");\n}\n```\n\nWhen the code inside `try` throws an error, JavaScript immediately moves to `catch`.\n\n```text\ntry\n ↓\nError happens\n ↓\ncatch\n ↓\nHandle the error\n```\n\nThis prevents the error from crashing that part of the program.\n\n---\n\n## 2. The `Error` Object\n\nThe `catch` block gives us an error object.\n\n```javascript\ncatch (err) {\n  console.log(err);\n}\n```\n\nAn error usually contains useful information.\n\n### `err.name`\n\nTells us the type of error.\n\n```javascript\nconsole.log(err.name);\n```\n\nExample:\n\n```text\nTypeError\n```\n\n### `err.message`\n\nTells us what went wrong.\n\n```javascript\nconsole.log(err.message);\n```\n\nExample:\n\n```text\nCannot read properties of null\n```\n\n### `err.stack`\n\nShows where the error happened.\n\n```javascript\nconsole.log(err.stack);\n```\n\nThis is very useful when <b>debugging</b> (finding the cause of a problem).\n\n---\n\n## 3. `finally`\n\nSometimes we need to run some code <b>no matter what happens</b>.\n\nThat's what `finally` is for.\n\n```javascript\ntry {\n  // Try something\n} catch (err) {\n  // Handle error\n} finally {\n  // Always runs\n}\n```\n\nFor example, imagine we open a database connection:\n\n```text\nOpen database\n     ↓\nDo some work\n     ↓\nSuccess or Error\n     ↓\nClose database\n```\n\nWe want the database connection to close whether the operation succeeds or fails.\n\nSo we can use:\n\n```javascript\ntry {\n  await database.query();\n} catch (err) {\n  console.log(err.message);\n} finally {\n  database.close();\n}\n```\n\n`finally` runs:\n\n• After success\n• After an error\n• Even if `return` is used\n\nThat's why it's useful for <b>cleanup</b> (closing or releasing something).\n\n---\n\n## 4. Common JavaScript Errors\n\nJavaScript has several built-in error types.\n\n### `TypeError`\n\nUsually means you're using a value in the wrong way.\n\n```javascript\nconst user = null;\n\nuser.name;\n```\n\nResult:\n\n```text\nTypeError\n```\n\n---\n\n### `ReferenceError`\n\nHappens when you try to use a variable that doesn't exist.\n\n```javascript\nconsole.log(username);\n```\n\nIf `username` was never created:\n\n```text\nReferenceError\n```\n\n---\n\n### `SyntaxError`\n\nHappens when JavaScript code is written incorrectly.\n\n```javascript\nconst user =\n```\n\nThe code isn't valid JavaScript.\n\n```text\nSyntaxError\n```\n\n---\n\n### `RangeError`\n\nHappens when a value is outside an allowed range.\n\n```javascript\nconst numbers = new Array(-1);\n```\n\nThis produces a `RangeError`.\n\n---\n\n## 5. `throw`\n\nWe can also create an error ourselves using `throw`.\n\nFor example, suppose a user must be at least 18 years old.\n\n```javascript\nfunction register(age) {\n  if (age < 18) {\n    throw new Error(\"User must be 18 or older\");\n  }\n\n  console.log(\"Registration successful\");\n}\n```\n\nIf:\n\n```javascript\nregister(15);\n```\n\nThe function throws an error.\n\nWe can handle it:\n\n```javascript\ntry {\n  register(15);\n} catch (err) {\n  console.log(err.message);\n}\n```\n\nOutput:\n\n```text\nUser must be 18 or older\n```\n\nSo `throw` basically means:\n\n> <b>\"Something is wrong. Stop and send this error to whoever can handle it.\"</b>\n\n---\n\n## 6. Custom Errors\n\nIn a real application, you may want different types of errors.\n\nFor example:\n\n• Validation error\n• Authentication error\n• Payment error\n• Database error\n\nWe can create our own error class.\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message) {\n    super(message);\n    this.name = \"ValidationError\";\n  }\n}\n```\n\nNow we can use it:\n\n```javascript\nthrow new ValidationError(\"Email is required\");\n```\n\nThis makes it easier to understand what went wrong.\n\n---\n\n## 7. Adding Extra Information\n\nCustom errors can contain additional information.\n\nFor example:\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;\n  }\n}\n```\n\nNow:\n\n```javascript\nthrow new ValidationError(\n  \"Email is required\",\n  \"email\"\n);\n```\n\nWe can access:\n\n```javascript\nerr.message\nerr.field\n```\n\nSo the error can tell us:\n\n```text\nType: ValidationError\nField: email\nMessage: Email is required\n```\n\n---\n\n## 8. Checking the Error Type\n\nWe can use `instanceof` to check what kind of error we received.\n\n```javascript\ntry {\n  // something\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Invalid input\");\n  }\n}\n```\n\nThis lets us handle different errors differently.\n\nFor example:\n\n```javascript\ntry {\n  await createUser();\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Please check your input\");\n  } else {\n    throw err;\n  }\n}\n```\n\nThe important part is:\n\n```javascript\nthrow err;\n```\n\nIf we don't know how to handle an error, <b>send it back up instead of silently ignoring it</b>.\n\n---\n\n## 9. Never Silently Ignore Errors\n\nThis is bad:\n\n```javascript\ntry {\n  await saveUser();\n} catch (err) {\n  // Nothing\n}\n```\n\nNow the program failed, but nobody knows why.\n\nIt's usually better to:\n\n```javascript\ncatch (err) {\n  console.error(err);\n  throw err;\n}\n```\n\nOr handle it properly if you know what to do.",
-        np: "<b>Error</b> तब हुन्छ जब तपाईंको program चल्दै गर्दा केही गलत हुन्छ।\n\nउदाहरणका लागि:\n\n```javascript\nconst user = null;\n\nconsole.log(user.name);\n```\n\nयसले error दिन्छ किनकि `null` को अर्थ <b>पढ्न कुनै object छैन</b> भन्ने हो।\n\nError धेरै कारणले हुन सक्छ:\n\n• User ले invalid data हाल्यो\n• Database request fail भयो\n• API उपलब्ध छैन\n• Network connection fail भयो\n• File भेटिएन\n• तपाईंको code मा bug छ\n\nहामी हरेक error रोक्न सक्दैनौं।\n\nलक्ष्य <b>पूरै application crash हुन नदिई error लाई राम्ररी handle गर्नु</b> हो।\n\n---\n\n## 1. `try...catch`\n\nJavaScript ले error handle गर्न `try...catch` दिन्छ।\n\n```javascript\ntry {\n  // Code that might fail\n} catch (err) {\n  // Handle the error\n}\n```\n\nउदाहरणका लागि:\n\n```javascript\ntry {\n  const user = null;\n  console.log(user.name);\n} catch (err) {\n  console.log(\"Something went wrong\");\n}\n```\n\n`try` भित्रको code ले error throw गर्दा, JavaScript तुरुन्तै `catch` मा जान्छ।\n\n```text\ntry\n ↓\nError happens\n ↓\ncatch\n ↓\nHandle the error\n```\n\nयसले error लाई program को त्यो भाग crash गर्नबाट रोक्छ।\n\n---\n\n## 2. `Error` Object\n\n`catch` block ले हामीलाई error object दिन्छ।\n\n```javascript\ncatch (err) {\n  console.log(err);\n}\n```\n\nError मा सामान्यतया उपयोगी जानकारी हुन्छ।\n\n### `err.name`\n\nError को प्रकार बताउँछ।\n\n```javascript\nconsole.log(err.name);\n```\n\nउदाहरण:\n\n```text\nTypeError\n```\n\n### `err.message`\n\nके गलत भयो त्यो बताउँछ।\n\n```javascript\nconsole.log(err.message);\n```\n\nउदाहरण:\n\n```text\nCannot read properties of null\n```\n\n### `err.stack`\n\nError कहाँ भयो त्यो देखाउँछ।\n\n```javascript\nconsole.log(err.stack);\n```\n\nयो <b>debugging</b> (समस्याको कारण खोज्दा) धेरै उपयोगी हुन्छ।\n\n---\n\n## 3. `finally`\n\nकहिलेकाहीँ हामीलाई <b>के भए पनि</b> चल्ने code चाहिन्छ।\n\n`finally` त्यसैका लागि हो।\n\n```javascript\ntry {\n  // Try something\n} catch (err) {\n  // Handle error\n} finally {\n  // Always runs\n}\n```\n\nउदाहरणका लागि, कल्पना गर्नुहोस् हामी database connection खोल्छौं:\n\n```text\nOpen database\n     ↓\nDo some work\n     ↓\nSuccess or Error\n     ↓\nClose database\n```\n\nOperation सफल होस् वा fail, हामी database connection बन्द होस् भन्ने चाहन्छौं।\n\nत्यसैले हामी यो प्रयोग गर्न सक्छौं:\n\n```javascript\ntry {\n  await database.query();\n} catch (err) {\n  console.log(err.message);\n} finally {\n  database.close();\n}\n```\n\n`finally` चल्छ:\n\n• सफल भएपछि\n• Error आएपछि\n• `return` प्रयोग भए पनि\n\nत्यसैले यो <b>cleanup</b> (कुनै चीज बन्द वा release गर्नु) का लागि उपयोगी छ।\n\n---\n\n## 4. सामान्य JavaScript Errors\n\nJavaScript मा केही built-in error types छन्।\n\n### `TypeError`\n\nसामान्यतया तपाईंले value लाई गलत तरिकाले प्रयोग गरेको जनाउँछ।\n\n```javascript\nconst user = null;\n\nuser.name;\n```\n\nनतिजा:\n\n```text\nTypeError\n```\n\n---\n\n### `ReferenceError`\n\nअस्तित्वमा नभएको variable प्रयोग गर्न खोज्दा हुन्छ।\n\n```javascript\nconsole.log(username);\n```\n\nयदि `username` कहिल्यै बनाइएको थिएन:\n\n```text\nReferenceError\n```\n\n---\n\n### `SyntaxError`\n\nJavaScript code गलत तरिकाले लेखिँदा हुन्छ।\n\n```javascript\nconst user =\n```\n\nयो code valid JavaScript होइन।\n\n```text\nSyntaxError\n```\n\n---\n\n### `RangeError`\n\nValue अनुमति दिइएको range बाहिर हुँदा हुन्छ।\n\n```javascript\nconst numbers = new Array(-1);\n```\n\nयसले `RangeError` दिन्छ।\n\n---\n\n## 5. `throw`\n\nहामी आफैं पनि `throw` प्रयोग गरी error बनाउन सक्छौं।\n\nउदाहरणका लागि, मानौं user कम्तीमा 18 वर्षको हुनुपर्छ।\n\n```javascript\nfunction register(age) {\n  if (age < 18) {\n    throw new Error(\"User must be 18 or older\");\n  }\n\n  console.log(\"Registration successful\");\n}\n```\n\nयदि:\n\n```javascript\nregister(15);\n```\n\nFunction ले error throw गर्छ।\n\nहामी यसलाई handle गर्न सक्छौं:\n\n```javascript\ntry {\n  register(15);\n} catch (err) {\n  console.log(err.message);\n}\n```\n\nOutput:\n\n```text\nUser must be 18 or older\n```\n\nत्यसैले `throw` को मुख्य अर्थ:\n\n> <b>\"केही गलत छ। रोक र यो error लाई handle गर्न सक्नेसम्म पठाऊ।\"</b>\n\n---\n\n## 6. Custom Errors\n\nवास्तविक application मा, तपाईंलाई फरक-फरक प्रकारका error चाहिन सक्छ।\n\nउदाहरणका लागि:\n\n• Validation error\n• Authentication error\n• Payment error\n• Database error\n\nहामी आफ्नै error class बनाउन सक्छौं।\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message) {\n    super(message);\n    this.name = \"ValidationError\";\n  }\n}\n```\n\nअब हामी यो प्रयोग गर्न सक्छौं:\n\n```javascript\nthrow new ValidationError(\"Email is required\");\n```\n\nयसले के गलत भयो भन्ने बुझ्न सजिलो बनाउँछ।\n\n---\n\n## 7. थप जानकारी थप्नु\n\nCustom error मा अतिरिक्त जानकारी राख्न सकिन्छ।\n\nउदाहरणका लागि:\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;\n  }\n}\n```\n\nअब:\n\n```javascript\nthrow new ValidationError(\n  \"Email is required\",\n  \"email\"\n);\n```\n\nहामी यो पहुँच गर्न सक्छौं:\n\n```javascript\nerr.message\nerr.field\n```\n\nत्यसैले error हामीलाई यो बताउन सक्छ:\n\n```text\nType: ValidationError\nField: email\nMessage: Email is required\n```\n\n---\n\n## 8. Error को प्रकार जाँच्नु\n\nहामीले कुन प्रकारको error पायौं भन्ने जाँच्न `instanceof` प्रयोग गर्न सक्छौं।\n\n```javascript\ntry {\n  // something\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Invalid input\");\n  }\n}\n```\n\nयसले हामीलाई फरक error लाई फरक तरिकाले handle गर्न दिन्छ।\n\nउदाहरणका लागि:\n\n```javascript\ntry {\n  await createUser();\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Please check your input\");\n  } else {\n    throw err;\n  }\n}\n```\n\nमहत्वपूर्ण भाग यो हो:\n\n```javascript\nthrow err;\n```\n\nError कसरी handle गर्ने थाहा नभए, <b>चुपचाप बेवास्ता गर्नुको साटो माथि फर्काउनुहोस्</b>।\n\n---\n\n## 9. Error लाई कहिल्यै चुपचाप बेवास्ता नगर्नुहोस्\n\nयो नराम्रो हो:\n\n```javascript\ntry {\n  await saveUser();\n} catch (err) {\n  // Nothing\n}\n```\n\nअब program fail भयो, तर किन भयो कसैलाई थाहा छैन।\n\nसामान्यतया यो राम्रो हुन्छ:\n\n```javascript\ncatch (err) {\n  console.error(err);\n  throw err;\n}\n```\n\nवा के गर्ने थाहा छ भने राम्ररी handle गर्नुहोस्।",
-        jp: "<b>エラー</b>とは、プログラムの実行中に何かがうまくいかないことです。\n\nたとえば:\n\n```javascript\nconst user = null;\n\nconsole.log(user.name);\n```\n\n`null` は<b>読み取る対象のオブジェクトがない</b>という意味なので、これはエラーになります。\n\nエラーはさまざまな理由で起こります:\n\n• ユーザーが不正なデータを入力する\n• データベースへのリクエストが失敗する\n• APIが利用できない\n• ネットワーク接続が失敗する\n• ファイルが見つからない\n• コードにバグがある\n\nすべてのエラーを防ぐことはできません。\n\n目標は<b>アプリケーション全体をクラッシュさせず、エラーを適切に処理すること</b>です。\n\n---\n\n## 1. `try...catch`\n\nJavaScriptはエラーを処理するために `try...catch` を用意しています。\n\n```javascript\ntry {\n  // Code that might fail\n} catch (err) {\n  // Handle the error\n}\n```\n\nたとえば:\n\n```javascript\ntry {\n  const user = null;\n  console.log(user.name);\n} catch (err) {\n  console.log(\"Something went wrong\");\n}\n```\n\n`try` の中のコードがエラーをスローすると、JavaScriptはすぐに `catch` へ移ります。\n\n```text\ntry\n ↓\nError happens\n ↓\ncatch\n ↓\nHandle the error\n```\n\nこれでエラーがプログラムのその部分をクラッシュさせるのを防げます。\n\n---\n\n## 2. `Error` オブジェクト\n\n`catch` ブロックはエラーオブジェクトを渡してくれます。\n\n```javascript\ncatch (err) {\n  console.log(err);\n}\n```\n\nエラーには通常、役に立つ情報が入っています。\n\n### `err.name`\n\nエラーの種類を教えてくれます。\n\n```javascript\nconsole.log(err.name);\n```\n\n例:\n\n```text\nTypeError\n```\n\n### `err.message`\n\n何がうまくいかなかったかを教えてくれます。\n\n```javascript\nconsole.log(err.message);\n```\n\n例:\n\n```text\nCannot read properties of null\n```\n\n### `err.stack`\n\nエラーがどこで起きたかを示します。\n\n```javascript\nconsole.log(err.stack);\n```\n\nこれは<b>デバッグ</b>（問題の原因を探すこと）のときにとても役立ちます。\n\n---\n\n## 3. `finally`\n\n<b>何が起きても</b>実行したいコードがあるときもあります。\n\nそのためにあるのが `finally` です。\n\n```javascript\ntry {\n  // Try something\n} catch (err) {\n  // Handle error\n} finally {\n  // Always runs\n}\n```\n\nたとえば、データベース接続を開くと想像してください:\n\n```text\nOpen database\n     ↓\nDo some work\n     ↓\nSuccess or Error\n     ↓\nClose database\n```\n\n処理が成功しても失敗しても、データベース接続は閉じたいはずです。\n\nそこで次のように書けます:\n\n```javascript\ntry {\n  await database.query();\n} catch (err) {\n  console.log(err.message);\n} finally {\n  database.close();\n}\n```\n\n`finally` が実行されるのは:\n\n• 成功したあと\n• エラーが起きたあと\n• `return` が使われた場合でも\n\nだからこそ<b>クリーンアップ</b>（何かを閉じたり解放したりすること）に役立ちます。\n\n---\n\n## 4. よくあるJavaScriptのエラー\n\nJavaScriptには組み込みのエラー型がいくつかあります。\n\n### `TypeError`\n\nたいていは値の使い方が間違っていることを意味します。\n\n```javascript\nconst user = null;\n\nuser.name;\n```\n\n結果:\n\n```text\nTypeError\n```\n\n---\n\n### `ReferenceError`\n\n存在しない変数を使おうとしたときに起きます。\n\n```javascript\nconsole.log(username);\n```\n\n`username` が一度も作られていなければ:\n\n```text\nReferenceError\n```\n\n---\n\n### `SyntaxError`\n\nJavaScriptのコードの書き方が正しくないときに起きます。\n\n```javascript\nconst user =\n```\n\nこのコードは正しいJavaScriptではありません。\n\n```text\nSyntaxError\n```\n\n---\n\n### `RangeError`\n\n値が許された範囲の外にあるときに起きます。\n\n```javascript\nconst numbers = new Array(-1);\n```\n\nこれは `RangeError` になります。\n\n---\n\n## 5. `throw`\n\n`throw` を使って自分でエラーを作ることもできます。\n\nたとえば、ユーザーは18歳以上でなければならないとしましょう。\n\n```javascript\nfunction register(age) {\n  if (age < 18) {\n    throw new Error(\"User must be 18 or older\");\n  }\n\n  console.log(\"Registration successful\");\n}\n```\n\nもし:\n\n```javascript\nregister(15);\n```\n\nこの関数はエラーをスローします。\n\nこう処理できます:\n\n```javascript\ntry {\n  register(15);\n} catch (err) {\n  console.log(err.message);\n}\n```\n\n出力:\n\n```text\nUser must be 18 or older\n```\n\nつまり `throw` は基本的にこういう意味です:\n\n> <b>「何かがおかしい。処理を止めて、このエラーを扱える相手に渡す。」</b>\n\n---\n\n## 6. カスタムエラー\n\n実際のアプリケーションでは、種類の違うエラーが欲しくなります。\n\nたとえば:\n\n• バリデーションエラー\n• 認証エラー\n• 決済エラー\n• データベースエラー\n\n自分のエラークラスを作れます。\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message) {\n    super(message);\n    this.name = \"ValidationError\";\n  }\n}\n```\n\nこれで次のように使えます:\n\n```javascript\nthrow new ValidationError(\"Email is required\");\n```\n\n何がうまくいかなかったのかが分かりやすくなります。\n\n---\n\n## 7. 追加情報を持たせる\n\nカスタムエラーには追加の情報を持たせられます。\n\nたとえば:\n\n```javascript\nclass ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;\n  }\n}\n```\n\nそして:\n\n```javascript\nthrow new ValidationError(\n  \"Email is required\",\n  \"email\"\n);\n```\n\n次のようにアクセスできます:\n\n```javascript\nerr.message\nerr.field\n```\n\nエラー自身がこう教えてくれます:\n\n```text\nType: ValidationError\nField: email\nMessage: Email is required\n```\n\n---\n\n## 8. エラーの種類を調べる\n\n`instanceof` を使って、受け取ったエラーの種類を調べられます。\n\n```javascript\ntry {\n  // something\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Invalid input\");\n  }\n}\n```\n\nこれでエラーごとに違う処理ができます。\n\nたとえば:\n\n```javascript\ntry {\n  await createUser();\n} catch (err) {\n  if (err instanceof ValidationError) {\n    console.log(\"Please check your input\");\n  } else {\n    throw err;\n  }\n}\n```\n\n大事な部分はここです:\n\n```javascript\nthrow err;\n```\n\n処理の仕方が分からないエラーは、<b>黙って無視せず上に投げ返す</b>ことです。\n\n---\n\n## 9. エラーを黙って無視しない\n\nこれは良くありません:\n\n```javascript\ntry {\n  await saveUser();\n} catch (err) {\n  // Nothing\n}\n```\n\nプログラムは失敗したのに、その理由を誰も知りません。\n\n通常はこうする方が良いです:\n\n```javascript\ncatch (err) {\n  console.error(err);\n  throw err;\n}\n```\n\nあるいは、どうすべきか分かっているなら適切に処理します。",
+        en: "A <b>class</b> is a blueprint for creating objects — like a house blueprint, the class itself isn't an object, it just describes what one should look like. `class User {}` doesn't create a user; it defines the shape every `User` object will have.\n\nBefore ES6, JavaScript already had object-oriented programming via constructor functions and `.prototype` (`function User(name) { this.name = name; } User.prototype.greet = function() {...}`) — it worked, but many developers found the syntax hard to read. ES6 classes didn't replace that system; they are <b>syntactic sugar</b> — a nicer way to write the exact same prototype-based mechanism. Proof: `typeof User` is still `\"function\"`, because JavaScript still creates a constructor function behind the scenes.\n\nWhen you write `new User(\"John\")`, JavaScript automatically calls the class's `constructor(...)`, which is responsible for initializing the object's properties (`this.name = name`). Methods written inside the class body — like `greet()` — are NOT copied into every object; they're stored once on `User.prototype` and shared by every instance, which is what saves memory.",
+        np: "Class भनेको objects बनाउने blueprint हो — house blueprint जस्तै, class आफैं object होइन, यसले object कस्तो देखिनुपर्छ भनेर बताउँछ। `class User {}` ले user बनाउँदैन, यसले shape define गर्छ। ES6 अघि constructor functions र `.prototype` प्रयोग हुन्थ्यो — काम गथ्र्यो तर पढ्न गाह्रो थियो। ES6 classes ले त्यो system replace गरेन, यो syntactic sugar मात्र हो — उही prototype-based mechanism लेख्ने राम्रो तरिका। प्रमाण: `typeof User` अझै `\"function\"` हो। `new User(\"John\")` लेख्दा JavaScript ले class को `constructor(...)` call गर्छ, जसले properties initialize गर्छ। Class body भित्रका methods हरेक object मा copy हुँदैनन् — तिनी `User.prototype` मा एकपल्ट रहन्छन् र सबै instances ले share गर्छन्, यसले memory बचाउँछ।",
+        jp: "クラスはオブジェクトを作るための設計図 — 家の設計図のように、クラス自体はオブジェクトではなく、どんな形であるべきかを説明するだけ。`class User {}`はユーザーを作らず、形を定義するだけ。ES6以前はコンストラクタ関数と`.prototype`でオブジェクト指向プログラミングをしていた — 動作したが読みにくかった。ES6クラスはそのシステムを置き換えたのではなく、糖衣構文 — 同じプロトタイプベースの仕組みを書く良い方法。証拠: `typeof User`は今も`\"function\"`。`new User(\"John\")`と書くと、JavaScriptはクラスの`constructor(...)`を自動的に呼び、プロパティを初期化する。クラス本体内のメソッドは各オブジェクトにコピーされず、`User.prototype`に一度だけ保存され、すべてのインスタンスで共有される。これによりメモリが節約される。",
       },
-      diagram: `try
- ↓
-Run risky code
- ↓
-Did it fail?
- ↙          ↘
-No           Yes
-↓             ↓
-Continue     catch
-               ↓
-          Handle error
-               ↓
-            finally
-               ↓
-          Cleanup`,
+      diagram: `Cookie cutter analogy: the class is the cutter, not the cookie —
+it stamps out objects that all share the same shape.
+
+           class User
+
+      constructor(name)      ← runs once per 'new', sets up the object
+            │
+        greet()              ← NOT copied per object
+            │
+            ▼
+      User.prototype         ← greet() lives here ONCE, shared by all
+            │
+     new User("John")
+            │
+            ▼
+      john object            ← has its own 'name', but borrows greet()`,
       codeExample: {
-        title: { en: "Robust error handling with custom error classes", np: "Robust error handling, custom error classes", jp: "カスタムエラークラスによる堅牢なエラー処理" },
-        code: `// ── Basic try/catch — recovering instead of crashing ─────────────────
-function parseConfig(jsonString) {
-  try {
-    return JSON.parse(jsonString);       // might throw SyntaxError
-  } catch (err) {
-    console.error("Invalid JSON:", err.message);
-    return null;
+        title: { en: "Class basics — constructor, methods, and the equivalent prototype code", np: "Class basics — constructor, methods, prototype equivalent", jp: "クラスの基本 — コンストラクタ・メソッド・等価なプロトタイプコード" },
+        code: `// ── Basic class ───────────────────────────────────────────────────
+class User {
+  constructor(name) {
+    this.name = name;      // runs once per 'new', sets up this object
   }
-}
-parseConfig("invalid json");   // logs "Invalid JSON: ..." instead of crashing
 
-// ── The Error object ─────────────────────────────────────────────────
-try {
-  null.name;   // TypeError: Cannot read properties of null
-} catch (err) {
-  err.name;     // "TypeError"
-  err.message;  // "Cannot read properties of null (reading 'name')"
-  err.stack;    // full stack trace — where it happened
-}
-
-// ── finally always runs — even after a 'return' inside try ───────────
-function test() {
-  try {
-    return "Success";
-  } finally {
-    console.log("Finally runs");   // logs BEFORE the function actually returns
-  }
-}
-test();   // logs "Finally runs", then returns "Success"
-
-// ── Throwing your own errors on purpose ───────────────────────────────
-function withdraw(amount) {
-  if (amount > 1000) throw new Error("Withdrawal limit exceeded");
-  return amount;
-}
-
-// ── Custom error classes — extend Error for extra context ─────────────
-class ValidationError extends Error {
-  constructor(message, field) {
-    super(message);            // sets this.message and this.stack correctly
-    this.name = "ValidationError";
-    this.field = field;        // extra context
-  }
-}
-class AuthenticationError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "AuthenticationError";
-    this.statusCode = 401;
+  greet() {
+    return \`Hello \${this.name}\`;
   }
 }
 
-function login(password) {
-  if (password !== "123456") throw new AuthenticationError("Invalid password");
+const john = new User("John");
+john.greet();   // "Hello John"
+
+// ── Behind the scenes — the exact equivalent without 'class' ─────────
+function UserOld(name) {
+  this.name = name;
+}
+UserOld.prototype.greet = function () {
+  return \`Hello \${this.name}\`;
+};
+
+const jane = new UserOld("Jane");
+jane.greet();   // "Hello Jane" — identical result, just older syntax
+
+// ── Real-world example ────────────────────────────────────────────────
+class Product {
+  constructor(name, price) {
+    this.name = name;
+    this.price = price;
+  }
+
+  display() {
+    return \`\${this.name} - $\${this.price}\`;
+  }
 }
 
-// ── Catching specific error types with instanceof ─────────────────────
-try {
-  login("wrong-password");
-} catch (err) {
-  if (err instanceof AuthenticationError) {
-    console.log({ statusCode: err.statusCode, message: err.message });
-    // { statusCode: 401, message: "Invalid password" }
-  } else {
-    throw err;   // unrecognised error — never swallow it silently
-  }
-}`,
+const laptop = new Product("Laptop", 999);
+laptop.display();   // "Laptop - $999"
+
+// ── Proof classes are still functions under the hood ──────────────────
+typeof User;                                       // "function"
+Object.getPrototypeOf(john) === User.prototype;    // true — same mechanism as UserOld`,
       },
       keyTakeaways: [
-        { en: "`try` → \\\"Try this code.\\\" Put the risky part inside it so a failure does not crash the whole application.", np: "`try` → \\\"यो code try गर।\\\" जोखिमपूर्ण भाग यसभित्र राख्नुहोस् ताकि failure ले पूरै application crash नगरोस्।", jp: "`try` → \\\"このコードを試す。\\\" 失敗がアプリ全体をクラッシュさせないよう、危険な部分をこの中に置く。" },
-        { en: "`catch` → \\\"Something went wrong. Handle it.\\\" The error object carries `err.name` (the type), `err.message` (what happened) and `err.stack` (where it happened).", np: "`catch` → \\\"केही गलत भयो। यसलाई handle गर।\\\" Error object मा `err.name` (प्रकार), `err.message` (के भयो) र `err.stack` (कहाँ भयो) हुन्छ।", jp: "`catch` → \\\"何かがおかしい。処理する。\\\" エラーオブジェクトは `err.name`（種類）、`err.message`（何が起きたか）、`err.stack`（どこで起きたか）を持つ。" },
-        { en: "`finally` → \\\"Do this no matter what.\\\" It runs after success, after an error, and even after a `return` — which makes it the place for cleanup like closing a database connection.", np: "`finally` → \\\"के भए पनि यो गर।\\\" यो सफल भएपछि, error आएपछि, र `return` पछि पनि चल्छ — त्यसैले database connection बन्द गर्ने जस्ता cleanup का लागि यही ठाउँ हो।", jp: "`finally` → \\\"何があってもこれを行う。\\\" 成功後・エラー後・`return` の後でも実行されるので、データベース接続を閉じるようなクリーンアップの置き場所になる。" },
-        { en: "`throw` → \\\"I want to create/report an error.\\\" Use it when a business rule is broken, even if the code would technically keep running.", np: "`throw` → \\\"मैले error बनाउन/रिपोर्ट गर्न चाहन्छु।\\\" Business rule भाँचिँदा प्रयोग गर्नुहोस्, code technically चलिरहन सक्ने भए पनि।", jp: "`throw` → \\\"エラーを作って報告したい。\\\" コードが技術的には動き続ける場合でも、業務ルールが破られたときに使う。" },
-        { en: "`instanceof` → \\\"What type of error is this?\\\" It lets you handle a `ValidationError` one way and rethrow everything else with `throw err`.", np: "`instanceof` → \\\"यो कुन प्रकारको error हो?\\\" यसले `ValidationError` लाई एक तरिकाले handle गर्न र बाँकी सबै लाई `throw err` ले rethrow गर्न दिन्छ।", jp: "`instanceof` → \\\"これはどの種類のエラーか?\\\" `ValidationError` は個別に処理し、それ以外は `throw err` で再スローできる。" },
-        { en: "<b>Custom error</b> → \\\"Create an error specific to my application.\\\" `class ValidationError extends Error` can also carry extra context such as the `field` that failed.", np: "<b>Custom error</b> → \\\"मेरो application का लागि विशेष error बनाउ।\\\" `class ValidationError extends Error` ले fail भएको `field` जस्तो अतिरिक्त context पनि बोक्न सक्छ।", jp: "<b>カスタムエラー</b> → \\\"自分のアプリ専用のエラーを作る。\\\" `class ValidationError extends Error` は失敗した `field` などの追加情報も持てる。" },
-        { en: "Never swallow an error with an empty `catch` — log it and rethrow, or handle it properly. A silent failure leaves nobody knowing why the program broke.", np: "खाली `catch` ले error कहिल्यै निल्नु हुँदैन — log गर्नुहोस् र rethrow गर्नुहोस्, वा राम्ररी handle गर्नुहोस्। चुपचापको failure ले program किन बिग्रियो कसैलाई थाहा हुँदैन।", jp: "空の `catch` でエラーを握りつぶさない — ログを出して再スローするか、きちんと処理する。黙って失敗すると、なぜ壊れたのか誰にも分からない。" },
-        { en: "The goal of error handling is not to hide errors. It is to handle expected problems properly, give useful information when debugging, and let unexpected errors continue to the right place instead of silently disappearing.", np: "Error handling को लक्ष्य error लुकाउनु होइन। लक्ष्य अपेक्षित समस्या राम्ररी handle गर्नु, debugging मा उपयोगी जानकारी दिनु, र अनपेक्षित error लाई चुपचाप हराउनुको साटो ठीक ठाउँमा पुग्न दिनु हो।", jp: "エラー処理の目的はエラーを隠すことではない。想定される問題を適切に処理し、デバッグに役立つ情報を残し、想定外のエラーは黙って消さずに適切な場所まで届けることだ。" },
+        { en: "A class is a blueprint for creating objects — it doesn't create anything by itself, it just describes what instances should look like.", np: "Class भनेको objects बनाउने blueprint हो — यसले आफैं केही बनाउँदैन, instances कस्तो देखिनुपर्छ भनेर मात्र describe गर्छ।", jp: "クラスはオブジェクトを作るための設計図。それ自体は何も作らず、インスタンスがどう見えるべきかを説明するだけ。" },
+        { en: "Classes are syntactic sugar over constructor functions and `.prototype` — they didn't replace that system, they just made it easier to write.", np: "Classes constructor functions र `.prototype` माथिको syntactic sugar हुन् — यिनले त्यो system replace गरेनन्, केवल लेख्न सजिलो बनाए।", jp: "クラスはコンストラクタ関数と`.prototype`の上の糖衣構文。そのシステムを置き換えたのではなく、書きやすくしただけ。" },
+        { en: "A class is still a function internally (`typeof MyClass` is `\"function\"`); the `constructor(...)` runs once per `new` call to initialize the object's own properties.", np: "Class भित्री रूपमा अझै function हो (`typeof MyClass` `\"function\"` हो); `constructor(...)` हरेक `new` call मा एकपल्ट चली object का properties initialize गर्छ।", jp: "クラスは内部的には今も関数（`typeof MyClass`は`\"function\"`）。`constructor(...)`は`new`が呼ばれるたびに一度実行され、オブジェクト自身のプロパティを初期化する。" },
+        { en: "Methods written in a class body are stored once on the prototype and shared by every instance, not copied into each object — this is what makes them memory efficient.", np: "Class body भित्रका methods prototype मा एकपल्ट मात्र रहन्छन् र हरेक instance ले share गर्छन्, हरेक object मा copy हुँदैनन् — यसैले memory efficient हुन्छ।", jp: "クラス本体内のメソッドはプロトタイプに一度だけ保存され、すべてのインスタンスで共有される。各オブジェクトにコピーされない。これがメモリ効率が良い理由。" },
       ],
       commonMistakes: [
-        { en: "Leaving a `catch` block empty, which swallows the error entirely — you never learn what failed, where it failed, or why.", np: "`catch` block खाली छोड्नु, जसले error लाई पूर्ण रूपमा swallow गर्छ — के, कहाँ, र किन fail भयो भन्ने कहिल्यै थाहा हुँदैन।", jp: "catchブロックを空のままにすること。エラーを完全に握りつぶし、何が・どこで・なぜ失敗したか分からなくなる。" },
-        { en: "Catching every error broadly and just returning `null` or ignoring it, instead of re-throwing errors you don't specifically handle — this hides real problems from the caller.", np: "हरेक error लाई broadly catch गरेर केवल `null` फर्काउनु वा ignore गर्नु, specifically handle नगरेका errors re-throw गर्नुको सट्टा — यसले real problems caller बाट लुकाउँछ।", jp: "特定して処理していないエラーを再スローする代わりに、すべてのエラーを広くキャッチして単にnullを返すか無視すること。これは呼び出し元から本当の問題を隠す。" },
-        { en: "Using `error.message` string comparisons for logic (`if (error.message === \"User missing\")`) instead of `instanceof` — messages can change wording and silently break the check.", np: "Logic का लागि `error.message` string comparison प्रयोग गर्नु (`if (error.message === \"User missing\")`) `instanceof` को सट्टा — messages को wording बदलिन सक्छ र check silently बिग्रन्छ।", jp: "instanceofの代わりにerror.messageの文字列比較をロジックに使うこと（`if (error.message === \"User missing\")`）。メッセージの文言が変わるとチェックが黙って壊れる。" },
-        { en: "Forgetting `finally` cleanup (e.g. closing a database connection) and only putting that logic in `try`, so it never runs when an error happens partway through.", np: "`finally` cleanup बिर्सनु (जस्तै database connection close गर्नु) र त्यो logic `try` मा मात्र राख्नु, जसले error हुँदा त्यो कहिल्यै चल्दैन।", jp: "finallyでのクリーンアップ（データベース接続のクローズなど）を忘れ、そのロジックをtryにのみ置くこと。途中でエラーが起きると実行されない。" },
+        { en: "Calling a class like a normal function without `new` (`User(\"John\")`) — class constructors always throw a TypeError when called this way.", np: "`new` बिना class लाई normal function जस्तै call गर्नु (`User(\"John\")`) — class constructors यसरी call गर्दा सधैं TypeError throw गर्छन्।", jp: "`new`なしでクラスを通常の関数のように呼ぶこと（`User(\"John\")`）。クラスのコンストラクタはこのように呼ばれると常にTypeErrorをスローする。" },
+        { en: "Defining methods inside the constructor (`this.greet = function() {}`) instead of as class methods — every instance then gets its own separate copy instead of sharing one on the prototype.", np: "Methods लाई class methods को रूपमा नभई constructor भित्र define गर्नु (`this.greet = function() {}`) — प्रत्येक instance ले prototype मा एउटा share गर्नुको सट्टा आफ्नै छुट्टै copy पाउँछ।", jp: "メソッドをクラスメソッドとしてではなくコンストラクタ内で定義すること（`this.greet = function() {}`）。各インスタンスがプロトタイプで1つ共有する代わりに、それぞれ独自のコピーを持つことになる。" },
+        { en: "Believing every class must have a `constructor` — if there's no initialization to do, a class is perfectly valid without one.", np: "हरेक class मा `constructor` हुनैपर्छ भन्ने ठान्नु — initialization गर्नु नपरे, constructor बिना पनि class पूर्ण रूपमा valid हुन्छ।", jp: "すべてのクラスに`constructor`が必要だと思い込むこと。初期化することがなければ、constructorなしでもクラスは完全に有効。" },
+        { en: "Believing classes are a fundamentally different, \"real\" OOP mechanism unrelated to prototypes — they are the same mechanism with nicer syntax on top.", np: "Classes prototypes सँग सम्बन्ध नभएको fundamentally फरक, 'real' OOP mechanism हो भन्ने विश्वास गर्नु — यिनी उही mechanism हुन्, राम्रो syntax मात्र थपिएको।", jp: "クラスはプロトタイプとは無関係な根本的に異なる「本物の」OOP機構だと信じること。実際は同じ機構の上に見やすい構文を乗せたもの。" },
       ],
       quiz: [
         {
-          question: { en: "In `try { return riskyCall(); } finally { console.log(\"done\"); }`, if `riskyCall()` succeeds and returns, does the finally block still run?", np: "`try { return riskyCall(); } finally { console.log(\"done\"); }` मा `riskyCall()` success भई return गरे पनि finally block चल्छ?", jp: "`try { return riskyCall(); } finally { console.log(\"done\"); }`でriskyCall()が成功してreturnしてもfinallyブロックは実行される？" },
+          question: { en: "What does `typeof MyClass` return for a class declared with `class MyClass {}`?", np: "`class MyClass {}` को लागि `typeof MyClass` ले के फर्काउँछ?", jp: "`class MyClass {}`で宣言されたクラスの`typeof MyClass`は？" },
           options: [
-            { en: "No — finally is skipped once a return happens", np: "होइन — return भएपछि finally skip हुन्छ", jp: "いいえ — returnが発生するとfinallyはスキップされる" },
-            { en: "Yes — finally always runs, even after a return inside try", np: "हो — finally सधैं चल्छ, try भित्र return भए पनि", jp: "はい — finallyは常に実行される、try内のreturnの後でも" },
+            { en: "`\"class\"`", np: "`\"class\"`", jp: "`\"class\"`" },
+            { en: "`\"function\"`", np: "`\"function\"`", jp: "`\"function\"`" },
           ],
           correctIndex: 1,
-          explanation: { en: "finally is guaranteed to execute regardless of how the try/catch block exits — normal completion, an error, or a return statement.", np: "Try/catch block कसरी बाहिर निस्किए पनि finally execute हुने guaranteed छ — normal completion, error, वा return।", jp: "finallyはtry/catchブロックがどのように終了しても実行が保証される — 正常終了、エラー、return文のいずれでも。" },
+          explanation: { en: "Classes compile to constructor functions, so JavaScript reports their type as function, not a special 'class' type.", np: "Classes constructor functions मा compile हुन्छन्, त्यसैले JS ले तिनको type function नै report गर्छ, special 'class' type होइन।", jp: "クラスはコンストラクタ関数にコンパイルされるため、JSは特別な'class'型ではなくfunctionとして型を報告する。" },
         },
         {
-          question: { en: "Why should you call `super(message)` in a custom error class's constructor?", np: "Custom error class को constructor मा `super(message)` किन call गर्नुपर्छ?", jp: "カスタムエラークラスのコンストラクタで`super(message)`を呼ぶべき理由は？" },
+          question: { en: "Where do methods written inside a class body end up?", np: "Class body भित्र लेखिएका methods कहाँ जान्छन्?", jp: "クラス本体内に書かれたメソッドはどこに配置される？" },
           options: [
-            { en: "It sets `this.message` correctly, using Error's own constructor logic", np: "यसले Error को आफ्नै constructor logic प्रयोग गरी `this.message` सहि सेट गर्छ", jp: "Error自身のコンストラクタロジックを使ってthis.messageを正しく設定する" },
-            { en: "It's optional boilerplate with no real effect", np: "यो optional boilerplate हो, real effect छैन", jp: "実際の効果のないオプションのボイラープレート" },
+            { en: "As own properties on each instance", np: "हरेक instance मा own properties को रूपमा", jp: "各インスタンス自身のプロパティとして" },
+            { en: "On the class's `.prototype`, shared by every instance", np: "Class को `.prototype` मा, हरेक instance ले share गर्ने", jp: "クラスの`.prototype`に、すべてのインスタンスで共有される" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Error's constructor is what wires up .message and .stack; skipping super() leaves those unset or broken.", np: "Error को constructor ले नै .message र .stack सेटअप गर्छ; super() skip गर्दा ती सेट नहुन सक्छ।", jp: "Errorのコンストラクタが.messageと.stackを設定する。super()をスキップするとこれらが未設定になる。" },
+          correctIndex: 1,
+          explanation: { en: "This is identical to the constructor-function pattern — instance methods live once on the shared prototype.", np: "यो constructor-function pattern सँग identical छ — instance methods shared prototype मा एकपल्ट रहन्छन्।", jp: "これはコンストラクタ関数パターンと同一。インスタンスメソッドは共有プロトタイプに一度だけ存在する。" },
         },
         {
-          question: { en: "What should you do with an error type you don't specifically recognise inside a `catch` block?", np: "`catch` block भित्र नचिनेको error type सँग के गर्नुपर्छ?", jp: "catchブロック内で特定して認識していないエラータイプはどうするべき？" },
+          question: { en: "What happens if you call a class as a plain function, without `new`?", np: "Class लाई `new` बिना plain function जस्तै call गर्दा के हुन्छ?", jp: "`new`なしでクラスをプレーンな関数として呼び出すとどうなる？" },
           options: [
-            { en: "Re-throw it (`throw err`) so it isn't silently swallowed", np: "यसलाई re-throw गर्नुहोस् (`throw err`) ताकि silently swallow नहोस्", jp: "黙って握りつぶされないように再スロー（`throw err`）する" },
-            { en: "Log it and continue as if nothing happened", np: "Log गर्नुहोस् र केही नभएको जस्तो जारी राख्नुहोस्", jp: "ログに記録して何もなかったように続行する" },
+            { en: "It throws a TypeError", np: "यसले TypeError throw गर्छ", jp: "TypeErrorをスローする" },
+            { en: "It runs normally, just without setting up `this` correctly", np: "यो normally चल्छ, `this` सहि setup नभएको बाहेक", jp: "正常に実行されるが、thisが正しく設定されないだけ" },
           ],
           correctIndex: 0,
-          explanation: { en: "Swallowing unrecognised errors hides real bugs; rethrowing keeps them visible to whoever calls this code.", np: "नचिनेको error swallow गर्दा real bugs लुक्छन्; rethrow गर्दा यो code call गर्ने लाई देखिन्छ।", jp: "認識しないエラーを握りつぶすと本当のバグが隠れる。再スローすればこのコードを呼ぶ側に見える。" },
+          explanation: { en: "Unlike constructor functions, class constructors explicitly require the 'new' keyword and throw if it's missing.", np: "Constructor functions फरक, class constructors ले explicitly 'new' keyword चाहिन्छ र नभएमा throw गर्छ।", jp: "コンストラクタ関数とは異なり、クラスのコンストラクタは明示的にnewキーワードを要求し、なければスローする。" },
         },
       ],
     },
     {
-      id: "commonjs-modules",
-      title: { en: "CommonJS Modules (require / module.exports)", np: "CommonJS Modules (require / module.exports)", jp: "CommonJSモジュール（require/module.exports）" },
+      id: "inheritance-extends-super",
+      title: { en: "Inheritance with extends and super", np: "extends र super सँग Inheritance", jp: "extendsとsuperによる継承" },
       durationMinutes: 9,
       explanation: {
-        en: "When an application becomes large, putting everything into one file becomes difficult to manage.\n\nFor example:\n\n```text\napp.js\n ├── Users\n ├── Payments\n ├── Database\n ├── Email\n └── Authentication\n```\n\nInstead, we split the application into smaller files.\n\nEach file can handle <b>one main job</b>.\n\nThis is called a <b>module</b>.\n\n---\n\n## 1. What is a Module?\n\nA module is simply a separate file containing related code.\n\nFor example:\n\n```text\nproject/\n├── app.js\n├── math.js\n└── user.js\n```\n\n`math.js` can contain math-related functions.\n\n`user.js` can contain user-related functions.\n\n`app.js` can use them.\n\nThis makes the application easier to understand and maintain.\n\n---\n\n## 2. CommonJS\n\n<b>CommonJS</b> is a module system commonly used in Node.js.\n\nIt uses two main things:\n\n```text\nmodule.exports → Share code\n\nrequire()      → Get code from another file\n```\n\n---\n\n## 3. `module.exports`\n\nSuppose we have a file called `math.js`.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports.add = add;\n```\n\nWe are saying:\n\n> \"Make the `add` function available to other files.\"\n\n---\n\n## 4. Using `require()`\n\nNow in `app.js`:\n\n```javascript\nconst math = require(\"./math\");\n\nconsole.log(math.add(2, 3));\n```\n\nOutput:\n\n```text\n5\n```\n\nThe flow is:\n\n```text\nmath.js\n   ↓\nmodule.exports\n   ↓\nrequire(\"./math\")\n   ↓\napp.js\n```\n\n---\n\n## 5. Exporting Multiple Things\n\nA module can export multiple functions.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nfunction subtract(a, b) {\n  return a - b;\n}\n\nmodule.exports.add = add;\nmodule.exports.subtract = subtract;\n```\n\nThen:\n\n```javascript\nconst math = require(\"./math\");\n\nmath.add(10, 5);\nmath.subtract(10, 5);\n```\n\nWe can also write:\n\n```javascript\nmodule.exports = {\n  add,\n  subtract\n};\n```\n\nBoth approaches export an object containing the functions.\n\n---\n\n## 6. Exporting One Thing\n\nSometimes a file only needs to export one function.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports = add;\n```\n\nThen:\n\n```javascript\nconst add = require(\"./math\");\n\nconsole.log(add(2, 3));\n```\n\nHere, `require()` directly gives us the function.\n\n---\n\n## 7. `require()` is Synchronous\n\n<b>Synchronous</b> means:\n\n> The code waits until the operation finishes before continuing.\n\nWhen Node.js does:\n\n```javascript\nconst math = require(\"./math\");\n```\n\nNode.js loads the file before moving to the next line.\n\nThink of it like:\n\n```text\nrequire(\"./math\")\n       ↓\nLoad file\n       ↓\nRun/prepare module\n       ↓\nContinue\n```\n\nThis is different from many asynchronous operations in Node.js.\n\n---\n\n## 8. Modules Are Cached\n\nThis is one of the most important things to understand.\n\nWhen Node.js loads a module for the first time, it <b>caches</b> (saves) the result.\n\nFor example:\n\n```javascript\n// math.js\n\nconsole.log(\"Math module loaded\");\n\nmodule.exports = {\n  add: (a, b) => a + b\n};\n```\n\nNow:\n\n```javascript\nconst math1 = require(\"./math\");\nconst math2 = require(\"./math\");\n```\n\nYou might expect the file to run twice.\n\nBut it doesn't.\n\nOutput:\n\n```text\nMath module loaded\n```\n\nOnly once.\n\nBoth variables get the same cached module:\n\n```text\nrequire(\"./math\") ──┐\n                    ├──→ Same cached module\nrequire(\"./math\") ──┘\n```\n\nSo:\n\n```javascript\nmath1 === math2\n```\n\nis:\n\n```text\ntrue\n```\n\n---\n\n## 9. Why Module Caching Matters\n\nBecause the module is cached, top-level code in that module normally runs only once.\n\nFor example:\n\n```javascript\n// counter.js\n\nlet count = 0;\n\ncount++;\n\nmodule.exports = count;\n```\n\nIf another file does:\n\n```javascript\nconst a = require(\"./counter\");\nconst b = require(\"./counter\");\n```\n\nBoth use the cached result.\n\nThe module isn't created again from scratch.\n\nThis is useful for things like:\n\n• Database connections\n• Configuration\n• Shared state\n• Expensive setup\n\n---\n\n## 10. `require()` Can Be Called Anywhere\n\n`require()` is a normal function, so you can call it inside a condition or function.\n\nFor example:\n\n```javascript\nif (process.env.NODE_ENV === \"development\") {\n  const logger = require(\"./logger\");\n}\n```\n\nOr:\n\n```javascript\nfunction getDatabase() {\n  return require(\"./database\");\n}\n```\n\nThis makes `require()` flexible.\n\nWith ES Modules, `import` works differently and follows stricter rules.",
-        np: "Application ठूलो हुँदै जाँदा, सबै चीज एउटै file मा राख्नु व्यवस्थापन गर्न कठिन हुन्छ।\n\nउदाहरणका लागि:\n\n```text\napp.js\n ├── Users\n ├── Payments\n ├── Database\n ├── Email\n └── Authentication\n```\n\nबरु, हामी application लाई साना file मा विभाजन गर्छौं।\n\nहरेक file ले <b>एउटा मुख्य काम</b> सम्हाल्न सक्छ।\n\nयसलाई <b>module</b> भनिन्छ।\n\n---\n\n## 1. Module के हो?\n\nModule भनेको सम्बन्धित code राखिएको छुट्टै file मात्र हो।\n\nउदाहरणका लागि:\n\n```text\nproject/\n├── app.js\n├── math.js\n└── user.js\n```\n\n`math.js` मा math सम्बन्धी functions हुन सक्छन्।\n\n`user.js` मा user सम्बन्धी functions हुन सक्छन्।\n\n`app.js` ले तिनलाई प्रयोग गर्न सक्छ।\n\nयसले application बुझ्न र maintain गर्न सजिलो बनाउँछ।\n\n---\n\n## 2. CommonJS\n\n<b>CommonJS</b> Node.js मा सामान्य रूपमा प्रयोग हुने module system हो।\n\nयसले दुई मुख्य चीज प्रयोग गर्छ:\n\n```text\nmodule.exports → Share code\n\nrequire()      → Get code from another file\n```\n\n---\n\n## 3. `module.exports`\n\nमानौं हामीसँग `math.js` नामको file छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports.add = add;\n```\n\nहामी यो भन्दै छौं:\n\n> \"`add` function लाई अरू file हरूका लागि उपलब्ध बनाऊ।\"\n\n---\n\n## 4. `require()` को प्रयोग\n\nअब `app.js` मा:\n\n```javascript\nconst math = require(\"./math\");\n\nconsole.log(math.add(2, 3));\n```\n\nOutput:\n\n```text\n5\n```\n\nFlow यो हो:\n\n```text\nmath.js\n   ↓\nmodule.exports\n   ↓\nrequire(\"./math\")\n   ↓\napp.js\n```\n\n---\n\n## 5. धेरै चीज Export गर्नु\n\nएउटा module ले धेरै function export गर्न सक्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nfunction subtract(a, b) {\n  return a - b;\n}\n\nmodule.exports.add = add;\nmodule.exports.subtract = subtract;\n```\n\nत्यसपछि:\n\n```javascript\nconst math = require(\"./math\");\n\nmath.add(10, 5);\nmath.subtract(10, 5);\n```\n\nहामी यसो पनि लेख्न सक्छौं:\n\n```javascript\nmodule.exports = {\n  add,\n  subtract\n};\n```\n\nदुबै तरिकाले function राखिएको object export हुन्छ।\n\n---\n\n## 6. एउटा चीज मात्र Export गर्नु\n\nकहिलेकाहीँ file ले एउटा function मात्र export गर्नुपर्ने हुन्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports = add;\n```\n\nत्यसपछि:\n\n```javascript\nconst add = require(\"./math\");\n\nconsole.log(add(2, 3));\n```\n\nयहाँ, `require()` ले हामीलाई सिधै function दिन्छ।\n\n---\n\n## 7. `require()` Synchronous छ\n\n<b>Synchronous</b> को अर्थ:\n\n> Operation सकिने बेलासम्म code कुर्छ, त्यसपछि मात्र अगाडि बढ्छ।\n\nNode.js ले यो गर्दा:\n\n```javascript\nconst math = require(\"./math\");\n```\n\nNode.js अर्को line मा जानुअघि file load गर्छ।\n\nयसलाई यसरी सोच्नुहोस्:\n\n```text\nrequire(\"./math\")\n       ↓\nLoad file\n       ↓\nRun/prepare module\n       ↓\nContinue\n```\n\nयो Node.js का धेरै asynchronous operations भन्दा फरक छ।\n\n---\n\n## 8. Modules Cache हुन्छन्\n\nयो बुझ्नुपर्ने सबैभन्दा महत्वपूर्ण चीजमध्ये एक हो।\n\nNode.js ले module पहिलो पटक load गर्दा, नतिजा <b>cache</b> (सेभ) गर्छ।\n\nउदाहरणका लागि:\n\n```javascript\n// math.js\n\nconsole.log(\"Math module loaded\");\n\nmodule.exports = {\n  add: (a, b) => a + b\n};\n```\n\nअब:\n\n```javascript\nconst math1 = require(\"./math\");\nconst math2 = require(\"./math\");\n```\n\nतपाईं file दुई पटक चल्छ भनी सोच्न सक्नुहुन्छ।\n\nतर चल्दैन।\n\nOutput:\n\n```text\nMath module loaded\n```\n\nएक पटक मात्र।\n\nदुबै variable ले उही cached module पाउँछन्:\n\n```text\nrequire(\"./math\") ──┐\n                    ├──→ Same cached module\nrequire(\"./math\") ──┘\n```\n\nत्यसैले:\n\n```javascript\nmath1 === math2\n```\n\nयो हुन्छ:\n\n```text\ntrue\n```\n\n---\n\n## 9. Module Caching किन महत्वपूर्ण छ\n\nModule cache हुने हुनाले, त्यो module को top-level code सामान्यतया एक पटक मात्र चल्छ।\n\nउदाहरणका लागि:\n\n```javascript\n// counter.js\n\nlet count = 0;\n\ncount++;\n\nmodule.exports = count;\n```\n\nयदि अर्को file ले यो गर्छ:\n\n```javascript\nconst a = require(\"./counter\");\nconst b = require(\"./counter\");\n```\n\nदुबैले cached नतिजा प्रयोग गर्छन्।\n\nModule फेरि सुरुबाट बनाइँदैन।\n\nयो यस्ता चीजका लागि उपयोगी छ:\n\n• Database connections\n• Configuration\n• Shared state\n• महँगो setup\n\n---\n\n## 10. `require()` कहीं पनि Call गर्न सकिन्छ\n\n`require()` सामान्य function हो, त्यसैले तपाईं यसलाई condition वा function भित्र call गर्न सक्नुहुन्छ।\n\nउदाहरणका लागि:\n\n```javascript\nif (process.env.NODE_ENV === \"development\") {\n  const logger = require(\"./logger\");\n}\n```\n\nवा:\n\n```javascript\nfunction getDatabase() {\n  return require(\"./database\");\n}\n```\n\nयसले `require()` लाई flexible बनाउँछ।\n\nES Modules मा, `import` फरक तरिकाले काम गर्छ र कडा नियम पालना गर्छ।",
-        jp: "アプリケーションが大きくなると、すべてを1つのファイルに入れておくのは管理しづらくなります。\n\nたとえば:\n\n```text\napp.js\n ├── Users\n ├── Payments\n ├── Database\n ├── Email\n └── Authentication\n```\n\n代わりに、アプリケーションを小さなファイルに分割します。\n\n各ファイルは<b>1つの主な役割</b>を担えます。\n\nこれを<b>モジュール</b>と呼びます。\n\n---\n\n## 1. モジュールとは?\n\nモジュールとは、関連するコードをまとめた別のファイルにすぎません。\n\nたとえば:\n\n```text\nproject/\n├── app.js\n├── math.js\n└── user.js\n```\n\n`math.js` には数学関連の関数を入れられます。\n\n`user.js` にはユーザー関連の関数を入れられます。\n\n`app.js` はそれらを使えます。\n\nこれでアプリケーションは理解しやすく、保守しやすくなります。\n\n---\n\n## 2. CommonJS\n\n<b>CommonJS</b> はNode.jsで広く使われているモジュールシステムです。\n\n主に2つのものを使います:\n\n```text\nmodule.exports → Share code\n\nrequire()      → Get code from another file\n```\n\n---\n\n## 3. `module.exports`\n\n`math.js` というファイルがあるとします。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports.add = add;\n```\n\nこれはこう言っているのと同じです:\n\n> 「`add` 関数を他のファイルから使えるようにする。」\n\n---\n\n## 4. `require()` を使う\n\n次に `app.js` で:\n\n```javascript\nconst math = require(\"./math\");\n\nconsole.log(math.add(2, 3));\n```\n\n出力:\n\n```text\n5\n```\n\n流れはこうです:\n\n```text\nmath.js\n   ↓\nmodule.exports\n   ↓\nrequire(\"./math\")\n   ↓\napp.js\n```\n\n---\n\n## 5. 複数のものをエクスポートする\n\n1つのモジュールから複数の関数をエクスポートできます。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nfunction subtract(a, b) {\n  return a - b;\n}\n\nmodule.exports.add = add;\nmodule.exports.subtract = subtract;\n```\n\nそして:\n\n```javascript\nconst math = require(\"./math\");\n\nmath.add(10, 5);\nmath.subtract(10, 5);\n```\n\nこうも書けます:\n\n```javascript\nmodule.exports = {\n  add,\n  subtract\n};\n```\n\nどちらの書き方でも、関数を含むオブジェクトがエクスポートされます。\n\n---\n\n## 6. 1つだけエクスポートする\n\nファイルが関数を1つだけエクスポートしたい場合もあります。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nmodule.exports = add;\n```\n\nそして:\n\n```javascript\nconst add = require(\"./math\");\n\nconsole.log(add(2, 3));\n```\n\nこの場合、`require()` は関数そのものを返します。\n\n---\n\n## 7. `require()` は同期的\n\n<b>同期的（Synchronous）</b>とは:\n\n> 処理が終わるまでコードが待ってから先に進む、という意味です。\n\nNode.jsが次を実行するとき:\n\n```javascript\nconst math = require(\"./math\");\n```\n\nNode.jsは次の行に進む前にファイルを読み込みます。\n\nこうイメージしてください:\n\n```text\nrequire(\"./math\")\n       ↓\nLoad file\n       ↓\nRun/prepare module\n       ↓\nContinue\n```\n\nこれはNode.jsの多くの非同期処理とは異なります。\n\n---\n\n## 8. モジュールはキャッシュされる\n\nこれは理解すべき最も重要なことの1つです。\n\nNode.jsがモジュールを初めて読み込むとき、その結果を<b>キャッシュ</b>（保存）します。\n\nたとえば:\n\n```javascript\n// math.js\n\nconsole.log(\"Math module loaded\");\n\nmodule.exports = {\n  add: (a, b) => a + b\n};\n```\n\nそして:\n\n```javascript\nconst math1 = require(\"./math\");\nconst math2 = require(\"./math\");\n```\n\nファイルが2回実行されると思うかもしれません。\n\nしかし、そうはなりません。\n\n出力:\n\n```text\nMath module loaded\n```\n\n1回だけです。\n\nどちらの変数も同じキャッシュされたモジュールを受け取ります:\n\n```text\nrequire(\"./math\") ──┐\n                    ├──→ Same cached module\nrequire(\"./math\") ──┘\n```\n\nつまり:\n\n```javascript\nmath1 === math2\n```\n\nは:\n\n```text\ntrue\n```\n\n---\n\n## 9. モジュールのキャッシュが重要な理由\n\nモジュールがキャッシュされるので、そのモジュールのトップレベルのコードは通常1回だけ実行されます。\n\nたとえば:\n\n```javascript\n// counter.js\n\nlet count = 0;\n\ncount++;\n\nmodule.exports = count;\n```\n\n別のファイルがこうすると:\n\n```javascript\nconst a = require(\"./counter\");\nconst b = require(\"./counter\");\n```\n\nどちらもキャッシュされた結果を使います。\n\nモジュールが最初から作り直されることはありません。\n\nこれは次のようなものに役立ちます:\n\n• データベース接続\n• 設定\n• 共有される状態\n• コストの高い初期化\n\n---\n\n## 10. `require()` はどこでも呼べる\n\n`require()` は普通の関数なので、条件文や関数の中でも呼べます。\n\nたとえば:\n\n```javascript\nif (process.env.NODE_ENV === \"development\") {\n  const logger = require(\"./logger\");\n}\n```\n\nまたは:\n\n```javascript\nfunction getDatabase() {\n  return require(\"./database\");\n}\n```\n\nこれが `require()` の柔軟さです。\n\nESモジュールでは `import` の動きが違い、より厳しいルールに従います。",
+        en: "<b>Inheritance</b> lets one class reuse another class's properties and methods instead of duplicating the same code across multiple classes. The class holding the shared logic is called the <b>parent</b> (or base) class; the class that reuses it is the <b>child</b> (or derived) class, connected with the `extends` keyword — e.g. `class Student extends Person {}` gives `Student` everything `Person` has, without rewriting a single line. Under the hood this sets up the entire prototype chain from Day 8 in one line, which is also why `instanceof` reflects the whole chain: a `Student` instance is `instanceof Student` AND `instanceof Person`.\n\nWhen the child defines its own `constructor(...)`, it must call `super(...)` first to run the parent's constructor and set up the inherited properties — using `this` before `super(...)` throws a `ReferenceError`, because the object doesn't exist yet until the parent has initialized it.\n\nA child can also <b>override</b> a method by redefining it with the same name — JavaScript then uses the child's version instead of the parent's. If the child still wants the parent's behaviour too, `super.method()` (no `new`, no parentheses after `super`) calls the parent's original implementation from inside the override. If a method isn't found directly on the child at all, JavaScript walks up to the parent's prototype and keeps looking until it finds it or reaches `Object` — this lookup is called the prototype chain.",
+        np: "Inheritance ले एउटा class को properties/methods अर्को class ले reuse गर्न दिन्छ, code duplicate नगरी। Parent class मा shared logic हुन्छ, child class ले `extends` प्रयोग गरेर त्यो inherit गर्छ — यसैले `instanceof` ले पूरै chain (parent + child दुवै) चिन्छ। Child को आफ्नै constructor भए `super(...)` पहिले call गर्नुपर्छ — नत्र `this` प्रयोग गर्दा ReferenceError हुन्छ। Child ले method override गर्न सक्छ, र `super.method()` ले parent को version पनि call गर्न सकिन्छ। भित्री रूपमा यो अझै prototype chain lookup नै हो।",
+        jp: "継承は、あるクラスのプロパティやメソッドを別のクラスが再利用できるようにする仕組みで、コードの重複を避けられる。共有ロジックを持つのが親クラス、`extends`で継承するのが子クラス — そのため`instanceof`はチェーン全体（親と子の両方）を認識する。子が独自のコンストラクタを持つ場合、まず`super(...)`を呼ぶ必要がある — それより前に`this`を使うとReferenceErrorになる。子はメソッドをオーバーライドでき、`super.method()`で親のバージョンも呼び出せる。内部的にはこれもプロトタイプチェーンによるルックアップ。",
       },
-      diagram: `                 module.js
-                    ↓
-             module.exports
-                    ↓
-                  require
-                    ↓
-                 app.js`,
+      diagram: `Person (parent)                       Student extends Person (child)
+  constructor(name, age)                 constructor(name, age, grade) {
+  introduce() { ... }                      super(name, age);   ← MUST run before 'this'
+                                            this.grade = grade;
+                                          }
+                                          study() { ... }
+
+john = new Student("John", 20, "A")
+
+john.study()          → found on Student                    ✅
+john.introduce()      → not on Student, look up the chain
+                      → found on Person (prototype lookup)  ✅
+
+john instanceof Student  → true
+john instanceof Person   → true   ← chain includes Person.prototype`,
       codeExample: {
-        title: { en: "Exporting and importing with CommonJS", np: "CommonJS सँग export/import", jp: "CommonJSでのエクスポート・インポート" },
-        code: `// ── Exporting a single function — math.js ────────────────────────────
-function add(a, b) { return a + b; }
-module.exports = add;
+        title: { en: "extends, super(), overriding, and calling the parent's method", np: "extends, super(), method override", jp: "extends・super()・メソッドのオーバーライド" },
+        code: `// ── Basic inheritance — reuse without rewriting ──────────────────────
+class Animal {
+  speak() { return "Animal makes a sound"; }
+}
+class Dog extends Animal {}   // Dog gets speak() for free, no code duplication
 
-// ── Importing it — app.js ─────────────────────────────────────────────
-const add = require("./math");
-add(5, 3);   // 8
+const dog = new Dog();
+dog.speak();   // "Animal makes a sound" — inherited, not redefined
 
-// ── Exporting multiple functions as an object ──────────────────────────
-function subtract(a, b) { return a - b; }
-module.exports = { add, subtract };
+// ── super() — initialize the inherited properties first ──────────────
+class Person {
+  constructor(name) { this.name = name; }
+}
+class Student extends Person {
+  constructor(name, course) {
+    super(name);          // MUST run before touching 'this'
+    this.course = course;
+  }
+}
+const student = new Student("Alice", "JavaScript");
+student.name;    // "Alice" — set up by Person's constructor
+student.course;  // "JavaScript"
 
-const math = require("./math");
-math.add(10, 5);        // 15
-math.subtract(10, 5);   // 5
+// ── Overriding a method ────────────────────────────────────────────────
+class Cat extends Animal {
+  speak() { return "Meow!"; }   // replaces Animal's speak()
+}
+new Cat().speak();   // "Meow!" — Cat's own version wins
 
-// ── Destructured import — cleaner call sites ────────────────────────────
-const { add, subtract } = require("./math");
-add(5, 2);        // 7
-subtract(5, 2);   // 3
+// ── Calling the parent's version too, via super.method() ─────────────
+class Puppy extends Animal {
+  speak() { return super.speak() + " ... and also, Woof!"; }
+}
+new Puppy().speak();   // "Animal makes a sound ... and also, Woof!"
 
-// ── Real backend example ────────────────────────────────────────────────
-// database.js
-function connectDatabase() { console.log("Database connected"); }
-function closeDatabase() { console.log("Database closed"); }
-module.exports = { connectDatabase, closeDatabase };
-
-// server.js
-const database = require("./database");
-database.connectDatabase();   // "Database connected"
-console.log("Server running");
-
-// ── Built-in and third-party modules ────────────────────────────────────
-const path = require("path");        // core Node module, no ./ needed
-// const express = require("express");  // third-party package (node_modules)
-
-// ── require() is just a function call — can be conditional ─────────────
-if (process.env.DEBUG) {
-  const debugTools = require("./debug");   // valid in CJS, not in ES Modules
-}`,
+// ── Real-world example ──────────────────────────────────────────────────
+class Employee {
+  constructor(name) { this.name = name; }
+  login() { return \`\${this.name} logged in.\`; }
+}
+class Manager extends Employee {
+  approveLeave() { return \`\${this.name} approved leave.\`; }
+}
+const manager = new Manager("Sarah");
+manager.login();         // "Sarah logged in." — inherited from Employee
+manager.approveLeave();  // "Sarah approved leave." — Manager's own method`,
       },
       keyTakeaways: [
-        { en: "`module.exports` → \"Share this code.\" It is how a file makes a function, object or value available to other files.", np: "`module.exports` → \"यो code share गर।\" यसै मार्फत file ले function, object वा value अरू file लाई उपलब्ध बनाउँछ।", jp: "`module.exports` → \"このコードを共有する。\" ファイルが関数・オブジェクト・値を他のファイルから使えるようにする仕組み。" },
-        { en: "`require()` → \"Give me that code.\" `const math = require(\"./math\")` loads the module and returns whatever it exported.", np: "`require()` → \"त्यो code मलाई देऊ।\" `const math = require(\"./math\")` ले module load गर्छ र यसले export गरेको जे छ त्यही फर्काउँछ।", jp: "`require()` → \"そのコードをくれ。\" `const math = require(\"./math\")` はモジュールを読み込み、エクスポートされたものを返す。" },
-        { en: "<b>Synchronous</b> → \"Wait until the module is loaded.\" Node.js finishes loading the file before moving to the next line.", np: "<b>Synchronous</b> → \"Module load हुँदासम्म कुर।\" Node.js अर्को line मा जानुअघि file load सक्काउँछ।", jp: "<b>同期的</b> → \"モジュールが読み込まれるまで待つ。\" Node.jsは次の行に進む前にファイルの読み込みを終える。" },
-        { en: "<b>Cached</b> → \"Load it once and reuse it.\" Requiring the same file twice runs its top-level code only once, and both variables point at the same object, so `math1 === math2` is `true`.", np: "<b>Cached</b> → \"एक पटक load गर र पुनः प्रयोग गर।\" उही file दुई पटक require गर्दा top-level code एक पटक मात्र चल्छ, र दुबै variable उही object तिर देखाउँछन्, त्यसैले `math1 === math2` `true` हुन्छ।", jp: "<b>キャッシュ</b> → \"一度読み込んで再利用する。\" 同じファイルを2回requireしてもトップレベルのコードは1回だけ実行され、両方の変数が同じオブジェクトを指すので `math1 === math2` は `true`。" },
-        { en: "Caching is what makes a module a good place for database connections, configuration, shared state and expensive setup.", np: "Caching ले नै module लाई database connections, configuration, shared state र महँगो setup राख्ने राम्रो ठाउँ बनाउँछ।", jp: "キャッシュされるからこそ、モジュールはデータベース接続・設定・共有状態・コストの高い初期化を置くのに適した場所になる。" },
-        { en: "`require()` anywhere → \"It can be called inside conditions or functions.\" It is just a function, unlike the static `import` of ES Modules.", np: "`require()` कहीं पनि → \"यो condition वा function भित्र call गर्न सकिन्छ।\" यो केवल function हो, ES Modules को static `import` जस्तो होइन।", jp: "`require()` はどこでも → \"条件文や関数の中でも呼べる。\" ESモジュールの静的な `import` とは違い、単なる関数だから。" },
-        { en: "The basic pattern: `module.exports = { add(a, b) { return a + b; } }` in `math.js`, then `const math = require(\"./math\")` in `app.js`.", np: "आधारभूत pattern: `math.js` मा `module.exports = { add(a, b) { return a + b; } }`, त्यसपछि `app.js` मा `const math = require(\"./math\")`।", jp: "基本パターン: `math.js` で `module.exports = { add(a, b) { return a + b; } }`、`app.js` で `const math = require(\"./math\")`。" },
-        { en: "In one line: `module.exports` shares code → `require()` gets the code → modules load synchronously → modules are cached after the first load.", np: "एक वाक्यमा: `module.exports` ले code share गर्छ → `require()` ले code लिन्छ → modules synchronously load हुन्छन् → पहिलो load पछि modules cache हुन्छन्।", jp: "一言で言えば: `module.exports` がコードを共有し → `require()` がそれを取得し → モジュールは同期的に読み込まれ → 最初の読み込み後はキャッシュされる。" },
+        { en: "Inheritance lets a child class reuse a parent class's properties and methods via `extends`, instead of duplicating the same code in multiple classes.", np: "Inheritance ले child class लाई `extends` मार्फत parent class को properties/methods reuse गर्न दिन्छ, धेरै classes मा उही code duplicate नगरी।", jp: "継承は`extends`を通じて子クラスが親クラスのプロパティやメソッドを再利用できるようにし、複数のクラスで同じコードを重複させずに済む。" },
+        { en: "`super(...)` calls the parent's constructor and must run before any use of `this` in the child's constructor — using `this` first throws a ReferenceError.", np: "`super(...)` ले parent को constructor call गर्छ र child को constructor मा `this` प्रयोग गर्नुअघि चल्नुपर्छ — पहिले `this` प्रयोग गर्दा ReferenceError हुन्छ।", jp: "`super(...)`は親のコンストラクタを呼び、子のコンストラクタでthisを使う前に実行する必要がある。先にthisを使うとReferenceErrorになる。" },
+        { en: "A child class can override an inherited method by redefining it with the same name; `super.method()` lets it also call the parent's original version.", np: "Child class ले inherited method लाई उही नामले redefine गरेर override गर्न सक्छ; `super.method()` ले parent को original version पनि call गर्न दिन्छ।", jp: "子クラスは同じ名前で再定義することで継承したメソッドをオーバーライドできる。`super.method()`で親の元のバージョンも呼び出せる。" },
+        { en: "Behind the scenes, method lookup still walks the prototype chain from Day 8 — if a method isn't found on the child, JavaScript looks up to the parent, then further up until it's found.", np: "भित्री रूपमा method lookup अझै Day 8 को prototype chain मार्फत हुन्छ — child मा method नभेटिए JS ले parent मा, त्यसपछि माथि खोज्छ।", jp: "内部的にはメソッドの検索はDay 8のプロトタイプチェーンをたどる。子に見つからなければ親、さらに上へと探す。" },
       ],
       commonMistakes: [
-        { en: "Writing a function in a file but forgetting to attach it to `module.exports` — it stays private to that file, and `require()` in another file returns nothing useful.", np: "File मा function लेखेर `module.exports` मा attach गर्न बिर्सनु — त्यो त्यही file मा मात्र private रहन्छ, अर्को file को `require()` ले केही useful फिर्ता दिँदैन।", jp: "ファイルに関数を書いたが`module.exports`に付けるのを忘れること。その関数はそのファイル内だけのプライベートなままで、他ファイルのrequire()は何も有用なものを返さない。" },
-        { en: "Requiring a local file without the `./` prefix (`require(\"math\")` instead of `require(\"./math\")`) — Node then looks for an installed package named `math` instead of your file.", np: "Local file require गर्दा `./` prefix बिर्सनु (`require(\"./math\")` को सट्टा `require(\"math\")`) — Node ले तिम्रो file को सट्टा `math` नामको installed package खोज्छ।", jp: "ローカルファイルをrequireする際に`./`接頭辞を忘れること（`require(\"./math\")`ではなく`require(\"math\")`）。Nodeは自分のファイルの代わりに`math`という名前のインストール済みパッケージを探してしまう。" },
-        { en: "Mixing `module.exports.x = ...` (adding to the exports object) with `module.exports = { ... }` (replacing it entirely) in the same file — the replacement wipes out the earlier additions.", np: "Same file मा `module.exports.x = ...` (exports मा थप्नु) र `module.exports = { ... }` (पूर्ण replace) मिलाउनु — replacement ले पहिलेका additions हराउँछ।", jp: "同じファイルで`module.exports.x = ...`（追加）と`module.exports = { ... }`（完全置換）を混ぜること。置換により以前の追加が消える。" },
-        { en: "Mixing CommonJS (`require`/`module.exports`) and ES Modules (`import`/`export`) syntax in the same file — they are different module systems, so pick one style per project.", np: "Same file मा CommonJS (`require`/`module.exports`) र ES Modules (`import`/`export`) syntax मिलाउनु — यी फरक module systems हुन्, project प्रति एउटा style मात्र छान्ने।", jp: "同じファイルでCommonJS（require/module.exports）とESモジュール（import/export）の構文を混ぜること。異なるモジュールシステムなので、プロジェクトごとに1つの方式を選ぶ。" },
-        { en: "Writing `module.exports.add()` (which calls the function immediately) instead of `module.exports.add = add` (which exports the function reference).", np: "`module.exports.add = add` (function reference export) को सट्टा `module.exports.add()` (जसले function तुरुन्तै call गर्छ) लेख्नु।", jp: "`module.exports.add = add`（関数の参照をエクスポート）の代わりに`module.exports.add()`（関数を即座に呼び出してしまう）と書くこと。" },
+        { en: "Forgetting `extends` entirely, so the child class doesn't inherit anything from the intended parent class.", np: "`extends` नै बिर्सनु, त्यसले child class ले चाहिएको parent class बाट केही inherit गर्दैन।", jp: "`extends`自体を書き忘れること。その結果、子クラスは意図した親クラスから何も継承しない。" },
+        { en: "Trying to use `this` in a derived class's constructor before calling `super(...)` — this always throws a ReferenceError.", np: "Derived class को constructor मा `super(...)` call गर्नुअघि `this` प्रयोग गर्ने प्रयास गर्नु — यसले सधैं ReferenceError throw गर्छ।", jp: "`super(...)`を呼ぶ前に派生クラスのコンストラクタでthisを使おうとすること。これは常にReferenceErrorをスローする。" },
+        { en: "Confusing inheritance with copying — a child doesn't get its own copy of the parent's methods, it accesses them through the prototype chain, which is memory efficient.", np: "Inheritance लाई copying सँग confuse गर्नु — child ले parent को methods को आफ्नै copy पाउँदैन, prototype chain मार्फत access गर्छ, जुन memory efficient छ।", jp: "継承をコピーと混同すること。子は親のメソッドの独自コピーを持たず、プロトタイプチェーンを通じてアクセスする。これはメモリ効率が良い。" },
+        { en: "Rewriting a method that's identical to the parent's version instead of simply letting the child inherit it unchanged.", np: "Parent को version सँग उस्तै method फेरि लेख्नु, child ले त्यसलाई unchanged inherit गर्न दिनुको सट्टा।", jp: "親のバージョンと同一のメソッドを書き直すこと。子にそのまま継承させれば十分な場合。" },
       ],
       quiz: [
         {
-          question: { en: "Is `require()` synchronous or asynchronous?", np: "`require()` synchronous वा asynchronous हो?", jp: "`require()`は同期か非同期か？" },
+          question: { en: "What must happen before you can use `this` inside a derived class's constructor?", np: "Derived class को constructor भित्र `this` प्रयोग गर्नुअघि के हुनुपर्छ?", jp: "派生クラスのコンストラクタ内でthisを使う前に何が必要？" },
           options: [
-            { en: "Synchronous — it blocks until the module fully loads", np: "Synchronous — module पूर्ण load नभएसम्म block गर्छ", jp: "同期 — モジュールが完全にロードされるまでブロックする" },
-            { en: "Asynchronous — it returns a Promise", np: "Asynchronous — यो Promise फर्काउँछ", jp: "非同期 — Promiseを返す" },
+            { en: "Nothing special — `this` is always available", np: "विशेष केही होइन — `this` सधैं available हुन्छ", jp: "特別なことは何もない — thisは常に利用可能" },
+            { en: "`super(...)` must be called first", np: "पहिले `super(...)` call हुनुपर्छ", jp: "先に`super(...)`を呼ぶ必要がある" },
           ],
-          correctIndex: 0,
-          explanation: { en: "CommonJS require() is a blocking, synchronous operation — this is one of its key differences from ES Modules' import.", np: "CommonJS require() blocking, synchronous operation हो — ES Modules को import सँगको एक key फरक।", jp: "CommonJSのrequire()はブロッキングで同期的な操作。これはESモジュールのimportとの主な違いの1つ。" },
+          correctIndex: 1,
+          explanation: { en: "The parent constructor sets up 'this' — accessing it beforehand throws a ReferenceError.", np: "Parent constructor ले 'this' सेटअप गर्छ — अगावै access गर्दा ReferenceError हुन्छ।", jp: "親コンストラクタがthisを設定する。それ以前にアクセスするとReferenceErrorをスローする。" },
         },
         {
-          question: { en: "If you `require(\"./math\")` twice from two different files, do you get two separate objects?", np: "दुई फरक files बाट `require(\"./math\")` दुई पटक गर्दा दुई फरक objects पाउँछौं?", jp: "2つの異なるファイルから`require(\"./math\")`を2回すると、2つの別々のオブジェクトを得る？" },
+          question: { en: "What does `super.speak()` do inside an overriding `speak()` method?", np: "Overriding `speak()` method भित्र `super.speak()` ले के गर्छ?", jp: "オーバーライドする`speak()`メソッド内で`super.speak()`は何をする？" },
           options: [
-            { en: "No — the module is cached; both get the exact same object", np: "होइन — module cache हुन्छ; दुवैले उही object पाउँछन्", jp: "いいえ — モジュールはキャッシュされ、両方が同じオブジェクトを得る" },
-            { en: "Yes — each require re-runs the module fresh", np: "हो — हरेक require ले module नयाँ रूपमा फेरि चलाउँछ", jp: "はい — 各requireがモジュールを新しく再実行する" },
+            { en: "Calls the parent class's version of `speak()`", np: "Parent class को `speak()` version call गर्छ", jp: "親クラスの`speak()`のバージョンを呼ぶ" },
+            { en: "Calls `speak()` on every instance created so far", np: "अहिलेसम्म बनेका सबै instances मा `speak()` call गर्छ", jp: "今まで作られたすべてのインスタンスでspeak()を呼ぶ" },
           ],
           correctIndex: 0,
-          explanation: { en: "Node caches modules by resolved file path after the first require, so later requires reuse that same cached object.", np: "Node ले पहिलो require पछि resolved file path अनुसार module cache गर्छ, पछिका requires ले उही cached object reuse गर्छन्।", jp: "Nodeは最初のrequire後に解決されたファイルパスでモジュールをキャッシュし、以降のrequireは同じキャッシュされたオブジェクトを再利用する。" },
+          explanation: { en: "super.method() reaches up one level in the prototype chain to invoke the parent's implementation.", np: "super.method() ले prototype chain मा एक level माथि गएर parent को implementation call गर्छ।", jp: "super.method()はプロトタイプチェーンを1段上って親の実装を呼び出す。" },
         },
         {
-          question: { en: "Can `require()` be called conditionally inside an `if` block?", np: "`require()` लाई `if` block भित्र conditionally call गर्न सकिन्छ?", jp: "`require()`はifブロック内で条件付きで呼べる？" },
+          question: { en: "If `Dog extends Animal`, is a `Dog` instance `instanceof Animal`?", np: "`Dog extends Animal` भए `Dog` instance `instanceof Animal` हो?", jp: "`Dog extends Animal`の場合、Dogインスタンスはinstanceof Animalか？" },
           options: [
-            { en: "Yes — it's a normal function call, valid anywhere", np: "हो — यो normal function call हो, जहाँसुकै valid", jp: "はい — 通常の関数呼び出しで、どこでも有効" },
-            { en: "No — require must always be at the top level of the file", np: "होइन — require सधैं file को top level मा हुनुपर्छ", jp: "いいえ — requireは常にファイルのトップレベルにある必要がある" },
+            { en: "Yes — extends wires Dog's prototype chain to include Animal.prototype", np: "हो — extends ले Dog को prototype chain मा Animal.prototype समावेश गराउँछ", jp: "はい — extendsはDogのプロトタイプチェーンにAnimal.prototypeを含める" },
+            { en: "No — instanceof only recognises the direct class, not ancestors", np: "होइन — instanceof ले direct class मात्र चिन्छ, ancestors होइन", jp: "いいえ — instanceofは直接のクラスのみを認識し、祖先は認識しない" },
           ],
           correctIndex: 0,
-          explanation: { en: "Unlike ES Modules' static import statement, require() is just a function, so it can appear anywhere ordinary code can, including inside conditionals.", np: "ES Modules को static import statement भन्दा फरक, require() केवल function हो, त्यसैले यो conditional भित्र पनि प्रयोग हुन सक्छ।", jp: "ESモジュールの静的なimport文とは異なり、require()は単なる関数なので、条件文の中など通常のコードが書ける場所ならどこでも使える。" },
+          explanation: { en: "instanceof checks the entire prototype chain, and extends puts the parent's prototype into that chain.", np: "instanceof ले पूरै prototype chain check गर्छ, र extends ले parent को prototype त्यो chain मा राख्छ।", jp: "instanceofはプロトタイプチェーン全体を確認し、extendsはそのチェーンに親のプロトタイプを入れる。" },
         },
       ],
     },
     {
-      id: "es-modules",
-      title: { en: "ES Modules (import / export)", np: "ES Modules (import / export)", jp: "ESモジュール（import/export）" },
+      id: "static-getters-private",
+      title: { en: "Static Methods, Getters/Setters & Private Fields", np: "Static Methods, Getters/Setters, Private Fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>ES Modules (ESM)</b> are the modern and official way to share code between JavaScript files.\n\nThey are used in:\n\n• Browsers\n• Node.js\n• React\n• Next.js\n• Many modern JavaScript applications\n\nThe two main keywords are:\n\n```text\nexport → Share code\nimport → Use code from another file\n```\n\n---\n\n## 1. Exporting Code\n\nSuppose we have:\n\n```text\nmath.js\n```\n\nWe can export a function:\n\n```javascript\nexport function add(a, b) {\n  return a + b;\n}\n```\n\nNow another file can use it.\n\n---\n\n## 2. Importing Code\n\nIn `app.js`:\n\n```javascript\nimport { add } from \"./math.js\";\n\nconsole.log(add(2, 3));\n```\n\nOutput:\n\n```text\n5\n```\n\nThe flow is:\n\n```text\nmath.js\n   ↓\nexport\n   ↓\nimport\n   ↓\napp.js\n```\n\n---\n\n## 3. Named Exports\n\nYou can export multiple things from one file.\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport function subtract(a, b) {\n  return a - b;\n}\n```\n\nThen:\n\n```javascript\nimport { PI, add, subtract } from \"./math.js\";\n```\n\nThe names must match the exported names.\n\nFor example:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nworks.\n\nBut:\n\n```javascript\nimport { sum } from \"./math.js\";\n```\n\ndoesn't work because there is no named export called `sum`.\n\n---\n\n## 4. Renaming an Import\n\nYou can give an imported value a different name using `as`.\n\n```javascript\nimport { add as sum } from \"./math.js\";\n\nconsole.log(sum(2, 3));\n```\n\nHere:\n\n```text\nadd → original name\nsum → name we use in this file\n```\n\n---\n\n## 5. Default Export\n\nA file can also have <b>one default export</b>.\n\nFor example:\n\n```javascript\nexport default class Calculator {\n  add(a, b) {\n    return a + b;\n  }\n}\n```\n\nThen we can import it:\n\n```javascript\nimport Calculator from \"./calculator.js\";\n```\n\nNotice something important:\n\nThe name doesn't have to match.\n\nWe could write:\n\n```javascript\nimport MyCalculator from \"./calculator.js\";\n```\n\nThis is also valid.\n\nThat's because it is a <b>default export</b>.\n\n---\n\n## 6. Named vs Default Export\n\nThe easiest way to remember the difference:\n\n### Named export\n\n```javascript\nexport function add() {}\n```\n\nImport:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nThe name normally needs to match.\n\n### Default export\n\n```javascript\nexport default function add() {}\n```\n\nImport:\n\n```javascript\nimport something from \"./math.js\";\n```\n\nYou can choose the local name.\n\n---\n\n## 7. You Can Use Both\n\nA file can have multiple named exports and one default export.\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport default class Calculator {}\n```\n\nThen:\n\n```javascript\nimport Calculator, { PI, add } from \"./math.js\";\n```\n\n---\n\n## 8. `import` Must Be at the Top Level\n\nUnlike CommonJS:\n\n```javascript\nrequire(\"./math\");\n```\n\nESM `import` statements normally have to be at the <b>top level</b>.\n\nThis is valid:\n\n```javascript\nimport { add } from \"./math.js\";\n\nif (something) {\n  add(2, 3);\n}\n```\n\nBut this is not:\n\n```javascript\nif (something) {\n  import { add } from \"./math.js\";\n}\n```\n\nWhy?\n\nBecause JavaScript wants to understand the module's dependencies before running the code.\n\n<b>Dependency</b> means another file/module that your code needs.\n\n---\n\n## 9. Why Does JavaScript Do This?\n\nBecause the JavaScript engine can look at the imports before running the program.\n\nFor example:\n\n```javascript\nimport { add } from \"./math.js\";\nimport { getUser } from \"./user.js\";\n```\n\nJavaScript already knows:\n\n```text\napp.js\n ├── math.js\n └── user.js\n```\n\nThis makes it easier for tools to understand the application.\n\n---\n\n## 10. Tree-Shaking\n\nModern tools can use this information for <b>tree-shaking</b>.\n\n<b>Tree-shaking</b> means:\n\n> Remove code that your application doesn't use.\n\nSuppose `math.js` contains:\n\n```javascript\nexport function add() {}\n\nexport function subtract() {}\n\nexport function multiply() {}\n```\n\nBut your application only does:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nA build tool (a tool that prepares your code for production) may remove the unused functions:\n\n```text\nadd       → Used ✓\nsubtract  → Not used ✗\nmultiply  → Not used ✗\n```\n\nThis can make the final application smaller.\n\n---\n\n## 11. Dynamic `import()`\n\nSometimes we don't want to load a module immediately.\n\nFor example, maybe we only need a feature when the user clicks a button.\n\nWe can use <b>dynamic import</b>:\n\n```javascript\nconst module = await import(\"./math.js\");\n```\n\nUnlike normal `import`, this can happen inside a function or condition.\n\nFor example:\n\n```javascript\nif (needsMath) {\n  const math = await import(\"./math.js\");\n\n  console.log(math.add(2, 3));\n}\n```\n\nDynamic `import()` returns a <b>Promise</b>.\n\nA Promise represents a result that will be available later.\n\nSo:\n\n```text\nimport()\n   ↓\nPromise\n   ↓\nModule loads\n   ↓\nModule becomes available\n```\n\nThis is useful for <b>lazy loading</b> (load something only when you need it).\n\n---\n\n## 12. CommonJS vs ES Modules\n\nYou just learned CommonJS, so here's the simple comparison:\n\n```text\nCommonJS                                   ES Modules\n─────────────────────────────────────────  ───────────────────────────────\nrequire()                                  import\nmodule.exports                             export\nCommon in older Node.js code               Modern JavaScript standard\nrequire() can be called anywhere           Static import is top-level\nLoaded synchronously                       Designed for static analysis\nDynamic loading with require()             Dynamic loading with import()\n```",
-        np: "<b>ES Modules (ESM)</b> JavaScript file बीच code share गर्ने आधुनिक र आधिकारिक तरिका हो।\n\nयो यहाँ प्रयोग हुन्छ:\n\n• Browsers\n• Node.js\n• React\n• Next.js\n• धेरै आधुनिक JavaScript applications\n\nदुई मुख्य keyword हुन्:\n\n```text\nexport → Share code\nimport → Use code from another file\n```\n\n---\n\n## 1. Code Export गर्नु\n\nमानौं हामीसँग छ:\n\n```text\nmath.js\n```\n\nहामी function export गर्न सक्छौं:\n\n```javascript\nexport function add(a, b) {\n  return a + b;\n}\n```\n\nअब अर्को file ले यसलाई प्रयोग गर्न सक्छ।\n\n---\n\n## 2. Code Import गर्नु\n\n`app.js` मा:\n\n```javascript\nimport { add } from \"./math.js\";\n\nconsole.log(add(2, 3));\n```\n\nOutput:\n\n```text\n5\n```\n\nFlow यो हो:\n\n```text\nmath.js\n   ↓\nexport\n   ↓\nimport\n   ↓\napp.js\n```\n\n---\n\n## 3. Named Exports\n\nतपाईं एउटै file बाट धेरै चीज export गर्न सक्नुहुन्छ।\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport function subtract(a, b) {\n  return a - b;\n}\n```\n\nत्यसपछि:\n\n```javascript\nimport { PI, add, subtract } from \"./math.js\";\n```\n\nनाम export गरिएका नाम सँग मिल्नुपर्छ।\n\nउदाहरणका लागि:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nयो काम गर्छ।\n\nतर:\n\n```javascript\nimport { sum } from \"./math.js\";\n```\n\nयो काम गर्दैन किनकि `sum` नामको named export छैन।\n\n---\n\n## 4. Import लाई Rename गर्नु\n\n`as` प्रयोग गरी import गरिएको value लाई फरक नाम दिन सकिन्छ।\n\n```javascript\nimport { add as sum } from \"./math.js\";\n\nconsole.log(sum(2, 3));\n```\n\nयहाँ:\n\n```text\nadd → original name\nsum → name we use in this file\n```\n\n---\n\n## 5. Default Export\n\nFile मा <b>एउटा default export</b> पनि हुन सक्छ।\n\nउदाहरणका लागि:\n\n```javascript\nexport default class Calculator {\n  add(a, b) {\n    return a + b;\n  }\n}\n```\n\nत्यसपछि हामी यसलाई import गर्न सक्छौं:\n\n```javascript\nimport Calculator from \"./calculator.js\";\n```\n\nएउटा महत्वपूर्ण कुरा ध्यान दिनुहोस्:\n\nनाम मिल्नु आवश्यक छैन।\n\nहामी यसो लेख्न सक्छौं:\n\n```javascript\nimport MyCalculator from \"./calculator.js\";\n```\n\nयो पनि valid छ।\n\nकिनभने यो <b>default export</b> हो।\n\n---\n\n## 6. Named vs Default Export\n\nफरक सम्झ्ने सजिलो तरिका:\n\n### Named export\n\n```javascript\nexport function add() {}\n```\n\nImport:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nनाम सामान्यतया मिल्नुपर्छ।\n\n### Default export\n\n```javascript\nexport default function add() {}\n```\n\nImport:\n\n```javascript\nimport something from \"./math.js\";\n```\n\nतपाईं local नाम आफैं छान्न सक्नुहुन्छ।\n\n---\n\n## 7. दुबै प्रयोग गर्न सकिन्छ\n\nएउटै file मा धेरै named export र एउटा default export हुन सक्छ।\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport default class Calculator {}\n```\n\nत्यसपछि:\n\n```javascript\nimport Calculator, { PI, add } from \"./math.js\";\n```\n\n---\n\n## 8. `import` Top Level मा हुनुपर्छ\n\nCommonJS भन्दा फरक:\n\n```javascript\nrequire(\"./math\");\n```\n\nESM का `import` statement सामान्यतया <b>top level</b> मा हुनुपर्छ।\n\nयो valid छ:\n\n```javascript\nimport { add } from \"./math.js\";\n\nif (something) {\n  add(2, 3);\n}\n```\n\nतर यो होइन:\n\n```javascript\nif (something) {\n  import { add } from \"./math.js\";\n}\n```\n\nकिन?\n\nकिनभने JavaScript ले code चलाउनुअघि module का dependencies बुझ्न चाहन्छ।\n\n<b>Dependency</b> को अर्थ तपाईंको code लाई चाहिने अर्को file/module हो।\n\n---\n\n## 9. JavaScript यो किन गर्छ?\n\nकिनभने JavaScript engine ले program चलाउनुअघि import हेर्न सक्छ।\n\nउदाहरणका लागि:\n\n```javascript\nimport { add } from \"./math.js\";\nimport { getUser } from \"./user.js\";\n```\n\nJavaScript लाई पहिले नै थाहा हुन्छ:\n\n```text\napp.js\n ├── math.js\n └── user.js\n```\n\nयसले tools लाई application बुझ्न सजिलो बनाउँछ।\n\n---\n\n## 10. Tree-Shaking\n\nआधुनिक tools ले यो जानकारी <b>tree-shaking</b> का लागि प्रयोग गर्न सक्छन्।\n\n<b>Tree-shaking</b> को अर्थ:\n\n> तपाईंको application ले प्रयोग नगर्ने code हटाउनु।\n\nमानौं `math.js` मा छ:\n\n```javascript\nexport function add() {}\n\nexport function subtract() {}\n\nexport function multiply() {}\n```\n\nतर तपाईंको application ले यति मात्र गर्छ:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nBuild tool (production का लागि code तयार गर्ने tool) ले प्रयोग नभएका function हटाउन सक्छ:\n\n```text\nadd       → Used ✓\nsubtract  → Not used ✗\nmultiply  → Not used ✗\n```\n\nयसले final application सानो बनाउन सक्छ।\n\n---\n\n## 11. Dynamic `import()`\n\nकहिलेकाहीँ हामी module तुरुन्तै load गर्न चाहँदैनौं।\n\nउदाहरणका लागि, user ले button click गर्दा मात्र कुनै feature चाहिन सक्छ।\n\nहामी <b>dynamic import</b> प्रयोग गर्न सक्छौं:\n\n```javascript\nconst module = await import(\"./math.js\");\n```\n\nसामान्य `import` भन्दा फरक, यो function वा condition भित्र हुन सक्छ।\n\nउदाहरणका लागि:\n\n```javascript\nif (needsMath) {\n  const math = await import(\"./math.js\");\n\n  console.log(math.add(2, 3));\n}\n```\n\nDynamic `import()` ले <b>Promise</b> फर्काउँछ।\n\nPromise पछि उपलब्ध हुने नतिजाको प्रतिनिधित्व गर्छ।\n\nत्यसैले:\n\n```text\nimport()\n   ↓\nPromise\n   ↓\nModule loads\n   ↓\nModule becomes available\n```\n\nयो <b>lazy loading</b> (चाहिने बेला मात्र load गर्नु) का लागि उपयोगी छ।\n\n---\n\n## 12. CommonJS vs ES Modules\n\nतपाईंले भर्खर CommonJS सिक्नुभयो, त्यसैले यहाँ सरल तुलना छ:\n\n```text\nCommonJS                                   ES Modules\n─────────────────────────────────────────  ───────────────────────────────\nrequire()                                  import\nmodule.exports                             export\nCommon in older Node.js code               Modern JavaScript standard\nrequire() can be called anywhere           Static import is top-level\nLoaded synchronously                       Designed for static analysis\nDynamic loading with require()             Dynamic loading with import()\n```",
-        jp: "<b>ESモジュール（ESM）</b>は、JavaScriptファイル間でコードを共有するための最新かつ公式の方法です。\n\n次のような場所で使われます:\n\n• ブラウザ\n• Node.js\n• React\n• Next.js\n• 多くの最新のJavaScriptアプリケーション\n\n主なキーワードは2つです:\n\n```text\nexport → Share code\nimport → Use code from another file\n```\n\n---\n\n## 1. コードをエクスポートする\n\nこういうファイルがあるとします:\n\n```text\nmath.js\n```\n\n関数をエクスポートできます:\n\n```javascript\nexport function add(a, b) {\n  return a + b;\n}\n```\n\nこれで別のファイルから使えます。\n\n---\n\n## 2. コードをインポートする\n\n`app.js` で:\n\n```javascript\nimport { add } from \"./math.js\";\n\nconsole.log(add(2, 3));\n```\n\n出力:\n\n```text\n5\n```\n\n流れはこうです:\n\n```text\nmath.js\n   ↓\nexport\n   ↓\nimport\n   ↓\napp.js\n```\n\n---\n\n## 3. 名前付きエクスポート\n\n1つのファイルから複数のものをエクスポートできます。\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport function subtract(a, b) {\n  return a - b;\n}\n```\n\nそして:\n\n```javascript\nimport { PI, add, subtract } from \"./math.js\";\n```\n\n名前はエクスポートされた名前と一致していなければなりません。\n\nたとえば:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nこれは動きます。\n\nしかし:\n\n```javascript\nimport { sum } from \"./math.js\";\n```\n\n`sum` という名前付きエクスポートは存在しないので、これは動きません。\n\n---\n\n## 4. インポートの名前を変える\n\n`as` を使えば、インポートした値に別の名前を付けられます。\n\n```javascript\nimport { add as sum } from \"./math.js\";\n\nconsole.log(sum(2, 3));\n```\n\nここでは:\n\n```text\nadd → original name\nsum → name we use in this file\n```\n\n---\n\n## 5. デフォルトエクスポート\n\nファイルは<b>1つのデフォルトエクスポート</b>も持てます。\n\nたとえば:\n\n```javascript\nexport default class Calculator {\n  add(a, b) {\n    return a + b;\n  }\n}\n```\n\nそしてインポートします:\n\n```javascript\nimport Calculator from \"./calculator.js\";\n```\n\n大事な点に注目してください:\n\n名前は一致しなくてもかまいません。\n\nこう書くこともできます:\n\n```javascript\nimport MyCalculator from \"./calculator.js\";\n```\n\nこれも有効です。\n\n<b>デフォルトエクスポート</b>だからです。\n\n---\n\n## 6. 名前付き vs デフォルト\n\n違いを覚える一番簡単な方法:\n\n### 名前付きエクスポート\n\n```javascript\nexport function add() {}\n```\n\nインポート:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\n通常は名前を一致させる必要があります。\n\n### デフォルトエクスポート\n\n```javascript\nexport default function add() {}\n```\n\nインポート:\n\n```javascript\nimport something from \"./math.js\";\n```\n\nローカル名は自由に選べます。\n\n---\n\n## 7. 両方使える\n\n1つのファイルに複数の名前付きエクスポートと1つのデフォルトエクスポートを置けます。\n\n```javascript\nexport const PI = 3.14;\n\nexport function add(a, b) {\n  return a + b;\n}\n\nexport default class Calculator {}\n```\n\nそして:\n\n```javascript\nimport Calculator, { PI, add } from \"./math.js\";\n```\n\n---\n\n## 8. `import` はトップレベルに置く\n\nCommonJSとは違い:\n\n```javascript\nrequire(\"./math\");\n```\n\nESMの `import` 文は通常<b>トップレベル</b>に置かなければなりません。\n\nこれは有効です:\n\n```javascript\nimport { add } from \"./math.js\";\n\nif (something) {\n  add(2, 3);\n}\n```\n\nしかしこれは無効です:\n\n```javascript\nif (something) {\n  import { add } from \"./math.js\";\n}\n```\n\nなぜでしょう?\n\nJavaScriptはコードを実行する前に、そのモジュールの依存関係を把握したいからです。\n\n<b>依存関係（Dependency）</b>とは、あなたのコードが必要とする別のファイル／モジュールのことです。\n\n---\n\n## 9. なぜJavaScriptはこうするのか?\n\nJavaScriptエンジンがプログラムを実行する前にimportを見られるからです。\n\nたとえば:\n\n```javascript\nimport { add } from \"./math.js\";\nimport { getUser } from \"./user.js\";\n```\n\nJavaScriptはすでにこう分かっています:\n\n```text\napp.js\n ├── math.js\n └── user.js\n```\n\nこれでツールがアプリケーションを理解しやすくなります。\n\n---\n\n## 10. ツリーシェイキング\n\n最新のツールはこの情報を<b>ツリーシェイキング</b>に使えます。\n\n<b>ツリーシェイキング</b>とは:\n\n> アプリケーションが使わないコードを取り除くこと。\n\n`math.js` に次があるとします:\n\n```javascript\nexport function add() {}\n\nexport function subtract() {}\n\nexport function multiply() {}\n```\n\nしかしアプリケーションがするのはこれだけ:\n\n```javascript\nimport { add } from \"./math.js\";\n```\n\nビルドツール（本番用にコードを準備するツール）は使われていない関数を削除できます:\n\n```text\nadd       → Used ✓\nsubtract  → Not used ✗\nmultiply  → Not used ✗\n```\n\nこれで最終的なアプリケーションを小さくできます。\n\n---\n\n## 11. 動的 `import()`\n\nモジュールをすぐには読み込みたくない場合もあります。\n\nたとえば、ユーザーがボタンを押したときだけ必要な機能があるかもしれません。\n\n<b>動的import</b>を使えます:\n\n```javascript\nconst module = await import(\"./math.js\");\n```\n\n通常の `import` と違い、これは関数や条件文の中で使えます。\n\nたとえば:\n\n```javascript\nif (needsMath) {\n  const math = await import(\"./math.js\");\n\n  console.log(math.add(2, 3));\n}\n```\n\n動的 `import()` は<b>Promise</b>を返します。\n\nPromiseは後で利用できるようになる結果を表します。\n\nつまり:\n\n```text\nimport()\n   ↓\nPromise\n   ↓\nModule loads\n   ↓\nModule becomes available\n```\n\nこれは<b>遅延読み込み（lazy loading）</b>（必要になったときだけ読み込むこと）に役立ちます。\n\n---\n\n## 12. CommonJS vs ESモジュール\n\nCommonJSを学んだばかりなので、簡単な比較を示します:\n\n```text\nCommonJS                                   ES Modules\n─────────────────────────────────────────  ───────────────────────────────\nrequire()                                  import\nmodule.exports                             export\nCommon in older Node.js code               Modern JavaScript standard\nrequire() can be called anywhere           Static import is top-level\nLoaded synchronously                       Designed for static analysis\nDynamic loading with require()             Dynamic loading with import()\n```",
+        en: "<b>Static methods</b> belong to the class itself, not to any instance — you call them as `ClassName.method()` without ever creating an object, which is perfect for utilities and factory functions (e.g. `Calculator.add(2, 3)`). Calling a static method on an instance (`instance.staticMethod()`) throws, because static members only exist on the class.\n\n<b>Getters (`get`)</b> and <b>setters (`set`)</b> let a method be accessed like a plain property — no `()` — while still running code behind the scenes. A getter is handy for computed values (`get area() { return this.width * this.height; }`, read as `rect.area`), and a setter is handy for validating or transforming a value before it's stored, such as trimming whitespace or rejecting a negative age.\n\n<b>Private fields (`#name`)</b> take this further: a field declared with a `#` prefix is only accessible from inside that class's own body — accessing `obj.#balance` from outside code is a `SyntaxError`, not just a convention like `_balance`. Combining private fields with public methods (`deposit()`, `getBalance()`) lets the class fully control how its internal state is read or changed — this is the essence of <b>encapsulation</b>. One more subtlety: unlike function declarations, classes are not hoisted the same way — they sit in the Temporal Dead Zone (Day 3) until their declaration line runs, so a class can't be used before it's declared.",
+        np: "Static methods class को आफ्नै हो, instance को होइन — `ClassName.method()` बाट call हुन्छ, object नबनाई। Instance मा static method call गर्दा throw हुन्छ। Getter/setter ले method लाई property जस्तै access गर्न दिन्छ — getter ले computed value दिन्छ, setter ले store गर्नुअघि value validate/transform गर्छ। Private fields (`#name`) class body भित्र मात्र accessible हुन्छन् — बाहिरबाट access गर्दा SyntaxError, `_name` convention भन्दा बलियो — यसैले encapsulation सम्भव हुन्छ। Classes पनि function जस्तो hoist हुँदैनन्, declaration नचलुन्जेल Temporal Dead Zone मा रहन्छन्।",
+        jp: "staticメソッドはインスタンスではなくクラス自体に属し、オブジェクトを作らずに`ClassName.method()`として呼べる。インスタンスでstaticメソッドを呼ぶとスローする。getter/setterはメソッドをプロパティのようにアクセスさせる — getterは計算値を返し、setterは保存前に値を検証・変換する。プライベートフィールド(`#name`)はクラス本体内のみアクセス可能で、外部からアクセスするとSyntaxErrorになる（`_name`という慣習より強力）。これによりカプセル化が実現する。クラスも関数のようにはホイストされず、宣言されるまでTemporal Dead Zoneにある。",
       },
-      diagram: `math.js
-   ↓
- export
-   ↓
-app.js
-   ↓
- import
-   ↓
-Use the code`,
-      codeExample: {
-        title: { en: "Named exports, default export, and dynamic import", np: "Named exports, default export, dynamic import", jp: "名前付きエクスポート・デフォルトエクスポート・動的import" },
-        code: `// ── Named exports — math.js ─────────────────────────────────────────
-export const PI = 3.14159;
-export function add(a, b) { return a + b; }
-export function multiply(a, b) { return a * b; }
+      diagram: `Calculator                            BankAccount
+  static add(a, b)                       #balance             ← private, class-only
+                                          get balance()         ← read like a property
+Calculator.add(5, 3)  → 8                set nickname(v)       ← write like a property
+(no 'new' needed)                        deposit(amount)
 
-// ── Default export — one per file, alongside named exports ────────────
-export default class Calculator {
-  add(a, b) { return a + b; }
+const acc = new BankAccount(...)
+
+acc.balance             ✅ getter runs, returns #balance
+acc.#balance             ❌ SyntaxError — outside the class body
+acc.deposit(500)         → updates #balance internally`,
+      codeExample: {
+        title: { en: "Static methods, getters/setters, and private fields together", np: "Static methods, getters/setters, private fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
+        code: `// ── Static methods — belong to the class, not an instance ────────────
+class MathHelper {
+  static square(n) { return n * n; }
+}
+MathHelper.square(4);        // 16 — called on the class directly
+
+class User {
+  constructor(name) { this.name = name; }
+  static createGuest() { return new User("Guest"); }   // factory pattern
+}
+const guest = User.createGuest();
+guest.name;   // "Guest"
+
+// ── Getters — read like a property, no () ─────────────────────────────
+class Rectangle {
+  constructor(width, height) { this.width = width; this.height = height; }
+  get area() { return this.width * this.height; }
+}
+const rect = new Rectangle(5, 4);
+rect.area;    // 20 — not rect.area()
+
+// ── Setters — validate before storing ───────────────────────────────────
+class Person {
+  set age(value) {
+    if (value < 0) { console.log("Invalid age"); return; }
+    this._age = value;
+  }
+}
+const person = new Person();
+person.age = -5;   // "Invalid age" — setter rejected it
+
+// ── Private fields (#) — real encapsulation ─────────────────────────────
+class BankAccount {
+  #balance = 0;                       // only this class can touch #balance
+
+  deposit(amount) { this.#balance += amount; }
+  withdraw(amount) { if (amount <= this.#balance) this.#balance -= amount; }
+  getBalance() { return this.#balance; }
 }
 
-// ── Named imports — app.js ───────────────────────────────────────────
-import { add, multiply } from "./math.js";   // names must match exactly
-add(2, 3);        // 5
-multiply(2, 3);   // 6
+const account = new BankAccount();
+account.deposit(500);
+account.withdraw(200);
+account.getBalance();     // 300
 
-// ── Default import — any local name works ─────────────────────────────
-import Calculator from "./math.js";     // no curly braces
-import MyCalc from "./math.js";         // this name works too — default exports aren't named
-
-// ── Real backend example ────────────────────────────────────────────────
-// user.service.js
-export function findUser(userId) { return { id: userId, name: "Alex" }; }
-export function deleteUser(userId) { console.log("Deleting user", userId); }
-
-// user.controller.js
-import { findUser, deleteUser } from "./user.service.js";
-const user = findUser(10);   // { id: 10, name: "Alex" }
-deleteUser(10);               // "Deleting user 10"
-
-// ── Dynamic import — load a module on demand (async) ────────────────────
-button.addEventListener("click", async () => {
-  const { renderChart } = await import("./chart-library.js");  // lazy-loaded, returns a Promise
-  renderChart(data);
-});
-
-// ── Enabling ESM in Node.js — package.json ──────────────────────────────
-// { "type": "module" }`,
+// account.#balance;      // SyntaxError — private fields can't be read from outside`,
       },
       keyTakeaways: [
-        { en: "`export` → \"Share this code.\" `import` → \"Bring this code into my file.\" Together they are the whole module system.", np: "`export` → \"यो code share गर।\" `import` → \"यो code मेरो file मा ल्याऊ।\" यी दुई मिलेर पूरै module system बनाउँछन्।", jp: "`export` → \"このコードを共有する。\" `import` → \"このコードを自分のファイルに持ち込む。\" この2つでモジュールシステムのすべて。" },
-        { en: "<b>Named export</b> → import using the exported name: `import { add } from \"./math.js\"`. Rename it locally with `as` if you want a different name.", np: "<b>Named export</b> → export गरिएको नाम प्रयोग गरी import गर्नुहोस्: `import { add } from \"./math.js\"`। फरक नाम चाहिए `as` ले local रूपमा rename गर्नुहोस्।", jp: "<b>名前付きエクスポート</b> → エクスポートされた名前でインポートする: `import { add } from \"./math.js\"`。別名にしたいときは `as` でローカル名を変える。" },
-        { en: "<b>Default export</b> → import using any name. A file can have one default export alongside any number of named exports: `import Calculator, { PI, add } from \"./math.js\"`.", np: "<b>Default export</b> → कुनै पनि नाम प्रयोग गरी import गर्नुहोस्। एउटा file मा जुनसुकै संख्याका named export सँगै एउटा default export हुन सक्छ: `import Calculator, { PI, add } from \"./math.js\"`।", jp: "<b>デフォルトエクスポート</b> → 任意の名前でインポートできる。1つのファイルは任意の数の名前付きエクスポートと共に1つのデフォルトエクスポートを持てる: `import Calculator, { PI, add } from \"./math.js\"`。" },
-        { en: "<b>Static import</b> → must be at the top level, never inside an `if`. JavaScript wants to know the module's dependencies before running any code.", np: "<b>Static import</b> → top level मा हुनुपर्छ, `if` भित्र कहिल्यै हुँदैन। JavaScript कुनै पनि code चलाउनुअघि module का dependencies जान्न चाहन्छ।", jp: "<b>静的import</b> → トップレベルに置く必要があり、`if` の中には書けない。JavaScriptはコードを実行する前にモジュールの依存関係を知りたいから。" },
-        { en: "<b>Tree-shaking</b> → \"Remove unused code.\" Because the dependency graph is knowable without running anything, a build tool can drop exports nothing imports, making the final bundle smaller.", np: "<b>Tree-shaking</b> → \"प्रयोग नभएको code हटाउ।\" कुनै पनि चीज नचलाई dependency graph थाहा हुने हुनाले, build tool ले कतै import नभएका export हटाउन सक्छ, जसले final bundle सानो बनाउँछ।", jp: "<b>ツリーシェイキング</b> → \"使われていないコードを削除する。\" 何も実行せずに依存グラフが分かるので、ビルドツールはどこからもインポートされないエクスポートを落とし、最終バンドルを小さくできる。" },
-        { en: "<b>Dynamic `import()`</b> → \"Load a module when you need it.\" It can sit inside a function or condition and returns a Promise, which is what makes lazy loading possible.", np: "<b>Dynamic `import()`</b> → \"चाहिने बेला module load गर।\" यो function वा condition भित्र हुन सक्छ र Promise फर्काउँछ, यसैले lazy loading सम्भव हुन्छ।", jp: "<b>動的 `import()`</b> → \"必要になったときにモジュールを読み込む。\" 関数や条件文の中に書けてPromiseを返すので、遅延読み込みが可能になる。" },
-        { en: "Versus CommonJS: `require()`/`module.exports` load synchronously and can be called anywhere; `import`/`export` are static and designed for ahead-of-time analysis.", np: "CommonJS सँग तुलना: `require()`/`module.exports` synchronously load हुन्छन् र कहीं पनि call गर्न सकिन्छ; `import`/`export` static छन् र ahead-of-time analysis का लागि डिजाइन गरिएका छन्।", jp: "CommonJSとの比較: `require()`/`module.exports` は同期的に読み込まれ、どこでも呼べる。`import`/`export` は静的で、事前解析のために設計されている。" },
-        { en: "ES Modules are the modern JavaScript module system: `export function add(a, b) { ... }` in `math.js`, then `import { add } from \"./math.js\"` in `app.js`.", np: "ES Modules आधुनिक JavaScript module system हो: `math.js` मा `export function add(a, b) { ... }`, त्यसपछि `app.js` मा `import { add } from \"./math.js\"`।", jp: "ESモジュールは最新のJavaScriptモジュールシステム: `math.js` で `export function add(a, b) { ... }`、`app.js` で `import { add } from \"./math.js\"`。" },
+        { en: "Static methods and properties belong to the class itself — call them as `ClassName.method()`, never on an instance.", np: "Static methods/properties class को आफ्नै हुन् — `ClassName.method()` को रूपमा call गर्ने, instance मा होइन।", jp: "staticメソッドとプロパティはクラス自体に属する。`ClassName.method()`として呼び、インスタンスでは呼ばない。" },
+        { en: "Getters (`get`) let you read a computed value like a plain property, with no `()`.", np: "Getters (`get`) ले computed value लाई plain property जस्तै पढ्न दिन्छ, `()` बिना।", jp: "getter（`get`）は計算値を`()`なしで通常のプロパティのように読ませる。" },
+        { en: "Setters (`set`) run validation or transformation logic before a value is actually stored.", np: "Setters (`set`) ले value वास्तवमा store हुनुअघि validation वा transformation logic चलाउँछ।", jp: "setter（`set`）は値が実際に保存される前に検証や変換ロジックを実行する。" },
+        { en: "Private fields (`#name`) are enforced by the language itself — accessing them outside the class throws a SyntaxError, giving real encapsulation rather than just a naming convention.", np: "Private fields (`#name`) language ले नै enforce गर्छ — class बाहिरबाट access गर्दा SyntaxError, यसैले real encapsulation हुन्छ, केवल naming convention होइन।", jp: "プライベートフィールド（`#name`）は言語自体によって強制される。クラス外からアクセスするとSyntaxErrorになり、単なる命名規則ではなく本物のカプセル化になる。" },
       ],
       commonMistakes: [
-        { en: "Forgetting curly braces on a named import (`import add from \"./math.js\"` instead of `import { add } from \"./math.js\"`).", np: "Named import मा curly braces बिर्सनु (`import { add } from \"./math.js\"` को सट्टा `import add from \"./math.js\"`)।", jp: "名前付きインポートで波括弧を忘れること（`import { add } from \"./math.js\"`ではなく`import add from \"./math.js\"`）。" },
-        { en: "Using curly braces on a default import (`import { User } from \"./User.js\"` instead of `import User from \"./User.js\"`) — default exports don't have a name to match.", np: "Default import मा curly braces प्रयोग गर्नु (`import User from \"./User.js\"` को सट्टा `import { User } from \"./User.js\"`) — default exports सँग match गर्ने name नै हुँदैन।", jp: "デフォルトインポートで波括弧を使うこと（`import User from \"./User.js\"`ではなく`import { User } from \"./User.js\"`）。デフォルトエクスポートには一致させる名前がない。" },
-        { en: "Trying to write more than one default export in the same file — a file can only have one; use named exports for anything beyond that.", np: "Same file मा एक भन्दा बढी default export लेख्ने प्रयास गर्नु — एउटा file मा एउटा मात्र हुन सक्छ; बाँकीका लागि named exports प्रयोग गर्ने।", jp: "同じファイルに2つ以上のデフォルトエクスポートを書こうとすること。1ファイルに1つしか持てない。それ以外は名前付きエクスポートを使う。" },
-        { en: "Forgetting the file extension in an import path (`\"./math\"` instead of `\"./math.js\"`) — native ESM in the browser requires it, unlike bundler-based setups.", np: "Import path मा file extension बिर्सनु (`\"./math.js\"` को सट्टा `\"./math\"`) — browser को native ESM मा यो required हुन्छ।", jp: "importパスでファイル拡張子を忘れること（`\"./math.js\"`ではなく`\"./math\"`）。ブラウザのネイティブESMではこれが必要。" },
-        { en: "Mixing CommonJS (`module.exports`) and ES Modules (`import`/`export`) syntax in the same file — they are different module systems, so pick one style per project.", np: "Same file मा CommonJS (`module.exports`) र ES Modules (`import`/`export`) syntax मिलाउनु — यी फरक module systems हुन्, project प्रति एउटा style मात्र छान्ने।", jp: "同じファイルでCommonJS（module.exports）とESモジュール（import/export）の構文を混ぜること。異なるモジュールシステムなので、プロジェクトごとに1つの方式を選ぶ。" },
+        { en: "Calling a static method on an instance (`new MathHelper().square(4)`) instead of on the class (`MathHelper.square(4)`).", np: "Static method लाई instance मा call गर्नु (`new MathHelper().square(4)`) class मा नभई (`MathHelper.square(4)`)।", jp: "staticメソッドをクラス（`MathHelper.square(4)`）ではなくインスタンス（`new MathHelper().square(4)`）で呼ぶこと。" },
+        { en: "Calling a getter like a function (`user.fullName()`) — getters are accessed as plain properties, with no parentheses.", np: "Getter लाई function जस्तै call गर्नु (`user.fullName()`) — getters plain property जस्तै access हुन्छन्, parentheses बिना।", jp: "getterを関数のように呼ぶこと（`user.fullName()`）。getterは括弧なしで通常のプロパティとしてアクセスする。" },
+        { en: "Writing a setter with no validation at all, which defeats the purpose of using a setter in the first place.", np: "Setter मा कुनै validation नै नराख्नु, जसले setter प्रयोग गर्ने उद्देश्य नै हराउँछ।", jp: "検証を全く行わないsetterを書くこと。そもそもsetterを使う意味がなくなる。" },
+        { en: "Forgetting the `#` when referencing a private field inside a class method (`this.balance` instead of `this.#balance`), which silently reads or creates a different, non-private property.", np: "Class method भित्र private field reference गर्दा `#` बिर्सनु (`this.#balance` को सट्टा `this.balance`), जसले silently फरक, non-private property पढ्छ वा बनाउँछ।", jp: "クラスメソッド内でプライベートフィールドを参照する際に`#`を忘れること（`this.#balance`ではなく`this.balance`）。これは別の非プライベートなプロパティを黙って読み書きしてしまう。" },
       ],
       quiz: [
         {
-          question: { en: "Can a single file have both a default export and named exports?", np: "एउटा file मा default export र named exports दुवै हुन सक्छ?", jp: "1つのファイルにデフォルトエクスポートと名前付きエクスポートの両方を持てる？" },
+          question: { en: "What happens if code outside the class tries to access `obj.#balance`?", np: "Class बाहिरको code ले `obj.#balance` access गर्ने प्रयास गर्दा के हुन्छ?", jp: "クラス外のコードが`obj.#balance`にアクセスしようとするとどうなる？" },
           options: [
-            { en: "Yes — a file can have both at the same time", np: "हो — एउटा file मा दुवै एकैसाथ हुन सक्छ", jp: "はい — 1つのファイルに両方同時に持てる" },
-            { en: "No — a file must choose exactly one export style", np: "होइन — file ले exactly एउटा export style छान्नुपर्छ", jp: "いいえ — ファイルは1つのエクスポート方式を選ばなければならない" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "ES Modules allow up to one default export alongside any number of named exports in the same file.", np: "ES Modules ले same file मा एउटा default export सँगै जुनसुकै संख्याको named exports लाई अनुमति दिन्छ।", jp: "ESモジュールは同じファイルで1つのデフォルトエクスポートと任意の数の名前付きエクスポートを許可する。" },
-        },
-        {
-          question: { en: "Why must static `import` statements sit only at the top level of a module?", np: "Static `import` statements किन module को top level मा मात्र हुनुपर्छ?", jp: "静的importステートメントがモジュールのトップレベルにのみ置ける理由は？" },
-          options: [
-            { en: "Because it's a purely stylistic rule with no functional purpose", np: "किनकि यो कुनै functional purpose नभएको केवल stylistic rule हो", jp: "機能的な目的のない単なるスタイル上の規則だから" },
-            { en: "So bundlers/engines can statically analyse the whole module graph and tree-shake unused exports", np: "ताकि bundlers/engines ले पूरै module graph statically analyse गरी unused exports tree-shake गर्न सकोस्", jp: "バンドラー/エンジンがモジュールグラフ全体を静的に解析し未使用エクスポートをツリーシェイクできるように" },
+            { en: "It returns `undefined`", np: "यसले `undefined` फर्काउँछ", jp: "`undefined`を返す" },
+            { en: "It throws a SyntaxError — private fields are enforced by the language", np: "यसले SyntaxError throw गर्छ — private fields language ले enforce गर्छ", jp: "SyntaxErrorをスローする — プライベートフィールドは言語によって強制される" },
           ],
           correctIndex: 1,
-          explanation: { en: "Static, top-level-only imports are what makes the entire module dependency graph knowable ahead of time, without running any code.", np: "Static, top-level-only imports ले नै कोड नचलाई पूरै module dependency graph अगावै जान्न सक्ने बनाउँछ।", jp: "静的でトップレベルのみのimportこそが、コードを実行せずにモジュール依存グラフ全体を事前に把握可能にする。" },
+          explanation: { en: "Unlike an underscore convention, # is a real language feature that makes external access a parse-time error.", np: "Underscore convention भन्दा फरक, # एक real language feature हो जसले external access लाई parse-time error बनाउँछ।", jp: "アンダースコアの慣習とは異なり、#は本物の言語機能であり、外部アクセスを解析時エラーにする。" },
         },
         {
-          question: { en: "What does `await import(\"./chart-library.js\")` return?", np: "`await import(\"./chart-library.js\")` ले के फर्काउँछ?", jp: "`await import(\"./chart-library.js\")`は何を返す？" },
+          question: { en: "How do you call a static method named `create` on a class `Widget`?", np: "`Widget` class मा `create` नामको static method कसरी call गर्ने?", jp: "`Widget`クラスの`create`という静的メソッドはどうやって呼ぶ？" },
           options: [
-            { en: "A Promise that resolves to the module's exports", np: "Module का exports मा resolve हुने Promise", jp: "モジュールのエクスポートに解決されるPromise" },
-            { en: "The module's exports synchronously, immediately", np: "Module का exports synchronously, तुरुन्तै", jp: "モジュールのエクスポートを同期的に、即座に" },
+            { en: "`new Widget().create()`", np: "`new Widget().create()`", jp: "`new Widget().create()`" },
+            { en: "`Widget.create()`", np: "`Widget.create()`", jp: "`Widget.create()`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Static methods belong to the class itself, not to any instance, so they're called directly on the class name.", np: "Static methods class को नै हुन्, कुनै instance को होइन, त्यसैले class name मा सिधै call हुन्छ।", jp: "staticメソッドはインスタンスではなくクラス自体に属するため、クラス名で直接呼ばれる。" },
+        },
+        {
+          question: { en: "Can you reference a `class` before its declaration line in the same scope, the way you can with a hoisted `function` declaration?", np: "Hoisted `function` declaration जस्तै same scope मा `class` लाई declaration अगाडि reference गर्न सकिन्छ?", jp: "ホイストされた関数宣言のように、同じスコープで宣言行より前にクラスを参照できる？" },
+          options: [
+            { en: "No — classes sit in the Temporal Dead Zone until declared", np: "होइन — classes declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — クラスは宣言されるまでTemporal Dead Zoneにある" },
+            { en: "Yes, classes are hoisted exactly like functions", np: "हो, classes functions जस्तै exactly hoist हुन्छन्", jp: "はい、クラスは関数と同じようにホイストされる" },
           ],
           correctIndex: 0,
-          explanation: { en: "Dynamic import() is inherently asynchronous, which is exactly what makes lazy/conditional loading possible in ESM.", np: "Dynamic import() स्वाभाविक रूपमा asynchronous हो, यही ले ESM मा lazy/conditional loading सम्भव बनाउँछ।", jp: "動的import()は本質的に非同期であり、これがESMで遅延/条件付き読み込みを可能にする。" },
+          explanation: { en: "Classes behave like let/const declarations for hoisting purposes — accessible only after the declaration executes.", np: "Hoisting का लागि classes let/const declarations जस्तै behave गर्छन् — declaration execute भएपछि मात्र accessible।", jp: "ホイスティングの観点ではクラスはlet/const宣言のように動作する。宣言が実行された後のみアクセス可能。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "Does a `finally` block run even after a `return` inside `try`?", np: "`try` भित्रको `return` पछि पनि `finally` block चल्छ?", jp: "try内のreturnの後でもfinallyブロックは実行される？" },
-      options: [{ en: "Yes — finally always runs", np: "हो — finally सधैं चल्छ", jp: "はい — finallyは常に実行される" }, { en: "No — return skips finally", np: "होइन — return ले finally skip गर्छ", jp: "いいえ — returnはfinallyをスキップする" }],
+      question: { en: "Are ES6 classes a fundamentally different mechanism from prototypes?", np: "ES6 classes prototypes भन्दा fundamentally फरक mechanism हो?", jp: "ES6クラスはプロトタイプとは根本的に異なる機構か？" },
+      options: [{ en: "No — classes compile to the same constructor+prototype mechanism", np: "होइन — classes उही constructor+prototype mechanism मा compile हुन्छन्", jp: "いいえ — クラスは同じコンストラクタ+プロトタイプ機構にコンパイルされる" }, { en: "Yes — classes use a completely separate inheritance model", np: "हो — classes ले पूर्ण फरक inheritance model प्रयोग गर्छन्", jp: "はい — クラスは完全に別の継承モデルを使う" }],
       correctIndex: 0,
-      explanation: { en: "finally is guaranteed regardless of how try/catch exits.", np: "Try/catch कसरी बाहिर निस्किए पनि finally guaranteed छ।", jp: "try/catchがどのように終了してもfinallyは保証される。" },
+      explanation: { en: "typeof a class is 'function', and instances relate to it via Object.getPrototypeOf, exactly like Day 8's pattern.", np: "Class को typeof 'function' हो, र instances Object.getPrototypeOf मार्फत सम्बन्धित हुन्छन्, Day 8 जस्तै।", jp: "クラスのtypeofは'function'であり、インスタンスはObject.getPrototypeOfを通じて関連する。Day 8のパターンと同じ。" },
     },
     {
-      question: { en: "What must a custom error class's constructor call to correctly set `.message`?", np: "Custom error class को constructor ले `.message` सहि सेट गर्न के call गर्नुपर्छ?", jp: "カスタムエラークラスのコンストラクタが.messageを正しく設定するために何を呼ぶ必要がある？" },
-      options: [{ en: "`super(message)`", np: "`super(message)`", jp: "`super(message)`" }, { en: "Nothing, message is automatic", np: "केही होइन, message automatic हो", jp: "何も、messageは自動" }],
+      question: { en: "What must you call before using `this` in a derived class's constructor?", np: "Derived class को constructor मा `this` प्रयोग गर्नुअघि के call गर्नुपर्छ?", jp: "派生クラスのコンストラクタでthisを使う前に何を呼ぶ必要がある？" },
+      options: [{ en: "`super(...)`", np: "`super(...)`", jp: "`super(...)`" }, { en: "Nothing — `this` is available immediately", np: "केही होइन — `this` तुरुन्तै available हुन्छ", jp: "何も — thisは即座に利用可能" }],
       correctIndex: 0,
-      explanation: { en: "Error's own constructor logic sets up .message and .stack.", np: "Error को आफ्नै constructor logic ले .message र .stack सेटअप गर्छ।", jp: "Error自身のコンストラクタロジックが.messageと.stackを設定する。" },
+      explanation: { en: "super() runs the parent constructor which sets up this; skipping it throws.", np: "super() ले parent constructor चलाउँछ जसले this सेटअप गर्छ; skip गर्दा throw हुन्छ।", jp: "super()は親コンストラクタを実行してthisを設定する。スキップするとスローする。" },
     },
     {
-      question: { en: "What should you do with an error type inside `catch` that you don't specifically handle?", np: "`catch` भित्र specifically handle नगरेको error type सँग के गर्नुपर्छ?", jp: "catch内で特に処理していないエラータイプはどうするべき？" },
-      options: [{ en: "Re-throw it", np: "Re-throw गर्नुहोस्", jp: "再スローする" }, { en: "Log and ignore it", np: "Log गरी ignore गर्नुहोस्", jp: "ログに記録して無視する" }],
+      question: { en: "What does `super.speak()` do inside an overridden `speak()` method?", np: "Overridden `speak()` method भित्र `super.speak()` ले के गर्छ?", jp: "オーバーライドされたspeak()メソッド内でsuper.speak()は何をする？" },
+      options: [{ en: "Calls the parent class's implementation of speak()", np: "Parent class को speak() implementation call गर्छ", jp: "親クラスのspeak()の実装を呼ぶ" }, { en: "Recursively calls the current method forever", np: "Current method लाई recursively सधैं call गर्छ", jp: "現在のメソッドを再帰的に永遠に呼ぶ" }],
       correctIndex: 0,
-      explanation: { en: "Rethrowing keeps unrecognised bugs visible instead of hiding them.", np: "Rethrow गर्दा नचिनेका bugs लुकाइनुको सट्टा दृश्य रहन्छन्।", jp: "再スローすれば認識していないバグが隠れずに見えるようになる。" },
+      explanation: { en: "super.method() reaches one level up the prototype chain to the parent's version.", np: "super.method() ले prototype chain मा एक level माथि parent को version सम्म पुग्छ।", jp: "super.method()はプロトタイプチェーンを1段上って親のバージョンに到達する。" },
     },
     {
-      question: { en: "Is `require()` in CommonJS synchronous or asynchronous?", np: "CommonJS को `require()` synchronous वा asynchronous हो?", jp: "CommonJSのrequire()は同期か非同期か？" },
-      options: [{ en: "Synchronous", np: "Synchronous", jp: "同期" }, { en: "Asynchronous", np: "Asynchronous", jp: "非同期" }],
+      question: { en: "Does `Dog extends Animal` make a `Dog` instance `instanceof Animal`?", np: "`Dog extends Animal` ले `Dog` instance `instanceof Animal` बनाउँछ?", jp: "`Dog extends Animal`はDogインスタンスをinstanceof Animalにする？" },
+      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — instanceof only checks the immediate class", np: "होइन — instanceof ले immediate class मात्र check गर्छ", jp: "いいえ — instanceofは直近のクラスのみを確認する" }],
       correctIndex: 0,
-      explanation: { en: "require() blocks until the module is fully loaded.", np: "require() ले module पूर्ण load नभएसम्म block गर्छ।", jp: "require()はモジュールが完全にロードされるまでブロックする。" },
+      explanation: { en: "extends puts Animal.prototype into Dog's prototype chain, so instanceof recognises both.", np: "extends ले Animal.prototype लाई Dog को prototype chain मा राख्छ, त्यसैले instanceof ले दुवै चिन्छ।", jp: "extendsはAnimal.prototypeをDogのプロトタイプチェーンに入れるため、instanceofは両方を認識する。" },
     },
     {
-      question: { en: "If two files `require(\"./math\")`, do they get the same cached object or two fresh copies?", np: "दुई files ले `require(\"./math\")` गर्दा उही cached object वा दुई फरक copies पाउँछन्?", jp: "2つのファイルがrequire(\"./math\")すると、同じキャッシュされたオブジェクトか2つの新しいコピーか？" },
-      options: [{ en: "The same cached object", np: "उही cached object", jp: "同じキャッシュされたオブジェクト" }, { en: "Two independent fresh copies", np: "दुई independent फरक copies", jp: "2つの独立した新しいコピー" }],
+      question: { en: "How do you access a property defined with a `get` keyword inside a class?", np: "Class भित्र `get` keyword सँग define गरिएको property कसरी access गर्ने?", jp: "クラス内でgetキーワードで定義されたプロパティはどうやってアクセスする？" },
+      options: [{ en: "Like a normal property, no parentheses", np: "Normal property जस्तै, parentheses बिना", jp: "通常のプロパティのように括弧なし" }, { en: "As a method call with parentheses", np: "Parentheses सहित method call को रूपमा", jp: "括弧付きのメソッド呼び出しとして" }],
       correctIndex: 0,
-      explanation: { en: "Modules run once and are cached by resolved path.", np: "Modules एकपल्ट चल्छन् र resolved path अनुसार cache हुन्छन्।", jp: "モジュールは一度実行され、解決されたパスでキャッシュされる。" },
+      explanation: { en: "Getters are read transparently, exactly like Day 8's defineProperty-based getters.", np: "Getters transparently पढिन्छन्, Day 8 को defineProperty-based getters जस्तै।", jp: "getterは透過的に読まれる。Day 8のdefinePropertyベースのgetterと同じ。" },
     },
     {
-      question: { en: "Can `require()` be called conditionally inside an `if` block?", np: "`require()` लाई `if` block भित्र conditionally call गर्न सकिन्छ?", jp: "`require()`はifブロック内で条件付きで呼べる？" },
-      options: [{ en: "Yes — it's a normal function call", np: "हो — यो normal function call हो", jp: "はい — 通常の関数呼び出し" }, { en: "No — must be top-level like import", np: "होइन — import जस्तै top-level हुनुपर्छ", jp: "いいえ — importのようにトップレベルである必要がある" }],
+      question: { en: "What happens if code outside a class tries to access a `#privateField`?", np: "Class बाहिरको code ले `#privateField` access गर्ने प्रयास गर्दा के हुन्छ?", jp: "クラス外のコードが`#privateField`にアクセスしようとするとどうなる？" },
+      options: [{ en: "SyntaxError — enforced at the language level", np: "SyntaxError — language level मा enforce", jp: "SyntaxError — 言語レベルで強制される" }, { en: "It just returns undefined", np: "यसले केवल undefined फर्काउँछ", jp: "単にundefinedを返す" }],
       correctIndex: 0,
-      explanation: { en: "require() is just a function, unlike static ESM import.", np: "require() केवल function हो, static ESM import जस्तो होइन।", jp: "require()は単なる関数であり、静的なESM importとは異なる。" },
+      explanation: { en: "Private fields are a real language feature, not a naming convention like _field.", np: "Private fields real language feature हो, _field जस्तो naming convention होइन।", jp: "プライベートフィールドは_fieldのような命名規則ではなく本物の言語機能。" },
     },
     {
-      question: { en: "Can a single ES Module file have both a default export and named exports?", np: "एउटा ES Module file मा default export र named exports दुवै हुन सक्छ?", jp: "1つのESモジュールファイルにデフォルトエクスポートと名前付きエクスポートの両方を持てる？" },
-      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No, only one style per file", np: "होइन, file प्रति एउटा style मात्र", jp: "いいえ、ファイルごとに1つの方式のみ" }],
+      question: { en: "How do you call a static method `Widget.build()`?", np: "Static method `Widget.build()` कसरी call गर्ने?", jp: "静的メソッド`Widget.build()`はどうやって呼ぶ？" },
+      options: [{ en: "Directly on the class: `Widget.build()`", np: "सिधै class मा: `Widget.build()`", jp: "クラスで直接: `Widget.build()`" }, { en: "On an instance: `new Widget().build()`", np: "Instance मा: `new Widget().build()`", jp: "インスタンスで: `new Widget().build()`" }],
       correctIndex: 0,
-      explanation: { en: "ESM allows one default export alongside any number of named exports.", np: "ESM ले जुनसुकै संख्याका named exports सँगै एउटा default export अनुमति दिन्छ।", jp: "ESMは任意の数の名前付きエクスポートと共に1つのデフォルトエクスポートを許可する。" },
+      explanation: { en: "Static methods live on the class itself, not on instances.", np: "Static methods class को नै हो, instances को होइन।", jp: "staticメソッドはインスタンスではなくクラス自体にある。" },
     },
     {
-      question: { en: "Why must ESM `import` statements sit at the top level of a module?", np: "ESM `import` statements किन module को top level मा हुनुपर्छ?", jp: "ESMのimport文がモジュールのトップレベルに置かれる必要があるのはなぜ？" },
-      options: [{ en: "So the module graph can be statically analysed for tree-shaking", np: "ताकि module graph tree-shaking का लागि statically analyse होस्", jp: "モジュールグラフをツリーシェイキングのために静的に解析できるように" }, { en: "It's just a stylistic preference", np: "यो केवल stylistic preference हो", jp: "単なるスタイル上の好み" }],
+      question: { en: "Are classes hoisted the same way function declarations are?", np: "Classes function declarations जस्तै hoist हुन्छन्?", jp: "クラスは関数宣言のようにホイストされる？" },
+      options: [{ en: "No — they remain in the Temporal Dead Zone until declared", np: "होइन — declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — 宣言されるまでTemporal Dead Zoneに留まる" }, { en: "Yes, fully hoisted and usable before declaration", np: "हो, पूर्ण hoisted र declaration अघि प्रयोग योग्य", jp: "はい、完全にホイストされ宣言前でも使える" }],
       correctIndex: 0,
-      explanation: { en: "Static imports enable ahead-of-time analysis, unlike CommonJS's dynamic require().", np: "Static imports ले ahead-of-time analysis सम्भव बनाउँछ, CommonJS को dynamic require() जस्तो होइन।", jp: "静的importは事前解析を可能にする。CommonJSの動的なrequire()とは異なる。" },
+      explanation: { en: "Classes behave like let/const for hoisting, unlike function declarations.", np: "Function declarations भन्दा फरक, hoisting का लागि classes let/const जस्तै behave गर्छन्।", jp: "関数宣言とは異なり、クラスはホイスティングの観点でlet/constのように動作する。" },
     },
     {
-      question: { en: "What does `await import(\"./x.js\")` return?", np: "`await import(\"./x.js\")` ले के फर्काउँछ?", jp: "`await import(\"./x.js\")`は何を返す？" },
-      options: [{ en: "A Promise resolving to the module's exports", np: "Module का exports मा resolve हुने Promise", jp: "モジュールのエクスポートに解決されるPromise" }, { en: "The exports synchronously", np: "Exports synchronously", jp: "エクスポートを同期的に" }],
+      question: { en: "What is a typical use case for a static method on a class?", np: "Class मा static method को typical use case के हो?", jp: "クラスの静的メソッドの典型的な使用例は？" },
+      options: [{ en: "A factory function related to the class as a whole, like `BankAccount.createSavingsAccount()`", np: "पूरै class सँग सम्बन्धित factory function, जस्तै `BankAccount.createSavingsAccount()`", jp: "`BankAccount.createSavingsAccount()`のようなクラス全体に関連するファクトリ関数" }, { en: "Storing per-instance private state", np: "Per-instance private state store गर्नु", jp: "インスタンスごとのプライベート状態を保存すること" }],
       correctIndex: 0,
-      explanation: { en: "Dynamic import is asynchronous by design, enabling lazy loading.", np: "Dynamic import design द्वारा asynchronous छ, lazy loading सम्भव बनाउँछ।", jp: "動的importは設計上非同期であり、遅延読み込みを可能にする。" },
+      explanation: { en: "Static methods are for class-level utilities and factories, not per-instance state (that's what private fields are for).", np: "Static methods class-level utilities र factories का लागि हो, per-instance state का लागि होइन (त्यो private fields को काम हो)।", jp: "staticメソッドはクラスレベルのユーティリティやファクトリのためであり、インスタンスごとの状態のためではない（それはプライベートフィールドの役割）。" },
     },
   ],
 };
