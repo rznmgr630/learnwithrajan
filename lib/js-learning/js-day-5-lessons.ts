@@ -105,73 +105,103 @@ console.log(next()); // 3`,
       title: { en: "Higher-Order Functions", np: "Higher-Order Functions", jp: "高階関数" },
       durationMinutes: 9,
       explanation: {
-        en: "A <b>higher-order function</b> is a function that either takes a function as an argument, returns a function, or both. This is possible only because functions in JavaScript are <b>first-class values</b> — exactly like a number or a string, they can be stored in a variable, passed as an argument, and returned from another function.\n\n• Passing a function in lets the caller plug in custom behaviour without the higher-order function needing to know the details\n  ↳ `array.map(fn)` doesn't know what `fn` does — it just calls it for every item\n• Returning a function out lets you generate specialised, ready-to-use functions on demand\n  ↳ A closure factory (like `createMultiplier` from Day 3/4's closures section) is already a higher-order function",
-        np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन्।",
-        jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値。",
+        en: "A <b>higher-order function</b> (a function that takes another function as an argument or returns a function) is a common JavaScript pattern.\n\nThis works because functions are <b>first-class values</b> (functions can be stored, passed around, and returned like normal values).\n\nA function can:\n\n• Be stored in a variable\n• Be passed to another function\n• Be returned from another function\n\n---\n\n### Taking a Function\n\n```javascript\nfunction processUser(name, callback) {\n  callback(name);\n}\n\nfunction greet(name) {\n  console.log(`Hello ${name}`);\n}\n\nprocessUser(\"Rajan\", greet);\n```\n\nHere:\n\n```text\nprocessUser → Higher-Order Function\ngreet       → Function passed as an argument\n```\n\nThe higher-order function doesn't need to know exactly what `greet()` does.\n\n---\n\n### Common Example: `map()`\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(function (num) {\n  return num * 2;\n});\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\n`map()` is a <b>higher-order function</b> because it receives a function.\n\n```text\nnumbers\n   ↓\nmap()\n   ↓\nfunction(num)\n   ↓\n[2, 4, 6]\n```\n\n---\n\n### Returning a Function\n\nA higher-order function can also return another function.\n\n```javascript\nfunction createMultiplier(x) {\n  return function (num) {\n    return num * x;\n  };\n}\n\nconst double = createMultiplier(2);\n\nconsole.log(double(5)); // 10\n```\n\nHere, `createMultiplier()` returns a function.\n\nThe returned function also forms a <b>closure</b> (it remembers `x` from the outer function).",
+        np: "<b>Higher-order function</b> (अर्को function लाई argument रूपमा लिने वा function फर्काउने function) JavaScript को सामान्य pattern हो।\n\nयो सम्भव छ किनकि function <b>first-class value</b> (function लाई सामान्य value जस्तै राख्न, पठाउन र फर्काउन सकिन्छ) हुन्।\n\nFunction यी गर्न सक्छ:\n\n• Variable मा राखिनु\n• अर्को function मा पठाइनु\n• अर्को function बाट फर्काइनु\n\n---\n\n### Function लिनु\n\n```javascript\nfunction processUser(name, callback) {\n  callback(name);\n}\n\nfunction greet(name) {\n  console.log(`Hello ${name}`);\n}\n\nprocessUser(\"Rajan\", greet);\n```\n\nयहाँ:\n\n```text\nprocessUser → Higher-Order Function\ngreet       → Function passed as an argument\n```\n\nHigher-order function लाई `greet()` ठ्याक्कै के गर्छ भन्ने थाहा हुनु आवश्यक छैन।\n\n---\n\n### सामान्य उदाहरण: `map()`\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(function (num) {\n  return num * 2;\n});\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\n`map()` <b>higher-order function</b> हो किनकि यसले function पाउँछ।\n\n```text\nnumbers\n   ↓\nmap()\n   ↓\nfunction(num)\n   ↓\n[2, 4, 6]\n```\n\n---\n\n### Function फर्काउनु\n\nHigher-order function ले अर्को function पनि फर्काउन सक्छ।\n\n```javascript\nfunction createMultiplier(x) {\n  return function (num) {\n    return num * x;\n  };\n}\n\nconst double = createMultiplier(2);\n\nconsole.log(double(5)); // 10\n```\n\nयहाँ, `createMultiplier()` ले function फर्काउँछ।\n\nफर्काइएको function ले <b>closure</b> पनि बनाउँछ (यो outer function बाट `x` सम्झन्छ)।",
+        jp: "<b>高階関数</b>（別の関数を引数として受け取る、あるいは関数を返す関数）はJavaScriptでよく使われるパターンです。\n\nこれが可能なのは、関数が<b>第一級の値</b>（関数を通常の値と同じように保存・受け渡し・返却できる）だからです。\n\n関数は次のことができます:\n\n• 変数に入れる\n• 別の関数に渡す\n• 別の関数から返す\n\n---\n\n### 関数を受け取る\n\n```javascript\nfunction processUser(name, callback) {\n  callback(name);\n}\n\nfunction greet(name) {\n  console.log(`Hello ${name}`);\n}\n\nprocessUser(\"Rajan\", greet);\n```\n\nここでは:\n\n```text\nprocessUser → Higher-Order Function\ngreet       → Function passed as an argument\n```\n\n高階関数は `greet()` が具体的に何をするかを知らなくてかまいません。\n\n---\n\n### よくある例: `map()`\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(function (num) {\n  return num * 2;\n});\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\n`map()` は関数を受け取るので<b>高階関数</b>です。\n\n```text\nnumbers\n   ↓\nmap()\n   ↓\nfunction(num)\n   ↓\n[2, 4, 6]\n```\n\n---\n\n### 関数を返す\n\n高階関数は別の関数を返すこともできます。\n\n```javascript\nfunction createMultiplier(x) {\n  return function (num) {\n    return num * x;\n  };\n}\n\nconst double = createMultiplier(2);\n\nconsole.log(double(5)); // 10\n```\n\nここでは `createMultiplier()` が関数を返しています。\n\n返された関数は<b>クロージャ</b>にもなります（外側の関数の `x` を覚えている）。",
       },
-      diagram: `Function IN                          Function OUT
-──────────────────                   ──────────────────
-numbers.map(fn)      ← fn passed in   function withLogging(fn) {
-numbers.filter(fn)                       return function(...args) { ... }
-numbers.reduce(fn)                    }  ← a NEW function returned
-                                       "higher-order" = either direction (or both)`,
+      diagram: `Higher-Order Function
+        │
+        ├── Takes a function
+        │       ↓
+        │   custom behavior
+        │
+        └── Returns a function
+                ↓
+          new function`,
       codeExample: {
-        title: { en: "Functions as arguments and return values", np: "Argument र return value को रूपमा function", jp: "引数と戻り値としての関数" },
-        code: `// ── Functions as arguments ───────────────────────────────────────
-function repeat(n, action) {
-  for (let i = 0; i < n; i++) {
-    action(i);           // call the passed function
-  }
+        title: { en: "Taking a function, and returning one", np: "Function लिनु, र फर्काउनु", jp: "関数を受け取り、関数を返す" },
+        code: `// Taking a function
+function processUser(name, callback) {
+  callback(name);
 }
-repeat(3, (i) => console.log(\`Step \${i}\`));
-// Step 0 / Step 1 / Step 2
 
-// ── Functions returning functions ────────────────────────────────
-function withLogging(fn) {
-  return function (...args) {
-    console.log("Calling with", args);
-    const result = fn(...args);
-    console.log("Result:", result);
-    return result;
+function greet(name) {
+  console.log(\`Hello \${name}\`);
+}
+
+processUser("Rajan", greet);
+
+// A built-in higher-order function
+const numbers = [1, 2, 3];
+
+const doubled = numbers.map(function (num) {
+  return num * 2;
+});
+
+console.log(doubled); // [2, 4, 6]
+
+// Returning a function
+function createMultiplier(x) {
+  return function (num) {
+    return num * x;
   };
 }
-const addLogged = withLogging((a, b) => a + b);
-addLogged(2, 3);  // logs "Calling with [2, 3]" and "Result: 5"
 
-// ── Common built-in higher-order functions you use every day ──────
-const numbers = [1, 2, 3, 4, 5];
-numbers.filter(n => n % 2 === 0);      // [2, 4]
-numbers.map(n => n * 2);               // [2, 4, 6, 8, 10]
-numbers.reduce((acc, n) => acc + n, 0); // 15`,
+const double = createMultiplier(2);
+
+console.log(double(5)); // 10`,
       },
       keyTakeaways: [
-        { en: "A higher-order function takes a function as an argument, returns one, or both — this is only possible because functions are first-class values in JavaScript.", np: "Higher-order function ले function लिन्छ, return गर्छ, वा दुवै गर्छ — JS मा functions first-class values भएकाले सम्भव हुन्छ।", jp: "高階関数は関数を引数に取るか返すか、または両方を行う。JavaScriptの関数がファーストクラス値だからこそ可能。" },
-        { en: "Built-in array methods like `.map()`, `.filter()`, and `.reduce()` are higher-order functions you already use daily.", np: "`.map()`, `.filter()`, `.reduce()` जस्ता built-in array methods दिनहुँ प्रयोग गरिने higher-order functions हुन्।", jp: "`.map()`・`.filter()`・`.reduce()`のような組み込み配列メソッドは日常的に使う高階関数。" },
-        { en: "Passing a function in decouples the \"what to loop over\" from the \"what to do with each item\" — the caller supplies the behaviour.", np: "Function pass गर्नाले 'के loop गर्ने' र 'हरेक item मा के गर्ने' छुट्टिन्छ — caller ले behaviour दिन्छ।", jp: "関数を渡すことで「何をループするか」と「各項目に何をするか」が分離される。呼び出し側が動作を提供する。" },
+        { en: "<b>Higher-order function</b> → takes a function or returns a function.", np: "<b>Higher-order function</b> → function लिन्छ वा function फर्काउँछ।", jp: "<b>高階関数</b> → 関数を受け取る、または関数を返す。" },
+        { en: "<b>First-class value</b> → functions can be stored, passed, and returned like other values.", np: "<b>First-class value</b> → function लाई अरू value जस्तै राख्न, पठाउन र फर्काउन सकिन्छ।", jp: "<b>第一級の値</b> → 関数も他の値と同じように保存・受け渡し・返却できる。" },
+        { en: "`map()`, `filter()`, and `reduce()` are common higher-order functions.", np: "`map()`, `filter()`, र `reduce()` सामान्य higher-order function हुन्।", jp: "`map()`・`filter()`・`reduce()` は代表的な高階関数。" },
+        { en: "Passing a function lets you provide custom behavior.", np: "Function पठाउँदा तपाईं custom behavior दिन सक्नुहुन्छ।", jp: "関数を渡すことで独自の振る舞いを差し込める。" },
+        { en: "Returning a function lets you create specialized functions.", np: "Function फर्काउँदा तपाईं विशेषीकृत function बनाउन सक्नुहुन्छ।", jp: "関数を返すことで特化した関数を作れる。" },
+        { en: "Closures and higher-order functions are often used together.", np: "Closure र higher-order function प्रायः सँगै प्रयोग हुन्छन्।", jp: "クロージャと高階関数はよく組み合わせて使われる。" },
       ],
       commonMistakes: [
-        { en: "Passing a function call (`fn()`) instead of a function reference (`fn`) to a higher-order function — this calls it immediately instead of passing it along.", np: "Higher-order function मा function reference (`fn`) को सट्टा function call (`fn()`) pass गर्नु — यसले तुरुन्तै call गर्छ।", jp: "高階関数に関数参照（`fn`）ではなく関数呼び出し（`fn()`）を渡すこと。即座に呼び出されてしまう。" },
-        { en: "Forgetting that `.map()`/`.filter()` return NEW arrays and don't mutate the original.", np: "`.map()`/`.filter()` ले नयाँ array फर्काउँछ र original मुटेट गर्दैन भन्ने बिर्सनु।", jp: "`.map()`/`.filter()`が新しい配列を返し、元を変更しないことを忘れること。" },
-        { en: "Using `.forEach()` when you actually need a returned value — forEach always returns undefined, unlike map/filter/reduce.", np: "Return value चाहिँदा `.forEach()` प्रयोग गर्नु — forEach ले सधैं undefined फर्काउँछ।", jp: "戻り値が必要なのに`.forEach()`を使うこと。forEachは常にundefinedを返す。" },
+        { en: "<b>Thinking every function is a higher-order function</b> — `function add(a, b) { return a + b; }` is just a normal function. It becomes higher-order when it takes or returns another function.", np: "<b>हरेक function higher-order function हो भन्ने ठान्नु</b> — `function add(a, b) { return a + b; }` सामान्य function मात्र हो। यो अर्को function लिँदा वा फर्काउँदा higher-order बन्छ।", jp: "<b>すべての関数が高階関数だと思う</b> — `function add(a, b) { return a + b; }` は普通の関数。別の関数を受け取るか返すときに高階関数になる。" },
+        { en: "<b>Confusing calling a function with passing it</b> — `process(greet)` passes the function, while `process(greet())` calls `greet` first and passes its result.", np: "<b>Function call गर्नु र पठाउनु भ्रममा पार्नु</b> — `process(greet)` ले function पठाउँछ, जब कि `process(greet())` ले पहिले `greet` call गरी यसको नतिजा पठाउँछ।", jp: "<b>関数を呼ぶことと渡すことを混同する</b> — `process(greet)` は関数を渡し、`process(greet())` はまず `greet` を呼んでその結果を渡す。" },
+        { en: "<b>Thinking `map()` knows what your function does</b> — `map()` simply calls your function for each item; your function decides what happens to each one.", np: "<b>`map()` लाई तपाईंको function के गर्छ थाहा छ भन्ने ठान्नु</b> — `map()` ले हरेक item का लागि तपाईंको function मात्र call गर्छ; हरेकलाई के हुन्छ त्यो तपाईंको function ले तय गर्छ।", jp: "<b>`map()` が自分の関数の中身を知っていると思う</b> — `map()` は各要素に対して関数を呼ぶだけ。各要素に何をするかは自分の関数が決める。" },
       ],
       quiz: [
         {
-          question: { en: "What makes a function a \"higher-order function\"?", np: "कुन कुराले function लाई 'higher-order function' बनाउँछ?", jp: "何が関数を「高階関数」にする？" },
-          options: [{ en: "It runs faster than normal functions", np: "Normal function भन्दा छिटो चल्छ", jp: "通常の関数より速く実行される" }, { en: "It takes a function as an argument, returns one, or both", np: "यसले function argument को रूपमा लिन्छ, return गर्छ, वा दुवै गर्छ", jp: "関数を引数に取るか返すか、または両方を行う" }],
+          question: { en: "What is a higher-order function?", np: "Higher-order function के हो?", jp: "高階関数とは何か?" },
+          options: [
+            { en: "A function that only performs calculations", np: "गणना मात्र गर्ने function", jp: "計算だけを行う関数" },
+            { en: "A function that takes or returns another function", np: "अर्को function लिने वा फर्काउने function", jp: "別の関数を受け取る、または返す関数" },
+            { en: "A function with many parameters", np: "धेरै parameter भएको function", jp: "引数が多い関数" },
+          ],
           correctIndex: 1,
-          explanation: { en: "The defining trait is treating functions as values passed in or returned.", np: "Function लाई value को रूपमा pass वा return गर्नु नै defining trait हो।", jp: "関数を値として渡すか返すことが定義的な特徴。" },
+          explanation: { en: "The number of parameters is irrelevant; what matters is whether a function is passed in or returned.", np: "Parameter को संख्या सम्बन्धित छैन; function पठाइयो वा फर्काइयो त्यो मात्र महत्वपूर्ण छ।", jp: "引数の数は関係ない。関数が渡されるか返されるかが本質。" },
         },
         {
-          question: { en: "Which of these is a built-in higher-order function you use daily?", np: "यीमध्ये कुन दिनहुँ प्रयोग गरिने built-in higher-order function हो?", jp: "次のうち日常的に使う組み込み高階関数はどれ？" },
-          options: [{ en: "Array.prototype.map", np: "Array.prototype.map", jp: "Array.prototype.map" }, { en: "Number.parseInt", np: "Number.parseInt", jp: "Number.parseInt" }],
+          question: { en: "Why can JavaScript pass functions as arguments?", np: "JavaScript ले function लाई argument रूपमा किन पठाउन सक्छ?", jp: "なぜJavaScriptは関数を引数として渡せるのか?" },
+          options: [
+            { en: "Functions are first-class values", np: "Function first-class value हुन्", jp: "関数が第一級の値だから" },
+            { en: "Functions are objects only", np: "Function केवल object हुन्", jp: "関数はオブジェクトにすぎないから" },
+            { en: "Because of loops", np: "Loop का कारण", jp: "ループがあるから" },
+          ],
           correctIndex: 0,
-          explanation: { en: "map() takes a function as an argument and calls it for each array item — a classic higher-order function.", np: "map() ले function argument लिन्छ र हरेक array item मा call गर्छ — classic higher-order function.", jp: "map()は関数を引数に取り各配列要素に対して呼び出す — 典型的な高階関数。" },
+          explanation: { en: "Being first-class means a function can go anywhere a value can: a variable, an argument, a return value.", np: "First-class हुनुको अर्थ function value जान सक्ने कतै पनि जान सक्छ: variable, argument, return value।", jp: "第一級であるとは、値が置ける場所すべてに関数も置けるということ: 変数・引数・戻り値。" },
         },
         {
-          question: { en: "What's wrong with passing `doThing()` instead of `doThing` to a higher-order function like `repeat(3, doThing())`?", np: "`repeat(3, doThing())` मा `doThing` को सट्टा `doThing()` pass गर्दा के गल्ती हुन्छ?", jp: "`repeat(3, doThing())`のように`doThing`ではなく`doThing()`を渡すと何が問題？" },
-          options: [{ en: "Nothing, they're identical", np: "केही छैन, उस्तै हो", jp: "問題ない、同じ" }, { en: "doThing() calls the function immediately, passing its RESULT instead of the function itself", np: "doThing() ले तुरुन्तै function call गर्छ, function आफैं होइन इसको result pass गर्छ", jp: "doThing()は即座に関数を呼び出し、関数自体ではなく結果を渡す" }],
-          correctIndex: 1,
-          explanation: { en: "You must pass a function reference, not the result of calling it, so the higher-order function can call it later.", np: "Function reference pass गर्नुपर्छ, call गरेको result होइन, ताकि higher-order function ले पछि call गर्न सकोस्।", jp: "後で高階関数が呼び出せるように、呼び出し結果ではなく関数参照を渡す必要がある。" },
+          question: { en: "Is `map()` a higher-order function?", np: "`map()` higher-order function हो?", jp: "`map()` は高階関数か?" },
+          options: [
+            { en: "Yes", np: "हो", jp: "はい" },
+            { en: "No", np: "होइन", jp: "いいえ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "It takes a function and calls it once per item.", np: "यो function लिन्छ र हरेक item का लागि एक पटक call गर्छ।", jp: "関数を受け取り、各要素につき1回呼び出す。" },
+        },
+        {
+          question: { en: "Can a higher-order function return another function?", np: "Higher-order function ले अर्को function फर्काउन सक्छ?", jp: "高階関数は別の関数を返せるか?" },
+          options: [
+            { en: "Yes", np: "सक्छ", jp: "はい" },
+            { en: "No", np: "सक्दैन", jp: "いいえ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`createMultiplier(2)` returns a function that remembers `x`, which is a closure too.", np: "`createMultiplier(2)` ले `x` सम्झने function फर्काउँछ, जो closure पनि हो।", jp: "`createMultiplier(2)` は `x` を覚えた関数を返す。それはクロージャでもある。" },
         },
       ],
     },
