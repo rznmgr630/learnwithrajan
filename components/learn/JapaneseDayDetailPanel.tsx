@@ -14,10 +14,13 @@ import { getLessonPage } from "@/lib/japanese-learning/n5/n5-lesson-pages";
 import { kanjiForDay } from "@/lib/japanese-learning/n5/n5-kanji-by-day";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 type Props = {
   dayNumber: number | null;
   onClose: () => void;
+  /** Enables the previous/next footer; receives the day to open. */
+  onNavigateDay?: (day: number) => void;
   isDone: (day: number) => boolean;
   onToggleDone: (day: number) => void;
 };
@@ -40,10 +43,18 @@ function japaneseTagLabel(slug: string, translate: (key: UiStringKey) => string)
   return key ? translate(key) : slug;
 }
 
-export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
+export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDone, onNavigateDay }: Props) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getJapaneseN5DayContext(dayNumber) : null;
+
+  function neighbour(offset: -1 | 1): LessonNavTarget | null {
+    if (dayNumber === null) return null;
+    const day = dayNumber + offset;
+    const neighbourCtx = day >= 1 ? getJapaneseN5DayContext(day) : null;
+    if (!neighbourCtx) return null;
+    return { day, title: pickLocalized(neighbourCtx.day.title, locale) };
+  }
   const detail = ctx ? resolveJapaneseN5Detail(ctx.day) : null;
   const lessonPage = dayNumber !== null ? getLessonPage(dayNumber) : null;
   const kanjiItems = dayNumber !== null ? kanjiForDay(dayNumber) : [];
@@ -164,6 +175,15 @@ export function JapaneseDayDetailPanel({ dayNumber, onClose, isDone, onToggleDon
               ) : null}
             </div>
           )}
+          {onNavigateDay ? (
+            <LessonNav
+              previous={neighbour(-1)}
+              next={neighbour(1)}
+              onNavigate={(target) => {
+                if (target.day !== undefined) onNavigateDay(target.day);
+              }}
+            />
+          ) : null}
         </div>
 
         <div className="border-t border-[var(--border)] p-5">

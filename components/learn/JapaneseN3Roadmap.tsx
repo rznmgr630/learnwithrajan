@@ -321,6 +321,7 @@ export function JapaneseN3Roadmap() {
         onClose={() => setDetailDay(null)}
         isDone={isDone}
         onToggleDone={(day) => toggleDay(day)}
+        onNavigateDay={setDetailDay}
       />
 
       <JapaneseWeeklyTestPanel
