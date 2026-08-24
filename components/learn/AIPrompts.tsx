@@ -5,6 +5,7 @@ import type { PromptItem } from "@/lib/ai-prompts/types";
 import { PROMPTS } from "@/lib/ai-prompts/prompts-data";
 import { SLASH_CATEGORIES } from "@/lib/ai-prompts/slash-categories-data";
 import { PROMPT_VISUALS } from "@/components/learn/ai-prompt-visuals";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
 
@@ -47,7 +48,19 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () => void }) {
+function PromptDrawer({
+  item,
+  onClose,
+  previous,
+  next,
+  onNavigate,
+}: {
+  item: PromptItem | null;
+  onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
+}) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -104,6 +117,8 @@ function PromptDrawer({ item, onClose }: { item: PromptItem | null; onClose: () 
               <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-[var(--text)]">{item.prompt}</p>
             </div>
           </div>
+
+          <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
       </aside>
     </div>
@@ -137,6 +152,14 @@ function PromptCard({ item, onClick }: { item: PromptItem; onClick: () => void }
       </div>
     </button>
   );
+}
+
+const orderedPrompts = CATEGORIES.flatMap((category) => PROMPTS.filter((p) => p.category === category));
+
+function neighbourOf(item: PromptItem | null, offset: -1 | 1): LessonNavTarget | null {
+  if (!item) return null;
+  const neighbour = orderedPrompts[orderedPrompts.findIndex((p) => p.id === item.id) + offset];
+  return neighbour ? { id: neighbour.id, title: neighbour.title } : null;
 }
 
 export function AIPrompts() {
@@ -218,7 +241,14 @@ export function AIPrompts() {
         </div>
       </div>
 
-      <PromptDrawer item={active} onClose={() => setActive(null)} />
+      <PromptDrawer
+        key={active?.id ?? "none"}
+        item={active}
+        onClose={() => setActive(null)}
+        previous={neighbourOf(active, -1)}
+        next={neighbourOf(active, 1)}
+        onNavigate={(target) => setActive(orderedPrompts.find((p) => p.id === target.id) ?? null)}
+      />
     </>
   );
 }
