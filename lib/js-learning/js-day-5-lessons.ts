@@ -210,74 +210,114 @@ console.log(double(5)); // 10`,
       title: { en: "Currying & Composition", np: "Currying र Composition", jp: "カリー化と合成" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThink of a vending machine: a normal function is like paying with the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.\n\n<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
-        np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)।",
-        jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。",
+        en: "<b>Currying</b> (turning a function with multiple arguments into a chain of functions) lets you provide one argument at a time.\n\n```javascript\nadd(1, 2, 3);\n\n// becomes\n\nadd(1)(2)(3);\n```\n\n<b>Partial application</b> (pre-filling some arguments) is similar, but you don't have to provide exactly one argument at each step.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add5 = (b) => add(5, b);\n\nconsole.log(add5(3)); // 8\n```\n\n<b>Function composition</b> (combining small functions to create a new function) lets you build a pipeline where the output of one function becomes the input of the next.\n\n```text\nadd 1\n  ↓\ndouble\n  ↓\nsquare\n  ↓\nresult\n```\n\nThis helps keep code small, reusable, and easier to understand.\n\n---\n\n### Currying\n\n```javascript\nfunction add(a) {\n  return function (b) {\n    return function (c) {\n      return a + b + c;\n    };\n  };\n}\n\nconsole.log(add(1)(2)(3)); // 6\n```\n\nEach function remembers the previous value and waits for the next one.\n\n---\n\n### Composition\n\n```javascript\nconst add1 = (x) => x + 1;\nconst double = (x) => x * 2;\n\nconst result = double(add1(5));\n\nconsole.log(result); // 12\n```\n\nThe value moves through the functions:\n\n```text\n5\n↓\nadd1 → 6\n↓\ndouble → 12\n```",
+        np: "<b>Currying</b> (धेरै argument लिने function लाई function को श्रृंखलामा बदल्नु) ले तपाईंलाई एक पटकमा एउटा argument दिन दिन्छ।\n\n```javascript\nadd(1, 2, 3);\n\n// becomes\n\nadd(1)(2)(3);\n```\n\n<b>Partial application</b> (केही argument पहिले नै भर्नु) मिल्दो छ, तर हरेक चरणमा ठ्याक्कै एउटा argument दिनै पर्दैन।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add5 = (b) => add(5, b);\n\nconsole.log(add5(3)); // 8\n```\n\n<b>Function composition</b> (साना function जोडी नयाँ function बनाउनु) ले एउटा function को output अर्कोको input बन्ने pipeline बनाउन दिन्छ।\n\n```text\nadd 1\n  ↓\ndouble\n  ↓\nsquare\n  ↓\nresult\n```\n\nयसले code सानो, पुनःप्रयोग योग्य र बुझ्न सजिलो राख्न मद्दत गर्छ।\n\n---\n\n### Currying\n\n```javascript\nfunction add(a) {\n  return function (b) {\n    return function (c) {\n      return a + b + c;\n    };\n  };\n}\n\nconsole.log(add(1)(2)(3)); // 6\n```\n\nहरेक function ले अघिल्लो value सम्झन्छ र अर्कोको प्रतीक्षा गर्छ।\n\n---\n\n### Composition\n\n```javascript\nconst add1 = (x) => x + 1;\nconst double = (x) => x * 2;\n\nconst result = double(add1(5));\n\nconsole.log(result); // 12\n```\n\nValue function हरू मार्फत बहन्छ:\n\n```text\n5\n↓\nadd1 → 6\n↓\ndouble → 12\n```",
+        jp: "<b>カリー化</b>（複数の引数を取る関数を、関数の連鎖に変えること）を使うと、引数を1つずつ渡せます。\n\n```javascript\nadd(1, 2, 3);\n\n// becomes\n\nadd(1)(2)(3);\n```\n\n<b>部分適用</b>（一部の引数を先に埋めること）は似ていますが、各段階でちょうど1つの引数を渡す必要はありません。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add5 = (b) => add(5, b);\n\nconsole.log(add5(3)); // 8\n```\n\n<b>関数合成</b>（小さな関数を組み合わせて新しい関数を作ること）を使うと、ある関数の出力が次の関数の入力になるパイプラインを作れます。\n\n```text\nadd 1\n  ↓\ndouble\n  ↓\nsquare\n  ↓\nresult\n```\n\nこれでコードは小さく、再利用しやすく、理解しやすくなります。\n\n---\n\n### カリー化\n\n```javascript\nfunction add(a) {\n  return function (b) {\n    return function (c) {\n      return a + b + c;\n    };\n  };\n}\n\nconsole.log(add(1)(2)(3)); // 6\n```\n\n各関数は前の値を覚えて、次の値を待ちます。\n\n---\n\n### 合成\n\n```javascript\nconst add1 = (x) => x + 1;\nconst double = (x) => x * 2;\n\nconst result = double(add1(5));\n\nconsole.log(result); // 12\n```\n\n値は関数を順に通っていきます:\n\n```text\n5\n↓\nadd1 → 6\n↓\ndouble → 12\n```",
       },
-      diagram: `add(2, 3)                       curriedAdd(2)(3)
-──────────────                  ──────────────────────
-one call, all args at once      curriedAdd(2) ──▶ returns (b) => 2 + b
-                                 (b) => 2+b (3) ──▶ 5
+      diagram: `Currying
 
-pipe(add1, double, square)(3)
-  3 → add1 → 4 → double → 8 → square → 64`,
+add(1, 2, 3)
+     ↓
+add(1)
+     ↓
+add(1)(2)
+     ↓
+add(1)(2)(3)
+     ↓
+result
+
+
+Composition
+
+value
+  ↓
+function A
+  ↓
+function B
+  ↓
+function C
+  ↓
+result`,
       codeExample: {
-        title: { en: "Currying, partial application, and composition", np: "Currying, partial application, composition", jp: "カリー化・部分適用・合成" },
-        code: `// ── Curried version ───────────────────────────────────────────────
-const curriedAdd = (a) => (b) => a + b;
-curriedAdd(2)(3);  // 5
-const add2 = curriedAdd(2);   // returns (b) => 2 + b
-add2(3);  // 5
-
-// ── Why currying is useful — creating specialised functions ───────
-const multiply = (a) => (b) => a * b;
-const double  = multiply(2);
-const triple  = multiply(3);
-[1, 2, 3].map(double);  // [2, 4, 6]
-
-// ── Partial application with bind() ───────────────────────────────
-function log(level, message) {
-  console.log(\`[\${level.toUpperCase()}] \${message}\`);
+        title: { en: "Currying, partial application and composition", np: "Currying, partial application र composition", jp: "カリー化・部分適用・合成" },
+        code: `// Currying — one argument at a time
+function add(a) {
+  return function (b) {
+    return function (c) {
+      return a + b + c;
+    };
+  };
 }
-const logError = log.bind(null, "error");
-logError("Database connection failed");   // [ERROR] Database connection failed
 
-// ── Function composition — combining functions ───────────────────
-const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
-const add1   = x => x + 1;
-const double2 = x => x * 2;
-const square = x => x * x;
-const transform = pipe(add1, double2, square);
-transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
+console.log(add(1)(2)(3)); // 6
+
+// Partial application — pre-fill some arguments
+function addTwo(a, b) {
+  return a + b;
+}
+
+const add5 = (b) => addTwo(5, b);
+
+console.log(add5(3)); // 8
+
+// Composition — output feeds the next function
+const add1 = (x) => x + 1;
+const double = (x) => x * 2;
+
+console.log(double(add1(5))); // 12`,
       },
       keyTakeaways: [
-        { en: "Currying converts `f(a, b, c)` into `f(a)(b)(c)` — a chain of single-argument functions instead of one multi-argument call.", np: "Currying ले `f(a,b,c)` लाई `f(a)(b)(c)` मा बदल्छ — single-argument functions को chain।", jp: "カリー化は`f(a,b,c)`を`f(a)(b)(c)`に変換する — 単一引数関数の連鎖。" },
-        { en: "Partial application (e.g. via `.bind()`) pre-fills some arguments now and returns a new function needing only the rest.", np: "Partial application (जस्तै `.bind()` मार्फत) ले केही arguments अगावै भर्छ र बाँकीका लागि नयाँ function दिन्छ।", jp: "部分適用（例: `.bind()`）は一部の引数を先に埋め、残りだけを必要とする新しい関数を返す。" },
-        { en: "Function composition (`pipe`/`compose`) chains small single-purpose functions left-to-right (or right-to-left) into a readable pipeline.", np: "Function composition (`pipe`/`compose`) ले साना function हरूलाई बायाँबाट दायाँ (वा उल्टो) pipeline मा जोड्छ।", jp: "関数合成（`pipe`/`compose`）は小さな単機能関数を左から右（または逆）にパイプラインとして連結する。" },
+        { en: "<b>Currying</b> → gives function arguments one at a time.", np: "<b>Currying</b> → function लाई एक पटकमा एउटा argument दिन्छ।", jp: "<b>カリー化</b> → 関数に引数を1つずつ渡す。" },
+        { en: "<b>Partial application</b> → pre-fills some arguments and returns a new function.", np: "<b>Partial application</b> → केही argument पहिले भरी नयाँ function फर्काउँछ।", jp: "<b>部分適用</b> → 一部の引数を先に埋めて新しい関数を返す。" },
+        { en: "<b>Composition</b> → combines small functions into a pipeline.", np: "<b>Composition</b> → साना function लाई pipeline मा जोड्छ।", jp: "<b>合成</b> → 小さな関数をパイプラインにつなげる。" },
+        { en: "Currying is useful when you want to create specialized functions.", np: "विशेषीकृत function बनाउन चाहँदा currying उपयोगी हुन्छ।", jp: "特化した関数を作りたいときにカリー化が役立つ。" },
+        { en: "Composition helps break large operations into small, reusable functions.", np: "Composition ले ठूला काम लाई साना, पुनःप्रयोग योग्य function मा विभाजन गर्न मद्दत गर्छ।", jp: "合成は大きな処理を小さく再利用しやすい関数に分けるのに役立つ。" },
       ],
       commonMistakes: [
-        { en: "Confusing currying with partial application — currying always produces single-argument steps; partial application can fill any number of arguments at once.", np: "Currying र partial application मिलाउनु — currying ले सधैं single-argument steps दिन्छ; partial application ले जुनसुकै संख्याको argument भर्न सक्छ।", jp: "カリー化と部分適用を混同すること。カリー化は常に単一引数のステップを生む。部分適用は任意数の引数を一度に埋められる。" },
-        { en: "Mixing up the order in `pipe` (left-to-right) vs `compose` (right-to-left) and getting the wrong transformation order.", np: "`pipe` (बायाँबाट दायाँ) र `compose` (दायाँबाट बायाँ) को order मिलाउनु।", jp: "`pipe`（左から右）と`compose`（右から左）の順序を混同すること。" },
-        { en: "Over-currying every function in a codebase \"just in case\" — it adds indirection that isn't worth it unless you actually reuse partially-applied versions.", np: "पूरै codebase मा हरेक function लाई 'just in case' curry गर्नु — यसले अनावश्यक indirection थप्छ।", jp: "「念のため」コードベースのすべての関数をカリー化すること。実際に部分適用版を再利用しない限り価値のない間接化を加える。" },
+        { en: "<b>Confusing currying with partial application</b> — currying normally takes one argument at a time, as in `add(1)(2)(3)`, while partial application can supply several at once, as in `add(1, 2)`.", np: "<b>Currying र partial application भ्रममा पार्नु</b> — currying सामान्यतया एक पटकमा एउटा argument लिन्छ, जस्तै `add(1)(2)(3)`, जब कि partial application ले एकैचोटि धेरै दिन सक्छ, जस्तै `add(1, 2)`।", jp: "<b>カリー化と部分適用を混同する</b> — カリー化は通常 `add(1)(2)(3)` のように1つずつ、部分適用は `add(1, 2)` のように複数まとめて渡せる。" },
+        { en: "<b>Making composition unnecessarily complicated</b> — start with simple functions like `const double = (x) => x * 2;` and combine them, instead of writing one large function.", np: "<b>Composition अनावश्यक जटिल बनाउनु</b> — `const double = (x) => x * 2;` जस्ता सरल function बाट सुरु गरी जोड्नुहोस्, एउटै ठूलो function लेख्नुको साटो।", jp: "<b>合成を不必要に複雑にする</b> — `const double = (x) => x * 2;` のような単純な関数から始めて組み合わせる。1つの大きな関数を書かない。" },
+        { en: "<b>Forgetting the returned function</b> — a curried function must keep returning another function until every required argument has arrived.", np: "<b>फर्काइने function बिर्सनु</b> — curried function ले चाहिने हरेक argument आउनेसम्म अर्को function फर्काइरहनु पर्छ।", jp: "<b>返す関数を忘れる</b> — カリー化した関数は、必要な引数がすべて揃うまで別の関数を返し続けなければならない。" },
       ],
       quiz: [
         {
-          question: { en: "What does currying turn `f(a, b, c)` into?", np: "Currying ले `f(a, b, c)` लाई केमा बदल्छ?", jp: "カリー化は`f(a, b, c)`を何に変換する？" },
-          options: [{ en: "f(a)(b)(c)", np: "f(a)(b)(c)", jp: "f(a)(b)(c)" }, { en: "f(a, b, c, d)", np: "f(a, b, c, d)", jp: "f(a, b, c, d)" }],
-          correctIndex: 0,
-          explanation: { en: "Currying converts a multi-argument call into a chain of single-argument function calls.", np: "Currying ले multi-argument call लाई single-argument function calls को chain मा बदल्छ।", jp: "カリー化は多引数呼び出しを単一引数関数呼び出しの連鎖に変換する。" },
-        },
-        {
-          question: { en: "In `pipe(add1, double, square)(3)`, in what order do the functions run?", np: "`pipe(add1, double, square)(3)` मा function हरू कुन order मा चल्छन्?", jp: "`pipe(add1, double, square)(3)`で関数はどの順序で実行される？" },
-          options: [{ en: "Left to right: add1, then double, then square", np: "बायाँबाट दायाँ: add1, double, square", jp: "左から右: add1、double、square" }, { en: "Right to left: square, then double, then add1", np: "दायाँबाट बायाँ: square, double, add1", jp: "右から左: square、double、add1" }],
-          correctIndex: 0,
-          explanation: { en: "pipe runs functions left-to-right, in the order listed; compose runs right-to-left.", np: "pipe ले listed order मा बायाँबाट दायाँ चलाउँछ; compose ले दायाँबाट बायाँ चलाउँछ।", jp: "pipeは記載順に左から右へ実行。composeは右から左へ実行。" },
-        },
-        {
-          question: { en: "What does `.bind(null, \"error\")` do to a two-argument function `log(level, message)`?", np: "`.bind(null, \"error\")` ले `log(level, message)` मा के गर्छ?", jp: "`.bind(null, \"error\")`は2引数関数`log(level, message)`に何をする？" },
-          options: [{ en: "Calls log immediately with level=\"error\"", np: "level='error' सँग log तुरुन्तै call गर्छ", jp: "level=\"error\"で即座にlogを呼び出す" }, { en: "Returns a new function that only needs the remaining `message` argument", np: "बाँकी `message` argument मात्र चाहिने नयाँ function फर्काउँछ", jp: "残りの`message`引数だけを必要とする新しい関数を返す" }],
+          question: { en: "What does currying do?", np: "Currying ले के गर्छ?", jp: "カリー化は何をするか?" },
+          options: [
+            { en: "Makes a function asynchronous", np: "Function लाई asynchronous बनाउँछ", jp: "関数を非同期にする" },
+            { en: "Turns multiple arguments into a chain of function calls", np: "धेरै argument लाई function call को श्रृंखलामा बदल्छ", jp: "複数の引数を関数呼び出しの連鎖に変える" },
+            { en: "Removes arguments from a function", np: "Function बाट argument हटाउँछ", jp: "関数から引数を取り除く" },
+          ],
           correctIndex: 1,
-          explanation: { en: "This is partial application — level is pre-filled, and the returned function only needs message.", np: "यो partial application हो — level pre-filled हुन्छ, return भएको function लाई message मात्र चाहिन्छ।", jp: "これは部分適用 — levelは先に埋められ、返された関数はmessageだけを必要とする。" },
+          explanation: { en: "`add(1, 2, 3)` becomes `add(1)(2)(3)`, with each step returning the next function.", np: "`add(1, 2, 3)` `add(1)(2)(3)` बन्छ, हरेक चरणले अर्को function फर्काउँछ।", jp: "`add(1, 2, 3)` が `add(1)(2)(3)` になり、各段階が次の関数を返す。" },
+        },
+        {
+          question: { en: "What is partial application?", np: "Partial application के हो?", jp: "部分適用とは何か?" },
+          options: [
+            { en: "Pre-filling some function arguments", np: "केही function argument पहिले भर्नु", jp: "関数の一部の引数を先に埋めること" },
+            { en: "Removing a function", np: "Function हटाउनु", jp: "関数を削除すること" },
+            { en: "Running a function twice", np: "Function दुई पटक चलाउनु", jp: "関数を2回実行すること" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`const add5 = (b) => add(5, b)` fixes the first argument and leaves the rest.", np: "`const add5 = (b) => add(5, b)` ले पहिलो argument तय गर्छ र बाँकी छोड्छ।", jp: "`const add5 = (b) => add(5, b)` は最初の引数を固定し、残りを後に回す。" },
+        },
+        {
+          question: { en: "What does function composition do?", np: "Function composition ले के गर्छ?", jp: "関数合成は何をするか?" },
+          options: [
+            { en: "Combines functions into a pipeline", np: "Function लाई pipeline मा जोड्छ", jp: "関数をパイプラインにつなげる" },
+            { en: "Converts functions into objects", np: "Function लाई object मा बदल्छ", jp: "関数をオブジェクトに変換する" },
+            { en: "Makes functions run asynchronously", np: "Function लाई asynchronously चलाउँछ", jp: "関数を非同期に実行する" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Each function's output becomes the next one's input, as in `double(add1(5))`.", np: "हरेक function को output अर्कोको input बन्छ, जस्तै `double(add1(5))`।", jp: "各関数の出力が次の入力になる。例: `double(add1(5))`。" },
+        },
+        {
+          question: { en: "Given `const double = (x) => x * 2;`, what is `double(5)`?", np: "`const double = (x) => x * 2;` दिइएमा, `double(5)` के हो?", jp: "`const double = (x) => x * 2;` のとき `double(5)` は?" },
+          options: [
+            { en: "`5`", np: "`5`", jp: "`5`" },
+            { en: "`7`", np: "`7`", jp: "`7`" },
+            { en: "`10`", np: "`10`", jp: "`10`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "The arrow function multiplies its input by two.", np: "Arrow function ले आफ्नो input लाई दुईले गुणन गर्छ।", jp: "アロー関数は入力を2倍にする。" },
         },
       ],
     },
