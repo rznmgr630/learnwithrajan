@@ -352,6 +352,7 @@ test();`,
           explanation: { en: "It turns a silent `undefined` bug into an immediate, obvious error.", np: "यसले चुपचापको `undefined` bug लाई तुरुन्तै देखिने स्पष्ट error मा बदल्छ।", jp: "静かな `undefined` のバグを、すぐ分かる明確なエラーに変えてくれる。" },
         },
       ],
+      youtubeId: "BNC6slYCj50",
     },
   ],
   finalQuiz: [
