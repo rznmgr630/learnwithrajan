@@ -8,6 +8,7 @@ import { DSAValidParenthesesDiagram } from "@/components/learn/DSAValidParenthes
 import { DSAStockProfitDiagram } from "@/components/learn/DSAStockProfitDiagram";
 import { DSAContainsDuplicateDiagram } from "@/components/learn/DSAContainsDuplicateDiagram";
 import { DSAMaxSubarrayDiagram } from "@/components/learn/DSAMaxSubarrayDiagram";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 const LANGUAGE_ORDER: SolutionLanguage[] = ["javascript", "typescript", "php", "java", "python"];
 
@@ -217,9 +218,15 @@ function ProblemContent({ problem }: { problem: DsaProblem }) {
 export function DSAProblemDrawer({
   problem,
   onClose,
+  previous,
+  next,
+  onNavigate,
 }: {
   problem: DsaProblem | null;
   onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
 }) {
   useEffect(() => {
     if (!problem) return;
@@ -284,6 +291,9 @@ export function DSAProblemDrawer({
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overscroll-y-contain">
           <ProblemContent problem={problem} />
+          <div className="px-5 pb-5">
+            <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
+          </div>
         </div>
       </aside>
     </div>

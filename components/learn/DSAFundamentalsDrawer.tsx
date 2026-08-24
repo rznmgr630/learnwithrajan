@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 export type FundamentalTopicId = "big-o" | "space-complexity";
 
@@ -286,9 +287,18 @@ const TOPIC_CONTENT: Record<FundamentalTopicId, { title: string; subtitle: strin
 interface Props {
   topicId: FundamentalTopicId | null;
   onClose: () => void;
+  /** Enables the previous/next footer; receives the topic to open. */
+  onNavigate?: (topicId: FundamentalTopicId) => void;
 }
 
-export function DSAFundamentalsDrawer({ topicId, onClose }: Props) {
+const ORDERED_TOPIC_IDS: FundamentalTopicId[] = ["big-o", "space-complexity"];
+
+function topicNeighbour(topicId: FundamentalTopicId, offset: -1 | 1): LessonNavTarget | null {
+  const id = ORDERED_TOPIC_IDS[ORDERED_TOPIC_IDS.indexOf(topicId) + offset];
+  return id ? { id, title: TOPIC_CONTENT[id].title } : null;
+}
+
+export function DSAFundamentalsDrawer({ topicId, onClose, onNavigate }: Props) {
   // Close on Escape
   useEffect(() => {
     if (!topicId) return;
@@ -353,6 +363,14 @@ export function DSAFundamentalsDrawer({ topicId, onClose }: Props) {
               {sec.body}
             </SectionBlock>
           ))}
+
+          {onNavigate ? (
+            <LessonNav
+              previous={topicNeighbour(topicId, -1)}
+              next={topicNeighbour(topicId, 1)}
+              onNavigate={(target) => onNavigate(target.id as FundamentalTopicId)}
+            />
+          ) : null}
         </div>
       </aside>
     </div>
