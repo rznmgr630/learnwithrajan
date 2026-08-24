@@ -7,6 +7,7 @@ import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { JsLessonDayDetail } from "@/components/learn/JsLessonDayDetail";
+import type { LessonDayNavTarget } from "@/components/learn/LessonDayNav";
 import { JS_ROADMAP_WEEKS, JS_TOTAL_DAYS } from "@/lib/js-learning/js-challenge-data";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { JS_DAY_1_LESSONS } from "@/lib/js-learning/js-day-1-lessons";
@@ -57,11 +58,26 @@ const LESSON_DAYS: Record<number, JsLessonDay> = {
   20: JS_DAY_20_LESSONS,
 };
 
+const LESSON_DAY_NUMBERS = Object.keys(LESSON_DAYS)
+  .map(Number)
+  .sort((a, b) => a - b);
+
 export function JsRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useJsProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
   const [lessonDay, setLessonDay] = useState<number | null>(null);
+
+  const lessonNeighbours = useMemo(() => {
+    if (lessonDay === null) return { previous: null, next: null };
+    const toTarget = (n: number | undefined): LessonDayNavTarget | null =>
+      n === undefined ? null : { day: n, title: pickLocalized(LESSON_DAYS[n].title, locale) };
+    const i = LESSON_DAY_NUMBERS.indexOf(lessonDay);
+    return {
+      previous: toTarget(LESSON_DAY_NUMBERS[i - 1]),
+      next: toTarget(LESSON_DAY_NUMBERS[i + 1]),
+    };
+  }, [lessonDay, locale]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / JS_TOTAL_DAYS) * 100))}%`,
@@ -241,6 +257,9 @@ export function JsRoadmap() {
           open
           onClose={() => setLessonDay(null)}
           day={LESSON_DAYS[lessonDay]}
+          previousDay={lessonNeighbours.previous}
+          nextDay={lessonNeighbours.next}
+          onNavigateDay={setLessonDay}
         />
       ) : null}
     </div>
