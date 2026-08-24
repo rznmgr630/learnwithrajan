@@ -223,7 +223,7 @@ console.log(result);
           explanation: { en: "Each statement finishes before the next one starts.", np: "हरेक statement सकिएपछि मात्र अर्को सुरु हुन्छ।", jp: "各文が終わってから次が始まる。" },
         },
       ],
-      youtubeId: "ZvbzSrg0afE",
+      youtubeIds: ["ZvbzSrg0afE"],
     },
     {
       id: "execution-context-call-stack",
@@ -371,7 +371,7 @@ var square4 = square(4);
           explanation: { en: "Last in, first out: the newest context runs, and leaves first when it returns.", np: "Last in, first out: सबैभन्दा नयाँ context चल्छ, र return गर्दा पहिले हट्छ।", jp: "後入れ先出し: 最新のコンテキストが動き、returnすると最初に外れる。" },
         },
       ],
-      youtubeId: "iLWTnMzWtj4",
+      youtubeIds: ["iLWTnMzWtj4"],
     },
   ],
   finalQuiz: [
