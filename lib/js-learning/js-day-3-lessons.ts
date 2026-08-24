@@ -11,78 +11,113 @@ export const JS_DAY_3_LESSONS: JsLessonDay = {
       title: { en: "The Three Scope Types", np: "तीन Scope Types", jp: "3種類のスコープ" },
       durationMinutes: 9,
       explanation: {
-        en: "Scope is about visibility — which variables a piece of code is allowed to see. JavaScript nests three kinds of scope inside each other like Russian dolls: whatever is visible at an outer layer stays visible at every layer inside it, but never the other way round.\n\n• <b>Global scope</b> — the outermost doll; visible from anywhere in the file\n• <b>Function scope</b> — a doll inside the global one; visible only inside that function\n• <b>Block scope</b> — the smallest doll, created by any `{ }` (an `if`, `for`, or bare block); visible only inside that block\n  ↳ `var` ignores this smallest doll entirely — it always escapes to the nearest function (or global) layer\n\nJavaScript also uses <b>lexical scoping</b>: a variable's scope is decided by where it is written in the source, not by how or where the function is later called. An inner function keeps access to its outer function's variables even after the outer function has already finished running — this \"remembers where it was born\" rule is the entire foundation of closures (Day 4).",
-        np: "Scope भनेको visibility हो। JS मा तीन scope Russian doll जस्तै nested हुन्छन्। JS ले lexical scoping प्रयोग गर्छ — यही Closure को आधार हो।",
-        jp: "スコープは可視性のこと。JSには入れ子の3種類のスコープがある。JSはレキシカルスコープを使い、これがクロージャの基礎となる。",
+        en: "<b>Scope</b> (where a variable can be accessed) controls which parts of your code can see a variable.\n\nJavaScript has three main types of scope:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nThink of scope like boxes inside other boxes:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\nA variable in an outer scope can usually be accessed by code inside it, but an inner variable cannot be accessed from outside.\n\n---\n\n### 1. Global Scope\n\n<b>Global scope</b> (the outermost scope, available throughout the program) is created outside functions and blocks.\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nThe function can access `name` because `name` is in the outer scope.\n\n---\n\n### 2. Function Scope\n\n<b>Function scope</b> (variables that are available only inside a function) is created when a function is defined.\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` exists only inside `greet()`.\n\n---\n\n### 3. Block Scope\n\n<b>Block scope</b> (variables available only inside `{ }`) is created by blocks such as:\n\n```javascript\nif\nfor\nwhile\n```\n\nExample:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` and `const` are block-scoped.\n\n---\n\n### `var` and Block Scope\n\n<b>`var`</b> (the older variable declaration) does not respect block scope.\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` escapes the block and belongs to the nearest function scope.\n\nThis is one reason modern JavaScript prefers `let` and `const`.\n\n---\n\n### 4. Lexical Scoping\n\n<b>Lexical scoping</b> (scope determined by where code is written) means JavaScript decides what variables a function can access based on where the function was created.\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` can access `name` because it was written inside `outer()`.\n\nThis is true even if the function is called somewhere else.\n\nThis behavior is the foundation of <b>closures</b> (functions that remember variables from where they were created).\n\n---\n\n### Visibility Rule\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\nExample:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
+        np: "<b>Scope</b> (variable कहाँ पहुँच गर्न सकिन्छ) ले तपाईंको code का कुन भागले variable देख्न सक्छ भन्ने नियन्त्रण गर्छ।\n\nJavaScript मा तीन मुख्य प्रकारका scope छन्:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nScope लाई बाकसभित्र बाकस जस्तै सोच्नुहोस्:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\nबाहिरी scope को variable भित्रको code ले सामान्यतया पहुँच गर्न सक्छ, तर भित्री variable लाई बाहिरबाट पहुँच गर्न सकिँदैन।\n\n---\n\n### 1. Global Scope\n\n<b>Global scope</b> (सबैभन्दा बाहिरी scope, पूरै program भर उपलब्ध) function र block बाहिर बन्छ।\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nFunction ले `name` पहुँच गर्न सक्छ किनकि `name` बाहिरी scope मा छ।\n\n---\n\n### 2. Function Scope\n\n<b>Function scope</b> (function भित्र मात्र उपलब्ध हुने variable) function परिभाषित हुँदा बन्छ।\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` `greet()` भित्र मात्र अस्तित्वमा हुन्छ।\n\n---\n\n### 3. Block Scope\n\n<b>Block scope</b> (`{ }` भित्र मात्र उपलब्ध हुने variable) यस्ता block ले बनाउँछन्:\n\n```javascript\nif\nfor\nwhile\n```\n\nउदाहरण:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` र `const` block-scoped हुन्।\n\n---\n\n### `var` र Block Scope\n\n<b>`var`</b> (पुरानो variable declaration) ले block scope मान्दैन।\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` block बाट उम्किन्छ र नजिकको function scope मा पर्छ।\n\nआधुनिक JavaScript ले `let` र `const` मन पराउनुको यो एक कारण हो।\n\n---\n\n### 4. Lexical Scoping\n\n<b>Lexical scoping</b> (code कहाँ लेखिएको छ त्यसले तय गर्ने scope) को अर्थ JavaScript ले function कहाँ बनाइएको थियो त्यसका आधारमा त्यसले कुन variable पहुँच गर्न सक्छ भन्ने निर्णय गर्छ।\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` ले `name` पहुँच गर्न सक्छ किनकि यो `outer()` भित्र लेखिएको थियो।\n\nFunction अन्त कतै call गरिए पनि यो सत्य हुन्छ।\n\nयो व्यवहार <b>closures</b> (आफू बनेको ठाउँका variable सम्झने function) को जग हो।\n\n---\n\n### दृश्यता नियम\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\nउदाहरण:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
+        jp: "<b>スコープ</b>（変数にアクセスできる範囲）は、コードのどの部分がその変数を見られるかを決めます。\n\nJavaScriptには主に3種類のスコープがあります:\n\n```text\nGlobal scope\nFunction scope\nBlock scope\n```\n\nスコープは箱の中の箱のようなものだと考えてください:\n\n```text\nGlobal\n└── Function\n    └── Block\n```\n\n外側のスコープの変数は内側のコードから使えますが、内側の変数を外側から使うことはできません。\n\n---\n\n### 1. グローバルスコープ\n\n<b>グローバルスコープ</b>（最も外側のスコープ。プログラム全体で使える）は、関数やブロックの外に作られます。\n\n```javascript\nconst name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\n`name` が外側のスコープにあるので、関数から使えます。\n\n---\n\n### 2. 関数スコープ\n\n<b>関数スコープ</b>（関数の中でだけ使える変数）は、関数を定義したときに作られます。\n\n```javascript\nfunction greet() {\n  const message = \"Hello\";\n\n  console.log(message);\n}\n\ngreet(); // Hello\n\nconsole.log(message); // Error\n```\n\n`message` は `greet()` の中にだけ存在します。\n\n---\n\n### 3. ブロックスコープ\n\n<b>ブロックスコープ</b>（`{ }` の中でだけ使える変数）は、次のようなブロックが作ります:\n\n```javascript\nif\nfor\nwhile\n```\n\n例:\n\n```javascript\nif (true) {\n  let age = 30;\n\n  console.log(age); // 30\n}\n\nconsole.log(age); // Error\n```\n\n`let` と `const` はブロックスコープです。\n\n---\n\n### `var` とブロックスコープ\n\n<b>`var`</b>（古い変数宣言）はブロックスコープを尊重しません。\n\n```javascript\nif (true) {\n  var age = 30;\n}\n\nconsole.log(age); // 30\n```\n\n`var` はブロックから抜け出し、最も近い関数スコープに属します。\n\n現代のJavaScriptが `let` と `const` を好む理由の1つがこれです。\n\n---\n\n### 4. レキシカルスコープ\n\n<b>レキシカルスコープ</b>（コードが書かれた場所で決まるスコープ）とは、関数がどこで作られたかに基づいて、その関数が使える変数をJavaScriptが決めるという意味です。\n\n```javascript\nfunction outer() {\n  const name = \"Rajan\";\n\n  function inner() {\n    console.log(name);\n  }\n\n  inner();\n}\n\nouter(); // Rajan\n```\n\n`inner()` は `outer()` の中に書かれているので `name` を使えます。\n\nこれは関数が別の場所で呼ばれても変わりません。\n\nこの性質が<b>クロージャ</b>（作られた場所の変数を覚えている関数）の土台になります。\n\n---\n\n### 見え方のルール\n\n```text\nOuter scope\n     ↓\nInner scope can see it\n\nInner scope\n     ↓\nOuter scope cannot see it\n```\n\n例:\n\n```javascript\nconst global = \"Global\";\n\nfunction outer() {\n  const local = \"Local\";\n\n  if (true) {\n    const block = \"Block\";\n\n    console.log(global); // Works\n    console.log(local);  // Works\n    console.log(block);  // Works\n  }\n\n  console.log(block); // Error\n}\n```",
       },
-      diagram: `┌─ Global scope ─────────────────────────────────────┐
-│  const appName = "MyApp";                           │
-│  ┌─ Function scope (outer()) ─────────────────────┐ │
-│  │  const secret = "only mine";                    │ │
-│  │  ┌─ Block scope ( if (true) { ... } ) ────────┐  │ │
-│  │  │  let blockOnly = "block";                  │  │ │
-│  │  │  var notBlock  = "leaks out!";  ← escapes ─┼──┼─┘
-│  │  └─────────────────────────────────────────────┘ │
-│  └───────────────────────────────────────────────────┘
-└───────────────────────────────────────────────────────┘
-Inner layers can always read outer variables — never the other way round.`,
+      diagram: `                    Global Scope
+                  const global = ...
+                         |
+             +-----------+-----------+
+             |                       |
+       Function Scope           Other code
+       const user = ...             |
+             |                      |
+       +-----+-----+                |
+       |           |                |
+   Block Scope  Block Scope         |
+   let x = ...  const y = ...       |
+
+
+Visibility Rule
+
+Outer scope
+     ↓
+Inner scope can see it
+
+Inner scope
+     ↓
+Outer scope cannot see it`,
       codeExample: {
-        title: { en: "Global, function, and block scope", np: "Global, function, block scope", jp: "グローバル・関数・ブロックスコープ" },
-        code: `const appName = "MyApp";  // global — accessible everywhere
+        title: { en: "Global, function and block scope together", np: "Global, function र block scope सँगै", jp: "グローバル・関数・ブロックスコープを一度に" },
+        code: `const globalName = "Rajan";
 
-function outer() {
-  const secret = "only mine";   // function-scoped
-  console.log(secret);           // ✅ works
-}
-// console.log(secret);   // ❌ ReferenceError — not accessible outside
+function greet() {
+  const message = "Hello";
 
-if (true) {
-  let blockOnly = "block";       // block-scoped
-  var notBlock = "leaks out!";   // var ignores blocks
-}
-// console.log(blockOnly);   // ❌ ReferenceError
-console.log(notBlock);         // ✅ "leaks out!" — var is function-scoped
+  if (true) {
+    const age = 30;
 
-// ── Lexical scope — inner functions access outer variables ──────────
-function makeCounter() {
-  let count = 0;
-  return function () {
-    count++;               // inner function reads AND writes outer's 'count'
-    return count;
-  };
+    console.log(globalName); // Works
+    console.log(message);    // Works
+    console.log(age);        // Works
+  }
+
+  console.log(globalName); // Works
+  console.log(message);    // Works
+  console.log(age);        // Error
 }
-const counter = makeCounter();
-counter();  // 1
-counter();  // 2`,
+
+greet();`,
       },
       keyTakeaways: [
-        { en: "Scope nests like Russian dolls: global → function → block. Inner scopes can always read outer variables, never the reverse.", np: "Scope Russian doll जस्तै nest हुन्छ: global → function → block। Inner ले outer पढ्न सक्छ, उल्टो हुँदैन।", jp: "スコープはロシアの入れ子人形のように入れ子になる: グローバル→関数→ブロック。内側は外側を読めるが逆はできない。" },
-        { en: "`var` ignores block boundaries entirely and is scoped to the nearest function (or global) layer instead.", np: "`var` ले block boundary लाई पूरै ignore गरी nearest function (वा global) मा scope हुन्छ।", jp: "`var`はブロック境界を完全に無視し、最も近い関数（またはグローバル）にスコープされる。" },
-        { en: "Lexical scoping means a variable's scope is fixed by where it's written in the code, not by where the function is called from.", np: "Lexical scoping भनेको variable को scope code मा कहाँ लेखिएको छ त्यसले तय गर्छ, call कहाँबाट भयो त्यसले होइन।", jp: "レキシカルスコープとは、変数のスコープがコードの記述位置で決まり、呼び出し元では決まらないこと。" },
+        { en: "<b>Scope</b> → determines where a variable can be accessed.", np: "<b>Scope</b> → variable कहाँ पहुँच गर्न सकिन्छ भन्ने तय गर्छ।", jp: "<b>スコープ</b> → 変数にアクセスできる範囲を決める。" },
+        { en: "<b>Global scope</b> → available throughout the program.", np: "<b>Global scope</b> → पूरै program भर उपलब्ध।", jp: "<b>グローバルスコープ</b> → プログラム全体で使える。" },
+        { en: "<b>Function scope</b> → available only inside a function.", np: "<b>Function scope</b> → function भित्र मात्र उपलब्ध।", jp: "<b>関数スコープ</b> → 関数の中でだけ使える。" },
+        { en: "<b>Block scope</b> → available only inside `{ }`.", np: "<b>Block scope</b> → `{ }` भित्र मात्र उपलब्ध।", jp: "<b>ブロックスコープ</b> → `{ }` の中でだけ使える。" },
+        { en: "`let` and `const` are block-scoped.", np: "`let` र `const` block-scoped हुन्।", jp: "`let` と `const` はブロックスコープ。" },
+        { en: "`var` ignores block scope and uses function scope.", np: "`var` ले block scope बेवास्ता गरी function scope प्रयोग गर्छ।", jp: "`var` はブロックスコープを無視して関数スコープを使う。" },
+        { en: "<b>Lexical scoping</b> → scope is decided by where the code is written.", np: "<b>Lexical scoping</b> → code कहाँ लेखिएको छ त्यसले scope तय गर्छ।", jp: "<b>レキシカルスコープ</b> → スコープはコードが書かれた場所で決まる。" },
+        { en: "Inner scopes can access outer variables.", np: "भित्री scope ले बाहिरी variable पहुँच गर्न सक्छ।", jp: "内側のスコープは外側の変数にアクセスできる。" },
+        { en: "Outer scopes cannot access variables inside inner scopes.", np: "बाहिरी scope ले भित्री scope का variable पहुँच गर्न सक्दैन।", jp: "外側のスコープは内側のスコープの変数にアクセスできない。" },
+        { en: "Lexical scoping is the foundation of <b>closures</b>.", np: "Lexical scoping <b>closures</b> को जग हो।", jp: "レキシカルスコープは<b>クロージャ</b>の土台。" },
       ],
       commonMistakes: [
-        { en: "Declaring a variable with `var` inside an `if` block and expecting it to be inaccessible outside — it leaks to the enclosing function.", np: "`if` block भित्र `var` declare गरेर बाहिर access नहुने ठान्नु — यो leak हुन्छ।", jp: "`if`ブロック内で`var`を宣言し、外からアクセスできないと期待すること（実際は漏れる）。" },
-        { en: "Assuming an inner function loses access to outer variables once the outer function has returned — closures keep them alive.", np: "Outer function return भएपछि inner function ले variables गुमाउँछ भन्ने ठान्नु — closure ले जिउँदो राख्छ।", jp: "外側の関数がreturnした後、内側の関数が変数へのアクセスを失うと思うこと（実際はクロージャで保持される）。" },
-        { en: "Confusing lexical scope (where the code is written) with the call stack (where the function was invoked from) — JavaScript only cares about the former.", np: "Lexical scope (code कहाँ लेखियो) र call stack (कहाँबाट call भयो) मिलाउनु — JS ले पहिलो मात्र हेर्छ।", jp: "レキシカルスコープ（コードの記述位置）とコールスタック（呼び出し元）を混同すること。JSは前者のみを見る。" },
+        { en: "<b>Trying to access a block variable outside the block</b> — `if (true) { let name = \"Rajan\"; }` then `console.log(name)` throws, because `name` only exists inside the block.", np: "<b>Block बाहिर block variable पहुँच गर्न खोज्नु</b> — `if (true) { let name = \"Rajan\"; }` पछि `console.log(name)` ले error दिन्छ, किनकि `name` block भित्र मात्र अस्तित्वमा हुन्छ।", jp: "<b>ブロックの外からブロック変数にアクセスしようとする</b> — `if (true) { let name = \"Rajan\"; }` の後の `console.log(name)` はエラーになる。`name` はブロックの中にしか存在しない。" },
+        { en: "<b>Thinking `var` is block-scoped</b> — `if (true) { var age = 30; }` then `console.log(age)` prints `30`, because `var` escapes the block.", np: "<b>`var` block-scoped हो भन्ने ठान्नु</b> — `if (true) { var age = 30; }` पछि `console.log(age)` ले `30` देखाउँछ, किनकि `var` block बाट उम्किन्छ।", jp: "<b>`var` がブロックスコープだと思う</b> — `if (true) { var age = 30; }` の後の `console.log(age)` は `30` を出す。`var` はブロックから抜け出すから。" },
+        { en: "<b>Thinking an inner variable is available outside</b> — a `const message` declared inside `greet()` belongs to that function scope and cannot be read after the call.", np: "<b>भित्री variable बाहिर उपलब्ध छ भन्ने ठान्नु</b> — `greet()` भित्र declare गरिएको `const message` त्यही function scope को हो र call पछि पढ्न सकिँदैन।", jp: "<b>内側の変数が外でも使えると思う</b> — `greet()` の中で宣言した `const message` はその関数スコープのものなので、呼び出し後に読むことはできない。" },
+        { en: "<b>Confusing where a function is called with where it gets its scope</b> — a function uses the scope where it was <b>created</b>, not where it is called. That is lexical scoping.", np: "<b>Function कहाँ call भयो र यसले scope कहाँबाट पायो भन्ने भ्रममा पर्नु</b> — function ले आफू <b>बनेको</b> ठाउँको scope प्रयोग गर्छ, call भएको ठाउँको होइन। यही lexical scoping हो।", jp: "<b>関数が呼ばれた場所とスコープを得た場所を混同する</b> — 関数は<b>作られた</b>場所のスコープを使い、呼ばれた場所のものは使わない。それがレキシカルスコープ。" },
       ],
       quiz: [
         {
-          question: { en: "A `var` declared inside an `if` block — where is it accessible from?", np: "`if` block भित्र declare गरिएको `var` कहाँबाट access गर्न मिल्छ?", jp: "`if`ブロック内で宣言された`var`はどこからアクセスできる？" },
-          options: [{ en: "Only inside the if block", np: "if block भित्र मात्र", jp: "ifブロック内のみ" }, { en: "The entire enclosing function (or global scope)", np: "सम्पूर्ण enclosing function (वा global scope)", jp: "囲む関数全体（またはグローバルスコープ）" }],
+          question: { en: "What does scope determine?", np: "Scope ले के तय गर्छ?", jp: "スコープは何を決めるか?" },
+          options: [
+            { en: "How fast code runs", np: "Code कति छिटो चल्छ", jp: "コードの実行速度" },
+            { en: "Where a variable can be accessed", np: "Variable कहाँ पहुँच गर्न सकिन्छ", jp: "変数にアクセスできる範囲" },
+            { en: "The variable's data type", np: "Variable को data type", jp: "変数のデータ型" },
+          ],
           correctIndex: 1,
-          explanation: { en: "var is function-scoped, so it ignores the if block's boundaries entirely.", np: "var function-scoped हो, त्यसैले if block को boundary ignore गर्छ।", jp: "varは関数スコープなので、ifブロックの境界を無視する。" },
+          explanation: { en: "Scope is about visibility: which parts of the code can see a given variable.", np: "Scope दृश्यताको कुरा हो: code का कुन भागले दिइएको variable देख्न सक्छ।", jp: "スコープは可視性の話。コードのどの部分がその変数を見られるか。" },
         },
         {
-          question: { en: "What determines a variable's scope under lexical scoping?", np: "Lexical scoping मा variable को scope केले तय गर्छ?", jp: "レキシカルスコープで変数のスコープを決めるものは？" },
-          options: [{ en: "Where the function is called from", np: "Function कहाँबाट call भयो", jp: "関数がどこから呼ばれたか" }, { en: "Where the variable is written in the source code", np: "Variable code मा कहाँ लेखिएको छ", jp: "変数がソースコードのどこに書かれているか" }],
+          question: { en: "Which variables are block-scoped?", np: "कुन variable block-scoped हुन्?", jp: "ブロックスコープなのはどれか?" },
+          options: [
+            { en: "`var` only", np: "`var` मात्र", jp: "`var` だけ" },
+            { en: "`let` and `const`", np: "`let` र `const`", jp: "`let` と `const`" },
+            { en: "All variables", np: "सबै variable", jp: "すべての変数" },
+          ],
           correctIndex: 1,
-          explanation: { en: "Lexical scope is fixed at write-time based on source location, not at call-time.", np: "Lexical scope write-time मा source location अनुसार तय हुन्छ, call-time मा होइन।", jp: "レキシカルスコープは記述時にソースの位置で決まり、呼び出し時には決まらない。" },
+          explanation: { en: "`let` and `const` stay inside their `{ }`; `var` does not.", np: "`let` र `const` आफ्नो `{ }` भित्रै रहन्छन्; `var` रहँदैन।", jp: "`let` と `const` は `{ }` の中に留まるが、`var` は留まらない。" },
         },
         {
-          question: { en: "Can an inner function still access its outer function's variables after the outer function has returned?", np: "Outer function return भएपछि पनि inner function ले outer को variable access गर्न सक्छ?", jp: "外側の関数がreturnした後も内側の関数は外側の変数にアクセスできる？" },
-          options: [{ en: "No — those variables are gone", np: "होइन — variables हराइसक्छ", jp: "いいえ — その変数は消える" }, { en: "Yes — this is the basis of closures", np: "हो — यही closure को आधार हो", jp: "はい — これがクロージャの基礎" }],
+          question: { en: "Which scope does `var` use?", np: "`var` ले कुन scope प्रयोग गर्छ?", jp: "`var` はどのスコープを使うか?" },
+          options: [
+            { en: "Block scope", np: "Block scope", jp: "ブロックスコープ" },
+            { en: "Function scope", np: "Function scope", jp: "関数スコープ" },
+            { en: "Only global scope", np: "Global scope मात्र", jp: "グローバルスコープだけ" },
+          ],
           correctIndex: 1,
-          explanation: { en: "Lexical scoping keeps the outer variables alive as long as an inner function still references them — this is exactly what a closure is.", np: "Inner function ले reference राखेसम्म outer variables जिउँदो रहन्छ — यही closure हो।", jp: "内側の関数が参照し続ける限り外側の変数は生き続ける。これがクロージャそのもの。" },
+          explanation: { en: "A `var` declared inside an `if` block belongs to the nearest enclosing function.", np: "`if` block भित्र declare गरिएको `var` नजिकको enclosing function को हो।", jp: "`if` ブロックの中で宣言した `var` は、最も近い外側の関数に属する。" },
+        },
+        {
+          question: { en: "What does lexical scoping mean?", np: "Lexical scoping को अर्थ के हो?", jp: "レキシカルスコープとはどういう意味か?" },
+          options: [
+            { en: "Scope is decided by where code is written", np: "Code कहाँ लेखिएको छ त्यसले scope तय गर्छ", jp: "スコープはコードが書かれた場所で決まる" },
+            { en: "Scope changes every time a function is called", np: "Function call हुँदा हरेक पटक scope बदलिन्छ", jp: "関数が呼ばれるたびにスコープが変わる" },
+            { en: "All variables are global", np: "सबै variable global हुन्छन्", jp: "すべての変数がグローバルになる" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The function keeps the scope of the place it was written, no matter where it is later called.", np: "Function पछि जहाँ call भए पनि आफू लेखिएको ठाउँको scope राख्छ।", jp: "関数は後でどこで呼ばれても、書かれた場所のスコープを保つ。" },
         },
       ],
     },
