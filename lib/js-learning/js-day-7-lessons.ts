@@ -90,10 +90,10 @@ console.log(total); // 1100`,
           question: { en: "What does `map()` do?", np: "`map()` ले के गर्छ?", jp: "`map()` は何をするか?" },
           options: [
             { en: "Removes items", np: "Item हटाउँछ", jp: "要素を取り除く" },
-            { en: "Transforms every item", np: "हरेक item बदल्छ", jp: "すべての要素を変換する" },
             { en: "Combines everything into one value", np: "सबैलाई एउटै value मा जोड्छ", jp: "すべてを1つの値にまとめる" },
+            { en: "Transforms every item", np: "हरेक item बदल्छ", jp: "すべての要素を変換する" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "It returns a new array of the same length, one transformed item per input.", np: "यसले उही लम्बाइको नयाँ array फर्काउँछ, हरेक input का लागि एउटा बदलिएको item।", jp: "同じ長さの新しい配列を返す。入力1つにつき変換後の要素が1つ。" },
         },
         {
@@ -110,20 +110,20 @@ console.log(total); // 1100`,
           question: { en: "What does `reduce()` do?", np: "`reduce()` ले के गर्छ?", jp: "`reduce()` は何をするか?" },
           options: [
             { en: "Always returns an array", np: "सधैं array फर्काउँछ", jp: "常に配列を返す" },
-            { en: "Removes duplicate values", np: "दोहोरिएका value हटाउँछ", jp: "重複した値を取り除く" },
             { en: "Builds one final result from an array", np: "Array बाट एउटा अन्तिम नतिजा बनाउँछ", jp: "配列から1つの最終結果を作る" },
+            { en: "Removes duplicate values", np: "दोहोरिएका value हटाउँछ", jp: "重複した値を取り除く" },
           ],
-          correctIndex: 2,
+          correctIndex: 1,
           explanation: { en: "That result can be a number, a string, an object or even another array.", np: "त्यो नतिजा number, string, object वा अर्को array पनि हुन सक्छ।", jp: "その結果は数値・文字列・オブジェクト、さらには別の配列にもなりうる。" },
         },
         {
           question: { en: "What does `[1, 2, 3].filter(n => n > 1).map(n => n * 10)` produce?", np: "`[1, 2, 3].filter(n => n > 1).map(n => n * 10)` ले के दिन्छ?", jp: "`[1, 2, 3].filter(n => n > 1).map(n => n * 10)` は何を返すか?" },
           options: [
             { en: "`[1, 2, 3]`", np: "`[1, 2, 3]`", jp: "`[1, 2, 3]`" },
-            { en: "`[20, 30]`", np: "`[20, 30]`", jp: "`[20, 30]`" },
             { en: "`60`", np: "`60`", jp: "`60`" },
+            { en: "`[20, 30]`", np: "`[20, 30]`", jp: "`[20, 30]`" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "`filter()` leaves `[2, 3]`, then `map()` multiplies each by ten.", np: "`filter()` ले `[2, 3]` छोड्छ, त्यसपछि `map()` ले हरेकलाई दसले गुणन गर्छ।", jp: "`filter()` が `[2, 3]` を残し、`map()` が各要素を10倍する。" },
         },
       ],
@@ -221,41 +221,41 @@ console.log(allActive);       // false`,
         {
           question: { en: "Which method returns the first matching element?", np: "कुन method ले पहिलो मिल्ने element फर्काउँछ?", jp: "最初に一致した要素を返すのはどれか?" },
           options: [
-            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
             { en: "`find()`", np: "`find()`", jp: "`find()`" },
+            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
             { en: "`some()`", np: "`some()`", jp: "`some()`" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "`filter()` returns every match as an array and `some()` returns a boolean.", np: "`filter()` ले सबै match array मा फर्काउँछ र `some()` ले boolean फर्काउँछ।", jp: "`filter()` は一致すべてを配列で、`some()` は真偽値を返す。" },
         },
         {
           question: { en: "What does `some()` return?", np: "`some()` ले के फर्काउँछ?", jp: "`some()` は何を返すか?" },
           options: [
             { en: "The matching element", np: "मिल्ने element", jp: "一致した要素" },
-            { en: "The matching index", np: "मिल्ने index", jp: "一致した添字" },
             { en: "`true` if at least one element matches", np: "कम्तीमा एउटा element मिले `true`", jp: "少なくとも1つ一致すれば `true`" },
+            { en: "The matching index", np: "मिल्ने index", jp: "一致した添字" },
           ],
-          correctIndex: 2,
+          correctIndex: 1,
           explanation: { en: "It answers a yes/no question, so it never tells you which element matched.", np: "यसले हो/होइन प्रश्नको जवाफ दिन्छ, त्यसैले कुन element मिल्यो भन्दैन।", jp: "はい／いいえに答えるだけなので、どの要素が一致したかは分からない。" },
         },
         {
           question: { en: "What does `every()` check?", np: "`every()` ले के जाँच्छ?", jp: "`every()` は何を確かめるか?" },
           options: [
-            { en: "Whether all elements match", np: "सबै element मिल्छन् कि", jp: "すべての要素が一致するか" },
-            { en: "Whether one element matches", np: "एउटा element मिल्छ कि", jp: "1つの要素が一致するか" },
             { en: "Whether a value exists", np: "Value छ कि", jp: "値が存在するか" },
+            { en: "Whether one element matches", np: "एउटा element मिल्छ कि", jp: "1つの要素が一致するか" },
+            { en: "Whether all elements match", np: "सबै element मिल्छन् कि", jp: "すべての要素が一致するか" },
           ],
-          correctIndex: 0,
+          correctIndex: 2,
           explanation: { en: "A single failing element makes the whole result `false`.", np: "एउटै element नमिले पूरै नतिजा `false` हुन्छ।", jp: "1つでも条件を満たさなければ全体が `false` になる。" },
         },
         {
           question: { en: "What does `[2, 4, 6].find(num => num > 10)` return?", np: "`[2, 4, 6].find(num => num > 10)` ले के फर्काउँछ?", jp: "`[2, 4, 6].find(num => num > 10)` は何を返すか?" },
           options: [
-            { en: "`[]`", np: "`[]`", jp: "`[]`" },
-            { en: "`-1`", np: "`-1`", jp: "`-1`" },
             { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`-1`", np: "`-1`", jp: "`-1`" },
+            { en: "`[]`", np: "`[]`", jp: "`[]`" },
           ],
-          correctIndex: 2,
+          correctIndex: 0,
           explanation: { en: "`find()` gives `undefined` when nothing matches; `-1` is what `findIndex()` returns.", np: "केही नमिले `find()` ले `undefined` दिन्छ; `-1` `findIndex()` ले फर्काउँछ।", jp: "一致がなければ `find()` は `undefined`。`-1` を返すのは `findIndex()`。" },
         },
       ],
@@ -265,85 +265,123 @@ console.log(allActive);       // false`,
       title: { en: "Mutating Methods — sort, splice, flat & forEach", np: "Mutating Methods — sort, splice, flat, forEach", jp: "配列変更メソッド — sort・splice・flat・forEach" },
       durationMinutes: 9,
       explanation: {
-        en: "Some array methods change the original array in place (<b>mutate</b>) instead of returning a new one — this matters a lot when working with React/Redux state, where mutating directly can cause bugs or missed re-renders.\n\n• <b>sort</b> — mutates the array; with no comparator it converts elements to STRINGS and sorts lexicographically (so `10` comes before `2`) — always pass `(a, b) => a - b` for numeric sort\n• <b>splice</b> — mutates: removes/inserts/replaces elements at a position; `slice` (no \"p\") does the same job WITHOUT mutating\n• <b>flat(depth)</b> / <b>flatMap</b> — flatten nested arrays by a given depth (or `Infinity` for fully flat); `flatMap` maps then flattens one level in a single, more efficient pass\n• <b>forEach</b> — iterates purely for side effects; it always returns `undefined` and cannot be chained — use `map` instead when you need a new array back.",
-        np: "sort, push, pop, splice जस्ता method ले original array mutate गर्छ। sort ले comparator बिना string जस्तो sort गर्छ। slice ले mutate गर्दैन। forEach ले सधैं undefined फर्काउँछ, chain हुँदैन।",
-        jp: "sort・push・pop・spliceなどは元の配列を変更する。比較関数なしのsortは文字列としてソートする。sliceは変更しない。forEachは常にundefinedを返しチェーンできない。",
+        en: "Some array methods <b>mutate</b> (change) the original array, while others create a new result.\n\nThis is important when working with React or Redux because changing an existing array directly can cause bugs.\n\n<b>`sort()`</b> — changes the original array and sorts its elements.\n\n<b>`splice()`</b> — changes the original array by removing, adding, or replacing elements.\n\n<b>`flat()`</b> — creates a new array by removing nested array levels.\n\n<b>`flatMap()`</b> — runs `map()` and then flattens one level.\n\n<b>`forEach()`</b> — runs code for every element but returns `undefined`.\n\n---\n\n### 1. Basic — `sort()`\n\nSort numbers from smallest to largest:\n\n```javascript\nconst numbers = [10, 2, 5, 1];\n\nnumbers.sort((a, b) => a - b);\n\nconsole.log(numbers);\n// [1, 2, 5, 10]\n```\n\nAlways use a <b>comparator</b> (function that tells `sort()` how to compare values) for numbers.\n\nWithout one:\n\n```javascript\n[10, 2, 5, 1].sort();\n// [1, 10, 2, 5]\n```\n\nJavaScript treats the values like strings when no comparator is provided.\n\n---\n\n### 2. Basic — `splice()`\n\nRemove elements from an array:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\", \"mango\"];\n\nfruits.splice(1, 2);\n\nconsole.log(fruits);\n// [\"apple\", \"mango\"]\n```\n\n`splice(start, deleteCount)` means:\n\n• Start at index `1`\n• Remove `2` elements\n\n`splice()` changes the original array.\n\n---\n\n### 3. Intermediate — `splice()` to add or replace\n\nYou can also add elements:\n\n```javascript\nconst fruits = [\"apple\", \"orange\"];\n\nfruits.splice(1, 0, \"banana\");\n\nconsole.log(fruits);\n// [\"apple\", \"banana\", \"orange\"]\n```\n\nOr replace an element:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfruits.splice(1, 1, \"mango\");\n\nconsole.log(fruits);\n// [\"apple\", \"mango\", \"orange\"]\n```\n\nIf you want a similar operation <b>without changing the original</b>, use `slice()` (no `p`).\n\n---\n\n### 4. Intermediate — `flat()`\n\nFlatten nested arrays:\n\n```javascript\nconst numbers = [1, [2, 3], [4, 5]];\n\nconst result = numbers.flat();\n\nconsole.log(result);\n// [1, 2, 3, 4, 5]\n```\n\nFor deeper nesting, provide a depth:\n\n```javascript\nconst numbers = [1, [2, [3, [4]]]];\n\nconsole.log(numbers.flat(2));\n// [1, 2, 3, [4]]\n```\n\nUse `flat(Infinity)` to flatten all levels.\n\n---\n\n### 5. Advanced — `flatMap()`\n\n`flatMap()` combines `map()` and one level of `flat()`:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", skills: [\"JavaScript\", \"React\"] },\n  { name: \"John\", skills: [\"Node.js\", \"Python\"] }\n];\n\nconst skills = users.flatMap(user => user.skills);\n\nconsole.log(skills);\n// [\"JavaScript\", \"React\", \"Node.js\", \"Python\"]\n```\n\nInstead of `users.map(user => user.skills).flat();` you can write `users.flatMap(user => user.skills);`.\n\n---\n\n### 6. Advanced — `forEach()`\n\nUse `forEach()` when you simply want to <b>do something</b> for every element:\n\n```javascript\nconst users = [\"Rajan\", \"John\", \"Sam\"];\n\nusers.forEach(user => {\n  console.log(`Hello ${user}`);\n});\n```\n\nIt returns `undefined`:\n\n```javascript\nconst result = users.forEach(user => user.toUpperCase());\n\nconsole.log(result);\n// undefined\n```\n\nIf you need a <b>new array</b>, use `map()` instead:\n\n```javascript\nconst names = users.map(user => user.toUpperCase());\n\nconsole.log(names);\n// [\"RAJAN\", \"JOHN\", \"SAM\"]\n```",
+        np: "केही array method ले मूल array लाई <b>mutate</b> (परिवर्तन) गर्छन्, अरूले नयाँ नतिजा बनाउँछन्।\n\nReact वा Redux सँग काम गर्दा यो महत्वपूर्ण छ किनकि अवस्थित array सिधै बदल्दा bug आउन सक्छ।\n\n<b>`sort()`</b> — मूल array बदल्छ र element क्रमबद्ध गर्छ।\n\n<b>`splice()`</b> — element हटाएर, थपेर वा बदलेर मूल array परिवर्तन गर्छ।\n\n<b>`flat()`</b> — nested array तह हटाएर नयाँ array बनाउँछ।\n\n<b>`flatMap()`</b> — `map()` चलाउँछ र एक तह flatten गर्छ।\n\n<b>`forEach()`</b> — हरेक element का लागि code चलाउँछ तर `undefined` फर्काउँछ।\n\n---\n\n### 1. आधारभूत — `sort()`\n\nसानोदेखि ठूलो क्रममा संख्या मिलाउनुहोस्:\n\n```javascript\nconst numbers = [10, 2, 5, 1];\n\nnumbers.sort((a, b) => a - b);\n\nconsole.log(numbers);\n// [1, 2, 5, 10]\n```\n\nसंख्याका लागि सधैं <b>comparator</b> (`sort()` लाई कसरी तुलना गर्ने बताउने function) प्रयोग गर्नुहोस्।\n\nयसबिना:\n\n```javascript\n[10, 2, 5, 1].sort();\n// [1, 10, 2, 5]\n```\n\nComparator नदिँदा JavaScript ले value लाई string जस्तै व्यवहार गर्छ।\n\n---\n\n### 2. आधारभूत — `splice()`\n\nArray बाट element हटाउनुहोस्:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\", \"mango\"];\n\nfruits.splice(1, 2);\n\nconsole.log(fruits);\n// [\"apple\", \"mango\"]\n```\n\n`splice(start, deleteCount)` को अर्थ:\n\n• Index `1` बाट सुरु गर\n• `2` element हटाऊ\n\n`splice()` ले मूल array बदल्छ।\n\n---\n\n### 3. मध्यम — `splice()` ले थप्नु वा बदल्नु\n\nतपाईं element थप्न पनि सक्नुहुन्छ:\n\n```javascript\nconst fruits = [\"apple\", \"orange\"];\n\nfruits.splice(1, 0, \"banana\");\n\nconsole.log(fruits);\n// [\"apple\", \"banana\", \"orange\"]\n```\n\nवा element बदल्न:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfruits.splice(1, 1, \"mango\");\n\nconsole.log(fruits);\n// [\"apple\", \"mango\", \"orange\"]\n```\n\n<b>मूल नबदली</b> उस्तै काम चाहिएमा, `slice()` (`p` बिना) प्रयोग गर्नुहोस्।\n\n---\n\n### 4. मध्यम — `flat()`\n\nNested array flatten गर्नुहोस्:\n\n```javascript\nconst numbers = [1, [2, 3], [4, 5]];\n\nconst result = numbers.flat();\n\nconsole.log(result);\n// [1, 2, 3, 4, 5]\n```\n\nगहिरो nesting का लागि, depth दिनुहोस्:\n\n```javascript\nconst numbers = [1, [2, [3, [4]]]];\n\nconsole.log(numbers.flat(2));\n// [1, 2, 3, [4]]\n```\n\nसबै तह flatten गर्न `flat(Infinity)` प्रयोग गर्नुहोस्।\n\n---\n\n### 5. उन्नत — `flatMap()`\n\n`flatMap()` ले `map()` र `flat()` को एक तह जोड्छ:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", skills: [\"JavaScript\", \"React\"] },\n  { name: \"John\", skills: [\"Node.js\", \"Python\"] }\n];\n\nconst skills = users.flatMap(user => user.skills);\n\nconsole.log(skills);\n// [\"JavaScript\", \"React\", \"Node.js\", \"Python\"]\n```\n\n`users.map(user => user.skills).flat();` को साटो `users.flatMap(user => user.skills);` लेख्न सक्नुहुन्छ।\n\n---\n\n### 6. उन्नत — `forEach()`\n\nहरेक element का लागि केवल <b>केही गर्न</b> चाहँदा `forEach()` प्रयोग गर्नुहोस्:\n\n```javascript\nconst users = [\"Rajan\", \"John\", \"Sam\"];\n\nusers.forEach(user => {\n  console.log(`Hello ${user}`);\n});\n```\n\nयसले `undefined` फर्काउँछ:\n\n```javascript\nconst result = users.forEach(user => user.toUpperCase());\n\nconsole.log(result);\n// undefined\n```\n\n<b>नयाँ array</b> चाहिएमा, `map()` प्रयोग गर्नुहोस्:\n\n```javascript\nconst names = users.map(user => user.toUpperCase());\n\nconsole.log(names);\n// [\"RAJAN\", \"JOHN\", \"SAM\"]\n```",
+        jp: "配列メソッドには元の配列を<b>変更（mutate）</b>するものと、新しい結果を作るものがあります。\n\nReactやReduxでは、既存の配列を直接変更するとバグの原因になるため、この違いが重要です。\n\n<b>`sort()`</b> — 元の配列を変更して並べ替える。\n\n<b>`splice()`</b> — 要素の削除・追加・置換で元の配列を変更する。\n\n<b>`flat()`</b> — 入れ子の階層を減らした新しい配列を作る。\n\n<b>`flatMap()`</b> — `map()` を実行してから1階層だけ平らにする。\n\n<b>`forEach()`</b> — 各要素に対してコードを実行するが `undefined` を返す。\n\n---\n\n### 1. 基本 — `sort()`\n\n数値を小さい順に並べる:\n\n```javascript\nconst numbers = [10, 2, 5, 1];\n\nnumbers.sort((a, b) => a - b);\n\nconsole.log(numbers);\n// [1, 2, 5, 10]\n```\n\n数値には必ず<b>比較関数（comparator）</b>（`sort()` に比べ方を教える関数）を渡します。\n\n渡さないと:\n\n```javascript\n[10, 2, 5, 1].sort();\n// [1, 10, 2, 5]\n```\n\n比較関数がないと、JavaScriptは値を文字列として扱います。\n\n---\n\n### 2. 基本 — `splice()`\n\n配列から要素を削除する:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\", \"mango\"];\n\nfruits.splice(1, 2);\n\nconsole.log(fruits);\n// [\"apple\", \"mango\"]\n```\n\n`splice(start, deleteCount)` の意味:\n\n• 添字 `1` から始める\n• `2` 個削除する\n\n`splice()` は元の配列を変更します。\n\n---\n\n### 3. 中級 — `splice()` で追加・置換\n\n要素を追加できます:\n\n```javascript\nconst fruits = [\"apple\", \"orange\"];\n\nfruits.splice(1, 0, \"banana\");\n\nconsole.log(fruits);\n// [\"apple\", \"banana\", \"orange\"]\n```\n\n置き換えもできます:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nfruits.splice(1, 1, \"mango\");\n\nconsole.log(fruits);\n// [\"apple\", \"mango\", \"orange\"]\n```\n\n<b>元を変えずに</b>似たことをしたいときは `slice()`（`p` なし）を使います。\n\n---\n\n### 4. 中級 — `flat()`\n\n入れ子の配列を平らにする:\n\n```javascript\nconst numbers = [1, [2, 3], [4, 5]];\n\nconst result = numbers.flat();\n\nconsole.log(result);\n// [1, 2, 3, 4, 5]\n```\n\nもっと深い入れ子には深さを指定します:\n\n```javascript\nconst numbers = [1, [2, [3, [4]]]];\n\nconsole.log(numbers.flat(2));\n// [1, 2, 3, [4]]\n```\n\nすべての階層を平らにするには `flat(Infinity)` を使います。\n\n---\n\n### 5. 上級 — `flatMap()`\n\n`flatMap()` は `map()` と1階層の `flat()` を合わせたものです:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", skills: [\"JavaScript\", \"React\"] },\n  { name: \"John\", skills: [\"Node.js\", \"Python\"] }\n];\n\nconst skills = users.flatMap(user => user.skills);\n\nconsole.log(skills);\n// [\"JavaScript\", \"React\", \"Node.js\", \"Python\"]\n```\n\n`users.map(user => user.skills).flat();` の代わりに `users.flatMap(user => user.skills);` と書けます。\n\n---\n\n### 6. 上級 — `forEach()`\n\n各要素に対して単に<b>何かをしたい</b>ときは `forEach()` を使います:\n\n```javascript\nconst users = [\"Rajan\", \"John\", \"Sam\"];\n\nusers.forEach(user => {\n  console.log(`Hello ${user}`);\n});\n```\n\n返り値は `undefined` です:\n\n```javascript\nconst result = users.forEach(user => user.toUpperCase());\n\nconsole.log(result);\n// undefined\n```\n\n<b>新しい配列</b>が必要なら `map()` を使います:\n\n```javascript\nconst names = users.map(user => user.toUpperCase());\n\nconsole.log(names);\n// [\"RAJAN\", \"JOHN\", \"SAM\"]\n```",
       },
-      diagram: `MUTATES the original array         Does NOT mutate
-──────────────────────────         ──────────────────────
-sort, reverse, push, pop,          map, filter, slice,
-shift, unshift, splice, fill       concat, flat, flatMap
-
-nums.sort()            →  [1, 10, 2, 21]   ❌ string sort!
-nums.sort((a,b)=>a-b)  →  [1, 2, 10, 21]   ✅ numeric sort
-
-[1, [2, [3, [4]]]].flat()         →  [1, 2, [3, [4]]]    1 level deep
-[1, [2, [3, [4]]]].flat(Infinity) →  [1, 2, 3, 4]         fully flat`,
+      diagram: `Original Array
+     │
+     ├── sort()    → changes original
+     │
+     ├── splice()  → changes original
+     │
+     ├── flat()    → returns new array
+     │
+     ├── flatMap() → map + flatten one level
+     │
+     └── forEach() → runs code, returns undefined`,
       codeExample: {
-        title: { en: "sort, splice/slice, flat/flatMap, forEach — and their gotchas", np: "sort, splice/slice, flat/flatMap, forEach — gotchas सहित", jp: "sort・splice/slice・flat/flatMap・forEachと注意点" },
-        code: `// ── sort — MUTATES the original array ────────────────────────────────────
-const nums = [10, 1, 21, 2];
-nums.sort();                 // [1, 10, 2, 21] — default sorts as STRINGS! Bug waiting to happen
-nums.sort((a, b) => a - b);  // [1, 2, 10, 21] — ascending (use (b - a) for descending)
+        title: { en: "What mutates, what returns something new", np: "के mutate हुन्छ, के नयाँ फर्काउँछ", jp: "変更するもの、新しく返すもの" },
+        code: `// ── 1. Basic — sort() mutates, and needs a comparator ─────────────
+const numbers = [10, 2, 5, 1];
 
-const users = [{ name: "Charlie" }, { name: "Alice" }, { name: "Bob" }];
-users.sort((a, b) => a.name.localeCompare(b.name));
-// [Alice, Bob, Charlie]
+numbers.sort((a, b) => a - b);
+console.log(numbers); // [1, 2, 5, 10]
 
-// ── splice — MUTATES: add/remove/replace at a position ───────────────────
-const arr = [1, 2, 3, 4, 5];
-arr.splice(2, 1);          // removes 1 element at index 2 → arr = [1, 2, 4, 5]
-arr.splice(2, 0, 99);      // inserts 99 at index 2, removes 0 → arr = [1, 2, 99, 4, 5]
+console.log([10, 2, 5, 1].sort()); // [1, 10, 2, 5] — compared as strings
 
-// ── slice — does NOT mutate, returns a new portion ────────────────────────
-const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including) index 3
+// ── 2. Basic — splice() removes in place ──────────────────────────
+const fruits = ["apple", "banana", "orange", "mango"];
 
-// ── flat / flatMap — flatten nested arrays ─────────────────────────────────
-[1, [2, [3, [4]]]].flat();          // [1, 2, [3, [4]]] — only one level by default
-[1, [2, [3, [4]]]].flat(Infinity);  // [1, 2, 3, 4] — flatten all levels
-[[1, 2], [3, 4]].flatMap(x => x);   // [1, 2, 3, 4] — map then flatten one level
+fruits.splice(1, 2);
+console.log(fruits); // ["apple", "mango"]
 
-// ── forEach — iterate for side effects, always returns undefined ──────────
-[1, 2, 3].forEach((n, i) => console.log(i, n));
-// Use map() when you need a new array back; forEach() cannot be chained`,
+// ── 3. Intermediate — splice() adds and replaces ──────────────────
+const basket = ["apple", "orange"];
+
+basket.splice(1, 0, "banana");
+console.log(basket); // ["apple", "banana", "orange"]
+
+basket.splice(1, 1, "mango");
+console.log(basket); // ["apple", "mango", "orange"]
+
+// ── 4. Intermediate — flat() returns a new array ──────────────────
+console.log([1, [2, 3], [4, 5]].flat());   // [1, 2, 3, 4, 5]
+console.log([1, [2, [3, [4]]]].flat(2));   // [1, 2, 3, [4]]
+
+// ── 5. Advanced — flatMap() is map plus one flatten ───────────────
+const users = [
+  { name: "Rajan", skills: ["JavaScript", "React"] },
+  { name: "John", skills: ["Node.js", "Python"] }
+];
+
+console.log(users.flatMap(user => user.skills));
+// ["JavaScript", "React", "Node.js", "Python"]
+
+// ── 6. Advanced — forEach() returns undefined ─────────────────────
+const names = ["Rajan", "John", "Sam"];
+
+names.forEach(name => console.log(\`Hello \${name}\`));
+
+console.log(names.forEach(name => name.toUpperCase())); // undefined
+console.log(names.map(name => name.toUpperCase()));     // ["RAJAN", "JOHN", "SAM"]`,
       },
       keyTakeaways: [
-        { en: "`.sort()` with no comparator sorts elements as STRINGS — always pass `(a, b) => a - b` for a correct numeric ascending sort.", np: "Comparator बिना `.sort()` ले elements लाई STRING को रूपमा sort गर्छ — सहि numeric sort का लागि `(a, b) => a - b` पास गर्नुहोस्।", jp: "比較関数なしの`.sort()`は要素を文字列としてソートする。正しい数値の昇順ソートには`(a, b) => a - b`を渡す。" },
-        { en: "`sort`, `splice`, `push`, `pop`, `shift`, `unshift`, `reverse`, and `fill` all MUTATE the original array in place — avoid using them directly on React/Redux state.", np: "`sort`, `splice`, `push`, `pop`, `shift`, `unshift`, `reverse`, `fill` सबैले original array mutate गर्छन् — React/Redux state मा सिधै प्रयोग नगर्नुहोस्।", jp: "`sort`・`splice`・`push`・`pop`・`shift`・`unshift`・`reverse`・`fill`はすべて元の配列を変更する。React/Reduxの状態には直接使わない。" },
-        { en: "`forEach()` always returns `undefined` and cannot be chained — use it only for side effects; use `map()` when you need a transformed array back.", np: "`forEach()` ले सधैं `undefined` फर्काउँछ र chain हुँदैन — side effects का लागि मात्र प्रयोग गर्नुहोस्; नयाँ array चाहिँदा `map()` प्रयोग गर्नुहोस्।", jp: "`forEach()`は常に`undefined`を返しチェーンできない。副作用のみに使い、変換された配列が必要なら`map()`を使う。" },
+        { en: "`sort()` → sorts and <b>mutates</b> the original array.", np: "`sort()` → क्रमबद्ध गर्छ र मूल array <b>mutate</b> गर्छ।", jp: "`sort()` → 並べ替えて元の配列を<b>変更</b>する。" },
+        { en: "`splice()` → adds, removes or replaces and <b>mutates</b> the original array.", np: "`splice()` → थप्छ, हटाउँछ वा बदल्छ र मूल array <b>mutate</b> गर्छ।", jp: "`splice()` → 追加・削除・置換をして元の配列を<b>変更</b>する。" },
+        { en: "`slice()` → similar to `splice()`, but <b>doesn't mutate</b>.", np: "`slice()` → `splice()` जस्तै, तर <b>mutate गर्दैन</b>।", jp: "`slice()` → `splice()` に似ているが<b>変更しない</b>。" },
+        { en: "`flat()` → removes nested array levels and returns a new array.", np: "`flat()` → nested array तह हटाउँछ र नयाँ array फर्काउँछ।", jp: "`flat()` → 入れ子の階層を減らし、新しい配列を返す。" },
+        { en: "`flatMap()` → `map()` plus one level of `flat()`.", np: "`flatMap()` → `map()` सँगै `flat()` को एक तह।", jp: "`flatMap()` → `map()` と1階層の `flat()` を合わせたもの。" },
+        { en: "`forEach()` → runs code for every item and returns `undefined`.", np: "`forEach()` → हरेक item का लागि code चलाउँछ र `undefined` फर्काउँछ।", jp: "`forEach()` → 各要素にコードを実行し `undefined` を返す。" },
+        { en: "Use `map()` when you need a <b>new array</b>.", np: "<b>नयाँ array</b> चाहिँदा `map()` प्रयोग गर्नुहोस्।", jp: "<b>新しい配列</b>が必要なときは `map()` を使う。" },
       ],
       commonMistakes: [
-        { en: "Sorting an array of numbers without a comparator and getting lexicographic (string) order instead of numeric order — `[10, 1, 21, 2].sort()` becomes `[1, 10, 2, 21]`.", np: "Numbers को array comparator बिना sort गरेर lexicographic (string) order पाउनु — `[10, 1, 21, 2].sort()` ले `[1, 10, 2, 21]` दिन्छ।", jp: "数値の配列を比較関数なしでソートし、数値順ではなく辞書順（文字列順）になること — `[10, 1, 21, 2].sort()`は`[1, 10, 2, 21]`になる。" },
-        { en: "Calling `sort()`, `splice()`, or `push()` directly on a React/Redux state array — the mutation doesn't trigger a re-render and can corrupt state shared elsewhere.", np: "React/Redux state array मा सिधै `sort()`, `splice()`, `push()` call गर्नु — mutation ले re-render trigger गर्दैन र state corrupt गर्न सक्छ।", jp: "React/Reduxの状態配列に直接`sort()`・`splice()`・`push()`を呼ぶこと。変更は再レンダリングを引き起こさず、他で共有される状態を破損させることがある。" },
-        { en: "Chaining `.forEach()` expecting it to return a new array or a value — it always returns `undefined`, so `arr.forEach(fn).map(...)` will throw.", np: "`.forEach()` लाई नयाँ array वा value फर्काउँछ भनेर chain गर्नु — यसले सधैं `undefined` फर्काउँछ, त्यसैले `arr.forEach(fn).map(...)` ले throw गर्छ।", jp: "`.forEach()`が新しい配列や値を返すと期待してチェーンすること。常に`undefined`を返すため`arr.forEach(fn).map(...)`はスローする。" },
+        { en: "<b>Forgetting that `sort()` changes the original array</b> — it returns the same array it just reordered, so the source is gone.", np: "<b>`sort()` ले मूल array बदल्छ भनी बिर्सनु</b> — यसले भर्खर पुनःक्रमित गरेकै array फर्काउँछ, त्यसैले मूल हराउँछ।", jp: "<b>`sort()` が元の配列を変えることを忘れる</b> — 並べ替えた同じ配列を返すので、元の並びは失われる。" },
+        { en: "<b>Using `sort()` without a comparator for numbers</b> — `[10, 2, 5, 1].sort()` gives `[1, 10, 2, 5]`, because values are compared as strings.", np: "<b>संख्याका लागि comparator बिना `sort()` प्रयोग गर्नु</b> — `[10, 2, 5, 1].sort()` ले `[1, 10, 2, 5]` दिन्छ, किनकि value string जस्तै तुलना हुन्छन्।", jp: "<b>数値に比較関数なしで `sort()` を使う</b> — `[10, 2, 5, 1].sort()` は `[1, 10, 2, 5]`。値が文字列として比較されるため。" },
+        { en: "<b>Confusing `splice()` with `slice()`</b> — `splice()` mutates, `slice()` returns a copy of a section.", np: "<b>`splice()` र `slice()` भ्रममा पार्नु</b> — `splice()` ले mutate गर्छ, `slice()` ले खण्डको copy फर्काउँछ।", jp: "<b>`splice()` と `slice()` を混同する</b> — `splice()` は変更し、`slice()` は一部のコピーを返す。" },
+        { en: "<b>Expecting `forEach()` to return a new array</b> — it always returns `undefined`.", np: "<b>`forEach()` ले नयाँ array फर्काउँछ भन्ने आशा गर्नु</b> — यसले सधैं `undefined` फर्काउँछ।", jp: "<b>`forEach()` が新しい配列を返すと思う</b> — 常に `undefined` を返す。" },
+        { en: "<b>Mutating React or Redux state directly with `sort()` or `splice()`</b> — copy first, for example `[...items].sort(...)`.", np: "<b>React वा Redux state लाई `sort()` वा `splice()` ले सिधै mutate गर्नु</b> — पहिले copy गर्नुहोस्, जस्तै `[...items].sort(...)`।", jp: "<b>ReactやReduxの状態を `sort()` や `splice()` で直接変更する</b> — まずコピーする。例: `[...items].sort(...)`。" },
       ],
       quiz: [
         {
-          question: { en: "What does `[10, 1, 21, 2].sort()` return without a comparator?", np: "Comparator बिना `[10, 1, 21, 2].sort()` ले के फर्काउँछ?", jp: "比較関数なしで`[10, 1, 21, 2].sort()`は何を返す？" },
+          question: { en: "Which method changes the original array?", np: "कुन method ले मूल array बदल्छ?", jp: "元の配列を変更するのはどれか?" },
           options: [
-            { en: "`[1, 2, 10, 21]` — numeric ascending order", np: "`[1, 2, 10, 21]` — numeric ascending order", jp: "`[1, 2, 10, 21]` — 数値の昇順" },
-            { en: "`[1, 10, 2, 21]` — string (lexicographic) order", np: "`[1, 10, 2, 21]` — string (lexicographic) order", jp: "`[1, 10, 2, 21]` — 文字列（辞書）順" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`sort()`", np: "`sort()`", jp: "`sort()`" },
+            { en: "`flat()`", np: "`flat()`", jp: "`flat()`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Without a comparator, sort() converts elements to strings first, so digit-by-digit comparison puts '10' before '2'.", np: "Comparator बिना sort() ले elements लाई पहिले string मा convert गर्छ, त्यसैले '10' '2' भन्दा अगाडि आउँछ।", jp: "比較関数がない場合、sort()は要素を先に文字列に変換するため、'10'が'2'より前に来る。" },
+          explanation: { en: "`map()` and `flat()` both return new arrays and leave the source alone.", np: "`map()` र `flat()` दुबैले नयाँ array फर्काउँछन् र स्रोत छुँदैनन्।", jp: "`map()` と `flat()` はどちらも新しい配列を返し、元はそのまま。" },
         },
         {
-          question: { en: "Which of these methods MUTATES the original array?", np: "यीमध्ये कुन method ले original array mutate गर्छ?", jp: "次のうち元の配列を変更するメソッドはどれ？" },
+          question: { en: "What does `splice()` do?", np: "`splice()` ले के गर्छ?", jp: "`splice()` は何をするか?" },
           options: [
-            { en: "`slice()`", np: "`slice()`", jp: "`slice()`" },
-            { en: "`splice()`", np: "`splice()`", jp: "`splice()`" },
+            { en: "Only sorts an array", np: "Array क्रमबद्ध मात्र गर्छ", jp: "配列を並べ替えるだけ" },
+            { en: "Creates a deep copy", np: "Deep copy बनाउँछ", jp: "ディープコピーを作る" },
+            { en: "Adds, removes, or replaces elements", np: "Element थप्छ, हटाउँछ वा बदल्छ", jp: "要素を追加・削除・置換する" },
           ],
-          correctIndex: 1,
-          explanation: { en: "splice() removes/inserts elements in place on the original array; slice() returns a new array and leaves the original untouched.", np: "splice() ले original array मा सिधै remove/insert गर्छ; slice() ले नयाँ array फर्काउँछ र original नछोई।", jp: "splice()は元の配列に直接要素を削除/挿入する。slice()は新しい配列を返し元は変更しない。" },
+          correctIndex: 2,
+          explanation: { en: "All three operations happen in place, on the original array.", np: "तीनै काम मूल array मै हुन्छन्।", jp: "3つの操作すべてが元の配列上で行われる。" },
         },
         {
-          question: { en: "Why shouldn't you use `forEach()` when you need a transformed array back?", np: "Transformed array चाहिँदा `forEach()` किन प्रयोग गर्नु हुँदैन?", jp: "変換された配列が必要な場合、なぜ`forEach()`を使うべきではない？" },
+          question: { en: "What does `forEach()` return?", np: "`forEach()` ले के फर्काउँछ?", jp: "`forEach()` は何を返すか?" },
           options: [
-            { en: "`forEach()` always returns `undefined` and can't be chained into further array methods", np: "`forEach()` ले सधैं `undefined` फर्काउँछ र थप array methods मा chain गर्न सकिँदैन", jp: "`forEach()`は常に`undefined`を返し、さらなる配列メソッドにチェーンできない" },
-            { en: "`forEach()` is deprecated in modern JavaScript", np: "`forEach()` modern JavaScript मा deprecated छ", jp: "`forEach()`はモダンJavaScriptで廃止されている" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "The original array", np: "मूल array", jp: "元の配列" },
+            { en: "A new array", np: "नयाँ array", jp: "新しい配列" },
           ],
           correctIndex: 0,
-          explanation: { en: "forEach exists purely for side effects (like logging); if you need a new array back, map() is the correct tool.", np: "forEach केवल side effects (जस्तै logging) का लागि हो; नयाँ array चाहिँदा map() सहि tool हो।", jp: "forEachはロギングのような副作用のためだけに存在する。新しい配列が必要ならmap()が正しい選択。" },
+          explanation: { en: "It exists for side effects; use `map()` when you want a result back.", np: "यो side effect का लागि हो; नतिजा चाहिँदा `map()` प्रयोग गर्नुहोस्।", jp: "副作用のためのメソッド。結果が欲しいときは `map()` を使う。" },
+        },
+        {
+          question: { en: "Which method combines mapping and flattening one level?", np: "कुन method ले mapping र एक तह flattening जोड्छ?", jp: "mapと1階層の平坦化を合わせたメソッドはどれか?" },
+          options: [
+            { en: "`splice()`", np: "`splice()`", jp: "`splice()`" },
+            { en: "`flatMap()`", np: "`flatMap()`", jp: "`flatMap()`" },
+            { en: "`sort()`", np: "`sort()`", jp: "`sort()`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It is shorthand for `.map(...).flat()`, and only flattens a single level.", np: "यो `.map(...).flat()` को छोटो रूप हो, र एक तह मात्र flatten गर्छ।", jp: "`.map(...).flat()` の短縮形で、平坦化は1階層だけ。" },
         },
       ],
     },
@@ -351,8 +389,8 @@ const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including)
   finalQuiz: [
     {
       question: { en: "If you call `.map()` on a 5-item array, how many items does the result always have?", np: "5-item array मा `.map()` call गर्दा result मा सधैं कति item हुन्छ?", jp: "5要素の配列に`.map()`を呼ぶと結果には常に何個の要素がある？" },
-      options: [{ en: "Exactly 5", np: "ठ्याक्कै 5", jp: "正確に5" }, { en: "It depends on the callback's return value", np: "Callback को return value अनुसार निर्भर हुन्छ", jp: "コールバックの戻り値に依存する" }],
-      correctIndex: 0,
+      options: [{ en: "It depends on the callback's return value", np: "Callback को return value अनुसार निर्भर हुन्छ", jp: "コールバックの戻り値に依存する" }, { en: "Exactly 5", np: "ठ्याक्कै 5", jp: "正確に5" }],
+      correctIndex: 1,
       explanation: { en: "map() always produces one output per input element, regardless of what the callback returns.", np: "map() ले callback ले जे फर्काए पनि हरेक input element को एउटा output दिन्छ।", jp: "map()はコールバックが何を返しても入力要素ごとに1つの出力を生成する。" },
     },
     {
@@ -363,8 +401,8 @@ const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including)
     },
     {
       question: { en: "In `array.filter(a).map(b)`, does `filter` or `map` run first?", np: "`array.filter(a).map(b)` मा `filter` वा `map` कुन पहिले चल्छ?", jp: "`array.filter(a).map(b)`で`filter`と`map`のどちらが先に実行される？" },
-      options: [{ en: "filter runs first, over the full array", np: "पहिले पूरै array माथि filter चल्छ", jp: "先にfilterが全配列に対して実行される" }, { en: "map runs first", np: "पहिले map चल्छ", jp: "先にmapが実行される" }],
-      correctIndex: 0,
+      options: [{ en: "map runs first", np: "पहिले map चल्छ", jp: "先にmapが実行される" }, { en: "filter runs first, over the full array", np: "पहिले पूरै array माथि filter चल्छ", jp: "先にfilterが全配列に対して実行される" }],
+      correctIndex: 1,
       explanation: { en: "Chained calls execute strictly left to right, each fully completing before the next one starts.", np: "Chain गरिएका calls बायाँबाट दायाँ क्रममा चल्छन्, अघिल्लो पूरा भएपछि मात्र अर्को सुरु हुन्छ।", jp: "チェーンされた呼び出しは厳密に左から右へ実行され、各呼び出しが完全に完了してから次が開始する。" },
     },
     {
@@ -375,8 +413,8 @@ const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including)
     },
     {
       question: { en: "What is the difference between `some()` and `every()`?", np: "`some()` र `every()` बीचको फरक के हो?", jp: "`some()`と`every()`の違いは？" },
-      options: [{ en: "`some()` = at least one passes; `every()` = all must pass", np: "`some()` = कम्तिमा एक pass; `every()` = सबै pass हुनुपर्छ", jp: "`some()` = 少なくとも1つ通る; `every()` = すべて通る必要がある" }, { en: "They are interchangeable", np: "दुवै एउटै हुन्", jp: "両者は交換可能" }],
-      correctIndex: 0,
+      options: [{ en: "They are interchangeable", np: "दुवै एउटै हुन्", jp: "両者は交換可能" }, { en: "`some()` = at least one passes; `every()` = all must pass", np: "`some()` = कम्तिमा एक pass; `every()` = सबै pass हुनुपर्छ", jp: "`some()` = 少なくとも1つ通る; `every()` = すべて通る必要がある" }],
+      correctIndex: 1,
       explanation: { en: "some() needs just one passing element to return true; every() needs all of them to pass.", np: "some() लाई true फर्काउन एउटा मात्र pass हुने element चाहिन्छ; every() लाई सबै pass हुनुपर्छ।", jp: "some()はtrueを返すのに1つ通る要素だけが必要。every()はすべてが通る必要がある。" },
     },
     {
@@ -387,8 +425,8 @@ const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including)
     },
     {
       question: { en: "What does `[10, 1, 21, 2].sort()` return without a comparator?", np: "Comparator बिना `[10, 1, 21, 2].sort()` ले के फर्काउँछ?", jp: "比較関数なしで`[10, 1, 21, 2].sort()`は何を返す？" },
-      options: [{ en: "`[1, 10, 2, 21]` (string order)", np: "`[1, 10, 2, 21]` (string order)", jp: "`[1, 10, 2, 21]`（文字列順）" }, { en: "`[1, 2, 10, 21]` (numeric order)", np: "`[1, 2, 10, 21]` (numeric order)", jp: "`[1, 2, 10, 21]`（数値順）" }],
-      correctIndex: 0,
+      options: [{ en: "`[1, 2, 10, 21]` (numeric order)", np: "`[1, 2, 10, 21]` (numeric order)", jp: "`[1, 2, 10, 21]`（数値順）" }, { en: "`[1, 10, 2, 21]` (string order)", np: "`[1, 10, 2, 21]` (string order)", jp: "`[1, 10, 2, 21]`（文字列順）" }],
+      correctIndex: 1,
       explanation: { en: "sort() without a comparator always converts to strings first and compares lexicographically.", np: "Comparator बिना sort() ले सधैं पहिले string मा convert गर्छ र lexicographically compare गर्छ।", jp: "比較関数なしのsort()は常に先に文字列に変換し辞書順に比較する。" },
     },
     {
@@ -399,8 +437,8 @@ const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including)
     },
     {
       question: { en: "Why shouldn't you rely on `forEach()` to build a new array?", np: "नयाँ array बनाउन `forEach()` मा किन भर पर्नु हुँदैन?", jp: "新しい配列を構築するために`forEach()`に頼るべきでない理由は？" },
-      options: [{ en: "It always returns `undefined` and cannot be chained into other array methods", np: "यसले सधैं `undefined` फर्काउँछ र अरू array methods मा chain हुँदैन", jp: "常に`undefined`を返し、他の配列メソッドにチェーンできない" }, { en: "It is significantly slower than every other array method", np: "यो अरू सबै array methods भन्दा धेरै ढिलो हुन्छ", jp: "他のすべての配列メソッドより著しく遅い" }],
-      correctIndex: 0,
+      options: [{ en: "It is significantly slower than every other array method", np: "यो अरू सबै array methods भन्दा धेरै ढिलो हुन्छ", jp: "他のすべての配列メソッドより著しく遅い" }, { en: "It always returns `undefined` and cannot be chained into other array methods", np: "यसले सधैं `undefined` फर्काउँछ र अरू array methods मा chain हुँदैन", jp: "常に`undefined`を返し、他の配列メソッドにチェーンできない" }],
+      correctIndex: 1,
       explanation: { en: "forEach is designed purely for side effects — for building a new array, map() is the right tool.", np: "forEach केवल side effects का लागि design गरिएको हो — नयाँ array बनाउन map() सहि tool हो।", jp: "forEachは純粋に副作用のために設計されている。新しい配列を構築するにはmap()が適切なツール。" },
     },
   ],
