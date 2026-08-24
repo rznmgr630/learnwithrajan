@@ -3,7 +3,7 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 export const JS_DAY_4_LESSONS: JsLessonDay = {
   day: 4,
   title: { en: "Scope, Hoisting & the Temporal Dead Zone", np: "Scope, Hoisting र Temporal Dead Zone", jp: "スコープ・ホイスティング・TDZ" },
-  totalMinutes: 27,
+  totalMinutes: 36,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
@@ -121,6 +121,112 @@ greet();`,
         },
       ],
       youtubeIds: ["uH-tVP8MUs8"],
+    },
+    {
+      id: "block-scope-shadowing",
+      title: { en: "Block Scope & Shadowing", np: "Block Scope र Shadowing", jp: "ブロックスコープとシャドーイング" },
+      durationMinutes: 9,
+      explanation: {
+        en: "<b>Block scope</b> means a variable is available only inside the `{ }` block where it is declared.\n\nA <b>block</b> is code surrounded by curly braces `{ }`, such as an `if`, `for`, or `while` block. A block lets you group multiple JavaScript statements together.\n\n`let` and `const` are <b>block-scoped</b> (available only inside their block). `var` is <b>function-scoped</b> (available throughout the function), so it does not follow block scope.\n\n```javascript\nif (true) {\n  let message = \"Hello\";\n  const count = 10;\n\n  console.log(message); // Hello\n}\n\nconsole.log(message); // ReferenceError\n```\n\nThe variable exists inside the block, but it cannot be accessed from outside.\n\n---\n\n### Shadowing\n\n<b>Shadowing</b> means declaring a variable with the same name in an inner scope.\n\n```javascript\nlet name = \"Rajan\";\n\n{\n  let name = \"John\";\n  console.log(name); // John\n}\n\nconsole.log(name); // Rajan\n```\n\nThe inner `name` temporarily hides the outer `name`. The two variables are separate.\n\n---\n\n### Lexical Scope\n\n<b>Lexical scope</b> (scope decided by where code is written) means JavaScript determines which variables a function can access based on where that function was created.\n\n```javascript\nlet name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nThe function can access `name` because it was created where `name` is visible.",
+        np: "<b>Block scope</b> को अर्थ variable आफू declare गरिएको `{ }` block भित्र मात्र उपलब्ध हुन्छ भन्ने हो।\n\n<b>Block</b> भनेको curly brace `{ }` ले घेरिएको code हो, जस्तै `if`, `for`, वा `while` block। Block ले धेरै JavaScript statement लाई सँगै समूहबद्ध गर्न दिन्छ।\n\n`let` र `const` <b>block-scoped</b> (आफ्नो block भित्र मात्र उपलब्ध) हुन्। `var` <b>function-scoped</b> (पूरै function भर उपलब्ध) हुन्छ, त्यसैले यसले block scope पछ्याउँदैन।\n\n```javascript\nif (true) {\n  let message = \"Hello\";\n  const count = 10;\n\n  console.log(message); // Hello\n}\n\nconsole.log(message); // ReferenceError\n```\n\nVariable block भित्र अस्तित्वमा हुन्छ, तर बाहिरबाट पहुँच गर्न सकिँदैन।\n\n---\n\n### Shadowing\n\n<b>Shadowing</b> को अर्थ भित्री scope मा उही नामको variable declare गर्नु हो।\n\n```javascript\nlet name = \"Rajan\";\n\n{\n  let name = \"John\";\n  console.log(name); // John\n}\n\nconsole.log(name); // Rajan\n```\n\nभित्री `name` ले बाहिरी `name` लाई अस्थायी रूपमा लुकाउँछ। यी दुई छुट्टै variable हुन्।\n\n---\n\n### Lexical Scope\n\n<b>Lexical scope</b> (code कहाँ लेखिएको छ त्यसले तय गर्ने scope) को अर्थ JavaScript ले function कहाँ बनाइएको थियो त्यसका आधारमा त्यसले कुन variable पहुँच गर्न सक्छ भन्ने निर्धारण गर्छ।\n\n```javascript\nlet name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\nFunction ले `name` पहुँच गर्न सक्छ किनकि यो `name` देखिने ठाउँमा बनाइएको थियो।",
+        jp: "<b>ブロックスコープ</b>とは、変数が宣言された `{ }` ブロックの中でだけ使えるということです。\n\n<b>ブロック</b>とは `{ }` で囲まれたコードのことで、`if`・`for`・`while` のブロックなどがあります。ブロックは複数のJavaScript文をひとまとめにできます。\n\n`let` と `const` は<b>ブロックスコープ</b>（そのブロックの中でだけ使える）です。`var` は<b>関数スコープ</b>（関数全体で使える）なので、ブロックスコープには従いません。\n\n```javascript\nif (true) {\n  let message = \"Hello\";\n  const count = 10;\n\n  console.log(message); // Hello\n}\n\nconsole.log(message); // ReferenceError\n```\n\n変数はブロックの中には存在しますが、外からはアクセスできません。\n\n---\n\n### シャドーイング\n\n<b>シャドーイング</b>とは、内側のスコープで同じ名前の変数を宣言することです。\n\n```javascript\nlet name = \"Rajan\";\n\n{\n  let name = \"John\";\n  console.log(name); // John\n}\n\nconsole.log(name); // Rajan\n```\n\n内側の `name` が外側の `name` を一時的に隠します。2つは別々の変数です。\n\n---\n\n### レキシカルスコープ\n\n<b>レキシカルスコープ</b>（コードが書かれた場所で決まるスコープ）とは、関数がどこで作られたかに基づいて、その関数が使える変数をJavaScriptが決めるということです。\n\n```javascript\nlet name = \"Rajan\";\n\nfunction greet() {\n  console.log(name);\n}\n\ngreet(); // Rajan\n```\n\n`name` が見える場所で作られたので、この関数は `name` を使えます。",
+      },
+      diagram: `Global Scope
+│
+├── name = "Rajan"
+│
+└── if block
+    │
+    ├── let message
+    └── const count
+
+    message and count
+    are available here only
+
+
+Outer Scope
+    ↓
+Inner Block
+    ↓
+Can access outer variables
+    ↑
+Outer scope cannot access
+inner block variables`,
+      codeExample: {
+        title: { en: "let and const stay in, var escapes", np: "let र const भित्रै रहन्छन्, var उम्किन्छ", jp: "letとconstは中に留まり、varは抜け出す" },
+        code: `// Example 1 — let and const stay inside the block
+if (true) {
+  let age = 25;
+  const name = "Rajan";
+
+  console.log(age);  // 25
+  console.log(name); // Rajan
+}
+
+console.log(age); // ReferenceError
+
+// Example 2 — var behaves differently
+if (true) {
+  var message = "Hello";
+}
+
+console.log(message); // Hello`,
+      },
+      keyTakeaways: [
+        { en: "<b>Block scope</b> means a variable is available only inside `{ }`.", np: "<b>Block scope</b> को अर्थ variable `{ }` भित्र मात्र उपलब्ध हुन्छ।", jp: "<b>ブロックスコープ</b>とは、変数が `{ }` の中でだけ使えるということ。" },
+        { en: "`let` and `const` are <b>block-scoped</b>.", np: "`let` र `const` <b>block-scoped</b> हुन्।", jp: "`let` と `const` は<b>ブロックスコープ</b>。" },
+        { en: "`var` is <b>function-scoped</b>, not block-scoped.", np: "`var` <b>function-scoped</b> हो, block-scoped होइन।", jp: "`var` は<b>関数スコープ</b>で、ブロックスコープではない。" },
+        { en: "<b>Shadowing</b> means an inner scope declares a variable with the same name as an outer scope.", np: "<b>Shadowing</b> को अर्थ भित्री scope ले बाहिरी scope कै नामको variable declare गर्नु हो।", jp: "<b>シャドーイング</b>とは、内側のスコープが外側と同じ名前の変数を宣言すること。" },
+        { en: "<b>Lexical scope</b> means scope is decided by where the code is written.", np: "<b>Lexical scope</b> को अर्थ code कहाँ लेखिएको छ त्यसले scope तय गर्छ।", jp: "<b>レキシカルスコープ</b>とは、スコープがコードの書かれた場所で決まること。" },
+        { en: "Inner scopes can access variables from outer scopes, but outer scopes cannot access inner variables.", np: "भित्री scope ले बाहिरी scope का variable पहुँच गर्न सक्छ, तर बाहिरी scope ले भित्री variable पहुँच गर्न सक्दैन।", jp: "内側のスコープは外側の変数にアクセスできるが、外側から内側の変数にはアクセスできない。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Thinking `var` is block-scoped</b> — `if (true) { var x = 10; }` then `console.log(x)` prints `10`. `var` ignores block boundaries, so use `let` or `const` when you want block scope.", np: "<b>`var` block-scoped हो भन्ने ठान्नु</b> — `if (true) { var x = 10; }` पछि `console.log(x)` ले `10` देखाउँछ। `var` ले block boundary बेवास्ता गर्छ, त्यसैले block scope चाहिँदा `let` वा `const` प्रयोग गर्नुहोस्।", jp: "<b>`var` がブロックスコープだと思う</b> — `if (true) { var x = 10; }` の後の `console.log(x)` は `10` を出す。`var` はブロック境界を無視するので、ブロックスコープが欲しいときは `let` か `const` を使う。" },
+        { en: "<b>Trying to access a block variable outside</b> — a `let score` declared inside an `if` block throws a `ReferenceError` when read after the block, because it exists only there.", np: "<b>Block बाहिर block variable पहुँच गर्न खोज्नु</b> — `if` block भित्र declare गरिएको `let score` लाई block पछि पढ्दा `ReferenceError` आउँछ, किनकि यो त्यहीँ मात्र अस्तित्वमा हुन्छ।", jp: "<b>ブロックの外からブロック変数にアクセスしようとする</b> — `if` ブロック内で宣言した `let score` はそこにしか存在しないので、ブロックの後で読むと `ReferenceError` になる。" },
+        { en: "<b>Confusing shadowing with changing a variable</b> — with `let count = 10` outside and `let count = 20` inside a block, the inner one is a different variable. The outer `count` is still `10` afterwards.", np: "<b>Shadowing र variable बदल्नु भ्रममा पार्नु</b> — बाहिर `let count = 10` र block भित्र `let count = 20` हुँदा, भित्रीचाहिँ फरक variable हो। पछि बाहिरी `count` अझै `10` नै हुन्छ।", jp: "<b>シャドーイングと値の変更を混同する</b> — 外に `let count = 10`、ブロック内に `let count = 20` があるとき、内側は別の変数。その後も外側の `count` は `10` のまま。" },
+      ],
+      quiz: [
+        {
+          question: { en: "Which variables are block-scoped?", np: "कुन variable block-scoped हुन्?", jp: "ブロックスコープなのはどれか?" },
+          options: [
+            { en: "`var` only", np: "`var` मात्र", jp: "`var` だけ" },
+            { en: "`let` and `const`", np: "`let` र `const`", jp: "`let` と `const`" },
+            { en: "All variables", np: "सबै variable", jp: "すべての変数" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`let` and `const` stay inside their `{ }`; `var` belongs to the nearest function instead.", np: "`let` र `const` आफ्नो `{ }` भित्रै रहन्छन्; `var` चाहिँ नजिकको function को हुन्छ।", jp: "`let` と `const` は `{ }` の中に留まる。`var` は最も近い関数に属する。" },
+        },
+        {
+          question: { en: "What happens with `if (true) { let x = 10; }` then `console.log(x)`?", np: "`if (true) { let x = 10; }` पछि `console.log(x)` गर्दा के हुन्छ?", jp: "`if (true) { let x = 10; }` の後に `console.log(x)` するとどうなるか?" },
+          options: [
+            { en: "Prints `10`", np: "`10` देखाउँछ", jp: "`10` を表示する" },
+            { en: "Prints `undefined`", np: "`undefined` देखाउँछ", jp: "`undefined` を表示する" },
+            { en: "Throws a `ReferenceError`", np: "`ReferenceError` दिन्छ", jp: "`ReferenceError` を投げる" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`x` exists only inside the block, so reading it afterwards fails.", np: "`x` block भित्र मात्र अस्तित्वमा हुन्छ, त्यसैले पछि पढ्दा fail हुन्छ।", jp: "`x` はブロックの中にしか存在しないので、後で読むと失敗する。" },
+        },
+        {
+          question: { en: "What is shadowing?", np: "Shadowing के हो?", jp: "シャドーイングとは何か?" },
+          options: [
+            { en: "Deleting a variable", np: "Variable मेटाउनु", jp: "変数を削除すること" },
+            { en: "Declaring a variable with the same name in an inner scope", np: "भित्री scope मा उही नामको variable declare गर्नु", jp: "内側のスコープで同じ名前の変数を宣言すること" },
+            { en: "Changing a variable's type", np: "Variable को type बदल्नु", jp: "変数の型を変えること" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The inner variable hides the outer one for the length of that scope; both still exist separately.", np: "भित्री variable ले त्यो scope भर बाहिरीलाई लुकाउँछ; दुबै छुट्टै अस्तित्वमा रहन्छन्।", jp: "内側の変数がそのスコープの間だけ外側を隠す。両方とも別々に存在し続ける。" },
+        },
+        {
+          question: { en: "Which keyword is function-scoped?", np: "कुन keyword function-scoped हो?", jp: "関数スコープなのはどのキーワードか?" },
+          options: [
+            { en: "`let`", np: "`let`", jp: "`let`" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
+            { en: "`var`", np: "`var`", jp: "`var`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "A `var` declared inside a block belongs to the nearest enclosing function.", np: "Block भित्र declare गरिएको `var` नजिकको enclosing function को हुन्छ।", jp: "ブロック内で宣言した `var` は最も近い外側の関数に属する。" },
+        },
+      ],
     },
     {
       id: "hoisting-detail",
