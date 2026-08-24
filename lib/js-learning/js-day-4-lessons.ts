@@ -247,6 +247,7 @@ const welcome = () => {
           explanation: { en: "`var` gives `undefined` and a `TypeError` on an early call; `let`/`const` give a `ReferenceError`.", np: "`var` ले `undefined` दिन्छ र चाँडै call गर्दा `TypeError`; `let`/`const` ले `ReferenceError` दिन्छन्।", jp: "`var` は `undefined` になり早い呼び出しで `TypeError`、`let`/`const` は `ReferenceError` になる。" },
         },
       ],
+      youtubeId: "Fnlnw8uY6jo",
     },
     {
       id: "temporal-dead-zone",
