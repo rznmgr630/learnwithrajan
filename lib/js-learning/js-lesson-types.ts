@@ -17,8 +17,8 @@ export interface JsLesson {
   keyTakeaways: LocalizedString[];
   commonMistakes: LocalizedString[];
   quiz: JsLessonQuizQuestion[];
-  /** YouTube id shown under the tabs, for lessons with a companion video. */
-  youtubeId?: string;
+  /** YouTube ids shown under the tabs, for lessons with companion videos. */
+  youtubeIds?: string[];
 }
 
 export interface JsLessonDay {

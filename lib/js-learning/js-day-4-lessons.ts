@@ -247,7 +247,7 @@ const welcome = () => {
           explanation: { en: "`var` gives `undefined` and a `TypeError` on an early call; `let`/`const` give a `ReferenceError`.", np: "`var` ले `undefined` दिन्छ र चाँडै call गर्दा `TypeError`; `let`/`const` ले `ReferenceError` दिन्छन्।", jp: "`var` は `undefined` になり早い呼び出しで `TypeError`、`let`/`const` は `ReferenceError` になる。" },
         },
       ],
-      youtubeId: "Fnlnw8uY6jo",
+      youtubeIds: ["Fnlnw8uY6jo"],
     },
     {
       id: "temporal-dead-zone",
@@ -352,7 +352,7 @@ test();`,
           explanation: { en: "It turns a silent `undefined` bug into an immediate, obvious error.", np: "यसले चुपचापको `undefined` bug लाई तुरुन्तै देखिने स्पष्ट error मा बदल्छ।", jp: "静かな `undefined` のバグを、すぐ分かる明確なエラーに変えてくれる。" },
         },
       ],
-      youtubeId: "BNC6slYCj50",
+      youtubeIds: ["BNC6slYCj50"],
     },
   ],
   finalQuiz: [

@@ -99,6 +99,7 @@ console.log(next()); // 3`,
           explanation: { en: "Only the variables it actually references, which is why leaks come from holding more than you need.", np: "यसले वास्तवमा reference गरेका variable मात्र, त्यसैले चाहिने भन्दा धेरै राख्दा leak हुन्छ।", jp: "実際に参照している変数だけ。だから必要以上に保持するとリークになる。" },
         },
       ],
+      youtubeIds: ["qikxEIxsXco", "eBTBG4nda2A", "t1nFAMws5FI"],
     },
     {
       id: "higher-order-functions",
