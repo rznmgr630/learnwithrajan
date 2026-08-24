@@ -126,67 +126,125 @@ greet();`,
       title: { en: "Hoisting in Detail", np: "Hoisting विस्तारमा", jp: "ホイスティング詳解" },
       durationMinutes: 9,
       explanation: {
-        en: "Every declaration type hoists differently — some get a placeholder value immediately, others get registered but locked. Knowing which is which turns a confusing `ReferenceError` or unexpected `undefined` into something you can predict before you even run the code.\n\n• `var` — hoisted, pre-filled with `undefined`\n• `let`/`const` — hoisted, but locked in the Temporal Dead Zone until their declaration line\n• Function declarations — hoisted completely, body included\n• Function expressions / arrow functions — not specially hoisted; they follow the rules of whatever keyword (`var`/`let`/`const`) holds them",
-        np: "हरेक declaration type फरक तरिकाले hoist हुन्छ — कोहीलाई placeholder value तुरुन्तै मिल्छ, कोही registered तर locked रहन्छ।",
-        jp: "宣言の種類ごとにホイストの仕方が異なる。どれがどうなるか知っていれば、ReferenceErrorや予期しないundefinedを事前に予測できる。",
+        en: "<b>Hoisting</b> (JavaScript preparing declarations before running the code) works differently for each type of declaration.\n\nThe important question is:\n\n> What can I use before its declaration?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> is hoisted and automatically gets `undefined` (no value assigned yet).\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript roughly treats it like:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` and `const`\n\n<b>`let`</b> and <b>`const`</b> are hoisted, but they stay in the <b>Temporal Dead Zone (TDZ)</b> (the period where the variable exists but cannot be accessed).\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThe same applies to `const`:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nSo:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. Function Declarations\n\n<b>Function declarations</b> (functions written with `function`) are completely hoisted.\n\nThe function name and its body are available before the function appears in the code.\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nThis works.\n\n---\n\n### 4. Function Expressions\n\n<b>Function expressions</b> (functions stored in variables) follow the hoisting rules of the variable holding them.\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `ReferenceError` because `greet` is a `const` and is still in the TDZ.\n\nWith `var`:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `TypeError` because `greet` is `undefined` when called.\n\n---\n\n### 5. Arrow Functions\n\n<b>Arrow functions</b> (functions written with `=>`) also follow the rules of the variable holding them.\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nThis gives a `ReferenceError` because `greet` is a `const` in the TDZ.\n\nThe arrow function itself is not available before the assignment.\n\n---\n\n### Quick Comparison\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
+        np: "<b>Hoisting</b> (JavaScript ले code चलाउनुअघि declaration तयार गर्नु) हरेक प्रकारको declaration का लागि फरक तरिकाले काम गर्छ।\n\nमहत्वपूर्ण प्रश्न यो हो:\n\n> Declaration अघि म के प्रयोग गर्न सक्छु?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> hoist हुन्छ र स्वतः `undefined` (अझै कुनै value assign गरिएको छैन) पाउँछ।\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript ले यसलाई मोटामोटी यसो व्यवहार गर्छ:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` र `const`\n\n<b>`let`</b> र <b>`const`</b> hoist हुन्छन्, तर तिनी <b>Temporal Dead Zone (TDZ)</b> (variable अस्तित्वमा छ तर पहुँच गर्न नमिल्ने अवधि) मा रहन्छन्।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` मा पनि उही लागू हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nत्यसैले:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. Function Declarations\n\n<b>Function declaration</b> (`function` ले लेखिएका function) पूर्ण रूपमा hoist हुन्छन्।\n\nFunction को नाम र यसको body code मा function देखिनुअघि नै उपलब्ध हुन्छन्।\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ।\n\n---\n\n### 4. Function Expressions\n\n<b>Function expression</b> (variable मा राखिएका function) आफूलाई बोक्ने variable का hoisting नियम पछ्याउँछन्।\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nयसले `ReferenceError` दिन्छ किनकि `greet` `const` हो र अझै TDZ मा छ।\n\n`var` सँग:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\nयसले `TypeError` दिन्छ किनकि call गर्दा `greet` `undefined` हुन्छ।\n\n---\n\n### 5. Arrow Functions\n\n<b>Arrow function</b> (`=>` ले लेखिएका function) पनि आफूलाई बोक्ने variable का नियम पछ्याउँछन्।\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\nयसले `ReferenceError` दिन्छ किनकि `greet` TDZ मा रहेको `const` हो।\n\nArrow function आफैं assignment अघि उपलब्ध हुँदैन।\n\n---\n\n### छिटो तुलना\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
+        jp: "<b>ホイスティング</b>（JavaScriptがコード実行前に宣言を準備すること）は、宣言の種類ごとに動きが違います。\n\n大事な問いはこれです:\n\n> 宣言より前に何が使えるのか?\n\n---\n\n### 1. `var`\n\n<b>`var`</b> はホイスティングされ、自動的に `undefined`（まだ値が代入されていない）になります。\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScriptはおおよそこう扱います:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n---\n\n### 2. `let` と `const`\n\n<b>`let`</b> と <b>`const`</b> はホイスティングされますが、<b>一時的デッドゾーン（TDZ）</b>（変数は存在するがアクセスできない期間）に留まります。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` でも同じです:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```\n\nつまり:\n\n```text\nvar        → hoisted → undefined\nlet/const  → hoisted → TDZ → ReferenceError if accessed early\n```\n\n---\n\n### 3. 関数宣言\n\n<b>関数宣言</b>（`function` で書く関数）は完全にホイスティングされます。\n\n関数名と本体が、コード上に現れる前から使えます。\n\n```javascript\ngreet();\n\nfunction greet() {\n  console.log(\"Hello\");\n}\n```\n\nこれは動きます。\n\n---\n\n### 4. 関数式\n\n<b>関数式</b>（変数に入れた関数）は、それを持つ変数のホイスティング規則に従います。\n\n```javascript\ngreet();\n\nconst greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n`greet` は `const` でまだTDZにあるため、`ReferenceError` になります。\n\n`var` の場合:\n\n```javascript\ngreet();\n\nvar greet = function () {\n  console.log(\"Hello\");\n};\n```\n\n呼び出し時に `greet` が `undefined` なので `TypeError` になります。\n\n---\n\n### 5. アロー関数\n\n<b>アロー関数</b>（`=>` で書く関数）も、それを持つ変数の規則に従います。\n\n```javascript\ngreet();\n\nconst greet = () => {\n  console.log(\"Hello\");\n};\n```\n\n`greet` はTDZにある `const` なので `ReferenceError` になります。\n\nアロー関数そのものは代入より前には使えません。\n\n---\n\n### かんたん比較\n\n```text\nDeclaration              Before declaration\n------------------------------------------------\nvar                       undefined\nlet                       ReferenceError\nconst                     ReferenceError\nfunction declaration      Works\nfunction expression       Depends on var/let/const\narrow function            Depends on var/let/const\n```",
       },
-      diagram: `Declaration                Hoisted?    Initial value        TDZ?
-──────────────────────────────────────────────────────────────
-var                         Yes         undefined             No
-let / const                 Yes         uninitialized         Yes
-function declaration        Yes (full)  function body         No
-function expr / arrow       as variable undefined or TDZ      depends on keyword`,
-      codeExample: {
-        title: { en: "What gets hoisted — and to what value", np: "के hoist हुन्छ र कुन value मा", jp: "何がどの値でホイストされるか" },
-        code: `// ── var is hoisted and initialised to undefined ───────────────────
-console.log(x);  // undefined — NOT a ReferenceError
-var x = 5;
-console.log(x);  // 5
+      diagram: `                    Hoisting
+                       |
+        +--------------+--------------+
+        |              |              |
+       var          let / const    Functions
+        |              |              |
+    undefined          TDZ        +---+---+
+                                  |       |
+                             declaration  expression/
+                                  |        arrow
+                                 Full     follows
+                                hoisting  var/let/const
 
-// ── function declarations are FULLY hoisted (declaration + body) ───
-sayHello();      // ✅ "Hello!" — works before the declaration
+
+Quick Comparison
+
+Declaration              Before declaration
+------------------------------------------------
+var                       undefined
+let                       ReferenceError
+const                     ReferenceError
+function declaration      Works
+function expression       Depends on var/let/const
+arrow function            Depends on var/let/const`,
+      codeExample: {
+        title: { en: "What each declaration does before its line", np: "हरेक declaration ले आफ्नो line अघि के गर्छ", jp: "各宣言が自分の行より前で何をするか" },
+        code: `// var
+console.log(a); // undefined
+var a = 10;
+
+
+// let
+console.log(b); // ReferenceError
+let b = 20;
+
+
+// const
+console.log(c); // ReferenceError
+const c = 30;
+
+
+// Function declaration
+sayHello(); // Works
+
 function sayHello() {
-  console.log("Hello!");
+  console.log("Hello");
 }
 
-// ── let and const are hoisted but sit in the Temporal Dead Zone ────
-// console.log(y);   // ❌ ReferenceError: Cannot access 'y' before initialization
-let y = 10;
-console.log(y);     // 10
 
-// ── Function expressions and arrow functions — NOT hoisted ─────────
-// greet("Alice");   // ❌ TypeError: greet is not a function
-const greet = (name) => \`Hello \${name}\`;
-greet("Alice");     // ✅ works after assignment`,
+// Function expression
+const greet = function () {
+  console.log("Hi");
+};
+
+
+// Arrow function
+const welcome = () => {
+  console.log("Welcome");
+};`,
       },
       keyTakeaways: [
-        { en: "`var` is hoisted and pre-filled with `undefined` — reading it early gives `undefined`, not an error.", np: "var hoist हुन्छ र undefined ले pre-fill हुन्छ — early access मा error आउँदैन।", jp: "varはホイストされundefinedで初期化されるため、早期アクセスはエラーではなくundefinedになる。" },
-        { en: "Function declarations are the only construct hoisted with their full body — you can call them before the line they're written on.", np: "Function declaration एक मात्र construct हो जो पूरै body सहित hoist हुन्छ।", jp: "関数宣言は本体ごとホイストされる唯一の構文で、宣言前に呼び出せる。" },
-        { en: "Function expressions and arrow functions are not specially hoisted — they're just variable assignments, so they follow whatever keyword holds them.", np: "Function expression/arrow function विशेष रूपमा hoist हुँदैन — यो त variable assignment मात्र हो।", jp: "関数式・アロー関数は特別にホイストされない。単なる変数代入であり、保持するキーワードに従う。" },
+        { en: "<b>Hoisting</b> → declarations are prepared before execution.", np: "<b>Hoisting</b> → execution अघि declaration तयार गरिन्छन्।", jp: "<b>ホイスティング</b> → 実行前に宣言が準備される。" },
+        { en: "`var` → hoisted with `undefined`.", np: "`var` → `undefined` सँग hoist हुन्छ।", jp: "`var` → `undefined` の状態でホイスティングされる。" },
+        { en: "`let` / `const` → hoisted but stay in the <b>TDZ</b>.", np: "`let` / `const` → hoist हुन्छन् तर <b>TDZ</b> मा रहन्छन्।", jp: "`let` / `const` → ホイスティングされるが<b>TDZ</b>に留まる。" },
+        { en: "Function declarations → completely hoisted.", np: "Function declaration → पूर्ण रूपमा hoist हुन्छन्।", jp: "関数宣言 → 完全にホイスティングされる。" },
+        { en: "Function expressions → follow their variable's rules.", np: "Function expression → आफ्नो variable का नियम पछ्याउँछन्।", jp: "関数式 → それを持つ変数の規則に従う。" },
+        { en: "Arrow functions → follow their variable's rules.", np: "Arrow function → आफ्नो variable का नियम पछ्याउँछन्।", jp: "アロー関数 → それを持つ変数の規則に従う。" },
+        { en: "`const` and `let` accessed too early → `ReferenceError`.", np: "`const` र `let` लाई धेरै चाँडै पहुँच गर्दा → `ReferenceError`।", jp: "`const` と `let` に早くアクセスしすぎると → `ReferenceError`。" },
+        { en: "A `var` function called too early → usually `TypeError`, because the variable is `undefined`.", np: "`var` function लाई धेरै चाँडै call गर्दा → सामान्यतया `TypeError`, किनकि variable `undefined` हुन्छ।", jp: "`var` の関数を早く呼びすぎると → 変数が `undefined` なので通常 `TypeError`。" },
       ],
       commonMistakes: [
-        { en: "Assuming `let`/`const` are not hoisted at all — they are hoisted, they're just unusable (TDZ) until declared.", np: "let/const hoist नै हुँदैन भन्ने ठान्नु — वास्तवमा hoist हुन्छन्, TDZ मा locked मात्र हुन्छन्।", jp: "let/constが全くホイストされないと思うこと。実際はホイストされるがTDZでロックされる。" },
-        { en: "Relying on hoisting for `const fn = () => {}` — arrow functions and function expressions are NOT hoisted the way declarations are.", np: "`const fn = () => {}` जस्ता function expression लाई function declaration जस्तै hoist हुन्छ भन्ने ठान्नु।", jp: "`const fn = () => {}`のような関数式が関数宣言と同様にホイストされると思うこと。" },
-        { en: "Writing code order that depends on hoisting working out \"by luck\" instead of declaring variables/functions before first use.", np: "Variable/function लाई पहिलो प्रयोग अघि declare नगरी hoisting मा भर पर्नु।", jp: "変数・関数を最初の使用前に宣言せず、ホイスティングが「たまたま」うまくいくことに依存すること。" },
+        { en: "<b>Thinking `let` and `const` are not hoisted</b> — they are, but they cannot be accessed before their declaration, so `console.log(age)` above `let age = 30;` throws a `ReferenceError`.", np: "<b>`let` र `const` hoist हुँदैनन् भन्ने ठान्नु</b> — हुन्छन्, तर declaration अघि पहुँच गर्न सकिँदैन, त्यसैले `let age = 30;` माथिको `console.log(age)` ले `ReferenceError` दिन्छ।", jp: "<b>`let` と `const` はホイスティングされないと思う</b> — される。ただし宣言前にはアクセスできないので、`let age = 30;` の上の `console.log(age)` は `ReferenceError` になる。" },
+        { en: "<b>Thinking function expressions work like declarations</b> — calling `greet()` above `function greet() {}` works, but above `const greet = function () {}` it throws.", np: "<b>Function expression declaration जस्तै काम गर्छ भन्ने ठान्नु</b> — `function greet() {}` माथि `greet()` call गर्दा काम गर्छ, तर `const greet = function () {}` माथि error दिन्छ।", jp: "<b>関数式が関数宣言と同じに動くと思う</b> — `function greet() {}` より前の `greet()` は動くが、`const greet = function () {}` より前ではエラーになる。" },
+        { en: "<b>Forgetting that the variable controls function-expression hoisting</b> — `var greet = function () {}` follows `var`'s rules, `const greet = function () {}` follows `const`'s.", np: "<b>Function expression को hoisting variable ले नियन्त्रण गर्छ भनी बिर्सनु</b> — `var greet = function () {}` ले `var` का नियम पछ्याउँछ, `const greet = function () {}` ले `const` का।", jp: "<b>関数式のホイスティングを決めるのは変数だと忘れる</b> — `var greet = function () {}` は `var` の規則に、`const greet = function () {}` は `const` の規則に従う。" },
       ],
       quiz: [
         {
-          question: { en: "What does `console.log(x); var x = 5;` print?", np: "`console.log(x); var x = 5;` ले के print गर्छ?", jp: "`console.log(x); var x = 5;` は何を出力する？" },
-          options: [{ en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" }, { en: "undefined", np: "undefined", jp: "undefined" }, { en: "5", np: "5", jp: "5" }],
+          question: { en: "What is the value of `var` before its assignment?", np: "Assignment अघि `var` को value के हुन्छ?", jp: "代入より前の `var` の値は?" },
+          options: [
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
           correctIndex: 1,
-          explanation: { en: "var is hoisted and pre-filled with undefined before the code runs.", np: "var hoist भई code चल्नु अघि undefined ले pre-fill हुन्छ।", jp: "varはコード実行前にホイストされundefinedで初期化される。" },
+          explanation: { en: "The declaration is hoisted and initialised to `undefined`; only the assignment waits for its line.", np: "Declaration hoist भई `undefined` मा initialise हुन्छ; assignment मात्र आफ्नो line कुर्छ।", jp: "宣言はホイスティングされ `undefined` で初期化される。待つのは代入だけ。" },
         },
         {
-          question: { en: "Which construct is hoisted with its full body, allowing you to call it before its declaration line?", np: "कुन construct पूरै body सहित hoist हुन्छ?", jp: "本体ごとホイストされ、宣言前に呼び出せる構文は？" },
-          options: [{ en: "Function declaration", np: "Function declaration", jp: "関数宣言" }, { en: "Arrow function assigned to const", np: "const मा assign गरिएको arrow function", jp: "constに代入されたアロー関数" }],
-          correctIndex: 0,
-          explanation: { en: "Only function declarations get full hoisting with their body.", np: "Function declaration मात्र पूरै body सहित hoist हुन्छ।", jp: "関数宣言のみが本体ごと完全にホイストされる。" },
+          question: { en: "What happens when `let` is accessed before its declaration?", np: "Declaration अघि `let` पहुँच गर्दा के हुन्छ?", jp: "宣言より前に `let` にアクセスするとどうなるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "It is hoisted but sits in the TDZ until its declaration is reached.", np: "यो hoist हुन्छ तर declaration पुग्नेसम्म TDZ मा रहन्छ।", jp: "ホイスティングはされるが、宣言に到達するまでTDZにある。" },
         },
         {
-          question: { en: "Are arrow functions assigned to a `const` hoisted like function declarations?", np: "`const` मा assign गरिएको arrow function function declaration जस्तै hoist हुन्छ?", jp: "constに代入されたアロー関数は関数宣言のようにホイストされる？" },
-          options: [{ en: "Yes, fully hoisted with their body", np: "हो, body सहित पूरै hoist हुन्छ", jp: "はい、本体ごと完全にホイストされる" }, { en: "No — they follow const's TDZ rules", np: "होइन — const को TDZ rule पालना गर्छ", jp: "いいえ — constのTDZルールに従う" }],
+          question: { en: "Which function is completely hoisted?", np: "कुन function पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされる関数はどれか?" },
+          options: [
+            { en: "Arrow function", np: "Arrow function", jp: "アロー関数" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+            { en: "Function expression", np: "Function expression", jp: "関数式" },
+          ],
           correctIndex: 1,
-          explanation: { en: "An arrow function stored in a const is just a variable assignment — it follows const's TDZ behaviour, not function-declaration hoisting.", np: "const मा arrow function assignment मात्र हो — TDZ rule पालना गर्छ, function declaration hoisting होइन।", jp: "constに格納されたアロー関数は単なる変数代入で、constのTDZルールに従う。" },
+          explanation: { en: "Only a function declaration is hoisted with its body, so it can be called above its definition.", np: "Function declaration मात्र आफ्नो body सँग hoist हुन्छ, त्यसैले यसलाई definition माथि call गर्न सकिन्छ।", jp: "本体ごとホイスティングされるのは関数宣言だけなので、定義より上で呼び出せる。" },
+        },
+        {
+          question: { en: "What determines how a function expression is hoisted?", np: "Function expression कसरी hoist हुन्छ भन्ने के ले तय गर्छ?", jp: "関数式のホイスティングを決めるのは何か?" },
+          options: [
+            { en: "The function name", np: "Function को नाम", jp: "関数名" },
+            { en: "The variable keyword holding it", np: "यसलाई बोक्ने variable keyword", jp: "それを持つ変数のキーワード" },
+            { en: "The function body", np: "Function को body", jp: "関数の本体" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`var` gives `undefined` and a `TypeError` on an early call; `let`/`const` give a `ReferenceError`.", np: "`var` ले `undefined` दिन्छ र चाँडै call गर्दा `TypeError`; `let`/`const` ले `ReferenceError` दिन्छन्।", jp: "`var` は `undefined` になり早い呼び出しで `TypeError`、`let`/`const` は `ReferenceError` になる。" },
         },
       ],
     },
