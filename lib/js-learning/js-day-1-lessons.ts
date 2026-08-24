@@ -87,83 +87,98 @@ console.log(age);  // 30`,
       title: { en: "Primitive Types", np: "Primitive Types", jp: "プリミティブ型" },
       durationMinutes: 9,
       explanation: {
-        en: "Every value in JavaScript is either a <b>primitive</b> (a simple, single value stored directly) or an <b>object</b> (a more complex structure stored by reference). There are exactly eight primitive types — memorising the list removes a lot of guesswork when debugging `typeof` output.\n\n• `string`, `number`, `boolean` — the everyday three\n• `null` — a developer explicitly says \"no value\"\n• `undefined` — JavaScript's default for \"nobody set this yet\"\n• `symbol` — a guaranteed-unique identifier\n• `bigint` — integers larger than `Number.MAX_SAFE_INTEGER`\n• everything else is an <b>object</b> (arrays, functions, dates — even though `typeof null === \"object\"`, which is a famous historic bug)",
-        np: "हरेक value primitive (सिधा value) वा object (reference द्वारा) हो। ठ्याक्कै आठ primitive types छन्।",
-        jp: "すべての値はプリミティブ（単純な値）かオブジェクト（参照）です。プリミティブはちょうど8種類あります。",
+        en: "A <b>primitive</b> (a simple value that is not an object) is one of JavaScript's basic value types.\n\nJavaScript has <b>8 primitive types</b>:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nEverything else is an <b>object</b> (a value that can contain more data or behavior).\n\n---\n\n### 1. `string`\n\n<b>String</b> (text) is used for words and characters.\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>Number</b> (numeric value) is used for integers and decimals.\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScript uses the same `number` type for both.\n\n---\n\n### 3. `boolean`\n\n<b>Boolean</b> (true or false value) has only two possible values:\n\n```javascript\ntrue\nfalse\n```\n\nExample:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b> (intentionally no value) means the developer deliberately says:\n\n> \"There is currently no value.\"\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b> (no value has been assigned yet) usually means a value hasn't been set.\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>Symbol</b> (a guaranteed unique value) is mainly used when we need a unique identifier.\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\nTwo Symbols are always different:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b> (a number type for very large integers) is used when numbers are larger than JavaScript's safe `number` limit.\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\nThe `n` at the end makes it a BigInt.\n\n---\n\n### 8. The `typeof` Operator\n\n<b>`typeof`</b> (an operator that tells you the type of a value) can be used to check a value's type.\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nThere is one famous JavaScript mistake:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` is actually a primitive, but `typeof null` returns `\"object\"` because of an old JavaScript bug that cannot be changed without breaking existing code.",
+        np: "<b>Primitive</b> (object नभएको साधारण value) JavaScript का आधारभूत value type मध्ये एक हो।\n\nJavaScript मा <b>8 primitive type</b> छन्:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nबाँकी सबै <b>object</b> (थप data वा behavior राख्न सक्ने value) हो।\n\n---\n\n### 1. `string`\n\n<b>String</b> (text) शब्द र अक्षरका लागि प्रयोग हुन्छ।\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>Number</b> (संख्यात्मक value) integer र decimal का लागि प्रयोग हुन्छ।\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScript ले दुबैका लागि उही `number` type प्रयोग गर्छ।\n\n---\n\n### 3. `boolean`\n\n<b>Boolean</b> (true वा false value) का दुई मात्र सम्भावित value हुन्छन्:\n\n```javascript\ntrue\nfalse\n```\n\nउदाहरण:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b> (जानाजानी कुनै value नराख्नु) को अर्थ developer ले जानाजानी यो भन्नु हो:\n\n> \"अहिले कुनै value छैन।\"\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b> (अझै कुनै value assign गरिएको छैन) को अर्थ सामान्यतया value सेट नै गरिएको छैन भन्ने हो।\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>Symbol</b> (सधैं अद्वितीय हुने value) मुख्यतया unique identifier चाहिने बेला प्रयोग हुन्छ।\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\nदुई Symbol सधैं फरक हुन्छन्:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b> (धेरै ठूला integer का लागि number type) JavaScript को safe `number` सीमा भन्दा ठूला संख्याका लागि प्रयोग हुन्छ।\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\nअन्तको `n` ले यसलाई BigInt बनाउँछ।\n\n---\n\n### 8. `typeof` Operator\n\n<b>`typeof`</b> (value को type बताउने operator) ले value को type जाँच्न प्रयोग गर्न सकिन्छ।\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nJavaScript को एउटा प्रसिद्ध गल्ती छ:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` वास्तवमा primitive हो, तर पुरानो JavaScript bug ले `typeof null` ले `\"object\"` फर्काउँछ, जो अवस्थित code नभाँचिकन बदल्न सकिँदैन।",
+        jp: "<b>プリミティブ</b>（オブジェクトではない単純な値）は、JavaScriptの基本的な値の型の1つです。\n\nJavaScriptには<b>8つのプリミティブ型</b>があります:\n\n```text\nstring\nnumber\nboolean\nnull\nundefined\nsymbol\nbigint\n```\n\nそれ以外はすべて<b>オブジェクト</b>（より多くのデータや振る舞いを持てる値）です。\n\n---\n\n### 1. `string`\n\n<b>文字列（String）</b>（テキスト）は単語や文字に使います。\n\n```javascript\nconst name = \"Rajan\";\nconst message = \"Hello\";\n```\n\n---\n\n### 2. `number`\n\n<b>数値（Number）</b>は整数と小数に使います。\n\n```javascript\nconst age = 30;\nconst price = 99.99;\n```\n\nJavaScriptはどちらにも同じ `number` 型を使います。\n\n---\n\n### 3. `boolean`\n\n<b>真偽値（Boolean）</b>（trueかfalse）が取りうる値は2つだけです:\n\n```javascript\ntrue\nfalse\n```\n\n例:\n\n```javascript\nconst isLoggedIn = true;\nconst isAdmin = false;\n```\n\n---\n\n### 4. `null`\n\n<b>`null`</b>（意図的に値がない）は、開発者が意図してこう言っている状態です:\n\n> 「現在、値はありません。」\n\n```javascript\nconst user = null;\n```\n\n---\n\n### 5. `undefined`\n\n<b>`undefined`</b>（まだ値が代入されていない）は、通常まだ値が設定されていないことを意味します。\n\n```javascript\nlet name;\n\nconsole.log(name); // undefined\n```\n\n---\n\n### 6. `symbol`\n\n<b>シンボル（Symbol）</b>（必ず一意になる値）は、主に一意の識別子が必要なときに使います。\n\n```javascript\nconst id = Symbol(\"id\");\n```\n\n2つのSymbolは常に別物です:\n\n```javascript\nSymbol(\"id\") === Symbol(\"id\"); // false\n```\n\n---\n\n### 7. `bigint`\n\n<b>BigInt</b>（非常に大きな整数のための数値型）は、JavaScriptの安全な `number` の限界を超える数に使います。\n\n```javascript\nconst bigNumber = 123456789012345678901234567890n;\n```\n\n末尾の `n` がBigIntにします。\n\n---\n\n### 8. `typeof` 演算子\n\n<b>`typeof`</b>（値の型を教えてくれる演算子）で値の型を調べられます。\n\n```javascript\ntypeof \"Hello\";     // \"string\"\ntypeof 42;          // \"number\"\ntypeof true;        // \"boolean\"\ntypeof undefined;   // \"undefined\"\ntypeof 123n;        // \"bigint\"\ntypeof Symbol();    // \"symbol\"\n```\n\nJavaScriptには有名な間違いが1つあります:\n\n```javascript\ntypeof null; // \"object\"\n```\n\n`null` は実際にはプリミティブですが、既存のコードを壊さずには変えられない古いJavaScriptのバグのため、`typeof null` は `\"object\"` を返します。",
       },
-      diagram: `Value
- ├─ Primitive (copied by value)
- │   ├─ string     "hello"
- │   ├─ number     42, 9.99, NaN
- │   ├─ boolean    true / false
- │   ├─ null        intentional "no value"
- │   ├─ undefined   "not set yet"
- │   ├─ symbol      Symbol("id")
- │   └─ bigint      9007199254740993n
- └─ Object (copied by reference)
-     ├─ {}  plain object
-     ├─ []  array
-     └─ function(){}`,
+      diagram: `                    JavaScript Values
+                           |
+              +------------+------------+
+              |                         |
+          Primitives                 Objects
+              |                         |
+    +---------+---------+               |
+    |         |         |               |
+  string   number   boolean          Array
+    |         |         |             Function
+   null   undefined   symbol          Date
+             |         |              ...
+           bigint`,
       codeExample: {
-        title: { en: "All primitive types with examples", np: "सबै primitive types उदाहरण सहित", jp: "全プリミティブ型の例" },
-        code: `const greeting = "Hello";              // string
-const age = 30;                         // number
-const isActive = true;                  // boolean
-const empty = null;                     // null — intentional absence
-let notSet;                             // undefined — not yet assigned
-const id = Symbol("id");                // symbol — always unique
-const huge = 9007199254740993n;         // bigint — note the 'n' suffix
+        title: { en: "All eight primitives with typeof", np: "आठै primitive typeof सहित", jp: "8つのプリミティブとtypeof" },
+        code: `const name = "Rajan";       // string
+const age = 30;             // number
+const isActive = true;      // boolean
+const user = null;          // null
+let address;                // undefined
+const id = Symbol("id");    // symbol
+const big = 1234567890123n; // bigint
 
-// typeof operator
-console.log(typeof "hello");     // "string"
-console.log(typeof 42);          // "number"
-console.log(typeof undefined);   // "undefined"
-console.log(typeof null);        // "object" ← famous bug, kept for compatibility
-console.log(typeof Symbol());    // "symbol"
-console.log(typeof 1n);          // "bigint"
-console.log(typeof {});          // "object"
-console.log(typeof []);          // "object" (not "array"!)`,
+console.log(typeof name);      // "string"
+console.log(typeof age);       // "number"
+console.log(typeof isActive);  // "boolean"
+console.log(typeof user);      // "object"
+console.log(typeof address);   // "undefined"
+console.log(typeof id);        // "symbol"
+console.log(typeof big);       // "bigint"`,
       },
       keyTakeaways: [
-        { en: "`undefined` means \"nobody has set this yet\" (JavaScript's default). `null` means a developer explicitly said \"this has no value.\"", np: "undefined = कोहीले set नगरेको। null = developer ले आफैं value छैन भनेको।", jp: "undefinedは「未設定」のデフォルト。nullは開発者が明示的に設定した「値なし」。" },
-        { en: "Primitives are copied by value — assigning one to a new variable copies the value, so changing the copy never affects the original.", np: "Primitives value द्वारा copy हुन्छन् — copy बदल्दा original मा असर पर्दैन।", jp: "プリミティブは値でコピーされる。コピーを変更しても元の値には影響しない。" },
-        { en: "`typeof null` returning `\"object\"` is a bug frozen in place since 1995 — always use `value === null` to check for null specifically.", np: "`typeof null` ले 'object' दिने कुरा 1995 देखिको bug हो — null check गर्न `value === null` प्रयोग गर्नुहोस्।", jp: "`typeof null`が'object'を返すのは1995年からのバグ。nullチェックには`value === null`を使う。" },
+        { en: "JavaScript has <b>8 primitive types</b>.", np: "JavaScript मा <b>8 primitive type</b> छन्।", jp: "JavaScriptには<b>8つのプリミティブ型</b>がある。" },
+        { en: "`string` → text.", np: "`string` → text।", jp: "`string` → テキスト。" },
+        { en: "`number` → numbers and decimals.", np: "`number` → संख्या र decimal।", jp: "`number` → 数値と小数。" },
+        { en: "`boolean` → `true` or `false`.", np: "`boolean` → `true` वा `false`।", jp: "`boolean` → `true` か `false`。" },
+        { en: "`null` → intentionally no value.", np: "`null` → जानाजानी कुनै value छैन।", jp: "`null` → 意図的に値がない。" },
+        { en: "`undefined` → value hasn't been assigned.", np: "`undefined` → value assign गरिएको छैन।", jp: "`undefined` → 値が代入されていない。" },
+        { en: "`symbol` → unique identifier.", np: "`symbol` → unique identifier।", jp: "`symbol` → 一意の識別子。" },
+        { en: "`bigint` → very large integers.", np: "`bigint` → धेरै ठूला integer।", jp: "`bigint` → 非常に大きな整数。" },
+        { en: "Everything else is an <b>object</b>.", np: "बाँकी सबै <b>object</b> हो।", jp: "それ以外はすべて<b>オブジェクト</b>。" },
+        { en: "`typeof null` returns `\"object\"` because of a historical JavaScript bug.", np: "पुरानो JavaScript bug का कारण `typeof null` ले `\"object\"` फर्काउँछ।", jp: "歴史的なJavaScriptのバグにより `typeof null` は `\"object\"` を返す。" },
       ],
       commonMistakes: [
-        { en: "Confusing `null` and `undefined` — using them interchangeably instead of `null` for \"intentionally empty\" and `undefined` for \"not yet set.\"", np: "null र undefined लाई मिलाउनु — 'intentionally empty' का लागि null र 'not set' का लागि undefined छुट्याउनु पर्छ।", jp: "nullとundefinedを混同すること。「意図的に空」にはnull、「未設定」にはundefinedを使い分ける。" },
-        { en: "Checking `typeof value === \"object\"` to detect an object, forgetting that `null` also passes this check.", np: "Object check गर्न `typeof value === 'object'` प्रयोग गर्दा null पनि pass हुने कुरा बिर्सनु।", jp: "オブジェクトの判定に`typeof value === 'object'`を使い、nullも通ることを忘れること。" },
-        { en: "Assuming `typeof []` returns `\"array\"` — it returns `\"object\"`; use `Array.isArray()` instead.", np: "`typeof []` ले 'array' दिन्छ भन्ने ठान्नु — यसले 'object' दिन्छ; `Array.isArray()` प्रयोग गर्नुहोस्।", jp: "`typeof []`が'array'を返すと思うこと。実際は'object'。`Array.isArray()`を使う。" },
+        { en: "<b>Confusing `null` and `undefined`</b> — `let a;` is `undefined` (\"no value was assigned\"), while `let b = null;` is intentionally no value.", np: "<b>`null` र `undefined` भ्रममा पार्नु</b> — `let a;` `undefined` हो (\"कुनै value assign भएको छैन\"), जब कि `let b = null;` जानाजानी कुनै value नराखेको हो।", jp: "<b>`null` と `undefined` を混同する</b> — `let a;` は `undefined`（「値が代入されていない」）、`let b = null;` は意図的に値がない状態。" },
+        { en: "<b>Thinking arrays are primitives</b> — `typeof [1, 2, 3]` is `\"object\"`. Arrays are objects.", np: "<b>Array primitive हो भन्ने ठान्नु</b> — `typeof [1, 2, 3]` `\"object\"` हो। Array object हुन्।", jp: "<b>配列をプリミティブだと思う</b> — `typeof [1, 2, 3]` は `\"object\"`。配列はオブジェクト。" },
+        { en: "<b>Being surprised by `typeof null`</b> — it returns `\"object\"`, but `null` is still a primitive; `typeof` reports it incorrectly.", np: "<b>`typeof null` देखेर अचम्म पर्नु</b> — यो `\"object\"` फर्काउँछ, तर `null` अझै primitive हो; `typeof` ले गलत रिपोर्ट गर्छ।", jp: "<b>`typeof null` に驚く</b> — `\"object\"` を返すが `null` はプリミティブのまま。`typeof` の報告が誤っている。" },
       ],
       quiz: [
         {
-          question: { en: "Which of these is a primitive type, not an object?", np: "यीमध्ये कुन primitive type हो, object होइन?", jp: "次のうちオブジェクトではなくプリミティブ型はどれ？" },
+          question: { en: "How many primitive types does JavaScript have?", np: "JavaScript मा कति primitive type छन्?", jp: "JavaScriptのプリミティブ型はいくつあるか?" },
           options: [
-            { en: "Array", np: "Array", jp: "Array" },
-            { en: "Symbol", np: "Symbol", jp: "Symbol" },
-            { en: "Function", np: "Function", jp: "Function" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "Symbol is one of JavaScript's primitive types. Arrays and functions are both objects — typeof [] and typeof function(){} both return \"object\"/\"function\", never a primitive tag.", np: "Symbol primitive type हो। Array र function दुवै object हुन्।", jp: "Symbolはプリミティブ型。配列と関数はどちらもオブジェクト。" },
-        },
-        {
-          question: { en: "What does `typeof null` return?", np: "`typeof null` ले के फर्काउँछ?", jp: "`typeof null`は何を返す？" },
-          options: [
-            { en: "\"null\"", np: "\"null\"", jp: "\"null\"" },
-            { en: "\"undefined\"", np: "\"undefined\"", jp: "\"undefined\"" },
-            { en: "\"object\"", np: "\"object\"", jp: "\"object\"" },
+            { en: "5", np: "5", jp: "5" },
+            { en: "7", np: "7", jp: "7" },
+            { en: "8", np: "8", jp: "8" },
           ],
           correctIndex: 2,
-          explanation: { en: "It's a historic bug from 1995 that was never fixed for backwards-compatibility reasons.", np: "यो 1995 देखिको bug हो जो compatibility कारणले fix गरिएन।", jp: "1995年からの互換性維持のため修正されなかったバグ。" },
+          explanation: { en: "There are 8: string, number, boolean, null, undefined, symbol and bigint.", np: "8 छन्: string, number, boolean, null, undefined, symbol र bigint।", jp: "8つ: string、number、boolean、null、undefined、symbol、bigint。" },
         },
         {
-          question: { en: "Which is the correct way to check if a value is an array?", np: "Value array हो कि होइन check गर्ने सही तरिका कुन हो?", jp: "値が配列かどうかを確認する正しい方法は？" },
+          question: { en: "What does `null` mean?", np: "`null` को अर्थ के हो?", jp: "`null` は何を意味するか?" },
           options: [
-            { en: "typeof value === \"array\"", np: "typeof value === \"array\"", jp: "typeof value === \"array\"" },
-            { en: "Array.isArray(value)", np: "Array.isArray(value)", jp: "Array.isArray(value)" },
-            { en: "value instanceof array", np: "value instanceof array", jp: "value instanceof array" },
+            { en: "A value was never created", np: "Value कहिल्यै बनेको थिएन", jp: "値が作られたことがない" },
+            { en: "Intentionally no value", np: "जानाजानी कुनै value छैन", jp: "意図的に値がない" },
+            { en: "An error", np: "एउटा error", jp: "エラー" },
           ],
           correctIndex: 1,
-          explanation: { en: "typeof an array returns \"object\", not \"array\" — Array.isArray() is the reliable check.", np: "Array को typeof ले 'object' दिन्छ, 'array' होइन — Array.isArray() भरपर्दो तरिका हो।", jp: "配列のtypeofは'array'ではなく'object'を返す。Array.isArray()が確実な方法。" },
+          explanation: { en: "`null` is the developer saying \"there is currently no value\", unlike `undefined`, which means nothing was assigned yet.", np: "`null` भनेको developer ले \"अहिले कुनै value छैन\" भन्नु हो, `undefined` भन्दा फरक, जसको अर्थ अझै केही assign गरिएको छैन।", jp: "`null` は開発者が「現在値がない」と示すもの。まだ何も代入されていない `undefined` とは異なる。" },
+        },
+        {
+          question: { en: "What is the type of `42`?", np: "`42` को type के हो?", jp: "`42` の型は?" },
+          options: [
+            { en: "`string`", np: "`string`", jp: "`string`" },
+            { en: "`number`", np: "`number`", jp: "`number`" },
+            { en: "`bigint`", np: "`bigint`", jp: "`bigint`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "JavaScript uses `number` for both integers and decimals; `bigint` is only for values beyond the safe number limit.", np: "JavaScript ले integer र decimal दुबैका लागि `number` प्रयोग गर्छ; `bigint` safe number सीमा नाघेका value का लागि मात्र हो।", jp: "JavaScriptは整数も小数も `number` を使う。`bigint` は安全な数値の限界を超える値のためだけ。" },
+        },
+        {
+          question: { en: "What does `typeof null` return?", np: "`typeof null` ले के फर्काउँछ?", jp: "`typeof null` は何を返すか?" },
+          options: [
+            { en: "`\"null\"`", np: "`\"null\"`", jp: "`\"null\"`" },
+            { en: "`\"undefined\"`", np: "`\"undefined\"`", jp: "`\"undefined\"`" },
+            { en: "`\"object\"`", np: "`\"object\"`", jp: "`\"object\"`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "It returns `\"object\"` because of an old JavaScript bug that cannot be fixed without breaking existing code.", np: "पुरानो JavaScript bug का कारण यो `\"object\"` फर्काउँछ, जो अवस्थित code नभाँचिकन ठीक गर्न सकिँदैन।", jp: "既存のコードを壊さずには直せない古いJavaScriptのバグのため `\"object\"` を返す。" },
         },
       ],
     },
