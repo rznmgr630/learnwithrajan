@@ -10,10 +10,15 @@ import type {
 import { MCQ_OPTION_TRANSLATIONS } from "@/lib/japanese-learning/mcq-option-translations";
 import { RichText } from "@/components/learn/RichText";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 type Props = {
   test: JapaneseWeeklyTest | null;
   onClose: () => void;
+  previous?: LessonNavTarget | null;
+  next?: LessonNavTarget | null;
+  /** Enables the previous/next footer; receives the test id to open. */
+  onNavigate?: (id: string) => void;
   isWeeklyTestDone: (id: string) => boolean;
   onToggleWeeklyTest: (id: string) => void;
 };
@@ -230,7 +235,15 @@ function WeeklyTestItemBlock({
   );
 }
 
-export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onToggleWeeklyTest }: Props) {
+export function JapaneseWeeklyTestPanel({
+  test,
+  onClose,
+  isWeeklyTestDone,
+  onToggleWeeklyTest,
+  previous,
+  next,
+  onNavigate,
+}: Props) {
   const { locale, t } = useLocale();
   const open = test !== null;
   const hasSubTests = Boolean(test?.subTests?.length);
@@ -439,6 +452,16 @@ export function JapaneseWeeklyTestPanel({ test, onClose, isWeeklyTestDone, onTog
                 <RichText text={pickLocalized(test.closingNote, locale)} />
               </p>
             </div>
+          ) : null}
+
+          {onNavigate ? (
+            <LessonNav
+              previous={previous}
+              next={next}
+              onNavigate={(target) => {
+                if (typeof target.id === "string") onNavigate(target.id);
+              }}
+            />
           ) : null}
         </div>
 
