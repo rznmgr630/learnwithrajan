@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { CourseSidebar, type CourseSidebarSection } from "@/components/learn/CourseSidebar";
 import { CodeBlock } from "@/components/learn/CodeBlock";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import {
   IT_OFFICER_CONCEPTS,
   IT_OFFICER_CONCEPT_COUNT,
@@ -85,7 +86,17 @@ function topAncestorTitle(concept: ITOfficerConcept): string {
   return current.title;
 }
 
-function ConceptDetail({ concept, index }: { concept: ITOfficerConcept; index: number }) {
+function ConceptDetail({
+  concept,
+  index,
+  previous,
+  next,
+}: {
+  concept: ITOfficerConcept;
+  index: number;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+}) {
   return (
     <div>
       <div className="sticky top-[101px] z-[5] overflow-hidden rounded-t-2xl border border-b-0 border-[var(--border)] bg-[var(--elevated)] shadow-sm">
@@ -164,6 +175,8 @@ function ConceptDetail({ concept, index }: { concept: ITOfficerConcept; index: n
               <CodeBlock code={concept.code} language={concept.codeLanguage} />
             </section>
           )}
+
+          <LessonNav previous={previous} next={next} />
         </div>
       </article>
     </div>
@@ -176,6 +189,11 @@ const orderedConcepts = IT_OFFICER_SECTIONS.flatMap(
   (section) => IT_OFFICER_CONCEPTS.filter((c) => c.section === section)
 );
 const positionOf = new Map(orderedConcepts.map((c, i) => [c.id, i + 1]));
+
+function neighbourOf(concept: ITOfficerConcept, offset: -1 | 1): LessonNavTarget | null {
+  const neighbour = orderedConcepts[orderedConcepts.findIndex((c) => c.id === concept.id) + offset];
+  return neighbour ? { title: neighbour.title, href: `${BASE_PATH}/${neighbour.slug}` } : null;
+}
 
 function buildSidebarItems(sectionConcepts: ITOfficerConcept[], parentSlug: string | undefined): CourseSidebarSection["items"] {
   return sectionConcepts
@@ -237,7 +255,12 @@ export function LoksewaITOfficerPage({ activeConcept }: { activeConcept?: ITOffi
 
           <div className="min-w-0 flex-1">
             {activeConcept ? (
-              <ConceptDetail concept={activeConcept} index={positionOf.get(activeConcept.id)!} />
+              <ConceptDetail
+                concept={activeConcept}
+                index={positionOf.get(activeConcept.id)!}
+                previous={neighbourOf(activeConcept, -1)}
+                next={neighbourOf(activeConcept, 1)}
+              />
             ) : (
               <div className="relative flex min-h-[60vh] flex-col items-center justify-center text-center">
                 <div className="absolute -inset-x-4 -top-4 h-48 bg-gradient-to-b from-[var(--accent)]/5 to-transparent" />

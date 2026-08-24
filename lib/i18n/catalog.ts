@@ -773,6 +773,16 @@ export const UI_STRINGS = {
     np: "दिन {day}",
     jp: "{day}日目",
   },
+  "lessonNav.previousItemAria": {
+    en: "Go to the previous topic: {title}",
+    np: "अघिल्लो topic मा जानुहोस्: {title}",
+    jp: "前のトピックへ移動: {title}",
+  },
+  "lessonNav.nextItemAria": {
+    en: "Go to the next topic: {title}",
+    np: "अर्को topic मा जानुहोस्: {title}",
+    jp: "次のトピックへ移動: {title}",
+  },
   "lessonNav.previousAria": {
     en: "Go to the previous day, day {day}: {title}",
     np: "अघिल्लो दिनमा जानुहोस्, दिन {day}: {title}",
