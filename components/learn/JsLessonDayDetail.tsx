@@ -7,6 +7,7 @@ import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
 import type { JsLesson, JsLessonDay, JsLessonQuizQuestion } from "@/lib/js-learning/js-lesson-types";
+import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 type Tab = "explanation" | "diagram" | "code" | "takeaways" | "mistakes" | "quiz";
 
@@ -233,11 +234,7 @@ function LessonAccordionItem({
   function handleToggle() {
     const willExpand = !expanded;
     onToggle();
-    if (willExpand) {
-      requestAnimationFrame(() => {
-        itemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
+    if (willExpand) scrollOpenSectionIntoView(itemRef.current);
   }
 
   return (

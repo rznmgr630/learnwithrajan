@@ -16,6 +16,7 @@ import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import type { Locale } from "@/lib/i18n/types";
+import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 /** Single pill style for all topic tags — color comes from theme accent only elsewhere. */
 const TAG_PILL =
@@ -118,8 +119,13 @@ export function JapaneseRoadmap() {
             >
               <button
                 type="button"
-                onClick={() => setOpenWeekId((cur) => (cur === week.id ? null : week.id))}
-                className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
+                onClick={(e) => {
+                  const header = e.currentTarget;
+                  const willOpen = !open;
+                  setOpenWeekId((cur) => (cur === week.id ? null : week.id));
+                  if (willOpen) scrollOpenSectionIntoView(header);
+                }}
+                className="flex w-full scroll-mt-20 items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
               >
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
                 <span className="flex-1 font-medium text-[var(--text)]">

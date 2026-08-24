@@ -6,6 +6,7 @@ import { PROMPTS } from "@/lib/ai-prompts/prompts-data";
 import { SLASH_CATEGORIES } from "@/lib/ai-prompts/slash-categories-data";
 import { PROMPT_VISUALS } from "@/components/learn/ai-prompt-visuals";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
+import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 const CATEGORIES = Array.from(new Set(PROMPTS.map((p) => p.category)));
 
@@ -175,11 +176,16 @@ export function AIPrompts() {
           return (
             <details
               key={category}
-              className="group overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm open:[&_.cat-chevron]:rotate-180"
+              className="group scroll-mt-20 overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm open:[&_.cat-chevron]:rotate-180"
               open={isOpen}
               onToggle={(e) => {
-                if (e.currentTarget.open) setOpenCategory(category);
-                else setOpenCategory((prev) => (prev === category ? null : prev));
+                const details = e.currentTarget;
+                if (details.open) {
+                  setOpenCategory(category);
+                  scrollOpenSectionIntoView(details);
+                } else {
+                  setOpenCategory((prev) => (prev === category ? null : prev));
+                }
               }}
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
