@@ -74,21 +74,21 @@ console.log(Object.entries(user));
         {
           question: { en: "What does `Object.keys(user)` return?", np: "`Object.keys(user)` ले के फर्काउँछ?", jp: "`Object.keys(user)` は何を返すか?" },
           options: [
-            { en: "An array of keys", np: "Key को array", jp: "キーの配列" },
-            { en: "An array of values", np: "Value को array", jp: "値の配列" },
             { en: "A new object", np: "नयाँ object", jp: "新しいオブジェクト" },
+            { en: "An array of values", np: "Value को array", jp: "値の配列" },
+            { en: "An array of keys", np: "Key को array", jp: "キーの配列" },
           ],
-          correctIndex: 0,
+          correctIndex: 2,
           explanation: { en: "`Object.values()` gives the values and `Object.entries()` gives both as pairs.", np: "`Object.values()` ले value दिन्छ र `Object.entries()` ले दुबै जोडीमा दिन्छ।", jp: "`Object.values()` は値を、`Object.entries()` は両方を組で返す。" },
         },
         {
           question: { en: "Which method converts entries back into an object?", np: "कुन method ले entries लाई फेरि object मा बदल्छ?", jp: "エントリをオブジェクトに戻すのはどのメソッドか?" },
           options: [
-            { en: "`Object.keys()`", np: "`Object.keys()`", jp: "`Object.keys()`" },
-            { en: "`Object.entries()`", np: "`Object.entries()`", jp: "`Object.entries()`" },
             { en: "`Object.fromEntries()`", np: "`Object.fromEntries()`", jp: "`Object.fromEntries()`" },
+            { en: "`Object.entries()`", np: "`Object.entries()`", jp: "`Object.entries()`" },
+            { en: "`Object.keys()`", np: "`Object.keys()`", jp: "`Object.keys()`" },
           ],
-          correctIndex: 2,
+          correctIndex: 0,
           explanation: { en: "It is the inverse of `Object.entries()`, which is handy after mapping over pairs.", np: "यो `Object.entries()` को उल्टो हो, जो जोडीमा map गरेपछि उपयोगी हुन्छ।", jp: "`Object.entries()` の逆。組をmapした後に便利。" },
         },
       ],
@@ -173,10 +173,10 @@ console.log(add(1, 2, 3)); // 6`,
           question: { en: "What does spread (`...`) do?", np: "Spread (`...`) ले के गर्छ?", jp: "スプレッド（`...`）は何をするか?" },
           options: [
             { en: "Collects remaining values", np: "बाँकी value जम्मा गर्छ", jp: "残りの値をまとめる" },
-            { en: "Expands values", np: "Value फैलाउँछ", jp: "値を展開する" },
             { en: "Deletes values", np: "Value मेटाउँछ", jp: "値を削除する" },
+            { en: "Expands values", np: "Value फैलाउँछ", jp: "値を展開する" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "It copies the items out into a new array or object literal.", np: "यसले item लाई नयाँ array वा object literal मा निकाल्छ।", jp: "要素を新しい配列やオブジェクトリテラルに取り出す。" },
         },
         {
@@ -270,20 +270,20 @@ console.log(source.skills);
           question: { en: "What does a shallow copy copy?", np: "Shallow copy ले के copy गर्छ?", jp: "浅いコピーは何をコピーするか?" },
           options: [
             { en: "Every nested object", np: "हरेक nested object", jp: "すべての入れ子のオブジェクト" },
-            { en: "Only the top level", np: "Top level मात्र", jp: "トップレベルだけ" },
             { en: "Nothing", np: "केही पनि होइन", jp: "何もコピーしない" },
+            { en: "Only the top level", np: "Top level मात्र", jp: "トップレベルだけ" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "The outer object is new, but each nested value is still the same reference.", np: "बाहिरी object नयाँ हुन्छ, तर हरेक nested value उही reference नै रहन्छ।", jp: "外側は新しくなるが、入れ子の値は同じ参照のまま。" },
         },
         {
           question: { en: "With `const copy = { ...original }` then `copy.address.city = \"Osaka\"`, what happens?", np: "`const copy = { ...original }` पछि `copy.address.city = \"Osaka\"` गर्दा के हुन्छ?", jp: "`const copy = { ...original }` の後に `copy.address.city = \"Osaka\"` とするとどうなるか?" },
           options: [
-            { en: "Only `copy` changes", np: "`copy` मात्र बदलिन्छ", jp: "`copy` だけが変わる" },
             { en: "Both can change because `address` is shared", np: "`address` साझा भएकाले दुबै बदलिन सक्छन्", jp: "`address` が共有されているので両方変わりうる" },
+            { en: "Only `copy` changes", np: "`copy` मात्र बदलिन्छ", jp: "`copy` だけが変わる" },
             { en: "The code always throws an error", np: "Code ले सधैं error दिन्छ", jp: "コードは必ずエラーになる" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "The spread copied the reference to `address`, not the object behind it.", np: "Spread ले `address` को reference copy गर्‍यो, पछाडिको object होइन।", jp: "スプレッドがコピーしたのは `address` への参照で、その先のオブジェクトではない。" },
         },
         {
@@ -302,8 +302,8 @@ console.log(source.skills);
   finalQuiz: [
     {
       question: { en: "Which notation must you use when a property key is dynamic or stored in a variable?", np: "Property key dynamic वा variable मा रहेको बेला कुन notation प्रयोग गर्नुपर्छ?", jp: "プロパティキーが動的または変数に格納されている場合、どちらの記法を使うべき？" },
-      options: [{ en: "Dot notation", np: "Dot notation", jp: "ドット記法" }, { en: "Bracket notation", np: "Bracket notation", jp: "ブラケット記法" }],
-      correctIndex: 1,
+      options: [{ en: "Bracket notation", np: "Bracket notation", jp: "ブラケット記法" }, { en: "Dot notation", np: "Dot notation", jp: "ドット記法" }],
+      correctIndex: 0,
       explanation: { en: "Bracket notation evaluates the expression inside it, so it works with variables and computed keys; dot notation only accepts a literal name.", np: "Bracket notation ले भित्रको expression evaluate गर्छ, त्यसैले variable सँग काम गर्छ।", jp: "ブラケット記法は内部の式を評価するため変数でも機能する。" },
     },
     {
@@ -314,20 +314,20 @@ console.log(source.skills);
     },
     {
       question: { en: "What's the difference between `\"key\" in obj` and `Object.hasOwn(obj, \"key\")`?", np: "`\"key\" in obj` र `Object.hasOwn(obj, \"key\")` मा के फरक छ?", jp: "`\"key\" in obj`と`Object.hasOwn(obj, \"key\")`の違いは？" },
-      options: [{ en: "No difference", np: "फरक छैन", jp: "違いはない" }, { en: "`in` also checks inherited properties; `hasOwn` checks only own properties", np: "`in` ले inherited properties पनि check गर्छ; `hasOwn` ले आफ्नै properties मात्र check गर्छ", jp: "`in`は継承プロパティも確認する。`hasOwn`は自身のプロパティのみ確認する" }],
-      correctIndex: 1,
+      options: [{ en: "`in` also checks inherited properties; `hasOwn` checks only own properties", np: "`in` ले inherited properties पनि check गर्छ; `hasOwn` ले आफ्नै properties मात्र check गर्छ", jp: "`in`は継承プロパティも確認する。`hasOwn`は自身のプロパティのみ確認する" }, { en: "No difference", np: "फरक छैन", jp: "違いはない" }],
+      correctIndex: 0,
       explanation: { en: "`in` walks the prototype chain; Object.hasOwn is the precise own-property check.", np: "`in` ले prototype chain walk गर्छ; Object.hasOwn precise own-property check हो।", jp: "`in`はプロトタイプチェーンを遡る。Object.hasOwnは正確な自己プロパティ確認。" },
     },
     {
       question: { en: "In `const { country = \"Unknown\" } = user`, when does the default value `\"Unknown\"` get used?", np: "`const { country = \"Unknown\" } = user` मा default value `\"Unknown\"` कहिले प्रयोग हुन्छ?", jp: "`const { country = \"Unknown\" } = user`でデフォルト値`\"Unknown\"`はいつ使われる？" },
-      options: [{ en: "Whenever `user.country` is exactly `undefined`", np: "`user.country` ठ्याक्कै `undefined` भएमा", jp: "`user.country`がまさに`undefined`のとき" }, { en: "Only if the `user` object is completely empty", np: "`user` object पूर्ण खाली भएमा मात्र", jp: "`user`オブジェクトが完全に空の場合のみ" }],
-      correctIndex: 0,
+      options: [{ en: "Only if the `user` object is completely empty", np: "`user` object पूर्ण खाली भएमा मात्र", jp: "`user`オブジェクトが完全に空の場合のみ" }, { en: "Whenever `user.country` is exactly `undefined`", np: "`user.country` ठ्याक्कै `undefined` भएमा", jp: "`user.country`がまさに`undefined`のとき" }],
+      correctIndex: 1,
       explanation: { en: "Destructuring defaults trigger whenever the extracted value is undefined, regardless of why.", np: "Extract भएको value undefined भएमा जुनसुकै कारणले पनि default trigger हुन्छ।", jp: "分割代入のデフォルトは、抽出された値がundefinedであれば理由を問わず発動する。" },
     },
     {
       question: { en: "Is `...` for spread and `...` for rest the same operation?", np: "Spread को `...` र rest को `...` उस्तै operation हो?", jp: "スプレッドの`...`とrestの`...`は同じ操作？" },
-      options: [{ en: "Yes, always identical", np: "हो, सधैं उस्तै", jp: "はい、常に同一" }, { en: "No — spread expands an iterable, rest collects remaining values into one", np: "होइन — spread ले फिँजाउँछ, rest ले बाँकीलाई एकमा collect गर्छ", jp: "いいえ — スプレッドは展開し、restは残りを1つに集める" }],
-      correctIndex: 1,
+      options: [{ en: "No — spread expands an iterable, rest collects remaining values into one", np: "होइन — spread ले फिँजाउँछ, rest ले बाँकीलाई एकमा collect गर्छ", jp: "いいえ — スプレッドは展開し、restは残りを1つに集める" }, { en: "Yes, always identical", np: "हो, सधैं उस्तै", jp: "はい、常に同一" }],
+      correctIndex: 0,
       explanation: { en: "Same syntax, opposite direction: spread pulls values out into a new structure, rest gathers loose values into an array.", np: "Syntax उस्तै तर विपरीत दिशा: spread ले value बाहिर निकाल्छ, rest ले array मा जम्मा गर्छ।", jp: "同じ構文だが逆方向: スプレッドは値を取り出し、restは配列に集める。" },
     },
     {
@@ -344,14 +344,14 @@ console.log(source.skills);
     },
     {
       question: { en: "Which is the modern, preferred way to deep clone an object with Dates and Maps inside it?", np: "Dates र Maps भएको object deep clone गर्ने modern, preferred तरिका कुन हो?", jp: "DateとMapを含むオブジェクトを深くクローンする現代的で推奨される方法は？" },
-      options: [{ en: "`structuredClone(obj)`", np: "`structuredClone(obj)`", jp: "`structuredClone(obj)`" }, { en: "`JSON.parse(JSON.stringify(obj))`", np: "`JSON.parse(JSON.stringify(obj))`", jp: "`JSON.parse(JSON.stringify(obj))`" }],
-      correctIndex: 0,
+      options: [{ en: "`JSON.parse(JSON.stringify(obj))`", np: "`JSON.parse(JSON.stringify(obj))`", jp: "`JSON.parse(JSON.stringify(obj))`" }, { en: "`structuredClone(obj)`", np: "`structuredClone(obj)`", jp: "`structuredClone(obj)`" }],
+      correctIndex: 1,
       explanation: { en: "structuredClone() correctly preserves Date and Map instances; JSON round-tripping corrupts or loses them.", np: "structuredClone() ले Date र Map instances सही ढंगले preserve गर्छ; JSON round-trip ले corrupt/loss गराउँछ।", jp: "structuredClone()はDateとMapのインスタンスを正しく保持する。JSONの往復変換は破損・消失させる。" },
     },
     {
       question: { en: "Why should you avoid `JSON.parse(JSON.stringify(obj))` for deep cloning objects with functions?", np: "Function भएको object deep clone गर्दा `JSON.parse(JSON.stringify(obj))` किन avoid गर्नुपर्छ?", jp: "関数を含むオブジェクトを深くクローンする際に`JSON.parse(JSON.stringify(obj))`を避けるべき理由は？" },
-      options: [{ en: "It's too slow to matter in practice", np: "यो व्यवहारमा धेरै ढिलो हुन्छ", jp: "実際には遅すぎて問題にならない" }, { en: "JSON has no representation for functions — they are silently dropped", np: "JSON मा function को कुनै representation छैन — silently हराउन्छ", jp: "JSONには関数の表現がなく、黙って削除される" }],
-      correctIndex: 1,
+      options: [{ en: "JSON has no representation for functions — they are silently dropped", np: "JSON मा function को कुनै representation छैन — silently हराउन्छ", jp: "JSONには関数の表現がなく、黙って削除される" }, { en: "It's too slow to matter in practice", np: "यो व्यवहारमा धेरै ढिलो हुन्छ", jp: "実際には遅すぎて問題にならない" }],
+      correctIndex: 0,
       explanation: { en: "JSON.stringify simply omits function-valued properties entirely, along with undefined and Symbol keys.", np: "JSON.stringify ले function-valued properties लाई पूर्ण रूपमा omit गर्छ, undefined र Symbol keys सँगै।", jp: "JSON.stringifyは関数値のプロパティをundefinedやSymbolキーとともに完全に省略する。" },
     },
   ],

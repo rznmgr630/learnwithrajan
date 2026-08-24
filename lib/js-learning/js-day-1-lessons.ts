@@ -63,21 +63,21 @@ const data = await fetch("/api/users");`,
         {
           question: { en: "When was JavaScript created?", np: "JavaScript कहिले बनाइयो?", jp: "JavaScriptはいつ作られたか?" },
           options: [
-            { en: "1989", np: "1989", jp: "1989" },
             { en: "1995", np: "1995", jp: "1995" },
+            { en: "1989", np: "1989", jp: "1989" },
             { en: "2005", np: "2005", jp: "2005" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Brendan Eich built the first version at Netscape in 1995.", np: "Brendan Eich ले 1995 मा Netscape मा पहिलो संस्करण बनाए।", jp: "Brendan Eichが1995年にNetscapeで最初のバージョンを作った。" },
         },
         {
           question: { en: "Who created JavaScript?", np: "JavaScript कसले बनाए?", jp: "JavaScriptを作ったのは誰か?" },
           options: [
-            { en: "Brendan Eich", np: "Brendan Eich", jp: "Brendan Eich" },
             { en: "James Gosling", np: "James Gosling", jp: "James Gosling" },
+            { en: "Brendan Eich", np: "Brendan Eich", jp: "Brendan Eich" },
             { en: "Dennis Ritchie", np: "Dennis Ritchie", jp: "Dennis Ritchie" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "James Gosling created Java and Dennis Ritchie created C, which is a common mix-up.", np: "James Gosling ले Java र Dennis Ritchie ले C बनाए, जुन प्रायः भ्रममा पारिन्छ।", jp: "James GoslingはJava、Dennis RitchieはCを作った。よく混同される。" },
         },
         {
@@ -93,11 +93,11 @@ const data = await fetch("/api/users");`,
         {
           question: { en: "What allowed JavaScript to become widely used on servers?", np: "JavaScript लाई server मा व्यापक रूपमा प्रयोग हुन केले सम्भव बनायो?", jp: "JavaScriptがサーバーで広く使われるようになったきっかけは?" },
           options: [
-            { en: "CSS", np: "CSS", jp: "CSS" },
             { en: "Node.js", np: "Node.js", jp: "Node.js" },
+            { en: "CSS", np: "CSS", jp: "CSS" },
             { en: "HTML", np: "HTML", jp: "HTML" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Node.js gave JavaScript a runtime outside the browser in 2009.", np: "Node.js ले 2009 मा JavaScript लाई browser बाहिरको runtime दियो।", jp: "Node.jsが2009年にブラウザ外のランタイムを提供した。" },
         },
       ],
@@ -185,41 +185,41 @@ console.log(result);
         {
           question: { en: "What does the Memory Component store?", np: "Memory Component ले के राख्छ?", jp: "メモリコンポーネントは何を保存するか?" },
           options: [
-            { en: "Variables and functions", np: "Variable र function", jp: "変数と関数" },
-            { en: "Only HTML", np: "HTML मात्र", jp: "HTMLだけ" },
             { en: "Only errors", np: "Error मात्र", jp: "エラーだけ" },
+            { en: "Only HTML", np: "HTML मात्र", jp: "HTMLだけ" },
+            { en: "Variables and functions", np: "Variable र function", jp: "変数と関数" },
           ],
-          correctIndex: 0,
+          correctIndex: 2,
           explanation: { en: "It keeps them as key-value pairs, which is why it is also called the variable environment.", np: "यसले तिनलाई key-value जोडीमा राख्छ, त्यसैले यसलाई variable environment पनि भनिन्छ।", jp: "キーと値の組で保持するため、変数環境とも呼ばれる。" },
         },
         {
           question: { en: "What is another name for the Memory Component?", np: "Memory Component कै अर्को नाम के हो?", jp: "メモリコンポーネントの別名は?" },
           options: [
-            { en: "Event Loop", np: "Event Loop", jp: "イベントループ" },
             { en: "Variable Environment", np: "Variable Environment", jp: "変数環境" },
+            { en: "Event Loop", np: "Event Loop", jp: "イベントループ" },
             { en: "Call Stack", np: "Call Stack", jp: "コールスタック" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "The Code Component has a second name too: the thread of execution.", np: "Code Component को पनि अर्को नाम छ: thread of execution।", jp: "コードコンポーネントにも別名がある: 実行のスレッド。" },
         },
         {
           question: { en: "What does single-threaded mean?", np: "Single-threaded को अर्थ के हो?", jp: "シングルスレッドとはどういう意味か?" },
           options: [
-            { en: "JavaScript has one main thread for executing JS code", np: "JavaScript सँग JS code चलाउने एउटा मुख्य thread हुन्छ", jp: "JSコードを実行するメインスレッドが1つあるということ" },
             { en: "JavaScript cannot use the internet", np: "JavaScript ले internet प्रयोग गर्न सक्दैन", jp: "JavaScriptはインターネットを使えない" },
+            { en: "JavaScript has one main thread for executing JS code", np: "JavaScript सँग JS code चलाउने एउटा मुख्य thread हुन्छ", jp: "JSコードを実行するメインスレッドが1つあるということ" },
             { en: "JavaScript can execute everything at once", np: "JavaScript ले सबै एकैचोटि execute गर्न सक्छ", jp: "JavaScriptはすべてを同時に実行できる" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "One thread runs your JavaScript; the surrounding runtime handles timers and requests separately.", np: "एउटा thread ले तपाईंको JavaScript चलाउँछ; वरिपरिको runtime ले timer र request छुट्टै सम्हाल्छ।", jp: "1つのスレッドがJavaScriptを実行し、周囲のランタイムがタイマーやリクエストを別に処理する。" },
         },
         {
           question: { en: "What does synchronous mean?", np: "Synchronous को अर्थ के हो?", jp: "同期的とはどういう意味か?" },
           options: [
             { en: "Code runs randomly", np: "Code अनियमित रूपमा चल्छ", jp: "コードがランダムに実行される" },
-            { en: "Code normally runs one step at a time in order", np: "Code सामान्यतया क्रमैसँग एक पटकमा एक पाइला चल्छ", jp: "コードは通常、順に1ステップずつ実行される" },
             { en: "Code never waits", np: "Code कहिल्यै कुर्दैन", jp: "コードは決して待たない" },
+            { en: "Code normally runs one step at a time in order", np: "Code सामान्यतया क्रमैसँग एक पटकमा एक पाइला चल्छ", jp: "コードは通常、順に1ステップずつ実行される" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "Each statement finishes before the next one starts.", np: "हरेक statement सकिएपछि मात्र अर्को सुरु हुन्छ।", jp: "各文が終わってから次が始まる。" },
         },
       ],
@@ -323,11 +323,11 @@ var square4 = square(4);
         {
           question: { en: "What is created when a JavaScript program starts?", np: "JavaScript program सुरु हुँदा के बन्छ?", jp: "JavaScriptプログラムが始まると何が作られるか?" },
           options: [
-            { en: "Promise", np: "Promise", jp: "Promise" },
             { en: "Global Execution Context", np: "Global Execution Context", jp: "グローバル実行コンテキスト" },
+            { en: "Promise", np: "Promise", jp: "Promise" },
             { en: "Callback", np: "Callback", jp: "コールバック" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "The GEC is the first context; function contexts are stacked on top of it later.", np: "GEC पहिलो context हो; function context पछि यसमाथि थपिन्छन्।", jp: "GECが最初のコンテキストで、関数のコンテキストは後からその上に積まれる。" },
         },
         {
@@ -343,21 +343,21 @@ var square4 = square(4);
         {
           question: { en: "What happens when a function is called?", np: "Function call हुँदा के हुन्छ?", jp: "関数が呼ばれると何が起こるか?" },
           options: [
-            { en: "A new Execution Context is created", np: "नयाँ Execution Context बन्छ", jp: "新しい実行コンテキストが作られる" },
-            { en: "The Call Stack disappears", np: "Call Stack हराउँछ", jp: "コールスタックが消える" },
             { en: "The browser closes", np: "Browser बन्द हुन्छ", jp: "ブラウザが閉じる" },
+            { en: "The Call Stack disappears", np: "Call Stack हराउँछ", jp: "コールスタックが消える" },
+            { en: "A new Execution Context is created", np: "नयाँ Execution Context बन्छ", jp: "新しい実行コンテキストが作られる" },
           ],
-          correctIndex: 0,
+          correctIndex: 2,
           explanation: { en: "It is pushed onto the call stack and popped again when the function returns.", np: "यो call stack मा push हुन्छ र function return गर्दा फेरि pop हुन्छ।", jp: "コールスタックにpushされ、関数がreturnすると再びpopされる。" },
         },
         {
           question: { en: "In `function square(num) {}` called as `square(2)`, what is `2`?", np: "`function square(num) {}` लाई `square(2)` भनी call गर्दा, `2` के हो?", jp: "`function square(num) {}` を `square(2)` と呼ぶとき、`2` は何か?" },
           options: [
-            { en: "Parameter", np: "Parameter", jp: "仮引数" },
             { en: "Argument", np: "Argument", jp: "実引数" },
+            { en: "Parameter", np: "Parameter", jp: "仮引数" },
             { en: "Variable Environment", np: "Variable Environment", jp: "変数環境" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "`num` is the parameter defined by the function; `2` is the argument passed in.", np: "`num` function ले परिभाषित गरेको parameter हो; `2` पठाइएको argument हो।", jp: "`num` は関数が定義する仮引数、`2` は渡される実引数。" },
         },
         {
@@ -378,11 +378,11 @@ var square4 = square(4);
     {
       question: { en: "Which environment lets JavaScript run outside the browser?", np: "कुन environment ले JavaScript लाई browser बाहिर चलाउन दिन्छ?", jp: "JavaScriptをブラウザの外で動かせる環境はどれか?" },
       options: [
-        { en: "Node.js", np: "Node.js", jp: "Node.js" },
-        { en: "ECMAScript", np: "ECMAScript", jp: "ECMAScript" },
         { en: "npm", np: "npm", jp: "npm" },
+        { en: "ECMAScript", np: "ECMAScript", jp: "ECMAScript" },
+        { en: "Node.js", np: "Node.js", jp: "Node.js" },
       ],
-      correctIndex: 0,
+      correctIndex: 2,
       explanation: { en: "Node.js gave JavaScript a server-side runtime in 2009.", np: "Node.js ले 2009 मा JavaScript लाई server-side runtime दियो।", jp: "Node.jsが2009年にサーバー側のランタイムを与えた。" },
     },
     {
@@ -409,10 +409,10 @@ var square4 = square(4);
       question: { en: "When is a function's execution context removed?", np: "Function को execution context कहिले हट्छ?", jp: "関数の実行コンテキストはいつ取り除かれるか?" },
       options: [
         { en: "When the function is defined", np: "Function परिभाषित हुँदा", jp: "関数が定義されたとき" },
-        { en: "When the function returns", np: "Function return गर्दा", jp: "関数がreturnしたとき" },
         { en: "When the page closes", np: "Page बन्द हुँदा", jp: "ページを閉じたとき" },
+        { en: "When the function returns", np: "Function return गर्दा", jp: "関数がreturnしたとき" },
       ],
-      correctIndex: 1,
+      correctIndex: 2,
       explanation: { en: "It is popped off the call stack as soon as the function finishes.", np: "Function सकिने बित्तिकै यो call stack बाट pop हुन्छ।", jp: "関数が終わるとすぐコールスタックからpopされる。" },
     },
   ],
