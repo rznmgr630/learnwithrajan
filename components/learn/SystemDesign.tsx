@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, SYSTEM_DESIGN_SECTIONS, type SystemDesignConcept } from "@/lib/system-design/concepts";
 import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
 import { SdDiagram } from "@/components/learn/SdDiagram";
@@ -87,7 +88,21 @@ function SectionLabel({ label, color = "accent" }: { label: string; color?: "acc
   );
 }
 
-function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConcept | null; index: number; onClose: () => void }) {
+function ConceptDrawer({
+  concept,
+  index,
+  onClose,
+  previous,
+  next,
+  onNavigate,
+}: {
+  concept: SystemDesignConcept | null;
+  index: number;
+  onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
+}) {
   useEffect(() => {
     if (!concept) return;
     const prev = document.body.style.overflow;
@@ -201,6 +216,7 @@ function ConceptDrawer({ concept, index, onClose }: { concept: SystemDesignConce
             </div>
           </section>
 
+          <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
       </aside>
     </div>
@@ -247,6 +263,12 @@ const orderedConcepts = SYSTEM_DESIGN_SECTIONS.flatMap(
   (section) => SYSTEM_DESIGN_CONCEPTS.filter((c) => c.section === section)
 );
 const positionOf = new Map(orderedConcepts.map((c, i) => [c.id, i + 1]));
+
+function neighbourOf(concept: SystemDesignConcept | null, offset: -1 | 1): LessonNavTarget | null {
+  if (!concept) return null;
+  const neighbour = orderedConcepts[orderedConcepts.findIndex((c) => c.id === concept.id) + offset];
+  return neighbour ? { id: neighbour.id, title: neighbour.title } : null;
+}
 
 export function SystemDesign() {
   const [active, setActive] = useState<SystemDesignConcept | null>(null);
@@ -320,7 +342,15 @@ export function SystemDesign() {
         </div>
       </div>
 
-      <ConceptDrawer concept={active} index={active ? positionOf.get(active.id)! : 0} onClose={() => setActive(null)} />
+      <ConceptDrawer
+        key={active?.id ?? "none"}
+        concept={active}
+        index={active ? positionOf.get(active.id)! : 0}
+        onClose={() => setActive(null)}
+        previous={neighbourOf(active, -1)}
+        next={neighbourOf(active, 1)}
+        onNavigate={(target) => setActive(orderedConcepts.find((c) => c.id === target.id) ?? null)}
+      />
     </>
   );
 }

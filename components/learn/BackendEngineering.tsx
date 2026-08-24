@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import {
   BACKEND_CONCEPTS,
   BACKEND_CATEGORIES,
@@ -74,7 +75,19 @@ function renderBody(text: string) {
   return text.split("\n\n").map((block, i) => renderParagraph(block, i));
 }
 
-function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; onClose: () => void }) {
+function ConceptDrawer({
+  concept,
+  onClose,
+  previous,
+  next,
+  onNavigate,
+}: {
+  concept: BackendConcept | null;
+  onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
+}) {
   useEffect(() => {
     if (!concept) return;
     const prev = document.body.style.overflow;
@@ -151,10 +164,22 @@ function ConceptDrawer({ concept, onClose }: { concept: BackendConcept | null; o
             </h3>
             {renderBody(concept.interviewTip)}
           </section>
+
+          <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
       </aside>
     </div>
   );
+}
+
+const orderedConcepts = BACKEND_CATEGORIES.flatMap((category) =>
+  BACKEND_CONCEPTS.filter((c) => c.category === category),
+);
+
+function neighbourOf(concept: BackendConcept | null, offset: -1 | 1): LessonNavTarget | null {
+  if (!concept) return null;
+  const neighbour = orderedConcepts[orderedConcepts.findIndex((c) => c.id === concept.id) + offset];
+  return neighbour ? { id: neighbour.id, title: neighbour.title } : null;
 }
 
 function ConceptCard({ concept, onClick }: { concept: BackendConcept; onClick: () => void }) {
@@ -268,7 +293,14 @@ export function BackendEngineering() {
         </div>
       </div>
 
-      <ConceptDrawer concept={active} onClose={() => setActive(null)} />
+      <ConceptDrawer
+        key={active?.id ?? "none"}
+        concept={active}
+        onClose={() => setActive(null)}
+        previous={neighbourOf(active, -1)}
+        next={neighbourOf(active, 1)}
+        onNavigate={(target) => setActive(orderedConcepts.find((c) => c.id === target.id) ?? null)}
+      />
     </>
   );
 }

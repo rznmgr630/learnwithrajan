@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export type LessonNavTarget = {
+  /** Identifies the target for callback navigation, e.g. a concept id. */
+  id?: string | number;
   /** Rendered as "Day 3" above the title. Omit for content that isn't day-based. */
   day?: number;
   /** Already-localized, plain-text title for the target. */
