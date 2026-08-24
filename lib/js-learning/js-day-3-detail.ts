@@ -3,242 +3,278 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_3_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Scope is the set of rules that determines where a variable can be accessed. Hoisting is what JavaScript does before it runs your code — it scans ahead and registers every declaration before the first line executes. Together, these two concepts explain most of the \"why did that variable come back undefined?\" moments you will encounter.",
-      np: "Scope ले variable कहाँ access गर्न पाइन्छ भनी निर्धारण गर्छ। Hoisting ले code चलाउनु अगाडि declarations माथि move गर्छ — यी दुई मिलेर 'किन undefined आयो?' भन्ने प्रश्नको उत्तर दिन्छन्।",
-      jp: "スコープは変数のアクセス範囲を決めるルール。ホイスティングはコード実行前に宣言を巻き上げるJS固有の動作。この2つで「なぜundefinedが返るのか」という疑問の多くが解決する。",
+      en: "Operators, conditionals, and loops are the building blocks of every program — the vocabulary you combine to make decisions and repeat work.\n\nToday also covers the three ways to write a function in JavaScript. They all do the same basic job (take input, return output) but disagree on when they're available, and how they handle the word `this` — differences that matter the moment you start passing functions around as callbacks.",
+      np: "Operators, conditionals, loops हरेक program को building blocks हुन्। आज function को तीन तरिका पनि — hoisting र this मा फरक व्यवहार सहित।",
+      jp: "演算子・条件分岐・ループはプログラムの基本構成要素。関数の3種類（宣言・式・アロー）の違いも学ぶ。",
     },
     {
-      en: "In Day 3 we cover:\n• <b>Global, function, and block scope</b> — three nested boundaries a variable can live inside\n• <b>Lexical scoping</b> — why inner functions can always see outer variables\n• <b>Hoisting</b> — what gets moved up, and to what initial value\n• The <b>Temporal Dead Zone (TDZ)</b> — why let/const throw instead of quietly returning undefined",
-      np: "Day 3 मा: global/function/block scope, lexical scoping, hoisting, र Temporal Dead Zone।",
-      jp: "Day 3では: グローバル・関数・ブロックスコープ、レキシカルスコープ、ホイスティング、TDZを学びます。",
+      en: "In Day 2 we cover:\n• <b>Operators</b> — arithmetic, comparison, logical, nullish coalescing, optional chaining\n• <b>Conditionals</b> — if/else, switch, and the guard-clause pattern\n• <b>Loops</b> — for, while, for...of, for...in, and when to reach for each\n• <b>Function types</b> — declaration, expression, and arrow, and how `this` behaves in each",
+      np: "Day 2 मा: operators, conditionals, loops, र function types — this को व्यवहार सहित।",
+      jp: "Day 2では: 演算子、条件分岐、ループ、関数の種類とthisの挙動を学びます。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "EvfRXyKa_GI", title: "Learn JavaScript Hoisting In 5 Minutes" },
+        { type: "youtube", videoId: "W6NZfCO5SIk", title: "JavaScript for Beginners — Full Course" },
       ],
     },
     {
-      title: { en: "The three scope types", np: "तीन scope types", jp: "3種類のスコープ" },
+      title: { en: "Operators", np: "Operators", jp: "演算子" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Scope is about visibility — which variables a piece of code is allowed to see. JavaScript nests three kinds of scope inside each other like Russian dolls: whatever is visible at an outer layer stays visible at every layer inside it, but never the other way round.\n\n• <b>Global scope</b> — the outermost doll; visible from anywhere in the file\n• <b>Function scope</b> — a doll inside the global one; visible only inside that function\n• <b>Block scope</b> — the smallest doll, created by any `{ }` (an `if`, `for`, or bare block); visible only inside that block\n  ↳ `var` ignores this smallest doll entirely — it always escapes to the nearest function (or global) layer",
-            np: "Scope भनेको visibility हो — कुन variable कहाँ देखिन्छ। JavaScript मा तीन scope Russian doll जस्तै nested हुन्छन्: बाहिरको भित्र देखिन्छ, भित्रको बाहिर देखिँदैन।",
-            jp: "スコープは可視性のこと。JavaScriptには入れ子になった3種類のスコープがあり、外側は内側から見えるが、内側は外側から見えない。",
+            en: "Operators are the small symbols (`+`, `===`, `&&`, `??`) that combine values into new values. Most are familiar from math class, but three are worth slowing down on because they trip up beginners: <b>short-circuit evaluation</b>, <b>nullish coalescing (`??`)</b>, and <b>optional chaining (`?.`)</b> — all three exist to write safer code with less nesting.\n\n• <b>`||` (OR)</b> falls back whenever the left side is any falsy value (`0`, `''`, `null`, `undefined`, `NaN`, `false`)\n  ↳ Dangerous for numbers: `count || 10` replaces a real `0` with `10`\n• <b>`??` (nullish coalescing)</b> falls back only when the left side is exactly `null` or `undefined`\n  ↳ Safe for numbers: `count ?? 10` keeps a real `0` as `0`\n• <b>`?.` (optional chaining)</b> stops and returns `undefined` the moment it hits a `null`/`undefined` link in a chain, instead of throwing",
+            np: "|| ले कुनै पनि falsy value (0, '', null, undefined, false) मा fallback गर्छ। ?? ले केवल null/undefined मा मात्र fallback गर्छ — number को लागि सुरक्षित। ?. ले chain बीचमा null भेटिए error नफाली undefined फर्काउँछ।",
+            jp: "||はfalsy値すべてでフォールバック（0が消える危険あり）。??はnull/undefinedのみでフォールバック（数値に安全）。?.はチェーン中でnull/undefinedに当たった時点でエラーなくundefinedを返す。",
           },
         },
         {
           type: "code",
-          title: { en: "Scope nesting — global → function → block (visual)", np: "Scope nesting (visual)", jp: "スコープの入れ子（図）" },
-          code: `┌─ Global scope ─────────────────────────────────────┐
-│  const appName = "MyApp";                           │
-│                                                       │
-│  ┌─ Function scope (outer()) ─────────────────────┐  │
-│  │  const secret = "only mine";                    │  │
-│  │                                                   │  │
-│  │  ┌─ Block scope ( if (true) { ... } ) ────────┐  │  │
-│  │  │  let blockOnly = "block";                  │  │  │
-│  │  │  var notBlock  = "leaks out!";  ← escapes ─┼──┼──┘
-│  │  └─────────────────────────────────────────────┘  │
-│  └───────────────────────────────────────────────────┘
-└───────────────────────────────────────────────────────┘
+          title: { en: "Arithmetic, comparison, logical & nullish operators", np: "मुख्य operators", jp: "主要演算子" },
+          code: `// ── Arithmetic ──────────────────────────────────────────────────────
+5 + 3    // 8
+5 - 3    // 2
+5 * 3    // 15
+5 / 3    // 1.6666...
+5 % 3    // 2  (remainder / modulo)
+5 ** 3   // 125 (exponentiation)
+++x      // pre-increment: increment then return
+x++      // post-increment: return then increment
 
-// Inner layers can read outer variables (arrows point outward, always allowed):
-//   block scope    -> can read appName, secret, blockOnly
-//   function scope -> can read appName, secret (not blockOnly — it's a layer down)
-//   global scope   -> can read appName only`,
-        },
-        {
-          type: "code",
-          title: { en: "Global, function, and block scope", np: "Global, function, block scope", jp: "グローバル・関数・ブロックスコープ" },
-          code: `// ── Global scope — accessible everywhere in the file ──────────────
-const appName = "MyApp";  // global
+// ── Comparison (always returns boolean) ────────────────────────────
+5 > 3    // true
+5 >= 5   // true
+5 == "5" // true  ← coercion (avoid)
+5 === "5"// false ← strict (use this)
+5 !== 3  // true
 
-function doSomething() {
-  console.log(appName);  // ✅ accessible — inner scopes can read outer variables
-}
+// ── Logical ────────────────────────────────────────────────────────
+true && false  // false — both must be truthy
+true || false  // true  — at least one must be truthy
+!true          // false
 
-// ── Function scope — only inside that function ──────────────────────
-function outer() {
-  const secret = "only mine";
-  console.log(secret);    // ✅ works
-}
-// console.log(secret);   // ❌ ReferenceError — not accessible outside
+// Short-circuit evaluation — crucial pattern in React and Node.js
+const user = null;
+const name = user && user.name;   // null  — stops at user (falsy)
+const role = user || "guest";     // "guest" — uses right side when left is falsy
 
-// ── Block scope — only inside the { } block ─────────────────────────
-if (true) {
-  let blockOnly = "block";
-  const alsoBlock = "also block";
-  var notBlock = "leaks out!";  // var ignores blocks
-}
-// console.log(blockOnly);   // ❌ ReferenceError
-// console.log(alsoBlock);   // ❌ ReferenceError
-console.log(notBlock);         // ✅ "leaks out!" — because var is function-scoped
+// ── Nullish coalescing ?? ───────────────────────────────────────────
+// Like || but only falls back when left side is null or undefined
+// (not 0, '', or false which || would also skip)
+const count = 0;
+const a = count || 10;   // 10  — oops, 0 is falsy
+const b = count ?? 10;   // 0   — 0 is not null/undefined
 
-// ── Lexical scope — inner functions access outer variables ──────────
-function makeCounter() {
-  let count = 0;           // outer variable
+// ── Optional chaining ?. ────────────────────────────────────────────
+const city = user?.address?.city;  // undefined — no error if user is null
+const len  = user?.name?.length;   // undefined
 
-  return function () {
-    count++;               // inner function can read AND write outer's 'count'
-    return count;
-  };
-}
-
-const counter = makeCounter();
-counter();  // 1
-counter();  // 2
-counter();  // 3
-// count is not accessible here — it lives inside makeCounter's scope`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "JavaScript uses <b>lexical scoping</b> (also called static scoping): the scope of a variable is determined by <b>where it is written</b> in the source code, not by how or where the function is later called. An inner function always has access to the variables of the outer function that contains it — even after the outer function has already finished running.\n\nThis \"remembers where it was born, not where it's called from\" rule is the entire foundation of closures, which Day 4 builds on directly.",
-            np: "JavaScript ले lexical scoping प्रयोग गर्छ: variable को scope कहाँ लेखिएको छ त्यसले निर्धारण गर्छ — function कसरी call हुन्छ त्यसले होइन। यही Closure को आधार हो।",
-            jp: "JavaScriptはレキシカルスコープを使う。変数のスコープはコードの書かれた場所で決まる（呼び出し方ではない）。これがクロージャの基礎。",
-          },
+// ── Ternary ─────────────────────────────────────────────────────────
+const label = age >= 18 ? "adult" : "minor";`,
         },
       ],
     },
     {
-      title: { en: "Hoisting in detail", np: "Hoisting विस्तारमा", jp: "ホイスティング詳解" },
+      title: { en: "Conditionals", np: "Conditionals", jp: "条件分岐" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every declaration type hoists differently — some get a placeholder value immediately, others get registered but locked. Knowing which is which turns a confusing `ReferenceError` or unexpected `undefined` into something you can predict before you even run the code.",
-            np: "हरेक declaration type फरक तरिकाले hoist हुन्छ — कोहीलाई placeholder value तुरुन्तै मिल्छ, कोही registered तर locked रहन्छ।",
-            jp: "宣言の種類ごとにホイストの仕方が異なる。どれがどうなるか知っていれば、ReferenceErrorや予期しないundefinedを事前に予測できる。",
+            en: "Conditionals let your program take different paths depending on data. `if/else` reads like plain English for a handful of branches; `switch` reads cleaner once you have many exact-match cases; and the <b>guard clause</b> pattern — returning early on invalid input — flattens code that would otherwise nest three or four `if` blocks deep.\n\nThink of guard clauses as a bouncer at the door: reject anyone who doesn't meet the requirements immediately, so the code inside the venue never has to double-check who's allowed to be there.",
+            np: "if/else थोरै branches मा राम्रो। switch धेरै exact-match cases मा सफा। Guard clause ले invalid input लाई सुरुमै return गरी nesting हटाउँछ।",
+            jp: "if/elseは少数の分岐に向く。switchは多数の完全一致に向く。ガード節は無効な入力を早期returnし、ネストを減らす。",
           },
         },
         {
           type: "code",
-          title: { en: "What gets hoisted — and to what value", np: "के hoist हुन्छ र कुन value मा", jp: "何がどの値でホイストされるか" },
-          code: `// ── var is hoisted and initialised to undefined ───────────────────
-console.log(x);  // undefined — NOT a ReferenceError
-var x = 5;
-console.log(x);  // 5
+          title: { en: "if/else, switch and guard clauses", np: "if/else, switch र guard clauses", jp: "if/else・switch・ガード節" },
+          code: `// ── if / else if / else ──────────────────────────────────────────
+const score = 75;
 
-// JavaScript sees this as:
-var x;           // declaration hoisted to top of function scope
-console.log(x);  // undefined
-x = 5;           // assignment stays in place
-console.log(x);  // 5
-
-// ── function declarations are FULLY hoisted (declaration + body) ───
-sayHello();      // ✅ "Hello!" — works before the declaration
-function sayHello() {
-  console.log("Hello!");
+if (score >= 90) {
+  console.log("A");
+} else if (score >= 80) {
+  console.log("B");
+} else if (score >= 70) {
+  console.log("C");
+} else {
+  console.log("F");
 }
 
-// ── let and const are hoisted but sit in the Temporal Dead Zone ────
-// console.log(y);   // ❌ ReferenceError: Cannot access 'y' before initialization
-let y = 10;
-console.log(y);     // 10
+// ── switch — cleaner for many discrete values ─────────────────────
+const day = "Monday";
 
-// ── Function expressions and arrow functions — NOT hoisted ─────────
-// greet("Alice");   // ❌ TypeError: greet is not a function
-const greet = (name) => \`Hello \${name}\`;
-greet("Alice");     // ✅ works after assignment
-
-// ── Class declarations follow let/const rules (TDZ) ───────────────
-// new Animal();  // ❌ ReferenceError: Cannot access 'Animal' before initialization
-class Animal {}
-new Animal();      // ✅`,
-        },
-        {
-          type: "table",
-          caption: { en: "Hoisting summary — what each declaration type hoists to", np: "Hoisting summary", jp: "各宣言のホイスト動作まとめ" },
-          headers: [
-            { en: "Declaration", np: "Declaration", jp: "宣言" },
-            { en: "Hoisted?", np: "Hoist?", jp: "ホイスト?" },
-            { en: "Initial value", np: "Initial value", jp: "初期値" },
-            { en: "TDZ?", np: "TDZ?", jp: "TDZ?" },
-          ],
-          rows: [
-            [
-              { en: "var", np: "var", jp: "var" },
-              { en: "Yes", np: "हो", jp: "はい" },
-              { en: "undefined", np: "undefined", jp: "undefined" },
-              { en: "No", np: "होइन", jp: "なし" },
-            ],
-            [
-              { en: "let", np: "let", jp: "let" },
-              { en: "Yes", np: "हो", jp: "はい" },
-              { en: "uninitialized (TDZ)", np: "TDZ", jp: "未初期化(TDZ)" },
-              { en: "Yes", np: "हो", jp: "あり" },
-            ],
-            [
-              { en: "const", np: "const", jp: "const" },
-              { en: "Yes", np: "हो", jp: "はい" },
-              { en: "uninitialized (TDZ)", np: "TDZ", jp: "未初期化(TDZ)" },
-              { en: "Yes", np: "हो", jp: "あり" },
-            ],
-            [
-              { en: "function declaration", np: "function declaration", jp: "関数宣言" },
-              { en: "Yes (fully)", np: "हो (पूरै)", jp: "はい(完全)" },
-              { en: "function body", np: "function body", jp: "関数本体" },
-              { en: "No", np: "होइन", jp: "なし" },
-            ],
-            [
-              { en: "function expression / arrow", np: "function expression/arrow", jp: "関数式/アロー" },
-              { en: "As variable (var/let/const)", np: "variable जस्तै", jp: "変数と同様" },
-              { en: "undefined or TDZ", np: "undefined या TDZ", jp: "undefinedまたはTDZ" },
-              { en: "Depends on keyword", np: "keyword अनुसार", jp: "キーワード依存" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: { en: "The Temporal Dead Zone (TDZ)", np: "Temporal Dead Zone (TDZ)", jp: "一時的デッドゾーン(TDZ)" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The <b>Temporal Dead Zone</b> is the gap between when a `let` or `const` variable is hoisted (the start of its enclosing block) and when it is actually initialised (the line where it is declared). Touching it during that gap throws a `ReferenceError`.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet — the system knows the parcel exists (it's registered), but it refuses to hand it over until the paperwork (the declaration line) is complete. `var`'s silent `undefined` is the opposite: it hands you an empty box and lets you assume it's fine, which is exactly the kind of bug the TDZ was designed to surface loudly instead.",
-            np: "Temporal Dead Zone एउटा `let` वा `const` variable hoist हुनेदेखि (block को सुरु) initialized हुनेसम्म (declaration line) को period हो। यस बीचमा access गर्दा ReferenceError आउँछ।",
-            jp: "TDZとはlet/constがホイストされた時点（ブロック開始）から実際に初期化される（宣言行）までの期間。この間にアクセスするとReferenceError。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "TDZ example — surprising but predictable once you know the rule", np: "TDZ उदाहरण", jp: "TDZの例" },
-          code: `// This looks like it should work but doesn't
-let x = "global";
-
-function test() {
-  console.log(x);  // ❌ ReferenceError — NOT "global"
-  let x = "local"; // x is in TDZ from the top of this block until here
+switch (day) {
+  case "Monday":
+  case "Tuesday":
+    console.log("Early week");
+    break;        // without break, execution falls through to the next case
+  case "Friday":
+    console.log("Almost weekend");
+    break;
+  default:
+    console.log("Mid week");
 }
 
-test();
+// ── Guard clauses — return early instead of deep nesting ──────────
+// ❌ Deeply nested (hard to read)
+function processOrder(order) {
+  if (order) {
+    if (order.items.length > 0) {
+      if (order.isPaid) {
+        // actual logic buried three levels deep
+        ship(order);
+      }
+    }
+  }
+}
 
-// Why? Because let x inside test() is hoisted to the top of test's block.
-// The x inside test() shadows the outer x immediately —
-// but it's in the TDZ until the let x = "local" line is reached.
-// So the console.log sees the inner (TDZ) x, not the outer "global" x.
-
-// ── The fix: always declare before use ────────────────────────────
-function testFixed() {
-  let x = "local";  // declare first
-  console.log(x);   // ✅ "local"
+// ✅ Guard clauses (easier to read and maintain)
+function processOrder(order) {
+  if (!order) return;                      // bail early
+  if (order.items.length === 0) return;    // bail early
+  if (!order.isPaid) return;              // bail early
+  ship(order);                             // actual logic at top level
 }`,
+        },
+      ],
+    },
+    {
+      title: { en: "Loops", np: "Loops", jp: "ループ" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "All loops repeat a block of code — they differ in <b>what</b> drives the repetition and <b>what</b> they can iterate over.\n\n• <b>for</b> — use when you need a counter or an index\n• <b>while</b> — use when the stopping condition isn't a simple count\n• <b>for...of</b> — use to walk through values in arrays, strings, Sets, and Maps\n  ↳ Gives you the value directly, no index bookkeeping\n• <b>for...in</b> — use to walk through an object's own keys\n  ↳ Not for arrays — it also visits inherited properties, which arrays rarely want",
+            np: "for = counter चाहिँदा। while = simple count नभएको exit condition। for...of = array/string/Set/Map को value। for...in = object को key — array को लागि होइन।",
+            jp: "for＝カウンタが必要な時。while＝単純なカウントでない終了条件。for...of＝配列・文字列・Set・Mapの値。for...in＝オブジェクトのキー（配列には不向き）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "for, while, for...of, for...in — when to use each", np: "Loops — कहिले कुन?", jp: "各ループの使い分け" },
+          code: `// ── for — when you need the index or a counted loop ───────────────
+for (let i = 0; i < 5; i++) {
+  console.log(i);  // 0 1 2 3 4
+}
+
+// ── while — when the exit condition is not a simple counter ────────
+let attempts = 0;
+while (attempts < 3) {
+  attempts++;
+}
+
+// do...while — body always runs at least once
+do {
+  attempts++;
+} while (attempts < 0);  // runs once even though condition is false
+
+// ── for...of — iterate over iterable values (arrays, strings, Sets, Maps)
+const fruits = ["apple", "banana", "cherry"];
+for (const fruit of fruits) {
+  console.log(fruit);     // apple / banana / cherry
+}
+
+// With index (use entries()):
+for (const [i, fruit] of fruits.entries()) {
+  console.log(i, fruit);  // 0 apple / 1 banana / ...
+}
+
+// ── for...in — iterate over object keys (not for arrays!)
+const person = { name: "Alice", age: 30 };
+for (const key in person) {
+  console.log(key, person[key]);  // name Alice / age 30
+}
+// ⚠️ for...in also iterates inherited prototype properties — use hasOwnProperty check
+// or Object.keys() / Object.entries() instead
+
+// ── break and continue ───────────────────────────────────────────
+for (let i = 0; i < 10; i++) {
+  if (i === 3) continue;  // skip 3
+  if (i === 7) break;     // stop at 7
+  console.log(i);         // 0 1 2 4 5 6
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Function types — declaration, expression & arrow", np: "Function types — declaration, expression, arrow", jp: "関数の3種類" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A function is just a named block of reusable code, but JavaScript gives you three syntaxes to create one — and the choice affects two things: whether the function is <b>hoisted</b>, and what `this` means inside it.\n\n• <b>Function declaration</b> — `function greet() {}` — fully hoisted, has its own `this`\n  ↳ Best for top-level, named, reusable utilities\n• <b>Function expression</b> — `const greet = function() {}` — not hoisted, has its own `this`\n  ↳ Useful when you need to pass a function around or create it conditionally\n• <b>Arrow function</b> — `const greet = () => {}` — not hoisted, borrows `this` from where it's written\n  ↳ The safe default for callbacks — no surprise `this`, no `arguments`, can't be used as a constructor",
+            np: "Function declaration पूरै hoisted, आफ्नै this। Function expression hoisted हुँदैन। Arrow function ले this लाई surrounding context बाट borrow गर्छ — callback को लागि default।",
+            jp: "関数宣言は完全にホイストされ独自のthisを持つ。関数式はホイストされない。アロー関数は周囲のthisを継承し、コールバックの安全なデフォルト。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Three ways to write a function and their differences", np: "Function को तीन तरिका र फरक", jp: "3種類の関数とその違い" },
+          code: `// ── Function Declaration — hoisted, named, has its own 'this' ─────
+function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+// You can call greet() BEFORE this line because function declarations are fully hoisted
+
+// ── Function Expression — NOT hoisted, stored in a variable ────────
+const greet2 = function(name) {
+  return \`Hello, \${name}!\`;
+};
+// greet2 is undefined before this line (the variable is hoisted, but not initialised)
+
+// Named function expression — the name 'sayHi' is only available inside the function
+const greet3 = function sayHi(name) {
+  return \`Hello, \${name}!\`;
+};
+
+// ── Arrow Function — concise syntax, no own 'this', not constructable ─
+const greet4 = (name) => \`Hello, \${name}!\`;  // implicit return for single expression
+
+const add = (a, b) => a + b;
+
+const square = n => n * n;  // parens optional for single param
+
+const makeUser = (name) => ({           // wrap in () to return an object literal
+  name,
+  createdAt: new Date(),
+});
+
+// Multi-line arrow function needs explicit return
+const greet5 = (name) => {
+  const message = \`Hello, \${name}!\`;
+  return message;
+};
+
+// ── Key difference: 'this' binding ─────────────────────────────────
+const timer = {
+  seconds: 0,
+
+  startRegular: function() {
+    // function() has its own 'this' — but inside setInterval, 'this' is lost
+    setInterval(function() {
+      this.seconds++;          // ❌ 'this' is undefined (strict) or window (non-strict)
+    }, 1000);
+  },
+
+  startArrow: function() {
+    // Arrow function captures 'this' from the surrounding context (startArrow's this)
+    setInterval(() => {
+      this.seconds++;          // ✅ 'this' is the timer object
+    }, 1000);
+  },
+};`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
-            {
-              en: "<b>The TDZ is a safety net, not a punishment.</b> It exists specifically to catch the moment you reference a variable before you meant to assign it — a mistake `var` would hide behind a quiet `undefined`.",
-              np: "TDZ सजाय होइन, सुरक्षा जाल हो — variable assign गर्नु अघि accidentally access गर्ने bug पत्ता लगाउन बनाइएको हो।",
-              jp: "TDZは罰ではなく安全網。意図せず変数を先に参照してしまうミスを検出するために存在する。",
-            },
+            { en: "<b>Function declarations</b> are hoisted — you can call them before they appear in the file. Use them for named, reusable utility functions at the top level of a module.", np: "Function declaration hoist हुन्छ। Module को top-level utility function का लागि प्रयोग गर्नुहोस्।", jp: "関数宣言はホイストされる。モジュールのトップレベルのユーティリティ関数に使う。" },
+            { en: "<b>Function expressions</b> are useful when you need to pass a function as an argument or conditionally create one.", np: "Function expression argument पठाउन वा conditionally create गर्न उपयोगी।", jp: "関数式は引数として渡すときや条件付きで生成するときに便利。" },
+            { en: "<b>Arrow functions</b> should be your default for callbacks and inline functions. They do not have their own `this`, `arguments`, or `prototype`, which avoids common pitfalls in callbacks.", np: "Arrow function callback को लागि default — आफ्नै this, arguments, prototype छैन।", jp: "アロー関数はコールバックのデフォルト。this・arguments・prototypeを持たないためコールバックで安全。" },
           ],
         },
       ],
@@ -246,27 +282,27 @@ function testFixed() {
   ],
   faq: [
     {
-      question: { en: "What is lexical scope?", np: "Lexical scope के हो?", jp: "レキシカルスコープとは？" },
+      question: { en: "When should I use an arrow function vs a regular function?", np: "Arrow function र regular function कहिले?", jp: "アロー関数と通常関数の使い分けは？" },
       answer: {
-        en: "Lexical scope means a function's variable access is determined by where the function is defined in the source code, not where it is called from. A function defined inside another function always has access to the outer function's variables, no matter where it is later called. This is different from dynamic scope (where scope depends on the call stack) — JavaScript always uses lexical scope.",
-        np: "Lexical scope भनेको function को variable access कहाँ define गरिएको छ त्यसले निर्धारण गर्छ — कहाँबाट call हुन्छ त्यसले होइन। Inner function ले outer function को variables हमेशा access गर्न सक्छ। JS हमेशा lexical scope प्रयोग गर्छ।",
-        jp: "レキシカルスコープとは、関数の変数アクセスが呼び出し元ではなく、定義された場所で決まること。内側の関数は常に外側の変数にアクセスできる。JSは常にレキシカルスコープを使う。",
+        en: "Use arrow functions for callbacks, array methods, and any place where you want to inherit `this` from the surrounding context. Use regular functions (declaration or expression) when you need the function to have its own `this` — for example, object methods where `this` refers to the object, or constructor functions. Never use arrow functions as constructors (they throw a TypeError) or as object methods when you need `this` to refer to the object.",
+        np: "Callback, array methods, surrounding this inherit गर्न arrow function। Object methods जहाँ this ले object नै बुझाउनु पर्छ त्यहाँ regular function। Arrow function constructor भएर हुँदैन।",
+        jp: "コールバック・配列メソッド・周囲のthisを継承したい場合はアロー関数。オブジェクトメソッドやコンストラクタなどthisが自分のものを指す必要がある場合は通常関数。",
       },
     },
     {
-      question: { en: "Why does var leak out of blocks?", np: "var किन block बाहिर leak हुन्छ?", jp: "varがブロックからリークする理由は？" },
+      question: { en: "What is the difference between break and continue?", np: "break र continue मा के फरक?", jp: "breakとcontinueの違いは？" },
       answer: {
-        en: "var is function-scoped, not block-scoped. JavaScript had only function scope when it was first designed — the concept of block scope (using let and const) was added in ES6 (2015). Before that, the only way to create a new scope was with a function. This is why var ignores if/for/while blocks and is scoped to the nearest enclosing function. It is also why old code used IIFEs (Immediately Invoked Function Expressions) to create private scope.",
-        np: "var function-scoped हो, block-scoped होइन। JavaScript सुरुमा केवल function scope थियो — block scope (let/const) ES6 (2015) मा थपियो। त्यसैले var if/for/while blocks ignore गर्छ।",
-        jp: "varは関数スコープでありブロックスコープではない。ブロックスコープ(let/const)はES6(2015)で追加。それ以前はIIFEでスコープを作っていた。",
+        en: "`break` exits the loop entirely — no more iterations run. `continue` skips the rest of the current iteration and moves to the next one. Both work in `for`, `while`, and `for...of` loops. In a `switch` statement, `break` exits the switch block — without it, execution falls through to the next case.",
+        np: "`break` loop पूरै छोड्छ। `continue` current iteration मात्र skip गरेर अर्को iteration मा जान्छ।",
+        jp: "`break`はループを完全に終了。`continue`は現在のイテレーションをスキップして次へ。switchでは`break`がないとfall-throughが起きる。",
       },
     },
     {
-      question: { en: "How does JavaScript decide which variable to use when names are duplicated across scopes?", np: "same नाम बहु scope मा भएमा JS ले कुन variable छान्छ?", jp: "同名の変数が複数のスコープにある場合、JSはどれを選ぶ？" },
+      question: { en: "Why does `count || 10` behave differently from `count ?? 10` when count is 0?", np: "count 0 हुँदा `||` र `??` किन फरक व्यवहार गर्छ?", jp: "countが0のとき`||`と`??`はなぜ異なる動作をする？" },
       answer: {
-        en: "JavaScript looks up the scope chain starting from the innermost scope and stops at the first match — this is called shadowing. If a block declares its own `x`, any code inside that block sees the block's `x`, not the outer one, even though the outer `x` still exists and is untouched. Once you leave that inner block, the outer `x` becomes visible again. This is exactly what happens in the TDZ example above: the inner `let x` shadows the outer `x` for the entire function, even before the inner one is assigned.",
-        np: "JS सबैभन्दा भित्री scope बाट खोज्दै बाहिर जान्छ र पहिलो मिल्ने variable प्रयोग गर्छ — यसलाई shadowing भनिन्छ।",
-        jp: "JSは最も内側のスコープから外側へスコープチェーンを探索し、最初に一致した変数を使う。これをシャドーイングと呼ぶ。",
+        en: "`||` falls back to the right side whenever the left side is any falsy value — and `0` is falsy in JavaScript, so `0 || 10` evaluates to `10`, silently discarding a legitimate value. `??` only falls back when the left side is exactly `null` or `undefined`, so `0 ?? 10` correctly evaluates to `0`. Whenever `0`, `''`, or `false` are valid values you want to keep, prefer `??` over `||`.",
+        np: "`||` ले कुनै पनि falsy value मा fallback गर्छ — 0 पनि falsy भएकाले `0 || 10` ले 10 दिन्छ। `??` ले केवल null/undefined मा मात्र fallback गर्छ — `0 ?? 10` ले 0 नै दिन्छ।",
+        jp: "`||`はfalsy値すべてでフォールバックする（0もfalsyなので`0 || 10`は10になる）。`??`はnull/undefinedの時のみフォールバックするため`0 ?? 10`は0のまま。",
       },
     },
   ],

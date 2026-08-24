@@ -3,291 +3,248 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_20_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Performance optimization in JavaScript comes down to doing less work, doing it less often, or doing it on a different thread. Debounce and throttle reduce how often a function runs. Memoization avoids repeating expensive calculations. Web Workers move heavy CPU work off the main thread so the UI stays responsive.",
-      np: "JavaScript performance optimization: कम काम गर्नु, कम पटक गर्नु, वा अर्को thread मा गर्नु। Debounce र throttle function run हुने frequency reduce गर्छ। Memoization expensive calculations repeat गर्न रोक्छ। Web Workers ले heavy CPU work main thread बाट सारेर UI responsive राख्छ।",
-      jp: "JavaScriptのパフォーマンス最適化: より少なく・より少ない頻度で・別スレッドで実行する。デバウンスとスロットルは実行頻度を下げる。メモ化は高コストな計算の繰り返しを避ける。Web Workersは重いCPU処理をメインスレッドから分離してUIを応答可能に保つ。",
+      en: "JavaScript manages memory automatically using garbage collection — you don't call `free()` like in C. But automatic does not mean perfect. Memory leaks happen when objects stay in memory longer than they should, and they are one of the hardest categories of bugs to find because they don't cause an immediate crash.",
+      np: "JavaScript ले garbage collection प्रयोग गरेर automatically memory manage गर्छ — C जस्तो `free()` call गर्नु पर्दैन। तर automatic भनेको perfect होइन। Memory leaks तब हुन्छ जब objects लाई आवश्यकता भन्दा बढी समय memory मा राखिन्छ — immediate crash नहुनाले find गर्न सबैभन्दा गाह्रो bugs मध्ये एक।",
+      jp: "JavaScriptはガベージコレクションで自動的にメモリを管理する。しかし自動=完璧ではない。オブジェクトが必要以上に長くメモリに残るとメモリリークが発生する。即座にクラッシュしないため発見が最も難しいバグの一つ。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "cjIswDCKgu0", title: "Debounce vs Throttle — JavaScript Interview Questions" },
+        { type: "youtube", videoId: "LaxbdIyBkL0", title: "JavaScript Memory Management & Garbage Collection" },
       ],
     },
     {
-      title: { en: "Debounce", np: "Debounce", jp: "デバウンス" },
+      title: { en: "Stack vs Heap", np: "Stack vs Heap", jp: "スタックとヒープ" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Debounce delays execution until there has been a quiet period — a gap with no new calls. If a new call arrives before the timer fires, the timer resets. The function only runs after the user **stops** triggering it. Use debounce for events where only the final value matters: search-as-you-type, window resize, saving draft text.",
-            np: "Debounce ले execution delay गर्छ जबसम्म quiet period हुँदैन — नयाँ calls नआएसम्म। Timer fire हुनु अगाडि नयाँ call आयो भने timer reset हुन्छ। User **रोकेपछि** मात्र function run हुन्छ। Search-as-you-type, window resize, draft save का लागि।",
-            jp: "デバウンスは一定の静止期間が経過するまで実行を遅らせる。新しい呼び出しが来るとタイマーリセット。ユーザーが**止めた後**に一度だけ実行。検索入力・リサイズ・下書き保存に使う。",
+            en: "JavaScript uses two memory regions. The **stack** is fast and small — it stores primitive values (`number`, `string`, `boolean`, etc.) and function call frames. It is automatically managed as functions enter and exit. The **heap** is large and slower — it stores objects, arrays, functions, and closures. Heap memory is managed by the garbage collector.",
+            np: "JavaScript दुईवटा memory regions प्रयोग गर्छ। **Stack** fast र small छ — primitive values र function call frames store गर्छ। Functions enter/exit हुँदा automatically manage हुन्छ। **Heap** large र slower छ — objects, arrays, functions, closures store गर्छ। Heap memory garbage collector ले manage गर्छ।",
+            jp: "JavaScriptは2つのメモリ領域を使用。**スタック**は高速・小容量 — プリミティブ値と関数呼び出しフレームを格納。関数の出入りで自動管理。**ヒープ**は大容量・低速 — オブジェクト・配列・関数・クロージャを格納。GCが管理。",
           },
         },
         {
           type: "code",
-          title: { en: "Debounce implementation and usage", np: "Debounce implementation र usage", jp: "デバウンスの実装と使用例" },
-          code: `// ── debounce implementation ────────────────────────────────────────
-function debounce(fn, delayMs) {
-  let timerId;
+          title: { en: "What goes where in memory", np: "Memory मा के कहाँ जान्छ", jp: "メモリのどこに何が格納されるか" },
+          code: `// ── Stack: primitive values ────────────────────────────────────────
+let a = 42;          // stored on the stack — copy semantics
+let b = a;           // b gets its OWN copy of 42
+b = 100;
+console.log(a);      // 42 — a is unchanged (primitives copy by value)
 
-  return function (...args) {
-    clearTimeout(timerId);   // cancel any pending call
-    timerId = setTimeout(() => {
-      fn.apply(this, args);  // call the original function after the quiet period
-    }, delayMs);
+let str = "hello";   // small strings are often stored on the stack or interned
+
+// ── Heap: objects and reference types ─────────────────────────────
+let obj1 = { x: 1 };  // OBJECT stored on the heap; obj1 is a REFERENCE (pointer) on the stack
+let obj2 = obj1;       // obj2 gets a copy of the REFERENCE, not the object
+obj2.x = 99;
+console.log(obj1.x);   // 99 — both variables point to the SAME object
+
+// ── How garbage collection decides what to free ───────────────────
+let user = { name: "Alice" };  // heap object — referenced by 'user'
+user = null;                   // no more references → eligible for GC
+
+function createClosure() {
+  const bigData = new Array(1000000).fill(0);  // on the heap
+  return function() {
+    return bigData.length;  // closure keeps bigData alive!
   };
 }
 
-// ── Usage: search input that only fires when typing stops ──────────
-const searchInput = document.querySelector("#search");
-
-const debouncedSearch = debounce(async (query) => {
-  if (!query.trim()) return;
-  const results = await fetchSearchResults(query);
-  renderResults(results);
-}, 300);  // wait 300ms after the last keystroke
-
-searchInput.addEventListener("input", (e) => debouncedSearch(e.target.value));
-// User types "java" quickly → only ONE request, after they stop typing
-
-// ── With leading edge — run immediately, then ignore for delay ─────
-function debounceLeading(fn, delayMs) {
-  let timerId;
-  let lastArgs;
-
-  return function (...args) {
-    lastArgs = args;
-    if (!timerId) {
-      fn.apply(this, args);  // execute immediately on first call
-    }
-    clearTimeout(timerId);
-    timerId = setTimeout(() => {
-      timerId = null;
-    }, delayMs);
-  };
-}
-
-// ── Built-in alternatives ─────────────────────────────────────────
-// lodash debounce (battle-tested, more options):
-// import { debounce } from "lodash";
-// const debouncedFn = debounce(fn, 300, { leading: true, trailing: false });`,
+const fn = createClosure();  // bigData is NOT GC'd — fn holds a reference
+fn = null;                   // NOW bigData can be GC'd — no more references`,
         },
       ],
     },
     {
-      title: { en: "Throttle", np: "Throttle", jp: "スロットル" },
+      title: { en: "Garbage collection — Mark and Sweep", np: "Garbage collection — Mark and Sweep", jp: "ガベージコレクション — マークアンドスイープ" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Throttle guarantees a function runs at most once per time window — no matter how many times it is called. Unlike debounce (which waits for quiet), throttle fires immediately on the first call and then ignores calls until the window resets. Use throttle for continuous events where you need periodic updates: scroll position tracking, mouse move, real-time analytics.",
-            np: "Throttle ले guarantee गर्छ कि function time window मा maximum एक पटक run हुन्छ। Debounce (quiet को लागि wait) भन्दा फरक — throttle पहिलो call मा तुरन्त fire हुन्छ र window reset नभइकन calls ignore गर्छ। Scroll, mouse move, real-time analytics का लागि।",
-            jp: "スロットルは時間ウィンドウ内に関数が最大一度しか実行されないことを保証する。デバウンス（静止を待つ）と異なり、最初の呼び出しで即座に実行し、ウィンドウがリセットするまで無視する。スクロール・マウス移動・リアルタイム分析に使う。",
+            en: "Modern JavaScript engines use a **mark-and-sweep** algorithm. Starting from 'roots' (global variables, current call stack, closures), the GC marks every object it can reach by following references. Any object that was NOT marked is unreachable — meaning no code can ever access it — so its memory is freed. This is why circular references are no longer a problem in modern JS: if two objects only reference each other but neither is reachable from a root, they are both collected.",
+            np: "Modern JS engines **mark-and-sweep** algorithm प्रयोग गर्छन्। 'Roots' (global variables, current call stack, closures) बाट सुरु गरेर GC ले references follow गर्दै reach गर्न सकिने हरेक object mark गर्छ। Mark नभएका objects unreachable हुन् — कुनै code ले access गर्न सक्दैन — त्यसैले तिनीहरूको memory free हुन्छ।",
+            jp: "モダンJSエンジンは**マークアンドスイープ**アルゴリズムを使用。ルート（グローバル変数・コールスタック・クロージャ）から参照をたどって到達できる全オブジェクトをマーク。マークされないオブジェクトは到達不能→メモリを解放。循環参照もルートから辿れなければ収集される。",
           },
         },
         {
           type: "code",
-          title: { en: "Throttle implementation and the key difference from debounce", np: "Throttle vs debounce — key difference", jp: "スロットルの実装とデバウンスとの違い" },
-          code: `// ── throttle implementation ────────────────────────────────────────
-function throttle(fn, intervalMs) {
-  let lastCallTime = 0;
-
-  return function (...args) {
-    const now = Date.now();
-    if (now - lastCallTime >= intervalMs) {
-      lastCallTime = now;
-      return fn.apply(this, args);
-    }
-    // Otherwise ignore this call — too soon
-  };
+          title: { en: "The four classic memory leak patterns", np: "चार classic memory leak patterns", jp: "4つの典型的なメモリリークパターン" },
+          code: `// ── Leak 1: Forgotten event listeners ────────────────────────────
+// ❌ The element is removed from the DOM but the listener keeps it alive
+function setup() {
+  const btn = document.querySelector("#btn");
+  btn.addEventListener("click", handleClick);
+  // If btn is later removed from DOM without removing the listener,
+  // btn stays in memory because the event system holds a reference
 }
 
-// ── Usage: throttled scroll handler ───────────────────────────────
-const throttledOnScroll = throttle(() => {
-  const scrolled = window.scrollY;
-  updateProgressBar(scrolled);
-  loadMoreIfNearBottom(scrolled);
-}, 100);  // run at most every 100ms
+// ✅ Always remove listeners when no longer needed
+function setup() {
+  const btn = document.querySelector("#btn");
+  btn.addEventListener("click", handleClick);
 
-window.addEventListener("scroll", throttledOnScroll);
-// Even if scroll fires 60× per second, updateProgressBar runs max 10× per second
-
-// ── Debounce vs throttle — the mental model ────────────────────────
-// Imagine a user scrolling for 5 seconds:
-
-// Debounce (300ms): runs ONCE — 300ms after they STOP scrolling
-// Throttle (300ms): runs ~17× — once every 300ms WHILE they scroll
-
-// ── When to use which ─────────────────────────────────────────────
-//
-// DEBOUNCE — wait for the user to finish:
-//   ✓ Search input (only fetch when they stop typing)
-//   ✓ Form auto-save (save after they pause editing)
-//   ✓ Window resize (recalculate layout after resize ends)
-//   ✓ Button that should not be double-clicked
-//
-// THROTTLE — allow periodic updates during continuous action:
-//   ✓ Scroll event (update sticky header, progress bar, infinite scroll)
-//   ✓ Mouse move (drag and drop, cursor tracking)
-//   ✓ Real-time analytics (sample events, not every mousemove)
-//   ✓ Rate-limiting API calls (max N per second)`,
-        },
-      ],
-    },
-    {
-      title: { en: "Memoization", np: "Memoization", jp: "メモ化" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Cache function results for the same inputs", np: "Same inputs का लागि function results cache गर्नु", jp: "同じ入力に対する関数結果をキャッシュ" },
-          code: `// ── Simple memoization for pure functions ─────────────────────────
-function memoize(fn) {
-  const cache = new Map();
-
-  return function (...args) {
-    const key = JSON.stringify(args);  // serialize args as cache key
-
-    if (cache.has(key)) {
-      return cache.get(key);           // return cached result
-    }
-
-    const result = fn.apply(this, args);
-    cache.set(key, result);
-    return result;
-  };
+  return () => btn.removeEventListener("click", handleClick);  // cleanup
 }
 
-// ── Classic example: Fibonacci ─────────────────────────────────────
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
+// ── Leak 2: Timers that never clear ──────────────────────────────
+// ❌ setInterval keeps closure alive forever
+function startPolling() {
+  const heavyData = loadLargeDataset();
+  setInterval(() => {
+    process(heavyData);  // heavyData is captured in the closure — never GC'd
+  }, 1000);
 }
 
-fibonacci(40);  // ~1 billion operations — SLOW
+// ✅ Store the timer ID and clear it when done
+let timerId;
+function startPolling() {
+  const heavyData = loadLargeDataset();
+  timerId = setInterval(() => process(heavyData), 1000);
+}
+function stopPolling() {
+  clearInterval(timerId);
+}
 
-const memoFib = memoize(function fib(n) {
-  if (n <= 1) return n;
-  return memoFib(n - 1) + memoFib(n - 2);
-});
+// ── Leak 3: Growing caches with no eviction ───────────────────────
+// ❌ Cache grows unbounded — objects never removed
+const cache = {};
+function rememberResult(key, fn) {
+  if (!cache[key]) cache[key] = fn();
+  return cache[key];
+}
 
-memoFib(40);  // each value computed once, then cached — FAST
+// ✅ Use a Map with a max size, or WeakMap for object keys
+const MAX = 1000;
+const lruCache = new Map();
+function rememberResult(key, fn) {
+  if (lruCache.has(key)) return lruCache.get(key);
+  const value = fn();
+  lruCache.set(key, value);
+  if (lruCache.size > MAX) {
+    // Delete the oldest entry (Maps preserve insertion order)
+    lruCache.delete(lruCache.keys().next().value);
+  }
+  return value;
+}
 
-// ── Real-world use: expensive calculations ─────────────────────────
-const parseMarkdown = memoize((text) => {
-  // Parsing markdown is expensive — cache the result
-  return heavyMarkdownParser(text);
-});
+// ── Leak 4: Closures holding large data unnecessarily ────────────
+// ❌ smallValue captures the whole bigData array via closure
+function processData(bigData) {
+  const smallValue = bigData[0];
+  setTimeout(() => {
+    console.log(bigData);  // whole bigData lives in memory until timeout fires
+  }, 10000);
+}
 
-// React's useMemo and useCallback are memoization:
-// useMemo(() => expensiveCalc(a, b), [a, b])  — recalculates only when a or b changes
-// useCallback(fn, [deps])  — returns the same function reference until deps change
-
-// ── Memoization with WeakMap (for object arguments, GC-friendly) ───
-function memoizeByObject(fn) {
-  const cache = new WeakMap();
-  return function (obj) {
-    if (cache.has(obj)) return cache.get(obj);
-    const result = fn(obj);
-    cache.set(obj, result);
-    return result;
-  };
+// ✅ Extract only what you need
+function processData(bigData) {
+  const firstItem = bigData[0];
+  bigData = null;            // explicitly allow GC (within this function scope)
+  setTimeout(() => {
+    console.log(firstItem);  // only firstItem is kept alive
+  }, 10000);
 }`,
         },
       ],
     },
     {
-      title: { en: "Web Workers — off the main thread", np: "Web Workers — main thread बाट बाहिर", jp: "Web Workers — メインスレッドから外へ" },
+      title: { en: "WeakMap and WeakSet — GC-friendly references", np: "WeakMap र WeakSet — GC-friendly references", jp: "WeakMapとWeakSet — GCに優しい参照" },
       blocks: [
         {
           type: "code",
-          title: { en: "Moving heavy CPU work to a background thread", np: "Heavy CPU work background thread मा सार्नु", jp: "重いCPU処理をバックグラウンドスレッドへ" },
-          code: `// ── The problem: blocking the main thread ─────────────────────────
-// Heavy computation freezes the UI — clicks are not responded to
-function sortMillion() {
-  const arr = Array.from({ length: 1_000_000 }, () => Math.random());
-  arr.sort((a, b) => a - b);  // takes ~500ms — UI is unresponsive!
-  return arr;
+          title: { en: "Storing metadata without preventing garbage collection", np: "GC prevent नगरी metadata store गर्नु", jp: "GCを妨げずにメタデータを格納する" },
+          code: `// ── Regular Map — holds strong references ────────────────────────
+const map = new Map();
+let user = { name: "Alice" };
+map.set(user, { clicks: 5 });
+user = null;
+// Even though user is null, { name: "Alice" } is NOT garbage collected
+// because the Map still holds a reference to it as a key
+
+// ── WeakMap — holds WEAK references ──────────────────────────────
+const weakMap = new WeakMap();
+let user2 = { name: "Bob" };
+weakMap.set(user2, { clicks: 3 });
+user2 = null;
+// { name: "Bob" } CAN be garbage collected — WeakMap does not prevent GC
+// When user2 is GC'd, its WeakMap entry disappears automatically
+
+// ── WeakMap use cases ────────────────────────────────────────────
+// 1. Attaching metadata to objects without memory leaks:
+const domCache = new WeakMap();
+
+function getMetadata(element) {
+  if (!domCache.has(element)) {
+    domCache.set(element, { created: Date.now(), clicks: 0 });
+  }
+  return domCache.get(element);
+}
+// When the DOM element is removed, its metadata is automatically GC'd
+
+// 2. Private data (before class private fields existed):
+const _private = new WeakMap();
+
+class Counter {
+  constructor() {
+    _private.set(this, { count: 0 });
+  }
+  increment() {
+    _private.get(this).count++;
+  }
+  get value() {
+    return _private.get(this).count;
+  }
 }
 
-// ── Solution: Web Worker runs on a separate thread ─────────────────
+// ── WeakMap limitations ───────────────────────────────────────────
+// Keys MUST be objects (not primitives)
+// Not iterable — no forEach, no .keys(), no .values()
+// Cannot check .size (GC timing is non-deterministic)
 
-// worker.js — runs in a background thread
-self.addEventListener("message", (event) => {
-  const { data, type } = event.data;
+// ── WeakSet — like a Set but with weak references ─────────────────
+const seen = new WeakSet();
 
-  if (type === "sort") {
-    const sorted = data.sort((a, b) => a - b);  // does NOT block the UI thread
-    self.postMessage({ type: "sortResult", result: sorted });
-  }
-});
+function processOnce(obj) {
+  if (seen.has(obj)) return;
+  seen.add(obj);
+  doProcess(obj);
+  // When obj is GC'd, the WeakSet entry is automatically removed
+}
 
-// main.js — UI thread
-const worker = new Worker("/worker.js");
+// ── WeakRef — a direct weak reference to an object ────────────────
+const cache = new Map();
 
-// Send data to the worker
-worker.postMessage({
-  type: "sort",
-  data: Array.from({ length: 1_000_000 }, () => Math.random()),
-});
+function storeInCache(key, value) {
+  cache.set(key, new WeakRef(value));
+}
 
-// Receive result asynchronously — UI stays responsive while worker runs
-worker.onmessage = (event) => {
-  if (event.data.type === "sortResult") {
-    console.log("Sorted!", event.data.result.length);
-  }
-};
-
-worker.onerror = (err) => console.error("Worker error:", err);
-
-// Terminate the worker when done:
-worker.terminate();
-
-// ── Transferable objects — zero-copy large data ────────────────────
-// Transferring a large ArrayBuffer copies it by default (expensive for huge data).
-// Use transfer to move ownership (zero-copy):
-const buffer = new ArrayBuffer(1024 * 1024 * 100);  // 100MB
-worker.postMessage({ buffer }, [buffer]);  // transfer, not copy — buffer is now "neutered"
-
-// ── Inline worker using a Blob URL ────────────────────────────────
-const workerCode = \`
-  self.onmessage = ({ data }) => {
-    const result = data.reduce((a, b) => a + b, 0);
-    self.postMessage(result);
-  };
-\`;
-const blob   = new Blob([workerCode], { type: "application/javascript" });
-const url    = URL.createObjectURL(blob);
-const worker = new Worker(url);`,
+function getFromCache(key) {
+  const ref = cache.get(key);
+  return ref?.deref();  // returns the object or undefined if it was GC'd
+}`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between debounce and throttle?", np: "Debounce र throttle मा के फरक?", jp: "デバウンスとスロットルの違いは？" },
+      question: { en: "How do I find memory leaks in JavaScript?", np: "JavaScript मा memory leaks कसरी find गर्ने?", jp: "JavaScriptのメモリリークを見つけるには？" },
       answer: {
-        en: "Debounce fires ONCE after a quiet period — the function runs only when the user stops triggering it. If new calls keep coming, the timer keeps resetting. Throttle fires at a REGULAR INTERVAL regardless of how many calls come in — it executes immediately on the first call, then once per interval window. Rule of thumb: use debounce when you only care about the final value (search input, auto-save). Use throttle when you need periodic updates during continuous activity (scroll handler, drag position).",
-        np: "Debounce quiet period पछि एक पटक fire हुन्छ — user stop गरेपछि। New calls आउँदै रह्यो भने timer reset हुँदै रहन्छ। Throttle REGULAR INTERVAL मा fire हुन्छ — पहिलो call मा तुरन्त, त्यसपछि हर interval मा एक पटक। Search/save = debounce। Scroll/drag = throttle।",
-        jp: "デバウンスは静止後に一度だけ実行。新しい呼び出しが来るとタイマーリセット。スロットルは一定間隔で実行 — 最初の呼び出しで即座に、以降は一定間隔で一度ずつ。検索/自動保存=デバウンス。スクロール/ドラッグ=スロットル。",
+        en: "Chrome DevTools Memory tab is your main tool. Take a heap snapshot before and after a suspected leak (e.g. open and close a modal 10 times), compare them, and look for objects that are growing. The Allocation Instrumentation on Timeline shows memory allocations over time — a steadily growing heap line (no drops after GC) indicates a leak. Also watch the Performance Monitor panel for JS heap size growing continuously. Common culprits: event listeners on detached DOM nodes, intervals/timeouts never cleared, closures over large data.",
+        np: "Chrome DevTools Memory tab मुख्य tool हो। Suspected leak भन्दा पहिले र पछि heap snapshot लिनुहोस् (modal 10 पटक open/close), compare गर्नुहोस्, growing objects हेर्नुहोस्। Allocation Instrumentation on Timeline ले time over memory allocations देखाउँछ। Common culprits: detached DOM nodes मा event listeners, clear नभएका intervals/timeouts, large data माथि closures।",
+        jp: "Chrome DevToolsのMemoryタブが主なツール。疑わしいリーク前後でヒープスナップショットを取り（モーダルを10回開閉など）比較して増加するオブジェクトを探す。Allocation Instrumentationでメモリ使用量の推移を確認。ヒープが継続的に増加（GC後も下がらない）はリークの兆候。主な原因：切り離されたDOMノードへのリスナー・未クリアのタイマー・大量データへのクロージャ。",
       },
     },
     {
-      question: { en: "Can Web Workers access the DOM?", np: "Web Workers ले DOM access गर्न सक्छन्?", jp: "Web WorkersはDOMにアクセスできるか？" },
+      question: { en: "What is the difference between WeakMap and Map?", np: "WeakMap र Map मा के फरक?", jp: "WeakMapとMapの違いは？" },
       answer: {
-        en: "No. Web Workers run in a completely separate context — they have no access to `document`, `window`, `localStorage`, or any DOM API. They can only communicate with the main thread via `postMessage()` and `onmessage`. This is intentional: if workers could modify the DOM concurrently, you would need to synchronize DOM access across threads, which would be extremely complex. Workers are for pure computation — number crunching, sorting, parsing, image processing.",
-        np: "होइन। Web Workers पूरै separate context मा run हुन्छन् — `document`, `window`, `localStorage`, वा कुनै DOM API access छैन। `postMessage()` र `onmessage` मार्फत मात्र communicate गर्न सक्छन्। Workers pure computation का लागि — number crunching, sorting, parsing, image processing।",
-        jp: "いいえ。Web Workersは完全に独立したコンテキストで実行 — `document`・`window`・DOM APIへのアクセスなし。`postMessage()`と`onmessage`でのみメインスレッドと通信できる。Workersは純粋な計算用 — 数値計算・ソート・パース・画像処理。",
-      },
-    },
-    {
-      question: { en: "When should I use memoization?", np: "Memoization कहिले use गर्ने?", jp: "メモ化はいつ使うべきか？" },
-      answer: {
-        en: "Memoize when: (1) the function is pure — same inputs always produce the same output, with no side effects; (2) the function is called repeatedly with the same arguments; (3) the function is genuinely expensive — heavy computation, parsing, transformation. Do NOT memoize: functions that read from external state (current time, random numbers), functions that have side effects, or cheap functions — the cache lookup overhead is not worth it for trivial operations.",
-        np: "Memoize गर्नुहोस् जब: (1) function pure छ — same inputs = same output, side effects छैन; (2) function repeatedly same arguments सँग call हुन्छ; (3) function genuinely expensive छ। Memoize नगर्नुहोस्: external state read गर्ने functions, side effects भएका, वा cheap functions।",
-        jp: "メモ化する場合: (1)関数が純粋 — 同入力=同出力、副作用なし; (2)同じ引数で繰り返し呼ばれる; (3)本当にコストが高い。メモ化しない: 外部状態を読む関数（現在時刻・乱数）・副作用のある関数・軽い処理（キャッシュの手数料が割に合わない）。",
+        en: "A regular Map holds strong references to its keys — as long as the Map exists, the key objects are kept alive even if there are no other references to them. A WeakMap holds weak references — if the key object has no other references, it can be garbage collected, and the WeakMap entry disappears automatically. WeakMaps are not iterable and have no `size` property. Use WeakMap when you want to associate data with an object but don't want that data to prevent the object from being GC'd — typical for DOM node metadata, private state, and caches.",
+        np: "Regular Map ले keys लाई strong references hold गर्छ — Map exist जबसम्म key objects alive रहन्छन्। WeakMap ले weak references hold गर्छ — key object को कुनै अर्को reference छैन भने GC हुन सक्छ, WeakMap entry automatically disappear हुन्छ। DOM node metadata, private state, caches का लागि WeakMap।",
+        jp: "通常のMapはキーへの強参照を保持 — 他の参照がなくてもMapが存在する限りキーオブジェクトは生きている。WeakMapは弱参照 — 他に参照がなければGCされ、エントリも自動消去。イテレート不可・sizeプロパティなし。DOMノードのメタデータ・プライベート状態・キャッシュに使う。",
       },
     },
   ],

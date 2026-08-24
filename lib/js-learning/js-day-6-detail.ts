@@ -3,184 +3,228 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_6_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Array methods like `map`, `filter`, `reduce`, and `sort` are the workhorses of modern JavaScript. Learning to chain them fluently — and understanding how `reduce` works under the hood — is one of the clearest signals of JavaScript proficiency in a technical interview.",
-      np: "`map`, `filter`, `reduce`, `sort` जस्ता array methods आधुनिक JavaScript का workhorse हुन्। तिनलाई chain गर्न सिक्नु र `reduce` कसरी काम गर्छ बुझ्नु technical interview मा JS proficiency को सबैभन्दा ठूलो signal हो।",
-      jp: "`map`・`filter`・`reduce`・`sort`などの配列メソッドはモダンJSの要。チェーンの流暢な使いこなしと`reduce`の仕組みの理解はJS技術面接での重要なシグナル。",
+      en: "Objects are the fundamental building block of JavaScript — almost everything is an object or behaves like one. Understanding how to create, read, update, and delete properties, how destructuring works, and how to clone objects correctly will save you hours of debugging.",
+      np: "Objects JavaScript को fundamental building block हो — लगभग सबै कुरा object हो वा object जस्तो व्यवहार गर्छ। Create, read, update, delete — र destructuring तथा cloning सहि ढंगले गर्न सिक्नु जरुरी छ।",
+      jp: "オブジェクトはJavaScriptの基本構成要素。CRUD・分割代入・クローニングを正しく理解するとデバッグ時間が大幅に減る。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "R8rmfD9Y5-c", title: "Array Methods You Must Know (map, filter, reduce)" },
+        { type: "youtube", videoId: "PFmuCDHHpwk", title: "JavaScript Objects and Prototypes" },
       ],
     },
     {
-      title: { en: "Transforming arrays — map, filter, reduce", np: "Arrays transform — map, filter, reduce", jp: "配列変換 — map・filter・reduce" },
+      title: { en: "Creating and working with objects", np: "Objects सिर्जना र प्रयोग", jp: "オブジェクトの作成と操作" },
       blocks: [
         {
           type: "code",
-          title: { en: "map, filter, reduce — the three essential methods", np: "map, filter, reduce — तीन मुख्य methods", jp: "map・filter・reduce — 3つの基本メソッド" },
-          code: `const products = [
-  { id: 1, name: "Apple",  price: 1.5,  category: "fruit",    inStock: true  },
-  { id: 2, name: "Bread",  price: 2.5,  category: "bakery",   inStock: true  },
-  { id: 3, name: "Banana", price: 0.75, category: "fruit",    inStock: false },
-  { id: 4, name: "Milk",   price: 1.2,  category: "dairy",    inStock: true  },
-  { id: 5, name: "Cake",   price: 5.0,  category: "bakery",   inStock: true  },
-];
+          title: { en: "Object literals, property access, and mutation", np: "Object literals, property access र mutation", jp: "オブジェクトリテラル・プロパティアクセス・変更" },
+          code: `// ── Object literal ────────────────────────────────────────────────
+const user = {
+  name: "Alice",
+  age: 30,
+  address: {
+    city: "Kathmandu",
+    country: "Nepal",
+  },
+  greet() {                     // shorthand method syntax (ES6)
+    return \`Hi, I'm \${this.name}\`;
+  },
+};
 
-// ── map — transform every element, returns new array of same length ────
-const names     = products.map(p => p.name);
-// ["Apple", "Bread", "Banana", "Milk", "Cake"]
+// ── Property access ───────────────────────────────────────────────
+user.name;                      // "Alice" — dot notation
+user["age"];                    // 30 — bracket notation (use when key is dynamic)
+user.address.city;              // "Kathmandu" — nested access
 
-const withTax   = products.map(p => ({ ...p, priceWithTax: p.price * 1.13 }));
-// Each product now has a priceWithTax field
+const key = "name";
+user[key];                      // "Alice" — dynamic key access
 
-const nameUpper = products.map(p => p.name.toUpperCase());
-// ["APPLE", "BREAD", "BANANA", "MILK", "CAKE"]
+// ── Adding / updating properties ───────────────────────────────────
+user.email = "alice@example.com";   // add new property
+user.age = 31;                       // update existing
+user["hobbies"] = ["reading", "coding"];
 
-// ── filter — keep elements where callback returns true ──────────────────
-const inStock   = products.filter(p => p.inStock);
-// 4 products (all except Banana)
+// ── Deleting properties ────────────────────────────────────────────
+delete user.email;              // removes the property entirely
 
-const expensive = products.filter(p => p.price > 2);
-// [Bread, Cake]
+// ── Checking if a property exists ─────────────────────────────────
+"name" in user;                 // true — checks own AND inherited properties
+user.hasOwnProperty("name");    // true — checks own properties only
+Object.hasOwn(user, "name");    // true — modern, preferred over hasOwnProperty
 
-const fruits    = products.filter(p => p.category === "fruit");
-// [Apple, Banana]
+// ── Property shorthand (ES6) ───────────────────────────────────────
+const name = "Bob";
+const age  = 25;
+const person = { name, age };   // same as { name: name, age: age }
 
-// ── reduce — fold array into a single value ─────────────────────────────
-// Signature: array.reduce(callback(accumulator, currentValue, index), initialValue)
-
-// Sum all prices:
-const total = products.reduce((sum, p) => sum + p.price, 0);
-// 0 + 1.5 + 2.5 + 0.75 + 1.2 + 5.0 = 10.95
-
-// Count by category:
-const byCategory = products.reduce((acc, p) => {
-  acc[p.category] = (acc[p.category] ?? 0) + 1;
-  return acc;
-}, {});
-// { fruit: 2, bakery: 2, dairy: 1 }
-
-// Build a lookup Map:
-const productMap = products.reduce((map, p) => {
-  map.set(p.id, p);
-  return map;
-}, new Map());
-// productMap.get(1) → { id: 1, name: "Apple", ... }
-
-// ── Chaining — combine methods ──────────────────────────────────────────
-const totalInStockFruitRevenue = products
-  .filter(p => p.category === "fruit" && p.inStock)
-  .map(p => p.price)
-  .reduce((sum, price) => sum + price, 0);
-// Only Apple is in-stock fruit → 1.5`,
+// ── Computed property names ───────────────────────────────────────
+const field = "score";
+const result = { [field]: 100 };  // { score: 100 }`,
         },
       ],
     },
     {
-      title: { en: "Finding and testing — find, some, every, includes", np: "Finding र testing — find, some, every, includes", jp: "検索・テスト — find・some・every・includes" },
+      title: { en: "Destructuring, spread & rest", np: "Destructuring, spread र rest", jp: "分割代入・スプレッド・rest" },
       blocks: [
         {
           type: "code",
-          title: { en: "Searching and checking array contents", np: "Array contents search र check गर्नु", jp: "配列の検索と確認" },
-          code: `const numbers = [1, 5, 3, 8, 2, 9, 4, 7, 6];
+          title: { en: "Unpacking objects and arrays cleanly", np: "Objects र arrays clearly unpack गर्नु", jp: "オブジェクトと配列を簡潔に展開する" },
+          code: `// ── Object destructuring ─────────────────────────────────────────
+const { name, age } = user;          // extract name and age
+console.log(name, age);              // "Alice" 30
 
-// find — returns the FIRST element where callback is true (or undefined)
-numbers.find(n => n > 6);         // 8 — stops after finding the first match
+// Rename while destructuring:
+const { name: userName, age: userAge } = user;
 
-// findIndex — returns the INDEX of the first match (or -1)
-numbers.findIndex(n => n > 6);    // 3 (index of 8)
+// Default values (used when the property is undefined):
+const { country = "Unknown" } = user;  // "Unknown" — user has no country
 
-// findLast / findLastIndex — search from the end (ES2023)
-numbers.findLast(n => n > 6);     // 7 (last element > 6)
+// Nested destructuring:
+const { address: { city } } = user;    // "Kathmandu"
 
-// some — returns true if ANY element satisfies the callback
-numbers.some(n => n > 8);         // true (9 > 8)
-numbers.some(n => n > 10);        // false
+// In function parameters — very common in React/Express:
+function greet({ name, age }) {
+  return \`\${name} is \${age}\`;
+}
 
-// every — returns true only if ALL elements satisfy the callback
-numbers.every(n => n > 0);        // true
-numbers.every(n => n > 5);        // false
+// ── Array destructuring ───────────────────────────────────────────
+const [first, second, , fourth] = [10, 20, 30, 40];  // skip third with empty comma
+console.log(first, second, fourth);   // 10 20 40
 
-// includes — returns true if the exact value is in the array
-numbers.includes(8);              // true
-numbers.includes(10);             // false
-// Note: uses SameValueZero — strict equality but NaN === NaN
-[NaN].includes(NaN);              // true (unlike indexOf which uses ===)
+// Swapping variables:
+let a = 1, b = 2;
+[a, b] = [b, a];   // a = 2, b = 1
 
-// indexOf / lastIndexOf — find index by value
-numbers.indexOf(5);               // 1
-numbers.lastIndexOf(5);           // 1 (only one 5)
-numbers.indexOf(100);             // -1 — not found`,
+// ── Spread operator — expanding an iterable ───────────────────────
+const arr1 = [1, 2, 3];
+const arr2 = [4, 5, 6];
+const merged = [...arr1, ...arr2];      // [1, 2, 3, 4, 5, 6]
+
+const obj1 = { a: 1, b: 2 };
+const obj2 = { c: 3 };
+const combined = { ...obj1, ...obj2 };  // { a: 1, b: 2, c: 3 }
+
+// Overriding with spread (last one wins for duplicate keys):
+const updated = { ...user, age: 31 };  // shallow copy with age updated
+
+// ── Rest parameters — collect remaining items ─────────────────────
+function sum(...numbers) {              // rest collects all arguments into an array
+  return numbers.reduce((acc, n) => acc + n, 0);
+}
+sum(1, 2, 3, 4, 5);  // 15
+
+const [head, ...tail] = [1, 2, 3, 4];  // head = 1, tail = [2, 3, 4]
+const { name: n, ...rest } = user;     // n = "Alice", rest = { age: 30, address: ... }`,
         },
       ],
     },
     {
-      title: { en: "Mutating methods — sort, splice, flat, forEach", np: "Mutating methods — sort, splice, flat, forEach", jp: "配列変更メソッド — sort・splice・flat・forEach" },
+      title: { en: "Cloning objects — shallow vs deep", np: "Objects clone — shallow vs deep", jp: "オブジェクトのクローン — 浅いvs深い" },
       blocks: [
         {
           type: "code",
-          title: { en: "sort, flat, flatMap, forEach, splice — and their gotchas", np: "sort, flat, flatMap, forEach, splice — gotchas सहित", jp: "sort・flat・flatMap・forEach・spliceと注意点" },
-          code: `// ── sort — MUTATES the original array ────────────────────────────────────
-const nums = [10, 1, 21, 2];
-nums.sort();              // [1, 10, 2, 21] — default sorts as STRINGS! Bug waiting to happen
-nums.sort((a, b) => a - b);  // [1, 2, 10, 21] — ascending (b - a for descending)
+          title: { en: "Shallow copy vs deep clone — the interview question", np: "Shallow copy vs deep clone — interview question", jp: "浅いコピーと深いクローン" },
+          code: `const original = {
+  name: "Alice",
+  hobbies: ["reading", "coding"],   // nested reference type
+  address: { city: "Kathmandu" },   // another nested object
+};
 
-// Sort objects:
-const users = [{ name: "Charlie" }, { name: "Alice" }, { name: "Bob" }];
-users.sort((a, b) => a.name.localeCompare(b.name));
-// [Alice, Bob, Charlie]
+// ── Shallow copy — copies top-level properties only ────────────────
+const shallow1 = Object.assign({}, original);
+const shallow2 = { ...original };                // same result
 
-// ── forEach — iterate with a callback, returns undefined (not chainable) ─
-[1, 2, 3].forEach((n, i) => console.log(i, n));
-// Use map when you need a new array; use forEach for side effects only
+// The top-level 'name' is independent:
+shallow1.name = "Bob";
+console.log(original.name);  // "Alice" — not affected
 
-// ── flat — flatten nested arrays ─────────────────────────────────────────
-[1, [2, [3, [4]]]].flat();     // [1, 2, [3, [4]]] — only one level by default
-[1, [2, [3, [4]]]].flat(2);    // [1, 2, 3, [4]]
-[1, [2, [3, [4]]]].flat(Infinity);  // [1, 2, 3, 4] — flatten all levels
+// But nested objects are STILL shared references:
+shallow1.hobbies.push("gaming");
+console.log(original.hobbies);  // ["reading", "coding", "gaming"] — affected!
 
-// ── flatMap — map then flatten one level (more efficient than .map().flat()) ─
-[[1, 2], [3, 4]].flatMap(x => x);          // [1, 2, 3, 4]
-["hello world", "foo bar"].flatMap(s => s.split(" "));  // ["hello", "world", "foo", "bar"]
+shallow1.address.city = "Pokhara";
+console.log(original.address.city);  // "Pokhara" — affected!
 
-// ── splice — MUTATES: add/remove/replace elements at a position ──────────
-const arr = [1, 2, 3, 4, 5];
-arr.splice(2, 1);          // removes 1 element at index 2 → arr = [1, 2, 4, 5]
-arr.splice(2, 0, 99);      // inserts 99 at index 2, removes 0 → arr = [1, 2, 99, 4, 5]
+// ── Deep clone — creates fully independent copy ───────────────────
 
-// ── slice — does NOT mutate, returns a portion ───────────────────────────
-const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including) index 3
-arr.slice(-2);                 // last two elements`,
+// Option 1: JSON (fast, but lossy — loses functions, undefined, Date, Symbol)
+const deep1 = JSON.parse(JSON.stringify(original));
+deep1.hobbies.push("gaming");
+console.log(original.hobbies);  // not affected ✅
+
+// Option 2: structuredClone (modern, native, handles more types)
+const deep2 = structuredClone(original);  // ES2022, Node 17+
+deep2.address.city = "Pokhara";
+console.log(original.address.city);  // "Kathmandu" — not affected ✅
+
+// Option 3: Lodash cloneDeep (for maximum compatibility or complex objects)
+// import { cloneDeep } from "lodash";
+// const deep3 = cloneDeep(original);
+
+// Rule: use structuredClone for deep cloning — it handles Date, RegExp, Map, Set`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
-            { en: "**Mutating methods** (avoid in React/Redux state): `sort`, `reverse`, `push`, `pop`, `shift`, `unshift`, `splice`, `fill`. Always use non-mutating alternatives (`[...arr].sort(...)`) when working with state.", np: "**Mutating methods** (React/Redux state मा avoid): sort, reverse, push, pop, splice। State सँग काम गर्दा `[...arr].sort(...)` जस्ता non-mutating alternatives प्रयोग गर्नुहोस्।", jp: "**変更メソッド**（Reactの状態では避ける）: sort・reverse・push・pop・splice。状態を扱う場合は`[...arr].sort()`のような非変更的な方法を使う。" },
-            { en: "**map vs forEach**: use `map` when you need a new transformed array. Use `forEach` only for side effects (logging, sending requests). `forEach` always returns `undefined` and cannot be chained.", np: "**map vs forEach**: 新अarray चाहिए → map। Side effects मात्र → forEach। forEach ले undefined return गर्छ, chain हुँदैन।", jp: "**map vs forEach**: 新しい配列が必要→map。副作用のみ→forEach。forEachはundefinedを返しチェーン不可。" },
+            { en: "**Shallow copy** (`{...obj}` or `Object.assign`) is fine for flat objects. Any nested objects or arrays are still shared between the original and the copy.", np: "**Shallow copy** flat objects का लागि ठीक। Nested objects/arrays original र copy दुवैमा shared रहन्छ।", jp: "**浅いコピー**はフラットなオブジェクトなら問題なし。ネストされた参照は共有されたまま。" },
+            { en: "**Deep clone** with `structuredClone()` creates a completely independent copy. Use it when you need to mutate a nested structure without affecting the original.", np: "**Deep clone** `structuredClone()` ले पूरै independent copy बनाउँछ। Nested structure mutate गर्दा original affect हुनु हुँदैन भने प्रयोग गर्नुहोस्।", jp: "**深いクローン** `structuredClone()`は完全に独立したコピーを作る。ネストされた構造を変更する際に使う。" },
+            { en: "**Object.assign(target, source)** is equivalent to spreading: it copies own enumerable properties from source to target. The target is mutated in place.", np: "**Object.assign(target, source)** spread जस्तै। Source बाट target मा own enumerable properties copy गर्छ। Target mutate हुन्छ।", jp: "**Object.assign**はスプレッドと同等。sourceのownかつenumerableなプロパティをtargetにコピー（targetは変更される）。" },
           ],
+        },
+      ],
+    },
+    {
+      title: { en: "Useful Object methods", np: "उपयोगी Object methods", jp: "便利なObjectメソッド" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Object.keys, values, entries, fromEntries, freeze", np: "Object methods", jp: "Objectメソッド" },
+          code: `const scores = { alice: 95, bob: 87, carol: 92 };
+
+Object.keys(scores);     // ["alice", "bob", "carol"]
+Object.values(scores);   // [95, 87, 92]
+Object.entries(scores);  // [["alice", 95], ["bob", 87], ["carol", 92]]
+
+// Transform an object (like map but for objects):
+const doubled = Object.fromEntries(
+  Object.entries(scores).map(([key, val]) => [key, val * 2])
+);
+// { alice: 190, bob: 174, carol: 184 }
+
+// Filter an object:
+const passing = Object.fromEntries(
+  Object.entries(scores).filter(([, score]) => score >= 90)
+);
+// { alice: 95, carol: 92 }
+
+// Freeze — prevent modifications (shallow — does not deep-freeze)
+const config = Object.freeze({ apiUrl: "https://api.example.com", timeout: 5000 });
+// config.timeout = 10000;  // silently ignored in sloppy mode, TypeError in strict
+
+// Object.isFrozen(config);  // true`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Can you implement reduce from scratch?", np: "Reduce scratch बाट implement गर्न सकिन्छ?", jp: "reduceをスクラッチで実装できますか？" },
+      question: { en: "What is the difference between spread and Object.assign?", np: "Spread र Object.assign मा के फरक?", jp: "スプレッドとObject.assignの違いは？" },
       answer: {
-        en: "Yes. `reduce` iterates over an array and accumulates a result. It starts with an initial value (the accumulator) and calls the callback with (accumulator, currentValue, index, array) for each element, using the return value as the new accumulator. Here is a simple implementation: `function myReduce(array, callback, initialValue) { let acc = initialValue; for (let i = 0; i < array.length; i++) { acc = callback(acc, array[i], i, array); } return acc; }`",
-        np: "`reduce` array iterate गर्छ र result accumulate गर्छ। Simple implementation: `function myReduce(array, cb, init) { let acc = init; for (let i = 0; i < array.length; i++) { acc = cb(acc, array[i], i, array); } return acc; }`",
-        jp: "シンプルな実装: `function myReduce(arr, cb, init) { let acc = init; for (let i = 0; i < arr.length; i++) { acc = cb(acc, arr[i], i, arr); } return acc; }` reduceは配列を走査して累積値を返す。",
+        en: "They are functionally equivalent for creating a shallow copy. The main differences: `Object.assign` mutates the target object and returns it (so `Object.assign({}, source)` creates a new object only because the first argument is a new `{}`). Spread always creates a new object/array. Spread is more readable for simple merges. `Object.assign` is useful when you want to merge into an existing object in place.",
+        np: "दुवैले shallow copy बनाउँछन्। `Object.assign` target object mutate गर्छ। Spread हमेशा नयाँ object बनाउँछ। Simple merge का लागि spread बढी readable। Existing object मा merge गर्न `Object.assign` उपयोगी।",
+        jp: "どちらも浅いコピーを作成。`Object.assign`はターゲットを変更して返す。スプレッドは常に新しいオブジェクトを作る。単純なマージはスプレッドの方が読みやすい。既存のオブジェクトに直接マージする場合は`Object.assign`が便利。",
       },
     },
     {
-      question: { en: "Why does .sort() without a comparator give wrong results for numbers?", np: ".sort() comparator बिना numbers को लागि गलत result किन दिन्छ?", jp: "比較関数なしの.sort()が数値で正しくない結果を返す理由は？" },
+      question: { en: "How do you deep clone an object?", np: "Object deep clone कसरी गर्ने?", jp: "オブジェクトを深くクローンするには？" },
       answer: {
-        en: "Without a comparator, `.sort()` converts each element to a string and sorts lexicographically (like a dictionary). So `10` comes before `2` because `'1'` comes before `'2'` alphabetically. Always pass a numeric comparator when sorting numbers: `(a, b) => a - b` for ascending, `(b, a) => a - b` for descending. The comparator function should return a negative number if `a` should come first, a positive number if `b` should come first, and 0 if they are equal.",
-        np: "Comparator बिना `.sort()` हरेक element लाई string मा convert गरेर lexicographically sort गर्छ। त्यसैले `10` ले `2` भन्दा अगाडि आउँछ — '1' ले '2' भन्दा alphabetically अगाडि हुन्छ। Numbers sort गर्न हमेशा `(a, b) => a - b` comparator pass गर्नुहोस्।",
-        jp: "比較関数なしの`.sort()`は各要素を文字列に変換して辞書順にソート。そのため`10`が`2`より前に来る（'1'<'2'）。数値のソートには`(a, b) => a - b`を渡す。",
+        en: "Use `structuredClone(obj)` — it is built into modern JavaScript (Node 17+, all modern browsers) and handles Date, RegExp, Map, Set, ArrayBuffer, and more. For older environments or complex class instances, use Lodash's `cloneDeep`. Avoid `JSON.parse(JSON.stringify(obj))` — it loses functions, `undefined` values, `Symbol` keys, `Date` objects become strings, and it cannot handle circular references.",
+        np: "Modern JS मा `structuredClone(obj)` प्रयोग गर्नुहोस् — Node 17+, modern browsers मा available र Date, Map, Set पनि handle गर्छ। पुरानो environment का लागि Lodash `cloneDeep`। `JSON.parse(JSON.stringify)` avoid गर्नुहोस् — functions, undefined, Symbol, Date हराउँछ।",
+        jp: "`structuredClone(obj)`を使う（Node 17+・モダンブラウザ対応、Date・Map・Setも処理可能）。古い環境ではLodash `cloneDeep`。`JSON.parse(JSON.stringify)`は関数・undefined・Symbol・Dateが失われるので避ける。",
       },
     },
   ],

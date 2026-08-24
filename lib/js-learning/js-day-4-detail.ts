@@ -3,246 +3,241 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Closures are one of the most powerful — and most misunderstood — features in JavaScript. A closure is a function that remembers the variables from the scope it was created in, even after that scope has finished running. Higher-order functions and currying are both built on this same idea: functions that treat other functions as ordinary values.",
-      np: "Closure JavaScript को सबभन्दा शक्तिशाली feature हो। Closure एउटा function हो जसले आफू create भएको scope का variables याद राख्छ — scope बन्द भएपछि पनि।",
-      jp: "クロージャはJavaScriptで最も強力かつ誤解されやすい機能。クロージャはスコープが閉じた後も、作成時のスコープの変数を覚えている関数のこと。",
+      en: "Scope is the set of rules that determines where a variable can be accessed. Hoisting is what JavaScript does before it runs your code — it scans ahead and registers every declaration before the first line executes. Together, these two concepts explain most of the \"why did that variable come back undefined?\" moments you will encounter.",
+      np: "Scope ले variable कहाँ access गर्न पाइन्छ भनी निर्धारण गर्छ। Hoisting ले code चलाउनु अगाडि declarations माथि move गर्छ — यी दुई मिलेर 'किन undefined आयो?' भन्ने प्रश्नको उत्तर दिन्छन्।",
+      jp: "スコープは変数のアクセス範囲を決めるルール。ホイスティングはコード実行前に宣言を巻き上げるJS固有の動作。この2つで「なぜundefinedが返るのか」という疑問の多くが解決する。",
     },
     {
-      en: "In Day 4 we cover:\n• <b>Closures</b> — how an inner function keeps outer variables alive\n• <b>Higher-order functions</b> — functions that take or return other functions\n• <b>Currying &amp; partial application</b> — turning a multi-argument function into a chain of single-argument ones\n• <b>Function composition</b> — chaining small functions into a pipeline",
-      np: "Day 4 मा: closures, higher-order functions, currying/partial application, र function composition।",
-      jp: "Day 4では: クロージャ、高階関数、カリー化・部分適用、関数合成を学びます。",
+      en: "In Day 3 we cover:\n• <b>Global, function, and block scope</b> — three nested boundaries a variable can live inside\n• <b>Lexical scoping</b> — why inner functions can always see outer variables\n• <b>Hoisting</b> — what gets moved up, and to what initial value\n• The <b>Temporal Dead Zone (TDZ)</b> — why let/const throw instead of quietly returning undefined",
+      np: "Day 3 मा: global/function/block scope, lexical scoping, hoisting, र Temporal Dead Zone।",
+      jp: "Day 3では: グローバル・関数・ブロックスコープ、レキシカルスコープ、ホイスティング、TDZを学びます。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "vKJpN5FAeF4", title: "JavaScript Closures Explained" },
+        { type: "youtube", videoId: "EvfRXyKa_GI", title: "Learn JavaScript Hoisting In 5 Minutes" },
       ],
     },
     {
-      title: { en: "Closures — the foundation", np: "Closures — आधार", jp: "クロージャの基礎" },
+      title: { en: "The three scope types", np: "तीन scope types", jp: "3種類のスコープ" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Picture a function as a person leaving home for a trip. Normally, once they leave, everything back at the house is gone from their perspective. A <b>closure</b> is that person packing a backpack before leaving — a backpack containing direct access to specific things from home, not photocopies. Even far away, they can reach into the backpack and read or change what's inside, and it stays in sync with the original.\n\nThat backpack is exactly what an inner function carries: a live link to the variables of the outer function it was created in, available anytime the inner function is later called — no matter how much later, or from how far away in the code.",
-            np: "Closure लाई यात्रामा जाने व्यक्तिले घरबाटै केही सामान backpack मा राखेको जस्तो सोच्नुहोस् — टाढा पुगे पनि उसले backpack भित्रको सामान access गर्न सक्छ, र त्यो सधैं original सँग sync मा रहन्छ।",
-            jp: "クロージャは、旅に出る人が家から特定のものへの直接アクセスをバックパックに入れて持って行くようなもの。遠くにいてもバックパックの中身を読んだり変更したりでき、常に元と同期している。",
+            en: "Scope is about visibility — which variables a piece of code is allowed to see. JavaScript nests three kinds of scope inside each other like Russian dolls: whatever is visible at an outer layer stays visible at every layer inside it, but never the other way round.\n\n• <b>Global scope</b> — the outermost doll; visible from anywhere in the file\n• <b>Function scope</b> — a doll inside the global one; visible only inside that function\n• <b>Block scope</b> — the smallest doll, created by any `{ }` (an `if`, `for`, or bare block); visible only inside that block\n  ↳ `var` ignores this smallest doll entirely — it always escapes to the nearest function (or global) layer",
+            np: "Scope भनेको visibility हो — कुन variable कहाँ देखिन्छ। JavaScript मा तीन scope Russian doll जस्तै nested हुन्छन्: बाहिरको भित्र देखिन्छ, भित्रको बाहिर देखिँदैन।",
+            jp: "スコープは可視性のこと。JavaScriptには入れ子になった3種類のスコープがあり、外側は内側から見えるが、内側は外側から見えない。",
           },
         },
         {
           type: "code",
-          title: { en: "A closure keeps the outer variable alive", np: "Closure ले outer variable जिउँदो राख्छ", jp: "クロージャは外部変数を保持する" },
-          code: `// ── Basic closure ───────────────────────────────────────────────
-function outer() {
-  let count = 0;        // this variable lives in outer's scope
+          title: { en: "Scope nesting — global → function → block (visual)", np: "Scope nesting (visual)", jp: "スコープの入れ子（図）" },
+          code: `┌─ Global scope ─────────────────────────────────────┐
+│  const appName = "MyApp";                           │
+│                                                       │
+│  ┌─ Function scope (outer()) ─────────────────────┐  │
+│  │  const secret = "only mine";                    │  │
+│  │                                                   │  │
+│  │  ┌─ Block scope ( if (true) { ... } ) ────────┐  │  │
+│  │  │  let blockOnly = "block";                  │  │  │
+│  │  │  var notBlock  = "leaks out!";  ← escapes ─┼──┼──┘
+│  │  └─────────────────────────────────────────────┘  │
+│  └───────────────────────────────────────────────────┘
+└───────────────────────────────────────────────────────┘
 
-  return function inner() {
-    count++;            // inner "closes over" count
+// Inner layers can read outer variables (arrows point outward, always allowed):
+//   block scope    -> can read appName, secret, blockOnly
+//   function scope -> can read appName, secret (not blockOnly — it's a layer down)
+//   global scope   -> can read appName only`,
+        },
+        {
+          type: "code",
+          title: { en: "Global, function, and block scope", np: "Global, function, block scope", jp: "グローバル・関数・ブロックスコープ" },
+          code: `// ── Global scope — accessible everywhere in the file ──────────────
+const appName = "MyApp";  // global
+
+function doSomething() {
+  console.log(appName);  // ✅ accessible — inner scopes can read outer variables
+}
+
+// ── Function scope — only inside that function ──────────────────────
+function outer() {
+  const secret = "only mine";
+  console.log(secret);    // ✅ works
+}
+// console.log(secret);   // ❌ ReferenceError — not accessible outside
+
+// ── Block scope — only inside the { } block ─────────────────────────
+if (true) {
+  let blockOnly = "block";
+  const alsoBlock = "also block";
+  var notBlock = "leaks out!";  // var ignores blocks
+}
+// console.log(blockOnly);   // ❌ ReferenceError
+// console.log(alsoBlock);   // ❌ ReferenceError
+console.log(notBlock);         // ✅ "leaks out!" — because var is function-scoped
+
+// ── Lexical scope — inner functions access outer variables ──────────
+function makeCounter() {
+  let count = 0;           // outer variable
+
+  return function () {
+    count++;               // inner function can read AND write outer's 'count'
     return count;
   };
 }
 
-const increment = outer(); // outer() runs and returns inner
-// outer's execution context is gone, but 'count' is still alive
-// because 'inner' holds a reference to it
-
-console.log(increment()); // 1
-console.log(increment()); // 2
-console.log(increment()); // 3
-
-// Each call to outer() creates a separate closure with its own 'count'
-const incrementA = outer();
-const incrementB = outer();
-incrementA(); // 1
-incrementA(); // 2
-incrementB(); // 1  — completely separate count
-
-// ── Practical use case: factory functions ────────────────────────
-function createMultiplier(factor) {
-  return (number) => number * factor;   // 'factor' is closed over
-}
-
-const double = createMultiplier(2);
-const triple = createMultiplier(3);
-
-double(5);  // 10
-triple(5);  // 15
-
-// ── Closures in module pattern (private state) ────────────────────
-function createBankAccount(initialBalance) {
-  let balance = initialBalance;  // private — not accessible from outside
-
-  return {
-    deposit:    (amount) => { balance += amount; },
-    withdraw:   (amount) => { balance = Math.max(0, balance - amount); },
-    getBalance: ()       => balance,
-  };
-}
-
-const account = createBankAccount(100);
-account.deposit(50);
-account.withdraw(30);
-console.log(account.getBalance()); // 120
-// balance is not directly readable or writable from outside`,
+const counter = makeCounter();
+counter();  // 1
+counter();  // 2
+counter();  // 3
+// count is not accessible here — it lives inside makeCounter's scope`,
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "<b>A closure is created every time a function is created inside another function.</b> The inner function keeps a live reference to the outer scope's variables — not a snapshot copy of their value at creation time.",
-              np: "Closure हरेक पटक inner function create हुँदा बन्छ। Inner function ले outer scope का variables को live reference राख्छ — creation time को copy होइन।",
-              jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく変数への生きた参照を保持する。",
-            },
-            {
-              en: "<b>Memory implication:</b> closures keep outer variables alive for as long as the closure itself exists. Be careful with closures inside event listeners or timers — they can quietly prevent garbage collection if not cleaned up.",
-              np: "Memory: closure जबसम्म रहन्छ, outer variables पनि memory मा रहन्छ। Event listener वा timer मा closure हुँदा cleanup गर्न नभुलनुहोस्।",
-              jp: "メモリ: クロージャが存在する限り外部変数はGCされない。イベントリスナーやタイマーのクロージャは注意してクリーンアップする。",
-            },
+          type: "paragraph",
+          text: {
+            en: "JavaScript uses <b>lexical scoping</b> (also called static scoping): the scope of a variable is determined by <b>where it is written</b> in the source code, not by how or where the function is later called. An inner function always has access to the variables of the outer function that contains it — even after the outer function has already finished running.\n\nThis \"remembers where it was born, not where it's called from\" rule is the entire foundation of closures, which Day 4 builds on directly.",
+            np: "JavaScript ले lexical scoping प्रयोग गर्छ: variable को scope कहाँ लेखिएको छ त्यसले निर्धारण गर्छ — function कसरी call हुन्छ त्यसले होइन। यही Closure को आधार हो।",
+            jp: "JavaScriptはレキシカルスコープを使う。変数のスコープはコードの書かれた場所で決まる（呼び出し方ではない）。これがクロージャの基礎。",
+          },
+        },
+      ],
+    },
+    {
+      title: { en: "Hoisting in detail", np: "Hoisting विस्तारमा", jp: "ホイスティング詳解" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Every declaration type hoists differently — some get a placeholder value immediately, others get registered but locked. Knowing which is which turns a confusing `ReferenceError` or unexpected `undefined` into something you can predict before you even run the code.",
+            np: "हरेक declaration type फरक तरिकाले hoist हुन्छ — कोहीलाई placeholder value तुरुन्तै मिल्छ, कोही registered तर locked रहन्छ।",
+            jp: "宣言の種類ごとにホイストの仕方が異なる。どれがどうなるか知っていれば、ReferenceErrorや予期しないundefinedを事前に予測できる。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "What gets hoisted — and to what value", np: "के hoist हुन्छ र कुन value मा", jp: "何がどの値でホイストされるか" },
+          code: `// ── var is hoisted and initialised to undefined ───────────────────
+console.log(x);  // undefined — NOT a ReferenceError
+var x = 5;
+console.log(x);  // 5
+
+// JavaScript sees this as:
+var x;           // declaration hoisted to top of function scope
+console.log(x);  // undefined
+x = 5;           // assignment stays in place
+console.log(x);  // 5
+
+// ── function declarations are FULLY hoisted (declaration + body) ───
+sayHello();      // ✅ "Hello!" — works before the declaration
+function sayHello() {
+  console.log("Hello!");
+}
+
+// ── let and const are hoisted but sit in the Temporal Dead Zone ────
+// console.log(y);   // ❌ ReferenceError: Cannot access 'y' before initialization
+let y = 10;
+console.log(y);     // 10
+
+// ── Function expressions and arrow functions — NOT hoisted ─────────
+// greet("Alice");   // ❌ TypeError: greet is not a function
+const greet = (name) => \`Hello \${name}\`;
+greet("Alice");     // ✅ works after assignment
+
+// ── Class declarations follow let/const rules (TDZ) ───────────────
+// new Animal();  // ❌ ReferenceError: Cannot access 'Animal' before initialization
+class Animal {}
+new Animal();      // ✅`,
+        },
+        {
+          type: "table",
+          caption: { en: "Hoisting summary — what each declaration type hoists to", np: "Hoisting summary", jp: "各宣言のホイスト動作まとめ" },
+          headers: [
+            { en: "Declaration", np: "Declaration", jp: "宣言" },
+            { en: "Hoisted?", np: "Hoist?", jp: "ホイスト?" },
+            { en: "Initial value", np: "Initial value", jp: "初期値" },
+            { en: "TDZ?", np: "TDZ?", jp: "TDZ?" },
+          ],
+          rows: [
+            [
+              { en: "var", np: "var", jp: "var" },
+              { en: "Yes", np: "हो", jp: "はい" },
+              { en: "undefined", np: "undefined", jp: "undefined" },
+              { en: "No", np: "होइन", jp: "なし" },
+            ],
+            [
+              { en: "let", np: "let", jp: "let" },
+              { en: "Yes", np: "हो", jp: "はい" },
+              { en: "uninitialized (TDZ)", np: "TDZ", jp: "未初期化(TDZ)" },
+              { en: "Yes", np: "हो", jp: "あり" },
+            ],
+            [
+              { en: "const", np: "const", jp: "const" },
+              { en: "Yes", np: "हो", jp: "はい" },
+              { en: "uninitialized (TDZ)", np: "TDZ", jp: "未初期化(TDZ)" },
+              { en: "Yes", np: "हो", jp: "あり" },
+            ],
+            [
+              { en: "function declaration", np: "function declaration", jp: "関数宣言" },
+              { en: "Yes (fully)", np: "हो (पूरै)", jp: "はい(完全)" },
+              { en: "function body", np: "function body", jp: "関数本体" },
+              { en: "No", np: "होइन", jp: "なし" },
+            ],
+            [
+              { en: "function expression / arrow", np: "function expression/arrow", jp: "関数式/アロー" },
+              { en: "As variable (var/let/const)", np: "variable जस्तै", jp: "変数と同様" },
+              { en: "undefined or TDZ", np: "undefined या TDZ", jp: "undefinedまたはTDZ" },
+              { en: "Depends on keyword", np: "keyword अनुसार", jp: "キーワード依存" },
+            ],
           ],
         },
       ],
     },
     {
-      title: { en: "Higher-order functions", np: "Higher-order functions", jp: "高階関数" },
+      title: { en: "The Temporal Dead Zone (TDZ)", np: "Temporal Dead Zone (TDZ)", jp: "一時的デッドゾーン(TDZ)" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A <b>higher-order function</b> is a function that either takes a function as an argument, returns a function, or both. This is possible only because functions in JavaScript are <b>first-class values</b> — exactly like a number or a string, they can be stored in a variable, passed as an argument, and returned from another function.\n\n• Passing a function in lets the caller plug in custom behaviour without the higher-order function needing to know the details\n  ↳ `array.map(fn)` doesn't know what `fn` does — it just calls it for every item\n• Returning a function out lets you generate specialised, ready-to-use functions on demand\n  ↳ `createMultiplier(3)` from the closures section above is already a higher-order function — it returns a function",
-            np: "Higher-order function एउटा function हो जसले argument को रूपमा function लिन्छ वा function return गर्छ। JS मा functions first-class values हुन्।",
-            jp: "高階関数とは引数として関数を受け取るか、関数を返す関数のこと。JavaScriptの関数はファーストクラス値。",
+            en: "The <b>Temporal Dead Zone</b> is the gap between when a `let` or `const` variable is hoisted (the start of its enclosing block) and when it is actually initialised (the line where it is declared). Touching it during that gap throws a `ReferenceError`.\n\nThink of it like a parcel that has arrived at the depot but hasn't been signed for yet — the system knows the parcel exists (it's registered), but it refuses to hand it over until the paperwork (the declaration line) is complete. `var`'s silent `undefined` is the opposite: it hands you an empty box and lets you assume it's fine, which is exactly the kind of bug the TDZ was designed to surface loudly instead.",
+            np: "Temporal Dead Zone एउटा `let` वा `const` variable hoist हुनेदेखि (block को सुरु) initialized हुनेसम्म (declaration line) को period हो। यस बीचमा access गर्दा ReferenceError आउँछ।",
+            jp: "TDZとはlet/constがホイストされた時点（ブロック開始）から実際に初期化される（宣言行）までの期間。この間にアクセスするとReferenceError。",
           },
         },
         {
           type: "code",
-          title: { en: "Functions as arguments and return values", np: "Argument र return value को रूपमा function", jp: "引数と戻り値としての関数" },
-          code: `// ── Functions as arguments ───────────────────────────────────────
-function repeat(n, action) {
-  for (let i = 0; i < n; i++) {
-    action(i);           // call the passed function
-  }
+          title: { en: "TDZ example — surprising but predictable once you know the rule", np: "TDZ उदाहरण", jp: "TDZの例" },
+          code: `// This looks like it should work but doesn't
+let x = "global";
+
+function test() {
+  console.log(x);  // ❌ ReferenceError — NOT "global"
+  let x = "local"; // x is in TDZ from the top of this block until here
 }
 
-repeat(3, (i) => console.log(\`Step \${i}\`));
-// Step 0 / Step 1 / Step 2
+test();
 
-// ── Functions returning functions ────────────────────────────────
-function withLogging(fn) {
-  return function (...args) {      // spread to accept any number of arguments
-    console.log("Calling with", args);
-    const result = fn(...args);
-    console.log("Result:", result);
-    return result;
-  };
-}
+// Why? Because let x inside test() is hoisted to the top of test's block.
+// The x inside test() shadows the outer x immediately —
+// but it's in the TDZ until the let x = "local" line is reached.
+// So the console.log sees the inner (TDZ) x, not the outer "global" x.
 
-const addLogged = withLogging((a, b) => a + b);
-addLogged(2, 3);  // logs "Calling with [2, 3]" and "Result: 5"
-
-// ── Common built-in higher-order functions you use every day ──────
-const numbers = [1, 2, 3, 4, 5];
-
-numbers.filter(n => n % 2 === 0);      // [2, 4]
-numbers.map(n => n * 2);               // [2, 4, 6, 8, 10]
-numbers.reduce((acc, n) => acc + n, 0); // 15
-numbers.find(n => n > 3);              // 4
-numbers.every(n => n > 0);             // true
-numbers.some(n => n > 4);              // true
-numbers.sort((a, b) => b - a);         // [5, 4, 3, 2, 1] — descending`,
-        },
-      ],
-    },
-    {
-      title: { en: "Currying & partial application", np: "Currying र partial application", jp: "カリー化と部分適用" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Currying</b> turns a function that expects several arguments at once into a chain of functions that each take exactly one argument, one at a time — `f(a, b, c)` becomes `f(a)(b)(c)`. <b>Partial application</b> is the more general idea: pre-filling some of a function's arguments now, and getting back a new function that only needs the rest later.\n\nThe usual reason to reach for currying: you want a function to run only once every argument is available, but the arguments show up from different places at different times — one from an API response, one from user input, one from a database lookup. You could collect them into a few variables and call the function manually once all of them exist, but that stops working once a function needs many arguments instead of three.\n\nThink of a vending machine: a normal function is like paying the exact amount at once. A curried function is like inserting one coin at a time — the machine remembers what you've already fed it, and only dispenses the result once the final coin arrives.",
-            np: "Currying ले multi-argument function लाई एक-एक argument लिने functions को chain मा बदल्छ — f(a,b,c) → f(a)(b)(c)। Partial application ले केही arguments अगावै भरेर बाँकीका लागि नयाँ function दिन्छ। Currying चाहिने सामान्य कारण: तीनवटै argument फरक-फरक ठाउँबाट (API, user input, database) आउँछ र सबै नआएसम्म function चलाउनु हुँदैन।",
-            jp: "カリー化は複数の引数を一度に取る関数を、1つずつ引数を取る関数の連鎖に変換する。部分適用はより一般的な考え方で、一部の引数を先に埋めて残りを受け取る新しい関数を得る。よくある動機は、引数がAPI・ユーザー入力・DBなど別々の場所から届き、全部揃うまで実行したくない場合。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Currying — converting a multi-argument function into nested single-argument functions", np: "Currying — multi-argument function लाई single-argument functions मा", jp: "カリー化 — 多引数関数を単引数関数の連鎖に変換" },
-          code: `// ── Regular (uncurried) function ─────────────────────────────────
-const add = (a, b, c) => a + b + c;
-add(2, 5, 3);  // 10
-
-// ── The problem currying solves ──────────────────────────────────
-// You only want to run add() once all three values are available —
-// say the first comes from one place, the second from an API, the
-// third from user input. Collecting them into variables and calling
-// add() manually once all three exist works, but it stops scaling
-// once a function needs many arguments instead of three.
-
-// ── Curried version — nest one function per argument ─────────────
-const curriedAdd = (a) => (b) => (c) => a + b + c;
-// Nothing executes until the last argument arrives:
-curriedAdd(2);        // a function still waiting for 'b'
-curriedAdd(2)(5);     // a function still waiting for 'c'
-curriedAdd(2)(5)(3);  // 10 — only now does it actually run
-
-// ── Why currying is useful — creating specialised functions ───────
-const multiply = (a) => (b) => a * b;
-const double  = multiply(2);
-const triple  = multiply(3);
-
-[1, 2, 3].map(double);  // [2, 4, 6]
-[1, 2, 3].map(triple);  // [3, 6, 9]
-
-// ── Real-world use — splitting work across independent steps ─────
-// Curry sendEmail(to)(subject)(body) and each argument can be filled
-// in by a different part of the system, one step at a time, without
-// any step needing to know about the others.
-const sendEmail = (to) => (subject) => (body) =>
-  console.log(\`Sending to \${to} — [\${subject}] \${body}\`);
-
-const step1 = sendEmail("user@example.com");        // resolves the recipient
-const step2 = step1("New order confirmation");       // adds the subject
-step2("Your order has shipped!");                    // finally sends
-// Sending to user@example.com — [New order confirmation] Your order has shipped!
-
-// ── Partial application — pre-filling some arguments ──────────────
-function log(level, message) {
-  console.log(\`[\${level.toUpperCase()}] \${message}\`);
-}
-
-// bind() creates a partially applied function
-const logError = log.bind(null, "error");
-const logInfo  = log.bind(null, "info");
-
-logError("Database connection failed");   // [ERROR] Database connection failed
-logInfo("Server started on port 3000");   // [INFO] Server started on port 3000
-
-// ── Function composition — combining functions ───────────────────
-const compose = (...fns) => (x) => fns.reduceRight((v, f) => f(v), x);
-const pipe    = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
-
-const add1   = x => x + 1;
-const double2 = x => x * 2;
-const square = x => x * x;
-
-const transform = pipe(add1, double2, square);
-transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
+// ── The fix: always declare before use ────────────────────────────
+function testFixed() {
+  let x = "local";  // declare first
+  console.log(x);   // ✅ "local"
+}`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "<b>Splitting responsibility across steps:</b> because each curried call just returns a plain function, you can hand that function off to a completely different piece of code — even one owned by a different developer — that only supplies its own argument and doesn't need to know what happens before or after. `sendEmail(to)` can be resolved by one service, `(subject)` filled in by another, and `(body)` supplied by whichever code finally has the message — nothing sends until the last piece arrives.",
-              np: "काम बाँड्ने: curried call ले जहिले पनि एउटा plain function फर्काउने भएकोले, त्यो function लाई अर्को (फरक developer को) code लाई दिन सकिन्छ, जसले आफ्नो मात्र argument थप्छ। `sendEmail(to)` एउटा service ले हल गर्छ, `(subject)` अर्कोले थप्छ, `(body)` अन्तिममा जोसँग message छ उसले दिन्छ — अन्तिम टुक्रा नआएसम्म पठाइँदैन।",
-              jp: "責務の分割: カリー化された呼び出しは常にただの関数を返すので、その関数を別のコード（別の開発者が担当する部分）に渡せる。`sendEmail(to)`はあるサービスが解決し、`(subject)`は別の部分が追加し、`(body)`は最後にメッセージを持つコードが渡す — 最後の引数が届くまで送信されない。",
-            },
-            {
-              en: "<b>Function composition</b> chains small, single-purpose functions into a pipeline — `pipe(add1, double2, square)` reads left to right as \"do this, then this, then this,\" which is often easier to follow than one large function doing everything at once.",
-              np: "Function composition ले साना function हरूलाई pipeline मा जोड्छ — पढ्न बायाँबाट दायाँ, \"यो गर, त्यसपछि यो गर\" जस्तो।",
-              jp: "関数合成は小さな単機能の関数をパイプラインとして連結する。左から右に「これをして、次にこれをして」と読める。",
+              en: "<b>The TDZ is a safety net, not a punishment.</b> It exists specifically to catch the moment you reference a variable before you meant to assign it — a mistake `var` would hide behind a quiet `undefined`.",
+              np: "TDZ सजाय होइन, सुरक्षा जाल हो — variable assign गर्नु अघि accidentally access गर्ने bug पत्ता लगाउन बनाइएको हो।",
+              jp: "TDZは罰ではなく安全網。意図せず変数を先に参照してしまうミスを検出するために存在する。",
             },
           ],
         },
@@ -251,27 +246,27 @@ transform(3);  // step1: 3+1=4, step2: 4*2=8, step3: 8*8=64`,
   ],
   faq: [
     {
-      question: { en: "Why are closures useful?", np: "Closures किन उपयोगी छन्?", jp: "クロージャが有用な理由は？" },
+      question: { en: "What is lexical scope?", np: "Lexical scope के हो?", jp: "レキシカルスコープとは？" },
       answer: {
-        en: "Closures are useful for three main reasons: (1) data privacy — variables inside a closure are not accessible from outside, so you can create private state without classes; (2) factory functions — you can create multiple independent copies of a function, each with its own private state; (3) callbacks and event handlers — closures let a callback access variables from the scope where it was defined, not just the scope where it runs.",
-        np: "Closures तीन कारणले उपयोगी: (1) data privacy — closure भित्रका variables बाहिरबाट access हुँदैन; (2) factory functions — आफ्नै private state सहित independent copies; (3) callbacks — callback ले आफू define भएको scope का variables access गर्न सक्छ।",
-        jp: "クロージャが有用な理由: (1)データプライバシー — 外部からアクセス不可の状態; (2)ファクトリ関数 — 独立した状態を持つ複数の関数; (3)コールバック — 定義されたスコープの変数にアクセスできる。",
+        en: "Lexical scope means a function's variable access is determined by where the function is defined in the source code, not where it is called from. A function defined inside another function always has access to the outer function's variables, no matter where it is later called. This is different from dynamic scope (where scope depends on the call stack) — JavaScript always uses lexical scope.",
+        np: "Lexical scope भनेको function को variable access कहाँ define गरिएको छ त्यसले निर्धारण गर्छ — कहाँबाट call हुन्छ त्यसले होइन। Inner function ले outer function को variables हमेशा access गर्न सक्छ। JS हमेशा lexical scope प्रयोग गर्छ।",
+        jp: "レキシカルスコープとは、関数の変数アクセスが呼び出し元ではなく、定義された場所で決まること。内側の関数は常に外側の変数にアクセスできる。JSは常にレキシカルスコープを使う。",
       },
     },
     {
-      question: { en: "What is the difference between currying and partial application?", np: "Currying र partial application मा के फरक?", jp: "カリー化と部分適用の違いは？" },
+      question: { en: "Why does var leak out of blocks?", np: "var किन block बाहिर leak हुन्छ?", jp: "varがブロックからリークする理由は？" },
       answer: {
-        en: "Currying transforms a function that takes multiple arguments into a sequence of functions that each take one argument: f(a, b, c) becomes f(a)(b)(c). Partial application fixes some arguments of a function and returns a new function for the remaining ones. Currying is a special form of partial application. In practice, both are used to create specialised functions from general ones.",
-        np: "Currying ले multi-argument function लाई single-argument functions को sequence मा transform गर्छ: f(a,b,c) → f(a)(b)(c)। Partial application केही arguments fix गरेर बाँकीका लागि नयाँ function return गर्छ। Currying partial application को special form हो।",
-        jp: "カリー化は多引数関数を一引数関数の連鎖に変換: f(a,b,c) → f(a)(b)(c)。部分適用は引数の一部を固定して残りの関数を返す。カリー化は部分適用の特殊形。",
+        en: "var is function-scoped, not block-scoped. JavaScript had only function scope when it was first designed — the concept of block scope (using let and const) was added in ES6 (2015). Before that, the only way to create a new scope was with a function. This is why var ignores if/for/while blocks and is scoped to the nearest enclosing function. It is also why old code used IIFEs (Immediately Invoked Function Expressions) to create private scope.",
+        np: "var function-scoped हो, block-scoped होइन। JavaScript सुरुमा केवल function scope थियो — block scope (let/const) ES6 (2015) मा थपियो। त्यसैले var if/for/while blocks ignore गर्छ।",
+        jp: "varは関数スコープでありブロックスコープではない。ブロックスコープ(let/const)はES6(2015)で追加。それ以前はIIFEでスコープを作っていた。",
       },
     },
     {
-      question: { en: "Do closures cause memory leaks?", np: "Closures ले memory leak गराउँछ?", jp: "クロージャはメモリリークを引き起こす？" },
+      question: { en: "How does JavaScript decide which variable to use when names are duplicated across scopes?", np: "same नाम बहु scope मा भएमा JS ले कुन variable छान्छ?", jp: "同名の変数が複数のスコープにある場合、JSはどれを選ぶ？" },
       answer: {
-        en: "Closures themselves don't leak memory — they behave exactly as designed by keeping referenced variables alive. The risk appears when a closure is attached to something long-lived (a global event listener, a timer that never gets cleared, a cache that never evicts) and nobody ever releases that reference. The fix isn't avoiding closures — it's removing event listeners when a component unmounts, clearing intervals you no longer need, and being deliberate about what a long-lived closure captures.",
-        np: "Closure आफैंले memory leak गराउँदैन — design अनुसार नै variables जिउँदो राख्छ। जोखिम त्यतिखेर आउँछ जब closure लामो समयसम्म रहने चिज (global listener, नरोकिने timer) सँग जोडिन्छ र कहिल्यै release हुँदैन।",
-        jp: "クロージャ自体はメモリリークを引き起こさない。リスクは、クロージャが長寿命のもの（グローバルリスナー、クリアされないタイマー）に結び付き、参照が解放されない場合に生じる。",
+        en: "JavaScript looks up the scope chain starting from the innermost scope and stops at the first match — this is called shadowing. If a block declares its own `x`, any code inside that block sees the block's `x`, not the outer one, even though the outer `x` still exists and is untouched. Once you leave that inner block, the outer `x` becomes visible again. This is exactly what happens in the TDZ example above: the inner `let x` shadows the outer `x` for the entire function, even before the inner one is assigned.",
+        np: "JS सबैभन्दा भित्री scope बाट खोज्दै बाहिर जान्छ र पहिलो मिल्ने variable प्रयोग गर्छ — यसलाई shadowing भनिन्छ।",
+        jp: "JSは最も内側のスコープから外側へスコープチェーンを探索し、最初に一致した変数を使う。これをシャドーイングと呼ぶ。",
       },
     },
   ],

@@ -2,331 +2,341 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_6_LESSONS: JsLessonDay = {
   day: 6,
-  title: { en: "Arrays — Map, Filter, Reduce & Key Methods", np: "Arrays — Map, Filter, Reduce र Key Methods", jp: "配列 — map・filter・reduce・主要メソッド" },
+  title: { en: "Objects — Creation, Methods, Destructuring & Spread", np: "Objects — Creation, Methods, Destructuring र Spread", jp: "オブジェクト・メソッド・分割代入・スプレッド" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "map-filter-reduce",
-      title: { en: "Transforming Arrays — map, filter, reduce", np: "Arrays Transform — map, filter, reduce", jp: "配列変換 — map・filter・reduce" },
+      id: "object-fundamentals",
+      title: { en: "Object Fundamentals & Built-in Methods", np: "Object आधारभूत कुरा र Built-in Methods", jp: "オブジェクトの基礎と組み込みメソッド" },
       durationMinutes: 9,
       explanation: {
-        en: "These three methods are the workhorses of modern JavaScript, and each has one specific job:\n\n• <b>map</b> — transforms every element and returns a NEW array of the exact same length, one output per input\n• <b>filter</b> — keeps only the elements where the callback returns `true`, returning a new (possibly shorter) array\n• <b>reduce</b> — folds the entire array down into a single value (a number, an object, a Map — anything), by carrying an accumulator through every step\n\nNone of these three mutate the original array — they always return something new. Because each one returns an array (except reduce, which usually doesn't), you can chain them together: `.filter(...).map(...).reduce(...)` reads left to right as a pipeline, first narrowing down the data, then transforming it, then collapsing it to one answer.",
-        np: "map ले हरेक element transform गर्छ र same length को नयाँ array दिन्छ। filter ले callback true भएका element मात्र राख्छ। reduce ले पूरै array लाई एउटा single value मा फोल्ड गर्छ। तीनैले original array mutate गर्दैनन् — chain गर्न सकिन्छ।",
-        jp: "mapは各要素を変換し同じ長さの新しい配列を返す。filterはコールバックがtrueの要素だけを残す。reduceは配列全体を1つの値に折り畳む。3つとも元の配列を変更せず、チェーンできる。",
+        en: "An object is a collection of key-value pairs — think of it as a labelled filing cabinet where each drawer (property) has a name and holds a value, which can be a string, number, function, or even another object.\n\n<b>Creating and accessing</b>\n• Object literals `{ key: value }` are the most common way to create one\n• Dot notation (`user.name`) is for known, fixed keys; bracket notation (`user[key]`) is required when the key is dynamic or stored in a variable\n• ES6 shorthand lets you write `{ name, age }` instead of `{ name: name, age: age }` when a variable's name matches the property name\n\n<b>Reading many properties at once</b>\n• `Object.keys()`, `Object.values()`, and `Object.entries()` turn an object into arrays you can loop over, `.map()`, or `.filter()` — exactly like a real array\n• `Object.fromEntries()` reverses `Object.entries()` — it's how you \"map\" or \"filter\" an object, since objects don't have their own `.map()`/`.filter()`\n• `Object.freeze()` makes an object's top-level properties read-only; `Object.hasOwn(obj, key)` is the modern way to check a property exists directly on the object.",
+        np: "Object भनेको key-value pairs को collection हो — labelled filing cabinet जस्तै जहाँ हरेक drawer (property) को नाम हुन्छ र मान (value) राखिन्छ। Dot notation fixed keys का लागि, bracket notation dynamic keys का लागि। Object.keys/values/entries ले object लाई array मा बदल्छ ताकि map/filter प्रयोग गर्न सकिन्छ।",
+        jp: "オブジェクトはキーと値のペアの集合 — ラベル付きファイルキャビネットのようなもの。ドット記法は固定キー、ブラケット記法は動的キーに使う。Object.keys/values/entriesはオブジェクトを配列に変換しmap/filterを可能にする。",
       },
-      diagram: `[1, 2, 3, 4, 5]
-      │ .filter(n => n % 2 === 0)   →  [2, 4]            shorter, same type
-      │ .map(n => n * 10)           →  [20, 40]          same length, transformed
-      │ .reduce((sum, n) => sum+n, 0) → 60                single value
+      diagram: `const user = { name: "Alice", age: 30 };
+                    │              │
+                    ▼              ▼
+              key/property       value
 
-products.filter(inStock).map(getPrice).reduce(sum, 0)
-         └── narrow down ──┘└─ transform ─┘└── collapse to one ──┘`,
+user.name         ← dot notation (fixed key)
+user["age"]       ← bracket notation (dynamic/computed key)
+
+Object.entries(user)                   →  [["name","Alice"], ["age",30]]
+                                                     │
+                                    now a real array — map/filter it
+                                                     │
+Object.fromEntries( ...mapped/filtered... )  →  back to a plain object`,
       codeExample: {
-        title: { en: "map, filter, reduce — and chaining them together", np: "map, filter, reduce — chain गरेर", jp: "map・filter・reduce — チェーン結合" },
-        code: `const products = [
-  { id: 1, name: "Apple",  price: 1.5,  category: "fruit",  inStock: true  },
-  { id: 2, name: "Bread",  price: 2.5,  category: "bakery", inStock: true  },
-  { id: 3, name: "Banana", price: 0.75, category: "fruit",  inStock: false },
-];
+        title: { en: "Object literals, property access, and useful Object methods", np: "Object literals, property access र Object methods", jp: "オブジェクトリテラル・プロパティアクセス・Objectメソッド" },
+        code: `// ── Object literal + shorthand method ────────────────────────────
+const user = {
+  name: "Alice",
+  age: 30,
+  greet() { return \`Hi, I'm \${this.name}\`; },   // shorthand method (ES6)
+};
 
-// ── map — transform every element, same length back ──────────────
-const names = products.map(p => p.name);
-// ["Apple", "Bread", "Banana"]
+// ── Property access ───────────────────────────────────────────────
+user.name;              // "Alice" — dot notation
+const key = "age";
+user[key];               // 30 — bracket notation (dynamic key)
 
-// ── filter — keep elements where callback is true ─────────────────
-const inStock = products.filter(p => p.inStock);
-// 2 products (all except Banana)
+// ── Add / update / delete ─────────────────────────────────────────
+user.email = "alice@example.com";   // add
+user.age = 31;                       // update
+delete user.email;                   // remove entirely
 
-// ── reduce — fold the array into ONE value ────────────────────────
-// Signature: array.reduce((accumulator, current, index) => ..., initialValue)
-const total = products.reduce((sum, p) => sum + p.price, 0);
-// 0 + 1.5 + 2.5 + 0.75 = 4.75
+// ── Property shorthand + computed keys ────────────────────────────
+const name = "Bob", age = 25;
+const person = { name, age };        // same as { name: name, age: age }
+const field = "score";
+const result = { [field]: 100 };     // { score: 100 }
 
-const byCategory = products.reduce((acc, p) => {
-  acc[p.category] = (acc[p.category] ?? 0) + 1;
-  return acc;
-}, {});
-// { fruit: 2, bakery: 1 }
+// ── Checking existence ────────────────────────────────────────────
+Object.hasOwn(user, "name");    // true — modern, preferred check
 
-// ── Chaining — narrow, transform, then collapse ────────────────────
-const totalInStockFruitRevenue = products
-  .filter(p => p.category === "fruit" && p.inStock)
-  .map(p => p.price)
-  .reduce((sum, price) => sum + price, 0);
-// Only Apple is in-stock fruit → 1.5`,
+// ── Object.keys / values / entries / fromEntries ──────────────────
+const scores = { alice: 95, bob: 87, carol: 92 };
+Object.keys(scores);     // ["alice", "bob", "carol"]
+Object.values(scores);   // [95, 87, 92]
+Object.entries(scores);  // [["alice", 95], ["bob", 87], ["carol", 92]]
+
+const passing = Object.fromEntries(
+  Object.entries(scores).filter(([, score]) => score >= 90)
+);
+// { alice: 95, carol: 92 }
+
+// ── freeze — shallow, top-level only ──────────────────────────────
+const config = Object.freeze({ apiUrl: "https://api.example.com" });
+// config.apiUrl = "x";  // silently ignored (TypeError in strict mode)`,
       },
       keyTakeaways: [
-        { en: "`map()` always returns a new array of the SAME length as the input — one output for every input, no exceptions.", np: "`map()` ले सधैं input सँग same length को नयाँ array दिन्छ — हरेक input को एउटा output।", jp: "`map()`は常に入力と同じ長さの新しい配列を返す — 入力ごとに1つの出力。" },
-        { en: "`filter()` returns a new array containing only the elements where the callback returned `true` — it can be shorter than the input, never longer.", np: "`filter()` ले callback true भएका element मात्र राखेर नयाँ array दिन्छ — यो input भन्दा छोटो हुन सक्छ, लामो कहिल्यै हुँदैन।", jp: "`filter()`はコールバックがtrueを返した要素だけを含む新しい配列を返す — 入力より短くなることはあるが長くなることはない。" },
-        { en: "`reduce()` folds an entire array into a single value by carrying an accumulator forward through every element — the most flexible of the three.", np: "`reduce()` ले accumulator लाई हरेक element मार्फत बढाउँदै पूरै array लाई एउटा value मा फोल्ड गर्छ — तीनमध्ये सबैभन्दा flexible।", jp: "`reduce()`はアキュムレータを各要素に渡しながら配列全体を1つの値に折り畳む — 3つの中で最も柔軟。" },
+        { en: "Use dot notation for known, fixed keys; use bracket notation when the key is dynamic, computed, or stored in a variable.", np: "थाहा भएको fixed key का लागि dot notation; dynamic/computed key वा variable मा रहेको key का लागि bracket notation प्रयोग गर्नुहोस्।", jp: "既知の固定キーにはドット記法、動的・計算されたキーや変数に格納されたキーにはブラケット記法を使う。" },
+        { en: "`Object.keys/values/entries` convert an object into an array so you can use array methods on it; `Object.fromEntries` converts the result back into an object.", np: "`Object.keys/values/entries` ले object लाई array मा बदल्छ ताकि array methods प्रयोग गर्न सकिन्छ; `Object.fromEntries` ले फेरि object मा फिर्ता बदल्छ।", jp: "`Object.keys/values/entries`はオブジェクトを配列に変換し配列メソッドを使えるようにする。`Object.fromEntries`は結果を再びオブジェクトに戻す。" },
+        { en: "`Object.freeze()` only freezes top-level properties — any nested object or array inside it is still fully mutable.", np: "`Object.freeze()` ले top-level properties मात्र freeze गर्छ — भित्रको nested object/array अझै mutable नै रहन्छ।", jp: "`Object.freeze()`はトップレベルのプロパティのみを凍結する。内部のネストされたオブジェクト/配列は依然として変更可能。" },
       ],
       commonMistakes: [
-        { en: "Omitting `reduce`'s `initialValue` — without it, `reduce` uses the first element as the starting accumulator, which throws on an empty array and can silently change the result's type.", np: "`reduce` को `initialValue` छुटाउनु — यसबिना पहिलो element नै accumulator बन्छ, empty array मा throw हुन्छ र result को type पनि बदलिन सक्छ।", jp: "`reduce`の`initialValue`を省略すること。省略すると最初の要素がアキュムレータになり、空配列でスローされ、結果の型が変わることがある。" },
-        { en: "Expecting `map()` to remove items by returning `null`/`undefined` from the callback — `map()` always keeps the same length; use `filter()` first if you need fewer items.", np: "Callback बाट `null`/`undefined` return गरेर `map()` ले item हटाउँछ भन्ने ठान्नु — `map()` ले सधैं same length राख्छ; कम item चाहिँदा पहिले `filter()` प्रयोग गर्नुहोस्।", jp: "コールバックから`null`/`undefined`を返して`map()`が要素を削除すると思うこと。`map()`は常に同じ長さを保つ。要素を減らすには先に`filter()`を使う。" },
-        { en: "Reaching for `reduce()` to solve something `map()` or `filter()` already solves more clearly — reduce is powerful but often harder to read than the simpler method.", np: "`map()` वा `filter()` ले सहज रूपमा गर्न सक्ने काम `reduce()` बाट गर्नु — reduce शक्तिशाली छ तर सरल method भन्दा पढ्न गाह्रो हुन सक्छ।", jp: "`map()`や`filter()`で明確に解決できることを`reduce()`で解決しようとすること。reduceは強力だがシンプルなメソッドより読みにくいことが多い。" },
+        { en: "Writing `user[name]` when you meant the literal string key `\"name\"` — without quotes, JavaScript looks up a variable called `name`, not the property `name`.", np: "`\"name\"` literal key चाहेको ठाउँमा `user[name]` लेख्नु — quotes बिना JS ले `name` नामको variable खोज्छ, property होइन।", jp: "文字列キー`\"name\"`のつもりで`user[name]`と書くこと。引用符がないとJSは`name`という変数を探してしまう。" },
+        { en: "Assuming `Object.freeze()` deep-freezes an object — mutating a nested object inside a frozen one still works.", np: "`Object.freeze()` ले deep freeze गर्छ भन्ने ठान्नु — frozen object भित्रको nested object अझै mutate गर्न सकिन्छ।", jp: "`Object.freeze()`が深く凍結すると思い込むこと。凍結されたオブジェクト内のネストされたオブジェクトはまだ変更可能。" },
+        { en: "Using `\"key\" in obj` when you only want the object's own properties — `in` also checks inherited properties up the prototype chain, unlike `Object.hasOwn()`.", np: "Object आफ्नै property मात्र चाहिँदा `\"key\" in obj` प्रयोग गर्नु — `in` ले prototype chain का inherited properties पनि check गर्छ, `Object.hasOwn()` ले गर्दैन।", jp: "自身のプロパティだけを確認したいのに`\"key\" in obj`を使うこと。`in`はプロトタイプチェーンの継承プロパティも確認するが`Object.hasOwn()`はしない。" },
       ],
       quiz: [
         {
-          question: { en: "If you call `.map()` on a 5-item array, how many items does the result have?", np: "5-item array मा `.map()` call गर्दा result मा कति item हुन्छ?", jp: "5要素の配列に`.map()`を呼ぶと、結果には何個の要素がある？" },
+          question: { en: "Which notation must you use when the property key is stored in a variable?", np: "Property key variable मा राखिएको बेला कुन notation प्रयोग गर्नुपर्छ?", jp: "プロパティキーが変数に格納されている場合、どちらの記法を使うべき？" },
           options: [
-            { en: "Could be fewer than 5, depending on the callback", np: "Callback अनुसार 5 भन्दा कम हुन सक्छ", jp: "コールバックによっては5未満になることがある" },
-            { en: "Always exactly 5", np: "सधैं ठ्याक्कै 5", jp: "常に正確に5" },
+            { en: "Dot notation, e.g. `obj.key`", np: "Dot notation, जस्तै `obj.key`", jp: "ドット記法、例: `obj.key`" },
+            { en: "Bracket notation, e.g. `obj[key]`", np: "Bracket notation, जस्तै `obj[key]`", jp: "ブラケット記法、例: `obj[key]`" },
           ],
           correctIndex: 1,
-          explanation: { en: "map() always produces one output per input, so the result length always matches the input length.", np: "map() ले हरेक input को एउटा output दिन्छ, त्यसैले result length input length सँग सधैं मिल्छ।", jp: "map()は入力ごとに1つの出力を生成するため、結果の長さは常に入力の長さと一致する。" },
+          explanation: { en: "Dot notation only works with a literal, fixed property name; bracket notation evaluates the expression inside it, so it works with variables.", np: "Dot notation ले literal, fixed property name मात्र काम गर्छ; bracket notation ले भित्रको expression evaluate गर्छ, त्यसैले variable सँग काम गर्छ।", jp: "ドット記法はリテラルの固定プロパティ名でのみ機能する。ブラケット記法は内部の式を評価するため変数でも機能する。" },
         },
         {
-          question: { en: "What happens if you call `.reduce()` with no `initialValue` on an empty array?", np: "Empty array मा `initialValue` बिना `.reduce()` call गर्दा के हुन्छ?", jp: "空配列で`initialValue`なしに`.reduce()`を呼ぶとどうなる？" },
+          question: { en: "What does `Object.freeze()` protect against for nested objects?", np: "Nested objects का लागि `Object.freeze()` ले केबाट सुरक्षा दिन्छ?", jp: "`Object.freeze()`はネストされたオブジェクトに対して何を保護する？" },
           options: [
-            { en: "It quietly returns `undefined`", np: "यसले silently `undefined` फर्काउँछ", jp: "黙って`undefined`を返す" },
-            { en: "It throws a `TypeError`", np: "यसले `TypeError` throw गर्छ", jp: "`TypeError`をスローする" },
+            { en: "It deep-freezes everything, including nested objects", np: "यसले nested objects समेत सबै deep-freeze गर्छ", jp: "ネストされたオブジェクトを含め、すべてを深く凍結する" },
+            { en: "Nothing — it only freezes top-level properties; nested objects remain mutable", np: "केही होइन — यसले top-level properties मात्र freeze गर्छ; nested objects mutable नै रहन्छ", jp: "何もない — トップレベルのプロパティのみを凍結し、ネストされたオブジェクトは変更可能なまま" },
           ],
           correctIndex: 1,
-          explanation: { en: "With no initial value and no elements to use as a starting accumulator, reduce has nothing to work with and throws.", np: "Initial value नभई र काम गर्ने element पनि नभई reduce सँग सुरु गर्ने केही हुँदैन, त्यसैले throw हुन्छ।", jp: "初期値も出発点となる要素もない場合、reduceは何も処理できずスローする。" },
+          explanation: { en: "Object.freeze() is shallow. To fully lock a nested structure you'd need to recursively freeze every nested object yourself.", np: "Object.freeze() shallow हो। Nested structure पूर्ण रूपमा lock गर्न हरेक nested object recursively freeze गर्नुपर्छ।", jp: "Object.freeze()は浅い。ネストされた構造を完全にロックするには各ネストされたオブジェクトを再帰的に凍結する必要がある。" },
         },
         {
-          question: { en: "In `products.filter(cb1).map(cb2)`, in what order do the two methods run?", np: "`products.filter(cb1).map(cb2)` मा दुई methods कुन order मा चल्छन्?", jp: "`products.filter(cb1).map(cb2)`で2つのメソッドはどの順序で実行される？" },
+          question: { en: "What is the key difference between `\"key\" in obj` and `Object.hasOwn(obj, \"key\")`?", np: "`\"key\" in obj` र `Object.hasOwn(obj, \"key\")` बीचको मुख्य फरक के हो?", jp: "`\"key\" in obj`と`Object.hasOwn(obj, \"key\")`の主な違いは？" },
           options: [
-            { en: "filter runs first over the full array, then map runs on the filtered result", np: "पहिले पूरै array माथि filter चल्छ, त्यसपछि filtered result मा map चल्छ", jp: "先にfilterが全配列に対して実行され、その後mapがフィルタ後の結果に実行される" },
-            { en: "Both run at the same time on the original array", np: "दुवै original array मा एकैसाथ चल्छन्", jp: "両方が元の配列に対して同時に実行される" },
+            { en: "There is no difference — they always return the same result", np: "फरक छैन — दुवैले सधैं उस्तै result दिन्छन्", jp: "違いはない — 常に同じ結果を返す" },
+            { en: "`in` also checks properties inherited via the prototype chain; `Object.hasOwn` checks only the object's own properties", np: "`in` ले prototype chain बाट inherit भएका properties पनि check गर्छ; `Object.hasOwn` ले object का आफ्नै properties मात्र check गर्छ", jp: "`in`はプロトタイプチェーン経由で継承されたプロパティも確認する。`Object.hasOwn`はオブジェクト自身のプロパティのみ確認する" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Chained methods run strictly left to right — each one completes fully and returns a new array before the next method runs on it.", np: "Chain गरिएका methods बायाँबाट दायाँ क्रममा चल्छन् — हरेक अघिल्लो पूरा भएपछि मात्र अर्को चल्छ।", jp: "チェーンされたメソッドは厳密に左から右に実行される — 各メソッドが完全に完了し新しい配列を返した後に次が実行される。" },
+          correctIndex: 1,
+          explanation: { en: "`in` walks up the prototype chain, so it can return true for inherited methods like `toString`. `Object.hasOwn` is the precise, own-property-only check.", np: "`in` prototype chain माथि walk गर्छ, त्यसैले inherited method जस्तै `toString` का लागि पनि true फर्काउन सक्छ। `Object.hasOwn` precise, own-property-only check हो।", jp: "`in`はプロトタイプチェーンを遡るため、`toString`のような継承メソッドにもtrueを返せる。`Object.hasOwn`は自身のプロパティのみを正確に確認する。" },
         },
       ],
     },
     {
-      id: "find-some-every-includes",
-      title: { en: "Finding & Testing — find, some, every, includes", np: "Find र Testing — find, some, every, includes", jp: "検索・テスト — find・some・every・includes" },
+      id: "destructuring-spread-rest",
+      title: { en: "Destructuring, Spread & Rest", np: "Destructuring, Spread र Rest", jp: "分割代入・スプレッド・rest" },
       durationMinutes: 9,
       explanation: {
-        en: "These methods answer yes/no or \"which one\" questions about an array, and all of them stop iterating as soon as the answer is known — which makes them more efficient than `filter()` when you only need one result or a boolean.\n\n• <b>find</b> / <b>findIndex</b> — return the FIRST matching element (or its index), or `undefined`/`-1` if nothing matches\n• <b>some</b> — `true` if AT LEAST ONE element satisfies the callback\n• <b>every</b> — `true` only if ALL elements satisfy the callback\n• <b>includes</b> — `true` if the array contains that exact value, using an equality check (<b>SameValueZero</b>) that treats `NaN` as equal to itself — unlike `indexOf`, which uses strict equality and can never find `NaN`.",
-        np: "find/findIndex ले पहिलो matching element फर्काउँछ। some ले 'कम्तिमा एक' जाँच गर्छ, every ले 'सबै' जाँच गर्छ। includes ले SameValueZero प्रयोग गर्छ जसले NaN लाई आफैं सँग बराबर मान्छ, indexOf ले मान्दैन।",
-        jp: "find/findIndexは最初にマッチした要素を返す。someは「少なくとも1つ」、everyは「すべて」を確認する。includesはSameValueZeroを使いNaNを自身と等しいとみなすが、indexOfはそうではない。",
+        en: "<b>Destructuring</b> unpacks values out of an object or array by name or position, instead of reaching in one property at a time — `const { name, age } = user` reads exactly like the shape of the data itself. It works with renaming (`{ name: userName }`), default values (`{ country = \"Unknown\" }`), nested shapes, and directly inside function parameters.\n\n<b>Spread</b> (`...`) expands an iterable's items into a new array or object — `{...obj1, ...obj2}` merges objects left to right, with later keys overwriting earlier ones. <b>Rest</b> (`...`) does the opposite: it collects whatever remaining items are left into a real array, and can only appear as the very last item in a destructuring pattern or function parameter list.",
+        np: "Destructuring ले object/array बाट value लाई नाम वा position अनुसार unpack गर्छ। Spread (`...`) ले iterable लाई नयाँ array/object मा फिँजाउँछ; Rest (`...`) ले बाँकी सबै items लाई array मा collect गर्छ।",
+        jp: "分割代入はオブジェクトや配列から名前や位置で値を取り出す。スプレッド(`...`)はイテラブルを新しい配列/オブジェクトに展開する。rest(`...`)は残りの項目を配列に集める。",
       },
-      diagram: `[1, 5, 3, 8, 2, 9, 4, 7, 6]
+      diagram: `const { name, age } = user;              ← object destructuring
+const [first, , third] = [10, 20, 30];   ← array destructuring (skip with ,)
+const [head, ...tail] = [1, 2, 3, 4];    ← rest collects [2, 3, 4]
 
-find(n => n > 6)        →  8    (FIRST match, stops iterating there)
-findIndex(n => n > 6)   →  3    (index of that first match)
-some(n => n > 8)        →  true   ("does ANY element pass?")
-every(n => n > 0)       →  true   ("do ALL elements pass?")
-includes(8)             →  true   (exact value match)
+{ ...obj1, ...obj2 }    ← spread MERGES, later keys win
+function f(...args) {}  ← rest COLLECTS all arguments into an array
 
-[NaN].includes(NaN)   →  true    ← SameValueZero: NaN equals itself
-[NaN].indexOf(NaN)    →  -1      ← strict equality: NaN !== NaN`,
+     spread  →  expands   ...arr  into  a, b, c
+     rest    →  collects  a, b, c  into ...arr`,
       codeExample: {
-        title: { en: "find, findIndex, some, every, includes, indexOf", np: "find, findIndex, some, every, includes, indexOf", jp: "find・findIndex・some・every・includes・indexOf" },
-        code: `const numbers = [1, 5, 3, 8, 2, 9, 4, 7, 6];
+        title: { en: "Destructuring, spread, and rest in practice", np: "Destructuring, spread, rest व्यवहारमा", jp: "分割代入・スプレッド・restの実践" },
+        code: `const user = { name: "Alice", age: 30, address: { city: "Kathmandu" } };
 
-// find — returns the FIRST element where callback is true (or undefined)
-numbers.find(n => n > 6);         // 8 — stops after finding the first match
+// ── Object destructuring — rename, default, nested ────────────────
+const { name, age } = user;
+const { name: userName } = user;             // rename while destructuring
+const { country = "Unknown" } = user;        // default (user has no country)
+const { address: { city } } = user;          // nested destructuring
 
-// findIndex — returns the INDEX of the first match (or -1)
-numbers.findIndex(n => n > 6);    // 3 (index of 8)
+// In function parameters — very common in React/Express:
+function greet({ name, age }) { return \`\${name} is \${age}\`; }
 
-// findLast / findLastIndex — search from the end (ES2023)
-numbers.findLast(n => n > 6);     // 7 (last element > 6)
+// ── Array destructuring — skip items, swap variables ───────────────
+const [first, , third] = [10, 20, 30];   // skip index 1 with an empty slot
+let a = 1, b = 2;
+[a, b] = [b, a];                          // swap: a = 2, b = 1
 
-// some — true if ANY element satisfies the callback
-numbers.some(n => n > 8);         // true (9 > 8)
-numbers.some(n => n > 10);        // false
+// ── Spread — expanding into a new array/object ──────────────────────
+const merged   = [...[1, 2], ...[3, 4]];        // [1, 2, 3, 4]
+const combined = { ...{ a: 1 }, ...{ a: 2, b: 3 } };  // { a: 2, b: 3 } — last wins
 
-// every — true only if ALL elements satisfy the callback
-numbers.every(n => n > 0);        // true
-numbers.every(n => n > 5);        // false
+// ── Rest — collecting the remainder ─────────────────────────────────
+function sum(...numbers) {                 // rest gathers all args into an array
+  return numbers.reduce((acc, n) => acc + n, 0);
+}
+sum(1, 2, 3, 4, 5);  // 15
 
-// includes — true if the exact value is in the array (SameValueZero)
-numbers.includes(8);              // true
-[NaN].includes(NaN);              // true (unlike indexOf, which uses ===)
-
-// indexOf / lastIndexOf — find index by value (strict equality)
-numbers.indexOf(5);               // 1
-numbers.indexOf(100);             // -1 — not found
-[NaN].indexOf(NaN);               // -1 — NaN !== NaN under strict equality`,
+const [head, ...tail] = [1, 2, 3, 4];   // head = 1, tail = [2, 3, 4]
+const { name: n, ...rest } = user;      // n = "Alice", rest = { age: 30, address: {...} }`,
       },
       keyTakeaways: [
-        { en: "`find`/`findIndex` return the first match (or `undefined`/`-1`) and stop iterating immediately — more efficient than `filter()[0]` when you only need one result.", np: "`find`/`findIndex` ले पहिलो match (वा `undefined`/`-1`) फर्काउँछ र तुरुन्तै रोकिन्छ — एउटा मात्र result चाहिँदा `filter()[0]` भन्दा बढी efficient।", jp: "`find`/`findIndex`は最初のマッチ（または`undefined`/`-1`）を返し、すぐに反復を止める。1つの結果だけ必要な場合`filter()[0]`より効率的。" },
-        { en: "`some()` asks \"does AT LEAST ONE pass?\"; `every()` asks \"do ALL pass?\" — both short-circuit as soon as the final answer is certain.", np: "`some()` ले 'कम्तिमा एक pass हुन्छ?' जाँच गर्छ; `every()` ले 'सबै pass हुन्छ?' जाँच गर्छ — दुवैले answer confirm भएपछि तुरुन्तै रोकिन्छन्।", jp: "`some()`は「少なくとも1つ通るか」、`every()`は「すべて通るか」を確認する。両方とも答えが確定した時点で即座に停止する。" },
-        { en: "`includes()` uses `SameValueZero` equality, which treats `NaN` as equal to itself; `indexOf()` uses strict equality (`===`) and can never find `NaN` in an array.", np: "`includes()` ले `SameValueZero` equality प्रयोग गर्छ, जसले `NaN` लाई आफैं सँग बराबर मान्छ; `indexOf()` ले strict equality प्रयोग गर्छ र array मा `NaN` कहिल्यै भेट्दैन।", jp: "`includes()`は`SameValueZero`等価性を使い`NaN`を自身と等しいとみなす。`indexOf()`は厳密等価（`===`）を使い配列内で`NaN`を見つけられない。" },
+        { en: "Destructuring pulls values out by name or position and works directly in function parameters — no manual `.property` or `[index]` access needed.", np: "Destructuring ले नाम वा position अनुसार value निकाल्छ, function parameters मा सिधै काम गर्छ — manual property/index access चाहिँदैन।", jp: "分割代入は名前や位置で値を取り出し、関数パラメータで直接機能する。手動のプロパティ/インデックスアクセスは不要。" },
+        { en: "Spread always creates a NEW array/object; when merging objects, later spread sources overwrite earlier ones for duplicate keys.", np: "Spread ले सधैं नयाँ array/object बनाउँछ; object merge गर्दा duplicate key मा पछिल्लो source ले अगाडिको overwrite गर्छ।", jp: "スプレッドは常に新しい配列/オブジェクトを作る。オブジェクトをマージする際、重複キーは後のソースが前のものを上書きする。" },
+        { en: "Rest collects \"everything else\" into a real array, but it must be the LAST element in the pattern — you can't have anything after it.", np: "Rest ले 'बाँकी सबै' लाई एक real array मा collect गर्छ, तर यो pattern को अन्तिम element हुनुपर्छ।", jp: "restは「残り全部」を実際の配列に集めるが、パターンの最後の要素でなければならない。" },
       ],
       commonMistakes: [
-        { en: "Writing `array.filter(cb)[0]` to get a single item when `array.find(cb)` already does this more clearly and stops early instead of scanning the whole array.", np: "एउटा item चाहिँदा `array.filter(cb)[0]` लेख्नु — `array.find(cb)` ले पहिले नै यो स्पष्ट र छिटो गर्छ।", jp: "1つの項目が必要な場合に`array.filter(cb)[0]`と書くこと。`array.find(cb)`はより明確で早期に停止する。" },
-        { en: "Mixing up `some()` (ANY) with `every()` (ALL) and getting the opposite boolean result from what was intended.", np: "`some()` (ANY) र `every()` (ALL) मिलाउनु र विपरीत boolean result पाउनु।", jp: "`some()`（ANY）と`every()`（ALL）を混同し、意図と逆のブール値の結果を得ること。" },
-        { en: "Assuming `indexOf()` can locate `NaN` in an array — it can't, because it uses strict equality where `NaN !== NaN`; use `includes()` instead.", np: "`indexOf()` ले array मा `NaN` भेट्न सक्छ भन्ने ठान्नु — सक्दैन, किनकि यो strict equality प्रयोग गर्छ जहाँ `NaN !== NaN`; `includes()` प्रयोग गर्नुहोस्।", jp: "`indexOf()`が配列内の`NaN`を見つけられると思うこと。`NaN !== NaN`という厳密等価を使うため見つけられない。代わりに`includes()`を使う。" },
+        { en: "Confusing spread and rest because they share the same `...` syntax — spread EXPANDS an existing iterable, rest COLLECTS remaining values into one.", np: "Spread र rest दुवैले `...` syntax प्रयोग गर्ने भएर मिलाउनु — spread ले फिँजाउँछ, rest ले collect गर्छ।", jp: "同じ`...`構文を使うためスプレッドとrestを混同すること。スプレッドは展開し、restは収集する。" },
+        { en: "Assuming `{...obj}` performs a deep copy — it only copies top-level keys; nested objects/arrays inside are still shared references.", np: "`{...obj}` ले deep copy गर्छ भन्ने ठान्नु — यसले top-level keys मात्र copy गर्छ, nested object/array अझै shared रहन्छ।", jp: "`{...obj}`が深いコピーを行うと思い込むこと。トップレベルのキーのみをコピーし、ネストされた参照は共有されたまま。" },
+        { en: "Destructuring a property that doesn't exist without a default value and being surprised it silently returns `undefined` instead of throwing.", np: "Default value बिना नभएको property destructure गरेर error आउनुको सट्टा `undefined` आउँदा अनौठो मान्नु।", jp: "存在しないプロパティをデフォルト値なしで分割代入し、エラーではなく黙って`undefined`が返されて驚くこと。" },
       ],
       quiz: [
         {
-          question: { en: "What does `find()` return if no element in the array matches the callback?", np: "Array मा कुनै element callback सँग match नभएमा `find()` ले के फर्काउँछ?", jp: "配列内でコールバックにマッチする要素がない場合、`find()`は何を返す？" },
+          question: { en: "In `const { country = \"Unknown\" } = user`, what happens if `user.country` is `undefined`?", np: "`const { country = \"Unknown\" } = user` मा `user.country` `undefined` भएमा के हुन्छ?", jp: "`const { country = \"Unknown\" } = user`で`user.country`が`undefined`の場合どうなる？" },
           options: [
-            { en: "`null`", np: "`null`", jp: "`null`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "It throws an error", np: "Error throw हुन्छ", jp: "エラーがスローされる" },
+            { en: "`country` becomes `\"Unknown\"`", np: "`country` `\"Unknown\"` हुन्छ", jp: "`country`は`\"Unknown\"`になる" },
           ],
           correctIndex: 1,
-          explanation: { en: "find() returns undefined (not null) when nothing matches — the same convention as accessing a missing object property.", np: "केही match नभएमा find() ले undefined (null होइन) फर्काउँछ — missing object property access जस्तै convention।", jp: "何もマッチしない場合、find()はundefined（nullではない）を返す — 存在しないオブジェクトプロパティにアクセスする場合と同じ規則。" },
+          explanation: { en: "Destructuring defaults apply whenever the extracted value is exactly `undefined`, not just when the key is missing entirely.", np: "Extract भएको value ठ्याक्कै `undefined` भएमा destructuring default apply हुन्छ, key नभएको बेला मात्र होइन।", jp: "分割代入のデフォルトは、抽出された値がまさに`undefined`である場合に適用される。キーが完全に欠けている場合だけではない。" },
         },
         {
-          question: { en: "What is the key difference between `some()` and `every()`?", np: "`some()` र `every()` बीचको मुख्य फरक के हो?", jp: "`some()`と`every()`の主な違いは？" },
+          question: { en: "What does `const [head, ...tail] = [1, 2, 3]` produce?", np: "`const [head, ...tail] = [1, 2, 3]` ले के दिन्छ?", jp: "`const [head, ...tail] = [1, 2, 3]`は何を生成する？" },
           options: [
-            { en: "`some()` checks if ANY element passes; `every()` checks if ALL elements pass", np: "`some()` ले कुनै एक element pass भयो कि जाँच्छ; `every()` ले सबै pass भयो कि जाँच्छ", jp: "`some()`はANY要素が通るか確認し、`every()`はALL要素が通るか確認する" },
-            { en: "They are functionally identical", np: "दुवै functionally उस्तै हुन्", jp: "機能的に同一" },
+            { en: "`head = 1`, `tail = [2, 3]`", np: "`head = 1`, `tail = [2, 3]`", jp: "`head = 1`、`tail = [2, 3]`" },
+            { en: "`head = [1, 2, 3]`, `tail = undefined`", np: "`head = [1, 2, 3]`, `tail = undefined`", jp: "`head = [1, 2, 3]`、`tail = undefined`" },
           ],
           correctIndex: 0,
-          explanation: { en: "some() short-circuits to true on the first passing element; every() short-circuits to false on the first failing element.", np: "some() पहिलो pass हुने element मा true मा short-circuit हुन्छ; every() पहिलो fail हुने element मा false मा short-circuit हुन्छ।", jp: "some()は最初に通った要素でtrueに短絡する。every()は最初に失敗した要素でfalseに短絡する。" },
+          explanation: { en: "The rest pattern collects everything after the first matched element into a new array.", np: "Rest pattern ले पहिलो matched element पछिका सबैलाई नयाँ array मा collect गर्छ।", jp: "restパターンは最初にマッチした要素以降のすべてを新しい配列に集める。" },
         },
         {
-          question: { en: "Why does `[NaN].includes(NaN)` return `true` while `[NaN].indexOf(NaN)` returns `-1`?", np: "`[NaN].includes(NaN)` ले `true` फर्काउँछ तर `[NaN].indexOf(NaN)` ले `-1` फर्काउँछ, किन?", jp: "`[NaN].includes(NaN)`は`true`を返すが`[NaN].indexOf(NaN)`が`-1`を返す理由は？" },
+          question: { en: "Does `{...obj1, ...obj2}` deep copy nested objects inside `obj1` or `obj2`?", np: "`{...obj1, ...obj2}` ले `obj1` वा `obj2` भित्रका nested objects deep copy गर्छ?", jp: "`{...obj1, ...obj2}`は`obj1`や`obj2`内のネストされたオブジェクトを深くコピーする？" },
           options: [
-            { en: "`includes()` uses `SameValueZero` (treats `NaN` as equal to itself); `indexOf()` uses strict equality where `NaN !== NaN`", np: "`includes()` ले `SameValueZero` प्रयोग गर्छ (NaN लाई आफैं सँग बराबर मान्छ); `indexOf()` ले strict equality प्रयोग गर्छ जहाँ `NaN !== NaN`", jp: "`includes()`は`SameValueZero`を使う（NaNを自身と等しいとみなす）。`indexOf()`は厳密等価を使い`NaN !== NaN`" },
-            { en: "They behave identically — this is a trick question", np: "दुवैको behavior उस्तै — यो trick question हो", jp: "両者は同じ動作をする — これは引っかけ問題" },
+            { en: "Yes, the result is fully independent at every level", np: "हो, result हरेक level मा पूर्ण independent हुन्छ", jp: "はい、結果はすべてのレベルで完全に独立している" },
+            { en: "No — only top-level keys are copied; nested objects/arrays remain shared references", np: "होइन — top-level keys मात्र copy हुन्छ; nested objects/arrays shared reference नै रहन्छ", jp: "いいえ — トップレベルのキーのみコピーされ、ネストされたオブジェクト/配列は共有参照のまま" },
           ],
-          correctIndex: 0,
-          explanation: { en: "SameValueZero is almost identical to strict equality except it makes an exception specifically for NaN.", np: "SameValueZero strict equality सँग लगभग उस्तै हो तर NaN का लागि विशेष अपवाद बनाउँछ।", jp: "SameValueZeroは厳密等価とほぼ同じだが、NaNに対して特別な例外を設けている。" },
+          correctIndex: 1,
+          explanation: { en: "Spread is a shallow copy operation, exactly like `Object.assign`. Mutating a nested value through the copy will also change the original.", np: "Spread एक shallow copy operation हो, `Object.assign` जस्तै। Copy मार्फत nested value mutate गर्दा original पनि बदलिन्छ।", jp: "スプレッドは`Object.assign`と同様に浅いコピー操作。コピー経由でネストされた値を変更すると元も変わる。" },
         },
       ],
     },
     {
-      id: "sort-splice-flat-foreach",
-      title: { en: "Mutating Methods — sort, splice, flat & forEach", np: "Mutating Methods — sort, splice, flat, forEach", jp: "配列変更メソッド — sort・splice・flat・forEach" },
+      id: "cloning-shallow-deep",
+      title: { en: "Cloning Objects — Shallow vs Deep", np: "Object Cloning — Shallow vs Deep", jp: "オブジェクトのクローン — 浅いvs深い" },
       durationMinutes: 9,
       explanation: {
-        en: "Some array methods change the original array in place (<b>mutate</b>) instead of returning a new one — this matters a lot when working with React/Redux state, where mutating directly can cause bugs or missed re-renders.\n\n• <b>sort</b> — mutates the array; with no comparator it converts elements to STRINGS and sorts lexicographically (so `10` comes before `2`) — always pass `(a, b) => a - b` for numeric sort\n• <b>splice</b> — mutates: removes/inserts/replaces elements at a position; `slice` (no \"p\") does the same job WITHOUT mutating\n• <b>flat(depth)</b> / <b>flatMap</b> — flatten nested arrays by a given depth (or `Infinity` for fully flat); `flatMap` maps then flattens one level in a single, more efficient pass\n• <b>forEach</b> — iterates purely for side effects; it always returns `undefined` and cannot be chained — use `map` instead when you need a new array back.",
-        np: "sort, push, pop, splice जस्ता method ले original array mutate गर्छ। sort ले comparator बिना string जस्तो sort गर्छ। slice ले mutate गर्दैन। forEach ले सधैं undefined फर्काउँछ, chain हुँदैन।",
-        jp: "sort・push・pop・spliceなどは元の配列を変更する。比較関数なしのsortは文字列としてソートする。sliceは変更しない。forEachは常にundefinedを返しチェーンできない。",
+        en: "A <b>shallow copy</b> (`{...obj}` or `Object.assign({}, obj)`) copies an object's top-level properties by value — but if a property's value is itself an object or array, only the reference is copied, not the data it points to. So the original and the copy end up pointing at the exact same nested object, and mutating it through either one affects both.\n\nA <b>deep clone</b> walks the entire structure and creates brand-new, fully independent copies at every level. `structuredClone()` is the modern, built-in way to do this (Node 17+, all modern browsers) and correctly handles `Date`, `Map`, `Set`, and `RegExp`. Avoid `JSON.parse(JSON.stringify(obj))` for this — it silently drops functions, `undefined` values, and `Symbol` keys, and turns `Date` objects into plain strings.",
+        np: "Shallow copy ले top-level properties मात्र value द्वारा copy गर्छ — nested object/array भने अझै same reference रहन्छ। Deep clone ले हरेक level मा independent copy बनाउँछ। `structuredClone()` modern deep clone को लागि उपयोग गर्नुहोस्।",
+        jp: "浅いコピーはトップレベルのプロパティのみをコピーする — ネストされたオブジェクト/配列は同じ参照のまま。深いクローンはすべてのレベルで独立したコピーを作る。深いクローンには`structuredClone()`を使う。",
       },
-      diagram: `MUTATES the original array         Does NOT mutate
-──────────────────────────         ──────────────────────
-sort, reverse, push, pop,          map, filter, slice,
-shift, unshift, splice, fill       concat, flat, flatMap
+      diagram: `original ──┬── name: "Alice"          (copied BY VALUE — independent)
+           └── hobbies: [...] ───┐
+                                  │  SAME array reference
+shallow = {...original} ──┬── name: "Bob"        (independent copy)
+                           └── hobbies: [...] ────┘  ← mutating this affects original too!
 
-nums.sort()            →  [1, 10, 2, 21]   ❌ string sort!
-nums.sort((a,b)=>a-b)  →  [1, 2, 10, 21]   ✅ numeric sort
-
-[1, [2, [3, [4]]]].flat()         →  [1, 2, [3, [4]]]    1 level deep
-[1, [2, [3, [4]]]].flat(Infinity) →  [1, 2, 3, 4]         fully flat`,
+deep = structuredClone(original)  →  every level is a brand-new, independent copy`,
       codeExample: {
-        title: { en: "sort, splice/slice, flat/flatMap, forEach — and their gotchas", np: "sort, splice/slice, flat/flatMap, forEach — gotchas सहित", jp: "sort・splice/slice・flat/flatMap・forEachと注意点" },
-        code: `// ── sort — MUTATES the original array ────────────────────────────────────
-const nums = [10, 1, 21, 2];
-nums.sort();                 // [1, 10, 2, 21] — default sorts as STRINGS! Bug waiting to happen
-nums.sort((a, b) => a - b);  // [1, 2, 10, 21] — ascending (use (b - a) for descending)
+        title: { en: "Shallow copy vs deep clone — the classic interview question", np: "Shallow copy vs deep clone — classic interview question", jp: "浅いコピーと深いクローン — 定番の面接質問" },
+        code: `const original = {
+  name: "Alice",
+  hobbies: ["reading", "coding"],   // nested reference type
+  address: { city: "Kathmandu" },   // another nested object
+};
 
-const users = [{ name: "Charlie" }, { name: "Alice" }, { name: "Bob" }];
-users.sort((a, b) => a.name.localeCompare(b.name));
-// [Alice, Bob, Charlie]
+// ── Shallow copy — copies top-level properties only ────────────────
+const shallow = { ...original };           // same as Object.assign({}, original)
 
-// ── splice — MUTATES: add/remove/replace at a position ───────────────────
-const arr = [1, 2, 3, 4, 5];
-arr.splice(2, 1);          // removes 1 element at index 2 → arr = [1, 2, 4, 5]
-arr.splice(2, 0, 99);      // inserts 99 at index 2, removes 0 → arr = [1, 2, 99, 4, 5]
+shallow.name = "Bob";
+console.log(original.name);   // "Alice" — top-level is independent, not affected
 
-// ── slice — does NOT mutate, returns a new portion ────────────────────────
-const copy = arr.slice(1, 3);  // [2, 99] — from index 1 up to (not including) index 3
+shallow.hobbies.push("gaming");
+console.log(original.hobbies);   // ["reading", "coding", "gaming"] — affected! shared reference
 
-// ── flat / flatMap — flatten nested arrays ─────────────────────────────────
-[1, [2, [3, [4]]]].flat();          // [1, 2, [3, [4]]] — only one level by default
-[1, [2, [3, [4]]]].flat(Infinity);  // [1, 2, 3, 4] — flatten all levels
-[[1, 2], [3, 4]].flatMap(x => x);   // [1, 2, 3, 4] — map then flatten one level
+// ── Deep clone — creates a fully independent copy ───────────────────
+const deep = structuredClone(original);   // ES2022, Node 17+, modern browsers
+deep.address.city = "Pokhara";
+console.log(original.address.city);   // "Kathmandu" — NOT affected ✅
 
-// ── forEach — iterate for side effects, always returns undefined ──────────
-[1, 2, 3].forEach((n, i) => console.log(i, n));
-// Use map() when you need a new array back; forEach() cannot be chained`,
+// ── Avoid this for deep cloning ──────────────────────────────────────
+// const lossy = JSON.parse(JSON.stringify(original));
+// loses: functions, undefined values, Symbol keys; Date becomes a string`,
       },
       keyTakeaways: [
-        { en: "`.sort()` with no comparator sorts elements as STRINGS — always pass `(a, b) => a - b` for a correct numeric ascending sort.", np: "Comparator बिना `.sort()` ले elements लाई STRING को रूपमा sort गर्छ — सहि numeric sort का लागि `(a, b) => a - b` पास गर्नुहोस्।", jp: "比較関数なしの`.sort()`は要素を文字列としてソートする。正しい数値の昇順ソートには`(a, b) => a - b`を渡す。" },
-        { en: "`sort`, `splice`, `push`, `pop`, `shift`, `unshift`, `reverse`, and `fill` all MUTATE the original array in place — avoid using them directly on React/Redux state.", np: "`sort`, `splice`, `push`, `pop`, `shift`, `unshift`, `reverse`, `fill` सबैले original array mutate गर्छन् — React/Redux state मा सिधै प्रयोग नगर्नुहोस्।", jp: "`sort`・`splice`・`push`・`pop`・`shift`・`unshift`・`reverse`・`fill`はすべて元の配列を変更する。React/Reduxの状態には直接使わない。" },
-        { en: "`forEach()` always returns `undefined` and cannot be chained — use it only for side effects; use `map()` when you need a transformed array back.", np: "`forEach()` ले सधैं `undefined` फर्काउँछ र chain हुँदैन — side effects का लागि मात्र प्रयोग गर्नुहोस्; नयाँ array चाहिँदा `map()` प्रयोग गर्नुहोस्।", jp: "`forEach()`は常に`undefined`を返しチェーンできない。副作用のみに使い、変換された配列が必要なら`map()`を使う。" },
+        { en: "Spread/`Object.assign` only copy top-level properties — nested objects and arrays remain shared references between the original and the copy.", np: "Spread/`Object.assign` ले top-level properties मात्र copy गर्छ — nested object/array original र copy बीच shared reference नै रहन्छ।", jp: "スプレッド/`Object.assign`はトップレベルのプロパティのみをコピーする。ネストされたオブジェクト/配列は元とコピーの間で共有参照のまま。" },
+        { en: "`structuredClone()` is the modern, native way to deep clone — it correctly handles `Date`, `Map`, `Set`, and `RegExp`, unlike the lossy `JSON.parse(JSON.stringify())` trick.", np: "`structuredClone()` modern, native deep clone तरिका हो — यसले `Date`, `Map`, `Set`, `RegExp` सही ढंगले handle गर्छ, lossy `JSON.parse(JSON.stringify())` भन्दा फरक।", jp: "`structuredClone()`は現代的なネイティブの深いクローン手法。`Date`・`Map`・`Set`・`RegExp`を正しく処理する。損失のある`JSON.parse(JSON.stringify())`とは異なる。" },
+        { en: "Reach for a deep clone only when you genuinely need to mutate nested data without touching the original — otherwise a cheap shallow copy is simpler and faster.", np: "Original नछोई nested data mutate गर्नुपर्दा मात्र deep clone प्रयोग गर्नुहोस् — अन्यथा shallow copy छिटो र सरल हुन्छ।", jp: "元に触れずにネストされたデータを本当に変更する必要がある場合のみ深いクローンを使う。それ以外は安価な浅いコピーの方が簡単で速い。" },
       ],
       commonMistakes: [
-        { en: "Sorting an array of numbers without a comparator and getting lexicographic (string) order instead of numeric order — `[10, 1, 21, 2].sort()` becomes `[1, 10, 2, 21]`.", np: "Numbers को array comparator बिना sort गरेर lexicographic (string) order पाउनु — `[10, 1, 21, 2].sort()` ले `[1, 10, 2, 21]` दिन्छ।", jp: "数値の配列を比較関数なしでソートし、数値順ではなく辞書順（文字列順）になること — `[10, 1, 21, 2].sort()`は`[1, 10, 2, 21]`になる。" },
-        { en: "Calling `sort()`, `splice()`, or `push()` directly on a React/Redux state array — the mutation doesn't trigger a re-render and can corrupt state shared elsewhere.", np: "React/Redux state array मा सिधै `sort()`, `splice()`, `push()` call गर्नु — mutation ले re-render trigger गर्दैन र state corrupt गर्न सक्छ।", jp: "React/Reduxの状態配列に直接`sort()`・`splice()`・`push()`を呼ぶこと。変更は再レンダリングを引き起こさず、他で共有される状態を破損させることがある。" },
-        { en: "Chaining `.forEach()` expecting it to return a new array or a value — it always returns `undefined`, so `arr.forEach(fn).map(...)` will throw.", np: "`.forEach()` लाई नयाँ array वा value फर्काउँछ भनेर chain गर्नु — यसले सधैं `undefined` फर्काउँछ, त्यसैले `arr.forEach(fn).map(...)` ले throw गर्छ।", jp: "`.forEach()`が新しい配列や値を返すと期待してチェーンすること。常に`undefined`を返すため`arr.forEach(fn).map(...)`はスローする。" },
+        { en: "Believing `{...obj}` is a full deep copy, then being surprised when mutating a nested array through the copy also changes the original.", np: "`{...obj}` लाई पूर्ण deep copy मान्नु, अनि copy मार्फत nested array mutate गर्दा original पनि बदलिँदा अचम्मित हुनु।", jp: "`{...obj}`が完全な深いコピーだと信じ、コピー経由でネストされた配列を変更すると元も変わることに驚くこと。" },
+        { en: "Deep-cloning data that contains `Date` objects, functions, or `undefined` with `JSON.parse(JSON.stringify(x))`, silently corrupting or losing them.", np: "`Date`, function, `undefined` भएको data लाई `JSON.parse(JSON.stringify(x))` ले deep-clone गर्दा silently corrupt/loss हुनु।", jp: "`Date`オブジェクト・関数・`undefined`を含むデータを`JSON.parse(JSON.stringify(x))`で深くクローンし、黙って破損・消失させること。" },
+        { en: "Deep-cloning large objects \"just to be safe\" when a shallow copy would have been enough, hurting performance for no real benefit.", np: "Shallow copy नै पर्याप्त हुँदा 'सुरक्षाको लागि' ठूला object deep-clone गर्नु, अनावश्यक performance loss हुनु।", jp: "浅いコピーで十分な場合でも「念のため」大きなオブジェクトを深くクローンし、無駄にパフォーマンスを損なうこと。" },
       ],
       quiz: [
         {
-          question: { en: "What does `[10, 1, 21, 2].sort()` return without a comparator?", np: "Comparator बिना `[10, 1, 21, 2].sort()` ले के फर्काउँछ?", jp: "比較関数なしで`[10, 1, 21, 2].sort()`は何を返す？" },
+          question: { en: "After `const shallow = {...original}`, if you push a new item to `shallow.hobbies`, what happens to `original.hobbies`?", np: "`const shallow = {...original}` पछि `shallow.hobbies` मा नयाँ item push गर्दा `original.hobbies` मा के हुन्छ?", jp: "`const shallow = {...original}`の後、`shallow.hobbies`に新しい項目をpushすると`original.hobbies`はどうなる？" },
           options: [
-            { en: "`[1, 2, 10, 21]` — numeric ascending order", np: "`[1, 2, 10, 21]` — numeric ascending order", jp: "`[1, 2, 10, 21]` — 数値の昇順" },
-            { en: "`[1, 10, 2, 21]` — string (lexicographic) order", np: "`[1, 10, 2, 21]` — string (lexicographic) order", jp: "`[1, 10, 2, 21]` — 文字列（辞書）順" },
+            { en: "It stays unaffected — arrays are always copied by value", np: "प्रभाव पर्दैन — array सधैं value द्वारा copy हुन्छ", jp: "影響を受けない — 配列は常に値でコピーされる" },
+            { en: "It also changes, because both point to the same array reference", np: "यो पनि बदलिन्छ, किनकि दुवैले same array reference देखाउँछन्", jp: "変わる — 両方が同じ配列参照を指しているため" },
           ],
           correctIndex: 1,
-          explanation: { en: "Without a comparator, sort() converts elements to strings first, so digit-by-digit comparison puts '10' before '2'.", np: "Comparator बिना sort() ले elements लाई पहिले string मा convert गर्छ, त्यसैले '10' '2' भन्दा अगाडि आउँछ।", jp: "比較関数がない場合、sort()は要素を先に文字列に変換するため、'10'が'2'より前に来る。" },
+          explanation: { en: "A shallow copy only copies the top-level reference, not a new array — so both variables point at the same underlying array in memory.", np: "Shallow copy ले top-level reference मात्र copy गर्छ, नयाँ array होइन — त्यसैले दुवै variable memory मा same array लाई point गर्छन्।", jp: "浅いコピーはトップレベルの参照のみをコピーし、新しい配列は作らない。そのため両方の変数はメモリ内の同じ配列を指す。" },
         },
         {
-          question: { en: "Which of these methods MUTATES the original array?", np: "यीमध्ये कुन method ले original array mutate गर्छ?", jp: "次のうち元の配列を変更するメソッドはどれ？" },
+          question: { en: "Which method is the modern, preferred way to deep clone an object in JavaScript?", np: "JavaScript मा object deep clone गर्ने modern, preferred तरिका कुन हो?", jp: "JavaScriptでオブジェクトを深くクローンする現代的で推奨される方法は？" },
           options: [
-            { en: "`slice()`", np: "`slice()`", jp: "`slice()`" },
-            { en: "`splice()`", np: "`splice()`", jp: "`splice()`" },
+            { en: "`JSON.parse(JSON.stringify(obj))`", np: "`JSON.parse(JSON.stringify(obj))`", jp: "`JSON.parse(JSON.stringify(obj))`" },
+            { en: "`structuredClone(obj)`", np: "`structuredClone(obj)`", jp: "`structuredClone(obj)`" },
           ],
           correctIndex: 1,
-          explanation: { en: "splice() removes/inserts elements in place on the original array; slice() returns a new array and leaves the original untouched.", np: "splice() ले original array मा सिधै remove/insert गर्छ; slice() ले नयाँ array फर्काउँछ र original नछोई।", jp: "splice()は元の配列に直接要素を削除/挿入する。slice()は新しい配列を返し元は変更しない。" },
+          explanation: { en: "structuredClone() is built into modern JavaScript and correctly handles Date, Map, Set, and RegExp, which JSON round-tripping cannot.", np: "structuredClone() modern JS मा built-in छ र Date, Map, Set, RegExp सही ढंगले handle गर्छ, JSON round-trip ले सक्दैन।", jp: "structuredClone()はモダンJavaScriptに組み込まれており、Date・Map・Set・RegExpを正しく処理する。JSONの往復変換ではできない。" },
         },
         {
-          question: { en: "Why shouldn't you use `forEach()` when you need a transformed array back?", np: "Transformed array चाहिँदा `forEach()` किन प्रयोग गर्नु हुँदैन?", jp: "変換された配列が必要な場合、なぜ`forEach()`を使うべきではない？" },
+          question: { en: "What does `JSON.parse(JSON.stringify(obj))` lose or corrupt when cloning?", np: "`JSON.parse(JSON.stringify(obj))` ले clone गर्दा के हराउँछ वा corrupt गर्छ?", jp: "`JSON.parse(JSON.stringify(obj))`はクローン時に何を失う、または破損させる？" },
           options: [
-            { en: "`forEach()` always returns `undefined` and can't be chained into further array methods", np: "`forEach()` ले सधैं `undefined` फर्काउँछ र थप array methods मा chain गर्न सकिँदैन", jp: "`forEach()`は常に`undefined`を返し、さらなる配列メソッドにチェーンできない" },
-            { en: "`forEach()` is deprecated in modern JavaScript", np: "`forEach()` modern JavaScript मा deprecated छ", jp: "`forEach()`はモダンJavaScriptで廃止されている" },
+            { en: "Nothing — it produces a perfect, lossless clone", np: "केही होइन — यसले perfect, lossless clone दिन्छ", jp: "何も — 完璧で無損失のクローンを生成する" },
+            { en: "Functions, `undefined` values, and `Symbol` keys are dropped; `Date` objects become plain strings", np: "Functions, `undefined` values, `Symbol` keys हराउँछ; `Date` objects plain string मा बदलिन्छ", jp: "関数・`undefined`値・`Symbol`キーが失われ、`Date`オブジェクトは文字列になる" },
           ],
-          correctIndex: 0,
-          explanation: { en: "forEach exists purely for side effects (like logging); if you need a new array back, map() is the correct tool.", np: "forEach केवल side effects (जस्तै logging) का लागि हो; नयाँ array चाहिँदा map() सहि tool हो।", jp: "forEachはロギングのような副作用のためだけに存在する。新しい配列が必要ならmap()が正しい選択。" },
+          correctIndex: 1,
+          explanation: { en: "JSON has no representation for functions, undefined, or symbols, and serializes Date objects as ISO strings instead of Date instances.", np: "JSON मा function, undefined, symbol को कुनै representation छैन, र Date object लाई ISO string को रूपमा serialize गर्छ।", jp: "JSONには関数・undefined・シンボルの表現がなく、DateオブジェクトをインスタンスではなくISO文字列としてシリアライズする。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "If you call `.map()` on a 5-item array, how many items does the result always have?", np: "5-item array मा `.map()` call गर्दा result मा सधैं कति item हुन्छ?", jp: "5要素の配列に`.map()`を呼ぶと結果には常に何個の要素がある？" },
-      options: [{ en: "Exactly 5", np: "ठ्याक्कै 5", jp: "正確に5" }, { en: "It depends on the callback's return value", np: "Callback को return value अनुसार निर्भर हुन्छ", jp: "コールバックの戻り値に依存する" }],
-      correctIndex: 0,
-      explanation: { en: "map() always produces one output per input element, regardless of what the callback returns.", np: "map() ले callback ले जे फर्काए पनि हरेक input element को एउटा output दिन्छ।", jp: "map()はコールバックが何を返しても入力要素ごとに1つの出力を生成する。" },
+      question: { en: "Which notation must you use when a property key is dynamic or stored in a variable?", np: "Property key dynamic वा variable मा रहेको बेला कुन notation प्रयोग गर्नुपर्छ?", jp: "プロパティキーが動的または変数に格納されている場合、どちらの記法を使うべき？" },
+      options: [{ en: "Dot notation", np: "Dot notation", jp: "ドット記法" }, { en: "Bracket notation", np: "Bracket notation", jp: "ブラケット記法" }],
+      correctIndex: 1,
+      explanation: { en: "Bracket notation evaluates the expression inside it, so it works with variables and computed keys; dot notation only accepts a literal name.", np: "Bracket notation ले भित्रको expression evaluate गर्छ, त्यसैले variable सँग काम गर्छ।", jp: "ブラケット記法は内部の式を評価するため変数でも機能する。" },
     },
     {
-      question: { en: "What happens if `reduce()` is called with no `initialValue` on an empty array?", np: "Empty array मा `initialValue` बिना `reduce()` call गर्दा के हुन्छ?", jp: "空配列で`initialValue`なしに`reduce()`を呼ぶとどうなる？" },
-      options: [{ en: "It throws a `TypeError`", np: "यसले `TypeError` throw गर्छ", jp: "`TypeError`をスローする" }, { en: "It returns `0`", np: "यसले `0` फर्काउँछ", jp: "`0`を返す" }],
-      correctIndex: 0,
-      explanation: { en: "With nothing to seed the accumulator and no elements to fall back on, reduce has no valid starting point and throws.", np: "Accumulator सुरु गर्ने केही र fallback गर्ने element नभई reduce सँग valid starting point हुँदैन।", jp: "アキュムレータを初期化するものも代替となる要素もない場合、reduceには有効な出発点がなくスローする。" },
+      question: { en: "Does `Object.freeze()` deep-freeze nested objects inside the frozen object?", np: "`Object.freeze()` ले frozen object भित्रका nested objects पनि deep-freeze गर्छ?", jp: "`Object.freeze()`は凍結されたオブジェクト内のネストされたオブジェクトも深く凍結する？" },
+      options: [{ en: "Yes, everything nested is frozen too", np: "हो, nested सबै पनि freeze हुन्छ", jp: "はい、ネストされたものもすべて凍結される" }, { en: "No — only top-level properties are frozen", np: "होइन — top-level properties मात्र freeze हुन्छ", jp: "いいえ — トップレベルのプロパティのみ凍結される" }],
+      correctIndex: 1,
+      explanation: { en: "Object.freeze() is shallow; nested structures need to be frozen individually to be fully immutable.", np: "Object.freeze() shallow हो; nested structure लाई पूर्ण immutable बनाउन individually freeze गर्नुपर्छ।", jp: "Object.freeze()は浅い。完全に不変にするにはネストされた構造を個別に凍結する必要がある。" },
     },
     {
-      question: { en: "In `array.filter(a).map(b)`, does `filter` or `map` run first?", np: "`array.filter(a).map(b)` मा `filter` वा `map` कुन पहिले चल्छ?", jp: "`array.filter(a).map(b)`で`filter`と`map`のどちらが先に実行される？" },
-      options: [{ en: "filter runs first, over the full array", np: "पहिले पूरै array माथि filter चल्छ", jp: "先にfilterが全配列に対して実行される" }, { en: "map runs first", np: "पहिले map चल्छ", jp: "先にmapが実行される" }],
-      correctIndex: 0,
-      explanation: { en: "Chained calls execute strictly left to right, each fully completing before the next one starts.", np: "Chain गरिएका calls बायाँबाट दायाँ क्रममा चल्छन्, अघिल्लो पूरा भएपछि मात्र अर्को सुरु हुन्छ।", jp: "チェーンされた呼び出しは厳密に左から右へ実行され、各呼び出しが完全に完了してから次が開始する。" },
+      question: { en: "What's the difference between `\"key\" in obj` and `Object.hasOwn(obj, \"key\")`?", np: "`\"key\" in obj` र `Object.hasOwn(obj, \"key\")` मा के फरक छ?", jp: "`\"key\" in obj`と`Object.hasOwn(obj, \"key\")`の違いは？" },
+      options: [{ en: "No difference", np: "फरक छैन", jp: "違いはない" }, { en: "`in` also checks inherited properties; `hasOwn` checks only own properties", np: "`in` ले inherited properties पनि check गर्छ; `hasOwn` ले आफ्नै properties मात्र check गर्छ", jp: "`in`は継承プロパティも確認する。`hasOwn`は自身のプロパティのみ確認する" }],
+      correctIndex: 1,
+      explanation: { en: "`in` walks the prototype chain; Object.hasOwn is the precise own-property check.", np: "`in` ले prototype chain walk गर्छ; Object.hasOwn precise own-property check हो।", jp: "`in`はプロトタイプチェーンを遡る。Object.hasOwnは正確な自己プロパティ確認。" },
     },
     {
-      question: { en: "What does `find()` return when no element matches?", np: "कुनै element match नभएमा `find()` ले के फर्काउँछ?", jp: "マッチする要素がない場合`find()`は何を返す？" },
-      options: [{ en: "`undefined`", np: "`undefined`", jp: "`undefined`" }, { en: "`null`", np: "`null`", jp: "`null`" }],
+      question: { en: "In `const { country = \"Unknown\" } = user`, when does the default value `\"Unknown\"` get used?", np: "`const { country = \"Unknown\" } = user` मा default value `\"Unknown\"` कहिले प्रयोग हुन्छ?", jp: "`const { country = \"Unknown\" } = user`でデフォルト値`\"Unknown\"`はいつ使われる？" },
+      options: [{ en: "Whenever `user.country` is exactly `undefined`", np: "`user.country` ठ्याक्कै `undefined` भएमा", jp: "`user.country`がまさに`undefined`のとき" }, { en: "Only if the `user` object is completely empty", np: "`user` object पूर्ण खाली भएमा मात्र", jp: "`user`オブジェクトが完全に空の場合のみ" }],
       correctIndex: 0,
-      explanation: { en: "find() returns undefined, not null, when nothing satisfies the callback.", np: "कुनै element callback सँग match नभएमा find() ले undefined फर्काउँछ, null होइन।", jp: "何もコールバックを満たさない場合、find()はnullではなくundefinedを返す。" },
+      explanation: { en: "Destructuring defaults trigger whenever the extracted value is undefined, regardless of why.", np: "Extract भएको value undefined भएमा जुनसुकै कारणले पनि default trigger हुन्छ।", jp: "分割代入のデフォルトは、抽出された値がundefinedであれば理由を問わず発動する。" },
     },
     {
-      question: { en: "What is the difference between `some()` and `every()`?", np: "`some()` र `every()` बीचको फरक के हो?", jp: "`some()`と`every()`の違いは？" },
-      options: [{ en: "`some()` = at least one passes; `every()` = all must pass", np: "`some()` = कम्तिमा एक pass; `every()` = सबै pass हुनुपर्छ", jp: "`some()` = 少なくとも1つ通る; `every()` = すべて通る必要がある" }, { en: "They are interchangeable", np: "दुवै एउटै हुन्", jp: "両者は交換可能" }],
-      correctIndex: 0,
-      explanation: { en: "some() needs just one passing element to return true; every() needs all of them to pass.", np: "some() लाई true फर्काउन एउटा मात्र pass हुने element चाहिन्छ; every() लाई सबै pass हुनुपर्छ।", jp: "some()はtrueを返すのに1つ通る要素だけが必要。every()はすべてが通る必要がある。" },
+      question: { en: "Is `...` for spread and `...` for rest the same operation?", np: "Spread को `...` र rest को `...` उस्तै operation हो?", jp: "スプレッドの`...`とrestの`...`は同じ操作？" },
+      options: [{ en: "Yes, always identical", np: "हो, सधैं उस्तै", jp: "はい、常に同一" }, { en: "No — spread expands an iterable, rest collects remaining values into one", np: "होइन — spread ले फिँजाउँछ, rest ले बाँकीलाई एकमा collect गर्छ", jp: "いいえ — スプレッドは展開し、restは残りを1つに集める" }],
+      correctIndex: 1,
+      explanation: { en: "Same syntax, opposite direction: spread pulls values out into a new structure, rest gathers loose values into an array.", np: "Syntax उस्तै तर विपरीत दिशा: spread ले value बाहिर निकाल्छ, rest ले array मा जम्मा गर्छ।", jp: "同じ構文だが逆方向: スプレッドは値を取り出し、restは配列に集める。" },
     },
     {
-      question: { en: "Why can `indexOf()` never find `NaN` in an array, while `includes()` can?", np: "`indexOf()` ले array मा `NaN` किन कहिल्यै भेट्दैन, तर `includes()` ले भेट्छ?", jp: "`indexOf()`が配列内で`NaN`を見つけられないのに`includes()`は見つけられるのはなぜ？" },
-      options: [{ en: "indexOf uses strict equality (`NaN !== NaN`); includes uses SameValueZero", np: "indexOf ले strict equality प्रयोग गर्छ (`NaN !== NaN`); includes ले SameValueZero प्रयोग गर्छ", jp: "indexOfは厳密等価（`NaN !== NaN`）を使う。includesはSameValueZeroを使う" }, { en: "indexOf is older and has a bug that was never fixed", np: "indexOf पुरानो हो र यसमा कहिल्यै fix नभएको bug छ", jp: "indexOfは古く、修正されなかったバグがある" }],
-      correctIndex: 0,
-      explanation: { en: "This is a deliberate equality-algorithm difference, not a bug — SameValueZero treats NaN as equal to itself.", np: "यो जानाजानी equality-algorithm फरक हो, bug होइन — SameValueZero ले NaN लाई आफैं सँग बराबर मान्छ।", jp: "これは意図的な等価アルゴリズムの違いであり、バグではない。SameValueZeroはNaNを自身と等しいとみなす。" },
+      question: { en: "Does `{...obj1, ...obj2}` create fully independent nested objects?", np: "`{...obj1, ...obj2}` ले पूर्ण independent nested objects बनाउँछ?", jp: "`{...obj1, ...obj2}`は完全に独立したネストされたオブジェクトを作る？" },
+      options: [{ en: "Yes, at every level", np: "हो, हरेक level मा", jp: "はい、すべてのレベルで" }, { en: "No — only the top level is new; nested objects/arrays are still shared", np: "होइन — top level मात्र नयाँ हो; nested objects/arrays अझै shared छन्", jp: "いいえ — トップレベルのみ新規で、ネストされたオブジェクト/配列は共有されたまま" }],
+      correctIndex: 1,
+      explanation: { en: "Spread is a shallow-copy operation, just like Object.assign.", np: "Spread एक shallow-copy operation हो, Object.assign जस्तै।", jp: "スプレッドはObject.assignと同様の浅いコピー操作。" },
     },
     {
-      question: { en: "What does `[10, 1, 21, 2].sort()` return without a comparator?", np: "Comparator बिना `[10, 1, 21, 2].sort()` ले के फर्काउँछ?", jp: "比較関数なしで`[10, 1, 21, 2].sort()`は何を返す？" },
-      options: [{ en: "`[1, 10, 2, 21]` (string order)", np: "`[1, 10, 2, 21]` (string order)", jp: "`[1, 10, 2, 21]`（文字列順）" }, { en: "`[1, 2, 10, 21]` (numeric order)", np: "`[1, 2, 10, 21]` (numeric order)", jp: "`[1, 2, 10, 21]`（数値順）" }],
+      question: { en: "After a shallow copy, does mutating a nested array through the copy affect the original?", np: "Shallow copy पछि copy मार्फत nested array mutate गर्दा original प्रभावित हुन्छ?", jp: "浅いコピー後、コピー経由でネストされた配列を変更すると元は影響を受ける？" },
+      options: [{ en: "Yes — the nested array reference is shared", np: "हो — nested array reference shared हुन्छ", jp: "はい — ネストされた配列の参照は共有されている" }, { en: "No — every level is independent", np: "होइन — हरेक level independent छ", jp: "いいえ — すべてのレベルが独立している" }],
       correctIndex: 0,
-      explanation: { en: "sort() without a comparator always converts to strings first and compares lexicographically.", np: "Comparator बिना sort() ले सधैं पहिले string मा convert गर्छ र lexicographically compare गर्छ।", jp: "比較関数なしのsort()は常に先に文字列に変換し辞書順に比較する。" },
+      explanation: { en: "Only top-level values are copied by a shallow copy; nested references remain shared.", np: "Shallow copy ले top-level values मात्र copy गर्छ; nested references shared नै रहन्छ।", jp: "浅いコピーはトップレベルの値のみをコピーし、ネストされた参照は共有されたまま。" },
     },
     {
-      question: { en: "Does `slice()` mutate the original array?", np: "`slice()` ले original array mutate गर्छ?", jp: "`slice()`は元の配列を変更する？" },
-      options: [{ en: "No — it returns a new array and leaves the original untouched", np: "होइन — यसले नयाँ array फर्काउँछ र original नछोई", jp: "いいえ — 新しい配列を返し元は変更しない" }, { en: "Yes — it works exactly like `splice()`", np: "हो — यो `splice()` जस्तै काम गर्छ", jp: "はい — `splice()`とまったく同じように動作する" }],
+      question: { en: "Which is the modern, preferred way to deep clone an object with Dates and Maps inside it?", np: "Dates र Maps भएको object deep clone गर्ने modern, preferred तरिका कुन हो?", jp: "DateとMapを含むオブジェクトを深くクローンする現代的で推奨される方法は？" },
+      options: [{ en: "`structuredClone(obj)`", np: "`structuredClone(obj)`", jp: "`structuredClone(obj)`" }, { en: "`JSON.parse(JSON.stringify(obj))`", np: "`JSON.parse(JSON.stringify(obj))`", jp: "`JSON.parse(JSON.stringify(obj))`" }],
       correctIndex: 0,
-      explanation: { en: "slice() and splice() sound similar but behave oppositely: slice never mutates, splice always does.", np: "slice() र splice() सुन्दा उस्तै तर behavior विपरीत छ: slice ले कहिल्यै mutate गर्दैन, splice ले सधैं गर्छ।", jp: "slice()とsplice()は名前が似ているが動作は逆: sliceは決して変更せず、spliceは常に変更する。" },
+      explanation: { en: "structuredClone() correctly preserves Date and Map instances; JSON round-tripping corrupts or loses them.", np: "structuredClone() ले Date र Map instances सही ढंगले preserve गर्छ; JSON round-trip ले corrupt/loss गराउँछ।", jp: "structuredClone()はDateとMapのインスタンスを正しく保持する。JSONの往復変換は破損・消失させる。" },
     },
     {
-      question: { en: "Why shouldn't you rely on `forEach()` to build a new array?", np: "नयाँ array बनाउन `forEach()` मा किन भर पर्नु हुँदैन?", jp: "新しい配列を構築するために`forEach()`に頼るべきでない理由は？" },
-      options: [{ en: "It always returns `undefined` and cannot be chained into other array methods", np: "यसले सधैं `undefined` फर्काउँछ र अरू array methods मा chain हुँदैन", jp: "常に`undefined`を返し、他の配列メソッドにチェーンできない" }, { en: "It is significantly slower than every other array method", np: "यो अरू सबै array methods भन्दा धेरै ढिलो हुन्छ", jp: "他のすべての配列メソッドより著しく遅い" }],
-      correctIndex: 0,
-      explanation: { en: "forEach is designed purely for side effects — for building a new array, map() is the right tool.", np: "forEach केवल side effects का लागि design गरिएको हो — नयाँ array बनाउन map() सहि tool हो।", jp: "forEachは純粋に副作用のために設計されている。新しい配列を構築するにはmap()が適切なツール。" },
+      question: { en: "Why should you avoid `JSON.parse(JSON.stringify(obj))` for deep cloning objects with functions?", np: "Function भएको object deep clone गर्दा `JSON.parse(JSON.stringify(obj))` किन avoid गर्नुपर्छ?", jp: "関数を含むオブジェクトを深くクローンする際に`JSON.parse(JSON.stringify(obj))`を避けるべき理由は？" },
+      options: [{ en: "It's too slow to matter in practice", np: "यो व्यवहारमा धेरै ढिलो हुन्छ", jp: "実際には遅すぎて問題にならない" }, { en: "JSON has no representation for functions — they are silently dropped", np: "JSON मा function को कुनै representation छैन — silently हराउन्छ", jp: "JSONには関数の表現がなく、黙って削除される" }],
+      correctIndex: 1,
+      explanation: { en: "JSON.stringify simply omits function-valued properties entirely, along with undefined and Symbol keys.", np: "JSON.stringify ले function-valued properties लाई पूर्ण रूपमा omit गर्छ, undefined र Symbol keys सँगै।", jp: "JSON.stringifyは関数値のプロパティをundefinedやSymbolキーとともに完全に省略する。" },
     },
   ],
 };

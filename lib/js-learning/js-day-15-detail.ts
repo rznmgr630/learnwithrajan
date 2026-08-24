@@ -3,259 +3,201 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "The DOM (Document Object Model) is the browser's representation of a web page as a tree of objects. JavaScript can read and modify it to make pages dynamic. Events are how the browser tells your code that something happened — a click, a key press, a form submission.",
-      np: "DOM (Document Object Model) browser ले web page लाई objects को tree को रूपमा represent गर्दछ। JavaScript ले pages dynamic बनाउन यसलाई read र modify गर्न सक्छ। Events ले browser ले तपाईंको code लाई केही भयो भनेर बताउँछ।",
-      jp: "DOM（Document Object Model）はブラウザがWebページをオブジェクトのツリーとして表現したもの。JavaScriptはそれを読み書きしてページを動的にする。イベントはブラウザがコードにクリック・キー入力・フォーム送信などを通知する仕組み。",
+      en: "Node.js has its own event loop implementation built on libuv, which is different from the browser's in one important way: it has explicit **phases**. Each phase has its own queue and runs all callbacks in that queue before moving to the next phase. `process.nextTick()` and `setImmediate()` are Node-specific additions that give you fine-grained control over when a callback runs.",
+      np: "Node.js को आफ्नै event loop implementation libuv मा build भएको छ, browser भन्दा एक महत्त्वपूर्ण फरकसहित: explicit **phases** छन्। हरेक phase को आफ्नै queue छ। `process.nextTick()` र `setImmediate()` Node-specific additions हुन्।",
+      jp: "Node.jsのイベントループはlibuvで構築され、ブラウザと異なる重要な点がある：明示的な**フェーズ**がある。各フェーズは独自のキューを持ち、全コールバックを処理してから次へ進む。`process.nextTick()`と`setImmediate()`はNode固有の追加。",
     },
     {
-      en: "Event delegation is one of the most important performance patterns in frontend JavaScript. Instead of attaching an event listener to every list item, you attach one listener to the parent and let events bubble up. This works for thousands of items without the memory cost of thousands of listeners.",
-      np: "Event delegation frontend JavaScript को सबैभन्दा महत्त्वपूर्ण performance patterns मध्ये एक हो। हर list item मा listener attach गर्नुको सट्टा एउटा listener parent मा attach गर्नुहोस् र events bubble up हुन दिनुहोस्।",
-      jp: "イベント委譲はフロントエンドJSの重要なパフォーマンスパターン。各リストアイテムにリスナーをつける代わりに、親一つにリスナーをつけてバブリングを利用する。数千アイテムでもメモリコストは1つのリスナー分。",
+      en: "This topic comes up constantly in Node.js interviews. You don't need to memorize every phase — you need to understand the difference between `process.nextTick()`, microtasks (Promises), `setImmediate()`, and `setTimeout(fn, 0)` and be able to predict the order they run in.",
+      np: "यो topic Node.js interviews मा बारम्बार आउँछ। हरेक phase memorize गर्नु पर्दैन — `process.nextTick()`, microtasks, `setImmediate()`, र `setTimeout(fn, 0)` को फरक र तिनीहरूको run order predict गर्न सक्नु जरुरी छ।",
+      jp: "Node.jsの面接でよく出るトピック。全フェーズを暗記する必要はないが、`process.nextTick()`・マイクロタスク・`setImmediate()`・`setTimeout(fn,0)`の違いと実行順序を予測できる必要がある。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "y17RuWkWdn8", title: "JavaScript DOM Manipulation — Crash Course" },
+        { type: "youtube", videoId: "8aGhZQkoFbQ", title: "What the heck is the event loop anyway? — Philip Roberts, JSConf" },
       ],
     },
     {
-      title: { en: "Querying and modifying the DOM", np: "DOM query र modify गर्नु", jp: "DOMのクエリと変更" },
+      title: { en: "The Node.js event loop phases", np: "Node.js event loop phases", jp: "Node.jsイベントループのフェーズ" },
       blocks: [
         {
-          type: "code",
-          title: { en: "Selecting elements and changing them", np: "Elements select र change गर्नु", jp: "要素の選択と変更" },
-          code: `// ── Selecting elements ────────────────────────────────────────────
-// querySelector — returns the FIRST matching element (or null)
-const title   = document.querySelector("h1");
-const btn     = document.querySelector("#submit-btn");      // by id
-const inputs  = document.querySelectorAll("input[type='text']"); // all matching
-
-// Older methods (still work, fast for id/class lookups)
-const byId    = document.getElementById("app");
-const byClass = document.getElementsByClassName("card");   // HTMLCollection (live)
-const byTag   = document.getElementsByTagName("p");         // HTMLCollection (live)
-
-// ── Reading and writing text content ──────────────────────────────
-const heading = document.querySelector("h1");
-
-heading.textContent;              // "Hello World"   (raw text, safe)
-heading.innerHTML;                // "<span>Hello</span> World" (HTML markup)
-
-heading.textContent = "New Title"; // set text (safe — escapes HTML)
-heading.innerHTML   = "<em>New</em> Title"; // set HTML (careful with user input — XSS risk!)
-
-// ── Modifying attributes and styles ──────────────────────────────
-const img = document.querySelector("img");
-
-img.src          = "/new-image.jpg";  // attribute
-img.alt          = "New image";
-img.setAttribute("data-id", "42");
-img.getAttribute("data-id");          // "42"
-img.removeAttribute("alt");
-img.hasAttribute("src");              // true
-
-// Styles — use CSS classes instead of inline styles when possible
-heading.style.color     = "red";       // inline style (ok for dynamic values)
-heading.style.fontSize  = "2rem";
-
-// Prefer class manipulation:
-heading.classList.add("highlight");
-heading.classList.remove("highlight");
-heading.classList.toggle("active");    // add if absent, remove if present
-heading.classList.contains("active");  // true or false
-heading.className;                     // full class string
-
-// ── Creating and inserting elements ──────────────────────────────
-const li = document.createElement("li");
-li.textContent = "New item";
-li.classList.add("list-item");
-
-const ul = document.querySelector("ul");
-ul.appendChild(li);                    // add as last child
-ul.prepend(li);                        // add as first child
-ul.insertBefore(li, ul.children[2]);   // insert before index 2
-
-// Modern insertion methods (cleaner):
-ul.append(li);                         // like appendChild but accepts strings too
-ul.before(li);                         // insert before the ul itself
-ul.after(li);                          // insert after the ul itself
-
-// Removing elements:
-li.remove();                           // remove from DOM directly
-ul.removeChild(li);                    // older way`,
+          type: "table",
+          caption: { en: "The loop cycles through these phases in order, over and over", np: "Loop ले यी phases मा order मा cycle गर्छ", jp: "ループはこのフェーズを順番に繰り返す" },
+          headers: [
+            { en: "Phase", np: "Phase", jp: "フェーズ" },
+            { en: "What runs here", np: "के run हुन्छ", jp: "何が実行されるか" },
+            { en: "Example APIs", np: "Example APIs", jp: "対応するAPI" },
+          ],
+          rows: [
+            [
+              { en: "1. Timers", np: "1. Timers", jp: "1. タイマー" },
+              { en: "Callbacks scheduled by setTimeout() and setInterval() whose delay has expired", np: "Delay expire भएका setTimeout/setInterval callbacks", jp: "遅延が過ぎたsetTimeout/setIntervalのコールバック" },
+              { en: "setTimeout, setInterval", np: "setTimeout, setInterval", jp: "setTimeout・setInterval" },
+            ],
+            [
+              { en: "2. Pending callbacks", np: "2. Pending callbacks", jp: "2. ペンディングコールバック" },
+              { en: "I/O callbacks deferred to the next loop iteration (e.g. some TCP errors)", np: "次のloop iteration मा defer भएका I/O callbacks", jp: "次のループ反復に延期されたI/Oコールバック" },
+              { en: "Some TCP error callbacks", np: "केही TCP error callbacks", jp: "一部のTCPエラーコールバック" },
+            ],
+            [
+              { en: "3. Idle / Prepare", np: "3. Idle / Prepare", jp: "3. アイドル/準備" },
+              { en: "Internal Node.js use only — you will never need to worry about this", np: "Internal Node.js use — worried गर्नु पर्दैन", jp: "Node.js内部使用のみ — 気にする必要なし" },
+              { en: "Internal only", np: "Internal only", jp: "内部のみ" },
+            ],
+            [
+              { en: "4. Poll", np: "4. Poll", jp: "4. ポーリング" },
+              { en: "Retrieve new I/O events and run their callbacks. If the queue is empty, wait here for new events (unless setImmediate is scheduled)", np: "新 I/O events र callbacks। Queue empty भए wait।", jp: "新しいI/Oイベントの取得と実行。キューが空ならイベントを待つ" },
+              { en: "fs.readFile callback, network responses", np: "fs.readFile callback, network", jp: "fs.readFileコールバック・ネットワーク応答" },
+            ],
+            [
+              { en: "5. Check", np: "5. Check", jp: "5. チェック" },
+              { en: "setImmediate() callbacks run here — always after the poll phase", np: "setImmediate() callbacks — poll phase पछि", jp: "setImmediate()コールバック — ポーリングフェーズの後" },
+              { en: "setImmediate", np: "setImmediate", jp: "setImmediate" },
+            ],
+            [
+              { en: "6. Close callbacks", np: "6. Close callbacks", jp: "6. クローズコールバック" },
+              { en: "Callbacks for abruptly closed resources, e.g. socket.on('close', cb)", np: "Abruptly closed resources callbacks", jp: "突然閉じられたリソースのコールバック" },
+              { en: "socket.on('close', cb)", np: "socket.on('close', cb)", jp: "socket.on('close', cb)" },
+            ],
+          ],
         },
-      ],
-    },
-    {
-      title: { en: "Events — listening and responding", np: "Events — listen र respond गर्नु", jp: "イベント — リスニングと応答" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "addEventListener, removeEventListener, and the event object", np: "addEventListener र event object", jp: "addEventListener・removeEventListener・イベントオブジェクト" },
-          code: `// ── Adding event listeners ────────────────────────────────────────
-const btn = document.querySelector("#btn");
-
-function handleClick(event) {
-  console.log("Clicked!", event.type);  // "click"
-  console.log("Target:", event.target); // the element that was clicked
-  console.log("X:", event.clientX, "Y:", event.clientY); // mouse position
-}
-
-btn.addEventListener("click", handleClick);
-
-// ── Removing a listener — must pass the SAME function reference ───
-btn.removeEventListener("click", handleClick); // ✅ removes it
-// btn.removeEventListener("click", () => {}); // ❌ won't work — different function
-
-// ── Common event types ────────────────────────────────────────────
-element.addEventListener("click",       handler);  // mouse click
-element.addEventListener("dblclick",    handler);  // double click
-element.addEventListener("mouseenter",  handler);  // mouse enters (no bubbling)
-element.addEventListener("mouseleave",  handler);  // mouse leaves (no bubbling)
-element.addEventListener("keydown",     handler);  // key pressed
-element.addEventListener("keyup",       handler);  // key released
-element.addEventListener("input",       handler);  // input value changed (real-time)
-element.addEventListener("change",      handler);  // value committed (blur or select)
-element.addEventListener("submit",      handler);  // form submitted
-element.addEventListener("focus",       handler);  // element gains focus
-element.addEventListener("blur",        handler);  // element loses focus
-document.addEventListener("DOMContentLoaded", handler);  // DOM fully parsed
-
-// ── The event object ──────────────────────────────────────────────
-form.addEventListener("submit", (event) => {
-  event.preventDefault();      // prevent default browser action (form submit = page reload)
-  event.stopPropagation();     // stop event bubbling to parent elements
-
-  const input = document.querySelector("#email");
-  console.log(input.value);   // read the input value
-});
-
-// ── Keyboard events ───────────────────────────────────────────────
-document.addEventListener("keydown", (event) => {
-  console.log(event.key);     // "Enter", "a", "ArrowUp", "Escape"
-  console.log(event.code);    // "Enter", "KeyA", "ArrowUp", "Escape" (layout-independent)
-  console.log(event.ctrlKey, event.shiftKey, event.altKey);  // modifier keys
-
-  if (event.key === "Escape") closeModal();
-  if (event.ctrlKey && event.key === "s") saveDocument();
-});`,
-        },
-      ],
-    },
-    {
-      title: { en: "Event bubbling, capturing & delegation", np: "Event bubbling, capturing र delegation", jp: "イベントバブリング・キャプチャ・委譲" },
-      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "When an event fires on an element, it first travels DOWN the DOM tree from the root to the target (capture phase), then travels BACK UP from the target to the root (bubble phase). Most events bubble — `click`, `keydown`, `input`, `submit`. A few do not — `focus`, `blur`, `mouseenter`, `mouseleave`. By default, `addEventListener` listens in the bubble phase.",
-            np: "Event fire हुँदा पहिले DOM tree मा ROOT बाट TARGET सम्म DOWN जान्छ (capture phase), त्यसपछि TARGET बाट ROOT सम्म BACK UP जान्छ (bubble phase)। अधिकांश events bubble हुन्छन् — `click`, `keydown`, `input`, `submit`. केही हुँदैनन् — `focus`, `blur`, `mouseenter`।",
-            jp: "イベント発生時、まずDOMツリーをルートからターゲットへDOWN（キャプチャフェーズ）、次にターゲットからルートへUP（バブルフェーズ）。ほとんどのイベントはバブリングする。`addEventListener`はデフォルトでバブルフェーズでリスニング。",
+            en: "Between every phase transition, Node.js checks the **microtask queues** — first `process.nextTick()` callbacks, then Promise callbacks. This means microtasks run between phases, not just at the start of the loop.",
+            np: "हर phase transition बीच Node.js **microtask queues** check गर्छ — पहिले `process.nextTick()` callbacks, त्यसपछि Promise callbacks। यसको मतलब microtasks phases बीचमा run हुन्छन्।",
+            jp: "各フェーズ遷移の間に、Node.jsは**マイクロタスクキュー**をチェックする — まず`process.nextTick()`、次にPromiseコールバック。マイクロタスクはループの開始時だけでなく、フェーズ間でも実行される。",
           },
         },
+      ],
+    },
+    {
+      title: { en: "process.nextTick() vs setImmediate() vs setTimeout(fn, 0)", np: "process.nextTick() vs setImmediate() vs setTimeout(fn, 0)", jp: "process.nextTick() vs setImmediate() vs setTimeout(fn, 0)" },
+      blocks: [
         {
           type: "code",
-          title: { en: "Event bubbling and delegation in practice", np: "Event bubbling र delegation practice मा", jp: "イベントバブリングと委譲の実践" },
-          code: `// ── Bubbling in action ────────────────────────────────────────────
-// <div id="outer">          ← click event bubbles UP to here last
-//   <div id="inner">        ← click event bubbles UP to here
-//     <button id="btn">     ← click event starts here
-//   </div>
-// </div>
+          title: { en: "Order of execution — the interview question", np: "Execution order — interview question", jp: "実行順序 — 面接でよく聞かれる問題" },
+          code: `const { setImmediate } = require("timers");
 
-document.getElementById("outer").addEventListener("click", () => console.log("outer"));
-document.getElementById("inner").addEventListener("click", () => console.log("inner"));
-document.getElementById("btn").addEventListener("click",   () => console.log("btn"));
+setImmediate(() => console.log("setImmediate"));
 
-// Clicking the button outputs: btn → inner → outer (bottom to top)
+setTimeout(() => console.log("setTimeout 0"), 0);
 
-// ── event.stopPropagation() — stop the event from bubbling ────────
-document.getElementById("btn").addEventListener("click", (event) => {
-  event.stopPropagation();  // "inner" and "outer" will NOT fire
-  console.log("btn only");
-});
+Promise.resolve().then(() => console.log("Promise.then"));
 
-// ── Event delegation — one listener handles many children ─────────
-// ❌ Naive approach — a listener per item (expensive, misses future items)
-document.querySelectorAll(".todo-item").forEach(item => {
-  item.addEventListener("click", handleTodoClick);  // 100 items = 100 listeners!
-});
+process.nextTick(() => console.log("process.nextTick"));
 
-// ✅ Event delegation — one listener on the parent
-const list = document.querySelector("#todo-list");
+console.log("sync");
 
-list.addEventListener("click", (event) => {
-  // event.target is the element that was actually clicked
-  const item = event.target.closest(".todo-item"); // handles clicks on child elements too
+// Output:
+// sync
+// process.nextTick    ← nextTick queue (before Promises)
+// Promise.then        ← microtask queue (Promises)
+// setTimeout 0        ← timers phase (macrotask)
+// setImmediate        ← check phase (macrotask)
 
-  if (!item) return;  // click was not on a todo item
+// Priority order (highest to lowest):
+// 1. Synchronous code
+// 2. process.nextTick() — drained completely before Promises
+// 3. Promise.then / async-await — microtask queue
+// 4. setTimeout(fn, 0) — timers phase
+// 5. setImmediate — check phase (always after poll, so often after setTimeout)
 
-  const id = item.dataset.id;
-  handleTodoClick(id);
-});
+// ── process.nextTick() — run at the END of the current operation ──
+// Use case: ensure a callback runs after the current function finishes
+// but before any I/O or timer callbacks
 
-// Delegation advantages:
-// 1. One listener instead of N → less memory
-// 2. Works for dynamically added elements (items added after the listener is set up)
-// 3. Easier to remove (remove one listener vs N)
+function EventEmitter_like(callback) {
+  // ❌ Without nextTick — callback fires during constructor, before setup
+  // callback();
 
-// ── Capture phase — listen as event travels DOWN the tree ─────────
-document.getElementById("outer").addEventListener(
-  "click",
-  () => console.log("outer (capture)"),
-  true  // { capture: true } — listen during capture phase
-);
-// Now outer fires BEFORE inner and btn (top-down)`,
+  // ✅ With nextTick — callback fires after constructor returns
+  process.nextTick(callback);
+}
+
+// ── setImmediate — run in the check phase (after I/O) ────────────
+// Prefer setImmediate over setTimeout(fn, 0) inside I/O callbacks
+// because setImmediate always runs in the check phase (predictable)
+// while setTimeout timing can vary slightly
+
+fs.readFile("./file.txt", () => {
+  setTimeout(  () => console.log("setTimeout"), 0);
+  setImmediate(() => console.log("setImmediate"));
+  // Inside an I/O callback: setImmediate ALWAYS runs before setTimeout
+  // Output: setImmediate, then setTimeout
+});`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**`event.target`** is the element that was actually clicked (the deepest one). **`event.currentTarget`** is the element the listener is attached to. They are different when using delegation.",
-              np: "**`event.target`** actually click भएको element हो (सबैभन्दा गहिरो)। **`event.currentTarget`** listener attach भएको element हो। Delegation use गर्दा दुवै फरक हुन्छन्।",
-              jp: "**`event.target`**は実際にクリックされた要素（最も深い要素）。**`event.currentTarget`**はリスナーがアタッチされた要素。委譲では両者が異なる。",
+              en: "**`process.nextTick()`** runs before Promises and before the next event loop phase. Overusing it can starve the event loop — if nextTick callbacks keep adding more nextTick callbacks, I/O never gets a chance to run.",
+              np: "**`process.nextTick()`** Promises र अर्को event loop phase भन्दा पहिले run हुन्छ। Overuse गर्दा event loop starve हुन सक्छ — nextTick callbacks ले अर्को nextTick add गरिरहे I/O कहिल्यै run हुँदैन।",
+              jp: "**`process.nextTick()`**はPromiseと次のフェーズより先に実行される。使いすぎるとイベントループが枯渇する — nextTickコールバックが更にnextTickを追加し続けるとI/Oが実行されなくなる。",
             },
             {
-              en: "**`event.preventDefault()`** stops the browser's default action (form submit reloads the page, anchor tag navigates). It does NOT stop event propagation — use `stopPropagation()` for that.",
-              np: "**`event.preventDefault()`** browser को default action रोक्छ (form submit ले page reload, anchor ले navigate)। Event propagation रोक्दैन — त्यसका लागि `stopPropagation()`।",
-              jp: "**`event.preventDefault()`**はブラウザのデフォルト動作を阻止（フォーム送信でのページリロード、アンカーのナビゲーション）。イベント伝播は止めない — それには`stopPropagation()`。",
-            },
-            {
-              en: "**`element.closest(selector)`** walks up the DOM from the element and returns the nearest ancestor matching the selector (or the element itself). Use it in delegation to find the right container when the user might have clicked a child element.",
-              np: "**`element.closest(selector)`** element बाट DOM tree माथि walk गर्छ र selector match गर्ने nearest ancestor (वा element itself) return गर्छ। Delegation मा user ले child element click गर्दा सही container find गर्न use गर्नुहोस्।",
-              jp: "**`element.closest(selector)`**は要素からDOMを上にたどり、セレクタに一致する最近の祖先（または要素自身）を返す。委譲でユーザーが子要素をクリックした際の正しいコンテナ検索に使う。",
+              en: "**`setImmediate()`** runs in the check phase, after the poll phase finishes. It is more predictable than `setTimeout(fn, 0)` when called from inside an I/O callback.",
+              np: "**`setImmediate()`** check phase मा run हुन्छ — poll phase सकिएपछि। I/O callback भित्रबाट call गर्दा `setTimeout(fn, 0)` भन्दा बढी predictable छ।",
+              jp: "**`setImmediate()`**はポーリングフェーズ後のチェックフェーズで実行される。I/Oコールバック内から呼ばれる場合、`setTimeout(fn, 0)`より予測しやすい。",
             },
           ],
+        },
+      ],
+    },
+    {
+      title: { en: "Common async ordering pitfalls", np: "Common async ordering pitfalls", jp: "よくある非同期順序の落とし穴" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Predicting async output — practice exercises", np: "Async output predict गर्ने — practice", jp: "非同期出力の予測 — 練習問題" },
+          code: `// Exercise 1: What is the output order?
+async function main() {
+  console.log("A");
+  await Promise.resolve();
+  console.log("B");
+  setTimeout(() => console.log("C"), 0);
+  await Promise.resolve();
+  console.log("D");
+}
+main();
+console.log("E");
+
+// Answer: A, E, B, D, C
+// A — sync inside main()
+// await pauses main() and allows "E" to run
+// E — sync after main() call
+// B — first await resolves (microtask)
+// D — second await resolves (microtask)
+// C — setTimeout (macrotask, runs last)
+
+// Exercise 2: nextTick vs Promise
+process.nextTick(() => console.log("nextTick"));
+Promise.resolve().then(() => console.log("Promise"));
+// Output: nextTick, Promise
+// nextTick queue is drained before the Promise microtask queue`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between innerHTML and textContent?", np: "innerHTML र textContent मा के फरक?", jp: "innerHTMLとtextContentの違いは？" },
+      question: { en: "When should I use process.nextTick vs setImmediate?", np: "process.nextTick vs setImmediate — कहिले कुन?", jp: "process.nextTickとsetImmediateの使い分けは？" },
       answer: {
-        en: "`textContent` reads and writes the raw text of an element and all its descendants — it ignores HTML markup and escapes any HTML you write to it, so it is safe for user-generated content. `innerHTML` reads and writes the actual HTML markup. When you read it, you get the HTML source. When you write it, the browser parses and renders it as HTML. Never set `innerHTML` with user-provided content — it is an XSS attack vector. Use `textContent` for text and `createElement`/`append` for dynamic HTML.",
-        np: "`textContent` raw text read/write गर्छ र HTML markup escape गर्छ — user content का लागि safe। `innerHTML` actual HTML markup read/write गर्छ। User-provided content मा `innerHTML` set गर्नु XSS attack vector हो। Text का लागि `textContent`, dynamic HTML का लागि `createElement`/`append`।",
-        jp: "`textContent`はテキストを読み書きし、HTMLをエスケープするため安全。`innerHTML`はHTMLマークアップを読み書きする。ユーザー提供コンテンツを`innerHTML`にセットするのはXSSの攻撃ベクター。テキストは`textContent`、動的HTMLは`createElement`/`append`を使う。",
+        en: "Use `process.nextTick()` when you need a callback to run after the current operation completes but before any I/O or timers — for example, to emit an event after a constructor returns, or to handle an error asynchronously in a synchronous-looking API. Use `setImmediate()` when you want to yield to I/O before running your callback. Inside an I/O callback, prefer `setImmediate()` because its timing is guaranteed (check phase), while `setTimeout(fn, 0)` timing can vary slightly.",
+        np: "`process.nextTick()`: current operation सकिएपछि I/O/timers अगाडि — constructor return भएपछि event emit गर्न। `setImmediate()`: callback run अगाडि I/O मा yield गर्न। I/O callback भित्र `setImmediate()` prefer — timing guaranteed।",
+        jp: "`process.nextTick()`: 現在の操作完了後、I/O前に実行 — コンストラクタ返却後のイベント発火など。`setImmediate()`: コールバック前にI/Oに譲歩したい場合。I/Oコールバック内ではタイミングが保証されるsetImmediateを優先。",
       },
     },
     {
-      question: { en: "When should I use event delegation?", np: "Event delegation कहिले use गर्ने?", jp: "イベント委譲はいつ使うべきか？" },
+      question: { en: "What happens if I call process.nextTick() recursively?", np: "process.nextTick() recursively call गर्दा के हुन्छ?", jp: "process.nextTick()を再帰的に呼ぶとどうなる？" },
       answer: {
-        en: "Use delegation when: (1) you have many similar elements that need the same handler — a list of 100 items, a table with 1000 rows; (2) elements are added or removed dynamically — a TODO list where items are added, a live search result list; (3) you are setting up listeners before the DOM is fully built. For a small number of static elements (like 3 navigation buttons), attaching listeners directly is simpler and equally correct.",
-        np: "Delegation use गर्नुहोस् जब: (1) धेरै similar elements लाई same handler चाहिन्छ — 100 items को list; (2) elements dynamically add/remove हुन्छन् — TODO list; (3) DOM fully built हुनु अगाडि listeners setup गर्नु परेको। थोरै static elements (3 navigation buttons) का लागि directly attach गर्नु simplest।",
-        jp: "委譲を使う場合: (1)同じハンドラが必要な要素が多い — 100アイテムのリスト; (2)要素が動的に追加・削除される — TODOリスト; (3)DOM構築前にリスナーを設定する場合。少数の静的要素（ナビボタン3つなど）なら直接アタッチが簡単で適切。",
-      },
-    },
-    {
-      question: { en: "What is the difference between event.target and event.currentTarget?", np: "event.target र event.currentTarget मा के फरक?", jp: "event.targetとevent.currentTargetの違いは？" },
-      answer: {
-        en: "`event.target` is the element the event originally fired on — the exact element the user clicked, typed in, etc. It changes as the event bubbles. `event.currentTarget` is the element the current listener is attached to — it stays the same throughout the listener's execution. In event delegation, `event.currentTarget` is always the parent you attached the listener to, while `event.target` is the child that was actually interacted with.",
-        np: "`event.target` event originally fire भएको element — user ले exactly click गरेको। Bubble हुँदा बदलिन्छ। `event.currentTarget` current listener attach भएको element — listener execution भर same रहन्छ। Delegation मा `currentTarget` parent हो, `target` interact भएको child।",
-        jp: "`event.target`はイベントが最初に発生した要素 — ユーザーが実際にクリックした要素。バブリングで変わる。`event.currentTarget`はリスナーがアタッチされた要素 — リスナー実行中は変わらない。委譲では`currentTarget`は親、`target`は実際に操作された子。",
+        en: "The event loop starves — I/O callbacks, timers, and even Promises never get a chance to run. `process.nextTick()` drains its queue completely before moving to the next phase, and if every tick callback schedules another tick, the loop is stuck in the nextTick queue forever. This is known as I/O starvation. Node.js does not have a built-in limit for nextTick recursion (unlike the call stack). Use `setImmediate()` when you need a recursive async callback — it yields to I/O between calls.",
+        np: "Event loop starve हुन्छ — I/O callbacks, timers, Promises कहिल्यै run हुँदैनन्। nextTick ले queue completely drain गर्छ र हर tick callback ले अर्को tick add गर्दा loop stuck हुन्छ। यो I/O starvation हो। Recursive async callback चाहिए भने `setImmediate()` प्रयोग गर्नुहोस्।",
+        jp: "イベントループが枯渇する — I/O・タイマー・Promiseが実行される機会を失う。nextTickキューは完全に消化されるため、再帰的に追加し続けるとI/O枯渇が起きる。再帰的な非同期コールバックには`setImmediate()`を使う。",
       },
     },
   ],
