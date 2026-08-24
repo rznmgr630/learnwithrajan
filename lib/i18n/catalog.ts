@@ -753,6 +753,36 @@ export const UI_STRINGS = {
     np: "みんなの日本語 I · ३०-दिने पाठ्यक्रम · पछि JLPT N4",
     jp: "みんなの日本語 初級I · 30日シラバス · 将来的に N4",
   },
+  "lessonNav.label": {
+    en: "Day navigation",
+    np: "दिन navigation",
+    jp: "日付ナビゲーション",
+  },
+  "lessonNav.previous": {
+    en: "Previous",
+    np: "अघिल्लो",
+    jp: "前へ",
+  },
+  "lessonNav.next": {
+    en: "Next",
+    np: "अर्को",
+    jp: "次へ",
+  },
+  "lessonNav.dayLabel": {
+    en: "Day {day}",
+    np: "दिन {day}",
+    jp: "{day}日目",
+  },
+  "lessonNav.previousAria": {
+    en: "Go to the previous day, day {day}: {title}",
+    np: "अघिल्लो दिनमा जानुहोस्, दिन {day}: {title}",
+    jp: "前の日（{day}日目）へ移動: {title}",
+  },
+  "lessonNav.nextAria": {
+    en: "Go to the next day, day {day}: {title}",
+    np: "अर्को दिनमा जानुहोस्, दिन {day}: {title}",
+    jp: "次の日（{day}日目）へ移動: {title}",
+  },
   "learn.back": {
     en: "← Learning hub",
     np: "← सिकाइ केन्द्र",
