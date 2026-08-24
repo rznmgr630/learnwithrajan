@@ -181,6 +181,7 @@ console.log(typeof big);       // "bigint"`,
           explanation: { en: "It returns `\"object\"` because of an old JavaScript bug that cannot be fixed without breaking existing code.", np: "पुरानो JavaScript bug का कारण यो `\"object\"` फर्काउँछ, जो अवस्थित code नभाँचिकन ठीक गर्न सकिँदैन।", jp: "既存のコードを壊さずには直せない古いJavaScriptのバグのため `\"object\"` を返す。" },
         },
       ],
+      youtubeIds: ["B7iF6G3EyIk"],
     },
     {
       id: "hoisting",
