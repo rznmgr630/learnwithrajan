@@ -11,88 +11,106 @@ export const JS_DAY_7_LESSONS: JsLessonDay = {
       title: { en: "Transforming Arrays — map, filter, reduce", np: "Arrays Transform — map, filter, reduce", jp: "配列変換 — map・filter・reduce" },
       durationMinutes: 9,
       explanation: {
-        en: "These three methods are the workhorses of modern JavaScript, and each has one specific job:\n\n• <b>map</b> — transforms every element and returns a NEW array of the exact same length, one output per input\n• <b>filter</b> — keeps only the elements where the callback returns `true`, returning a new (possibly shorter) array\n• <b>reduce</b> — folds the entire array down into a single value (a number, an object, a Map — anything), by carrying an accumulator through every step\n\nNone of these three mutate the original array — they always return something new. Because each one returns an array (except reduce, which usually doesn't), you can chain them together: `.filter(...).map(...).reduce(...)` reads left to right as a pipeline, first narrowing down the data, then transforming it, then collapsing it to one answer.",
-        np: "map ले हरेक element transform गर्छ र same length को नयाँ array दिन्छ। filter ले callback true भएका element मात्र राख्छ। reduce ले पूरै array लाई एउटा single value मा फोल्ड गर्छ। तीनैले original array mutate गर्दैनन् — chain गर्न सकिन्छ।",
-        jp: "mapは各要素を変換し同じ長さの新しい配列を返す。filterはコールバックがtrueの要素だけを残す。reduceは配列全体を1つの値に折り畳む。3つとも元の配列を変更せず、チェーンできる。",
+        en: "`map`, `filter`, and `reduce` are three important array methods. Each one has a different job:\n\n<b>`map()`</b> — changes every element and returns a <b>new array</b> with the same length.\n\n<b>`filter()`</b> — keeps elements that pass a condition and returns a <b>new array</b> that can be shorter.\n\n<b>`reduce()`</b> — processes the whole array and produces <b>one final value</b> (such as a number, object, or array).\n\nThey <b>do not change the original array</b>.\n\nYou can also <b>chain</b> them together:\n\n```javascript\nusers\n  .filter(user => user.active)\n  .map(user => user.name)\n  .reduce((result, name) => result + \", \" + name);\n```\n\nThink of the chain as:\n\n<b>Filter → Transform → Combine</b>\n\n---\n\n### `map()` — transform every item\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(num => num * 2);\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\nSame number of elements.\n\n---\n\n### `filter()` — keep matching items\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst even = numbers.filter(num => num % 2 === 0);\n\nconsole.log(even);\n// [2, 4]\n```\n\nOnly elements that pass the condition remain.\n\n---\n\n### `reduce()` — create one result\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst total = numbers.reduce(\n  (sum, num) => sum + num,\n  0\n);\n\nconsole.log(total);\n// 10\n```\n\nThe `sum` is the <b>accumulator</b> (value carried from one step to the next).",
+        np: "`map`, `filter`, र `reduce` तीन महत्वपूर्ण array method हुन्। हरेकको काम फरक छ:\n\n<b>`map()`</b> — हरेक element बदल्छ र उही लम्बाइको <b>नयाँ array</b> फर्काउँछ।\n\n<b>`filter()`</b> — condition पास गर्ने element राख्छ र छोटो हुन सक्ने <b>नयाँ array</b> फर्काउँछ।\n\n<b>`reduce()`</b> — पूरै array process गर्छ र <b>एउटा अन्तिम value</b> (जस्तै number, object, वा array) दिन्छ।\n\nयिनले <b>मूल array बदल्दैनन्</b>।\n\nतपाईं यिनलाई <b>chain</b> पनि गर्न सक्नुहुन्छ:\n\n```javascript\nusers\n  .filter(user => user.active)\n  .map(user => user.name)\n  .reduce((result, name) => result + \", \" + name);\n```\n\nChain लाई यसरी सोच्नुहोस्:\n\n<b>Filter → Transform → Combine</b>\n\n---\n\n### `map()` — हरेक item बदल्नु\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(num => num * 2);\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\nElement को संख्या उही रहन्छ।\n\n---\n\n### `filter()` — मिल्ने item राख्नु\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst even = numbers.filter(num => num % 2 === 0);\n\nconsole.log(even);\n// [2, 4]\n```\n\nCondition पास गर्ने element मात्र बाँकी रहन्छन्।\n\n---\n\n### `reduce()` — एउटा नतिजा बनाउनु\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst total = numbers.reduce(\n  (sum, num) => sum + num,\n  0\n);\n\nconsole.log(total);\n// 10\n```\n\n`sum` <b>accumulator</b> (एक चरणबाट अर्कोमा बोकिने value) हो।",
+        jp: "`map`・`filter`・`reduce` は重要な配列メソッドです。それぞれ役割が違います:\n\n<b>`map()`</b> — すべての要素を変換し、同じ長さの<b>新しい配列</b>を返す。\n\n<b>`filter()`</b> — 条件を満たす要素だけを残し、短くなりうる<b>新しい配列</b>を返す。\n\n<b>`reduce()`</b> — 配列全体を処理して<b>1つの最終的な値</b>（数値・オブジェクト・配列など）を作る。\n\nいずれも<b>元の配列は変更しません</b>。\n\nつなげて<b>チェーン</b>することもできます:\n\n```javascript\nusers\n  .filter(user => user.active)\n  .map(user => user.name)\n  .reduce((result, name) => result + \", \" + name);\n```\n\nチェーンはこう考えてください:\n\n<b>絞る → 変換する → まとめる</b>\n\n---\n\n### `map()` — すべての要素を変換\n\n```javascript\nconst numbers = [1, 2, 3];\n\nconst doubled = numbers.map(num => num * 2);\n\nconsole.log(doubled);\n// [2, 4, 6]\n```\n\n要素の数は同じです。\n\n---\n\n### `filter()` — 条件に合う要素を残す\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst even = numbers.filter(num => num % 2 === 0);\n\nconsole.log(even);\n// [2, 4]\n```\n\n条件を満たす要素だけが残ります。\n\n---\n\n### `reduce()` — 1つの結果を作る\n\n```javascript\nconst numbers = [1, 2, 3, 4];\n\nconst total = numbers.reduce(\n  (sum, num) => sum + num,\n  0\n);\n\nconsole.log(total);\n// 10\n```\n\n`sum` が<b>アキュムレータ</b>（次のステップへ持ち越される値）です。",
       },
-      diagram: `[1, 2, 3, 4, 5]
-      │ .filter(n => n % 2 === 0)   →  [2, 4]            shorter, same type
-      │ .map(n => n * 10)           →  [20, 40]          same length, transformed
-      │ .reduce((sum, n) => sum+n, 0) → 60                single value
-
-products.filter(inStock).map(getPrice).reduce(sum, 0)
-         └── narrow down ──┘└─ transform ─┘└── collapse to one ──┘`,
+      diagram: `Original Array
+     │
+     ▼
+  filter()
+     │
+     ▼
+Smaller Array
+     │
+     ▼
+   map()
+     │
+     ▼
+Transformed Array
+     │
+     ▼
+  reduce()
+     │
+     ▼
+ One Final Value`,
       codeExample: {
-        title: { en: "map, filter, reduce — and chaining them together", np: "map, filter, reduce — chain गरेर", jp: "map・filter・reduce — チェーン結合" },
-        code: `const products = [
-  { id: 1, name: "Apple",  price: 1.5,  category: "fruit",  inStock: true  },
-  { id: 2, name: "Bread",  price: 2.5,  category: "bakery", inStock: true  },
-  { id: 3, name: "Banana", price: 0.75, category: "fruit",  inStock: false },
+        title: { en: "Transform, keep and combine", np: "बदल्नु, राख्नु र जोड्नु", jp: "変換する・残す・まとめる" },
+        code: `// map — transform every item, same length
+const numbers = [1, 2, 3];
+
+const doubled = numbers.map(num => num * 2);
+console.log(doubled); // [2, 4, 6]
+
+// filter — keep the ones that pass
+const values = [1, 2, 3, 4];
+
+const even = values.filter(num => num % 2 === 0);
+console.log(even); // [2, 4]
+
+// reduce — combine into one result
+const total = values.reduce((sum, num) => sum + num, 0);
+console.log(total); // 10
+
+// chained: filter, then transform, then combine
+const users = [
+  { name: "Rajan", active: true },
+  { name: "John", active: false }
 ];
 
-// ── map — transform every element, same length back ──────────────
-const names = products.map(p => p.name);
-// ["Apple", "Bread", "Banana"]
+const activeNames = users
+  .filter(user => user.active)
+  .map(user => user.name)
+  .join(", ");
 
-// ── filter — keep elements where callback is true ─────────────────
-const inStock = products.filter(p => p.inStock);
-// 2 products (all except Banana)
-
-// ── reduce — fold the array into ONE value ────────────────────────
-// Signature: array.reduce((accumulator, current, index) => ..., initialValue)
-const total = products.reduce((sum, p) => sum + p.price, 0);
-// 0 + 1.5 + 2.5 + 0.75 = 4.75
-
-const byCategory = products.reduce((acc, p) => {
-  acc[p.category] = (acc[p.category] ?? 0) + 1;
-  return acc;
-}, {});
-// { fruit: 2, bakery: 1 }
-
-// ── Chaining — narrow, transform, then collapse ────────────────────
-const totalInStockFruitRevenue = products
-  .filter(p => p.category === "fruit" && p.inStock)
-  .map(p => p.price)
-  .reduce((sum, price) => sum + price, 0);
-// Only Apple is in-stock fruit → 1.5`,
+console.log(activeNames); // "Rajan"`,
       },
       keyTakeaways: [
-        { en: "`map()` always returns a new array of the SAME length as the input — one output for every input, no exceptions.", np: "`map()` ले सधैं input सँग same length को नयाँ array दिन्छ — हरेक input को एउटा output।", jp: "`map()`は常に入力と同じ長さの新しい配列を返す — 入力ごとに1つの出力。" },
-        { en: "`filter()` returns a new array containing only the elements where the callback returned `true` — it can be shorter than the input, never longer.", np: "`filter()` ले callback true भएका element मात्र राखेर नयाँ array दिन्छ — यो input भन्दा छोटो हुन सक्छ, लामो कहिल्यै हुँदैन।", jp: "`filter()`はコールバックがtrueを返した要素だけを含む新しい配列を返す — 入力より短くなることはあるが長くなることはない。" },
-        { en: "`reduce()` folds an entire array into a single value by carrying an accumulator forward through every element — the most flexible of the three.", np: "`reduce()` ले accumulator लाई हरेक element मार्फत बढाउँदै पूरै array लाई एउटा value मा फोल्ड गर्छ — तीनमध्ये सबैभन्दा flexible।", jp: "`reduce()`はアキュムレータを各要素に渡しながら配列全体を1つの値に折り畳む — 3つの中で最も柔軟。" },
+        { en: "`map()` → <b>transform every item</b>.", np: "`map()` → <b>हरेक item बदल्नु</b>।", jp: "`map()` → <b>すべての要素を変換する</b>。" },
+        { en: "`filter()` → <b>keep matching items</b>.", np: "`filter()` → <b>मिल्ने item राख्नु</b>।", jp: "`filter()` → <b>条件に合う要素を残す</b>。" },
+        { en: "`reduce()` → <b>combine into one result</b>.", np: "`reduce()` → <b>एउटै नतिजामा जोड्नु</b>।", jp: "`reduce()` → <b>1つの結果にまとめる</b>。" },
+        { en: "`map()` and `filter()` return new arrays.", np: "`map()` र `filter()` ले नयाँ array फर्काउँछन्।", jp: "`map()` と `filter()` は新しい配列を返す。" },
+        { en: "`reduce()` can return any type of value.", np: "`reduce()` ले जुनसुकै प्रकारको value फर्काउन सक्छ।", jp: "`reduce()` はどんな型の値でも返せる。" },
+        { en: "These methods don't change the original array.", np: "यी method ले मूल array बदल्दैनन्।", jp: "これらのメソッドは元の配列を変更しない。" },
+        { en: "They can be chained together to build a clear data pipeline.", np: "यिनलाई chain गरी स्पष्ट data pipeline बनाउन सकिन्छ।", jp: "つなげて明確なデータのパイプラインを作れる。" },
       ],
       commonMistakes: [
-        { en: "Omitting `reduce`'s `initialValue` — without it, `reduce` uses the first element as the starting accumulator, which throws on an empty array and can silently change the result's type.", np: "`reduce` को `initialValue` छुटाउनु — यसबिना पहिलो element नै accumulator बन्छ, empty array मा throw हुन्छ र result को type पनि बदलिन सक्छ।", jp: "`reduce`の`initialValue`を省略すること。省略すると最初の要素がアキュムレータになり、空配列でスローされ、結果の型が変わることがある。" },
-        { en: "Expecting `map()` to remove items by returning `null`/`undefined` from the callback — `map()` always keeps the same length; use `filter()` first if you need fewer items.", np: "Callback बाट `null`/`undefined` return गरेर `map()` ले item हटाउँछ भन्ने ठान्नु — `map()` ले सधैं same length राख्छ; कम item चाहिँदा पहिले `filter()` प्रयोग गर्नुहोस्।", jp: "コールバックから`null`/`undefined`を返して`map()`が要素を削除すると思うこと。`map()`は常に同じ長さを保つ。要素を減らすには先に`filter()`を使う。" },
-        { en: "Reaching for `reduce()` to solve something `map()` or `filter()` already solves more clearly — reduce is powerful but often harder to read than the simpler method.", np: "`map()` वा `filter()` ले सहज रूपमा गर्न सक्ने काम `reduce()` बाट गर्नु — reduce शक्तिशाली छ तर सरल method भन्दा पढ्न गाह्रो हुन सक्छ।", jp: "`map()`や`filter()`で明確に解決できることを`reduce()`で解決しようとすること。reduceは強力だがシンプルなメソッドより読みにくいことが多い。" },
+        { en: "<b>Using `map()` when you only want to select some items</b> — `map()` always returns the same number of elements, so use `filter()` to drop items.", np: "<b>केही item मात्र छान्न `map()` प्रयोग गर्नु</b> — `map()` ले सधैं उही संख्याको element फर्काउँछ, त्यसैले item हटाउन `filter()` प्रयोग गर्नुहोस्।", jp: "<b>一部だけ選びたいのに `map()` を使う</b> — `map()` は常に同じ数の要素を返すので、要素を落とすなら `filter()` を使う。" },
+        { en: "<b>Using `filter()` when you need to change every item</b> — `filter()` only keeps or drops; it never transforms.", np: "<b>हरेक item बदल्नुपर्दा `filter()` प्रयोग गर्नु</b> — `filter()` ले राख्ने वा हटाउने मात्र गर्छ; कहिल्यै बदल्दैन।", jp: "<b>すべての要素を変えたいのに `filter()` を使う</b> — `filter()` は残すか落とすかだけで、変換はしない。" },
+        { en: "<b>Forgetting to return a value from the `map()` callback</b> — a callback with a body and no `return` fills the new array with `undefined`.", np: "<b>`map()` callback बाट value return गर्न बिर्सनु</b> — body भएको तर `return` नभएको callback ले नयाँ array लाई `undefined` ले भर्छ।", jp: "<b>`map()` のコールバックで値を返し忘れる</b> — 本体があるのに `return` がないと、新しい配列は `undefined` で埋まる。" },
+        { en: "<b>Using `reduce()` when `map()` or `filter()` would be simpler</b> — reach for the method that names your intent.", np: "<b>`map()` वा `filter()` सजिलो हुँदा `reduce()` प्रयोग गर्नु</b> — तपाईंको उद्देश्य बताउने method छान्नुहोस्।", jp: "<b>`map()` や `filter()` で足りるのに `reduce()` を使う</b> — 意図を名前で表せるメソッドを選ぶ。" },
+        { en: "<b>Assuming these methods change the original array</b> — they return new values and leave the source untouched.", np: "<b>यी method ले मूल array बदल्छन् भन्ने ठान्नु</b> — यिनले नयाँ value फर्काउँछन् र स्रोत जस्ताको तस्तै छोड्छन्।", jp: "<b>これらが元の配列を変えると思う</b> — 新しい値を返すだけで、元はそのまま。" },
       ],
       quiz: [
         {
-          question: { en: "If you call `.map()` on a 5-item array, how many items does the result have?", np: "5-item array मा `.map()` call गर्दा result मा कति item हुन्छ?", jp: "5要素の配列に`.map()`を呼ぶと、結果には何個の要素がある？" },
+          question: { en: "Which method transforms every element?", np: "कुन method ले हरेक element बदल्छ?", jp: "すべての要素を変換するのはどのメソッドか?" },
           options: [
-            { en: "Could be fewer than 5, depending on the callback", np: "Callback अनुसार 5 भन्दा कम हुन सक्छ", jp: "コールバックによっては5未満になることがある" },
-            { en: "Always exactly 5", np: "सधैं ठ्याक्कै 5", jp: "常に正確に5" },
+            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`reduce()`", np: "`reduce()`", jp: "`reduce()`" },
           ],
           correctIndex: 1,
-          explanation: { en: "map() always produces one output per input, so the result length always matches the input length.", np: "map() ले हरेक input को एउटा output दिन्छ, त्यसैले result length input length सँग सधैं मिल्छ।", jp: "map()は入力ごとに1つの出力を生成するため、結果の長さは常に入力の長さと一致する。" },
+          explanation: { en: "`map()` returns a new array of the same length, one transformed item per input.", np: "`map()` ले उही लम्बाइको नयाँ array फर्काउँछ, हरेक input का लागि एउटा बदलिएको item।", jp: "`map()` は同じ長さの新しい配列を返す。入力1つにつき変換後の要素が1つ。" },
         },
         {
-          question: { en: "What happens if you call `.reduce()` with no `initialValue` on an empty array?", np: "Empty array मा `initialValue` बिना `.reduce()` call गर्दा के हुन्छ?", jp: "空配列で`initialValue`なしに`.reduce()`を呼ぶとどうなる？" },
+          question: { en: "Which method keeps only elements that pass a condition?", np: "कुन method ले condition पास गर्ने element मात्र राख्छ?", jp: "条件を満たす要素だけを残すのはどのメソッドか?" },
           options: [
-            { en: "It quietly returns `undefined`", np: "यसले silently `undefined` फर्काउँछ", jp: "黙って`undefined`を返す" },
-            { en: "It throws a `TypeError`", np: "यसले `TypeError` throw गर्छ", jp: "`TypeError`をスローする" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "With no initial value and no elements to use as a starting accumulator, reduce has nothing to work with and throws.", np: "Initial value नभई र काम गर्ने element पनि नभई reduce सँग सुरु गर्ने केही हुँदैन, त्यसैले throw हुन्छ।", jp: "初期値も出発点となる要素もない場合、reduceは何も処理できずスローする。" },
-        },
-        {
-          question: { en: "In `products.filter(cb1).map(cb2)`, in what order do the two methods run?", np: "`products.filter(cb1).map(cb2)` मा दुई methods कुन order मा चल्छन्?", jp: "`products.filter(cb1).map(cb2)`で2つのメソッドはどの順序で実行される？" },
-          options: [
-            { en: "filter runs first over the full array, then map runs on the filtered result", np: "पहिले पूरै array माथि filter चल्छ, त्यसपछि filtered result मा map चल्छ", jp: "先にfilterが全配列に対して実行され、その後mapがフィルタ後の結果に実行される" },
-            { en: "Both run at the same time on the original array", np: "दुवै original array मा एकैसाथ चल्छन्", jp: "両方が元の配列に対して同時に実行される" },
+            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`reduce()`", np: "`reduce()`", jp: "`reduce()`" },
           ],
           correctIndex: 0,
-          explanation: { en: "Chained methods run strictly left to right — each one completes fully and returns a new array before the next method runs on it.", np: "Chain गरिएका methods बायाँबाट दायाँ क्रममा चल्छन् — हरेक अघिल्लो पूरा भएपछि मात्र अर्को चल्छ।", jp: "チェーンされたメソッドは厳密に左から右に実行される — 各メソッドが完全に完了し新しい配列を返した後に次が実行される。" },
+          explanation: { en: "The result can be shorter than the original, but never transformed.", np: "नतिजा मूल भन्दा छोटो हुन सक्छ, तर कहिल्यै बदलिएको हुँदैन।", jp: "結果は元より短くなりうるが、変換はされない。" },
+        },
+        {
+          question: { en: "Which method can turn an entire array into one value?", np: "कुन method ले पूरै array लाई एउटै value मा बदल्न सक्छ?", jp: "配列全体を1つの値に変えられるのはどのメソッドか?" },
+          options: [
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
+            { en: "`reduce()`", np: "`reduce()`", jp: "`reduce()`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "The accumulator carries the running result from one step to the next.", np: "Accumulator ले चलिरहेको नतिजा एक चरणबाट अर्कोमा बोक्छ।", jp: "アキュムレータが途中の結果を次のステップへ運ぶ。" },
         },
       ],
     },
