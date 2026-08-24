@@ -133,87 +133,130 @@ console.log(total); // 1100`,
       title: { en: "Finding & Testing — find, some, every, includes", np: "Find र Testing — find, some, every, includes", jp: "検索・テスト — find・some・every・includes" },
       durationMinutes: 9,
       explanation: {
-        en: "These methods answer yes/no or \"which one\" questions about an array, and all of them stop iterating as soon as the answer is known — which makes them more efficient than `filter()` when you only need one result or a boolean.\n\n• <b>find</b> / <b>findIndex</b> — return the FIRST matching element (or its index), or `undefined`/`-1` if nothing matches\n• <b>some</b> — `true` if AT LEAST ONE element satisfies the callback\n• <b>every</b> — `true` only if ALL elements satisfy the callback\n• <b>includes</b> — `true` if the array contains that exact value, using an equality check (<b>SameValueZero</b>) that treats `NaN` as equal to itself — unlike `indexOf`, which uses strict equality and can never find `NaN`.",
-        np: "find/findIndex ले पहिलो matching element फर्काउँछ। some ले 'कम्तिमा एक' जाँच गर्छ, every ले 'सबै' जाँच गर्छ। includes ले SameValueZero प्रयोग गर्छ जसले NaN लाई आफैं सँग बराबर मान्छ, indexOf ले मान्दैन।",
-        jp: "find/findIndexは最初にマッチした要素を返す。someは「少なくとも1つ」、everyは「すべて」を確認する。includesはSameValueZeroを使いNaNを自身と等しいとみなすが、indexOfはそうではない。",
+        en: "These methods help you <b>find something</b> or <b>check a condition</b> in an array.\n\nThey stop as soon as they know the answer, so they can be better than `filter()` when you only need one result or a `true`/`false` answer.\n\n<b>`find()`</b> — returns the <b>first matching element</b>, or `undefined`.\n\n<b>`findIndex()`</b> — returns the <b>index</b> of the first matching element, or `-1`.\n\n<b>`some()`</b> — returns `true` if <b>at least one</b> element matches.\n\n<b>`every()`</b> — returns `true` only if <b>all</b> elements match.\n\n<b>`includes()`</b> — checks whether an array contains a specific value and returns `true` or `false`.\n\n---\n\n### 1. Basic — `find()`\n\nFind the first number greater than 10:\n\n```javascript\nconst numbers = [5, 12, 8, 20];\n\nconst result = numbers.find(num => num > 10);\n\nconsole.log(result);\n// 12\n```\n\n`find()` stops after finding `12`.\n\n---\n\n### 2. Basic — `includes()`\n\nCheck whether a value exists:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nconsole.log(fruits.includes(\"banana\"));\n// true\n\nconsole.log(fruits.includes(\"mango\"));\n// false\n```\n\nUse `includes()` when you already know the value you are looking for.\n\n---\n\n### 3. Intermediate — `findIndex()`\n\nFind where a user appears:\n\n```javascript\nconst users = [\n  { id: 1, name: \"Rajan\" },\n  { id: 2, name: \"John\" },\n  { id: 3, name: \"Sam\" }\n];\n\nconst index = users.findIndex(user => user.id === 2);\n\nconsole.log(index);\n// 1\n```\n\nIf no user matches, `findIndex()` returns `-1`.\n\n---\n\n### 4. Intermediate — `some()`\n\nCheck whether at least one user is an admin:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", admin: false },\n  { name: \"John\", admin: true },\n  { name: \"Sam\", admin: false }\n];\n\nconst hasAdmin = users.some(user => user.admin);\n\nconsole.log(hasAdmin);\n// true\n```\n\nYou don't need to know <b>which</b> user is an admin. You only need a yes/no answer.\n\n---\n\n### 5. Advanced — `every()`\n\nCheck whether all products are in stock:\n\n```javascript\nconst products = [\n  { name: \"Laptop\", stock: 5 },\n  { name: \"Mouse\", stock: 10 },\n  { name: \"Keyboard\", stock: 2 }\n];\n\nconst allInStock = products.every(product => product.stock > 0);\n\nconsole.log(allInStock);\n// true\n```\n\nIf even one product has `stock: 0`, the result becomes `false`.\n\n---\n\n### 6. Real-World — choosing the right method\n\nChoose the method based on the question:\n\n```text\n\"Which user?\"            → find()\n\"Where is the user?\"     → findIndex()\n\"Does at least one?\"     → some()\n\"Do all?\"                → every()\n\"Does this value exist?\" → includes()\n```",
+        np: "यी method ले array मा <b>केही खोज्न</b> वा <b>condition जाँच्न</b> मद्दत गर्छन्।\n\nजवाफ थाहा भएको बित्तिकै यी रोकिन्छन्, त्यसैले एउटै नतिजा वा `true`/`false` जवाफ मात्र चाहिँदा यी `filter()` भन्दा राम्रा हुन सक्छन्।\n\n<b>`find()`</b> — <b>पहिलो मिल्ने element</b>, वा `undefined` फर्काउँछ।\n\n<b>`findIndex()`</b> — पहिलो मिल्ने element को <b>index</b>, वा `-1` फर्काउँछ।\n\n<b>`some()`</b> — <b>कम्तीमा एउटा</b> element मिल्यो भने `true` फर्काउँछ।\n\n<b>`every()`</b> — <b>सबै</b> element मिले मात्र `true` फर्काउँछ।\n\n<b>`includes()`</b> — array मा निश्चित value छ कि छैन जाँच्छ र `true` वा `false` फर्काउँछ।\n\n---\n\n### 1. आधारभूत — `find()`\n\n10 भन्दा ठूलो पहिलो संख्या खोज्नुहोस्:\n\n```javascript\nconst numbers = [5, 12, 8, 20];\n\nconst result = numbers.find(num => num > 10);\n\nconsole.log(result);\n// 12\n```\n\n`find()` `12` भेटेपछि रोकिन्छ।\n\n---\n\n### 2. आधारभूत — `includes()`\n\nValue छ कि छैन जाँच्नुहोस्:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nconsole.log(fruits.includes(\"banana\"));\n// true\n\nconsole.log(fruits.includes(\"mango\"));\n// false\n```\n\nखोजिरहेको value पहिले नै थाहा हुँदा `includes()` प्रयोग गर्नुहोस्।\n\n---\n\n### 3. मध्यम — `findIndex()`\n\nUser कहाँ छ भेट्टाउनुहोस्:\n\n```javascript\nconst users = [\n  { id: 1, name: \"Rajan\" },\n  { id: 2, name: \"John\" },\n  { id: 3, name: \"Sam\" }\n];\n\nconst index = users.findIndex(user => user.id === 2);\n\nconsole.log(index);\n// 1\n```\n\nकुनै user नमिले, `findIndex()` ले `-1` फर्काउँछ।\n\n---\n\n### 4. मध्यम — `some()`\n\nकम्तीमा एउटा user admin छ कि जाँच्नुहोस्:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", admin: false },\n  { name: \"John\", admin: true },\n  { name: \"Sam\", admin: false }\n];\n\nconst hasAdmin = users.some(user => user.admin);\n\nconsole.log(hasAdmin);\n// true\n```\n\n<b>कुन</b> user admin हो थाहा हुनु पर्दैन। तपाईंलाई हो/होइन जवाफ मात्र चाहिन्छ।\n\n---\n\n### 5. उन्नत — `every()`\n\nसबै product stock मा छन् कि जाँच्नुहोस्:\n\n```javascript\nconst products = [\n  { name: \"Laptop\", stock: 5 },\n  { name: \"Mouse\", stock: 10 },\n  { name: \"Keyboard\", stock: 2 }\n];\n\nconst allInStock = products.every(product => product.stock > 0);\n\nconsole.log(allInStock);\n// true\n```\n\nएउटै product को `stock: 0` भए पनि नतिजा `false` हुन्छ।\n\n---\n\n### 6. वास्तविक प्रयोग — सही method छान्नु\n\nप्रश्न अनुसार method छान्नुहोस्:\n\n```text\n\"Which user?\"            → find()\n\"Where is the user?\"     → findIndex()\n\"Does at least one?\"     → some()\n\"Do all?\"                → every()\n\"Does this value exist?\" → includes()\n```",
+        jp: "これらのメソッドは配列の中で<b>何かを探す</b>、あるいは<b>条件を確かめる</b>のに役立ちます。\n\n答えが分かった時点で止まるので、1件だけ欲しいときや `true`/`false` だけ欲しいときは `filter()` より適しています。\n\n<b>`find()`</b> — <b>最初に一致した要素</b>、なければ `undefined` を返す。\n\n<b>`findIndex()`</b> — 最初に一致した要素の<b>添字</b>、なければ `-1` を返す。\n\n<b>`some()`</b> — <b>少なくとも1つ</b>一致すれば `true` を返す。\n\n<b>`every()`</b> — <b>すべて</b>一致したときだけ `true` を返す。\n\n<b>`includes()`</b> — 配列に特定の値が含まれるかを調べ、`true` か `false` を返す。\n\n---\n\n### 1. 基本 — `find()`\n\n10より大きい最初の数値を探す:\n\n```javascript\nconst numbers = [5, 12, 8, 20];\n\nconst result = numbers.find(num => num > 10);\n\nconsole.log(result);\n// 12\n```\n\n`find()` は `12` を見つけた時点で止まります。\n\n---\n\n### 2. 基本 — `includes()`\n\n値が存在するか調べる:\n\n```javascript\nconst fruits = [\"apple\", \"banana\", \"orange\"];\n\nconsole.log(fruits.includes(\"banana\"));\n// true\n\nconsole.log(fruits.includes(\"mango\"));\n// false\n```\n\n探している値がすでに分かっているときは `includes()` を使います。\n\n---\n\n### 3. 中級 — `findIndex()`\n\nユーザーの位置を探す:\n\n```javascript\nconst users = [\n  { id: 1, name: \"Rajan\" },\n  { id: 2, name: \"John\" },\n  { id: 3, name: \"Sam\" }\n];\n\nconst index = users.findIndex(user => user.id === 2);\n\nconsole.log(index);\n// 1\n```\n\n一致するユーザーがいなければ `findIndex()` は `-1` を返します。\n\n---\n\n### 4. 中級 — `some()`\n\n管理者が1人でもいるか調べる:\n\n```javascript\nconst users = [\n  { name: \"Rajan\", admin: false },\n  { name: \"John\", admin: true },\n  { name: \"Sam\", admin: false }\n];\n\nconst hasAdmin = users.some(user => user.admin);\n\nconsole.log(hasAdmin);\n// true\n```\n\n<b>誰が</b>管理者かを知る必要はありません。はい／いいえだけで十分です。\n\n---\n\n### 5. 上級 — `every()`\n\nすべての商品に在庫があるか調べる:\n\n```javascript\nconst products = [\n  { name: \"Laptop\", stock: 5 },\n  { name: \"Mouse\", stock: 10 },\n  { name: \"Keyboard\", stock: 2 }\n];\n\nconst allInStock = products.every(product => product.stock > 0);\n\nconsole.log(allInStock);\n// true\n```\n\n1つでも `stock: 0` があれば結果は `false` になります。\n\n---\n\n### 6. 実践 — 正しいメソッドを選ぶ\n\n問いに合わせてメソッドを選びます:\n\n```text\n\"Which user?\"            → find()\n\"Where is the user?\"     → findIndex()\n\"Does at least one?\"     → some()\n\"Do all?\"                → every()\n\"Does this value exist?\" → includes()\n```",
       },
-      diagram: `[1, 5, 3, 8, 2, 9, 4, 7, 6]
-
-find(n => n > 6)        →  8    (FIRST match, stops iterating there)
-findIndex(n => n > 6)   →  3    (index of that first match)
-some(n => n > 8)        →  true   ("does ANY element pass?")
-every(n => n > 0)       →  true   ("do ALL elements pass?")
-includes(8)             →  true   (exact value match)
-
-[NaN].includes(NaN)   →  true    ← SameValueZero: NaN equals itself
-[NaN].indexOf(NaN)    →  -1      ← strict equality: NaN !== NaN`,
+      diagram: `Array
+ │
+ ├── find()       → Which item matches first?
+ │
+ ├── findIndex()  → Where is the first match?
+ │
+ ├── some()       → Does at least one match?
+ │
+ ├── every()      → Do all match?
+ │
+ └── includes()   → Does this exact value exist?`,
       codeExample: {
-        title: { en: "find, findIndex, some, every, includes, indexOf", np: "find, findIndex, some, every, includes, indexOf", jp: "find・findIndex・some・every・includes・indexOf" },
-        code: `const numbers = [1, 5, 3, 8, 2, 9, 4, 7, 6];
+        title: { en: "Searching, then testing, then choosing", np: "खोज्नु, जाँच्नु, अनि छान्नु", jp: "探す・確かめる・選ぶ" },
+        code: `// ── 1. Basic — find() ─────────────────────────────────────────────
+const numbers = [5, 12, 8, 20];
 
-// find — returns the FIRST element where callback is true (or undefined)
-numbers.find(n => n > 6);         // 8 — stops after finding the first match
+console.log(numbers.find(num => num > 10)); // 12
 
-// findIndex — returns the INDEX of the first match (or -1)
-numbers.findIndex(n => n > 6);    // 3 (index of 8)
+// ── 2. Basic — includes() ─────────────────────────────────────────
+const fruits = ["apple", "banana", "orange"];
 
-// findLast / findLastIndex — search from the end (ES2023)
-numbers.findLast(n => n > 6);     // 7 (last element > 6)
+console.log(fruits.includes("banana")); // true
+console.log(fruits.includes("mango"));  // false
 
-// some — true if ANY element satisfies the callback
-numbers.some(n => n > 8);         // true (9 > 8)
-numbers.some(n => n > 10);        // false
+// ── 3. Intermediate — findIndex() ─────────────────────────────────
+const people = [
+  { id: 1, name: "Rajan" },
+  { id: 2, name: "John" },
+  { id: 3, name: "Sam" }
+];
 
-// every — true only if ALL elements satisfy the callback
-numbers.every(n => n > 0);        // true
-numbers.every(n => n > 5);        // false
+console.log(people.findIndex(person => person.id === 2)); // 1
 
-// includes — true if the exact value is in the array (SameValueZero)
-numbers.includes(8);              // true
-[NaN].includes(NaN);              // true (unlike indexOf, which uses ===)
+// ── 4. Intermediate — some() ──────────────────────────────────────
+const staff = [
+  { name: "Rajan", admin: false },
+  { name: "John", admin: true }
+];
 
-// indexOf / lastIndexOf — find index by value (strict equality)
-numbers.indexOf(5);               // 1
-numbers.indexOf(100);             // -1 — not found
-[NaN].indexOf(NaN);               // -1 — NaN !== NaN under strict equality`,
+console.log(staff.some(person => person.admin)); // true
+
+// ── 5. Advanced — every() ─────────────────────────────────────────
+const products = [
+  { name: "Laptop", stock: 5 },
+  { name: "Keyboard", stock: 2 }
+];
+
+console.log(products.every(product => product.stock > 0)); // true
+
+// ── 6. Real-world — pick the method that answers your question ────
+const users = [
+  { id: 1, name: "Rajan", active: true },
+  { id: 2, name: "John", active: false },
+  { id: 3, name: "Sam", active: true }
+];
+
+const user = users.find(u => u.id === 2);
+const hasInactiveUser = users.some(u => !u.active);
+const allActive = users.every(u => u.active);
+
+console.log(user);            // { id: 2, name: "John", active: false }
+console.log(hasInactiveUser); // true
+console.log(allActive);       // false`,
       },
       keyTakeaways: [
-        { en: "`find`/`findIndex` return the first match (or `undefined`/`-1`) and stop iterating immediately — more efficient than `filter()[0]` when you only need one result.", np: "`find`/`findIndex` ले पहिलो match (वा `undefined`/`-1`) फर्काउँछ र तुरुन्तै रोकिन्छ — एउटा मात्र result चाहिँदा `filter()[0]` भन्दा बढी efficient।", jp: "`find`/`findIndex`は最初のマッチ（または`undefined`/`-1`）を返し、すぐに反復を止める。1つの結果だけ必要な場合`filter()[0]`より効率的。" },
-        { en: "`some()` asks \"does AT LEAST ONE pass?\"; `every()` asks \"do ALL pass?\" — both short-circuit as soon as the final answer is certain.", np: "`some()` ले 'कम्तिमा एक pass हुन्छ?' जाँच गर्छ; `every()` ले 'सबै pass हुन्छ?' जाँच गर्छ — दुवैले answer confirm भएपछि तुरुन्तै रोकिन्छन्।", jp: "`some()`は「少なくとも1つ通るか」、`every()`は「すべて通るか」を確認する。両方とも答えが確定した時点で即座に停止する。" },
-        { en: "`includes()` uses `SameValueZero` equality, which treats `NaN` as equal to itself; `indexOf()` uses strict equality (`===`) and can never find `NaN` in an array.", np: "`includes()` ले `SameValueZero` equality प्रयोग गर्छ, जसले `NaN` लाई आफैं सँग बराबर मान्छ; `indexOf()` ले strict equality प्रयोग गर्छ र array मा `NaN` कहिल्यै भेट्दैन।", jp: "`includes()`は`SameValueZero`等価性を使い`NaN`を自身と等しいとみなす。`indexOf()`は厳密等価（`===`）を使い配列内で`NaN`を見つけられない。" },
+        { en: "`find()` → <b>first matching item</b>.", np: "`find()` → <b>पहिलो मिल्ने item</b>।", jp: "`find()` → <b>最初に一致した要素</b>。" },
+        { en: "`findIndex()` → <b>index of the first matching item</b>.", np: "`findIndex()` → <b>पहिलो मिल्ने item को index</b>।", jp: "`findIndex()` → <b>最初に一致した要素の添字</b>。" },
+        { en: "`some()` → <b>at least one matches</b>.", np: "`some()` → <b>कम्तीमा एउटा मिल्छ</b>।", jp: "`some()` → <b>少なくとも1つ一致する</b>。" },
+        { en: "`every()` → <b>all match</b>.", np: "`every()` → <b>सबै मिल्छन्</b>।", jp: "`every()` → <b>すべて一致する</b>。" },
+        { en: "`includes()` → <b>value exists</b>.", np: "`includes()` → <b>value छ</b>।", jp: "`includes()` → <b>値が存在する</b>。" },
+        { en: "These methods stop early when they already know the answer.", np: "जवाफ थाहा भइसकेपछि यी method चाँडै रोकिन्छन्।", jp: "これらは答えが分かった時点で早く止まる。" },
+        { en: "Use `find()` instead of `filter()` when you only need the <b>first match</b>.", np: "<b>पहिलो match</b> मात्र चाहिँदा `filter()` को साटो `find()` प्रयोग गर्नुहोस्।", jp: "<b>最初の一致</b>だけが必要なら `filter()` ではなく `find()` を使う。" },
       ],
       commonMistakes: [
-        { en: "Writing `array.filter(cb)[0]` to get a single item when `array.find(cb)` already does this more clearly and stops early instead of scanning the whole array.", np: "एउटा item चाहिँदा `array.filter(cb)[0]` लेख्नु — `array.find(cb)` ले पहिले नै यो स्पष्ट र छिटो गर्छ।", jp: "1つの項目が必要な場合に`array.filter(cb)[0]`と書くこと。`array.find(cb)`はより明確で早期に停止する。" },
-        { en: "Mixing up `some()` (ANY) with `every()` (ALL) and getting the opposite boolean result from what was intended.", np: "`some()` (ANY) र `every()` (ALL) मिलाउनु र विपरीत boolean result पाउनु।", jp: "`some()`（ANY）と`every()`（ALL）を混同し、意図と逆のブール値の結果を得ること。" },
-        { en: "Assuming `indexOf()` can locate `NaN` in an array — it can't, because it uses strict equality where `NaN !== NaN`; use `includes()` instead.", np: "`indexOf()` ले array मा `NaN` भेट्न सक्छ भन्ने ठान्नु — सक्दैन, किनकि यो strict equality प्रयोग गर्छ जहाँ `NaN !== NaN`; `includes()` प्रयोग गर्नुहोस्।", jp: "`indexOf()`が配列内の`NaN`を見つけられると思うこと。`NaN !== NaN`という厳密等価を使うため見つけられない。代わりに`includes()`を使う。" },
+        { en: "<b>Using `filter()` when you only need one matching item</b> — it walks the whole array and hands back an array you then have to index into.", np: "<b>एउटा मिल्ने item मात्र चाहिँदा `filter()` प्रयोग गर्नु</b> — यसले पूरै array घुम्छ र array फर्काउँछ, जसबाट तपाईंले फेरि item निकाल्नुपर्छ।", jp: "<b>1件だけでよいのに `filter()` を使う</b> — 配列全体を走査し、さらに添字で取り出す必要のある配列を返す。" },
+        { en: "<b>Forgetting that `find()` returns `undefined` when nothing matches</b> — reading a property off that result throws a `TypeError`.", np: "<b>केही नमिले `find()` ले `undefined` फर्काउँछ भनी बिर्सनु</b> — त्यो नतिजाबाट property पढ्दा `TypeError` आउँछ।", jp: "<b>一致がないと `find()` が `undefined` を返すことを忘れる</b> — その結果からプロパティを読むと `TypeError` になる。" },
+        { en: "<b>Forgetting that `findIndex()` returns `-1` when nothing matches</b> — `-1` is a valid array index from the end in some APIs, so check explicitly.", np: "<b>केही नमिले `findIndex()` ले `-1` फर्काउँछ भनी बिर्सनु</b> — केही API मा `-1` अन्त्यबाटको मान्य index हो, त्यसैले स्पष्ट जाँच्नुहोस्।", jp: "<b>一致がないと `findIndex()` が `-1` を返すことを忘れる</b> — API によっては `-1` が末尾からの有効な添字なので、明示的に確認する。" },
+        { en: "<b>Using `every()` when you actually mean \"at least one\"</b> — that is `some()`.", np: "<b>\"कम्तीमा एउटा\" भन्न खोज्दा `every()` प्रयोग गर्नु</b> — त्यो `some()` हो।", jp: "<b>「少なくとも1つ」のつもりで `every()` を使う</b> — それは `some()` の役目。" },
+        { en: "<b>Using `includes()` to search objects by a property</b> — `includes()` compares whole values, so use `find()` or `some()` instead.", np: "<b>Property अनुसार object खोज्न `includes()` प्रयोग गर्नु</b> — `includes()` ले पूरै value तुलना गर्छ, त्यसैले `find()` वा `some()` प्रयोग गर्नुहोस्।", jp: "<b>プロパティでオブジェクトを探すのに `includes()` を使う</b> — `includes()` は値全体を比較するので、`find()` か `some()` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "What does `find()` return if no element in the array matches the callback?", np: "Array मा कुनै element callback सँग match नभएमा `find()` ले के फर्काउँछ?", jp: "配列内でコールバックにマッチする要素がない場合、`find()`は何を返す？" },
+          question: { en: "Which method returns the first matching element?", np: "कुन method ले पहिलो मिल्ने element फर्काउँछ?", jp: "最初に一致した要素を返すのはどれか?" },
           options: [
-            { en: "`null`", np: "`null`", jp: "`null`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`filter()`", np: "`filter()`", jp: "`filter()`" },
+            { en: "`find()`", np: "`find()`", jp: "`find()`" },
+            { en: "`some()`", np: "`some()`", jp: "`some()`" },
           ],
           correctIndex: 1,
-          explanation: { en: "find() returns undefined (not null) when nothing matches — the same convention as accessing a missing object property.", np: "केही match नभएमा find() ले undefined (null होइन) फर्काउँछ — missing object property access जस्तै convention।", jp: "何もマッチしない場合、find()はundefined（nullではない）を返す — 存在しないオブジェクトプロパティにアクセスする場合と同じ規則。" },
+          explanation: { en: "`filter()` returns every match as an array and `some()` returns a boolean.", np: "`filter()` ले सबै match array मा फर्काउँछ र `some()` ले boolean फर्काउँछ।", jp: "`filter()` は一致すべてを配列で、`some()` は真偽値を返す。" },
         },
         {
-          question: { en: "What is the key difference between `some()` and `every()`?", np: "`some()` र `every()` बीचको मुख्य फरक के हो?", jp: "`some()`と`every()`の主な違いは？" },
+          question: { en: "What does `some()` return?", np: "`some()` ले के फर्काउँछ?", jp: "`some()` は何を返すか?" },
           options: [
-            { en: "`some()` checks if ANY element passes; `every()` checks if ALL elements pass", np: "`some()` ले कुनै एक element pass भयो कि जाँच्छ; `every()` ले सबै pass भयो कि जाँच्छ", jp: "`some()`はANY要素が通るか確認し、`every()`はALL要素が通るか確認する" },
-            { en: "They are functionally identical", np: "दुवै functionally उस्तै हुन्", jp: "機能的に同一" },
+            { en: "The matching element", np: "मिल्ने element", jp: "一致した要素" },
+            { en: "The matching index", np: "मिल्ने index", jp: "一致した添字" },
+            { en: "`true` if at least one element matches", np: "कम्तीमा एउटा element मिले `true`", jp: "少なくとも1つ一致すれば `true`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "some() short-circuits to true on the first passing element; every() short-circuits to false on the first failing element.", np: "some() पहिलो pass हुने element मा true मा short-circuit हुन्छ; every() पहिलो fail हुने element मा false मा short-circuit हुन्छ।", jp: "some()は最初に通った要素でtrueに短絡する。every()は最初に失敗した要素でfalseに短絡する。" },
+          correctIndex: 2,
+          explanation: { en: "It answers a yes/no question, so it never tells you which element matched.", np: "यसले हो/होइन प्रश्नको जवाफ दिन्छ, त्यसैले कुन element मिल्यो भन्दैन।", jp: "はい／いいえに答えるだけなので、どの要素が一致したかは分からない。" },
         },
         {
-          question: { en: "Why does `[NaN].includes(NaN)` return `true` while `[NaN].indexOf(NaN)` returns `-1`?", np: "`[NaN].includes(NaN)` ले `true` फर्काउँछ तर `[NaN].indexOf(NaN)` ले `-1` फर्काउँछ, किन?", jp: "`[NaN].includes(NaN)`は`true`を返すが`[NaN].indexOf(NaN)`が`-1`を返す理由は？" },
+          question: { en: "What does `every()` check?", np: "`every()` ले के जाँच्छ?", jp: "`every()` は何を確かめるか?" },
           options: [
-            { en: "`includes()` uses `SameValueZero` (treats `NaN` as equal to itself); `indexOf()` uses strict equality where `NaN !== NaN`", np: "`includes()` ले `SameValueZero` प्रयोग गर्छ (NaN लाई आफैं सँग बराबर मान्छ); `indexOf()` ले strict equality प्रयोग गर्छ जहाँ `NaN !== NaN`", jp: "`includes()`は`SameValueZero`を使う（NaNを自身と等しいとみなす）。`indexOf()`は厳密等価を使い`NaN !== NaN`" },
-            { en: "They behave identically — this is a trick question", np: "दुवैको behavior उस्तै — यो trick question हो", jp: "両者は同じ動作をする — これは引っかけ問題" },
+            { en: "Whether all elements match", np: "सबै element मिल्छन् कि", jp: "すべての要素が一致するか" },
+            { en: "Whether one element matches", np: "एउटा element मिल्छ कि", jp: "1つの要素が一致するか" },
+            { en: "Whether a value exists", np: "Value छ कि", jp: "値が存在するか" },
           ],
           correctIndex: 0,
-          explanation: { en: "SameValueZero is almost identical to strict equality except it makes an exception specifically for NaN.", np: "SameValueZero strict equality सँग लगभग उस्तै हो तर NaN का लागि विशेष अपवाद बनाउँछ।", jp: "SameValueZeroは厳密等価とほぼ同じだが、NaNに対して特別な例外を設けている。" },
+          explanation: { en: "A single failing element makes the whole result `false`.", np: "एउटै element नमिले पूरै नतिजा `false` हुन्छ।", jp: "1つでも条件を満たさなければ全体が `false` になる。" },
+        },
+        {
+          question: { en: "What does `[2, 4, 6].find(num => num > 10)` return?", np: "`[2, 4, 6].find(num => num > 10)` ले के फर्काउँछ?", jp: "`[2, 4, 6].find(num => num > 10)` は何を返すか?" },
+          options: [
+            { en: "`[]`", np: "`[]`", jp: "`[]`" },
+            { en: "`-1`", np: "`-1`", jp: "`-1`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`find()` gives `undefined` when nothing matches; `-1` is what `findIndex()` returns.", np: "केही नमिले `find()` ले `undefined` दिन्छ; `-1` `findIndex()` ले फर्काउँछ।", jp: "一致がなければ `find()` は `undefined`。`-1` を返すのは `findIndex()`。" },
         },
       ],
     },
