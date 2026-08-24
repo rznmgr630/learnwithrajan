@@ -3,14 +3,14 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_1_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "JavaScript has three ways to declare a variable and eight primitive types.\n\nThink of a variable declaration as a labelled storage box — `var`, `let`, and `const` are three different kinds of boxes with different rules about who can open them, when, and whether the label can be swapped later. Picking the right box up front prevents a whole class of bugs that are notoriously hard to debug.",
-      np: "JavaScript मा variable declare गर्ने तीन तरिका (var, let, const) र आठ primitive types छन् — सही बक्स छान्नु जरुरी छ।",
-      jp: "変数宣言の3つの方法（var・let・const）と8つのプリミティブ型。正しい「箱」を選ぶことでバグを防ぎます。",
+      en: "JavaScript has three ways to declare a variable and seven primitive types.\n\nThink of a variable declaration as a labelled storage box — `var`, `let`, and `const` are three different kinds of boxes with different rules about who can open them, when, and whether the label can be swapped later. Picking the right box up front prevents a whole class of bugs that are notoriously hard to debug.",
+      np: "JavaScript मा variable declare गर्ने तीन तरिका (var, let, const) र सात primitive types छन् — सही बक्स छान्नु जरुरी छ।",
+      jp: "変数宣言の3つの方法（var・let・const）と7つのプリミティブ型。正しい「箱」を選ぶことでバグを防ぎます。",
     },
     {
-      en: "In Day 1 we cover:\n• <b>var, let, const</b> — scope, hoisting, and re-assignment rules\n• The <b>eight primitive types</b> JavaScript actually has\n• <b>Hoisting</b> — what JavaScript quietly does before your code runs\n• <b>Type coercion</b> — why `'5' + 3 === '53'` but `'5' - 3 === 2`",
-      np: "Day 1 मा: var/let/const, आठ primitive types, hoisting, र type coercion।",
-      jp: "Day 1では: var・let・const、8つのプリミティブ型、ホイスティング、型変換を学びます。",
+      en: "In Day 1 we cover:\n• <b>var, let, const</b> — scope, hoisting, and re-assignment rules\n• The <b>seven primitive types</b> JavaScript actually has\n• <b>Hoisting</b> — what JavaScript quietly does before your code runs\n• <b>Type coercion</b> — why `'5' + 3 === '53'` but `'5' - 3 === 2`",
+      np: "Day 1 मा: var/let/const, सात primitive types, hoisting, र type coercion।",
+      jp: "Day 1では: var・let・const、7つのプリミティブ型、ホイスティング、型変換を学びます。",
     },
   ],
   sections: [
@@ -99,13 +99,13 @@ console.log(funcVar);     // ✅ "also inside" — var leaks out of the block`,
       ],
     },
     {
-      title: { en: "The eight primitive types", np: "आठ primitive types", jp: "8つのプリミティブ型" },
+      title: { en: "The seven primitive types", np: "सात primitive types", jp: "7つのプリミティブ型" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every value in JavaScript is either a <b>primitive</b> (a simple, single value stored directly) or an <b>object</b> (a more complex structure stored by reference). There are exactly eight primitive types — memorising the list removes a lot of guesswork when debugging `typeof` output.",
-            np: "हरेक value primitive (सिधा value) वा object (reference द्वारा) हो। ठ्याक्कै आठ primitive types छन्।",
+            en: "Every value in JavaScript is either a <b>primitive</b> (a simple, single value stored directly) or an <b>object</b> (a more complex structure stored by reference). There are exactly seven primitive types — memorising the list removes a lot of guesswork when debugging `typeof` output.",
+            np: "हरेक value primitive (सिधा value) वा object (reference द्वारा) हो। ठ्याक्कै सात primitive types छन्।",
             jp: "すべての値はプリミティブ（単純な値）かオブジェクト（参照）です。プリミティブはちょうど8種類あります。",
           },
         },
