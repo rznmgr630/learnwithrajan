@@ -206,80 +206,95 @@ console.log(add(1, 2, 3)); // 6`,
       title: { en: "Cloning Objects — Shallow vs Deep", np: "Object Cloning — Shallow vs Deep", jp: "オブジェクトのクローン — 浅いvs深い" },
       durationMinutes: 9,
       explanation: {
-        en: "A <b>shallow copy</b> (`{...obj}` or `Object.assign({}, obj)`) copies an object's top-level properties by value — but if a property's value is itself an object or array, only the reference is copied, not the data it points to. So the original and the copy end up pointing at the exact same nested object, and mutating it through either one affects both.\n\nA <b>deep clone</b> walks the entire structure and creates brand-new, fully independent copies at every level. `structuredClone()` is the modern, built-in way to do this (Node 17+, all modern browsers) and correctly handles `Date`, `Map`, `Set`, and `RegExp`. Avoid `JSON.parse(JSON.stringify(obj))` for this — it silently drops functions, `undefined` values, and `Symbol` keys, and turns `Date` objects into plain strings.",
-        np: "Shallow copy ले top-level properties मात्र value द्वारा copy गर्छ — nested object/array भने अझै same reference रहन्छ। Deep clone ले हरेक level मा independent copy बनाउँछ। `structuredClone()` modern deep clone को लागि उपयोग गर्नुहोस्।",
-        jp: "浅いコピーはトップレベルのプロパティのみをコピーする — ネストされたオブジェクト/配列は同じ参照のまま。深いクローンはすべてのレベルで独立したコピーを作る。深いクローンには`structuredClone()`を使う。",
+        en: "A <b>shallow copy</b> (copies only the top level) creates a new object, but nested objects and arrays are still shared.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = { ...user };\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Osaka\n```\n\nWhy? `user` and `copy` have different outer objects, but both point to the same `address` object.\n\nCommon ways to make a shallow copy:\n\n```javascript\nconst copy1 = { ...user };\nconst copy2 = Object.assign({}, user);\n```\n\n---\n\n### Deep clone\n\nA <b>deep clone</b> (copies every level) creates completely independent copies, including nested objects and arrays.\n\nThe modern built-in way is `structuredClone()`:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = structuredClone(user);\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Tokyo\n```\n\nThe original and cloned object are now independent.",
+        np: "<b>Shallow copy</b> (top level मात्र copy गर्ने) ले नयाँ object बनाउँछ, तर nested object र array अझै साझा हुन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = { ...user };\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Osaka\n```\n\nकिन? `user` र `copy` का बाहिरी object फरक छन्, तर दुबैले उही `address` object तिर देखाउँछन्।\n\nShallow copy बनाउने सामान्य तरिका:\n\n```javascript\nconst copy1 = { ...user };\nconst copy2 = Object.assign({}, user);\n```\n\n---\n\n### Deep clone\n\n<b>Deep clone</b> (हरेक तह copy गर्ने) ले nested object र array सहित पूर्ण रूपमा स्वतन्त्र copy बनाउँछ।\n\nआधुनिक built-in तरिका `structuredClone()` हो:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = structuredClone(user);\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Tokyo\n```\n\nअब original र clone गरिएको object स्वतन्त्र छन्।",
+        jp: "<b>浅いコピー（shallow copy）</b>（トップレベルだけをコピーする）は新しいオブジェクトを作りますが、入れ子のオブジェクトや配列は共有されたままです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = { ...user };\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Osaka\n```\n\nなぜでしょう? `user` と `copy` は外側のオブジェクトこそ別ですが、どちらも同じ `address` オブジェクトを指しています。\n\n浅いコピーを作る一般的な方法:\n\n```javascript\nconst copy1 = { ...user };\nconst copy2 = Object.assign({}, user);\n```\n\n---\n\n### ディープクローン\n\n<b>ディープクローン</b>（すべての階層をコピーする）は、入れ子のオブジェクトや配列も含めて完全に独立したコピーを作ります。\n\n現代的な組み込みの方法が `structuredClone()` です:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  address: {\n    city: \"Tokyo\"\n  }\n};\n\nconst copy = structuredClone(user);\n\ncopy.address.city = \"Osaka\";\n\nconsole.log(user.address.city); // Tokyo\n```\n\nこれで元のオブジェクトとクローンは独立します。",
       },
-      diagram: `original ──┬── name: "Alice"          (copied BY VALUE — independent)
-           └── hobbies: [...] ───┐
-                                  │  SAME array reference
-shallow = {...original} ──┬── name: "Bob"        (independent copy)
-                           └── hobbies: [...] ────┘  ← mutating this affects original too!
+      diagram: `Shallow Copy
 
-deep = structuredClone(original)  →  every level is a brand-new, independent copy`,
+Original ──→ address ←── Copy
+                ↑
+          Same object
+
+
+Deep Clone
+
+Original ──→ address
+
+Copy ──────→ address
+
+        Different objects`,
       codeExample: {
-        title: { en: "Shallow copy vs deep clone — the classic interview question", np: "Shallow copy vs deep clone — classic interview question", jp: "浅いコピーと深いクローン — 定番の面接質問" },
-        code: `const original = {
-  name: "Alice",
-  hobbies: ["reading", "coding"],   // nested reference type
-  address: { city: "Kathmandu" },   // another nested object
+        title: { en: "The nested array shared, then independent", np: "Nested array साझा, त्यसपछि स्वतन्त्र", jp: "入れ子の配列: 共有される場合と独立する場合" },
+        code: `// Shallow copy — the nested array is shared
+const original = {
+  name: "Rajan",
+  skills: ["JavaScript", "React"]
 };
 
-// ── Shallow copy — copies top-level properties only ────────────────
-const shallow = { ...original };           // same as Object.assign({}, original)
+const shallow = { ...original };
 
-shallow.name = "Bob";
-console.log(original.name);   // "Alice" — top-level is independent, not affected
+shallow.skills.push("Node.js");
 
-shallow.hobbies.push("gaming");
-console.log(original.hobbies);   // ["reading", "coding", "gaming"] — affected! shared reference
+console.log(original.skills);
+// ["JavaScript", "React", "Node.js"]
 
-// ── Deep clone — creates a fully independent copy ───────────────────
-const deep = structuredClone(original);   // ES2022, Node 17+, modern browsers
-deep.address.city = "Pokhara";
-console.log(original.address.city);   // "Kathmandu" — NOT affected ✅
+// Deep clone — the nested array is independent
+const source = {
+  name: "Rajan",
+  skills: ["JavaScript", "React"]
+};
 
-// ── Avoid this for deep cloning ──────────────────────────────────────
-// const lossy = JSON.parse(JSON.stringify(original));
-// loses: functions, undefined values, Symbol keys; Date becomes a string`,
+const deep = structuredClone(source);
+
+deep.skills.push("Node.js");
+
+console.log(source.skills);
+// ["JavaScript", "React"]`,
       },
       keyTakeaways: [
-        { en: "Spread/`Object.assign` only copy top-level properties — nested objects and arrays remain shared references between the original and the copy.", np: "Spread/`Object.assign` ले top-level properties मात्र copy गर्छ — nested object/array original र copy बीच shared reference नै रहन्छ।", jp: "スプレッド/`Object.assign`はトップレベルのプロパティのみをコピーする。ネストされたオブジェクト/配列は元とコピーの間で共有参照のまま。" },
-        { en: "`structuredClone()` is the modern, native way to deep clone — it correctly handles `Date`, `Map`, `Set`, and `RegExp`, unlike the lossy `JSON.parse(JSON.stringify())` trick.", np: "`structuredClone()` modern, native deep clone तरिका हो — यसले `Date`, `Map`, `Set`, `RegExp` सही ढंगले handle गर्छ, lossy `JSON.parse(JSON.stringify())` भन्दा फरक।", jp: "`structuredClone()`は現代的なネイティブの深いクローン手法。`Date`・`Map`・`Set`・`RegExp`を正しく処理する。損失のある`JSON.parse(JSON.stringify())`とは異なる。" },
-        { en: "Reach for a deep clone only when you genuinely need to mutate nested data without touching the original — otherwise a cheap shallow copy is simpler and faster.", np: "Original नछोई nested data mutate गर्नुपर्दा मात्र deep clone प्रयोग गर्नुहोस् — अन्यथा shallow copy छिटो र सरल हुन्छ।", jp: "元に触れずにネストされたデータを本当に変更する必要がある場合のみ深いクローンを使う。それ以外は安価な浅いコピーの方が簡単で速い。" },
+        { en: "<b>Shallow copy</b> copies only the top level.", np: "<b>Shallow copy</b> ले top level मात्र copy गर्छ।", jp: "<b>浅いコピー</b>はトップレベルだけをコピーする。" },
+        { en: "Nested objects and arrays are still shared in a shallow copy.", np: "Shallow copy मा nested object र array अझै साझा हुन्छन्।", jp: "浅いコピーでは入れ子のオブジェクトや配列は共有されたまま。" },
+        { en: "`{ ...obj }` and `Object.assign()` create shallow copies.", np: "`{ ...obj }` र `Object.assign()` ले shallow copy बनाउँछन्।", jp: "`{ ...obj }` と `Object.assign()` は浅いコピーを作る。" },
+        { en: "<b>Deep clone</b> creates independent copies at every level.", np: "<b>Deep clone</b> ले हरेक तहमा स्वतन्त्र copy बनाउँछ।", jp: "<b>ディープクローン</b>はすべての階層で独立したコピーを作る。" },
+        { en: "`structuredClone()` is the modern built-in way to deep clone supported data.", np: "`structuredClone()` समर्थित data deep clone गर्ने आधुनिक built-in तरिका हो।", jp: "`structuredClone()` は対応データをディープクローンする現代的な組み込みの方法。" },
+        { en: "`JSON.parse(JSON.stringify())` is not a reliable general-purpose deep clone.", np: "`JSON.parse(JSON.stringify())` भरपर्दो सामान्य-प्रयोजन deep clone होइन।", jp: "`JSON.parse(JSON.stringify())` は汎用のディープクローンとしては信頼できない。" },
       ],
       commonMistakes: [
-        { en: "Believing `{...obj}` is a full deep copy, then being surprised when mutating a nested array through the copy also changes the original.", np: "`{...obj}` लाई पूर्ण deep copy मान्नु, अनि copy मार्फत nested array mutate गर्दा original पनि बदलिँदा अचम्मित हुनु।", jp: "`{...obj}`が完全な深いコピーだと信じ、コピー経由でネストされた配列を変更すると元も変わることに驚くこと。" },
-        { en: "Deep-cloning data that contains `Date` objects, functions, or `undefined` with `JSON.parse(JSON.stringify(x))`, silently corrupting or losing them.", np: "`Date`, function, `undefined` भएको data लाई `JSON.parse(JSON.stringify(x))` ले deep-clone गर्दा silently corrupt/loss हुनु।", jp: "`Date`オブジェクト・関数・`undefined`を含むデータを`JSON.parse(JSON.stringify(x))`で深くクローンし、黙って破損・消失させること。" },
-        { en: "Deep-cloning large objects \"just to be safe\" when a shallow copy would have been enough, hurting performance for no real benefit.", np: "Shallow copy नै पर्याप्त हुँदा 'सुरक्षाको लागि' ठूला object deep-clone गर्नु, अनावश्यक performance loss हुनु।", jp: "浅いコピーで十分な場合でも「念のため」大きなオブジェクトを深くクローンし、無駄にパフォーマンスを損なうこと。" },
+        { en: "<b>Thinking `{ ...obj }` creates a completely independent object</b> — only the outer object is new; every nested value is still shared.", np: "<b>`{ ...obj }` ले पूर्ण स्वतन्त्र object बनाउँछ भन्ने ठान्नु</b> — बाहिरी object मात्र नयाँ हुन्छ; हरेक nested value अझै साझा हुन्छ।", jp: "<b>`{ ...obj }` が完全に独立したオブジェクトを作ると思う</b> — 新しいのは外側だけで、入れ子の値はすべて共有されたまま。" },
+        { en: "<b>Changing a nested object in a shallow copy and expecting the original to stay unchanged</b> — both names point at the same nested object, so the original changes too.", np: "<b>Shallow copy मा nested object बदलेर original अपरिवर्तित रहन्छ भन्ने आशा गर्नु</b> — दुबै नामले उही nested object तिर देखाउँछन्, त्यसैले original पनि बदलिन्छ।", jp: "<b>浅いコピーの入れ子を変えても元は変わらないと思う</b> — どちらの名前も同じ入れ子のオブジェクトを指すので、元も変わる。" },
+        { en: "<b>Using `JSON.parse(JSON.stringify(obj))` as a universal deep-cloning solution</b> — it silently drops functions and `undefined`, and mangles `Date`, `Map`, `Set` and `NaN`.", np: "<b>`JSON.parse(JSON.stringify(obj))` लाई सर्वव्यापी deep-cloning समाधान मान्नु</b> — यसले function र `undefined` चुपचाप हटाउँछ, र `Date`, `Map`, `Set` र `NaN` बिगार्छ।", jp: "<b>`JSON.parse(JSON.stringify(obj))` を万能のディープクローンだと思う</b> — 関数と `undefined` を黙って落とし、`Date`・`Map`・`Set`・`NaN` を壊す。" },
       ],
       quiz: [
         {
-          question: { en: "After `const shallow = {...original}`, if you push a new item to `shallow.hobbies`, what happens to `original.hobbies`?", np: "`const shallow = {...original}` पछि `shallow.hobbies` मा नयाँ item push गर्दा `original.hobbies` मा के हुन्छ?", jp: "`const shallow = {...original}`の後、`shallow.hobbies`に新しい項目をpushすると`original.hobbies`はどうなる？" },
+          question: { en: "What does a shallow copy copy?", np: "Shallow copy ले के copy गर्छ?", jp: "浅いコピーは何をコピーするか?" },
           options: [
-            { en: "It stays unaffected — arrays are always copied by value", np: "प्रभाव पर्दैन — array सधैं value द्वारा copy हुन्छ", jp: "影響を受けない — 配列は常に値でコピーされる" },
-            { en: "It also changes, because both point to the same array reference", np: "यो पनि बदलिन्छ, किनकि दुवैले same array reference देखाउँछन्", jp: "変わる — 両方が同じ配列参照を指しているため" },
+            { en: "Every nested object", np: "हरेक nested object", jp: "すべての入れ子のオブジェクト" },
+            { en: "Only the top level", np: "Top level मात्र", jp: "トップレベルだけ" },
+            { en: "Nothing", np: "केही पनि होइन", jp: "何もコピーしない" },
           ],
           correctIndex: 1,
-          explanation: { en: "A shallow copy only copies the top-level reference, not a new array — so both variables point at the same underlying array in memory.", np: "Shallow copy ले top-level reference मात्र copy गर्छ, नयाँ array होइन — त्यसैले दुवै variable memory मा same array लाई point गर्छन्।", jp: "浅いコピーはトップレベルの参照のみをコピーし、新しい配列は作らない。そのため両方の変数はメモリ内の同じ配列を指す。" },
+          explanation: { en: "The outer object is new, but each nested value is still the same reference.", np: "बाहिरी object नयाँ हुन्छ, तर हरेक nested value उही reference नै रहन्छ।", jp: "外側は新しくなるが、入れ子の値は同じ参照のまま。" },
         },
         {
-          question: { en: "Which method is the modern, preferred way to deep clone an object in JavaScript?", np: "JavaScript मा object deep clone गर्ने modern, preferred तरिका कुन हो?", jp: "JavaScriptでオブジェクトを深くクローンする現代的で推奨される方法は？" },
+          question: { en: "With `const copy = { ...original }` then `copy.address.city = \"Osaka\"`, what happens?", np: "`const copy = { ...original }` पछि `copy.address.city = \"Osaka\"` गर्दा के हुन्छ?", jp: "`const copy = { ...original }` の後に `copy.address.city = \"Osaka\"` とするとどうなるか?" },
           options: [
-            { en: "`JSON.parse(JSON.stringify(obj))`", np: "`JSON.parse(JSON.stringify(obj))`", jp: "`JSON.parse(JSON.stringify(obj))`" },
-            { en: "`structuredClone(obj)`", np: "`structuredClone(obj)`", jp: "`structuredClone(obj)`" },
+            { en: "Only `copy` changes", np: "`copy` मात्र बदलिन्छ", jp: "`copy` だけが変わる" },
+            { en: "Both can change because `address` is shared", np: "`address` साझा भएकाले दुबै बदलिन सक्छन्", jp: "`address` が共有されているので両方変わりうる" },
+            { en: "The code always throws an error", np: "Code ले सधैं error दिन्छ", jp: "コードは必ずエラーになる" },
           ],
           correctIndex: 1,
-          explanation: { en: "structuredClone() is built into modern JavaScript and correctly handles Date, Map, Set, and RegExp, which JSON round-tripping cannot.", np: "structuredClone() modern JS मा built-in छ र Date, Map, Set, RegExp सही ढंगले handle गर्छ, JSON round-trip ले सक्दैन।", jp: "structuredClone()はモダンJavaScriptに組み込まれており、Date・Map・Set・RegExpを正しく処理する。JSONの往復変換ではできない。" },
+          explanation: { en: "The spread copied the reference to `address`, not the object behind it.", np: "Spread ले `address` को reference copy गर्‍यो, पछाडिको object होइन।", jp: "スプレッドがコピーしたのは `address` への参照で、その先のオブジェクトではない。" },
         },
         {
-          question: { en: "What does `JSON.parse(JSON.stringify(obj))` lose or corrupt when cloning?", np: "`JSON.parse(JSON.stringify(obj))` ले clone गर्दा के हराउँछ वा corrupt गर्छ?", jp: "`JSON.parse(JSON.stringify(obj))`はクローン時に何を失う、または破損させる？" },
+          question: { en: "Which is the modern built-in way to create a deep clone?", np: "Deep clone बनाउने आधुनिक built-in तरिका कुन हो?", jp: "ディープクローンを作る現代的な組み込みの方法はどれか?" },
           options: [
-            { en: "Nothing — it produces a perfect, lossless clone", np: "केही होइन — यसले perfect, lossless clone दिन्छ", jp: "何も — 完璧で無損失のクローンを生成する" },
-            { en: "Functions, `undefined` values, and `Symbol` keys are dropped; `Date` objects become plain strings", np: "Functions, `undefined` values, `Symbol` keys हराउँछ; `Date` objects plain string मा बदलिन्छ", jp: "関数・`undefined`値・`Symbol`キーが失われ、`Date`オブジェクトは文字列になる" },
+            { en: "`Object.assign()`", np: "`Object.assign()`", jp: "`Object.assign()`" },
+            { en: "`{ ...obj }`", np: "`{ ...obj }`", jp: "`{ ...obj }`" },
+            { en: "`structuredClone()`", np: "`structuredClone()`", jp: "`structuredClone()`" },
           ],
-          correctIndex: 1,
-          explanation: { en: "JSON has no representation for functions, undefined, or symbols, and serializes Date objects as ISO strings instead of Date instances.", np: "JSON मा function, undefined, symbol को कुनै representation छैन, र Date object लाई ISO string को रूपमा serialize गर्छ।", jp: "JSONには関数・undefined・シンボルの表現がなく、DateオブジェクトをインスタンスではなくISO文字列としてシリアライズする。" },
+          correctIndex: 2,
+          explanation: { en: "The first two are shallow; `structuredClone()` walks every level.", np: "पहिलो दुई shallow हुन्; `structuredClone()` ले हरेक तह घुम्छ।", jp: "最初の2つは浅いコピー。`structuredClone()` はすべての階層をたどる。" },
         },
       ],
     },
