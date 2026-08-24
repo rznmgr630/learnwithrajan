@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
@@ -227,12 +227,27 @@ function LessonAccordionItem({
   const { getResult } = useJsLessonQuizProgress();
   const quizId = `${quizIdPrefix}.${lesson.id}`;
   const quizDone = getResult(quizId);
+  const itemRef = useRef<HTMLDivElement>(null);
+
+  /** Collapsing the lesson above shifts this one, so bring it back to the top. */
+  function handleToggle() {
+    const willExpand = !expanded;
+    onToggle();
+    if (willExpand) {
+      requestAnimationFrame(() => {
+        itemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
 
   return (
-    <div className="shrink-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)]">
+    <div
+      ref={itemRef}
+      className="shrink-0 scroll-mt-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)]"
+    >
       <button
         type="button"
-        onClick={onToggle}
+        onClick={handleToggle}
         aria-expanded={expanded}
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)]"
       >
