@@ -11,72 +11,107 @@ export const JS_DAY_2_LESSONS: JsLessonDay = {
       title: { en: "Operators", np: "Operators", jp: "演算子" },
       durationMinutes: 9,
       explanation: {
-        en: "Operators are the small symbols (`+`, `===`, `&&`, `??`) that combine values into new values. Most are familiar from math class, but three are worth slowing down on because they trip up beginners: <b>short-circuit evaluation</b>, <b>nullish coalescing (`??`)</b>, and <b>optional chaining (`?.`)</b> — all three exist to write safer code with less nesting.\n\n• <b>`||` (OR)</b> falls back whenever the left side is any falsy value (`0`, `''`, `null`, `undefined`, `NaN`, `false`)\n  ↳ Dangerous for numbers: `count || 10` replaces a real `0` with `10`\n• <b>`??` (nullish coalescing)</b> falls back only when the left side is exactly `null` or `undefined`\n  ↳ Safe for numbers: `count ?? 10` keeps a real `0` as `0`\n• <b>`?.` (optional chaining)</b> stops and returns `undefined` the moment it hits a `null`/`undefined` link in a chain, instead of throwing",
-        np: "|| ले कुनै पनि falsy value मा fallback गर्छ। ?? ले केवल null/undefined मा मात्र fallback गर्छ — number को लागि सुरक्षित। ?. ले chain बीचमा null भेटिए error नफाली undefined फर्काउँछ।",
-        jp: "||はfalsy値すべてでフォールバック。??はnull/undefinedのみでフォールバック（数値に安全）。?.はチェーン中でnull/undefinedに当たった時点でエラーなくundefinedを返す。",
+        en: "<b>Operators</b> (symbols that perform an operation on values) are used to calculate, compare, or combine values.\n\nExamples:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nMost operators are straightforward, but three are especially useful to understand:\n\n• `||` → OR\n• `??` → nullish coalescing\n• `?.` → optional chaining\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b> (OR operator that uses a fallback when the left value is falsy) returns the right side when the left side is <b>falsy</b>.\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nRemember, these values are falsy:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nThis can cause problems with numbers:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\nThe `0` was a real value, but `||` treated it as falsy.\n\n---\n\n### 2. `??` — Nullish Coalescing\n\n<b>Nullish coalescing</b> (using a fallback only when a value is `null` or `undefined`) uses the right side only when the left side is `null` or `undefined`.\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nThis is different from `||`.\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nThink:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — Optional Chaining\n\n<b>Optional chaining</b> (safely accessing a value that might not exist) prevents an error when part of an object is `null` or `undefined`.\n\nWithout `?.`:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\nWith `?.`:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nIf JavaScript finds `null` or `undefined` while following the chain, it stops and returns `undefined`.\n\nExample:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nInstead of:\n\n```javascript\nuser.name;\n// Error\n```",
+        np: "<b>Operator</b> (value माथि काम गर्ने चिन्ह) value गणना गर्न, तुलना गर्न, वा जोड्न प्रयोग हुन्छन्।\n\nउदाहरण:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nधेरैजसो operator सरल छन्, तर तीन ओटा बुझ्न विशेष उपयोगी छन्:\n\n• `||` → OR\n• `??` → nullish coalescing\n• `?.` → optional chaining\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b> (बायाँ value falsy भएमा fallback प्रयोग गर्ने OR operator) बायाँ पट्टि <b>falsy</b> भएमा दायाँ पट्टि फर्काउँछ।\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nसम्झनुहोस्, यी value falsy हुन्:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nयसले संख्यासँग समस्या ल्याउन सक्छ:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\n`0` वास्तविक value थियो, तर `||` ले यसलाई falsy मानिदियो।\n\n---\n\n### 2. `??` — Nullish Coalescing\n\n<b>Nullish coalescing</b> (value `null` वा `undefined` हुँदा मात्र fallback प्रयोग गर्नु) ले बायाँ पट्टि `null` वा `undefined` हुँदा मात्र दायाँ पट्टि प्रयोग गर्छ।\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nयो `||` भन्दा फरक छ।\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nसोच्नुहोस्:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — Optional Chaining\n\n<b>Optional chaining</b> (अवस्थित नहुन सक्ने value सुरक्षित रूपमा पहुँच गर्नु) ले object को कुनै भाग `null` वा `undefined` हुँदा error आउनबाट रोक्छ।\n\n`?.` बिना:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\n`?.` सँग:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nChain पछ्याउँदै जाँदा JavaScript ले `null` वा `undefined` भेट्यो भने, यो रोकिन्छ र `undefined` फर्काउँछ।\n\nउदाहरण:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nयसको साटो:\n\n```javascript\nuser.name;\n// Error\n```",
+        jp: "<b>演算子</b>（値に対して操作を行う記号）は、値を計算・比較・結合するために使います。\n\n例:\n\n```javascript\n+\n-\n*\n/\n===\n&&\n||\n??\n?.\n```\n\nほとんどの演算子は分かりやすいですが、特に理解しておくと役立つものが3つあります:\n\n• `||` → OR\n• `??` → null合体（nullish coalescing）\n• `?.` → オプショナルチェーン\n\n---\n\n### 1. `||` — OR\n\n<b>`||`</b>（左の値がfalsyのときフォールバックを使うOR演算子）は、左側が<b>falsy</b>のときに右側を返します。\n\n```javascript\nconst name = \"\";\n\nconsole.log(name || \"Guest\");\n// \"Guest\"\n```\n\nfalsyな値は次のとおりです:\n\n```text\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nこれは数値で問題を起こすことがあります:\n\n```javascript\nconst count = 0;\n\nconsole.log(count || 10);\n// 10\n```\n\n`0` は本物の値でしたが、`||` はそれをfalsyとして扱いました。\n\n---\n\n### 2. `??` — null合体\n\n<b>null合体（Nullish coalescing）</b>（値が `null` か `undefined` のときだけフォールバックを使う）は、左側が `null` か `undefined` のときだけ右側を使います。\n\n```javascript\nconst count = 0;\n\nconsole.log(count ?? 10);\n// 0\n```\n\nこれは `||` とは違います。\n\n```javascript\n0 || 10;   // 10\n0 ?? 10;   // 0\n\n\"\" || \"Hi\";  // \"Hi\"\n\"\" ?? \"Hi\";  // \"\"\n\nfalse || true; // true\nfalse ?? true; // false\n```\n\nこう考えてください:\n\n```text\n|| → fallback for any falsy value\n\n?? → fallback only for null or undefined\n```\n\n---\n\n### 3. `?.` — オプショナルチェーン\n\n<b>オプショナルチェーン</b>（存在しないかもしれない値に安全にアクセスする）は、オブジェクトの一部が `null` や `undefined` のときにエラーを防ぎます。\n\n`?.` なし:\n\n```javascript\nconst user = {};\n\nconsole.log(user.address.city);\n// Error\n```\n\n`?.` あり:\n\n```javascript\nconsole.log(user.address?.city);\n// undefined\n```\n\nチェーンをたどる途中で `null` か `undefined` を見つけると、JavaScriptはそこで止まって `undefined` を返します。\n\n例:\n\n```javascript\nconst user = null;\n\nconsole.log(user?.name);\n// undefined\n```\n\nこう書く代わりに:\n\n```javascript\nuser.name;\n// Error\n```",
       },
-      diagram: `0 || 10   ──▶  0 is falsy         ──▶  10   (|| skips real 0 — bug risk)
-0 ?? 10   ──▶  0 is not null/undef ──▶  0    (?? keeps real 0 — safe)
+      diagram: `                    Operators
+                        |
+        +---------------+---------------+
+        |               |               |
+       ||              ??              ?.
+      OR          Nullish fallback   Safe access
+        |               |               |
+   Any falsy       null / undefined   Stops safely
+   → fallback       → fallback       → undefined
 
-user?.address?.city
-  │        │        └─ if this link is null/undefined, stop here
-  │        └─ if this link is null/undefined, stop here
-  └─ if this is null/undefined, whole chain short-circuits to undefined`,
+
+|| vs ??
+
+count = 0
+
+count || 10
+    ↓
+0 is falsy
+    ↓
+10
+
+count ?? 10
+    ↓
+0 is NOT null/undefined
+    ↓
+0`,
       codeExample: {
-        title: { en: "Arithmetic, comparison, logical & nullish operators", np: "मुख्य operators", jp: "主要演算子" },
-        code: `// ── Arithmetic ──────────────────────────────────────────────────────
-5 + 3    // 8
-5 % 3    // 2  (remainder / modulo)
-5 ** 3   // 125 (exponentiation)
-
-// ── Comparison (always returns boolean) ────────────────────────────
-5 === "5"  // false ← strict (use this)
-5 == "5"   // true  ← coercion (avoid)
-
-// ── Logical / short-circuit evaluation ──────────────────────────────
+        title: { en: "OR, nullish coalescing and optional chaining", np: "OR, nullish coalescing र optional chaining", jp: "OR・null合体・オプショナルチェーン" },
+        code: `const count = 0;
+const name = "";
 const user = null;
-const name = user && user.name;   // null  — stops at user (falsy)
-const role = user || "guest";     // "guest" — uses right side when left is falsy
 
-// ── Nullish coalescing ?? ───────────────────────────────────────────
-const count = 0;
-const a = count || 10;   // 10  — oops, 0 is falsy
-const b = count ?? 10;   // 0   — 0 is not null/undefined
+// OR
+console.log(count || 10);
+// 10
 
-// ── Optional chaining ?. ────────────────────────────────────────────
-const city = user?.address?.city;  // undefined — no error if user is null
+// Nullish coalescing
+console.log(count ?? 10);
+// 0
 
-// ── Ternary ─────────────────────────────────────────────────────────
-const label = age >= 18 ? "adult" : "minor";`,
+// Optional chaining
+console.log(user?.name);
+// undefined`,
       },
       keyTakeaways: [
-        { en: "`||` falls back on any falsy value; `??` falls back only on `null`/`undefined`. Prefer `??` whenever `0`, `''`, or `false` are valid values.", np: "`||` कुनै पनि falsy value मा fallback गर्छ; `??` केवल null/undefined मा। 0, '', false valid भएमा `??` प्रयोग गर्नुहोस्।", jp: "`||`はfalsy値全体、`??`はnull/undefinedのみでフォールバック。0・''・falseが有効な値なら`??`を使う。" },
-        { en: "`?.` (optional chaining) stops and returns `undefined` the instant it hits a null/undefined link, instead of throwing a TypeError.", np: "`?.` ले null/undefined भेटिनासाथ रोकिएर undefined फर्काउँछ, TypeError दिँदैन।", jp: "`?.`はnull/undefinedに当たった瞬間にundefinedを返し、TypeErrorを投げない。" },
-        { en: "Always use `===`/`!==` for comparisons — `==`/`!=` silently coerce types and produce surprising results.", np: "Comparison का लागि सधैं `===`/`!==` प्रयोग गर्नुहोस् — `==`/`!=` ले silently coerce गर्छ।", jp: "比較には常に`===`/`!==`を使う。`==`/`!=`は型を暗黙に変換し予期しない結果を生む。" },
+        { en: "<b>Operators</b> → symbols that perform operations on values.", np: "<b>Operator</b> → value माथि काम गर्ने चिन्ह।", jp: "<b>演算子</b> → 値に対して操作を行う記号。" },
+        { en: "`||` → uses the right side when the left side is falsy.", np: "`||` → बायाँ पट्टि falsy हुँदा दायाँ पट्टि प्रयोग गर्छ।", jp: "`||` → 左側がfalsyのとき右側を使う。" },
+        { en: "`??` → uses the right side only for `null` or `undefined`.", np: "`??` → `null` वा `undefined` का लागि मात्र दायाँ पट्टि प्रयोग गर्छ।", jp: "`??` → `null` か `undefined` のときだけ右側を使う。" },
+        { en: "`?.` → safely accesses properties that might not exist.", np: "`?.` → अवस्थित नहुन सक्ने property सुरक्षित रूपमा पहुँच गर्छ।", jp: "`?.` → 存在しないかもしれないプロパティに安全にアクセスする。" },
+        { en: "Use `??` when `0`, `\"\"`, or `false` are valid values.", np: "`0`, `\"\"`, वा `false` मान्य value हुँदा `??` प्रयोग गर्नुहोस्।", jp: "`0`、`\"\"`、`false` が有効な値のときは `??` を使う。" },
+        { en: "Use `?.` to avoid errors when accessing nested data.", np: "Nested data पहुँच गर्दा error बच्न `?.` प्रयोग गर्नुहोस्।", jp: "入れ子のデータにアクセスするときは `?.` でエラーを避ける。" },
       ],
       commonMistakes: [
-        { en: "Using `||` to provide a default for a number that could legitimately be `0` — e.g. `quantity || 1` silently overwrites a real `0`.", np: "0 हुन सक्ने number का लागि default दिन `||` प्रयोग गर्नु — `quantity || 1` ले real 0 लाई silently overwrite गर्छ।", jp: "0になりうる数値のデフォルトに`||`を使うこと。`quantity || 1`は本当の0を上書きする。" },
-        { en: "Chaining `.` instead of `?.` on a value that might be null, causing a `TypeError: Cannot read properties of null`.", np: "null हुन सक्ने value मा `?.` को सट्टा `.` प्रयोग गर्दा `TypeError` आउनु।", jp: "nullになりうる値に`.`ではなく`?.`を使わずTypeErrorになること。" },
-        { en: "Using `==` for a \"quick\" comparison and getting a surprising `true`, like `\"\" == 0` or `[] == false`.", np: "छिटो comparison का लागि `==` प्रयोग गर्दा `\"\" == 0` जस्तो अनपेक्षित `true` पाउनु।", jp: "手早い比較に`==`を使い、`\"\" == 0`のような予期しない`true`を得ること。" },
+        { en: "<b>Using `||` when `0` is a valid value</b> — `const count = 0; count || 10` gives `10`. If `0` is valid, use `count ?? 10`, which gives `0`.", np: "<b>`0` मान्य value हुँदा `||` प्रयोग गर्नु</b> — `const count = 0; count || 10` ले `10` दिन्छ। `0` मान्य भए `count ?? 10` प्रयोग गर्नुहोस्, जो `0` दिन्छ।", jp: "<b>`0` が有効な値なのに `||` を使う</b> — `const count = 0; count || 10` は `10` になる。`0` が有効なら `count ?? 10` を使えば `0` になる。" },
+        { en: "<b>Thinking `??` handles every falsy value</b> — `false ?? true` is `false`, `0 ?? 10` is `0`, `\"\" ?? \"Hello\"` is `\"\"`. `??` only checks for `null` and `undefined`.", np: "<b>`??` ले हरेक falsy value सम्हाल्छ भन्ने ठान्नु</b> — `false ?? true` `false` हो, `0 ?? 10` `0` हो, `\"\" ?? \"Hello\"` `\"\"` हो। `??` ले `null` र `undefined` मात्र जाँच्छ।", jp: "<b>`??` がすべてのfalsyな値を扱うと思う</b> — `false ?? true` は `false`、`0 ?? 10` は `0`、`\"\" ?? \"Hello\"` は `\"\"`。`??` が見るのは `null` と `undefined` だけ。" },
+        { en: "<b>Forgetting optional chaining</b> — with `const user = null`, `user.name` throws an error while `user?.name` returns `undefined`.", np: "<b>Optional chaining बिर्सनु</b> — `const user = null` सँग, `user.name` ले error दिन्छ जब कि `user?.name` ले `undefined` फर्काउँछ।", jp: "<b>オプショナルチェーンを忘れる</b> — `const user = null` のとき `user.name` はエラーになるが、`user?.name` は `undefined` を返す。" },
       ],
       quiz: [
         {
-          question: { en: "If `count` is `0`, what does `count ?? 10` evaluate to?", np: "`count` 0 भएमा `count ?? 10` को नतिजा के हो?", jp: "`count`が0のとき`count ?? 10`は何になる？" },
-          options: [{ en: "10", np: "10", jp: "10" }, { en: "0", np: "0", jp: "0" }, { en: "undefined", np: "undefined", jp: "undefined" }],
+          question: { en: "What does `0 || 10` return?", np: "`0 || 10` ले के फर्काउँछ?", jp: "`0 || 10` は何を返すか?" },
+          options: [
+            { en: "`0`", np: "`0`", jp: "`0`" },
+            { en: "`10`", np: "`10`", jp: "`10`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+          ],
           correctIndex: 1,
-          explanation: { en: "?? only falls back on null/undefined. 0 is neither, so it's kept as-is.", np: "?? ले केवल null/undefined मा मात्र fallback गर्छ। 0 त्यो होइन, त्यसैले जस्तै रहन्छ।", jp: "??はnull/undefinedのみでフォールバック。0はどちらでもないため、そのまま保持される。" },
+          explanation: { en: "`0` is falsy, so `||` falls back to the right side.", np: "`0` falsy हो, त्यसैले `||` दायाँ पट्टि fallback गर्छ।", jp: "`0` はfalsyなので `||` は右側にフォールバックする。" },
         },
         {
-          question: { en: "What does `user?.address?.city` return when `user` is `null`?", np: "`user` null भएमा `user?.address?.city` ले के फर्काउँछ?", jp: "`user`がnullのとき`user?.address?.city`は何を返す？" },
-          options: [{ en: "Throws a TypeError", np: "TypeError आउँछ", jp: "TypeErrorが発生する" }, { en: "undefined", np: "undefined", jp: "undefined" }, { en: "null", np: "null", jp: "null" }],
-          correctIndex: 1,
-          explanation: { en: "Optional chaining short-circuits to undefined the moment it hits a null/undefined link, no error thrown.", np: "Optional chaining ले null/undefined भेटिनासाथ undefined दिन्छ, error आउँदैन।", jp: "オプショナルチェーンはnull/undefinedに当たった時点でundefinedを返し、エラーは発生しない。" },
+          question: { en: "What does `0 ?? 10` return?", np: "`0 ?? 10` ले के फर्काउँछ?", jp: "`0 ?? 10` は何を返すか?" },
+          options: [
+            { en: "`0`", np: "`0`", jp: "`0`" },
+            { en: "`10`", np: "`10`", jp: "`10`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`0` is neither `null` nor `undefined`, so `??` keeps it.", np: "`0` न `null` न `undefined` हो, त्यसैले `??` ले यसलाई राख्छ।", jp: "`0` は `null` でも `undefined` でもないので `??` はそのまま残す。" },
         },
         {
-          question: { en: "Which operator should you use by default when comparing two values?", np: "दुई value comparison गर्न default मा कुन operator?", jp: "2つの値を比較するときデフォルトで使うべき演算子は？" },
-          options: [{ en: "==", np: "==", jp: "==" }, { en: "===", np: "===", jp: "===" }],
+          question: { en: "What does `user?.name` do?", np: "`user?.name` ले के गर्छ?", jp: "`user?.name` は何をするか?" },
+          options: [
+            { en: "Always throws an error", np: "सधैं error दिन्छ", jp: "常にエラーを投げる" },
+            { en: "Safely accesses `name`", np: "`name` लाई सुरक्षित रूपमा पहुँच गर्छ", jp: "`name` に安全にアクセスする" },
+            { en: "Deletes `name`", np: "`name` मेटाउँछ", jp: "`name` を削除する" },
+          ],
           correctIndex: 1,
-          explanation: { en: "=== never coerces types, avoiding surprising results from implicit conversion.", np: "=== ले कहिल्यै type coerce गर्दैन, अनपेक्षित नतिजाबाट बचाउँछ।", jp: "===は型を変換しないため、暗黙変換による予期しない結果を避けられる。" },
+          explanation: { en: "If `user` is `null` or `undefined`, the chain stops and returns `undefined` instead of throwing.", np: "`user` `null` वा `undefined` भए, chain रोकिन्छ र error दिनुको साटो `undefined` फर्काउँछ।", jp: "`user` が `null` か `undefined` なら、チェーンは止まりエラーを投げずに `undefined` を返す。" },
+        },
+        {
+          question: { en: "Which operator should you use when `0` is a valid value and you only want a fallback for missing values?", np: "`0` मान्य value हुँदा र हराएका value का लागि मात्र fallback चाहिँदा कुन operator प्रयोग गर्नुपर्छ?", jp: "`0` が有効な値で、欠けている値だけにフォールバックしたいときはどの演算子を使うべきか?" },
+          options: [
+            { en: "`||`", np: "`||`", jp: "`||`" },
+            { en: "`??`", np: "`??`", jp: "`??`" },
+            { en: "`&&`", np: "`&&`", jp: "`&&`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`??` only falls back for `null` and `undefined`, so a real `0` survives.", np: "`??` ले `null` र `undefined` का लागि मात्र fallback गर्छ, त्यसैले वास्तविक `0` बाँच्छ।", jp: "`??` は `null` と `undefined` のときだけフォールバックするので、本物の `0` は残る。" },
         },
       ],
     },
