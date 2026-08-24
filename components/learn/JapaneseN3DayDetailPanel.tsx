@@ -11,10 +11,13 @@ import {
 } from "@/lib/japanese-learning/n3/japanese-n3-data";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 type Props = {
   dayNumber: number | null;
   onClose: () => void;
+  /** Enables the previous/next footer; receives the day to open. */
+  onNavigateDay?: (day: number) => void;
   isDone: (day: number) => boolean;
   onToggleDone: (day: number) => void;
 };
@@ -37,10 +40,18 @@ function n3TagLabel(slug: string, translate: (key: UiStringKey) => string): stri
   return key ? translate(key) : slug;
 }
 
-export function JapaneseN3DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
+export function JapaneseN3DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone, onNavigateDay }: Props) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getJapaneseN3DayContext(dayNumber) : null;
+
+  function neighbour(offset: -1 | 1): LessonNavTarget | null {
+    if (dayNumber === null) return null;
+    const day = dayNumber + offset;
+    const neighbourCtx = day >= 1 ? getJapaneseN3DayContext(day) : null;
+    if (!neighbourCtx) return null;
+    return { day, title: pickLocalized(neighbourCtx.day.title, locale) };
+  }
   const detail = ctx ? resolveJapaneseN3Detail(ctx.day) : null;
 
   useEffect(() => {
@@ -152,6 +163,15 @@ export function JapaneseN3DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
                 ))}
               </ul>
             </div>
+          ) : null}
+          {onNavigateDay ? (
+            <LessonNav
+              previous={neighbour(-1)}
+              next={neighbour(1)}
+              onNavigate={(target) => {
+                if (target.day !== undefined) onNavigateDay(target.day);
+              }}
+            />
           ) : null}
         </div>
 

@@ -11,10 +11,13 @@ import {
 } from "@/lib/japanese-learning/n4/japanese-n4-data";
 import type { LocalizedString } from "@/lib/japanese-learning/types";
 import { pickLocalized } from "@/lib/i18n/pick";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 type Props = {
   dayNumber: number | null;
   onClose: () => void;
+  /** Enables the previous/next footer; receives the day to open. */
+  onNavigateDay?: (day: number) => void;
   isDone: (day: number) => boolean;
   onToggleDone: (day: number) => void;
 };
@@ -76,10 +79,18 @@ function Accordion({
   );
 }
 
-export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone }: Props) {
+export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleDone, onNavigateDay }: Props) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
   const ctx = dayNumber !== null ? getJapaneseN4DayContext(dayNumber) : null;
+
+  function neighbour(offset: -1 | 1): LessonNavTarget | null {
+    if (dayNumber === null) return null;
+    const day = dayNumber + offset;
+    const neighbourCtx = day >= 1 ? getJapaneseN4DayContext(day) : null;
+    if (!neighbourCtx) return null;
+    return { day, title: pickLocalized(neighbourCtx.day.title, locale) };
+  }
   const detail = ctx ? resolveJapaneseN4Detail(ctx.day) : null;
 
   useEffect(() => {
@@ -198,6 +209,15 @@ export function JapaneseN4DayDetailPanel({ dayNumber, onClose, isDone, onToggleD
             </div>
           ) : null}
           </div>
+          {onNavigateDay ? (
+            <LessonNav
+              previous={neighbour(-1)}
+              next={neighbour(1)}
+              onNavigate={(target) => {
+                if (target.day !== undefined) onNavigateDay(target.day);
+              }}
+            />
+          ) : null}
         </div>
 
         <div className="border-t border-[var(--border)] p-5">
