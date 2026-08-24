@@ -289,74 +289,123 @@ let name = "Rajan";`,
       title: { en: "Type Coercion", np: "Type Coercion", jp: "型変換" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Explicit coercion</b> is when you intentionally convert a value yourself using `Number()`, `String()`, `Boolean()`, or `parseInt()`. <b>Implicit coercion</b> is when JavaScript converts values automatically — usually when an operator sees mismatched types and has to pick a side.\n\nImplicit coercion is exactly why `'5' + 3 === '53'` (the `+` operator leans towards text) but `'5' - 3 === 2` (the `-` operator has no text version, so it forces both sides to numbers). Once you know the rule per operator, the \"surprising\" behaviour becomes predictable.\n\n• <b>Falsy values</b> (exactly six): `false`, `0`, `''`, `null`, `undefined`, `NaN`\n• Everything else is truthy — including `'0'`, `[]`, and `{}`\n• <b>Use `===` by default.</b> Only reach for `==` to check both `null` and `undefined` at once",
-        np: "Explicit coercion तपाईंले आफैं गर्नुहुन्छ। Implicit coercion JavaScript ले operator प्रयोग गर्दा आफैं गर्छ।",
-        jp: "明示的変換は自分で行う。暗黙の変換は演算子使用時にJSが自動で行う。",
+        en: "<b>Type coercion</b> (changing a value from one type to another) happens often in JavaScript.\n\nThere are two types:\n\n### Explicit Coercion\n\n<b>Explicit coercion</b> (you intentionally convert a value yourself) happens when you use functions like:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\nExamples:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### Implicit Coercion\n\n<b>Implicit coercion</b> (JavaScript automatically converts a value) happens when JavaScript needs to work with different types.\n\nFor example:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` can be used for text, so JavaScript converts `3` to a string.\n\nBut:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` only works with numbers, so JavaScript converts `\"5\"` to a number.\n\nThink:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### Truthy and Falsy\n\n<b>Falsy</b> (a value that becomes `false` in a condition) has exactly six values:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nEverything else is <b>truthy</b> (a value that becomes `true` in a condition).\n\nFor example:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\nEven though they may look empty or false-like, they are truthy.\n\n---\n\n### `==` vs `===`\n\n<b>`==`</b> (loose equality that allows type conversion) can convert values before comparing them.\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b> (strict equality that checks both value and type) does not perform this conversion.\n\n```javascript\n5 === \"5\"; // false\n```\n\nUse `===` by default.\n\nThere is one useful exception:\n\n```javascript\nvalue == null\n```\n\nThis checks for both:\n\n```javascript\nnull\nundefined\n```",
+        np: "<b>Type coercion</b> (value लाई एक type बाट अर्को type मा बदल्नु) JavaScript मा प्रायः हुन्छ।\n\nयसका दुई प्रकार छन्:\n\n### Explicit Coercion\n\n<b>Explicit coercion</b> (तपाईं आफैं जानाजानी value बदल्नु) यस्ता function प्रयोग गर्दा हुन्छ:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\nउदाहरण:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### Implicit Coercion\n\n<b>Implicit coercion</b> (JavaScript ले स्वतः value बदल्नु) JavaScript लाई फरक type सँग काम गर्नुपर्दा हुन्छ।\n\nउदाहरणका लागि:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` text का लागि पनि प्रयोग हुन सक्छ, त्यसैले JavaScript ले `3` लाई string मा बदल्छ।\n\nतर:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` संख्या सँग मात्र काम गर्छ, त्यसैले JavaScript ले `\"5\"` लाई number मा बदल्छ।\n\nसोच्नुहोस्:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### Truthy र Falsy\n\n<b>Falsy</b> (condition मा `false` बन्ने value) का ठ्याक्कै छ value छन्:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nबाँकी सबै <b>truthy</b> (condition मा `true` बन्ने value) हुन्।\n\nउदाहरणका लागि:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\nखाली वा false जस्तै देखिए पनि, यी truthy हुन्।\n\n---\n\n### `==` vs `===`\n\n<b>`==`</b> (type conversion हुन दिने loose equality) तुलना गर्नुअघि value बदल्न सक्छ।\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b> (value र type दुबै जाँच्ने strict equality) यो conversion गर्दैन।\n\n```javascript\n5 === \"5\"; // false\n```\n\nDefault मा `===` प्रयोग गर्नुहोस्।\n\nएउटा उपयोगी अपवाद छ:\n\n```javascript\nvalue == null\n```\n\nयसले दुबै जाँच्छ:\n\n```javascript\nnull\nundefined\n```",
+        jp: "<b>型変換（Type coercion）</b>（値をある型から別の型に変えること）はJavaScriptで頻繁に起こります。\n\n2種類あります:\n\n### 明示的な変換\n\n<b>明示的な変換</b>（自分で意図して値を変換する）は、次のような関数を使うときに起こります:\n\n```javascript\nNumber()\nString()\nBoolean()\nparseInt()\n```\n\n例:\n\n```javascript\nNumber(\"5\");      // 5\nString(5);        // \"5\"\nBoolean(1);       // true\nparseInt(\"42\");   // 42\n```\n\n---\n\n### 暗黙的な変換\n\n<b>暗黙的な変換</b>（JavaScriptが自動的に値を変換する）は、異なる型を一緒に扱う必要があるときに起こります。\n\nたとえば:\n\n```javascript\n\"5\" + 3; // \"53\"\n```\n\n`+` は文字列にも使えるので、JavaScriptは `3` を文字列に変換します。\n\nしかし:\n\n```javascript\n\"5\" - 3; // 2\n```\n\n`-` は数値にしか使えないので、JavaScriptは `\"5\"` を数値に変換します。\n\nこう考えてください:\n\n```text\n\"5\" + 3\n   ↓\nText operation\n   ↓\n\"53\"\n\n\"5\" - 3\n   ↓\nNumber operation\n   ↓\n2\n```\n\n---\n\n### TruthyとFalsy\n\n<b>Falsy</b>（条件の中で `false` になる値）はちょうど6つです:\n\n```javascript\nfalse\n0\n\"\"\nnull\nundefined\nNaN\n```\n\nそれ以外はすべて<b>truthy</b>（条件の中で `true` になる値）です。\n\nたとえば:\n\n```javascript\nBoolean(\"0\"); // true\nBoolean([]);  // true\nBoolean({});  // true\n```\n\n空っぽに見えたりfalseらしく見えても、これらはtruthyです。\n\n---\n\n### `==` と `===`\n\n<b>`==`</b>（型変換を許す緩い等価）は、比較する前に値を変換することがあります。\n\n```javascript\n5 == \"5\"; // true\n```\n\n<b>`===`</b>（値と型の両方を調べる厳密な等価）はこの変換を行いません。\n\n```javascript\n5 === \"5\"; // false\n```\n\n既定では `===` を使いましょう。\n\n役に立つ例外が1つあります:\n\n```javascript\nvalue == null\n```\n\nこれは次の両方を調べます:\n\n```javascript\nnull\nundefined\n```",
       },
-      diagram: `"5" + 3   ──▶  "+" prefers text  ──▶  "53"   (string concatenation)
-"5" - 3   ──▶  "-" has no text form ──▶  2    (both sides forced to number)
-"5" == 5  ──▶  coerces before comparing ──▶ true   (avoid ==)
-"5" === 5 ──▶  no coercion, types differ ──▶ false  (use ===)`,
+      diagram: `                 Type Coercion
+                      |
+          +-----------+-----------+
+          |                       |
+       Explicit                Implicit
+    (you convert)          (JavaScript converts)
+          |                       |
+    Number("5")              "5" + 3
+    String(5)                "53"
+    Boolean(1)               "5" - 3
+    parseInt("5")             2
+
+
+Falsy Values
+     |
+     +-- false
+     +-- 0
+     +-- ""
+     +-- null
+     +-- undefined
+     +-- NaN
+
+Everything else → Truthy`,
       codeExample: {
-        title: { en: "Coercion rules with + and ==", np: "Coercion rules: + र ==", jp: "型変換ルール: + と ==" },
-        code: `// ── Explicit coercion ────────────────────────────────────────────
-Number("42")     // 42
-Boolean(0)       // false  ← falsy
-Boolean("")      // false  ← falsy
-// Everything else is truthy: "0", [], {}, -1, Infinity
+        title: { en: "Explicit and implicit conversion in action", np: "Explicit र implicit conversion व्यवहारमा", jp: "明示的・暗黙的な変換の実例" },
+        code: `// Explicit coercion
+const age = Number("30");
 
-// ── Implicit coercion with + and - ────────────────────────────────
-"5" + 3          // "53"  — + prefers string concatenation
-"5" - 3          // 2     — - forces both sides to numbers
+console.log(age);        // 30
+console.log(typeof age); // "number"
 
-// ── Loose equality == vs strict equality === ──────────────────────
-"5" == 5         // true  — coerces before comparing (avoid!)
-"5" === 5        // false — no coercion; different types → not equal
-null == undefined // true  — only null == null and null == undefined
-NaN == NaN       // false — NaN is not equal to itself (use Number.isNaN())
+// Implicit coercion
+console.log("5" + 3); // "53"
+console.log("5" - 3); // 2
 
-// ── Practical rule: always use === ───────────────────────────────
-// The only safe use of == is:  value == null  (checks null and undefined at once)`,
+// Truthy / Falsy
+if ("0") {
+  console.log("Truthy");
+}
+
+if (0) {
+  console.log("This won't run");
+}
+
+// Equality
+console.log(5 == "5");  // true
+console.log(5 === "5"); // false`,
       },
       keyTakeaways: [
-        { en: "There are exactly six falsy values: `false`, `0`, `''`, `null`, `undefined`, `NaN`. Everything else is truthy.", np: "Falsy values ठ्याक्कै छ छन्: false, 0, '', null, undefined, NaN।", jp: "Falsy値はちょうど6つ: false・0・''・null・undefined・NaN。" },
-        { en: "`+` leans toward string concatenation when either side is a string; `-`, `*`, `/` always force both sides to numbers.", np: "`+` मा कुनै एक side string भए concatenation हुन्छ; `-`, `*`, `/` ले सधैं number मा coerce गर्छ।", jp: "`+`はどちらかが文字列なら連結に傾く。`-`・`*`・`/`は常に両辺を数値に変換する。" },
-        { en: "Use `===`/`!==` by default. The only justified use of `==` is `value == null`, which matches both `null` and `undefined` in one check.", np: "Default मा `===`/`!==` प्रयोग गर्नुहोस्। `==` को एक मात्र उचित प्रयोग `value == null` हो।", jp: "デフォルトは`===`/`!==`。`==`の唯一正当な使用は`value == null`。" },
+        { en: "<b>Type coercion</b> → converting a value from one type to another.", np: "<b>Type coercion</b> → value लाई एक type बाट अर्को type मा बदल्नु।", jp: "<b>型変換</b> → 値をある型から別の型に変えること。" },
+        { en: "<b>Explicit coercion</b> → you convert the value yourself.", np: "<b>Explicit coercion</b> → तपाईं आफैं value बदल्नुहुन्छ।", jp: "<b>明示的な変換</b> → 自分で値を変換する。" },
+        { en: "<b>Implicit coercion</b> → JavaScript converts it automatically.", np: "<b>Implicit coercion</b> → JavaScript ले स्वतः बदल्छ।", jp: "<b>暗黙的な変換</b> → JavaScriptが自動的に変換する。" },
+        { en: "`+` can convert values to strings.", np: "`+` ले value लाई string मा बदल्न सक्छ।", jp: "`+` は値を文字列に変換することがある。" },
+        { en: "`-`, `*`, and `/` usually convert values to numbers.", np: "`-`, `*`, र `/` ले सामान्यतया value लाई number मा बदल्छन्।", jp: "`-`、`*`、`/` は通常、値を数値に変換する。" },
+        { en: "There are exactly <b>6 falsy values</b>: `false`, `0`, `\"\"`, `null`, `undefined`, `NaN`.", np: "ठ्याक्कै <b>6 falsy value</b> छन्: `false`, `0`, `\"\"`, `null`, `undefined`, `NaN`।", jp: "falsyな値はちょうど<b>6つ</b>: `false`、`0`、`\"\"`、`null`、`undefined`、`NaN`。" },
+        { en: "Everything else is truthy.", np: "बाँकी सबै truthy हुन्।", jp: "それ以外はすべてtruthy。" },
+        { en: "Use <b>`===`</b> by default.", np: "Default मा <b>`===`</b> प्रयोग गर्नुहोस्।", jp: "既定では<b>`===`</b>を使う。" },
+        { en: "Use `== null` only when you intentionally want to match both `null` and `undefined`.", np: "`null` र `undefined` दुबै match गराउन जानाजानी चाहेको बेला मात्र `== null` प्रयोग गर्नुहोस्।", jp: "`null` と `undefined` の両方に意図して一致させたいときだけ `== null` を使う。" },
       ],
       commonMistakes: [
-        { en: "Expecting `\"5\" - 3` to concatenate like `+` does — `-` has no string version, so it always coerces to numbers.", np: "`\"5\" - 3` ले पनि `+` जस्तै concatenate गर्छ भन्ने ठान्नु — `-` ले सधैं number मा coerce गर्छ।", jp: "`\"5\" - 3`が`+`のように連結すると期待すること。実際は常に数値に変換される。" },
-        { en: "Using `==` for a quick comparison and getting a surprising `true` from mismatched types, like `\"5\" == 5` or `[] == false`.", np: "छिटो comparison का लागि `==` प्रयोग गर्दा `\"5\" == 5` जस्तो अनपेक्षित `true` पाउनु।", jp: "手早い比較に`==`を使い、`\"5\" == 5`のような予期しない`true`を得ること。" },
-        { en: "Treating `'0'` (a non-empty string) as falsy — it's truthy, only the number `0` and the empty string `''` are falsy.", np: "`'0'` (non-empty string) लाई falsy ठान्नु — यो truthy हो, number `0` मात्र falsy हो।", jp: "`'0'`（空でない文字列）をfalsyと考えること。実際はtruthyで、数値の`0`のみfalsy。" },
+        { en: "<b>Expecting `+` to always perform addition</b> — `\"10\" + 5` is `\"105\"`, because `+` can also join strings.", np: "<b>`+` सधैं जोड्ने काम गर्छ भन्ने आशा गर्नु</b> — `\"10\" + 5` `\"105\"` हो, किनकि `+` ले string जोड्न पनि सक्छ।", jp: "<b>`+` が常に足し算だと思う</b> — `+` は文字列の連結にも使えるため、`\"10\" + 5` は `\"105\"` になる。" },
+        { en: "<b>Assuming `\"0\"` is falsy</b> — `Boolean(\"0\")` is `true`. A non-empty string is truthy.", np: "<b>`\"0\"` falsy हो भन्ने ठान्नु</b> — `Boolean(\"0\")` `true` हो। खाली नभएको string truthy हुन्छ।", jp: "<b>`\"0\"` がfalsyだと思う</b> — `Boolean(\"0\")` は `true`。空でない文字列はtruthy。" },
+        { en: "<b>Using `==` everywhere</b> — `5 == \"5\"` is `true`, which hides type differences. Prefer `5 === \"5\"`, which is `false`.", np: "<b>सबैतिर `==` प्रयोग गर्नु</b> — `5 == \"5\"` `true` हो, जसले type को फरक लुकाउँछ। `5 === \"5\"` प्रयोग गर्नुहोस्, जो `false` हो।", jp: "<b>どこでも `==` を使う</b> — `5 == \"5\"` は `true` で型の違いを隠す。`false` になる `5 === \"5\"` を使うべき。" },
+        { en: "<b>Forgetting that arrays and objects are truthy</b> — `Boolean([])` and `Boolean({})` are both `true`.", np: "<b>Array र object truthy हुन्छन् भनी बिर्सनु</b> — `Boolean([])` र `Boolean({})` दुबै `true` हुन्।", jp: "<b>配列とオブジェクトがtruthyであることを忘れる</b> — `Boolean([])` も `Boolean({})` もどちらも `true`。" },
       ],
       quiz: [
         {
-          question: { en: "What is the result of `\"5\" + 3`?", np: "`\"5\" + 3` को नतिजा के हो?", jp: "`\"5\" + 3` の結果は？" },
+          question: { en: "What is `\"5\" + 3`?", np: "`\"5\" + 3` के हो?", jp: "`\"5\" + 3` は何か?" },
           options: [
-            { en: "8", np: "8", jp: "8" },
-            { en: "\"53\"", np: "\"53\"", jp: "\"53\"" },
-            { en: "NaN", np: "NaN", jp: "NaN" },
+            { en: "`8`", np: "`8`", jp: "`8`" },
+            { en: "`\"53\"`", np: "`\"53\"`", jp: "`\"53\"`" },
+            { en: "Error", np: "Error", jp: "エラー" },
           ],
           correctIndex: 1,
-          explanation: { en: "+ prefers string concatenation whenever one side is already a string, so 3 is coerced to \"3\" and joined.", np: "एक side string भएमा `+` ले concatenation गर्छ — 3 लाई \"3\" मा coerce गरेर जोड्छ।", jp: "一方が文字列なら`+`は連結を優先し、3は\"3\"に変換されて結合される。" },
+          explanation: { en: "`+` also joins strings, so `3` is converted to a string and the two are concatenated.", np: "`+` ले string पनि जोड्छ, त्यसैले `3` string मा बदलिन्छ र दुबै जोडिन्छन्।", jp: "`+` は文字列の連結にも使えるので、`3` が文字列に変換されて連結される。" },
         },
         {
-          question: { en: "How many falsy values are there in JavaScript?", np: "JavaScript मा कति falsy values छन्?", jp: "JavaScriptのfalsy値はいくつ？" },
+          question: { en: "What is `\"5\" - 3`?", np: "`\"5\" - 3` के हो?", jp: "`\"5\" - 3` は何か?" },
           options: [
-            { en: "4", np: "4", jp: "4" },
-            { en: "6", np: "6", jp: "6" },
-            { en: "8", np: "8", jp: "8" },
+            { en: "`\"53\"`", np: "`\"53\"`", jp: "`\"53\"`" },
+            { en: "`2`", np: "`2`", jp: "`2`" },
+            { en: "Error", np: "Error", jp: "エラー" },
           ],
           correctIndex: 1,
-          explanation: { en: "Exactly six: false, 0, '', null, undefined, NaN. Everything else — including '0', [], {} — is truthy.", np: "ठ्याक्कै छ: false, 0, '', null, undefined, NaN। बाँकी सबै truthy।", jp: "ちょうど6つ: false・0・''・null・undefined・NaN。それ以外はすべてtruthy。" },
+          explanation: { en: "`-` only works with numbers, so `\"5\"` is converted to a number first.", np: "`-` संख्या सँग मात्र काम गर्छ, त्यसैले `\"5\"` पहिले number मा बदलिन्छ।", jp: "`-` は数値にしか使えないので、まず `\"5\"` が数値に変換される。" },
         },
         {
-          question: { en: "What does `\"5\" === 5` evaluate to?", np: "`\"5\" === 5` को नतिजा के हो?", jp: "`\"5\" === 5` の結果は？" },
+          question: { en: "Which one is falsy?", np: "कुन falsy हो?", jp: "falsyなのはどれか?" },
           options: [
-            { en: "true", np: "true", jp: "true" },
-            { en: "false", np: "false", jp: "false" },
+            { en: "`\"0\"`", np: "`\"0\"`", jp: "`\"0\"`" },
+            { en: "`[]`", np: "`[]`", jp: "`[]`" },
+            { en: "`0`", np: "`0`", jp: "`0`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`0` is one of the six falsy values; a non-empty string and an empty array are both truthy.", np: "`0` छ falsy value मध्ये एक हो; खाली नभएको string र खाली array दुबै truthy हुन्।", jp: "`0` は6つのfalsyな値の1つ。空でない文字列も空の配列もtruthy。" },
+        },
+        {
+          question: { en: "What is `5 === \"5\"`?", np: "`5 === \"5\"` के हो?", jp: "`5 === \"5\"` は何か?" },
+          options: [
+            { en: "`true`", np: "`true`", jp: "`true`" },
+            { en: "`false`", np: "`false`", jp: "`false`" },
           ],
           correctIndex: 1,
-          explanation: { en: "=== never coerces types. A string and a number are different types, so they are never strictly equal regardless of value.", np: "=== ले कहिल्यै coerce गर्दैन। String र number फरक type हुन्, त्यसैले strictly equal हुँदैन।", jp: "===は型を変換しない。文字列と数値は異なる型なので、値が同じでも厳密には等しくない。" },
+          explanation: { en: "`===` compares value and type without converting, and a number is not a string.", np: "`===` ले conversion नगरी value र type तुलना गर्छ, र number string होइन।", jp: "`===` は変換せずに値と型を比較する。数値は文字列ではない。" },
+        },
+        {
+          question: { en: "What should you normally use for equality?", np: "Equality का लागि सामान्यतया कुन प्रयोग गर्नुपर्छ?", jp: "等価比較には通常どれを使うべきか?" },
+          options: [
+            { en: "`==`", np: "`==`", jp: "`==`" },
+            { en: "`===`", np: "`===`", jp: "`===`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`===` avoids surprises from implicit conversion; `== null` is the one useful exception.", np: "`===` ले implicit conversion का अचम्मबाट बचाउँछ; `== null` एउटै उपयोगी अपवाद हो।", jp: "`===` は暗黙的な変換による驚きを避けられる。`== null` だけが有用な例外。" },
         },
       ],
     },
