@@ -182,6 +182,7 @@ export function DevopsRoadmap() {
         onClose={() => setDetailDay(null)}
         isDone={isDone}
         onToggleDone={(day) => toggleDay(day)}
+        onNavigateDay={setDetailDay}
         track="devops"
       />
     </div>

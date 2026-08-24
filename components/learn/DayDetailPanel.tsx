@@ -29,6 +29,8 @@ import { localizeReactNativeRoadmapDayDetail } from "@/lib/react-native-learning
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
+import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 type DayDetailPanelProps = {
   dayNumber: number | null;
@@ -37,7 +39,32 @@ type DayDetailPanelProps = {
   onToggleDone: (day: number) => void;
   /** Defaults to backend 30-day roadmap. */
   track?: RoadmapDiagramTrack;
+  /** Enables the previous/next footer; receives the day to open. */
+  onNavigateDay?: (day: number) => void;
 };
+
+function dayContextFor(track: RoadmapDiagramTrack, dayNumber: number) {
+  switch (track) {
+    case "git":
+      return getGitRoadmapDayContext(dayNumber);
+    case "react":
+      return getReactRoadmapDayContext(dayNumber);
+    case "laravel":
+      return getLaravelRoadmapDayContext(dayNumber);
+    case "nextjs":
+      return getNextjsRoadmapDayContext(dayNumber);
+    case "nodejs":
+      return getNodejsRoadmapDayContext(dayNumber);
+    case "js":
+      return getJsRoadmapDayContext(dayNumber);
+    case "react-native":
+      return getReactNativeRoadmapDayContext(dayNumber);
+    case "devops":
+      return getDevopsRoadmapDayContext(dayNumber);
+    default:
+      return getRoadmapDayContext(dayNumber);
+  }
+}
 
 function overviewParagraphs(overview: string | string[]): string[] {
   const raw = Array.isArray(overview) ? overview : [overview];
@@ -50,29 +77,22 @@ export function DayDetailPanel({
   isDone,
   onToggleDone,
   track = "backend",
+  onNavigateDay,
 }: DayDetailPanelProps) {
   const { locale, t } = useLocale();
   const open = dayNumber !== null;
-  const ctx =
-    dayNumber !== null
-      ? track === "git"
-        ? getGitRoadmapDayContext(dayNumber)
-        : track === "react"
-          ? getReactRoadmapDayContext(dayNumber)
-          : track === "laravel"
-            ? getLaravelRoadmapDayContext(dayNumber)
-            : track === "nextjs"
-              ? getNextjsRoadmapDayContext(dayNumber)
-              : track === "nodejs"
-                ? getNodejsRoadmapDayContext(dayNumber)
-                : track === "js"
-                  ? getJsRoadmapDayContext(dayNumber)
-                  : track === "react-native"
-                  ? getReactNativeRoadmapDayContext(dayNumber)
-                  : track === "devops"
-                    ? getDevopsRoadmapDayContext(dayNumber)
-                    : getRoadmapDayContext(dayNumber)
-      : null;
+  const ctx = dayNumber !== null ? dayContextFor(track, dayNumber) : null;
+
+  function neighbour(offset: -1 | 1): LessonNavTarget | null {
+    if (dayNumber === null) return null;
+    const day = dayNumber + offset;
+    const neighbourCtx = day >= 1 ? dayContextFor(track, day) : null;
+    if (!neighbourCtx) return null;
+    return {
+      day,
+      title: stripRichMarkers(stripLessonTimingFromTitle(pickLocalized(neighbourCtx.day.title, locale))),
+    };
+  }
   const detailRaw = ctx
     ? track === "git"
       ? resolveGitDayDetail(ctx.day)
@@ -340,6 +360,16 @@ export function DayDetailPanel({
                 ))}
               </ul>
             </div>
+          ) : null}
+
+          {onNavigateDay ? (
+            <LessonNav
+              previous={neighbour(-1)}
+              next={neighbour(1)}
+              onNavigate={(target) => {
+                if (target.day !== undefined) onNavigateDay(target.day);
+              }}
+            />
           ) : null}
         </div>
 
