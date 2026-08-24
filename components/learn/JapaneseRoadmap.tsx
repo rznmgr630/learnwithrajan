@@ -14,10 +14,24 @@ import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
+import type { Locale } from "@/lib/i18n/types";
 
 /** Single pill style for all topic tags — color comes from theme accent only elsewhere. */
 const TAG_PILL =
   "rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]";
+
+const weeklyTestIds = [
+  ...JAPANESE_N5_WEEKS.filter((w) => w.weeklyTest).map((w) => w.id),
+  JAPANESE_N5_FULL_LEVEL_MOCK.id,
+];
+
+function weeklyTestNeighbour(currentId: string | null, offset: -1 | 1, locale: Locale): LessonNavTarget | null {
+  if (currentId === null) return null;
+  const id = weeklyTestIds[weeklyTestIds.indexOf(currentId) + offset];
+  const test = id ? resolveJapaneseWeeklyTestForRoadmap(id) : undefined;
+  return test ? { id, title: pickLocalized(test.title, locale) } : null;
+}
 
 export function JapaneseRoadmap() {
   const { locale, t, tParams } = useLocale();
@@ -346,6 +360,9 @@ export function JapaneseRoadmap() {
             : (resolveJapaneseWeeklyTestForRoadmap(weeklyTestWeekId) ?? null)
         }
         onClose={() => setWeeklyTestWeekId(null)}
+        previous={weeklyTestNeighbour(weeklyTestWeekId, -1, locale)}
+        next={weeklyTestNeighbour(weeklyTestWeekId, 1, locale)}
+        onNavigate={setWeeklyTestWeekId}
         isWeeklyTestDone={isWeeklyTestDone}
         onToggleWeeklyTest={toggleWeeklyTest}
       />
