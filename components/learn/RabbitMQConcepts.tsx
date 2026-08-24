@@ -8,6 +8,7 @@ import {
   RABBITMQ_SECTIONS,
   type RabbitMQConcept,
 } from "@/lib/rabbitmq/concepts";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
 function renderLine(text: string) {
   const parts = text.split(/(<b>[^<]+<\/b>|`[^`]+`)/g);
@@ -88,9 +89,15 @@ function renderBody(text: string) {
 function ConceptDrawer({
   concept,
   onClose,
+  previous,
+  next,
+  onNavigate,
 }: {
   concept: RabbitMQConcept | null;
   onClose: () => void;
+  previous: LessonNavTarget | null;
+  next: LessonNavTarget | null;
+  onNavigate: (target: LessonNavTarget) => void;
 }) {
   useEffect(() => {
     if (!concept) return;
@@ -223,6 +230,8 @@ function ConceptDrawer({
             </h3>
             {renderBody(concept.tip)}
           </section>
+
+          <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
       </aside>
     </div>
@@ -276,6 +285,16 @@ function ConceptCard({
       </svg>
     </button>
   );
+}
+
+const orderedConcepts = RABBITMQ_SECTIONS.flatMap((section) =>
+  RABBITMQ_CONCEPTS.filter((c) => c.section === section),
+);
+
+function neighbourOf(concept: RabbitMQConcept | null, offset: -1 | 1): LessonNavTarget | null {
+  if (!concept) return null;
+  const neighbour = orderedConcepts[orderedConcepts.findIndex((c) => c.id === concept.id) + offset];
+  return neighbour ? { id: neighbour.id, title: neighbour.title } : null;
 }
 
 export function RabbitMQConcepts() {
@@ -366,7 +385,14 @@ export function RabbitMQConcepts() {
         </div>
       </div>
 
-      <ConceptDrawer concept={active} onClose={() => setActive(null)} />
+      <ConceptDrawer
+        key={active?.id ?? "none"}
+        concept={active}
+        onClose={() => setActive(null)}
+        previous={neighbourOf(active, -1)}
+        next={neighbourOf(active, 1)}
+        onNavigate={(target) => setActive(orderedConcepts.find((c) => c.id === target.id) ?? null)}
+      />
     </>
   );
 }
