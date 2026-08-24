@@ -7,7 +7,7 @@ import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { JsLessonDayDetail } from "@/components/learn/JsLessonDayDetail";
-import type { LessonDayNavTarget } from "@/components/learn/LessonDayNav";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import { JS_ROADMAP_WEEKS, JS_TOTAL_DAYS } from "@/lib/js-learning/js-challenge-data";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { JS_DAY_1_LESSONS } from "@/lib/js-learning/js-day-1-lessons";
@@ -70,7 +70,7 @@ export function JsRoadmap() {
 
   const lessonNeighbours = useMemo(() => {
     if (lessonDay === null) return { previous: null, next: null };
-    const toTarget = (n: number | undefined): LessonDayNavTarget | null =>
+    const toTarget = (n: number | undefined): LessonNavTarget | null =>
       n === undefined ? null : { day: n, title: pickLocalized(LESSON_DAYS[n].title, locale) };
     const i = LESSON_DAY_NUMBERS.indexOf(lessonDay);
     return {

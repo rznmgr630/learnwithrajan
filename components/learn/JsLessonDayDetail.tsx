@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
-import { LessonDayNav, type LessonDayNavTarget } from "@/components/learn/LessonDayNav";
+import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
 import type { JsLesson, JsLessonDay, JsLessonQuizQuestion } from "@/lib/js-learning/js-lesson-types";
@@ -347,8 +347,8 @@ export function JsLessonDayDetail({
   open: boolean;
   onClose: () => void;
   day: JsLessonDay;
-  previousDay?: LessonDayNavTarget | null;
-  nextDay?: LessonDayNavTarget | null;
+  previousDay?: LessonNavTarget | null;
+  nextDay?: LessonNavTarget | null;
   onNavigateDay?: (day: number) => void;
 }) {
   const { locale } = useLocale();
@@ -427,7 +427,13 @@ export function JsLessonDayDetail({
           </div>
 
           {onNavigateDay ? (
-            <LessonDayNav previous={previousDay} next={nextDay} onNavigate={onNavigateDay} />
+            <LessonNav
+              previous={previousDay}
+              next={nextDay}
+              onNavigate={(target) => {
+                if (target.day !== undefined) onNavigateDay(target.day);
+              }}
+            />
           ) : null}
         </div>
       </aside>
