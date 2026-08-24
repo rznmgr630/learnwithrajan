@@ -187,74 +187,100 @@ console.log(typeof big);       // "bigint"`,
       title: { en: "Hoisting", np: "Hoisting", jp: "ホイスティング" },
       durationMinutes: 9,
       explanation: {
-        en: "Before JavaScript runs a single line of your code, it scans the whole file in a <b>creation phase</b> and registers every variable and function name in memory. Only after that does the <b>execution phase</b> run your code top to bottom. This scan-then-run behaviour is called <b>hoisting</b>.\n\nThink of it like a restaurant reading the entire order ticket before cooking anything — the kitchen already knows every dish that's coming, even the ones at the bottom of the ticket, before the first pan touches the stove.\n\n• <b>Function declarations</b> are hoisted completely — name AND body\n• <b>var</b> is hoisted and pre-filled with `undefined`\n• <b>let</b> and <b>const</b> are hoisted too, but stay in the <b>Temporal Dead Zone (TDZ)</b> — touching them early throws a `ReferenceError`",
-        np: "JS ले पहिले सम्पूर्ण file scan गरेर हरेक variable/function नाम memory मा दर्ता गर्छ (creation phase), त्यसपछि मात्र code चलाउँछ (execution phase)। यसैलाई hoisting भनिन्छ।",
-        jp: "JSはコードを実行する前にファイル全体をスキャンし、変数・関数名をメモリに登録します（作成フェーズ）。その後にコードを実行します（実行フェーズ）。これがホイスティングです。",
+        en: "<b>Hoisting</b> (JavaScript registering variables and functions before running the code) happens before your code starts executing.\n\nJavaScript roughly has two phases:\n\n1. <b>Creation phase</b> (JavaScript prepares variables and functions)\n2. <b>Execution phase</b> (JavaScript runs the code from top to bottom)\n\nThink of it like a restaurant reading the entire order before starting to cook. The kitchen already knows what is coming.\n\n---\n\n### 1. Function Declarations\n\n<b>Function declarations</b> (functions created with the `function` keyword) are completely hoisted.\n\nYou can call the function before it appears in the code:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\nThis works because JavaScript already knows about the function during the creation phase.\n\n---\n\n### 2. `var`\n\n<b>`var`</b> (an older way to create variables) is hoisted and automatically given `undefined` (a value meaning nothing has been assigned yet).\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript roughly treats it like:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\nThe declaration is hoisted, but the value is not.\n\n---\n\n### 3. `let` and `const`\n\n<b>`let`</b> and <b>`const`</b> are also hoisted, but they cannot be accessed before their declaration.\n\nThe time between entering the scope and reaching the declaration is called the <b>Temporal Dead Zone (TDZ)</b> (the period where `let` or `const` exists but cannot be used yet).\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\nThe same happens with `const`:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
+        np: "<b>Hoisting</b> (JavaScript ले code चलाउनुअघि variable र function दर्ता गर्नु) तपाईंको code चल्न सुरु हुनुअघि हुन्छ।\n\nJavaScript मा मोटामोटी दुई phase हुन्छन्:\n\n1. <b>Creation phase</b> (JavaScript ले variable र function तयार गर्छ)\n2. <b>Execution phase</b> (JavaScript ले code माथिबाट तल चलाउँछ)\n\nयसलाई restaurant ले पकाउन सुरु गर्नुअघि पूरै order पढेको जस्तै सोच्नुहोस्। Kitchen लाई के आउँदै छ पहिले नै थाहा हुन्छ।\n\n---\n\n### 1. Function Declarations\n\n<b>Function declaration</b> (`function` keyword ले बनाइएका function) पूर्ण रूपमा hoist हुन्छन्।\n\nतपाईं function code मा देखिनुअघि नै यसलाई call गर्न सक्नुहुन्छ:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\nयो काम गर्छ किनकि creation phase मा JavaScript लाई function बारे पहिले नै थाहा हुन्छ।\n\n---\n\n### 2. `var`\n\n<b>`var`</b> (variable बनाउने पुरानो तरिका) hoist हुन्छ र स्वतः `undefined` (केही assign गरिएको छैन भन्ने अर्थ दिने value) पाउँछ।\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScript ले यसलाई मोटामोटी यसो व्यवहार गर्छ:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\nDeclaration hoist हुन्छ, तर value हुँदैन।\n\n---\n\n### 3. `let` र `const`\n\n<b>`let`</b> र <b>`const`</b> पनि hoist हुन्छन्, तर declaration अघि तिनलाई पहुँच गर्न सकिँदैन।\n\nScope भित्र प्रवेश गरेदेखि declaration पुग्नेसम्मको समयलाई <b>Temporal Dead Zone (TDZ)</b> (`let` वा `const` अस्तित्वमा छ तर अझै प्रयोग गर्न नमिल्ने अवधि) भनिन्छ।\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` सँग पनि उही हुन्छ:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
+        jp: "<b>ホイスティング</b>（JavaScriptがコードを実行する前に変数と関数を登録すること）は、コードが動き出す前に起こります。\n\nJavaScriptにはおおまかに2つのフェーズがあります:\n\n1. <b>作成フェーズ</b>（JavaScriptが変数と関数を準備する）\n2. <b>実行フェーズ</b>（JavaScriptがコードを上から下へ実行する）\n\nレストランが料理を始める前に注文全体を読むのに似ています。厨房は何が来るかをすでに知っています。\n\n---\n\n### 1. 関数宣言\n\n<b>関数宣言</b>（`function` キーワードで作る関数）は完全にホイスティングされます。\n\nコード上に現れる前に関数を呼び出せます:\n\n```javascript\nsayHello();\n\nfunction sayHello() {\n  console.log(\"Hello\");\n}\n```\n\n作成フェーズの時点でJavaScriptがその関数を知っているので、これは動きます。\n\n---\n\n### 2. `var`\n\n<b>`var`</b>（変数を作る古い方法）はホイスティングされ、自動的に `undefined`（まだ何も代入されていないことを意味する値）が入ります。\n\n```javascript\nconsole.log(age); // undefined\n\nvar age = 30;\n```\n\nJavaScriptはおおよそこう扱います:\n\n```javascript\nvar age;\n\nconsole.log(age); // undefined\n\nage = 30;\n```\n\n宣言はホイスティングされますが、値はされません。\n\n---\n\n### 3. `let` と `const`\n\n<b>`let`</b> と <b>`const`</b> もホイスティングされますが、宣言より前にアクセスすることはできません。\n\nスコープに入ってから宣言に到達するまでの期間を<b>一時的デッドゾーン（TDZ）</b>（`let` や `const` は存在するがまだ使えない期間）と呼びます。\n\n```javascript\nconsole.log(age); // ReferenceError\n\nlet age = 30;\n```\n\n`const` でも同じです:\n\n```javascript\nconsole.log(name); // ReferenceError\n\nconst name = \"Rajan\";\n```",
       },
-      diagram: `CREATION PHASE (scan everything first)      EXECUTION PHASE (run top to bottom)
-──────────────────────────────────────      ──────────────────────────────────────
-var a           -> undefined                console.log(a)        -> undefined
-let b            -> [TDZ]                    console.log(typeof b) -> "undefined"
-const c          -> [TDZ]                    sayHi()                -> "Hi!" (hoisted body runs)
-function sayHi{} -> full body ready          var a = 1              -> a becomes 1
-                                              let b = 2               -> b leaves TDZ, becomes 2`,
+      diagram: `              JavaScript starts
+                     |
+                     ↓
+              Creation Phase
+         (prepare variables/functions)
+                     |
+          +----------+----------+
+          |          |          |
+       function     var      let/const
+          |          |          |
+      Full body   undefined     TDZ
+          |          |          |
+          +----------+----------+
+                     |
+                     ↓
+              Execution Phase
+           (run code top to bottom)`,
       codeExample: {
-        title: { en: "Creation phase vs execution phase, side by side", np: "Creation phase vs execution phase", jp: "作成フェーズと実行フェーズ" },
-        code: `console.log(a);        // undefined — not an error!
-// console.log(c);      // ❌ ReferenceError — TDZ
-sayHi();                 // "Hi!" — works even though called before its declaration
+        title: { en: "Hoisting behaviour of each declaration", np: "हरेक declaration को hoisting व्यवहार", jp: "宣言ごとのホイスティングの挙動" },
+        code: `// Function declaration
+sayHello();
 
-var a = 1;
-let b = 2;
-const c = 3;
-
-function sayHi() {
-  console.log("Hi!");
+function sayHello() {
+  console.log("Hello");
 }
 
-// What actually happens:
-// CREATION PHASE:  var a -> undefined | let b, const c -> TDZ | sayHi -> full body ready
-// EXECUTION PHASE: runs top to bottom, filling in real values as each line executes`,
+// var
+console.log(age); // undefined
+
+var age = 30;
+
+// let
+console.log(name); // ReferenceError
+
+let name = "Rajan";`,
       },
       keyTakeaways: [
-        { en: "Function declarations are hoisted completely, so you can call them before the line where they're written.", np: "Function declaration पूरै hoist हुन्छ — declaration अघि call गर्न मिल्छ।", jp: "関数宣言は完全にホイストされ、宣言前に呼び出せる。" },
-        { en: "`var` is hoisted and pre-filled with `undefined` — reading it early gives `undefined`, not an error.", np: "var hoist हुन्छ र undefined ले pre-fill हुन्छ — early access मा error आउँदैन।", jp: "varはホイストされundefinedで初期化されるため、早期アクセスはエラーではなくundefinedになる。" },
-        { en: "`let`/`const` are hoisted but locked in the Temporal Dead Zone until their declaration line runs — accessing them early throws.", np: "let/const hoist हुन्छन् तर declaration नआउँदासम्म TDZ मा locked रहन्छन् — early access मा error आउँछ।", jp: "let/constはホイストされるが宣言行までTDZにロックされ、早期アクセスはエラーになる。" },
+        { en: "<b>Hoisting</b> → JavaScript prepares declarations before execution.", np: "<b>Hoisting</b> → JavaScript ले execution अघि declaration तयार गर्छ।", jp: "<b>ホイスティング</b> → JavaScriptは実行前に宣言を準備する。" },
+        { en: "<b>Creation phase</b> → variables and functions are prepared.", np: "<b>Creation phase</b> → variable र function तयार गरिन्छन्।", jp: "<b>作成フェーズ</b> → 変数と関数が準備される。" },
+        { en: "<b>Execution phase</b> → code runs from top to bottom.", np: "<b>Execution phase</b> → code माथिबाट तल चल्छ।", jp: "<b>実行フェーズ</b> → コードが上から下へ実行される。" },
+        { en: "<b>Function declarations</b> → fully hoisted.", np: "<b>Function declaration</b> → पूर्ण रूपमा hoist हुन्छन्।", jp: "<b>関数宣言</b> → 完全にホイスティングされる。" },
+        { en: "<b>`var`</b> → hoisted with `undefined`.", np: "<b>`var`</b> → `undefined` सँग hoist हुन्छ।", jp: "<b>`var`</b> → `undefined` の状態でホイスティングされる。" },
+        { en: "<b>`let` / `const`</b> → hoisted but stay in the <b>TDZ</b>.", np: "<b>`let` / `const`</b> → hoist हुन्छन् तर <b>TDZ</b> मा रहन्छन्।", jp: "<b>`let` / `const`</b> → ホイスティングされるが<b>TDZ</b>に留まる。" },
+        { en: "Accessing `let` or `const` before declaration causes a `ReferenceError`.", np: "Declaration अघि `let` वा `const` पहुँच गर्दा `ReferenceError` आउँछ।", jp: "宣言前に `let` や `const` にアクセスすると `ReferenceError` になる。" },
       ],
       commonMistakes: [
-        { en: "Assuming `let`/`const` are not hoisted at all — they are hoisted, they're just unusable (TDZ) until declared.", np: "let/const hoist नै हुँदैन भन्ने ठान्नु — वास्तवमा hoist हुन्छन्, TDZ मा locked मात्र हुन्छन्।", jp: "let/constが全くホイストされないと思うこと。実際はホイストされるがTDZでロックされる。" },
-        { en: "Relying on function-declaration hoisting for functions defined as `const fn = () => {}` — arrow functions and function expressions are NOT hoisted this way.", np: "`const fn = () => {}` जस्ता function expression लाई function declaration जस्तै hoist हुन्छ भन्ने ठान्नु।", jp: "`const fn = () => {}`のような関数式が関数宣言と同様にホイストされると思うこと。" },
-        { en: "Writing code that depends on execution order working out \"by luck\" instead of declaring variables before first use.", np: "Variable लाई पहिलो प्रयोग अघि declare नगरी execution order मा भर पर्नु।", jp: "変数を最初の使用前に宣言せず、実行順序が「たまたま」うまくいくことに依存すること。" },
+        { en: "<b>Thinking `var` gets its value during hoisting</b> — `console.log(age)` before `var age = 30;` logs `undefined`. Only the declaration is hoisted, not the value.", np: "<b>Hoisting मा `var` ले value पाउँछ भन्ने ठान्नु</b> — `var age = 30;` अघि `console.log(age)` ले `undefined` देखाउँछ। Declaration मात्र hoist हुन्छ, value होइन।", jp: "<b>ホイスティングで `var` に値が入ると思う</b> — `var age = 30;` の前の `console.log(age)` は `undefined` を出す。ホイスティングされるのは宣言だけで値ではない。" },
+        { en: "<b>Thinking `let` and `const` are not hoisted</b> — they are, but they remain in the <b>TDZ</b> until their declaration is reached, so `console.log(age)` before `let age = 30;` throws a `ReferenceError`.", np: "<b>`let` र `const` hoist हुँदैनन् भन्ने ठान्नु</b> — हुन्छन्, तर declaration पुग्नेसम्म <b>TDZ</b> मा रहन्छन्, त्यसैले `let age = 30;` अघि `console.log(age)` ले `ReferenceError` दिन्छ।", jp: "<b>`let` と `const` はホイスティングされないと思う</b> — されるが宣言に到達するまで<b>TDZ</b>に留まるので、`let age = 30;` の前の `console.log(age)` は `ReferenceError` を投げる。" },
+        { en: "<b>Confusing function declarations with function expressions</b> — calling `sayHello()` above `function sayHello() {}` works, but above `var sayHello = function () {}` throws a `TypeError`: the `var` is hoisted as `undefined` and the function value is assigned only when execution reaches that line.", np: "<b>Function declaration र function expression भ्रममा पार्नु</b> — `function sayHello() {}` माथि `sayHello()` call गर्दा काम गर्छ, तर `var sayHello = function () {}` माथि `TypeError` दिन्छ: `var` `undefined` भई hoist हुन्छ र function value execution त्यो line मा पुगेपछि मात्र assign हुन्छ।", jp: "<b>関数宣言と関数式を混同する</b> — `function sayHello() {}` より前の `sayHello()` は動くが、`var sayHello = function () {}` より前では `TypeError` になる。`var` は `undefined` としてホイスティングされ、関数の値は実行がその行に達したときに初めて代入される。" },
       ],
       quiz: [
         {
-          question: { en: "What does `console.log(x); var x = 5;` print?", np: "`console.log(x); var x = 5;` ले के print गर्छ?", jp: "`console.log(x); var x = 5;` は何を出力する？" },
+          question: { en: "What is hoisting?", np: "Hoisting के हो?", jp: "ホイスティングとは何か?" },
           options: [
-            { en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" },
-            { en: "undefined", np: "undefined", jp: "undefined" },
-            { en: "5", np: "5", jp: "5" },
+            { en: "Moving code to the top of the file", np: "Code लाई file को सबैभन्दा माथि सार्नु", jp: "コードをファイルの先頭に移動すること" },
+            { en: "Preparing declarations before execution", np: "Execution अघि declaration तयार गर्नु", jp: "実行前に宣言を準備すること" },
+            { en: "Running code twice", np: "Code दुई पटक चलाउनु", jp: "コードを2回実行すること" },
           ],
           correctIndex: 1,
-          explanation: { en: "var is hoisted and pre-filled with undefined, so reading it before the assignment line gives undefined, not an error.", np: "var hoist भई undefined ले pre-fill हुन्छ — assignment अघि पढ्दा undefined आउँछ।", jp: "varはホイストされundefinedで初期化されるため、代入前に読むとundefinedになる。" },
+          explanation: { en: "Nothing physically moves — JavaScript registers declarations during the creation phase, before executing the code.", np: "कुनै चीज भौतिक रूपमा सर्दैन — JavaScript ले code चलाउनुअघि creation phase मा declaration दर्ता गर्छ।", jp: "実際に移動するものはない — JavaScriptはコード実行前の作成フェーズで宣言を登録する。" },
         },
         {
-          question: { en: "What happens if you access a `let` variable before its declaration line, in the same block?", np: "Same block मा declaration अघि `let` variable access गर्दा के हुन्छ?", jp: "同じブロック内で宣言前に`let`変数にアクセスすると？" },
+          question: { en: "What happens to `var` during hoisting?", np: "Hoisting मा `var` लाई के हुन्छ?", jp: "ホイスティングのとき `var` はどうなるか?" },
           options: [
-            { en: "Returns undefined", np: "undefined फर्काउँछ", jp: "undefinedを返す" },
-            { en: "Throws a ReferenceError (TDZ)", np: "ReferenceError (TDZ) आउँछ", jp: "ReferenceError（TDZ）が発生する" },
-            { en: "Returns null", np: "null फर्काउँछ", jp: "nullを返す" },
+            { en: "It gets its final value", np: "यसले आफ्नो अन्तिम value पाउँछ", jp: "最終的な値が入る" },
+            { en: "It becomes `undefined`", np: "यो `undefined` बन्छ", jp: "`undefined` になる" },
+            { en: "It is ignored", np: "यसलाई बेवास्ता गरिन्छ", jp: "無視される" },
           ],
           correctIndex: 1,
-          explanation: { en: "let is hoisted but stays in the Temporal Dead Zone until its declaration line runs — accessing it early throws.", np: "let hoist हुन्छ तर declaration नआउँदासम्म TDZ मा रहन्छ — early access मा error आउँछ।", jp: "letはホイストされるが宣言行までTDZに留まり、早期アクセスはエラーになる。" },
+          explanation: { en: "The declaration is hoisted and initialised to `undefined`; the assignment happens only when execution reaches that line.", np: "Declaration hoist भई `undefined` मा initialise हुन्छ; assignment execution त्यो line मा पुगेपछि मात्र हुन्छ।", jp: "宣言がホイスティングされ `undefined` で初期化される。代入は実行がその行に達したときだけ起こる。" },
         },
         {
-          question: { en: "Are arrow functions assigned to a `const` hoisted like function declarations?", np: "`const` मा assign गरिएको arrow function function declaration जस्तै hoist हुन्छ?", jp: "`const`に代入されたアロー関数は関数宣言のようにホイストされる？" },
+          question: { en: "What happens when you access `let` before its declaration?", np: "Declaration अघि `let` पहुँच गर्दा के हुन्छ?", jp: "宣言より前に `let` にアクセスするとどうなるか?" },
           options: [
-            { en: "Yes, fully hoisted with their body", np: "हो, body सहित पूरै hoist हुन्छ", jp: "はい、本体ごと完全にホイストされる" },
-            { en: "No — they follow const's TDZ rules, unusable before the line runs", np: "होइन — const को TDZ rule पालना गर्छ, line नचल्दासम्म प्रयोग गर्न मिल्दैन", jp: "いいえ — constのTDZルールに従い、その行が実行されるまで使えない" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`ReferenceError`", np: "`ReferenceError`", jp: "`ReferenceError`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`let` is hoisted but sits in the Temporal Dead Zone until its declaration is reached, so reading it early throws a `ReferenceError`.", np: "`let` hoist हुन्छ तर declaration पुग्नेसम्म Temporal Dead Zone मा रहन्छ, त्यसैले चाँडै पढ्दा `ReferenceError` आउँछ।", jp: "`let` はホイスティングされるが宣言に到達するまで一時的デッドゾーンにあるため、早く読むと `ReferenceError` を投げる。" },
+        },
+        {
+          question: { en: "Which is fully hoisted?", np: "कुन पूर्ण रूपमा hoist हुन्छ?", jp: "完全にホイスティングされるのはどれか?" },
+          options: [
+            { en: "`var`", np: "`var`", jp: "`var`" },
+            { en: "Function declaration", np: "Function declaration", jp: "関数宣言" },
+            { en: "`const`", np: "`const`", jp: "`const`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Only function declarations get full hoisting. An arrow function stored in a const is just a variable assignment — it follows const's TDZ behaviour.", np: "पूरै hoisting function declaration लाई मात्र मिल्छ। const मा arrow function assignment मात्र हो — TDZ rule पालना गर्छ।", jp: "完全なホイストは関数宣言のみ。constに格納されたアロー関数は単なる変数代入で、constのTDZルールに従う。" },
+          explanation: { en: "A function declaration is hoisted with its whole body, which is why it can be called before it appears in the code.", np: "Function declaration आफ्नो पूरै body सँग hoist हुन्छ, त्यसैले यसलाई code मा देखिनुअघि call गर्न सकिन्छ।", jp: "関数宣言は本体ごとホイスティングされるので、コード上に現れる前に呼び出せる。" },
         },
       ],
     },
