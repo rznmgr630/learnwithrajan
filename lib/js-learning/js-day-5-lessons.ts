@@ -205,7 +205,7 @@ console.log(double(5)); // 10`,
           explanation: { en: "`createMultiplier(2)` returns a function that remembers `x`, which is a closure too.", np: "`createMultiplier(2)` ले `x` सम्झने function फर्काउँछ, जो closure पनि हो।", jp: "`createMultiplier(2)` は `x` を覚えた関数を返す。それはクロージャでもある。" },
         },
       ],
-      youtubeIds: ["SHINoHxvTso"],
+      youtubeIds: ["SHINoHxvTso", "HkWxvB1RJq0", "zdp0zrpKzIE"],
     },
     {
       id: "currying-composition",
