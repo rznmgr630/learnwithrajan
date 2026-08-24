@@ -11,81 +11,92 @@ export const JS_DAY_5_LESSONS: JsLessonDay = {
       title: { en: "Closures — the Foundation", np: "Closures — आधार", jp: "クロージャの基礎" },
       durationMinutes: 9,
       explanation: {
-        en: "Picture a function as a person leaving home for a trip. Normally, once they leave, everything back at the house is gone from their perspective. A <b>closure</b> is that person packing a backpack before leaving — a backpack containing direct access to specific things from home, not photocopies. Even far away, they can reach into the backpack and read or change what's inside, and it stays in sync with the original.\n\nThat backpack is exactly what an inner function carries: a live link to the variables of the outer function it was created in, available anytime the inner function is later called — no matter how much later, or from how far away in the code.\n\n• <b>A closure is created every time a function is created inside another function.</b> The inner function keeps a live reference, not a snapshot copy.\n• <b>Memory implication:</b> closures keep outer variables alive as long as the closure exists — be careful with closures inside event listeners or timers.",
-        np: "Closure लाई यात्रामा जाने व्यक्तिले घरबाटै केही सामान backpack मा राखेको जस्तो सोच्नुहोस् — टाढा पुगे पनि backpack भित्रको सामान access गर्न सक्छ।",
-        jp: "クロージャは、旅に出る人が家から特定のものへの直接アクセスをバックパックに入れて持って行くようなもの。遠くにいてもバックパックの中身にアクセスできる。",
+        en: "A <b>closure</b> (a function that remembers variables from where it was created) happens when a function is created inside another function.\n\nThe inner function can still access the outer function's variables even after the outer function has finished.\n\nThink of it like a <b>backpack</b> 🎒:\n\n```text\nOuter Function\n     │\n     ├── name = \"Rajan\"\n     │\n     ↓\nInner Function\n     │\n     └── remembers → name\n```\n\nExample:\n\n```javascript\nfunction greet() {\n  const name = \"Rajan\";\n\n  function sayHello() {\n    console.log(name);\n  }\n\n  return sayHello;\n}\n\nconst hello = greet();\n\nhello(); // Rajan\n```\n\nNormally, you might expect `name` to disappear when `greet()` finishes.\n\nBut `sayHello()` still has access to it.\n\nThat's a <b>closure</b>.\n\n---\n\n### A closure keeps a live reference\n\nClosures keep a <b>live reference</b> (a connection to the original variable), not a copy.\n\n```javascript\nfunction counter() {\n  let count = 0;\n\n  return function () {\n    count++;\n    return count;\n  };\n}\n\nconst next = counter();\n\nconsole.log(next()); // 1\nconsole.log(next()); // 2\nconsole.log(next()); // 3\n```\n\nThe inner function keeps access to `count`.\n\n```text\ncount → 0\n   ↓\nnext() → 1\n   ↓\ncount → 1\n   ↓\nnext() → 2\n   ↓\ncount → 2\n```",
+        np: "<b>Closure</b> (आफू बनेको ठाउँका variable सम्झने function) तब बन्छ जब एउटा function अर्को function भित्र बनाइन्छ।\n\nOuter function सकिएपछि पनि inner function ले outer function का variable पहुँच गर्न सक्छ।\n\nयसलाई <b>ब्यागप्याक</b> 🎒 जस्तै सोच्नुहोस्:\n\n```text\nOuter Function\n     │\n     ├── name = \"Rajan\"\n     │\n     ↓\nInner Function\n     │\n     └── remembers → name\n```\n\nउदाहरण:\n\n```javascript\nfunction greet() {\n  const name = \"Rajan\";\n\n  function sayHello() {\n    console.log(name);\n  }\n\n  return sayHello;\n}\n\nconst hello = greet();\n\nhello(); // Rajan\n```\n\nसामान्यतया, `greet()` सकिँदा `name` हराउँछ भन्ने तपाईंलाई लाग्न सक्छ।\n\nतर `sayHello()` सँग अझै यसको पहुँच हुन्छ।\n\nयही <b>closure</b> हो।\n\n---\n\n### Closure ले live reference राख्छ\n\nClosure ले copy होइन, <b>live reference</b> (मूल variable सँगको जोडाइ) राख्छ।\n\n```javascript\nfunction counter() {\n  let count = 0;\n\n  return function () {\n    count++;\n    return count;\n  };\n}\n\nconst next = counter();\n\nconsole.log(next()); // 1\nconsole.log(next()); // 2\nconsole.log(next()); // 3\n```\n\nInner function ले `count` को पहुँच राख्छ।\n\n```text\ncount → 0\n   ↓\nnext() → 1\n   ↓\ncount → 1\n   ↓\nnext() → 2\n   ↓\ncount → 2\n```",
+        jp: "<b>クロージャ</b>（作られた場所の変数を覚えている関数）は、関数が別の関数の中で作られたときに生まれます。\n\n外側の関数が終わったあとでも、内側の関数は外側の変数にアクセスできます。\n\n<b>バックパック</b> 🎒 のようなものだと考えてください:\n\n```text\nOuter Function\n     │\n     ├── name = \"Rajan\"\n     │\n     ↓\nInner Function\n     │\n     └── remembers → name\n```\n\n例:\n\n```javascript\nfunction greet() {\n  const name = \"Rajan\";\n\n  function sayHello() {\n    console.log(name);\n  }\n\n  return sayHello;\n}\n\nconst hello = greet();\n\nhello(); // Rajan\n```\n\n普通なら `greet()` が終わった時点で `name` は消えると思うかもしれません。\n\nしかし `sayHello()` はまだそれにアクセスできます。\n\nこれが<b>クロージャ</b>です。\n\n---\n\n### クロージャは生きた参照を保つ\n\nクロージャはコピーではなく<b>生きた参照</b>（元の変数へのつながり）を保ちます。\n\n```javascript\nfunction counter() {\n  let count = 0;\n\n  return function () {\n    count++;\n    return count;\n  };\n}\n\nconst next = counter();\n\nconsole.log(next()); // 1\nconsole.log(next()); // 2\nconsole.log(next()); // 3\n```\n\n内側の関数は `count` へのアクセスを保ち続けます。\n\n```text\ncount → 0\n   ↓\nnext() → 1\n   ↓\ncount → 1\n   ↓\nnext() → 2\n   ↓\ncount → 2\n```",
       },
-      diagram: `function outer() {
-  let count = 0;              ← lives in outer's scope
-  return function inner() {
-    count++;                  ← inner "closes over" count (backpack)
-    return count;
-  };
-}
-const increment = outer();    ← outer() has finished running...
-increment();  // 1             ...but 'count' is still alive via the backpack
-increment();  // 2
-increment();  // 3`,
+      diagram: `greet()
+│
+├── name → "Rajan"
+│
+└── sayHello()
+       │
+       └── remembers → name
+              │
+              ↓
+           "Rajan"
+
+greet() finishes
+       ↓
+sayHello() still remembers name`,
       codeExample: {
-        title: { en: "A closure keeps the outer variable alive", np: "Closure ले outer variable जिउँदो राख्छ", jp: "クロージャは外部変数を保持する" },
-        code: `function outer() {
-  let count = 0;        // this variable lives in outer's scope
-  return function inner() {
-    count++;            // inner "closes over" count
+        title: { en: "A counter that remembers its own count", np: "आफ्नै count सम्झने counter", jp: "自分のカウントを覚えるカウンター" },
+        code: `function counter() {
+  let count = 0;
+
+  return function () {
+    count++;
     return count;
   };
 }
 
-const increment = outer(); // outer() runs and returns inner
-console.log(increment()); // 1
-console.log(increment()); // 2
+const next = counter();
 
-// Each call to outer() creates a separate closure with its own 'count'
-const incrementA = outer();
-const incrementB = outer();
-incrementA(); // 1
-incrementB(); // 1  — completely separate count
-
-// ── Practical use case: private state via a factory function ──────
-function createBankAccount(initialBalance) {
-  let balance = initialBalance;  // private — not accessible from outside
-  return {
-    deposit:    (amount) => { balance += amount; },
-    getBalance: ()       => balance,
-  };
-}
-const account = createBankAccount(100);
-account.deposit(50);
-console.log(account.getBalance()); // 150`,
+console.log(next()); // 1
+console.log(next()); // 2
+console.log(next()); // 3`,
       },
       keyTakeaways: [
-        { en: "A closure is created every time a function is created inside another function — the inner function keeps a live reference, not a snapshot.", np: "Closure हरेक पटक inner function create हुँदा बन्छ — यसले live reference राख्छ, snapshot होइन।", jp: "クロージャは関数の中で関数が作られるたびに生成される。コピーではなく生きた参照を保持する。" },
-        { en: "Each call to the outer function creates a fresh, independent closure — separate calls never share the same captured variable.", np: "Outer function को हरेक call ले नयाँ, independent closure बनाउँछ — captured variable share हुँदैन।", jp: "外側の関数を呼ぶたびに独立した新しいクロージャが生成され、キャプチャした変数を共有しない。" },
-        { en: "Closures are the standard way to create private state in JavaScript, without needing a class.", np: "Class बिना private state बनाउने standard तरिका closure हो।", jp: "クラスなしでプライベートな状態を作る標準的な方法がクロージャ。" },
+        { en: "<b>Closure</b> → a function remembers variables from its outer scope.", np: "<b>Closure</b> → function ले आफ्नो outer scope का variable सम्झन्छ।", jp: "<b>クロージャ</b> → 関数が外側のスコープの変数を覚えている。" },
+        { en: "It is created when a function is created inside another function.", np: "यो एउटा function अर्को function भित्र बनाउँदा बन्छ।", jp: "関数が別の関数の中で作られたときに生まれる。" },
+        { en: "The inner function keeps a <b>live reference</b> (connection) to those variables.", np: "Inner function ले ती variable सँग <b>live reference</b> (जोडाइ) राख्छ।", jp: "内側の関数はそれらの変数への<b>生きた参照</b>（つながり）を保つ。" },
+        { en: "The outer function can finish, but the variables can stay alive while the closure exists.", np: "Outer function सकिन सक्छ, तर closure रहेसम्म variable जीवित रहन सक्छन्।", jp: "外側の関数は終わってもよいが、クロージャがある間は変数が生き続けられる。" },
+        { en: "Closures are commonly used for counters, private data, callbacks, and event handlers.", np: "Closure सामान्यतया counter, private data, callback, र event handler का लागि प्रयोग हुन्छन्।", jp: "クロージャはカウンター・プライベートなデータ・コールバック・イベントハンドラによく使われる。" },
+        { en: "Closures use memory because they keep outer variables alive.", np: "Closure ले outer variable जीवित राख्ने हुनाले memory प्रयोग गर्छन्।", jp: "クロージャは外側の変数を生かし続けるためメモリを使う。" },
       ],
       commonMistakes: [
-        { en: "Assuming multiple calls to the same factory function share the captured variable — each call gets its own independent copy.", np: "एउटै factory function को धेरै call ले captured variable share गर्छ भन्ने ठान्नु — हरेक call को आफ्नै independent copy हुन्छ।", jp: "同じファクトリ関数の複数呼び出しがキャプチャした変数を共有すると思うこと。実際は各呼び出しが独立したコピーを持つ。" },
-        { en: "Forgetting that closures keep referenced variables alive in memory, causing quiet memory growth in long-lived event listeners or timers.", np: "Closure ले reference गरिएको variable memory मा जिउँदो राख्छ भन्ने बिर्सनु, event listener/timer मा memory growth हुनु।", jp: "クロージャが参照する変数をメモリに保持し続けることを忘れ、長寿命のイベントリスナーやタイマーで静かにメモリが増えること。" },
-        { en: "Trying to read a closure's captured variable from outside the returned function — it's only reachable through that function's own logic.", np: "Return भएको function बाहिरबाट closure को captured variable पढ्ने प्रयास गर्नु — त्यो function को logic बाट मात्र पुग्न सकिन्छ।", jp: "返された関数の外からクロージャのキャプチャした変数を読もうとすること。その関数のロジックを通してのみ到達できる。" },
+        { en: "<b>Thinking a closure stores a copy</b> — it keeps a connection to the original variable, so the closure always sees the updated value.", np: "<b>Closure ले copy राख्छ भन्ने ठान्नु</b> — यो मूल variable सँग जोडाइ राख्छ, त्यसैले closure ले सधैं अद्यावधिक value देख्छ।", jp: "<b>クロージャはコピーを持つと思う</b> — 元の変数へのつながりを保つので、常に更新後の値が見える。" },
+        { en: "<b>Thinking the outer function must stay running</b> — it doesn't. The outer function returns and finishes, and the inner function still has access.", np: "<b>Outer function चलिरहनु पर्छ भन्ने ठान्नु</b> — पर्दैन। Outer function return गरी सकिन्छ, र inner function सँग अझै पहुँच हुन्छ।", jp: "<b>外側の関数が動き続けている必要があると思う</b> — 必要ない。外側の関数はreturnして終わり、それでも内側の関数はアクセスできる。" },
+        { en: "<b>Forgetting about memory</b> — a closure keeps its remembered variables alive. Be careful with many closures inside <b>event listeners</b> or <b>timers</b>, since they can hold data in memory longer than expected.", np: "<b>Memory बिर्सनु</b> — closure ले सम्झेका variable जीवित राख्छ। <b>Event listener</b> वा <b>timer</b> भित्र धेरै closure बनाउँदा होसियार हुनुहोस्, तिनले data अपेक्षा भन्दा लामो समय memory मा राख्न सक्छन्।", jp: "<b>メモリを忘れる</b> — クロージャは覚えている変数を生かし続ける。<b>イベントリスナー</b>や<b>タイマー</b>の中で多数作ると、想定より長くデータがメモリに残ることがある。" },
       ],
       quiz: [
         {
-          question: { en: "After `const increment = outer();` runs and `outer`'s call finishes, is the local variable `count` inside `outer` gone?", np: "`outer()` call सकिएपछि `outer` भित्रको `count` हराउँछ?", jp: "`outer`の呼び出しが終わった後、内部の`count`は消える？" },
-          options: [{ en: "Yes, it's garbage collected immediately", np: "हो, तुरुन्तै garbage collect हुन्छ", jp: "はい、すぐにガベージコレクトされる" }, { en: "No — the returned inner function keeps it alive via a closure", np: "होइन — return भएको inner function ले closure मार्फत जिउँदो राख्छ", jp: "いいえ — 返された内側の関数がクロージャで保持し続ける" }],
+          question: { en: "What is a closure?", np: "Closure के हो?", jp: "クロージャとは何か?" },
+          options: [
+            { en: "A loop", np: "एउटा loop", jp: "ループ" },
+            { en: "A function that remembers variables from its outer scope", np: "आफ्नो outer scope का variable सम्झने function", jp: "外側のスコープの変数を覚えている関数" },
+            { en: "A special type of object", np: "object को एक विशेष प्रकार", jp: "特殊な種類のオブジェクト" },
+          ],
           correctIndex: 1,
-          explanation: { en: "As long as something still references count (the inner function), it stays alive in memory.", np: "count लाई कोहीले (inner function) reference गरेसम्म यो memory मा जिउँदो रहन्छ।", jp: "何か（内側の関数）がcountを参照し続ける限り、メモリ内で生き続ける。" },
+          explanation: { en: "It is formed when a function is created inside another and keeps access to that outer scope.", np: "यो एउटा function अर्को भित्र बन्दा बन्छ र त्यो outer scope को पहुँच राख्छ।", jp: "関数が別の関数の中で作られ、その外側のスコープへのアクセスを保つときに生まれる。" },
         },
         {
-          question: { en: "Do two separate calls to `outer()` share the same closed-over variable?", np: "`outer()` का दुई फरक call ले same closed-over variable share गर्छन्?", jp: "`outer()`の2つの別の呼び出しは同じクロージャ変数を共有する？" },
-          options: [{ en: "Yes, they share one variable", np: "हो, एउटै variable share गर्छन्", jp: "はい、1つの変数を共有する" }, { en: "No, each call gets its own independent copy", np: "होइन, हरेक call को आफ्नै independent copy हुन्छ", jp: "いいえ、各呼び出しは独立したコピーを持つ" }],
+          question: { en: "Does a closure keep a copy of the variable?", np: "Closure ले variable को copy राख्छ?", jp: "クロージャは変数のコピーを持つか?" },
+          options: [
+            { en: "Yes", np: "हो", jp: "はい" },
+            { en: "No, it keeps a live reference", np: "होइन, यो live reference राख्छ", jp: "いいえ、生きた参照を保つ" },
+          ],
           correctIndex: 1,
-          explanation: { en: "Each invocation of outer() creates a brand new scope and a brand new closure.", np: "`outer()` को हरेक invocation ले नयाँ scope र नयाँ closure बनाउँछ।", jp: "outer()を呼び出すたびに新しいスコープと新しいクロージャが作られる。" },
+          explanation: { en: "Because it is a live reference, later changes to the variable are visible inside the closure.", np: "Live reference भएकाले, variable मा पछि हुने परिवर्तन closure भित्र देखिन्छ।", jp: "生きた参照なので、後の変更もクロージャの中から見える。" },
         },
         {
-          question: { en: "What is one common risk of closures?", np: "Closure को एक सामान्य जोखिम के हो?", jp: "クロージャの一般的なリスクの1つは？" },
-          options: [{ en: "They run slower than regular functions", np: "Regular function भन्दा ढिलो चल्छ", jp: "通常の関数より実行が遅い" }, { en: "They can keep variables alive in memory longer than expected if not cleaned up", np: "Cleanup नगरेमा variable अनुमान भन्दा बढी समय memory मा जिउँदो रहन सक्छ", jp: "クリーンアップしないと変数が予想より長くメモリに残ることがある" }],
-          correctIndex: 1,
-          explanation: { en: "Closures attached to long-lived listeners or timers can quietly prevent garbage collection.", np: "लामो समयसम्म रहने listener/timer मा जोडिएको closure ले garbage collection रोक्न सक्छ।", jp: "長寿命のリスナーやタイマーに結び付いたクロージャはガベージコレクションを静かに妨げることがある。" },
+          question: { en: "Can the outer function finish while the closure still works?", np: "Closure काम गरिरहँदा outer function सकिन सक्छ?", jp: "クロージャが動いている間に外側の関数は終われるか?" },
+          options: [
+            { en: "Yes", np: "सक्छ", jp: "はい" },
+            { en: "No", np: "सक्दैन", jp: "いいえ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The outer call returns and leaves the stack, but the variables it holds stay alive for the closure.", np: "Outer call return गरी stack छोड्छ, तर यसले राखेका variable closure का लागि जीवित रहन्छन्।", jp: "外側の呼び出しはreturnしてスタックから外れるが、保持していた変数はクロージャのために生き続ける。" },
+        },
+        {
+          question: { en: "What does a closure keep alive?", np: "Closure ले के जीवित राख्छ?", jp: "クロージャは何を生かし続けるか?" },
+          options: [
+            { en: "Outer variables it needs", np: "यसलाई चाहिने outer variable", jp: "必要な外側の変数" },
+            { en: "The entire application", np: "पूरै application", jp: "アプリ全体" },
+            { en: "The browser", np: "Browser", jp: "ブラウザ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Only the variables it actually references, which is why leaks come from holding more than you need.", np: "यसले वास्तवमा reference गरेका variable मात्र, त्यसैले चाहिने भन्दा धेरै राख्दा leak हुन्छ।", jp: "実際に参照している変数だけ。だから必要以上に保持するとリークになる。" },
         },
       ],
     },
