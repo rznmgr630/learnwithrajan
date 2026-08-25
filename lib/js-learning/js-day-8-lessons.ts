@@ -433,7 +433,7 @@ greet.call(user, ...[30, "Tokyo"]); // Rajan 30 Tokyo`,
           explanation: { en: "`bind()` fixed `this` to `user`, so calling `fn()` later still logs the name.", np: "`bind()` ले `this` लाई `user` मा स्थिर गर्‍यो, त्यसैले पछि `fn()` call गर्दा पनि नाम देखिन्छ।", jp: "`bind()` が `this` を `user` に固定したので、あとで `fn()` を呼んでも名前が出る。" },
         },
       ],
-      youtubeIds: ["75W8UPQ5l7k"],
+      youtubeIds: ["75W8UPQ5l7k", "ke_y6z0xRpk"],
     },
   ],
   finalQuiz: [

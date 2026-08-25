@@ -277,90 +277,135 @@ pet.speak(); // Animal sound`,
       title: { en: "Property Descriptors & Object.defineProperty", np: "Property Descriptors र Object.defineProperty", jp: "プロパティディスクリプタとObject.defineProperty" },
       durationMinutes: 9,
       explanation: {
-        en: "Every object property secretly carries three hidden flags controlling its behaviour, in addition to its value:\n\n• <b>writable</b> — can the value be reassigned?\n• <b>enumerable</b> — does it show up in `for...in` loops and `Object.keys()`?\n• <b>configurable</b> — can the property be deleted, or this descriptor itself be changed later?\n\nProperties you create normally (`obj.x = 5`) get all three set to `true` by default. `Object.defineProperty(obj, key, descriptor)` lets you set them explicitly — for example, to make a property read-only or hide it from enumeration. The same mechanism also powers <b>getters and setters</b>: instead of a fixed `value`, a descriptor can define a `get()` function that computes a value on access, and a `set()` function that runs custom logic on assignment.",
-        np: "हरेक property मा तीन hidden flags हुन्छन्: writable, enumerable, configurable। Normal property मा सबै true हुन्छ। `Object.defineProperty` ले explicitly control दिन्छ — जस्तै read-only बनाउन वा enumeration बाट hide गर्न। Getter/setter पनि यही मार्फत बनाइन्छ।",
-        jp: "すべてのプロパティにはwritable・enumerable・configurableの3つの隠しフラグがある。通常のプロパティはすべてtrue。`Object.defineProperty`で明示的に制御できる。getter/setterもこの仕組みで作られる。",
+        en: "Every JavaScript object property has hidden settings called a <b>property descriptor</b>. These settings control what can happen when you read, change, enumerate, or delete the property.\n\nThere are two descriptor types:\n\n• <b>Data descriptor</b> — uses `value` with `writable`, `enumerable`, and `configurable`\n• <b>Accessor descriptor</b> — uses `get` and/or `set` instead of `value`\n\nThe three main flags are:\n\n<b>`writable`</b> — whether the property's value can be changed\n\n<b>`enumerable`</b> — whether the property appears in `Object.keys()`, `for...in`, etc.\n\n<b>`configurable`</b> — whether the property can be deleted or its descriptor changed\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nNow `user.name` can be read, but its value cannot be reassigned.\n\n> <b>Important:</b> properties created normally with `obj.x = 5` have all three flags set to `true`. With `Object.defineProperty()`, unspecified descriptor flags default to `false`.\n\n---\n\n### 1. Basic `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` prevents reassignment.\n\n---\n\n### 3. Hidden property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nThe property still exists; it simply doesn't appear in normal enumeration.\n\n---\n\n### 4. Getters and setters\n\nAccessor descriptors don't use `value`. They use `get` and `set`.\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nHere, `fullName` behaves like a normal property even though its value is calculated dynamically.\n\n---\n\n### 5. Inspecting descriptors\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\nYou can inspect every own property with `Object.getOwnPropertyDescriptors(user)`.",
+        np: "हरेक JavaScript object property का लुकेका सेटिङ हुन्छन्, जसलाई <b>property descriptor</b> भनिन्छ। यी सेटिङले property पढ्दा, बदल्दा, enumerate गर्दा वा मेटाउँदा के हुन सक्छ नियन्त्रण गर्छन्।\n\nDescriptor का दुई प्रकार छन्:\n\n• <b>Data descriptor</b> — `writable`, `enumerable`, र `configurable` सँगै `value` प्रयोग गर्छ\n• <b>Accessor descriptor</b> — `value` को साटो `get` र/वा `set` प्रयोग गर्छ\n\nतीन मुख्य flag:\n\n<b>`writable`</b> — property को value बदल्न मिल्छ कि मिल्दैन\n\n<b>`enumerable`</b> — property `Object.keys()`, `for...in` आदिमा देखिन्छ कि देखिँदैन\n\n<b>`configurable`</b> — property मेटाउन वा यसको descriptor बदल्न मिल्छ कि मिल्दैन\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nअब `user.name` पढ्न मिल्छ, तर यसको value reassign गर्न मिल्दैन।\n\n> <b>महत्वपूर्ण:</b> `obj.x = 5` ले सामान्य रूपमा बनेका property का तीनै flag `true` हुन्छन्। `Object.defineProperty()` सँग, नतोकिएका descriptor flag default मा `false` हुन्छन्।\n\n---\n\n### 1. आधारभूत `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` ले reassignment रोक्छ।\n\n---\n\n### 3. लुकेको property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nProperty अझै अवस्थित छ; यो सामान्य enumeration मा देखिँदैन मात्र।\n\n---\n\n### 4. Getter र setter\n\nAccessor descriptor ले `value` प्रयोग गर्दैनन्। तिनले `get` र `set` प्रयोग गर्छन्।\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nयहाँ, `fullName` को value गतिशील रूपमा गणना हुने भए पनि सामान्य property जस्तै व्यवहार गर्छ।\n\n---\n\n### 5. Descriptor हेर्नु\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ले हरेक own property हेर्न सकिन्छ।",
+        jp: "JavaScriptのすべてのプロパティには<b>プロパティディスクリプタ</b>と呼ばれる隠れた設定があります。読み取り・変更・列挙・削除のときに何ができるかを、この設定が制御します。\n\nディスクリプタには2種類あります:\n\n• <b>データディスクリプタ</b> — `value` と `writable`・`enumerable`・`configurable` を使う\n• <b>アクセサディスクリプタ</b> — `value` の代わりに `get` や `set` を使う\n\n主なフラグは3つです:\n\n<b>`writable`</b> — 値を変更できるか\n\n<b>`enumerable`</b> — `Object.keys()` や `for...in` などに現れるか\n\n<b>`configurable`</b> — 削除やディスクリプタの変更ができるか\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nこれで `user.name` は読めますが、値を再代入することはできません。\n\n> <b>重要:</b> `obj.x = 5` のように普通に作ったプロパティは3つのフラグがすべて `true` です。`Object.defineProperty()` では、指定しなかったフラグは既定で `false` になります。\n\n---\n\n### 1. 基本の `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. 読み取り専用のプロパティ\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` が再代入を防ぎます。\n\n---\n\n### 3. 隠れたプロパティ\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nプロパティは存在し続けます。通常の列挙に現れないだけです。\n\n---\n\n### 4. ゲッターとセッター\n\nアクセサディスクリプタは `value` を使わず、`get` と `set` を使います。\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nここでは `fullName` の値は動的に計算されますが、普通のプロパティのように振る舞います。\n\n---\n\n### 5. ディスクリプタを調べる\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\n出力:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ですべての自身のプロパティを調べられます。",
       },
-      diagram: `Object.defineProperty(obj, "id", {
-  value: 42,
-  writable:     false,   ← obj.id = 99 silently fails
-  enumerable:   false,   ← hidden from Object.keys() / for...in
-  configurable: false,   ← cannot delete or redefine
-});
+      diagram: `             Property Descriptor
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+     Data Property         Accessor Property
+          │                     │
+     ┌────┴────┐           ┌────┴────┐
+   value    writable      get       set
+            enumerable
+            configurable
 
-Instead of a fixed 'value', a descriptor can use:
-  get()  →  runs when property is READ    (person.fullName)
-  set(v) →  runs when property is WRITTEN (person.fullName = v)`,
+
+Think of a property like a locked cabinet:
+
+┌─────────────────────────────┐
+│ user.name                   │
+├─────────────────────────────┤
+│ value: "Rajan"              │
+│ writable: false             │
+│ enumerable: true            │
+│ configurable: false         │
+└─────────────────────────────┘`,
       codeExample: {
-        title: { en: "Controlling property behaviour with descriptors, getters, and setters", np: "Descriptors, getters, setters सँग property control", jp: "ディスクリプタ・getter・setterによるプロパティ制御" },
-        code: `const obj = {};
-Object.defineProperty(obj, "id", {
-  value:        42,
-  writable:     false,  // obj.id = 99 will silently fail (or throw in strict mode)
-  enumerable:   false,  // won't appear in for...in or Object.keys()
-  configurable: false,  // cannot delete obj.id or redefine this descriptor
+        title: { en: "Locking, hiding and computing a property", np: "Property lock गर्नु, लुकाउनु र गणना गर्नु", jp: "プロパティを固定・非表示・計算する" },
+        code: `// ── 1. Basic defineProperty ───────────────────────────────────────
+const user = {};
+
+Object.defineProperty(user, "name", {
+  value: "Rajan",
+  writable: true,
+  enumerable: true,
+  configurable: true
 });
 
-obj.id;            // 42
-obj.id = 99;       // silently ignored (sloppy mode)
-Object.keys(obj);  // [] — id is not enumerable
+console.log(user.name); // "Rajan"
 
-// ── Reading a property's descriptor ───────────────────────────────
-Object.getOwnPropertyDescriptor(obj, "id");
-// { value: 42, writable: false, enumerable: false, configurable: false }
+// ── 2. Read-only — writable defaults to false ─────────────────────
+Object.defineProperty(user, "id", {
+  value: 101,
+  writable: false
+});
 
-// ── Getters and setters via defineProperty ────────────────────────
-const person = { firstName: "John", lastName: "Doe" };
+user.id = 202;
+console.log(user.id); // 101
+
+// ── 3. Hidden from enumeration, but still readable ────────────────
+Object.defineProperty(user, "password", {
+  value: "secret",
+  enumerable: false
+});
+
+console.log(Object.keys(user)); // ["name"]
+console.log(user.password);     // "secret"
+
+// ── 4. Accessor descriptor — get and set instead of value ─────────
+const person = {
+  firstName: "Rajan",
+  lastName: "Magar"
+};
 
 Object.defineProperty(person, "fullName", {
-  get()      { return \`\${this.firstName} \${this.lastName}\`; },
-  set(value) { [this.firstName, this.lastName] = value.split(" "); },
-  enumerable: true,
-  configurable: true,
+  get() {
+    return \`\${this.firstName} \${this.lastName}\`;
+  },
+  set(value) {
+    [this.firstName, this.lastName] = value.split(" ");
+  }
 });
 
-person.fullName;             // "John Doe" — computed on read, no () call needed
-person.fullName = "Jane Smith";  // runs the setter
-person.firstName;            // "Jane"`,
+console.log(person.fullName); // "Rajan Magar"
+
+person.fullName = "John Doe";
+console.log(person.firstName); // "John"
+
+// ── 5. Inspecting what a property actually allows ─────────────────
+console.log(Object.getOwnPropertyDescriptor(person, "firstName"));
+// { value: "John", writable: true, enumerable: true, configurable: true }`,
       },
       keyTakeaways: [
-        { en: "Every property has three hidden flags — `writable`, `enumerable`, `configurable` — all `true` by default for normally-created properties, but controllable via `Object.defineProperty()`.", np: "हरेक property मा तीन hidden flags छन् — `writable`, `enumerable`, `configurable` — normal properties मा सबै default `true`, `Object.defineProperty()` ले control गर्न सकिन्छ।", jp: "すべてのプロパティには`writable`・`enumerable`・`configurable`の3つの隠しフラグがある。通常作成されたプロパティはすべてデフォルトでtrueだが`Object.defineProperty()`で制御できる。" },
-        { en: "Setting `enumerable: false` hides a property from `Object.keys()` and `for...in` without making it inaccessible — you can still read/write it directly by name.", np: "`enumerable: false` सेट गर्दा property `Object.keys()` र `for...in` बाट hide हुन्छ तर inaccessible हुँदैन — नामले सिधै read/write गर्न सकिन्छ।", jp: "`enumerable: false`を設定すると`Object.keys()`と`for...in`からプロパティが隠れるが、アクセス不能にはならない。直接名前で読み書きできる。" },
-        { en: "Getters/setters defined via descriptors let a property look like a plain value from the outside while actually running computed logic on read or write.", np: "Descriptors मार्फत define गरिएका getter/setter ले property बाहिरबाट plain value जस्तो देखाउँछ तर read/write मा computed logic चलाउँछ।", jp: "ディスクリプタで定義されたgetter/setterは、外から見ると単純な値のように見えるが、実際は読み書き時に計算ロジックを実行する。" },
+        { en: "<b>Property descriptors</b> control how object properties behave.", np: "<b>Property descriptor</b> ले object property कसरी व्यवहार गर्छन् नियन्त्रण गर्छन्।", jp: "<b>プロパティディスクリプタ</b>がプロパティの振る舞いを制御する。" },
+        { en: "<b>`writable`</b> → can the value change?", np: "<b>`writable`</b> → value बदल्न मिल्छ?", jp: "<b>`writable`</b> → 値を変更できるか?" },
+        { en: "<b>`enumerable`</b> → does it appear during enumeration?", np: "<b>`enumerable`</b> → enumeration मा देखिन्छ?", jp: "<b>`enumerable`</b> → 列挙時に現れるか?" },
+        { en: "<b>`configurable`</b> → can it be deleted or reconfigured?", np: "<b>`configurable`</b> → मेटाउन वा पुनः configure गर्न मिल्छ?", jp: "<b>`configurable`</b> → 削除や再設定ができるか?" },
+        { en: "<b>`Object.defineProperty()`</b> lets you control these settings.", np: "<b>`Object.defineProperty()`</b> ले यी सेटिङ नियन्त्रण गर्न दिन्छ।", jp: "<b>`Object.defineProperty()`</b> でこれらの設定を制御できる。" },
+        { en: "<b>Getters and setters</b> are accessor descriptors and use `get`/`set` instead of `value`.", np: "<b>Getter र setter</b> accessor descriptor हुन् र `value` को साटो `get`/`set` प्रयोग गर्छन्।", jp: "<b>ゲッターとセッター</b>はアクセサディスクリプタで、`value` の代わりに `get`/`set` を使う。" },
+        { en: "`Object.getOwnPropertyDescriptor()` lets you inspect a property's configuration.", np: "`Object.getOwnPropertyDescriptor()` ले property को configuration हेर्न दिन्छ।", jp: "`Object.getOwnPropertyDescriptor()` でプロパティの設定を調べられる。" },
+        { en: "Be careful: with `defineProperty()`, unspecified flags default to <b>`false`</b>.", np: "होसियार: `defineProperty()` सँग, नतोकिएका flag default मा <b>`false`</b> हुन्छन्।", jp: "注意: `defineProperty()` では指定しなかったフラグは既定で<b>`false`</b>。" },
       ],
       commonMistakes: [
-        { en: "Assuming that setting `writable: false` in sloppy mode will throw an error on reassignment — it silently ignores the write instead; only strict mode throws a TypeError.", np: "Sloppy mode मा `writable: false` सेट गर्दा reassignment मा error throw हुन्छ भन्ने ठान्नु — यो silently ignore हुन्छ; strict mode मा मात्र TypeError throw हुन्छ।", jp: "sloppyモードで`writable: false`を設定すると再割り当てでエラーがスローされると思うこと。実際は黙って無視される。strictモードのみTypeErrorをスローする。" },
-        { en: "Forgetting that `enumerable: false` hides a property from `Object.keys()`/`JSON.stringify()`, then being confused why a property that clearly exists doesn't show up when serialising or looping.", np: "`enumerable: false` ले `Object.keys()`/`JSON.stringify()` बाट property hide गर्छ भन्ने बिर्सनु, अनि property देखिँदैन भन्दा confuse हुनु।", jp: "`enumerable: false`が`Object.keys()`/`JSON.stringify()`からプロパティを隠すことを忘れ、明らかに存在するプロパティがシリアライズやループで表示されないことに混乱すること。" },
-        { en: "Calling a getter like a method (`person.fullName()`) instead of accessing it like a property (`person.fullName`) — getters are read without parentheses.", np: "Getter लाई method जस्तै call गर्नु (`person.fullName()`) property जस्तै access गर्नुको सट्टा (`person.fullName`) — getter बिना parentheses पढिन्छ।", jp: "getterをプロパティのようにアクセス（`person.fullName`）する代わりにメソッドのように呼ぶこと（`person.fullName()`）。getterは括弧なしで読む。" },
-        { en: "Attempting to change `writable`/`enumerable`/`configurable` on a property whose `configurable` flag is already `false` — the descriptor is locked and the attempt throws.", np: "`configurable` false भइसकेको property को `writable`/`enumerable`/`configurable` बदलन खोज्नु — descriptor locked भएर throw हुन्छ।", jp: "`configurable`が既にfalseのプロパティの`writable`/`enumerable`/`configurable`を変更しようとすること。ディスクリプタはロックされ試みはスローする。" },
+        { en: "<b>Assuming `defineProperty()` defaults behave like normal properties</b> — `Object.defineProperty(user, \"age\", { value: 30 })` leaves `writable` as `false`, so `user.age = 40` silently does nothing.", np: "<b>`defineProperty()` का default सामान्य property जस्तै हुन्छन् भन्ने ठान्नु</b> — `Object.defineProperty(user, \"age\", { value: 30 })` ले `writable` लाई `false` छोड्छ, त्यसैले `user.age = 40` ले चुपचाप केही गर्दैन।", jp: "<b>`defineProperty()` の既定値が普通のプロパティと同じだと思う</b> — `Object.defineProperty(user, \"age\", { value: 30 })` は `writable` が `false` のままなので、`user.age = 40` は黙って何も起きない。" },
+        { en: "<b>Using `value` together with `get` or `set`</b> — a descriptor cannot define both a data property and an accessor; it throws a `TypeError`.", np: "<b>`value` लाई `get` वा `set` सँगै प्रयोग गर्नु</b> — descriptor ले data property र accessor दुबै परिभाषित गर्न सक्दैन; यसले `TypeError` दिन्छ।", jp: "<b>`value` と `get`/`set` を同時に使う</b> — ディスクリプタはデータプロパティとアクセサの両方を定義できず、`TypeError` になる。" },
+        { en: "<b>Thinking `enumerable: false` makes a property private</b> — `user.password` still works. It only hides the property from enumeration.", np: "<b>`enumerable: false` ले property निजी बनाउँछ भन्ने ठान्नु</b> — `user.password` अझै काम गर्छ। यसले property लाई enumeration बाट लुकाउँछ मात्र।", jp: "<b>`enumerable: false` でプライベートになると思う</b> — `user.password` は依然として読める。列挙から隠すだけ。" },
       ],
       quiz: [
         {
-          question: { en: "What three hidden flags does every property descriptor have, in addition to its value?", np: "Value बाहेक हरेक property descriptor मा कुन तीन hidden flags हुन्छन्?", jp: "値以外に、すべてのプロパティディスクリプタが持つ3つの隠しフラグは？" },
+          question: { en: "What does `writable: false` do?", np: "`writable: false` ले के गर्छ?", jp: "`writable: false` は何をするか?" },
           options: [
-            { en: "writable, enumerable, configurable", np: "writable, enumerable, configurable", jp: "writable、enumerable、configurable" },
-            { en: "public, private, protected", np: "public, private, protected", jp: "public、private、protected" },
+            { en: "Hides the property", np: "Property लुकाउँछ", jp: "プロパティを隠す" },
+            { en: "Prevents deleting the property", np: "Property मेटाउनबाट रोक्छ", jp: "プロパティの削除を防ぐ" },
+            { en: "Prevents changing its value", np: "यसको value बदल्नबाट रोक्छ", jp: "値の変更を防ぐ" },
+            { en: "Makes the property private", np: "Property निजी बनाउँछ", jp: "プロパティをプライベートにする" },
           ],
-          correctIndex: 0,
-          explanation: { en: "These three flags control reassignment, visibility in enumeration, and whether the descriptor itself can be changed.", np: "यी तीन flags ले reassignment, enumeration मा visibility, र descriptor बदलिन सक्छ कि सक्दैन control गर्छ।", jp: "この3つのフラグは再割り当て・列挙での可視性・ディスクリプタ自体を変更できるかを制御する。" },
+          correctIndex: 2,
+          explanation: { en: "Hiding is `enumerable`, and preventing deletion is `configurable`.", np: "लुकाउने `enumerable` हो, र मेटाउन रोक्ने `configurable` हो।", jp: "隠すのは `enumerable`、削除を防ぐのは `configurable`。" },
         },
         {
-          question: { en: "Does `enumerable: false` make a property completely inaccessible?", np: "`enumerable: false` ले property पूर्ण रूपमा inaccessible बनाउँछ?", jp: "`enumerable: false`はプロパティを完全にアクセス不能にする？" },
+          question: { en: "What does `obj.x` print after `Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;`?", np: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` पछि `obj.x` ले के देखाउँछ?", jp: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` の後 `obj.x` は何を出すか?" },
           options: [
-            { en: "No — it only hides the property from `Object.keys()`/`for...in`; direct access by name still works", np: "होइन — यसले property लाई `Object.keys()`/`for...in` बाट मात्र hide गर्छ; नामले direct access अझै काम गर्छ", jp: "いいえ — `Object.keys()`/`for...in`からプロパティを隠すだけで、名前による直接アクセスは機能する" },
-            { en: "Yes, it can no longer be read or written", np: "हो, यो अब पढ्न वा लेख्न सकिँदैन", jp: "はい、もう読み書きできなくなる" },
+            { en: "`10`", np: "`10`", jp: "`10`" },
+            { en: "`20`", np: "`20`", jp: "`20`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
           ],
           correctIndex: 0,
-          explanation: { en: "enumerable only controls visibility during enumeration (loops, Object.keys, JSON.stringify) — direct property access is unaffected.", np: "enumerable ले enumeration (loops, Object.keys, JSON.stringify) बेलाको visibility मात्र control गर्छ — direct access मा असर पर्दैन।", jp: "enumerableは列挙時（ループ、Object.keys、JSON.stringify）の可視性のみを制御する。直接アクセスには影響しない。" },
+          explanation: { en: "`writable` was not specified, so it defaulted to `false` and the assignment was ignored.", np: "`writable` तोकिएको थिएन, त्यसैले default `false` भयो र assignment बेवास्ता भयो।", jp: "`writable` を指定しなかったので既定の `false` になり、代入は無視された。" },
         },
         {
-          question: { en: "How do you read the value of a property defined with a `get()` function?", np: "`get()` function सँग define गरिएको property को value कसरी पढ्ने?", jp: "`get()`関数で定義されたプロパティの値はどうやって読む？" },
+          question: { en: "Which descriptor is used for a computed property?", np: "गणना गरिने property का लागि कुन descriptor प्रयोग हुन्छ?", jp: "計算されるプロパティにはどのディスクリプタを使うか?" },
           options: [
-            { en: "Access it like a normal property, e.g. `person.fullName` — no parentheses", np: "Normal property जस्तै access गर्नुहोस्, जस्तै `person.fullName` — parentheses बिना", jp: "通常のプロパティのようにアクセスする（例: `person.fullName`）— 括弧なし" },
-            { en: "Call it like a method: `person.fullName()`", np: "Method जस्तै call गर्नुहोस्: `person.fullName()`", jp: "メソッドのように呼び出す: `person.fullName()`" },
+            { en: "`value`", np: "`value`", jp: "`value`" },
+            { en: "`get`", np: "`get`", jp: "`get`" },
+            { en: "`writable`", np: "`writable`", jp: "`writable`" },
+            { en: "`enumerable`", np: "`enumerable`", jp: "`enumerable`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Getters are designed to be transparent — they run automatically on property read, so no function-call syntax is needed.", np: "Getters transparent हुने design गरिएका हुन् — property read मा automatically चल्छन्, function-call syntax चाहिँदैन।", jp: "getterは透過的に設計されている。プロパティ読み取り時に自動的に実行されるため、関数呼び出し構文は不要。" },
+          correctIndex: 1,
+          explanation: { en: "`get` (with an optional `set`) makes an accessor property, which cannot also use `value`.", np: "`get` (वैकल्पिक `set` सहित) ले accessor property बनाउँछ, जसले `value` पनि प्रयोग गर्न सक्दैन।", jp: "`get`（必要なら `set` も）でアクセサプロパティになる。`value` とは併用できない。" },
         },
       ],
     },
