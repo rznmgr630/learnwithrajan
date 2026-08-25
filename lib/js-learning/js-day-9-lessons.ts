@@ -2,494 +2,432 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_9_LESSONS: JsLessonDay = {
   day: 9,
-  title: { en: "The this Keyword — Contexts, call, apply & bind", np: "this Keyword — Contexts, call, apply, bind", jp: "this・call・apply・bind" },
+  title: { en: "Strings, Template Literals & Unicode", np: "Strings, Template Literals र Unicode", jp: "文字列・テンプレートリテラル・Unicode" },
   totalMinutes: 27,
-  difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
+  difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
   lessons: [
     {
-      id: "four-rules-of-this",
-      title: { en: "The Four Rules of this", np: "this का चार Rules", jp: "thisの4つのルール" },
+      id: "strings-immutability",
+      title: { en: "Strings & Immutability", np: "Strings र Immutability", jp: "文字列とイミュータビリティ" },
       durationMinutes: 9,
       explanation: {
-        en: "`this` is a special JavaScript value that tells you <b>which object a regular function is working with</b>.\n\nThe most important rule is:\n\n> <b>For regular functions, `this` is decided by how the function is called, not where it is written.</b>\n\nThere are four main ways `this` is determined:\n\n<b>Default binding</b> — a regular function is called by itself.\n\n<b>Implicit binding</b> — a function is called as an object method.\n\n<b>Explicit binding</b> — `call()`, `apply()`, or `bind()` chooses the value of `this`.\n\n<b>`new` binding</b> — `new` creates a new object and makes `this` refer to it.\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>Important:</b> Arrow functions are different. They do <b>not</b> create their own `this`; they use `this` from the surrounding scope.\n\n---\n\n### 1. Basic — Default Binding\n\nA regular function called by itself uses <b>default binding</b>.\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\nIn <b>strict mode</b> (`\"use strict\"`), `this` is `undefined`. Without strict mode in a browser, it can refer to the global object.\n\n---\n\n### 2. Basic — Implicit Binding\n\nWhen a function is called through an object, `this` refers to the object before the `.`.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe object before `.` is `user`, so:\n\n```text\nthis → user\n```\n\n---\n\n### 3. Intermediate — Explicit Binding with `call()`\n\n`call()` lets you choose what `this` should be.\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. Intermediate — `apply()`\n\n`apply()` works like `call()`, but function arguments are passed as an array.\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\nFor `this` they behave the same:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nThe main difference is how arguments are passed.\n\n---\n\n### 5. Intermediate — `bind()`\n\n`bind()` creates a <b>new function</b> with `this` permanently connected to the object you provide.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\nUnlike `call()` and `apply()`, `bind()` does <b>not</b> immediately run the function.\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. Advanced — Losing `this`\n\nThis is one of the most common `this` problems.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out of the object:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nWhy? `user.greet()` has an object before the `.`, but `greet()` does not, so the <b>implicit binding is lost</b>.\n\n---\n\n### 7. Advanced — Fixing a Callback with `bind()`\n\nThis commonly happens when passing an object method as a callback.\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nThe method is passed without its `user` object. Fix it with `bind()`:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. Advanced — `new` Binding\n\nWhen a function is called with `new`, JavaScript creates a new object and makes `this` refer to it.\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. Important — Arrow Functions\n\nArrow functions do <b>not</b> have their own `this`. They use `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nHere, the arrow function gets `this` from `greet()`. This is why arrow functions are very useful for callbacks.",
-        np: "`this` JavaScript को विशेष value हो जसले <b>सामान्य function कुन object सँग काम गर्दै छ</b> भन्ने बताउँछ।\n\nसबैभन्दा महत्वपूर्ण नियम:\n\n> <b>सामान्य function का लागि, `this` कहाँ लेखिएको छ भन्दा कसरी call गरिएको छ त्यसले तय गर्छ।</b>\n\n`this` तय हुने चार मुख्य तरिका छन्:\n\n<b>Default binding</b> — सामान्य function आफैं call हुन्छ।\n\n<b>Implicit binding</b> — function object method का रूपमा call हुन्छ।\n\n<b>Explicit binding</b> — `call()`, `apply()`, वा `bind()` ले `this` को value छान्छ।\n\n<b>`new` binding</b> — `new` ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>महत्वपूर्ण:</b> Arrow function फरक छन्। तिनले आफ्नै `this` <b>बनाउँदैनन्</b>; तिनले वरिपरिको scope बाट `this` लिन्छन्।\n\n---\n\n### 1. आधारभूत — Default Binding\n\nआफैं call हुने सामान्य function ले <b>default binding</b> प्रयोग गर्छ।\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>Strict mode</b> (`\"use strict\"`) मा, `this` `undefined` हुन्छ। Browser मा strict mode बिना, यो global object लाई जनाउन सक्छ।\n\n---\n\n### 2. आधारभूत — Implicit Binding\n\nFunction object मार्फत call हुँदा, `this` ले `.` अघिको object लाई जनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` अघिको object `user` हो, त्यसैले:\n\n```text\nthis → user\n```\n\n---\n\n### 3. मध्यम — `call()` सँग Explicit Binding\n\n`call()` ले `this` के हुनुपर्छ छान्न दिन्छ।\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. मध्यम — `apply()`\n\n`apply()` `call()` जस्तै काम गर्छ, तर function argument array रूपमा पठाइन्छन्।\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` का लागि दुबै उस्तै व्यवहार गर्छन्:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nमुख्य फरक argument कसरी पठाइन्छ भन्नेमा हो।\n\n---\n\n### 5. मध्यम — `bind()`\n\n`bind()` ले <b>नयाँ function</b> बनाउँछ जसको `this` तपाईंले दिएको object सँग स्थायी रूपमा जोडिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` र `apply()` भन्दा फरक, `bind()` ले function लाई तुरुन्तै <b>चलाउँदैन</b>।\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. उन्नत — `this` हराउनु\n\nयो `this` सँग सम्बन्धित सबैभन्दा सामान्य समस्यामध्ये एक हो।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method लाई object बाट बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nकिन? `user.greet()` मा `.` अघि object छ, तर `greet()` मा छैन, त्यसैले <b>implicit binding हराउँछ</b>।\n\n---\n\n### 7. उन्नत — `bind()` ले Callback ठीक गर्नु\n\nObject method लाई callback रूपमा पठाउँदा यो प्रायः हुन्छ।\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nMethod आफ्नो `user` object बिना पठाइन्छ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. उन्नत — `new` Binding\n\nFunction `new` सँग call हुँदा, JavaScript ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. महत्वपूर्ण — Arrow Functions\n\nArrow function का आफ्नै `this` <b>हुँदैन</b>। तिनले वरिपरिको code बाट `this` लिन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nयहाँ, arrow function ले `greet()` बाट `this` पाउँछ। त्यसैले callback का लागि arrow function धेरै उपयोगी हुन्छन्।",
-        jp: "`this` は、<b>通常の関数がどのオブジェクトを相手にしているか</b>を示すJavaScriptの特別な値です。\n\n最も重要な規則はこれです:\n\n> <b>通常の関数では、`this` は「どこに書かれたか」ではなく「どう呼ばれたか」で決まる。</b>\n\n`this` の決まり方は主に4つあります:\n\n<b>デフォルトバインディング</b> — 通常の関数がそれ単体で呼ばれる。\n\n<b>暗黙のバインディング</b> — 関数がオブジェクトのメソッドとして呼ばれる。\n\n<b>明示的バインディング</b> — `call()`・`apply()`・`bind()` が `this` の値を選ぶ。\n\n<b>`new` バインディング</b> — `new` が新しいオブジェクトを作り、`this` をそれに向ける。\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>重要:</b> アロー関数は別物です。自分の `this` を<b>作らず</b>、周囲のスコープの `this` を使います。\n\n---\n\n### 1. 基本 — デフォルトバインディング\n\n単体で呼ばれた通常の関数は<b>デフォルトバインディング</b>になります。\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>strictモード</b>（`\"use strict\"`）では `this` は `undefined` です。ブラウザでstrictモードでない場合はグローバルオブジェクトを指すことがあります。\n\n---\n\n### 2. 基本 — 暗黙のバインディング\n\nオブジェクト経由で呼ばれると、`this` は `.` の前のオブジェクトを指します。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` の前は `user` なので:\n\n```text\nthis → user\n```\n\n---\n\n### 3. 中級 — `call()` による明示的バインディング\n\n`call()` は `this` に何を使うかを選べます。\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. 中級 — `apply()`\n\n`apply()` は `call()` と同じ働きですが、引数を配列で渡します。\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` については同じ振る舞いです:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\n違いは引数の渡し方だけです。\n\n---\n\n### 5. 中級 — `bind()`\n\n`bind()` は、渡したオブジェクトに `this` が固定された<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` や `apply()` と違い、`bind()` はすぐには関数を<b>実行しません</b>。\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. 上級 — `this` を失う\n\nこれは `this` にまつわる最もよくある問題の1つです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドをオブジェクトの外に取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nなぜでしょう? `user.greet()` には `.` の前にオブジェクトがありますが、`greet()` にはありません。つまり<b>暗黙のバインディングが失われた</b>のです。\n\n---\n\n### 7. 上級 — `bind()` でコールバックを直す\n\nオブジェクトのメソッドをコールバックとして渡すときによく起こります。\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nメソッドが `user` オブジェクトなしで渡されています。`bind()` で直します:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. 上級 — `new` バインディング\n\n`new` を付けて関数を呼ぶと、JavaScriptは新しいオブジェクトを作り、`this` をそれに向けます。\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. 重要 — アロー関数\n\nアロー関数は自分の `this` を<b>持ちません</b>。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nここではアロー関数が `greet()` から `this` を受け取ります。だからアロー関数はコールバックにとても便利なのです。",
+        en: "A <b>string</b> is a sequence of text characters. JavaScript strings are <b>immutable</b>, meaning string methods never change the original string — they return a new string.\n\n```javascript\nconst name = \"Rajan\";\n\nname.toUpperCase();\n\nconsole.log(name); // \"Rajan\"\n```\n\n---\n\n### Methods you should know\n\n```javascript\nconst text = \"Hello JavaScript\";\n\ntext.slice(0, 5);                // \"Hello\"\ntext.split(\" \");                 // [\"Hello\", \"JavaScript\"]\ntext.padStart(20, \"-\");          // \"----Hello JavaScript\"\ntext.replaceAll(\"Java\", \"Type\"); // \"Hello TypeScript\"\ntext.trim();                     // removes whitespace\ntext.at(-1);                     // \"t\"\n```\n\n<b>Key idea:</b> `slice()` creates a new string; it doesn't modify the original.\n\n---\n\n### 1. Basic — chaining returns new strings\n\n```javascript\nconst username = \"  rajan  \";\n\nconst result = username\n  .trim()\n  .toUpperCase();\n\nconsole.log(result);   // \"RAJAN\"\nconsole.log(username); // \"  rajan  \" — untouched\n```\n\nEach call hands back a fresh string, so the original variable is never rewritten.\n\n---\n\n### 2. Intermediate — `at()` and negative indexes\n\n```javascript\nconst text = \"Hello\";\n\nconsole.log(text.at(0));  // \"H\"\nconsole.log(text.at(-1)); // \"o\"\n```\n\n`at()` accepts negative positions, which `text[-1]` cannot do.\n\n---\n\n### 3. Advanced — building a small transformation\n\n```javascript\nconst raw = \"  hello javascript world  \";\n\nconst title = raw\n  .trim()\n  .split(\" \")\n  .map(word => word.at(0).toUpperCase() + word.slice(1))\n  .join(\" \");\n\nconsole.log(title); // \"Hello Javascript World\"\n```\n\nNothing here mutates `raw`; each step passes a new value along.",
+        np: "<b>String</b> पाठ अक्षरहरूको क्रम हो। JavaScript का string <b>immutable</b> हुन्छन्, अर्थात् string method ले मूल string कहिल्यै बदल्दैनन् — तिनले नयाँ string फर्काउँछन्।\n\n```javascript\nconst name = \"Rajan\";\n\nname.toUpperCase();\n\nconsole.log(name); // \"Rajan\"\n```\n\n---\n\n### थाहा हुनुपर्ने method\n\n```javascript\nconst text = \"Hello JavaScript\";\n\ntext.slice(0, 5);                // \"Hello\"\ntext.split(\" \");                 // [\"Hello\", \"JavaScript\"]\ntext.padStart(20, \"-\");          // \"----Hello JavaScript\"\ntext.replaceAll(\"Java\", \"Type\"); // \"Hello TypeScript\"\ntext.trim();                     // removes whitespace\ntext.at(-1);                     // \"t\"\n```\n\n<b>मुख्य विचार:</b> `slice()` ले नयाँ string बनाउँछ; मूललाई बदल्दैन।\n\n---\n\n### 1. आधारभूत — chain गर्दा नयाँ string आउँछ\n\n```javascript\nconst username = \"  rajan  \";\n\nconst result = username\n  .trim()\n  .toUpperCase();\n\nconsole.log(result);   // \"RAJAN\"\nconsole.log(username); // \"  rajan  \" — untouched\n```\n\nहरेक call ले नयाँ string फर्काउँछ, त्यसैले मूल variable कहिल्यै पुनर्लेखन हुँदैन।\n\n---\n\n### 2. मध्यम — `at()` र ऋणात्मक index\n\n```javascript\nconst text = \"Hello\";\n\nconsole.log(text.at(0));  // \"H\"\nconsole.log(text.at(-1)); // \"o\"\n```\n\n`at()` ले ऋणात्मक स्थान स्वीकार गर्छ, जुन `text[-1]` ले सक्दैन।\n\n---\n\n### 3. उन्नत — सानो रूपान्तरण बनाउनु\n\n```javascript\nconst raw = \"  hello javascript world  \";\n\nconst title = raw\n  .trim()\n  .split(\" \")\n  .map(word => word.at(0).toUpperCase() + word.slice(1))\n  .join(\" \");\n\nconsole.log(title); // \"Hello Javascript World\"\n```\n\nयहाँ केहीले पनि `raw` लाई mutate गर्दैन; हरेक चरणले नयाँ value अगाडि पठाउँछ।",
+        jp: "<b>文字列</b>はテキストの文字の並びです。JavaScriptの文字列は<b>イミュータブル</b>で、文字列メソッドは元の文字列を決して変えず、新しい文字列を返します。\n\n```javascript\nconst name = \"Rajan\";\n\nname.toUpperCase();\n\nconsole.log(name); // \"Rajan\"\n```\n\n---\n\n### 知っておきたいメソッド\n\n```javascript\nconst text = \"Hello JavaScript\";\n\ntext.slice(0, 5);                // \"Hello\"\ntext.split(\" \");                 // [\"Hello\", \"JavaScript\"]\ntext.padStart(20, \"-\");          // \"----Hello JavaScript\"\ntext.replaceAll(\"Java\", \"Type\"); // \"Hello TypeScript\"\ntext.trim();                     // removes whitespace\ntext.at(-1);                     // \"t\"\n```\n\n<b>要点:</b> `slice()` は新しい文字列を作り、元は変えません。\n\n---\n\n### 1. 基本 — チェーンは新しい文字列を返す\n\n```javascript\nconst username = \"  rajan  \";\n\nconst result = username\n  .trim()\n  .toUpperCase();\n\nconsole.log(result);   // \"RAJAN\"\nconsole.log(username); // \"  rajan  \" — untouched\n```\n\n各呼び出しが新しい文字列を返すので、元の変数は書き換わりません。\n\n---\n\n### 2. 中級 — `at()` と負の添字\n\n```javascript\nconst text = \"Hello\";\n\nconsole.log(text.at(0));  // \"H\"\nconsole.log(text.at(-1)); // \"o\"\n```\n\n`at()` は負の位置を受け取れます。`text[-1]` ではできません。\n\n---\n\n### 3. 上級 — 小さな変換を組み立てる\n\n```javascript\nconst raw = \"  hello javascript world  \";\n\nconst title = raw\n  .trim()\n  .split(\" \")\n  .map(word => word.at(0).toUpperCase() + word.slice(1))\n  .join(\" \");\n\nconsole.log(title); // \"Hello Javascript World\"\n```\n\n`raw` は一切変更されません。各段階が新しい値を次へ渡します。",
       },
-      diagram: `Regular Function
+      diagram: `const name = "Rajan"
 
-        How was it called?
-               │
-     ┌─────────┼─────────┐
-     ↓         ↓         ↓
-   fn()     obj.fn()   fn.call(obj)
-     │         │         │
-     ↓         ↓         ↓
- Default    obj       chosen object
+name.toUpperCase()
+        ↓
+   new string "RAJAN"
+        ↓
+   name is still "Rajan"
 
 
-Arrow Function
-
-        Where was it created?
-               │
-               ↓
-     Uses surrounding \`this\`
-
-
-Easy rule to remember
-
-fn()             → default
-obj.fn()         → obj
-fn.call(obj)     → obj
-fn.apply(obj)    → obj
-fn.bind(obj)     → fixed to obj
-new Fn()         → new object
-arrow function   → surrounding this`,
+slice(a, b)      part of a string       → new string
+split(sep)       string  → array
+trim()           strip whitespace       → new string
+padStart(n, ch)  pad the front          → new string
+replaceAll(a, b) swap every match       → new string
+at(i)            one character, i may be negative`,
       codeExample: {
-        title: { en: "Every binding rule, one at a time", np: "हरेक binding नियम, एक-एक गरी", jp: "各バインディング規則を1つずつ" },
-        code: `// ── 1. Basic — default binding ────────────────────────────────────
-"use strict";
+        title: { en: "Methods that return, never mutate", np: "फर्काउने method, mutate नगर्ने", jp: "変更せず返すメソッド" },
+        code: `// ── 1. Basic — methods return new strings ─────────────────────────
+const username = "  rajan  ";
 
-function showThis() {
-  console.log(this); // undefined in strict mode
-}
+const result = username.trim().toUpperCase();
 
-showThis();
+console.log(result);   // "RAJAN"
+console.log(username); // "  rajan  " — the original is untouched
 
-// ── 2. Basic — implicit binding ───────────────────────────────────
-const user = {
-  name: "Rajan",
+// ── 2. Intermediate — the everyday method set ─────────────────────
+const text = "Hello JavaScript";
 
-  greet() {
-    console.log(this.name);
-  }
-};
+console.log(text.slice(0, 5));                // "Hello"
+console.log(text.split(" "));                 // ["Hello", "JavaScript"]
+console.log(text.replaceAll("Java", "Type")); // "Hello TypeScript"
+console.log(text.padStart(20, "-"));          // "----Hello JavaScript"
+console.log(text.at(-1));                     // "t"
 
-user.greet(); // Rajan — the object before the dot
+// ── 3. Advanced — a chain that never mutates its input ────────────
+const raw = "  hello javascript world  ";
 
-// ── 3. Intermediate — call() ──────────────────────────────────────
-function hello() {
-  console.log(\`Hello, \${this.name}\`);
-}
+const title = raw
+  .trim()
+  .split(" ")
+  .map(word => word.at(0).toUpperCase() + word.slice(1))
+  .join(" ");
 
-hello.call(user); // Hello, Rajan
-
-// ── 4. Intermediate — apply() passes arguments as an array ────────
-function introduce(city, country) {
-  console.log(\`\${this.name} lives in \${city}, \${country}\`);
-}
-
-introduce.apply(user, ["Tokyo", "Japan"]); // Rajan lives in Tokyo, Japan
-
-// ── 5. Intermediate — bind() returns a new function ───────────────
-const greetUser = hello.bind(user);
-greetUser(); // Hello, Rajan
-
-// ── 6. Advanced — losing this ─────────────────────────────────────
-const detached = user.greet;
-detached(); // undefined — no object before the dot
-
-// ── 7. Advanced — fixing a callback ───────────────────────────────
-setTimeout(user.greet, 1000);            // Hello, undefined
-setTimeout(user.greet.bind(user), 1000); // Rajan
-
-// ── 8. Advanced — new binding ─────────────────────────────────────
-function Person(name) {
-  this.name = name;
-}
-
-console.log(new Person("Rajan").name); // Rajan
-
-// ── 9. Arrow functions borrow the surrounding this ────────────────
-const account = {
-  name: "Rajan",
-
-  greet() {
-    const showName = () => console.log(this.name);
-    showName();
-  }
-};
-
-account.greet(); // Rajan`,
+console.log(title); // "Hello Javascript World"
+console.log(raw);   // unchanged`,
       },
       keyTakeaways: [
-        { en: "`this` depends on <b>how a regular function is called</b>.", np: "`this` <b>सामान्य function कसरी call भयो</b> त्यसमा निर्भर हुन्छ।", jp: "`this` は<b>通常の関数がどう呼ばれたか</b>で決まる。" },
-        { en: "`fn()` → <b>default binding</b>.", np: "`fn()` → <b>default binding</b>।", jp: "`fn()` → <b>デフォルトバインディング</b>。" },
-        { en: "`obj.fn()` → <b>implicit binding</b>, so `this` is `obj`.", np: "`obj.fn()` → <b>implicit binding</b>, त्यसैले `this` `obj` हुन्छ।", jp: "`obj.fn()` → <b>暗黙のバインディング</b>で `this` は `obj`。" },
-        { en: "`fn.call(obj)` and `fn.apply(obj)` → <b>explicit binding</b>, and both run immediately.", np: "`fn.call(obj)` र `fn.apply(obj)` → <b>explicit binding</b>, र दुबै तुरुन्तै चल्छन्।", jp: "`fn.call(obj)` と `fn.apply(obj)` → <b>明示的バインディング</b>。どちらもすぐ実行される。" },
-        { en: "`fn.bind(obj)` → creates a function with fixed `this`.", np: "`fn.bind(obj)` → स्थिर `this` भएको function बनाउँछ।", jp: "`fn.bind(obj)` → `this` が固定された関数を作る。" },
-        { en: "`new Person()` → `this` refers to the new object.", np: "`new Person()` → `this` ले नयाँ object लाई जनाउँछ।", jp: "`new Person()` → `this` は新しいオブジェクトを指す。" },
-        { en: "Taking `obj.method` out of the object can lose `this`.", np: "`obj.method` लाई object बाट बाहिर निकाल्दा `this` हराउन सक्छ।", jp: "`obj.method` をオブジェクトの外に取り出すと `this` を失うことがある。" },
-        { en: "Arrow functions <b>do not have their own `this`</b>; they take it from the surrounding scope.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>; तिनले वरिपरिको scope बाट लिन्छन्।", jp: "アロー関数は<b>自分の `this` を持たず</b>、周囲のスコープから受け取る。" },
+        { en: "JavaScript strings are <b>immutable</b> — methods return new strings and never edit the original.", np: "JavaScript का string <b>immutable</b> हुन्छन् — method ले नयाँ string फर्काउँछन्, मूललाई कहिल्यै सम्पादन गर्दैनन्।", jp: "JavaScriptの文字列は<b>イミュータブル</b>。メソッドは新しい文字列を返し、元は編集しない。" },
+        { en: "`slice()` takes a part of a string; `split()` turns one into an array.", np: "`slice()` ले string को भाग लिन्छ; `split()` ले यसलाई array मा बदल्छ।", jp: "`slice()` は文字列の一部を取り、`split()` は配列に変える。" },
+        { en: "`trim()`, `padStart()` and `replaceAll()` all hand back fresh strings too.", np: "`trim()`, `padStart()` र `replaceAll()` ले पनि नयाँ string नै फर्काउँछन्।", jp: "`trim()`・`padStart()`・`replaceAll()` もすべて新しい文字列を返す。" },
+        { en: "`at()` reads one character and accepts <b>negative indexes</b>, unlike bracket access.", np: "`at()` ले एउटा अक्षर पढ्छ र bracket पहुँच भन्दा फरक <b>ऋणात्मक index</b> स्वीकार गर्छ।", jp: "`at()` は1文字を読み、ブラケット記法と違って<b>負の添字</b>を受け取れる。" },
+        { en: "Chaining string methods is safe precisely because each step returns a new value.", np: "String method chain गर्नु सुरक्षित छ किनकि हरेक चरणले नयाँ value फर्काउँछ।", jp: "各段階が新しい値を返すからこそ、文字列メソッドの連鎖は安全。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking `this` always means \"the current object\"</b> — after `const fn = user.greet;`, calling `fn()` no longer has `user` attached.", np: "<b>`this` सधैं \"वर्तमान object\" हो भन्ने ठान्नु</b> — `const fn = user.greet;` पछि, `fn()` call गर्दा `user` जोडिएको हुँदैन।", jp: "<b>`this` は常に「今のオブジェクト」だと思う</b> — `const fn = user.greet;` の後に `fn()` を呼んでも `user` は付いてこない。" },
-        { en: "<b>Confusing `call()` and `bind()`</b> — `greet.call(user)` runs the function now, while `greet.bind(user)` returns a new function to call later.", np: "<b>`call()` र `bind()` भ्रममा पार्नु</b> — `greet.call(user)` ले function अहिले चलाउँछ, जब कि `greet.bind(user)` ले पछि call गर्न नयाँ function फर्काउँछ।", jp: "<b>`call()` と `bind()` を混同する</b> — `greet.call(user)` は今すぐ実行し、`greet.bind(user)` は後で呼ぶ新しい関数を返す。" },
-        { en: "<b>Assuming arrow functions have their own `this`</b> — they don't; a top-level `const greet = () => console.log(this);` logs the surrounding `this`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने ठान्नु</b> — हुँदैन; top-level `const greet = () => console.log(this);` ले वरिपरिको `this` देखाउँछ।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — 持たない。トップレベルの `const greet = () => console.log(this);` は周囲の `this` を出す。" },
-        { en: "<b>Using an arrow function as an object method when you expect the object as `this`</b> — `greet: () => console.log(this.name)` usually logs `undefined`. Use a regular method: `greet() { ... }`.", np: "<b>Object लाई `this` चाहिँदा arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले सामान्यतया `undefined` देखाउँछ। सामान्य method प्रयोग गर्नुहोस्: `greet() { ... }`।", jp: "<b>オブジェクトを `this` にしたいのにアロー関数をメソッドにする</b> — `greet: () => console.log(this.name)` はたいてい `undefined` を出す。通常のメソッド `greet() { ... }` を使う。" },
+        { en: "<b>Expecting a method to change the string in place</b> — `name.toUpperCase();` on its own does nothing visible. Assign the result: `const upper = name.toUpperCase();`.", np: "<b>Method ले string लाई त्यहीँ बदल्छ भन्ने आशा गर्नु</b> — `name.toUpperCase();` एक्लै केही देखिने काम गर्दैन। नतिजा assign गर्नुहोस्: `const upper = name.toUpperCase();`।", jp: "<b>メソッドが文字列をその場で変えると思う</b> — `name.toUpperCase();` だけでは何も起きない。結果を代入する: `const upper = name.toUpperCase();`。" },
+        { en: "<b>Using `text[-1]` to read the last character</b> — that is `undefined`. Use `text.at(-1)`.", np: "<b>अन्तिम अक्षर पढ्न `text[-1]` प्रयोग गर्नु</b> — त्यो `undefined` हो। `text.at(-1)` प्रयोग गर्नुहोस्।", jp: "<b>最後の文字を `text[-1]` で読む</b> — それは `undefined`。`text.at(-1)` を使う。" },
+        { en: "<b>Reaching for `replace()` when you mean every match</b> — `replace()` with a plain string swaps only the first one. Use `replaceAll()`.", np: "<b>हरेक match भन्न खोज्दा `replace()` प्रयोग गर्नु</b> — साधारण string सँग `replace()` ले पहिलो मात्र बदल्छ। `replaceAll()` प्रयोग गर्नुहोस्।", jp: "<b>すべての一致のつもりで `replace()` を使う</b> — 文字列を渡した `replace()` は最初の1つだけ置換する。`replaceAll()` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "What determines `this` for a regular function?", np: "सामान्य function का लागि `this` के ले तय गर्छ?", jp: "通常の関数の `this` は何で決まるか?" },
+          question: { en: "What does `name.toUpperCase()` do to `name`?", np: "`name.toUpperCase()` ले `name` लाई के गर्छ?", jp: "`name.toUpperCase()` は `name` に何をするか?" },
           options: [
-            { en: "How the function is called", np: "Function कसरी call गरिएको छ", jp: "関数がどう呼ばれたか" },
-            { en: "Where the function is written", np: "Function कहाँ लेखिएको छ", jp: "関数がどこに書かれたか" },
-            { en: "The function's name", np: "Function को नाम", jp: "関数の名前" },
+            { en: "Nothing — it returns a new string", np: "केही होइन — यसले नयाँ string फर्काउँछ", jp: "何もしない。新しい文字列を返す" },
+            { en: "Changes it in place", np: "यसलाई त्यहीँ बदल्छ", jp: "その場で変更する" },
+            { en: "Deletes it", np: "यसलाई मेटाउँछ", jp: "削除する" },
           ],
           correctIndex: 0,
-          explanation: { en: "The call site decides it, which is why the same function can see different objects.", np: "Call site ले तय गर्छ, त्यसैले उही function ले फरक object देख्न सक्छ।", jp: "呼び出し側が決めるので、同じ関数でも別のオブジェクトを見ることがある。" },
+          explanation: { en: "Strings are immutable, so you have to keep the returned value.", np: "String immutable हुन्छन्, त्यसैले फर्काइएको value राख्नुपर्छ।", jp: "文字列はイミュータブルなので、返り値を受け取る必要がある。" },
         },
         {
-          question: { en: "Given `const user = { name: \"Rajan\", greet() { console.log(this.name); } }`, what is `this` in `user.greet()`?", np: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` मा, `user.greet()` भित्र `this` के हो?", jp: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` のとき `user.greet()` の `this` は?" },
+          question: { en: "Which method reads the last character of a string?", np: "String को अन्तिम अक्षर कुन method ले पढ्छ?", jp: "文字列の最後の1文字を読むメソッドは?" },
           options: [
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "`user`", np: "`user`", jp: "`user`" },
-            { en: "`window`", np: "`window`", jp: "`window`" },
+            { en: "`text[-1]`", np: "`text[-1]`", jp: "`text[-1]`" },
+            { en: "`text.at(-1)`", np: "`text.at(-1)`", jp: "`text.at(-1)`" },
+            { en: "`text.last()`", np: "`text.last()`", jp: "`text.last()`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Implicit binding: `this` is whatever sits before the dot at the call site.", np: "Implicit binding: call site मा `.` अघि जे छ त्यही `this` हुन्छ।", jp: "暗黙のバインディング: 呼び出し時にドットの前にあるものが `this` になる。" },
+          explanation: { en: "Bracket access does not understand negative positions and gives `undefined`.", np: "Bracket पहुँचले ऋणात्मक स्थान बुझ्दैन र `undefined` दिन्छ।", jp: "ブラケット記法は負の位置を理解できず `undefined` になる。" },
         },
         {
-          question: { en: "What does `bind()` do?", np: "`bind()` ले के गर्छ?", jp: "`bind()` は何をするか?" },
+          question: { en: "Which method replaces every occurrence of a substring?", np: "कुन method ले substring का हरेक घटना बदल्छ?", jp: "部分文字列のすべての出現を置換するメソッドは?" },
           options: [
-            { en: "Immediately runs the function", np: "Function तुरुन्तै चलाउँछ", jp: "関数をすぐ実行する" },
-            { en: "Deletes `this`", np: "`this` मेटाउँछ", jp: "`this` を削除する" },
-            { en: "Creates a new function with a chosen `this`", np: "छानिएको `this` भएको नयाँ function बनाउँछ", jp: "選んだ `this` を持つ新しい関数を作る" },
+            { en: "`replace()`", np: "`replace()`", jp: "`replace()`" },
+            { en: "`split()`", np: "`split()`", jp: "`split()`" },
+            { en: "`replaceAll()`", np: "`replaceAll()`", jp: "`replaceAll()`" },
           ],
           correctIndex: 2,
-          explanation: { en: "That is why it fixes callbacks: `setTimeout(user.greet.bind(user), 1000)`.", np: "त्यसैले यसले callback ठीक गर्छ: `setTimeout(user.greet.bind(user), 1000)`।", jp: "だからコールバックを直せる: `setTimeout(user.greet.bind(user), 1000)`。" },
-        },
-        {
-          question: { en: "What happens with `const greet = user.greet;` then `greet()`?", np: "`const greet = user.greet;` पछि `greet()` गर्दा के हुन्छ?", jp: "`const greet = user.greet;` の後に `greet()` するとどうなるか?" },
-          options: [
-            { en: "The object binding is lost", np: "Object binding हराउँछ", jp: "オブジェクトのバインディングが失われる" },
-            { en: "`this` automatically stays `user`", np: "`this` स्वतः `user` नै रहन्छ", jp: "`this` は自動的に `user` のまま" },
-            { en: "JavaScript creates a new object", np: "JavaScript ले नयाँ object बनाउँछ", jp: "JavaScriptが新しいオブジェクトを作る" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "There is no object before the dot any more, so it falls back to default binding.", np: "अब `.` अघि object छैन, त्यसैले यो default binding मा झर्छ।", jp: "もうドットの前にオブジェクトがないので、デフォルトバインディングに戻る。" },
-        },
-        {
-          question: { en: "What is special about arrow functions?", np: "Arrow function मा के विशेष छ?", jp: "アロー関数の特別な点は?" },
-          options: [
-            { en: "They always have `this` set to the global object", np: "तिनको `this` सधैं global object हुन्छ", jp: "`this` が常にグローバルオブジェクトになる" },
-            { en: "They use `this` from the surrounding scope", np: "तिनले वरिपरिको scope बाट `this` लिन्छन्", jp: "周囲のスコープの `this` を使う" },
-            { en: "They create their own `this`", np: "तिनले आफ्नै `this` बनाउँछन्", jp: "自分の `this` を作る" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "That makes them ideal inside a method, and wrong as the method itself.", np: "त्यसैले यी method भित्र उपयुक्त छन्, र method आफैं बन्दा गलत।", jp: "だからメソッドの内側では最適だが、メソッド自体には不向き。" },
-        },
-        {
-          question: { en: "What does `new` do to `this` in `function Person(name) { this.name = name; }`?", np: "`function Person(name) { this.name = name; }` मा `new` ले `this` लाई के गर्छ?", jp: "`function Person(name) { this.name = name; }` で `new` は `this` をどうするか?" },
-          options: [
-            { en: "`this` refers to `Person` itself", np: "`this` ले `Person` आफैंलाई जनाउँछ", jp: "`this` は `Person` 自身を指す" },
-            { en: "`this` is always `undefined`", np: "`this` सधैं `undefined` हुन्छ", jp: "`this` は常に `undefined`" },
-            { en: "`this` refers to the new object", np: "`this` ले नयाँ object लाई जनाउँछ", jp: "`this` は新しいオブジェクトを指す" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "`new` creates the object, points `this` at it, and returns it automatically.", np: "`new` ले object बनाउँछ, `this` लाई त्यसैतिर देखाउँछ, र स्वतः फर्काउँछ।", jp: "`new` はオブジェクトを作り、`this` をそれに向け、自動的に返す。" },
-        },
-      ],
-      youtubeIds: ["9T4z98JcHR0"],
-    },
-    {
-      id: "arrow-functions-and-this",
-      title: { en: "Arrow Functions & this", np: "Arrow Functions र this", jp: "アロー関数とthis" },
-      durationMinutes: 9,
-      explanation: {
-        en: "Arrow functions are different from normal functions because they <b>do not have their own `this`</b>.\n\nInstead, an arrow function uses the `this` from the <b>surrounding scope where it was created</b>. This is called <b>lexical `this`</b> (it gets `this` from the outside).\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nHere, `sayName` is an arrow function. It does not create its own `this`, so it uses the `this` from `greet()`.\n\n---\n\n### Important\n\nThe four normal `this` rules do <b>not</b> change an arrow function's `this`:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\nEven `call()`, `apply()`, and `bind()` cannot change an arrow function's `this`.\n\nThink of an arrow function as saying:\n\n> \"I won't create my own `this`. I'll use the `this` from outside.\"\n\n---\n\n### 1. Basic example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function gets `this` from `greet()`.\n\n---\n\n### 2. Very common callback example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function keeps the `this` from `greet()`. This is one of the main reasons arrow functions are useful for callbacks.\n\n---\n\n### 3. Arrow function as an object method — common mistake\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nWhy? Because the arrow function does <b>not</b> get `this` from `user`. The object does not create a new `this` for the arrow function.\n\nFor object methods, use a normal method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` cannot change arrow `this`\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nFor arrow functions, `call()`, `apply()`, and `bind()` cannot change `this`.",
-        np: "Arrow function सामान्य function भन्दा फरक छन् किनकि तिनका <b>आफ्नै `this` हुँदैन</b>।\n\nबरु, arrow function ले <b>आफू बनेको वरिपरिको scope</b> बाट `this` लिन्छ। यसलाई <b>lexical `this`</b> (बाहिरबाट `this` पाउने) भनिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nयहाँ, `sayName` arrow function हो। यसले आफ्नै `this` बनाउँदैन, त्यसैले `greet()` बाट `this` लिन्छ।\n\n---\n\n### महत्वपूर्ण\n\nसामान्य `this` का चार नियमले arrow function को `this` <b>बदल्दैनन्</b>:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\n`call()`, `apply()`, र `bind()` ले पनि arrow function को `this` बदल्न सक्दैनन्।\n\nArrow function यसो भन्छ जस्तै सोच्नुहोस्:\n\n> \"म आफ्नै `this` बनाउँदिन। म बाहिरको `this` प्रयोग गर्छु।\"\n\n---\n\n### 1. आधारभूत उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` बाट `this` पाउँछ।\n\n---\n\n### 2. धेरै सामान्य callback उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` को `this` राख्छ। Callback का लागि arrow function उपयोगी हुनुको यो मुख्य कारण हो।\n\n---\n\n### 3. Object method रूपमा arrow function — सामान्य गल्ती\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nकिन? किनकि arrow function ले `user` बाट `this` <b>पाउँदैन</b>। Object ले arrow function का लागि नयाँ `this` बनाउँदैन।\n\nObject method का लागि, सामान्य method प्रयोग गर्नुहोस्:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` ले arrow को `this` बदल्न सक्दैन\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nArrow function का लागि, `call()`, `apply()`, र `bind()` ले `this` बदल्न सक्दैनन्।",
-        jp: "アロー関数は通常の関数と違い、<b>自分の `this` を持ちません</b>。\n\n代わりに、<b>作られた場所の周囲のスコープ</b>の `this` を使います。これを<b>レキシカルな `this`</b>（外側から `this` を受け取る）と呼びます。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nここで `sayName` はアロー関数です。自分の `this` を作らないので、`greet()` の `this` を使います。\n\n---\n\n### 重要\n\n通常の `this` の4つの規則は、アロー関数の `this` を<b>変えません</b>:\n\n• デフォルトバインディング\n• 暗黙のバインディング\n• 明示的バインディング\n• `new` バインディング\n\n`call()`・`apply()`・`bind()` でさえ、アロー関数の `this` は変えられません。\n\nアロー関数はこう言っていると考えてください:\n\n> 「自分の `this` は作らない。外側の `this` を使う。」\n\n---\n\n### 1. 基本の例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` から `this` を受け取ります。\n\n---\n\n### 2. とてもよくあるコールバックの例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` の `this` を保ちます。アロー関数がコールバックに便利な主な理由の1つです。\n\n---\n\n### 3. オブジェクトのメソッドにするのはよくある間違い\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nなぜでしょう? アロー関数は `user` から `this` を<b>受け取らない</b>からです。オブジェクトはアロー関数のために新しい `this` を作りません。\n\nオブジェクトのメソッドには通常のメソッドを使います:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` はアロー関数の `this` を変えられない\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nアロー関数では `call()`・`apply()`・`bind()` のいずれも `this` を変えられません。",
-      },
-      diagram: `Normal function
-      │
-      └── this depends on HOW it is called
-
-
-Arrow function
-      │
-      └── this comes from WHERE it was created
-                    │
-                    ↓
-              surrounding scope`,
-      codeExample: {
-        title: { en: "Where the arrow gets its this, and where it doesn't", np: "Arrow ले `this` कहाँबाट पाउँछ, कहाँबाट पाउँदैन", jp: "アローが this を得る場所、得られない場所" },
-        code: `// ── 1. Basic — the arrow borrows this from greet() ────────────────
-const user = {
-  name: "Rajan",
-
-  greet() {
-    const sayHello = () => console.log(this.name);
-    sayHello();
-  }
-};
-
-user.greet(); // Rajan
-
-// ── 2. The common callback win ────────────────────────────────────
-const account = {
-  name: "Rajan",
-
-  greet() {
-    setTimeout(() => {
-      console.log(this.name); // Rajan — this survives the delay
-    }, 1000);
-  }
-};
-
-account.greet();
-
-// ── 3. Common mistake — arrow as the method itself ────────────────
-const broken = {
-  name: "Rajan",
-
-  greet: () => {
-    console.log(this.name); // undefined — no this from the object
-  }
-};
-
-broken.greet();
-
-// ── 4. call() cannot change an arrow function's this ──────────────
-const greet = () => console.log(this.name);
-
-greet.call(user); // still not user`,
-      },
-      keyTakeaways: [
-        { en: "Arrow functions <b>do not have their own `this`</b>.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>।", jp: "アロー関数は<b>自分の `this` を持たない</b>。" },
-        { en: "They use <b>lexical `this`</b> (the `this` from where they were created).", np: "तिनले <b>lexical `this`</b> (आफू बनेको ठाउँको `this`) प्रयोग गर्छन्।", jp: "<b>レキシカルな `this`</b>（作られた場所の `this`）を使う。" },
-        { en: "`call()`, `apply()`, and `bind()` <b>cannot change</b> an arrow function's `this`.", np: "`call()`, `apply()`, र `bind()` ले arrow function को `this` <b>बदल्न सक्दैनन्</b>।", jp: "`call()`・`apply()`・`bind()` はアロー関数の `this` を<b>変えられない</b>。" },
-        { en: "Arrow functions are great for <b>callbacks</b> when you want to keep the surrounding `this`.", np: "वरिपरिको `this` राख्न चाहँदा <b>callback</b> का लागि arrow function उत्तम छन्।", jp: "周囲の `this` を保ちたい<b>コールバック</b>にはアロー関数が最適。" },
-        { en: "Avoid arrow functions as <b>object methods</b> when you need `this` to refer to the object.", np: "`this` ले object लाई जनाउनुपर्दा <b>object method</b> रूपमा arrow function नचलाउनुहोस्।", jp: "`this` にオブジェクトを求めるなら、<b>オブジェクトのメソッド</b>にアロー関数を使わない。" },
-        { en: "Normal functions get `this` based on <b>how they are called</b>; arrow functions get it from <b>where they are created</b>.", np: "सामान्य function ले <b>कसरी call भयो</b> त्यसबाट `this` पाउँछन्; arrow function ले <b>कहाँ बनियो</b> त्यसबाट।", jp: "通常の関数は<b>どう呼ばれたか</b>で、アロー関数は<b>どこで作られたか</b>で `this` が決まる。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Using an arrow function as an object method</b> — `greet: () => console.log(this.name)` never sees `user`, because the object literal creates no `this`.", np: "<b>Arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले `user` कहिल्यै देख्दैन, किनकि object literal ले `this` बनाउँदैन।", jp: "<b>アロー関数をオブジェクトのメソッドにする</b> — `greet: () => console.log(this.name)` は `user` を見られない。オブジェクトリテラルは `this` を作らないから。" },
-        { en: "<b>Thinking `bind()` can fix an arrow function</b> — `greet.bind(user)()` still uses the surrounding `this`.", np: "<b>`bind()` ले arrow function ठीक गर्न सक्छ भन्ने ठान्नु</b> — `greet.bind(user)()` ले अझै वरिपरिको `this` प्रयोग गर्छ।", jp: "<b>`bind()` でアロー関数を直せると思う</b> — `greet.bind(user)()` でも周囲の `this` のまま。" },
-        { en: "<b>Reaching for a normal function inside a method</b> — that is where an arrow shines, since `setTimeout(() => this.name, 1000)` keeps the method's `this`.", np: "<b>Method भित्र सामान्य function प्रयोग गर्नु</b> — त्यहीँ arrow उपयोगी हुन्छ, किनकि `setTimeout(() => this.name, 1000)` ले method को `this` राख्छ।", jp: "<b>メソッドの内側で通常の関数を使う</b> — そこはアローの出番。`setTimeout(() => this.name, 1000)` はメソッドの `this` を保つ。" },
-      ],
-      quiz: [
-        {
-          question: { en: "Does an arrow function have its own `this`?", np: "Arrow function को आफ्नै `this` हुन्छ?", jp: "アロー関数は自分の `this` を持つか?" },
-          options: [
-            { en: "No", np: "हुँदैन", jp: "いいえ" },
-            { en: "Yes", np: "हुन्छ", jp: "はい" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "It borrows `this` from the scope it was written in.", np: "यसले आफू लेखिएको scope बाट `this` लिन्छ।", jp: "書かれたスコープから `this` を借りる。" },
-        },
-        {
-          question: { en: "Where does an arrow function get `this` from?", np: "Arrow function ले `this` कहाँबाट पाउँछ?", jp: "アロー関数は `this` をどこから得るか?" },
-          options: [
-            { en: "The object to the left of `.`", np: "`.` को बायाँको object", jp: "`.` の左のオブジェクト" },
-            { en: "`new`", np: "`new`", jp: "`new`" },
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "The surrounding scope where it was created", np: "आफू बनेको वरिपरिको scope", jp: "作られた場所の周囲のスコープ" },
-          ],
-          correctIndex: 3,
-          explanation: { en: "None of the four binding rules apply to it.", np: "चारै binding नियम यसमा लागू हुँदैनन्।", jp: "4つのバインディング規則はいずれも適用されない。" },
-        },
-        {
-          question: { en: "What does this print? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", np: "यसले के देखाउँछ? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", jp: "何が出力されるか? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`" },
-          options: [
-            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
-            { en: "`null`", np: "`null`", jp: "`null`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "Error", np: "Error", jp: "エラー" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`greet()` is a normal method, so its `this` is `user`, and the arrow inherits it.", np: "`greet()` सामान्य method हो, त्यसैले यसको `this` `user` हुन्छ, र arrow ले त्यही पाउँछ।", jp: "`greet()` は通常のメソッドなので `this` は `user`。アローがそれを受け継ぐ。" },
+          explanation: { en: "`replace()` with a plain string only swaps the first match.", np: "साधारण string सँग `replace()` ले पहिलो match मात्र बदल्छ।", jp: "文字列を渡した `replace()` は最初の一致だけを置き換える。" },
         },
       ],
     },
     {
-      id: "call-apply-bind",
-      title: { en: "call, apply, and bind in Depth", np: "call, apply, bind विस्तारमा", jp: "call・apply・bindの詳細" },
+      id: "template-literals",
+      title: { en: "Template Literals & Tagged Templates", np: "Template Literals र Tagged Templates", jp: "テンプレートリテラルとタグ付きテンプレート" },
       durationMinutes: 9,
       explanation: {
-        en: "`call()`, `apply()`, and `bind()` are methods that let you control what <b>`this`</b> refers to inside a normal function.\n\nThe main difference is <b>when the function runs</b> and <b>how arguments are given</b>.\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nThink of them like this:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — run immediately\n\n`call()` runs the function <b>right away</b>. Arguments are passed <b>one by one</b>.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nThis means:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — run immediately with an array\n\n`apply()` works almost like `call()`, but arguments are provided as <b>one array</b>.\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nThis is useful when your arguments are <b>already inside an array</b>.\n\n---\n\n### 3. `bind()` — create a new function\n\n`bind()` does <b>not</b> run the function immediately. Instead, it creates a <b>new function</b> with `this` fixed.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nThink of it as:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` can also fix arguments\n\nYou can provide arguments while creating the new function.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nHere `10` is already fixed as the first argument. This is called <b>partial application</b> (pre-filling some arguments).\n\n---\n\n### 5. The most common real-world use\n\nSuppose an object has a method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nThe connection to `user` is lost. Fix it with `bind()`:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nThis is one of the most common reasons to use `bind()`.\n\n---\n\n### 6. Modern JavaScript\n\nWith the spread operator (`...`), `apply()` is needed less often:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nSo today, you will often see `call()` plus spread instead of `apply()`.\n\n---\n\n### Easy memory trick\n\n> <b>Call = now + comma</b>\n> <b>Apply = now + array</b>\n> <b>Bind = later + new function</b>",
-        np: "`call()`, `apply()`, र `bind()` यस्ता method हुन् जसले सामान्य function भित्र <b>`this`</b> ले के जनाउँछ भन्ने नियन्त्रण गर्न दिन्छन्।\n\nमुख्य फरक <b>function कहिले चल्छ</b> र <b>argument कसरी दिइन्छ</b> भन्नेमा हो।\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — तुरुन्तै चलाउनु\n\n`call()` ले function <b>तुरुन्तै</b> चलाउँछ। Argument <b>एक-एक गरी</b> पठाइन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nयसको अर्थ:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — array सँग तुरुन्तै चलाउनु\n\n`apply()` `call()` जस्तै काम गर्छ, तर argument <b>एउटा array</b> मा दिइन्छन्।\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nArgument <b>पहिले नै array भित्र</b> हुँदा यो उपयोगी हुन्छ।\n\n---\n\n### 3. `bind()` — नयाँ function बनाउनु\n\n`bind()` ले function तुरुन्तै <b>चलाउँदैन</b>। बरु, `this` स्थिर भएको <b>नयाँ function</b> बनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` ले argument पनि तय गर्न सक्छ\n\nनयाँ function बनाउँदै argument दिन सक्नुहुन्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nयहाँ `10` पहिलो argument रूपमा पहिले नै तय भइसक्यो। यसलाई <b>partial application</b> (केही argument पहिले भर्नु) भनिन्छ।\n\n---\n\n### 5. सबैभन्दा सामान्य वास्तविक प्रयोग\n\nमानौं object सँग method छ:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` सँगको जोडाइ हराउँछ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\n`bind()` प्रयोग गर्ने सबैभन्दा सामान्य कारणमध्ये यो एक हो।\n\n---\n\n### 6. आधुनिक JavaScript\n\nSpread operator (`...`) सँग, `apply()` कम चाहिन्छ:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nत्यसैले आजकाल `apply()` को साटो `call()` सँगै spread प्रायः देखिन्छ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call = अहिले + comma</b>\n> <b>Apply = अहिले + array</b>\n> <b>Bind = पछि + नयाँ function</b>",
-        jp: "`call()`・`apply()`・`bind()` は、通常の関数の中で<b>`this`</b> が何を指すかを制御できるメソッドです。\n\n主な違いは<b>いつ関数が実行されるか</b>と<b>引数の渡し方</b>です。\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nこう考えてください:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — すぐ実行する\n\n`call()` は関数を<b>その場で</b>実行します。引数は<b>1つずつ</b>渡します。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nつまり:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — 配列ですぐ実行する\n\n`apply()` は `call()` とほぼ同じですが、引数を<b>1つの配列</b>で渡します。\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\n引数が<b>すでに配列に入っている</b>ときに便利です。\n\n---\n\n### 3. `bind()` — 新しい関数を作る\n\n`bind()` は関数をすぐには<b>実行しません</b>。代わりに `this` を固定した<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nこうイメージしてください:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` は引数も固定できる\n\n新しい関数を作るときに引数を与えられます。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nここでは `10` が第1引数として固定済みです。これを<b>部分適用</b>（一部の引数を先に埋めること）と呼びます。\n\n---\n\n### 5. 最もよくある実践的な用途\n\nオブジェクトにメソッドがあるとします:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドを取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` とのつながりが失われます。`bind()` で直します:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nこれが `bind()` を使う最もよくある理由の1つです。\n\n---\n\n### 6. 現代のJavaScript\n\nスプレッド構文（`...`）があるので `apply()` の出番は減りました:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\n今では `apply()` の代わりに `call()` とスプレッドの組み合わせをよく見かけます。\n\n---\n\n### 覚え方\n\n> <b>Call = 今すぐ + カンマ</b>\n> <b>Apply = 今すぐ + 配列</b>\n> <b>Bind = あとで + 新しい関数</b>",
+        en: "Template literals use backticks and allow <b>expression interpolation</b>, multiline strings, and cleaner dynamic text.\n\n```javascript\nconst name = \"Rajan\";\nconst age = 29;\n\nconst message = `My name is ${name} and I am ${age} years old.`;\n\nconsole.log(message);\n```\n\n---\n\n### Multiline\n\n```javascript\nconst message = `\nHello Rajan,\nWelcome to JavaScript.\nGood luck with your learning!\n`;\n```\n\n---\n\n### Expressions\n\n```javascript\nconst price = 100;\nconst quantity = 3;\n\nconsole.log(`Total: $${price * quantity}`);\n```\n\nInstead of `\"Total: $\" + price * quantity`.\n\n---\n\n### Tagged templates\n\nA <b>tagged template</b> lets a function process a template literal before the final string is created.\n\n```javascript\nfunction tag(strings, ...values) {\n  console.log(strings);\n  console.log(values);\n}\n\nconst name = \"Rajan\";\n\ntag`Hello ${name}!`;\n```\n\nThe tag receives:\n\n• the static pieces of the template\n• the interpolated values\n\n---\n\n### Practical example: HTML escaping\n\n```javascript\nfunction escapeHTML(strings, ...values) {\n  return strings.reduce((result, string, i) => {\n    const value = values[i - 1];\n\n    const escaped = String(value ?? \"\")\n      .replaceAll(\"&\", \"&amp;\")\n      .replaceAll(\"<\", \"&lt;\")\n      .replaceAll(\">\", \"&gt;\")\n      .replaceAll('\"', \"&quot;\");\n\n    return result + escaped + string;\n  });\n}\n\nconst username = \"<script>alert('xss')</script>\";\n\nconst html = escapeHTML`<h1>Hello ${username}</h1>`;\n\nconsole.log(html);\n```\n\nThe important idea is that tagged templates can <b>transform or validate interpolated data</b> before using it.\n\n> In real applications, use a well-tested HTML or template library for security-sensitive escaping rather than building your own.",
+        np: "Template literal ले backtick प्रयोग गर्छन् र <b>expression interpolation</b>, multiline string, र सफा dynamic text दिन्छन्।\n\n```javascript\nconst name = \"Rajan\";\nconst age = 29;\n\nconst message = `My name is ${name} and I am ${age} years old.`;\n\nconsole.log(message);\n```\n\n---\n\n### Multiline\n\n```javascript\nconst message = `\nHello Rajan,\nWelcome to JavaScript.\nGood luck with your learning!\n`;\n```\n\n---\n\n### Expression\n\n```javascript\nconst price = 100;\nconst quantity = 3;\n\nconsole.log(`Total: $${price * quantity}`);\n```\n\n`\"Total: $\" + price * quantity` को साटो।\n\n---\n\n### Tagged template\n\n<b>Tagged template</b> ले अन्तिम string बन्नुअघि function लाई template literal process गर्न दिन्छ।\n\n```javascript\nfunction tag(strings, ...values) {\n  console.log(strings);\n  console.log(values);\n}\n\nconst name = \"Rajan\";\n\ntag`Hello ${name}!`;\n```\n\nTag ले पाउँछ:\n\n• Template का स्थिर टुक्रा\n• Interpolate गरिएका value\n\n---\n\n### व्यावहारिक उदाहरण: HTML escaping\n\n```javascript\nfunction escapeHTML(strings, ...values) {\n  return strings.reduce((result, string, i) => {\n    const value = values[i - 1];\n\n    const escaped = String(value ?? \"\")\n      .replaceAll(\"&\", \"&amp;\")\n      .replaceAll(\"<\", \"&lt;\")\n      .replaceAll(\">\", \"&gt;\")\n      .replaceAll('\"', \"&quot;\");\n\n    return result + escaped + string;\n  });\n}\n\nconst username = \"<script>alert('xss')</script>\";\n\nconst html = escapeHTML`<h1>Hello ${username}</h1>`;\n\nconsole.log(html);\n```\n\nमहत्वपूर्ण विचार यो हो कि tagged template ले प्रयोग गर्नुअघि <b>interpolate गरिएको data रूपान्तरण वा प्रमाणित</b> गर्न सक्छ।\n\n> वास्तविक application मा, सुरक्षा-संवेदनशील escaping का लागि आफैं बनाउनुको साटो राम्ररी परीक्षण गरिएको HTML वा template library प्रयोग गर्नुहोस्।",
+        jp: "テンプレートリテラルはバッククォートを使い、<b>式の埋め込み</b>・複数行の文字列・すっきりした動的テキストを可能にします。\n\n```javascript\nconst name = \"Rajan\";\nconst age = 29;\n\nconst message = `My name is ${name} and I am ${age} years old.`;\n\nconsole.log(message);\n```\n\n---\n\n### 複数行\n\n```javascript\nconst message = `\nHello Rajan,\nWelcome to JavaScript.\nGood luck with your learning!\n`;\n```\n\n---\n\n### 式\n\n```javascript\nconst price = 100;\nconst quantity = 3;\n\nconsole.log(`Total: $${price * quantity}`);\n```\n\n`\"Total: $\" + price * quantity` の代わりに書けます。\n\n---\n\n### タグ付きテンプレート\n\n<b>タグ付きテンプレート</b>を使うと、最終的な文字列が作られる前に関数がテンプレートリテラルを処理できます。\n\n```javascript\nfunction tag(strings, ...values) {\n  console.log(strings);\n  console.log(values);\n}\n\nconst name = \"Rajan\";\n\ntag`Hello ${name}!`;\n```\n\nタグ関数が受け取るのは:\n\n• テンプレートの静的な部分\n• 埋め込まれた値\n\n---\n\n### 実用例: HTMLのエスケープ\n\n```javascript\nfunction escapeHTML(strings, ...values) {\n  return strings.reduce((result, string, i) => {\n    const value = values[i - 1];\n\n    const escaped = String(value ?? \"\")\n      .replaceAll(\"&\", \"&amp;\")\n      .replaceAll(\"<\", \"&lt;\")\n      .replaceAll(\">\", \"&gt;\")\n      .replaceAll('\"', \"&quot;\");\n\n    return result + escaped + string;\n  });\n}\n\nconst username = \"<script>alert('xss')</script>\";\n\nconst html = escapeHTML`<h1>Hello ${username}</h1>`;\n\nconsole.log(html);\n```\n\n大事なのは、タグ付きテンプレートが使用前に<b>埋め込まれたデータを変換・検証できる</b>という点です。\n\n> 実際のアプリケーションでは、セキュリティに関わるエスケープは自作せず、十分に検証されたHTML・テンプレートライブラリを使ってください。",
       },
-      diagram: `              Function
-                  │
-       ┌──────────┼──────────┐
-       ↓          ↓          ↓
-     call()    apply()    bind()
-       │          │          │
-   runs now    runs now   runs later
-       │          │          │
-   a, b, c     [a,b,c]    new function
+      diagram: `\`Hello \${name}!\`
+        │
+        ├── static pieces:  ["Hello ", "!"]
+        └── values:         ["Rajan"]
+
+Plain template literal
+        ↓
+JavaScript joins them
+        ↓
+      "Hello Rajan!"
 
 
-Method     Runs immediately?   Arguments
-------------------------------------------------
-call()     Yes                 One by one
-apply()    Yes                 Inside an array
-bind()     No                  Returns a new function`,
+Tagged template
+        ↓
+tag(strings, ...values)
+        ↓
+your function decides the result`,
       codeExample: {
-        title: { en: "Run now, run now with an array, or run later", np: "अहिले चलाउनु, array सँग अहिले, वा पछि", jp: "今すぐ・配列で今すぐ・あとで" },
-        code: `const user = { name: "Rajan" };
+        title: { en: "Interpolation, then a tag that intercepts it", np: "Interpolation, अनि यसलाई समात्ने tag", jp: "埋め込みと、それを受け取るタグ" },
+        code: `// ── 1. Basic — interpolation and multiline ────────────────────────
+const name = "Rajan";
+const age = 29;
 
-function greet(age, city) {
-  console.log(this.name, age, city);
+console.log(\`My name is \${name} and I am \${age} years old.\`);
+
+const letter = \`
+Hello Rajan,
+Welcome to JavaScript.
+\`;
+
+// ── 2. Intermediate — any expression fits inside \${} ──────────────
+const price = 100;
+const quantity = 3;
+
+console.log(\`Total: $\${price * quantity}\`); // "Total: $300"
+
+// ── 3. Advanced — a tag receives the pieces and the values ────────
+function tag(strings, ...values) {
+  console.log(strings); // ["Hello ", "!"]
+  console.log(values);  // ["Rajan"]
 }
 
-// ── 1. call() — runs now, arguments one by one ────────────────────
-greet.call(user, 30, "Tokyo"); // Rajan 30 Tokyo
+tag\`Hello \${name}!\`;
 
-// ── 2. apply() — runs now, arguments in an array ──────────────────
-greet.apply(user, [30, "Tokyo"]); // Rajan 30 Tokyo
+// A tag can transform what was interpolated before it lands in the output
+function escapeHTML(strings, ...values) {
+  return strings.reduce((result, string, i) => {
+    const escaped = String(values[i - 1] ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
 
-// ── 3. bind() — returns a new function to call later ──────────────
-function sayName() {
-  console.log(this.name);
+    return result + escaped + string;
+  });
 }
 
-const greetUser = sayName.bind(user);
-greetUser(); // Rajan
+const username = "<script>alert('xss')</script>";
 
-// ── 4. bind() can pre-fill arguments too ──────────────────────────
-function add(a, b) {
-  return a + b;
-}
-
-const add10 = add.bind(null, 10);
-console.log(add10(5)); // 15
-
-// ── 5. The classic fix — a method that lost its object ────────────
-const account = {
-  name: "Rajan",
-  greet() {
-    console.log(this.name);
-  }
-};
-
-const detached = account.greet;
-detached(); // undefined
-
-const bound = account.greet.bind(account);
-bound(); // Rajan
-
-// ── 6. Modern JS often uses call() plus spread instead of apply ───
-greet.call(user, ...[30, "Tokyo"]); // Rajan 30 Tokyo`,
+console.log(escapeHTML\`<h1>Hello \${username}</h1>\`);`,
       },
       keyTakeaways: [
-        { en: "<b>`call()`</b> → runs the function immediately with arguments <b>one by one</b>.", np: "<b>`call()`</b> → function तुरुन्तै चलाउँछ, argument <b>एक-एक गरी</b>।", jp: "<b>`call()`</b> → 引数を<b>1つずつ</b>渡して即座に実行する。" },
-        { en: "<b>`apply()`</b> → runs the function immediately with arguments in an <b>array</b>.", np: "<b>`apply()`</b> → function तुरुन्तै चलाउँछ, argument <b>array</b> मा।", jp: "<b>`apply()`</b> → 引数を<b>配列</b>で渡して即座に実行する。" },
-        { en: "<b>`bind()`</b> → returns a <b>new function</b> that can be called later.", np: "<b>`bind()`</b> → पछि call गर्न मिल्ने <b>नयाँ function</b> फर्काउँछ।", jp: "<b>`bind()`</b> → あとで呼べる<b>新しい関数</b>を返す。" },
-        { en: "All three can set `this` for <b>normal functions</b>, but none of them work on arrow functions.", np: "तीनैले <b>सामान्य function</b> का लागि `this` सेट गर्न सक्छन्, तर कुनैले पनि arrow function मा काम गर्दैनन्।", jp: "3つとも<b>通常の関数</b>の `this` を設定できるが、アロー関数には効かない。" },
-        { en: "`bind()` is useful when you need to keep `this` for a callback or event handler.", np: "Callback वा event handler का लागि `this` राख्नुपर्दा `bind()` उपयोगी हुन्छ।", jp: "コールバックやイベントハンドラで `this` を保ちたいときに `bind()` が役立つ。" },
-        { en: "`call()` and `apply()` <b>execute</b> the function; `bind()` <b>does not</b>.", np: "`call()` र `apply()` ले function <b>चलाउँछन्</b>; `bind()` ले <b>चलाउँदैन</b>।", jp: "`call()` と `apply()` は関数を<b>実行する</b>。`bind()` は<b>実行しない</b>。" },
-        { en: "Memory trick: <b>call = now + comma</b>, <b>apply = now + array</b>, <b>bind = later + new function</b>.", np: "सम्झने तरिका: <b>call = अहिले + comma</b>, <b>apply = अहिले + array</b>, <b>bind = पछि + नयाँ function</b>।", jp: "覚え方: <b>call = 今すぐ+カンマ</b>、<b>apply = 今すぐ+配列</b>、<b>bind = あとで+新しい関数</b>。" },
+        { en: "Template literals use backticks and <b>`${}` interpolation</b> instead of string concatenation.", np: "Template literal ले string जोड्नुको साटो backtick र <b>`${}` interpolation</b> प्रयोग गर्छन्।", jp: "テンプレートリテラルは文字列連結の代わりにバッククォートと<b>`${}` の埋め込み</b>を使う。" },
+        { en: "They keep <b>multiline</b> text readable without `\\n` escapes.", np: "तिनले `\\n` escape बिना <b>multiline</b> पाठ पढ्न सजिलो राख्छन्।", jp: "`\\n` を使わずに<b>複数行</b>のテキストを読みやすく保てる。" },
+        { en: "Any expression works inside `${}`, including arithmetic and function calls.", np: "`${}` भित्र जुनसुकै expression काम गर्छ, गणित र function call समेत।", jp: "`${}` の中では計算や関数呼び出しを含め、どんな式でも使える。" },
+        { en: "A <b>tagged template</b> passes the static pieces and the values to a function.", np: "<b>Tagged template</b> ले स्थिर टुक्रा र value लाई function मा पठाउँछ।", jp: "<b>タグ付きテンプレート</b>は静的な部分と値を関数に渡す。" },
+        { en: "Tags can <b>transform or validate</b> interpolated data before it reaches the output.", np: "Tag ले interpolate गरिएको data output मा पुग्नुअघि <b>रूपान्तरण वा प्रमाणित</b> गर्न सक्छ।", jp: "タグは埋め込まれたデータが出力に届く前に<b>変換・検証</b>できる。" },
+        { en: "For security-sensitive escaping, prefer a well-tested library over a hand-written tag.", np: "सुरक्षा-संवेदनशील escaping का लागि, हातले लेखिएको tag भन्दा राम्ररी परीक्षण गरिएको library रोज्नुहोस्।", jp: "セキュリティに関わるエスケープは、手書きのタグより実績あるライブラリを使う。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking `bind()` runs the function</b> — `const greetUser = greet.bind(user);` runs nothing. You still need `greetUser()`.", np: "<b>`bind()` ले function चलाउँछ भन्ने ठान्नु</b> — `const greetUser = greet.bind(user);` ले केही चलाउँदैन। तपाईंलाई अझै `greetUser()` चाहिन्छ।", jp: "<b>`bind()` が関数を実行すると思う</b> — `const greetUser = greet.bind(user);` では何も動かない。`greetUser()` が必要。" },
-        { en: "<b>Confusing `call()` and `apply()`</b> — `fn.call(user, 10, 20)` passes arguments separately, `fn.apply(user, [10, 20])` passes them in an array.", np: "<b>`call()` र `apply()` भ्रममा पार्नु</b> — `fn.call(user, 10, 20)` ले argument छुट्टाछुट्टै पठाउँछ, `fn.apply(user, [10, 20])` ले array मा।", jp: "<b>`call()` と `apply()` を混同する</b> — `fn.call(user, 10, 20)` は個別に、`fn.apply(user, [10, 20])` は配列で渡す。" },
-        { en: "<b>Trying to use these to change an arrow function's `this`</b> — `greet.call(user)` on an arrow function changes nothing; arrows take `this` from their surrounding scope.", np: "<b>यिनले arrow function को `this` बदल्न खोज्नु</b> — arrow function मा `greet.call(user)` ले केही बदल्दैन; arrow ले वरिपरिको scope बाट `this` लिन्छ।", jp: "<b>これらでアロー関数の `this` を変えようとする</b> — アロー関数への `greet.call(user)` は何も変えない。アローは周囲のスコープから `this` を取る。" },
+        { en: "<b>Using quotes instead of backticks</b> — `\"Hello ${name}\"` prints the `${name}` literally. Interpolation only works inside backticks.", np: "<b>Backtick को साटो quote प्रयोग गर्नु</b> — `\"Hello ${name}\"` ले `${name}` जस्ताको तस्तै देखाउँछ। Interpolation backtick भित्र मात्र काम गर्छ।", jp: "<b>バッククォートの代わりに引用符を使う</b> — `\"Hello ${name}\"` は `${name}` をそのまま出力する。埋め込みはバッククォートの中だけ。" },
+        { en: "<b>Calling a tag with parentheses</b> — a tagged template is written `tag`Hello ${name}`` with no parentheses; `tag(`Hello`)` is an ordinary call.", np: "<b>Tag लाई कोष्ठक सहित call गर्नु</b> — tagged template `tag`Hello ${name}`` भनी कोष्ठक बिना लेखिन्छ; `tag(`Hello`)` सामान्य call हो।", jp: "<b>タグを括弧付きで呼ぶ</b> — タグ付きテンプレートは括弧なしで `tag`Hello ${name}`` と書く。`tag(`Hello`)` は普通の呼び出し。" },
+        { en: "<b>Trusting interpolated user input in HTML</b> — a template literal does not escape anything. Escape deliberately, ideally with a tested library.", np: "<b>HTML मा interpolate गरिएको user input भरोसा गर्नु</b> — template literal ले केही escape गर्दैन। जानाजान escape गर्नुहोस्, राम्रो त परीक्षण गरिएको library ले।", jp: "<b>HTMLに埋め込むユーザー入力を信用する</b> — テンプレートリテラルは何もエスケープしない。意識的に、できれば実績あるライブラリでエスケープする。" },
       ],
       quiz: [
         {
-          question: { en: "Which method runs the function immediately?", np: "कुन method ले function तुरुन्तै चलाउँछ?", jp: "関数をすぐに実行するのはどれか?" },
+          question: { en: "What character starts a template literal?", np: "Template literal कुन अक्षरले सुरु हुन्छ?", jp: "テンプレートリテラルはどの文字で始まるか?" },
           options: [
-            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "Both `bind()` and `call()`", np: "`bind()` र `call()` दुबै", jp: "`bind()` と `call()` の両方" },
-            { en: "None", np: "कुनै पनि होइन", jp: "どれでもない" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`apply()` also runs immediately; `bind()` is the one that waits.", np: "`apply()` पनि तुरुन्तै चल्छ; `bind()` चाहिँ कुर्छ।", jp: "`apply()` もすぐ実行する。待つのは `bind()`。" },
-        },
-        {
-          question: { en: "Which method expects arguments inside an array?", np: "कुन method ले argument array भित्र खोज्छ?", jp: "引数を配列で受け取るのはどれか?" },
-          options: [
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
-            { en: "`apply()`", np: "`apply()`", jp: "`apply()`" },
-            { en: "`map()`", np: "`map()`", jp: "`map()`" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "Remember: apply = array.", np: "सम्झनुहोस्: apply = array।", jp: "覚え方: apply = array。" },
-        },
-        {
-          question: { en: "What does `bind()` return?", np: "`bind()` ले के फर्काउँछ?", jp: "`bind()` は何を返すか?" },
-          options: [
-            { en: "The function's result", np: "Function को नतिजा", jp: "関数の結果" },
-            { en: "An array", np: "एउटा array", jp: "配列" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "A new function", np: "नयाँ function", jp: "新しい関数" },
-          ],
-          correctIndex: 3,
-          explanation: { en: "The returned function has `this` fixed, and any pre-filled arguments baked in.", np: "फर्काइएको function को `this` स्थिर हुन्छ, र पहिले भरिएका argument पनि समावेश हुन्छन्।", jp: "返される関数は `this` が固定され、先に埋めた引数も含まれている。" },
-        },
-        {
-          question: { en: "What does this print? `const fn = greet.bind(user); fn();` where `user = { name: \"Rajan\" }`", np: "यसले के देखाउँछ? `const fn = greet.bind(user); fn();` जहाँ `user = { name: \"Rajan\" }`", jp: "何が出力されるか? `const fn = greet.bind(user); fn();`（`user = { name: \"Rajan\" }`）" },
-          options: [
-            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
-            { en: "`user`", np: "`user`", jp: "`user`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "Error", np: "Error", jp: "エラー" },
+            { en: "A backtick", np: "एउटा backtick", jp: "バッククォート" },
+            { en: "A single quote", np: "एउटा single quote", jp: "シングルクォート" },
+            { en: "A double quote", np: "एउटा double quote", jp: "ダブルクォート" },
           ],
           correctIndex: 0,
-          explanation: { en: "`bind()` fixed `this` to `user`, so calling `fn()` later still logs the name.", np: "`bind()` ले `this` लाई `user` मा स्थिर गर्‍यो, त्यसैले पछि `fn()` call गर्दा पनि नाम देखिन्छ।", jp: "`bind()` が `this` を `user` に固定したので、あとで `fn()` を呼んでも名前が出る。" },
+          explanation: { en: "Only backticks enable `${}` interpolation and multiline text.", np: "Backtick ले मात्र `${}` interpolation र multiline पाठ सम्भव बनाउँछ।", jp: "`${}` の埋め込みと複数行が使えるのはバッククォートだけ。" },
+        },
+        {
+          question: { en: "What does a tag function receive?", np: "Tag function ले के पाउँछ?", jp: "タグ関数は何を受け取るか?" },
+          options: [
+            { en: "The finished string only", np: "तयार भएको string मात्र", jp: "完成した文字列だけ" },
+            { en: "The static pieces and the interpolated values", np: "स्थिर टुक्रा र interpolate गरिएका value", jp: "静的な部分と埋め込まれた値" },
+            { en: "Nothing", np: "केही पनि होइन", jp: "何も受け取らない" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "That is what lets it transform the values before building the result.", np: "त्यसैले यसले नतिजा बनाउनुअघि value रूपान्तरण गर्न सक्छ।", jp: "だから結果を組み立てる前に値を変換できる。" },
+        },
+        {
+          question: { en: "Does a template literal escape HTML for you?", np: "Template literal ले तपाईंका लागि HTML escape गर्छ?", jp: "テンプレートリテラルはHTMLをエスケープしてくれるか?" },
+          options: [
+            { en: "No — you must escape deliberately", np: "होइन — तपाईंले जानाजान escape गर्नुपर्छ", jp: "いいえ。自分で意識的にエスケープする" },
+            { en: "Yes, automatically", np: "हो, स्वतः", jp: "はい、自動的に" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Interpolated user input goes in exactly as written, script tags included.", np: "Interpolate गरिएको user input जस्ताको तस्तै जान्छ, script tag समेत।", jp: "埋め込まれたユーザー入力はそのまま入る。scriptタグも含めて。" },
         },
       ],
-      youtubeIds: ["75W8UPQ5l7k", "ke_y6z0xRpk"],
+    },
+    {
+      id: "unicode-normalization",
+      title: { en: "Unicode, Normalization & Sorting", np: "Unicode, Normalization र Sorting", jp: "Unicode・正規化・並べ替え" },
+      durationMinutes: 9,
+      explanation: {
+        en: "JavaScript strings are represented using <b>UTF-16 code units</b>. That is why:\n\n```javascript\nconsole.log(\"👍\".length);\n// 2\n```\n\nEven though 👍 looks like one character, the emoji uses <b>two UTF-16 code units</b>.\n\n---\n\n### Code units vs code points\n\n```javascript\nconst emoji = \"👍\";\n\nconsole.log(emoji.length);      // 2\nconsole.log([...emoji].length); // 1\n```\n\nThe spread operator iterates by <b>Unicode code points</b>, so it correctly treats 👍 as one code point.\n\nCompare:\n\n```javascript\nemoji.split(\"\");\n// [\"\\uD83D\", \"\\uDC4D\"]\n\n[...emoji];\n// [\"👍\"]\n```\n\nFor Unicode-aware iteration:\n\n```javascript\nfor (const char of \"Hello 👍\") {\n  console.log(char);\n}\n```\n\n---\n\n### Unicode normalization\n\nTwo strings can <b>look identical but contain different Unicode representations</b>. For example, `é` can be represented as one precomposed character, or as `e` plus a combining accent.\n\n```javascript\nconst a = \"\\u00E9\";\nconst b = \"\\u0065\\u0301\";\n\nconsole.log(a === b); // false\n```\n\nThey look the same but contain different underlying sequences. Use `normalize()` when comparing Unicode text:\n\n```javascript\nconsole.log(\n  a.normalize(\"NFC\") === b.normalize(\"NFC\")\n);\n// true\n```\n\nCommon forms include:\n\n• `NFC` — composed form\n• `NFD` — decomposed form\n• `NFKC` — compatibility composition\n• `NFKD` — compatibility decomposition\n\nFor most ordinary text comparisons, <b>NFC</b> is the common starting point.\n\n---\n\n### `localeCompare()` for sorting\n\nNormal string comparison is based on Unicode code-point ordering, which isn't always appropriate for human language.\n\n```javascript\nconst names = [\"Zoe\", \"Álex\", \"Anna\"];\n\nnames.sort((a, b) => a.localeCompare(b));\n\nconsole.log(names);\n```\n\nYou can provide a locale and options:\n\n```javascript\nnames.sort((a, b) =>\n  a.localeCompare(b, \"en\", {\n    sensitivity: \"base\"\n  })\n);\n```\n\nThis is especially useful when sorting names or words for users.",
+        np: "JavaScript का string <b>UTF-16 code unit</b> ले प्रतिनिधित्व गरिन्छन्। त्यसैले:\n\n```javascript\nconsole.log(\"👍\".length);\n// 2\n```\n\n👍 एउटै अक्षर जस्तो देखिए पनि, यो emoji ले <b>दुई UTF-16 code unit</b> प्रयोग गर्छ।\n\n---\n\n### Code unit vs code point\n\n```javascript\nconst emoji = \"👍\";\n\nconsole.log(emoji.length);      // 2\nconsole.log([...emoji].length); // 1\n```\n\nSpread operator ले <b>Unicode code point</b> अनुसार iterate गर्छ, त्यसैले यसले 👍 लाई एउटै code point मान्छ।\n\nतुलना गर्नुहोस्:\n\n```javascript\nemoji.split(\"\");\n// [\"\\uD83D\", \"\\uDC4D\"]\n\n[...emoji];\n// [\"👍\"]\n```\n\nUnicode-सचेत iteration का लागि:\n\n```javascript\nfor (const char of \"Hello 👍\") {\n  console.log(char);\n}\n```\n\n---\n\n### Unicode normalization\n\nदुई string <b>उस्तै देखिए पनि फरक Unicode प्रतिनिधित्व</b> बोक्न सक्छन्। उदाहरणका लागि, `é` लाई एउटै precomposed अक्षर, वा `e` सँग combining accent गरी प्रतिनिधित्व गर्न सकिन्छ।\n\n```javascript\nconst a = \"\\u00E9\";\nconst b = \"\\u0065\\u0301\";\n\nconsole.log(a === b); // false\n```\n\nतिनी उस्तै देखिन्छन् तर भित्री क्रम फरक छ। Unicode पाठ तुलना गर्दा `normalize()` प्रयोग गर्नुहोस्:\n\n```javascript\nconsole.log(\n  a.normalize(\"NFC\") === b.normalize(\"NFC\")\n);\n// true\n```\n\nसामान्य form:\n\n• `NFC` — composed form\n• `NFD` — decomposed form\n• `NFKC` — compatibility composition\n• `NFKD` — compatibility decomposition\n\nधेरैजसो सामान्य पाठ तुलनाका लागि, <b>NFC</b> सामान्य सुरुवात बिन्दु हो।\n\n---\n\n### क्रमबद्ध गर्न `localeCompare()`\n\nसामान्य string तुलना Unicode code-point क्रममा आधारित हुन्छ, जुन मानव भाषाका लागि सधैं उपयुक्त हुँदैन।\n\n```javascript\nconst names = [\"Zoe\", \"Álex\", \"Anna\"];\n\nnames.sort((a, b) => a.localeCompare(b));\n\nconsole.log(names);\n```\n\nतपाईं locale र option दिन सक्नुहुन्छ:\n\n```javascript\nnames.sort((a, b) =>\n  a.localeCompare(b, \"en\", {\n    sensitivity: \"base\"\n  })\n);\n```\n\nUser का लागि नाम वा शब्द क्रमबद्ध गर्दा यो विशेष उपयोगी हुन्छ।",
+        jp: "JavaScriptの文字列は<b>UTF-16のコードユニット</b>で表現されます。だから:\n\n```javascript\nconsole.log(\"👍\".length);\n// 2\n```\n\n👍 は1文字に見えますが、この絵文字は<b>2つのUTF-16コードユニット</b>を使います。\n\n---\n\n### コードユニットとコードポイント\n\n```javascript\nconst emoji = \"👍\";\n\nconsole.log(emoji.length);      // 2\nconsole.log([...emoji].length); // 1\n```\n\nスプレッド構文は<b>Unicodeのコードポイント</b>単位で反復するので、👍 を正しく1つとして扱います。\n\n比べてみましょう:\n\n```javascript\nemoji.split(\"\");\n// [\"\\uD83D\", \"\\uDC4D\"]\n\n[...emoji];\n// [\"👍\"]\n```\n\nUnicodeを意識した反復には:\n\n```javascript\nfor (const char of \"Hello 👍\") {\n  console.log(char);\n}\n```\n\n---\n\n### Unicodeの正規化\n\n2つの文字列が<b>同じに見えても、異なるUnicode表現</b>を含むことがあります。たとえば `é` は、1つの合成済み文字としても、`e` と結合アクセントの組み合わせとしても表せます。\n\n```javascript\nconst a = \"\\u00E9\";\nconst b = \"\\u0065\\u0301\";\n\nconsole.log(a === b); // false\n```\n\n見た目は同じでも、内部の並びが違います。Unicodeのテキストを比較するときは `normalize()` を使います:\n\n```javascript\nconsole.log(\n  a.normalize(\"NFC\") === b.normalize(\"NFC\")\n);\n// true\n```\n\nよく使う形式:\n\n• `NFC` — 合成形\n• `NFD` — 分解形\n• `NFKC` — 互換合成\n• `NFKD` — 互換分解\n\nふつうのテキスト比較では、<b>NFC</b> が出発点としてよく使われます。\n\n---\n\n### 並べ替えのための `localeCompare()`\n\n通常の文字列比較はUnicodeのコードポイント順に基づくため、人間の言語には必ずしも適しません。\n\n```javascript\nconst names = [\"Zoe\", \"Álex\", \"Anna\"];\n\nnames.sort((a, b) => a.localeCompare(b));\n\nconsole.log(names);\n```\n\nロケールやオプションも指定できます:\n\n```javascript\nnames.sort((a, b) =>\n  a.localeCompare(b, \"en\", {\n    sensitivity: \"base\"\n  })\n);\n```\n\nユーザー向けに名前や単語を並べ替えるときに特に役立ちます。",
+      },
+      diagram: `"👍"
+
+UTF-16 code units      ["\\uD83D", "\\uDC4D"]   length 2
+Unicode code points    ["👍"]                   [...str].length 1
+
+
+"é" can arrive two ways
+
+"\\u00E9"           one precomposed character
+"\\u0065\\u0301"     e + combining accent
+
+    a === b                     false
+    a.normalize("NFC") === b.normalize("NFC")   true
+
+
+Sorting
+"Zoe" < "Álex"?  code-point order says yes
+localeCompare()  asks the locale instead`,
+      codeExample: {
+        title: { en: "Code points, normal forms, and locale sorting", np: "Code point, normal form, र locale sorting", jp: "コードポイント・正規形・ロケール順" },
+        code: `// ── 1. Basic — length counts code units, not characters ───────────
+console.log("👍".length);      // 2
+console.log([...("👍")].length); // 1
+
+// ── 2. Intermediate — iterate by code point ───────────────────────
+const emoji = "👍";
+
+console.log(emoji.split("")); // ["\\uD83D", "\\uDC4D"] — broken halves
+console.log([...emoji]);      // ["👍"] — one code point
+
+for (const char of "Hello 👍") {
+  console.log(char); // H, e, l, l, o, " ", 👍
+}
+
+const characters = [..."Hello 👍 World 🌍"];
+console.log(characters.length); // counts emoji as one each
+
+// ── 3. Advanced — normalize before comparing ──────────────────────
+const a = "\\u00E9";          // é, precomposed
+const b = "\\u0065\\u0301";    // e + combining accent
+
+console.log(a === b);                                 // false
+console.log(a.normalize("NFC") === b.normalize("NFC")); // true
+
+// ── Human-friendly sorting ────────────────────────────────────────
+const users = ["zoe", "Álex", "anna"];
+
+users.sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
+
+console.log(users); // ["anna", "Álex", "zoe"]`,
+      },
+      keyTakeaways: [
+        { en: "JavaScript strings use <b>UTF-16 code units</b>, so `\"👍\".length` is `2`.", np: "JavaScript का string ले <b>UTF-16 code unit</b> प्रयोग गर्छन्, त्यसैले `\"👍\".length` `2` हो।", jp: "JavaScriptの文字列は<b>UTF-16のコードユニット</b>を使うので `\"👍\".length` は `2`。" },
+        { en: "`[...str]` iterates <b>code points</b>; `split(\"\")` splits UTF-16 code units and can break an emoji in half.", np: "`[...str]` ले <b>code point</b> मा iterate गर्छ; `split(\"\")` ले UTF-16 code unit फुटाउँछ र emoji दुई टुक्रा पार्न सक्छ।", jp: "`[...str]` は<b>コードポイント</b>で反復する。`split(\"\")` はUTF-16のコードユニットで分割し、絵文字を割ってしまう。" },
+        { en: "`for...of` over a string is also code-point aware.", np: "String मा `for...of` पनि code-point सचेत हुन्छ।", jp: "文字列に対する `for...of` もコードポイント単位で動く。" },
+        { en: "Visually identical text can hold different sequences, so `\"\\u00E9\" === \"\\u0065\\u0301\"` is `false`.", np: "दृश्यमा उस्तै पाठले फरक क्रम बोक्न सक्छ, त्यसैले `\"\\u00E9\" === \"\\u0065\\u0301\"` `false` हो।", jp: "見た目が同じテキストでも並びが違うことがあり、`\"\\u00E9\" === \"\\u0065\\u0301\"` は `false`。" },
+        { en: "`normalize()` makes those comparable; <b>NFC</b> is the usual starting point.", np: "`normalize()` ले तिनलाई तुलनायोग्य बनाउँछ; <b>NFC</b> सामान्य सुरुवात हो।", jp: "`normalize()` で比較可能になる。<b>NFC</b> が通常の出発点。" },
+        { en: "`localeCompare()` sorts the way people expect, unlike raw code-point ordering.", np: "`localeCompare()` ले मानिसले अपेक्षा गरे जसरी क्रमबद्ध गर्छ, कच्चा code-point क्रम भन्दा फरक।", jp: "`localeCompare()` は生のコードポイント順と違い、人が期待する順に並べる。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Trusting `.length` as a character count</b> — an emoji or other astral character counts as `2`. Use `[...str].length` when you mean code points.", np: "<b>`.length` लाई अक्षरको गन्ती मान्नु</b> — emoji वा अन्य astral अक्षर `2` गनिन्छ। Code point भन्न खोज्दा `[...str].length` प्रयोग गर्नुहोस्।", jp: "<b>`.length` を文字数だと信じる</b> — 絵文字などは `2` と数えられる。コードポイントなら `[...str].length` を使う。" },
+        { en: "<b>Using `split(\"\")` on text with emoji</b> — it hands back broken surrogate halves like `\"\\uD83D\"`. Spread the string instead.", np: "<b>Emoji भएको पाठमा `split(\"\")` प्रयोग गर्नु</b> — यसले `\"\\uD83D\"` जस्ता भाँचिएका surrogate आधा फर्काउँछ। बरु string spread गर्नुहोस्।", jp: "<b>絵文字を含む文字列に `split(\"\")` を使う</b> — `\"\\uD83D\"` のような壊れたサロゲートの片割れが返る。スプレッドを使う。" },
+        { en: "<b>Comparing user-entered text without normalizing</b> — two visually identical names can fail `===`. Normalize both sides first.", np: "<b>Normalize नगरी user ले लेखेको पाठ तुलना गर्नु</b> — दृश्यमा उस्तै दुई नाम `===` मा असफल हुन सक्छन्। पहिले दुबै पक्ष normalize गर्नुहोस्।", jp: "<b>正規化せずにユーザー入力を比較する</b> — 見た目が同じ名前でも `===` が失敗しうる。両方を先に正規化する。" },
+        { en: "<b>Sorting names with a plain `<` comparison</b> — accented letters land in surprising places. Use `localeCompare()` with a locale.", np: "<b>नाम लाई साधारण `<` तुलनाले क्रमबद्ध गर्नु</b> — accent भएका अक्षर अनौठो ठाउँमा पर्छन्। Locale सहित `localeCompare()` प्रयोग गर्नुहोस्।", jp: "<b>名前を単純な `<` で並べ替える</b> — アクセント付きの文字が予想外の位置に来る。ロケール付きの `localeCompare()` を使う。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What is `\"👍\".length`?", np: "`\"👍\".length` कति हो?", jp: "`\"👍\".length` はいくつか?" },
+          options: [
+            { en: "`1`", np: "`1`", jp: "`1`" },
+            { en: "`4`", np: "`4`", jp: "`4`" },
+            { en: "`2`", np: "`2`", jp: "`2`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "The emoji is stored as two UTF-16 code units, and `.length` counts those.", np: "Emoji दुई UTF-16 code unit रूपमा राखिन्छ, र `.length` ले तिनै गन्छ।", jp: "絵文字は2つのUTF-16コードユニットとして保存され、`.length` はそれを数える。" },
+        },
+        {
+          question: { en: "Which correctly counts 👍 as one character?", np: "कुनले 👍 लाई एक अक्षर सही रूपमा गन्छ?", jp: "👍 を正しく1文字と数えるのはどれか?" },
+          options: [
+            { en: "`str.split(\"\").length`", np: "`str.split(\"\").length`", jp: "`str.split(\"\").length`" },
+            { en: "`[...str].length`", np: "`[...str].length`", jp: "`[...str].length`" },
+            { en: "`str.length`", np: "`str.length`", jp: "`str.length`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Spreading iterates code points; `split(\"\")` splits code units.", np: "Spread ले code point मा iterate गर्छ; `split(\"\")` ले code unit फुटाउँछ।", jp: "スプレッドはコードポイントで反復し、`split(\"\")` はコードユニットで分割する。" },
+        },
+        {
+          question: { en: "Why is `\"\\u00E9\" === \"\\u0065\\u0301\"` false?", np: "`\"\\u00E9\" === \"\\u0065\\u0301\"` किन false हो?", jp: "なぜ `\"\\u00E9\" === \"\\u0065\\u0301\"` は false なのか?" },
+          options: [
+            { en: "They render differently", np: "तिनी फरक देखिन्छन्", jp: "表示が違うから" },
+            { en: "`===` cannot compare strings", np: "`===` ले string तुलना गर्न सक्दैन", jp: "`===` は文字列を比較できないから" },
+            { en: "They look the same but hold different Unicode sequences", np: "तिनी उस्तै देखिन्छन् तर फरक Unicode क्रम बोक्छन्", jp: "見た目は同じでも異なるUnicodeの並びを持つから" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "One is precomposed, the other is a letter plus a combining accent. `normalize(\"NFC\")` fixes it.", np: "एउटा precomposed हो, अर्को अक्षर सँग combining accent। `normalize(\"NFC\")` ले ठीक गर्छ।", jp: "一方は合成済み、もう一方は文字＋結合アクセント。`normalize(\"NFC\")` で解決する。" },
+        },
+        {
+          question: { en: "Which should you use to sort names for people to read?", np: "मानिसले पढ्नका लागि नाम क्रमबद्ध गर्न कुन प्रयोग गर्नुपर्छ?", jp: "人が読むために名前を並べ替えるにはどれを使うべきか?" },
+          options: [
+            { en: "`a.localeCompare(b)`", np: "`a.localeCompare(b)`", jp: "`a.localeCompare(b)`" },
+            { en: "`a < b`", np: "`a < b`", jp: "`a < b`" },
+            { en: "`a.length - b.length`", np: "`a.length - b.length`", jp: "`a.length - b.length`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Raw comparison uses code-point order, which misplaces accented letters.", np: "कच्चा तुलनाले code-point क्रम प्रयोग गर्छ, जसले accent भएका अक्षर गलत ठाउँमा राख्छ।", jp: "生の比較はコードポイント順なので、アクセント付きの文字が誤った位置に来る。" },
+        },
+      ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "What is `this` inside a plain function call in strict mode?", np: "Strict mode मा plain function call भित्र `this` के हो?", jp: "strictモードでのプレーンな関数呼び出し内のthisは？" },
-      options: [{ en: "The global object", np: "Global object", jp: "グローバルオブジェクト" }, { en: "`undefined`", np: "`undefined`", jp: "`undefined`" }],
-      correctIndex: 1,
-      explanation: { en: "Strict mode default binding does not fall back to the global object.", np: "Strict mode default binding ले global object मा फिर्ता जाँदैन।", jp: "strictモードのデフォルト束縛はグローバルオブジェクトにフォールバックしない。" },
-    },
-    {
-      question: { en: "What happens to `this` when you extract a method off its object and call it bare?", np: "Method लाई object बाट extract गरेर bare call गर्दा `this` को हुन्छ?", jp: "オブジェクトからメソッドを取り出して生で呼び出すとthisはどうなる？" },
-      options: [{ en: "It's lost — falls back to default binding", np: "हराउन्छ — default binding मा फिर्ता जान्छ", jp: "失われる — デフォルト束縛にフォールバックする" }, { en: "It stays pointed at the original object", np: "मूल object मै रहन्छ", jp: "元のオブジェクトを指したままになる" }],
+      question: { en: "Do JavaScript string methods change the original string?", np: "JavaScript का string method ले मूल string बदल्छन्?", jp: "JavaScriptの文字列メソッドは元の文字列を変えるか?" },
+      options: [
+        { en: "No — strings are immutable, so methods return new strings", np: "होइन — string immutable हुन्छन्, त्यसैले method ले नयाँ string फर्काउँछन्", jp: "いいえ。文字列はイミュータブルで、メソッドは新しい文字列を返す" },
+        { en: "Yes, they edit it in place", np: "हो, तिनले त्यहीँ सम्पादन गर्छन्", jp: "はい、その場で書き換える" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Without the object to the left of a dot at the call site, implicit binding cannot apply.", np: "Call site मा dot को बायाँ object नभई implicit binding लागू हुँदैन।", jp: "呼び出し場所でドットの左にオブジェクトがなければ暗黙的束縛は適用されない。" },
+      explanation: { en: "You have to keep the returned value; the original variable is untouched.", np: "तपाईंले फर्काइएको value राख्नुपर्छ; मूल variable जस्ताको तस्तै रहन्छ।", jp: "返り値を受け取る必要がある。元の変数はそのまま。" },
     },
     {
-      question: { en: "Which binding rule wins if a function is both called with `new` and bound with `bind()`?", np: "Function `new` सँग call भएको छ र `bind()` ले पनि bind भएको छ भने कुन rule जित्छ?", jp: "関数が`new`で呼ばれ、かつ`bind()`で束縛されている場合、どちらのルールが勝つ？" },
-      options: [{ en: "Explicit binding always wins", np: "Explicit binding ले सधैं जित्छ", jp: "明示的束縛が常に勝つ" }, { en: "`new` binding — it has the highest priority", np: "`new` binding — highest priority", jp: "`new`束縛 — 最も優先度が高い" }],
+      question: { en: "Which method reads the last character, including with a negative index?", np: "ऋणात्मक index सहित अन्तिम अक्षर कुन method ले पढ्छ?", jp: "負の添字も使って最後の文字を読むメソッドは?" },
+      options: [
+        { en: "`charAt()`", np: "`charAt()`", jp: "`charAt()`" },
+        { en: "`at()`", np: "`at()`", jp: "`at()`" },
+        { en: "`slice()`", np: "`slice()`", jp: "`slice()`" },
+      ],
       correctIndex: 1,
-      explanation: { en: "new binding sits above explicit binding in the priority order of the four this rules.", np: "चार this rules को priority order मा new binding explicit binding भन्दा माथि छ।", jp: "4つのthisルールの優先順位では、new束縛は明示的束縛より上位にある。" },
+      explanation: { en: "`text.at(-1)` works where `text[-1]` gives `undefined`.", np: "`text[-1]` ले `undefined` दिने ठाउँमा `text.at(-1)` काम गर्छ।", jp: "`text[-1]` が `undefined` になる場面でも `text.at(-1)` は動く。" },
     },
     {
-      question: { en: "Where does an arrow function's `this` come from?", np: "Arrow function को `this` कहाँबाट आउँछ?", jp: "アロー関数のthisはどこから来る？" },
-      options: [{ en: "The lexical scope surrounding it at creation time", np: "Creation बेलाको surrounding lexical scope", jp: "作成時の周囲のレキシカルスコープ" }, { en: "Whatever object it's later called on", np: "पछि जुन object मा call हुन्छ त्यही", jp: "後で呼び出されるオブジェクト" }],
+      question: { en: "What starts a template literal?", np: "Template literal केले सुरु हुन्छ?", jp: "テンプレートリテラルは何で始まるか?" },
+      options: [
+        { en: "A forward slash", np: "एउटा forward slash", jp: "スラッシュ" },
+        { en: "A double quote", np: "एउटा double quote", jp: "ダブルクォート" },
+        { en: "A backtick", np: "एउटा backtick", jp: "バッククォート" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Backticks are what enable `${}` interpolation and multiline text.", np: "Backtick ले नै `${}` interpolation र multiline पाठ सम्भव बनाउँछ।", jp: "バッククォートが `${}` の埋め込みと複数行を可能にする。" },
+    },
+    {
+      question: { en: "What two things does a tagged template hand to its function?", np: "Tagged template ले आफ्नो function लाई कुन दुई कुरा दिन्छ?", jp: "タグ付きテンプレートは関数に何を2つ渡すか?" },
+      options: [
+        { en: "The static string pieces and the interpolated values", np: "स्थिर string टुक्रा र interpolate गरिएका value", jp: "静的な文字列の断片と、埋め込まれた値" },
+        { en: "The finished string and its length", np: "तयार string र यसको लम्बाइ", jp: "完成した文字列とその長さ" },
+        { en: "Nothing at all", np: "केही पनि होइन", jp: "何も渡さない" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Arrow functions have no dynamic this-binding — they inherit this from where they were defined.", np: "Arrow functions मा dynamic this-binding हुँदैन — यिनले define भएको ठाउँबाट this inherit गर्छन्।", jp: "アロー関数には動的なthis束縛がない。定義された場所からthisを継承する。" },
+      explanation: { en: "That split is what lets a tag escape or validate the values first.", np: "त्यही विभाजनले tag लाई पहिले value escape वा प्रमाणित गर्न दिन्छ।", jp: "この分離があるから、タグは先に値をエスケープ・検証できる。" },
     },
     {
-      question: { en: "Is an arrow function a good choice for an object literal method like `{ inc: () => { this.count++ } }`?", np: "`{ inc: () => { this.count++ } }` जस्तो object literal method का लागि arrow function राम्रो choice हो?", jp: "`{ inc: () => { this.count++ } }`のようなオブジェクトリテラルのメソッドにアロー関数は適切？" },
-      options: [{ en: "Yes — it always refers to the object it's defined on", np: "हो — यो सधैं define भएको object लाई जनाउँछ", jp: "はい — 常に定義されたオブジェクトを指す" }, { en: "No — it captures this from the module scope, not the object", np: "होइन — यसले module scope बाट this capture गर्छ, object बाट होइन", jp: "いいえ — オブジェクトではなくモジュールスコープからthisをキャプチャする" }],
+      question: { en: "Why is `\"👍\".length` equal to 2?", np: "`\"👍\".length` किन 2 बराबर हुन्छ?", jp: "なぜ `\"👍\".length` は2なのか?" },
+      options: [
+        { en: "JavaScript counts bytes", np: "JavaScript ले byte गन्छ", jp: "JavaScriptがバイトを数えるから" },
+        { en: "The emoji uses two UTF-16 code units", np: "Emoji ले दुई UTF-16 code unit प्रयोग गर्छ", jp: "この絵文字が2つのUTF-16コードユニットを使うから" },
+        { en: "There is a hidden space", np: "लुकेको space छ", jp: "隠れた空白があるから" },
+      ],
       correctIndex: 1,
-      explanation: { en: "The arrow's lexical scope at creation time is the module, not the object literal being built.", np: "Arrow को creation बेलाको lexical scope module हो, बन्दै गरेको object literal होइन।", jp: "アローの作成時のレキシカルスコープは、構築中のオブジェクトリテラルではなくモジュール。" },
+      explanation: { en: "`.length` counts code units, not characters you can see.", np: "`.length` ले देखिने अक्षर होइन, code unit गन्छ।", jp: "`.length` は目に見える文字ではなくコードユニットを数える。" },
     },
     {
-      question: { en: "Can `bind()` override an arrow function's `this`?", np: "`bind()` ले arrow function को `this` override गर्न सक्छ?", jp: "`bind()`はアロー関数のthisを上書きできる？" },
-      options: [{ en: "No — arrow functions ignore explicit binding entirely", np: "होइन — arrow functions ले explicit binding लाई पूर्ण बेवास्ता गर्छन्", jp: "いいえ — アロー関数は明示的束縛を完全に無視する" }, { en: "Yes, just like a regular function", np: "हो, regular function जस्तै", jp: "はい、通常の関数と同じ" }],
+      question: { en: "Which safely splits text containing emoji into characters?", np: "Emoji भएको पाठलाई अक्षरमा सुरक्षित रूपमा कुनले फुटाउँछ?", jp: "絵文字を含む文字列を安全に1文字ずつに分けるのはどれか?" },
+      options: [
+        { en: "`text.split(\"\")`", np: "`text.split(\"\")`", jp: "`text.split(\"\")`" },
+        { en: "`text.slice(0)`", np: "`text.slice(0)`", jp: "`text.slice(0)`" },
+        { en: "`[...text]`", np: "`[...text]`", jp: "`[...text]`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Spreading iterates code points; `split(\"\")` returns broken surrogate halves.", np: "Spread ले code point मा iterate गर्छ; `split(\"\")` ले भाँचिएका surrogate आधा फर्काउँछ।", jp: "スプレッドはコードポイントで反復する。`split(\"\")` は壊れたサロゲートの片割れを返す。" },
+    },
+    {
+      question: { en: "Two names look identical but `===` says false. What should you try?", np: "दुई नाम उस्तै देखिन्छन् तर `===` ले false भन्छ। तपाईंले के प्रयास गर्नुपर्छ?", jp: "2つの名前は同じに見えるのに `===` が false。何を試すべきか?" },
+      options: [
+        { en: "Normalize both with `normalize(\"NFC\")` before comparing", np: "तुलना गर्नुअघि दुबैलाई `normalize(\"NFC\")` ले normalize गर्नुहोस्", jp: "比較前に両方を `normalize(\"NFC\")` で正規化する" },
+        { en: "Compare their lengths instead", np: "बरु तिनको लम्बाइ तुलना गर्नुहोस्", jp: "代わりに長さを比較する" },
+        { en: "Convert both to numbers", np: "दुबैलाई number मा बदल्नुहोस्", jp: "両方を数値に変換する" },
+      ],
       correctIndex: 0,
-      explanation: { en: "There is no dynamic this-binding to override on an arrow function in the first place.", np: "Arrow function मा override गर्ने dynamic this-binding सुरुदेखि नै हुँदैन।", jp: "そもそもアロー関数には上書きすべき動的なthis束縛が存在しない。" },
+      explanation: { en: "One may be precomposed while the other is a letter plus a combining mark.", np: "एउटा precomposed हुन सक्छ भने अर्को अक्षर सँग combining mark।", jp: "一方は合成済み、もう一方は文字＋結合記号かもしれない。" },
     },
     {
-      question: { en: "What is the key difference in how `call()` and `apply()` pass arguments?", np: "`call()` र `apply()` ले arguments pass गर्ने तरिकामा मुख्य फरक के हो?", jp: "`call()`と`apply()`の引数の渡し方の主な違いは？" },
-      options: [{ en: "They pass arguments identically", np: "दुवैले arguments उस्तै तरिकाले pass गर्छन्", jp: "両者は引数を同じように渡す" }, { en: "call takes individual arguments; apply takes a single array", np: "call ले individual arguments लिन्छ; apply ले single array लिन्छ", jp: "callは個別の引数を受け取る。applyは単一の配列を受け取る" }],
+      question: { en: "Which comparison sorts accented names the way readers expect?", np: "Accent भएका नाम पाठकले अपेक्षा गरे जसरी कुन तुलनाले क्रमबद्ध गर्छ?", jp: "アクセント付きの名前を読者の期待どおりに並べるのはどの比較か?" },
+      options: [
+        { en: "`a < b`", np: "`a < b`", jp: "`a < b`" },
+        { en: "`a.localeCompare(b)`", np: "`a.localeCompare(b)`", jp: "`a.localeCompare(b)`" },
+        { en: "`a.charCodeAt(0) - b.charCodeAt(0)`", np: "`a.charCodeAt(0) - b.charCodeAt(0)`", jp: "`a.charCodeAt(0) - b.charCodeAt(0)`" },
+      ],
       correctIndex: 1,
-      explanation: { en: "This is the sole functional difference between the two methods; both invoke immediately.", np: "यही दुई methods बीचको एकमात्र functional फरक हो; दुवैले तुरुन्तै invoke गर्छन्।", jp: "これが2つのメソッドの唯一の機能的な違い。両方とも即座に呼び出す。" },
+      explanation: { en: "Plain comparison follows code-point order, which is not human alphabetical order.", np: "साधारण तुलनाले code-point क्रम पछ्याउँछ, जुन मानवीय वर्णक्रम होइन।", jp: "単純な比較はコードポイント順で、人間のアルファベット順ではない。" },
     },
     {
-      question: { en: "Does `bind()` invoke the function immediately?", np: "`bind()` ले function तुरुन्तै invoke गर्छ?", jp: "`bind()`は関数を即座に呼び出す？" },
-      options: [{ en: "No — it returns a new function for later use", np: "होइन — यसले पछि प्रयोगका लागि नयाँ function फर्काउँछ", jp: "いいえ — 後で使うための新しい関数を返す" }, { en: "Yes, immediately", np: "हो, तुरुन्तै", jp: "はい、即座に" }],
-      correctIndex: 0,
-      explanation: { en: "bind() is the odd one out among the three — it never calls the function itself.", np: "तीनमध्ये bind() अलग हो — यसले function आफैं कहिल्यै call गर्दैन।", jp: "3つの中でbind()は例外的で、関数自体を決して呼び出さない。" },
-    },
-    {
-      question: { en: "Why bind a class method used as an event handler in the constructor?", np: "Constructor मा event handler को रूपमा प्रयोग हुने class method किन bind गर्ने?", jp: "コンストラクタでイベントハンドラとして使うクラスメソッドをなぜbindするのか？" },
-      options: [{ en: "It's purely a stylistic convention with no functional effect", np: "यो कुनै functional असर नभएको केवल stylistic convention हो", jp: "機能的な効果はなく、純粋にスタイル上の慣習" }, { en: "So `this` stays correct once the method is detached and called by the event system", np: "ताकि method detach भएर event system ले call गर्दा पनि `this` सहि रहोस्", jp: "メソッドが切り離され、イベントシステムによって呼び出されてもthisが正しいままであるように" }],
-      correctIndex: 1,
-      explanation: { en: "Event systems call the handler bare, without the instance to the left of a dot, so binding is what preserves the correct this.", np: "Event system ले handler लाई bare call गर्छ, dot को बायाँ instance बिना, त्यसैले bind ले नै सहि this जोगाउँछ।", jp: "イベントシステムはハンドラをドットの左にインスタンスなしで生で呼び出すため、束縛が正しいthisを保持する。" },
+      question: { en: "Which normalization form is the usual starting point for text comparison?", np: "पाठ तुलनाका लागि सामान्य सुरुवात बिन्दु कुन normalization form हो?", jp: "テキスト比較で通常の出発点となる正規化形式は?" },
+      options: [
+        { en: "`NFKD`", np: "`NFKD`", jp: "`NFKD`" },
+        { en: "`NFD`", np: "`NFD`", jp: "`NFD`" },
+        { en: "`NFC`", np: "`NFC`", jp: "`NFC`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "NFC is the composed form, and the common default for ordinary comparisons.", np: "NFC composed form हो, र सामान्य तुलनाका लागि सामान्य default।", jp: "NFCは合成形で、通常の比較での一般的な既定。" },
     },
   ],
 };

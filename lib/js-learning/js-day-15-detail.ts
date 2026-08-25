@@ -3,186 +3,279 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "JavaScript is single-threaded — only one thing runs at a time. The event loop is what makes async code possible on a single thread. Understanding how the call stack, the task queue, and the microtask queue work together explains every surprising output ordering you will ever see in JavaScript.",
-      np: "JavaScript single-threaded छ — एक पटकमा एउटा मात्र काम हुन्छ। Event loop ले single thread मा async code सम्भव बनाउँछ। Call stack, task queue, र microtask queue कसरी सँगै काम गर्छन् बुझ्नाले सबै surprising output orderings को explanation आउँछ।",
-      jp: "JavaScriptはシングルスレッド — 一度に一つしか実行できない。イベントループがシングルスレッドで非同期を可能にする。コールスタック・タスクキュー・マイクロタスクキューの仕組みを理解すれば、不思議な実行順序の謎が解ける。",
+      en: "`async`/`await` is syntactic sugar over Promises. It lets you write asynchronous code that reads like synchronous code — top to bottom, no `.then()` chains. Under the hood it is exactly the same as Promises, so understanding Promises first (Day 11) makes `async`/`await` immediately clear.",
+      np: "`async`/`await` Promises माथि syntactic sugar हो। यसले async code लाई sync जस्तो top-to-bottom लेख्न दिन्छ — `.then()` chain बिना। भित्री रूपमा Promises जस्तै हो।",
+      jp: "`async`/`await`はPromiseの糖衣構文。非同期コードを同期的に見えるよう上から下へ書ける。内部はPromiseと全く同じなので、Day 11の理解があれば即座に理解できる。",
+    },
+    {
+      en: "The Promise utility methods — `Promise.all`, `Promise.allSettled`, `Promise.race`, `Promise.any` — give you fine-grained control over running multiple async operations at once. Choosing the right one prevents both unnecessary waiting and unexpected failures.",
+      np: "Promise utility methods — `Promise.all`, `allSettled`, `race`, `any` — ले multiple async operations एकैसाथ run गर्दा fine-grained control दिन्छ।",
+      jp: "Promise.all・allSettled・race・anyは複数の非同期操作を同時に実行する際の詳細な制御手段。適切なものを選ぶことで不要な待機と予期しない失敗を防げる。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "8aGhZQkoFbQ", title: "What the heck is the event loop anyway? — Philip Roberts, JSConf" },
+        { type: "youtube", videoId: "V_Kr9OSfDeU", title: "Async Await in JavaScript" },
       ],
     },
     {
-      title: { en: "The call stack", np: "Call stack", jp: "コールスタック" },
+      title: { en: "async / await basics", np: "async / await basics", jp: "async/awaitの基本" },
       blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "The call stack is a data structure that tracks which function is currently running. When you call a function, it is pushed onto the stack. When it returns, it is popped off. JavaScript can only do one thing at a time because there is only one call stack. If the stack is busy running synchronous code, nothing else can run.",
-            np: "Call stack एउटा data structure हो जसले कुन function हाल run भइरहेको छ track गर्छ। Function call हुँदा stack मा push हुन्छ, return हुँदा pop हुन्छ। JavaScript एक पटकमा एउटा मात्र काम गर्छ किनभने एउटा मात्र call stack छ।",
-            jp: "コールスタックは現在実行中の関数を追跡するデータ構造。関数を呼ぶとpush、returnするとpop。コールスタックは一つしかないため、同期コードが実行中は他は何も実行できない。",
-          },
-        },
-        {
           type: "code",
-          title: { en: "Stack overflow and understanding the stack", np: "Stack overflow र stack को बुझाइ", jp: "スタックオーバーフローとスタックの理解" },
-          code: `// ── Call stack in action ─────────────────────────────────────────
-function c() { console.log("c"); }
-function b() { c(); }
-function a() { b(); }
-
-a();
-// Stack frames (bottom to top):
-//   a() → calls b()
-//   b() → calls c()
-//   c() → logs "c", returns
-//   b() → returns
-//   a() → returns
-
-// ── Stack overflow — infinite recursion ───────────────────────────
-function recurse() {
-  return recurse();  // calls itself forever
+          title: { en: "Rewriting Promises with async/await", np: "Promises async/await सँग rewrite गर्नु", jp: "PromiseをAsync/Awaitで書き直す" },
+          code: `// ── Same operation: Promise chain vs async/await ─────────────────
+// Promise chain:
+function getUserData(id) {
+  return fetchUser(id)
+    .then(user => fetchOrders(user.id))
+    .then(orders => ({ user, orders }))
+    .catch(err => console.error(err));
 }
-// recurse();  // Uncaught RangeError: Maximum call stack size exceeded
 
-// ── Synchronous code blocks the stack ────────────────────────────
-// While this runs, NOTHING else can happen — no clicks, no timers
-function blockFor3Seconds() {
-  const end = Date.now() + 3000;
-  while (Date.now() < end) {}  // busy loop
-  console.log("Done blocking");
+// async/await — same logic, reads top to bottom:
+async function getUserData(id) {
+  try {
+    const user   = await fetchUser(id);      // pause until fetchUser resolves
+    const orders = await fetchOrders(user.id); // pause until fetchOrders resolves
+    return { user, orders };                 // return value is auto-wrapped in a Promise
+  } catch (err) {
+    console.error(err);
+  }
 }
-blockFor3Seconds();
-// The UI freezes for 3 seconds — this is why CPU work on the main thread is bad`,
-        },
-      ],
-    },
-    {
-      title: { en: "Web APIs, the callback queue, and the event loop", np: "Web APIs, callback queue, र event loop", jp: "Web API・コールバックキュー・イベントループ" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When you call `setTimeout`, `fetch`, or add an event listener, the browser's Web APIs handle the waiting — not JavaScript. When the timer fires or the network responds, the callback is placed in the **callback queue** (also called the task queue or macrotask queue). The **event loop** checks: is the call stack empty? If yes, it picks the next callback from the queue and pushes it onto the stack. This is how async callbacks run without blocking.",
-            np: "`setTimeout`, `fetch`, वा event listener add गर्दा, browser को Web APIs ले waiting handle गर्छ — JavaScript ले होइन। Timer fire हुँदा वा network respond गर्दा, callback **callback queue** (task queue) मा जान्छ। **Event loop** check गर्छ: call stack empty छ? छ भने queue बाट अर्को callback stack मा push गर्छ।",
-            jp: "`setTimeout`・`fetch`・イベントリスナーはブラウザのWeb APIが処理する。タイマー発火やネットワーク応答時、コールバックは**コールバックキュー**（マクロタスクキュー）に入る。**イベントループ**はコールスタックが空なら次のコールバックをキューからスタックに移す。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "setTimeout(fn, 0) does not run immediately — the event loop explained", np: "setTimeout(fn, 0) तुरन्त run हुँदैन — event loop", jp: "setTimeout(fn, 0)は即座に実行されない — イベントループ" },
-          code: `// ── Classic event loop output puzzle ──────────────────────────────
-console.log("1");          // sync — runs immediately
 
-setTimeout(() => {
-  console.log("2");        // async (macrotask) — goes to callback queue
-}, 0);
+// ── async functions ALWAYS return a Promise ───────────────────────
+async function greet() {
+  return "Hello";  // implicitly returns Promise.resolve("Hello")
+}
 
-console.log("3");          // sync — runs immediately
+greet().then(msg => console.log(msg));  // "Hello"
+// or
+const msg = await greet();  // "Hello"
 
-// Output: 1, 3, 2
-// Why? "2" is in the callback queue — the event loop only runs it
-// after the call stack is clear (after "3" runs).
+// ── await pauses the CURRENT function, not the whole thread ───────
+async function run() {
+  console.log("start");
+  const result = await someAsyncTask();  // pauses run() while task runs
+  console.log("after await:", result);   // resumes when task settles
+  console.log("end");
+}
+// Code outside run() continues to execute while it is paused
 
-// ── Even setTimeout(fn, 0) is async ───────────────────────────────
-// "0ms" doesn't mean "run right now" — it means "run as soon as the
-// call stack is empty and it's your turn in the queue"
+// ── Error handling with try/catch ─────────────────────────────────
+async function fetchData(url) {
+  try {
+    const response = await fetch(url);
 
-// ── Multiple timers — order depends on timing ─────────────────────
-setTimeout(() => console.log("A"), 0);
-setTimeout(() => console.log("B"), 0);
-setTimeout(() => console.log("C"), 100);
-// Output order: A, B, (100ms pause), C
-// A and B are in the queue immediately (0ms delay, but still async)
-// C waits 100ms before entering the queue`,
-        },
-      ],
-    },
-    {
-      title: { en: "Microtask queue — Promises run first", np: "Microtask queue — Promises पहिले run हुन्छ", jp: "マイクロタスクキュー — Promiseは先に実行される" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Promises do not use the callback queue. They use the **microtask queue**, which has higher priority. After every task (and between tasks), the event loop drains the entire microtask queue before picking the next macrotask. This means `.then()` callbacks, `catch()`, `finally()`, and `await` continuations all run before any `setTimeout` or `setInterval` callback, even if the timer delay was 0.",
-            np: "Promises callback queue प्रयोग गर्दैनन् — **microtask queue** प्रयोग गर्छन् जसको higher priority छ। हर task पछि event loop microtask queue पूरै drain गर्छ। यसको मतलब `.then()`, `catch()`, `await` continuations सबै `setTimeout` callback भन्दा पहिले run हुन्छन् — timer delay 0 भए पनि।",
-            jp: "Promiseはコールバックキューではなく**マイクロタスクキュー**を使用（優先度が高い）。各タスク後、イベントループはマイクロタスクキューを全て処理してから次のマクロタスクを取り出す。つまり`.then()`・`await`の継続は`setTimeout`より先に実行される。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Macrotasks vs microtasks — the output order that trips everyone up", np: "Macrotask vs microtask — सबैलाई confuse गर्ने output order", jp: "マクロタスクとマイクロタスク — 誰もが混乱する実行順序" },
-          code: `console.log("1 — sync");
+    if (!response.ok) {
+      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+    }
 
-setTimeout(() => console.log("5 — macrotask (setTimeout)"), 0);
-
-Promise.resolve()
-  .then(() => console.log("3 — microtask (Promise.then)"))
-  .then(() => console.log("4 — microtask (chained .then)"));
-
-console.log("2 — sync");
-
-// Output:
-// 1 — sync
-// 2 — sync
-// 3 — microtask (Promise.then)
-// 4 — microtask (chained .then)
-// 5 — macrotask (setTimeout)
-
-// Why?
-// 1. Call stack runs: console.log("1")
-// 2. setTimeout callback → goes to macrotask queue (waits)
-// 3. Promise.resolve().then() → callback goes to microtask queue
-// 4. Call stack runs: console.log("2")
-// 5. Call stack is now empty
-// 6. Event loop: drain microtasks first → "3" then "4"
-// 7. Now check macrotask queue → "5"
-
-// ── queueMicrotask — run something in the microtask queue ─────────
-queueMicrotask(() => console.log("also a microtask"));
-
-// ── Summary of priorities (highest to lowest) ─────────────────────
-// 1. Synchronous code (call stack)
-// 2. Microtasks (Promise.then, queueMicrotask, MutationObserver)
-// 3. Macrotasks (setTimeout, setInterval, setImmediate in Node, I/O callbacks)`,
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    // Network errors and HTTP errors both end up here
+    console.error("Fetch failed:", err.message);
+    throw err;  // rethrow so the caller can also handle it
+  }
+}`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
-            { en: "**Macrotasks** (also called tasks): `setTimeout`, `setInterval`, `setImmediate` (Node), I/O callbacks, UI rendering. One macrotask runs per event loop turn.", np: "**Macrotasks**: setTimeout, setInterval, setImmediate, I/O callbacks, UI rendering। एक event loop turn मा एउटा macrotask।", jp: "**マクロタスク**: setTimeout・setInterval・setImmediate・I/Oコールバック・UIレンダリング。1回のイベントループで一つ実行。" },
-            { en: "**Microtasks**: `Promise.then/catch/finally`, `await` continuations, `queueMicrotask`, `MutationObserver`. ALL microtasks in the queue run before the next macrotask.", np: "**Microtasks**: Promise.then/catch/finally, await continuations, queueMicrotask। queue मा भएका सबै microtasks अर्को macrotask अगाडि run हुन्छन्।", jp: "**マイクロタスク**: Promise.then/catch/finally・awaitの継続・queueMicrotask。キュー内の全マイクロタスクが次のマクロタスクの前に実行される。" },
+            {
+              en: "**`async` makes a function return a Promise** — even if it returns a plain value. You cannot use `await` outside an `async` function (except at the top level of an ES module).",
+              np: "**`async` ले function लाई Promise return गराउँछ** — plain value return गरे पनि। `async` function बाहिर `await` use गर्न मिल्दैन (ES module top-level बाहेक)।",
+              jp: "**`async`は関数をPromiseを返すようにする** — 普通の値を返しても。`async`関数の外では`await`は使えない（ESモジュールのトップレベルを除く）。",
+            },
+            {
+              en: "**`await` only pauses the current `async` function** — other code can run while it waits. It is not blocking the JavaScript engine.",
+              np: "**`await` ले current `async` function मात्र pause गर्छ** — अर्को code चलिरहन्छ। JavaScript engine block हुँदैन।",
+              jp: "**`await`は現在の`async`関数のみを一時停止** — 他のコードは実行し続ける。JavaScriptエンジンをブロックしない。",
+            },
+            {
+              en: "**Forgetting `await`** gives you a Promise object instead of the resolved value — `console.log(fetchUser(1))` prints `Promise { <pending> }`, not the user.",
+              np: "**`await` भुल्नु** ले resolved value को सट्टा Promise object दिन्छ — `console.log(fetchUser(1))` ले `Promise { <pending> }` print गर्छ, user होइन।",
+              jp: "**`await`を忘れる**と解決値の代わりにPromiseオブジェクトが得られる。`console.log(fetchUser(1))`は`Promise { <pending> }`を表示する。",
+            },
           ],
+        },
+      ],
+    },
+    {
+      title: { en: "Promise utility methods", np: "Promise utility methods", jp: "Promiseユーティリティメソッド" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Promise.all, allSettled, race, any — when to use each", np: "Promise utilities — कहिले कुन?", jp: "Promiseユーティリティの使い分け" },
+          code: `// ── Promise.all — run tasks in parallel, fail fast ────────────────
+// All Promises run at the same time.
+// Resolves when ALL settle with success.
+// Rejects immediately if ANY one rejects.
+const [user, posts, comments] = await Promise.all([
+  fetchUser(1),
+  fetchPosts(1),
+  fetchComments(1),
+]);
+// wall-clock time ≈ max(fetchUser, fetchPosts, fetchComments)
+// If fetchPosts rejects, the whole Promise.all rejects (fetchUser result is lost)
+
+// ── Promise.allSettled — always wait for all, capture failures ─────
+// Never rejects — waits for every Promise to settle.
+// Returns an array of result objects: { status, value } or { status, reason }
+const results = await Promise.allSettled([
+  sendEmailTo("alice@example.com"),
+  sendEmailTo("bob@invalid"),  // will fail
+  sendEmailTo("carol@example.com"),
+]);
+
+for (const result of results) {
+  if (result.status === "fulfilled") {
+    console.log("Sent:", result.value);
+  } else {
+    console.error("Failed:", result.reason.message);
+  }
+}
+// Use when partial success is acceptable (sending notifications, bulk operations)
+
+// ── Promise.race — first settled wins ─────────────────────────────
+// Resolves OR rejects as soon as ANY one Promise settles.
+// Classic use: add a timeout to an operation
+const withTimeout = (promise, ms) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(\`Timed out after \${ms}ms\`)), ms)
+    ),
+  ]);
+
+const user = await withTimeout(fetchUser(1), 5000);
+
+// ── Promise.any — first SUCCESS wins ──────────────────────────────
+// Resolves as soon as ANY one Promise fulfills.
+// Only rejects if ALL Promises reject (AggregateError).
+// Use for: trying multiple sources, first response wins
+const data = await Promise.any([
+  fetchFromCDN1(url),
+  fetchFromCDN2(url),
+  fetchFromOrigin(url),
+]);
+// Whichever CDN responds first, that is the result. Others are ignored.`,
+        },
+        {
+          type: "table",
+          caption: { en: "Choosing the right Promise utility", np: "सही Promise utility छान्नु", jp: "適切なPromiseユーティリティの選択" },
+          headers: [
+            { en: "Method", np: "Method", jp: "メソッド" },
+            { en: "Resolves when", np: "कहिले resolve?", jp: "いつresolveするか" },
+            { en: "Rejects when", np: "कहिले reject?", jp: "いつrejectするか" },
+            { en: "Use for", np: "कसका लागि", jp: "用途" },
+          ],
+          rows: [
+            [
+              { en: "Promise.all", np: "Promise.all", jp: "Promise.all" },
+              { en: "ALL fulfill", np: "सबै fulfill", jp: "全て成功" },
+              { en: "ANY rejects", np: "कोई reject", jp: "どれか失敗" },
+              { en: "Independent tasks where all results are needed", np: "सबै results चाहिए", jp: "全結果が必要な独立タスク" },
+            ],
+            [
+              { en: "Promise.allSettled", np: "Promise.allSettled", jp: "Promise.allSettled" },
+              { en: "ALL settle (either way)", np: "सबै settle", jp: "全て確定（成否問わず）" },
+              { en: "Never rejects", np: "कहिल्यै reject गर्दैन", jp: "rejectしない" },
+              { en: "Bulk ops where partial success is OK", np: "Partial success OK", jp: "部分的成功が許容されるバルク操作" },
+            ],
+            [
+              { en: "Promise.race", np: "Promise.race", jp: "Promise.race" },
+              { en: "First one fulfills", np: "पहिलो fulfill", jp: "最初のfulfill" },
+              { en: "First one rejects", np: "पहिलो reject", jp: "最初のreject" },
+              { en: "Timeouts, first-response-wins", np: "Timeout, पहिलो response", jp: "タイムアウト・最速レスポンス" },
+            ],
+            [
+              { en: "Promise.any", np: "Promise.any", jp: "Promise.any" },
+              { en: "First one fulfills", np: "पहिलो fulfill", jp: "最初のfulfill" },
+              { en: "ALL reject", np: "सबै reject", jp: "全て失敗" },
+              { en: "Multiple fallbacks, fastest success wins", np: "Fallbacks, fastest success", jp: "複数フォールバック・最速成功" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Parallel vs sequential execution", np: "Parallel vs sequential execution", jp: "並列実行と逐次実行" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "await in a loop — a very common performance mistake", np: "Loop मा await — common performance mistake", jp: "ループ内のawait — よくあるパフォーマンスミス" },
+          code: `const userIds = [1, 2, 3, 4, 5];
+
+// ❌ Sequential — each fetch waits for the previous one to finish
+// Total time ≈ 5 × fetchUser time
+async function getSequential() {
+  const users = [];
+  for (const id of userIds) {
+    const user = await fetchUser(id);  // waits here each iteration
+    users.push(user);
+  }
+  return users;
+}
+
+// ✅ Parallel — all fetches start at once
+// Total time ≈ slowest single fetchUser
+async function getParallel() {
+  const promises = userIds.map(id => fetchUser(id));  // kick off all at once
+  return Promise.all(promises);                        // wait for all to finish
+}
+
+// ✅ Alternative parallel pattern:
+async function getParallelAlt() {
+  return Promise.all(userIds.map(fetchUser));
+}
+
+// ── When sequential IS correct ────────────────────────────────────
+// When step N depends on the result of step N-1
+async function processInOrder() {
+  const user    = await fetchUser(1);           // need user first
+  const orders  = await fetchOrders(user.id);   // need user.id
+  const invoice = await createInvoice(orders);  // need orders
+  return invoice;
+}
+
+// ── for await...of — consuming async iterables ────────────────────
+async function* paginate(url) {
+  let nextUrl = url;
+  while (nextUrl) {
+    const response = await fetch(nextUrl);
+    const data = await response.json();
+    yield data.items;
+    nextUrl = data.nextPageUrl;
+  }
+}
+
+for await (const items of paginate("/api/products")) {
+  console.log("Got page:", items.length, "items");
+}`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Why does setTimeout(fn, 0) not run immediately?", np: "setTimeout(fn, 0) तुरन्त किन run हुँदैन?", jp: "setTimeout(fn, 0)が即座に実行されない理由は？" },
+      question: { en: "What is the difference between Promise.all and Promise.allSettled?", np: "Promise.all र Promise.allSettled मा के फरक?", jp: "Promise.allとPromise.allSettledの違いは？" },
       answer: {
-        en: "Because `setTimeout` is a Web API — it runs outside JavaScript's main thread. When the timer fires (even at 0ms), the callback is placed in the macrotask queue. The event loop only picks it up after the current call stack has completely emptied AND all microtasks have run. So `setTimeout(fn, 0)` means 'run this as soon as possible, but after all synchronous code and all pending microtasks have finished'.",
-        np: "`setTimeout` Web API हो — JavaScript को main thread बाहिर run हुन्छ। Timer fire हुँदा (0ms भए पनि) callback macrotask queue मा जान्छ। Event loop ले तब मात्र pick up गर्छ जब current call stack completely empty हुन्छ र सबै microtasks run भइसक्छन्।",
-        jp: "`setTimeout`はWeb APIで、JSのメインスレッド外で実行される。タイマーが発火すると（0msでも）コールバックはマクロタスクキューに入る。イベントループは現在のコールスタックが完全に空になり、全マイクロタスクが完了した後にのみ取り出す。",
+        en: "Promise.all resolves when ALL promises fulfill, but rejects immediately if ANY one rejects — and you lose the results from the already-fulfilled promises. Promise.allSettled always waits for every promise to finish (whether fulfilled or rejected) and gives you an array of result objects with a `status` field. Use Promise.all when you need all results and a single failure should abort the operation. Use Promise.allSettled when partial success is acceptable — like sending notifications to multiple recipients.",
+        np: "Promise.all सबै fulfill हुँदा resolve हुन्छ, तर कुनै एक reject गर्दा तुरन्त reject हुन्छ। Promise.allSettled हरेक promise settle नभइकन रुकिन्छ र `status` field सहित result objects array दिन्छ। Partial success OK भए allSettled।",
+        jp: "Promise.allは全て成功で解決するが、一つ失敗すると即座に拒否（成功分の結果も失う）。allSettledは全て確定するまで待ち、statusフィールド付きの結果配列を返す。部分的成功が許容されるならallSettled。",
       },
     },
     {
-      question: { en: "What is a 'task' vs a 'microtask'?", np: "Task र microtask मा के फरक?", jp: "タスクとマイクロタスクの違いは？" },
+      question: { en: "How do I run async operations in parallel inside a loop?", np: "Loop भित्र async operations parallel मा कसरी run गर्ने?", jp: "ループ内で非同期処理を並列実行するには？" },
       answer: {
-        en: "A task (or macrotask) is a unit of work scheduled by setTimeout, setInterval, I/O callbacks, or UI events — one runs per event loop iteration. A microtask is a unit of work scheduled by Promises, queueMicrotask, or MutationObserver. All microtasks in the queue are drained after each task, before the next task runs. This means microtasks run more urgently than macrotasks. If a microtask schedules another microtask, that new one also runs before any macrotask.",
-        np: "Task (macrotask) setTimeout, setInterval, I/O callbacks, UI events ले schedule गर्छ — एक event loop iteration मा एउटा run हुन्छ। Microtask Promises, queueMicrotask ले schedule गर्छ। हर task पछि queue मा भएका सबै microtasks drain हुन्छन्। Microtask ले अर्को microtask schedule गरे त्यो पनि अर्को macrotask अगाडि run हुन्छ।",
-        jp: "タスク（マクロタスク）はsetTimeout・I/O・UIイベントがスケジュール — イベントループ1回あたり1つ実行。マイクロタスクはPromise・queueMicrotaskがスケジュール。各タスク後、キュー内の全マイクロタスクが消化される。マイクロタスクが新たなマイクロタスクをスケジュールすると、それも次のマクロタスク前に実行される。",
-      },
-    },
-    {
-      question: { en: "What does 'blocking the event loop' mean and why is it bad?", np: "Event loop block गर्नु भनेको के हो र किन खराब?", jp: "「イベントループのブロック」とは何か、なぜ悪いのか？" },
-      answer: {
-        en: "Blocking the event loop means running synchronous code that takes a long time — a heavy computation, a huge loop, or synchronous file I/O. While that code runs, the call stack is never empty, so the event loop cannot process any callbacks: timers don't fire, fetch responses are not handled, user clicks are ignored. The page or server freezes until the synchronous code finishes. For heavy CPU work, use Web Workers (browser) or worker_threads (Node.js) to run on a separate thread.",
-        np: "Event loop block गर्नु भनेको time-consuming synchronous code run गर्नु हो — heavy computation, huge loop, वा synchronous file I/O। Call stack कहिल्यै empty नहुनाले event loop कुनै callback process गर्न सक्दैन। Page वा server freeze हुन्छ। Heavy CPU work का लागि Web Workers (browser) वा worker_threads (Node.js) प्रयोग गर्नुहोस्।",
-        jp: "イベントループのブロックとは長時間の同期コード実行（重い計算・巨大ループ・同期I/O）。コールスタックが空にならないため、タイマーも応答も処理できない。ページやサーバーがフリーズ。重いCPU処理はWeb Workers(ブラウザ)やworker_threads(Node.js)を使う。",
+        en: "Do not use `await` inside a `for` loop — that runs each operation sequentially. Instead, create all the Promises first using `.map()`, then await them all with `Promise.all()`. The pattern is: `const results = await Promise.all(items.map(item => asyncOperation(item)))`. This starts all operations simultaneously and waits for all of them, bringing total time down from N × operation time to approximately the time of the slowest single operation.",
+        np: "`for` loop भित्र `await` use नगर्नुहोस् — त्यसले sequential run गर्छ। बरु `.map()` सँग सबै Promises create गर्नुहोस् र `Promise.all()` सँग await गर्नुहोस्: `const results = await Promise.all(items.map(item => asyncOperation(item)))`।",
+        jp: "`for`ループ内で`await`しない（逐次実行になる）。代わりに`.map()`で全Promiseを生成して`Promise.all()`でawaitする。パターン: `const results = await Promise.all(items.map(item => asyncOperation(item)))`。",
       },
     },
   ],

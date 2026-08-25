@@ -2,439 +2,389 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_18_LESSONS: JsLessonDay = {
   day: 18,
-  title: { en: "Modern web APIs — Fetch, Storage & AbortController", np: "Modern Web APIs — Fetch, Storage", jp: "Fetch・Storage・AbortController" },
+  title: { en: "DOM, events, event bubbling & delegation", np: "DOM, events, bubbling र delegation", jp: "DOM・イベント・バブリング・委譲" },
   totalMinutes: 27,
-  difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
+  difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "fetch-api",
-      title: { en: "The Fetch API", np: "Fetch API", jp: "Fetch API" },
+      id: "querying-modifying-dom",
+      title: { en: "Querying & Modifying the DOM", np: "DOM Query र Modify गर्नु", jp: "DOMのクエリと変更" },
       durationMinutes: 9,
       explanation: {
-        en: "`fetch(url)` sends an HTTP request and returns a <b>Promise</b> that resolves once the server responds — it pairs naturally with `async`/`await`, letting you write request code that reads top-to-bottom instead of nesting callbacks. The single biggest surprise for newcomers: `fetch` only <b>rejects</b> on a genuine network-level failure — the user is offline, DNS fails, or the request is blocked by CORS. A `404 Not Found` or `500 Server Error` still counts as a completed HTTP transaction, so the promise resolves normally. That means you must always check `response.ok` (`true` for status codes 200-299) — or inspect `response.status` directly — and throw your own error when it's `false`, otherwise a failed request will silently be treated as a success.\n\nOnce you have a `Response` object, you read its body with one of several methods: `response.json()` parses it as JSON, `response.text()` returns raw text, `response.blob()` gives you binary data (images, files), and `response.arrayBuffer()` returns a raw binary buffer — all of them return Promises of their own, so they need an `await` too. A `Response` body is a <b>stream that can only be consumed once</b>; calling `.json()` twice on the same response throws an error. If you genuinely need to read the body more than once (for example, logging the raw text while also parsing JSON), call `response.clone()` first and read from the clone.\n\nSending data works with the same function plus more options: a `POST` request sets `method: \"POST\"`, includes a `Content-Type: application/json` header so the server knows how to parse the body, and passes `body: JSON.stringify(data)` — the body itself is always a string (or Blob/FormData/ArrayBuffer), `fetch` never serializes objects for you. Other commonly used options include `headers` (any custom headers, like an `Authorization` token), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (whether to send cookies — `omit`/`same-origin`/`include`), and `cache` (how to interact with the browser's HTTP cache).",
-        np: "`fetch(url)` ले HTTP request पठाउँछ र server ले respond गरेपछि resolve हुने <b>Promise</b> फर्काउँछ — यो `async`/`await` सँग naturally मिल्छ, जसले callbacks nest नगरी top-to-bottom पढ्न मिल्ने request code लेख्न दिन्छ। नयाँ सिक्नेहरूलाई सबैभन्दा ठूलो surprise यही हो: `fetch` ले केवल genuine network-level failure मा मात्र <b>reject</b> गर्छ — user offline भएमा, DNS fail भएमा, वा request CORS ले block गरेमा। `404 Not Found` वा `500 Server Error` लाई पनि completed HTTP transaction नै मानिन्छ, त्यसैले promise normally resolve हुन्छ। यसैले सधैं `response.ok` (status codes 200-299 का लागि `true`) check गर्नुपर्छ — वा directly `response.status` जाँच गर्नुपर्छ — र `false` भएमा आफ्नै error throw गर्नुपर्छ, नत्र failed request लाई silently success मानिनेछ।\n\n`Response` object पाएपछि, यसको body कुनै एउटा method ले read गर्न सकिन्छ: `response.json()` ले JSON को रूपमा parse गर्छ, `response.text()` ले raw text फर्काउँछ, `response.blob()` ले binary data (images, files) दिन्छ, र `response.arrayBuffer()` ले raw binary buffer फर्काउँछ — यी सबैले आफ्नै Promise फर्काउँछन्, त्यसैले तिनलाई पनि `await` चाहिन्छ। `Response` body <b>एकपटक मात्र consume हुने stream</b> हो; same response मा `.json()` दुई पटक call गर्दा error आउँछ। साँच्चै body दुई पटक read गर्नुपर्ने भएमा (जस्तै raw text log गर्दै JSON पनि parse गर्ने), पहिले `response.clone()` call गरी clone बाट read गर्नुहोस्।\n\nData पठाउनु उही function मा थप options सँग हुन्छ: `POST` request मा `method: \"POST\"` set गरिन्छ, server लाई body कसरी parse गर्ने भन्न `Content-Type: application/json` header समावेश गरिन्छ, र `body: JSON.stringify(data)` pass गरिन्छ — body सधैं string (वा Blob/FormData/ArrayBuffer) नै हुन्छ, `fetch` ले objects आफै serialize गर्दैन। अन्य सामान्य options मा `headers` (जस्तै `Authorization` token जस्ता custom headers), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (cookies पठाउने कि नपठाउने — `omit`/`same-origin`/`include`), र `cache` (browser को HTTP cache सँग कसरी interact गर्ने) पर्छन्।",
-        jp: "`fetch(url)`はHTTPリクエストを送信し、サーバーが応答すると解決する<b>Promise</b>を返す — `async`/`await`と自然に組み合わさり、コールバックを入れ子にせず上から下へ読めるリクエストコードを書ける。初心者が最も驚くポイント: `fetch`は本当のネットワークレベルの失敗（オフライン・DNS失敗・CORSによるブロック）でのみ<b>reject</b>する。`404 Not Found`や`500 Server Error`もHTTPトランザクションとしては完了しているため、Promiseは正常に解決する。つまり常に`response.ok`（ステータスコード200-299で`true`）を確認するか`response.status`を直接調べ、`false`のときは自分でエラーをスローする必要がある。そうしないと失敗したリクエストが黙って成功として扱われてしまう。\n\n`Response`オブジェクトを取得したら、いくつかのメソッドでボディを読み取る: `response.json()`はJSONとして解析し、`response.text()`は生のテキストを返し、`response.blob()`はバイナリデータ（画像やファイル）を、`response.arrayBuffer()`は生のバイナリバッファを返す — すべて独自のPromiseを返すため`await`が必要。`Response`のボディは<b>一度しか消費できないストリーム</b>であり、同じレスポンスで`.json()`を2回呼ぶとエラーになる。どうしても2回読む必要がある場合（生テキストをログしつつJSONも解析するなど）は、先に`response.clone()`を呼びクローンから読む。\n\nデータ送信は同じ関数にオプションを追加するだけ: `POST`リクエストでは`method: \"POST\"`を設定し、サーバーがボディの解析方法を知るために`Content-Type: application/json`ヘッダーを付け、`body: JSON.stringify(data)`を渡す — ボディは常に文字列（またはBlob/FormData/ArrayBuffer）で、`fetch`がオブジェクトを自動でシリアライズすることはない。他によく使うオプションには`headers`（`Authorization`トークンなどのカスタムヘッダー）、`mode`（`cors`/`no-cors`/`same-origin`）、`credentials`（クッキーを送るか — `omit`/`same-origin`/`include`）、`cache`（ブラウザのHTTPキャッシュとの連携方法）がある。",
+        en: "`document.querySelector(selector)` returns the <b>first</b> matching element (or `null`), while `document.querySelectorAll(selector)` returns a static list of every match — both accept any valid CSS selector. `document.getElementById(id)` is an older, narrower method that only matches by id, but it is still fast and common. Once you have an element, `textContent` reads/writes its raw text (safe — it escapes any HTML you assign to it), while `innerHTML` reads/writes actual HTML markup — assigning untrusted user input to `innerHTML` is a classic <b>XSS</b> (cross-site scripting) vulnerability, because the browser parses and runs whatever markup you hand it.\n\nBeyond text, you can toggle CSS classes with `classList.add()`, `classList.remove()`, and `classList.toggle()` — the preferred way to change appearance, since it keeps styling in CSS rather than JS. `setAttribute()`/`getAttribute()`/`removeAttribute()` manage arbitrary HTML attributes, and `element.style.property` sets one inline CSS property directly (useful for runtime-computed values, but overused it fights your stylesheet). To add brand-new content, `document.createElement(tag)` builds a detached element in memory, and `parentNode.appendChild(newElement)` (or the newer `append()`) inserts it into the live DOM — nothing appears on screen until that insertion happens.",
+        np: "`document.querySelector(selector)` ले <b>पहिलो</b> matching element (वा `null`) फर्काउँछ, जबकि `document.querySelectorAll(selector)` ले सबै matches को static list फर्काउँछ — दुवैले कुनै पनि valid CSS selector accept गर्छन्। `document.getElementById(id)` पुरानो, साँघुरो method हो जसले केवल id ले match गर्छ, तर अझै fast र common छ। Element पाएपछि, `textContent` ले raw text read/write गर्छ (safe — assign गरेको जुनसुकै HTML escape गर्छ), जबकि `innerHTML` ले actual HTML markup read/write गर्छ — untrusted user input लाई `innerHTML` मा assign गर्नु classic <b>XSS</b> vulnerability हो, किनकि browser ले जे markup दिए पनि parse गरेर चलाउँछ।\n\nText बाहेक, `classList.add()`, `classList.remove()`, र `classList.toggle()` ले CSS classes toggle गर्न सकिन्छ — यो appearance change गर्ने preferred तरिका हो, किनकि styling CSS मा नै रहन्छ। `setAttribute()`/`getAttribute()`/`removeAttribute()` ले arbitrary HTML attributes manage गर्छन्, र `element.style.property` ले एउटा inline CSS property directly set गर्छ। नयाँ content थप्न, `document.createElement(tag)` ले memory मा detached element बनाउँछ, र `parentNode.appendChild(newElement)` (वा नयाँ `append()`) ले live DOM मा insert गर्छ — insertion नभएसम्म screen मा केही देखिँदैन।",
+        jp: "`document.querySelector(selector)`は最初に一致する要素（または`null`）を返し、`document.querySelectorAll(selector)`はすべての一致を含む静的なリストを返す — どちらも有効なCSSセレクタを受け付ける。`document.getElementById(id)`はidでのみ一致する古く限定的なメソッドだが、今も高速でよく使われる。要素を取得したら、`textContent`は生のテキストを読み書きする（安全 — 代入したHTMLをエスケープする）。一方`innerHTML`は実際のHTMLマークアップを読み書きする — 信頼できないユーザー入力を`innerHTML`に代入するのは典型的な<b>XSS</b>（クロスサイトスクリプティング）脆弱性であり、ブラウザは渡されたマークアップを何でも解析・実行してしまう。\n\nテキスト以外にも、`classList.add()`・`classList.remove()`・`classList.toggle()`でCSSクラスを切り替えられる — スタイリングをCSS側に保てるため見た目を変える推奨方法。`setAttribute()`/`getAttribute()`/`removeAttribute()`は任意のHTML属性を管理し、`element.style.property`は1つのインラインCSSプロパティを直接設定する（実行時に決まる値に便利だが、多用するとスタイルシートと競合する）。新しいコンテンツを追加するには、`document.createElement(tag)`でメモリ上に未接続の要素を作り、`parentNode.appendChild(newElement)`（または新しい`append()`）でライブDOMに挿入する — 挿入されるまで画面には何も表示されない。",
       },
-      diagram: `fetch(url)  →  Promise<Response>
-                    │
-      ┌─────────────┴─────────────┐
-      │ network error (offline,   │  →  Promise REJECTS  (catch / try-catch)
-      │ DNS fail, CORS blocked)    │
-      └────────────────────────────┘
-      │ server responds (ANY       │  →  Promise RESOLVES (even for 404 / 500!)
-      │ status code: 200, 404, 500)│       ⚠ must check response.ok yourself
-      └────────────────────────────┘
+      diagram: `document
+  └─ <ul id="list">
+        ├─ <li class="item">Apple</li>
+        ├─ <li class="item">Banana</li>
+        └─ <li class="item">Cherry</li>
 
-response.ok            → true only for status 200-299
-response.status        → 200, 404, 500 ...
-response.json()        ┐
-response.text()        │  each reads the body ONCE, returns its own Promise
-response.blob()        │  need it twice? → response.clone() first
-response.arrayBuffer() ┘`,
+querySelector(".item")      → FIRST match only       → <li>Apple</li>
+querySelectorAll(".item")   → ALL matches (static)    → [Apple, Banana, Cherry]
+getElementById("list")      → matches by id only      → <ul id="list">
+
+textContent = "Hi"          → safe, escapes HTML       ┐
+innerHTML   = "<b>Hi</b>"   → parsed and rendered as HTML ┘ ← XSS risk with untrusted input`,
       codeExample: {
-        title: { en: "GET and POST requests with error handling", np: "Error handling सहित GET र POST requests", jp: "エラー処理付きのGET・POSTリクエスト" },
-        code: `// ── A basic GET request ───────────────────────────────────────────
-const res = await fetch("https://api.example.com/products/42");
-const product = await res.json();          // parse the JSON body
+        title: { en: "Selecting, reading and modifying DOM elements", np: "DOM elements select, read र modify गर्नु", jp: "DOM要素の選択・読み取り・変更" },
+        code: `// ── Selecting elements ────────────────────────────────────────────
+const heading = document.querySelector("h1");             // first match, or null
+const cards   = document.querySelectorAll(".card");        // NodeList of ALL matches
+const byId    = document.getElementById("app");            // fastest, id only
 
-// ── The #1 gotcha: fetch does NOT throw on HTTP error responses ────
-// A 404 or 500 still resolves successfully — you must check response.ok yourself
-async function getProduct(id) {
-  const res = await fetch(\`https://api.example.com/products/\${id}\`);
+// ── Reading vs writing text/HTML ──────────────────────────────────
+heading.textContent;                  // "Hello World"              — raw text only
+heading.innerHTML;                    // "<span>Hello</span> World" — HTML markup
 
-  if (!res.ok) {
-    // res.status: 404, 500, etc. — res.statusText: "Not Found", "Internal Server Error"
-    throw new Error(\`Request failed: \${res.status} \${res.statusText}\`);
-  }
+heading.textContent = "New Title";        // safe — any HTML you pass is escaped as text
+heading.innerHTML   = "<em>New</em> Title"; // renders as HTML — DANGEROUS with user input
 
-  return res.json();     // still a Promise — must be awaited/returned
-}
+// Never do this with untrusted data — it's a classic XSS vector:
+// comment.innerHTML = userSuppliedText;   // attacker could inject <img onerror=...>
+comment.textContent = userSuppliedText;    // safe — always shown as plain text, never executed
 
-// ── Reading the response body — pick ONE, it can only be read once ──
-const textCopy = await res.clone().text();  // clone() first if you need it twice
-// res.json()         → parsed JSON
-// res.text()         → raw string
-// res.blob()         → binary (image, file download)
-// res.arrayBuffer()  → raw binary buffer
+// ── Classes, attributes & inline styles ───────────────────────────
+heading.classList.add("highlight");
+heading.classList.remove("highlight");
+heading.classList.toggle("active");        // adds if absent, removes if present
+heading.classList.contains("active");      // true / false
 
-// ── POST request — sending JSON to the server ───────────────────────
-async function createProduct(data) {
-  const res = await fetch("https://api.example.com/products", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",   // tells the server how to parse \`body\`
-      "Authorization": \`Bearer \${authToken}\`,
-    },
-    body: JSON.stringify(data),   // fetch never auto-serializes objects for you
-  });
+const img = document.querySelector("img");
+img.setAttribute("data-id", "42");
+img.getAttribute("data-id");               // "42"
+img.removeAttribute("alt");
 
-  if (!res.ok) throw new Error(\`Create failed: \${res.status}\`);
-  return res.json();
-}
+heading.style.color    = "red";            // inline style — fine for runtime-computed values
+heading.style.fontSize = "2rem";           // prefer classList for static styling
 
-// ── The full set of request options ──────────────────────────────────
-fetch(url, {
-  method: "GET",                     // GET | POST | PUT | PATCH | DELETE
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),     // string | FormData | Blob | ArrayBuffer
-  mode: "cors",                      // cors | no-cors | same-origin
-  credentials: "same-origin",        // omit | same-origin | include (send cookies?)
-  cache: "no-cache",                 // default | no-cache | no-store | force-cache
-});`,
+// ── Creating and inserting new elements ───────────────────────────
+const li = document.createElement("li");
+li.textContent = "New item";
+li.classList.add("list-item");
+
+const list = document.querySelector("ul");
+list.appendChild(li);                      // insert as the last child
+list.append("plain text works here too");  // modern — accepts elements AND strings
+list.prepend(li);                          // insert as the first child
+
+li.remove();                               // remove an element directly, no parent lookup needed`,
       },
       keyTakeaways: [
-        { en: "`fetch` only rejects on genuine network failures — a 404 or 500 still resolves, so you must always check `response.ok` (or `response.status`) yourself.", np: "`fetch` केवल genuine network failure मा मात्र reject हुन्छ — 404 वा 500 पनि resolve नै हुन्छ, त्यसैले सधैं आफैं `response.ok` (वा `response.status`) check गर्नुपर्छ।", jp: "`fetch`は本当のネットワーク障害でのみrejectする。404や500でもresolveするため、常に自分で`response.ok`（または`response.status`）を確認する必要がある。" },
-        { en: "The body can only be read once via `json()`/`text()`/`blob()`/`arrayBuffer()` — call `response.clone()` first if you need to read it a second time.", np: "Body `json()`/`text()`/`blob()`/`arrayBuffer()` मार्फत एकपटक मात्र read गर्न सकिन्छ — दुई पटक read गर्नुपर्ने भएमा पहिले `response.clone()` call गर्नुहोस्।", jp: "ボディは`json()`/`text()`/`blob()`/`arrayBuffer()`で一度しか読めない — 2回目に読む必要があれば先に`response.clone()`を呼ぶ。" },
-        { en: "A `POST` needs an explicit `method`, a `Content-Type` header, and a `JSON.stringify()`-ed body — `fetch` never serializes objects automatically.", np: "`POST` मा explicit `method`, `Content-Type` header, र `JSON.stringify()` गरिएको body चाहिन्छ — `fetch` ले objects आफैं serialize गर्दैन।", jp: "`POST`には明示的な`method`、`Content-Type`ヘッダー、`JSON.stringify()`されたボディが必要 — `fetch`がオブジェクトを自動でシリアライズすることはない。" },
+        { en: "`querySelector` returns the first match (or `null`) and `querySelectorAll` returns every match as a static list; both accept any CSS selector, unlike `getElementById`, which only matches by id.", np: "`querySelector` ले पहिलो match (वा `null`) फर्काउँछ र `querySelectorAll` ले सबै matches को static list फर्काउँछ; दुवैले कुनै पनि CSS selector accept गर्छन्, `getElementById` भन्दा फरक जसले केवल id ले match गर्छ।", jp: "`querySelector`は最初の一致（または`null`）を返し、`querySelectorAll`はすべての一致を静的なリストで返す。どちらも任意のCSSセレクタを受け付けるが、`getElementById`はidでのみ一致する。" },
+        { en: "`textContent` is safe for untrusted text (it escapes HTML); `innerHTML` parses real markup, so assigning user-supplied strings to it is a classic XSS vector — use `textContent` or `createElement` instead.", np: "`textContent` untrusted text का लागि safe छ (HTML escape गर्छ); `innerHTML` ले actual markup parse गर्छ, त्यसैले user-supplied strings लाई assign गर्नु classic XSS vector हो — यसको सट्टा `textContent` वा `createElement` प्रयोग गर्नुहोस्।", jp: "`textContent`は信頼できないテキストに対して安全（HTMLをエスケープする）。`innerHTML`は実際のマークアップを解析するため、ユーザー入力を代入するのは典型的なXSSベクターとなる — 代わりに`textContent`か`createElement`を使う。" },
+        { en: "`classList.add/remove/toggle` is the preferred way to change appearance (styling stays in CSS); `createElement` plus `appendChild`/`append` is how brand-new elements get inserted into the live DOM.", np: "`classList.add/remove/toggle` appearance बदल्ने preferred तरिका हो (styling CSS मा नै रहन्छ); `createElement` र `appendChild`/`append` ले नयाँ elements लाई live DOM मा insert गर्छ।", jp: "`classList.add/remove/toggle`は見た目を変える推奨方法（スタイリングはCSS側に保てる）。`createElement`と`appendChild`/`append`で新しい要素をライブDOMに挿入する。" },
       ],
       commonMistakes: [
-        { en: "Assuming a `.catch()` or `try/catch` block will automatically catch a `404`/`500` response instead of checking `response.ok` explicitly.", np: "`404`/`500` response लाई `response.ok` explicitly check नगरी `.catch()` वा `try/catch` block ले automatic रूपमा catch गर्ने ठान्नु।", jp: "`response.ok`を明示的に確認せず、`404`/`500`レスポンスが`.catch()`や`try/catch`で自動的に捕捉されると思い込むこと。" },
-        { en: "Calling `response.json()` (or any body-reading method) twice on the same response without `clone()`, which throws an error.", np: "`clone()` बिना same response मा `response.json()` (वा कुनै body-reading method) दुई पटक call गर्नु, जसले error throw गर्छ।", jp: "`clone()`なしで同じレスポンスに対して`response.json()`（または他のボディ読み取りメソッド）を2回呼び、エラーを発生させること。" },
-        { en: "Forgetting the `Content-Type: application/json` header or forgetting to `JSON.stringify()` the body on a `POST`, so the server can't parse it correctly.", np: "`POST` मा `Content-Type: application/json` header बिर्सनु वा body `JSON.stringify()` गर्न बिर्सनु, जसले गर्दा server ले सहि parse गर्न सक्दैन।", jp: "`POST`で`Content-Type: application/json`ヘッダーを忘れる、またはボディを`JSON.stringify()`し忘れ、サーバーが正しく解析できなくなること。" },
+        { en: "Assigning untrusted or user-generated content to `innerHTML` instead of `textContent`, opening an XSS hole.", np: "Untrusted वा user-generated content लाई `textContent` को सट्टा `innerHTML` मा assign गर्नु, XSS hole खोल्नु।", jp: "信頼できない、あるいはユーザー生成コンテンツを`textContent`ではなく`innerHTML`に代入し、XSSの穴を開けること。" },
+        { en: "Forgetting `querySelectorAll` returns a NodeList, not a single element, and trying to call element methods on it directly instead of looping with `forEach`.", np: "`querySelectorAll` ले single element होइन, NodeList फर्काउँछ भनेर बिर्सनु, र `forEach` ले loop गर्नुको सट्टा त्यसमा directly element methods call गर्ने प्रयास गर्नु।", jp: "`querySelectorAll`が単一要素ではなくNodeListを返すことを忘れ、`forEach`でループする代わりにそれに直接要素のメソッドを呼び出そうとすること。" },
+        { en: "Building a new element with `createElement` but forgetting to `appendChild`/`append` it into the DOM — it exists in memory but never appears on the page.", np: "`createElement` ले नयाँ element बनाउने तर DOM मा `appendChild`/`append` गर्न बिर्सनु — यो memory मा हुन्छ तर page मा कहिल्यै देखिँदैन।", jp: "`createElement`で新しい要素を作ったが、DOMに`appendChild`/`append`するのを忘れること — メモリ上には存在するがページには決して表示されない。" },
       ],
       quiz: [
         {
-          question: { en: "Does the `fetch` promise reject when the server responds with a `404 Not Found`?", np: "Server ले `404 Not Found` सँग respond गर्दा `fetch` promise reject हुन्छ?", jp: "サーバーが`404 Not Found`で応答した場合、`fetch`のPromiseはrejectする？" },
+          question: { en: "What does `document.querySelector(\".missing\")` return if no element matches?", np: "कुनै पनि element match नभएमा `document.querySelector(\".missing\")` ले के फर्काउँछ?", jp: "一致する要素がない場合、`document.querySelector(\".missing\")`は何を返す？" },
           options: [
-            { en: "No — it resolves normally; you must check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुपर्छ", jp: "しない — 正常にresolveする。`response.ok`を確認する必要がある" },
-            { en: "Yes — fetch always throws on any 4xx/5xx status", np: "हो — fetch ले जुनसुकै 4xx/5xx status मा सधैं throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスでスローする" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "It throws an error", np: "यसले error throw गर्छ", jp: "エラーをスローする" },
           ],
           correctIndex: 0,
-          explanation: { en: "fetch only rejects on network-level failures; a completed HTTP response, even an error status, resolves the promise normally.", np: "fetch ले network-level failure मा मात्र reject गर्छ; completed HTTP response, error status भए पनि, promise normally resolve गर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。完了したHTTPレスポンスはエラーステータスでも正常にPromiseを解決する。" },
+          explanation: { en: "querySelector returns null rather than throwing when nothing matches, so you should always check before using the result.", np: "querySelector ले कुनै match नभएमा throw नगरी null फर्काउँछ, त्यसैले result प्रयोग गर्नु अघि जाँच गर्नुपर्छ।", jp: "querySelectorは何も一致しない場合、エラーをスローせずnullを返す。使う前に必ずチェックすべき。" },
         },
         {
-          question: { en: "How many times can you successfully call `.json()` on the same `Response` object without `clone()`?", np: "`clone()` बिना same `Response` object मा कति पटक `.json()` सफलतापूर्वक call गर्न सकिन्छ?", jp: "`clone()`なしで同じ`Response`オブジェクトに対して`.json()`を何回成功させて呼べる？" },
+          question: { en: "Which property is safe to assign untrusted, user-supplied text to?", np: "Untrusted, user-supplied text assign गर्न कुन property safe छ?", jp: "信頼できないユーザー入力のテキストを代入するのに安全なプロパティはどちら？" },
           options: [
-            { en: "Once — the body is a stream that can only be consumed once", np: "एकपटक — body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ", jp: "1回 — ボディは一度しか消費できないストリーム" },
-            { en: "As many times as you want", np: "जति चाहे त्यति पटक", jp: "何回でも" },
+            { en: "`textContent`", np: "`textContent`", jp: "`textContent`" },
+            { en: "`innerHTML`", np: "`innerHTML`", jp: "`innerHTML`" },
           ],
           correctIndex: 0,
-          explanation: { en: "The response body is a stream; reading it a second time without cloning first throws an error.", np: "Response body एउटा stream हो; clone नगरी दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディはストリームであり、クローンせずに2回目に読むとエラーになる。" },
+          explanation: { en: "textContent always escapes what it's given and displays it as plain text; innerHTML parses it as real markup, opening an XSS risk.", np: "textContent ले जे दिए पनि escape गरेर plain text को रूपमा देखाउँछ; innerHTML ले actual markup को रूपमा parse गर्छ, XSS risk खोल्छ।", jp: "textContentは渡されたものを常にエスケープしプレーンテキストとして表示する。innerHTMLは実際のマークアップとして解析し、XSSのリスクを開く。" },
         },
         {
-          question: { en: "What must you set to correctly send JSON data in a `POST` request body?", np: "`POST` request body मा JSON data सहि रूपमा पठाउन के set गर्नुपर्छ?", jp: "`POST`リクエストボディで正しくJSONデータを送るには何を設定する必要がある？" },
+          question: { en: "If an element already has the class `\"active\"`, what does `classList.toggle(\"active\")` do?", np: "Element मा पहिले नै `\"active\"` class छ भने, `classList.toggle(\"active\")` ले के गर्छ?", jp: "要素にすでに`\"active\"`クラスがある場合、`classList.toggle(\"active\")`は何をする？" },
           options: [
-            { en: "A `Content-Type: application/json` header and a `JSON.stringify()`-ed body", np: "`Content-Type: application/json` header र `JSON.stringify()` गरिएको body", jp: "`Content-Type: application/json`ヘッダーと`JSON.stringify()`されたボディ" },
-            { en: "Nothing — fetch detects and serializes plain objects automatically", np: "केही छैन — fetch ले plain objects आफैं detect र serialize गर्छ", jp: "何もない — fetchはプレーンオブジェクトを自動で検出・シリアライズする" },
+            { en: "Removes the class", np: "Class हटाउँछ", jp: "クラスを削除する" },
+            { en: "Adds a duplicate copy of the class", np: "Class को duplicate copy थप्छ", jp: "クラスの重複コピーを追加する" },
           ],
           correctIndex: 0,
-          explanation: { en: "fetch never serializes the body for you; you must stringify it yourself and tell the server its format via the header.", np: "fetch ले body कहिल्यै आफैं serialize गर्दैन; आफैं stringify गर्नुपर्छ र header मार्फत server लाई format बताउनुपर्छ।", jp: "fetchはボディを自動でシリアライズしない。自分でstringifyし、ヘッダーでサーバーに形式を伝える必要がある。" },
+          explanation: { en: "toggle() flips the class's presence — adds it if absent, removes it if present, and classes can't be duplicated anyway.", np: "toggle() ले class को presence flip गर्छ — नभए थप्छ, भए हटाउँछ, र classes जहिल्यै पनि duplicate हुन सक्दैनन्।", jp: "toggle()はクラスの有無を反転する — なければ追加、あれば削除。クラスはそもそも重複できない。" },
         },
       ],
     },
     {
-      id: "abortcontroller",
-      title: { en: "AbortController — Cancelling Requests", np: "AbortController — Requests Cancel गर्नु", jp: "AbortController — リクエストのキャンセル" },
+      id: "events-addeventlistener",
+      title: { en: "Events & addEventListener", np: "Events र addEventListener", jp: "イベントとaddEventListener" },
       durationMinutes: 9,
       explanation: {
-        en: "An `AbortController` is a small standalone object with one job: giving you a way to cancel an in-flight operation. Calling `new AbortController()` gives you a `.signal` property (an `AbortSignal`) and an `.abort()` method. You pass the `signal` into `fetch`'s options object (`fetch(url, { signal })`), and later, calling `controller.abort()` immediately cancels that request — the `fetch` promise rejects with an error whose `.name` is `\"AbortError\"`. Because `AbortError` is a normal rejection, you distinguish it from a genuine failure inside your `catch` block by checking `err.name`, so you don't accidentally show the user an error message for a cancellation they caused on purpose.\n\nThis matters most inside component lifecycles: a component might start a `fetch` in a `useEffect`, but if the component unmounts (the user navigates away) before the response arrives, setting state from that stale response can throw warnings or cause bugs. The fix is to create one `AbortController` per effect run, pass its signal into `fetch`, and return a cleanup function that calls `controller.abort()` — React calls that cleanup automatically right before the effect re-runs or the component unmounts, so any request that hasn't resolved yet is cancelled cleanly.\n\nTwo very common patterns build directly on this. A <b>fetch timeout</b> — since `fetch` itself has no built-in timeout — pairs `AbortController` with `setTimeout`: start a timer that calls `controller.abort()` after N milliseconds, and clear that timer if the request finishes first. A <b>debounced search box</b> uses the same idea to avoid race conditions: every time the user types, abort whatever search request is still in flight before starting a new one, so an old, slow response can never overwrite the results of a newer, faster one.",
-        np: "`AbortController` एउटा सानो standalone object हो जसको काम एउटै हो: in-flight operation cancel गर्ने तरिका दिनु। `new AbortController()` ले `.signal` property (एउटा `AbortSignal`) र `.abort()` method दिन्छ। `signal` लाई `fetch` को options object मा pass गरिन्छ (`fetch(url, { signal })`), र पछि `controller.abort()` call गर्दा त्यो request तुरुन्तै cancel हुन्छ — `fetch` promise `.name` `\"AbortError\"` भएको error सँग reject हुन्छ। `AbortError` सामान्य rejection नै भएकाले, `catch` block भित्र `err.name` check गरेर यसलाई genuine failure बाट छुट्याउनुपर्छ, ताकि आफैले जानाजानी गरेको cancellation लाई error message को रूपमा user लाई नदेखाइन्।\n\nयो component lifecycles भित्र सबैभन्दा महत्वपूर्ण हुन्छ: कुनै component ले `useEffect` भित्र `fetch` सुरु गर्न सक्छ, तर response आउनु अघि नै component unmount भएमा (user अन्तै गएमा), त्यो stale response बाट state set गर्दा warnings वा bugs आउन सक्छन्। Fix भनेको हरेक effect run का लागि एउटा `AbortController` बनाउने, त्यसको signal `fetch` मा pass गर्ने, र `controller.abort()` call गर्ने cleanup function return गर्ने हो — React ले effect फेरि चल्नु अघि वा component unmount हुनु अघि नै त्यो cleanup automatic रूपमा call गर्छ, त्यसैले resolve नभएको जुनसुकै request cleanly cancel हुन्छ।\n\nयसैमा आधारित दुई निकै common patterns छन्। <b>Fetch timeout</b> — किनकि `fetch` मा आफैं built-in timeout हुँदैन — `AbortController` लाई `setTimeout` सँग जोड्छ: N milliseconds पछि `controller.abort()` call गर्ने timer सुरु गर्नुहोस्, र request पहिले नै पूरा भएमा त्यो timer clear गर्नुहोस्। <b>Debounced search box</b> ले उही idea प्रयोग गरी race conditions रोक्छ: user ले टाइप गर्दा हरेक पटक, नयाँ request सुरु गर्नु अघि in-flight रहेको पुरानो search request abort गरिन्छ, ताकि पुरानो ढिलो response ले नयाँ छिटो response को result कहिल्यै overwrite नगरोस्।",
-        jp: "`AbortController`は1つの仕事だけを持つ小さな単独オブジェクト — 実行中の処理をキャンセルする手段を提供する。`new AbortController()`は`.signal`プロパティ（`AbortSignal`）と`.abort()`メソッドを返す。その`signal`を`fetch`のオプションに渡し（`fetch(url, { signal })`）、後で`controller.abort()`を呼ぶとそのリクエストは即座にキャンセルされる — `fetch`のPromiseは`.name`が`\"AbortError\"`であるエラーでrejectされる。`AbortError`は通常のrejectionなので、`catch`ブロック内で`err.name`を確認して本当の失敗と区別する必要がある。そうしないと、自分で意図的に起こしたキャンセルに対してユーザーにエラーメッセージを表示してしまう。\n\nこれはコンポーネントのライフサイクル内で特に重要になる。コンポーネントが`useEffect`内で`fetch`を開始しても、応答が届く前にコンポーネントがアンマウントされる（ユーザーが離脱する）と、その古い応答からstateを設定すると警告やバグの原因になる。解決策は各エフェクト実行ごとに1つの`AbortController`を作り、そのsignalを`fetch`に渡し、`controller.abort()`を呼ぶクリーンアップ関数を返すこと — Reactはエフェクトが再実行される直前やコンポーネントがアンマウントされる直前にそのクリーンアップを自動で呼ぶため、まだ解決していないリクエストはきれいにキャンセルされる。\n\nこの上に2つの非常によくあるパターンが成り立つ。<b>fetchのタイムアウト</b> — `fetch`自体には組み込みのタイムアウトがないため — `AbortController`を`setTimeout`と組み合わせる: Nミリ秒後に`controller.abort()`を呼ぶタイマーを開始し、リクエストが先に完了したらそのタイマーをクリアする。<b>デバウンスされた検索ボックス</b>は同じ考え方でレースコンディションを防ぐ: ユーザーが入力するたびに、新しいリクエストを開始する前に実行中の古い検索リクエストをabortし、古く遅い応答が新しく速い応答の結果を上書きすることを防ぐ。",
+        en: "`element.addEventListener(type, handler)` attaches a function that runs whenever an event of that `type` fires on the element, and multiple listeners can be attached to the same event without overwriting each other (unlike the older `onclick = fn` style). To later remove one with `removeEventListener(type, handler)`, you must pass the exact <b>same function reference</b> you registered — a new anonymous arrow function that merely looks the same will not match, so listeners you intend to remove later must be a named function stored in a variable.\n\nEvery handler receives an `event` object describing what happened. `event.target` is the actual element the event originated on (the one the user clicked or typed into), while `event.currentTarget` is the element the listener itself is attached to — they differ whenever the event bubbled up from a descendant. Two methods control the event's effect on the rest of the page: `event.preventDefault()` cancels the browser's default behaviour for that event (a form's automatic page reload on submit, a link's navigation), and `event.stopPropagation()` stops the event from continuing to bubble up to ancestor elements — these solve different problems and are not interchangeable.",
+        np: "`element.addEventListener(type, handler)` ले त्यो `type` को event element मा fire हुँदा चल्ने function attach गर्छ, र same event मा multiple listeners overwrite नभई attach हुन सक्छन् (पुरानो `onclick = fn` भन्दा फरक)। पछि `removeEventListener(type, handler)` ले remove गर्न, register गरेकै <b>same function reference</b> pass गर्नुपर्छ — same देखिने नयाँ anonymous arrow function ले match गर्दैन, त्यसैले पछि remove गर्नुपर्ने listeners variable मा named function को रूपमा राख्नुपर्छ।\n\nहरेक handler ले के भयो भन्ने बताउने `event` object पाउँछ। `event.target` वास्तवमा event originate भएको element हो (user ले click/type गरेको), जबकि `event.currentTarget` listener attach भएको element हो — event bubble भएमा दुवै फरक हुन्छन्। `event.preventDefault()` ले browser को default behaviour cancel गर्छ (form submit को page reload, link को navigation), र `event.stopPropagation()` ले event लाई ancestor elements सम्म bubble हुन रोक्छ — यी दुई फरक समस्या solve गर्छन्, interchangeable होइनन्।",
+        jp: "`element.addEventListener(type, handler)`はそのtypeのイベントが要素上で発生するたびに実行される関数をアタッチし、同じイベントに複数のリスナーを（古い`onclick = fn`方式と違い）上書きせずに追加できる。後で`removeEventListener(type, handler)`で削除するには、登録したのと全く同じ<b>関数の参照</b>を渡す必要がある — 見た目が同じでも新しい匿名アロー関数では一致しないため、後で削除する予定のリスナーは変数に保存した名前付き関数にする。\n\n各ハンドラは何が起きたかを記述する`event`オブジェクトを受け取る。`event.target`はイベントが実際に発生した要素（ユーザーがクリック/入力した要素）、`event.currentTarget`はリスナー自身がアタッチされた要素 — イベントが子孫からバブリングした場合は両者が異なる。`event.preventDefault()`はブラウザのデフォルト動作をキャンセルし（フォーム送信時の自動ページリロード、リンクのナビゲーション）、`event.stopPropagation()`はイベントが祖先要素へバブリングし続けるのを止める — これらは異なる問題を解決するもので、置き換え可能ではない。",
       },
-      diagram: `const controller = new AbortController();
-fetch(url, { signal: controller.signal })
-      │
-      ├─ request completes normally   → Promise RESOLVES
-      │
-      └─ controller.abort() called    → Promise REJECTS
-                                           err.name === "AbortError"
+      diagram: `btn.addEventListener("click", handleClick);   ← registers handleClick
 
-Cleanup pattern (e.g. inside useEffect):
+  User clicks <button> ──────────► event fires
+                                     │
+                                     ▼
+                           handleClick(event)
+                             event.target           → element actually clicked
+                             event.currentTarget     → element the listener is on
+                             event.preventDefault()  → cancel default browser action
+                             event.stopPropagation() → stop bubbling to ancestors
 
-  mount ──► new controller ──► fetch(url,{signal}) ──► setState(data)
-                                      │
-  unmount ─────────────────────► controller.abort()  ← cleanup fn, runs first
-
-Fetch timeout:                 Debounced search:
-  setTimeout(5000ms) ─┐          keystroke 1 → controller1 = new fetch
-  controller.abort() ◄┘          keystroke 2 → controller1.abort() [cancel old]
-  (fires if request               → controller2 = new fetch
-   is too slow)                  keystroke 3 → controller2.abort(), controller3 = new fetch
-                                   → only the LAST request's response survives`,
+btn.removeEventListener("click", handleClick);   ✔ same reference — removes it
+btn.removeEventListener("click", () => {});      ✘ different function — does nothing`,
       codeExample: {
-        title: { en: "Cancelling fetch requests with AbortController", np: "AbortController सँग fetch requests cancel गर्नु", jp: "AbortControllerでfetchリクエストをキャンセルする" },
-        code: `// ── Basic cancellation ────────────────────────────────────────────
-const controller = new AbortController();
+        title: { en: "addEventListener, the event object, and safe removal", np: "addEventListener, event object, safe removal", jp: "addEventListener・イベントオブジェクト・安全な削除" },
+        code: `// ── Adding a listener ─────────────────────────────────────────────
+const btn = document.querySelector("#submit-btn");
 
-fetch("/api/report", { signal: controller.signal })
-  .then((res) => res.json())
-  .then((data) => console.log(data))
-  .catch((err) => {
-    if (err.name === "AbortError") {
-      console.log("Request was cancelled — not a real error");
-    } else {
-      console.error("Fetch actually failed:", err);
-    }
-  });
-
-controller.abort();   // cancel it — the promise above rejects with AbortError
-
-// ── Cancel on unmount inside a React component ─────────────────────
-useEffect(() => {
-  const controller = new AbortController();
-
-  async function loadReport() {
-    try {
-      const res = await fetch("/api/report", { signal: controller.signal });
-      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-      setReport(await res.json());
-    } catch (err) {
-      if (err.name !== "AbortError") setError(err);   // ignore expected cancellations
-    }
-  }
-
-  loadReport();
-  return () => controller.abort();   // runs before the next effect / on unmount
-}, [reportId]);
-
-// ── Timeout wrapper — abort if the server is too slow ───────────────
-async function fetchWithTimeout(url, timeoutMs = 5000, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
-  } catch (err) {
-    if (err.name === "AbortError") throw new Error(\`Timed out after \${timeoutMs}ms\`);
-    throw err;
-  } finally {
-    clearTimeout(timer);   // no leftover timer either way
-  }
+function handleClick(event) {
+  console.log("Clicked:", event.type);                 // "click"
+  console.log("target:", event.target);                // element the user actually clicked
+  console.log("currentTarget:", event.currentTarget);   // element the listener is attached to
 }
 
-// ── Debounced search — always cancel the previous in-flight request ─
-let activeController = null;
+btn.addEventListener("click", handleClick);
 
-searchInput.addEventListener("input", async (event) => {
-  activeController?.abort();          // kill whatever search was still running
-  activeController = new AbortController();
+// ── Removing a listener — MUST pass the same function reference ──
+btn.removeEventListener("click", handleClick);        // removes it — same reference
+// btn.removeEventListener("click", () => { ... });   // no-op — different function object
 
-  try {
-    const res = await fetch(
-      \`/api/search?q=\${encodeURIComponent(event.target.value)}\`,
-      { signal: activeController.signal }
-    );
-    renderResults(await res.json());
-  } catch (err) {
-    if (err.name !== "AbortError") showError(err);
-  }
-});`,
-      },
-      keyTakeaways: [
-        { en: "Pass `controller.signal` into `fetch`'s options; calling `controller.abort()` rejects that fetch with an `AbortError` — check `err.name` to tell it apart from a real failure.", np: "`controller.signal` लाई `fetch` को options मा pass गर्नुहोस्; `controller.abort()` call गर्दा त्यो fetch `AbortError` सँग reject हुन्छ — genuine failure बाट छुट्याउन `err.name` check गर्नुहोस्।", jp: "`controller.signal`を`fetch`のオプションに渡す。`controller.abort()`を呼ぶとそのfetchは`AbortError`でrejectされる — 本当の失敗と区別するには`err.name`を確認する。" },
-        { en: "Create one `AbortController` per effect run and call `.abort()` in the effect's cleanup function so a component never sets state from a stale, unmounted request.", np: "हरेक effect run का लागि एउटा `AbortController` बनाउनुहोस् र effect को cleanup function मा `.abort()` call गर्नुहोस्, ताकि component ले कहिल्यै stale, unmounted request बाट state set नगरोस्।", jp: "各エフェクト実行ごとに1つの`AbortController`を作り、エフェクトのクリーンアップ関数で`.abort()`を呼ぶことで、コンポーネントが古い・アンマウント済みのリクエストからstateを設定することを防ぐ。" },
-        { en: "A fetch timeout pairs `setTimeout` with `controller.abort()`; a debounced search aborts the previous controller before every new request so an old response can never overwrite a newer one.", np: "Fetch timeout ले `setTimeout` लाई `controller.abort()` सँग जोड्छ; debounced search ले हरेक नयाँ request अघि पुरानो controller abort गर्छ ताकि पुरानो response ले नयाँलाई कहिल्यै overwrite नगरोस्।", jp: "fetchのタイムアウトは`setTimeout`と`controller.abort()`を組み合わせる。デバウンスされた検索は新しいリクエストごとに前のコントローラーをabortし、古い応答が新しい応答を上書きすることを防ぐ。" },
-      ],
-      commonMistakes: [
-        { en: "Not checking `err.name === \"AbortError\"` in the `catch` block, so an intentional cancellation gets displayed to the user as a real error.", np: "`catch` block मा `err.name === \"AbortError\"` check नगर्नु, जसले गर्दा जानाजानी गरेको cancellation लाई user लाई real error को रूपमा देखाइन्छ।", jp: "`catch`ブロックで`err.name === \"AbortError\"`を確認せず、意図的なキャンセルがユーザーに本当のエラーとして表示されること。" },
-        { en: "Forgetting to call `controller.abort()` in a cleanup function, letting a stale request set state after the component has already unmounted.", np: "Cleanup function मा `controller.abort()` call गर्न बिर्सनु, component पहिले नै unmount भइसकेपछि stale request ले state set गर्न दिनु।", jp: "クリーンアップ関数で`controller.abort()`を呼び忘れ、コンポーネントがすでにアンマウントされた後に古いリクエストがstateを設定してしまうこと。" },
-        { en: "Reusing the same `AbortController` for multiple requests instead of creating a fresh one each time — once aborted, a controller's `signal` stays aborted forever.", np: "हरेक पटक नयाँ नबनाई same `AbortController` लाई multiple requests का लागि पुन: प्रयोग गर्नु — एकपटक abort भएपछि controller को `signal` सधैंभरि aborted नै रहन्छ।", jp: "毎回新しく作らず同じ`AbortController`を複数のリクエストに再利用すること — 一度abortされるとコントローラーの`signal`は永久にabort状態のままになる。" },
-      ],
-      quiz: [
-        {
-          question: { en: "What is the `.name` of the error a `fetch` promise rejects with when its request is aborted?", np: "Request abort हुँदा `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "リクエストがabortされたとき、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
-          options: [
-            { en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" },
-            { en: "`\"NetworkError\"`", np: "`\"NetworkError\"`", jp: "`\"NetworkError\"`" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Aborting a fetch always produces an error whose name is AbortError, which is how you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常に名前がAbortErrorのエラーが生成される。これで意図的なキャンセルと本当の失敗を区別する。" },
-        },
-        {
-          question: { en: "Where should `controller.abort()` be called to prevent a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを防ぐには、`controller.abort()`をどこで呼ぶべき？" },
-          options: [
-            { en: "Inside the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function भित्र", jp: "`useEffect`から返されるクリーンアップ関数の中" },
-            { en: "Inside the `.then()` success callback", np: "`.then()` success callback भित्र", jp: "`.then()`の成功コールバックの中" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "React automatically runs the effect's cleanup function on unmount (or before the next run), making it the correct place to cancel a pending request.", np: "React ले unmount हुँदा (वा अर्को run अघि) effect को cleanup function automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時（または次の実行前）にエフェクトのクリーンアップ関数を自動で実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
-        },
-        {
-          question: { en: "In a debounced search box, what should happen the moment the user types a new character?", np: "Debounced search box मा user ले नयाँ character टाइप गर्ने क्षणमा के हुनुपर्छ?", jp: "デバウンスされた検索ボックスで、ユーザーが新しい文字を入力した瞬間に何が起こるべき？" },
-          options: [
-            { en: "Abort the previous in-flight request before starting a new one", np: "नयाँ सुरु गर्नु अघि पुरानो in-flight request abort गर्नुपर्छ", jp: "新しいリクエストを開始する前に前の実行中リクエストをabortする" },
-            { en: "Let every previous request keep running and only render the last one", np: "हरेक पुरानो request चलिरहन दिनुपर्छ र अन्तिम मात्र render गर्नुपर्छ", jp: "すべての前のリクエストを実行させ続け、最後のものだけをレンダリングする" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Aborting the previous request prevents a race condition where an old, slower response could arrive after and overwrite the results of a newer search.", np: "पुरानो request abort गर्दा race condition रोकिन्छ जहाँ पुरानो, ढिलो response पछि आएर नयाँ search को result overwrite गर्न सक्छ।", jp: "前のリクエストをabortすることで、古く遅い応答が後から到着して新しい検索結果を上書きするというレースコンディションを防ぐ。" },
-        },
-      ],
-    },
-    {
-      id: "web-storage",
-      title: { en: "Web Storage — localStorage & sessionStorage", np: "Web Storage — localStorage र sessionStorage", jp: "Web Storage — localStorageとsessionStorage" },
-      durationMinutes: 9,
-      explanation: {
-        en: "`localStorage` and `sessionStorage` share the exact same simple API: `setItem(key, value)` saves a value, `getItem(key)` reads it back (or returns `null` if the key doesn't exist), `removeItem(key)` deletes one entry, and `clear()` wipes everything for that origin. The one rule that trips people up: <b>every key and value is always a string</b>. If you save a number or object directly, it gets silently coerced with `String()` — so the standard pattern is to `JSON.stringify()` an object before `setItem`, and `JSON.parse()` the result after `getItem`, wrapped in a `try/catch` in case the stored data is ever corrupted or missing.\n\nBoth storages share a browser-enforced quota of roughly <b>5-10 MB per origin</b> — try to exceed it and `setItem` throws a `QuotaExceededError`, which real code should catch rather than let crash the page. The difference between the two is lifetime and scope: `localStorage` persists indefinitely until code or the user explicitly clears it (surviving tab closes and browser restarts), while `sessionStorage` is scoped to a single tab and is wiped the moment that tab closes — even a duplicate tab of the same page starts with empty `sessionStorage`. A subtle detail about the `storage` event: it fires on `window` whenever `localStorage` changes, but only in <b>other</b> tabs/windows of the same origin — the tab that made the change never receives its own event, which makes it useful for syncing state (like a logout) across open tabs.\n\nWeb Storage isn't the only browser persistence option. Cookies hold far less data (~4KB) but are automatically sent to the server with every matching request, which is exactly why session/auth data historically lived there. `IndexedDB` sits at the other end — a full transactional database capable of storing hundreds of megabytes with structured querying, suited for offline apps and large datasets that Web Storage's flat string API can't handle well. On security: because any JavaScript running on your page — including an injected `XSS` payload — can freely read `localStorage`, it is <b>not</b> a safe place for sensitive, long-lived credentials like refresh tokens. The safer pattern is an `httpOnly` cookie for anything long-lived and sensitive (JavaScript cannot read `httpOnly` cookies at all), reserving `localStorage`/`sessionStorage` for non-sensitive UI state like theme, form drafts, or short-lived access tokens.",
-        np: "`localStorage` र `sessionStorage` ले ठ्याक्कै उही simple API share गर्छन्: `setItem(key, value)` ले value save गर्छ, `getItem(key)` ले फेरि read गर्छ (key नभएमा `null` फर्काउँछ), `removeItem(key)` ले एउटा entry delete गर्छ, र `clear()` ले त्यो origin को सबै कुरा हटाउँछ। मानिसहरू सबैभन्दा बिर्सने नियम: <b>हरेक key र value सधैं string हुन्छ</b>। Number वा object directly save गरेमा, यो silently `String()` ले coerce हुन्छ — त्यसैले standard pattern भनेको object लाई `setItem` अघि `JSON.stringify()` गर्ने, र `getItem` पछि result लाई `JSON.parse()` गर्ने हो, र stored data कहिलेकाहीं corrupted वा missing हुनसक्ने भएकोले `try/catch` मा wrap गर्ने हो।\n\nदुवै storages ले browser-enforced roughly <b>5-10 MB per origin</b> quota share गर्छन् — यो exceed गर्ने प्रयास गर्दा `setItem` ले `QuotaExceededError` throw गर्छ, जसलाई real code मा page crash हुन नदिन catch गर्नुपर्छ। दुई बीचको फरक भनेको lifetime र scope हो: `localStorage` code वा user ले explicitly clear नगरेसम्म (tab बन्द र browser restart पछि पनि बाँचेर) forever persist हुन्छ, जबकि `sessionStorage` एउटै tab मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै wipe हुन्छ — same page को duplicate tab पनि empty `sessionStorage` सँग सुरु हुन्छ। `storage` event को एउटा subtle detail: `localStorage` change हुनासाथ यो `window` मा fire हुन्छ, तर same origin को <b>अन्य</b> tabs/windows मा मात्र — change गर्ने tab ले आफ्नै event कहिल्यै पाउँदैन, जसले खुला tabs हरूमा state sync गर्न (जस्तै logout) उपयोगी बनाउँछ।\n\nWeb Storage मात्र browser persistence option होइन। Cookies ले धेरै कम data (~4KB) राख्छन् तर हरेक matching request सँग automatic रूपमा server मा पठाइन्छन्, जो नै session/auth data historically त्यहाँ राख्ने कारण हो। `IndexedDB` अर्को छेउमा छ — सयौं megabytes structured querying सहित store गर्न सक्ने full transactional database, offline apps र Web Storage को flat string API ले राम्ररी handle नगर्ने large datasets का लागि उपयुक्त। Security बारेमा: तपाईंको page मा चल्ने जुनसुकै JavaScript — injected `XSS` payload समावेश गरी — ले `localStorage` freely read गर्न सक्ने भएकोले, यो refresh tokens जस्ता sensitive, long-lived credentials का लागि <b>safe छैन</b>। सुरक्षित pattern भनेको long-lived र sensitive जुनसुकै कुरा का लागि `httpOnly` cookie हो (JavaScript ले `httpOnly` cookies बिल्कुल read गर्न सक्दैन), र `localStorage`/`sessionStorage` लाई theme, form drafts, वा short-lived access tokens जस्ता non-sensitive UI state का लागि छोड्ने हो।",
-        jp: "`localStorage`と`sessionStorage`はまったく同じシンプルなAPIを共有する: `setItem(key, value)`は値を保存し、`getItem(key)`は読み戻す（キーが存在しない場合は`null`を返す）、`removeItem(key)`は1つのエントリを削除し、`clear()`はそのオリジンのすべてを消す。多くの人が引っかかる唯一のルール: <b>キーと値は常に文字列</b>である。数値やオブジェクトを直接保存すると`String()`で暗黙に変換されてしまう — そのため標準的なパターンは、`setItem`の前にオブジェクトを`JSON.stringify()`し、`getItem`の後に結果を`JSON.parse()`することで、保存データが壊れていたり存在しない場合に備えて`try/catch`で囲む。\n\n両ストレージともブラウザが強制するオリジンあたり約<b>5-10 MB</b>のクォータを共有する — これを超えようとすると`setItem`は`QuotaExceededError`をスローするので、実際のコードはページをクラッシュさせず捕捉すべき。2つの違いは有効期間とスコープ: `localStorage`はコードやユーザーが明示的にクリアしない限り無期限に持続する（タブを閉じてもブラウザを再起動しても残る）。一方`sessionStorage`は単一タブにスコープされ、そのタブが閉じた瞬間に消える — 同じページの複製タブでも空の`sessionStorage`から始まる。`storage`イベントの微妙な点: `localStorage`が変更されると`window`上で発火するが、これは同一オリジンの<b>他の</b>タブ/ウィンドウのみである — 変更を行ったタブ自身は自分のイベントを受け取らない。これは開いているタブ間で状態（ログアウトなど）を同期させるのに便利。\n\nWeb Storageはブラウザの永続化オプションの唯一の手段ではない。Cookieはずっと少ないデータ（約4KB）しか保持できないが、一致するすべてのリクエストと共に自動的にサーバーへ送信される — これこそセッション/認証データが歴史的にそこに置かれてきた理由。`IndexedDB`はその対極にある — 数百メガバイトを構造化クエリ付きで保存できる完全なトランザクションデータベースで、オフラインアプリやWeb Storageのフラットな文字列APIではうまく扱えない大規模データに適している。セキュリティについて: ページ上で動く任意のJavaScript — 注入された`XSS`ペイロードも含む — が`localStorage`を自由に読めるため、リフレッシュトークンのような重要で長期的な認証情報を置くのに<b>安全ではない</b>。より安全なパターンは、長期的で重要なものには`httpOnly`Cookie（JavaScriptは`httpOnly`Cookieを一切読めない）を使い、`localStorage`/`sessionStorage`はテーマ・フォームの下書き・短命なアクセストークンなど非機密なUI状態に限定することである。",
-      },
-      diagram: `                 localStorage              sessionStorage
-lifetime          forever (until cleared)   until TAB closes
-scope             same origin, ALL tabs     current tab ONLY
-capacity          ~5-10 MB                  ~5-10 MB
+// This is why "removable" listeners can't be anonymous inline arrows:
+// btn.addEventListener("click", () => console.log("hi")); // can never be removed later!
 
-API (identical for both):
-  setItem(key, value)   → value coerced to STRING
-  getItem(key)          → string | null
-  removeItem(key)
-  clear()
+// ── preventDefault vs stopPropagation ─────────────────────────────
+const form = document.querySelector("#signup-form");
 
-Objects need JSON:
-  setItem("user", JSON.stringify({ name: "Alice" }))
-  JSON.parse(getItem("user"))          → { name: "Alice" }
-
-storage event:
-  Tab A: localStorage.setItem("theme","dark")
-  Tab A window ─── does NOT get "storage" event
-  Tab B window ─── DOES get "storage" event   ← fires in OTHER tabs only
-
-localStorage   ── XSS script CAN read it ──►  NOT safe for long-lived secrets
-httpOnly cookie ── JS cannot read it at all ──► safer for refresh tokens`,
-      codeExample: {
-        title: { en: "Reading, writing and choosing the right storage", np: "सहि storage read, write र choose गर्नु", jp: "適切なストレージの読み書きと選択" },
-        code: `// ── Basic API — identical for localStorage and sessionStorage ──────
-localStorage.setItem("theme", "dark");
-localStorage.getItem("theme");        // "dark"
-localStorage.getItem("missingKey");   // null — not an error
-localStorage.removeItem("theme");
-localStorage.clear();                 // wipes EVERY key for this origin
-
-// ── Values are always strings — JSON for anything else ──────────────
-const settings = { theme: "dark", fontSize: 16 };
-localStorage.setItem("settings", JSON.stringify(settings));
-
-const stored = JSON.parse(localStorage.getItem("settings") ?? "null");
-console.log(stored?.fontSize);   // 16
-
-// ── Safe read/write helpers that survive corrupted/missing data ─────
-function readStorage(key, fallback = null) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;   // JSON.parse blew up — treat it as if it wasn't there
-  }
-}
-
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (err) {
-    // storage is full — roughly a 5-10MB ceiling per origin
-    console.error("QuotaExceededError:", err);
-  }
-}
-
-// ── sessionStorage — same API, scoped to this tab only ──────────────
-sessionStorage.setItem("wizardStep", "2");    // cleared automatically when the tab closes
-// a duplicate of this tab in a new window starts with an EMPTY sessionStorage
-
-// ── Reacting to changes made in OTHER tabs ──────────────────────────
-window.addEventListener("storage", (event) => {
-  // Only fires here if a DIFFERENT tab changed localStorage — never this tab's own writes
-  if (event.key === "authToken" && event.newValue === null) {
-    // another tab logged out — mirror it here too
-    window.location.reload();
-  }
+form.addEventListener("submit", (event) => {
+  event.preventDefault();      // stop the browser's default page reload on submit
+  // ... validate and submit via fetch() instead
 });
 
-// ── Security: don't put long-lived secrets in localStorage ──────────
-// localStorage.setItem("refreshToken", token);  // readable by any injected XSS script
-// Better: keep the refresh token in an httpOnly cookie (set by the server,
-// completely invisible to JavaScript) and hold only a short-lived access
-// token in memory (a plain JS variable, gone on page reload).`,
+document.querySelector("#outer").addEventListener("click", (event) => {
+  event.stopPropagation();     // stop this click from bubbling up to ancestors
+  console.log("only this handler runs, ancestors never see the click");
+});
+
+// ── Common event types ─────────────────────────────────────────────
+element.addEventListener("click",   handler);
+element.addEventListener("input",   handler);   // fires on every keystroke
+element.addEventListener("change",  handler);   // fires when value is committed (blur/select)
+element.addEventListener("keydown", (event) => {
+  console.log(event.key);      // "Enter", "a", "Escape"
+  if (event.key === "Escape") closeModal();
+});`,
       },
       keyTakeaways: [
-        { en: "`localStorage`/`sessionStorage` share the same `setItem`/`getItem`/`removeItem`/`clear` API but differ in lifetime (forever vs per-tab); values are always strings, so objects need `JSON.stringify`/`JSON.parse`.", np: "`localStorage`/`sessionStorage` ले उही `setItem`/`getItem`/`removeItem`/`clear` API share गर्छन् तर lifetime (forever vs per-tab) मा फरक हुन्छन्; values सधैं strings हुन्छन्, त्यसैले objects लाई `JSON.stringify`/`JSON.parse` चाहिन्छ।", jp: "`localStorage`/`sessionStorage`は同じ`setItem`/`getItem`/`removeItem`/`clear`APIを共有するが、有効期間（永続 vs タブ単位）が異なる。値は常に文字列なので、オブジェクトには`JSON.stringify`/`JSON.parse`が必要。" },
-        { en: "Both have a roughly 5-10MB per-origin quota (`QuotaExceededError` if exceeded); the `storage` event only fires in other tabs, never the tab that made the change.", np: "दुवैको roughly 5-10MB per-origin quota हुन्छ (exceed भएमा `QuotaExceededError`); `storage` event अन्य tabs मा मात्र fire हुन्छ, change गर्ने tab मा कहिल्यै फायर हुँदैन।", jp: "両方ともオリジンあたり約5-10MBのクォータがある（超えると`QuotaExceededError`）。`storage`イベントは他のタブでのみ発火し、変更したタブ自身では発火しない。" },
-        { en: "Cookies are smaller but auto-sent with every request, `IndexedDB` handles large structured data; avoid storing long-lived sensitive tokens in `localStorage` (XSS risk) — prefer `httpOnly` cookies.", np: "Cookies साना हुन्छन् तर हरेक request सँग auto-sent हुन्छन्, `IndexedDB` ले large structured data handle गर्छ; `localStorage` (XSS risk) मा long-lived sensitive tokens राख्नबाट जोगिनुहोस् — `httpOnly` cookies prefer गर्नुहोस्।", jp: "Cookieは小さいが全リクエストで自動送信され、`IndexedDB`は大きな構造化データを扱う。`localStorage`（XSSリスク）に長期的な機密トークンを保存するのは避け、`httpOnly`Cookieを優先する。" },
+        { en: "`addEventListener` lets you attach multiple listeners to the same event on the same element, unlike the old `onclick = fn` style, which overwrites the previous handler.", np: "`addEventListener` ले same element को same event मा multiple listeners attach गर्न दिन्छ, पुरानो `onclick = fn` style भन्दा फरक जसले अघिल्लो handler overwrite गर्छ।", jp: "`addEventListener`は同じ要素の同じイベントに複数のリスナーをアタッチできる。前のハンドラを上書きする古い`onclick = fn`方式とは異なる。" },
+        { en: "`removeEventListener` only works if you pass the exact same function reference used in `addEventListener` — anonymous inline functions can never be removed later.", np: "`removeEventListener` ले `addEventListener` मा प्रयोग गरेकै exact same function reference pass गरे मात्र काम गर्छ — anonymous inline functions पछि कहिल्यै remove हुन सक्दैनन्।", jp: "`removeEventListener`は`addEventListener`で使ったのと全く同じ関数の参照を渡した場合にのみ機能する — 匿名のインライン関数は後で削除できない。" },
+        { en: "`preventDefault()` cancels the browser's default action; `stopPropagation()` stops bubbling to ancestors — they solve different problems and neither implies the other.", np: "`preventDefault()` ले browser को default action cancel गर्छ; `stopPropagation()` ले ancestors सम्म bubbling रोक्छ — यी दुई फरक समस्या solve गर्छन्, एउटाले अर्कोलाई implies गर्दैन।", jp: "`preventDefault()`はブラウザのデフォルト動作をキャンセルし、`stopPropagation()`は祖先へのバブリングを止める — これらは異なる問題を解決するもので、一方が他方を意味しない。" },
       ],
       commonMistakes: [
-        { en: "Storing an object or number directly without `JSON.stringify`, then getting back a coerced/broken string like `\"[object Object]\"`.", np: "`JSON.stringify` बिना object वा number directly store गर्नु, त्यसपछि `\"[object Object]\"` जस्तो coerced/broken string फर्किनु।", jp: "`JSON.stringify`せずにオブジェクトや数値を直接保存し、`\"[object Object]\"`のような変換された壊れた文字列が返ってくること。" },
-        { en: "Expecting the `storage` event to fire in the same tab/window that made the change, when it only fires in other tabs of the same origin.", np: "`storage` event change गर्ने same tab/window मा नै fire हुनेछ भनी आशा गर्नु, जब यो same origin को अन्य tabs मा मात्र fire हुन्छ।", jp: "`storage`イベントが変更を行った同じタブ/ウィンドウで発火すると期待するが、実際は同一オリジンの他のタブでのみ発火すること。" },
-        { en: "Storing a long-lived auth/refresh token in `localStorage`, exposing it to any injected XSS script instead of using an `httpOnly` cookie.", np: "`httpOnly` cookie प्रयोग गर्नुको सट्टा long-lived auth/refresh token `localStorage` मा store गर्नु, यसलाई injected XSS script मा exposed बनाउनु।", jp: "`httpOnly`Cookieを使う代わりに長期的な認証/リフレッシュトークンを`localStorage`に保存し、注入されたXSSスクリプトに晒すこと。" },
+        { en: "Passing a new anonymous arrow function to `removeEventListener`, expecting it to remove a previously-added listener that merely looks the same.", np: "`removeEventListener` मा नयाँ anonymous arrow function pass गरेर, केवल same देखिने पहिले थपिएको listener remove हुन्छ भन्ने आशा गर्नु।", jp: "`removeEventListener`に新しい匿名アロー関数を渡し、見た目が同じというだけで以前追加したリスナーが削除されると期待すること。" },
+        { en: "Confusing `event.target` (where the event started) with `event.currentTarget` (where the listener is attached), especially inside delegated handlers.", np: "`event.target` (event सुरु भएको ठाउँ) र `event.currentTarget` (listener attach भएको ठाउँ) लाई भ्रमित गर्नु, विशेष गरी delegated handlers भित्र।", jp: "`event.target`（イベントが開始した場所）と`event.currentTarget`（リスナーがアタッチされている場所）を混同すること。特に委譲ハンドラ内で。" },
+        { en: "Calling `stopPropagation()` when the actual goal was `preventDefault()` (or vice versa) — the two methods don't stop the same thing.", np: "वास्तविक लक्ष्य `preventDefault()` भएको बेला `stopPropagation()` call गर्नु (वा उल्टो) — यी दुई methods ले उही कुरा रोक्दैनन्।", jp: "本来の目的が`preventDefault()`だったのに`stopPropagation()`を呼ぶこと（またはその逆）— この2つのメソッドは同じものを止めるわけではない。" },
       ],
       quiz: [
         {
-          question: { en: "What type are all `localStorage` keys and values, no matter what you originally pass in?", np: "मूलतः जुनसुकै type pass गरे पनि सबै `localStorage` keys र values कुन type हुन्छन्?", jp: "元々何を渡したかにかかわらず、すべての`localStorage`のキーと値はどの型になる？" },
+          question: { en: "To remove a listener with `removeEventListener`, what must you pass as the handler?", np: "`removeEventListener` ले listener remove गर्न handler को रूपमा के pass गर्नुपर्छ?", jp: "`removeEventListener`でリスナーを削除するには、ハンドラとして何を渡す必要がある？" },
           options: [
-            { en: "Always strings", np: "सधैं strings", jp: "常に文字列" },
-            { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" },
+            { en: "The exact same function reference used in addEventListener", np: "addEventListener मा प्रयोग गरेकै exact same function reference", jp: "addEventListenerで使ったのと全く同じ関数の参照" },
+            { en: "Any function containing identical code", np: "उस्तै code भएको जुनसुकै function", jp: "同一のコードを含む任意の関数" },
           ],
           correctIndex: 0,
-          explanation: { en: "localStorage/sessionStorage coerce every key and value to a string; objects must be JSON.stringify'd first to survive round-tripping.", np: "localStorage/sessionStorage ले हरेक key र value लाई string मा coerce गर्छन्; objects बचाउन पहिले JSON.stringify गर्नुपर्छ।", jp: "localStorage/sessionStorageはすべてのキーと値を文字列に変換する。オブジェクトを正しく保存するには先にJSON.stringifyする必要がある。" },
+          explanation: { en: "removeEventListener compares function identity, not behaviour — a lookalike function that isn't the same reference will not match.", np: "removeEventListener ले function identity compare गर्छ, behaviour होइन — same नभएको function match हुँदैन।", jp: "removeEventListenerは関数の同一性を比較する。振る舞いではない — 見た目が同じでも参照が異なれば一致しない。" },
         },
         {
-          question: { en: "When is `sessionStorage` automatically cleared?", np: "`sessionStorage` automatic रूपमा कहिले clear हुन्छ?", jp: "`sessionStorage`はいつ自動的にクリアされる？" },
+          question: { en: "What does `event.preventDefault()` do?", np: "`event.preventDefault()` ले के गर्छ?", jp: "`event.preventDefault()`は何をする？" },
           options: [
-            { en: "When the tab it belongs to is closed", np: "यो belong भएको tab बन्द हुँदा", jp: "それが属するタブが閉じられたとき" },
-            { en: "Only when `clear()` is called manually", np: "`clear()` manually call गरेमा मात्र", jp: "手動で`clear()`が呼ばれたときのみ" },
+            { en: "Stops the browser's default action for that event", np: "त्यो event को browser को default action रोक्छ", jp: "そのイベントに対するブラウザのデフォルト動作を止める" },
+            { en: "Stops the event from bubbling to ancestor elements", np: "Event लाई ancestor elements सम्म bubble हुनबाट रोक्छ", jp: "イベントが祖先要素へバブリングするのを止める" },
           ],
           correctIndex: 0,
-          explanation: { en: "sessionStorage is scoped to a single tab's session and is wiped automatically the moment that tab closes, unlike localStorage.", np: "sessionStorage एउटै tab को session मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै automatic रूपमा wipe हुन्छ, localStorage भन्दा फरक।", jp: "sessionStorageは単一タブのセッションにスコープされ、そのタブが閉じた瞬間に自動的にクリアされる。localStorageとは異なる。" },
+          explanation: { en: "preventDefault cancels the browser's built-in behaviour (like a form submit reloading the page); stopPropagation is the one that stops bubbling.", np: "preventDefault ले browser को built-in behaviour cancel गर्छ (जस्तै form submit को page reload); bubbling रोक्ने त stopPropagation हो।", jp: "preventDefaultはブラウザ組み込みの動作（フォーム送信によるページリロードなど）をキャンセルする。バブリングを止めるのはstopPropagationの方。" },
         },
         {
-          question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` is changed?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
+          question: { en: "Inside a listener attached to a parent element, what does `event.currentTarget` refer to?", np: "Parent element मा attach भएको listener भित्र, `event.currentTarget` ले केलाई refer गर्छ?", jp: "親要素にアタッチされたリスナー内で、`event.currentTarget`は何を指す？" },
           options: [
-            { en: "Only other tabs of the same origin — never the tab that made the change", np: "Same origin को अन्य tabs मा मात्र — change गर्ने tab मा कहिल्यै होइन", jp: "同一オリジンの他のタブのみ — 変更を行ったタブでは決して発火しない" },
-            { en: "Every tab, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" },
+            { en: "The parent element the listener is attached to", np: "Listener attach भएको parent element", jp: "リスナーがアタッチされている親要素" },
+            { en: "The exact child element that was clicked", np: "वास्तवमा click भएको exact child element", jp: "実際にクリックされた子要素" },
           ],
           correctIndex: 0,
-          explanation: { en: "The storage event deliberately excludes the originating tab, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event ले originating tab लाई जानाजानी exclude गर्छ, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは意図的に発生元のタブを除外する。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
+          explanation: { en: "currentTarget always stays fixed as the element the handler is attached to; the clicked child is event.target instead.", np: "currentTarget सधैं handler attach भएको element नै रहन्छ; click भएको child भने event.target हो।", jp: "currentTargetは常にハンドラがアタッチされた要素のままである。クリックされた子要素はevent.targetの方。" },
+        },
+      ],
+    },
+    {
+      id: "event-bubbling-delegation",
+      title: { en: "Event Bubbling, Capturing & Delegation", np: "Event Bubbling, Capturing र Delegation", jp: "イベントバブリング・キャプチャリング・委譲" },
+      durationMinutes: 9,
+      explanation: {
+        en: "When an event fires on a nested element, it travels through the DOM tree in two phases: first <b>capturing</b> — from the root document down to the target — then <b>bubbling</b> — back up from the target through every ancestor to the root. Most events bubble (`click`, `input`, `submit`); a few don't (`focus`, `blur`, `mouseenter`/`mouseleave`). `addEventListener` listens in the bubble phase by default; passing `true` (or `{ capture: true }`) as a third argument switches it to the capture phase instead, so ancestor listeners fire before the target's own listener.\n\n<b>Event delegation</b> exploits bubbling: instead of attaching a listener to every individual child (expensive in memory, and blind to children added later), you attach one listener to a shared ancestor and inspect `event.target` inside it to figure out which child was actually interacted with. `element.closest(selector)` is the standard tool for this — it walks up from `event.target` and returns the nearest ancestor (or the element itself) matching the selector, correctly handling clicks that land on a child of the item you actually care about, such as an icon inside a button.",
+        np: "Nested element मा event fire हुँदा, यो DOM tree मा दुई phases मा यात्रा गर्छ: पहिले <b>capturing</b> — root document बाट target सम्म down — त्यसपछि <b>bubbling</b> — target बाट प्रत्येक ancestor हुँदै root सम्म फेरि माथि। अधिकांश events bubble हुन्छन् (`click`, `input`, `submit`); केही हुँदैनन् (`focus`, `blur`, `mouseenter`/`mouseleave`)। `addEventListener` ले default रूपमा bubble phase मा listen गर्छ; तेस्रो argument को रूपमा `true` (वा `{ capture: true }`) pass गर्दा capture phase मा switch हुन्छ, जसले गर्दा ancestor listeners target को आफ्नै listener भन्दा पहिले fire हुन्छन्।\n\n<b>Event delegation</b> ले bubbling को फाइदा उठाउँछ: हरेक individual child मा listener attach गर्नुको सट्टा (memory मा महँगो, र पछि थपिएका children लाई अनदेखा), एउटा shared ancestor मा एउटै listener attach गरी त्यसभित्र `event.target` जाँचेर वास्तवमा कुन child सँग interact भयो पत्ता लगाइन्छ। `element.closest(selector)` यसको standard tool हो — यसले `event.target` बाट माथि walk गर्छ र selector match गर्ने nearest ancestor (वा element आफैं) फर्काउँछ, जसले वास्तविक interested item को child (जस्तै button भित्रको icon) मा click परे पनि सहि handle गर्छ।",
+        jp: "ネストされた要素でイベントが発生すると、DOMツリーを2つのフェーズで移動する。まず<b>キャプチャリング</b> — ルートドキュメントからターゲットへ下降し、次に<b>バブリング</b> — ターゲットから各祖先を通ってルートへ再び上昇する。ほとんどのイベントはバブリングする（`click`・`input`・`submit`）。一部はしない（`focus`・`blur`・`mouseenter`/`mouseleave`）。`addEventListener`はデフォルトでバブルフェーズをリスニングする。第3引数に`true`（または`{ capture: true }`）を渡すとキャプチャフェーズに切り替わり、祖先のリスナーがターゲット自身のリスナーより先に発火する。\n\n<b>イベント委譲</b>はバブリングを利用する — 個々の子要素すべてにリスナーをつける代わりに（メモリコストが高く、後で追加された子要素に気づけない）、共通の祖先に1つのリスナーをつけ、その中で`event.target`を調べて実際に操作された子要素を特定する。`element.closest(selector)`はこのための標準的な手段で、`event.target`から上にたどりセレクタに一致する最も近い祖先（または要素自身）を返す。これにより、本来関心のある項目の子要素（ボタン内のアイコンなど）でクリックが発生した場合も正しく処理できる。",
+      },
+      diagram: `        <div id="outer">                  3. outer   ▲ bubble phase (UP)
+          <div id="inner">                2. inner   │  fires: btn → inner → outer
+            <button id="btn">click me</button>  1. btn  ← event STARTS here (target)
+          </div>
+        </div>
+
+capture phase (DOWN, top→bottom, opt-in with true):  outer → inner → btn
+bubble  phase (UP,   bottom→top, DEFAULT):            btn → inner → outer
+
+Event delegation:
+  <ul id="list">                    ← ONE listener attached HERE
+    <li class="item">Apple</li>     ← click bubbles up from any <li>
+    <li class="item">Banana</li>    ← including items added LATER
+  </ul>
+  list.addEventListener("click", e => {
+    const item = e.target.closest(".item");   // find which <li> was actually clicked
+    if (item) handleClick(item);
+  });`,
+      codeExample: {
+        title: { en: "Bubbling, capturing and event delegation", np: "Bubbling, capturing र event delegation", jp: "バブリング・キャプチャリング・イベント委譲" },
+        code: `// ── Bubbling — events travel UP from target to ancestors ─────────
+// <div id="outer"><div id="inner"><button id="btn">Click</button></div></div>
+
+document.querySelector("#outer").addEventListener("click", () => console.log("outer"));
+document.querySelector("#inner").addEventListener("click", () => console.log("inner"));
+document.querySelector("#btn").addEventListener("click",   () => console.log("btn"));
+
+// Clicking the button logs, in order: "btn" -> "inner" -> "outer" (target first, then up)
+
+// ── stopPropagation() — cut the bubble short ──────────────────────
+document.querySelector("#btn").addEventListener("click", (event) => {
+  event.stopPropagation();     // "inner" and "outer" handlers will NOT run
+  console.log("btn only");
+});
+
+// ── Capture phase — listen on the way DOWN instead ────────────────
+document.querySelector("#outer").addEventListener(
+  "click",
+  () => console.log("outer (capture)"),
+  true                          // 3rd arg true = { capture: true }
+);
+// Now "outer (capture)" logs BEFORE the bubble-phase handlers fire
+
+// ── Event delegation — one listener for many (and future) children ──
+// Naive — a listener per row; 1000 rows = 1000 listeners, and misses new rows
+document.querySelectorAll(".todo-item").forEach((item) => {
+  item.addEventListener("click", handleTodoClick);
+});
+
+// Delegation — one listener on the stable parent
+const list = document.querySelector("#todo-list");
+
+list.addEventListener("click", (event) => {
+  const item = event.target.closest(".todo-item"); // handles clicks on nested icons/text too
+  if (!item) return;                                // click was outside any todo item
+
+  const id = item.dataset.id;
+  handleTodoClick(id);
+});
+
+// Delegation still works for items added AFTER this listener was set up:
+const newItem = document.createElement("li");
+newItem.className = "todo-item";
+newItem.dataset.id = "99";
+list.appendChild(newItem);   // clicking it triggers the delegated handler above — no new listener needed`,
+      },
+      keyTakeaways: [
+        { en: "Events travel down (capture) then up (bubble); `addEventListener` listens on the bubble phase by default, and most events bubble except a few like `focus`/`blur`.", np: "Events पहिले down जान्छन् (capture) त्यसपछि up (bubble); `addEventListener` ले default रूपमा bubble phase मा listen गर्छ, र `focus`/`blur` जस्ता केही बाहेक अधिकांश events bubble हुन्छन्।", jp: "イベントはまず下降（キャプチャ）し、次に上昇（バブル）する。`addEventListener`はデフォルトでバブルフェーズをリスニングし、`focus`/`blur`など一部を除きほとんどのイベントがバブリングする。" },
+        { en: "Event delegation attaches one listener to a shared parent instead of one per child, saving memory and automatically covering elements added to the DOM later.", np: "Event delegation ले हरेक child मा एउटा-एउटा को सट्टा एउटा shared parent मा एउटै listener attach गर्छ, memory बचाउँछ र पछि DOM मा थपिएका elements पनि automatic रूपमा cover गर्छ।", jp: "イベント委譲は子要素ごとに1つずつではなく、共有の親に1つのリスナーをアタッチする。メモリを節約し、後でDOMに追加された要素も自動的にカバーする。" },
+        { en: "`element.closest(selector)` inside a delegated handler finds the right ancestor matching a class even when `event.target` is a nested child of that element.", np: "Delegated handler भित्र `element.closest(selector)` ले `event.target` त्यो element को nested child भए पनि class match गर्ने सही ancestor फेला पार्छ।", jp: "委譲ハンドラ内の`element.closest(selector)`は、`event.target`がその要素のネストされた子であっても、クラスに一致する正しい祖先を見つける。" },
+      ],
+      commonMistakes: [
+        { en: "Attaching a separate listener to every list item instead of delegating to the parent, wasting memory and silently missing items added after page load.", np: "Parent मा delegate गर्नुको सट्टा हरेक list item मा छुट्टै listener attach गर्नु, memory खेर फाल्नु र page load पछि थपिएका items silently miss गर्नु।", jp: "親に委譲せず各リストアイテムに個別のリスナーをアタッチすること。メモリを無駄にし、ページ読み込み後に追加されたアイテムを黙って見逃す。" },
+        { en: "Using `event.target` directly in a delegated handler without `closest()`, breaking when the click lands on a nested child like an icon inside the row.", np: "`closest()` बिना delegated handler मा `event.target` directly प्रयोग गर्नु, click row भित्रको icon जस्तो nested child मा परेमा break हुनु।", jp: "`closest()`なしで委譲ハンドラ内で`event.target`を直接使うこと。クリックが行内のアイコンのようなネストされた子要素に当たると壊れる。" },
+        { en: "Assuming `stopPropagation()` also prevents the default browser action (or vice versa with `preventDefault()`) — the two methods control unrelated things.", np: "`stopPropagation()` ले default browser action पनि रोक्छ भन्ने ठान्नु (वा उल्टो `preventDefault()` सँग) — यी दुई methods ले असंबंधित कुरा control गर्छन्।", jp: "`stopPropagation()`がデフォルトのブラウザ動作も阻止する（またはその逆で`preventDefault()`）と思い込むこと — この2つのメソッドは無関係のものを制御する。" },
+      ],
+      quiz: [
+        {
+          question: { en: "When the innermost `<button>` in a nested structure is clicked, in what order do bubble-phase listeners on btn, inner, and outer fire?", np: "Nested structure मा सबैभन्दा भित्री `<button>` click हुँदा, btn, inner, र outer मा bubble-phase listeners कुन क्रममा fire हुन्छन्?", jp: "ネストされた構造の最も内側の`<button>`がクリックされたとき、btn・inner・outerのバブルフェーズのリスナーはどの順で発火する？" },
+          options: [
+            { en: "Target first, then up through ancestors: btn, inner, outer", np: "पहिले target, त्यसपछि ancestors हुँदै माथि: btn, inner, outer", jp: "まずターゲット、次に祖先へ: btn、inner、outerの順" },
+            { en: "Ancestors first, then down to the target: outer, inner, btn", np: "पहिले ancestors, त्यसपछि target सम्म तल: outer, inner, btn", jp: "まず祖先、次にターゲットへ: outer、inner、btnの順" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The bubble phase starts at the exact target and travels upward, so the deepest element's listener always fires first.", np: "Bubble phase exact target बाट सुरु भई माथि जान्छ, त्यसैले सबैभन्दा गहिरो element को listener सधैं पहिले fire हुन्छ।", jp: "バブルフェーズは正確なターゲットから始まり上へ進むため、最も深い要素のリスナーが常に最初に発火する。" },
+        },
+        {
+          question: { en: "What is the main advantage of event delegation over attaching a listener to every child?", np: "हरेक child मा listener attach गर्नु भन्दा event delegation को मुख्य फाइदा के हो?", jp: "すべての子要素にリスナーをアタッチするより、イベント委譲の主な利点は何？" },
+          options: [
+            { en: "One listener also automatically handles children added to the DOM later", np: "एउटै listener ले पछि DOM मा थपिएका children पनि automatic रूपमा handle गर्छ", jp: "1つのリスナーが後でDOMに追加された子要素も自動的に処理する" },
+            { en: "It makes the click event fire faster", np: "यसले click event छिटो fire गराउँछ", jp: "クリックイベントをより速く発火させる" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Because the listener sits on a stable ancestor and relies on bubbling, it keeps working for elements that don't exist yet at setup time.", np: "Listener स्थिर ancestor मा रहने र bubbling मा भर पर्ने भएकाले, setup समयमा नभएका elements का लागि पनि यसले काम गरिरहन्छ।", jp: "リスナーは安定した祖先に置かれバブリングに依存するため、セットアップ時点でまだ存在しない要素に対しても機能し続ける。" },
+        },
+        {
+          question: { en: "Why use `element.closest(selector)` inside a delegated click handler instead of comparing `event.target` directly?", np: "Delegated click handler भित्र `event.target` directly compare गर्नुको सट्टा `element.closest(selector)` किन प्रयोग गर्ने?", jp: "委譲されたクリックハンドラ内で`event.target`を直接比較する代わりに`element.closest(selector)`を使う理由は？" },
+          options: [
+            { en: "Because the actual click target might be a nested child of the element you care about", np: "किनकि actual click target तपाईंलाई चासो भएको element को nested child हुन सक्छ", jp: "実際のクリックターゲットが、関心のある要素のネストされた子である可能性があるため" },
+            { en: "Because closest() runs faster than querySelector()", np: "किनकि closest() ले querySelector() भन्दा छिटो चल्छ", jp: "closest()がquerySelector()より高速に実行されるため" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "closest() walks up from the exact click point to find the nearest matching ancestor, correctly handling clicks on nested icons or text inside the item.", np: "closest() ले exact click point बाट माथि walk गरी nearest matching ancestor फेला पार्छ, item भित्रको nested icon वा text मा click परे पनि सहि handle गर्छ।", jp: "closest()は正確なクリック位置から上にたどり、最も近い一致する祖先を見つける。アイテム内のネストされたアイコンやテキストへのクリックも正しく処理する。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "Does `fetch` reject its promise for a `404` or `500` response?", np: "`fetch` ले `404` वा `500` response का लागि आफ्नो promise reject गर्छ?", jp: "`fetch`は`404`や`500`レスポンスに対してPromiseをrejectする？" },
-      options: [{ en: "No — it resolves normally; check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुहोस्", jp: "しない — 正常にresolveする。`response.ok`を確認する" }, { en: "Yes — fetch always throws on 4xx/5xx status codes", np: "हो — fetch ले सधैं 4xx/5xx status codes मा throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスコードでスローする" }],
+      question: { en: "Does `querySelectorAll` return the first match or every match?", np: "`querySelectorAll` ले पहिलो match फर्काउँछ कि सबै matches?", jp: "`querySelectorAll`は最初の一致を返す、それともすべての一致？" },
+      options: [{ en: "Every match, as a static list", np: "सबै matches, static list को रूपमा", jp: "すべての一致を静的なリストで" }, { en: "Only the first match", np: "केवल पहिलो match", jp: "最初の一致のみ" }],
       correctIndex: 0,
-      explanation: { en: "fetch only rejects on network-level failures; any completed HTTP response, including error statuses, resolves the promise, so you must check response.ok yourself.", np: "fetch ले network-level failure मा मात्र reject गर्छ; error statuses सहित कुनै पनि completed HTTP response ले promise resolve गर्छ, त्यसैले आफैं response.ok check गर्नुपर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。エラーステータスを含むあらゆる完了したHTTPレスポンスはPromiseを解決するため、自分でresponse.okを確認する必要がある。" },
+      explanation: { en: "querySelectorAll always returns a static NodeList of every matching element; use querySelector for just the first.", np: "querySelectorAll ले सधैं सबै matching elements को static NodeList फर्काउँछ; पहिलो मात्र चाहिएमा querySelector प्रयोग गर्नुहोस्।", jp: "querySelectorAllは常にすべての一致要素の静的なNodeListを返す。最初の1つだけならquerySelectorを使う。" },
     },
     {
-      question: { en: "How many times can a `Response` body be read without calling `clone()` first?", np: "पहिले `clone()` call नगरी `Response` body कति पटक read गर्न सकिन्छ?", jp: "先に`clone()`を呼ばずに`Response`のボディは何回読める？" },
-      options: [{ en: "Once", np: "एकपटक", jp: "1回" }, { en: "Unlimited times", np: "असीमित पटक", jp: "無制限" }],
+      question: { en: "Which is safe to set with untrusted user input: `textContent` or `innerHTML`?", np: "Untrusted user input set गर्न कुन safe छ: `textContent` कि `innerHTML`?", jp: "信頼できないユーザー入力を設定するのに安全なのは`textContent`と`innerHTML`のどちら？" },
+      options: [{ en: "textContent", np: "textContent", jp: "textContent" }, { en: "innerHTML", np: "innerHTML", jp: "innerHTML" }],
       correctIndex: 0,
-      explanation: { en: "The response body is a stream that can only be consumed once; a second read without clone() throws an error.", np: "Response body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ; clone() बिना दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディは一度しか消費できないストリームであり、clone()なしで2回目に読むとエラーになる。" },
+      explanation: { en: "textContent always escapes and displays plain text; innerHTML parses real markup, which is an XSS risk with untrusted input.", np: "textContent ले सधैं escape गरेर plain text देखाउँछ; innerHTML ले actual markup parse गर्छ, untrusted input सँग XSS risk हुन्छ।", jp: "textContentは常にエスケープしプレーンテキストとして表示する。innerHTMLは実際のマークアップを解析するため、信頼できない入力でXSSリスクとなる。" },
     },
     {
-      question: { en: "What must a `POST` request set so the server knows the body is JSON?", np: "Server ले body JSON हो भनेर थाहा पाउन `POST` request मा के set गर्नुपर्छ?", jp: "サーバーがボディがJSONであると認識するために`POST`リクエストで何を設定する必要がある？" },
-      options: [{ en: "A `Content-Type: application/json` header", np: "`Content-Type: application/json` header", jp: "`Content-Type: application/json`ヘッダー" }, { en: "Nothing — fetch detects it automatically", np: "केही छैन — fetch ले automatic रूपमा detect गर्छ", jp: "何もない — fetchが自動で検出する" }],
+      question: { en: "What happens if you call `classList.toggle(\"active\")` on an element that already has the `\"active\"` class?", np: "पहिले नै `\"active\"` class भएको element मा `classList.toggle(\"active\")` call गर्दा के हुन्छ?", jp: "すでに`\"active\"`クラスがある要素で`classList.toggle(\"active\")`を呼ぶとどうなる？" },
+      options: [{ en: "The class is removed", np: "Class हटिन्छ", jp: "クラスが削除される" }, { en: "Nothing changes", np: "केही परिवर्तन हुँदैन", jp: "何も変わらない" }],
       correctIndex: 0,
-      explanation: { en: "fetch never inspects or serializes the body for you; the Content-Type header plus a JSON.stringify'd body is required.", np: "fetch ले body कहिल्यै आफैं inspect वा serialize गर्दैन; Content-Type header र JSON.stringify गरिएको body दुवै चाहिन्छ।", jp: "fetchはボディを自動で検査・シリアライズすることはない。Content-TypeヘッダーとJSON.stringifyされたボディの両方が必要。" },
+      explanation: { en: "toggle() flips presence — it removes the class if it's already there.", np: "toggle() ले presence flip गर्छ — पहिले नै भए हटाउँछ।", jp: "toggle()は存在を反転する — すでにあれば削除する。" },
     },
     {
-      question: { en: "What is the `.name` of the error a `fetch` promise rejects with after `controller.abort()` is called?", np: "`controller.abort()` call गरेपछि `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "`controller.abort()`が呼ばれた後、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
-      options: [{ en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" }, { en: "`\"TypeError\"`", np: "`\"TypeError\"`", jp: "`\"TypeError\"`" }],
+      question: { en: "What must you pass to `removeEventListener` for it to actually remove a listener?", np: "`removeEventListener` ले वास्तवमा listener remove गर्न के pass गर्नुपर्छ?", jp: "`removeEventListener`が実際にリスナーを削除するために何を渡す必要がある？" },
+      options: [{ en: "The exact same function reference used in addEventListener", np: "addEventListener मा प्रयोग गरेकै exact same function reference", jp: "addEventListenerで使ったのと全く同じ関数の参照" }, { en: "A new function with the same code", np: "उस्तै code भएको नयाँ function", jp: "同じコードを持つ新しい関数" }],
       correctIndex: 0,
-      explanation: { en: "Aborting a fetch always produces an error named AbortError, letting you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常にAbortErrorという名前のエラーが生成され、意図的なキャンセルと本当の失敗を区別できる。" },
+      explanation: { en: "removeEventListener matches by function identity, not by behaviour.", np: "removeEventListener ले function identity ले match गर्छ, behaviour ले होइन।", jp: "removeEventListenerは振る舞いではなく関数の同一性で一致させる。" },
     },
     {
-      question: { en: "Where should `controller.abort()` be called to stop a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを止めるには、`controller.abort()`をどこで呼ぶべき？" },
-      options: [{ en: "In the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function मा", jp: "`useEffect`から返されるクリーンアップ関数の中" }, { en: "In the `.then()` success callback", np: "`.then()` success callback मा", jp: "`.then()`の成功コールバックの中" }],
+      question: { en: "In a listener attached to a parent, what does `event.target` refer to versus `event.currentTarget`?", np: "Parent मा attach भएको listener मा, `event.target` ले `event.currentTarget` भन्दा फरक के लाई refer गर्छ?", jp: "親にアタッチされたリスナーにおいて、`event.target`は`event.currentTarget`と対比して何を指す？" },
+      options: [{ en: "target = element actually interacted with; currentTarget = element the listener is on", np: "target = वास्तवमा interact भएको element; currentTarget = listener भएको element", jp: "target = 実際に操作された要素、currentTarget = リスナーがある要素" }, { en: "They always refer to the same element", np: "दुवैले सधैं उही element लाई refer गर्छन्", jp: "常に同じ要素を指す" }],
       correctIndex: 0,
-      explanation: { en: "React runs the effect's cleanup automatically on unmount or before the next run, making it the right place to cancel a pending request.", np: "React ले effect को cleanup unmount मा वा अर्को run अघि automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時または次の実行前にエフェクトのクリーンアップを自動実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
+      explanation: { en: "target is the originating element; currentTarget stays fixed as the element the handler is attached to — they diverge whenever the event bubbled.", np: "target originate भएको element हो; currentTarget handler भएको element नै रहन्छ — event bubble भएमा दुवै फरक हुन्छन्।", jp: "targetはイベント発生元の要素、currentTargetはハンドラがアタッチされた要素のまま — イベントがバブリングすると両者は異なる。" },
     },
     {
-      question: { en: "What type are all `localStorage` values stored as, regardless of what you pass to `setItem`?", np: "`setItem` मा जे pass गरे पनि सबै `localStorage` values कुन type मा store हुन्छन्?", jp: "`setItem`に何を渡しても、すべての`localStorage`の値はどの型で保存される？" },
-      options: [{ en: "Strings", np: "Strings", jp: "文字列" }, { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" }],
+      question: { en: "What does `event.stopPropagation()` do, as opposed to `event.preventDefault()`?", np: "`event.preventDefault()` को तुलनामा `event.stopPropagation()` ले के गर्छ?", jp: "`event.preventDefault()`とは対照的に、`event.stopPropagation()`は何をする？" },
+      options: [{ en: "Stops the event bubbling further up to ancestor elements", np: "Event लाई ancestor elements सम्म थप bubble हुनबाट रोक्छ", jp: "イベントが祖先要素へさらにバブリングするのを止める" }, { en: "Cancels the browser's default action for the event", np: "Event को browser default action cancel गर्छ", jp: "イベントに対するブラウザのデフォルト動作をキャンセルする" }],
       correctIndex: 0,
-      explanation: { en: "localStorage coerces every value to a string; objects must be JSON.stringify'd before storing and JSON.parse'd after reading.", np: "localStorage ले हरेक value लाई string मा coerce गर्छ; objects store गर्नु अघि JSON.stringify र read गरेपछि JSON.parse गर्नुपर्छ।", jp: "localStorageはすべての値を文字列に変換する。オブジェクトは保存前にJSON.stringify、読み取り後にJSON.parseする必要がある。" },
+      explanation: { en: "stopPropagation halts bubbling; preventDefault is the one that cancels default browser behaviour — they are not interchangeable.", np: "stopPropagation ले bubbling रोक्छ; default browser behaviour cancel गर्ने त preventDefault हो — यी interchangeable होइनन्।", jp: "stopPropagationはバブリングを止める。デフォルトのブラウザ動作をキャンセルするのはpreventDefaultの方 — 置き換え可能ではない。" },
     },
     {
-      question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` changes?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
-      options: [{ en: "Only other tabs of the same origin", np: "Same origin को अन्य tabs मा मात्र", jp: "同一オリジンの他のタブのみ" }, { en: "All tabs, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" }],
+      question: { en: "When a nested element is clicked, does the bubble phase fire from the target upward, or from the root downward?", np: "Nested element click हुँदा, bubble phase target बाट माथि fire हुन्छ कि root बाट तल?", jp: "ネストされた要素がクリックされたとき、バブルフェーズはターゲットから上へ発火するのか、ルートから下へなのか？" },
+      options: [{ en: "From the target upward through its ancestors", np: "Target बाट यसका ancestors हुँदै माथि", jp: "ターゲットから祖先を通って上へ" }, { en: "From the root document downward to the target", np: "Root document बाट target सम्म तल", jp: "ルートドキュメントからターゲットへ下へ" }],
       correctIndex: 0,
-      explanation: { en: "The storage event deliberately never fires in the tab that made the change, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event change गर्ने tab मा जानाजानी कहिल्यै fire हुँदैन, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは変更を行ったタブでは意図的に発火しない。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
+      explanation: { en: "Bubbling travels upward from the exact target through every ancestor to the root; the downward pass is the separate capture phase.", np: "Bubbling exact target बाट प्रत्येक ancestor हुँदै root सम्म माथि जान्छ; तलतिरको pass छुट्टै capture phase हो।", jp: "バブリングは正確なターゲットから各祖先を通ってルートへ上に進む。下方向のパスは別のキャプチャフェーズ。" },
     },
     {
-      question: { en: "Why should a long-lived refresh token generally NOT be stored in `localStorage`?", np: "Long-lived refresh token लाई सामान्यतया `localStorage` मा किन store गर्नु हुँदैन?", jp: "長期的なリフレッシュトークンを一般的に`localStorage`に保存すべきでない理由は？" },
-      options: [{ en: "Any injected XSS script can freely read localStorage", np: "जुनसुकै injected XSS script ले localStorage freely read गर्न सक्छ", jp: "注入されたXSSスクリプトがlocalStorageを自由に読めるため" }, { en: "localStorage values get cleared too frequently", np: "localStorage values धेरै बारम्बार clear हुन्छन्", jp: "localStorageの値が頻繁にクリアされすぎるため" }],
+      question: { en: "What is the main benefit of event delegation for a list whose items are added dynamically?", np: "Items dynamically थपिने list का लागि event delegation को मुख्य फाइदा के हो?", jp: "アイテムが動的に追加されるリストにおけるイベント委譲の主な利点は？" },
+      options: [{ en: "The single parent listener automatically covers items added after setup", np: "Single parent listener ले setup पछि थपिएका items लाई automatic रूपमा cover गर्छ", jp: "単一の親リスナーが設定後に追加されたアイテムも自動的にカバーする" }, { en: "It avoids the need for event objects entirely", np: "यसले event objects को आवश्यकता पूर्ण रूपमा हटाउँछ", jp: "イベントオブジェクトの必要性を完全になくす" }],
       correctIndex: 0,
-      explanation: { en: "Because localStorage is readable by any JavaScript on the page, an XSS vulnerability exposes long-lived tokens; httpOnly cookies are safer since JavaScript cannot read them at all.", np: "localStorage page मा चल्ने जुनसुकै JavaScript ले read गर्न सक्ने भएकोले, XSS vulnerability ले long-lived tokens expose गर्छ; httpOnly cookies बढी सुरक्षित छन् किनकि JavaScript ले तिनलाई बिल्कुल read गर्न सक्दैन।", jp: "localStorageはページ上の任意のJavaScriptから読めるため、XSS脆弱性が長期的なトークンを晒してしまう。httpOnly CookieはJavaScriptが一切読めないためより安全。" },
+      explanation: { en: "Because the listener relies on bubbling from a stable ancestor, it keeps working for children that didn't exist when it was set up.", np: "Listener स्थिर ancestor बाट bubbling मा भर पर्ने भएकाले, setup हुँदा नभएका children का लागि पनि यसले काम गर्न जारी राख्छ।", jp: "リスナーは安定した祖先からのバブリングに依存するため、設定時に存在しなかった子要素に対しても機能し続ける。" },
+    },
+    {
+      question: { en: "Inside a delegated click handler, why is `event.target.closest(\".item\")` used instead of `event.target` alone?", np: "Delegated click handler भित्र, `event.target` मात्र को सट्टा `event.target.closest(\".item\")` किन प्रयोग हुन्छ?", jp: "委譲されたクリックハンドラ内で、`event.target`だけでなく`event.target.closest(\".item\")`が使われる理由は？" },
+      options: [{ en: "The click might land on a nested child rather than the item itself", np: "Click item आफैंमा नभई nested child मा पर्न सक्छ", jp: "クリックがアイテム自体ではなくネストされた子要素に当たることがあるため" }, { en: "closest() is required syntax for all event handlers", np: "closest() सबै event handlers का लागि required syntax हो", jp: "closest()はすべてのイベントハンドラに必要な構文だから" }],
+      correctIndex: 0,
+      explanation: { en: "closest() walks up from the exact click point to find the nearest ancestor matching the selector, handling clicks on nested content correctly.", np: "closest() ले exact click point बाट माथि walk गरी selector match गर्ने nearest ancestor फेला पार्छ, nested content मा click परे पनि सहि handle गर्छ।", jp: "closest()は正確なクリック位置から上にたどり、セレクタに一致する最も近い祖先を見つけ、ネストされたコンテンツへのクリックも正しく処理する。" },
     },
   ],
 };

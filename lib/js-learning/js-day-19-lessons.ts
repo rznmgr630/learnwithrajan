@@ -2,491 +2,439 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_19_LESSONS: JsLessonDay = {
   day: 19,
-  title: { en: "Advanced promise patterns — retry, timeout & concurrency", np: "Advanced Promise patterns", jp: "Promise応用パターン" },
+  title: { en: "Modern web APIs — Fetch, Storage & AbortController", np: "Modern Web APIs — Fetch, Storage", jp: "Fetch・Storage・AbortController" },
   totalMinutes: 27,
   difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
   lessons: [
     {
-      id: "retry-backoff",
-      title: { en: "Retry with Exponential Backoff", np: "Exponential Backoff सहित Retry", jp: "指数バックオフによるリトライ" },
+      id: "fetch-api",
+      title: { en: "The Fetch API", np: "Fetch API", jp: "Fetch API" },
       durationMinutes: 9,
       explanation: {
-        en: "Sometimes a request fails because of a temporary problem, such as a network issue or a server being overloaded. In these cases, we can <b>try the request again</b>.\n\nBut simply retrying again and again is dangerous. If we retry forever, one failed request could keep hitting an already-problematic server and make things worse.\n\n## 1. Limit the number of retries\n\nThe first thing we should do is set a `maxAttempts`.\n\nFor example:\n\n• Try the request\n• If it fails, try again\n• Keep trying until we reach `maxAttempts`\n• If it still fails, throw the error\n\nThis prevents our application from retrying forever.\n\n## 2. Wait between retries\n\nWe shouldn't retry immediately after a failure.\n\nInstead, we use <b>exponential backoff</b>. This means that we wait longer after each failed attempt.\n\nFor example:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nA simple formula is:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\nWe should also set a `maxDelayMs` so the waiting time doesn't become too long.\n\n## 3. Add jitter\n\nImagine 1,000 users make requests at the same time and all of them fail.\n\nIf everyone follows exactly the same retry schedule:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nThe server could suddenly receive thousands of requests at the same time. This is called a <b>retry storm</b>.\n\nTo avoid this, we add a small random amount of time called <b>jitter</b>.\n\nFor example:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nNow the requests are spread out instead of all happening at exactly the same moment.\n\n## 4. Don't retry every error\n\nSome errors are temporary, while others will fail every time.\n\nUsually, we should retry things like:\n\n• `5xx` server errors\n• Network errors\n• `429 Too Many Requests`\n\nBut we generally shouldn't retry normal `4xx` errors.\n\nFor example:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nIf the request is invalid or the user isn't authorized, sending the exact same request again probably won't fix anything.\n\nThat's why we can use a function like:\n\n```javascript\nshouldRetry(error)\n```\n\nIt decides whether a particular error is worth retrying.\n\n## 5. Be careful with POST requests\n\nThere's another important problem with retries.\n\nImagine we send:\n\n```http\nPOST /users\n```\n\nThe server successfully creates the user, but the response gets lost because of a network problem.\n\nOur application doesn't know that the user was already created, so it retries the request.\n\nNow the server might create <b>another user</b>.\n\nFor operations that aren't naturally safe to repeat, such as creating a record with `POST`, we should use an <b>idempotency key</b>.\n\nThe key allows the server to recognize:\n\n> \"I've already processed this request, so don't create it again.\"",
-        np: "कहिलेकाहीँ request अस्थायी समस्याको कारण fail हुन्छ, जस्तै network issue वा server धेरै load भएको। यस्तो अवस्थामा, हामी <b>request फेरि try गर्न सक्छौं</b>।\n\nतर बारम्बार retry गर्दै जानु खतरनाक हुन्छ। यदि हामी सधैंभरि retry गर्यौं भने, एउटै fail भएको request ले पहिले नै समस्यामा परेको server लाई हानिरहन्छ र स्थिति अझ बिग्रिन्छ।\n\n## 1. Retry को संख्या सीमित गर्नुहोस्\n\nपहिलो काम `maxAttempts` सेट गर्नु हो।\n\nउदाहरणका लागि:\n\n• Request try गर्नुहोस्\n• Fail भयो भने फेरि try गर्नुहोस्\n• `maxAttempts` पुग्ने बेलासम्म try गरिरहनुहोस्\n• अझै fail भयो भने error throw गर्नुहोस्\n\nयसले हाम्रो application लाई सधैंभरि retry गर्नबाट रोक्छ।\n\n## 2. Retry बीचमा wait गर्नुहोस्\n\nFail भएको लगत्तै retry गर्नु हुँदैन।\n\nबरु, हामी <b>exponential backoff</b> प्रयोग गर्छौं। यसको अर्थ हरेक fail भएको attempt पछि हामी अझ लामो समय wait गर्छौं।\n\nउदाहरणका लागि:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nसरल formula यो हो:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\nहामीले `maxDelayMs` पनि सेट गर्नुपर्छ ताकि wait गर्ने समय धेरै लामो नहोस्।\n\n## 3. Jitter थप्नुहोस्\n\nकल्पना गर्नुहोस् 1,000 users एकै समयमा request गर्छन् र सबै fail हुन्छन्।\n\nयदि सबैले ठ्याक्कै उही retry schedule पछ्याउँछन् भने:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nServer ले अचानक हजारौं request एकै समयमा पाउन सक्छ। यसलाई <b>retry storm</b> भनिन्छ।\n\nयसलाई बच्न, हामी <b>jitter</b> भनिने सानो random समय थप्छौं।\n\nउदाहरणका लागि:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nअब request हरू ठ्याक्कै एउटै क्षणमा नभई फैलिएर जान्छन्।\n\n## 4. हरेक error retry नगर्नुहोस्\n\nकेही error अस्थायी हुन्छन्, केही हरेक पटक fail हुन्छन्।\n\nसामान्यतया, हामीले यस्ता चीज retry गर्नुपर्छ:\n\n• `5xx` server errors\n• Network errors\n• `429 Too Many Requests`\n\nतर सामान्य `4xx` errors लाई retry गर्नु हुँदैन।\n\nउदाहरणका लागि:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nयदि request invalid छ वा user authorized छैन भने, ठ्याक्कै उही request फेरि पठाउँदा केही ठीक हुँदैन।\n\nत्यसैले हामी यस्तो function प्रयोग गर्न सक्छौं:\n\n```javascript\nshouldRetry(error)\n```\n\nयसले कुन error retry गर्न लायक छ भन्ने निर्णय गर्छ।\n\n## 5. POST request मा होसियार हुनुहोस्\n\nRetry सँग अझ एउटा महत्वपूर्ण समस्या छ।\n\nकल्पना गर्नुहोस् हामी पठाउँछौं:\n\n```http\nPOST /users\n```\n\nServer ले user सफलतापूर्वक बनाउँछ, तर network समस्याको कारण response हराउँछ।\n\nहाम्रो application लाई user पहिले नै बनिसकेको थाहा हुँदैन, त्यसैले यो request retry गर्छ।\n\nअब server ले <b>अर्को user</b> बनाउन सक्छ।\n\nदोहोर्याउन स्वभाविक रूपमा सुरक्षित नभएका operations, जस्तै `POST` ले record बनाउनु, को लागि हामीले <b>idempotency key</b> प्रयोग गर्नुपर्छ।\n\nKey ले server लाई चिन्न दिन्छ:\n\n> \"मैले यो request पहिले नै process गरिसकेको छु, त्यसैले फेरि नबनाउ।\"",
-        jp: "ネットワークの問題やサーバーの過負荷など、一時的な原因でリクエストが失敗することがあります。そのような場合は<b>リクエストをもう一度試す</b>ことができます。\n\nしかし、ただ何度もリトライを繰り返すのは危険です。永遠にリトライすると、1つの失敗したリクエストがすでに問題を抱えたサーバーを叩き続け、状況をさらに悪化させます。\n\n## 1. リトライ回数を制限する\n\nまず最初にすべきことは `maxAttempts` を設定することです。\n\n例:\n\n• リクエストを試す\n• 失敗したらもう一度試す\n• `maxAttempts` に達するまで試し続ける\n• それでも失敗したらエラーをスローする\n\nこれでアプリケーションが永遠にリトライすることを防げます。\n\n## 2. リトライの間に待つ\n\n失敗した直後にすぐリトライすべきではありません。\n\n代わりに<b>指数バックオフ</b>を使います。これは失敗するたびに待ち時間を長くしていくという意味です。\n\n例:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nシンプルな式は次のとおりです:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\n待ち時間が長くなりすぎないように `maxDelayMs` も設定すべきです。\n\n## 3. ジッターを加える\n\n1,000人のユーザーが同時にリクエストして、その全部が失敗したと想像してください。\n\n全員がまったく同じリトライスケジュールに従うと:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nサーバーは突然、何千ものリクエストを同時に受け取ることになります。これを<b>リトライストーム</b>と呼びます。\n\nこれを避けるために、<b>ジッター</b>と呼ばれる少量のランダムな時間を加えます。\n\n例:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nこれでリクエストはまったく同じ瞬間に集まらず、分散されます。\n\n## 4. すべてのエラーをリトライしない\n\n一時的なエラーもあれば、毎回必ず失敗するエラーもあります。\n\n通常、次のようなものはリトライすべきです:\n\n• `5xx` サーバーエラー\n• ネットワークエラー\n• `429 Too Many Requests`\n\nしかし、通常の `4xx` エラーはリトライすべきではありません。\n\n例:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nリクエストが不正であったり、ユーザーに権限がない場合、まったく同じリクエストをもう一度送っても何も解決しません。\n\nそのため、次のような関数を使えます:\n\n```javascript\nshouldRetry(error)\n```\n\nこれは、そのエラーがリトライする価値があるかどうかを判断します。\n\n## 5. POSTリクエストには注意する\n\nリトライにはもう1つ重要な問題があります。\n\n次を送ると想像してください:\n\n```http\nPOST /users\n```\n\nサーバーはユーザーの作成に成功しますが、ネットワークの問題でレスポンスが失われます。\n\nアプリケーションはユーザーがすでに作成されたことを知らないため、リクエストをリトライします。\n\nその結果、サーバーは<b>もう1人のユーザー</b>を作ってしまうかもしれません。\n\n`POST` でレコードを作成するなど、繰り返しても安全とは言えない操作には<b>冪等性キー</b>を使うべきです。\n\nこのキーによってサーバーは次のように認識できます:\n\n> 「このリクエストはすでに処理済みなので、もう作らない。」",
+        en: "`fetch(url)` sends an HTTP request and returns a <b>Promise</b> that resolves once the server responds — it pairs naturally with `async`/`await`, letting you write request code that reads top-to-bottom instead of nesting callbacks. The single biggest surprise for newcomers: `fetch` only <b>rejects</b> on a genuine network-level failure — the user is offline, DNS fails, or the request is blocked by CORS. A `404 Not Found` or `500 Server Error` still counts as a completed HTTP transaction, so the promise resolves normally. That means you must always check `response.ok` (`true` for status codes 200-299) — or inspect `response.status` directly — and throw your own error when it's `false`, otherwise a failed request will silently be treated as a success.\n\nOnce you have a `Response` object, you read its body with one of several methods: `response.json()` parses it as JSON, `response.text()` returns raw text, `response.blob()` gives you binary data (images, files), and `response.arrayBuffer()` returns a raw binary buffer — all of them return Promises of their own, so they need an `await` too. A `Response` body is a <b>stream that can only be consumed once</b>; calling `.json()` twice on the same response throws an error. If you genuinely need to read the body more than once (for example, logging the raw text while also parsing JSON), call `response.clone()` first and read from the clone.\n\nSending data works with the same function plus more options: a `POST` request sets `method: \"POST\"`, includes a `Content-Type: application/json` header so the server knows how to parse the body, and passes `body: JSON.stringify(data)` — the body itself is always a string (or Blob/FormData/ArrayBuffer), `fetch` never serializes objects for you. Other commonly used options include `headers` (any custom headers, like an `Authorization` token), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (whether to send cookies — `omit`/`same-origin`/`include`), and `cache` (how to interact with the browser's HTTP cache).",
+        np: "`fetch(url)` ले HTTP request पठाउँछ र server ले respond गरेपछि resolve हुने <b>Promise</b> फर्काउँछ — यो `async`/`await` सँग naturally मिल्छ, जसले callbacks nest नगरी top-to-bottom पढ्न मिल्ने request code लेख्न दिन्छ। नयाँ सिक्नेहरूलाई सबैभन्दा ठूलो surprise यही हो: `fetch` ले केवल genuine network-level failure मा मात्र <b>reject</b> गर्छ — user offline भएमा, DNS fail भएमा, वा request CORS ले block गरेमा। `404 Not Found` वा `500 Server Error` लाई पनि completed HTTP transaction नै मानिन्छ, त्यसैले promise normally resolve हुन्छ। यसैले सधैं `response.ok` (status codes 200-299 का लागि `true`) check गर्नुपर्छ — वा directly `response.status` जाँच गर्नुपर्छ — र `false` भएमा आफ्नै error throw गर्नुपर्छ, नत्र failed request लाई silently success मानिनेछ।\n\n`Response` object पाएपछि, यसको body कुनै एउटा method ले read गर्न सकिन्छ: `response.json()` ले JSON को रूपमा parse गर्छ, `response.text()` ले raw text फर्काउँछ, `response.blob()` ले binary data (images, files) दिन्छ, र `response.arrayBuffer()` ले raw binary buffer फर्काउँछ — यी सबैले आफ्नै Promise फर्काउँछन्, त्यसैले तिनलाई पनि `await` चाहिन्छ। `Response` body <b>एकपटक मात्र consume हुने stream</b> हो; same response मा `.json()` दुई पटक call गर्दा error आउँछ। साँच्चै body दुई पटक read गर्नुपर्ने भएमा (जस्तै raw text log गर्दै JSON पनि parse गर्ने), पहिले `response.clone()` call गरी clone बाट read गर्नुहोस्।\n\nData पठाउनु उही function मा थप options सँग हुन्छ: `POST` request मा `method: \"POST\"` set गरिन्छ, server लाई body कसरी parse गर्ने भन्न `Content-Type: application/json` header समावेश गरिन्छ, र `body: JSON.stringify(data)` pass गरिन्छ — body सधैं string (वा Blob/FormData/ArrayBuffer) नै हुन्छ, `fetch` ले objects आफै serialize गर्दैन। अन्य सामान्य options मा `headers` (जस्तै `Authorization` token जस्ता custom headers), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (cookies पठाउने कि नपठाउने — `omit`/`same-origin`/`include`), र `cache` (browser को HTTP cache सँग कसरी interact गर्ने) पर्छन्।",
+        jp: "`fetch(url)`はHTTPリクエストを送信し、サーバーが応答すると解決する<b>Promise</b>を返す — `async`/`await`と自然に組み合わさり、コールバックを入れ子にせず上から下へ読めるリクエストコードを書ける。初心者が最も驚くポイント: `fetch`は本当のネットワークレベルの失敗（オフライン・DNS失敗・CORSによるブロック）でのみ<b>reject</b>する。`404 Not Found`や`500 Server Error`もHTTPトランザクションとしては完了しているため、Promiseは正常に解決する。つまり常に`response.ok`（ステータスコード200-299で`true`）を確認するか`response.status`を直接調べ、`false`のときは自分でエラーをスローする必要がある。そうしないと失敗したリクエストが黙って成功として扱われてしまう。\n\n`Response`オブジェクトを取得したら、いくつかのメソッドでボディを読み取る: `response.json()`はJSONとして解析し、`response.text()`は生のテキストを返し、`response.blob()`はバイナリデータ（画像やファイル）を、`response.arrayBuffer()`は生のバイナリバッファを返す — すべて独自のPromiseを返すため`await`が必要。`Response`のボディは<b>一度しか消費できないストリーム</b>であり、同じレスポンスで`.json()`を2回呼ぶとエラーになる。どうしても2回読む必要がある場合（生テキストをログしつつJSONも解析するなど）は、先に`response.clone()`を呼びクローンから読む。\n\nデータ送信は同じ関数にオプションを追加するだけ: `POST`リクエストでは`method: \"POST\"`を設定し、サーバーがボディの解析方法を知るために`Content-Type: application/json`ヘッダーを付け、`body: JSON.stringify(data)`を渡す — ボディは常に文字列（またはBlob/FormData/ArrayBuffer）で、`fetch`がオブジェクトを自動でシリアライズすることはない。他によく使うオプションには`headers`（`Authorization`トークンなどのカスタムヘッダー）、`mode`（`cors`/`no-cors`/`same-origin`）、`credentials`（クッキーを送るか — `omit`/`same-origin`/`include`）、`cache`（ブラウザのHTTPキャッシュとの連携方法）がある。",
       },
-      diagram: `Request
-   ↓
-Did it succeed?
-   ↓
- Yes → Return result
-   ↓
- No
-   ↓
-Should we retry?
-   ↓
- No → Throw error
-   ↓
- Yes
-   ↓
-Wait using exponential backoff + jitter
-   ↓
-Try again
-   ↓
-Reached max attempts?
-   ↓
- Yes → Throw error`,
+      diagram: `fetch(url)  →  Promise<Response>
+                    │
+      ┌─────────────┴─────────────┐
+      │ network error (offline,   │  →  Promise REJECTS  (catch / try-catch)
+      │ DNS fail, CORS blocked)    │
+      └────────────────────────────┘
+      │ server responds (ANY       │  →  Promise RESOLVES (even for 404 / 500!)
+      │ status code: 200, 404, 500)│       ⚠ must check response.ok yourself
+      └────────────────────────────┘
+
+response.ok            → true only for status 200-299
+response.status        → 200, 404, 500 ...
+response.json()        ┐
+response.text()        │  each reads the body ONCE, returns its own Promise
+response.blob()        │  need it twice? → response.clone() first
+response.arrayBuffer() ┘`,
       codeExample: {
-        title: { en: "Retrying transient failures with exponential backoff + jitter", np: "Exponential backoff + jitter सहित transient failures retry गर्नु", jp: "指数バックオフ+ジッターで一時的な失敗をリトライ" },
-        code: `// ── Attempt limit — stop eventually, don't hammer forever ──────────
-async function retry(fn, maxAttempts = 3) {
-  let lastError;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastError = err;
-      console.log(\`Attempt \${attempt}/\${maxAttempts} failed: \${err.message}\`);
-    }
+        title: { en: "GET and POST requests with error handling", np: "Error handling सहित GET र POST requests", jp: "エラー処理付きのGET・POSTリクエスト" },
+        code: `// ── A basic GET request ───────────────────────────────────────────
+const res = await fetch("https://api.example.com/products/42");
+const product = await res.json();          // parse the JSON body
+
+// ── The #1 gotcha: fetch does NOT throw on HTTP error responses ────
+// A 404 or 500 still resolves successfully — you must check response.ok yourself
+async function getProduct(id) {
+  const res = await fetch(\`https://api.example.com/products/\${id}\`);
+
+  if (!res.ok) {
+    // res.status: 404, 500, etc. — res.statusText: "Not Found", "Internal Server Error"
+    throw new Error(\`Request failed: \${res.status} \${res.statusText}\`);
   }
-  throw lastError; // every attempt failed — let the caller handle it
+
+  return res.json();     // still a Promise — must be awaited/returned
 }
 
-// ── Exponential backoff + jitter + a "should I even retry?" gate ───
-function isTransient(err) {
-  if (err.name === "TypeError") return true;   // network failure, fetch never landed
-  if (err.status === 429) return true;          // rate limited — back off and try again
-  if (err.status >= 500) return true;           // server-side, may be temporary
-  return false;                                  // 4xx client errors — retrying won't help
-}
+// ── Reading the response body — pick ONE, it can only be read once ──
+const textCopy = await res.clone().text();  // clone() first if you need it twice
+// res.json()         → parsed JSON
+// res.text()         → raw string
+// res.blob()         → binary (image, file download)
+// res.arrayBuffer()  → raw binary buffer
 
-async function retryWithBackoff(fn, {
-  maxAttempts = 4,
-  baseDelayMs = 1000,
-  maxDelayMs  = 30_000,
-  shouldRetry = isTransient,
-} = {}) {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const isLastAttempt = attempt === maxAttempts;
-      if (isLastAttempt || !shouldRetry(err)) throw err;
+// ── POST request — sending JSON to the server ───────────────────────
+async function createProduct(data) {
+  const res = await fetch("https://api.example.com/products", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",   // tells the server how to parse \`body\`
+      "Authorization": \`Bearer \${authToken}\`,
+    },
+    body: JSON.stringify(data),   // fetch never auto-serializes objects for you
+  });
 
-      const exponential = baseDelayMs * 2 ** (attempt - 1);   // 1s, 2s, 4s, 8s...
-      const jitter       = Math.random() * baseDelayMs;        // avoid a synchronized retry storm
-      const delay        = Math.min(exponential + jitter, maxDelayMs);
-
-      console.log(\`Attempt \${attempt} failed (\${err.status ?? err.name}). Retrying in \${Math.round(delay)}ms\`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-}
-
-// ── Usage — fetch that throws a shaped error on non-2xx responses ──
-async function fetchJson(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw Object.assign(new Error(\`HTTP \${res.status}\`), { status: res.status });
+  if (!res.ok) throw new Error(\`Create failed: \${res.status}\`);
   return res.json();
 }
 
-const order = await retryWithBackoff(() => fetchJson("/api/orders/42"), {
-  maxAttempts: 5,
-  baseDelayMs: 500,
-});
-
-// Creating a resource? Never retry blindly — pass an idempotency key so the
-// server can recognize and safely ignore a duplicate retried request.
-await retryWithBackoff(() =>
-  fetch("/api/orders", {
-    method: "POST",
-    headers: { "Idempotency-Key": orderRequestId },
-    body: JSON.stringify(orderPayload),
-  })
-);`,
+// ── The full set of request options ──────────────────────────────────
+fetch(url, {
+  method: "GET",                     // GET | POST | PUT | PATCH | DELETE
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),     // string | FormData | Blob | ArrayBuffer
+  mode: "cors",                      // cors | no-cors | same-origin
+  credentials: "same-origin",        // omit | same-origin | include (send cookies?)
+  cache: "no-cache",                 // default | no-cache | no-store | force-cache
+});`,
       },
       keyTakeaways: [
-        { en: "<b>Limited attempts</b> — cap retries with `maxAttempts` and throw the error once that limit is reached, so the app never retries forever.", np: "<b>सीमित attempts</b> — `maxAttempts` ले retries cap गर्नुहोस् र त्यो limit पुगेपछि error throw गर्नुहोस्, ताकि app सधैंभरि retry नगरोस्।", jp: "<b>回数の制限</b> — `maxAttempts` でリトライを制限し、上限に達したらエラーをスローする。こうすればアプリが永遠にリトライすることはない。" },
-        { en: "<b>Exponential backoff</b> — wait longer after each failure (`baseDelayMs * 2 ** attempt`), so waits grow 1s, 2s, 4s, 8s.", np: "<b>Exponential backoff</b> — हरेक failure पछि अझ लामो wait गर्नुहोस् (`baseDelayMs * 2 ** attempt`), ताकि wait 1s, 2s, 4s, 8s गरी बढ्छ।", jp: "<b>指数バックオフ</b> — 失敗ごとに待ち時間を長くする（`baseDelayMs * 2 ** attempt`）ので、待機は1秒、2秒、4秒、8秒と増えていく。" },
-        { en: "<b>Maximum delay</b> — set a `maxDelayMs` so the waiting time never becomes too long.", np: "<b>Maximum delay</b> — `maxDelayMs` सेट गर्नुहोस् ताकि wait गर्ने समय कहिल्यै धेरै लामो नहोस्।", jp: "<b>最大遅延</b> — `maxDelayMs` を設定し、待ち時間が長くなりすぎないようにする。" },
-        { en: "<b>Jitter</b> — add a small random amount to each delay so thousands of clients don't retry at the exact same moment and cause a retry storm.", np: "<b>Jitter</b> — हरेक delay मा सानो random समय थप्नुहोस् ताकि हजारौं client ठ्याक्कै एउटै क्षणमा retry गरी retry storm नबनाउन्।", jp: "<b>ジッター</b> — 各遅延に少量のランダムな時間を加え、何千のクライアントがまったく同じ瞬間にリトライしてリトライストームを起こさないようにする。" },
-        { en: "<b>Retry only temporary errors</b> — `5xx`, network errors and `429 Too Many Requests`. Normal `4xx` errors like `400`, `401`, `403` and `404` will fail the same way every time.", np: "<b>अस्थायी error मात्र retry गर्नुहोस्</b> — `5xx`, network errors र `429 Too Many Requests`। `400`, `401`, `403` र `404` जस्ता सामान्य `4xx` errors हरेक पटक उस्तै रूपमा fail हुन्छन्।", jp: "<b>一時的なエラーだけリトライする</b> — `5xx`、ネットワークエラー、`429 Too Many Requests`。`400`・`401`・`403`・`404` のような通常の `4xx` エラーは毎回同じように失敗する。" },
-        { en: "<b>Idempotency</b> — for operations that aren't safe to repeat, such as creating a record with `POST`, send an idempotency key so a retry can't create a duplicate.", np: "<b>Idempotency</b> — दोहोर्याउन सुरक्षित नभएका operations, जस्तै `POST` ले record बनाउनु, को लागि idempotency key पठाउनुहोस् ताकि retry ले duplicate नबनाउन सकोस्।", jp: "<b>冪等性</b> — `POST` でレコードを作成するなど繰り返しても安全でない操作には冪等性キーを送り、リトライが重複を作れないようにする。" },
-        { en: "The goal isn't to retry as much as possible. The goal is to give a temporary failure a chance to recover without making the problem worse.", np: "लक्ष्य जति सक्दो धेरै retry गर्नु होइन। लक्ष्य अस्थायी failure लाई समस्या अझ बिगार्न नदिई recover हुने मौका दिनु हो।", jp: "目標はできるだけ多くリトライすることではない。目標は一時的な失敗に、問題を悪化させずに回復するチャンスを与えることだ。" },
+        { en: "`fetch` only rejects on genuine network failures — a 404 or 500 still resolves, so you must always check `response.ok` (or `response.status`) yourself.", np: "`fetch` केवल genuine network failure मा मात्र reject हुन्छ — 404 वा 500 पनि resolve नै हुन्छ, त्यसैले सधैं आफैं `response.ok` (वा `response.status`) check गर्नुपर्छ।", jp: "`fetch`は本当のネットワーク障害でのみrejectする。404や500でもresolveするため、常に自分で`response.ok`（または`response.status`）を確認する必要がある。" },
+        { en: "The body can only be read once via `json()`/`text()`/`blob()`/`arrayBuffer()` — call `response.clone()` first if you need to read it a second time.", np: "Body `json()`/`text()`/`blob()`/`arrayBuffer()` मार्फत एकपटक मात्र read गर्न सकिन्छ — दुई पटक read गर्नुपर्ने भएमा पहिले `response.clone()` call गर्नुहोस्।", jp: "ボディは`json()`/`text()`/`blob()`/`arrayBuffer()`で一度しか読めない — 2回目に読む必要があれば先に`response.clone()`を呼ぶ。" },
+        { en: "A `POST` needs an explicit `method`, a `Content-Type` header, and a `JSON.stringify()`-ed body — `fetch` never serializes objects automatically.", np: "`POST` मा explicit `method`, `Content-Type` header, र `JSON.stringify()` गरिएको body चाहिन्छ — `fetch` ले objects आफैं serialize गर्दैन।", jp: "`POST`には明示的な`method`、`Content-Type`ヘッダー、`JSON.stringify()`されたボディが必要 — `fetch`がオブジェクトを自動でシリアライズすることはない。" },
       ],
       commonMistakes: [
-        { en: "Writing a retry loop with no attempt limit and no jitter, which under load turns one flaky endpoint into a synchronized storm of simultaneous retries.", np: "कुनै attempt limit र jitter नभएको retry loop लेख्नु, जसले load मा एउटा flaky endpoint लाई simultaneous retries को synchronized storm मा बदलिदिन्छ।", jp: "試行回数の上限もジッターもないリトライループを書くこと。負荷がかかると1つの不安定なエンドポイントが同期した一斉リトライの嵐に変わってしまう。" },
-        { en: "Retrying every error indiscriminately, including 4xx client errors that will fail identically on every attempt and just waste time.", np: "हरेक error लाई विना विचार retry गर्नु, 4xx client errors समेत जो हरेक attempt मा उस्तै रूपमा fail हुन्छन् र समय मात्र खेर फाल्छन्।", jp: "4xxクライアントエラーを含め、すべてのエラーを無差別にリトライすること。これは毎回同じように失敗し、時間を無駄にするだけ。" },
-        { en: "Retrying a POST/create request after a timeout without an idempotency key, risking a duplicate record if the original request actually succeeded.", np: "Timeout पछि idempotency key बिना POST/create request retry गर्नु, original request वास्तवमा सफल भएको भए duplicate record बनाउने जोखिम बढाउनु।", jp: "冪等性キーなしでタイムアウト後にPOST/作成リクエストをリトライすること。元のリクエストが実際に成功していた場合、重複レコードのリスクがある。" },
+        { en: "Assuming a `.catch()` or `try/catch` block will automatically catch a `404`/`500` response instead of checking `response.ok` explicitly.", np: "`404`/`500` response लाई `response.ok` explicitly check नगरी `.catch()` वा `try/catch` block ले automatic रूपमा catch गर्ने ठान्नु।", jp: "`response.ok`を明示的に確認せず、`404`/`500`レスポンスが`.catch()`や`try/catch`で自動的に捕捉されると思い込むこと。" },
+        { en: "Calling `response.json()` (or any body-reading method) twice on the same response without `clone()`, which throws an error.", np: "`clone()` बिना same response मा `response.json()` (वा कुनै body-reading method) दुई पटक call गर्नु, जसले error throw गर्छ।", jp: "`clone()`なしで同じレスポンスに対して`response.json()`（または他のボディ読み取りメソッド）を2回呼び、エラーを発生させること。" },
+        { en: "Forgetting the `Content-Type: application/json` header or forgetting to `JSON.stringify()` the body on a `POST`, so the server can't parse it correctly.", np: "`POST` मा `Content-Type: application/json` header बिर्सनु वा body `JSON.stringify()` गर्न बिर्सनु, जसले गर्दा server ले सहि parse गर्न सक्दैन।", jp: "`POST`で`Content-Type: application/json`ヘッダーを忘れる、またはボディを`JSON.stringify()`し忘れ、サーバーが正しく解析できなくなること。" },
       ],
       quiz: [
         {
-          question: { en: "What does exponential backoff do to the delay between retry attempts?", np: "Exponential backoff ले retry attempts बीचको delay लाई के गर्छ?", jp: "指数バックオフはリトライ試行間の遅延に対して何をする？" },
+          question: { en: "Does the `fetch` promise reject when the server responds with a `404 Not Found`?", np: "Server ले `404 Not Found` सँग respond गर्दा `fetch` promise reject हुन्छ?", jp: "サーバーが`404 Not Found`で応答した場合、`fetch`のPromiseはrejectする？" },
           options: [
-            { en: "Roughly doubles it after each failure, capped at a maximum delay", np: "हरेक failure पछि लगभग दोब्बर बनाउँछ, maximum delay मा cap गरिएको", jp: "各失敗ごとにおおよそ2倍にし、最大遅延で上限を設ける" },
-            { en: "Keeps it exactly the same fixed value every time", np: "हरेक पटक ठ्याक्कै उही fixed value राख्छ", jp: "毎回全く同じ固定値のままにする" },
+            { en: "No — it resolves normally; you must check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुपर्छ", jp: "しない — 正常にresolveする。`response.ok`を確認する必要がある" },
+            { en: "Yes — fetch always throws on any 4xx/5xx status", np: "हो — fetch ले जुनसुकै 4xx/5xx status मा सधैं throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスでスローする" },
           ],
           correctIndex: 0,
-          explanation: { en: "Each retry waits roughly double the previous delay (baseDelayMs * 2 ** attempt), capped at maxDelayMs so the wait never grows unbounded.", np: "हरेक retry ले अघिल्लो delay भन्दा लगभग दोब्बर wait गर्छ (baseDelayMs * 2 ** attempt), maxDelayMs मा cap गरिएको ताकि wait असीमित रूपमा नबढ्न।", jp: "各リトライは前回の遅延のおおよそ2倍待つ（baseDelayMs * 2 ** attempt）。maxDelayMsで上限が設けられ、待機が無限に増えることはない。" },
+          explanation: { en: "fetch only rejects on network-level failures; a completed HTTP response, even an error status, resolves the promise normally.", np: "fetch ले network-level failure मा मात्र reject गर्छ; completed HTTP response, error status भए पनि, promise normally resolve गर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。完了したHTTPレスポンスはエラーステータスでも正常にPromiseを解決する。" },
         },
         {
-          question: { en: "Why add random jitter to a retry's backoff delay?", np: "Retry को backoff delay मा random jitter किन थपिन्छ?", jp: "リトライのバックオフ遅延にランダムなジッターを加える理由は？" },
+          question: { en: "How many times can you successfully call `.json()` on the same `Response` object without `clone()`?", np: "`clone()` बिना same `Response` object मा कति पटक `.json()` सफलतापूर्वक call गर्न सकिन्छ?", jp: "`clone()`なしで同じ`Response`オブジェクトに対して`.json()`を何回成功させて呼べる？" },
           options: [
-            { en: "To prevent many clients from retrying at the exact same synchronized instant", np: "धेरै clients लाई एउटै exact synchronized instant मा retry हुनबाट रोक्न", jp: "多数のクライアントが全く同じ同期した瞬間にリトライするのを防ぐため" },
-            { en: "To make the retry function run faster", np: "Retry function लाई छिटो चलाउन", jp: "リトライ関数をより速く実行するため" },
+            { en: "Once — the body is a stream that can only be consumed once", np: "एकपटक — body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ", jp: "1回 — ボディは一度しか消費できないストリーム" },
+            { en: "As many times as you want", np: "जति चाहे त्यति पटक", jp: "何回でも" },
           ],
           correctIndex: 0,
-          explanation: { en: "If every client backs off with the exact same formula, they all retry in lockstep; jitter randomizes the delay so retries spread out instead of storming the service together.", np: "हरेक client ले उही formula प्रयोग गरी backoff गरे भने, सबैले lockstep मा retry गर्छन्; jitter ले delay लाई random बनाई retries एकसाथ storm नगरी फैलिन्छ।", jp: "全クライアントが全く同じ式でバックオフすると、全員が同期してリトライしてしまう。ジッターは遅延をランダム化し、リトライが一斉に押し寄せるのではなく分散するようにする。" },
+          explanation: { en: "The response body is a stream; reading it a second time without cloning first throws an error.", np: "Response body एउटा stream हो; clone नगरी दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディはストリームであり、クローンせずに2回目に読むとエラーになる。" },
         },
         {
-          question: { en: "Should a `shouldRetry` predicate allow retrying a `404 Not Found` response?", np: "`shouldRetry` predicate ले `404 Not Found` response लाई retry गर्न दिनुपर्छ?", jp: "`shouldRetry`述語は`404 Not Found`レスポンスのリトライを許可すべきか？" },
+          question: { en: "What must you set to correctly send JSON data in a `POST` request body?", np: "`POST` request body मा JSON data सहि रूपमा पठाउन के set गर्नुपर्छ?", jp: "`POST`リクエストボディで正しくJSONデータを送るには何を設定する必要がある？" },
           options: [
-            { en: "No — 4xx client errors will fail identically on every retry", np: "होइन — 4xx client errors हरेक retry मा उस्तै रूपमा fail हुन्छन्", jp: "いいえ — 4xxクライアントエラーは毎回同じように失敗する" },
-            { en: "Yes — retry it exactly like a transient 5xx error", np: "हो — यसलाई transient 5xx error जस्तै retry गर्नुपर्छ", jp: "はい — 一時的な5xxエラーと同様にリトライすべき" },
+            { en: "A `Content-Type: application/json` header and a `JSON.stringify()`-ed body", np: "`Content-Type: application/json` header र `JSON.stringify()` गरिएको body", jp: "`Content-Type: application/json`ヘッダーと`JSON.stringify()`されたボディ" },
+            { en: "Nothing — fetch detects and serializes plain objects automatically", np: "केही छैन — fetch ले plain objects आफैं detect र serialize गर्छ", jp: "何もない — fetchはプレーンオブジェクトを自動で検出・シリアライズする" },
           ],
           correctIndex: 0,
-          explanation: { en: "404 means the resource genuinely doesn't exist — retrying won't change that outcome, unlike a transient 5xx or network failure.", np: "404 को अर्थ resource साँच्चै अवस्थित छैन — retry ले त्यो outcome बदल्दैन, transient 5xx वा network failure भन्दा फरक।", jp: "404はリソースが本当に存在しないことを意味する — 一時的な5xxやネットワーク障害と異なり、リトライしてもその結果は変わらない。" },
+          explanation: { en: "fetch never serializes the body for you; you must stringify it yourself and tell the server its format via the header.", np: "fetch ले body कहिल्यै आफैं serialize गर्दैन; आफैं stringify गर्नुपर्छ र header मार्फत server लाई format बताउनुपर्छ।", jp: "fetchはボディを自動でシリアライズしない。自分でstringifyし、ヘッダーでサーバーに形式を伝える必要がある。" },
         },
       ],
     },
     {
-      id: "timeout-race",
-      title: { en: "Timeout, Promise.race & Circuit Breakers", np: "Timeout, Promise.race र Circuit Breakers", jp: "タイムアウト・Promise.race・サーキットブレーカー" },
+      id: "abortcontroller",
+      title: { en: "AbortController — Cancelling Requests", np: "AbortController — Requests Cancel गर्नु", jp: "AbortController — リクエストのキャンセル" },
       durationMinutes: 9,
       explanation: {
-        en: "When our app calls another server, we shouldn't wait forever if that server doesn't respond.\n\nThere are three useful ideas:\n\n1. <b>Timeout</b> — stop waiting after a certain amount of time.\n2. <b>`Promise.race()`</b> — choose whichever promise finishes first.\n3. <b>Circuit breaker</b> — stop calling a service that keeps failing.\n\n---\n\n## 1. Timeout\n\nImagine this:\n\n```javascript\nconst response = await fetch(url);\n```\n\nWhat if the server never responds?\n\nOur code could wait for a very long time.\n\nA <b>timeout</b> gives the request a deadline.\n\nFor example:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nThis prevents our application from getting stuck waiting forever.\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` waits for multiple promises and uses whichever one finishes first.\n\nFor example:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nHere we have two things happening:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\nWhichever finishes first wins.\n\n### If the server responds first:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### If 5 seconds pass first:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nThis is one way to create a manual timeout.\n\n---\n\n## 3. Better timeout for `fetch()`: `AbortController`\n\nFor `fetch()`, JavaScript provides a better solution called <b>`AbortController`</b>.\n\nIt allows us to actually <b>cancel</b> the request.\n\nExample:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\nThe important part is:\n\n```javascript\ncontroller.abort();\n```\n\nIt tells `fetch()`:\n\n> Stop this request.\n\n### Why `clearTimeout()`?\n\nIf the request finishes quickly, the timer is still running.\n\nSo we use:\n\n```javascript\nclearTimeout(timer);\n```\n\ninside `finally` so the timer is always cleaned up.\n\n---\n\n## 4. What is a Circuit Breaker?\n\nA timeout protects <b>one request</b>.\n\nBut imagine a service is completely down.\n\nOur app might do this:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\nThat's bad because we're wasting time and continuing to send requests to a broken service.\n\nA <b>circuit breaker</b> stops this.\n\nThink of it like an electrical circuit breaker in a house:\n\n> Too many problems → switch off → wait → test again.\n\n---\n\n## 5. Three Circuit Breaker States\n\nA circuit breaker has three simple states.\n\n### 🟢 Closed\n\nEverything is normal.\n\n```text\nRequest → Service\n```\n\nRequests are allowed.\n\n---\n\n### 🔴 Open\n\nThere have been too many failures.\n\nThe circuit opens and stops sending requests.\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\nWe don't even call the broken service.\n\nThis saves time and reduces pressure on the service.\n\n---\n\n### 🟡 Half-Open\n\nAfter waiting for a while, the circuit gives the service <b>one test request</b>.\n\nIf it works:\n\n```text\nSuccess → Closed\n```\n\nThe service seems healthy again, so normal requests continue.\n\nIf it fails:\n\n```text\nFailure → Open\n```\n\nThe circuit stops requests again.",
-        np: "हाम्रो app ले अर्को server call गर्दा, त्यो server ले response नदिए हामीले सधैंभरि wait गर्नु हुँदैन।\n\nतीन उपयोगी विचार छन्:\n\n1. <b>Timeout</b> — निश्चित समय पछि wait गर्न छोड्नु।\n2. <b>`Promise.race()`</b> — जो promise पहिले सक्किन्छ, त्यसै लिनु।\n3. <b>Circuit breaker</b> — बारम्बार fail हुने service लाई call गर्न छोड्नु।\n\n---\n\n## 1. Timeout\n\nयसो कल्पना गर्नुहोस्:\n\n```javascript\nconst response = await fetch(url);\n```\n\nयदि server ले कहिल्यै response नदिए के हुन्छ?\n\nहाम्रो code धेरै लामो समय wait गर्न सक्छ।\n\n<b>Timeout</b> ले request लाई एउटा deadline दिन्छ।\n\nउदाहरणका लागि:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nयसले हाम्रो application लाई सधैंभरि wait गर्दै अड्किनबाट बचाउँछ।\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` ले धेरै promise कुर्छ र जो पहिले सक्किन्छ त्यसलाई प्रयोग गर्छ।\n\nउदाहरणका लागि:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nयहाँ दुई चीज भइरहेका छन्:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\nजो पहिले सक्किन्छ, त्यही जित्छ।\n\n### यदि server पहिले response दिए:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### यदि 5 seconds पहिले बित्यो:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nयो manual timeout बनाउने एउटा तरिका हो।\n\n---\n\n## 3. `fetch()` का लागि राम्रो timeout: `AbortController`\n\n`fetch()` का लागि JavaScript ले <b>`AbortController`</b> भनिने राम्रो समाधान दिन्छ।\n\nयसले हामीलाई request साँच्चै <b>cancel</b> गर्न दिन्छ।\n\nउदाहरण:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\nमहत्वपूर्ण भाग यो हो:\n\n```javascript\ncontroller.abort();\n```\n\nयसले `fetch()` लाई भन्छ:\n\n> यो request रोक।\n\n### `clearTimeout()` किन?\n\nयदि request छिटो सक्किए, timer अझै चलिरहेको हुन्छ।\n\nत्यसैले हामी प्रयोग गर्छौं:\n\n```javascript\nclearTimeout(timer);\n```\n\n`finally` भित्र, ताकि timer सधैं सफा होस्।\n\n---\n\n## 4. Circuit Breaker के हो?\n\nTimeout ले <b>एउटा request</b> लाई मात्र बचाउँछ।\n\nतर कल्पना गर्नुहोस् एउटा service पूरै down छ।\n\nहाम्रो app यसो गर्न सक्छ:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\nयो नराम्रो हो किनकि हामी समय खेर फाल्दै छौं र भाँचिएको service लाई request पठाइरहेका छौं।\n\n<b>Circuit breaker</b> ले यसलाई रोक्छ।\n\nयसलाई घरको बिजुलीको circuit breaker जस्तै सोच्नुहोस्:\n\n> धेरै समस्या → बन्द गर → कुर → फेरि जाँच गर।\n\n---\n\n## 5. Circuit Breaker का तीन States\n\nCircuit breaker का तीन सरल states हुन्छन्।\n\n### 🟢 Closed\n\nसबै सामान्य छ।\n\n```text\nRequest → Service\n```\n\nRequest हरू अनुमति पाउँछन्।\n\n---\n\n### 🔴 Open\n\nधेरै failures भइसकेका छन्।\n\nCircuit खुल्छ र request पठाउन बन्द गर्छ।\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\nहामी भाँचिएको service लाई call पनि गर्दैनौं।\n\nयसले समय बचाउँछ र service माथिको pressure घटाउँछ।\n\n---\n\n### 🟡 Half-Open\n\nकेही बेर कुरेपछि, circuit ले service लाई <b>एउटा test request</b> दिन्छ।\n\nयदि काम गर्यो:\n\n```text\nSuccess → Closed\n```\n\nService फेरि स्वस्थ देखिन्छ, त्यसैले सामान्य request हरू जारी रहन्छन्।\n\nयदि fail भयो:\n\n```text\nFailure → Open\n```\n\nCircuit ले फेरि request रोक्छ।",
-        jp: "アプリが別のサーバーを呼ぶとき、そのサーバーが応答しないなら永遠に待つべきではありません。\n\n役に立つ考え方が3つあります:\n\n1. <b>タイムアウト</b> — 一定時間が過ぎたら待つのをやめる。\n2. <b>`Promise.race()`</b> — 最初に終わったPromiseを採用する。\n3. <b>サーキットブレーカー</b> — 失敗し続けるサービスの呼び出しをやめる。\n\n---\n\n## 1. タイムアウト\n\nこう想像してください:\n\n```javascript\nconst response = await fetch(url);\n```\n\nサーバーが一度も応答しなかったら?\n\nコードは非常に長い時間待つことになります。\n\n<b>タイムアウト</b>はリクエストに期限を与えます。\n\n例:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nこれでアプリケーションが永遠に待ったまま止まることを防げます。\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` は複数のPromiseを待ち、最初に終わったものを使います。\n\n例:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nここでは2つのことが同時に起きています:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\n先に終わった方が勝ちます。\n\n### サーバーが先に応答した場合:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### 5秒が先に過ぎた場合:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nこれは手動でタイムアウトを作る1つの方法です。\n\n---\n\n## 3. `fetch()` により良いタイムアウト: `AbortController`\n\n`fetch()` にはJavaScriptが<b>`AbortController`</b>というより良い方法を用意しています。\n\nこれを使うとリクエストを実際に<b>キャンセル</b>できます。\n\n例:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\n重要な部分はここです:\n\n```javascript\ncontroller.abort();\n```\n\nこれは `fetch()` にこう伝えます:\n\n> このリクエストを止めて。\n\n### なぜ `clearTimeout()` が必要か?\n\nリクエストが早く終わっても、タイマーはまだ動いています。\n\nそこで次を使います:\n\n```javascript\nclearTimeout(timer);\n```\n\n`finally` の中で呼ぶことで、タイマーは必ず片付けられます。\n\n---\n\n## 4. サーキットブレーカーとは?\n\nタイムアウトが守るのは<b>1つのリクエスト</b>だけです。\n\nしかし、あるサービスが完全に停止していると想像してください。\n\nアプリはこうなるかもしれません:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\n時間を無駄にし、壊れたサービスにリクエストを送り続けているので、これは良くありません。\n\n<b>サーキットブレーカー</b>がこれを止めます。\n\n家のブレーカーのように考えてください:\n\n> 問題が多すぎる → 遮断する → 待つ → もう一度試す。\n\n---\n\n## 5. サーキットブレーカーの3つの状態\n\nサーキットブレーカーには3つのシンプルな状態があります。\n\n### 🟢 Closed（閉）\n\nすべて正常です。\n\n```text\nRequest → Service\n```\n\nリクエストは許可されます。\n\n---\n\n### 🔴 Open（開）\n\n失敗が多すぎました。\n\n回路が開き、リクエストの送信を止めます。\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\n壊れたサービスを呼び出しさえしません。\n\nこれで時間を節約し、サービスへの負荷を減らせます。\n\n---\n\n### 🟡 Half-Open（半開）\n\nしばらく待った後、回路はサービスに<b>1回だけテストのリクエスト</b>を送ります。\n\nうまくいけば:\n\n```text\nSuccess → Closed\n```\n\nサービスは回復したように見えるので、通常のリクエストが続きます。\n\n失敗すれば:\n\n```text\nFailure → Open\n```\n\n回路は再びリクエストを止めます。",
+        en: "An `AbortController` is a small standalone object with one job: giving you a way to cancel an in-flight operation. Calling `new AbortController()` gives you a `.signal` property (an `AbortSignal`) and an `.abort()` method. You pass the `signal` into `fetch`'s options object (`fetch(url, { signal })`), and later, calling `controller.abort()` immediately cancels that request — the `fetch` promise rejects with an error whose `.name` is `\"AbortError\"`. Because `AbortError` is a normal rejection, you distinguish it from a genuine failure inside your `catch` block by checking `err.name`, so you don't accidentally show the user an error message for a cancellation they caused on purpose.\n\nThis matters most inside component lifecycles: a component might start a `fetch` in a `useEffect`, but if the component unmounts (the user navigates away) before the response arrives, setting state from that stale response can throw warnings or cause bugs. The fix is to create one `AbortController` per effect run, pass its signal into `fetch`, and return a cleanup function that calls `controller.abort()` — React calls that cleanup automatically right before the effect re-runs or the component unmounts, so any request that hasn't resolved yet is cancelled cleanly.\n\nTwo very common patterns build directly on this. A <b>fetch timeout</b> — since `fetch` itself has no built-in timeout — pairs `AbortController` with `setTimeout`: start a timer that calls `controller.abort()` after N milliseconds, and clear that timer if the request finishes first. A <b>debounced search box</b> uses the same idea to avoid race conditions: every time the user types, abort whatever search request is still in flight before starting a new one, so an old, slow response can never overwrite the results of a newer, faster one.",
+        np: "`AbortController` एउटा सानो standalone object हो जसको काम एउटै हो: in-flight operation cancel गर्ने तरिका दिनु। `new AbortController()` ले `.signal` property (एउटा `AbortSignal`) र `.abort()` method दिन्छ। `signal` लाई `fetch` को options object मा pass गरिन्छ (`fetch(url, { signal })`), र पछि `controller.abort()` call गर्दा त्यो request तुरुन्तै cancel हुन्छ — `fetch` promise `.name` `\"AbortError\"` भएको error सँग reject हुन्छ। `AbortError` सामान्य rejection नै भएकाले, `catch` block भित्र `err.name` check गरेर यसलाई genuine failure बाट छुट्याउनुपर्छ, ताकि आफैले जानाजानी गरेको cancellation लाई error message को रूपमा user लाई नदेखाइन्।\n\nयो component lifecycles भित्र सबैभन्दा महत्वपूर्ण हुन्छ: कुनै component ले `useEffect` भित्र `fetch` सुरु गर्न सक्छ, तर response आउनु अघि नै component unmount भएमा (user अन्तै गएमा), त्यो stale response बाट state set गर्दा warnings वा bugs आउन सक्छन्। Fix भनेको हरेक effect run का लागि एउटा `AbortController` बनाउने, त्यसको signal `fetch` मा pass गर्ने, र `controller.abort()` call गर्ने cleanup function return गर्ने हो — React ले effect फेरि चल्नु अघि वा component unmount हुनु अघि नै त्यो cleanup automatic रूपमा call गर्छ, त्यसैले resolve नभएको जुनसुकै request cleanly cancel हुन्छ।\n\nयसैमा आधारित दुई निकै common patterns छन्। <b>Fetch timeout</b> — किनकि `fetch` मा आफैं built-in timeout हुँदैन — `AbortController` लाई `setTimeout` सँग जोड्छ: N milliseconds पछि `controller.abort()` call गर्ने timer सुरु गर्नुहोस्, र request पहिले नै पूरा भएमा त्यो timer clear गर्नुहोस्। <b>Debounced search box</b> ले उही idea प्रयोग गरी race conditions रोक्छ: user ले टाइप गर्दा हरेक पटक, नयाँ request सुरु गर्नु अघि in-flight रहेको पुरानो search request abort गरिन्छ, ताकि पुरानो ढिलो response ले नयाँ छिटो response को result कहिल्यै overwrite नगरोस्।",
+        jp: "`AbortController`は1つの仕事だけを持つ小さな単独オブジェクト — 実行中の処理をキャンセルする手段を提供する。`new AbortController()`は`.signal`プロパティ（`AbortSignal`）と`.abort()`メソッドを返す。その`signal`を`fetch`のオプションに渡し（`fetch(url, { signal })`）、後で`controller.abort()`を呼ぶとそのリクエストは即座にキャンセルされる — `fetch`のPromiseは`.name`が`\"AbortError\"`であるエラーでrejectされる。`AbortError`は通常のrejectionなので、`catch`ブロック内で`err.name`を確認して本当の失敗と区別する必要がある。そうしないと、自分で意図的に起こしたキャンセルに対してユーザーにエラーメッセージを表示してしまう。\n\nこれはコンポーネントのライフサイクル内で特に重要になる。コンポーネントが`useEffect`内で`fetch`を開始しても、応答が届く前にコンポーネントがアンマウントされる（ユーザーが離脱する）と、その古い応答からstateを設定すると警告やバグの原因になる。解決策は各エフェクト実行ごとに1つの`AbortController`を作り、そのsignalを`fetch`に渡し、`controller.abort()`を呼ぶクリーンアップ関数を返すこと — Reactはエフェクトが再実行される直前やコンポーネントがアンマウントされる直前にそのクリーンアップを自動で呼ぶため、まだ解決していないリクエストはきれいにキャンセルされる。\n\nこの上に2つの非常によくあるパターンが成り立つ。<b>fetchのタイムアウト</b> — `fetch`自体には組み込みのタイムアウトがないため — `AbortController`を`setTimeout`と組み合わせる: Nミリ秒後に`controller.abort()`を呼ぶタイマーを開始し、リクエストが先に完了したらそのタイマーをクリアする。<b>デバウンスされた検索ボックス</b>は同じ考え方でレースコンディションを防ぐ: ユーザーが入力するたびに、新しいリクエストを開始する前に実行中の古い検索リクエストをabortし、古く遅い応答が新しく速い応答の結果を上書きすることを防ぐ。",
       },
-      diagram: `        Request
-           ↓
-     Circuit Closed
-           ↓
-       Call service
-        ↙       ↘
-    Success     Failure
-       ↓           ↓
-    Continue   More failures?
-                   ↓
-                  Yes
-                   ↓
-            Circuit Opens
-                   ↓
-               Wait
-                   ↓
-           Half-Open
-              ↙     ↘
-          Success   Failure
-             ↓         ↓
-           Closed     Open`,
+      diagram: `const controller = new AbortController();
+fetch(url, { signal: controller.signal })
+      │
+      ├─ request completes normally   → Promise RESOLVES
+      │
+      └─ controller.abort() called    → Promise REJECTS
+                                           err.name === "AbortError"
+
+Cleanup pattern (e.g. inside useEffect):
+
+  mount ──► new controller ──► fetch(url,{signal}) ──► setState(data)
+                                      │
+  unmount ─────────────────────► controller.abort()  ← cleanup fn, runs first
+
+Fetch timeout:                 Debounced search:
+  setTimeout(5000ms) ─┐          keystroke 1 → controller1 = new fetch
+  controller.abort() ◄┘          keystroke 2 → controller1.abort() [cancel old]
+  (fires if request               → controller2 = new fetch
+   is too slow)                  keystroke 3 → controller2.abort(), controller3 = new fetch
+                                   → only the LAST request's response survives`,
       codeExample: {
-        title: { en: "Timing out slow calls and breaking the circuit on a failing service", np: "Slow calls लाई timeout गर्नु र failing service मा circuit break गर्नु", jp: "遅い呼び出しのタイムアウトと失敗するサービスのサーキットブレーク" },
-        code: `// ── Manual timeout with Promise.race ────────────────────────────────
-function timeout(ms, message = \`Timed out after \${ms}ms\`) {
-  return new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
-}
+        title: { en: "Cancelling fetch requests with AbortController", np: "AbortController सँग fetch requests cancel गर्नु", jp: "AbortControllerでfetchリクエストをキャンセルする" },
+        code: `// ── Basic cancellation ────────────────────────────────────────────
+const controller = new AbortController();
 
-async function withTimeout(promise, ms) {
-  return Promise.race([promise, timeout(ms)]);
-  // whichever settles first wins — the loser's result is just discarded
-}
+fetch("/api/report", { signal: controller.signal })
+  .then((res) => res.json())
+  .then((data) => console.log(data))
+  .catch((err) => {
+    if (err.name === "AbortError") {
+      console.log("Request was cancelled — not a real error");
+    } else {
+      console.error("Fetch actually failed:", err);
+    }
+  });
 
-const user = await withTimeout(fetchUser(id), 5000);
+controller.abort();   // cancel it — the promise above rejects with AbortError
 
-// ── Preferred: AbortController actually cancels the network request ─
-async function fetchWithTimeout(url, ms = 5000) {
+// ── Cancel on unmount inside a React component ─────────────────────
+useEffect(() => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
+
+  async function loadReport() {
+    try {
+      const res = await fetch("/api/report", { signal: controller.signal });
+      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+      setReport(await res.json());
+    } catch (err) {
+      if (err.name !== "AbortError") setError(err);   // ignore expected cancellations
+    }
+  }
+
+  loadReport();
+  return () => controller.abort();   // runs before the next effect / on unmount
+}, [reportId]);
+
+// ── Timeout wrapper — abort if the server is too slow ───────────────
+async function fetchWithTimeout(url, timeoutMs = 5000, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-    return await res.json();
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } catch (err) {
+    if (err.name === "AbortError") throw new Error(\`Timed out after \${timeoutMs}ms\`);
+    throw err;
   } finally {
-    clearTimeout(timer);   // clear it whether we succeeded, failed, or aborted
+    clearTimeout(timer);   // no leftover timer either way
   }
 }
 
-// ── Circuit breaker — stop calling a service that's clearly down ────
-class CircuitBreaker {
-  #failureCount = 0;
-  #state = "closed";       // "closed" | "open" | "half-open"
-  #nextAttemptAt = 0;
+// ── Debounced search — always cancel the previous in-flight request ─
+let activeController = null;
 
-  constructor(fn, { threshold = 3, cooldownMs = 10_000 } = {}) {
-    this.fn = fn;
-    this.threshold = threshold;
-    this.cooldownMs = cooldownMs;
+searchInput.addEventListener("input", async (event) => {
+  activeController?.abort();          // kill whatever search was still running
+  activeController = new AbortController();
+
+  try {
+    const res = await fetch(
+      \`/api/search?q=\${encodeURIComponent(event.target.value)}\`,
+      { signal: activeController.signal }
+    );
+    renderResults(await res.json());
+  } catch (err) {
+    if (err.name !== "AbortError") showError(err);
   }
-
-  async call(...args) {
-    if (this.#state === "open") {
-      if (Date.now() < this.#nextAttemptAt) {
-        throw new Error("Circuit open — service assumed down, failing fast");
-      }
-      this.#state = "half-open";   // cooldown over, let one test call through
-    }
-
-    try {
-      const result = await this.fn(...args);
-      this.#failureCount = 0;      // success resets everything
-      this.#state = "closed";
-      return result;
-    } catch (err) {
-      this.#failureCount++;
-      if (this.#state === "half-open" || this.#failureCount >= this.threshold) {
-        this.#state = "open";
-        this.#nextAttemptAt = Date.now() + this.cooldownMs;
-      }
-      throw err;
-    }
-  }
-}
-
-const breaker = new CircuitBreaker(() => fetchWithTimeout("/api/payments"), {
-  threshold: 3,
-  cooldownMs: 15_000,
-});
-
-await breaker.call();   // after 3 failures, every call fails instantly for 15s`,
+});`,
       },
       keyTakeaways: [
-        { en: "<b>Timeout</b> → \"Don't wait forever.\" Give every call to another server a deadline so your app can't get stuck.", np: "<b>Timeout</b> → \"सधैंभरि wait नगर।\" अर्को server लाई गर्ने हरेक call लाई deadline दिनुहोस् ताकि तपाईंको app अड्किन नसकोस्।", jp: "<b>タイムアウト</b> → \"永遠に待たない。\" 他のサーバーへの呼び出しには必ず期限を与え、アプリが止まらないようにする。" },
-        { en: "<b>`Promise.race()`</b> → \"Whichever finishes first wins.\" Race the real work against a timer to build a manual timeout.", np: "<b>`Promise.race()`</b> → \"जो पहिले सक्किन्छ, त्यही जित्छ।\" वास्तविक काम लाई timer सँग race गराई manual timeout बनाउनुहोस्।", jp: "<b>`Promise.race()`</b> → \"先に終わった方が勝つ。\" 実際の処理をタイマーと競わせて手動のタイムアウトを作る。" },
-        { en: "<b>`AbortController`</b> → \"Actually cancel the request.\" `Promise.race()` only ignores the loser; `controller.abort()` really stops the `fetch()`. Always `clearTimeout()` in `finally`.", np: "<b>`AbortController`</b> → \"Request साँच्चै cancel गर।\" `Promise.race()` ले हारेको लाई बेवास्ता मात्र गर्छ; `controller.abort()` ले `fetch()` साँच्चै रोक्छ। `finally` मा सधैं `clearTimeout()` गर्नुहोस्।", jp: "<b>`AbortController`</b> → \"リクエストを実際にキャンセルする。\" `Promise.race()` は負けた方を無視するだけ。`controller.abort()` は `fetch()` を本当に止める。`finally` では必ず `clearTimeout()` する。" },
-        { en: "<b>Circuit breaker</b> → \"Stop calling a service that keeps failing.\" Too many failures → switch off → wait → test again.", np: "<b>Circuit breaker</b> → \"बारम्बार fail हुने service लाई call गर्न छोड।\" धेरै failures → बन्द गर → कुर → फेरि जाँच गर।", jp: "<b>サーキットブレーカー</b> → \"失敗し続けるサービスの呼び出しをやめる。\" 失敗が多すぎる → 遮断する → 待つ → もう一度試す。" },
-        { en: "Three states: <b>Closed</b> (requests flow normally), <b>Open</b> (fail immediately without calling the service), <b>Half-Open</b> (one test request decides whether to close or open again).", np: "तीन states: <b>Closed</b> (request सामान्य रूपमा जान्छन्), <b>Open</b> (service call नगरी तुरुन्तै fail), <b>Half-Open</b> (एउटा test request ले फेरि close गर्ने वा open राख्ने निर्णय गर्छ)।", jp: "3つの状態: <b>Closed</b>（リクエストは通常どおり流れる）、<b>Open</b>（サービスを呼ばず即座に失敗）、<b>Half-Open</b>（1回のテストリクエストで再び閉じるか開くかを決める）。" },
-        { en: "Together, these make your application faster, safer and more reliable when other services have problems.", np: "मिलेर, यिनले अरू service मा समस्या हुँदा तपाईंको application लाई छिटो, सुरक्षित र भरपर्दो बनाउँछन्।", jp: "これらを組み合わせることで、他のサービスに問題があるときでもアプリケーションはより速く、より安全で、より信頼できるものになる。" },
+        { en: "Pass `controller.signal` into `fetch`'s options; calling `controller.abort()` rejects that fetch with an `AbortError` — check `err.name` to tell it apart from a real failure.", np: "`controller.signal` लाई `fetch` को options मा pass गर्नुहोस्; `controller.abort()` call गर्दा त्यो fetch `AbortError` सँग reject हुन्छ — genuine failure बाट छुट्याउन `err.name` check गर्नुहोस्।", jp: "`controller.signal`を`fetch`のオプションに渡す。`controller.abort()`を呼ぶとそのfetchは`AbortError`でrejectされる — 本当の失敗と区別するには`err.name`を確認する。" },
+        { en: "Create one `AbortController` per effect run and call `.abort()` in the effect's cleanup function so a component never sets state from a stale, unmounted request.", np: "हरेक effect run का लागि एउटा `AbortController` बनाउनुहोस् र effect को cleanup function मा `.abort()` call गर्नुहोस्, ताकि component ले कहिल्यै stale, unmounted request बाट state set नगरोस्।", jp: "各エフェクト実行ごとに1つの`AbortController`を作り、エフェクトのクリーンアップ関数で`.abort()`を呼ぶことで、コンポーネントが古い・アンマウント済みのリクエストからstateを設定することを防ぐ。" },
+        { en: "A fetch timeout pairs `setTimeout` with `controller.abort()`; a debounced search aborts the previous controller before every new request so an old response can never overwrite a newer one.", np: "Fetch timeout ले `setTimeout` लाई `controller.abort()` सँग जोड्छ; debounced search ले हरेक नयाँ request अघि पुरानो controller abort गर्छ ताकि पुरानो response ले नयाँलाई कहिल्यै overwrite नगरोस्।", jp: "fetchのタイムアウトは`setTimeout`と`controller.abort()`を組み合わせる。デバウンスされた検索は新しいリクエストごとに前のコントローラーをabortし、古い応答が新しい応答を上書きすることを防ぐ。" },
       ],
       commonMistakes: [
-        { en: "Using `Promise.race` for a timeout but forgetting the original operation is still running in the background — it isn't actually cancelled, just ignored.", np: "Timeout का लागि `Promise.race` प्रयोग गर्नु तर original operation अझै background मा चलिरहेको बिर्सनु — यो वास्तवमा cancel हुँदैन, केवल ignore हुन्छ।", jp: "タイムアウトに`Promise.race`を使うが、元の操作がまだバックグラウンドで動いていることを忘れること — 実際にはキャンセルされておらず、無視されているだけ。" },
-        { en: "Forgetting to `clearTimeout()` the abort timer in a `finally` block, leaving a stray timer running after a fast, successful response.", np: "`finally` block मा abort timer लाई `clearTimeout()` गर्न बिर्सनु, छिटो सफल response पछि पनि stray timer चलिरहनु।", jp: "`finally`ブロックでアボートタイマーを`clearTimeout()`し忘れ、速く成功したレスポンスの後も迷子のタイマーが動き続けること。" },
-        { en: "Retrying or timing out on every single call to a completely dead service instead of using a circuit breaker, which keeps hammering it and makes every caller wait out the full timeout.", np: "पूर्ण रूपमा dead service मा circuit breaker प्रयोग नगरी हरेक single call मा retry वा timeout गर्नु, जसले त्यसलाई hammer गरिरहन्छ र हरेक caller लाई पूरा timeout wait गराउँछ।", jp: "完全に死んでいるサービスに対してサーキットブレーカーを使わず、毎回の呼び出しでリトライやタイムアウトを繰り返すこと。これはサービスを叩き続け、すべての呼び出し元にフルのタイムアウトを待たせる。" },
+        { en: "Not checking `err.name === \"AbortError\"` in the `catch` block, so an intentional cancellation gets displayed to the user as a real error.", np: "`catch` block मा `err.name === \"AbortError\"` check नगर्नु, जसले गर्दा जानाजानी गरेको cancellation लाई user लाई real error को रूपमा देखाइन्छ।", jp: "`catch`ブロックで`err.name === \"AbortError\"`を確認せず、意図的なキャンセルがユーザーに本当のエラーとして表示されること。" },
+        { en: "Forgetting to call `controller.abort()` in a cleanup function, letting a stale request set state after the component has already unmounted.", np: "Cleanup function मा `controller.abort()` call गर्न बिर्सनु, component पहिले नै unmount भइसकेपछि stale request ले state set गर्न दिनु।", jp: "クリーンアップ関数で`controller.abort()`を呼び忘れ、コンポーネントがすでにアンマウントされた後に古いリクエストがstateを設定してしまうこと。" },
+        { en: "Reusing the same `AbortController` for multiple requests instead of creating a fresh one each time — once aborted, a controller's `signal` stays aborted forever.", np: "हरेक पटक नयाँ नबनाई same `AbortController` लाई multiple requests का लागि पुन: प्रयोग गर्नु — एकपटक abort भएपछि controller को `signal` सधैंभरि aborted नै रहन्छ।", jp: "毎回新しく作らず同じ`AbortController`を複数のリクエストに再利用すること — 一度abortされるとコントローラーの`signal`は永久にabort状態のままになる。" },
       ],
       quiz: [
         {
-          question: { en: "What does `Promise.race([a, b])` settle with?", np: "`Promise.race([a, b])` कुनसँग settle हुन्छ?", jp: "`Promise.race([a, b])`は何で確定する？" },
+          question: { en: "What is the `.name` of the error a `fetch` promise rejects with when its request is aborted?", np: "Request abort हुँदा `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "リクエストがabortされたとき、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
           options: [
-            { en: "Whichever of a or b settles first", np: "a वा b मध्ये जो पहिले settle हुन्छ", jp: "aかbのうち先に確定した方" },
-            { en: "Always the result of a, ignoring b entirely", np: "सधैं a को result, b लाई पूर्ण रूपमा ignore गरी", jp: "常にaの結果で、bは完全に無視する" },
+            { en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" },
+            { en: "`\"NetworkError\"`", np: "`\"NetworkError\"`", jp: "`\"NetworkError\"`" },
           ],
           correctIndex: 0,
-          explanation: { en: "race() settles as soon as the first input promise settles, whether it resolves or rejects — the other is simply left running and ignored.", np: "race() पहिलो input promise settle हुने बित्तिकै settle हुन्छ, resolve वा reject जुनसुकै होस्; अर्को त simply चलिरहन्छ र ignore हुन्छ।", jp: "race()は最初のPromiseが確定した瞬間に確定する。resolveかrejectかは問わない — もう一方は単に動き続け無視される。" },
+          explanation: { en: "Aborting a fetch always produces an error whose name is AbortError, which is how you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常に名前がAbortErrorのエラーが生成される。これで意図的なキャンセルと本当の失敗を区別する。" },
         },
         {
-          question: { en: "Why is `AbortController` preferred over `Promise.race` for timing out a `fetch()` call?", np: "`fetch()` call timeout गर्न `Promise.race` भन्दा `AbortController` किन preferred छ?", jp: "`fetch()`呼び出しのタイムアウトに`Promise.race`より`AbortController`が好まれる理由は？" },
+          question: { en: "Where should `controller.abort()` be called to prevent a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを防ぐには、`controller.abort()`をどこで呼ぶべき？" },
           options: [
-            { en: "It actually cancels the underlying network request instead of just ignoring it", np: "यसले network request लाई केवल ignore गर्नुको सट्टा वास्तवमा cancel गर्छ", jp: "単に無視するのではなく、実際にネットワークリクエストをキャンセルする" },
-            { en: "It makes the fetch resolve faster than normal", np: "यसले fetch लाई normal भन्दा छिटो resolve गराउँछ", jp: "fetchを通常より速く解決させる" },
+            { en: "Inside the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function भित्र", jp: "`useEffect`から返されるクリーンアップ関数の中" },
+            { en: "Inside the `.then()` success callback", np: "`.then()` success callback भित्र", jp: "`.then()`の成功コールバックの中" },
           ],
           correctIndex: 0,
-          explanation: { en: "Promise.race just ignores the loser; AbortController's signal actually tells the browser to abort the in-flight network request, freeing the connection.", np: "Promise.race ले हार्नेलाई केवल ignore गर्छ; AbortController को signal ले browser लाई in-flight network request abort गर्न वास्तवमा भन्छ, connection free गर्छ।", jp: "Promise.raceは負けた方を単に無視する。AbortControllerのsignalは実際にブラウザに進行中のネットワークリクエストをアボートさせ、接続を解放する。" },
+          explanation: { en: "React automatically runs the effect's cleanup function on unmount (or before the next run), making it the correct place to cancel a pending request.", np: "React ले unmount हुँदा (वा अर्को run अघि) effect को cleanup function automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時（または次の実行前）にエフェクトのクリーンアップ関数を自動で実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
         },
         {
-          question: { en: "In the circuit breaker pattern, what happens while the circuit is in the `open` state?", np: "Circuit breaker pattern मा, circuit `open` state मा हुँदा के हुन्छ?", jp: "サーキットブレーカーパターンで、サーキットが`open`状態にある間何が起こる？" },
+          question: { en: "In a debounced search box, what should happen the moment the user types a new character?", np: "Debounced search box मा user ले नयाँ character टाइप गर्ने क्षणमा के हुनुपर्छ?", jp: "デバウンスされた検索ボックスで、ユーザーが新しい文字を入力した瞬間に何が起こるべき？" },
           options: [
-            { en: "Calls fail immediately without being attempted, until a cooldown passes", np: "Cooldown नबितेसम्म calls प्रयास नगरी तुरुन्तै fail हुन्छन्", jp: "クールダウンが経過するまで、呼び出しは試みられることなく即座に失敗する" },
-            { en: "Calls are retried immediately, faster than normal", np: "Calls तुरुन्तै, normal भन्दा छिटो retry हुन्छन्", jp: "呼び出しは通常より速く即座にリトライされる" },
+            { en: "Abort the previous in-flight request before starting a new one", np: "नयाँ सुरु गर्नु अघि पुरानो in-flight request abort गर्नुपर्छ", jp: "新しいリクエストを開始する前に前の実行中リクエストをabortする" },
+            { en: "Let every previous request keep running and only render the last one", np: "हरेक पुरानो request चलिरहन दिनुपर्छ र अन्तिम मात्र render गर्नुपर्छ", jp: "すべての前のリクエストを実行させ続け、最後のものだけをレンダリングする" },
           ],
           correctIndex: 0,
-          explanation: { en: "The open state fails fast on purpose — no calls are even attempted until the cooldown elapses and the breaker moves to half-open to test recovery.", np: "Open state ले जानाजानी fail fast गर्छ — cooldown नबितेसम्म कुनै call प्रयास पनि हुँदैन, त्यसपछि breaker recovery test गर्न half-open मा जान्छ।", jp: "open状態は意図的に即座に失敗する — クールダウンが経過し、ブレーカーが回復をテストするためhalf-openに移るまで、呼び出しは試みられることさえない。" },
+          explanation: { en: "Aborting the previous request prevents a race condition where an old, slower response could arrive after and overwrite the results of a newer search.", np: "पुरानो request abort गर्दा race condition रोकिन्छ जहाँ पुरानो, ढिलो response पछि आएर नयाँ search को result overwrite गर्न सक्छ।", jp: "前のリクエストをabortすることで、古く遅い応答が後から到着して新しい検索結果を上書きするというレースコンディションを防ぐ。" },
         },
       ],
     },
     {
-      id: "concurrency-memoization",
-      title: { en: "Concurrency Limiting & Async Memoization", np: "Concurrency Limiting र Async Memoization", jp: "同時実行数制限と非同期メモ化" },
+      id: "web-storage",
+      title: { en: "Web Storage — localStorage & sessionStorage", np: "Web Storage — localStorage र sessionStorage", jp: "Web Storage — localStorageとsessionStorage" },
       durationMinutes: 9,
       explanation: {
-        en: "When working with many requests, two common problems can happen:\n\n1. <b>Too many requests at once</b>\n2. <b>The same request being made multiple times</b>\n\nTwo useful solutions are <b>concurrency limiting</b> and <b>request deduplication/memoization</b>.\n\n---\n\n## 1. The Problem with `Promise.all()`\n\nYou might write:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nThis looks simple.\n\nBut imagine you have <b>1,000 URLs</b>.\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nThis can:\n\n• Overload your server\n• Hit an API's rate limit\n• Use too many connections\n• Make your application slower\n\nInstead, we can limit how many requests run at the same time.\n\n---\n\n## 2. Concurrency Limiting\n\n<b>Concurrency</b> means how many tasks are running at the same time.\n\nFor example, if our limit is `5`:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nSo we never have more than <b>5 requests running at once</b>.\n\n### Simple idea\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nThis is called <b>bounded concurrency</b> (a fixed limit on how many tasks can run together).\n\n---\n\n## 3. How does `Promise.race()` help?\n\nWe can keep track of the requests currently running.\n\nFor example:\n\n```javascript\nconst executing = new Set();\n```\n\nWhen we start a request, we add its promise to the set.\n\nIf we reach our limit:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` waits until <b>any one</b> of the running requests finishes.\n\nThen we can start another request.\n\nSo:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\nThe important idea is:\n\n> <b>Don't start a new task until there is room.</b>\n\n---\n\n## 4. Duplicate Requests\n\nNow imagine five components on a page all need the same user:\n\n```javascript\nfetchUser(1)\n```\n\nWithout any protection:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nThat's <b>5 identical network requests</b>.\n\nBut we only need one.\n\n---\n\n## 5. Request Deduplication\n\n<b>Deduplication</b> (removing duplicates) means:\n\n> If the same request is already running, reuse it instead of starting another one.\n\nWe can store running requests in a `Map`.\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b> means a request that has started but hasn't finished yet.\n\nThe idea is:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\nSo if five components ask for the same user:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\nAll five callers get the <b>same Promise</b>.\n\nAfter the request finishes, we remove it from the `Map`.\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` means <b>run this code whether the request succeeds or fails</b>.\n\n---\n\n## 6. Memoization\n\nMemoization is similar, but it solves a slightly different problem.\n\n<b>Memoization</b> means:\n\n> Save a previous result and reuse it later.\n\nFor example:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nThis means we don't need to make another network request.\n\n---\n\n## 7. Memoization with Expiration\n\nWe usually don't want to keep data forever.\n\nFor example, user data might be cached for <b>60 seconds</b>.\n\nThis is called a <b>TTL</b> (Time To Live), which simply means:\n\n> How long the cached data should be used.\n\nWe can store:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nThen:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\nAfter 60 seconds, the cache expires and we fetch fresh data.\n\n---\n\n## 8. Deduplication vs Memoization\n\nThese two concepts are easy to confuse.\n\n### Request Deduplication\n\nDeals with requests happening <b>at the same time</b>.\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nIt only cares about requests that are currently running.\n\n### Memoization\n\nDeals with requests happening <b>later</b>.\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\nThe result is reused until it expires.\n\n---\n\n## 9. They Can Work Together\n\nIn real applications, you can use both.\n\nSo:\n\n<b>Deduplication</b> prevents duplicate requests happening at the same time.\n\n<b>Memoization</b> prevents unnecessary requests happening later.",
-        np: "धेरै request सँग काम गर्दा, दुई सामान्य समस्या आउन सक्छन्:\n\n1. <b>एकैचोटि धेरै request</b>\n2. <b>उही request धेरै पटक बनाइनु</b>\n\nदुई उपयोगी समाधान हुन्: <b>concurrency limiting</b> र <b>request deduplication/memoization</b>।\n\n---\n\n## 1. `Promise.all()` को समस्या\n\nतपाईं यसो लेख्न सक्नुहुन्छ:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nयो सजिलो देखिन्छ।\n\nतर कल्पना गर्नुहोस् तपाईंसँग <b>1,000 URLs</b> छन्।\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nयसले सक्छ:\n\n• तपाईंको server लाई overload गर्न\n• API को rate limit नाघ्न\n• धेरै connection प्रयोग गर्न\n• तपाईंको application लाई ढिलो बनाउन\n\nबरु, हामी एकै समयमा कति request चल्ने हो त्यो सीमित गर्न सक्छौं।\n\n---\n\n## 2. Concurrency Limiting\n\n<b>Concurrency</b> को अर्थ एकै समयमा कति task चलिरहेका छन् भन्ने हो।\n\nउदाहरणका लागि, हाम्रो limit `5` छ भने:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nत्यसैले हामीसँग कहिल्यै <b>एकैचोटि 5 भन्दा धेरै request</b> हुँदैनन्।\n\n### सरल विचार\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nयसलाई <b>bounded concurrency</b> भनिन्छ (एकसाथ कति task चल्न सक्छन् भन्ने निश्चित limit)।\n\n---\n\n## 3. `Promise.race()` ले कसरी मद्दत गर्छ?\n\nहामी अहिले चलिरहेका request को हिसाब राख्न सक्छौं।\n\nउदाहरणका लागि:\n\n```javascript\nconst executing = new Set();\n```\n\nRequest सुरु गर्दा, हामी त्यसको promise set मा थप्छौं।\n\nLimit पुगेपछि:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` ले चलिरहेका request मध्ये <b>कुनै एक</b> सक्किने बेलासम्म कुर्छ।\n\nत्यसपछि हामी अर्को request सुरु गर्न सक्छौं।\n\nत्यसैले:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\nमहत्वपूर्ण विचार यो हो:\n\n> <b>ठाउँ नहुँदासम्म नयाँ task सुरु नगर्नु।</b>\n\n---\n\n## 4. Duplicate Requests\n\nअब कल्पना गर्नुहोस् page मा पाँच component लाई उही user चाहिन्छ:\n\n```javascript\nfetchUser(1)\n```\n\nकुनै सुरक्षा बिना:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nत्यो <b>5 उस्तै network request</b> हो।\n\nतर हामीलाई एउटा मात्र चाहिन्छ।\n\n---\n\n## 5. Request Deduplication\n\n<b>Deduplication</b> (duplicate हटाउनु) को अर्थ:\n\n> उही request पहिले नै चलिरहेको छ भने, अर्को सुरु गर्नुको साटो त्यसै लाई पुनः प्रयोग गर्नु।\n\nहामी चलिरहेका request लाई `Map` मा राख्न सक्छौं।\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b> को अर्थ सुरु भइसकेको तर अझै सकिएको छैन भन्ने request हो।\n\nविचार यो हो:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\nत्यसैले पाँच component ले उही user मागे भने:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\nपाँचै caller ले <b>उही Promise</b> पाउँछन्।\n\nRequest सकिएपछि, हामी त्यसलाई `Map` बाट हटाउँछौं।\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` को अर्थ <b>request सफल होस् वा fail, यो code चलाउनु</b> भन्ने हो।\n\n---\n\n## 6. Memoization\n\nMemoization मिल्दो छ, तर यो अलिकति फरक समस्या समाधान गर्छ।\n\n<b>Memoization</b> को अर्थ:\n\n> अघिल्लो result सेभ गर्नु र पछि पुनः प्रयोग गर्नु।\n\nउदाहरणका लागि:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nयसको अर्थ हामीले अर्को network request गर्नु पर्दैन।\n\n---\n\n## 7. Expiration सहितको Memoization\n\nहामी सामान्यतया data सधैंभरि राख्न चाहँदैनौं।\n\nउदाहरणका लागि, user data <b>60 seconds</b> सम्म cache हुन सक्छ।\n\nयसलाई <b>TTL</b> (Time To Live) भनिन्छ, जसको सरल अर्थ:\n\n> Cache गरिएको data कति बेरसम्म प्रयोग गर्ने।\n\nहामी यो राख्न सक्छौं:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nत्यसपछि:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\n60 seconds पछि, cache expire हुन्छ र हामी ताजा data fetch गर्छौं।\n\n---\n\n## 8. Deduplication vs Memoization\n\nयी दुई concept सजिलै भ्रममा पार्छन्।\n\n### Request Deduplication\n\n<b>एकै समयमा</b> हुने request सँग सम्बन्धित छ।\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nयसलाई अहिले चलिरहेका request सँग मात्र मतलब छ।\n\n### Memoization\n\n<b>पछि</b> हुने request सँग सम्बन्धित छ।\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\nResult expire नहुँदासम्म पुनः प्रयोग हुन्छ।\n\n---\n\n## 9. यी सँगै काम गर्न सक्छन्\n\nवास्तविक application मा, तपाईं दुबै प्रयोग गर्न सक्नुहुन्छ।\n\nत्यसैले:\n\n<b>Deduplication</b> ले एकै समयमा हुने duplicate request रोक्छ।\n\n<b>Memoization</b> ले पछि हुने अनावश्यक request रोक्छ।",
-        jp: "多くのリクエストを扱うとき、よくある問題が2つ起こります:\n\n1. <b>一度にリクエストが多すぎる</b>\n2. <b>同じリクエストが何度も行われる</b>\n\n役に立つ解決策が2つあります: <b>並行数の制限</b>と<b>リクエストの重複排除／メモ化</b>です。\n\n---\n\n## 1. `Promise.all()` の問題\n\nこう書くかもしれません:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nシンプルに見えます。\n\nしかし<b>1,000個のURL</b>があると想像してください。\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nこれは次のようなことを招きます:\n\n• サーバーに過負荷をかける\n• APIのレート制限に達する\n• 接続を使いすぎる\n• アプリケーションを遅くする\n\n代わりに、同時に走るリクエスト数を制限できます。\n\n---\n\n## 2. 並行数の制限\n\n<b>並行数（Concurrency）</b>とは、同時に走っているタスクの数のことです。\n\nたとえば制限が `5` の場合:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nつまり<b>同時に5件を超えるリクエスト</b>は決して走りません。\n\n### シンプルな考え方\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nこれを<b>境界付き並行性（bounded concurrency）</b>と呼びます（同時に走れるタスク数の固定の上限）。\n\n---\n\n## 3. `Promise.race()` はどう役立つのか?\n\nいま走っているリクエストを記録しておけます。\n\nたとえば:\n\n```javascript\nconst executing = new Set();\n```\n\nリクエストを開始したら、そのPromiseをセットに追加します。\n\n制限に達したら:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` は走っているリクエストの<b>どれか1つ</b>が終わるまで待ちます。\n\nそうすれば次のリクエストを開始できます。\n\nつまり:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\n大事な考え方はこうです:\n\n> <b>空きができるまで新しいタスクを始めない。</b>\n\n---\n\n## 4. 重複したリクエスト\n\nページ上の5つのコンポーネントが同じユーザーを必要としていると想像してください:\n\n```javascript\nfetchUser(1)\n```\n\n何の対策もないと:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nこれは<b>まったく同じネットワークリクエストが5件</b>です。\n\nしかし必要なのは1件だけです。\n\n---\n\n## 5. リクエストの重複排除\n\n<b>重複排除（Deduplication）</b>とは:\n\n> 同じリクエストがすでに走っているなら、もう1つ始めずにそれを再利用する。\n\n走っているリクエストは `Map` に保存できます。\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b>とは、開始したがまだ終わっていないリクエストのことです。\n\n考え方はこうです:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\n5つのコンポーネントが同じユーザーを求めた場合:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\n5つの呼び出し元すべてが<b>同じPromise</b>を受け取ります。\n\nリクエストが終わったら、`Map` から削除します。\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` は<b>リクエストが成功しても失敗してもこのコードを実行する</b>という意味です。\n\n---\n\n## 6. メモ化\n\nメモ化は似ていますが、少し違う問題を解決します。\n\n<b>メモ化（Memoization）</b>とは:\n\n> 前回の結果を保存して、後で再利用する。\n\nたとえば:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nつまり、もう一度ネットワークリクエストをする必要がなくなります。\n\n---\n\n## 7. 有効期限付きのメモ化\n\n通常、データを永遠に保持したいわけではありません。\n\nたとえば、ユーザーデータは<b>60秒</b>だけキャッシュするかもしれません。\n\nこれを<b>TTL</b>（Time To Live）と呼び、単純に次を意味します:\n\n> キャッシュしたデータをどれくらいの間使うか。\n\nこう保存できます:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nそして:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\n60秒後にキャッシュは期限切れになり、新しいデータを取得します。\n\n---\n\n## 8. 重複排除とメモ化の違い\n\nこの2つの概念は混同しやすいです。\n\n### リクエストの重複排除\n\n<b>同時に</b>起きるリクエストを扱います。\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nいま走っているリクエストのことだけを気にします。\n\n### メモ化\n\n<b>後で</b>起きるリクエストを扱います。\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\n結果は期限が切れるまで再利用されます。\n\n---\n\n## 9. 組み合わせて使える\n\n実際のアプリケーションでは、両方使えます。\n\nつまり:\n\n<b>重複排除</b>は同時に起きる重複リクエストを防ぎます。\n\n<b>メモ化</b>は後で起きる不要なリクエストを防ぎます。",
+        en: "`localStorage` and `sessionStorage` share the exact same simple API: `setItem(key, value)` saves a value, `getItem(key)` reads it back (or returns `null` if the key doesn't exist), `removeItem(key)` deletes one entry, and `clear()` wipes everything for that origin. The one rule that trips people up: <b>every key and value is always a string</b>. If you save a number or object directly, it gets silently coerced with `String()` — so the standard pattern is to `JSON.stringify()` an object before `setItem`, and `JSON.parse()` the result after `getItem`, wrapped in a `try/catch` in case the stored data is ever corrupted or missing.\n\nBoth storages share a browser-enforced quota of roughly <b>5-10 MB per origin</b> — try to exceed it and `setItem` throws a `QuotaExceededError`, which real code should catch rather than let crash the page. The difference between the two is lifetime and scope: `localStorage` persists indefinitely until code or the user explicitly clears it (surviving tab closes and browser restarts), while `sessionStorage` is scoped to a single tab and is wiped the moment that tab closes — even a duplicate tab of the same page starts with empty `sessionStorage`. A subtle detail about the `storage` event: it fires on `window` whenever `localStorage` changes, but only in <b>other</b> tabs/windows of the same origin — the tab that made the change never receives its own event, which makes it useful for syncing state (like a logout) across open tabs.\n\nWeb Storage isn't the only browser persistence option. Cookies hold far less data (~4KB) but are automatically sent to the server with every matching request, which is exactly why session/auth data historically lived there. `IndexedDB` sits at the other end — a full transactional database capable of storing hundreds of megabytes with structured querying, suited for offline apps and large datasets that Web Storage's flat string API can't handle well. On security: because any JavaScript running on your page — including an injected `XSS` payload — can freely read `localStorage`, it is <b>not</b> a safe place for sensitive, long-lived credentials like refresh tokens. The safer pattern is an `httpOnly` cookie for anything long-lived and sensitive (JavaScript cannot read `httpOnly` cookies at all), reserving `localStorage`/`sessionStorage` for non-sensitive UI state like theme, form drafts, or short-lived access tokens.",
+        np: "`localStorage` र `sessionStorage` ले ठ्याक्कै उही simple API share गर्छन्: `setItem(key, value)` ले value save गर्छ, `getItem(key)` ले फेरि read गर्छ (key नभएमा `null` फर्काउँछ), `removeItem(key)` ले एउटा entry delete गर्छ, र `clear()` ले त्यो origin को सबै कुरा हटाउँछ। मानिसहरू सबैभन्दा बिर्सने नियम: <b>हरेक key र value सधैं string हुन्छ</b>। Number वा object directly save गरेमा, यो silently `String()` ले coerce हुन्छ — त्यसैले standard pattern भनेको object लाई `setItem` अघि `JSON.stringify()` गर्ने, र `getItem` पछि result लाई `JSON.parse()` गर्ने हो, र stored data कहिलेकाहीं corrupted वा missing हुनसक्ने भएकोले `try/catch` मा wrap गर्ने हो।\n\nदुवै storages ले browser-enforced roughly <b>5-10 MB per origin</b> quota share गर्छन् — यो exceed गर्ने प्रयास गर्दा `setItem` ले `QuotaExceededError` throw गर्छ, जसलाई real code मा page crash हुन नदिन catch गर्नुपर्छ। दुई बीचको फरक भनेको lifetime र scope हो: `localStorage` code वा user ले explicitly clear नगरेसम्म (tab बन्द र browser restart पछि पनि बाँचेर) forever persist हुन्छ, जबकि `sessionStorage` एउटै tab मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै wipe हुन्छ — same page को duplicate tab पनि empty `sessionStorage` सँग सुरु हुन्छ। `storage` event को एउटा subtle detail: `localStorage` change हुनासाथ यो `window` मा fire हुन्छ, तर same origin को <b>अन्य</b> tabs/windows मा मात्र — change गर्ने tab ले आफ्नै event कहिल्यै पाउँदैन, जसले खुला tabs हरूमा state sync गर्न (जस्तै logout) उपयोगी बनाउँछ।\n\nWeb Storage मात्र browser persistence option होइन। Cookies ले धेरै कम data (~4KB) राख्छन् तर हरेक matching request सँग automatic रूपमा server मा पठाइन्छन्, जो नै session/auth data historically त्यहाँ राख्ने कारण हो। `IndexedDB` अर्को छेउमा छ — सयौं megabytes structured querying सहित store गर्न सक्ने full transactional database, offline apps र Web Storage को flat string API ले राम्ररी handle नगर्ने large datasets का लागि उपयुक्त। Security बारेमा: तपाईंको page मा चल्ने जुनसुकै JavaScript — injected `XSS` payload समावेश गरी — ले `localStorage` freely read गर्न सक्ने भएकोले, यो refresh tokens जस्ता sensitive, long-lived credentials का लागि <b>safe छैन</b>। सुरक्षित pattern भनेको long-lived र sensitive जुनसुकै कुरा का लागि `httpOnly` cookie हो (JavaScript ले `httpOnly` cookies बिल्कुल read गर्न सक्दैन), र `localStorage`/`sessionStorage` लाई theme, form drafts, वा short-lived access tokens जस्ता non-sensitive UI state का लागि छोड्ने हो।",
+        jp: "`localStorage`と`sessionStorage`はまったく同じシンプルなAPIを共有する: `setItem(key, value)`は値を保存し、`getItem(key)`は読み戻す（キーが存在しない場合は`null`を返す）、`removeItem(key)`は1つのエントリを削除し、`clear()`はそのオリジンのすべてを消す。多くの人が引っかかる唯一のルール: <b>キーと値は常に文字列</b>である。数値やオブジェクトを直接保存すると`String()`で暗黙に変換されてしまう — そのため標準的なパターンは、`setItem`の前にオブジェクトを`JSON.stringify()`し、`getItem`の後に結果を`JSON.parse()`することで、保存データが壊れていたり存在しない場合に備えて`try/catch`で囲む。\n\n両ストレージともブラウザが強制するオリジンあたり約<b>5-10 MB</b>のクォータを共有する — これを超えようとすると`setItem`は`QuotaExceededError`をスローするので、実際のコードはページをクラッシュさせず捕捉すべき。2つの違いは有効期間とスコープ: `localStorage`はコードやユーザーが明示的にクリアしない限り無期限に持続する（タブを閉じてもブラウザを再起動しても残る）。一方`sessionStorage`は単一タブにスコープされ、そのタブが閉じた瞬間に消える — 同じページの複製タブでも空の`sessionStorage`から始まる。`storage`イベントの微妙な点: `localStorage`が変更されると`window`上で発火するが、これは同一オリジンの<b>他の</b>タブ/ウィンドウのみである — 変更を行ったタブ自身は自分のイベントを受け取らない。これは開いているタブ間で状態（ログアウトなど）を同期させるのに便利。\n\nWeb Storageはブラウザの永続化オプションの唯一の手段ではない。Cookieはずっと少ないデータ（約4KB）しか保持できないが、一致するすべてのリクエストと共に自動的にサーバーへ送信される — これこそセッション/認証データが歴史的にそこに置かれてきた理由。`IndexedDB`はその対極にある — 数百メガバイトを構造化クエリ付きで保存できる完全なトランザクションデータベースで、オフラインアプリやWeb Storageのフラットな文字列APIではうまく扱えない大規模データに適している。セキュリティについて: ページ上で動く任意のJavaScript — 注入された`XSS`ペイロードも含む — が`localStorage`を自由に読めるため、リフレッシュトークンのような重要で長期的な認証情報を置くのに<b>安全ではない</b>。より安全なパターンは、長期的で重要なものには`httpOnly`Cookie（JavaScriptは`httpOnly`Cookieを一切読めない）を使い、`localStorage`/`sessionStorage`はテーマ・フォームの下書き・短命なアクセストークンなど非機密なUI状態に限定することである。",
       },
-      diagram: `                 Request
-                    ↓
-             Is result cached?
-              ↙          ↘
-            Yes           No
-             ↓             ↓
-       Return result   Is request running?
-                         ↙        ↘
-                       Yes         No
-                        ↓           ↓
-                 Return same     Start fetch
-                   Promise          ↓
-                                Save result
-                                   ↓
-                              Return result`,
+      diagram: `                 localStorage              sessionStorage
+lifetime          forever (until cleared)   until TAB closes
+scope             same origin, ALL tabs     current tab ONLY
+capacity          ~5-10 MB                  ~5-10 MB
+
+API (identical for both):
+  setItem(key, value)   → value coerced to STRING
+  getItem(key)          → string | null
+  removeItem(key)
+  clear()
+
+Objects need JSON:
+  setItem("user", JSON.stringify({ name: "Alice" }))
+  JSON.parse(getItem("user"))          → { name: "Alice" }
+
+storage event:
+  Tab A: localStorage.setItem("theme","dark")
+  Tab A window ─── does NOT get "storage" event
+  Tab B window ─── DOES get "storage" event   ← fires in OTHER tabs only
+
+localStorage   ── XSS script CAN read it ──►  NOT safe for long-lived secrets
+httpOnly cookie ── JS cannot read it at all ──► safer for refresh tokens`,
       codeExample: {
-        title: { en: "Bounded concurrency, request dedup & TTL memoization", np: "Bounded concurrency, request dedup र TTL memoization", jp: "有界の同時実行・リクエスト重複排除・TTLメモ化" },
-        code: `// ── The problem: Promise.all fires everything at once ───────────────
-const urls = Array.from({ length: 1000 }, (_, i) => \`/api/items/\${i}\`);
-// await Promise.all(urls.map(url => fetch(url)));   // ❌ 1000 simultaneous requests
+        title: { en: "Reading, writing and choosing the right storage", np: "सहि storage read, write र choose गर्नु", jp: "適切なストレージの読み書きと選択" },
+        code: `// ── Basic API — identical for localStorage and sessionStorage ──────
+localStorage.setItem("theme", "dark");
+localStorage.getItem("theme");        // "dark"
+localStorage.getItem("missingKey");   // null — not an error
+localStorage.removeItem("theme");
+localStorage.clear();                 // wipes EVERY key for this origin
 
-// ── Concurrency limiter — at most \`limit\` tasks in flight at once ───
-async function runWithConcurrency(items, fn, limit) {
-  const results = [];
-  const executing = new Set();
+// ── Values are always strings — JSON for anything else ──────────────
+const settings = { theme: "dark", fontSize: 16 };
+localStorage.setItem("settings", JSON.stringify(settings));
 
-  for (const [index, item] of items.entries()) {
-    const task = fn(item, index).then((result) => {
-      results[index] = result;
-      executing.delete(task);   // free up a slot when this task finishes
-    });
-    executing.add(task);
+const stored = JSON.parse(localStorage.getItem("settings") ?? "null");
+console.log(stored?.fontSize);   // 16
 
-    if (executing.size >= limit) {
-      await Promise.race(executing);   // wait for at least one slot to free up
-    }
+// ── Safe read/write helpers that survive corrupted/missing data ─────
+function readStorage(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;   // JSON.parse blew up — treat it as if it wasn't there
   }
-
-  await Promise.all(executing);   // drain whatever's still running
-  return results;
 }
 
-const items = await runWithConcurrency(
-  urls,
-  (url) => fetch(url).then((r) => r.json()),
-  5   // only 5 requests in flight at any moment
-);
-
-// ── Request deduplication — collapse identical concurrent calls ─────
-const inFlight = new Map();
-
-function dedupedFetch(url) {
-  if (inFlight.has(url)) return inFlight.get(url);   // share the pending Promise
-
-  const promise = fetch(url)
-    .then((res) => res.json())
-    .finally(() => inFlight.delete(url));             // clean up once it settles
-
-  inFlight.set(url, promise);
-  return promise;
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    // storage is full — roughly a 5-10MB ceiling per origin
+    console.error("QuotaExceededError:", err);
+  }
 }
 
-// Five simultaneous calls, ONE network request:
-await Promise.all([
-  dedupedFetch("/api/users/1"),
-  dedupedFetch("/api/users/1"),
-  dedupedFetch("/api/users/1"),
-]);
+// ── sessionStorage — same API, scoped to this tab only ──────────────
+sessionStorage.setItem("wizardStep", "2");    // cleared automatically when the tab closes
+// a duplicate of this tab in a new window starts with an EMPTY sessionStorage
 
-// ── Async memoization with a TTL cache ───────────────────────────────
-function memoizeAsync(fn, ttlMs = 60_000) {
-  const cache = new Map();
+// ── Reacting to changes made in OTHER tabs ──────────────────────────
+window.addEventListener("storage", (event) => {
+  // Only fires here if a DIFFERENT tab changed localStorage — never this tab's own writes
+  if (event.key === "authToken" && event.newValue === null) {
+    // another tab logged out — mirror it here too
+    window.location.reload();
+  }
+});
 
-  return async function (...args) {
-    const key = JSON.stringify(args);
-    const cached = cache.get(key);
-
-    if (cached && Date.now() < cached.expiresAt) {
-      return cached.value;   // fresh cache hit — no network call at all
-    }
-
-    const value = await fn(...args);
-    cache.set(key, { value, expiresAt: Date.now() + ttlMs });
-    return value;
-  };
-}
-
-const cachedFetchUser = memoizeAsync((id) => dedupedFetch(\`/api/users/\${id}\`), 5 * 60_000);
-
-await cachedFetchUser(1);   // network request, then cached for 5 minutes
-await cachedFetchUser(1);   // instant — served from cache`,
+// ── Security: don't put long-lived secrets in localStorage ──────────
+// localStorage.setItem("refreshToken", token);  // readable by any injected XSS script
+// Better: keep the refresh token in an httpOnly cookie (set by the server,
+// completely invisible to JavaScript) and hold only a short-lived access
+// token in memory (a plain JS variable, gone on page reload).`,
       },
       keyTakeaways: [
-        { en: "<b>Concurrency limiting</b> → \"Don't run too many tasks at once.\" `Promise.all()` over 1,000 URLs fires 1,000 requests at once; a limit keeps only a few running and starts a new one each time another finishes.", np: "<b>Concurrency limiting</b> → \"एकैचोटि धेरै task नचलाउ।\" 1,000 URLs माथि `Promise.all()` ले एकैचोटि 1,000 request पठाउँछ; limit ले केही मात्र चलाइराख्छ र एउटा सक्किएपछि नयाँ सुरु गर्छ।", jp: "<b>並行数の制限</b> → \"一度に多くのタスクを走らせない。\" 1,000件のURLに `Promise.all()` を使うと1,000件のリクエストが同時に飛ぶ。制限をかければ数件だけが走り、1件終わるごとに次を始める。" },
-        { en: "<b>`Promise.race()` on the running set</b> — keep in-flight promises in a `Set` and `await Promise.race(executing)` when you hit the limit. Don't start a new task until there is room.", np: "<b>चलिरहेको set माथि `Promise.race()`</b> — in-flight promise लाई `Set` मा राख्नुहोस् र limit पुग्दा `await Promise.race(executing)` गर्नुहोस्। ठाउँ नहुँदासम्म नयाँ task सुरु नगर्नुहोस्।", jp: "<b>実行中のセットに対する `Promise.race()`</b> — 実行中のPromiseを `Set` に保持し、上限に達したら `await Promise.race(executing)` する。空きができるまで新しいタスクを始めない。" },
-        { en: "<b>Request deduplication</b> → \"Don't make the same request twice at the same time.\" Store in-flight promises in a `Map` so five callers share one network request, and delete the entry in `finally()`.", np: "<b>Request deduplication</b> → \"उही request एकै समयमा दुई पटक नगर।\" In-flight promise लाई `Map` मा राख्नुहोस् ताकि पाँच caller ले एउटै network request बाँडिन्, र `finally()` मा entry हटाउनुहोस्।", jp: "<b>リクエストの重複排除</b> → \"同じリクエストを同時に2回行わない。\" 実行中のPromiseを `Map` に保存して5人の呼び出し元が1回のネットワークリクエストを共有し、`finally()` でエントリを削除する。" },
-        { en: "<b>Memoization</b> → \"Reuse a result we already have.\" Save the result and return it on later calls instead of fetching again.", np: "<b>Memoization</b> → \"हामीसँग पहिले नै भएको result पुनः प्रयोग गर।\" Result सेभ गर्नुहोस् र फेरि fetch गर्नुको साटो पछिका call मा त्यही फर्काउनुहोस्।", jp: "<b>メモ化</b> → \"すでにある結果を再利用する。\" 結果を保存し、再取得せずに後の呼び出しで返す。" },
-        { en: "<b>TTL</b> → \"How long should we keep using the cached result?\" Store `{ value, expiresAt }` so the cache expires (say after 60 seconds) and fresh data is fetched again.", np: "<b>TTL</b> → \"Cache गरिएको result कति बेरसम्म प्रयोग गर्ने?\" `{ value, expiresAt }` राख्नुहोस् ताकि cache expire होस् (जस्तै 60 seconds पछि) र ताजा data फेरि fetch होस्।", jp: "<b>TTL</b> → \"キャッシュした結果をどれくらい使い続けるか?\" `{ value, expiresAt }` を保存し、（たとえば60秒後に）キャッシュが期限切れになって新しいデータを取り直すようにする。" },
-        { en: "Deduplication is about requests happening <b>at the same time</b>; memoization is about requests happening <b>later</b>. Real applications use both together.", np: "Deduplication <b>एकै समयमा</b> हुने request बारे हो; memoization <b>पछि</b> हुने request बारे हो। वास्तविक application मा दुबै सँगै प्रयोग हुन्छन्।", jp: "重複排除は<b>同時に</b>起きるリクエストの話、メモ化は<b>後で</b>起きるリクエストの話。実際のアプリケーションでは両方を組み合わせて使う。" },
-        { en: "The main goal is simple: use fewer requests, avoid unnecessary work, and prevent your application from being overwhelmed.", np: "मुख्य लक्ष्य सरल छ: कम request प्रयोग गर्नु, अनावश्यक काम बचाउनु, र तपाईंको application लाई overwhelm हुनबाट रोक्नु।", jp: "主な目標はシンプルだ: リクエストを減らし、不要な処理を避け、アプリケーションが過負荷にならないようにする。" },
+        { en: "`localStorage`/`sessionStorage` share the same `setItem`/`getItem`/`removeItem`/`clear` API but differ in lifetime (forever vs per-tab); values are always strings, so objects need `JSON.stringify`/`JSON.parse`.", np: "`localStorage`/`sessionStorage` ले उही `setItem`/`getItem`/`removeItem`/`clear` API share गर्छन् तर lifetime (forever vs per-tab) मा फरक हुन्छन्; values सधैं strings हुन्छन्, त्यसैले objects लाई `JSON.stringify`/`JSON.parse` चाहिन्छ।", jp: "`localStorage`/`sessionStorage`は同じ`setItem`/`getItem`/`removeItem`/`clear`APIを共有するが、有効期間（永続 vs タブ単位）が異なる。値は常に文字列なので、オブジェクトには`JSON.stringify`/`JSON.parse`が必要。" },
+        { en: "Both have a roughly 5-10MB per-origin quota (`QuotaExceededError` if exceeded); the `storage` event only fires in other tabs, never the tab that made the change.", np: "दुवैको roughly 5-10MB per-origin quota हुन्छ (exceed भएमा `QuotaExceededError`); `storage` event अन्य tabs मा मात्र fire हुन्छ, change गर्ने tab मा कहिल्यै फायर हुँदैन।", jp: "両方ともオリジンあたり約5-10MBのクォータがある（超えると`QuotaExceededError`）。`storage`イベントは他のタブでのみ発火し、変更したタブ自身では発火しない。" },
+        { en: "Cookies are smaller but auto-sent with every request, `IndexedDB` handles large structured data; avoid storing long-lived sensitive tokens in `localStorage` (XSS risk) — prefer `httpOnly` cookies.", np: "Cookies साना हुन्छन् तर हरेक request सँग auto-sent हुन्छन्, `IndexedDB` ले large structured data handle गर्छ; `localStorage` (XSS risk) मा long-lived sensitive tokens राख्नबाट जोगिनुहोस् — `httpOnly` cookies prefer गर्नुहोस्।", jp: "Cookieは小さいが全リクエストで自動送信され、`IndexedDB`は大きな構造化データを扱う。`localStorage`（XSSリスク）に長期的な機密トークンを保存するのは避け、`httpOnly`Cookieを優先する。" },
       ],
       commonMistakes: [
-        { en: "Using `Promise.all` on a huge array of requests with no concurrency cap, overwhelming the server or hitting a rate limit.", np: "कुनै concurrency cap नराखी requests को ठूलो array मा `Promise.all` प्रयोग गर्नु, server overwhelm गर्नु वा rate limit hit गर्नु।", jp: "同時実行数の上限なしに巨大なリクエスト配列に`Promise.all`を使い、サーバーを過負荷にしたりレート制限に引っかかったりすること。" },
-        { en: "Not deduplicating concurrent identical requests, so multiple components calling the same endpoint at the same time each fire their own network request.", np: "Concurrent identical requests deduplicate नगर्नु, जसले गर्दा same endpoint लाई same समयमा call गर्ने multiple components ले आफ्नै-आफ्नै network request fire गर्छन्।", jp: "同時の同一リクエストを重複排除しないこと。同じエンドポイントを同時に呼び出す複数のコンポーネントがそれぞれ自分のネットワークリクエストを発火してしまう。" },
-        { en: "Memoizing an async function with no TTL or cache invalidation at all, so it keeps returning stale data forever after the underlying value changes.", np: "कुनै TTL वा cache invalidation बिना async function memoize गर्नु, जसले underlying value बदलिएपछि पनि सधैंभरि stale data फर्काइरहन्छ।", jp: "TTLもキャッシュ無効化もなしに非同期関数をメモ化すること。基となる値が変わった後も永遠に古いデータを返し続けてしまう。" },
+        { en: "Storing an object or number directly without `JSON.stringify`, then getting back a coerced/broken string like `\"[object Object]\"`.", np: "`JSON.stringify` बिना object वा number directly store गर्नु, त्यसपछि `\"[object Object]\"` जस्तो coerced/broken string फर्किनु।", jp: "`JSON.stringify`せずにオブジェクトや数値を直接保存し、`\"[object Object]\"`のような変換された壊れた文字列が返ってくること。" },
+        { en: "Expecting the `storage` event to fire in the same tab/window that made the change, when it only fires in other tabs of the same origin.", np: "`storage` event change गर्ने same tab/window मा नै fire हुनेछ भनी आशा गर्नु, जब यो same origin को अन्य tabs मा मात्र fire हुन्छ।", jp: "`storage`イベントが変更を行った同じタブ/ウィンドウで発火すると期待するが、実際は同一オリジンの他のタブでのみ発火すること。" },
+        { en: "Storing a long-lived auth/refresh token in `localStorage`, exposing it to any injected XSS script instead of using an `httpOnly` cookie.", np: "`httpOnly` cookie प्रयोग गर्नुको सट्टा long-lived auth/refresh token `localStorage` मा store गर्नु, यसलाई injected XSS script मा exposed बनाउनु।", jp: "`httpOnly`Cookieを使う代わりに長期的な認証/リフレッシュトークンを`localStorage`に保存し、注入されたXSSスクリプトに晒すこと。" },
       ],
       quiz: [
         {
-          question: { en: "What problem does a concurrency limiter solve that `Promise.all` alone doesn't?", np: "`Promise.all` एक्लैले solve नगर्ने कुन समस्या concurrency limiter ले solve गर्छ?", jp: "`Promise.all`単体では解決しない、同時実行数リミッターが解決する問題は何？" },
+          question: { en: "What type are all `localStorage` keys and values, no matter what you originally pass in?", np: "मूलतः जुनसुकै type pass गरे पनि सबै `localStorage` keys र values कुन type हुन्छन्?", jp: "元々何を渡したかにかかわらず、すべての`localStorage`のキーと値はどの型になる？" },
           options: [
-            { en: "It caps how many async tasks run at the same time instead of firing them all at once", np: "यसले सबैलाई एकैचोटि fire नगरी कति async tasks एकैसाथ चल्छन् cap गर्छ", jp: "すべてを一斉発火する代わりに、同時に実行される非同期タスクの数を制限する" },
-            { en: "It makes each individual request resolve faster", np: "यसले हरेक individual request लाई छिटो resolve गराउँछ", jp: "個々のリクエストをより速く解決させる" },
+            { en: "Always strings", np: "सधैं strings", jp: "常に文字列" },
+            { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" },
           ],
           correctIndex: 0,
-          explanation: { en: "Promise.all fires everything simultaneously; a concurrency limiter starts a new task only when an earlier one finishes, keeping at most N in flight.", np: "Promise.all ले सबैलाई एकैचोटि fire गर्छ; concurrency limiter ले अघिल्लो सकिएपछि मात्र नयाँ task सुरु गर्छ, maximum N मात्र in flight राख्छ।", jp: "Promise.allはすべてを同時に発火する。同時実行数リミッターは前のタスクが終わったときだけ新しいタスクを開始し、最大N個だけを進行中に保つ。" },
+          explanation: { en: "localStorage/sessionStorage coerce every key and value to a string; objects must be JSON.stringify'd first to survive round-tripping.", np: "localStorage/sessionStorage ले हरेक key र value लाई string मा coerce गर्छन्; objects बचाउन पहिले JSON.stringify गर्नुपर्छ।", jp: "localStorage/sessionStorageはすべてのキーと値を文字列に変換する。オブジェクトを正しく保存するには先にJSON.stringifyする必要がある。" },
         },
         {
-          question: { en: "When five components call `dedupedFetch(url)` for the same URL at the same time, what happens?", np: "पाँच components ले same URL का लागि same समयमा `dedupedFetch(url)` call गर्दा के हुन्छ?", jp: "5つのコンポーネントが同じURLに対して同時に`dedupedFetch(url)`を呼ぶとどうなる？" },
+          question: { en: "When is `sessionStorage` automatically cleared?", np: "`sessionStorage` automatic रूपमा कहिले clear हुन्छ?", jp: "`sessionStorage`はいつ自動的にクリアされる？" },
           options: [
-            { en: "All five share the same in-flight Promise, and only one network request is made", np: "पाँचैले उही in-flight Promise share गर्छन्, र केवल एउटा network request मात्र हुन्छ", jp: "5つすべてが同じ進行中のPromiseを共有し、ネットワークリクエストは1つだけ発生する" },
-            { en: "Each call fires its own separate network request", np: "हरेक call ले आफ्नो छुट्टै network request fire गर्छ", jp: "各呼び出しがそれぞれ独自のネットワークリクエストを発火する" },
+            { en: "When the tab it belongs to is closed", np: "यो belong भएको tab बन्द हुँदा", jp: "それが属するタブが閉じられたとき" },
+            { en: "Only when `clear()` is called manually", np: "`clear()` manually call गरेमा मात्र", jp: "手動で`clear()`が呼ばれたときのみ" },
           ],
           correctIndex: 0,
-          explanation: { en: "The in-flight Map returns the same pending Promise to every caller with a matching key, so duplicate simultaneous requests collapse into one.", np: "In-flight Map ले matching key भएका हरेक caller लाई उही pending Promise फर्काउँछ, त्यसैले duplicate simultaneous requests एउटामा collapse हुन्छन्।", jp: "進行中のMapは一致するキーを持つすべての呼び出し元に同じ保留中のPromiseを返すため、重複する同時リクエストは1つに集約される。" },
+          explanation: { en: "sessionStorage is scoped to a single tab's session and is wiped automatically the moment that tab closes, unlike localStorage.", np: "sessionStorage एउटै tab को session मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै automatic रूपमा wipe हुन्छ, localStorage भन्दा फरक।", jp: "sessionStorageは単一タブのセッションにスコープされ、そのタブが閉じた瞬間に自動的にクリアされる。localStorageとは異なる。" },
         },
         {
-          question: { en: "Why does a TTL-based memoization cache store an `expiresAt` timestamp alongside the cached value?", np: "TTL-based memoization cache ले cached value सँगै `expiresAt` timestamp किन store गर्छ?", jp: "TTLベースのメモ化キャッシュがキャッシュされた値とともに`expiresAt`タイムスタンプを保存する理由は？" },
+          question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` is changed?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
           options: [
-            { en: "So a cached entry is only reused while still fresh, and re-fetched once it's stale", np: "ताकि cached entry fresh रहुन्जेल मात्र reuse होस्, र stale भएपछि फेरि fetch होस्", jp: "キャッシュされたエントリが新鮮な間だけ再利用され、古くなったら再取得されるように" },
-            { en: "So the cache never needs to be checked before returning a value", np: "ताकि value फर्काउनु अघि cache जाँच गर्नैपर्दैन", jp: "値を返す前にキャッシュを確認する必要がなくなるように" },
+            { en: "Only other tabs of the same origin — never the tab that made the change", np: "Same origin को अन्य tabs मा मात्र — change गर्ने tab मा कहिल्यै होइन", jp: "同一オリジンの他のタブのみ — 変更を行ったタブでは決して発火しない" },
+            { en: "Every tab, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" },
           ],
           correctIndex: 0,
-          explanation: { en: "The expiresAt check lets the cache tell fresh entries from stale ones, so it only returns a cached value when the TTL hasn't passed yet.", np: "expiresAt check ले cache लाई fresh र stale entries छुट्याउन दिन्छ, त्यसैले TTL नबितेसम्म मात्र cached value फर्काउँछ।", jp: "expiresAtのチェックによりキャッシュは新鮮なエントリと古いエントリを区別できる。TTLがまだ過ぎていないときだけキャッシュされた値を返す。" },
+          explanation: { en: "The storage event deliberately excludes the originating tab, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event ले originating tab लाई जानाजानी exclude गर्छ, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは意図的に発生元のタブを除外する。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "Why must a retry loop have a `maxAttempts` limit?", np: "Retry loop मा `maxAttempts` limit किन हुनुपर्छ?", jp: "リトライループに`maxAttempts`の上限が必要な理由は？" },
-      options: [{ en: "Without one, a broken request could retry forever and keep hammering a struggling service", np: "नभएमा, broken request ले सधैंभरि retry गरी struggle गरिरहेको service लाई हान्न सक्छ", jp: "上限がなければ、壊れたリクエストが永遠にリトライを続け、苦しんでいるサービスを叩き続けてしまう" }, { en: "Without one, JavaScript throws a syntax error", np: "नभएमा, JavaScript ले syntax error throw गर्छ", jp: "上限がなければ、JavaScriptが構文エラーをスローする" }],
+      question: { en: "Does `fetch` reject its promise for a `404` or `500` response?", np: "`fetch` ले `404` वा `500` response का लागि आफ्नो promise reject गर्छ?", jp: "`fetch`は`404`や`500`レスポンスに対してPromiseをrejectする？" },
+      options: [{ en: "No — it resolves normally; check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुहोस्", jp: "しない — 正常にresolveする。`response.ok`を確認する" }, { en: "Yes — fetch always throws on 4xx/5xx status codes", np: "हो — fetch ले सधैं 4xx/5xx status codes मा throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスコードでスローする" }],
       correctIndex: 0,
-      explanation: { en: "A retry loop with no cap can turn one failure into an infinite hammering loop; capping attempts and rethrowing on the last one lets the caller react instead.", np: "कुनै cap नभएको retry loop ले एउटा failure लाई infinite hammering loop मा बदल्न सक्छ; attempts cap गरी अन्तिममा rethrow गर्दा caller ले react गर्न सक्छ।", jp: "上限のないリトライループは1つの失敗を無限のハンマリングループに変えてしまう。試行回数を制限し最後に再スローすることで、呼び出し側が対応できるようになる。" },
+      explanation: { en: "fetch only rejects on network-level failures; any completed HTTP response, including error statuses, resolves the promise, so you must check response.ok yourself.", np: "fetch ले network-level failure मा मात्र reject गर्छ; error statuses सहित कुनै पनि completed HTTP response ले promise resolve गर्छ, त्यसैले आफैं response.ok check गर्नुपर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。エラーステータスを含むあらゆる完了したHTTPレスポンスはPromiseを解決するため、自分でresponse.okを確認する必要がある。" },
     },
     {
-      question: { en: "In exponential backoff, roughly how does the delay change between successive retries?", np: "Exponential backoff मा, क्रमिक retries बीच delay लगभग कसरी बदलिन्छ?", jp: "指数バックオフでは、連続するリトライ間の遅延はおおよそどのように変化する？" },
-      options: [{ en: "It roughly doubles each time, up to a capped maximum", np: "हरेक पटक लगभग दोब्बर हुन्छ, cap गरिएको maximum सम्म", jp: "上限まで、毎回おおよそ2倍になる" }, { en: "It stays exactly the same every time", np: "हरेक पटक ठ्याक्कै उही रहन्छ", jp: "毎回全く同じままである" }],
+      question: { en: "How many times can a `Response` body be read without calling `clone()` first?", np: "पहिले `clone()` call नगरी `Response` body कति पटक read गर्न सकिन्छ?", jp: "先に`clone()`を呼ばずに`Response`のボディは何回読める？" },
+      options: [{ en: "Once", np: "एकपटक", jp: "1回" }, { en: "Unlimited times", np: "असीमित पटक", jp: "無制限" }],
       correctIndex: 0,
-      explanation: { en: "baseDelayMs * 2 ** attempt roughly doubles the wait each retry, capped by maxDelayMs so it never grows unbounded.", np: "baseDelayMs * 2 ** attempt ले हरेक retry मा wait लाई लगभग दोब्बर बनाउँछ, maxDelayMs ले cap गरिएको ताकि असीमित नबढ्न।", jp: "baseDelayMs * 2 ** attemptは各リトライで待機時間をおおよそ2倍にし、maxDelayMsで上限が設けられ無限に増えることはない。" },
+      explanation: { en: "The response body is a stream that can only be consumed once; a second read without clone() throws an error.", np: "Response body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ; clone() बिना दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディは一度しか消費できないストリームであり、clone()なしで2回目に読むとエラーになる。" },
     },
     {
-      question: { en: "Should a `shouldRetry` predicate retry a `400 Bad Request` error?", np: "`shouldRetry` predicate ले `400 Bad Request` error retry गर्नुपर्छ?", jp: "`shouldRetry`述語は`400 Bad Request`エラーをリトライすべきか？" },
-      options: [{ en: "No — it's a client error that will fail identically every time", np: "होइन — यो client error हो जो हरेक पटक उस्तै रूपमा fail हुन्छ", jp: "いいえ — これは毎回同じように失敗するクライアントエラーだ" }, { en: "Yes — treat it the same as a transient 5xx failure", np: "हो — यसलाई transient 5xx failure जस्तै treat गर्नुपर्छ", jp: "はい — 一時的な5xx失敗と同じように扱うべき" }],
+      question: { en: "What must a `POST` request set so the server knows the body is JSON?", np: "Server ले body JSON हो भनेर थाहा पाउन `POST` request मा के set गर्नुपर्छ?", jp: "サーバーがボディがJSONであると認識するために`POST`リクエストで何を設定する必要がある？" },
+      options: [{ en: "A `Content-Type: application/json` header", np: "`Content-Type: application/json` header", jp: "`Content-Type: application/json`ヘッダー" }, { en: "Nothing — fetch detects it automatically", np: "केही छैन — fetch ले automatic रूपमा detect गर्छ", jp: "何もない — fetchが自動で検出する" }],
       correctIndex: 0,
-      explanation: { en: "4xx errors mean something is wrong with the request itself, so retrying gets the same failure every time; only transient 5xx/network/429 failures deserve a retry.", np: "4xx errors को अर्थ request आफैंमा केही गलत छ, त्यसैले retry गर्दा हरेक पटक उही failure आउँछ; transient 5xx/network/429 failures मात्र retry पाउनुपर्छ।", jp: "4xxエラーはリクエスト自体に問題があることを意味するため、リトライしても毎回同じ失敗になる。一時的な5xx/ネットワーク/429の失敗だけがリトライに値する。" },
+      explanation: { en: "fetch never inspects or serializes the body for you; the Content-Type header plus a JSON.stringify'd body is required.", np: "fetch ले body कहिल्यै आफैं inspect वा serialize गर्दैन; Content-Type header र JSON.stringify गरिएको body दुवै चाहिन्छ।", jp: "fetchはボディを自動で検査・シリアライズすることはない。Content-TypeヘッダーとJSON.stringifyされたボディの両方が必要。" },
     },
     {
-      question: { en: "What does `Promise.race([operation, timeoutPromise])` settle with if the operation is too slow?", np: "Operation धेरै slow भएमा `Promise.race([operation, timeoutPromise])` कुनसँग settle हुन्छ?", jp: "操作が遅すぎる場合、`Promise.race([operation, timeoutPromise])`は何で確定する？" },
-      options: [{ en: "The timeout promise's rejection, since it settles first", np: "Timeout promise को rejection, किनकि यो पहिले settle हुन्छ", jp: "先に確定するため、タイムアウトPromiseの拒否" }, { en: "The operation's eventual result, once it finally arrives", np: "Operation को eventual result, जब यो अन्तमा आउँछ", jp: "最終的に到着した操作の結果" }],
+      question: { en: "What is the `.name` of the error a `fetch` promise rejects with after `controller.abort()` is called?", np: "`controller.abort()` call गरेपछि `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "`controller.abort()`が呼ばれた後、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
+      options: [{ en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" }, { en: "`\"TypeError\"`", np: "`\"TypeError\"`", jp: "`\"TypeError\"`" }],
       correctIndex: 0,
-      explanation: { en: "race() settles with whichever promise finishes first; a slow operation loses to a timeout that rejects sooner, and the slow operation's eventual result is simply discarded.", np: "race() जो promise पहिले पुग्छ त्यसैसँग settle हुन्छ; slow operation छिटो reject हुने timeout सँग हार्छ, र यसको eventual result simply discard हुन्छ।", jp: "race()はどちらか先に終わったPromiseで確定する。遅い操作はより早く拒否するタイムアウトに負け、その最終的な結果は単に捨てられる。" },
+      explanation: { en: "Aborting a fetch always produces an error named AbortError, letting you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常にAbortErrorという名前のエラーが生成され、意図的なキャンセルと本当の失敗を区別できる。" },
     },
     {
-      question: { en: "What is the key advantage of `AbortController` over a plain `Promise.race` timeout for `fetch()`?", np: "`fetch()` का लागि plain `Promise.race` timeout भन्दा `AbortController` को key advantage के हो?", jp: "`fetch()`に対して、単純な`Promise.race`タイムアウトより`AbortController`が持つ主な利点は？" },
-      options: [{ en: "It actually cancels the underlying network request instead of leaving it running", np: "यसले underlying network request लाई चलिरहन दिनुको सट्टा वास्तवमा cancel गर्छ", jp: "実行を続けさせるのではなく、実際に基盤のネットワークリクエストをキャンセルする" }, { en: "It skips the need for a try/catch block", np: "यसले try/catch block को आवश्यकता हटाउँछ", jp: "try/catchブロックの必要性をなくす" }],
+      question: { en: "Where should `controller.abort()` be called to stop a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを止めるには、`controller.abort()`をどこで呼ぶべき？" },
+      options: [{ en: "In the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function मा", jp: "`useEffect`から返されるクリーンアップ関数の中" }, { en: "In the `.then()` success callback", np: "`.then()` success callback मा", jp: "`.then()`の成功コールバックの中" }],
       correctIndex: 0,
-      explanation: { en: "Promise.race just ignores the slower promise; AbortController's signal tells the browser to actually stop the network request, freeing the connection.", np: "Promise.race ले slower promise लाई केवल ignore गर्छ; AbortController को signal ले browser लाई network request वास्तवमा रोक्न भन्छ, connection free गर्छ।", jp: "Promise.raceは遅い方のPromiseを単に無視する。AbortControllerのsignalは実際にブラウザに進行中のネットワークリクエストを停止させ、接続を解放する。" },
+      explanation: { en: "React runs the effect's cleanup automatically on unmount or before the next run, making it the right place to cancel a pending request.", np: "React ले effect को cleanup unmount मा वा अर्को run अघि automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時または次の実行前にエフェクトのクリーンアップを自動実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
     },
     {
-      question: { en: "In a circuit breaker, what triggers the move from `closed` to `open`?", np: "Circuit breaker मा, `closed` बाट `open` मा जाने trigger के हो?", jp: "サーキットブレーカーで、`closed`から`open`への移行を引き起こすものは？" },
-      options: [{ en: "The failure count reaching a configured threshold", np: "Failure count configured threshold मा पुग्नु", jp: "失敗回数が設定された閾値に達すること" }, { en: "A cooldown period elapsing", np: "Cooldown period बित्नु", jp: "クールダウン期間が経過すること" }],
+      question: { en: "What type are all `localStorage` values stored as, regardless of what you pass to `setItem`?", np: "`setItem` मा जे pass गरे पनि सबै `localStorage` values कुन type मा store हुन्छन्?", jp: "`setItem`に何を渡しても、すべての`localStorage`の値はどの型で保存される？" },
+      options: [{ en: "Strings", np: "Strings", jp: "文字列" }, { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" }],
       correctIndex: 0,
-      explanation: { en: "The circuit opens once accumulated failures hit the threshold; the cooldown elapsing is instead what moves it from open to half-open.", np: "Accumulated failures threshold मा पुगेपछि circuit open हुन्छ; cooldown बितेपछि त open बाट half-open मा जान्छ।", jp: "累積した失敗が閾値に達すると、サーキットはopenになる。クールダウンの経過はopenからhalf-openへの移行を引き起こす。" },
+      explanation: { en: "localStorage coerces every value to a string; objects must be JSON.stringify'd before storing and JSON.parse'd after reading.", np: "localStorage ले हरेक value लाई string मा coerce गर्छ; objects store गर्नु अघि JSON.stringify र read गरेपछि JSON.parse गर्नुपर्छ।", jp: "localStorageはすべての値を文字列に変換する。オブジェクトは保存前にJSON.stringify、読み取り後にJSON.parseする必要がある。" },
     },
     {
-      question: { en: "Why does firing `Promise.all` over 1000 URLs risk overwhelming a server, compared to a concurrency limiter?", np: "1000 URLs मा `Promise.all` fire गर्दा concurrency limiter को तुलनामा server overwhelm हुने जोखिम किन हुन्छ?", jp: "1000個のURLに`Promise.all`を発火することが、同時実行数リミッターと比べてサーバーを過負荷にするリスクがある理由は？" },
-      options: [{ en: "Promise.all starts every request at the exact same instant with no cap", np: "Promise.all ले कुनै cap बिना हरेक request लाई exact same instant मा सुरु गर्छ", jp: "Promise.allは上限なしにすべてのリクエストを全く同じ瞬間に開始する" }, { en: "Promise.all only supports up to 100 promises at a time", np: "Promise.all ले एकैसाथ maximum 100 promises मात्र support गर्छ", jp: "Promise.allは同時に最大100個のPromiseしかサポートしない" }],
+      question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` changes?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
+      options: [{ en: "Only other tabs of the same origin", np: "Same origin को अन्य tabs मा मात्र", jp: "同一オリジンの他のタブのみ" }, { en: "All tabs, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" }],
       correctIndex: 0,
-      explanation: { en: "Promise.all has no built-in concurrency cap — it fires every promise immediately, while a limiter deliberately caps how many run at once.", np: "Promise.all मा built-in concurrency cap छैन — यो हरेक promise तुरुन्तै fire गर्छ, जबकि limiter ले जानाजानी कति एकैसाथ चल्छन् cap गर्छ।", jp: "Promise.allには組み込みの同時実行数上限がない — すべてのPromiseを即座に発火する。一方リミッターは意図的に同時実行数を制限する。" },
+      explanation: { en: "The storage event deliberately never fires in the tab that made the change, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event change गर्ने tab मा जानाजानी कहिल्यै fire हुँदैन, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは変更を行ったタブでは意図的に発火しない。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
     },
     {
-      question: { en: "What is the core difference between request deduplication and async memoization?", np: "Request deduplication र async memoization बीचको core फरक के हो?", jp: "リクエスト重複排除と非同期メモ化の核心的な違いは？" },
-      options: [{ en: "Dedup shares one in-flight Promise among concurrent calls; memoization caches results across time with a TTL", np: "Dedup ले concurrent calls बीच एउटै in-flight Promise share गर्छ; memoization ले TTL सहित समयभरि results cache गर्छ", jp: "重複排除は同時呼び出し間で1つの進行中Promiseを共有し、メモ化はTTLで時間をまたいで結果をキャッシュする" }, { en: "They are two names for the exact same technique", np: "यी उही technique का दुई नाम हुन्", jp: "これらは全く同じ手法の2つの名前である" }],
+      question: { en: "Why should a long-lived refresh token generally NOT be stored in `localStorage`?", np: "Long-lived refresh token लाई सामान्यतया `localStorage` मा किन store गर्नु हुँदैन?", jp: "長期的なリフレッシュトークンを一般的に`localStorage`に保存すべきでない理由は？" },
+      options: [{ en: "Any injected XSS script can freely read localStorage", np: "जुनसुकै injected XSS script ले localStorage freely read गर्न सक्छ", jp: "注入されたXSSスクリプトがlocalStorageを自由に読めるため" }, { en: "localStorage values get cleared too frequently", np: "localStorage values धेरै बारम्बार clear हुन्छन्", jp: "localStorageの値が頻繁にクリアされすぎるため" }],
       correctIndex: 0,
-      explanation: { en: "Dedup solves overlapping calls happening at the same moment; memoization solves reusing a result for a later, non-overlapping call within a TTL window — they're often combined.", np: "Dedup ले उही moment मा overlap हुने calls solve गर्छ; memoization ले TTL window भित्र later, non-overlapping call का लागि result reuse गर्ने समस्या solve गर्छ — यी दुई प्राय: सँगै combine हुन्छन्।", jp: "重複排除は同じ瞬間に重なる呼び出しを解決し、メモ化はTTLウィンドウ内で後の重ならない呼び出しに結果を再利用する問題を解決する — この2つはよく組み合わされる。" },
+      explanation: { en: "Because localStorage is readable by any JavaScript on the page, an XSS vulnerability exposes long-lived tokens; httpOnly cookies are safer since JavaScript cannot read them at all.", np: "localStorage page मा चल्ने जुनसुकै JavaScript ले read गर्न सक्ने भएकोले, XSS vulnerability ले long-lived tokens expose गर्छ; httpOnly cookies बढी सुरक्षित छन् किनकि JavaScript ले तिनलाई बिल्कुल read गर्न सक्दैन।", jp: "localStorageはページ上の任意のJavaScriptから読めるため、XSS脆弱性が長期的なトークンを晒してしまう。httpOnly CookieはJavaScriptが一切読めないためより安全。" },
     },
   ],
 };

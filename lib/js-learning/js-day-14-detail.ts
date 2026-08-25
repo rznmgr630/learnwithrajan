@@ -3,279 +3,222 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "`async`/`await` is syntactic sugar over Promises. It lets you write asynchronous code that reads like synchronous code — top to bottom, no `.then()` chains. Under the hood it is exactly the same as Promises, so understanding Promises first (Day 11) makes `async`/`await` immediately clear.",
-      np: "`async`/`await` Promises माथि syntactic sugar हो। यसले async code लाई sync जस्तो top-to-bottom लेख्न दिन्छ — `.then()` chain बिना। भित्री रूपमा Promises जस्तै हो।",
-      jp: "`async`/`await`はPromiseの糖衣構文。非同期コードを同期的に見えるよう上から下へ書ける。内部はPromiseと全く同じなので、Day 11の理解があれば即座に理解できる。",
+      en: "Callbacks were the original way to handle asynchronous work in JavaScript — pass a function in, have it called when the job finishes. Promises replaced callbacks for most use cases because they are easier to chain, easier to error-handle, and don't lead to deeply nested 'callback hell'. Understanding both is important because older code and many Node.js APIs still use callbacks.",
+      np: "Callbacks JavaScript मा asynchronous work handle गर्ने original तरिका थियो। Promises ले callbacks लाई replace गर्‍यो किनभने chain गर्न, error handle गर्न सजिलो छ र 'callback hell' हुँदैन।",
+      jp: "コールバックは非同期処理の元祖。チェーン・エラー処理が容易なPromiseに置き換えられたが、古いコードやNode.js APIでは今も現役。両方の理解が重要。",
     },
     {
-      en: "The Promise utility methods — `Promise.all`, `Promise.allSettled`, `Promise.race`, `Promise.any` — give you fine-grained control over running multiple async operations at once. Choosing the right one prevents both unnecessary waiting and unexpected failures.",
-      np: "Promise utility methods — `Promise.all`, `allSettled`, `race`, `any` — ले multiple async operations एकैसाथ run गर्दा fine-grained control दिन्छ।",
-      jp: "Promise.all・allSettled・race・anyは複数の非同期操作を同時に実行する際の詳細な制御手段。適切なものを選ぶことで不要な待機と予期しない失敗を防げる。",
+      en: "A Promise is an object that represents the eventual result of an async operation. It is always in one of three states: pending (still working), fulfilled (succeeded with a value), or rejected (failed with a reason). Once settled, it never changes state.",
+      np: "Promise एउटा object हो जसले async operation को eventual result represent गर्छ। हमेशा तीन states मध्ये एउटामा हुन्छ: pending, fulfilled, वा rejected। एक पटक settled भएपछि state बदलिँदैन।",
+      jp: "PromiseはAsync操作の最終結果を表すオブジェクト。pending・fulfilled・rejectedの3状態があり、一度settling(確定)すると状態は変わらない。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "V_Kr9OSfDeU", title: "Async Await in JavaScript" },
+        { type: "youtube", videoId: "DHvZLI7Db8E", title: "JavaScript Promises In 10 Minutes" },
       ],
     },
     {
-      title: { en: "async / await basics", np: "async / await basics", jp: "async/awaitの基本" },
+      title: { en: "Callbacks — the original pattern", np: "Callbacks — original pattern", jp: "コールバック — 元祖パターン" },
       blocks: [
         {
           type: "code",
-          title: { en: "Rewriting Promises with async/await", np: "Promises async/await सँग rewrite गर्नु", jp: "PromiseをAsync/Awaitで書き直す" },
-          code: `// ── Same operation: Promise chain vs async/await ─────────────────
-// Promise chain:
-function getUserData(id) {
-  return fetchUser(id)
-    .then(user => fetchOrders(user.id))
-    .then(orders => ({ user, orders }))
-    .catch(err => console.error(err));
+          title: { en: "Callback pattern and the 'error-first' convention", np: "Callback pattern र error-first convention", jp: "コールバックパターンとエラーファーストの慣習" },
+          code: `// ── Simple callback ───────────────────────────────────────────────
+function fetchUser(id, callback) {
+  setTimeout(() => {
+    const user = { id, name: "Alice" };  // simulate async work
+    callback(null, user);                // null = no error, user = result
+  }, 1000);
 }
 
-// async/await — same logic, reads top to bottom:
-async function getUserData(id) {
-  try {
-    const user   = await fetchUser(id);      // pause until fetchUser resolves
-    const orders = await fetchOrders(user.id); // pause until fetchOrders resolves
-    return { user, orders };                 // return value is auto-wrapped in a Promise
-  } catch (err) {
-    console.error(err);
+fetchUser(1, (err, user) => {
+  if (err) return console.error("Error:", err);
+  console.log("Got user:", user.name);
+});
+
+// ── Error-first callback convention (Node.js style) ───────────────
+// First argument is always the error (null if success)
+// Second argument is the result
+const fs = require("fs");
+fs.readFile("./config.json", "utf8", (err, data) => {
+  if (err) {
+    console.error("Could not read file:", err.message);
+    return;
   }
-}
+  console.log("File contents:", data);
+});
 
-// ── async functions ALWAYS return a Promise ───────────────────────
-async function greet() {
-  return "Hello";  // implicitly returns Promise.resolve("Hello")
-}
+// ── Callback hell — why Promises were invented ────────────────────
+// Each step depends on the previous one → deeply nested
+getUser(userId, (err, user) => {
+  if (err) return handleError(err);
+  getOrders(user.id, (err, orders) => {
+    if (err) return handleError(err);
+    getOrderDetails(orders[0].id, (err, details) => {
+      if (err) return handleError(err);
+      // actual logic buried 3 levels deep
+      console.log(details);
+    });
+  });
+});`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The **error-first callback** convention (also called Node.js style) means the first argument to every callback is an error object — `null` if everything worked, an `Error` instance if it failed. This is a convention, not a language rule, but almost every Node.js core module and older npm package follows it.",
+            np: "**Error-first callback** convention ले हरेक callback को पहिलो argument error हो — सफल भए `null`, असफल भए `Error` instance। यो convention हो, language rule होइन, तर लगभग सबै Node.js core modules र पुराना npm packages ले follow गर्छन्।",
+            jp: "**エラーファーストコールバック**慣習では、最初の引数は常にerror（成功時null、失敗時Errorインスタンス）。言語仕様ではなく慣習だが、Node.jsコアモジュールと古いnpmパッケージはほぼすべてこれに従う。",
+          },
+        },
+      ],
+    },
+    {
+      title: { en: "Creating and consuming Promises", np: "Promises create र consume गर्नु", jp: "Promiseの作成と利用" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "new Promise(), then(), catch(), finally()", np: "new Promise(), then(), catch(), finally()", jp: "Promise作成と利用" },
+          code: `// ── Creating a Promise ────────────────────────────────────────────
+const fetchUser = (id) =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (id <= 0) {
+        reject(new Error("ID must be positive"));  // reject = failure
+      } else {
+        resolve({ id, name: "Alice" });             // resolve = success
+      }
+    }, 1000);
+  });
 
-greet().then(msg => console.log(msg));  // "Hello"
-// or
-const msg = await greet();  // "Hello"
+// ── Consuming a Promise ───────────────────────────────────────────
+fetchUser(1)
+  .then(user => console.log("Got user:", user.name))  // runs on resolve
+  .catch(err  => console.error("Failed:", err.message)) // runs on reject
+  .finally(()  => console.log("Always runs"));          // always runs
 
-// ── await pauses the CURRENT function, not the whole thread ───────
-async function run() {
-  console.log("start");
-  const result = await someAsyncTask();  // pauses run() while task runs
-  console.log("after await:", result);   // resumes when task settles
-  console.log("end");
-}
-// Code outside run() continues to execute while it is paused
+// ── Promise states ────────────────────────────────────────────────
+// 1. Pending   — the async work is still running
+// 2. Fulfilled — resolve() was called; .then() handlers fire
+// 3. Rejected  — reject() was called; .catch() handlers fire
+// Once fulfilled or rejected, a Promise is "settled" — state never changes
 
-// ── Error handling with try/catch ─────────────────────────────────
-async function fetchData(url) {
-  try {
-    const response = await fetch(url);
+// ── then() returns a NEW Promise ─────────────────────────────────
+// This is what makes chaining possible
+fetchUser(1)
+  .then(user => user.name)            // transforms the value
+  .then(name => name.toUpperCase())   // transforms again
+  .then(upper => console.log(upper))  // "ALICE"
+  .catch(err => console.error(err));  // catches any error from any .then()
 
-    if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
-    }
+// ── Wrapping a callback API in a Promise ──────────────────────────
+const readFilePromise = (path) =>
+  new Promise((resolve, reject) => {
+    fs.readFile(path, "utf8", (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
 
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    // Network errors and HTTP errors both end up here
-    console.error("Fetch failed:", err.message);
-    throw err;  // rethrow so the caller can also handle it
-  }
-}`,
+// Or use Node.js's built-in util.promisify:
+const { promisify } = require("util");
+const readFile = promisify(fs.readFile);
+const data = await readFile("./config.json", "utf8");`,
+        },
+      ],
+    },
+    {
+      title: { en: "Promise chaining", np: "Promise chaining", jp: "Promiseのチェーン" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Chaining async steps without nesting", np: "Nesting बिना async steps chain गर्नु", jp: "ネストなしで非同期ステップをチェーン" },
+          code: `// ── Promise chain vs callback hell — same logic, cleaner structure ──
+// Callback hell version (hard to read):
+getUser(userId, (err, user) => {
+  getOrders(user.id, (err, orders) => {
+    getOrderDetails(orders[0].id, (err, details) => {
+      render(details);
+    });
+  });
+});
+
+// Promise chain (flat structure, easy to read):
+getUser(userId)
+  .then(user    => getOrders(user.id))
+  .then(orders  => getOrderDetails(orders[0].id))
+  .then(details => render(details))
+  .catch(err    => showError(err));  // ONE catch handles all errors
+
+// ── Returning values vs Promises in .then() ────────────────────────
+// If you return a plain value, it's wrapped in a resolved Promise
+// If you return a Promise, the chain waits for it to settle
+
+Promise.resolve(1)
+  .then(n => n + 1)           // returns 2 — wrapped in resolved Promise
+  .then(n => Promise.resolve(n * 2))  // returns a Promise — chain waits
+  .then(n => console.log(n)); // 4
+
+// ── Common mistake: forgetting to return inside .then() ────────────
+// ❌ Bug — returns undefined, chain gets undefined not the fetch result
+.then(user => {
+  fetch(\`/api/orders/\${user.id}\`);  // forgot return!
+})
+.then(orders => console.log(orders));  // undefined
+
+// ✅ Fixed
+.then(user => fetch(\`/api/orders/\${user.id}\`))  // return the Promise
+.then(orders => console.log(orders));`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**`async` makes a function return a Promise** — even if it returns a plain value. You cannot use `await` outside an `async` function (except at the top level of an ES module).",
-              np: "**`async` ले function लाई Promise return गराउँछ** — plain value return गरे पनि। `async` function बाहिर `await` use गर्न मिल्दैन (ES module top-level बाहेक)।",
-              jp: "**`async`は関数をPromiseを返すようにする** — 普通の値を返しても。`async`関数の外では`await`は使えない（ESモジュールのトップレベルを除く）。",
+              en: "**Always return** inside `.then()` if you are calling another async function. Without `return`, the next `.then()` receives `undefined`.",
+              np: "`.then()` भित्र async function call गर्दा **हमेशा return** गर्नुहोस्। Return नगरे अर्को `.then()` ले `undefined` पाउँछ।",
+              jp: "`.then()`の中で非同期関数を呼ぶなら**必ずreturn**する。returnがないと次の`.then()`はundefinedを受け取る。",
             },
             {
-              en: "**`await` only pauses the current `async` function** — other code can run while it waits. It is not blocking the JavaScript engine.",
-              np: "**`await` ले current `async` function मात्र pause गर्छ** — अर्को code चलिरहन्छ। JavaScript engine block हुँदैन।",
-              jp: "**`await`は現在の`async`関数のみを一時停止** — 他のコードは実行し続ける。JavaScriptエンジンをブロックしない。",
+              en: "**One `.catch()` at the end** catches errors from any step in the chain. You rarely need `.catch()` after every `.then()`.",
+              np: "**अन्तमा एउटा `.catch()`** ले chain को जुनसुकै step को error catch गर्छ। हरेक `.then()` पछि `.catch()` चाहिँदैन।",
+              jp: "**最後に一つの`.catch()`**でチェーン内の全エラーをキャッチできる。各`.then()`の後に`.catch()`は不要。",
             },
             {
-              en: "**Forgetting `await`** gives you a Promise object instead of the resolved value — `console.log(fetchUser(1))` prints `Promise { <pending> }`, not the user.",
-              np: "**`await` भुल्नु** ले resolved value को सट्टा Promise object दिन्छ — `console.log(fetchUser(1))` ले `Promise { <pending> }` print गर्छ, user होइन।",
-              jp: "**`await`を忘れる**と解決値の代わりにPromiseオブジェクトが得られる。`console.log(fetchUser(1))`は`Promise { <pending> }`を表示する。",
+              en: "**`.finally()`** always runs whether the Promise resolved or rejected — useful for cleanup like hiding a loading spinner.",
+              np: "**`.finally()`** Promise resolve वा reject जुनसुकै भए पनि चल्छ — loading spinner hide गर्न जस्ता cleanup का लागि उपयोगी।",
+              jp: "**`.finally()`**はresolve・rejectに関わらず常に実行される。ローディングスピナーの非表示などのクリーンアップに便利。",
             },
           ],
-        },
-      ],
-    },
-    {
-      title: { en: "Promise utility methods", np: "Promise utility methods", jp: "Promiseユーティリティメソッド" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Promise.all, allSettled, race, any — when to use each", np: "Promise utilities — कहिले कुन?", jp: "Promiseユーティリティの使い分け" },
-          code: `// ── Promise.all — run tasks in parallel, fail fast ────────────────
-// All Promises run at the same time.
-// Resolves when ALL settle with success.
-// Rejects immediately if ANY one rejects.
-const [user, posts, comments] = await Promise.all([
-  fetchUser(1),
-  fetchPosts(1),
-  fetchComments(1),
-]);
-// wall-clock time ≈ max(fetchUser, fetchPosts, fetchComments)
-// If fetchPosts rejects, the whole Promise.all rejects (fetchUser result is lost)
-
-// ── Promise.allSettled — always wait for all, capture failures ─────
-// Never rejects — waits for every Promise to settle.
-// Returns an array of result objects: { status, value } or { status, reason }
-const results = await Promise.allSettled([
-  sendEmailTo("alice@example.com"),
-  sendEmailTo("bob@invalid"),  // will fail
-  sendEmailTo("carol@example.com"),
-]);
-
-for (const result of results) {
-  if (result.status === "fulfilled") {
-    console.log("Sent:", result.value);
-  } else {
-    console.error("Failed:", result.reason.message);
-  }
-}
-// Use when partial success is acceptable (sending notifications, bulk operations)
-
-// ── Promise.race — first settled wins ─────────────────────────────
-// Resolves OR rejects as soon as ANY one Promise settles.
-// Classic use: add a timeout to an operation
-const withTimeout = (promise, ms) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(\`Timed out after \${ms}ms\`)), ms)
-    ),
-  ]);
-
-const user = await withTimeout(fetchUser(1), 5000);
-
-// ── Promise.any — first SUCCESS wins ──────────────────────────────
-// Resolves as soon as ANY one Promise fulfills.
-// Only rejects if ALL Promises reject (AggregateError).
-// Use for: trying multiple sources, first response wins
-const data = await Promise.any([
-  fetchFromCDN1(url),
-  fetchFromCDN2(url),
-  fetchFromOrigin(url),
-]);
-// Whichever CDN responds first, that is the result. Others are ignored.`,
-        },
-        {
-          type: "table",
-          caption: { en: "Choosing the right Promise utility", np: "सही Promise utility छान्नु", jp: "適切なPromiseユーティリティの選択" },
-          headers: [
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "Resolves when", np: "कहिले resolve?", jp: "いつresolveするか" },
-            { en: "Rejects when", np: "कहिले reject?", jp: "いつrejectするか" },
-            { en: "Use for", np: "कसका लागि", jp: "用途" },
-          ],
-          rows: [
-            [
-              { en: "Promise.all", np: "Promise.all", jp: "Promise.all" },
-              { en: "ALL fulfill", np: "सबै fulfill", jp: "全て成功" },
-              { en: "ANY rejects", np: "कोई reject", jp: "どれか失敗" },
-              { en: "Independent tasks where all results are needed", np: "सबै results चाहिए", jp: "全結果が必要な独立タスク" },
-            ],
-            [
-              { en: "Promise.allSettled", np: "Promise.allSettled", jp: "Promise.allSettled" },
-              { en: "ALL settle (either way)", np: "सबै settle", jp: "全て確定（成否問わず）" },
-              { en: "Never rejects", np: "कहिल्यै reject गर्दैन", jp: "rejectしない" },
-              { en: "Bulk ops where partial success is OK", np: "Partial success OK", jp: "部分的成功が許容されるバルク操作" },
-            ],
-            [
-              { en: "Promise.race", np: "Promise.race", jp: "Promise.race" },
-              { en: "First one fulfills", np: "पहिलो fulfill", jp: "最初のfulfill" },
-              { en: "First one rejects", np: "पहिलो reject", jp: "最初のreject" },
-              { en: "Timeouts, first-response-wins", np: "Timeout, पहिलो response", jp: "タイムアウト・最速レスポンス" },
-            ],
-            [
-              { en: "Promise.any", np: "Promise.any", jp: "Promise.any" },
-              { en: "First one fulfills", np: "पहिलो fulfill", jp: "最初のfulfill" },
-              { en: "ALL reject", np: "सबै reject", jp: "全て失敗" },
-              { en: "Multiple fallbacks, fastest success wins", np: "Fallbacks, fastest success", jp: "複数フォールバック・最速成功" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: { en: "Parallel vs sequential execution", np: "Parallel vs sequential execution", jp: "並列実行と逐次実行" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "await in a loop — a very common performance mistake", np: "Loop मा await — common performance mistake", jp: "ループ内のawait — よくあるパフォーマンスミス" },
-          code: `const userIds = [1, 2, 3, 4, 5];
-
-// ❌ Sequential — each fetch waits for the previous one to finish
-// Total time ≈ 5 × fetchUser time
-async function getSequential() {
-  const users = [];
-  for (const id of userIds) {
-    const user = await fetchUser(id);  // waits here each iteration
-    users.push(user);
-  }
-  return users;
-}
-
-// ✅ Parallel — all fetches start at once
-// Total time ≈ slowest single fetchUser
-async function getParallel() {
-  const promises = userIds.map(id => fetchUser(id));  // kick off all at once
-  return Promise.all(promises);                        // wait for all to finish
-}
-
-// ✅ Alternative parallel pattern:
-async function getParallelAlt() {
-  return Promise.all(userIds.map(fetchUser));
-}
-
-// ── When sequential IS correct ────────────────────────────────────
-// When step N depends on the result of step N-1
-async function processInOrder() {
-  const user    = await fetchUser(1);           // need user first
-  const orders  = await fetchOrders(user.id);   // need user.id
-  const invoice = await createInvoice(orders);  // need orders
-  return invoice;
-}
-
-// ── for await...of — consuming async iterables ────────────────────
-async function* paginate(url) {
-  let nextUrl = url;
-  while (nextUrl) {
-    const response = await fetch(nextUrl);
-    const data = await response.json();
-    yield data.items;
-    nextUrl = data.nextPageUrl;
-  }
-}
-
-for await (const items of paginate("/api/products")) {
-  console.log("Got page:", items.length, "items");
-}`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between Promise.all and Promise.allSettled?", np: "Promise.all र Promise.allSettled मा के फरक?", jp: "Promise.allとPromise.allSettledの違いは？" },
+      question: { en: "What is the difference between a callback and a Promise?", np: "Callback र Promise मा के फरक?", jp: "コールバックとPromiseの違いは？" },
       answer: {
-        en: "Promise.all resolves when ALL promises fulfill, but rejects immediately if ANY one rejects — and you lose the results from the already-fulfilled promises. Promise.allSettled always waits for every promise to finish (whether fulfilled or rejected) and gives you an array of result objects with a `status` field. Use Promise.all when you need all results and a single failure should abort the operation. Use Promise.allSettled when partial success is acceptable — like sending notifications to multiple recipients.",
-        np: "Promise.all सबै fulfill हुँदा resolve हुन्छ, तर कुनै एक reject गर्दा तुरन्त reject हुन्छ। Promise.allSettled हरेक promise settle नभइकन रुकिन्छ र `status` field सहित result objects array दिन्छ। Partial success OK भए allSettled।",
-        jp: "Promise.allは全て成功で解決するが、一つ失敗すると即座に拒否（成功分の結果も失う）。allSettledは全て確定するまで待ち、statusフィールド付きの結果配列を返す。部分的成功が許容されるならallSettled。",
+        en: "A callback is a function you pass to another function, to be called when the async work is done. The calling function decides when and how your callback is invoked. A Promise is an object that represents a future value. You call `.then()` and `.catch()` on it to register handlers — the Promise invokes your handlers when it settles. Promises solve several callback problems: chaining is flat instead of nested, errors propagate automatically to `.catch()`, and Promises can only be resolved or rejected once (preventing double-calls).",
+        np: "Callback तपाईंले pass गर्ने function हो जुन async काम सकिएपछि call हुन्छ। Promise एउटा object हो जसले future value represent गर्छ। Promises ले callbacks का problems solve गर्छ: chaining flat हुन्छ, errors automatically `.catch()` मा propagate हुन्छ, र Promise एक पटक मात्र resolve/reject हुन सक्छ।",
+        jp: "コールバックは非同期処理完了時に呼ばれる関数。Promiseは将来の値を表すオブジェクト。Promiseはチェーンがフラット・エラーが自動伝播・一度だけ確定という利点がある。",
       },
     },
     {
-      question: { en: "How do I run async operations in parallel inside a loop?", np: "Loop भित्र async operations parallel मा कसरी run गर्ने?", jp: "ループ内で非同期処理を並列実行するには？" },
+      question: { en: "What happens if a Promise never resolves or rejects?", np: "Promise कहिल्यै resolve वा reject नभए के हुन्छ?", jp: "Promiseが永遠にresolve/rejectしない場合はどうなる？" },
       answer: {
-        en: "Do not use `await` inside a `for` loop — that runs each operation sequentially. Instead, create all the Promises first using `.map()`, then await them all with `Promise.all()`. The pattern is: `const results = await Promise.all(items.map(item => asyncOperation(item)))`. This starts all operations simultaneously and waits for all of them, bringing total time down from N × operation time to approximately the time of the slowest single operation.",
-        np: "`for` loop भित्र `await` use नगर्नुहोस् — त्यसले sequential run गर्छ। बरु `.map()` सँग सबै Promises create गर्नुहोस् र `Promise.all()` सँग await गर्नुहोस्: `const results = await Promise.all(items.map(item => asyncOperation(item)))`।",
-        jp: "`for`ループ内で`await`しない（逐次実行になる）。代わりに`.map()`で全Promiseを生成して`Promise.all()`でawaitする。パターン: `const results = await Promise.all(items.map(item => asyncOperation(item)))`。",
+        en: "It stays in the `pending` state forever. The `.then()` and `.catch()` handlers never run, and any code waiting for the result will wait forever. This is a Promise leak — a common source of memory issues in complex async code. To prevent it, always add a timeout using `Promise.race()` with a timer Promise, or ensure all code paths in `new Promise()` call either `resolve` or `reject`.",
+        np: "हमेशाको लागि `pending` state मा रहन्छ। `.then()` र `.catch()` handlers कहिल्यै run हुँदैनन्। यो Promise leak हो — complex async code मा memory issues को common कारण। रोक्न `Promise.race()` मा timeout थप्नुहोस् वा `new Promise()` भित्र सबै code paths ले `resolve` वा `reject` call गर्छन् भन्ने ensure गर्नुहोस्।",
+        jp: "永遠に`pending`のまま。`.then()`や`.catch()`ハンドラは一切実行されない。Promiseリークはメモリ問題の元。防ぐには`Promise.race()`でタイムアウトを追加するか、`new Promise()`内の全コードパスで必ずresolve/rejectを呼ぶ。",
+      },
+    },
+    {
+      question: { en: "Can I reject with a non-Error value?", np: "Non-Error value सँग reject गर्न सकिन्छ?", jp: "Error以外の値でrejectできるか？" },
+      answer: {
+        en: "Yes — you can reject with any value: `reject('something went wrong')` or `reject(404)`. But you should always reject with an `Error` instance. Rejecting with a string or number loses the stack trace, making debugging much harder. In a `.catch()` handler you also cannot safely use `err.message` or `err.stack` if the rejection value is not an Error. Rule: always `reject(new Error('reason'))` or `reject(new CustomError(...))`.",
+        np: "हो — जुनसुकै value सँग reject गर्न सकिन्छ। तर हमेशा `Error` instance सँग reject गर्नुहोस्। String वा number सँग reject गर्दा stack trace हराउँछ र debugging गाह्रो हुन्छ। Rule: हमेशा `reject(new Error('reason'))`।",
+        jp: "はい — 任意の値でrejectできる。しかし常に`Error`インスタンスでrejectすべき。文字列や数値でrejectするとスタックトレースが失われデバッグが困難になる。`reject(new Error('理由'))`が原則。",
       },
     },
   ],
