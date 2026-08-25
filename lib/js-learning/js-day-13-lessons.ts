@@ -146,115 +146,145 @@ console.log("Other work"); // runs while slowOperation is still pending`,
           explanation: { en: "A rejection becomes a thrown error at the `await`, so `catch` receives it.", np: "Rejection `await` मा throw भएको error बन्छ, त्यसैले `catch` ले पाउँछ।", jp: "拒否は `await` の位置で例外になるので、`catch` が受け取る。" },
         },
       ],
+      youtubeIds: ["6nv3qy3oNkc"],
     },
     {
       id: "promise-utility-methods",
       title: { en: "Promise.all, allSettled, race & any", np: "Promise.all, allSettled, race, any", jp: "Promise.all・allSettled・race・any" },
       durationMinutes: 9,
       explanation: {
-        en: "When you need to run several Promises together, four static methods each give you a different waiting strategy. `Promise.all()` runs everything in parallel and resolves with an array of results only when <b>all</b> succeed — but it <b>fails fast</b>: the moment any single Promise rejects, `Promise.all` rejects immediately too, discarding the results of the ones that already succeeded. `Promise.allSettled()` never rejects — it always waits for <b>every</b> Promise to settle (fulfilled or rejected) and gives you back an array of `{ status, value }` or `{ status, reason }` objects, so partial failure is visible instead of losing everything.\n\n`Promise.race()` settles as soon as the <b>first</b> Promise settles, whether that's a success or a failure — a classic use is racing a real request against a `setTimeout` rejection to implement a timeout. `Promise.any()` is the optimistic cousin: it resolves as soon as the <b>first</b> Promise fulfills and simply ignores rejections, only rejecting itself (with an `AggregateError`) if <b>every</b> Promise rejects — useful for querying several redundant sources and taking whichever answers first.",
-        np: "धेरै Promises एकैसाथ run गर्नुपर्दा, चार static methods ले फरक-फरक waiting strategy दिन्छन्। `Promise.all()` ले सबै parallel मा चलाउँछ र <b>सबै</b> succeed भएमा मात्र results को array सँग resolve हुन्छ — तर यो <b>fail fast</b> हुन्छ: कुनै एक Promise reject भएको क्षण `Promise.all` पनि तुरुन्तै reject हुन्छ, अघि succeed भएका results हराउँछन्। `Promise.allSettled()` कहिल्यै reject हुँदैन — यसले <b>हरेक</b> Promise settle (fulfilled वा rejected) नभएसम्म पर्खिन्छ र `{ status, value }` वा `{ status, reason }` objects को array फर्काउँछ, त्यसैले partial failure देखिन्छ, सबै नहराई।\n\n`Promise.race()` <b>पहिलो</b> Promise settle हुनासाथ settle हुन्छ, success होस् वा failure — timeout implement गर्न वास्तविक request लाई `setTimeout` rejection सँग race गराउनु classic use हो। `Promise.any()` optimistic cousin हो: <b>पहिलो</b> Promise fulfill हुनासाथ resolve हुन्छ र rejections लाई simply ignore गर्छ, <b>सबै</b> Promise reject भएमा मात्र आफैं reject हुन्छ (`AggregateError` सँग) — धेरै redundant sources query गरी जुनसुकैले पहिले जवाफ दिन्छ त्यो लिन उपयोगी।",
-        jp: "複数のPromiseを一緒に実行する必要があるとき、4つの静的メソッドがそれぞれ異なる待ち方の戦略を提供する。`Promise.all()`はすべてを並列実行し、<b>全て</b>成功したときのみ結果の配列で解決する — ただし<b>フェイルファスト</b>：どれか1つでも拒否された瞬間に`Promise.all`も即座に拒否され、すでに成功していた結果は破棄される。`Promise.allSettled()`は決して拒否せず、常に<b>すべての</b>Promiseが確定する（成功でも失敗でも）まで待ち、`{ status, value }`または`{ status, reason }`オブジェクトの配列を返すので、全てを失うことなく部分的な失敗が見える。\n\n`Promise.race()`は<b>最初の</b>Promiseが確定した時点で確定する。成功でも失敗でも構わない — 典型的な使い方は実際のリクエストを`setTimeout`のrejectと競わせてタイムアウトを実装すること。`Promise.any()`は楽観的ないとこで、<b>最初の</b>Promiseが成功した時点で解決し、rejectは単純に無視する。<b>すべての</b>Promiseが拒否された場合のみ自身も拒否される（`AggregateError`で）— 複数の冗長なソースに問い合わせ、最初に答えたものを採用するのに便利。",
+        en: "When you need to handle multiple <b>Promises</b> (asynchronous operations) together, JavaScript provides four main <b>Promise combinators</b> (methods for coordinating multiple Promises). The key difference is <b>when they finish and what happens when one fails</b>.\n\n• <b>`Promise.all()`</b> → waits for <b>all to fulfill</b>; rejects immediately if one rejects.\n• <b>`Promise.allSettled()`</b> → waits for <b>all to settle</b>, regardless of success or failure.\n• <b>`Promise.race()`</b> → finishes when the <b>first Promise settles</b>.\n• <b>`Promise.any()`</b> → finishes when the <b>first Promise fulfills</b>; rejects only when all reject.\n\n```text\n                 Success condition       Failure condition\n────────────────────────────────────────────────────────────\nPromise.all()    ALL fulfill             ANY rejects\nallSettled()     ALL settle              NEVER rejects\nrace()           FIRST settles           First rejection can win\nany()            FIRST fulfills          ALL reject\n```\n\n---\n\n### 1. `Promise.all()` — all must succeed\n\nUse it when you <b>need every result</b>.\n\n```javascript\nconst user = fetchUser();\nconst posts = fetchPosts();\nconst settings = fetchSettings();\n\nconst [userData, postsData, settingsData] =\n  await Promise.all([user, posts, settings]);\n```\n\nThe requests can run <b>concurrently</b> (at the same time) rather than waiting for one to finish before starting the next.\n\nIf one rejects:\n\n```javascript\nawait Promise.all([\n  fetchUser(),\n  fetchPosts(), // rejects\n  fetchSettings()\n]);\n```\n\n`Promise.all()` immediately rejects.\n\n---\n\n### 2. `Promise.allSettled()` — wait for everything\n\nUse it when <b>partial failure is acceptable</b> and you need to know what happened to every Promise.\n\n```javascript\nconst results = await Promise.allSettled([\n  fetchUser(),\n  fetchPosts(),\n  fetchSettings()\n]);\n\nconsole.log(results);\n```\n\nYou might get:\n\n```javascript\n[\n  { status: \"fulfilled\", value: { id: 1 } },\n  { status: \"rejected\", reason: Error(\"Network error\") },\n  { status: \"fulfilled\", value: { theme: \"dark\" } }\n]\n```\n\nOne failure doesn't stop the others from being reported.\n\n---\n\n### 3. `Promise.race()` — first to settle wins\n\nUse it when <b>the fastest result matters</b>, whether that result is success or failure.\n\n```javascript\nfunction timeout(ms) {\n  return new Promise((_, reject) => {\n    setTimeout(() => {\n      reject(new Error(\"Request timed out\"));\n    }, ms);\n  });\n}\n\nconst response = await Promise.race([\n  fetch(\"/api/data\"),\n  timeout(5000)\n]);\n```\n\nIf the request finishes first, you get success. If the timeout finishes first, you get a rejection.\n\n---\n\n### 4. `Promise.any()` — first success wins\n\nUse it when you have <b>multiple possible sources</b> and only need one successful result.\n\n```javascript\nconst result = await Promise.any([\n  fetch(\"https://server-a.com/data\"),\n  fetch(\"https://server-b.com/data\"),\n  fetch(\"https://server-c.com/data\")\n]);\n```\n\nIf Server A and B fail but Server C succeeds, `Promise.any()` resolves with Server C's result.\n\nIf <b>every Promise rejects</b>, it rejects with an <b>`AggregateError`</b> (an error containing multiple rejection reasons).",
+        np: "धेरै <b>Promise</b> (asynchronous operation) सँगै सम्हाल्नुपर्दा, JavaScript ले चार मुख्य <b>Promise combinator</b> (धेरै Promise समन्वय गर्ने method) दिन्छ। मुख्य फरक <b>तिनी कहिले सकिन्छन् र एउटा fail हुँदा के हुन्छ</b> भन्नेमा हो।\n\n• <b>`Promise.all()`</b> → <b>सबै fulfill</b> हुन कुर्छ; एउटा reject भए तुरुन्तै reject हुन्छ।\n• <b>`Promise.allSettled()`</b> → सफल होस् वा असफल, <b>सबै settle</b> हुन कुर्छ।\n• <b>`Promise.race()`</b> → <b>पहिलो Promise settle</b> हुँदा सकिन्छ।\n• <b>`Promise.any()`</b> → <b>पहिलो Promise fulfill</b> हुँदा सकिन्छ; सबै reject भएमा मात्र reject हुन्छ।\n\n```text\n                 Success condition       Failure condition\n────────────────────────────────────────────────────────────\nPromise.all()    ALL fulfill             ANY rejects\nallSettled()     ALL settle              NEVER rejects\nrace()           FIRST settles           First rejection can win\nany()            FIRST fulfills          ALL reject\n```\n\n---\n\n### 1. `Promise.all()` — सबै सफल हुनैपर्छ\n\n<b>हरेक नतिजा चाहिँदा</b> प्रयोग गर्नुहोस्।\n\n```javascript\nconst user = fetchUser();\nconst posts = fetchPosts();\nconst settings = fetchSettings();\n\nconst [userData, postsData, settingsData] =\n  await Promise.all([user, posts, settings]);\n```\n\nRequest एउटा सकिने कुरेर अर्को सुरु गर्नुको साटो <b>सँगसँगै</b> चल्न सक्छन्।\n\nएउटा reject भए:\n\n```javascript\nawait Promise.all([\n  fetchUser(),\n  fetchPosts(), // rejects\n  fetchSettings()\n]);\n```\n\n`Promise.all()` तुरुन्तै reject हुन्छ।\n\n---\n\n### 2. `Promise.allSettled()` — सबै कुर्नु\n\n<b>आंशिक असफलता स्वीकार्य</b> भएमा र हरेक Promise लाई के भयो थाहा चाहिँदा प्रयोग गर्नुहोस्।\n\n```javascript\nconst results = await Promise.allSettled([\n  fetchUser(),\n  fetchPosts(),\n  fetchSettings()\n]);\n\nconsole.log(results);\n```\n\nतपाईंले यस्तो पाउन सक्नुहुन्छ:\n\n```javascript\n[\n  { status: \"fulfilled\", value: { id: 1 } },\n  { status: \"rejected\", reason: Error(\"Network error\") },\n  { status: \"fulfilled\", value: { theme: \"dark\" } }\n]\n```\n\nएउटा असफलताले अरूको रिपोर्ट रोक्दैन।\n\n---\n\n### 3. `Promise.race()` — पहिलो settle हुने जित्छ\n\n<b>सबैभन्दा छिटो नतिजा महत्वपूर्ण</b> हुँदा प्रयोग गर्नुहोस्, त्यो नतिजा सफलता होस् वा असफलता।\n\n```javascript\nfunction timeout(ms) {\n  return new Promise((_, reject) => {\n    setTimeout(() => {\n      reject(new Error(\"Request timed out\"));\n    }, ms);\n  });\n}\n\nconst response = await Promise.race([\n  fetch(\"/api/data\"),\n  timeout(5000)\n]);\n```\n\nRequest पहिले सकिए सफलता पाइन्छ। Timeout पहिले सकिए rejection पाइन्छ।\n\n---\n\n### 4. `Promise.any()` — पहिलो सफलता जित्छ\n\n<b>धेरै सम्भावित स्रोत</b> हुँदा र एउटै सफल नतिजा चाहिँदा प्रयोग गर्नुहोस्।\n\n```javascript\nconst result = await Promise.any([\n  fetch(\"https://server-a.com/data\"),\n  fetch(\"https://server-b.com/data\"),\n  fetch(\"https://server-c.com/data\")\n]);\n```\n\nServer A र B fail भई C सफल भए, `Promise.any()` Server C को नतिजा सँग resolve हुन्छ।\n\n<b>हरेक Promise reject</b> भएमा, यो <b>`AggregateError`</b> (धेरै rejection कारण समेटेको error) सँग reject हुन्छ।",
+        jp: "複数の<b>Promise</b>（非同期処理）をまとめて扱うとき、JavaScriptには4つの主要な<b>Promiseコンビネータ</b>（複数のPromiseを調整するメソッド）があります。違いは<b>いつ完了するか、1つ失敗したときどうなるか</b>です。\n\n• <b>`Promise.all()`</b> → <b>すべて成功</b>するのを待つ。1つでも拒否されると即座に拒否。\n• <b>`Promise.allSettled()`</b> → 成功でも失敗でも<b>すべて確定</b>するのを待つ。\n• <b>`Promise.race()`</b> → <b>最初に確定したPromise</b>で終わる。\n• <b>`Promise.any()`</b> → <b>最初に成功したPromise</b>で終わる。すべて拒否されたときだけ拒否。\n\n```text\n                 Success condition       Failure condition\n────────────────────────────────────────────────────────────\nPromise.all()    ALL fulfill             ANY rejects\nallSettled()     ALL settle              NEVER rejects\nrace()           FIRST settles           First rejection can win\nany()            FIRST fulfills          ALL reject\n```\n\n---\n\n### 1. `Promise.all()` — すべて成功する必要がある\n\n<b>すべての結果が必要</b>なときに使います。\n\n```javascript\nconst user = fetchUser();\nconst posts = fetchPosts();\nconst settings = fetchSettings();\n\nconst [userData, postsData, settingsData] =\n  await Promise.all([user, posts, settings]);\n```\n\nリクエストは、1つ終わるのを待ってから次を始めるのではなく<b>同時に</b>走れます。\n\n1つでも拒否されると:\n\n```javascript\nawait Promise.all([\n  fetchUser(),\n  fetchPosts(), // rejects\n  fetchSettings()\n]);\n```\n\n`Promise.all()` は即座に拒否されます。\n\n---\n\n### 2. `Promise.allSettled()` — すべてを待つ\n\n<b>一部の失敗が許容できて</b>、各Promiseの結果をすべて知りたいときに使います。\n\n```javascript\nconst results = await Promise.allSettled([\n  fetchUser(),\n  fetchPosts(),\n  fetchSettings()\n]);\n\nconsole.log(results);\n```\n\nこんな結果が得られます:\n\n```javascript\n[\n  { status: \"fulfilled\", value: { id: 1 } },\n  { status: \"rejected\", reason: Error(\"Network error\") },\n  { status: \"fulfilled\", value: { theme: \"dark\" } }\n]\n```\n\n1つの失敗が、他の報告を止めることはありません。\n\n---\n\n### 3. `Promise.race()` — 最初に確定したものが勝つ\n\n結果が成功でも失敗でも、<b>いちばん速い結果が重要</b>なときに使います。\n\n```javascript\nfunction timeout(ms) {\n  return new Promise((_, reject) => {\n    setTimeout(() => {\n      reject(new Error(\"Request timed out\"));\n    }, ms);\n  });\n}\n\nconst response = await Promise.race([\n  fetch(\"/api/data\"),\n  timeout(5000)\n]);\n```\n\nリクエストが先に終われば成功、タイムアウトが先なら拒否になります。\n\n---\n\n### 4. `Promise.any()` — 最初の成功が勝つ\n\n<b>取得元の候補が複数</b>あり、成功した結果が1つあればよいときに使います。\n\n```javascript\nconst result = await Promise.any([\n  fetch(\"https://server-a.com/data\"),\n  fetch(\"https://server-b.com/data\"),\n  fetch(\"https://server-c.com/data\")\n]);\n```\n\nサーバーAとBが失敗してCが成功すれば、`Promise.any()` はCの結果で解決します。\n\n<b>すべてのPromiseが拒否</b>された場合は、<b>`AggregateError`</b>（複数の拒否理由を含むエラー）で拒否されます。",
       },
-      diagram: `Promise.all([A, B, C])         Promise.allSettled([A, B, C])
-  A ✓  B ✗  C ✓                   A ✓  B ✗  C ✓
-  → REJECTS immediately            → always resolves with:
-    (B's rejection wins,              [{fulfilled,A}, {rejected,B}, {fulfilled,C}]
-     A and C results are lost)
+      diagram: `Promises
+ ├── A ── ok
+ ├── B ── ok
+ └── C ── ok
 
-Promise.race([A, B, C])         Promise.any([A, B, C])
-  first to SETTLE wins            first to FULFILL wins
-  (success OR failure)            (rejections ignored unless ALL reject)
-  A settles first → race is A     B rejects, A fulfills → any is A`,
+Promise.all()
+       ↓
+   [A, B, C]
+       ↓
+    Resolve
+
+
+Promises
+ ├── A ── ok
+ ├── B ── fail
+ └── C ── ok
+
+Promise.all()
+       ↓
+     Reject
+   immediately
+
+
+                 Success condition       Failure condition
+────────────────────────────────────────────────────────────
+Promise.all()    ALL fulfill             ANY rejects
+allSettled()     ALL settle              NEVER rejects
+race()           FIRST settles           First rejection can win
+any()            FIRST fulfills          ALL reject`,
       codeExample: {
-        title: { en: "Choosing the right Promise utility method", np: "सही Promise utility method छान्नु", jp: "適切なPromiseユーティリティメソッドの選択" },
-        code: `// ── Promise.all — run in parallel, fail fast ───────────────────────
-// Resolves only when ALL succeed. Rejects immediately if ANY one rejects.
-const [user, posts, comments] = await Promise.all([
-  fetchUser(1),
-  fetchPosts(1),
-  fetchComments(1),
+        title: { en: "All four combinators, side by side", np: "चारै combinator सँगसँगै", jp: "4つのコンビネータを並べて" },
+        code: `// ── 1. all() — every result, or an immediate rejection ────────────
+const [userData, postsData, settingsData] = await Promise.all([
+  fetchUser(),
+  fetchPosts(),
+  fetchSettings()
 ]);
-// wall-clock time ≈ max(fetchUser, fetchPosts, fetchComments)
-// If fetchPosts rejects, the whole Promise.all rejects — fetchUser's result is lost too
 
-// ── Promise.allSettled — always wait for all, capture failures ─────
-// Never rejects — waits for every Promise to settle, success or failure.
+// ── 2. allSettled() — a full report, successes and failures ───────
 const results = await Promise.allSettled([
-  sendEmailTo("alice@example.com"),
-  sendEmailTo("bob@invalid"),   // will fail
-  sendEmailTo("carol@example.com"),
+  fetchUser(),
+  fetchPosts(),
+  fetchSettings()
 ]);
 
-for (const result of results) {
-  if (result.status === "fulfilled") {
-    console.log("Sent:", result.value);
-  } else {
-    console.error("Failed:", result.reason.message);
-  }
+// [
+//   { status: "fulfilled", value: { id: 1 } },
+//   { status: "rejected", reason: Error("Network error") },
+//   { status: "fulfilled", value: { theme: "dark" } }
+// ]
+
+// ── 3. race() — the classic timeout pattern ───────────────────────
+function timeout(ms) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error("Request timed out")), ms);
+  });
 }
-// Use when partial success is fine — bulk notifications, batch jobs
 
-// ── Promise.race — first to SETTLE wins (success or failure) ───────
-// Classic use: adding a timeout to any Promise
-const withTimeout = (promise, ms) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(\`Timed out after \${ms}ms\`)), ms)
-    ),
-  ]);
-
-const fastUser = await withTimeout(fetchUser(1), 5000);
-
-// ── Promise.any — first FULFILLMENT wins, rejections ignored ───────
-// Only rejects (AggregateError) if EVERY Promise rejects.
-const data = await Promise.any([
-  fetchFromCDN1(url),
-  fetchFromCDN2(url),
-  fetchFromOrigin(url),
+const response = await Promise.race([
+  fetch("/api/data"),
+  timeout(5000)
 ]);
-// Whichever source answers first wins — the others are simply ignored`,
+
+// ── 4. any() — first success from several sources ─────────────────
+const fastest = await Promise.any([
+  fetch("https://server-a.com/data"),
+  fetch("https://server-b.com/data"),
+  fetch("https://server-c.com/data")
+]);
+// Rejects with an AggregateError only if every source fails`,
       },
       keyTakeaways: [
-        { en: "`Promise.all()` fails fast — one rejection anywhere rejects the whole thing immediately, discarding results that already succeeded.", np: "`Promise.all()` fail fast हुन्छ — जहाँ पनि एक rejection भयो भने तुरुन्तै पूरै reject हुन्छ, succeed भइसकेका results हराउँछन्।", jp: "`Promise.all()`はフェイルファスト — どこかで1つでも拒否されると即座に全体が拒否され、すでに成功していた結果も破棄される。" },
-        { en: "`Promise.allSettled()` never rejects — it waits for every Promise and returns per-item `{ status, value|reason }` objects, so you can act on both successes and failures.", np: "`Promise.allSettled()` कहिल्यै reject हुँदैन — हरेक Promise पर्खी per-item `{ status, value|reason }` objects फर्काउँछ, successes र failures दुवैमा action लिन सकिन्छ।", jp: "`Promise.allSettled()`は決して拒否せず、すべてのPromiseを待って項目ごとの`{ status, value|reason }`オブジェクトを返すので、成功と失敗の両方に対応できる。" },
-        { en: "`Promise.race()` settles on the first Promise to settle either way (success or failure); `Promise.any()` settles on the first success and only rejects if all reject.", np: "`Promise.race()` पहिलो settle हुने Promise मा settle हुन्छ (success वा failure जुनसुकै); `Promise.any()` पहिलो success मा settle हुन्छ र सबै reject भएमा मात्र reject हुन्छ।", jp: "`Promise.race()`は最初に確定したPromiseで確定する（成功でも失敗でも）。`Promise.any()`は最初の成功で確定し、全て拒否された場合のみ拒否する。" },
+        { en: "<b>`Promise.all()`</b> → <b>all must succeed</b>; one rejection fails the whole operation.", np: "<b>`Promise.all()`</b> → <b>सबै सफल हुनुपर्छ</b>; एउटा rejection ले पूरै operation असफल बनाउँछ।", jp: "<b>`Promise.all()`</b> → <b>すべて成功が必要</b>。1つの拒否で全体が失敗する。" },
+        { en: "<b>`Promise.allSettled()`</b> → <b>wait for everything</b>; gives you every success and failure.", np: "<b>`Promise.allSettled()`</b> → <b>सबै कुर्छ</b>; हरेक सफलता र असफलता दिन्छ।", jp: "<b>`Promise.allSettled()`</b> → <b>すべてを待つ</b>。成功も失敗もすべて返す。" },
+        { en: "<b>`Promise.race()`</b> → <b>first to settle wins</b>, success or failure.", np: "<b>`Promise.race()`</b> → <b>पहिलो settle हुने जित्छ</b>, सफलता होस् वा असफलता।", jp: "<b>`Promise.race()`</b> → <b>最初に確定したものが勝つ</b>。成功でも失敗でも。" },
+        { en: "<b>`Promise.any()`</b> → <b>first success wins</b>; ignores failures until everything fails.", np: "<b>`Promise.any()`</b> → <b>पहिलो सफलता जित्छ</b>; सबै असफल नहुँदासम्म असफलता बेवास्ता गर्छ।", jp: "<b>`Promise.any()`</b> → <b>最初の成功が勝つ</b>。すべて失敗するまで失敗は無視する。" },
+        { en: "`all()` and `any()` can <b>fail fast</b> under their respective conditions.", np: "`all()` र `any()` आ-आफ्नो अवस्थामा <b>चाँडै fail</b> हुन सक्छन्।", jp: "`all()` と `any()` はそれぞれの条件で<b>早く失敗</b>しうる。" },
+        { en: "`allSettled()` is useful when you need a complete report of partial successes and failures.", np: "आंशिक सफलता र असफलताको पूर्ण रिपोर्ट चाहिँदा `allSettled()` उपयोगी हुन्छ।", jp: "部分的な成功と失敗の完全な報告が必要なときは `allSettled()` が便利。" },
+        { en: "`race()` is useful for <b>timeouts</b> and competing operations.", np: "`race()` <b>timeout</b> र प्रतिस्पर्धी operation का लागि उपयोगी छ।", jp: "`race()` は<b>タイムアウト</b>や競合する処理に便利。" },
       ],
       commonMistakes: [
-        { en: "Reaching for `Promise.all()` when partial success is actually acceptable, and losing every already-succeeded result to a single rejection.", np: "Partial success ठिकै हुँदा पनि `Promise.all()` use गर्नु, एउटा मात्र rejection ले सबै succeed भएका results हराउनु।", jp: "部分的な成功が実際には許容されるのに`Promise.all()`を使い、1つの拒否によってすでに成功していたすべての結果を失うこと。" },
-        { en: "Confusing `race` with `any` — `race` settles on the first Promise to settle at all (even a failure can \"win\"), while `any` only cares about the first success.", np: "`race` र `any` लाई घुलाउनु — `race` पहिलो settle हुने मा settle हुन्छ (failure ले पनि \"जित्न\" सक्छ), जबकि `any` ले पहिलो success मात्र हेर्छ।", jp: "`race`と`any`を混同すること — `race`は最初に確定したもの（失敗でも「勝てる」）で確定するが、`any`は最初の成功だけを気にする。" },
-        { en: "Reading `.value` directly off a `Promise.allSettled()` result without first checking `.status`, which breaks for the rejected entries that only have `.reason`.", np: "`.status` नजाँची `Promise.allSettled()` को result बाट सिधै `.value` पढ्नु, rejected entries मा `.reason` मात्र हुने भएकाले यो टुट्छ।", jp: "`.status`を確認せずに`Promise.allSettled()`の結果から直接`.value`を読むこと。拒否されたエントリには`.reason`しかないため壊れる。" },
+        { en: "<b>Using `Promise.all()` when one failure shouldn't cancel the result</b> — for `sendEmail()`, `sendSMS()` and `sendPushNotification()`, `allSettled()` tells you what happened to all three instead of failing outright.", np: "<b>एउटा असफलताले नतिजा रद्द गर्नु नहुने बेला `Promise.all()` प्रयोग गर्नु</b> — `sendEmail()`, `sendSMS()` र `sendPushNotification()` का लागि, `allSettled()` ले सिधै fail हुनुको साटो तीनैलाई के भयो बताउँछ।", jp: "<b>1つの失敗で全体を諦めるべきでない場面で `Promise.all()` を使う</b> — `sendEmail()`・`sendSMS()`・`sendPushNotification()` なら、`allSettled()` の方が3つすべての結果を知らせてくれる。" },
+        { en: "<b>Confusing `race()` with `any()`</b> — `race()` settles on the first result of any kind, while `any()` waits for the first <b>fulfilled</b> one.", np: "<b>`race()` र `any()` भ्रममा पार्नु</b> — `race()` जुनसुकै प्रकारको पहिलो नतिजामा settle हुन्छ, जब कि `any()` ले पहिलो <b>fulfilled</b> कुर्छ।", jp: "<b>`race()` と `any()` を混同する</b> — `race()` は種類を問わず最初の結果で確定し、`any()` は最初の<b>成功</b>を待つ。" },
+        { en: "<b>Thinking `Promise.all()` runs promises one after another</b> — they were already started before the call. Writing `await fetchUser(); await fetchPosts();` is the sequential version, and is slower for independent work.", np: "<b>`Promise.all()` ले promise एकपछि अर्को चलाउँछ भन्ने ठान्नु</b> — तिनी call अघि नै सुरु भइसकेका हुन्छन्। `await fetchUser(); await fetchPosts();` लेख्नु क्रमिक संस्करण हो, र स्वतन्त्र काका लागि ढिलो हुन्छ।", jp: "<b>`Promise.all()` が順番に実行すると思う</b> — 呼び出す前にすでに開始されている。`await fetchUser(); await fetchPosts();` が逐次版で、独立した処理では遅くなる。" },
       ],
       quiz: [
         {
-          question: { en: "If one Promise out of three passed to `Promise.all()` rejects, what happens to the results of the other two that already succeeded?", np: "`Promise.all()` मा दिइएका तीनमध्ये एउटा Promise reject भयो भने, succeed भइसकेका बाँकी दुईको results को के हुन्छ?", jp: "`Promise.all()`に渡した3つのうち1つが拒否された場合、すでに成功していた残り2つの結果はどうなる？" },
+          question: { en: "Which method waits for every Promise, including failures?", np: "कुन method ले असफलता सहित हरेक Promise कुर्छ?", jp: "失敗も含めてすべてのPromiseを待つのはどれか?" },
           options: [
-            { en: "They are discarded — Promise.all rejects immediately, losing them", np: "ती हराउँछन् — Promise.all तुरुन्तै reject हुन्छ, ती हराउँदै", jp: "破棄される — Promise.allは即座に拒否され、それらを失う" },
-            { en: "They are still returned alongside the rejection reason", np: "ती rejection reason सँगै फेरि पनि फर्किन्छन्", jp: "拒否理由と一緒にそれらも返される" },
+            { en: "`Promise.all()`", np: "`Promise.all()`", jp: "`Promise.all()`" },
+            { en: "`Promise.allSettled()`", np: "`Promise.allSettled()`", jp: "`Promise.allSettled()`" },
+            { en: "`Promise.race()`", np: "`Promise.race()`", jp: "`Promise.race()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Promise.all is fail-fast — the first rejection immediately rejects the combined Promise, and any already-fulfilled results are discarded.", np: "Promise.all fail-fast हो — पहिलो rejection ले तुरुन्तै combined Promise reject गर्छ, अघि succeed भएका results हराउँछन्।", jp: "Promise.allはフェイルファストであり、最初の拒否が即座に結合されたPromiseを拒否し、すでに成功していた結果は破棄される。" },
+          correctIndex: 1,
+          explanation: { en: "It never rejects; each entry reports `fulfilled` or `rejected`.", np: "यो कहिल्यै reject हुँदैन; हरेक entry ले `fulfilled` वा `rejected` बताउँछ।", jp: "決して拒否されない。各項目が `fulfilled` か `rejected` を報告する。" },
         },
         {
-          question: { en: "Which method should you reach for when you want to send emails to 100 recipients and still know which ones failed, without losing the successful sends?", np: "100 recipients लाई email पठाउँदा succeed भएका नहराई कुन fail भयो भन्ने पनि जान्न कुन method use गर्नुपर्छ?", jp: "100人の受信者にメールを送り、成功した送信を失わずにどれが失敗したかも知りたい場合、どのメソッドを使うべき？" },
+          question: { en: "Which method resolves when the first Promise fulfills?", np: "पहिलो Promise fulfill हुँदा कुन method resolve हुन्छ?", jp: "最初のPromiseが成功したときに解決するのはどれか?" },
           options: [
-            { en: "Promise.allSettled — waits for all and reports each outcome", np: "Promise.allSettled — सबै पर्खी हरेकको outcome report गर्छ", jp: "Promise.allSettled — 全てを待って各結果を報告する" },
-            { en: "Promise.all — fails fast on the first failure", np: "Promise.all — पहिलो failure मा fail fast हुन्छ", jp: "Promise.all — 最初の失敗でフェイルファストする" },
+            { en: "`Promise.race()`", np: "`Promise.race()`", jp: "`Promise.race()`" },
+            { en: "`Promise.any()`", np: "`Promise.any()`", jp: "`Promise.any()`" },
+            { en: "`Promise.all()`", np: "`Promise.all()`", jp: "`Promise.all()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Promise.allSettled never rejects and gives per-item status, exactly matching a bulk-send scenario where partial failure is acceptable.", np: "Promise.allSettled कहिल्यै reject हुँदैन र per-item status दिन्छ, partial failure ठिकै हुने bulk-send scenario मा एकदम मिल्छ।", jp: "Promise.allSettledは決して拒否せず項目ごとのステータスを返すので、部分的な失敗が許容されるバルク送信のシナリオにぴったり合う。" },
+          correctIndex: 1,
+          explanation: { en: "`race()` would also settle on the first rejection; `any()` waits for a success.", np: "`race()` पहिलो rejection मा पनि settle हुन्थ्यो; `any()` ले सफलता कुर्छ।", jp: "`race()` は最初の拒否でも確定するが、`any()` は成功を待つ。" },
         },
         {
-          question: { en: "When does `Promise.any()` reject, as opposed to `Promise.race()`?", np: "`Promise.race()` को तुलनामा `Promise.any()` कहिले reject हुन्छ?", jp: "`Promise.race()`と比べて`Promise.any()`はいつ拒否される？" },
+          question: { en: "What happens if one Promise rejects in `Promise.all()`?", np: "`Promise.all()` मा एउटा Promise reject भए के हुन्छ?", jp: "`Promise.all()` で1つのPromiseが拒否されるとどうなるか?" },
           options: [
-            { en: "Only when every Promise passed to it rejects (throws AggregateError)", np: "यसमा दिइएका सबै Promises reject भएमा मात्र (AggregateError throw गर्छ)", jp: "渡されたすべてのPromiseが拒否されたときのみ（AggregateErrorを投げる）" },
-            { en: "As soon as any single Promise passed to it rejects", np: "यसमा दिइएको कुनै एक Promise reject हुनासाथ", jp: "渡された1つのPromiseでも拒否された時点ですぐに" },
+            { en: "It waits for everything", np: "सबै कुर्छ", jp: "すべてを待つ" },
+            { en: "It ignores the rejection", np: "Rejection बेवास्ता गर्छ", jp: "拒否を無視する" },
+            { en: "It rejects immediately", np: "तुरुन्तै reject हुन्छ", jp: "即座に拒否される" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Promise.any ignores individual rejections and only fails when there are no successes left — i.e. all of them rejected.", np: "Promise.any ले individual rejections लाई ignore गर्छ र कुनै success नबाँकी रहेमा मात्र fail हुन्छ — अर्थात् सबै reject भएमा।", jp: "Promise.anyは個々の拒否を無視し、成功が1つも残っていない場合、つまり全て拒否された場合のみ失敗する。" },
+          correctIndex: 2,
+          explanation: { en: "The other promises keep running, but you never get their combined result.", np: "अरू promise चलिरहन्छन्, तर तपाईंले तिनको संयुक्त नतिजा कहिल्यै पाउनुहुन्न।", jp: "他のPromiseは動き続けるが、まとめた結果は得られない。" },
+        },
+        {
+          question: { en: "What does `Promise.race()` care about?", np: "`Promise.race()` ले केमा ध्यान दिन्छ?", jp: "`Promise.race()` は何を見ているか?" },
+          options: [
+            { en: "The first Promise to fulfill", np: "पहिलो fulfill हुने Promise", jp: "最初に成功したPromise" },
+            { en: "The first Promise to settle", np: "पहिलो settle हुने Promise", jp: "最初に確定したPromise" },
+            { en: "Whether all Promises fulfill", np: "सबै Promise fulfill हुन्छन् कि", jp: "すべてのPromiseが成功するか" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Settling covers both outcomes, which is exactly what makes it work for timeouts.", np: "Settle हुनुमा दुबै नतिजा पर्छन्, त्यही कारण यो timeout का लागि काम गर्छ।", jp: "確定には両方の結果が含まれる。だからタイムアウトに使える。" },
         },
       ],
+      youtubeIds: ["DlTVt1rZjIo"],
     },
     {
       id: "parallel-vs-sequential",
