@@ -121,6 +121,7 @@ console.log(admin.deleteUser()); // User deleted — found on Admin.prototype`,
           explanation: { en: "It links the new object to `User.prototype` first, then runs `constructor()`.", np: "यसले पहिले नयाँ object लाई `User.prototype` सँग जोड्छ, त्यसपछि `constructor()` चलाउँछ।", jp: "まず新しいオブジェクトを `User.prototype` にリンクし、その後 `constructor()` を実行する。" },
         },
       ],
+      youtubeIds: ["u6mVHkMpoMk"],
     },
     {
       id: "inheritance-extends-super",
