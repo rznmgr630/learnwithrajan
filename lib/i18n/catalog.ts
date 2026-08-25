@@ -728,6 +728,26 @@ export const UI_STRINGS = {
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
   },
+  "hub.loksewa.groupGeneral": {
+    en: "General knowledge",
+    np: "सामान्य ज्ञान",
+    jp: "一般知識",
+  },
+  "hub.loksewa.groupGeneralHint": {
+    en: "Q&A practice sets — GK, geography, products and ethnic groups",
+    np: "प्रश्नोत्तर अभ्यास — सामान्य ज्ञान, भूगोल, उत्पादन र जातजाति",
+    jp: "一問一答の練習 — 一般知識・地理・名産品・民族",
+  },
+  "hub.loksewa.groupTechnical": {
+    en: "Technical posts",
+    np: "प्राविधिक पद",
+    jp: "技術職",
+  },
+  "hub.loksewa.groupTechnicalHint": {
+    en: "Syllabus guides for technical service exams",
+    np: "प्राविधिक सेवा परीक्षाका पाठ्यक्रम गाइड",
+    jp: "技術職試験のシラバス解説",
+  },
   "hub.loksewaEthnicGroups.title": {
     en: "Ethnic Groups of Nepal",
     np: "नेपालका जातजाति",
