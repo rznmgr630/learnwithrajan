@@ -2,464 +2,468 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_10_LESSONS: JsLessonDay = {
   day: 10,
-  title: { en: "ES6 Classes — Inheritance, Static & Private Fields", np: "ES6 Classes — Inheritance, Static, Private", jp: "ES6クラス・継承・static・プライベート" },
+  title: { en: "Prototype System & Prototype Chain", np: "Prototype System र Prototype Chain", jp: "プロトタイプシステムと継承チェーン" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "class-basics",
-      title: { en: "Class Basics", np: "Class Basics", jp: "クラスの基本" },
+      id: "prototype-chain",
+      title: { en: "The Prototype Chain", np: "The Prototype Chain", jp: "プロトタイプチェーン" },
       durationMinutes: 9,
       explanation: {
-        en: "A <b>class</b> is a blueprint for creating objects. `class User {}` defines how `User` objects should behave; it does not create an object itself.\n\nJavaScript classes were introduced in <b>ES6</b>, but JavaScript still uses <b>prototype-based inheritance</b> underneath. Classes are essentially a cleaner syntax over the existing constructor-function and prototype system.\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nconst user = new User(\"John\");\n\nconsole.log(user.name);    // \"John\"\nconsole.log(user.greet()); // \"Hello, John\"\n```\n\nWhen `new User(\"John\")` runs:\n\n1. A new object is created.\n2. Its prototype is linked to `User.prototype`.\n3. `constructor()` runs with `this` referring to the new object.\n4. `this.name = name` adds the property.\n5. The new object is returned.\n\n---\n\n### 1. Basic class\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi, ${this.name}`;\n  }\n}\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.greet());\n// Hi, Rajan\n```\n\n---\n\n### 2. Multiple instances share the same method\n\n```javascript\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"John\");\n\nconsole.log(user1.greet());\nconsole.log(user2.greet());\n\nconsole.log(user1.greet === user2.greet);\n// true\n```\n\nBoth objects use the <b>same</b> `greet()` method from `User.prototype`.\n\nSo creating 1,000 users does <b>not</b> create 1,000 copies of `greet()`.\n\n```text\nname  → stored on each instance\ngreet → shared through User.prototype\n```\n\n---\n\n### 3. Class inheritance\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi ${this.name}`;\n  }\n}\n\nclass Admin extends User {\n  deleteUser() {\n    return \"User deleted\";\n  }\n}\n\nconst admin = new Admin(\"Rajan\");\n\nconsole.log(admin.greet());\n// Hi Rajan\n\nconsole.log(admin.deleteUser());\n// User deleted\n```\n\nThe lookup works roughly like:\n\n```text\nadmin\n  ↓\nAdmin.prototype\n  ↓\nUser.prototype\n  ↓\nObject.prototype\n  ↓\nnull\n```",
-        np: "<b>Class</b> object बनाउने खाका हो। `class User {}` ले `User` object कस्तो व्यवहार गर्नुपर्छ परिभाषित गर्छ; यसले आफैं object बनाउँदैन।\n\nJavaScript का class <b>ES6</b> मा आए, तर JavaScript ले भित्री रूपमा अझै <b>prototype-आधारित inheritance</b> प्रयोग गर्छ। Class मूलतः अवस्थित constructor-function र prototype प्रणालीमाथिको सफा syntax हो।\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nconst user = new User(\"John\");\n\nconsole.log(user.name);    // \"John\"\nconsole.log(user.greet()); // \"Hello, John\"\n```\n\n`new User(\"John\")` चल्दा:\n\n1. नयाँ object बन्छ।\n2. यसको prototype `User.prototype` सँग जोडिन्छ।\n3. `constructor()` चल्छ, `this` ले नयाँ object जनाउँछ।\n4. `this.name = name` ले property थप्छ।\n5. नयाँ object फर्काइन्छ।\n\n---\n\n### 1. आधारभूत class\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi, ${this.name}`;\n  }\n}\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.greet());\n// Hi, Rajan\n```\n\n---\n\n### 2. धेरै instance ले उही method बाँड्छन्\n\n```javascript\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"John\");\n\nconsole.log(user1.greet());\nconsole.log(user2.greet());\n\nconsole.log(user1.greet === user2.greet);\n// true\n```\n\nदुबै object ले `User.prototype` को <b>उही</b> `greet()` method प्रयोग गर्छन्।\n\nत्यसैले 1,000 user बनाउँदा `greet()` का 1,000 copy <b>बन्दैनन्</b>।\n\n```text\nname  → stored on each instance\ngreet → shared through User.prototype\n```\n\n---\n\n### 3. Class inheritance\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi ${this.name}`;\n  }\n}\n\nclass Admin extends User {\n  deleteUser() {\n    return \"User deleted\";\n  }\n}\n\nconst admin = new Admin(\"Rajan\");\n\nconsole.log(admin.greet());\n// Hi Rajan\n\nconsole.log(admin.deleteUser());\n// User deleted\n```\n\nखोजी मोटामोटी यसरी हुन्छ:\n\n```text\nadmin\n  ↓\nAdmin.prototype\n  ↓\nUser.prototype\n  ↓\nObject.prototype\n  ↓\nnull\n```",
-        jp: "<b>クラス</b>はオブジェクトを作るための設計図です。`class User {}` は `User` オブジェクトの振る舞いを定義するだけで、オブジェクト自体は作りません。\n\nJavaScriptのクラスは<b>ES6</b>で導入されましたが、内部では今も<b>プロトタイプベースの継承</b>を使っています。クラスは既存のコンストラクタ関数とプロトタイプの仕組みに対する、より読みやすい構文です。\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nconst user = new User(\"John\");\n\nconsole.log(user.name);    // \"John\"\nconsole.log(user.greet()); // \"Hello, John\"\n```\n\n`new User(\"John\")` を実行すると:\n\n1. 新しいオブジェクトが作られる。\n2. そのプロトタイプが `User.prototype` にリンクされる。\n3. `this` が新しいオブジェクトを指した状態で `constructor()` が実行される。\n4. `this.name = name` がプロパティを追加する。\n5. 新しいオブジェクトが返される。\n\n---\n\n### 1. 基本のクラス\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi, ${this.name}`;\n  }\n}\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.greet());\n// Hi, Rajan\n```\n\n---\n\n### 2. 複数のインスタンスが同じメソッドを共有する\n\n```javascript\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"John\");\n\nconsole.log(user1.greet());\nconsole.log(user2.greet());\n\nconsole.log(user1.greet === user2.greet);\n// true\n```\n\nどちらのオブジェクトも `User.prototype` の<b>同じ</b> `greet()` を使います。\n\nだからユーザーを1,000人作っても `greet()` のコピーが1,000個できるわけでは<b>ありません</b>。\n\n```text\nname  → stored on each instance\ngreet → shared through User.prototype\n```\n\n---\n\n### 3. クラスの継承\n\n```javascript\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hi ${this.name}`;\n  }\n}\n\nclass Admin extends User {\n  deleteUser() {\n    return \"User deleted\";\n  }\n}\n\nconst admin = new Admin(\"Rajan\");\n\nconsole.log(admin.greet());\n// Hi Rajan\n\nconsole.log(admin.deleteUser());\n// User deleted\n```\n\n探索はおおよそこうなります:\n\n```text\nadmin\n  ↓\nAdmin.prototype\n  ↓\nUser.prototype\n  ↓\nObject.prototype\n  ↓\nnull\n```",
+        en: "Every JavaScript <b>object</b> has an internal link to another object called its <b>prototype</b>.\n\nWhen you try to access a property, JavaScript first checks the object itself. If it doesn't find it, JavaScript looks at the object's prototype. If it still doesn't find it, it continues going up the <b>prototype chain</b> until it finds the property or reaches `null`.\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nThis is how JavaScript provides <b>inheritance</b> (sharing properties and methods between objects).\n\nNothing is copied from the prototype. The object simply <b>looks up</b> the chain when needed.\n\n---\n\n### 1. Property lookup\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\nThere is no `toString` directly inside `person`. JavaScript looks up the prototype chain:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nSo the method can still be used.\n\n---\n\n### 2. Adding a method to a prototype\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\nBoth objects can use `greet()` even though `greet` isn't stored directly on either object.\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nThere is <b>one shared `greet` function</b>, not one copy for every user.\n\n---\n\n### 3. Checking the prototype\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nThis is the modern way to inspect an object's prototype.\n\nYou may also see `user1.__proto__`, but `__proto__` is <b>legacy</b> (an older API) and should generally be avoided in new code.\n\n---\n\n### 4. Prototype lookup vs own property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` belongs directly to `user`:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` belongs to `User.prototype`:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript finds both because it searches the prototype chain.\n\n---\n\n### Easy memory trick\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
+        np: "हरेक JavaScript <b>object</b> को अर्को object सँग आन्तरिक जोडाइ हुन्छ, जसलाई यसको <b>prototype</b> भनिन्छ।\n\nतपाईंले property पहुँच गर्न खोज्दा, JavaScript ले पहिले object आफैंमा हेर्छ। नभेटे, object को prototype मा हेर्छ। त्यहाँ पनि नभेटे, property भेट्टाउनेसम्म वा `null` पुग्नेसम्म <b>prototype chain</b> माथि चढ्दै जान्छ।\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nयसै तरिकाले JavaScript ले <b>inheritance</b> (object बीच property र method बाँड्नु) दिन्छ।\n\nPrototype बाट केही copy हुँदैन। Object ले चाहिँदा chain <b>माथि खोज्छ</b> मात्र।\n\n---\n\n### 1. Property खोजी\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` भित्र सिधै `toString` छैन। JavaScript ले prototype chain माथि हेर्छ:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nत्यसैले method अझै प्रयोग गर्न सकिन्छ।\n\n---\n\n### 2. Prototype मा method थप्नु\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` कुनै पनि object मा सिधै नराखिए पनि दुबैले प्रयोग गर्न सक्छन्।\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nहरेक user का लागि छुट्टै copy होइन, <b>एउटै साझा `greet` function</b> हुन्छ।\n\n---\n\n### 3. Prototype जाँच्नु\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nयो object को prototype हेर्ने आधुनिक तरिका हो।\n\nतपाईंले `user1.__proto__` पनि देख्न सक्नुहुन्छ, तर `__proto__` <b>legacy</b> (पुरानो API) हो र नयाँ code मा सामान्यतया प्रयोग नगर्नु राम्रो।\n\n---\n\n### 4. Prototype खोजी vs आफ्नै property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` सिधै `user` को हो:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` `User.prototype` को हो:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript ले prototype chain खोज्ने हुनाले दुबै भेट्टाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
+        jp: "すべてのJavaScriptの<b>オブジェクト</b>は、<b>プロトタイプ</b>と呼ばれる別のオブジェクトへの内部的なリンクを持っています。\n\nプロパティにアクセスしようとすると、JavaScriptはまずそのオブジェクト自身を調べます。見つからなければプロトタイプを調べ、それでも見つからなければ、プロパティが見つかるか `null` に到達するまで<b>プロトタイプチェーン</b>をたどります。\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nこれがJavaScriptの<b>継承</b>（オブジェクト間でプロパティやメソッドを共有すること）の仕組みです。\n\nプロトタイプから何かがコピーされるわけではありません。オブジェクトは必要なときにチェーンを<b>たどって探す</b>だけです。\n\n---\n\n### 1. プロパティの探索\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` の中に `toString` は直接ありません。JavaScriptはプロトタイプチェーンをたどります:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nだからこのメソッドが使えます。\n\n---\n\n### 2. プロトタイプにメソッドを追加する\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` はどちらのオブジェクトにも直接入っていませんが、両方から使えます。\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nユーザーごとのコピーではなく、<b>共有された1つの `greet` 関数</b>があります。\n\n---\n\n### 3. プロトタイプを調べる\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nこれがオブジェクトのプロトタイプを調べる現代的な方法です。\n\n`user1.__proto__` も見かけますが、`__proto__` は<b>レガシー</b>（古いAPI）であり、新しいコードでは基本的に避けます。\n\n---\n\n### 4. プロトタイプ経由と自身のプロパティ\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` は `user` 自身のものです:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` は `User.prototype` のものです:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScriptはプロトタイプチェーンを探索するので、どちらも見つかります。\n\n---\n\n### 覚え方\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
       },
-      diagram: `              User (class)
-                  │
-                  │ new User("John")
-                  ▼
-        ┌─────────────────────┐
-        │     user object     │
-        │                     │
-        │ name: "John"        │
-        └──────────┬──────────┘
-                   │
-                   │ [[Prototype]]
-                   ▼
-        ┌─────────────────────┐
-        │   User.prototype    │
-        │                     │
-        │ greet() { ... }     │
-        └─────────────────────┘
+      diagram: `const user = new User("Rajan");
+
+user
+ ├── name: "Rajan"
+ │
+ └── [[Prototype]]
+          ↓
+     User.prototype
+     ├── greet()
+     │
+     └── [[Prototype]]
+              ↓
+         Object.prototype
+         ├── toString()
+         ├── hasOwnProperty()
+         │
+         └── [[Prototype]]
+                  ↓
+                null
 
 
-The important part:
+When you write user.greet(), JavaScript checks:
 
-name  → stored on each instance
-greet → shared through User.prototype`,
+1. Does user have greet?        no
+2. Does User.prototype have it? yes
+3. Found it, run it`,
       codeExample: {
-        title: { en: "One blueprint, many instances, one shared method", np: "एउटै खाका, धेरै instance, एउटै साझा method", jp: "1つの設計図・多数のインスタンス・共有される1つのメソッド" },
-        code: `// ── 1. Basic class ────────────────────────────────────────────────
-class User {
-  constructor(name) {
-    this.name = name;
-  }
+        title: { en: "Looking up the chain, and sharing one method", np: "Chain माथि खोज्नु, र एउटै method बाँड्नु", jp: "チェーンをたどる、1つのメソッドを共有する" },
+        code: `// ── 1. A method found further up the chain ────────────────────────
+const person = { name: "Rajan" };
 
-  greet() {
-    return \`Hi, \${this.name}\`;
-  }
+console.log(person.toString()); // from Object.prototype
+
+// ── 2. One shared method on the prototype ─────────────────────────
+function User(name) {
+  this.name = name;
 }
 
-const user = new User("Rajan");
-console.log(user.greet()); // Hi, Rajan
+User.prototype.greet = function () {
+  console.log(\`Hello \${this.name}\`);
+};
 
-// ── 2. Every instance shares one method object ────────────────────
 const user1 = new User("Rajan");
-const user2 = new User("John");
+const user2 = new User("Alex");
 
-console.log(user1.greet()); // Hi, Rajan
-console.log(user2.greet()); // Hi, John
+user1.greet(); // Hello Rajan
+user2.greet(); // Hello Alex
 
-console.log(user1.greet === user2.greet); // true — one shared function
+// Both share the very same function object
+console.log(user1.greet === user2.greet); // true
 
-// ── 3. Inheritance with extends ───────────────────────────────────
-class Admin extends User {
-  deleteUser() {
-    return "User deleted";
-  }
-}
+// ── 3. Inspecting the prototype ───────────────────────────────────
+console.log(Object.getPrototypeOf(user1) === User.prototype); // true
 
-const admin = new Admin("Rajan");
-
-console.log(admin.greet());      // Hi Rajan — found on User.prototype
-console.log(admin.deleteUser()); // User deleted — found on Admin.prototype`,
+// ── 4. Own property vs inherited one ──────────────────────────────
+console.log(Object.hasOwn(user1, "name"));  // true  — on the object
+console.log(Object.hasOwn(user1, "greet")); // false — on the prototype`,
       },
       keyTakeaways: [
-        { en: "<b>Class</b> → blueprint for creating objects.", np: "<b>Class</b> → object बनाउने खाका।", jp: "<b>クラス</b> → オブジェクトを作る設計図。" },
-        { en: "<b>`new`</b> → creates an instance and runs the constructor.", np: "<b>`new`</b> → instance बनाउँछ र constructor चलाउँछ।", jp: "<b>`new`</b> → インスタンスを作り、コンストラクタを実行する。" },
-        { en: "<b>`constructor()`</b> → initializes instance properties.", np: "<b>`constructor()`</b> → instance का property initialise गर्छ।", jp: "<b>`constructor()`</b> → インスタンスのプロパティを初期化する。" },
-        { en: "<b>Class methods</b> → stored on the class's `.prototype`, not copied to every instance.", np: "<b>Class का method</b> → class को `.prototype` मा राखिन्छन्, हरेक instance मा copy हुँदैनन्।", jp: "<b>クラスのメソッド</b> → クラスの `.prototype` に置かれ、各インスタンスにコピーされない。" },
-        { en: "<b>ES6 classes</b> → cleaner syntax over JavaScript's existing prototype system.", np: "<b>ES6 class</b> → JavaScript को अवस्थित prototype प्रणालीमाथिको सफा syntax।", jp: "<b>ES6のクラス</b> → 既存のプロトタイプの仕組みに対する読みやすい構文。" },
-        { en: "<b>`extends`</b> → creates inheritance between classes.", np: "<b>`extends`</b> → class बीच inheritance बनाउँछ।", jp: "<b>`extends`</b> → クラス間に継承を作る。" },
-        { en: "<b>`super()`</b> → calls the parent constructor.", np: "<b>`super()`</b> → parent constructor call गर्छ।", jp: "<b>`super()`</b> → 親のコンストラクタを呼ぶ。" },
-        { en: "Classes still use <b>prototypes internally</b>.", np: "Class ले भित्री रूपमा अझै <b>prototype</b> प्रयोग गर्छन्।", jp: "クラスは内部では今も<b>プロトタイプ</b>を使っている。" },
+        { en: "Every object has an internal <b>prototype</b> link.", np: "हरेक object को आन्तरिक <b>prototype</b> जोडाइ हुन्छ।", jp: "すべてのオブジェクトは内部的な<b>プロトタイプ</b>リンクを持つ。" },
+        { en: "JavaScript searches the object first, then its prototype, then higher prototypes.", np: "JavaScript ले पहिले object, त्यसपछि यसको prototype, अनि माथिका prototype खोज्छ।", jp: "JavaScriptはまずオブジェクト、次にそのプロトタイプ、さらに上のプロトタイプを探す。" },
+        { en: "This search is called the <b>prototype chain</b>.", np: "यो खोजीलाई <b>prototype chain</b> भनिन्छ।", jp: "この探索を<b>プロトタイプチェーン</b>と呼ぶ。" },
+        { en: "The chain ends at <b>`null`</b>.", np: "Chain <b>`null`</b> मा सकिन्छ।", jp: "チェーンは<b>`null`</b>で終わる。" },
+        { en: "Prototypes provide <b>inheritance</b> (sharing properties and methods).", np: "Prototype ले <b>inheritance</b> (property र method बाँड्नु) दिन्छ।", jp: "プロトタイプは<b>継承</b>（プロパティとメソッドの共有）を提供する。" },
+        { en: "Prototype methods are <b>shared</b> between instances instead of being copied.", np: "Prototype का method copy नभई instance बीच <b>साझा</b> हुन्छन्।", jp: "プロトタイプのメソッドはコピーされず、インスタンス間で<b>共有</b>される。" },
+        { en: "Use `Object.getPrototypeOf(obj)` to inspect an object's prototype.", np: "Object को prototype हेर्न `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस्।", jp: "オブジェクトのプロトタイプを調べるには `Object.getPrototypeOf(obj)` を使う。" },
+        { en: "`__proto__` is a <b>legacy</b> API and should generally be avoided.", np: "`__proto__` <b>legacy</b> API हो र सामान्यतया प्रयोग नगर्नु राम्रो।", jp: "`__proto__` は<b>レガシー</b>なAPIで、基本的に避ける。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking the class itself is an object instance</b> — `class User {}` is the blueprint, and `new User()` produces the actual instance.", np: "<b>Class आफैं object instance हो भन्ने ठान्नु</b> — `class User {}` खाका हो, र `new User()` ले वास्तविक instance बनाउँछ।", jp: "<b>クラス自体がインスタンスだと思う</b> — `class User {}` は設計図で、実際のインスタンスは `new User()` が作る。" },
-        { en: "<b>Putting methods inside the constructor unnecessarily</b> — `this.greet = function () { ... }` creates a new function for every instance. Declare `greet() { ... }` as a class method instead.", np: "<b>अनावश्यक रूपमा constructor भित्र method राख्नु</b> — `this.greet = function () { ... }` ले हरेक instance का लागि नयाँ function बनाउँछ। बरु `greet() { ... }` लाई class method रूपमा घोषणा गर्नुहोस्।", jp: "<b>必要もなくコンストラクタ内にメソッドを書く</b> — `this.greet = function () { ... }` はインスタンスごとに新しい関数を作る。代わりに `greet() { ... }` をクラスのメソッドとして書く。" },
-        { en: "<b>Thinking classes replaced prototypes</b> — they didn't. Classes are cleaner syntax for the same underlying prototype-based model.", np: "<b>Class ले prototype प्रतिस्थापन गर्‍यो भन्ने ठान्नु</b> — गरेको छैन। Class उही prototype-आधारित model का लागि सफा syntax हो।", jp: "<b>クラスがプロトタイプに取って代わったと思う</b> — そうではない。クラスは同じプロトタイプベースの仕組みの読みやすい構文。" },
+        { en: "<b>Thinking prototype methods are copied</b> — `User.prototype.greet` is not copied into every `User` object; each one reaches it through the chain, so `user1.greet === user2.greet` is `true`.", np: "<b>Prototype का method copy हुन्छन् भन्ने ठान्नु</b> — `User.prototype.greet` हरेक `User` object मा copy हुँदैन; हरेकले chain मार्फत पुग्छ, त्यसैले `user1.greet === user2.greet` `true` हुन्छ।", jp: "<b>プロトタイプのメソッドがコピーされると思う</b> — `User.prototype.greet` は各 `User` にコピーされない。チェーン経由で参照するので `user1.greet === user2.greet` は `true`。" },
+        { en: "<b>Thinking JavaScript only checks the object itself</b> — even when `greet` isn't inside `user`, the search continues up the prototype chain.", np: "<b>JavaScript ले object आफैं मात्र हेर्छ भन्ने ठान्नु</b> — `greet` `user` भित्र नभए पनि, खोजी prototype chain माथि जारी रहन्छ।", jp: "<b>JavaScriptがオブジェクト自身しか見ないと思う</b> — `greet` が `user` になくても、探索はプロトタイプチェーンを上へ続く。" },
+        { en: "<b>Using `__proto__` as the preferred API</b> — it works, but prefer `Object.getPrototypeOf(user)` in new code.", np: "<b>`__proto__` लाई मुख्य API मान्नु</b> — काम गर्छ, तर नयाँ code मा `Object.getPrototypeOf(user)` प्रयोग गर्नुहोस्।", jp: "<b>`__proto__` を推奨APIとして使う</b> — 動くが、新しいコードでは `Object.getPrototypeOf(user)` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "Does `class User {}` create a `User` object?", np: "`class User {}` ले `User` object बनाउँछ?", jp: "`class User {}` は `User` オブジェクトを作るか?" },
+          question: { en: "What happens when a property isn't found on an object?", np: "Object मा property नभेटिए के हुन्छ?", jp: "オブジェクトにプロパティが見つからないとどうなるか?" },
           options: [
-            { en: "No", np: "बनाउँदैन", jp: "いいえ" },
-            { en: "Yes", np: "बनाउँछ", jp: "はい" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "It only defines the blueprint; `new User()` creates the instance.", np: "यसले खाका मात्र परिभाषित गर्छ; `new User()` ले instance बनाउँछ।", jp: "設計図を定義するだけ。インスタンスを作るのは `new User()`。" },
-        },
-        {
-          question: { en: "Where are normal class methods stored?", np: "सामान्य class method कहाँ राखिन्छन्?", jp: "通常のクラスメソッドはどこに置かれるか?" },
-          options: [
-            { en: "On every instance", np: "हरेक instance मा", jp: "各インスタンス上" },
-            { en: "On `User.prototype`", np: "`User.prototype` मा", jp: "`User.prototype` 上" },
-            { en: "On `Object.prototype`", np: "`Object.prototype` मा", jp: "`Object.prototype` 上" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "That is why `user1.greet === user2.greet` is `true`.", np: "त्यसैले `user1.greet === user2.greet` `true` हुन्छ।", jp: "だから `user1.greet === user2.greet` は `true` になる。" },
-        },
-        {
-          question: { en: "What does `new User(\"John\")` do?", np: "`new User(\"John\")` ले के गर्छ?", jp: "`new User(\"John\")` は何をするか?" },
-          options: [
-            { en: "Copies every method into the object", np: "हरेक method object मा copy गर्छ", jp: "すべてのメソッドをオブジェクトにコピーする" },
-            { en: "Only creates the class", np: "Class मात्र बनाउँछ", jp: "クラスを作るだけ" },
-            { en: "Creates an instance and runs the constructor", np: "Instance बनाउँछ र constructor चलाउँछ", jp: "インスタンスを作りコンストラクタを実行する" },
+            { en: "JavaScript immediately throws an error", np: "JavaScript ले तुरुन्तै error दिन्छ", jp: "すぐにエラーを投げる" },
+            { en: "JavaScript creates the property", np: "JavaScript ले property बनाउँछ", jp: "プロパティを作る" },
+            { en: "JavaScript searches the prototype chain", np: "JavaScript ले prototype chain खोज्छ", jp: "プロトタイプチェーンを探索する" },
+            { en: "JavaScript searches the global scope", np: "JavaScript ले global scope खोज्छ", jp: "グローバルスコープを探す" },
           ],
           correctIndex: 2,
-          explanation: { en: "It links the new object to `User.prototype` first, then runs `constructor()`.", np: "यसले पहिले नयाँ object लाई `User.prototype` सँग जोड्छ, त्यसपछि `constructor()` चलाउँछ।", jp: "まず新しいオブジェクトを `User.prototype` にリンクし、その後 `constructor()` を実行する。" },
+          explanation: { en: "It keeps climbing until it finds the property or reaches `null`.", np: "यो property भेट्टाउनेसम्म वा `null` पुग्नेसम्म चढिरहन्छ।", jp: "プロパティが見つかるか `null` に達するまでたどり続ける。" },
+        },
+        {
+          question: { en: "Where are methods on `User.prototype` shared?", np: "`User.prototype` का method कहाँ साझा हुन्छन्?", jp: "`User.prototype` のメソッドはどこで共有されるか?" },
+          options: [
+            { en: "Only with the constructor", np: "Constructor सँग मात्र", jp: "コンストラクタとだけ" },
+            { en: "They are copied into every instance", np: "ती हरेक instance मा copy हुन्छन्", jp: "各インスタンスにコピーされる" },
+            { en: "Only with the first instance", np: "पहिलो instance सँग मात्र", jp: "最初のインスタンスとだけ" },
+            { en: "With all instances that use that prototype", np: "त्यो prototype प्रयोग गर्ने सबै instance सँग", jp: "そのプロトタイプを使うすべてのインスタンスと" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "One function object serves every instance, which saves memory.", np: "एउटै function object ले हरेक instance लाई काम गर्छ, जसले memory बचाउँछ।", jp: "1つの関数オブジェクトがすべてのインスタンスに使われ、メモリを節約できる。" },
+        },
+        {
+          question: { en: "What ends the prototype chain?", np: "Prototype chain के मा सकिन्छ?", jp: "プロトタイプチェーンは何で終わるか?" },
+          options: [
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`false`", np: "`false`", jp: "`false`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`0`", np: "`0`", jp: "`0`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`Object.prototype`'s own prototype is `null`, which stops the search.", np: "`Object.prototype` को आफ्नै prototype `null` हो, जसले खोजी रोक्छ।", jp: "`Object.prototype` のプロトタイプが `null` で、そこで探索が止まる。" },
+        },
+        {
+          question: { en: "What is the recommended way to get an object's prototype?", np: "Object को prototype लिने सिफारिस गरिएको तरिका कुन हो?", jp: "オブジェクトのプロトタイプを取得する推奨方法は?" },
+          options: [
+            { en: "`Object.prototype(user)`", np: "`Object.prototype(user)`", jp: "`Object.prototype(user)`" },
+            { en: "`Object.getPrototypeOf(user)`", np: "`Object.getPrototypeOf(user)`", jp: "`Object.getPrototypeOf(user)`" },
+            { en: "`Object.getProto(user)`", np: "`Object.getProto(user)`", jp: "`Object.getProto(user)`" },
+            { en: "`Object.prototypeOf(user)`", np: "`Object.prototypeOf(user)`", jp: "`Object.prototypeOf(user)`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`__proto__` also works but is legacy; this is the standard accessor.", np: "`__proto__` पनि काम गर्छ तर legacy हो; यो मानक accessor हो।", jp: "`__proto__` も動くがレガシー。こちらが標準のアクセサ。" },
         },
       ],
-      youtubeIds: ["u6mVHkMpoMk"],
+      youtubeIds: ["wstwjQ1yqWQ"],
     },
     {
-      id: "inheritance-extends-super",
-      title: { en: "Inheritance with extends and super", np: "extends र super सँग Inheritance", jp: "extendsとsuperによる継承" },
+      id: "prototype-inheritance",
+      title: { en: "Prototype Inheritance", np: "Prototype Inheritance", jp: "プロトタイプ継承" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Inheritance</b> lets one class reuse the properties and methods of another class instead of duplicating code.\n\n• <b>Parent class</b> → contains shared behavior.\n• <b>Child class</b> → inherits and can add or override behavior.\n• <b>`extends`</b> → connects the child to the parent.\n• <b>`super()`</b> → calls the parent constructor.\n• <b>`super.method()`</b> → calls a method from the parent class.\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\nUnder the hood, `extends` creates a <b>prototype chain</b>:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nThat's why:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. Basic inheritance\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\nThe child automatically gets the parent's methods.\n\n---\n\n### 2. `super()` in a constructor\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` runs the parent constructor so `this.name` can be initialized.\n\nIn a derived class, you <b>cannot use `this` before `super()`</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. Method overriding and `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\nThe child overrides `greet()`, but `super.greet()` lets it reuse the parent's implementation.",
-        np: "<b>Inheritance</b> ले एउटा class लाई code दोहोर्याउनुको साटो अर्को class का property र method पुनः प्रयोग गर्न दिन्छ।\n\n• <b>Parent class</b> → साझा behavior राख्छ।\n• <b>Child class</b> → inherit गर्छ र behavior थप्न वा override गर्न सक्छ।\n• <b>`extends`</b> → child लाई parent सँग जोड्छ।\n• <b>`super()`</b> → parent constructor call गर्छ।\n• <b>`super.method()`</b> → parent class को method call गर्छ।\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\nभित्री रूपमा, `extends` ले <b>prototype chain</b> बनाउँछ:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nत्यसैले:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. आधारभूत inheritance\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\nChild ले parent का method स्वतः पाउँछ।\n\n---\n\n### 2. Constructor मा `super()`\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` ले parent constructor चलाउँछ ताकि `this.name` initialise हुन सकोस्।\n\nDerived class मा, तपाईंले <b>`super()` अघि `this` प्रयोग गर्न सक्नुहुन्न</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. Method override र `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\nChild ले `greet()` override गर्छ, तर `super.greet()` ले parent को implementation पुनः प्रयोग गर्न दिन्छ।",
-        jp: "<b>継承</b>を使うと、コードを複製せずに、あるクラスが別のクラスのプロパティやメソッドを再利用できます。\n\n• <b>親クラス</b> → 共通の振る舞いを持つ。\n• <b>子クラス</b> → 継承し、振る舞いを追加したり上書きしたりできる。\n• <b>`extends`</b> → 子を親につなぐ。\n• <b>`super()`</b> → 親のコンストラクタを呼ぶ。\n• <b>`super.method()`</b> → 親クラスのメソッドを呼ぶ。\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\n内部では `extends` が<b>プロトタイプチェーン</b>を作ります:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nだからこうなります:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. 基本の継承\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\n子は親のメソッドを自動的に受け継ぎます。\n\n---\n\n### 2. コンストラクタでの `super()`\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` が親のコンストラクタを実行するので `this.name` が初期化されます。\n\n派生クラスでは<b>`super()` より前に `this` を使えません</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. メソッドの上書きと `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\n子は `greet()` を上書きしますが、`super.greet()` で親の実装を再利用できます。",
+        en: "<b>Prototype inheritance</b> means one object can use properties and methods from another object's prototype.\n\nBefore ES6 `class` syntax, this was commonly done using <b>constructor functions</b> and prototypes.\n\nThere are three important steps:\n\n1. Call the parent constructor with `Parent.call(this, ...)`.\n2. Connect the child prototype to the parent prototype using `Object.create()`.\n3. Fix the `constructor` property.\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nNow create a child constructor:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` runs the parent constructor using the new `Dog` object.\n\n---\n\n### 2. Connect the prototypes\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nNow the prototype chain becomes:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nSo a `Dog` can use methods from `Animal.prototype`.\n\n---\n\n### 3. Fix the constructor\n\n`Object.create()` replaces the child prototype, so the `constructor` property now points to `Animal`. Fix it:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nComplete example:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` is found through `Animal.prototype`, and `dog.bark()` is found on `Dog.prototype`.\n\n---\n\n### `Object.create()` by itself\n\nYou don't need constructors to use prototype inheritance.\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nHere:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` creates a new object whose prototype is `animal`.\n\n---\n\n### Easy memory trick\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
+        np: "<b>Prototype inheritance</b> को अर्थ एउटा object ले अर्को object को prototype का property र method प्रयोग गर्न सक्छ भन्ने हो।\n\nES6 `class` syntax अघि, यो सामान्यतया <b>constructor function</b> र prototype ले गरिन्थ्यो।\n\nतीन महत्वपूर्ण चरण छन्:\n\n1. `Parent.call(this, ...)` ले parent constructor call गर्नु।\n2. `Object.create()` ले child prototype लाई parent prototype सँग जोड्नु।\n3. `constructor` property ठीक गर्नु।\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nअब child constructor बनाउनुहोस्:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` ले नयाँ `Dog` object प्रयोग गरी parent constructor चलाउँछ।\n\n---\n\n### 2. Prototype जोड्नु\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nअब prototype chain यस्तो बन्छ:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nत्यसैले `Dog` ले `Animal.prototype` का method प्रयोग गर्न सक्छ।\n\n---\n\n### 3. Constructor ठीक गर्नु\n\n`Object.create()` ले child prototype प्रतिस्थापन गर्छ, त्यसैले `constructor` property अब `Animal` तिर देखाउँछ। ठीक गर्नुहोस्:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nपूरा उदाहरण:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` `Animal.prototype` मार्फत भेटिन्छ, र `dog.bark()` `Dog.prototype` मा भेटिन्छ।\n\n---\n\n### `Object.create()` आफैं\n\nPrototype inheritance प्रयोग गर्न constructor चाहिँदैन।\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nयहाँ:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` ले `animal` prototype भएको नयाँ object बनाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
+        jp: "<b>プロトタイプ継承</b>とは、あるオブジェクトが別のオブジェクトのプロトタイプにあるプロパティやメソッドを使えることです。\n\nES6の `class` 構文が登場する前は、<b>コンストラクタ関数</b>とプロトタイプでこれを行うのが一般的でした。\n\n重要な手順は3つです:\n\n1. `Parent.call(this, ...)` で親のコンストラクタを呼ぶ。\n2. `Object.create()` で子のプロトタイプを親のプロトタイプにつなぐ。\n3. `constructor` プロパティを直す。\n\n---\n\n### 1. 親のコンストラクタ\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\n次に子のコンストラクタを作ります:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` は新しい `Dog` オブジェクトを使って親のコンストラクタを実行します。\n\n---\n\n### 2. プロトタイプをつなぐ\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nこれでプロトタイプチェーンはこうなります:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Dog` は `Animal.prototype` のメソッドを使えます。\n\n---\n\n### 3. コンストラクタを直す\n\n`Object.create()` は子のプロトタイプを置き換えるので、`constructor` は `Animal` を指してしまいます。直しましょう:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\n完成した例:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\n出力:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` は `Animal.prototype` 経由で、`dog.bark()` は `Dog.prototype` で見つかります。\n\n---\n\n### `Object.create()` 単体で\n\nプロトタイプ継承にコンストラクタは必須ではありません。\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nここでは:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` は `animal` をプロトタイプに持つ新しいオブジェクトを作ります。\n\n---\n\n### 覚え方\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
       },
-      diagram: `             Person
-        ┌────────────────┐
-        │ name           │
-        │ greet()        │
-        └───────┬────────┘
-                │
-             extends
-                ↓
-            Student
-        ┌────────────────┐
-        │ grade          │
-        │ study()        │
-        └───────┬────────┘
-                │
-                ↓
-             student
-        ┌────────────────┐
-        │ name: "Rajan"  │
-        │ grade: 10      │
-        └────────────────┘
+      diagram: `Child object
+     │
+     ↓
+Child.prototype
+     │
+     ↓
+Parent.prototype
+     │
+     ↓
+Object.prototype
+     │
+     ↓
+null
+
+When JavaScript cannot find a method on the child object,
+it searches upward through this chain.
 
 
-student.greet() is not found on student,
-so JavaScript walks up the chain to Person.prototype.`,
+Call → Connect → Fix
+
+Parent.call(this, ...)
+      ↓
+Object.create(Parent.prototype)
+      ↓
+Child.prototype.constructor = Child`,
       codeExample: {
-        title: { en: "Extending, calling super, then overriding", np: "Extend गर्नु, super call गर्नु, अनि override गर्नु", jp: "継承する・superを呼ぶ・上書きする" },
-        code: `// ── 1. Basic inheritance — the child gets the parent's methods ────
-class Person {
-  constructor(name) {
-    this.name = name;
-  }
-
-  greet() {
-    return \`Hello, \${this.name}\`;
-  }
+        title: { en: "Call the parent, connect, then fix", np: "Parent call गर्नु, जोड्नु, अनि ठीक गर्नु", jp: "親を呼ぶ・つなぐ・直す" },
+        code: `// ── 1. Parent constructor with a shared method ────────────────────
+function Animal(name) {
+  this.name = name;
 }
 
-class Student extends Person {
-  constructor(name, grade) {
-    super(name);      // must run before this is used
-    this.grade = grade;
-  }
+Animal.prototype.speak = function () {
+  console.log(\`\${this.name} makes a sound\`);
+};
+
+// ── 2. Child constructor calls the parent ─────────────────────────
+function Dog(name, breed) {
+  Animal.call(this, name);
+  this.breed = breed;
 }
 
-const student = new Student("Rajan", 10);
+// ── 3. Connect the prototypes, then fix the constructor ───────────
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
 
-console.log(student.name);    // Rajan
-console.log(student.grade);   // 10
-console.log(student.greet()); // Hello, Rajan
+Dog.prototype.bark = function () {
+  console.log("Woof!");
+};
 
-// ── 2. The chain extends built for us ─────────────────────────────
-console.log(student instanceof Student); // true
-console.log(student instanceof Person);  // true
+const dog = new Dog("Max", "Labrador");
 
-// ── 3. Overriding, and reusing the parent with super.method() ─────
-class Teacher extends Person {
-  greet() {
-    return \`\${super.greet()} and hello from Teacher\`;
+dog.speak(); // Max makes a sound — from Animal.prototype
+dog.bark();  // Woof! — from Dog.prototype
+
+console.log(dog.constructor === Dog); // true, thanks to the fix
+
+// ── Object.create() on its own, no constructors needed ────────────
+const animal = {
+  speak() {
+    console.log("Animal sound");
   }
-}
+};
 
-console.log(new Teacher("Rajan").greet());
-// Hello, Rajan and hello from Teacher`,
+const pet = Object.create(animal);
+pet.speak(); // Animal sound`,
       },
       keyTakeaways: [
-        { en: "<b>`extends`</b> → creates inheritance between classes.", np: "<b>`extends`</b> → class बीच inheritance बनाउँछ।", jp: "<b>`extends`</b> → クラス間に継承を作る。" },
-        { en: "<b>`super()`</b> → calls the parent constructor.", np: "<b>`super()`</b> → parent constructor call गर्छ।", jp: "<b>`super()`</b> → 親のコンストラクタを呼ぶ。" },
-        { en: "<b>`super.method()`</b> → calls the parent's method.", np: "<b>`super.method()`</b> → parent को method call गर्छ।", jp: "<b>`super.method()`</b> → 親のメソッドを呼ぶ。" },
-        { en: "A child can <b>override</b> parent methods.", np: "Child ले parent का method <b>override</b> गर्न सक्छ।", jp: "子は親のメソッドを<b>上書き</b>できる。" },
-        { en: "Child instances are `instanceof` both the child and the parent.", np: "Child instance child र parent दुबैको `instanceof` हुन्छ।", jp: "子のインスタンスは子と親の両方の `instanceof` になる。" },
-        { en: "Method lookup follows the <b>prototype chain</b>.", np: "Method खोजीले <b>prototype chain</b> पछ्याउँछ।", jp: "メソッドの探索は<b>プロトタイプチェーン</b>をたどる。" },
-        { en: "In a child constructor, <b>`super()` must run before `this` is used</b>.", np: "Child constructor मा, <b>`this` प्रयोग गर्नुअघि `super()` चल्नैपर्छ</b>।", jp: "子のコンストラクタでは、<b>`this` を使う前に `super()` を実行</b>しなければならない。" },
+        { en: "<b>Prototype inheritance</b> lets one object use another object's methods.", np: "<b>Prototype inheritance</b> ले एउटा object लाई अर्को object का method प्रयोग गर्न दिन्छ।", jp: "<b>プロトタイプ継承</b>により、あるオブジェクトが別のオブジェクトのメソッドを使える。" },
+        { en: "`Parent.call(this, ...)` runs the parent constructor for the child object.", np: "`Parent.call(this, ...)` ले child object का लागि parent constructor चलाउँछ।", jp: "`Parent.call(this, ...)` は子オブジェクトのために親のコンストラクタを実行する。" },
+        { en: "`Object.create(Parent.prototype)` connects the child to the parent prototype.", np: "`Object.create(Parent.prototype)` ले child लाई parent prototype सँग जोड्छ।", jp: "`Object.create(Parent.prototype)` が子を親のプロトタイプにつなぐ。" },
+        { en: "`Child.prototype.constructor = Child` fixes the constructor reference.", np: "`Child.prototype.constructor = Child` ले constructor reference ठीक गर्छ।", jp: "`Child.prototype.constructor = Child` がコンストラクタ参照を直す。" },
+        { en: "`Object.create(proto)` can create an object directly from a prototype, with no constructor at all.", np: "`Object.create(proto)` ले constructor बिनै prototype बाट सिधै object बनाउन सक्छ।", jp: "`Object.create(proto)` はコンストラクタなしでプロトタイプから直接オブジェクトを作れる。" },
+        { en: "The child does <b>not</b> copy the parent's methods; it finds them through the prototype chain.", np: "Child ले parent का method copy <b>गर्दैन</b>; prototype chain मार्फत भेट्टाउँछ।", jp: "子は親のメソッドを<b>コピーしない</b>。プロトタイプチェーンをたどって見つける。" },
       ],
       commonMistakes: [
-        { en: "<b>Using `this` before `super()`</b> — `this.name = name;` above `super(name);` throws a `ReferenceError`. Call `super()` first, then assign.", np: "<b>`super()` अघि `this` प्रयोग गर्नु</b> — `super(name);` माथि `this.name = name;` ले `ReferenceError` दिन्छ। पहिले `super()` call गर्नुहोस्, त्यसपछि assign।", jp: "<b>`super()` の前に `this` を使う</b> — `super(name);` より上の `this.name = name;` は `ReferenceError`。先に `super()` を呼び、その後に代入する。" },
-        { en: "<b>Calling `super` like a normal object</b> — `super.greet()` is right for a parent method, but `super().greet()` is wrong. `super()` is only for the parent constructor.", np: "<b>`super` लाई सामान्य object जस्तै call गर्नु</b> — parent method का लागि `super.greet()` ठीक हो, तर `super().greet()` गलत। `super()` parent constructor का लागि मात्र हो।", jp: "<b>`super` を普通のオブジェクトのように呼ぶ</b> — 親のメソッドには `super.greet()` が正しく、`super().greet()` は誤り。`super()` は親のコンストラクタ専用。" },
-        { en: "<b>Forgetting that overriding replaces the parent's version</b> — once `Student` defines its own `greet()`, `student.greet()` uses that one. Call `super.greet()` when you also need the parent's behaviour.", np: "<b>Override ले parent को संस्करण प्रतिस्थापन गर्छ भनी बिर्सनु</b> — `Student` ले आफ्नै `greet()` परिभाषित गरेपछि, `student.greet()` ले त्यही प्रयोग गर्छ। Parent को behavior पनि चाहिए `super.greet()` call गर्नुहोस्।", jp: "<b>上書きが親の実装を置き換えることを忘れる</b> — `Student` が自前の `greet()` を定義すると `student.greet()` はそちらを使う。親の振る舞いも必要なら `super.greet()` を呼ぶ。" },
+        { en: "<b>Forgetting `Parent.call()`</b> — without it, the properties the parent constructor sets are never initialised on the child.", np: "<b>`Parent.call()` बिर्सनु</b> — यसबिना, parent constructor ले सेट गर्ने property child मा कहिल्यै initialise हुँदैनन्।", jp: "<b>`Parent.call()` を忘れる</b> — 親のコンストラクタが設定するプロパティが子で初期化されない。" },
+        { en: "<b>Forgetting `Object.create()`</b> — writing `Dog.prototype = Animal.prototype;` makes both constructors share the <b>same</b> prototype object, so adding to one changes the other.", np: "<b>`Object.create()` बिर्सनु</b> — `Dog.prototype = Animal.prototype;` लेख्दा दुबै constructor ले <b>उही</b> prototype object बाँड्छन्, त्यसैले एउटामा थप्दा अर्को पनि बदलिन्छ।", jp: "<b>`Object.create()` を忘れる</b> — `Dog.prototype = Animal.prototype;` と書くと両者が<b>同じ</b>プロトタイプを共有し、片方への追加がもう片方にも影響する。" },
+        { en: "<b>Forgetting the constructor fix</b> — after `Dog.prototype = Object.create(Animal.prototype);`, `dog.constructor` reports `Animal` until you set `Dog.prototype.constructor = Dog;`.", np: "<b>Constructor ठीक गर्न बिर्सनु</b> — `Dog.prototype = Object.create(Animal.prototype);` पछि, `Dog.prototype.constructor = Dog;` नगरेसम्म `dog.constructor` ले `Animal` देखाउँछ।", jp: "<b>コンストラクタの修正を忘れる</b> — `Dog.prototype = Object.create(Animal.prototype);` の後、`Dog.prototype.constructor = Dog;` を書くまで `dog.constructor` は `Animal` を指す。" },
       ],
       quiz: [
         {
-          question: { en: "What does `extends` do?", np: "`extends` ले के गर्छ?", jp: "`extends` は何をするか?" },
+          question: { en: "What does `Object.create(Animal.prototype)` do?", np: "`Object.create(Animal.prototype)` ले के गर्छ?", jp: "`Object.create(Animal.prototype)` は何をするか?" },
           options: [
-            { en: "Creates inheritance between classes", np: "Class बीच inheritance बनाउँछ", jp: "クラス間に継承を作る" },
-            { en: "Creates a new object", np: "नयाँ object बनाउँछ", jp: "新しいオブジェクトを作る" },
-            { en: "Copies all parent methods into the child", np: "Parent का सबै method child मा copy गर्छ", jp: "親のメソッドをすべて子にコピーする" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Nothing is copied; it links the child's prototype to the parent's.", np: "केही copy हुँदैन; यसले child को prototype लाई parent को सँग जोड्छ।", jp: "コピーはされない。子のプロトタイプを親につなぐだけ。" },
-        },
-        {
-          question: { en: "Why do we use `super()` in a child constructor?", np: "Child constructor मा `super()` किन प्रयोग गर्छौं?", jp: "子のコンストラクタでなぜ `super()` を使うのか?" },
-          options: [
-            { en: "To create a new class", np: "नयाँ class बनाउन", jp: "新しいクラスを作るため" },
-            { en: "To run the parent constructor", np: "Parent constructor चलाउन", jp: "親のコンストラクタを実行するため" },
-            { en: "To call any method", np: "जुनसुकै method call गर्न", jp: "任意のメソッドを呼ぶため" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "It initialises the parent's properties, and must run before `this` is touched.", np: "यसले parent का property initialise गर्छ, र `this` छुनुअघि चल्नैपर्छ।", jp: "親のプロパティを初期化する。`this` に触れる前に実行しなければならない。" },
-        },
-        {
-          question: { en: "What happens with `class Student extends Person { greet() { return super.greet(); } }`?", np: "`class Student extends Person { greet() { return super.greet(); } }` मा के हुन्छ?", jp: "`class Student extends Person { greet() { return super.greet(); } }` では何が起こるか?" },
-          options: [
-            { en: "Calls `Student.greet()` again", np: "`Student.greet()` फेरि call गर्छ", jp: "`Student.greet()` をもう一度呼ぶ" },
-            { en: "Creates a new `Person`", np: "नयाँ `Person` बनाउँछ", jp: "新しい `Person` を作る" },
-            { en: "Calls `Person.greet()`", np: "`Person.greet()` call गर्छ", jp: "`Person.greet()` を呼ぶ" },
+            { en: "Copies all Animal methods", np: "Animal का सबै method copy गर्छ", jp: "Animalのメソッドをすべてコピーする" },
+            { en: "Creates a new Animal", np: "नयाँ Animal बनाउँछ", jp: "新しいAnimalを作る" },
+            { en: "Connects the new object's prototype to `Animal.prototype`", np: "नयाँ object को prototype लाई `Animal.prototype` सँग जोड्छ", jp: "新しいオブジェクトのプロトタイプを `Animal.prototype` につなぐ" },
+            { en: "Deletes the child prototype", np: "Child prototype मेटाउँछ", jp: "子のプロトタイプを削除する" },
           ],
           correctIndex: 2,
-          explanation: { en: "`super.method()` reaches the parent's implementation without recursing.", np: "`super.method()` ले recursion नगरी parent को implementation मा पुग्छ।", jp: "`super.method()` は再帰せずに親の実装へ到達する。" },
+          explanation: { en: "Nothing is copied; the new object simply links upward to that prototype.", np: "केही copy हुँदैन; नयाँ object त्यो prototype तिर माथि जोडिन्छ मात्र।", jp: "何もコピーされない。新しいオブジェクトがそのプロトタイプへ上向きにリンクするだけ。" },
+        },
+        {
+          question: { en: "Why do we use `Animal.call(this, name)`?", np: "`Animal.call(this, name)` किन प्रयोग गर्छौं?", jp: "なぜ `Animal.call(this, name)` を使うのか?" },
+          options: [
+            { en: "To create a prototype", np: "Prototype बनाउन", jp: "プロトタイプを作るため" },
+            { en: "To change `Object.prototype`", np: "`Object.prototype` बदल्न", jp: "`Object.prototype` を変えるため" },
+            { en: "To create a new function", np: "नयाँ function बनाउन", jp: "新しい関数を作るため" },
+            { en: "To call the parent constructor for the child object", np: "Child object का लागि parent constructor call गर्न", jp: "子オブジェクトのために親のコンストラクタを呼ぶため" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "It runs the parent's setup with `this` pointing at the new child instance.", np: "यसले `this` लाई नयाँ child instance तिर देखाउँदै parent को setup चलाउँछ।", jp: "`this` を新しい子インスタンスに向けたまま親の初期化処理を実行する。" },
+        },
+        {
+          question: { en: "Why do we write `Dog.prototype.constructor = Dog;`?", np: "`Dog.prototype.constructor = Dog;` किन लेख्छौं?", jp: "なぜ `Dog.prototype.constructor = Dog;` と書くのか?" },
+          options: [
+            { en: "To fix the constructor reference", np: "Constructor reference ठीक गर्न", jp: "コンストラクタ参照を直すため" },
+            { en: "To create Dog", np: "Dog बनाउन", jp: "Dogを作るため" },
+            { en: "To call Dog", np: "Dog call गर्न", jp: "Dogを呼ぶため" },
+            { en: "To create inheritance", np: "Inheritance बनाउन", jp: "継承を作るため" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`Object.create()` replaced the prototype, so `constructor` pointed at `Animal` until this line.", np: "`Object.create()` ले prototype प्रतिस्थापन गर्‍यो, त्यसैले यो line नआउन्जेल `constructor` ले `Animal` देखाउँथ्यो।", jp: "`Object.create()` がプロトタイプを置き換えたため、この行までは `constructor` が `Animal` を指していた。" },
+        },
+        {
+          question: { en: "What does `Object.create(animal)` do?", np: "`Object.create(animal)` ले के गर्छ?", jp: "`Object.create(animal)` は何をするか?" },
+          options: [
+            { en: "Copies `animal`", np: "`animal` copy गर्छ", jp: "`animal` をコピーする" },
+            { en: "Creates an object whose prototype is `animal`", np: "`animal` prototype भएको object बनाउँछ", jp: "`animal` をプロトタイプに持つオブジェクトを作る" },
+            { en: "Deletes `animal`", np: "`animal` मेटाउँछ", jp: "`animal` を削除する" },
+            { en: "Converts `animal` into a class", np: "`animal` लाई class मा बदल्छ", jp: "`animal` をクラスに変換する" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "This is prototype inheritance without any constructor function.", np: "यो constructor function बिनाको prototype inheritance हो।", jp: "コンストラクタ関数なしのプロトタイプ継承。" },
         },
       ],
     },
     {
-      id: "static-getters-private",
-      title: { en: "Static Methods, Getters/Setters & Private Fields", np: "Static Methods, Getters/Setters, Private Fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
+      id: "property-descriptors",
+      title: { en: "Property Descriptors & Object.defineProperty", np: "Property Descriptors र Object.defineProperty", jp: "プロパティディスクリプタとObject.defineProperty" },
       durationMinutes: 9,
       explanation: {
-        en: "JavaScript classes provide several features for controlling <b>where functionality lives</b>, <b>how properties are accessed</b>, and <b>how internal data is protected</b>.\n\n• <b>Static methods</b> → belong to the class itself, not its instances.\n• <b>Getters</b> → read a value like a property while running a method behind the scenes.\n• <b>Setters</b> → assign a value like a property while running validation or transformation.\n• <b>Private fields</b> → use `#` to make class data accessible only inside the class.\n• Together, private fields and controlled methods provide <b>encapsulation</b>.\n\n---\n\n### 1. Static methods\n\nStatic methods belong to the <b>class</b>, so you don't need an instance.\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nThis does <b>not</b> work:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\nBecause `add()` belongs to `Calculator`, not `calculator`.\n\n---\n\n### 2. Getters\n\nA getter lets you access a method like a normal property.\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\nNotice there are <b>no parentheses</b>: `rectangle.area` instead of `rectangle.area()`.\n\n---\n\n### 3. Setters\n\nA setter lets you control what happens when a property is assigned.\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\nThe assignment `user.name = \"  Rajan  \";` automatically calls the setter.\n\n---\n\n### 4. Private fields\n\nPrivate fields use `#` and can only be accessed inside the class.\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` is genuinely private. `_balance` would only be a naming convention.\n\n---\n\n### 5. Combining everything\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nHere:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
-        np: "JavaScript का class ले <b>कार्यक्षमता कहाँ रहन्छ</b>, <b>property कसरी पहुँच गरिन्छ</b>, र <b>आन्तरिक data कसरी सुरक्षित हुन्छ</b> नियन्त्रण गर्न केही सुविधा दिन्छन्।\n\n• <b>Static method</b> → instance होइन, class आफैंको हुन्छ।\n• <b>Getter</b> → पर्दा पछाडि method चलाउँदै property जस्तै value पढ्न दिन्छ।\n• <b>Setter</b> → validation वा रूपान्तरण चलाउँदै property जस्तै value assign गर्न दिन्छ।\n• <b>Private field</b> → `#` प्रयोग गरी class को data class भित्र मात्र पहुँचयोग्य बनाउँछ।\n• Private field र नियन्त्रित method मिलेर <b>encapsulation</b> दिन्छन्।\n\n---\n\n### 1. Static method\n\nStatic method <b>class</b> को हुन्छ, त्यसैले instance चाहिँदैन।\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nयो काम <b>गर्दैन</b>:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\nकिनकि `add()` `calculator` होइन, `Calculator` को हो।\n\n---\n\n### 2. Getter\n\nGetter ले method लाई सामान्य property जस्तै पहुँच गर्न दिन्छ।\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\nध्यान दिनुहोस्, <b>कोष्ठक छैनन्</b>: `rectangle.area()` होइन `rectangle.area`।\n\n---\n\n### 3. Setter\n\nSetter ले property assign हुँदा के हुन्छ नियन्त्रण गर्न दिन्छ।\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\n`user.name = \"  Rajan  \";` assignment ले स्वतः setter call गर्छ।\n\n---\n\n### 4. Private field\n\nPrivate field ले `#` प्रयोग गर्छन् र class भित्र मात्र पहुँच गर्न सकिन्छ।\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` साँच्चै private हो। `_balance` भने नामकरण convention मात्र हुन्थ्यो।\n\n---\n\n### 5. सबै जोड्नु\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nयहाँ:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
-        jp: "JavaScriptのクラスには、<b>機能をどこに置くか</b>、<b>プロパティにどうアクセスするか</b>、<b>内部データをどう守るか</b>を制御する機能があります。\n\n• <b>静的メソッド</b> → インスタンスではなくクラス自身に属する。\n• <b>ゲッター</b> → 裏でメソッドを実行しつつ、プロパティのように値を読める。\n• <b>セッター</b> → 検証や変換を行いつつ、プロパティのように値を代入できる。\n• <b>プライベートフィールド</b> → `#` を使い、クラス内部からのみアクセスできるようにする。\n• プライベートフィールドと制御されたメソッドを合わせて<b>カプセル化</b>になる。\n\n---\n\n### 1. 静的メソッド\n\n静的メソッドは<b>クラス</b>に属するので、インスタンスは不要です。\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nこれは<b>動きません</b>:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\n`add()` は `calculator` ではなく `Calculator` に属しているからです。\n\n---\n\n### 2. ゲッター\n\nゲッターを使うと、メソッドを普通のプロパティのように読めます。\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\n<b>括弧がない</b>ことに注目してください: `rectangle.area()` ではなく `rectangle.area`。\n\n---\n\n### 3. セッター\n\nセッターを使うと、プロパティへの代入時の動作を制御できます。\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\n`user.name = \"  Rajan  \";` という代入が自動的にセッターを呼びます。\n\n---\n\n### 4. プライベートフィールド\n\nプライベートフィールドは `#` を使い、クラス内部からのみアクセスできます。\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` は本当にプライベートです。`_balance` は命名の慣習にすぎません。\n\n---\n\n### 5. すべてを組み合わせる\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nここでは:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
+        en: "Every JavaScript object property has hidden settings called a <b>property descriptor</b>. These settings control what can happen when you read, change, enumerate, or delete the property.\n\nThere are two descriptor types:\n\n• <b>Data descriptor</b> — uses `value` with `writable`, `enumerable`, and `configurable`\n• <b>Accessor descriptor</b> — uses `get` and/or `set` instead of `value`\n\nThe three main flags are:\n\n<b>`writable`</b> — whether the property's value can be changed\n\n<b>`enumerable`</b> — whether the property appears in `Object.keys()`, `for...in`, etc.\n\n<b>`configurable`</b> — whether the property can be deleted or its descriptor changed\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nNow `user.name` can be read, but its value cannot be reassigned.\n\n> <b>Important:</b> properties created normally with `obj.x = 5` have all three flags set to `true`. With `Object.defineProperty()`, unspecified descriptor flags default to `false`.\n\n---\n\n### 1. Basic `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` prevents reassignment.\n\n---\n\n### 3. Hidden property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nThe property still exists; it simply doesn't appear in normal enumeration.\n\n---\n\n### 4. Getters and setters\n\nAccessor descriptors don't use `value`. They use `get` and `set`.\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nHere, `fullName` behaves like a normal property even though its value is calculated dynamically.\n\n---\n\n### 5. Inspecting descriptors\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\nYou can inspect every own property with `Object.getOwnPropertyDescriptors(user)`.",
+        np: "हरेक JavaScript object property का लुकेका सेटिङ हुन्छन्, जसलाई <b>property descriptor</b> भनिन्छ। यी सेटिङले property पढ्दा, बदल्दा, enumerate गर्दा वा मेटाउँदा के हुन सक्छ नियन्त्रण गर्छन्।\n\nDescriptor का दुई प्रकार छन्:\n\n• <b>Data descriptor</b> — `writable`, `enumerable`, र `configurable` सँगै `value` प्रयोग गर्छ\n• <b>Accessor descriptor</b> — `value` को साटो `get` र/वा `set` प्रयोग गर्छ\n\nतीन मुख्य flag:\n\n<b>`writable`</b> — property को value बदल्न मिल्छ कि मिल्दैन\n\n<b>`enumerable`</b> — property `Object.keys()`, `for...in` आदिमा देखिन्छ कि देखिँदैन\n\n<b>`configurable`</b> — property मेटाउन वा यसको descriptor बदल्न मिल्छ कि मिल्दैन\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nअब `user.name` पढ्न मिल्छ, तर यसको value reassign गर्न मिल्दैन।\n\n> <b>महत्वपूर्ण:</b> `obj.x = 5` ले सामान्य रूपमा बनेका property का तीनै flag `true` हुन्छन्। `Object.defineProperty()` सँग, नतोकिएका descriptor flag default मा `false` हुन्छन्।\n\n---\n\n### 1. आधारभूत `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` ले reassignment रोक्छ।\n\n---\n\n### 3. लुकेको property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nProperty अझै अवस्थित छ; यो सामान्य enumeration मा देखिँदैन मात्र।\n\n---\n\n### 4. Getter र setter\n\nAccessor descriptor ले `value` प्रयोग गर्दैनन्। तिनले `get` र `set` प्रयोग गर्छन्।\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nयहाँ, `fullName` को value गतिशील रूपमा गणना हुने भए पनि सामान्य property जस्तै व्यवहार गर्छ।\n\n---\n\n### 5. Descriptor हेर्नु\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ले हरेक own property हेर्न सकिन्छ।",
+        jp: "JavaScriptのすべてのプロパティには<b>プロパティディスクリプタ</b>と呼ばれる隠れた設定があります。読み取り・変更・列挙・削除のときに何ができるかを、この設定が制御します。\n\nディスクリプタには2種類あります:\n\n• <b>データディスクリプタ</b> — `value` と `writable`・`enumerable`・`configurable` を使う\n• <b>アクセサディスクリプタ</b> — `value` の代わりに `get` や `set` を使う\n\n主なフラグは3つです:\n\n<b>`writable`</b> — 値を変更できるか\n\n<b>`enumerable`</b> — `Object.keys()` や `for...in` などに現れるか\n\n<b>`configurable`</b> — 削除やディスクリプタの変更ができるか\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nこれで `user.name` は読めますが、値を再代入することはできません。\n\n> <b>重要:</b> `obj.x = 5` のように普通に作ったプロパティは3つのフラグがすべて `true` です。`Object.defineProperty()` では、指定しなかったフラグは既定で `false` になります。\n\n---\n\n### 1. 基本の `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. 読み取り専用のプロパティ\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` が再代入を防ぎます。\n\n---\n\n### 3. 隠れたプロパティ\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nプロパティは存在し続けます。通常の列挙に現れないだけです。\n\n---\n\n### 4. ゲッターとセッター\n\nアクセサディスクリプタは `value` を使わず、`get` と `set` を使います。\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nここでは `fullName` の値は動的に計算されますが、普通のプロパティのように振る舞います。\n\n---\n\n### 5. ディスクリプタを調べる\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\n出力:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ですべての自身のプロパティを調べられます。",
       },
-      diagram: `                 Calculator
-              ┌───────────────┐
-              │ static add()  │ ← Class itself
-              └───────────────┘
-                      │
-                  Calculator.add()
-                      │
-                      ▼
-              ┌───────────────┐
-              │   instance    │
-              │               │
-              │ #balance      │ ← Private
-              │ balance       │
-              │ getBalance()  │
-              │ deposit()     │
-              └───────────────┘
+      diagram: `             Property Descriptor
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+     Data Property         Accessor Property
+          │                     │
+     ┌────┴────┐           ┌────┴────┐
+   value    writable      get       set
+            enumerable
+            configurable
 
 
-Class
- └── static methods
+Think of a property like a locked cabinet:
 
-Instance
- ├── public properties
- ├── getters/setters
- └── private fields (#)`,
+┌─────────────────────────────┐
+│ user.name                   │
+├─────────────────────────────┤
+│ value: "Rajan"              │
+│ writable: false             │
+│ enumerable: true            │
+│ configurable: false         │
+└─────────────────────────────┘`,
       codeExample: {
-        title: { en: "Static, getter, setter and private field together", np: "Static, getter, setter र private field सँगै", jp: "静的メソッド・ゲッター・セッター・プライベートフィールド" },
-        code: `// ── 1. Static — called on the class, not an instance ──────────────
-class Calculator {
-  static add(a, b) {
-    return a + b;
-  }
-}
+        title: { en: "Locking, hiding and computing a property", np: "Property lock गर्नु, लुकाउनु र गणना गर्नु", jp: "プロパティを固定・非表示・計算する" },
+        code: `// ── 1. Basic defineProperty ───────────────────────────────────────
+const user = {};
 
-console.log(Calculator.add(2, 3)); // 5
-// new Calculator().add(2, 3);     // TypeError
+Object.defineProperty(user, "name", {
+  value: "Rajan",
+  writable: true,
+  enumerable: true,
+  configurable: true
+});
 
-// ── 2. Getter — read like a property, no parentheses ──────────────
-class Rectangle {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-  }
-
-  get area() {
-    return this.width * this.height;
-  }
-}
-
-console.log(new Rectangle(10, 5).area); // 50
-
-// ── 3. Setter — assignment runs your code ─────────────────────────
-class User {
-  set name(value) {
-    this._name = value.trim();
-  }
-
-  get name() {
-    return this._name;
-  }
-}
-
-const user = new User();
-user.name = "  Rajan  ";
 console.log(user.name); // "Rajan"
 
-// ── 4 and 5. Private state behind controlled access ───────────────
-class BankAccount {
-  #balance = 0;
+// ── 2. Read-only — writable defaults to false ─────────────────────
+Object.defineProperty(user, "id", {
+  value: 101,
+  writable: false
+});
 
-  constructor(owner) {
-    this.owner = owner;
+user.id = 202;
+console.log(user.id); // 101
+
+// ── 3. Hidden from enumeration, but still readable ────────────────
+Object.defineProperty(user, "password", {
+  value: "secret",
+  enumerable: false
+});
+
+console.log(Object.keys(user)); // ["name"]
+console.log(user.password);     // "secret"
+
+// ── 4. Accessor descriptor — get and set instead of value ─────────
+const person = {
+  firstName: "Rajan",
+  lastName: "Magar"
+};
+
+Object.defineProperty(person, "fullName", {
+  get() {
+    return \`\${this.firstName} \${this.lastName}\`;
+  },
+  set(value) {
+    [this.firstName, this.lastName] = value.split(" ");
   }
+});
 
-  deposit(amount) {
-    if (amount <= 0) throw new Error("Amount must be positive");
-    this.#balance += amount;
-  }
+console.log(person.fullName); // "Rajan Magar"
 
-  get balance() {
-    return this.#balance;
-  }
+person.fullName = "John Doe";
+console.log(person.firstName); // "John"
 
-  static create(owner) {
-    return new BankAccount(owner);
-  }
-}
-
-const account = BankAccount.create("Rajan");
-account.deposit(500);
-
-console.log(account.balance); // 500
-// account.#balance;          // SyntaxError — genuinely private`,
+// ── 5. Inspecting what a property actually allows ─────────────────
+console.log(Object.getOwnPropertyDescriptor(person, "firstName"));
+// { value: "John", writable: true, enumerable: true, configurable: true }`,
       },
       keyTakeaways: [
-        { en: "<b>`static`</b> → belongs to the class, not instances.", np: "<b>`static`</b> → instance होइन, class को हुन्छ।", jp: "<b>`static`</b> → インスタンスではなくクラスに属する。" },
-        { en: "<b>`get`</b> → access a method like a property.", np: "<b>`get`</b> → method लाई property जस्तै पहुँच गर्नु।", jp: "<b>`get`</b> → メソッドをプロパティのように読む。" },
-        { en: "<b>`set`</b> → assign through a method-like property.", np: "<b>`set`</b> → method जस्तो property मार्फत assign गर्नु।", jp: "<b>`set`</b> → メソッドのようなプロパティを通じて代入する。" },
-        { en: "<b>`#field`</b> → genuinely private class field.", np: "<b>`#field`</b> → साँच्चै private class field।", jp: "<b>`#field`</b> → 本当にプライベートなクラスフィールド。" },
-        { en: "<b>Encapsulation</b> → keep internal state private and expose controlled operations.", np: "<b>Encapsulation</b> → आन्तरिक state private राख्नु र नियन्त्रित operation मात्र देखाउनु।", jp: "<b>カプセル化</b> → 内部状態を隠し、制御された操作だけを公開する。" },
-        { en: "`static` methods are called with `ClassName.method()`.", np: "`static` method `ClassName.method()` ले call गरिन्छन्।", jp: "`static` メソッドは `ClassName.method()` で呼ぶ。" },
-        { en: "Private fields cannot be accessed from outside the class.", np: "Private field class बाहिरबाट पहुँच गर्न सकिँदैन।", jp: "プライベートフィールドはクラスの外からアクセスできない。" },
-        { en: "Classes themselves are in the <b>Temporal Dead Zone (TDZ)</b> until their declaration runs.", np: "Class आफैं आफ्नो declaration नचल्दासम्म <b>Temporal Dead Zone (TDZ)</b> मा हुन्छन्।", jp: "クラス自体も宣言が実行されるまで<b>一時的デッドゾーン（TDZ）</b>にある。" },
+        { en: "<b>Property descriptors</b> control how object properties behave.", np: "<b>Property descriptor</b> ले object property कसरी व्यवहार गर्छन् नियन्त्रण गर्छन्।", jp: "<b>プロパティディスクリプタ</b>がプロパティの振る舞いを制御する。" },
+        { en: "<b>`writable`</b> → can the value change?", np: "<b>`writable`</b> → value बदल्न मिल्छ?", jp: "<b>`writable`</b> → 値を変更できるか?" },
+        { en: "<b>`enumerable`</b> → does it appear during enumeration?", np: "<b>`enumerable`</b> → enumeration मा देखिन्छ?", jp: "<b>`enumerable`</b> → 列挙時に現れるか?" },
+        { en: "<b>`configurable`</b> → can it be deleted or reconfigured?", np: "<b>`configurable`</b> → मेटाउन वा पुनः configure गर्न मिल्छ?", jp: "<b>`configurable`</b> → 削除や再設定ができるか?" },
+        { en: "<b>`Object.defineProperty()`</b> lets you control these settings.", np: "<b>`Object.defineProperty()`</b> ले यी सेटिङ नियन्त्रण गर्न दिन्छ।", jp: "<b>`Object.defineProperty()`</b> でこれらの設定を制御できる。" },
+        { en: "<b>Getters and setters</b> are accessor descriptors and use `get`/`set` instead of `value`.", np: "<b>Getter र setter</b> accessor descriptor हुन् र `value` को साटो `get`/`set` प्रयोग गर्छन्।", jp: "<b>ゲッターとセッター</b>はアクセサディスクリプタで、`value` の代わりに `get`/`set` を使う。" },
+        { en: "`Object.getOwnPropertyDescriptor()` lets you inspect a property's configuration.", np: "`Object.getOwnPropertyDescriptor()` ले property को configuration हेर्न दिन्छ।", jp: "`Object.getOwnPropertyDescriptor()` でプロパティの設定を調べられる。" },
+        { en: "Be careful: with `defineProperty()`, unspecified flags default to <b>`false`</b>.", np: "होसियार: `defineProperty()` सँग, नतोकिएका flag default मा <b>`false`</b> हुन्छन्।", jp: "注意: `defineProperty()` では指定しなかったフラグは既定で<b>`false`</b>。" },
       ],
       commonMistakes: [
-        { en: "<b>Calling a static method on an instance</b> — `new Calculator().add(2, 3)` throws a `TypeError`. Use `Calculator.add(2, 3)`.", np: "<b>Instance मा static method call गर्नु</b> — `new Calculator().add(2, 3)` ले `TypeError` दिन्छ। `Calculator.add(2, 3)` प्रयोग गर्नुहोस्।", jp: "<b>インスタンスから静的メソッドを呼ぶ</b> — `new Calculator().add(2, 3)` は `TypeError`。`Calculator.add(2, 3)` を使う。" },
-        { en: "<b>Calling a getter like a function</b> — `rectangle.area()` throws a `TypeError`; write `rectangle.area`.", np: "<b>Getter लाई function जस्तै call गर्नु</b> — `rectangle.area()` ले `TypeError` दिन्छ; `rectangle.area` लेख्नुहोस्।", jp: "<b>ゲッターを関数のように呼ぶ</b> — `rectangle.area()` は `TypeError`。`rectangle.area` と書く。" },
-        { en: "<b>Treating `_balance` as truly private</b> — the underscore is only a convention, and outside code can still read and write it. Use `#balance` for real privacy.", np: "<b>`_balance` लाई साँच्चै private मान्नु</b> — underscore convention मात्र हो, र बाहिरी code ले अझै पढ्न र लेख्न सक्छ। वास्तविक privacy का लागि `#balance` प्रयोग गर्नुहोस्।", jp: "<b>`_balance` を本当にプライベートだと思う</b> — アンダースコアは慣習にすぎず、外部から読み書きできる。本当に隠すなら `#balance`。" },
-        { en: "<b>Accessing a private field outside the class</b> — `account.#balance` is a `SyntaxError`. Expose a getter or method such as `account.balance`.", np: "<b>Class बाहिर private field पहुँच गर्नु</b> — `account.#balance` `SyntaxError` हो। `account.balance` जस्तो getter वा method देखाउनुहोस्।", jp: "<b>クラスの外でプライベートフィールドにアクセスする</b> — `account.#balance` は `SyntaxError`。`account.balance` のようなゲッターやメソッドを公開する。" },
+        { en: "<b>Assuming `defineProperty()` defaults behave like normal properties</b> — `Object.defineProperty(user, \"age\", { value: 30 })` leaves `writable` as `false`, so `user.age = 40` silently does nothing.", np: "<b>`defineProperty()` का default सामान्य property जस्तै हुन्छन् भन्ने ठान्नु</b> — `Object.defineProperty(user, \"age\", { value: 30 })` ले `writable` लाई `false` छोड्छ, त्यसैले `user.age = 40` ले चुपचाप केही गर्दैन।", jp: "<b>`defineProperty()` の既定値が普通のプロパティと同じだと思う</b> — `Object.defineProperty(user, \"age\", { value: 30 })` は `writable` が `false` のままなので、`user.age = 40` は黙って何も起きない。" },
+        { en: "<b>Using `value` together with `get` or `set`</b> — a descriptor cannot define both a data property and an accessor; it throws a `TypeError`.", np: "<b>`value` लाई `get` वा `set` सँगै प्रयोग गर्नु</b> — descriptor ले data property र accessor दुबै परिभाषित गर्न सक्दैन; यसले `TypeError` दिन्छ।", jp: "<b>`value` と `get`/`set` を同時に使う</b> — ディスクリプタはデータプロパティとアクセサの両方を定義できず、`TypeError` になる。" },
+        { en: "<b>Thinking `enumerable: false` makes a property private</b> — `user.password` still works. It only hides the property from enumeration.", np: "<b>`enumerable: false` ले property निजी बनाउँछ भन्ने ठान्नु</b> — `user.password` अझै काम गर्छ। यसले property लाई enumeration बाट लुकाउँछ मात्र।", jp: "<b>`enumerable: false` でプライベートになると思う</b> — `user.password` は依然として読める。列挙から隠すだけ。" },
       ],
       quiz: [
         {
-          question: { en: "Where does a static method belong?", np: "Static method कसको हुन्छ?", jp: "静的メソッドはどこに属するか?" },
+          question: { en: "What does `writable: false` do?", np: "`writable: false` ले के गर्छ?", jp: "`writable: false` は何をするか?" },
           options: [
-            { en: "The class itself", np: "Class आफैं", jp: "クラス自身" },
-            { en: "Every instance", np: "हरेक instance", jp: "各インスタンス" },
-            { en: "`Object.prototype`", np: "`Object.prototype`", jp: "`Object.prototype`" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "That is why instances cannot call it, only `ClassName.method()` can.", np: "त्यसैले instance ले call गर्न सक्दैन, `ClassName.method()` ले मात्र सक्छ।", jp: "だからインスタンスからは呼べず、`ClassName.method()` でのみ呼べる。" },
-        },
-        {
-          question: { en: "How do you access a getter?", np: "Getter कसरी पहुँच गर्नुहुन्छ?", jp: "ゲッターにはどうアクセスするか?" },
-          options: [
-            { en: "`user.name()`", np: "`user.name()`", jp: "`user.name()`" },
-            { en: "`user.name`", np: "`user.name`", jp: "`user.name`" },
-            { en: "`get user.name`", np: "`get user.name`", jp: "`get user.name`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "A getter looks like a property from the outside, so no parentheses.", np: "बाहिरबाट getter property जस्तै देखिन्छ, त्यसैले कोष्ठक हुँदैनन्।", jp: "外からはプロパティに見えるので、括弧は付けない。" },
-        },
-        {
-          question: { en: "What does `#balance` mean?", np: "`#balance` को अर्थ के हो?", jp: "`#balance` は何を意味するか?" },
-          options: [
-            { en: "A naming convention", np: "नामकरण convention", jp: "命名の慣習" },
-            { en: "A protected field", np: "Protected field", jp: "protectedなフィールド" },
-            { en: "A genuinely private class field", np: "साँच्चै private class field", jp: "本当にプライベートなクラスフィールド" },
+            { en: "Hides the property", np: "Property लुकाउँछ", jp: "プロパティを隠す" },
+            { en: "Prevents deleting the property", np: "Property मेटाउनबाट रोक्छ", jp: "プロパティの削除を防ぐ" },
+            { en: "Prevents changing its value", np: "यसको value बदल्नबाट रोक्छ", jp: "値の変更を防ぐ" },
+            { en: "Makes the property private", np: "Property निजी बनाउँछ", jp: "プロパティをプライベートにする" },
           ],
           correctIndex: 2,
-          explanation: { en: "Reading it from outside is a `SyntaxError`, unlike the `_name` convention.", np: "बाहिरबाट पढ्दा `SyntaxError` हुन्छ, `_name` convention भन्दा फरक।", jp: "`_name` の慣習と違い、外から読むと `SyntaxError` になる。" },
+          explanation: { en: "Hiding is `enumerable`, and preventing deletion is `configurable`.", np: "लुकाउने `enumerable` हो, र मेटाउन रोक्ने `configurable` हो।", jp: "隠すのは `enumerable`、削除を防ぐのは `configurable`。" },
         },
         {
-          question: { en: "Which correctly calls `static double(n)` on `class MathUtils`?", np: "`class MathUtils` को `static double(n)` कसरी सही रूपमा call हुन्छ?", jp: "`class MathUtils` の `static double(n)` を正しく呼ぶのはどれか?" },
+          question: { en: "What does `obj.x` print after `Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;`?", np: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` पछि `obj.x` ले के देखाउँछ?", jp: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` の後 `obj.x` は何を出すか?" },
           options: [
-            { en: "`MathUtils.double(5)`", np: "`MathUtils.double(5)`", jp: "`MathUtils.double(5)`" },
-            { en: "`new MathUtils().double(5)`", np: "`new MathUtils().double(5)`", jp: "`new MathUtils().double(5)`" },
-            { en: "`MathUtils.prototype.double(5)`", np: "`MathUtils.prototype.double(5)`", jp: "`MathUtils.prototype.double(5)`" },
+            { en: "`20`", np: "`20`", jp: "`20`" },
+            { en: "`10`", np: "`10`", jp: "`10`" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`writable` was not specified, so it defaulted to `false` and the assignment was ignored.", np: "`writable` तोकिएको थिएन, त्यसैले default `false` भयो र assignment बेवास्ता भयो।", jp: "`writable` を指定しなかったので既定の `false` になり、代入は無視された。" },
+        },
+        {
+          question: { en: "Which descriptor is used for a computed property?", np: "गणना गरिने property का लागि कुन descriptor प्रयोग हुन्छ?", jp: "計算されるプロパティにはどのディスクリプタを使うか?" },
+          options: [
+            { en: "`get`", np: "`get`", jp: "`get`" },
+            { en: "`value`", np: "`value`", jp: "`value`" },
+            { en: "`writable`", np: "`writable`", jp: "`writable`" },
+            { en: "`enumerable`", np: "`enumerable`", jp: "`enumerable`" },
           ],
           correctIndex: 0,
-          explanation: { en: "Static methods live on the class object, not on its prototype.", np: "Static method class object मा हुन्छन्, यसको prototype मा होइन।", jp: "静的メソッドはクラスオブジェクトにあり、プロトタイプにはない。" },
+          explanation: { en: "`get` (with an optional `set`) makes an accessor property, which cannot also use `value`.", np: "`get` (वैकल्पिक `set` सहित) ले accessor property बनाउँछ, जसले `value` पनि प्रयोग गर्न सक्दैन।", jp: "`get`（必要なら `set` も）でアクセサプロパティになる。`value` とは併用できない。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "Are ES6 classes a fundamentally different mechanism from prototypes?", np: "ES6 classes prototypes भन्दा fundamentally फरक mechanism हो?", jp: "ES6クラスはプロトタイプとは根本的に異なる機構か？" },
-      options: [{ en: "No — classes compile to the same constructor+prototype mechanism", np: "होइन — classes उही constructor+prototype mechanism मा compile हुन्छन्", jp: "いいえ — クラスは同じコンストラクタ+プロトタイプ機構にコンパイルされる" }, { en: "Yes — classes use a completely separate inheritance model", np: "हो — classes ले पूर्ण फरक inheritance model प्रयोग गर्छन्", jp: "はい — クラスは完全に別の継承モデルを使う" }],
-      correctIndex: 0,
-      explanation: { en: "typeof a class is 'function', and instances relate to it via Object.getPrototypeOf, exactly like Day 8's pattern.", np: "Class को typeof 'function' हो, र instances Object.getPrototypeOf मार्फत सम्बन्धित हुन्छन्, Day 8 जस्तै।", jp: "クラスのtypeofは'function'であり、インスタンスはObject.getPrototypeOfを通じて関連する。Day 8のパターンと同じ。" },
-    },
-    {
-      question: { en: "What must you call before using `this` in a derived class's constructor?", np: "Derived class को constructor मा `this` प्रयोग गर्नुअघि के call गर्नुपर्छ?", jp: "派生クラスのコンストラクタでthisを使う前に何を呼ぶ必要がある？" },
-      options: [{ en: "Nothing — `this` is available immediately", np: "केही होइन — `this` तुरुन्तै available हुन्छ", jp: "何も — thisは即座に利用可能" }, { en: "`super(...)`", np: "`super(...)`", jp: "`super(...)`" }],
+      question: { en: "How does JavaScript find a property that isn't directly on an object?", np: "Object मा सिधै नभएको property JS ले कसरी भेट्छ?", jp: "オブジェクトに直接ないプロパティをJSはどうやって見つける？" },
+      options: [{ en: "It throws a ReferenceError immediately", np: "यो तुरुन्तै ReferenceError throw गर्छ", jp: "即座にReferenceErrorをスローする" }, { en: "It walks the prototype chain until found or reaching null", np: "यो भेटिने वा null सम्म पुगुन्जेल prototype chain हिँड्छ", jp: "見つかるかnullに達するまでプロトタイプチェーンを歩く" }],
       correctIndex: 1,
-      explanation: { en: "super() runs the parent constructor which sets up this; skipping it throws.", np: "super() ले parent constructor चलाउँछ जसले this सेटअप गर्छ; skip गर्दा throw हुन्छ।", jp: "super()は親コンストラクタを実行してthisを設定する。スキップするとスローする。" },
+      explanation: { en: "Prototype chain lookup is how JavaScript implements inheritance.", np: "Prototype chain lookup नै JS को inheritance implementation हो।", jp: "プロトタイプチェーンの検索がJavaScriptの継承の実装方法。" },
     },
     {
-      question: { en: "What does `super.speak()` do inside an overridden `speak()` method?", np: "Overridden `speak()` method भित्र `super.speak()` ले के गर्छ?", jp: "オーバーライドされたspeak()メソッド内でsuper.speak()は何をする？" },
-      options: [{ en: "Calls the parent class's implementation of speak()", np: "Parent class को speak() implementation call गर्छ", jp: "親クラスのspeak()の実装を呼ぶ" }, { en: "Recursively calls the current method forever", np: "Current method लाई recursively सधैं call गर्छ", jp: "現在のメソッドを再帰的に永遠に呼ぶ" }],
+      question: { en: "Do all instances of a constructor share the same prototype methods in memory?", np: "Constructor का सबै instances ले memory मा उही prototype methods share गर्छन्?", jp: "コンストラクタのすべてのインスタンスはメモリ内で同じプロトタイプメソッドを共有する？" },
+      options: [{ en: "Yes — one copy shared via the chain", np: "हो — chain मार्फत एउटा copy share हुन्छ", jp: "はい — チェーン経由で1つのコピーが共有される" }, { en: "No — each gets its own copy", np: "होइन — हरेकले आफ्नै copy पाउँछ", jp: "いいえ — 各インスタンスが独自のコピーを持つ" }],
       correctIndex: 0,
-      explanation: { en: "super.method() reaches one level up the prototype chain to the parent's version.", np: "super.method() ले prototype chain मा एक level माथि parent को version सम्म पुग्छ।", jp: "super.method()はプロトタイプチェーンを1段上って親のバージョンに到達する。" },
+      explanation: { en: "This sharing is exactly what makes the prototype pattern memory-efficient.", np: "यही sharing ले prototype pattern लाई memory-efficient बनाउँछ।", jp: "この共有がプロトタイプパターンをメモリ効率的にする理由。" },
     },
     {
-      question: { en: "Does `Dog extends Animal` make a `Dog` instance `instanceof Animal`?", np: "`Dog extends Animal` ले `Dog` instance `instanceof Animal` बनाउँछ?", jp: "`Dog extends Animal`はDogインスタンスをinstanceof Animalにする？" },
-      options: [{ en: "No — instanceof only checks the immediate class", np: "होइन — instanceof ले immediate class मात्र check गर्छ", jp: "いいえ — instanceofは直近のクラスのみを確認する" }, { en: "Yes", np: "हो", jp: "はい" }],
+      question: { en: "What is the modern, recommended way to inspect an object's prototype?", np: "Object को prototype inspect गर्ने modern, recommended तरिका के हो?", jp: "オブジェクトのプロトタイプを調べる現代的で推奨される方法は？" },
+      options: [{ en: "`obj.__proto__`", np: "`obj.__proto__`", jp: "`obj.__proto__`" }, { en: "`Object.getPrototypeOf(obj)`", np: "`Object.getPrototypeOf(obj)`", jp: "`Object.getPrototypeOf(obj)`" }],
       correctIndex: 1,
-      explanation: { en: "extends puts Animal.prototype into Dog's prototype chain, so instanceof recognises both.", np: "extends ले Animal.prototype लाई Dog को prototype chain मा राख्छ, त्यसैले instanceof ले दुवै चिन्छ।", jp: "extendsはAnimal.prototypeをDogのプロトタイプチェーンに入れるため、instanceofは両方を認識する。" },
+      explanation: { en: "__proto__ is legacy; Object.getPrototypeOf is the standard API.", np: "__proto__ legacy हो; Object.getPrototypeOf standard API हो।", jp: "__proto__はレガシー。Object.getPrototypeOfが標準API。" },
     },
     {
-      question: { en: "How do you access a property defined with a `get` keyword inside a class?", np: "Class भित्र `get` keyword सँग define गरिएको property कसरी access गर्ने?", jp: "クラス内でgetキーワードで定義されたプロパティはどうやってアクセスする？" },
-      options: [{ en: "Like a normal property, no parentheses", np: "Normal property जस्तै, parentheses बिना", jp: "通常のプロパティのように括弧なし" }, { en: "As a method call with parentheses", np: "Parentheses सहित method call को रूपमा", jp: "括弧付きのメソッド呼び出しとして" }],
+      question: { en: "Why must `Dog`'s constructor call `Animal.call(this, name)`?", np: "`Dog` को constructor ले `Animal.call(this, name)` किन call गर्नुपर्छ?", jp: "Dogのコンストラクタが`Animal.call(this, name)`を呼ぶ必要があるのはなぜ？" },
+      options: [{ en: "To run the parent's initialisation logic on the new instance", np: "नयाँ instance मा parent को initialisation logic चलाउन", jp: "新しいインスタンスに親の初期化ロジックを実行するため" }, { en: "It's unnecessary boilerplate with no effect", np: "यो असर नभएको अनावश्यक boilerplate हो", jp: "効果のない不要なボイラープレート" }],
       correctIndex: 0,
-      explanation: { en: "Getters are read transparently, exactly like Day 8's defineProperty-based getters.", np: "Getters transparently पढिन्छन्, Day 8 को defineProperty-based getters जस्तै।", jp: "getterは透過的に読まれる。Day 8のdefinePropertyベースのgetterと同じ。" },
+      explanation: { en: "The prototype chain shares methods only, not constructor initialisation logic.", np: "Prototype chain ले methods मात्र share गर्छ, constructor initialisation logic होइन।", jp: "プロトタイプチェーンはメソッドのみを共有し、コンストラクタの初期化ロジックは共有しない。" },
     },
     {
-      question: { en: "What happens if code outside a class tries to access a `#privateField`?", np: "Class बाहिरको code ले `#privateField` access गर्ने प्रयास गर्दा के हुन्छ?", jp: "クラス外のコードが`#privateField`にアクセスしようとするとどうなる？" },
-      options: [{ en: "It just returns undefined", np: "यसले केवल undefined फर्काउँछ", jp: "単にundefinedを返す" }, { en: "SyntaxError — enforced at the language level", np: "SyntaxError — language level मा enforce", jp: "SyntaxError — 言語レベルで強制される" }],
+      question: { en: "What's wrong with `Child.prototype = Parent.prototype` instead of `Object.create(Parent.prototype)`?", np: "`Object.create(Parent.prototype)` को सट्टा `Child.prototype = Parent.prototype` मा के गल्ती छ?", jp: "`Object.create(Parent.prototype)`の代わりに`Child.prototype = Parent.prototype`とすると何が問題？" },
+      options: [{ en: "Nothing, they're equivalent", np: "केही छैन, दुवै उस्तै", jp: "何も問題ない、同等" }, { en: "Child and Parent end up sharing the literal same prototype object", np: "Child र Parent ले उही literal prototype object share गर्छन्", jp: "ChildとParentが文字通り同じプロトタイプオブジェクトを共有する" }],
       correctIndex: 1,
-      explanation: { en: "Private fields are a real language feature, not a naming convention like _field.", np: "Private fields real language feature हो, _field जस्तो naming convention होइन।", jp: "プライベートフィールドは_fieldのような命名規則ではなく本物の言語機能。" },
+      explanation: { en: "Object.create makes a new linked object; direct assignment makes them literally the same object, so changes bleed both ways.", np: "Object.create ले नयाँ linked object बनाउँछ; direct assignment ले उही object बनाउँछ, त्यसैले परिवर्तन दुवैतिर फैलिन्छ।", jp: "Object.createは新しいリンクされたオブジェクトを作る。直接代入は文字通り同じオブジェクトにするため、変更が両方に影響する。" },
     },
     {
-      question: { en: "How do you call a static method `Widget.build()`?", np: "Static method `Widget.build()` कसरी call गर्ने?", jp: "静的メソッド`Widget.build()`はどうやって呼ぶ？" },
-      options: [{ en: "Directly on the class: `Widget.build()`", np: "सिधै class मा: `Widget.build()`", jp: "クラスで直接: `Widget.build()`" }, { en: "On an instance: `new Widget().build()`", np: "Instance मा: `new Widget().build()`", jp: "インスタンスで: `new Widget().build()`" }],
+      question: { en: "What does `Object.create(proto)` do without any constructor involved?", np: "Constructor बिना `Object.create(proto)` ले के गर्छ?", jp: "コンストラクタなしで`Object.create(proto)`は何をする？" },
+      options: [{ en: "Creates a new object whose prototype is exactly `proto`", np: "`proto` लाई ठ्याक्कै prototype बनाई नयाँ object बनाउँछ", jp: "protoをまさにプロトタイプとする新しいオブジェクトを作る" }, { en: "Copies all properties from proto into a new object", np: "proto का सबै properties नयाँ object मा copy गर्छ", jp: "protoのすべてのプロパティを新しいオブジェクトにコピーする" }],
       correctIndex: 0,
-      explanation: { en: "Static methods live on the class itself, not on instances.", np: "Static methods class को नै हो, instances को होइन।", jp: "staticメソッドはインスタンスではなくクラス自体にある。" },
+      explanation: { en: "Object.create links, it doesn't copy — the new object's prototype IS the passed-in object.", np: "Object.create ले link गर्छ, copy गर्दैन — नयाँ object को prototype नै pass गरिएको object हो।", jp: "Object.createはリンクするだけでコピーはしない。新しいオブジェクトのプロトタイプは渡されたオブジェクトそのもの。" },
     },
     {
-      question: { en: "Are classes hoisted the same way function declarations are?", np: "Classes function declarations जस्तै hoist हुन्छन्?", jp: "クラスは関数宣言のようにホイストされる？" },
-      options: [{ en: "Yes, fully hoisted and usable before declaration", np: "हो, पूर्ण hoisted र declaration अघि प्रयोग योग्य", jp: "はい、完全にホイストされ宣言前でも使える" }, { en: "No — they remain in the Temporal Dead Zone until declared", np: "होइन — declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — 宣言されるまでTemporal Dead Zoneに留まる" }],
+      question: { en: "What three flags does a property descriptor control besides its value?", np: "Value बाहेक property descriptor ले कुन तीन flags control गर्छ?", jp: "値以外にプロパティディスクリプタが制御する3つのフラグは？" },
+      options: [{ en: "static, private, async", np: "static, private, async", jp: "static、private、async" }, { en: "writable, enumerable, configurable", np: "writable, enumerable, configurable", jp: "writable、enumerable、configurable" }],
       correctIndex: 1,
-      explanation: { en: "Classes behave like let/const for hoisting, unlike function declarations.", np: "Function declarations भन्दा फरक, hoisting का लागि classes let/const जस्तै behave गर्छन्।", jp: "関数宣言とは異なり、クラスはホイスティングの観点でlet/constのように動作する。" },
+      explanation: { en: "These control reassignment, enumeration visibility, and whether the descriptor can be changed later.", np: "यीले reassignment, enumeration visibility, र descriptor बदलिने अनुमति control गर्छ।", jp: "これらは再割り当て・列挙可視性・ディスクリプタを後で変更できるかを制御する。" },
     },
     {
-      question: { en: "What is a typical use case for a static method on a class?", np: "Class मा static method को typical use case के हो?", jp: "クラスの静的メソッドの典型的な使用例は？" },
-      options: [{ en: "A factory function related to the class as a whole, like `BankAccount.createSavingsAccount()`", np: "पूरै class सँग सम्बन्धित factory function, जस्तै `BankAccount.createSavingsAccount()`", jp: "`BankAccount.createSavingsAccount()`のようなクラス全体に関連するファクトリ関数" }, { en: "Storing per-instance private state", np: "Per-instance private state store गर्नु", jp: "インスタンスごとのプライベート状態を保存すること" }],
+      question: { en: "Does `enumerable: false` prevent direct access to a property by name?", np: "`enumerable: false` ले नामले property मा direct access रोक्छ?", jp: "`enumerable: false`は名前によるプロパティへの直接アクセスを防ぐ？" },
+      options: [{ en: "No — it only hides it from Object.keys()/for...in", np: "होइन — यसले केवल Object.keys()/for...in बाट hide गर्छ", jp: "いいえ — Object.keys()/for...inから隠すだけ" }, { en: "Yes — it blocks all access", np: "हो — यसले सबै access block गर्छ", jp: "はい — すべてのアクセスをブロックする" }],
       correctIndex: 0,
-      explanation: { en: "Static methods are for class-level utilities and factories, not per-instance state (that's what private fields are for).", np: "Static methods class-level utilities र factories का लागि हो, per-instance state का लागि होइन (त्यो private fields को काम हो)।", jp: "staticメソッドはクラスレベルのユーティリティやファクトリのためであり、インスタンスごとの状態のためではない（それはプライベートフィールドの役割）。" },
+      explanation: { en: "enumerable only affects visibility during enumeration; the property is still directly readable/writable.", np: "enumerable ले enumeration बेलाको visibility मात्र असर गर्छ; property अझै directly readable/writable छ।", jp: "enumerableは列挙時の可視性にのみ影響する。プロパティは直接読み書き可能なままである。" },
+    },
+    {
+      question: { en: "How do you read a property defined via a `get()` descriptor?", np: "`get()` descriptor सँग define गरिएको property कसरी पढ्ने?", jp: "`get()`ディスクリプタで定義されたプロパティはどうやって読む？" },
+      options: [{ en: "As a method call: `obj.fullName()`", np: "Method call को रूपमा: `obj.fullName()`", jp: "メソッド呼び出しとして: `obj.fullName()`" }, { en: "Like a normal property, no parentheses: `obj.fullName`", np: "Normal property जस्तै, parentheses बिना: `obj.fullName`", jp: "通常のプロパティのように括弧なし: `obj.fullName`" }],
+      correctIndex: 1,
+      explanation: { en: "Getters run transparently on property access — no call syntax is needed or valid.", np: "Getters property access मा transparently चल्छन् — call syntax चाहिँदैन।", jp: "getterはプロパティアクセス時に透過的に実行される。呼び出し構文は不要。" },
     },
   ],
 };

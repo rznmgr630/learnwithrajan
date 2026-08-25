@@ -2,427 +2,491 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_19_LESSONS: JsLessonDay = {
   day: 19,
-  title: { en: "Generators, iterators & async generators", np: "Generators, iterators र async generators", jp: "ジェネレータ・イテレータ" },
+  title: { en: "Advanced promise patterns — retry, timeout & concurrency", np: "Advanced Promise patterns", jp: "Promise応用パターン" },
   totalMinutes: 27,
-  difficulty: { en: "Advanced", np: "Advanced", jp: "上級" },
+  difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
   lessons: [
     {
-      id: "generator-functions",
-      title: { en: "Generator Functions", np: "Generator Functions", jp: "ジェネレータ関数" },
+      id: "retry-backoff",
+      title: { en: "Retry with Exponential Backoff", np: "Exponential Backoff सहित Retry", jp: "指数バックオフによるリトライ" },
       durationMinutes: 9,
       explanation: {
-        en: "A generator function is declared with `function*` (a `*` right after `function`), and calling it does not run any code inside — it immediately returns a <b>generator object</b>, which is both an iterator and an iterable. Only when you call `.next()` on that generator object does execution begin, running until it hits a `yield` expression, at which point it pauses and hands back `{ value, done: false }` — the function's local state (variables, position) is frozen in place. Calling `.next()` again resumes execution exactly where it left off, continuing until the next `yield` or until the function returns, which produces a final `{ value: returnValue, done: true }`. This pause-and-resume ability is unique to generators; ordinary functions always run to completion in one go.\n\nBecause a generator produces values one at a time on demand, it's perfect for representing sequences that are lazy — computed only as far as someone actually asks. `for...of` and the spread operator (`[...gen()]`) both drive a generator automatically, calling `.next()` repeatedly until `done` is `true`. This lets you write an infinite generator like `naturals()` with a `while (true)` loop inside — it never actually finishes, but that's fine, because nothing forces it to run further than requested; a helper like `take(n, iterable)` can pull just the first `n` values and stop. Generators also support two-way communication: whatever value you pass into `next(value)` becomes the result of the `yield` expression that was paused, letting a caller feed data back into the generator's own logic (useful for interactive step-by-step computations like a `calculator()` generator).",
-        np: "Generator function लाई `function*` (function पछि नै `*`) ले declare गरिन्छ, र यसलाई call गर्दा भित्रको कुनै code चल्दैन — बरु immediately एउटा <b>generator object</b> फर्काउँछ, जो iterator र iterable दुवै हो। त्यो generator object मा `.next()` call गरेपछि मात्र execution सुरु हुन्छ, जो `yield` expression भेट्टाउँदासम्म चल्छ, त्यसपछि pause भई `{ value, done: false }` फर्काउँछ — function को local state (variables, position) त्यहीँ freeze हुन्छ। फेरि `.next()` call गर्दा execution छोडेकै ठाउँबाट resume हुन्छ, अर्को `yield` सम्म वा function return नभएसम्म चल्छ, जसले final `{ value: returnValue, done: true }` produce गर्छ। यो pause-and-resume क्षमता generators मा मात्र हुन्छ; normal functions सधैं एकै पटकमा पूरा चल्छन्।\n\nGenerator ले values एक-एक गरी demand मा produce गर्ने भएकाले, यो lazy sequences (जति चाहियो त्यति मात्र compute हुने) represent गर्न उत्तम हुन्छ। `for...of` र spread operator (`[...gen()]`) दुवैले generator लाई automatic रूपमा drive गर्छन्, `done` `true` नभएसम्म repeatedly `.next()` call गर्छन्। यसैले `naturals()` जस्तो infinite generator भित्र `while (true)` loop राखी लेख्न सकिन्छ — यो कहिल्यै पूरा हुँदैन, तर त्यो ठीकै छ, किनकि माग नभएसम्म यो अगाडि चल्न बाध्य हुँदैन; `take(n, iterable)` जस्तो helper ले पहिलो `n` values मात्र लिएर रोकिन सक्छ। Generators ले two-way communication पनि support गर्छन्: `next(value)` मा pass गरेको जुनसुकै value रोकिएको `yield` expression को result बन्छ, जसले caller लाई generator को आफ्नै logic मा data फिर्ता feed गर्न दिन्छ (interactive step-by-step computations जस्तै `calculator()` generator का लागि उपयोगी)।",
-        jp: "ジェネレータ関数は`function*`（functionの直後に`*`）で宣言し、これを呼び出しても内部のコードはすぐには実行されない — 代わりに即座に<b>ジェネレータオブジェクト</b>を返す。これはイテレータでありイテラブルでもある。そのジェネレータオブジェクトで`.next()`を呼んで初めて実行が始まり、`yield`式に達するまで進み、そこで一時停止して`{ value, done: false }`を返す — 関数のローカルな状態（変数、位置）はその場で凍結される。再度`.next()`を呼ぶと、止まった場所から実行が再開され、次の`yield`か関数がreturnするまで続き、最終的に`{ value: returnValue, done: true }`を生成する。この一時停止・再開できる能力はジェネレータ特有であり、通常の関数は常に一度で完了まで実行される。\n\nジェネレータは値を一つずつオンデマンドで生成するため、遅延シーケンス（実際に要求された分だけ計算される）を表現するのに最適。`for...of`とスプレッド演算子（`[...gen()]`）はどちらもジェネレータを自動的に駆動し、`done`が`true`になるまで`.next()`を繰り返し呼ぶ。これにより`naturals()`のような無限ジェネレータを内部に`while (true)`ループで書くことができる — 決して完了しないが、要求された分しか実行されないので問題ない。`take(n, iterable)`のようなヘルパーで最初の`n`個だけを取り出して止めることができる。ジェネレータは双方向通信もサポートする — `next(value)`に渡した値が、一時停止していた`yield`式の結果になり、呼び出し側がジェネレータ自身のロジックにデータを戻すことができる（`calculator()`ジェネレータのような対話的な段階的計算に便利）。",
+        en: "Sometimes a request fails because of a temporary problem, such as a network issue or a server being overloaded. In these cases, we can <b>try the request again</b>.\n\nBut simply retrying again and again is dangerous. If we retry forever, one failed request could keep hitting an already-problematic server and make things worse.\n\n## 1. Limit the number of retries\n\nThe first thing we should do is set a `maxAttempts`.\n\nFor example:\n\n• Try the request\n• If it fails, try again\n• Keep trying until we reach `maxAttempts`\n• If it still fails, throw the error\n\nThis prevents our application from retrying forever.\n\n## 2. Wait between retries\n\nWe shouldn't retry immediately after a failure.\n\nInstead, we use <b>exponential backoff</b>. This means that we wait longer after each failed attempt.\n\nFor example:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nA simple formula is:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\nWe should also set a `maxDelayMs` so the waiting time doesn't become too long.\n\n## 3. Add jitter\n\nImagine 1,000 users make requests at the same time and all of them fail.\n\nIf everyone follows exactly the same retry schedule:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nThe server could suddenly receive thousands of requests at the same time. This is called a <b>retry storm</b>.\n\nTo avoid this, we add a small random amount of time called <b>jitter</b>.\n\nFor example:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nNow the requests are spread out instead of all happening at exactly the same moment.\n\n## 4. Don't retry every error\n\nSome errors are temporary, while others will fail every time.\n\nUsually, we should retry things like:\n\n• `5xx` server errors\n• Network errors\n• `429 Too Many Requests`\n\nBut we generally shouldn't retry normal `4xx` errors.\n\nFor example:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nIf the request is invalid or the user isn't authorized, sending the exact same request again probably won't fix anything.\n\nThat's why we can use a function like:\n\n```javascript\nshouldRetry(error)\n```\n\nIt decides whether a particular error is worth retrying.\n\n## 5. Be careful with POST requests\n\nThere's another important problem with retries.\n\nImagine we send:\n\n```http\nPOST /users\n```\n\nThe server successfully creates the user, but the response gets lost because of a network problem.\n\nOur application doesn't know that the user was already created, so it retries the request.\n\nNow the server might create <b>another user</b>.\n\nFor operations that aren't naturally safe to repeat, such as creating a record with `POST`, we should use an <b>idempotency key</b>.\n\nThe key allows the server to recognize:\n\n> \"I've already processed this request, so don't create it again.\"",
+        np: "कहिलेकाहीँ request अस्थायी समस्याको कारण fail हुन्छ, जस्तै network issue वा server धेरै load भएको। यस्तो अवस्थामा, हामी <b>request फेरि try गर्न सक्छौं</b>।\n\nतर बारम्बार retry गर्दै जानु खतरनाक हुन्छ। यदि हामी सधैंभरि retry गर्यौं भने, एउटै fail भएको request ले पहिले नै समस्यामा परेको server लाई हानिरहन्छ र स्थिति अझ बिग्रिन्छ।\n\n## 1. Retry को संख्या सीमित गर्नुहोस्\n\nपहिलो काम `maxAttempts` सेट गर्नु हो।\n\nउदाहरणका लागि:\n\n• Request try गर्नुहोस्\n• Fail भयो भने फेरि try गर्नुहोस्\n• `maxAttempts` पुग्ने बेलासम्म try गरिरहनुहोस्\n• अझै fail भयो भने error throw गर्नुहोस्\n\nयसले हाम्रो application लाई सधैंभरि retry गर्नबाट रोक्छ।\n\n## 2. Retry बीचमा wait गर्नुहोस्\n\nFail भएको लगत्तै retry गर्नु हुँदैन।\n\nबरु, हामी <b>exponential backoff</b> प्रयोग गर्छौं। यसको अर्थ हरेक fail भएको attempt पछि हामी अझ लामो समय wait गर्छौं।\n\nउदाहरणका लागि:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nसरल formula यो हो:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\nहामीले `maxDelayMs` पनि सेट गर्नुपर्छ ताकि wait गर्ने समय धेरै लामो नहोस्।\n\n## 3. Jitter थप्नुहोस्\n\nकल्पना गर्नुहोस् 1,000 users एकै समयमा request गर्छन् र सबै fail हुन्छन्।\n\nयदि सबैले ठ्याक्कै उही retry schedule पछ्याउँछन् भने:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nServer ले अचानक हजारौं request एकै समयमा पाउन सक्छ। यसलाई <b>retry storm</b> भनिन्छ।\n\nयसलाई बच्न, हामी <b>jitter</b> भनिने सानो random समय थप्छौं।\n\nउदाहरणका लागि:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nअब request हरू ठ्याक्कै एउटै क्षणमा नभई फैलिएर जान्छन्।\n\n## 4. हरेक error retry नगर्नुहोस्\n\nकेही error अस्थायी हुन्छन्, केही हरेक पटक fail हुन्छन्।\n\nसामान्यतया, हामीले यस्ता चीज retry गर्नुपर्छ:\n\n• `5xx` server errors\n• Network errors\n• `429 Too Many Requests`\n\nतर सामान्य `4xx` errors लाई retry गर्नु हुँदैन।\n\nउदाहरणका लागि:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nयदि request invalid छ वा user authorized छैन भने, ठ्याक्कै उही request फेरि पठाउँदा केही ठीक हुँदैन।\n\nत्यसैले हामी यस्तो function प्रयोग गर्न सक्छौं:\n\n```javascript\nshouldRetry(error)\n```\n\nयसले कुन error retry गर्न लायक छ भन्ने निर्णय गर्छ।\n\n## 5. POST request मा होसियार हुनुहोस्\n\nRetry सँग अझ एउटा महत्वपूर्ण समस्या छ।\n\nकल्पना गर्नुहोस् हामी पठाउँछौं:\n\n```http\nPOST /users\n```\n\nServer ले user सफलतापूर्वक बनाउँछ, तर network समस्याको कारण response हराउँछ।\n\nहाम्रो application लाई user पहिले नै बनिसकेको थाहा हुँदैन, त्यसैले यो request retry गर्छ।\n\nअब server ले <b>अर्को user</b> बनाउन सक्छ।\n\nदोहोर्याउन स्वभाविक रूपमा सुरक्षित नभएका operations, जस्तै `POST` ले record बनाउनु, को लागि हामीले <b>idempotency key</b> प्रयोग गर्नुपर्छ।\n\nKey ले server लाई चिन्न दिन्छ:\n\n> \"मैले यो request पहिले नै process गरिसकेको छु, त्यसैले फेरि नबनाउ।\"",
+        jp: "ネットワークの問題やサーバーの過負荷など、一時的な原因でリクエストが失敗することがあります。そのような場合は<b>リクエストをもう一度試す</b>ことができます。\n\nしかし、ただ何度もリトライを繰り返すのは危険です。永遠にリトライすると、1つの失敗したリクエストがすでに問題を抱えたサーバーを叩き続け、状況をさらに悪化させます。\n\n## 1. リトライ回数を制限する\n\nまず最初にすべきことは `maxAttempts` を設定することです。\n\n例:\n\n• リクエストを試す\n• 失敗したらもう一度試す\n• `maxAttempts` に達するまで試し続ける\n• それでも失敗したらエラーをスローする\n\nこれでアプリケーションが永遠にリトライすることを防げます。\n\n## 2. リトライの間に待つ\n\n失敗した直後にすぐリトライすべきではありません。\n\n代わりに<b>指数バックオフ</b>を使います。これは失敗するたびに待ち時間を長くしていくという意味です。\n\n例:\n\n```text\n1st retry → wait 1 second\n2nd retry → wait 2 seconds\n3rd retry → wait 4 seconds\n4th retry → wait 8 seconds\n```\n\nシンプルな式は次のとおりです:\n\n```text\nbaseDelayMs * 2 ** attempt\n```\n\n待ち時間が長くなりすぎないように `maxDelayMs` も設定すべきです。\n\n## 3. ジッターを加える\n\n1,000人のユーザーが同時にリクエストして、その全部が失敗したと想像してください。\n\n全員がまったく同じリトライスケジュールに従うと:\n\n```text\n1 second → everyone retries\n2 seconds → everyone retries\n4 seconds → everyone retries\n```\n\nサーバーは突然、何千ものリクエストを同時に受け取ることになります。これを<b>リトライストーム</b>と呼びます。\n\nこれを避けるために、<b>ジッター</b>と呼ばれる少量のランダムな時間を加えます。\n\n例:\n\n```text\nClient A → waits 1.2 seconds\nClient B → waits 1.7 seconds\nClient C → waits 1.4 seconds\n```\n\nこれでリクエストはまったく同じ瞬間に集まらず、分散されます。\n\n## 4. すべてのエラーをリトライしない\n\n一時的なエラーもあれば、毎回必ず失敗するエラーもあります。\n\n通常、次のようなものはリトライすべきです:\n\n• `5xx` サーバーエラー\n• ネットワークエラー\n• `429 Too Many Requests`\n\nしかし、通常の `4xx` エラーはリトライすべきではありません。\n\n例:\n\n```text\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n```\n\nリクエストが不正であったり、ユーザーに権限がない場合、まったく同じリクエストをもう一度送っても何も解決しません。\n\nそのため、次のような関数を使えます:\n\n```javascript\nshouldRetry(error)\n```\n\nこれは、そのエラーがリトライする価値があるかどうかを判断します。\n\n## 5. POSTリクエストには注意する\n\nリトライにはもう1つ重要な問題があります。\n\n次を送ると想像してください:\n\n```http\nPOST /users\n```\n\nサーバーはユーザーの作成に成功しますが、ネットワークの問題でレスポンスが失われます。\n\nアプリケーションはユーザーがすでに作成されたことを知らないため、リクエストをリトライします。\n\nその結果、サーバーは<b>もう1人のユーザー</b>を作ってしまうかもしれません。\n\n`POST` でレコードを作成するなど、繰り返しても安全とは言えない操作には<b>冪等性キー</b>を使うべきです。\n\nこのキーによってサーバーは次のように認識できます:\n\n> 「このリクエストはすでに処理済みなので、もう作らない。」",
       },
-      diagram: `function* counter() {
-  yield 1;    ┐
-  yield 2;    │ paused here between calls
-  yield 3;    ┘
-  return "done";
-}
-
-const gen = counter();       ← creates generator object, NO code runs yet
-
-gen.next()  → { value: 1, done: false }   ─┐
-gen.next()  → { value: 2, done: false }    │ resumes exactly where it paused
-gen.next()  → { value: 3, done: false }   ─┘
-gen.next()  → { value: "done", done: true }  ← final return, done flips to true
-gen.next()  → { value: undefined, done: true } ← nothing left
-
-Infinite + lazy:
-naturals()  while(true){ yield n++ }  →  1, 2, 3, 4, 5, ...  (never runs ahead of demand)
-take(3, naturals())                   →  [1, 2, 3]            (pulls only what's needed)`,
+      diagram: `Request
+   ↓
+Did it succeed?
+   ↓
+ Yes → Return result
+   ↓
+ No
+   ↓
+Should we retry?
+   ↓
+ No → Throw error
+   ↓
+ Yes
+   ↓
+Wait using exponential backoff + jitter
+   ↓
+Try again
+   ↓
+Reached max attempts?
+   ↓
+ Yes → Throw error`,
       codeExample: {
-        title: { en: "Generator functions, lazy infinite sequences and two-way values", np: "Generator functions, lazy infinite sequences र two-way values", jp: "ジェネレータ関数・遅延無限シーケンス・双方向の値" },
-        code: `// ── Defining and running a generator ──────────────────────────────
-function* countdown(from) {
-  console.log("generator created, but nothing runs until .next()");
-  while (from > 0) {
-    yield from;   // pause here, hand back the current count
-    from--;
+        title: { en: "Retrying transient failures with exponential backoff + jitter", np: "Exponential backoff + jitter सहित transient failures retry गर्नु", jp: "指数バックオフ+ジッターで一時的な失敗をリトライ" },
+        code: `// ── Attempt limit — stop eventually, don't hammer forever ──────────
+async function retry(fn, maxAttempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      console.log(\`Attempt \${attempt}/\${maxAttempts} failed: \${err.message}\`);
+    }
   }
-  return "liftoff!";
+  throw lastError; // every attempt failed — let the caller handle it
 }
 
-const gen = countdown(3);   // no console.log yet — just creates the generator object
-
-gen.next();  // logs the setup message, then { value: 3, done: false }
-gen.next();  // { value: 2, done: false }
-gen.next();  // { value: 1, done: false }
-gen.next();  // { value: "liftoff!", done: true }
-gen.next();  // { value: undefined, done: true } — nothing left to give
-
-// ── for...of and spread drive a generator automatically ───────────
-for (const n of countdown(3)) {
-  console.log(n);          // 3, 2, 1 (the "liftoff!" return value is ignored)
+// ── Exponential backoff + jitter + a "should I even retry?" gate ───
+function isTransient(err) {
+  if (err.name === "TypeError") return true;   // network failure, fetch never landed
+  if (err.status === 429) return true;          // rate limited — back off and try again
+  if (err.status >= 500) return true;           // server-side, may be temporary
+  return false;                                  // 4xx client errors — retrying won't help
 }
 
-const steps = [...countdown(3)];   // [3, 2, 1]
+async function retryWithBackoff(fn, {
+  maxAttempts = 4,
+  baseDelayMs = 1000,
+  maxDelayMs  = 30_000,
+  shouldRetry = isTransient,
+} = {}) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isLastAttempt = attempt === maxAttempts;
+      if (isLastAttempt || !shouldRetry(err)) throw err;
 
-// ── Infinite generators are safe because they're lazy ──────────────
-function* naturals(start = 1) {
-  let n = start;
-  while (true) {           // looks dangerous, but it's fine — nothing forces it forward
-    yield n++;
-  }
-}
+      const exponential = baseDelayMs * 2 ** (attempt - 1);   // 1s, 2s, 4s, 8s...
+      const jitter       = Math.random() * baseDelayMs;        // avoid a synchronized retry storm
+      const delay        = Math.min(exponential + jitter, maxDelayMs);
 
-function take(count, iterable) {
-  const result = [];
-  for (const value of iterable) {
-    result.push(value);
-    if (result.length === count) break;   // stop pulling — the generator just pauses forever
-  }
-  return result;
-}
-
-take(5, naturals());        // [1, 2, 3, 4, 5] — only 5 values were ever computed
-take(3, naturals(100));     // [100, 101, 102]
-
-// ── Two-way communication: next(value) feeds data back in ──────────
-function* calculator() {
-  const a = Number(yield "Enter first number:");
-  const b = Number(yield "Enter second number:");
-  return a + b;
-}
-
-const calc = calculator();
-calc.next();        // { value: "Enter first number:", done: false }
-calc.next("10");     // a = "10" — the yield expression resolves to "10"
-calc.next("20");     // b = "20" — { value: 30, done: true }`,
-      },
-      keyTakeaways: [
-        { en: "Calling a generator function doesn't run any code — it returns a generator object, and execution only begins (and pauses at each `yield`) once `.next()` is called.", np: "Generator function call गर्दा कुनै code चल्दैन — यसले generator object फर्काउँछ, र `.next()` call भएपछि मात्र execution सुरु हुन्छ (र हरेक `yield` मा pause हुन्छ)।", jp: "ジェネレータ関数を呼び出してもコードは実行されない — ジェネレータオブジェクトを返し、`.next()`が呼ばれて初めて実行が始まる（各`yield`で一時停止する）。" },
-        { en: "Generators are lazy, so an infinite generator like `naturals()` is safe to write — it only ever computes as many values as something like `for...of`, spread, or a `take()` helper actually pulls.", np: "Generators lazy हुने भएकाले, `naturals()` जस्तो infinite generator लेख्नु safe छ — `for...of`, spread, वा `take()` जस्तो helper ले जति values actually pull गर्छ त्यति मात्र compute हुन्छ।", jp: "ジェネレータは遅延評価されるため、`naturals()`のような無限ジェネレータを書いても安全 — `for...of`・スプレッド・`take()`のようなヘルパーが実際に取り出した分だけ計算される。" },
-        { en: "Passing a value into `next(value)` becomes the result of the paused `yield` expression, giving two-way communication between the caller and the generator's own code.", np: "`next(value)` मा pass गरेको value रोकिएको `yield` expression को result बन्छ, जसले caller र generator को आफ्नै code बीच two-way communication दिन्छ।", jp: "`next(value)`に渡した値は一時停止していた`yield`式の結果になり、呼び出し側とジェネレータ自身のコードの間で双方向通信ができる。" },
-      ],
-      commonMistakes: [
-        { en: "Expecting a generator function call like `counter()` to run its body immediately, forgetting that nothing executes until the first `.next()` call.", np: "`counter()` जस्तो generator function call ले immediately body चलाउँछ भन्ने आशा गर्नु, पहिलो `.next()` call नभएसम्म केही execute नहुने कुरा बिर्सनु।", jp: "`counter()`のようなジェネレータ関数呼び出しがすぐに本体を実行すると思い込み、最初の`.next()`呼び出しまで何も実行されないことを忘れること。" },
-        { en: "Writing an infinite generator with `while (true)` but consuming it with a plain `for...of` loop and no `break`, causing the loop to run forever instead of using `take()` or an explicit exit condition.", np: "`while (true)` सँग infinite generator लेखेर plain `for...of` loop ले (कुनै `break` बिना) consume गर्नु, जसले loop लाई `take()` वा explicit exit condition प्रयोग नगरी सधैंभरि चलाउँछ।", jp: "`while (true)`で無限ジェネレータを書いたのに、`break`なしの通常の`for...of`ループで消費し、`take()`や明示的な終了条件を使わずループを永遠に走らせてしまうこと。" },
-        { en: "Forgetting that the value returned by a generator's `return` statement shows up once, alongside `done: true`, and is silently ignored by `for...of` and spread — only explicit `.next()` calls see it.", np: "Generator को `return` statement ले फर्काउने value एक पटक मात्र `done: true` सँगै देखिन्छ, र `for...of`/spread ले silently ignore गर्छ भन्ने बिर्सनु — explicit `.next()` calls ले मात्र त्यो देख्छन्।", jp: "ジェネレータの`return`文が返す値は`done: true`と共に一度だけ現れ、`for...of`やスプレッドには黙って無視されることを忘れること — 明示的な`.next()`呼び出しだけがそれを見られる。" },
-      ],
-      quiz: [
-        {
-          question: { en: "What does calling a generator function (e.g. `counter()`) do?", np: "`counter()` जस्तो generator function call गर्दा के हुन्छ?", jp: "`counter()`のようなジェネレータ関数を呼び出すと何が起きる？" },
-          options: [
-            { en: "Returns a generator object immediately, without running any code inside", np: "भित्रको कुनै code नचलाई immediately generator object फर्काउँछ", jp: "内部のコードを何も実行せず、即座にジェネレータオブジェクトを返す" },
-            { en: "Runs the function body immediately, like a normal function call", np: "normal function call जस्तै immediately function body चलाउँछ", jp: "通常の関数呼び出しのように、すぐに関数本体を実行する" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Calling a generator function only creates the generator object; the body doesn't start executing until `.next()` is called for the first time.", np: "Generator function call गर्दा केवल generator object बन्छ; पहिलो पटक `.next()` call नभएसम्म body execute हुन थाल्दैन।", jp: "ジェネレータ関数を呼び出すとジェネレータオブジェクトが作られるだけ。最初に`.next()`が呼ばれるまで本体の実行は始まらない。" },
-        },
-        {
-          question: { en: "Why is it safe to write an infinite generator like `naturals()` with a `while (true)` loop inside?", np: "`naturals()` जस्तो infinite generator भित्र `while (true)` loop राखेर लेख्नु किन safe छ?", jp: "`naturals()`のような無限ジェネレータを`while (true)`ループで書いても安全なのはなぜ？" },
-          options: [
-            { en: "Because it only computes a new value each time `.next()` is actually called", np: "किनकि यसले actual `.next()` call हुँदा मात्र नयाँ value compute गर्छ", jp: "実際に`.next()`が呼ばれたときだけ新しい値を計算するから" },
-            { en: "Because JavaScript automatically limits generators to a fixed number of iterations", np: "किनकि JavaScript ले generators लाई fixed number of iterations मा automatic रूपमा limit गर्छ", jp: "JavaScriptがジェネレータの反復回数を自動的に制限するから" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "A generator pauses at each `yield`; nothing runs further until something (for...of, spread, take()) asks for the next value, so an infinite loop never actually blocks anything.", np: "Generator हरेक `yield` मा pause हुन्छ; कोहीले (for...of, spread, take()) अर्को value नमागेसम्म अगाडि चल्दैन, त्यसैले infinite loop ले कहिल्यै वास्तवमा block गर्दैन।", jp: "ジェネレータは各`yield`で一時停止する。for...of・スプレッド・take()などが次の値を要求するまで先へは進まないため、無限ループが実際に何かをブロックすることはない。" },
-        },
-        {
-          question: { en: "In the `calculator()` generator, what does the value passed to `calc.next(10)` become?", np: "`calculator()` generator मा, `calc.next(10)` मा pass गरेको value के बन्छ?", jp: "`calculator()`ジェネレータで、`calc.next(10)`に渡した値は何になる？" },
-          options: [
-            { en: "The result of the `yield` expression that was paused, waiting to be assigned", np: "assign हुन कुर्दै रोकिएको `yield` expression को result", jp: "代入されるのを待って一時停止していた`yield`式の結果" },
-            { en: "The next value that will be yielded back out immediately", np: "तुरुन्तै फेरि yield भई बाहिर आउने अर्को value", jp: "すぐに再度yieldされて外に出る次の値" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "next(value) resumes the paused yield expression with that value as its result — it flows INTO the generator's own code, it isn't yielded back out.", np: "next(value) ले रोकिएको yield expression लाई त्यो value लाई result को रूपमा दिएर resume गर्छ — यो generator को आफ्नै code भित्र जान्छ, फेरि बाहिर yield हुँदैन।", jp: "next(value)は一時停止していたyield式をその値を結果として再開させる — ジェネレータ自身のコードの中に流れ込むのであり、再びyieldされて外に出るわけではない。" },
-        },
-      ],
-    },
-    {
-      id: "iterators-protocol",
-      title: { en: "Iterators & the Iterator Protocol", np: "Iterators र Iterator Protocol", jp: "イテレータとイテレータプロトコル" },
-      durationMinutes: 9,
-      explanation: {
-        en: "An object is <b>iterable</b> if it has a method named `[Symbol.iterator]()` that returns an <b>iterator</b> — and an iterator, in turn, is simply any object with a `next()` method that returns `{ value, done }` on every call. That's the entire protocol: two small, well-defined shapes that any object can implement, with no inheritance or special base class required. `for...of`, the spread operator, array/object destructuring, and `Promise.all` all rely on this same protocol internally — they call `[Symbol.iterator]()` once to get an iterator, then call `.next()` repeatedly until `done` is `true`, using each `value` along the way.\n\nArrays, strings, `Map`s, `Set`s, and generator objects are all built-in iterables — each already has a working `[Symbol.iterator]()`, which is why `for...of` works on all of them without any setup. You can make your own class iterable in two ways. The manual way is to implement `[Symbol.iterator]()` yourself, returning a plain object literal with its own `next()` method that tracks state via closures — verbose, but it works in any environment. The much shorter way is to make `[Symbol.iterator]()` itself a <b>generator method</b> (written as `*[Symbol.iterator]() { ... }`), since a generator object already satisfies the iterator shape automatically — you just `yield` the values you want and the protocol is handled for you.",
-        np: "कुनै object <b>iterable</b> हुन्छ यदि यसमा `[Symbol.iterator]()` नाम को method छ जसले <b>iterator</b> फर्काउँछ — र iterator भनेको सिधै हरेक call मा `{ value, done }` फर्काउने `next()` method भएको कुनै पनि object हो। यही नै पूरा protocol हो: दुई सानो, राम्रोसँग-defined shapes जुन कुनै पनि object ले implement गर्न सक्छ, कुनै inheritance वा special base class चाहिँदैन। `for...of`, spread operator, array/object destructuring, र `Promise.all` सबैले भित्रभित्रै यही protocol मा भर पर्छन् — तिनले `[Symbol.iterator]()` एक पटक call गरी iterator लिन्छन्, त्यसपछि `done` `true` नभएसम्म repeatedly `.next()` call गर्छन्, बाटोमा हरेक `value` प्रयोग गर्छन्।\n\nArrays, strings, `Map`s, `Set`s, र generator objects सबै built-in iterables हुन् — हरेकमा पहिले नै काम गर्ने `[Symbol.iterator]()` हुन्छ, त्यसैले `for...of` तिनी सबैमा कुनै setup बिना काम गर्छ। तपाईंले आफ्नै class लाई दुई तरिकाले iterable बनाउन सक्नुहुन्छ। Manual तरिका भनेको `[Symbol.iterator]()` आफैं implement गर्नु, closures मार्फत state track गर्ने आफ्नै `next()` method भएको plain object literal फर्काउनु — verbose, तर जुनसुकै environment मा काम गर्छ। धेरै छोटो तरिका भनेको `[Symbol.iterator]()` लाई नै एउटा <b>generator method</b> बनाउनु (`*[Symbol.iterator]() { ... }` को रूपमा लेखिने), किनकि generator object पहिले नै automatically iterator shape पूरा गर्छ — तपाईंले चाहिने values `yield` गर्नुपर्छ मात्र र protocol आफैं handle हुन्छ।",
-        jp: "オブジェクトが<b>イテラブル</b>であるとは、`[Symbol.iterator]()`という名前のメソッドを持ち、それが<b>イテレータ</b>を返すことを意味する — そしてイテレータとは、単に呼び出しごとに`{ value, done }`を返す`next()`メソッドを持つオブジェクトである。これがプロトコル全体であり、継承や特別な基底クラスを必要とせず、どのオブジェクトでも実装できる2つの小さく明確に定義された形だけ。`for...of`・スプレッド演算子・配列/オブジェクトの分割代入・`Promise.all`はすべて内部でこの同じプロトコルに依存している — 一度`[Symbol.iterator]()`を呼んでイテレータを取得し、`done`が`true`になるまで`.next()`を繰り返し呼び、その都度の`value`を使う。\n\n配列・文字列・`Map`・`Set`・ジェネレータオブジェクトはすべて組み込みのイテラブル — それぞれすでに動作する`[Symbol.iterator]()`を持っているため、`for...of`はセットアップなしにすべてで動作する。独自のクラスをイテラブルにする方法は2つある。手動の方法は`[Symbol.iterator]()`を自分で実装し、クロージャで状態を追跡する独自の`next()`メソッドを持つプレーンなオブジェクトリテラルを返すこと — 冗長だが、どの環境でも動作する。もっと短い方法は`[Symbol.iterator]()`自体を<b>ジェネレータメソッド</b>にすること（`*[Symbol.iterator]() { ... }`と書く）。ジェネレータオブジェクトはすでに自動的にイテレータの形を満たしているため、欲しい値を`yield`するだけでプロトコルは自動的に処理される。",
-      },
-      diagram: `Iterable                              Iterator
-┌───────────────────────┐            ┌──────────────────────────┐
-│ [Symbol.iterator]()   ─┼──returns──►│ next() → { value, done } │
-└───────────────────────┘            └──────────────────────────┘
-
-Built-in iterables:  Array, String, Map, Set, generator objects
-
-for...of / [...x] / { ...destructure } all do this under the hood:
-  const it = x[Symbol.iterator]();
-  let step = it.next();
-  while (!step.done) {
-    use(step.value);
-    step = it.next();
-  }
-
-Custom class — two ways to plug into the protocol:
-
-  [Symbol.iterator]() {              *[Symbol.iterator]() {
-    let i = start;                     for (let i = start; i <= end; i++) {
-    return { next() { ... } };           yield i;
-  }                                     }
-  ← manual object + next()           }  ← generator does it automatically`,
-      codeExample: {
-        title: { en: "The iterator protocol and two ways to implement it", np: "Iterator protocol र यसलाई implement गर्ने दुई तरिका", jp: "イテレータプロトコルとその2つの実装方法" },
-        code: `// ── The protocol itself ─────────────────────────────────────────────
-// iterable:  has [Symbol.iterator]() that returns an iterator
-// iterator:  has next() that returns { value, done }
-
-const arr = ["a", "b", "c"];
-const it = arr[Symbol.iterator]();   // get the iterator manually
-it.next();  // { value: "a", done: false }
-it.next();  // { value: "b", done: false }
-it.next();  // { value: "c", done: false }
-it.next();  // { value: undefined, done: true }
-
-// for...of, spread, and destructuring all call [Symbol.iterator]() for you
-for (const letter of "abc") console.log(letter);   // a, b, c
-const [firstEntry] = new Map([["x", 1], ["y", 2]]); // ["x", 1]
-
-// ── Manual way: implement [Symbol.iterator]() yourself ──────────────
-class Countdown {
-  constructor(from) {
-    this.from = from;
-  }
-
-  [Symbol.iterator]() {
-    let current = this.from;         // closure keeps track of position
-
-    return {
-      next() {
-        if (current > 0) {
-          return { value: current--, done: false };
-        }
-        return { value: undefined, done: true };
-      },
-    };
-  }
-}
-
-[...new Countdown(3)];                        // [3, 2, 1]
-for (const n of new Countdown(3)) console.log(n);  // 3, 2, 1
-
-// ── Shortcut: make [Symbol.iterator]() itself a generator ───────────
-class Countdown2 {
-  constructor(from) {
-    this.from = from;
-  }
-
-  *[Symbol.iterator]() {             // note the * — this method IS the iterator
-    for (let n = this.from; n > 0; n--) {
-      yield n;
+      console.log(\`Attempt \${attempt} failed (\${err.status ?? err.name}). Retrying in \${Math.round(delay)}ms\`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }
 
-[...new Countdown2(3)];              // [3, 2, 1] — same result, far less code`,
+// ── Usage — fetch that throws a shaped error on non-2xx responses ──
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw Object.assign(new Error(\`HTTP \${res.status}\`), { status: res.status });
+  return res.json();
+}
+
+const order = await retryWithBackoff(() => fetchJson("/api/orders/42"), {
+  maxAttempts: 5,
+  baseDelayMs: 500,
+});
+
+// Creating a resource? Never retry blindly — pass an idempotency key so the
+// server can recognize and safely ignore a duplicate retried request.
+await retryWithBackoff(() =>
+  fetch("/api/orders", {
+    method: "POST",
+    headers: { "Idempotency-Key": orderRequestId },
+    body: JSON.stringify(orderPayload),
+  })
+);`,
       },
       keyTakeaways: [
-        { en: "The iterator protocol is just two shapes: an iterable has `[Symbol.iterator]()` that returns an iterator, and an iterator has `next()` returning `{ value, done }`.", np: "Iterator protocol भनेको दुई मात्र shapes हो: iterable मा `[Symbol.iterator]()` हुन्छ जो iterator फर्काउँछ, र iterator मा `next()` हुन्छ जो `{ value, done }` फर्काउँछ।", jp: "イテレータプロトコルはたった2つの形だけ — イテラブルはイテレータを返す`[Symbol.iterator]()`を持ち、イテレータは`{ value, done }`を返す`next()`を持つ。" },
-        { en: "`for...of`, spread, and destructuring don't have any special knowledge of arrays — they just call `[Symbol.iterator]()` and drive `.next()` until `done` is `true`, so they work on any conforming object.", np: "`for...of`, spread, र destructuring लाई arrays को कुनै special ज्ञान हुँदैन — तिनले केवल `[Symbol.iterator]()` call गर्छन् र `done` `true` नभएसम्म `.next()` drive गर्छन्, त्यसैले यी protocol पूरा गर्ने कुनै पनि object मा काम गर्छन्।", jp: "`for...of`・スプレッド・分割代入は配列について特別な知識を持っているわけではない — 単に`[Symbol.iterator]()`を呼び、`done`が`true`になるまで`.next()`を駆動するだけなので、このプロトコルに従う任意のオブジェクトで動作する。" },
-        { en: "Making `[Symbol.iterator]()` itself a generator method (`*[Symbol.iterator]() { ... }`) is far shorter than manually returning an object with your own `next()`, because the generator already satisfies the iterator shape.", np: "`[Symbol.iterator]()` लाई नै generator method (`*[Symbol.iterator]() { ... }`) बनाउनु आफैं `next()` भएको object manually फर्काउनु भन्दा धेरै छोटो हुन्छ, किनकि generator ले पहिले नै iterator shape पूरा गर्छ।", jp: "`[Symbol.iterator]()`自体をジェネレータメソッド（`*[Symbol.iterator]() { ... }`）にする方が、独自の`next()`を持つオブジェクトを手動で返すより遥かに短い。ジェネレータはすでにイテレータの形を満たしているから。" },
+        { en: "<b>Limited attempts</b> — cap retries with `maxAttempts` and throw the error once that limit is reached, so the app never retries forever.", np: "<b>सीमित attempts</b> — `maxAttempts` ले retries cap गर्नुहोस् र त्यो limit पुगेपछि error throw गर्नुहोस्, ताकि app सधैंभरि retry नगरोस्।", jp: "<b>回数の制限</b> — `maxAttempts` でリトライを制限し、上限に達したらエラーをスローする。こうすればアプリが永遠にリトライすることはない。" },
+        { en: "<b>Exponential backoff</b> — wait longer after each failure (`baseDelayMs * 2 ** attempt`), so waits grow 1s, 2s, 4s, 8s.", np: "<b>Exponential backoff</b> — हरेक failure पछि अझ लामो wait गर्नुहोस् (`baseDelayMs * 2 ** attempt`), ताकि wait 1s, 2s, 4s, 8s गरी बढ्छ।", jp: "<b>指数バックオフ</b> — 失敗ごとに待ち時間を長くする（`baseDelayMs * 2 ** attempt`）ので、待機は1秒、2秒、4秒、8秒と増えていく。" },
+        { en: "<b>Maximum delay</b> — set a `maxDelayMs` so the waiting time never becomes too long.", np: "<b>Maximum delay</b> — `maxDelayMs` सेट गर्नुहोस् ताकि wait गर्ने समय कहिल्यै धेरै लामो नहोस्।", jp: "<b>最大遅延</b> — `maxDelayMs` を設定し、待ち時間が長くなりすぎないようにする。" },
+        { en: "<b>Jitter</b> — add a small random amount to each delay so thousands of clients don't retry at the exact same moment and cause a retry storm.", np: "<b>Jitter</b> — हरेक delay मा सानो random समय थप्नुहोस् ताकि हजारौं client ठ्याक्कै एउटै क्षणमा retry गरी retry storm नबनाउन्।", jp: "<b>ジッター</b> — 各遅延に少量のランダムな時間を加え、何千のクライアントがまったく同じ瞬間にリトライしてリトライストームを起こさないようにする。" },
+        { en: "<b>Retry only temporary errors</b> — `5xx`, network errors and `429 Too Many Requests`. Normal `4xx` errors like `400`, `401`, `403` and `404` will fail the same way every time.", np: "<b>अस्थायी error मात्र retry गर्नुहोस्</b> — `5xx`, network errors र `429 Too Many Requests`। `400`, `401`, `403` र `404` जस्ता सामान्य `4xx` errors हरेक पटक उस्तै रूपमा fail हुन्छन्।", jp: "<b>一時的なエラーだけリトライする</b> — `5xx`、ネットワークエラー、`429 Too Many Requests`。`400`・`401`・`403`・`404` のような通常の `4xx` エラーは毎回同じように失敗する。" },
+        { en: "<b>Idempotency</b> — for operations that aren't safe to repeat, such as creating a record with `POST`, send an idempotency key so a retry can't create a duplicate.", np: "<b>Idempotency</b> — दोहोर्याउन सुरक्षित नभएका operations, जस्तै `POST` ले record बनाउनु, को लागि idempotency key पठाउनुहोस् ताकि retry ले duplicate नबनाउन सकोस्।", jp: "<b>冪等性</b> — `POST` でレコードを作成するなど繰り返しても安全でない操作には冪等性キーを送り、リトライが重複を作れないようにする。" },
+        { en: "The goal isn't to retry as much as possible. The goal is to give a temporary failure a chance to recover without making the problem worse.", np: "लक्ष्य जति सक्दो धेरै retry गर्नु होइन। लक्ष्य अस्थायी failure लाई समस्या अझ बिगार्न नदिई recover हुने मौका दिनु हो।", jp: "目標はできるだけ多くリトライすることではない。目標は一時的な失敗に、問題を悪化させずに回復するチャンスを与えることだ。" },
       ],
       commonMistakes: [
-        { en: "Implementing `[Symbol.iterator]()` to return `this` when the object itself doesn't have a `next()` method, instead of returning a proper iterator object (or delegating to a generator).", np: "Object आफैंमा `next()` method नभएको बेला `[Symbol.iterator]()` ले `this` फर्काउने implement गर्नु, त्यसको सट्टा सही iterator object फर्काउनु (वा generator मा delegate गर्नु) पर्ने।", jp: "オブジェクト自身に`next()`メソッドがないのに`[Symbol.iterator]()`が`this`を返すよう実装すること — 適切なイテレータオブジェクトを返す（またはジェネレータに委譲する）べき。" },
-        { en: "Forgetting the `*` when trying to use a generator as `[Symbol.iterator]()`, which silently makes the method a regular function that returns `undefined` instead of an iterator.", np: "Generator लाई `[Symbol.iterator]()` को रूपमा प्रयोग गर्दा `*` बिर्सनु, जसले method लाई silently एउटा normal function बनाउँछ जो iterator को सट्टा `undefined` फर्काउँछ।", jp: "ジェネレータを`[Symbol.iterator]()`として使う際に`*`を忘れること。これによりメソッドは黙って通常の関数になり、イテレータではなく`undefined`を返す。" },
-        { en: "Assuming every array-like object (such as a plain `{ length, 0: ..., 1: ... }` object) is automatically iterable — it isn't, unless it also implements `[Symbol.iterator]()`.", np: "हरेक array-like object (जस्तै plain `{ length, 0: ..., 1: ... }` object) automatic रूपमा iterable हुन्छ भन्ने ठान्नु — यसले `[Symbol.iterator]()` पनि implement नगरेसम्म त्यो होइन।", jp: "すべての配列風オブジェクト（`{ length, 0: ..., 1: ... }`のようなプレーンオブジェクト）が自動的にイテラブルだと思い込むこと — `[Symbol.iterator]()`も実装しない限りそうではない。" },
+        { en: "Writing a retry loop with no attempt limit and no jitter, which under load turns one flaky endpoint into a synchronized storm of simultaneous retries.", np: "कुनै attempt limit र jitter नभएको retry loop लेख्नु, जसले load मा एउटा flaky endpoint लाई simultaneous retries को synchronized storm मा बदलिदिन्छ।", jp: "試行回数の上限もジッターもないリトライループを書くこと。負荷がかかると1つの不安定なエンドポイントが同期した一斉リトライの嵐に変わってしまう。" },
+        { en: "Retrying every error indiscriminately, including 4xx client errors that will fail identically on every attempt and just waste time.", np: "हरेक error लाई विना विचार retry गर्नु, 4xx client errors समेत जो हरेक attempt मा उस्तै रूपमा fail हुन्छन् र समय मात्र खेर फाल्छन्।", jp: "4xxクライアントエラーを含め、すべてのエラーを無差別にリトライすること。これは毎回同じように失敗し、時間を無駄にするだけ。" },
+        { en: "Retrying a POST/create request after a timeout without an idempotency key, risking a duplicate record if the original request actually succeeded.", np: "Timeout पछि idempotency key बिना POST/create request retry गर्नु, original request वास्तवमा सफल भएको भए duplicate record बनाउने जोखिम बढाउनु।", jp: "冪等性キーなしでタイムアウト後にPOST/作成リクエストをリトライすること。元のリクエストが実際に成功していた場合、重複レコードのリスクがある。" },
       ],
       quiz: [
         {
-          question: { en: "What two things does an object need to be considered an \"iterator\" (not iterable, the iterator itself)?", np: "Object लाई \"iterator\" (iterable होइन, iterator आफैं) मानिनको लागि के चाहिन्छ?", jp: "オブジェクトが「イテレータ」（イテラブルではなくイテレータ自体）とみなされるために必要なものは？" },
+          question: { en: "What does exponential backoff do to the delay between retry attempts?", np: "Exponential backoff ले retry attempts बीचको delay लाई के गर्छ?", jp: "指数バックオフはリトライ試行間の遅延に対して何をする？" },
           options: [
-            { en: "A `next()` method that returns `{ value, done }`", np: "`{ value, done }` फर्काउने `next()` method", jp: "`{ value, done }`を返す`next()`メソッド" },
-            { en: "A `length` property and numeric indices", np: "`length` property र numeric indices", jp: "`length`プロパティと数値インデックス" },
+            { en: "Roughly doubles it after each failure, capped at a maximum delay", np: "हरेक failure पछि लगभग दोब्बर बनाउँछ, maximum delay मा cap गरिएको", jp: "各失敗ごとにおおよそ2倍にし、最大遅延で上限を設ける" },
+            { en: "Keeps it exactly the same fixed value every time", np: "हरेक पटक ठ्याक्कै उही fixed value राख्छ", jp: "毎回全く同じ固定値のままにする" },
           ],
           correctIndex: 0,
-          explanation: { en: "The iterator shape is defined purely by having a next() method with that return shape — nothing about length or indices is required.", np: "Iterator को shape त्यो return shape भएको next() method ले मात्र defined हुन्छ — length वा indices चाहिँदैन।", jp: "イテレータの形は、その戻り値の形を持つnext()メソッドがあることだけで定義される — lengthやインデックスは不要。" },
+          explanation: { en: "Each retry waits roughly double the previous delay (baseDelayMs * 2 ** attempt), capped at maxDelayMs so the wait never grows unbounded.", np: "हरेक retry ले अघिल्लो delay भन्दा लगभग दोब्बर wait गर्छ (baseDelayMs * 2 ** attempt), maxDelayMs मा cap गरिएको ताकि wait असीमित रूपमा नबढ्न।", jp: "各リトライは前回の遅延のおおよそ2倍待つ（baseDelayMs * 2 ** attempt）。maxDelayMsで上限が設けられ、待機が無限に増えることはない。" },
         },
         {
-          question: { en: "What do `for...of`, spread, and destructuring have in common, protocol-wise?", np: "Protocol हिसाबले `for...of`, spread, र destructuring मा के common छ?", jp: "プロトコル的に`for...of`・スプレッド・分割代入に共通するものは？" },
+          question: { en: "Why add random jitter to a retry's backoff delay?", np: "Retry को backoff delay मा random jitter किन थपिन्छ?", jp: "リトライのバックオフ遅延にランダムなジッターを加える理由は？" },
           options: [
-            { en: "They all call `[Symbol.iterator]()` internally and drive `.next()` until done", np: "तिनीहरू सबैले भित्रभित्रै `[Symbol.iterator]()` call गर्छन् र done नभएसम्म `.next()` drive गर्छन्", jp: "すべて内部で`[Symbol.iterator]()`を呼び、doneになるまで`.next()`を駆動する" },
-            { en: "They only work on native Arrays, never on custom classes", np: "तिनीहरू केवल native Arrays मा मात्र काम गर्छन्, custom classes मा कहिल्यै गर्दैनन्", jp: "ネイティブの配列でしか動作せず、カスタムクラスでは決して動作しない" },
+            { en: "To prevent many clients from retrying at the exact same synchronized instant", np: "धेरै clients लाई एउटै exact synchronized instant मा retry हुनबाट रोक्न", jp: "多数のクライアントが全く同じ同期した瞬間にリトライするのを防ぐため" },
+            { en: "To make the retry function run faster", np: "Retry function लाई छिटो चलाउन", jp: "リトライ関数をより速く実行するため" },
           ],
           correctIndex: 0,
-          explanation: { en: "All three rely on the same iterator protocol rather than having special-cased knowledge of arrays, so any conforming object works with all of them.", np: "यी तीनैले arrays को special knowledge राख्नुको सट्टा उही iterator protocol मा भर पर्छन्, त्यसैले protocol पूरा गर्ने कुनै पनि object मा यी सबैले काम गर्छन्।", jp: "この3つは配列についての特別な知識を持つのではなく、同じイテレータプロトコルに依存しているため、プロトコルに従う任意のオブジェクトで動作する。" },
+          explanation: { en: "If every client backs off with the exact same formula, they all retry in lockstep; jitter randomizes the delay so retries spread out instead of storming the service together.", np: "हरेक client ले उही formula प्रयोग गरी backoff गरे भने, सबैले lockstep मा retry गर्छन्; jitter ले delay लाई random बनाई retries एकसाथ storm नगरी फैलिन्छ।", jp: "全クライアントが全く同じ式でバックオフすると、全員が同期してリトライしてしまう。ジッターは遅延をランダム化し、リトライが一斉に押し寄せるのではなく分散するようにする。" },
         },
         {
-          question: { en: "What is the shorter way to make a custom class iterable, compared to manually implementing `[Symbol.iterator]()` with your own `next()`?", np: "आफ्नै `next()` सँग manually `[Symbol.iterator]()` implement गर्नुको तुलनामा custom class लाई iterable बनाउने छोटो तरिका के हो?", jp: "独自の`next()`で手動で`[Symbol.iterator]()`を実装するのに比べ、カスタムクラスをイテラブルにする短い方法は？" },
+          question: { en: "Should a `shouldRetry` predicate allow retrying a `404 Not Found` response?", np: "`shouldRetry` predicate ले `404 Not Found` response लाई retry गर्न दिनुपर्छ?", jp: "`shouldRetry`述語は`404 Not Found`レスポンスのリトライを許可すべきか？" },
           options: [
-            { en: "Make `[Symbol.iterator]()` itself a generator method with `*[Symbol.iterator]() { ... }`", np: "`[Symbol.iterator]()` लाई नै `*[Symbol.iterator]() { ... }` सँग generator method बनाउनु", jp: "`[Symbol.iterator]()`自体を`*[Symbol.iterator]() { ... }`というジェネレータメソッドにする" },
-            { en: "Add a `length` property so JavaScript infers iteration automatically", np: "`length` property थप्नु ताकि JavaScript ले automatic रूपमा iteration infer गरोस्", jp: "`length`プロパティを追加してJavaScriptが自動的にイテレーションを推測するようにする" },
+            { en: "No — 4xx client errors will fail identically on every retry", np: "होइन — 4xx client errors हरेक retry मा उस्तै रूपमा fail हुन्छन्", jp: "いいえ — 4xxクライアントエラーは毎回同じように失敗する" },
+            { en: "Yes — retry it exactly like a transient 5xx error", np: "हो — यसलाई transient 5xx error जस्तै retry गर्नुपर्छ", jp: "はい — 一時的な5xxエラーと同様にリトライすべき" },
           ],
           correctIndex: 0,
-          explanation: { en: "A generator method already returns an object satisfying the iterator shape, so you only need to yield values instead of writing your own next() by hand.", np: "Generator method ले पहिले नै iterator shape पूरा गर्ने object फर्काउँछ, त्यसैले आफ्नै next() हातले लेख्नुको सट्टा values yield गर्नु मात्र पर्छ।", jp: "ジェネレータメソッドはすでにイテレータの形に一致するものを返すため、自分でnext()を書く代わりに値をyieldするだけでよい。" },
+          explanation: { en: "404 means the resource genuinely doesn't exist — retrying won't change that outcome, unlike a transient 5xx or network failure.", np: "404 को अर्थ resource साँच्चै अवस्थित छैन — retry ले त्यो outcome बदल्दैन, transient 5xx वा network failure भन्दा फरक।", jp: "404はリソースが本当に存在しないことを意味する — 一時的な5xxやネットワーク障害と異なり、リトライしてもその結果は変わらない。" },
         },
       ],
     },
     {
-      id: "async-generators",
-      title: { en: "Async Generators — Lazy Async Sequences", np: "Async Generators — Lazy Async Sequences", jp: "非同期ジェネレータ — 遅延非同期シーケンス" },
+      id: "timeout-race",
+      title: { en: "Timeout, Promise.race & Circuit Breakers", np: "Timeout, Promise.race र Circuit Breakers", jp: "タイムアウト・Promise.race・サーキットブレーカー" },
       durationMinutes: 9,
       explanation: {
-        en: "An <b>async generator</b> is declared with `async function*`, combining the two capabilities you've just learned: like a regular generator, it can `yield` multiple values over time and pause between them; like an `async` function, its body can `await` Promises before producing each value. Calling one still just creates an async generator object without running any code, but now each step of iteration itself returns a Promise instead of a plain `{ value, done }` object — which is why you consume it with `for await...of` instead of a plain `for...of`. This makes async generators the natural fit for pagination: a `paginate(url)` generator can `await fetch(nextUrl)`, `yield` that page's items, then loop around and fetch the next page only once the caller has asked for more.\n\nInside an async generator, `yield*` delegates to another (async) generator's values one at a time, which is useful for flattening a generator-of-pages into a generator-of-individual-items without manually looping — a `flatPaginate()` generator can `yield*` each page it receives from `paginate()`. Because `for await...of` is a normal loop, `break` works exactly as you'd expect and stops pulling further pages, which means an async generator never fetches data the caller didn't end up needing. The bigger idea tying all of this together: generators solve \"produce values over time,\" Promises solve \"this value requires waiting,\" and async generators are simply both problems solved by the same mechanism — ideal for streaming or paginated data you don't want to load into memory all at once.",
-        np: "<b>Async generator</b> लाई `async function*` ले declare गरिन्छ, जसले तपाईंले भर्खरै सिकेका दुई क्षमता combine गर्छ: regular generator जस्तै, यसले समयसँगै multiple values `yield` गर्न सक्छ र बीचमा pause हुन्छ; `async` function जस्तै, यसको body ले हरेक value produce गर्नु अघि Promises `await` गर्न सक्छ। Call गर्दा अझै पनि कुनै code नचलाई एउटा async generator object मात्र बन्छ, तर अब iteration को हरेक step आफैंले plain `{ value, done }` object को सट्टा एउटा Promise फर्काउँछ — त्यसैले यसलाई plain `for...of` को सट्टा `for await...of` ले consume गरिन्छ। यसले async generators लाई pagination का लागि natural fit बनाउँछ: `paginate(url)` generator ले `await fetch(nextUrl)` गर्न सक्छ, त्यो page का items `yield` गर्न सक्छ, त्यसपछि caller ले थप माग्दा मात्र अर्को page fetch गर्न loop गर्न सक्छ।\n\nAsync generator भित्र, `yield*` ले अर्को (async) generator को values एक-एक गरी delegate गर्छ, जो pages-को-generator लाई manually loop नगरी individual-items-को-generator मा flatten गर्न उपयोगी हुन्छ — `flatPaginate()` generator ले `paginate()` बाट पाएको हरेक page `yield*` गर्न सक्छ। `for await...of` एक normal loop भएकोले, `break` ठीक तपाईंले सोचेजस्तै काम गर्छ र थप pages pull हुनबाट रोक्छ, जसको अर्थ async generator ले caller लाई अन्तिममा नचाहिने data कहिल्यै fetch गर्दैन। यी सबैलाई जोड्ने ठूलो idea यही हो: generators ले \"समयसँगै values produce गर्ने\" समस्या solve गर्छन्, Promises ले \"यो value कुर्नुपर्छ\" समस्या solve गर्छन्, र async generators ले दुवै समस्या एउटै mechanism ले solve गर्छन् — streaming वा paginated data का लागि उत्तम जो एकैसाथ memory मा load गर्न मन नपराइने हो।",
-        jp: "<b>async generator</b>は`async function*`で宣言され、これまで学んだ2つの能力を組み合わせる — 通常のジェネレータのように、時間をかけて複数の値を`yield`し、その間で一時停止できる。`async`関数のように、本体は各値を生成する前にPromiseを`await`できる。呼び出してもまだコードは実行されず、async generatorオブジェクトが作られるだけだが、今度はイテレーションの各ステップ自体が単なる`{ value, done }`オブジェクトではなくPromiseを返す — そのため通常の`for...of`ではなく`for await...of`で消費する。これによりasync generatorはページングに自然に適合する — `paginate(url)`ジェネレータは`await fetch(nextUrl)`を行い、そのページのアイテムを`yield`し、呼び出し側がさらに要求したときだけループして次のページを取得できる。\n\nasync generatorの内部では、`yield*`が別の（async）ジェネレータの値を一つずつ委譲する。これはページのジェネレータを手動でループせずに個々のアイテムのジェネレータへフラット化するのに便利 — `flatPaginate()`ジェネレータは`paginate()`から受け取った各ページを`yield*`できる。`for await...of`は通常のループなので、`break`は期待通りに動作し、それ以上のページの取得を止める。つまりasync generatorは、呼び出し側が結局必要としなかったデータを決して取得しない。これら全てをつなぐ大きな考え方はこうだ — ジェネレータは「時間をかけて値を生成する」問題を解決し、Promiseは「この値は待つ必要がある」問題を解決する。async generatorは単に両方の問題を同じ仕組みで解決するものであり、一度にメモリへロードしたくないストリーミングやページングされたデータに最適。",
+        en: "When our app calls another server, we shouldn't wait forever if that server doesn't respond.\n\nThere are three useful ideas:\n\n1. <b>Timeout</b> — stop waiting after a certain amount of time.\n2. <b>`Promise.race()`</b> — choose whichever promise finishes first.\n3. <b>Circuit breaker</b> — stop calling a service that keeps failing.\n\n---\n\n## 1. Timeout\n\nImagine this:\n\n```javascript\nconst response = await fetch(url);\n```\n\nWhat if the server never responds?\n\nOur code could wait for a very long time.\n\nA <b>timeout</b> gives the request a deadline.\n\nFor example:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nThis prevents our application from getting stuck waiting forever.\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` waits for multiple promises and uses whichever one finishes first.\n\nFor example:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nHere we have two things happening:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\nWhichever finishes first wins.\n\n### If the server responds first:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### If 5 seconds pass first:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nThis is one way to create a manual timeout.\n\n---\n\n## 3. Better timeout for `fetch()`: `AbortController`\n\nFor `fetch()`, JavaScript provides a better solution called <b>`AbortController`</b>.\n\nIt allows us to actually <b>cancel</b> the request.\n\nExample:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\nThe important part is:\n\n```javascript\ncontroller.abort();\n```\n\nIt tells `fetch()`:\n\n> Stop this request.\n\n### Why `clearTimeout()`?\n\nIf the request finishes quickly, the timer is still running.\n\nSo we use:\n\n```javascript\nclearTimeout(timer);\n```\n\ninside `finally` so the timer is always cleaned up.\n\n---\n\n## 4. What is a Circuit Breaker?\n\nA timeout protects <b>one request</b>.\n\nBut imagine a service is completely down.\n\nOur app might do this:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\nThat's bad because we're wasting time and continuing to send requests to a broken service.\n\nA <b>circuit breaker</b> stops this.\n\nThink of it like an electrical circuit breaker in a house:\n\n> Too many problems → switch off → wait → test again.\n\n---\n\n## 5. Three Circuit Breaker States\n\nA circuit breaker has three simple states.\n\n### 🟢 Closed\n\nEverything is normal.\n\n```text\nRequest → Service\n```\n\nRequests are allowed.\n\n---\n\n### 🔴 Open\n\nThere have been too many failures.\n\nThe circuit opens and stops sending requests.\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\nWe don't even call the broken service.\n\nThis saves time and reduces pressure on the service.\n\n---\n\n### 🟡 Half-Open\n\nAfter waiting for a while, the circuit gives the service <b>one test request</b>.\n\nIf it works:\n\n```text\nSuccess → Closed\n```\n\nThe service seems healthy again, so normal requests continue.\n\nIf it fails:\n\n```text\nFailure → Open\n```\n\nThe circuit stops requests again.",
+        np: "हाम्रो app ले अर्को server call गर्दा, त्यो server ले response नदिए हामीले सधैंभरि wait गर्नु हुँदैन।\n\nतीन उपयोगी विचार छन्:\n\n1. <b>Timeout</b> — निश्चित समय पछि wait गर्न छोड्नु।\n2. <b>`Promise.race()`</b> — जो promise पहिले सक्किन्छ, त्यसै लिनु।\n3. <b>Circuit breaker</b> — बारम्बार fail हुने service लाई call गर्न छोड्नु।\n\n---\n\n## 1. Timeout\n\nयसो कल्पना गर्नुहोस्:\n\n```javascript\nconst response = await fetch(url);\n```\n\nयदि server ले कहिल्यै response नदिए के हुन्छ?\n\nहाम्रो code धेरै लामो समय wait गर्न सक्छ।\n\n<b>Timeout</b> ले request लाई एउटा deadline दिन्छ।\n\nउदाहरणका लागि:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nयसले हाम्रो application लाई सधैंभरि wait गर्दै अड्किनबाट बचाउँछ।\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` ले धेरै promise कुर्छ र जो पहिले सक्किन्छ त्यसलाई प्रयोग गर्छ।\n\nउदाहरणका लागि:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nयहाँ दुई चीज भइरहेका छन्:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\nजो पहिले सक्किन्छ, त्यही जित्छ।\n\n### यदि server पहिले response दिए:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### यदि 5 seconds पहिले बित्यो:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nयो manual timeout बनाउने एउटा तरिका हो।\n\n---\n\n## 3. `fetch()` का लागि राम्रो timeout: `AbortController`\n\n`fetch()` का लागि JavaScript ले <b>`AbortController`</b> भनिने राम्रो समाधान दिन्छ।\n\nयसले हामीलाई request साँच्चै <b>cancel</b> गर्न दिन्छ।\n\nउदाहरण:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\nमहत्वपूर्ण भाग यो हो:\n\n```javascript\ncontroller.abort();\n```\n\nयसले `fetch()` लाई भन्छ:\n\n> यो request रोक।\n\n### `clearTimeout()` किन?\n\nयदि request छिटो सक्किए, timer अझै चलिरहेको हुन्छ।\n\nत्यसैले हामी प्रयोग गर्छौं:\n\n```javascript\nclearTimeout(timer);\n```\n\n`finally` भित्र, ताकि timer सधैं सफा होस्।\n\n---\n\n## 4. Circuit Breaker के हो?\n\nTimeout ले <b>एउटा request</b> लाई मात्र बचाउँछ।\n\nतर कल्पना गर्नुहोस् एउटा service पूरै down छ।\n\nहाम्रो app यसो गर्न सक्छ:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\nयो नराम्रो हो किनकि हामी समय खेर फाल्दै छौं र भाँचिएको service लाई request पठाइरहेका छौं।\n\n<b>Circuit breaker</b> ले यसलाई रोक्छ।\n\nयसलाई घरको बिजुलीको circuit breaker जस्तै सोच्नुहोस्:\n\n> धेरै समस्या → बन्द गर → कुर → फेरि जाँच गर।\n\n---\n\n## 5. Circuit Breaker का तीन States\n\nCircuit breaker का तीन सरल states हुन्छन्।\n\n### 🟢 Closed\n\nसबै सामान्य छ।\n\n```text\nRequest → Service\n```\n\nRequest हरू अनुमति पाउँछन्।\n\n---\n\n### 🔴 Open\n\nधेरै failures भइसकेका छन्।\n\nCircuit खुल्छ र request पठाउन बन्द गर्छ।\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\nहामी भाँचिएको service लाई call पनि गर्दैनौं।\n\nयसले समय बचाउँछ र service माथिको pressure घटाउँछ।\n\n---\n\n### 🟡 Half-Open\n\nकेही बेर कुरेपछि, circuit ले service लाई <b>एउटा test request</b> दिन्छ।\n\nयदि काम गर्यो:\n\n```text\nSuccess → Closed\n```\n\nService फेरि स्वस्थ देखिन्छ, त्यसैले सामान्य request हरू जारी रहन्छन्।\n\nयदि fail भयो:\n\n```text\nFailure → Open\n```\n\nCircuit ले फेरि request रोक्छ।",
+        jp: "アプリが別のサーバーを呼ぶとき、そのサーバーが応答しないなら永遠に待つべきではありません。\n\n役に立つ考え方が3つあります:\n\n1. <b>タイムアウト</b> — 一定時間が過ぎたら待つのをやめる。\n2. <b>`Promise.race()`</b> — 最初に終わったPromiseを採用する。\n3. <b>サーキットブレーカー</b> — 失敗し続けるサービスの呼び出しをやめる。\n\n---\n\n## 1. タイムアウト\n\nこう想像してください:\n\n```javascript\nconst response = await fetch(url);\n```\n\nサーバーが一度も応答しなかったら?\n\nコードは非常に長い時間待つことになります。\n\n<b>タイムアウト</b>はリクエストに期限を与えます。\n\n例:\n\n```text\nWait up to 5 seconds\n↓\nServer responds → continue\nServer doesn't respond → stop waiting\n```\n\nこれでアプリケーションが永遠に待ったまま止まることを防げます。\n\n---\n\n## 2. `Promise.race()`\n\n`Promise.race()` は複数のPromiseを待ち、最初に終わったものを使います。\n\n例:\n\n```javascript\nawait Promise.race([\n  fetch(url),\n  timeout(5000)\n]);\n```\n\nここでは2つのことが同時に起きています:\n\n```text\nfetch(url)     → waiting for the server\ntimeout(5000)  → waiting for 5 seconds\n```\n\n先に終わった方が勝ちます。\n\n### サーバーが先に応答した場合:\n\n```text\nfetch → wins\ntimeout → ignored\n```\n\n### 5秒が先に過ぎた場合:\n\n```text\ntimeout → wins\nfetch → ignored\n```\n\nこれは手動でタイムアウトを作る1つの方法です。\n\n---\n\n## 3. `fetch()` により良いタイムアウト: `AbortController`\n\n`fetch()` にはJavaScriptが<b>`AbortController`</b>というより良い方法を用意しています。\n\nこれを使うとリクエストを実際に<b>キャンセル</b>できます。\n\n例:\n\n```javascript\nconst controller = new AbortController();\n\nconst timer = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(url, {\n    signal: controller.signal\n  });\n\n  return response;\n} finally {\n  clearTimeout(timer);\n}\n```\n\n重要な部分はここです:\n\n```javascript\ncontroller.abort();\n```\n\nこれは `fetch()` にこう伝えます:\n\n> このリクエストを止めて。\n\n### なぜ `clearTimeout()` が必要か?\n\nリクエストが早く終わっても、タイマーはまだ動いています。\n\nそこで次を使います:\n\n```javascript\nclearTimeout(timer);\n```\n\n`finally` の中で呼ぶことで、タイマーは必ず片付けられます。\n\n---\n\n## 4. サーキットブレーカーとは?\n\nタイムアウトが守るのは<b>1つのリクエスト</b>だけです。\n\nしかし、あるサービスが完全に停止していると想像してください。\n\nアプリはこうなるかもしれません:\n\n```text\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\nRequest → wait 5 seconds → timeout\n```\n\n時間を無駄にし、壊れたサービスにリクエストを送り続けているので、これは良くありません。\n\n<b>サーキットブレーカー</b>がこれを止めます。\n\n家のブレーカーのように考えてください:\n\n> 問題が多すぎる → 遮断する → 待つ → もう一度試す。\n\n---\n\n## 5. サーキットブレーカーの3つの状態\n\nサーキットブレーカーには3つのシンプルな状態があります。\n\n### 🟢 Closed（閉）\n\nすべて正常です。\n\n```text\nRequest → Service\n```\n\nリクエストは許可されます。\n\n---\n\n### 🔴 Open（開）\n\n失敗が多すぎました。\n\n回路が開き、リクエストの送信を止めます。\n\n```text\nRequest\n  ↓\nCircuit Breaker\n  ↓\nFail immediately\n```\n\n壊れたサービスを呼び出しさえしません。\n\nこれで時間を節約し、サービスへの負荷を減らせます。\n\n---\n\n### 🟡 Half-Open（半開）\n\nしばらく待った後、回路はサービスに<b>1回だけテストのリクエスト</b>を送ります。\n\nうまくいけば:\n\n```text\nSuccess → Closed\n```\n\nサービスは回復したように見えるので、通常のリクエストが続きます。\n\n失敗すれば:\n\n```text\nFailure → Open\n```\n\n回路は再びリクエストを止めます。",
       },
-      diagram: `async function* paginate(url) {
-  while (url) {
-    const page = await fetch(url);   ← WAITS (Promise)
-    yield page.items;                ← PAUSES (generator)
-    url = page.nextUrl;
-  }
-}
-
-for await (const items of paginate(url)) {
-  ...                    ← each step: await the Promise, THEN get { value, done }
-  break;                 ← stops early, next page is never fetched
-}
-
-yield* delegation:
-  flatPaginate()  →  for await (page of paginate(url)) { yield* page; }
-                      pages: [A,B] [C,D] [E]   →   items: A, B, C, D, E  (one at a time)
-
-Generators          →  "produce values over time"
-Promises            →  "this value requires waiting"
-Async generators    →  both, combined`,
+      diagram: `        Request
+           ↓
+     Circuit Closed
+           ↓
+       Call service
+        ↙       ↘
+    Success     Failure
+       ↓           ↓
+    Continue   More failures?
+                   ↓
+                  Yes
+                   ↓
+            Circuit Opens
+                   ↓
+               Wait
+                   ↓
+           Half-Open
+              ↙     ↘
+          Success   Failure
+             ↓         ↓
+           Closed     Open`,
       codeExample: {
-        title: { en: "Async generators for lazy, paginated data streams", np: "Lazy, paginated data streams का लागि async generators", jp: "遅延ページングデータストリームのためのasync generator" },
-        code: `// ── Async generator — fetch one page at a time ─────────────────────
-async function* paginate(url) {
-  let nextUrl = url;
+        title: { en: "Timing out slow calls and breaking the circuit on a failing service", np: "Slow calls लाई timeout गर्नु र failing service मा circuit break गर्नु", jp: "遅い呼び出しのタイムアウトと失敗するサービスのサーキットブレーク" },
+        code: `// ── Manual timeout with Promise.race ────────────────────────────────
+function timeout(ms, message = \`Timed out after \${ms}ms\`) {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
+}
 
-  while (nextUrl) {
-    const response = await fetch(nextUrl);   // await works fine inside a generator
-    const page     = await response.json();
+async function withTimeout(promise, ms) {
+  return Promise.race([promise, timeout(ms)]);
+  // whichever settles first wins — the loser's result is just discarded
+}
 
-    yield page.items;                        // hand back this page, then pause
+const user = await withTimeout(fetchUser(id), 5000);
 
-    nextUrl = page.nextUrl ?? null;          // resumes here on the next .next() call
+// ── Preferred: AbortController actually cancels the network request ─
+async function fetchWithTimeout(url, ms = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);   // clear it whether we succeeded, failed, or aborted
   }
 }
 
-// ── Consuming with for await...of ───────────────────────────────────
-for await (const items of paginate("/api/products?page=1")) {
-  console.log("Got a page with", items.length, "items");
-  // The next page is only fetched once this loop asks for more
-}
+// ── Circuit breaker — stop calling a service that's clearly down ────
+class CircuitBreaker {
+  #failureCount = 0;
+  #state = "closed";       // "closed" | "open" | "half-open"
+  #nextAttemptAt = 0;
 
-// ── yield* delegates into another (async) generator ─────────────────
-async function* flatPaginate(url) {
-  for await (const page of paginate(url)) {
-    yield* page;          // yield every item in this page individually
+  constructor(fn, { threshold = 3, cooldownMs = 10_000 } = {}) {
+    this.fn = fn;
+    this.threshold = threshold;
+    this.cooldownMs = cooldownMs;
+  }
+
+  async call(...args) {
+    if (this.#state === "open") {
+      if (Date.now() < this.#nextAttemptAt) {
+        throw new Error("Circuit open — service assumed down, failing fast");
+      }
+      this.#state = "half-open";   // cooldown over, let one test call through
+    }
+
+    try {
+      const result = await this.fn(...args);
+      this.#failureCount = 0;      // success resets everything
+      this.#state = "closed";
+      return result;
+    } catch (err) {
+      this.#failureCount++;
+      if (this.#state === "half-open" || this.#failureCount >= this.threshold) {
+        this.#state = "open";
+        this.#nextAttemptAt = Date.now() + this.cooldownMs;
+      }
+      throw err;
+    }
   }
 }
 
-for await (const product of flatPaginate("/api/products")) {
-  console.log(product.name);   // one product at a time, across all pages
-}
+const breaker = new CircuitBreaker(() => fetchWithTimeout("/api/payments"), {
+  threshold: 3,
+  cooldownMs: 15_000,
+});
 
-// ── break stops pulling further pages entirely ──────────────────────
-async function firstNProducts(n) {
-  const results = [];
-
-  for await (const product of flatPaginate("/api/products")) {
-    results.push(product);
-    if (results.length === n) break;   // later pages are simply never fetched
-  }
-
-  return results;
-}
-
-const firstFive = await firstNProducts(5);`,
+await breaker.call();   // after 3 failures, every call fails instantly for 15s`,
       },
       keyTakeaways: [
-        { en: "`async function*` combines generators and Promises: the function can `yield` values over time, and can `await` before producing each one, which is why it's consumed with `for await...of` instead of `for...of`.", np: "`async function*` ले generators र Promises combine गर्छ: function ले समयसँगै values `yield` गर्न सक्छ, र हरेक produce गर्नु अघि `await` गर्न सक्छ, त्यसैले यसलाई `for...of` को सट्टा `for await...of` ले consume गरिन्छ।", jp: "`async function*`はジェネレータとPromiseを組み合わせる — 関数は時間をかけて値を`yield`でき、各値を生成する前に`await`できるため、`for...of`ではなく`for await...of`で消費する。" },
-        { en: "`yield*` delegates into another (async) generator's values one at a time, letting you flatten a generator-of-pages into a generator-of-individual-items without a manual nested loop.", np: "`yield*` ले अर्को (async) generator को values एक-एक गरी delegate गर्छ, जसले manual nested loop बिना pages-को-generator लाई individual-items-को-generator मा flatten गर्न दिन्छ।", jp: "`yield*`は別の（async）ジェネレータの値を一つずつ委譲し、手動のネストループなしにページのジェネレータを個々のアイテムのジェネレータへフラット化できる。" },
-        { en: "Because `for await...of` supports `break` like any loop, an async generator like a paginated `fetch()` stream never fetches pages the caller didn't end up asking for.", np: "`for await...of` ले कुनै पनि loop जस्तै `break` support गर्ने भएकाले, paginated `fetch()` stream जस्तो async generator ले caller ले अन्तिममा नमागेका pages कहिल्यै fetch गर्दैन।", jp: "`for await...of`は他のループと同様に`break`をサポートするため、ページングされた`fetch()`ストリームのようなasync generatorは、呼び出し側が結局要求しなかったページを決して取得しない。" },
+        { en: "<b>Timeout</b> → \"Don't wait forever.\" Give every call to another server a deadline so your app can't get stuck.", np: "<b>Timeout</b> → \"सधैंभरि wait नगर।\" अर्को server लाई गर्ने हरेक call लाई deadline दिनुहोस् ताकि तपाईंको app अड्किन नसकोस्।", jp: "<b>タイムアウト</b> → \"永遠に待たない。\" 他のサーバーへの呼び出しには必ず期限を与え、アプリが止まらないようにする。" },
+        { en: "<b>`Promise.race()`</b> → \"Whichever finishes first wins.\" Race the real work against a timer to build a manual timeout.", np: "<b>`Promise.race()`</b> → \"जो पहिले सक्किन्छ, त्यही जित्छ।\" वास्तविक काम लाई timer सँग race गराई manual timeout बनाउनुहोस्।", jp: "<b>`Promise.race()`</b> → \"先に終わった方が勝つ。\" 実際の処理をタイマーと競わせて手動のタイムアウトを作る。" },
+        { en: "<b>`AbortController`</b> → \"Actually cancel the request.\" `Promise.race()` only ignores the loser; `controller.abort()` really stops the `fetch()`. Always `clearTimeout()` in `finally`.", np: "<b>`AbortController`</b> → \"Request साँच्चै cancel गर।\" `Promise.race()` ले हारेको लाई बेवास्ता मात्र गर्छ; `controller.abort()` ले `fetch()` साँच्चै रोक्छ। `finally` मा सधैं `clearTimeout()` गर्नुहोस्।", jp: "<b>`AbortController`</b> → \"リクエストを実際にキャンセルする。\" `Promise.race()` は負けた方を無視するだけ。`controller.abort()` は `fetch()` を本当に止める。`finally` では必ず `clearTimeout()` する。" },
+        { en: "<b>Circuit breaker</b> → \"Stop calling a service that keeps failing.\" Too many failures → switch off → wait → test again.", np: "<b>Circuit breaker</b> → \"बारम्बार fail हुने service लाई call गर्न छोड।\" धेरै failures → बन्द गर → कुर → फेरि जाँच गर।", jp: "<b>サーキットブレーカー</b> → \"失敗し続けるサービスの呼び出しをやめる。\" 失敗が多すぎる → 遮断する → 待つ → もう一度試す。" },
+        { en: "Three states: <b>Closed</b> (requests flow normally), <b>Open</b> (fail immediately without calling the service), <b>Half-Open</b> (one test request decides whether to close or open again).", np: "तीन states: <b>Closed</b> (request सामान्य रूपमा जान्छन्), <b>Open</b> (service call नगरी तुरुन्तै fail), <b>Half-Open</b> (एउटा test request ले फेरि close गर्ने वा open राख्ने निर्णय गर्छ)।", jp: "3つの状態: <b>Closed</b>（リクエストは通常どおり流れる）、<b>Open</b>（サービスを呼ばず即座に失敗）、<b>Half-Open</b>（1回のテストリクエストで再び閉じるか開くかを決める）。" },
+        { en: "Together, these make your application faster, safer and more reliable when other services have problems.", np: "मिलेर, यिनले अरू service मा समस्या हुँदा तपाईंको application लाई छिटो, सुरक्षित र भरपर्दो बनाउँछन्।", jp: "これらを組み合わせることで、他のサービスに問題があるときでもアプリケーションはより速く、より安全で、より信頼できるものになる。" },
       ],
       commonMistakes: [
-        { en: "Trying to consume an async generator with a plain `for...of` loop instead of `for await...of`, which fails because each step now resolves to a Promise rather than a plain `{ value, done }` object.", np: "Async generator लाई `for await...of` को सट्टा plain `for...of` loop ले consume गर्न खोज्नु, जो fail हुन्छ किनकि अब हरेक step plain `{ value, done }` object को सट्टा Promise मा resolve हुन्छ।", jp: "async generatorを`for await...of`ではなく通常の`for...of`ループで消費しようとすること — 各ステップが今は単なる`{ value, done }`オブジェクトではなくPromiseに解決されるため失敗する。" },
-        { en: "Using `yield` instead of `yield*` when delegating into another generator's values, which yields the entire inner iterable as one value instead of each item individually.", np: "अर्को generator को values मा delegate गर्दा `yield*` को सट्टा `yield` प्रयोग गर्नु, जसले हरेक item individually को सट्टा भित्री सम्पूर्ण iterable लाई एउटै value को रूपमा yield गर्छ।", jp: "別のジェネレータの値に委譲する際に`yield*`ではなく`yield`を使うこと — これは各アイテムを個別にではなく、内側のイテラブル全体を1つの値としてyieldしてしまう。" },
-        { en: "Assuming an async generator eagerly fetches every page up front — it doesn't; each page is only requested when the consuming loop actually asks for the next value.", np: "Async generator ले सुरुमै सबै pages eagerly fetch गर्छ भन्ने ठान्नु — यसले गर्दैन; consuming loop ले actual रूपमा अर्को value नमागेसम्म हरेक page request गरिँदैन।", jp: "async generatorが最初にすべてのページを積極的に取得すると思い込むこと — そうではない。消費側のループが実際に次の値を要求したときだけ各ページがリクエストされる。" },
+        { en: "Using `Promise.race` for a timeout but forgetting the original operation is still running in the background — it isn't actually cancelled, just ignored.", np: "Timeout का लागि `Promise.race` प्रयोग गर्नु तर original operation अझै background मा चलिरहेको बिर्सनु — यो वास्तवमा cancel हुँदैन, केवल ignore हुन्छ।", jp: "タイムアウトに`Promise.race`を使うが、元の操作がまだバックグラウンドで動いていることを忘れること — 実際にはキャンセルされておらず、無視されているだけ。" },
+        { en: "Forgetting to `clearTimeout()` the abort timer in a `finally` block, leaving a stray timer running after a fast, successful response.", np: "`finally` block मा abort timer लाई `clearTimeout()` गर्न बिर्सनु, छिटो सफल response पछि पनि stray timer चलिरहनु।", jp: "`finally`ブロックでアボートタイマーを`clearTimeout()`し忘れ、速く成功したレスポンスの後も迷子のタイマーが動き続けること。" },
+        { en: "Retrying or timing out on every single call to a completely dead service instead of using a circuit breaker, which keeps hammering it and makes every caller wait out the full timeout.", np: "पूर्ण रूपमा dead service मा circuit breaker प्रयोग नगरी हरेक single call मा retry वा timeout गर्नु, जसले त्यसलाई hammer गरिरहन्छ र हरेक caller लाई पूरा timeout wait गराउँछ।", jp: "完全に死んでいるサービスに対してサーキットブレーカーを使わず、毎回の呼び出しでリトライやタイムアウトを繰り返すこと。これはサービスを叩き続け、すべての呼び出し元にフルのタイムアウトを待たせる。" },
       ],
       quiz: [
         {
-          question: { en: "Why must you use `for await...of` instead of `for...of` to consume an async generator?", np: "Async generator consume गर्न `for...of` को सट्टा `for await...of` किन प्रयोग गर्नुपर्छ?", jp: "async generatorを消費するのに`for...of`ではなく`for await...of`を使わなければならないのはなぜ？" },
+          question: { en: "What does `Promise.race([a, b])` settle with?", np: "`Promise.race([a, b])` कुनसँग settle हुन्छ?", jp: "`Promise.race([a, b])`は何で確定する？" },
           options: [
-            { en: "Because each step of iteration resolves to a Promise instead of a plain `{ value, done }` object", np: "किनकि iteration को हरेक step plain `{ value, done }` object को सट्टा Promise मा resolve हुन्छ", jp: "イテレーションの各ステップが単なる`{ value, done }`オブジェクトではなくPromiseに解決されるため" },
-            { en: "Because async generators don't support the spread operator", np: "किनकि async generators ले spread operator support गर्दैनन्", jp: "async generatorがスプレッド演算子をサポートしていないため" },
+            { en: "Whichever of a or b settles first", np: "a वा b मध्ये जो पहिले settle हुन्छ", jp: "aかbのうち先に確定した方" },
+            { en: "Always the result of a, ignoring b entirely", np: "सधैं a को result, b लाई पूर्ण रूपमा ignore गरी", jp: "常にaの結果で、bは完全に無視する" },
           ],
           correctIndex: 0,
-          explanation: { en: "An async generator's iteration steps are Promises, so the loop needs to await each one before reading value/done — that's exactly what for await...of does.", np: "Async generator को iteration steps Promises हुन्, त्यसैले loop ले value/done पढ्नु अघि हरेक await गर्नुपर्छ — for await...of ले ठीक त्यही गर्छ।", jp: "async generatorのイテレーションステップはPromiseなので、ループはvalue/doneを読む前に各Promiseをawaitする必要がある — for await...ofはまさにそれを行う。" },
+          explanation: { en: "race() settles as soon as the first input promise settles, whether it resolves or rejects — the other is simply left running and ignored.", np: "race() पहिलो input promise settle हुने बित्तिकै settle हुन्छ, resolve वा reject जुनसुकै होस्; अर्को त simply चलिरहन्छ र ignore हुन्छ।", jp: "race()は最初のPromiseが確定した瞬間に確定する。resolveかrejectかは問わない — もう一方は単に動き続け無視される。" },
         },
         {
-          question: { en: "What does `yield*` do when used inside one generator to delegate into another?", np: "एक generator भित्र अर्कोलाई delegate गर्न प्रयोग गर्दा `yield*` ले के गर्छ?", jp: "あるジェネレータの内部で別のジェネレータに委譲するために使われる`yield*`は何をする？" },
+          question: { en: "Why is `AbortController` preferred over `Promise.race` for timing out a `fetch()` call?", np: "`fetch()` call timeout गर्न `Promise.race` भन्दा `AbortController` किन preferred छ?", jp: "`fetch()`呼び出しのタイムアウトに`Promise.race`より`AbortController`が好まれる理由は？" },
           options: [
-            { en: "Yields each value from the inner generator individually, one at a time", np: "भित्री generator बाट हरेक value व्यक्तिगत रूपमा एक-एक गरी yield गर्छ", jp: "内側のジェネレータの各値を個別に一つずつyieldする" },
-            { en: "Yields the entire inner generator as a single combined value", np: "सम्पूर्ण भित्री generator लाई एउटै combined value को रूपमा yield गर्छ", jp: "内側のジェネレータ全体を1つの結合された値としてyieldする" },
+            { en: "It actually cancels the underlying network request instead of just ignoring it", np: "यसले network request लाई केवल ignore गर्नुको सट्टा वास्तवमा cancel गर्छ", jp: "単に無視するのではなく、実際にネットワークリクエストをキャンセルする" },
+            { en: "It makes the fetch resolve faster than normal", np: "यसले fetch लाई normal भन्दा छिटो resolve गराउँछ", jp: "fetchを通常より速く解決させる" },
           ],
           correctIndex: 0,
-          explanation: { en: "yield* forwards each value the inner generator produces one by one, as if the outer generator had yielded them directly itself.", np: "yield* ले भित्री generator ले produce गर्ने हरेक value एक-एक गरी forward गर्छ, जस्तो कि बाहिरी generator आफैंले तिनीहरूलाई directly yield गरेको हो।", jp: "yield*は内側のジェネレータが生成する各値を一つずつ転送する。まるで外側のジェネレータが直接それらをyieldしたかのように。" },
+          explanation: { en: "Promise.race just ignores the loser; AbortController's signal actually tells the browser to abort the in-flight network request, freeing the connection.", np: "Promise.race ले हार्नेलाई केवल ignore गर्छ; AbortController को signal ले browser लाई in-flight network request abort गर्न वास्तवमा भन्छ, connection free गर्छ।", jp: "Promise.raceは負けた方を単に無視する。AbortControllerのsignalは実際にブラウザに進行中のネットワークリクエストをアボートさせ、接続を解放する。" },
         },
         {
-          question: { en: "If you `break` out of a `for await...of` loop over a paginated async generator early, what happens to later pages?", np: "Paginated async generator मा `for await...of` loop बाट early `break` गरेमा, पछिका pages लाई के हुन्छ?", jp: "ページングされたasync generatorに対する`for await...of`ループを早めに`break`した場合、後のページはどうなる？" },
+          question: { en: "In the circuit breaker pattern, what happens while the circuit is in the `open` state?", np: "Circuit breaker pattern मा, circuit `open` state मा हुँदा के हुन्छ?", jp: "サーキットブレーカーパターンで、サーキットが`open`状態にある間何が起こる？" },
           options: [
-            { en: "They are never fetched, since the generator only fetches a page when asked for the next value", np: "ती कहिल्यै fetch हुँदैनन्, किनकि generator ले अर्को value मागिएमा मात्र page fetch गर्छ", jp: "ジェネレータは次の値が要求されたときだけページを取得するため、決して取得されない" },
-            { en: "They were already fetched in the background before the break", np: "ती break हुनु अघि नै background मा fetch भइसकेका हुन्छन्", jp: "breakする前にすでにバックグラウンドで取得されていた" },
+            { en: "Calls fail immediately without being attempted, until a cooldown passes", np: "Cooldown नबितेसम्म calls प्रयास नगरी तुरुन्तै fail हुन्छन्", jp: "クールダウンが経過するまで、呼び出しは試みられることなく即座に失敗する" },
+            { en: "Calls are retried immediately, faster than normal", np: "Calls तुरुन्तै, normal भन्दा छिटो retry हुन्छन्", jp: "呼び出しは通常より速く即座にリトライされる" },
           ],
           correctIndex: 0,
-          explanation: { en: "An async generator is lazy just like a synchronous one — breaking the consuming loop simply stops the generator from resuming, so no further fetch() calls happen.", np: "Async generator पनि synchronous जस्तै lazy हुन्छ — consuming loop break गर्नाले generator लाई resume हुनबाट रोक्छ, त्यसैले थप fetch() calls हुँदैनन्।", jp: "async generatorも同期的なものと同様に遅延評価される — 消費側のループをbreakすると単にジェネレータの再開が止まるだけなので、それ以上のfetch()呼び出しは発生しない。" },
+          explanation: { en: "The open state fails fast on purpose — no calls are even attempted until the cooldown elapses and the breaker moves to half-open to test recovery.", np: "Open state ले जानाजानी fail fast गर्छ — cooldown नबितेसम्म कुनै call प्रयास पनि हुँदैन, त्यसपछि breaker recovery test गर्न half-open मा जान्छ।", jp: "open状態は意図的に即座に失敗する — クールダウンが経過し、ブレーカーが回復をテストするためhalf-openに移るまで、呼び出しは試みられることさえない。" },
+        },
+      ],
+    },
+    {
+      id: "concurrency-memoization",
+      title: { en: "Concurrency Limiting & Async Memoization", np: "Concurrency Limiting र Async Memoization", jp: "同時実行数制限と非同期メモ化" },
+      durationMinutes: 9,
+      explanation: {
+        en: "When working with many requests, two common problems can happen:\n\n1. <b>Too many requests at once</b>\n2. <b>The same request being made multiple times</b>\n\nTwo useful solutions are <b>concurrency limiting</b> and <b>request deduplication/memoization</b>.\n\n---\n\n## 1. The Problem with `Promise.all()`\n\nYou might write:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nThis looks simple.\n\nBut imagine you have <b>1,000 URLs</b>.\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nThis can:\n\n• Overload your server\n• Hit an API's rate limit\n• Use too many connections\n• Make your application slower\n\nInstead, we can limit how many requests run at the same time.\n\n---\n\n## 2. Concurrency Limiting\n\n<b>Concurrency</b> means how many tasks are running at the same time.\n\nFor example, if our limit is `5`:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nSo we never have more than <b>5 requests running at once</b>.\n\n### Simple idea\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nThis is called <b>bounded concurrency</b> (a fixed limit on how many tasks can run together).\n\n---\n\n## 3. How does `Promise.race()` help?\n\nWe can keep track of the requests currently running.\n\nFor example:\n\n```javascript\nconst executing = new Set();\n```\n\nWhen we start a request, we add its promise to the set.\n\nIf we reach our limit:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` waits until <b>any one</b> of the running requests finishes.\n\nThen we can start another request.\n\nSo:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\nThe important idea is:\n\n> <b>Don't start a new task until there is room.</b>\n\n---\n\n## 4. Duplicate Requests\n\nNow imagine five components on a page all need the same user:\n\n```javascript\nfetchUser(1)\n```\n\nWithout any protection:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nThat's <b>5 identical network requests</b>.\n\nBut we only need one.\n\n---\n\n## 5. Request Deduplication\n\n<b>Deduplication</b> (removing duplicates) means:\n\n> If the same request is already running, reuse it instead of starting another one.\n\nWe can store running requests in a `Map`.\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b> means a request that has started but hasn't finished yet.\n\nThe idea is:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\nSo if five components ask for the same user:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\nAll five callers get the <b>same Promise</b>.\n\nAfter the request finishes, we remove it from the `Map`.\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` means <b>run this code whether the request succeeds or fails</b>.\n\n---\n\n## 6. Memoization\n\nMemoization is similar, but it solves a slightly different problem.\n\n<b>Memoization</b> means:\n\n> Save a previous result and reuse it later.\n\nFor example:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nThis means we don't need to make another network request.\n\n---\n\n## 7. Memoization with Expiration\n\nWe usually don't want to keep data forever.\n\nFor example, user data might be cached for <b>60 seconds</b>.\n\nThis is called a <b>TTL</b> (Time To Live), which simply means:\n\n> How long the cached data should be used.\n\nWe can store:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nThen:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\nAfter 60 seconds, the cache expires and we fetch fresh data.\n\n---\n\n## 8. Deduplication vs Memoization\n\nThese two concepts are easy to confuse.\n\n### Request Deduplication\n\nDeals with requests happening <b>at the same time</b>.\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nIt only cares about requests that are currently running.\n\n### Memoization\n\nDeals with requests happening <b>later</b>.\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\nThe result is reused until it expires.\n\n---\n\n## 9. They Can Work Together\n\nIn real applications, you can use both.\n\nSo:\n\n<b>Deduplication</b> prevents duplicate requests happening at the same time.\n\n<b>Memoization</b> prevents unnecessary requests happening later.",
+        np: "धेरै request सँग काम गर्दा, दुई सामान्य समस्या आउन सक्छन्:\n\n1. <b>एकैचोटि धेरै request</b>\n2. <b>उही request धेरै पटक बनाइनु</b>\n\nदुई उपयोगी समाधान हुन्: <b>concurrency limiting</b> र <b>request deduplication/memoization</b>।\n\n---\n\n## 1. `Promise.all()` को समस्या\n\nतपाईं यसो लेख्न सक्नुहुन्छ:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nयो सजिलो देखिन्छ।\n\nतर कल्पना गर्नुहोस् तपाईंसँग <b>1,000 URLs</b> छन्।\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nयसले सक्छ:\n\n• तपाईंको server लाई overload गर्न\n• API को rate limit नाघ्न\n• धेरै connection प्रयोग गर्न\n• तपाईंको application लाई ढिलो बनाउन\n\nबरु, हामी एकै समयमा कति request चल्ने हो त्यो सीमित गर्न सक्छौं।\n\n---\n\n## 2. Concurrency Limiting\n\n<b>Concurrency</b> को अर्थ एकै समयमा कति task चलिरहेका छन् भन्ने हो।\n\nउदाहरणका लागि, हाम्रो limit `5` छ भने:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nत्यसैले हामीसँग कहिल्यै <b>एकैचोटि 5 भन्दा धेरै request</b> हुँदैनन्।\n\n### सरल विचार\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nयसलाई <b>bounded concurrency</b> भनिन्छ (एकसाथ कति task चल्न सक्छन् भन्ने निश्चित limit)।\n\n---\n\n## 3. `Promise.race()` ले कसरी मद्दत गर्छ?\n\nहामी अहिले चलिरहेका request को हिसाब राख्न सक्छौं।\n\nउदाहरणका लागि:\n\n```javascript\nconst executing = new Set();\n```\n\nRequest सुरु गर्दा, हामी त्यसको promise set मा थप्छौं।\n\nLimit पुगेपछि:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` ले चलिरहेका request मध्ये <b>कुनै एक</b> सक्किने बेलासम्म कुर्छ।\n\nत्यसपछि हामी अर्को request सुरु गर्न सक्छौं।\n\nत्यसैले:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\nमहत्वपूर्ण विचार यो हो:\n\n> <b>ठाउँ नहुँदासम्म नयाँ task सुरु नगर्नु।</b>\n\n---\n\n## 4. Duplicate Requests\n\nअब कल्पना गर्नुहोस् page मा पाँच component लाई उही user चाहिन्छ:\n\n```javascript\nfetchUser(1)\n```\n\nकुनै सुरक्षा बिना:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nत्यो <b>5 उस्तै network request</b> हो।\n\nतर हामीलाई एउटा मात्र चाहिन्छ।\n\n---\n\n## 5. Request Deduplication\n\n<b>Deduplication</b> (duplicate हटाउनु) को अर्थ:\n\n> उही request पहिले नै चलिरहेको छ भने, अर्को सुरु गर्नुको साटो त्यसै लाई पुनः प्रयोग गर्नु।\n\nहामी चलिरहेका request लाई `Map` मा राख्न सक्छौं।\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b> को अर्थ सुरु भइसकेको तर अझै सकिएको छैन भन्ने request हो।\n\nविचार यो हो:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\nत्यसैले पाँच component ले उही user मागे भने:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\nपाँचै caller ले <b>उही Promise</b> पाउँछन्।\n\nRequest सकिएपछि, हामी त्यसलाई `Map` बाट हटाउँछौं।\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` को अर्थ <b>request सफल होस् वा fail, यो code चलाउनु</b> भन्ने हो।\n\n---\n\n## 6. Memoization\n\nMemoization मिल्दो छ, तर यो अलिकति फरक समस्या समाधान गर्छ।\n\n<b>Memoization</b> को अर्थ:\n\n> अघिल्लो result सेभ गर्नु र पछि पुनः प्रयोग गर्नु।\n\nउदाहरणका लागि:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nयसको अर्थ हामीले अर्को network request गर्नु पर्दैन।\n\n---\n\n## 7. Expiration सहितको Memoization\n\nहामी सामान्यतया data सधैंभरि राख्न चाहँदैनौं।\n\nउदाहरणका लागि, user data <b>60 seconds</b> सम्म cache हुन सक्छ।\n\nयसलाई <b>TTL</b> (Time To Live) भनिन्छ, जसको सरल अर्थ:\n\n> Cache गरिएको data कति बेरसम्म प्रयोग गर्ने।\n\nहामी यो राख्न सक्छौं:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nत्यसपछि:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\n60 seconds पछि, cache expire हुन्छ र हामी ताजा data fetch गर्छौं।\n\n---\n\n## 8. Deduplication vs Memoization\n\nयी दुई concept सजिलै भ्रममा पार्छन्।\n\n### Request Deduplication\n\n<b>एकै समयमा</b> हुने request सँग सम्बन्धित छ।\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nयसलाई अहिले चलिरहेका request सँग मात्र मतलब छ।\n\n### Memoization\n\n<b>पछि</b> हुने request सँग सम्बन्धित छ।\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\nResult expire नहुँदासम्म पुनः प्रयोग हुन्छ।\n\n---\n\n## 9. यी सँगै काम गर्न सक्छन्\n\nवास्तविक application मा, तपाईं दुबै प्रयोग गर्न सक्नुहुन्छ।\n\nत्यसैले:\n\n<b>Deduplication</b> ले एकै समयमा हुने duplicate request रोक्छ।\n\n<b>Memoization</b> ले पछि हुने अनावश्यक request रोक्छ।",
+        jp: "多くのリクエストを扱うとき、よくある問題が2つ起こります:\n\n1. <b>一度にリクエストが多すぎる</b>\n2. <b>同じリクエストが何度も行われる</b>\n\n役に立つ解決策が2つあります: <b>並行数の制限</b>と<b>リクエストの重複排除／メモ化</b>です。\n\n---\n\n## 1. `Promise.all()` の問題\n\nこう書くかもしれません:\n\n```javascript\nconst results = await Promise.all(\n  urls.map(url => fetch(url))\n);\n```\n\nシンプルに見えます。\n\nしかし<b>1,000個のURL</b>があると想像してください。\n\n```text\n1,000 URLs\n    ↓\n1,000 requests at once 😨\n```\n\nこれは次のようなことを招きます:\n\n• サーバーに過負荷をかける\n• APIのレート制限に達する\n• 接続を使いすぎる\n• アプリケーションを遅くする\n\n代わりに、同時に走るリクエスト数を制限できます。\n\n---\n\n## 2. 並行数の制限\n\n<b>並行数（Concurrency）</b>とは、同時に走っているタスクの数のことです。\n\nたとえば制限が `5` の場合:\n\n```text\n5 requests running\n↓\nOne finishes\n↓\nStart another request\n↓\nOne finishes\n↓\nStart another request\n```\n\nつまり<b>同時に5件を超えるリクエスト</b>は決して走りません。\n\n### シンプルな考え方\n\n```text\n100 URLs\n   ↓\nLimit = 5\n   ↓\n5 requests start\n   ↓\n1 finishes\n   ↓\n1 new request starts\n   ↓\nRepeat until everything is done\n```\n\nこれを<b>境界付き並行性（bounded concurrency）</b>と呼びます（同時に走れるタスク数の固定の上限）。\n\n---\n\n## 3. `Promise.race()` はどう役立つのか?\n\nいま走っているリクエストを記録しておけます。\n\nたとえば:\n\n```javascript\nconst executing = new Set();\n```\n\nリクエストを開始したら、そのPromiseをセットに追加します。\n\n制限に達したら:\n\n```javascript\nawait Promise.race(executing);\n```\n\n`Promise.race()` は走っているリクエストの<b>どれか1つ</b>が終わるまで待ちます。\n\nそうすれば次のリクエストを開始できます。\n\nつまり:\n\n```text\nLimit = 3\n\nRequest A ───────────✓\nRequest B ───────✓\nRequest C ───────────────✓\n             ↑\n       wait for one\n             ↓\n        Start Request D\n```\n\n大事な考え方はこうです:\n\n> <b>空きができるまで新しいタスクを始めない。</b>\n\n---\n\n## 4. 重複したリクエスト\n\nページ上の5つのコンポーネントが同じユーザーを必要としていると想像してください:\n\n```javascript\nfetchUser(1)\n```\n\n何の対策もないと:\n\n```text\nComponent 1 → fetchUser(1)\nComponent 2 → fetchUser(1)\nComponent 3 → fetchUser(1)\nComponent 4 → fetchUser(1)\nComponent 5 → fetchUser(1)\n```\n\nこれは<b>まったく同じネットワークリクエストが5件</b>です。\n\nしかし必要なのは1件だけです。\n\n---\n\n## 5. リクエストの重複排除\n\n<b>重複排除（Deduplication）</b>とは:\n\n> 同じリクエストがすでに走っているなら、もう1つ始めずにそれを再利用する。\n\n走っているリクエストは `Map` に保存できます。\n\n```javascript\nconst inFlight = new Map();\n```\n\n<b>In-flight</b>とは、開始したがまだ終わっていないリクエストのことです。\n\n考え方はこうです:\n\n```text\nRequest for user 1\n       ↓\nIs it already running?\n   ↙           ↘\n Yes            No\n ↓               ↓\nReturn same    Start request\n Promise           ↓\n                Store it\n```\n\n5つのコンポーネントが同じユーザーを求めた場合:\n\n```text\nComponent 1 ─┐\nComponent 2 ─┤\nComponent 3 ─┼──→ One network request\nComponent 4 ─┤\nComponent 5 ─┘\n```\n\n5つの呼び出し元すべてが<b>同じPromise</b>を受け取ります。\n\nリクエストが終わったら、`Map` から削除します。\n\n```javascript\npromise.finally(() => {\n  inFlight.delete(key);\n});\n```\n\n`finally()` は<b>リクエストが成功しても失敗してもこのコードを実行する</b>という意味です。\n\n---\n\n## 6. メモ化\n\nメモ化は似ていますが、少し違う問題を解決します。\n\n<b>メモ化（Memoization）</b>とは:\n\n> 前回の結果を保存して、後で再利用する。\n\nたとえば:\n\n```text\nFirst call\n↓\nFetch user\n↓\nSave result\n\nLater call\n↓\nReturn saved result\n```\n\nつまり、もう一度ネットワークリクエストをする必要がなくなります。\n\n---\n\n## 7. 有効期限付きのメモ化\n\n通常、データを永遠に保持したいわけではありません。\n\nたとえば、ユーザーデータは<b>60秒</b>だけキャッシュするかもしれません。\n\nこれを<b>TTL</b>（Time To Live）と呼び、単純に次を意味します:\n\n> キャッシュしたデータをどれくらいの間使うか。\n\nこう保存できます:\n\n```javascript\n{\n  value: user,\n  expiresAt: Date.now() + 60000\n}\n```\n\nそして:\n\n```text\nRequest\n   ↓\nIs cached data available?\n   ↓\nIs it still valid?\n ↙             ↘\nYes             No\n ↓               ↓\nReturn cache   Fetch again\n                 ↓\n              Save result\n```\n\n60秒後にキャッシュは期限切れになり、新しいデータを取得します。\n\n---\n\n## 8. 重複排除とメモ化の違い\n\nこの2つの概念は混同しやすいです。\n\n### リクエストの重複排除\n\n<b>同時に</b>起きるリクエストを扱います。\n\n```text\nRequest A ────────┐\nRequest B ────────┼──→ One network request\nRequest C ────────┘\n```\n\nいま走っているリクエストのことだけを気にします。\n\n### メモ化\n\n<b>後で</b>起きるリクエストを扱います。\n\n```text\n10:00 → Fetch data → Save result\n10:01 → Use saved result\n10:02 → Use saved result\n```\n\n結果は期限が切れるまで再利用されます。\n\n---\n\n## 9. 組み合わせて使える\n\n実際のアプリケーションでは、両方使えます。\n\nつまり:\n\n<b>重複排除</b>は同時に起きる重複リクエストを防ぎます。\n\n<b>メモ化</b>は後で起きる不要なリクエストを防ぎます。",
+      },
+      diagram: `                 Request
+                    ↓
+             Is result cached?
+              ↙          ↘
+            Yes           No
+             ↓             ↓
+       Return result   Is request running?
+                         ↙        ↘
+                       Yes         No
+                        ↓           ↓
+                 Return same     Start fetch
+                   Promise          ↓
+                                Save result
+                                   ↓
+                              Return result`,
+      codeExample: {
+        title: { en: "Bounded concurrency, request dedup & TTL memoization", np: "Bounded concurrency, request dedup र TTL memoization", jp: "有界の同時実行・リクエスト重複排除・TTLメモ化" },
+        code: `// ── The problem: Promise.all fires everything at once ───────────────
+const urls = Array.from({ length: 1000 }, (_, i) => \`/api/items/\${i}\`);
+// await Promise.all(urls.map(url => fetch(url)));   // ❌ 1000 simultaneous requests
+
+// ── Concurrency limiter — at most \`limit\` tasks in flight at once ───
+async function runWithConcurrency(items, fn, limit) {
+  const results = [];
+  const executing = new Set();
+
+  for (const [index, item] of items.entries()) {
+    const task = fn(item, index).then((result) => {
+      results[index] = result;
+      executing.delete(task);   // free up a slot when this task finishes
+    });
+    executing.add(task);
+
+    if (executing.size >= limit) {
+      await Promise.race(executing);   // wait for at least one slot to free up
+    }
+  }
+
+  await Promise.all(executing);   // drain whatever's still running
+  return results;
+}
+
+const items = await runWithConcurrency(
+  urls,
+  (url) => fetch(url).then((r) => r.json()),
+  5   // only 5 requests in flight at any moment
+);
+
+// ── Request deduplication — collapse identical concurrent calls ─────
+const inFlight = new Map();
+
+function dedupedFetch(url) {
+  if (inFlight.has(url)) return inFlight.get(url);   // share the pending Promise
+
+  const promise = fetch(url)
+    .then((res) => res.json())
+    .finally(() => inFlight.delete(url));             // clean up once it settles
+
+  inFlight.set(url, promise);
+  return promise;
+}
+
+// Five simultaneous calls, ONE network request:
+await Promise.all([
+  dedupedFetch("/api/users/1"),
+  dedupedFetch("/api/users/1"),
+  dedupedFetch("/api/users/1"),
+]);
+
+// ── Async memoization with a TTL cache ───────────────────────────────
+function memoizeAsync(fn, ttlMs = 60_000) {
+  const cache = new Map();
+
+  return async function (...args) {
+    const key = JSON.stringify(args);
+    const cached = cache.get(key);
+
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.value;   // fresh cache hit — no network call at all
+    }
+
+    const value = await fn(...args);
+    cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+    return value;
+  };
+}
+
+const cachedFetchUser = memoizeAsync((id) => dedupedFetch(\`/api/users/\${id}\`), 5 * 60_000);
+
+await cachedFetchUser(1);   // network request, then cached for 5 minutes
+await cachedFetchUser(1);   // instant — served from cache`,
+      },
+      keyTakeaways: [
+        { en: "<b>Concurrency limiting</b> → \"Don't run too many tasks at once.\" `Promise.all()` over 1,000 URLs fires 1,000 requests at once; a limit keeps only a few running and starts a new one each time another finishes.", np: "<b>Concurrency limiting</b> → \"एकैचोटि धेरै task नचलाउ।\" 1,000 URLs माथि `Promise.all()` ले एकैचोटि 1,000 request पठाउँछ; limit ले केही मात्र चलाइराख्छ र एउटा सक्किएपछि नयाँ सुरु गर्छ।", jp: "<b>並行数の制限</b> → \"一度に多くのタスクを走らせない。\" 1,000件のURLに `Promise.all()` を使うと1,000件のリクエストが同時に飛ぶ。制限をかければ数件だけが走り、1件終わるごとに次を始める。" },
+        { en: "<b>`Promise.race()` on the running set</b> — keep in-flight promises in a `Set` and `await Promise.race(executing)` when you hit the limit. Don't start a new task until there is room.", np: "<b>चलिरहेको set माथि `Promise.race()`</b> — in-flight promise लाई `Set` मा राख्नुहोस् र limit पुग्दा `await Promise.race(executing)` गर्नुहोस्। ठाउँ नहुँदासम्म नयाँ task सुरु नगर्नुहोस्।", jp: "<b>実行中のセットに対する `Promise.race()`</b> — 実行中のPromiseを `Set` に保持し、上限に達したら `await Promise.race(executing)` する。空きができるまで新しいタスクを始めない。" },
+        { en: "<b>Request deduplication</b> → \"Don't make the same request twice at the same time.\" Store in-flight promises in a `Map` so five callers share one network request, and delete the entry in `finally()`.", np: "<b>Request deduplication</b> → \"उही request एकै समयमा दुई पटक नगर।\" In-flight promise लाई `Map` मा राख्नुहोस् ताकि पाँच caller ले एउटै network request बाँडिन्, र `finally()` मा entry हटाउनुहोस्।", jp: "<b>リクエストの重複排除</b> → \"同じリクエストを同時に2回行わない。\" 実行中のPromiseを `Map` に保存して5人の呼び出し元が1回のネットワークリクエストを共有し、`finally()` でエントリを削除する。" },
+        { en: "<b>Memoization</b> → \"Reuse a result we already have.\" Save the result and return it on later calls instead of fetching again.", np: "<b>Memoization</b> → \"हामीसँग पहिले नै भएको result पुनः प्रयोग गर।\" Result सेभ गर्नुहोस् र फेरि fetch गर्नुको साटो पछिका call मा त्यही फर्काउनुहोस्।", jp: "<b>メモ化</b> → \"すでにある結果を再利用する。\" 結果を保存し、再取得せずに後の呼び出しで返す。" },
+        { en: "<b>TTL</b> → \"How long should we keep using the cached result?\" Store `{ value, expiresAt }` so the cache expires (say after 60 seconds) and fresh data is fetched again.", np: "<b>TTL</b> → \"Cache गरिएको result कति बेरसम्म प्रयोग गर्ने?\" `{ value, expiresAt }` राख्नुहोस् ताकि cache expire होस् (जस्तै 60 seconds पछि) र ताजा data फेरि fetch होस्।", jp: "<b>TTL</b> → \"キャッシュした結果をどれくらい使い続けるか?\" `{ value, expiresAt }` を保存し、（たとえば60秒後に）キャッシュが期限切れになって新しいデータを取り直すようにする。" },
+        { en: "Deduplication is about requests happening <b>at the same time</b>; memoization is about requests happening <b>later</b>. Real applications use both together.", np: "Deduplication <b>एकै समयमा</b> हुने request बारे हो; memoization <b>पछि</b> हुने request बारे हो। वास्तविक application मा दुबै सँगै प्रयोग हुन्छन्।", jp: "重複排除は<b>同時に</b>起きるリクエストの話、メモ化は<b>後で</b>起きるリクエストの話。実際のアプリケーションでは両方を組み合わせて使う。" },
+        { en: "The main goal is simple: use fewer requests, avoid unnecessary work, and prevent your application from being overwhelmed.", np: "मुख्य लक्ष्य सरल छ: कम request प्रयोग गर्नु, अनावश्यक काम बचाउनु, र तपाईंको application लाई overwhelm हुनबाट रोक्नु।", jp: "主な目標はシンプルだ: リクエストを減らし、不要な処理を避け、アプリケーションが過負荷にならないようにする。" },
+      ],
+      commonMistakes: [
+        { en: "Using `Promise.all` on a huge array of requests with no concurrency cap, overwhelming the server or hitting a rate limit.", np: "कुनै concurrency cap नराखी requests को ठूलो array मा `Promise.all` प्रयोग गर्नु, server overwhelm गर्नु वा rate limit hit गर्नु।", jp: "同時実行数の上限なしに巨大なリクエスト配列に`Promise.all`を使い、サーバーを過負荷にしたりレート制限に引っかかったりすること。" },
+        { en: "Not deduplicating concurrent identical requests, so multiple components calling the same endpoint at the same time each fire their own network request.", np: "Concurrent identical requests deduplicate नगर्नु, जसले गर्दा same endpoint लाई same समयमा call गर्ने multiple components ले आफ्नै-आफ्नै network request fire गर्छन्।", jp: "同時の同一リクエストを重複排除しないこと。同じエンドポイントを同時に呼び出す複数のコンポーネントがそれぞれ自分のネットワークリクエストを発火してしまう。" },
+        { en: "Memoizing an async function with no TTL or cache invalidation at all, so it keeps returning stale data forever after the underlying value changes.", np: "कुनै TTL वा cache invalidation बिना async function memoize गर्नु, जसले underlying value बदलिएपछि पनि सधैंभरि stale data फर्काइरहन्छ।", jp: "TTLもキャッシュ無効化もなしに非同期関数をメモ化すること。基となる値が変わった後も永遠に古いデータを返し続けてしまう。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What problem does a concurrency limiter solve that `Promise.all` alone doesn't?", np: "`Promise.all` एक्लैले solve नगर्ने कुन समस्या concurrency limiter ले solve गर्छ?", jp: "`Promise.all`単体では解決しない、同時実行数リミッターが解決する問題は何？" },
+          options: [
+            { en: "It caps how many async tasks run at the same time instead of firing them all at once", np: "यसले सबैलाई एकैचोटि fire नगरी कति async tasks एकैसाथ चल्छन् cap गर्छ", jp: "すべてを一斉発火する代わりに、同時に実行される非同期タスクの数を制限する" },
+            { en: "It makes each individual request resolve faster", np: "यसले हरेक individual request लाई छिटो resolve गराउँछ", jp: "個々のリクエストをより速く解決させる" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Promise.all fires everything simultaneously; a concurrency limiter starts a new task only when an earlier one finishes, keeping at most N in flight.", np: "Promise.all ले सबैलाई एकैचोटि fire गर्छ; concurrency limiter ले अघिल्लो सकिएपछि मात्र नयाँ task सुरु गर्छ, maximum N मात्र in flight राख्छ।", jp: "Promise.allはすべてを同時に発火する。同時実行数リミッターは前のタスクが終わったときだけ新しいタスクを開始し、最大N個だけを進行中に保つ。" },
+        },
+        {
+          question: { en: "When five components call `dedupedFetch(url)` for the same URL at the same time, what happens?", np: "पाँच components ले same URL का लागि same समयमा `dedupedFetch(url)` call गर्दा के हुन्छ?", jp: "5つのコンポーネントが同じURLに対して同時に`dedupedFetch(url)`を呼ぶとどうなる？" },
+          options: [
+            { en: "All five share the same in-flight Promise, and only one network request is made", np: "पाँचैले उही in-flight Promise share गर्छन्, र केवल एउटा network request मात्र हुन्छ", jp: "5つすべてが同じ進行中のPromiseを共有し、ネットワークリクエストは1つだけ発生する" },
+            { en: "Each call fires its own separate network request", np: "हरेक call ले आफ्नो छुट्टै network request fire गर्छ", jp: "各呼び出しがそれぞれ独自のネットワークリクエストを発火する" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The in-flight Map returns the same pending Promise to every caller with a matching key, so duplicate simultaneous requests collapse into one.", np: "In-flight Map ले matching key भएका हरेक caller लाई उही pending Promise फर्काउँछ, त्यसैले duplicate simultaneous requests एउटामा collapse हुन्छन्।", jp: "進行中のMapは一致するキーを持つすべての呼び出し元に同じ保留中のPromiseを返すため、重複する同時リクエストは1つに集約される。" },
+        },
+        {
+          question: { en: "Why does a TTL-based memoization cache store an `expiresAt` timestamp alongside the cached value?", np: "TTL-based memoization cache ले cached value सँगै `expiresAt` timestamp किन store गर्छ?", jp: "TTLベースのメモ化キャッシュがキャッシュされた値とともに`expiresAt`タイムスタンプを保存する理由は？" },
+          options: [
+            { en: "So a cached entry is only reused while still fresh, and re-fetched once it's stale", np: "ताकि cached entry fresh रहुन्जेल मात्र reuse होस्, र stale भएपछि फेरि fetch होस्", jp: "キャッシュされたエントリが新鮮な間だけ再利用され、古くなったら再取得されるように" },
+            { en: "So the cache never needs to be checked before returning a value", np: "ताकि value फर्काउनु अघि cache जाँच गर्नैपर्दैन", jp: "値を返す前にキャッシュを確認する必要がなくなるように" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The expiresAt check lets the cache tell fresh entries from stale ones, so it only returns a cached value when the TTL hasn't passed yet.", np: "expiresAt check ले cache लाई fresh र stale entries छुट्याउन दिन्छ, त्यसैले TTL नबितेसम्म मात्र cached value फर्काउँछ।", jp: "expiresAtのチェックによりキャッシュは新鮮なエントリと古いエントリを区別できる。TTLがまだ過ぎていないときだけキャッシュされた値を返す。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "When you call a generator function like `naturals()`, what happens right away?", np: "`naturals()` जस्तो generator function call गर्दा तुरुन्तै के हुन्छ?", jp: "`naturals()`のようなジェネレータ関数を呼び出すと、すぐに何が起きる？" },
-      options: [{ en: "A generator object is created, but no code inside runs yet", np: "generator object बन्छ, तर भित्रको कुनै code अझै चलेको हुँदैन", jp: "ジェネレータオブジェクトが作られるが、内部のコードはまだ実行されない" }, { en: "The function runs until it hits the first `return` statement", np: "function पहिलो `return` statement सम्म चल्छ", jp: "関数は最初の`return`文まで実行される" }],
+      question: { en: "Why must a retry loop have a `maxAttempts` limit?", np: "Retry loop मा `maxAttempts` limit किन हुनुपर्छ?", jp: "リトライループに`maxAttempts`の上限が必要な理由は？" },
+      options: [{ en: "Without one, a broken request could retry forever and keep hammering a struggling service", np: "नभएमा, broken request ले सधैंभरि retry गरी struggle गरिरहेको service लाई हान्न सक्छ", jp: "上限がなければ、壊れたリクエストが永遠にリトライを続け、苦しんでいるサービスを叩き続けてしまう" }, { en: "Without one, JavaScript throws a syntax error", np: "नभएमा, JavaScript ले syntax error throw गर्छ", jp: "上限がなければ、JavaScriptが構文エラーをスローする" }],
       correctIndex: 0,
-      explanation: { en: "Calling a generator function never executes its body immediately; it only creates the generator object, which starts running from .next().", np: "Generator function call ले भित्रको body तुरुन्तै कहिल्यै execute गर्दैन; यसले केवल generator object बनाउँछ, जो .next() बाट मात्र चल्न थाल्छ।", jp: "ジェネレータ関数の呼び出しは本体をすぐには実行しない。ジェネレータオブジェクトを作るだけで、.next()から実行が始まる。" },
+      explanation: { en: "A retry loop with no cap can turn one failure into an infinite hammering loop; capping attempts and rethrowing on the last one lets the caller react instead.", np: "कुनै cap नभएको retry loop ले एउटा failure लाई infinite hammering loop मा बदल्न सक्छ; attempts cap गरी अन्तिममा rethrow गर्दा caller ले react गर्न सक्छ।", jp: "上限のないリトライループは1つの失敗を無限のハンマリングループに変えてしまう。試行回数を制限し最後に再スローすることで、呼び出し側が対応できるようになる。" },
     },
     {
-      question: { en: "What is the shape of the value returned by every call to `.next()` on a plain (non-async) generator?", np: "Plain (non-async) generator मा हरेक `.next()` call ले फर्काउने value को shape के हो?", jp: "プレーンな（非async）ジェネレータの`.next()`呼び出しごとに返される値の形は？" },
-      options: [{ en: "`{ value, done }`", np: "`{ value, done }`", jp: "`{ value, done }`" }, { en: "A Promise that eventually resolves to the yielded value", np: "eventually yielded value मा resolve हुने Promise", jp: "最終的にyieldされた値に解決されるPromise" }],
+      question: { en: "In exponential backoff, roughly how does the delay change between successive retries?", np: "Exponential backoff मा, क्रमिक retries बीच delay लगभग कसरी बदलिन्छ?", jp: "指数バックオフでは、連続するリトライ間の遅延はおおよそどのように変化する？" },
+      options: [{ en: "It roughly doubles each time, up to a capped maximum", np: "हरेक पटक लगभग दोब्बर हुन्छ, cap गरिएको maximum सम्म", jp: "上限まで、毎回おおよそ2倍になる" }, { en: "It stays exactly the same every time", np: "हरेक पटक ठ्याक्कै उही रहन्छ", jp: "毎回全く同じままである" }],
       correctIndex: 0,
-      explanation: { en: "Plain generators return {value, done} synchronously — only async generators return a Promise from each step.", np: "Plain generators ले synchronously {value, done} फर्काउँछन् — async generators ले मात्र हरेक step बाट Promise फर्काउँछन्।", jp: "プレーンなジェネレータは同期的に{value, done}を返す — 各ステップからPromiseを返すのはasync generatorだけ。" },
+      explanation: { en: "baseDelayMs * 2 ** attempt roughly doubles the wait each retry, capped by maxDelayMs so it never grows unbounded.", np: "baseDelayMs * 2 ** attempt ले हरेक retry मा wait लाई लगभग दोब्बर बनाउँछ, maxDelayMs ले cap गरिएको ताकि असीमित नबढ्न।", jp: "baseDelayMs * 2 ** attemptは各リトライで待機時間をおおよそ2倍にし、maxDelayMsで上限が設けられ無限に増えることはない。" },
     },
     {
-      question: { en: "In the `calculator()` generator example, how does a caller send a value INTO the generator's paused code?", np: "`calculator()` generator उदाहरणमा, caller ले generator को paused code भित्र value कसरी पठाउँछ?", jp: "`calculator()`ジェネレータの例で、呼び出し側はジェネレータの一時停止しているコードにどのように値を送る？" },
-      options: [{ en: "By passing it as an argument to `.next(value)`", np: "`.next(value)` मा argument को रूपमा pass गरेर", jp: "`.next(value)`に引数として渡す" }, { en: "By setting a property directly on the generator object", np: "generator object मा directly property set गरेर", jp: "ジェネレータオブジェクトに直接プロパティを設定する" }],
+      question: { en: "Should a `shouldRetry` predicate retry a `400 Bad Request` error?", np: "`shouldRetry` predicate ले `400 Bad Request` error retry गर्नुपर्छ?", jp: "`shouldRetry`述語は`400 Bad Request`エラーをリトライすべきか？" },
+      options: [{ en: "No — it's a client error that will fail identically every time", np: "होइन — यो client error हो जो हरेक पटक उस्तै रूपमा fail हुन्छ", jp: "いいえ — これは毎回同じように失敗するクライアントエラーだ" }, { en: "Yes — treat it the same as a transient 5xx failure", np: "हो — यसलाई transient 5xx failure जस्तै treat गर्नुपर्छ", jp: "はい — 一時的な5xx失敗と同じように扱うべき" }],
       correctIndex: 0,
-      explanation: { en: "Whatever is passed to next(value) becomes the result of the yield expression that was paused, giving two-way communication.", np: "`next(value)` मा pass गरेको जुनसुकै value रोकिएको yield expression को result बन्छ, जसले two-way communication दिन्छ।", jp: "`next(value)`に渡された値は一時停止していたyield式の結果になり、双方向通信が可能になる。" },
+      explanation: { en: "4xx errors mean something is wrong with the request itself, so retrying gets the same failure every time; only transient 5xx/network/429 failures deserve a retry.", np: "4xx errors को अर्थ request आफैंमा केही गलत छ, त्यसैले retry गर्दा हरेक पटक उही failure आउँछ; transient 5xx/network/429 failures मात्र retry पाउनुपर्छ।", jp: "4xxエラーはリクエスト自体に問題があることを意味するため、リトライしても毎回同じ失敗になる。一時的な5xx/ネットワーク/429の失敗だけがリトライに値する。" },
     },
     {
-      question: { en: "What two things define the iterator protocol?", np: "Iterator protocol लाई कुन दुई कुराले define गर्छ?", jp: "イテレータプロトコルを定義する2つの要素は？" },
-      options: [{ en: "An iterable has `[Symbol.iterator]()` returning an iterator; an iterator has `next()` returning `{ value, done }`", np: "Iterable मा `[Symbol.iterator]()` हुन्छ जो iterator फर्काउँछ; iterator मा `next()` हुन्छ जो `{ value, done }` फर्काउँछ", jp: "イテラブルはイテレータを返す`[Symbol.iterator]()`を持ち、イテレータは`{ value, done }`を返す`next()`を持つ" }, { en: "An iterable has a `length` property; an iterator has an `index` property", np: "Iterable मा `length` property हुन्छ; iterator मा `index` property हुन्छ", jp: "イテラブルは`length`プロパティを持ち、イテレータは`index`プロパティを持つ" }],
+      question: { en: "What does `Promise.race([operation, timeoutPromise])` settle with if the operation is too slow?", np: "Operation धेरै slow भएमा `Promise.race([operation, timeoutPromise])` कुनसँग settle हुन्छ?", jp: "操作が遅すぎる場合、`Promise.race([operation, timeoutPromise])`は何で確定する？" },
+      options: [{ en: "The timeout promise's rejection, since it settles first", np: "Timeout promise को rejection, किनकि यो पहिले settle हुन्छ", jp: "先に確定するため、タイムアウトPromiseの拒否" }, { en: "The operation's eventual result, once it finally arrives", np: "Operation को eventual result, जब यो अन्तमा आउँछ", jp: "最終的に到着した操作の結果" }],
       correctIndex: 0,
-      explanation: { en: "The protocol is defined purely by those two method shapes, with no requirement for length or index properties.", np: "Protocol ती दुई method shapes ले मात्र defined हुन्छ, length वा index properties आवश्यक पर्दैन।", jp: "プロトコルはこの2つのメソッドの形だけで定義され、lengthやindexプロパティは不要。" },
+      explanation: { en: "race() settles with whichever promise finishes first; a slow operation loses to a timeout that rejects sooner, and the slow operation's eventual result is simply discarded.", np: "race() जो promise पहिले पुग्छ त्यसैसँग settle हुन्छ; slow operation छिटो reject हुने timeout सँग हार्छ, र यसको eventual result simply discard हुन्छ।", jp: "race()はどちらか先に終わったPromiseで確定する。遅い操作はより早く拒否するタイムアウトに負け、その最終的な結果は単に捨てられる。" },
     },
     {
-      question: { en: "Which of these already implement the iterator protocol out of the box?", np: "यीमध्ये कुनले पहिले नै out of the box iterator protocol implement गर्छ?", jp: "これらのうち、すでに標準でイテレータプロトコルを実装しているのはどれ？" },
-      options: [{ en: "Arrays, strings, Maps, Sets, and generator objects", np: "Arrays, strings, Maps, Sets, र generator objects", jp: "配列・文字列・Map・Set・ジェネレータオブジェクト" }, { en: "Only Arrays — everything else must be manually made iterable", np: "केवल Arrays — बाँकी सबैलाई manually iterable बनाउनुपर्छ", jp: "配列だけ — 他はすべて手動でイテラブルにする必要がある" }],
+      question: { en: "What is the key advantage of `AbortController` over a plain `Promise.race` timeout for `fetch()`?", np: "`fetch()` का लागि plain `Promise.race` timeout भन्दा `AbortController` को key advantage के हो?", jp: "`fetch()`に対して、単純な`Promise.race`タイムアウトより`AbortController`が持つ主な利点は？" },
+      options: [{ en: "It actually cancels the underlying network request instead of leaving it running", np: "यसले underlying network request लाई चलिरहन दिनुको सट्टा वास्तवमा cancel गर्छ", jp: "実行を続けさせるのではなく、実際に基盤のネットワークリクエストをキャンセルする" }, { en: "It skips the need for a try/catch block", np: "यसले try/catch block को आवश्यकता हटाउँछ", jp: "try/catchブロックの必要性をなくす" }],
       correctIndex: 0,
-      explanation: { en: "Arrays, strings, Maps, Sets, and generators are all built-in iterables with working [Symbol.iterator]() methods already.", np: "Arrays, strings, Maps, Sets, र generators सबैमा पहिले नै काम गर्ने [Symbol.iterator]() भएका built-in iterables हुन्।", jp: "配列・文字列・Map・Set・ジェネレータはすべて、すでに動作する[Symbol.iterator]()を持つ組み込みのイテラブル。" },
+      explanation: { en: "Promise.race just ignores the slower promise; AbortController's signal tells the browser to actually stop the network request, freeing the connection.", np: "Promise.race ले slower promise लाई केवल ignore गर्छ; AbortController को signal ले browser लाई network request वास्तवमा रोक्न भन्छ, connection free गर्छ।", jp: "Promise.raceは遅い方のPromiseを単に無視する。AbortControllerのsignalは実際にブラウザに進行中のネットワークリクエストを停止させ、接続を解放する。" },
     },
     {
-      question: { en: "What is the shortcut for making a custom class iterable, instead of manually writing an object with your own `next()`?", np: "आफ्नै `next()` भएको object manually लेख्नुको सट्टा custom class लाई iterable बनाउने shortcut के हो?", jp: "独自の`next()`を持つオブジェクトを手動で書く代わりに、カスタムクラスをイテラブルにするショートカットは？" },
-      options: [{ en: "Define `[Symbol.iterator]()` as a generator method: `*[Symbol.iterator]() { ... }`", np: "`[Symbol.iterator]()` लाई generator method को रूपमा define गर्नु: `*[Symbol.iterator]() { ... }`", jp: "`[Symbol.iterator]()`をジェネレータメソッドとして定義する: `*[Symbol.iterator]() { ... }`" }, { en: "Extend the built-in `Array` class", np: "built-in `Array` class extend गर्नु", jp: "組み込みの`Array`クラスを拡張する" }],
+      question: { en: "In a circuit breaker, what triggers the move from `closed` to `open`?", np: "Circuit breaker मा, `closed` बाट `open` मा जाने trigger के हो?", jp: "サーキットブレーカーで、`closed`から`open`への移行を引き起こすものは？" },
+      options: [{ en: "The failure count reaching a configured threshold", np: "Failure count configured threshold मा पुग्नु", jp: "失敗回数が設定された閾値に達すること" }, { en: "A cooldown period elapsing", np: "Cooldown period बित्नु", jp: "クールダウン期間が経過すること" }],
       correctIndex: 0,
-      explanation: { en: "A generator method already returns something matching the iterator shape, so yield replaces writing a manual next() method.", np: "Generator method ले पहिले नै iterator shape मिल्ने चीज फर्काउँछ, त्यसैले yield ले manual next() method लेख्ने काम replace गर्छ।", jp: "ジェネレータメソッドはすでにイテレータの形に一致するものを返すため、yieldが手動でnext()メソッドを書く作業を置き換える。" },
+      explanation: { en: "The circuit opens once accumulated failures hit the threshold; the cooldown elapsing is instead what moves it from open to half-open.", np: "Accumulated failures threshold मा पुगेपछि circuit open हुन्छ; cooldown बितेपछि त open बाट half-open मा जान्छ।", jp: "累積した失敗が閾値に達すると、サーキットはopenになる。クールダウンの経過はopenからhalf-openへの移行を引き起こす。" },
     },
     {
-      question: { en: "Why is `for await...of` required to consume an async generator, instead of plain `for...of`?", np: "Async generator consume गर्न plain `for...of` को सट्टा `for await...of` किन आवश्यक पर्छ?", jp: "async generatorを消費するのに、通常の`for...of`ではなく`for await...of`が必要なのはなぜ？" },
-      options: [{ en: "Because each iteration step resolves to a Promise, which needs to be awaited before reading `value`/`done`", np: "किनकि हरेक iteration step Promise मा resolve हुन्छ, जसलाई `value`/`done` पढ्नु अघि await गर्नुपर्छ", jp: "各イテレーションステップがPromiseに解決されるため、`value`/`done`を読む前にawaitする必要があるから" }, { en: "Because async generators don't produce a `done` flag", np: "किनकि async generators ले `done` flag produce गर्दैनन्", jp: "async generatorが`done`フラグを生成しないから" }],
+      question: { en: "Why does firing `Promise.all` over 1000 URLs risk overwhelming a server, compared to a concurrency limiter?", np: "1000 URLs मा `Promise.all` fire गर्दा concurrency limiter को तुलनामा server overwhelm हुने जोखिम किन हुन्छ?", jp: "1000個のURLに`Promise.all`を発火することが、同時実行数リミッターと比べてサーバーを過負荷にするリスクがある理由は？" },
+      options: [{ en: "Promise.all starts every request at the exact same instant with no cap", np: "Promise.all ले कुनै cap बिना हरेक request लाई exact same instant मा सुरु गर्छ", jp: "Promise.allは上限なしにすべてのリクエストを全く同じ瞬間に開始する" }, { en: "Promise.all only supports up to 100 promises at a time", np: "Promise.all ले एकैसाथ maximum 100 promises मात्र support गर्छ", jp: "Promise.allは同時に最大100個のPromiseしかサポートしない" }],
       correctIndex: 0,
-      explanation: { en: "for await...of automatically awaits each step's Promise; plain for...of has no way to do that and would receive an unresolved Promise instead of the value.", np: "`for await...of` ले हरेक step को Promise automatic रूपमा await गर्छ; plain `for...of` सँग त्यो गर्ने कुनै तरिका छैन र value को सट्टा unresolved Promise पाउँछ।", jp: "`for await...of`は各ステップのPromiseを自動的にawaitする。通常の`for...of`にはその方法がなく、値の代わりに未解決のPromiseを受け取ってしまう。" },
+      explanation: { en: "Promise.all has no built-in concurrency cap — it fires every promise immediately, while a limiter deliberately caps how many run at once.", np: "Promise.all मा built-in concurrency cap छैन — यो हरेक promise तुरुन्तै fire गर्छ, जबकि limiter ले जानाजानी कति एकैसाथ चल्छन् cap गर्छ।", jp: "Promise.allには組み込みの同時実行数上限がない — すべてのPromiseを即座に発火する。一方リミッターは意図的に同時実行数を制限する。" },
     },
     {
-      question: { en: "If you `break` out of a `for await...of` loop midway through a paginated async generator, what happens to the remaining pages?", np: "Paginated async generator मध्ये `for await...of` loop बाट `break` गरेमा, बाँकी pages लाई के हुन्छ?", jp: "ページングされたasync generatorの途中で`for await...of`ループを`break`した場合、残りのページはどうなる？" },
-      options: [{ en: "They are never fetched — the generator only fetches when the next value is actually requested", np: "ती कहिल्यै fetch हुँदैनन् — generator ले अर्को value actually माग्दा मात्र fetch गर्छ", jp: "決して取得されない — ジェネレータは次の値が実際に要求されたときだけ取得する" }, { en: "They are fetched anyway because the network request had already started", np: "network request पहिले नै सुरु भइसकेकाले जसरी पनि fetch हुन्छन्", jp: "ネットワークリクエストがすでに始まっていたため、いずれにせよ取得される" }],
+      question: { en: "What is the core difference between request deduplication and async memoization?", np: "Request deduplication र async memoization बीचको core फरक के हो?", jp: "リクエスト重複排除と非同期メモ化の核心的な違いは？" },
+      options: [{ en: "Dedup shares one in-flight Promise among concurrent calls; memoization caches results across time with a TTL", np: "Dedup ले concurrent calls बीच एउटै in-flight Promise share गर्छ; memoization ले TTL सहित समयभरि results cache गर्छ", jp: "重複排除は同時呼び出し間で1つの進行中Promiseを共有し、メモ化はTTLで時間をまたいで結果をキャッシュする" }, { en: "They are two names for the exact same technique", np: "यी उही technique का दुई नाम हुन्", jp: "これらは全く同じ手法の2つの名前である" }],
       correctIndex: 0,
-      explanation: { en: "Async generators stay lazy: breaking the consuming loop simply stops it from resuming, so no further fetch() calls are triggered.", np: "Async generators lazy नै रहन्छन्: consuming loop break गर्नाले generator resume हुनबाट रोकिन्छ, त्यसैले थप fetch() calls trigger हुँदैनन्।", jp: "async generatorは遅延評価を保つ — 消費側のループをbreakすると単に再開が止まるだけなので、それ以上のfetch()呼び出しはトリガーされない。" },
+      explanation: { en: "Dedup solves overlapping calls happening at the same moment; memoization solves reusing a result for a later, non-overlapping call within a TTL window — they're often combined.", np: "Dedup ले उही moment मा overlap हुने calls solve गर्छ; memoization ले TTL window भित्र later, non-overlapping call का लागि result reuse गर्ने समस्या solve गर्छ — यी दुई प्राय: सँगै combine हुन्छन्।", jp: "重複排除は同じ瞬間に重なる呼び出しを解決し、メモ化はTTLウィンドウ内で後の重ならない呼び出しに結果を再利用する問題を解決する — この2つはよく組み合わされる。" },
     },
   ],
 };

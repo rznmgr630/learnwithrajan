@@ -25,22 +25,23 @@ import { JS_DAY_22_DETAIL } from "@/lib/js-learning/js-day-22-detail";
 import { JS_DAY_23_DETAIL } from "@/lib/js-learning/js-day-23-detail";
 import { JS_DAY_24_DETAIL } from "@/lib/js-learning/js-day-24-detail";
 import { JS_DAY_25_DETAIL } from "@/lib/js-learning/js-day-25-detail";
-import { JS_DAY_1_DETAIL } from "@/lib/js-learning/js-day-1-detail";
 import { JS_DAY_26_DETAIL } from "@/lib/js-learning/js-day-26-detail";
+import { JS_DAY_1_DETAIL } from "@/lib/js-learning/js-day-1-detail";
+import { JS_DAY_27_DETAIL } from "@/lib/js-learning/js-day-27-detail";
 
 export const JS_CURRENT_DAY = 1;
-export const JS_TOTAL_DAYS = 26;
+export const JS_TOTAL_DAYS = 27;
 
 const JS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1:  JS_DAY_1_DETAIL,
-  2: JS_DAY_2_DETAIL,
-  3: JS_DAY_3_DETAIL,
-  4: JS_DAY_4_DETAIL,
-  5: JS_DAY_5_DETAIL,
-  6: JS_DAY_6_DETAIL,
-  7: JS_DAY_7_DETAIL,
-  8: JS_DAY_8_DETAIL,
-  9: JS_DAY_9_DETAIL,
+  2:  JS_DAY_2_DETAIL,
+  3:  JS_DAY_3_DETAIL,
+  4:  JS_DAY_4_DETAIL,
+  5:  JS_DAY_5_DETAIL,
+  6:  JS_DAY_6_DETAIL,
+  7:  JS_DAY_7_DETAIL,
+  8:  JS_DAY_8_DETAIL,
+  9:  JS_DAY_9_DETAIL,
   10: JS_DAY_10_DETAIL,
   11: JS_DAY_11_DETAIL,
   12: JS_DAY_12_DETAIL,
@@ -58,6 +59,7 @@ const JS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   24: JS_DAY_24_DETAIL,
   25: JS_DAY_25_DETAIL,
   26: JS_DAY_26_DETAIL,
+  27: JS_DAY_27_DETAIL,
 };
 
 const DOT: Record<string, string> = {
@@ -115,6 +117,7 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [
       jsDayRow(6, ["objects", "destructuring"]),
       jsDayRow(7, ["arrays", "fundamentals"]),
+      jsDayRow(8, ["objects", "advanced"]),
     ],
   },
   // Week 4 — this & OOP
@@ -123,9 +126,9 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w4"),
     dotClass: DOT["js-w4"],
     days: [
-      jsDayRow(8, ["this", "binding"]),
-      jsDayRow(9, ["prototypes", "inheritance"]),
-      jsDayRow(10, ["classes", "inheritance"]),
+      jsDayRow(9, ["this", "binding"]),
+      jsDayRow(10, ["prototypes", "inheritance"]),
+      jsDayRow(11, ["classes", "inheritance"]),
     ],
   },
   // Week 5 — Error Handling & Modules
@@ -134,7 +137,7 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w5"),
     dotClass: DOT["js-w5"],
     days: [
-      jsDayRow(11, ["errors", "modules"]),
+      jsDayRow(12, ["errors", "modules"]),
     ],
   },
   // Week 6 — Async
@@ -143,8 +146,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w6"),
     dotClass: DOT["js-w6"],
     days: [
-      jsDayRow(12, ["async", "promises"]),
-      jsDayRow(13, ["promises", "async"]),
+      jsDayRow(13, ["async", "promises"]),
+      jsDayRow(14, ["promises", "async"]),
     ],
   },
   // Week 7 — Event Loop
@@ -153,8 +156,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w7"),
     dotClass: DOT["js-w7"],
     days: [
-      jsDayRow(14, ["event-loop", "async"]),
-      jsDayRow(15, ["event-loop", "nodejs"]),
+      jsDayRow(15, ["event-loop", "async"]),
+      jsDayRow(16, ["event-loop", "nodejs"]),
     ],
   },
   // Week 8 — Browser APIs
@@ -163,8 +166,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w8"),
     dotClass: DOT["js-w8"],
     days: [
-      jsDayRow(16, ["dom", "browser"]),
-      jsDayRow(17, ["browser", "async"]),
+      jsDayRow(17, ["dom", "browser"]),
+      jsDayRow(18, ["browser", "async"]),
     ],
   },
   // Week 9 — Advanced Patterns
@@ -173,8 +176,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w9"),
     dotClass: DOT["js-w9"],
     days: [
-      jsDayRow(18, ["promises", "patterns"]),
-      jsDayRow(19, ["generators", "advanced"]),
+      jsDayRow(19, ["promises", "patterns"]),
+      jsDayRow(20, ["generators", "advanced"]),
     ],
   },
   // Week 10 — Memory & Performance
@@ -183,8 +186,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w10"),
     dotClass: DOT["js-w10"],
     days: [
-      jsDayRow(20, ["memory", "advanced"]),
-      jsDayRow(21, ["performance", "advanced"]),
+      jsDayRow(21, ["memory", "advanced"]),
+      jsDayRow(22, ["performance", "advanced"]),
     ],
   },
   // Week 11 — TypeScript
@@ -193,7 +196,7 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w11"),
     dotClass: DOT["js-w11"],
     days: [
-      jsDayRow(22, ["typescript", "advanced"]),
+      jsDayRow(23, ["typescript", "advanced"]),
     ],
   },
   // Week 12 — Advanced JS
@@ -202,8 +205,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w12"),
     dotClass: DOT["js-w12"],
     days: [
-      jsDayRow(23, ["advanced", "patterns"]),
-      jsDayRow(24, ["patterns", "advanced"]),
+      jsDayRow(24, ["advanced", "patterns"]),
+      jsDayRow(25, ["patterns", "advanced"]),
     ],
   },
   // Week 13 — Node.js Advanced & Senior
@@ -212,8 +215,8 @@ export const JS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: jsWeekTitle("js-w13"),
     dotClass: DOT["js-w13"],
     days: [
-      jsDayRow(25, ["nodejs", "advanced"]),
-      jsDayRow(26, ["internals", "performance"]),
+      jsDayRow(26, ["nodejs", "advanced"]),
+      jsDayRow(27, ["internals", "performance"]),
     ],
   },
 ];

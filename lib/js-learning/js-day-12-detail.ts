@@ -3,194 +3,226 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_12_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Callbacks were the original way to handle asynchronous work in JavaScript — pass a function in, have it called when the job finishes. Promises replaced callbacks for most use cases because they are easier to chain, easier to error-handle, and don't lead to deeply nested 'callback hell'. Understanding both is important because older code and many Node.js APIs still use callbacks.",
-      np: "Callbacks JavaScript मा asynchronous work handle गर्ने original तरिका थियो। Promises ले callbacks लाई replace गर्‍यो किनभने chain गर्न, error handle गर्न सजिलो छ र 'callback hell' हुँदैन।",
-      jp: "コールバックは非同期処理の元祖。チェーン・エラー処理が容易なPromiseに置き換えられたが、古いコードやNode.js APIでは今も現役。両方の理解が重要。",
-    },
-    {
-      en: "A Promise is an object that represents the eventual result of an async operation. It is always in one of three states: pending (still working), fulfilled (succeeded with a value), or rejected (failed with a reason). Once settled, it never changes state.",
-      np: "Promise एउटा object हो जसले async operation को eventual result represent गर्छ। हमेशा तीन states मध्ये एउटामा हुन्छ: pending, fulfilled, वा rejected। एक पटक settled भएपछि state बदलिँदैन।",
-      jp: "PromiseはAsync操作の最終結果を表すオブジェクト。pending・fulfilled・rejectedの3状態があり、一度settling(確定)すると状態は変わらない。",
+      en: "Error handling is the difference between an app that crashes silently and one that fails gracefully with useful information. Modules are how you split a large codebase into small, focused files. Today covers both — two things that every production JavaScript application depends on.",
+      np: "Error handling ले app silently crash हुने र gracefully fail हुने बीच फरक गर्छ। Modules ले ठूलो codebase लाई सानो, focused files मा split गर्छ। आज दुवै — हरेक production JS application का लागि अनिवार्य।",
+      jp: "エラー処理はアプリがサイレントクラッシュするかグレースフルに失敗するかを分ける。モジュールは大きなコードベースを小さなファイルに分割する仕組み。どちらもすべての本番JSアプリに不可欠。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "DHvZLI7Db8E", title: "JavaScript Promises In 10 Minutes" },
+        { type: "youtube", videoId: "cFTFtuEQ-10", title: "JavaScript Error Handling — try, catch, throw, finally" },
       ],
     },
     {
-      title: { en: "Callbacks — the original pattern", np: "Callbacks — original pattern", jp: "コールバック — 元祖パターン" },
+      title: { en: "try, catch, finally & custom errors", np: "try, catch, finally र custom errors", jp: "try・catch・finallyとカスタムエラー" },
       blocks: [
         {
           type: "code",
-          title: { en: "Callback pattern and the 'error-first' convention", np: "Callback pattern र error-first convention", jp: "コールバックパターンとエラーファーストの慣習" },
-          code: `// ── Simple callback ───────────────────────────────────────────────
-function fetchUser(id, callback) {
-  setTimeout(() => {
-    const user = { id, name: "Alice" };  // simulate async work
-    callback(null, user);                // null = no error, user = result
-  }, 1000);
+          title: { en: "Robust error handling patterns", np: "Robust error handling patterns", jp: "堅牢なエラー処理パターン" },
+          code: `// ── Basic try/catch ────────────────────────────────────────────────
+function parseConfig(jsonString) {
+  try {
+    const config = JSON.parse(jsonString);  // might throw SyntaxError
+    return config;
+  } catch (err) {
+    console.error("Failed to parse config:", err.message);
+    return null;
+  } finally {
+    console.log("parseConfig attempted");  // always runs, even if catch returns
+  }
 }
 
-fetchUser(1, (err, user) => {
-  if (err) return console.error("Error:", err);
-  console.log("Got user:", user.name);
-});
+// ── The Error object ─────────────────────────────────────────────────
+try {
+  null.property;   // TypeError: Cannot read properties of null
+} catch (err) {
+  err.name;        // "TypeError"
+  err.message;     // "Cannot read properties of null (reading 'property')"
+  err.stack;       // full stack trace string
+}
 
-// ── Error-first callback convention (Node.js style) ───────────────
-// First argument is always the error (null if success)
-// Second argument is the result
-const fs = require("fs");
-fs.readFile("./config.json", "utf8", (err, data) => {
-  if (err) {
-    console.error("Could not read file:", err.message);
-    return;
+// ── Built-in Error types ─────────────────────────────────────────────
+// TypeError     — wrong type: null.foo, undefined()
+// ReferenceError — undeclared variable: console.log(notDeclared)
+// SyntaxError   — invalid syntax: JSON.parse("{bad}")
+// RangeError    — out of range: new Array(-1)
+// URIError      — bad URI: decodeURIComponent('%')
+
+// ── Custom error classes ─────────────────────────────────────────────
+class ValidationError extends Error {
+  constructor(field, message) {
+    super(message);           // sets this.message
+    this.name = "ValidationError";
+    this.field = field;       // extra context
   }
-  console.log("File contents:", data);
-});
+}
 
-// ── Callback hell — why Promises were invented ────────────────────
-// Each step depends on the previous one → deeply nested
-getUser(userId, (err, user) => {
-  if (err) return handleError(err);
-  getOrders(user.id, (err, orders) => {
-    if (err) return handleError(err);
-    getOrderDetails(orders[0].id, (err, details) => {
-      if (err) return handleError(err);
-      // actual logic buried 3 levels deep
-      console.log(details);
-    });
-  });
+class NotFoundError extends Error {
+  constructor(resource, id) {
+    super(\`\${resource} with id \${id} not found\`);
+    this.name = "NotFoundError";
+    this.statusCode = 404;
+  }
+}
+
+// ── Using custom errors ───────────────────────────────────────────────
+function createUser(data) {
+  if (!data.email) throw new ValidationError("email", "Email is required");
+  if (!data.name)  throw new ValidationError("name",  "Name is required");
+  // ... create user
+}
+
+// ── Catching specific error types ─────────────────────────────────────
+try {
+  createUser({ name: "Alice" });  // missing email
+} catch (err) {
+  if (err instanceof ValidationError) {
+    console.error(\`Validation failed on field '\${err.field}': \${err.message}\`);
+  } else if (err instanceof NotFoundError) {
+    console.error("Not found:", err.message);
+  } else {
+    throw err;  // rethrow unknown errors — don't swallow them silently
+  }
+}
+
+// ── Error chaining (cause) — ES2022 ─────────────────────────────────
+function fetchUser(id) {
+  try {
+    // ... database query
+  } catch (dbError) {
+    throw new Error("Failed to fetch user", { cause: dbError });  // preserves original
+  }
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "CommonJS modules (require / module.exports)", np: "CommonJS modules (require / module.exports)", jp: "CommonJSモジュール（require/module.exports）" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "The original Node.js module system", np: "Original Node.js module system", jp: "Node.jsオリジナルのモジュールシステム" },
+          code: `// ── Exporting — math.js ─────────────────────────────────────────────
+// Named exports via module.exports object
+module.exports.add = (a, b) => a + b;
+module.exports.sub = (a, b) => a - b;
+
+// Or assign the whole exports object at once:
+module.exports = {
+  add: (a, b) => a + b,
+  sub: (a, b) => a - b,
+  PI: 3.14159,
+};
+
+// Default export (exporting a single thing):
+module.exports = function createServer(port) { /* ... */ };
+
+// ── Importing — app.js ───────────────────────────────────────────────
+const math = require("./math");    // relative path (same directory)
+math.add(2, 3);                    // 5
+
+// Destructured import:
+const { add, sub } = require("./math");
+
+// Core Node module (no path needed):
+const path = require("path");
+const fs   = require("fs");
+
+// Third-party package (must be in node_modules):
+const express = require("express");
+
+// ── Key behaviours ────────────────────────────────────────────────────
+// 1. Require is synchronous (blocking)
+// 2. Module is cached after first require — same object returned every time
+// 3. require() can be called conditionally or inside a function
+if (process.env.DEBUG) {
+  const debugTools = require("./debug");  // conditional import — valid in CJS
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "ES Modules (import / export)", np: "ES Modules (import / export)", jp: "ESモジュール（import/export）" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "The modern module syntax (works in browsers and Node.js 12+)", np: "Modern module syntax — browser र Node.js दुवैमा", jp: "モダンモジュール構文（ブラウザとNode.js 12+）" },
+          code: `// ── Named exports — math.js ─────────────────────────────────────────
+export const PI = 3.14159;
+export function add(a, b) { return a + b; }
+export function sub(a, b) { return a - b; }
+
+// Or export at the bottom (keeps logic and exports separate):
+const multiply = (a, b) => a * b;
+const divide   = (a, b) => a / b;
+export { multiply, divide };
+
+// Export with rename:
+export { multiply as times, divide as dividedBy };
+
+// ── Default export — one per file ────────────────────────────────────
+export default class Calculator {
+  add(a, b) { return a + b; }
+}
+// A file can have both default and named exports
+
+// ── Named imports — app.js ───────────────────────────────────────────
+import { add, sub, PI } from "./math.js";    // file extension required in native ESM
+import { multiply as times } from "./math.js"; // renamed import
+
+// Import all named exports as a namespace:
+import * as math from "./math.js";
+math.add(2, 3);  // 5
+math.PI;         // 3.14159
+
+// Import default export:
+import Calculator from "./math.js";   // can be named anything
+new Calculator().add(2, 3);
+
+// Import default AND named together:
+import Calculator, { PI } from "./math.js";
+
+// ── Dynamic import — load a module on demand (async) ─────────────────
+const module = await import("./heavy-module.js");  // returns a Promise
+module.doSomething();
+
+// Conditional/lazy loading:
+button.addEventListener("click", async () => {
+  const { renderChart } = await import("./chart-library.js");
+  renderChart(data);
 });`,
         },
         {
-          type: "paragraph",
-          text: {
-            en: "The **error-first callback** convention (also called Node.js style) means the first argument to every callback is an error object — `null` if everything worked, an `Error` instance if it failed. This is a convention, not a language rule, but almost every Node.js core module and older npm package follows it.",
-            np: "**Error-first callback** convention ले हरेक callback को पहिलो argument error हो — सफल भए `null`, असफल भए `Error` instance। यो convention हो, language rule होइन, तर लगभग सबै Node.js core modules र पुराना npm packages ले follow गर्छन्।",
-            jp: "**エラーファーストコールバック**慣習では、最初の引数は常にerror（成功時null、失敗時Errorインスタンス）。言語仕様ではなく慣習だが、Node.jsコアモジュールと古いnpmパッケージはほぼすべてこれに従う。",
-          },
-        },
-      ],
-    },
-    {
-      title: { en: "Creating and consuming Promises", np: "Promises create र consume गर्नु", jp: "Promiseの作成と利用" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "new Promise(), then(), catch(), finally()", np: "new Promise(), then(), catch(), finally()", jp: "Promise作成と利用" },
-          code: `// ── Creating a Promise ────────────────────────────────────────────
-const fetchUser = (id) =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (id <= 0) {
-        reject(new Error("ID must be positive"));  // reject = failure
-      } else {
-        resolve({ id, name: "Alice" });             // resolve = success
-      }
-    }, 1000);
-  });
-
-// ── Consuming a Promise ───────────────────────────────────────────
-fetchUser(1)
-  .then(user => console.log("Got user:", user.name))  // runs on resolve
-  .catch(err  => console.error("Failed:", err.message)) // runs on reject
-  .finally(()  => console.log("Always runs"));          // always runs
-
-// ── Promise states ────────────────────────────────────────────────
-// 1. Pending   — the async work is still running
-// 2. Fulfilled — resolve() was called; .then() handlers fire
-// 3. Rejected  — reject() was called; .catch() handlers fire
-// Once fulfilled or rejected, a Promise is "settled" — state never changes
-
-// ── then() returns a NEW Promise ─────────────────────────────────
-// This is what makes chaining possible
-fetchUser(1)
-  .then(user => user.name)            // transforms the value
-  .then(name => name.toUpperCase())   // transforms again
-  .then(upper => console.log(upper))  // "ALICE"
-  .catch(err => console.error(err));  // catches any error from any .then()
-
-// ── Wrapping a callback API in a Promise ──────────────────────────
-const readFilePromise = (path) =>
-  new Promise((resolve, reject) => {
-    fs.readFile(path, "utf8", (err, data) => {
-      if (err) reject(err);
-      else resolve(data);
-    });
-  });
-
-// Or use Node.js's built-in util.promisify:
-const { promisify } = require("util");
-const readFile = promisify(fs.readFile);
-const data = await readFile("./config.json", "utf8");`,
-        },
-      ],
-    },
-    {
-      title: { en: "Promise chaining", np: "Promise chaining", jp: "Promiseのチェーン" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Chaining async steps without nesting", np: "Nesting बिना async steps chain गर्नु", jp: "ネストなしで非同期ステップをチェーン" },
-          code: `// ── Promise chain vs callback hell — same logic, cleaner structure ──
-// Callback hell version (hard to read):
-getUser(userId, (err, user) => {
-  getOrders(user.id, (err, orders) => {
-    getOrderDetails(orders[0].id, (err, details) => {
-      render(details);
-    });
-  });
-});
-
-// Promise chain (flat structure, easy to read):
-getUser(userId)
-  .then(user    => getOrders(user.id))
-  .then(orders  => getOrderDetails(orders[0].id))
-  .then(details => render(details))
-  .catch(err    => showError(err));  // ONE catch handles all errors
-
-// ── Returning values vs Promises in .then() ────────────────────────
-// If you return a plain value, it's wrapped in a resolved Promise
-// If you return a Promise, the chain waits for it to settle
-
-Promise.resolve(1)
-  .then(n => n + 1)           // returns 2 — wrapped in resolved Promise
-  .then(n => Promise.resolve(n * 2))  // returns a Promise — chain waits
-  .then(n => console.log(n)); // 4
-
-// ── Common mistake: forgetting to return inside .then() ────────────
-// ❌ Bug — returns undefined, chain gets undefined not the fetch result
-.then(user => {
-  fetch(\`/api/orders/\${user.id}\`);  // forgot return!
-})
-.then(orders => console.log(orders));  // undefined
-
-// ✅ Fixed
-.then(user => fetch(\`/api/orders/\${user.id}\`))  // return the Promise
-.then(orders => console.log(orders));`,
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Always return** inside `.then()` if you are calling another async function. Without `return`, the next `.then()` receives `undefined`.",
-              np: "`.then()` भित्र async function call गर्दा **हमेशा return** गर्नुहोस्। Return नगरे अर्को `.then()` ले `undefined` पाउँछ।",
-              jp: "`.then()`の中で非同期関数を呼ぶなら**必ずreturn**する。returnがないと次の`.then()`はundefinedを受け取る。",
-            },
-            {
-              en: "**One `.catch()` at the end** catches errors from any step in the chain. You rarely need `.catch()` after every `.then()`.",
-              np: "**अन्तमा एउटा `.catch()`** ले chain को जुनसुकै step को error catch गर्छ। हरेक `.then()` पछि `.catch()` चाहिँदैन।",
-              jp: "**最後に一つの`.catch()`**でチェーン内の全エラーをキャッチできる。各`.then()`の後に`.catch()`は不要。",
-            },
-            {
-              en: "**`.finally()`** always runs whether the Promise resolved or rejected — useful for cleanup like hiding a loading spinner.",
-              np: "**`.finally()`** Promise resolve वा reject जुनसुकै भए पनि चल्छ — loading spinner hide गर्न जस्ता cleanup का लागि उपयोगी।",
-              jp: "**`.finally()`**はresolve・rejectに関わらず常に実行される。ローディングスピナーの非表示などのクリーンアップに便利。",
-            },
+          type: "table",
+          caption: { en: "CommonJS vs ES Modules — key differences", np: "CommonJS vs ES Modules — मुख्य फरक", jp: "CommonJSとESモジュールの主な違い" },
+          headers: [
+            { en: "Feature", np: "Feature", jp: "特徴" },
+            { en: "CommonJS (require)", np: "CommonJS", jp: "CommonJS" },
+            { en: "ES Modules (import)", np: "ES Modules", jp: "ESモジュール" },
+          ],
+          rows: [
+            [
+              { en: "Loading", np: "Loading", jp: "ロード" },
+              { en: "Synchronous (blocks)", np: "Synchronous", jp: "同期（ブロック）" },
+              { en: "Asynchronous (static analysis)", np: "Asynchronous", jp: "非同期（静的解析）" },
+            ],
+            [
+              { en: "Conditional imports", np: "Conditional imports", jp: "条件付きインポート" },
+              { en: "Yes (require anywhere)", np: "हो", jp: "可（どこでも）" },
+              { en: "No (top-level only)", np: "होइन (top-level मात्र)", jp: "不可（トップレベルのみ）" },
+            ],
+            [
+              { en: "Tree-shaking", np: "Tree-shaking", jp: "ツリーシェイキング" },
+              { en: "No — whole module imported", np: "होइन", jp: "不可" },
+              { en: "Yes — bundlers remove unused exports", np: "हो", jp: "可" },
+            ],
+            [
+              { en: "Where it works", np: "कहाँ काम गर्छ", jp: "動作環境" },
+              { en: "Node.js (default)", np: "Node.js default", jp: "Node.js（デフォルト）" },
+              { en: "Browser + Node.js (type: module)", np: "Browser + Node.js", jp: "ブラウザ + Node.js" },
+            ],
           ],
         },
       ],
@@ -198,27 +230,19 @@ Promise.resolve(1)
   ],
   faq: [
     {
-      question: { en: "What is the difference between a callback and a Promise?", np: "Callback र Promise मा के फरक?", jp: "コールバックとPromiseの違いは？" },
+      question: { en: "Should I use CommonJS or ES Modules in a new project?", np: "नयाँ project मा CommonJS वा ES Modules?", jp: "新しいプロジェクトではCommonJSとESモジュールどちらを使うべきか？" },
       answer: {
-        en: "A callback is a function you pass to another function, to be called when the async work is done. The calling function decides when and how your callback is invoked. A Promise is an object that represents a future value. You call `.then()` and `.catch()` on it to register handlers — the Promise invokes your handlers when it settles. Promises solve several callback problems: chaining is flat instead of nested, errors propagate automatically to `.catch()`, and Promises can only be resolved or rejected once (preventing double-calls).",
-        np: "Callback तपाईंले pass गर्ने function हो जुन async काम सकिएपछि call हुन्छ। Promise एउटा object हो जसले future value represent गर्छ। Promises ले callbacks का problems solve गर्छ: chaining flat हुन्छ, errors automatically `.catch()` मा propagate हुन्छ, र Promise एक पटक मात्र resolve/reject हुन सक्छ।",
-        jp: "コールバックは非同期処理完了時に呼ばれる関数。Promiseは将来の値を表すオブジェクト。Promiseはチェーンがフラット・エラーが自動伝播・一度だけ確定という利点がある。",
+        en: "Use **ES Modules** for new projects. Add `\"type\": \"module\"` to `package.json` and use `.js` extensions in import paths. ES Modules are the standard for both browsers and Node.js, support tree-shaking, and allow top-level `await`. Use CommonJS only if you are maintaining an older project or using a tool that does not yet support ESM (increasingly rare).",
+        np: "नयाँ projects का लागि **ES Modules** प्रयोग गर्नुहोस्। `package.json` मा `\"type\": \"module\"` add गर्नुहोस्। ESM browser र Node.js दुवैको standard हो, tree-shaking support गर्छ, र top-level `await` पनि। पुरानो project maintain गर्दा मात्र CommonJS।",
+        jp: "新しいプロジェクトには**ESモジュール**を使う。`package.json`に`\"type\": \"module\"`を追加。ESMはブラウザとNode.jsの両方の標準で、ツリーシェイキングとトップレベルawaitをサポート。古いプロジェクト維持やESM未対応ツールの場合のみCommonJS。",
       },
     },
     {
-      question: { en: "What happens if a Promise never resolves or rejects?", np: "Promise कहिल्यै resolve वा reject नभए के हुन्छ?", jp: "Promiseが永遠にresolve/rejectしない場合はどうなる？" },
+      question: { en: "When should I use custom error classes?", np: "Custom error classes कहिले प्रयोग गर्ने?", jp: "カスタムエラークラスはいつ使うべきか？" },
       answer: {
-        en: "It stays in the `pending` state forever. The `.then()` and `.catch()` handlers never run, and any code waiting for the result will wait forever. This is a Promise leak — a common source of memory issues in complex async code. To prevent it, always add a timeout using `Promise.race()` with a timer Promise, or ensure all code paths in `new Promise()` call either `resolve` or `reject`.",
-        np: "हमेशाको लागि `pending` state मा रहन्छ। `.then()` र `.catch()` handlers कहिल्यै run हुँदैनन्। यो Promise leak हो — complex async code मा memory issues को common कारण। रोक्न `Promise.race()` मा timeout थप्नुहोस् वा `new Promise()` भित्र सबै code paths ले `resolve` वा `reject` call गर्छन् भन्ने ensure गर्नुहोस्।",
-        jp: "永遠に`pending`のまま。`.then()`や`.catch()`ハンドラは一切実行されない。Promiseリークはメモリ問題の元。防ぐには`Promise.race()`でタイムアウトを追加するか、`new Promise()`内の全コードパスで必ずresolve/rejectを呼ぶ。",
-      },
-    },
-    {
-      question: { en: "Can I reject with a non-Error value?", np: "Non-Error value सँग reject गर्न सकिन्छ?", jp: "Error以外の値でrejectできるか？" },
-      answer: {
-        en: "Yes — you can reject with any value: `reject('something went wrong')` or `reject(404)`. But you should always reject with an `Error` instance. Rejecting with a string or number loses the stack trace, making debugging much harder. In a `.catch()` handler you also cannot safely use `err.message` or `err.stack` if the rejection value is not an Error. Rule: always `reject(new Error('reason'))` or `reject(new CustomError(...))`.",
-        np: "हो — जुनसुकै value सँग reject गर्न सकिन्छ। तर हमेशा `Error` instance सँग reject गर्नुहोस्। String वा number सँग reject गर्दा stack trace हराउँछ र debugging गाह्रो हुन्छ। Rule: हमेशा `reject(new Error('reason'))`।",
-        jp: "はい — 任意の値でrejectできる。しかし常に`Error`インスタンスでrejectすべき。文字列や数値でrejectするとスタックトレースが失われデバッグが困難になる。`reject(new Error('理由'))`が原則。",
+        en: "Use custom error classes when you need to: (1) distinguish between different error types in a catch block using `instanceof`; (2) attach extra context to an error (field name, status code, resource ID); (3) create a domain-specific error hierarchy (ValidationError, NotFoundError, AuthError all extend a base AppError). For simple scripts, built-in Error types are usually enough.",
+        np: "Custom error classes कहिले: (1) catch block मा `instanceof` सँग error types छुट्याउन; (2) error मा extra context (field, status code) add गर्न; (3) domain-specific error hierarchy बनाउन। Simple scripts का लागि built-in Error types पर्याप्त।",
+        jp: "カスタムエラーが必要な場面: (1)`instanceof`でエラータイプを区別; (2)エラーに追加コンテキスト（フィールド名・ステータスコード）を付ける; (3)ドメイン固有のエラー階層を作る。シンプルなスクリプトなら組み込みErrorで十分。",
       },
     },
   ],

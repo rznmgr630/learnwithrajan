@@ -2,468 +2,494 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_9_LESSONS: JsLessonDay = {
   day: 9,
-  title: { en: "Prototype System & Prototype Chain", np: "Prototype System र Prototype Chain", jp: "プロトタイプシステムと継承チェーン" },
+  title: { en: "The this Keyword — Contexts, call, apply & bind", np: "this Keyword — Contexts, call, apply, bind", jp: "this・call・apply・bind" },
   totalMinutes: 27,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
-      id: "prototype-chain",
-      title: { en: "The Prototype Chain", np: "The Prototype Chain", jp: "プロトタイプチェーン" },
+      id: "four-rules-of-this",
+      title: { en: "The Four Rules of this", np: "this का चार Rules", jp: "thisの4つのルール" },
       durationMinutes: 9,
       explanation: {
-        en: "Every JavaScript <b>object</b> has an internal link to another object called its <b>prototype</b>.\n\nWhen you try to access a property, JavaScript first checks the object itself. If it doesn't find it, JavaScript looks at the object's prototype. If it still doesn't find it, it continues going up the <b>prototype chain</b> until it finds the property or reaches `null`.\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nThis is how JavaScript provides <b>inheritance</b> (sharing properties and methods between objects).\n\nNothing is copied from the prototype. The object simply <b>looks up</b> the chain when needed.\n\n---\n\n### 1. Property lookup\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\nThere is no `toString` directly inside `person`. JavaScript looks up the prototype chain:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nSo the method can still be used.\n\n---\n\n### 2. Adding a method to a prototype\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\nBoth objects can use `greet()` even though `greet` isn't stored directly on either object.\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nThere is <b>one shared `greet` function</b>, not one copy for every user.\n\n---\n\n### 3. Checking the prototype\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nThis is the modern way to inspect an object's prototype.\n\nYou may also see `user1.__proto__`, but `__proto__` is <b>legacy</b> (an older API) and should generally be avoided in new code.\n\n---\n\n### 4. Prototype lookup vs own property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` belongs directly to `user`:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` belongs to `User.prototype`:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript finds both because it searches the prototype chain.\n\n---\n\n### Easy memory trick\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
-        np: "हरेक JavaScript <b>object</b> को अर्को object सँग आन्तरिक जोडाइ हुन्छ, जसलाई यसको <b>prototype</b> भनिन्छ।\n\nतपाईंले property पहुँच गर्न खोज्दा, JavaScript ले पहिले object आफैंमा हेर्छ। नभेटे, object को prototype मा हेर्छ। त्यहाँ पनि नभेटे, property भेट्टाउनेसम्म वा `null` पुग्नेसम्म <b>prototype chain</b> माथि चढ्दै जान्छ।\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nयसै तरिकाले JavaScript ले <b>inheritance</b> (object बीच property र method बाँड्नु) दिन्छ।\n\nPrototype बाट केही copy हुँदैन। Object ले चाहिँदा chain <b>माथि खोज्छ</b> मात्र।\n\n---\n\n### 1. Property खोजी\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` भित्र सिधै `toString` छैन। JavaScript ले prototype chain माथि हेर्छ:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nत्यसैले method अझै प्रयोग गर्न सकिन्छ।\n\n---\n\n### 2. Prototype मा method थप्नु\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` कुनै पनि object मा सिधै नराखिए पनि दुबैले प्रयोग गर्न सक्छन्।\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nहरेक user का लागि छुट्टै copy होइन, <b>एउटै साझा `greet` function</b> हुन्छ।\n\n---\n\n### 3. Prototype जाँच्नु\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nयो object को prototype हेर्ने आधुनिक तरिका हो।\n\nतपाईंले `user1.__proto__` पनि देख्न सक्नुहुन्छ, तर `__proto__` <b>legacy</b> (पुरानो API) हो र नयाँ code मा सामान्यतया प्रयोग नगर्नु राम्रो।\n\n---\n\n### 4. Prototype खोजी vs आफ्नै property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` सिधै `user` को हो:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` `User.prototype` को हो:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript ले prototype chain खोज्ने हुनाले दुबै भेट्टाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
-        jp: "すべてのJavaScriptの<b>オブジェクト</b>は、<b>プロトタイプ</b>と呼ばれる別のオブジェクトへの内部的なリンクを持っています。\n\nプロパティにアクセスしようとすると、JavaScriptはまずそのオブジェクト自身を調べます。見つからなければプロトタイプを調べ、それでも見つからなければ、プロパティが見つかるか `null` に到達するまで<b>プロトタイプチェーン</b>をたどります。\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nこれがJavaScriptの<b>継承</b>（オブジェクト間でプロパティやメソッドを共有すること）の仕組みです。\n\nプロトタイプから何かがコピーされるわけではありません。オブジェクトは必要なときにチェーンを<b>たどって探す</b>だけです。\n\n---\n\n### 1. プロパティの探索\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` の中に `toString` は直接ありません。JavaScriptはプロトタイプチェーンをたどります:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nだからこのメソッドが使えます。\n\n---\n\n### 2. プロトタイプにメソッドを追加する\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` はどちらのオブジェクトにも直接入っていませんが、両方から使えます。\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nユーザーごとのコピーではなく、<b>共有された1つの `greet` 関数</b>があります。\n\n---\n\n### 3. プロトタイプを調べる\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nこれがオブジェクトのプロトタイプを調べる現代的な方法です。\n\n`user1.__proto__` も見かけますが、`__proto__` は<b>レガシー</b>（古いAPI）であり、新しいコードでは基本的に避けます。\n\n---\n\n### 4. プロトタイプ経由と自身のプロパティ\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` は `user` 自身のものです:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` は `User.prototype` のものです:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScriptはプロトタイプチェーンを探索するので、どちらも見つかります。\n\n---\n\n### 覚え方\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
+        en: "`this` is a special JavaScript value that tells you <b>which object a regular function is working with</b>.\n\nThe most important rule is:\n\n> <b>For regular functions, `this` is decided by how the function is called, not where it is written.</b>\n\nThere are four main ways `this` is determined:\n\n<b>Default binding</b> — a regular function is called by itself.\n\n<b>Implicit binding</b> — a function is called as an object method.\n\n<b>Explicit binding</b> — `call()`, `apply()`, or `bind()` chooses the value of `this`.\n\n<b>`new` binding</b> — `new` creates a new object and makes `this` refer to it.\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>Important:</b> Arrow functions are different. They do <b>not</b> create their own `this`; they use `this` from the surrounding scope.\n\n---\n\n### 1. Basic — Default Binding\n\nA regular function called by itself uses <b>default binding</b>.\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\nIn <b>strict mode</b> (`\"use strict\"`), `this` is `undefined`. Without strict mode in a browser, it can refer to the global object.\n\n---\n\n### 2. Basic — Implicit Binding\n\nWhen a function is called through an object, `this` refers to the object before the `.`.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe object before `.` is `user`, so:\n\n```text\nthis → user\n```\n\n---\n\n### 3. Intermediate — Explicit Binding with `call()`\n\n`call()` lets you choose what `this` should be.\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. Intermediate — `apply()`\n\n`apply()` works like `call()`, but function arguments are passed as an array.\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\nFor `this` they behave the same:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nThe main difference is how arguments are passed.\n\n---\n\n### 5. Intermediate — `bind()`\n\n`bind()` creates a <b>new function</b> with `this` permanently connected to the object you provide.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\nUnlike `call()` and `apply()`, `bind()` does <b>not</b> immediately run the function.\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. Advanced — Losing `this`\n\nThis is one of the most common `this` problems.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out of the object:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nWhy? `user.greet()` has an object before the `.`, but `greet()` does not, so the <b>implicit binding is lost</b>.\n\n---\n\n### 7. Advanced — Fixing a Callback with `bind()`\n\nThis commonly happens when passing an object method as a callback.\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nThe method is passed without its `user` object. Fix it with `bind()`:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. Advanced — `new` Binding\n\nWhen a function is called with `new`, JavaScript creates a new object and makes `this` refer to it.\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. Important — Arrow Functions\n\nArrow functions do <b>not</b> have their own `this`. They use `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nHere, the arrow function gets `this` from `greet()`. This is why arrow functions are very useful for callbacks.",
+        np: "`this` JavaScript को विशेष value हो जसले <b>सामान्य function कुन object सँग काम गर्दै छ</b> भन्ने बताउँछ।\n\nसबैभन्दा महत्वपूर्ण नियम:\n\n> <b>सामान्य function का लागि, `this` कहाँ लेखिएको छ भन्दा कसरी call गरिएको छ त्यसले तय गर्छ।</b>\n\n`this` तय हुने चार मुख्य तरिका छन्:\n\n<b>Default binding</b> — सामान्य function आफैं call हुन्छ।\n\n<b>Implicit binding</b> — function object method का रूपमा call हुन्छ।\n\n<b>Explicit binding</b> — `call()`, `apply()`, वा `bind()` ले `this` को value छान्छ।\n\n<b>`new` binding</b> — `new` ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>महत्वपूर्ण:</b> Arrow function फरक छन्। तिनले आफ्नै `this` <b>बनाउँदैनन्</b>; तिनले वरिपरिको scope बाट `this` लिन्छन्।\n\n---\n\n### 1. आधारभूत — Default Binding\n\nआफैं call हुने सामान्य function ले <b>default binding</b> प्रयोग गर्छ।\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>Strict mode</b> (`\"use strict\"`) मा, `this` `undefined` हुन्छ। Browser मा strict mode बिना, यो global object लाई जनाउन सक्छ।\n\n---\n\n### 2. आधारभूत — Implicit Binding\n\nFunction object मार्फत call हुँदा, `this` ले `.` अघिको object लाई जनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` अघिको object `user` हो, त्यसैले:\n\n```text\nthis → user\n```\n\n---\n\n### 3. मध्यम — `call()` सँग Explicit Binding\n\n`call()` ले `this` के हुनुपर्छ छान्न दिन्छ।\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. मध्यम — `apply()`\n\n`apply()` `call()` जस्तै काम गर्छ, तर function argument array रूपमा पठाइन्छन्।\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` का लागि दुबै उस्तै व्यवहार गर्छन्:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nमुख्य फरक argument कसरी पठाइन्छ भन्नेमा हो।\n\n---\n\n### 5. मध्यम — `bind()`\n\n`bind()` ले <b>नयाँ function</b> बनाउँछ जसको `this` तपाईंले दिएको object सँग स्थायी रूपमा जोडिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` र `apply()` भन्दा फरक, `bind()` ले function लाई तुरुन्तै <b>चलाउँदैन</b>।\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. उन्नत — `this` हराउनु\n\nयो `this` सँग सम्बन्धित सबैभन्दा सामान्य समस्यामध्ये एक हो।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method लाई object बाट बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nकिन? `user.greet()` मा `.` अघि object छ, तर `greet()` मा छैन, त्यसैले <b>implicit binding हराउँछ</b>।\n\n---\n\n### 7. उन्नत — `bind()` ले Callback ठीक गर्नु\n\nObject method लाई callback रूपमा पठाउँदा यो प्रायः हुन्छ।\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nMethod आफ्नो `user` object बिना पठाइन्छ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. उन्नत — `new` Binding\n\nFunction `new` सँग call हुँदा, JavaScript ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. महत्वपूर्ण — Arrow Functions\n\nArrow function का आफ्नै `this` <b>हुँदैन</b>। तिनले वरिपरिको code बाट `this` लिन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nयहाँ, arrow function ले `greet()` बाट `this` पाउँछ। त्यसैले callback का लागि arrow function धेरै उपयोगी हुन्छन्।",
+        jp: "`this` は、<b>通常の関数がどのオブジェクトを相手にしているか</b>を示すJavaScriptの特別な値です。\n\n最も重要な規則はこれです:\n\n> <b>通常の関数では、`this` は「どこに書かれたか」ではなく「どう呼ばれたか」で決まる。</b>\n\n`this` の決まり方は主に4つあります:\n\n<b>デフォルトバインディング</b> — 通常の関数がそれ単体で呼ばれる。\n\n<b>暗黙のバインディング</b> — 関数がオブジェクトのメソッドとして呼ばれる。\n\n<b>明示的バインディング</b> — `call()`・`apply()`・`bind()` が `this` の値を選ぶ。\n\n<b>`new` バインディング</b> — `new` が新しいオブジェクトを作り、`this` をそれに向ける。\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>重要:</b> アロー関数は別物です。自分の `this` を<b>作らず</b>、周囲のスコープの `this` を使います。\n\n---\n\n### 1. 基本 — デフォルトバインディング\n\n単体で呼ばれた通常の関数は<b>デフォルトバインディング</b>になります。\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>strictモード</b>（`\"use strict\"`）では `this` は `undefined` です。ブラウザでstrictモードでない場合はグローバルオブジェクトを指すことがあります。\n\n---\n\n### 2. 基本 — 暗黙のバインディング\n\nオブジェクト経由で呼ばれると、`this` は `.` の前のオブジェクトを指します。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` の前は `user` なので:\n\n```text\nthis → user\n```\n\n---\n\n### 3. 中級 — `call()` による明示的バインディング\n\n`call()` は `this` に何を使うかを選べます。\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. 中級 — `apply()`\n\n`apply()` は `call()` と同じ働きですが、引数を配列で渡します。\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` については同じ振る舞いです:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\n違いは引数の渡し方だけです。\n\n---\n\n### 5. 中級 — `bind()`\n\n`bind()` は、渡したオブジェクトに `this` が固定された<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` や `apply()` と違い、`bind()` はすぐには関数を<b>実行しません</b>。\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. 上級 — `this` を失う\n\nこれは `this` にまつわる最もよくある問題の1つです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドをオブジェクトの外に取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nなぜでしょう? `user.greet()` には `.` の前にオブジェクトがありますが、`greet()` にはありません。つまり<b>暗黙のバインディングが失われた</b>のです。\n\n---\n\n### 7. 上級 — `bind()` でコールバックを直す\n\nオブジェクトのメソッドをコールバックとして渡すときによく起こります。\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nメソッドが `user` オブジェクトなしで渡されています。`bind()` で直します:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. 上級 — `new` バインディング\n\n`new` を付けて関数を呼ぶと、JavaScriptは新しいオブジェクトを作り、`this` をそれに向けます。\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. 重要 — アロー関数\n\nアロー関数は自分の `this` を<b>持ちません</b>。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nここではアロー関数が `greet()` から `this` を受け取ります。だからアロー関数はコールバックにとても便利なのです。",
       },
-      diagram: `const user = new User("Rajan");
+      diagram: `Regular Function
 
-user
- ├── name: "Rajan"
- │
- └── [[Prototype]]
-          ↓
-     User.prototype
-     ├── greet()
-     │
-     └── [[Prototype]]
-              ↓
-         Object.prototype
-         ├── toString()
-         ├── hasOwnProperty()
-         │
-         └── [[Prototype]]
-                  ↓
-                null
+        How was it called?
+               │
+     ┌─────────┼─────────┐
+     ↓         ↓         ↓
+   fn()     obj.fn()   fn.call(obj)
+     │         │         │
+     ↓         ↓         ↓
+ Default    obj       chosen object
 
 
-When you write user.greet(), JavaScript checks:
+Arrow Function
 
-1. Does user have greet?        no
-2. Does User.prototype have it? yes
-3. Found it, run it`,
+        Where was it created?
+               │
+               ↓
+     Uses surrounding \`this\`
+
+
+Easy rule to remember
+
+fn()             → default
+obj.fn()         → obj
+fn.call(obj)     → obj
+fn.apply(obj)    → obj
+fn.bind(obj)     → fixed to obj
+new Fn()         → new object
+arrow function   → surrounding this`,
       codeExample: {
-        title: { en: "Looking up the chain, and sharing one method", np: "Chain माथि खोज्नु, र एउटै method बाँड्नु", jp: "チェーンをたどる、1つのメソッドを共有する" },
-        code: `// ── 1. A method found further up the chain ────────────────────────
-const person = { name: "Rajan" };
+        title: { en: "Every binding rule, one at a time", np: "हरेक binding नियम, एक-एक गरी", jp: "各バインディング規則を1つずつ" },
+        code: `// ── 1. Basic — default binding ────────────────────────────────────
+"use strict";
 
-console.log(person.toString()); // from Object.prototype
+function showThis() {
+  console.log(this); // undefined in strict mode
+}
 
-// ── 2. One shared method on the prototype ─────────────────────────
-function User(name) {
+showThis();
+
+// ── 2. Basic — implicit binding ───────────────────────────────────
+const user = {
+  name: "Rajan",
+
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet(); // Rajan — the object before the dot
+
+// ── 3. Intermediate — call() ──────────────────────────────────────
+function hello() {
+  console.log(\`Hello, \${this.name}\`);
+}
+
+hello.call(user); // Hello, Rajan
+
+// ── 4. Intermediate — apply() passes arguments as an array ────────
+function introduce(city, country) {
+  console.log(\`\${this.name} lives in \${city}, \${country}\`);
+}
+
+introduce.apply(user, ["Tokyo", "Japan"]); // Rajan lives in Tokyo, Japan
+
+// ── 5. Intermediate — bind() returns a new function ───────────────
+const greetUser = hello.bind(user);
+greetUser(); // Hello, Rajan
+
+// ── 6. Advanced — losing this ─────────────────────────────────────
+const detached = user.greet;
+detached(); // undefined — no object before the dot
+
+// ── 7. Advanced — fixing a callback ───────────────────────────────
+setTimeout(user.greet, 1000);            // Hello, undefined
+setTimeout(user.greet.bind(user), 1000); // Rajan
+
+// ── 8. Advanced — new binding ─────────────────────────────────────
+function Person(name) {
   this.name = name;
 }
 
-User.prototype.greet = function () {
-  console.log(\`Hello \${this.name}\`);
+console.log(new Person("Rajan").name); // Rajan
+
+// ── 9. Arrow functions borrow the surrounding this ────────────────
+const account = {
+  name: "Rajan",
+
+  greet() {
+    const showName = () => console.log(this.name);
+    showName();
+  }
 };
 
-const user1 = new User("Rajan");
-const user2 = new User("Alex");
-
-user1.greet(); // Hello Rajan
-user2.greet(); // Hello Alex
-
-// Both share the very same function object
-console.log(user1.greet === user2.greet); // true
-
-// ── 3. Inspecting the prototype ───────────────────────────────────
-console.log(Object.getPrototypeOf(user1) === User.prototype); // true
-
-// ── 4. Own property vs inherited one ──────────────────────────────
-console.log(Object.hasOwn(user1, "name"));  // true  — on the object
-console.log(Object.hasOwn(user1, "greet")); // false — on the prototype`,
+account.greet(); // Rajan`,
       },
       keyTakeaways: [
-        { en: "Every object has an internal <b>prototype</b> link.", np: "हरेक object को आन्तरिक <b>prototype</b> जोडाइ हुन्छ।", jp: "すべてのオブジェクトは内部的な<b>プロトタイプ</b>リンクを持つ。" },
-        { en: "JavaScript searches the object first, then its prototype, then higher prototypes.", np: "JavaScript ले पहिले object, त्यसपछि यसको prototype, अनि माथिका prototype खोज्छ।", jp: "JavaScriptはまずオブジェクト、次にそのプロトタイプ、さらに上のプロトタイプを探す。" },
-        { en: "This search is called the <b>prototype chain</b>.", np: "यो खोजीलाई <b>prototype chain</b> भनिन्छ।", jp: "この探索を<b>プロトタイプチェーン</b>と呼ぶ。" },
-        { en: "The chain ends at <b>`null`</b>.", np: "Chain <b>`null`</b> मा सकिन्छ।", jp: "チェーンは<b>`null`</b>で終わる。" },
-        { en: "Prototypes provide <b>inheritance</b> (sharing properties and methods).", np: "Prototype ले <b>inheritance</b> (property र method बाँड्नु) दिन्छ।", jp: "プロトタイプは<b>継承</b>（プロパティとメソッドの共有）を提供する。" },
-        { en: "Prototype methods are <b>shared</b> between instances instead of being copied.", np: "Prototype का method copy नभई instance बीच <b>साझा</b> हुन्छन्।", jp: "プロトタイプのメソッドはコピーされず、インスタンス間で<b>共有</b>される。" },
-        { en: "Use `Object.getPrototypeOf(obj)` to inspect an object's prototype.", np: "Object को prototype हेर्न `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस्।", jp: "オブジェクトのプロトタイプを調べるには `Object.getPrototypeOf(obj)` を使う。" },
-        { en: "`__proto__` is a <b>legacy</b> API and should generally be avoided.", np: "`__proto__` <b>legacy</b> API हो र सामान्यतया प्रयोग नगर्नु राम्रो।", jp: "`__proto__` は<b>レガシー</b>なAPIで、基本的に避ける。" },
+        { en: "`this` depends on <b>how a regular function is called</b>.", np: "`this` <b>सामान्य function कसरी call भयो</b> त्यसमा निर्भर हुन्छ।", jp: "`this` は<b>通常の関数がどう呼ばれたか</b>で決まる。" },
+        { en: "`fn()` → <b>default binding</b>.", np: "`fn()` → <b>default binding</b>।", jp: "`fn()` → <b>デフォルトバインディング</b>。" },
+        { en: "`obj.fn()` → <b>implicit binding</b>, so `this` is `obj`.", np: "`obj.fn()` → <b>implicit binding</b>, त्यसैले `this` `obj` हुन्छ।", jp: "`obj.fn()` → <b>暗黙のバインディング</b>で `this` は `obj`。" },
+        { en: "`fn.call(obj)` and `fn.apply(obj)` → <b>explicit binding</b>, and both run immediately.", np: "`fn.call(obj)` र `fn.apply(obj)` → <b>explicit binding</b>, र दुबै तुरुन्तै चल्छन्।", jp: "`fn.call(obj)` と `fn.apply(obj)` → <b>明示的バインディング</b>。どちらもすぐ実行される。" },
+        { en: "`fn.bind(obj)` → creates a function with fixed `this`.", np: "`fn.bind(obj)` → स्थिर `this` भएको function बनाउँछ।", jp: "`fn.bind(obj)` → `this` が固定された関数を作る。" },
+        { en: "`new Person()` → `this` refers to the new object.", np: "`new Person()` → `this` ले नयाँ object लाई जनाउँछ।", jp: "`new Person()` → `this` は新しいオブジェクトを指す。" },
+        { en: "Taking `obj.method` out of the object can lose `this`.", np: "`obj.method` लाई object बाट बाहिर निकाल्दा `this` हराउन सक्छ।", jp: "`obj.method` をオブジェクトの外に取り出すと `this` を失うことがある。" },
+        { en: "Arrow functions <b>do not have their own `this`</b>; they take it from the surrounding scope.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>; तिनले वरिपरिको scope बाट लिन्छन्।", jp: "アロー関数は<b>自分の `this` を持たず</b>、周囲のスコープから受け取る。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking prototype methods are copied</b> — `User.prototype.greet` is not copied into every `User` object; each one reaches it through the chain, so `user1.greet === user2.greet` is `true`.", np: "<b>Prototype का method copy हुन्छन् भन्ने ठान्नु</b> — `User.prototype.greet` हरेक `User` object मा copy हुँदैन; हरेकले chain मार्फत पुग्छ, त्यसैले `user1.greet === user2.greet` `true` हुन्छ।", jp: "<b>プロトタイプのメソッドがコピーされると思う</b> — `User.prototype.greet` は各 `User` にコピーされない。チェーン経由で参照するので `user1.greet === user2.greet` は `true`。" },
-        { en: "<b>Thinking JavaScript only checks the object itself</b> — even when `greet` isn't inside `user`, the search continues up the prototype chain.", np: "<b>JavaScript ले object आफैं मात्र हेर्छ भन्ने ठान्नु</b> — `greet` `user` भित्र नभए पनि, खोजी prototype chain माथि जारी रहन्छ।", jp: "<b>JavaScriptがオブジェクト自身しか見ないと思う</b> — `greet` が `user` になくても、探索はプロトタイプチェーンを上へ続く。" },
-        { en: "<b>Using `__proto__` as the preferred API</b> — it works, but prefer `Object.getPrototypeOf(user)` in new code.", np: "<b>`__proto__` लाई मुख्य API मान्नु</b> — काम गर्छ, तर नयाँ code मा `Object.getPrototypeOf(user)` प्रयोग गर्नुहोस्।", jp: "<b>`__proto__` を推奨APIとして使う</b> — 動くが、新しいコードでは `Object.getPrototypeOf(user)` を使う。" },
+        { en: "<b>Thinking `this` always means \"the current object\"</b> — after `const fn = user.greet;`, calling `fn()` no longer has `user` attached.", np: "<b>`this` सधैं \"वर्तमान object\" हो भन्ने ठान्नु</b> — `const fn = user.greet;` पछि, `fn()` call गर्दा `user` जोडिएको हुँदैन।", jp: "<b>`this` は常に「今のオブジェクト」だと思う</b> — `const fn = user.greet;` の後に `fn()` を呼んでも `user` は付いてこない。" },
+        { en: "<b>Confusing `call()` and `bind()`</b> — `greet.call(user)` runs the function now, while `greet.bind(user)` returns a new function to call later.", np: "<b>`call()` र `bind()` भ्रममा पार्नु</b> — `greet.call(user)` ले function अहिले चलाउँछ, जब कि `greet.bind(user)` ले पछि call गर्न नयाँ function फर्काउँछ।", jp: "<b>`call()` と `bind()` を混同する</b> — `greet.call(user)` は今すぐ実行し、`greet.bind(user)` は後で呼ぶ新しい関数を返す。" },
+        { en: "<b>Assuming arrow functions have their own `this`</b> — they don't; a top-level `const greet = () => console.log(this);` logs the surrounding `this`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने ठान्नु</b> — हुँदैन; top-level `const greet = () => console.log(this);` ले वरिपरिको `this` देखाउँछ।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — 持たない。トップレベルの `const greet = () => console.log(this);` は周囲の `this` を出す。" },
+        { en: "<b>Using an arrow function as an object method when you expect the object as `this`</b> — `greet: () => console.log(this.name)` usually logs `undefined`. Use a regular method: `greet() { ... }`.", np: "<b>Object लाई `this` चाहिँदा arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले सामान्यतया `undefined` देखाउँछ। सामान्य method प्रयोग गर्नुहोस्: `greet() { ... }`।", jp: "<b>オブジェクトを `this` にしたいのにアロー関数をメソッドにする</b> — `greet: () => console.log(this.name)` はたいてい `undefined` を出す。通常のメソッド `greet() { ... }` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "What happens when a property isn't found on an object?", np: "Object मा property नभेटिए के हुन्छ?", jp: "オブジェクトにプロパティが見つからないとどうなるか?" },
+          question: { en: "What determines `this` for a regular function?", np: "सामान्य function का लागि `this` के ले तय गर्छ?", jp: "通常の関数の `this` は何で決まるか?" },
           options: [
-            { en: "JavaScript immediately throws an error", np: "JavaScript ले तुरुन्तै error दिन्छ", jp: "すぐにエラーを投げる" },
-            { en: "JavaScript creates the property", np: "JavaScript ले property बनाउँछ", jp: "プロパティを作る" },
-            { en: "JavaScript searches the prototype chain", np: "JavaScript ले prototype chain खोज्छ", jp: "プロトタイプチェーンを探索する" },
-            { en: "JavaScript searches the global scope", np: "JavaScript ले global scope खोज्छ", jp: "グローバルスコープを探す" },
+            { en: "How the function is called", np: "Function कसरी call गरिएको छ", jp: "関数がどう呼ばれたか" },
+            { en: "Where the function is written", np: "Function कहाँ लेखिएको छ", jp: "関数がどこに書かれたか" },
+            { en: "The function's name", np: "Function को नाम", jp: "関数の名前" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "The call site decides it, which is why the same function can see different objects.", np: "Call site ले तय गर्छ, त्यसैले उही function ले फरक object देख्न सक्छ।", jp: "呼び出し側が決めるので、同じ関数でも別のオブジェクトを見ることがある。" },
+        },
+        {
+          question: { en: "Given `const user = { name: \"Rajan\", greet() { console.log(this.name); } }`, what is `this` in `user.greet()`?", np: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` मा, `user.greet()` भित्र `this` के हो?", jp: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` のとき `user.greet()` の `this` は?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`user`", np: "`user`", jp: "`user`" },
+            { en: "`window`", np: "`window`", jp: "`window`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Implicit binding: `this` is whatever sits before the dot at the call site.", np: "Implicit binding: call site मा `.` अघि जे छ त्यही `this` हुन्छ।", jp: "暗黙のバインディング: 呼び出し時にドットの前にあるものが `this` になる。" },
+        },
+        {
+          question: { en: "What does `bind()` do?", np: "`bind()` ले के गर्छ?", jp: "`bind()` は何をするか?" },
+          options: [
+            { en: "Immediately runs the function", np: "Function तुरुन्तै चलाउँछ", jp: "関数をすぐ実行する" },
+            { en: "Deletes `this`", np: "`this` मेटाउँछ", jp: "`this` を削除する" },
+            { en: "Creates a new function with a chosen `this`", np: "छानिएको `this` भएको नयाँ function बनाउँछ", jp: "選んだ `this` を持つ新しい関数を作る" },
           ],
           correctIndex: 2,
-          explanation: { en: "It keeps climbing until it finds the property or reaches `null`.", np: "यो property भेट्टाउनेसम्म वा `null` पुग्नेसम्म चढिरहन्छ।", jp: "プロパティが見つかるか `null` に達するまでたどり続ける。" },
+          explanation: { en: "That is why it fixes callbacks: `setTimeout(user.greet.bind(user), 1000)`.", np: "त्यसैले यसले callback ठीक गर्छ: `setTimeout(user.greet.bind(user), 1000)`।", jp: "だからコールバックを直せる: `setTimeout(user.greet.bind(user), 1000)`。" },
         },
         {
-          question: { en: "Where are methods on `User.prototype` shared?", np: "`User.prototype` का method कहाँ साझा हुन्छन्?", jp: "`User.prototype` のメソッドはどこで共有されるか?" },
+          question: { en: "What happens with `const greet = user.greet;` then `greet()`?", np: "`const greet = user.greet;` पछि `greet()` गर्दा के हुन्छ?", jp: "`const greet = user.greet;` の後に `greet()` するとどうなるか?" },
           options: [
-            { en: "Only with the constructor", np: "Constructor सँग मात्र", jp: "コンストラクタとだけ" },
-            { en: "They are copied into every instance", np: "ती हरेक instance मा copy हुन्छन्", jp: "各インスタンスにコピーされる" },
-            { en: "Only with the first instance", np: "पहिलो instance सँग मात्र", jp: "最初のインスタンスとだけ" },
-            { en: "With all instances that use that prototype", np: "त्यो prototype प्रयोग गर्ने सबै instance सँग", jp: "そのプロトタイプを使うすべてのインスタンスと" },
+            { en: "The object binding is lost", np: "Object binding हराउँछ", jp: "オブジェクトのバインディングが失われる" },
+            { en: "`this` automatically stays `user`", np: "`this` स्वतः `user` नै रहन्छ", jp: "`this` は自動的に `user` のまま" },
+            { en: "JavaScript creates a new object", np: "JavaScript ले नयाँ object बनाउँछ", jp: "JavaScriptが新しいオブジェクトを作る" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "There is no object before the dot any more, so it falls back to default binding.", np: "अब `.` अघि object छैन, त्यसैले यो default binding मा झर्छ।", jp: "もうドットの前にオブジェクトがないので、デフォルトバインディングに戻る。" },
+        },
+        {
+          question: { en: "What is special about arrow functions?", np: "Arrow function मा के विशेष छ?", jp: "アロー関数の特別な点は?" },
+          options: [
+            { en: "They always have `this` set to the global object", np: "तिनको `this` सधैं global object हुन्छ", jp: "`this` が常にグローバルオブジェクトになる" },
+            { en: "They use `this` from the surrounding scope", np: "तिनले वरिपरिको scope बाट `this` लिन्छन्", jp: "周囲のスコープの `this` を使う" },
+            { en: "They create their own `this`", np: "तिनले आफ्नै `this` बनाउँछन्", jp: "自分の `this` を作る" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "That makes them ideal inside a method, and wrong as the method itself.", np: "त्यसैले यी method भित्र उपयुक्त छन्, र method आफैं बन्दा गलत।", jp: "だからメソッドの内側では最適だが、メソッド自体には不向き。" },
+        },
+        {
+          question: { en: "What does `new` do to `this` in `function Person(name) { this.name = name; }`?", np: "`function Person(name) { this.name = name; }` मा `new` ले `this` लाई के गर्छ?", jp: "`function Person(name) { this.name = name; }` で `new` は `this` をどうするか?" },
+          options: [
+            { en: "`this` refers to `Person` itself", np: "`this` ले `Person` आफैंलाई जनाउँछ", jp: "`this` は `Person` 自身を指す" },
+            { en: "`this` is always `undefined`", np: "`this` सधैं `undefined` हुन्छ", jp: "`this` は常に `undefined`" },
+            { en: "`this` refers to the new object", np: "`this` ले नयाँ object लाई जनाउँछ", jp: "`this` は新しいオブジェクトを指す" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`new` creates the object, points `this` at it, and returns it automatically.", np: "`new` ले object बनाउँछ, `this` लाई त्यसैतिर देखाउँछ, र स्वतः फर्काउँछ।", jp: "`new` はオブジェクトを作り、`this` をそれに向け、自動的に返す。" },
+        },
+      ],
+      youtubeIds: ["9T4z98JcHR0"],
+    },
+    {
+      id: "arrow-functions-and-this",
+      title: { en: "Arrow Functions & this", np: "Arrow Functions र this", jp: "アロー関数とthis" },
+      durationMinutes: 9,
+      explanation: {
+        en: "Arrow functions are different from normal functions because they <b>do not have their own `this`</b>.\n\nInstead, an arrow function uses the `this` from the <b>surrounding scope where it was created</b>. This is called <b>lexical `this`</b> (it gets `this` from the outside).\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nHere, `sayName` is an arrow function. It does not create its own `this`, so it uses the `this` from `greet()`.\n\n---\n\n### Important\n\nThe four normal `this` rules do <b>not</b> change an arrow function's `this`:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\nEven `call()`, `apply()`, and `bind()` cannot change an arrow function's `this`.\n\nThink of an arrow function as saying:\n\n> \"I won't create my own `this`. I'll use the `this` from outside.\"\n\n---\n\n### 1. Basic example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function gets `this` from `greet()`.\n\n---\n\n### 2. Very common callback example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function keeps the `this` from `greet()`. This is one of the main reasons arrow functions are useful for callbacks.\n\n---\n\n### 3. Arrow function as an object method — common mistake\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nWhy? Because the arrow function does <b>not</b> get `this` from `user`. The object does not create a new `this` for the arrow function.\n\nFor object methods, use a normal method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` cannot change arrow `this`\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nFor arrow functions, `call()`, `apply()`, and `bind()` cannot change `this`.",
+        np: "Arrow function सामान्य function भन्दा फरक छन् किनकि तिनका <b>आफ्नै `this` हुँदैन</b>।\n\nबरु, arrow function ले <b>आफू बनेको वरिपरिको scope</b> बाट `this` लिन्छ। यसलाई <b>lexical `this`</b> (बाहिरबाट `this` पाउने) भनिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nयहाँ, `sayName` arrow function हो। यसले आफ्नै `this` बनाउँदैन, त्यसैले `greet()` बाट `this` लिन्छ।\n\n---\n\n### महत्वपूर्ण\n\nसामान्य `this` का चार नियमले arrow function को `this` <b>बदल्दैनन्</b>:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\n`call()`, `apply()`, र `bind()` ले पनि arrow function को `this` बदल्न सक्दैनन्।\n\nArrow function यसो भन्छ जस्तै सोच्नुहोस्:\n\n> \"म आफ्नै `this` बनाउँदिन। म बाहिरको `this` प्रयोग गर्छु।\"\n\n---\n\n### 1. आधारभूत उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` बाट `this` पाउँछ।\n\n---\n\n### 2. धेरै सामान्य callback उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` को `this` राख्छ। Callback का लागि arrow function उपयोगी हुनुको यो मुख्य कारण हो।\n\n---\n\n### 3. Object method रूपमा arrow function — सामान्य गल्ती\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nकिन? किनकि arrow function ले `user` बाट `this` <b>पाउँदैन</b>। Object ले arrow function का लागि नयाँ `this` बनाउँदैन।\n\nObject method का लागि, सामान्य method प्रयोग गर्नुहोस्:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` ले arrow को `this` बदल्न सक्दैन\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nArrow function का लागि, `call()`, `apply()`, र `bind()` ले `this` बदल्न सक्दैनन्।",
+        jp: "アロー関数は通常の関数と違い、<b>自分の `this` を持ちません</b>。\n\n代わりに、<b>作られた場所の周囲のスコープ</b>の `this` を使います。これを<b>レキシカルな `this`</b>（外側から `this` を受け取る）と呼びます。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nここで `sayName` はアロー関数です。自分の `this` を作らないので、`greet()` の `this` を使います。\n\n---\n\n### 重要\n\n通常の `this` の4つの規則は、アロー関数の `this` を<b>変えません</b>:\n\n• デフォルトバインディング\n• 暗黙のバインディング\n• 明示的バインディング\n• `new` バインディング\n\n`call()`・`apply()`・`bind()` でさえ、アロー関数の `this` は変えられません。\n\nアロー関数はこう言っていると考えてください:\n\n> 「自分の `this` は作らない。外側の `this` を使う。」\n\n---\n\n### 1. 基本の例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` から `this` を受け取ります。\n\n---\n\n### 2. とてもよくあるコールバックの例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` の `this` を保ちます。アロー関数がコールバックに便利な主な理由の1つです。\n\n---\n\n### 3. オブジェクトのメソッドにするのはよくある間違い\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nなぜでしょう? アロー関数は `user` から `this` を<b>受け取らない</b>からです。オブジェクトはアロー関数のために新しい `this` を作りません。\n\nオブジェクトのメソッドには通常のメソッドを使います:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` はアロー関数の `this` を変えられない\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nアロー関数では `call()`・`apply()`・`bind()` のいずれも `this` を変えられません。",
+      },
+      diagram: `Normal function
+      │
+      └── this depends on HOW it is called
+
+
+Arrow function
+      │
+      └── this comes from WHERE it was created
+                    │
+                    ↓
+              surrounding scope`,
+      codeExample: {
+        title: { en: "Where the arrow gets its this, and where it doesn't", np: "Arrow ले `this` कहाँबाट पाउँछ, कहाँबाट पाउँदैन", jp: "アローが this を得る場所、得られない場所" },
+        code: `// ── 1. Basic — the arrow borrows this from greet() ────────────────
+const user = {
+  name: "Rajan",
+
+  greet() {
+    const sayHello = () => console.log(this.name);
+    sayHello();
+  }
+};
+
+user.greet(); // Rajan
+
+// ── 2. The common callback win ────────────────────────────────────
+const account = {
+  name: "Rajan",
+
+  greet() {
+    setTimeout(() => {
+      console.log(this.name); // Rajan — this survives the delay
+    }, 1000);
+  }
+};
+
+account.greet();
+
+// ── 3. Common mistake — arrow as the method itself ────────────────
+const broken = {
+  name: "Rajan",
+
+  greet: () => {
+    console.log(this.name); // undefined — no this from the object
+  }
+};
+
+broken.greet();
+
+// ── 4. call() cannot change an arrow function's this ──────────────
+const greet = () => console.log(this.name);
+
+greet.call(user); // still not user`,
+      },
+      keyTakeaways: [
+        { en: "Arrow functions <b>do not have their own `this`</b>.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>।", jp: "アロー関数は<b>自分の `this` を持たない</b>。" },
+        { en: "They use <b>lexical `this`</b> (the `this` from where they were created).", np: "तिनले <b>lexical `this`</b> (आफू बनेको ठाउँको `this`) प्रयोग गर्छन्।", jp: "<b>レキシカルな `this`</b>（作られた場所の `this`）を使う。" },
+        { en: "`call()`, `apply()`, and `bind()` <b>cannot change</b> an arrow function's `this`.", np: "`call()`, `apply()`, र `bind()` ले arrow function को `this` <b>बदल्न सक्दैनन्</b>।", jp: "`call()`・`apply()`・`bind()` はアロー関数の `this` を<b>変えられない</b>。" },
+        { en: "Arrow functions are great for <b>callbacks</b> when you want to keep the surrounding `this`.", np: "वरिपरिको `this` राख्न चाहँदा <b>callback</b> का लागि arrow function उत्तम छन्।", jp: "周囲の `this` を保ちたい<b>コールバック</b>にはアロー関数が最適。" },
+        { en: "Avoid arrow functions as <b>object methods</b> when you need `this` to refer to the object.", np: "`this` ले object लाई जनाउनुपर्दा <b>object method</b> रूपमा arrow function नचलाउनुहोस्।", jp: "`this` にオブジェクトを求めるなら、<b>オブジェクトのメソッド</b>にアロー関数を使わない。" },
+        { en: "Normal functions get `this` based on <b>how they are called</b>; arrow functions get it from <b>where they are created</b>.", np: "सामान्य function ले <b>कसरी call भयो</b> त्यसबाट `this` पाउँछन्; arrow function ले <b>कहाँ बनियो</b> त्यसबाट।", jp: "通常の関数は<b>どう呼ばれたか</b>で、アロー関数は<b>どこで作られたか</b>で `this` が決まる。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Using an arrow function as an object method</b> — `greet: () => console.log(this.name)` never sees `user`, because the object literal creates no `this`.", np: "<b>Arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले `user` कहिल्यै देख्दैन, किनकि object literal ले `this` बनाउँदैन।", jp: "<b>アロー関数をオブジェクトのメソッドにする</b> — `greet: () => console.log(this.name)` は `user` を見られない。オブジェクトリテラルは `this` を作らないから。" },
+        { en: "<b>Thinking `bind()` can fix an arrow function</b> — `greet.bind(user)()` still uses the surrounding `this`.", np: "<b>`bind()` ले arrow function ठीक गर्न सक्छ भन्ने ठान्नु</b> — `greet.bind(user)()` ले अझै वरिपरिको `this` प्रयोग गर्छ।", jp: "<b>`bind()` でアロー関数を直せると思う</b> — `greet.bind(user)()` でも周囲の `this` のまま。" },
+        { en: "<b>Reaching for a normal function inside a method</b> — that is where an arrow shines, since `setTimeout(() => this.name, 1000)` keeps the method's `this`.", np: "<b>Method भित्र सामान्य function प्रयोग गर्नु</b> — त्यहीँ arrow उपयोगी हुन्छ, किनकि `setTimeout(() => this.name, 1000)` ले method को `this` राख्छ।", jp: "<b>メソッドの内側で通常の関数を使う</b> — そこはアローの出番。`setTimeout(() => this.name, 1000)` はメソッドの `this` を保つ。" },
+      ],
+      quiz: [
+        {
+          question: { en: "Does an arrow function have its own `this`?", np: "Arrow function को आफ्नै `this` हुन्छ?", jp: "アロー関数は自分の `this` を持つか?" },
+          options: [
+            { en: "No", np: "हुँदैन", jp: "いいえ" },
+            { en: "Yes", np: "हुन्छ", jp: "はい" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "It borrows `this` from the scope it was written in.", np: "यसले आफू लेखिएको scope बाट `this` लिन्छ।", jp: "書かれたスコープから `this` を借りる。" },
+        },
+        {
+          question: { en: "Where does an arrow function get `this` from?", np: "Arrow function ले `this` कहाँबाट पाउँछ?", jp: "アロー関数は `this` をどこから得るか?" },
+          options: [
+            { en: "The object to the left of `.`", np: "`.` को बायाँको object", jp: "`.` の左のオブジェクト" },
+            { en: "`new`", np: "`new`", jp: "`new`" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "The surrounding scope where it was created", np: "आफू बनेको वरिपरिको scope", jp: "作られた場所の周囲のスコープ" },
           ],
           correctIndex: 3,
-          explanation: { en: "One function object serves every instance, which saves memory.", np: "एउटै function object ले हरेक instance लाई काम गर्छ, जसले memory बचाउँछ।", jp: "1つの関数オブジェクトがすべてのインスタンスに使われ、メモリを節約できる。" },
+          explanation: { en: "None of the four binding rules apply to it.", np: "चारै binding नियम यसमा लागू हुँदैनन्।", jp: "4つのバインディング規則はいずれも適用されない。" },
         },
         {
-          question: { en: "What ends the prototype chain?", np: "Prototype chain के मा सकिन्छ?", jp: "プロトタイプチェーンは何で終わるか?" },
+          question: { en: "What does this print? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", np: "यसले के देखाउँछ? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", jp: "何が出力されるか? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`" },
           options: [
+            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
             { en: "`null`", np: "`null`", jp: "`null`" },
-            { en: "`false`", np: "`false`", jp: "`false`" },
             { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "`0`", np: "`0`", jp: "`0`" },
+            { en: "Error", np: "Error", jp: "エラー" },
           ],
           correctIndex: 0,
-          explanation: { en: "`Object.prototype`'s own prototype is `null`, which stops the search.", np: "`Object.prototype` को आफ्नै prototype `null` हो, जसले खोजी रोक्छ।", jp: "`Object.prototype` のプロトタイプが `null` で、そこで探索が止まる。" },
-        },
-        {
-          question: { en: "What is the recommended way to get an object's prototype?", np: "Object को prototype लिने सिफारिस गरिएको तरिका कुन हो?", jp: "オブジェクトのプロトタイプを取得する推奨方法は?" },
-          options: [
-            { en: "`Object.prototype(user)`", np: "`Object.prototype(user)`", jp: "`Object.prototype(user)`" },
-            { en: "`Object.getPrototypeOf(user)`", np: "`Object.getPrototypeOf(user)`", jp: "`Object.getPrototypeOf(user)`" },
-            { en: "`Object.getProto(user)`", np: "`Object.getProto(user)`", jp: "`Object.getProto(user)`" },
-            { en: "`Object.prototypeOf(user)`", np: "`Object.prototypeOf(user)`", jp: "`Object.prototypeOf(user)`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`__proto__` also works but is legacy; this is the standard accessor.", np: "`__proto__` पनि काम गर्छ तर legacy हो; यो मानक accessor हो।", jp: "`__proto__` も動くがレガシー。こちらが標準のアクセサ。" },
+          explanation: { en: "`greet()` is a normal method, so its `this` is `user`, and the arrow inherits it.", np: "`greet()` सामान्य method हो, त्यसैले यसको `this` `user` हुन्छ, र arrow ले त्यही पाउँछ।", jp: "`greet()` は通常のメソッドなので `this` は `user`。アローがそれを受け継ぐ。" },
         },
       ],
-      youtubeIds: ["wstwjQ1yqWQ"],
     },
     {
-      id: "prototype-inheritance",
-      title: { en: "Prototype Inheritance", np: "Prototype Inheritance", jp: "プロトタイプ継承" },
+      id: "call-apply-bind",
+      title: { en: "call, apply, and bind in Depth", np: "call, apply, bind विस्तारमा", jp: "call・apply・bindの詳細" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Prototype inheritance</b> means one object can use properties and methods from another object's prototype.\n\nBefore ES6 `class` syntax, this was commonly done using <b>constructor functions</b> and prototypes.\n\nThere are three important steps:\n\n1. Call the parent constructor with `Parent.call(this, ...)`.\n2. Connect the child prototype to the parent prototype using `Object.create()`.\n3. Fix the `constructor` property.\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nNow create a child constructor:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` runs the parent constructor using the new `Dog` object.\n\n---\n\n### 2. Connect the prototypes\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nNow the prototype chain becomes:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nSo a `Dog` can use methods from `Animal.prototype`.\n\n---\n\n### 3. Fix the constructor\n\n`Object.create()` replaces the child prototype, so the `constructor` property now points to `Animal`. Fix it:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nComplete example:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` is found through `Animal.prototype`, and `dog.bark()` is found on `Dog.prototype`.\n\n---\n\n### `Object.create()` by itself\n\nYou don't need constructors to use prototype inheritance.\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nHere:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` creates a new object whose prototype is `animal`.\n\n---\n\n### Easy memory trick\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
-        np: "<b>Prototype inheritance</b> को अर्थ एउटा object ले अर्को object को prototype का property र method प्रयोग गर्न सक्छ भन्ने हो।\n\nES6 `class` syntax अघि, यो सामान्यतया <b>constructor function</b> र prototype ले गरिन्थ्यो।\n\nतीन महत्वपूर्ण चरण छन्:\n\n1. `Parent.call(this, ...)` ले parent constructor call गर्नु।\n2. `Object.create()` ले child prototype लाई parent prototype सँग जोड्नु।\n3. `constructor` property ठीक गर्नु।\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nअब child constructor बनाउनुहोस्:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` ले नयाँ `Dog` object प्रयोग गरी parent constructor चलाउँछ।\n\n---\n\n### 2. Prototype जोड्नु\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nअब prototype chain यस्तो बन्छ:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nत्यसैले `Dog` ले `Animal.prototype` का method प्रयोग गर्न सक्छ।\n\n---\n\n### 3. Constructor ठीक गर्नु\n\n`Object.create()` ले child prototype प्रतिस्थापन गर्छ, त्यसैले `constructor` property अब `Animal` तिर देखाउँछ। ठीक गर्नुहोस्:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nपूरा उदाहरण:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` `Animal.prototype` मार्फत भेटिन्छ, र `dog.bark()` `Dog.prototype` मा भेटिन्छ।\n\n---\n\n### `Object.create()` आफैं\n\nPrototype inheritance प्रयोग गर्न constructor चाहिँदैन।\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nयहाँ:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` ले `animal` prototype भएको नयाँ object बनाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
-        jp: "<b>プロトタイプ継承</b>とは、あるオブジェクトが別のオブジェクトのプロトタイプにあるプロパティやメソッドを使えることです。\n\nES6の `class` 構文が登場する前は、<b>コンストラクタ関数</b>とプロトタイプでこれを行うのが一般的でした。\n\n重要な手順は3つです:\n\n1. `Parent.call(this, ...)` で親のコンストラクタを呼ぶ。\n2. `Object.create()` で子のプロトタイプを親のプロトタイプにつなぐ。\n3. `constructor` プロパティを直す。\n\n---\n\n### 1. 親のコンストラクタ\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\n次に子のコンストラクタを作ります:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` は新しい `Dog` オブジェクトを使って親のコンストラクタを実行します。\n\n---\n\n### 2. プロトタイプをつなぐ\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nこれでプロトタイプチェーンはこうなります:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Dog` は `Animal.prototype` のメソッドを使えます。\n\n---\n\n### 3. コンストラクタを直す\n\n`Object.create()` は子のプロトタイプを置き換えるので、`constructor` は `Animal` を指してしまいます。直しましょう:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\n完成した例:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\n出力:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` は `Animal.prototype` 経由で、`dog.bark()` は `Dog.prototype` で見つかります。\n\n---\n\n### `Object.create()` 単体で\n\nプロトタイプ継承にコンストラクタは必須ではありません。\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nここでは:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` は `animal` をプロトタイプに持つ新しいオブジェクトを作ります。\n\n---\n\n### 覚え方\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
+        en: "`call()`, `apply()`, and `bind()` are methods that let you control what <b>`this`</b> refers to inside a normal function.\n\nThe main difference is <b>when the function runs</b> and <b>how arguments are given</b>.\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nThink of them like this:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — run immediately\n\n`call()` runs the function <b>right away</b>. Arguments are passed <b>one by one</b>.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nThis means:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — run immediately with an array\n\n`apply()` works almost like `call()`, but arguments are provided as <b>one array</b>.\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nThis is useful when your arguments are <b>already inside an array</b>.\n\n---\n\n### 3. `bind()` — create a new function\n\n`bind()` does <b>not</b> run the function immediately. Instead, it creates a <b>new function</b> with `this` fixed.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nThink of it as:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` can also fix arguments\n\nYou can provide arguments while creating the new function.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nHere `10` is already fixed as the first argument. This is called <b>partial application</b> (pre-filling some arguments).\n\n---\n\n### 5. The most common real-world use\n\nSuppose an object has a method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nThe connection to `user` is lost. Fix it with `bind()`:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nThis is one of the most common reasons to use `bind()`.\n\n---\n\n### 6. Modern JavaScript\n\nWith the spread operator (`...`), `apply()` is needed less often:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nSo today, you will often see `call()` plus spread instead of `apply()`.\n\n---\n\n### Easy memory trick\n\n> <b>Call = now + comma</b>\n> <b>Apply = now + array</b>\n> <b>Bind = later + new function</b>",
+        np: "`call()`, `apply()`, र `bind()` यस्ता method हुन् जसले सामान्य function भित्र <b>`this`</b> ले के जनाउँछ भन्ने नियन्त्रण गर्न दिन्छन्।\n\nमुख्य फरक <b>function कहिले चल्छ</b> र <b>argument कसरी दिइन्छ</b> भन्नेमा हो।\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — तुरुन्तै चलाउनु\n\n`call()` ले function <b>तुरुन्तै</b> चलाउँछ। Argument <b>एक-एक गरी</b> पठाइन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nयसको अर्थ:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — array सँग तुरुन्तै चलाउनु\n\n`apply()` `call()` जस्तै काम गर्छ, तर argument <b>एउटा array</b> मा दिइन्छन्।\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nArgument <b>पहिले नै array भित्र</b> हुँदा यो उपयोगी हुन्छ।\n\n---\n\n### 3. `bind()` — नयाँ function बनाउनु\n\n`bind()` ले function तुरुन्तै <b>चलाउँदैन</b>। बरु, `this` स्थिर भएको <b>नयाँ function</b> बनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` ले argument पनि तय गर्न सक्छ\n\nनयाँ function बनाउँदै argument दिन सक्नुहुन्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nयहाँ `10` पहिलो argument रूपमा पहिले नै तय भइसक्यो। यसलाई <b>partial application</b> (केही argument पहिले भर्नु) भनिन्छ।\n\n---\n\n### 5. सबैभन्दा सामान्य वास्तविक प्रयोग\n\nमानौं object सँग method छ:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` सँगको जोडाइ हराउँछ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\n`bind()` प्रयोग गर्ने सबैभन्दा सामान्य कारणमध्ये यो एक हो।\n\n---\n\n### 6. आधुनिक JavaScript\n\nSpread operator (`...`) सँग, `apply()` कम चाहिन्छ:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nत्यसैले आजकाल `apply()` को साटो `call()` सँगै spread प्रायः देखिन्छ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call = अहिले + comma</b>\n> <b>Apply = अहिले + array</b>\n> <b>Bind = पछि + नयाँ function</b>",
+        jp: "`call()`・`apply()`・`bind()` は、通常の関数の中で<b>`this`</b> が何を指すかを制御できるメソッドです。\n\n主な違いは<b>いつ関数が実行されるか</b>と<b>引数の渡し方</b>です。\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nこう考えてください:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — すぐ実行する\n\n`call()` は関数を<b>その場で</b>実行します。引数は<b>1つずつ</b>渡します。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nつまり:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — 配列ですぐ実行する\n\n`apply()` は `call()` とほぼ同じですが、引数を<b>1つの配列</b>で渡します。\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\n引数が<b>すでに配列に入っている</b>ときに便利です。\n\n---\n\n### 3. `bind()` — 新しい関数を作る\n\n`bind()` は関数をすぐには<b>実行しません</b>。代わりに `this` を固定した<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nこうイメージしてください:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` は引数も固定できる\n\n新しい関数を作るときに引数を与えられます。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nここでは `10` が第1引数として固定済みです。これを<b>部分適用</b>（一部の引数を先に埋めること）と呼びます。\n\n---\n\n### 5. 最もよくある実践的な用途\n\nオブジェクトにメソッドがあるとします:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドを取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` とのつながりが失われます。`bind()` で直します:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nこれが `bind()` を使う最もよくある理由の1つです。\n\n---\n\n### 6. 現代のJavaScript\n\nスプレッド構文（`...`）があるので `apply()` の出番は減りました:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\n今では `apply()` の代わりに `call()` とスプレッドの組み合わせをよく見かけます。\n\n---\n\n### 覚え方\n\n> <b>Call = 今すぐ + カンマ</b>\n> <b>Apply = 今すぐ + 配列</b>\n> <b>Bind = あとで + 新しい関数</b>",
       },
-      diagram: `Child object
-     │
-     ↓
-Child.prototype
-     │
-     ↓
-Parent.prototype
-     │
-     ↓
-Object.prototype
-     │
-     ↓
-null
-
-When JavaScript cannot find a method on the child object,
-it searches upward through this chain.
+      diagram: `              Function
+                  │
+       ┌──────────┼──────────┐
+       ↓          ↓          ↓
+     call()    apply()    bind()
+       │          │          │
+   runs now    runs now   runs later
+       │          │          │
+   a, b, c     [a,b,c]    new function
 
 
-Call → Connect → Fix
-
-Parent.call(this, ...)
-      ↓
-Object.create(Parent.prototype)
-      ↓
-Child.prototype.constructor = Child`,
+Method     Runs immediately?   Arguments
+------------------------------------------------
+call()     Yes                 One by one
+apply()    Yes                 Inside an array
+bind()     No                  Returns a new function`,
       codeExample: {
-        title: { en: "Call the parent, connect, then fix", np: "Parent call गर्नु, जोड्नु, अनि ठीक गर्नु", jp: "親を呼ぶ・つなぐ・直す" },
-        code: `// ── 1. Parent constructor with a shared method ────────────────────
-function Animal(name) {
-  this.name = name;
+        title: { en: "Run now, run now with an array, or run later", np: "अहिले चलाउनु, array सँग अहिले, वा पछि", jp: "今すぐ・配列で今すぐ・あとで" },
+        code: `const user = { name: "Rajan" };
+
+function greet(age, city) {
+  console.log(this.name, age, city);
 }
 
-Animal.prototype.speak = function () {
-  console.log(\`\${this.name} makes a sound\`);
-};
+// ── 1. call() — runs now, arguments one by one ────────────────────
+greet.call(user, 30, "Tokyo"); // Rajan 30 Tokyo
 
-// ── 2. Child constructor calls the parent ─────────────────────────
-function Dog(name, breed) {
-  Animal.call(this, name);
-  this.breed = breed;
+// ── 2. apply() — runs now, arguments in an array ──────────────────
+greet.apply(user, [30, "Tokyo"]); // Rajan 30 Tokyo
+
+// ── 3. bind() — returns a new function to call later ──────────────
+function sayName() {
+  console.log(this.name);
 }
 
-// ── 3. Connect the prototypes, then fix the constructor ───────────
-Dog.prototype = Object.create(Animal.prototype);
-Dog.prototype.constructor = Dog;
+const greetUser = sayName.bind(user);
+greetUser(); // Rajan
 
-Dog.prototype.bark = function () {
-  console.log("Woof!");
-};
+// ── 4. bind() can pre-fill arguments too ──────────────────────────
+function add(a, b) {
+  return a + b;
+}
 
-const dog = new Dog("Max", "Labrador");
+const add10 = add.bind(null, 10);
+console.log(add10(5)); // 15
 
-dog.speak(); // Max makes a sound — from Animal.prototype
-dog.bark();  // Woof! — from Dog.prototype
-
-console.log(dog.constructor === Dog); // true, thanks to the fix
-
-// ── Object.create() on its own, no constructors needed ────────────
-const animal = {
-  speak() {
-    console.log("Animal sound");
+// ── 5. The classic fix — a method that lost its object ────────────
+const account = {
+  name: "Rajan",
+  greet() {
+    console.log(this.name);
   }
 };
 
-const pet = Object.create(animal);
-pet.speak(); // Animal sound`,
+const detached = account.greet;
+detached(); // undefined
+
+const bound = account.greet.bind(account);
+bound(); // Rajan
+
+// ── 6. Modern JS often uses call() plus spread instead of apply ───
+greet.call(user, ...[30, "Tokyo"]); // Rajan 30 Tokyo`,
       },
       keyTakeaways: [
-        { en: "<b>Prototype inheritance</b> lets one object use another object's methods.", np: "<b>Prototype inheritance</b> ले एउटा object लाई अर्को object का method प्रयोग गर्न दिन्छ।", jp: "<b>プロトタイプ継承</b>により、あるオブジェクトが別のオブジェクトのメソッドを使える。" },
-        { en: "`Parent.call(this, ...)` runs the parent constructor for the child object.", np: "`Parent.call(this, ...)` ले child object का लागि parent constructor चलाउँछ।", jp: "`Parent.call(this, ...)` は子オブジェクトのために親のコンストラクタを実行する。" },
-        { en: "`Object.create(Parent.prototype)` connects the child to the parent prototype.", np: "`Object.create(Parent.prototype)` ले child लाई parent prototype सँग जोड्छ।", jp: "`Object.create(Parent.prototype)` が子を親のプロトタイプにつなぐ。" },
-        { en: "`Child.prototype.constructor = Child` fixes the constructor reference.", np: "`Child.prototype.constructor = Child` ले constructor reference ठीक गर्छ।", jp: "`Child.prototype.constructor = Child` がコンストラクタ参照を直す。" },
-        { en: "`Object.create(proto)` can create an object directly from a prototype, with no constructor at all.", np: "`Object.create(proto)` ले constructor बिनै prototype बाट सिधै object बनाउन सक्छ।", jp: "`Object.create(proto)` はコンストラクタなしでプロトタイプから直接オブジェクトを作れる。" },
-        { en: "The child does <b>not</b> copy the parent's methods; it finds them through the prototype chain.", np: "Child ले parent का method copy <b>गर्दैन</b>; prototype chain मार्फत भेट्टाउँछ।", jp: "子は親のメソッドを<b>コピーしない</b>。プロトタイプチェーンをたどって見つける。" },
+        { en: "<b>`call()`</b> → runs the function immediately with arguments <b>one by one</b>.", np: "<b>`call()`</b> → function तुरुन्तै चलाउँछ, argument <b>एक-एक गरी</b>।", jp: "<b>`call()`</b> → 引数を<b>1つずつ</b>渡して即座に実行する。" },
+        { en: "<b>`apply()`</b> → runs the function immediately with arguments in an <b>array</b>.", np: "<b>`apply()`</b> → function तुरुन्तै चलाउँछ, argument <b>array</b> मा।", jp: "<b>`apply()`</b> → 引数を<b>配列</b>で渡して即座に実行する。" },
+        { en: "<b>`bind()`</b> → returns a <b>new function</b> that can be called later.", np: "<b>`bind()`</b> → पछि call गर्न मिल्ने <b>नयाँ function</b> फर्काउँछ।", jp: "<b>`bind()`</b> → あとで呼べる<b>新しい関数</b>を返す。" },
+        { en: "All three can set `this` for <b>normal functions</b>, but none of them work on arrow functions.", np: "तीनैले <b>सामान्य function</b> का लागि `this` सेट गर्न सक्छन्, तर कुनैले पनि arrow function मा काम गर्दैनन्।", jp: "3つとも<b>通常の関数</b>の `this` を設定できるが、アロー関数には効かない。" },
+        { en: "`bind()` is useful when you need to keep `this` for a callback or event handler.", np: "Callback वा event handler का लागि `this` राख्नुपर्दा `bind()` उपयोगी हुन्छ।", jp: "コールバックやイベントハンドラで `this` を保ちたいときに `bind()` が役立つ。" },
+        { en: "`call()` and `apply()` <b>execute</b> the function; `bind()` <b>does not</b>.", np: "`call()` र `apply()` ले function <b>चलाउँछन्</b>; `bind()` ले <b>चलाउँदैन</b>।", jp: "`call()` と `apply()` は関数を<b>実行する</b>。`bind()` は<b>実行しない</b>。" },
+        { en: "Memory trick: <b>call = now + comma</b>, <b>apply = now + array</b>, <b>bind = later + new function</b>.", np: "सम्झने तरिका: <b>call = अहिले + comma</b>, <b>apply = अहिले + array</b>, <b>bind = पछि + नयाँ function</b>।", jp: "覚え方: <b>call = 今すぐ+カンマ</b>、<b>apply = 今すぐ+配列</b>、<b>bind = あとで+新しい関数</b>。" },
       ],
       commonMistakes: [
-        { en: "<b>Forgetting `Parent.call()`</b> — without it, the properties the parent constructor sets are never initialised on the child.", np: "<b>`Parent.call()` बिर्सनु</b> — यसबिना, parent constructor ले सेट गर्ने property child मा कहिल्यै initialise हुँदैनन्।", jp: "<b>`Parent.call()` を忘れる</b> — 親のコンストラクタが設定するプロパティが子で初期化されない。" },
-        { en: "<b>Forgetting `Object.create()`</b> — writing `Dog.prototype = Animal.prototype;` makes both constructors share the <b>same</b> prototype object, so adding to one changes the other.", np: "<b>`Object.create()` बिर्सनु</b> — `Dog.prototype = Animal.prototype;` लेख्दा दुबै constructor ले <b>उही</b> prototype object बाँड्छन्, त्यसैले एउटामा थप्दा अर्को पनि बदलिन्छ।", jp: "<b>`Object.create()` を忘れる</b> — `Dog.prototype = Animal.prototype;` と書くと両者が<b>同じ</b>プロトタイプを共有し、片方への追加がもう片方にも影響する。" },
-        { en: "<b>Forgetting the constructor fix</b> — after `Dog.prototype = Object.create(Animal.prototype);`, `dog.constructor` reports `Animal` until you set `Dog.prototype.constructor = Dog;`.", np: "<b>Constructor ठीक गर्न बिर्सनु</b> — `Dog.prototype = Object.create(Animal.prototype);` पछि, `Dog.prototype.constructor = Dog;` नगरेसम्म `dog.constructor` ले `Animal` देखाउँछ।", jp: "<b>コンストラクタの修正を忘れる</b> — `Dog.prototype = Object.create(Animal.prototype);` の後、`Dog.prototype.constructor = Dog;` を書くまで `dog.constructor` は `Animal` を指す。" },
+        { en: "<b>Thinking `bind()` runs the function</b> — `const greetUser = greet.bind(user);` runs nothing. You still need `greetUser()`.", np: "<b>`bind()` ले function चलाउँछ भन्ने ठान्नु</b> — `const greetUser = greet.bind(user);` ले केही चलाउँदैन। तपाईंलाई अझै `greetUser()` चाहिन्छ।", jp: "<b>`bind()` が関数を実行すると思う</b> — `const greetUser = greet.bind(user);` では何も動かない。`greetUser()` が必要。" },
+        { en: "<b>Confusing `call()` and `apply()`</b> — `fn.call(user, 10, 20)` passes arguments separately, `fn.apply(user, [10, 20])` passes them in an array.", np: "<b>`call()` र `apply()` भ्रममा पार्नु</b> — `fn.call(user, 10, 20)` ले argument छुट्टाछुट्टै पठाउँछ, `fn.apply(user, [10, 20])` ले array मा।", jp: "<b>`call()` と `apply()` を混同する</b> — `fn.call(user, 10, 20)` は個別に、`fn.apply(user, [10, 20])` は配列で渡す。" },
+        { en: "<b>Trying to use these to change an arrow function's `this`</b> — `greet.call(user)` on an arrow function changes nothing; arrows take `this` from their surrounding scope.", np: "<b>यिनले arrow function को `this` बदल्न खोज्नु</b> — arrow function मा `greet.call(user)` ले केही बदल्दैन; arrow ले वरिपरिको scope बाट `this` लिन्छ।", jp: "<b>これらでアロー関数の `this` を変えようとする</b> — アロー関数への `greet.call(user)` は何も変えない。アローは周囲のスコープから `this` を取る。" },
       ],
       quiz: [
         {
-          question: { en: "What does `Object.create(Animal.prototype)` do?", np: "`Object.create(Animal.prototype)` ले के गर्छ?", jp: "`Object.create(Animal.prototype)` は何をするか?" },
+          question: { en: "Which method runs the function immediately?", np: "कुन method ले function तुरुन्तै चलाउँछ?", jp: "関数をすぐに実行するのはどれか?" },
           options: [
-            { en: "Copies all Animal methods", np: "Animal का सबै method copy गर्छ", jp: "Animalのメソッドをすべてコピーする" },
-            { en: "Creates a new Animal", np: "नयाँ Animal बनाउँछ", jp: "新しいAnimalを作る" },
-            { en: "Connects the new object's prototype to `Animal.prototype`", np: "नयाँ object को prototype लाई `Animal.prototype` सँग जोड्छ", jp: "新しいオブジェクトのプロトタイプを `Animal.prototype` につなぐ" },
-            { en: "Deletes the child prototype", np: "Child prototype मेटाउँछ", jp: "子のプロトタイプを削除する" },
+            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "Both `bind()` and `call()`", np: "`bind()` र `call()` दुबै", jp: "`bind()` と `call()` の両方" },
+            { en: "None", np: "कुनै पनि होइन", jp: "どれでもない" },
           ],
-          correctIndex: 2,
-          explanation: { en: "Nothing is copied; the new object simply links upward to that prototype.", np: "केही copy हुँदैन; नयाँ object त्यो prototype तिर माथि जोडिन्छ मात्र।", jp: "何もコピーされない。新しいオブジェクトがそのプロトタイプへ上向きにリンクするだけ。" },
+          correctIndex: 1,
+          explanation: { en: "`apply()` also runs immediately; `bind()` is the one that waits.", np: "`apply()` पनि तुरुन्तै चल्छ; `bind()` चाहिँ कुर्छ।", jp: "`apply()` もすぐ実行する。待つのは `bind()`。" },
         },
         {
-          question: { en: "Why do we use `Animal.call(this, name)`?", np: "`Animal.call(this, name)` किन प्रयोग गर्छौं?", jp: "なぜ `Animal.call(this, name)` を使うのか?" },
+          question: { en: "Which method expects arguments inside an array?", np: "कुन method ले argument array भित्र खोज्छ?", jp: "引数を配列で受け取るのはどれか?" },
           options: [
-            { en: "To create a prototype", np: "Prototype बनाउन", jp: "プロトタイプを作るため" },
-            { en: "To change `Object.prototype`", np: "`Object.prototype` बदल्न", jp: "`Object.prototype` を変えるため" },
-            { en: "To create a new function", np: "नयाँ function बनाउन", jp: "新しい関数を作るため" },
-            { en: "To call the parent constructor for the child object", np: "Child object का लागि parent constructor call गर्न", jp: "子オブジェクトのために親のコンストラクタを呼ぶため" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
+            { en: "`apply()`", np: "`apply()`", jp: "`apply()`" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "Remember: apply = array.", np: "सम्झनुहोस्: apply = array।", jp: "覚え方: apply = array。" },
+        },
+        {
+          question: { en: "What does `bind()` return?", np: "`bind()` ले के फर्काउँछ?", jp: "`bind()` は何を返すか?" },
+          options: [
+            { en: "The function's result", np: "Function को नतिजा", jp: "関数の結果" },
+            { en: "An array", np: "एउटा array", jp: "配列" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "A new function", np: "नयाँ function", jp: "新しい関数" },
           ],
           correctIndex: 3,
-          explanation: { en: "It runs the parent's setup with `this` pointing at the new child instance.", np: "यसले `this` लाई नयाँ child instance तिर देखाउँदै parent को setup चलाउँछ।", jp: "`this` を新しい子インスタンスに向けたまま親の初期化処理を実行する。" },
+          explanation: { en: "The returned function has `this` fixed, and any pre-filled arguments baked in.", np: "फर्काइएको function को `this` स्थिर हुन्छ, र पहिले भरिएका argument पनि समावेश हुन्छन्।", jp: "返される関数は `this` が固定され、先に埋めた引数も含まれている。" },
         },
         {
-          question: { en: "Why do we write `Dog.prototype.constructor = Dog;`?", np: "`Dog.prototype.constructor = Dog;` किन लेख्छौं?", jp: "なぜ `Dog.prototype.constructor = Dog;` と書くのか?" },
+          question: { en: "What does this print? `const fn = greet.bind(user); fn();` where `user = { name: \"Rajan\" }`", np: "यसले के देखाउँछ? `const fn = greet.bind(user); fn();` जहाँ `user = { name: \"Rajan\" }`", jp: "何が出力されるか? `const fn = greet.bind(user); fn();`（`user = { name: \"Rajan\" }`）" },
           options: [
-            { en: "To fix the constructor reference", np: "Constructor reference ठीक गर्न", jp: "コンストラクタ参照を直すため" },
-            { en: "To create Dog", np: "Dog बनाउन", jp: "Dogを作るため" },
-            { en: "To call Dog", np: "Dog call गर्न", jp: "Dogを呼ぶため" },
-            { en: "To create inheritance", np: "Inheritance बनाउन", jp: "継承を作るため" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`Object.create()` replaced the prototype, so `constructor` pointed at `Animal` until this line.", np: "`Object.create()` ले prototype प्रतिस्थापन गर्‍यो, त्यसैले यो line नआउन्जेल `constructor` ले `Animal` देखाउँथ्यो।", jp: "`Object.create()` がプロトタイプを置き換えたため、この行までは `constructor` が `Animal` を指していた。" },
-        },
-        {
-          question: { en: "What does `Object.create(animal)` do?", np: "`Object.create(animal)` ले के गर्छ?", jp: "`Object.create(animal)` は何をするか?" },
-          options: [
-            { en: "Copies `animal`", np: "`animal` copy गर्छ", jp: "`animal` をコピーする" },
-            { en: "Creates an object whose prototype is `animal`", np: "`animal` prototype भएको object बनाउँछ", jp: "`animal` をプロトタイプに持つオブジェクトを作る" },
-            { en: "Deletes `animal`", np: "`animal` मेटाउँछ", jp: "`animal` を削除する" },
-            { en: "Converts `animal` into a class", np: "`animal` लाई class मा बदल्छ", jp: "`animal` をクラスに変換する" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "This is prototype inheritance without any constructor function.", np: "यो constructor function बिनाको prototype inheritance हो।", jp: "コンストラクタ関数なしのプロトタイプ継承。" },
-        },
-      ],
-    },
-    {
-      id: "property-descriptors",
-      title: { en: "Property Descriptors & Object.defineProperty", np: "Property Descriptors र Object.defineProperty", jp: "プロパティディスクリプタとObject.defineProperty" },
-      durationMinutes: 9,
-      explanation: {
-        en: "Every JavaScript object property has hidden settings called a <b>property descriptor</b>. These settings control what can happen when you read, change, enumerate, or delete the property.\n\nThere are two descriptor types:\n\n• <b>Data descriptor</b> — uses `value` with `writable`, `enumerable`, and `configurable`\n• <b>Accessor descriptor</b> — uses `get` and/or `set` instead of `value`\n\nThe three main flags are:\n\n<b>`writable`</b> — whether the property's value can be changed\n\n<b>`enumerable`</b> — whether the property appears in `Object.keys()`, `for...in`, etc.\n\n<b>`configurable`</b> — whether the property can be deleted or its descriptor changed\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nNow `user.name` can be read, but its value cannot be reassigned.\n\n> <b>Important:</b> properties created normally with `obj.x = 5` have all three flags set to `true`. With `Object.defineProperty()`, unspecified descriptor flags default to `false`.\n\n---\n\n### 1. Basic `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` prevents reassignment.\n\n---\n\n### 3. Hidden property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nThe property still exists; it simply doesn't appear in normal enumeration.\n\n---\n\n### 4. Getters and setters\n\nAccessor descriptors don't use `value`. They use `get` and `set`.\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nHere, `fullName` behaves like a normal property even though its value is calculated dynamically.\n\n---\n\n### 5. Inspecting descriptors\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\nYou can inspect every own property with `Object.getOwnPropertyDescriptors(user)`.",
-        np: "हरेक JavaScript object property का लुकेका सेटिङ हुन्छन्, जसलाई <b>property descriptor</b> भनिन्छ। यी सेटिङले property पढ्दा, बदल्दा, enumerate गर्दा वा मेटाउँदा के हुन सक्छ नियन्त्रण गर्छन्।\n\nDescriptor का दुई प्रकार छन्:\n\n• <b>Data descriptor</b> — `writable`, `enumerable`, र `configurable` सँगै `value` प्रयोग गर्छ\n• <b>Accessor descriptor</b> — `value` को साटो `get` र/वा `set` प्रयोग गर्छ\n\nतीन मुख्य flag:\n\n<b>`writable`</b> — property को value बदल्न मिल्छ कि मिल्दैन\n\n<b>`enumerable`</b> — property `Object.keys()`, `for...in` आदिमा देखिन्छ कि देखिँदैन\n\n<b>`configurable`</b> — property मेटाउन वा यसको descriptor बदल्न मिल्छ कि मिल्दैन\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nअब `user.name` पढ्न मिल्छ, तर यसको value reassign गर्न मिल्दैन।\n\n> <b>महत्वपूर्ण:</b> `obj.x = 5` ले सामान्य रूपमा बनेका property का तीनै flag `true` हुन्छन्। `Object.defineProperty()` सँग, नतोकिएका descriptor flag default मा `false` हुन्छन्।\n\n---\n\n### 1. आधारभूत `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. Read-only property\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` ले reassignment रोक्छ।\n\n---\n\n### 3. लुकेको property\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nProperty अझै अवस्थित छ; यो सामान्य enumeration मा देखिँदैन मात्र।\n\n---\n\n### 4. Getter र setter\n\nAccessor descriptor ले `value` प्रयोग गर्दैनन्। तिनले `get` र `set` प्रयोग गर्छन्।\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nयहाँ, `fullName` को value गतिशील रूपमा गणना हुने भए पनि सामान्य property जस्तै व्यवहार गर्छ।\n\n---\n\n### 5. Descriptor हेर्नु\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\nOutput:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ले हरेक own property हेर्न सकिन्छ।",
-        jp: "JavaScriptのすべてのプロパティには<b>プロパティディスクリプタ</b>と呼ばれる隠れた設定があります。読み取り・変更・列挙・削除のときに何ができるかを、この設定が制御します。\n\nディスクリプタには2種類あります:\n\n• <b>データディスクリプタ</b> — `value` と `writable`・`enumerable`・`configurable` を使う\n• <b>アクセサディスクリプタ</b> — `value` の代わりに `get` や `set` を使う\n\n主なフラグは3つです:\n\n<b>`writable`</b> — 値を変更できるか\n\n<b>`enumerable`</b> — `Object.keys()` や `for...in` などに現れるか\n\n<b>`configurable`</b> — 削除やディスクリプタの変更ができるか\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: false,\n  enumerable: true,\n  configurable: false\n});\n```\n\nこれで `user.name` は読めますが、値を再代入することはできません。\n\n> <b>重要:</b> `obj.x = 5` のように普通に作ったプロパティは3つのフラグがすべて `true` です。`Object.defineProperty()` では、指定しなかったフラグは既定で `false` になります。\n\n---\n\n### 1. 基本の `defineProperty`\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"name\", {\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n});\n\nconsole.log(user.name); // \"Rajan\"\n```\n\n---\n\n### 2. 読み取り専用のプロパティ\n\n```javascript\nconst user = {};\n\nObject.defineProperty(user, \"id\", {\n  value: 101,\n  writable: false\n});\n\nuser.id = 202;\n\nconsole.log(user.id); // 101\n```\n\n`writable: false` が再代入を防ぎます。\n\n---\n\n### 3. 隠れたプロパティ\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nObject.defineProperty(user, \"password\", {\n  value: \"secret\",\n  enumerable: false\n});\n\nconsole.log(Object.keys(user));\n// [\"name\"]\n\nconsole.log(user.password);\n// \"secret\"\n```\n\nプロパティは存在し続けます。通常の列挙に現れないだけです。\n\n---\n\n### 4. ゲッターとセッター\n\nアクセサディスクリプタは `value` を使わず、`get` と `set` を使います。\n\n```javascript\nconst user = {\n  firstName: \"Rajan\",\n  lastName: \"Magar\"\n};\n\nObject.defineProperty(user, \"fullName\", {\n  get() {\n    return `${this.firstName} ${this.lastName}`;\n  },\n\n  set(value) {\n    [this.firstName, this.lastName] = value.split(\" \");\n  }\n});\n\nconsole.log(user.fullName);\n// \"Rajan Magar\"\n\nuser.fullName = \"John Doe\";\n\nconsole.log(user.firstName);\n// \"John\"\n```\n\nここでは `fullName` の値は動的に計算されますが、普通のプロパティのように振る舞います。\n\n---\n\n### 5. ディスクリプタを調べる\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconsole.log(Object.getOwnPropertyDescriptor(user, \"name\"));\n```\n\n出力:\n\n```javascript\n{\n  value: \"Rajan\",\n  writable: true,\n  enumerable: true,\n  configurable: true\n}\n```\n\n`Object.getOwnPropertyDescriptors(user)` ですべての自身のプロパティを調べられます。",
-      },
-      diagram: `             Property Descriptor
-                     │
-          ┌──────────┴──────────┐
-          │                     │
-     Data Property         Accessor Property
-          │                     │
-     ┌────┴────┐           ┌────┴────┐
-   value    writable      get       set
-            enumerable
-            configurable
-
-
-Think of a property like a locked cabinet:
-
-┌─────────────────────────────┐
-│ user.name                   │
-├─────────────────────────────┤
-│ value: "Rajan"              │
-│ writable: false             │
-│ enumerable: true            │
-│ configurable: false         │
-└─────────────────────────────┘`,
-      codeExample: {
-        title: { en: "Locking, hiding and computing a property", np: "Property lock गर्नु, लुकाउनु र गणना गर्नु", jp: "プロパティを固定・非表示・計算する" },
-        code: `// ── 1. Basic defineProperty ───────────────────────────────────────
-const user = {};
-
-Object.defineProperty(user, "name", {
-  value: "Rajan",
-  writable: true,
-  enumerable: true,
-  configurable: true
-});
-
-console.log(user.name); // "Rajan"
-
-// ── 2. Read-only — writable defaults to false ─────────────────────
-Object.defineProperty(user, "id", {
-  value: 101,
-  writable: false
-});
-
-user.id = 202;
-console.log(user.id); // 101
-
-// ── 3. Hidden from enumeration, but still readable ────────────────
-Object.defineProperty(user, "password", {
-  value: "secret",
-  enumerable: false
-});
-
-console.log(Object.keys(user)); // ["name"]
-console.log(user.password);     // "secret"
-
-// ── 4. Accessor descriptor — get and set instead of value ─────────
-const person = {
-  firstName: "Rajan",
-  lastName: "Magar"
-};
-
-Object.defineProperty(person, "fullName", {
-  get() {
-    return \`\${this.firstName} \${this.lastName}\`;
-  },
-  set(value) {
-    [this.firstName, this.lastName] = value.split(" ");
-  }
-});
-
-console.log(person.fullName); // "Rajan Magar"
-
-person.fullName = "John Doe";
-console.log(person.firstName); // "John"
-
-// ── 5. Inspecting what a property actually allows ─────────────────
-console.log(Object.getOwnPropertyDescriptor(person, "firstName"));
-// { value: "John", writable: true, enumerable: true, configurable: true }`,
-      },
-      keyTakeaways: [
-        { en: "<b>Property descriptors</b> control how object properties behave.", np: "<b>Property descriptor</b> ले object property कसरी व्यवहार गर्छन् नियन्त्रण गर्छन्।", jp: "<b>プロパティディスクリプタ</b>がプロパティの振る舞いを制御する。" },
-        { en: "<b>`writable`</b> → can the value change?", np: "<b>`writable`</b> → value बदल्न मिल्छ?", jp: "<b>`writable`</b> → 値を変更できるか?" },
-        { en: "<b>`enumerable`</b> → does it appear during enumeration?", np: "<b>`enumerable`</b> → enumeration मा देखिन्छ?", jp: "<b>`enumerable`</b> → 列挙時に現れるか?" },
-        { en: "<b>`configurable`</b> → can it be deleted or reconfigured?", np: "<b>`configurable`</b> → मेटाउन वा पुनः configure गर्न मिल्छ?", jp: "<b>`configurable`</b> → 削除や再設定ができるか?" },
-        { en: "<b>`Object.defineProperty()`</b> lets you control these settings.", np: "<b>`Object.defineProperty()`</b> ले यी सेटिङ नियन्त्रण गर्न दिन्छ।", jp: "<b>`Object.defineProperty()`</b> でこれらの設定を制御できる。" },
-        { en: "<b>Getters and setters</b> are accessor descriptors and use `get`/`set` instead of `value`.", np: "<b>Getter र setter</b> accessor descriptor हुन् र `value` को साटो `get`/`set` प्रयोग गर्छन्।", jp: "<b>ゲッターとセッター</b>はアクセサディスクリプタで、`value` の代わりに `get`/`set` を使う。" },
-        { en: "`Object.getOwnPropertyDescriptor()` lets you inspect a property's configuration.", np: "`Object.getOwnPropertyDescriptor()` ले property को configuration हेर्न दिन्छ।", jp: "`Object.getOwnPropertyDescriptor()` でプロパティの設定を調べられる。" },
-        { en: "Be careful: with `defineProperty()`, unspecified flags default to <b>`false`</b>.", np: "होसियार: `defineProperty()` सँग, नतोकिएका flag default मा <b>`false`</b> हुन्छन्।", jp: "注意: `defineProperty()` では指定しなかったフラグは既定で<b>`false`</b>。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Assuming `defineProperty()` defaults behave like normal properties</b> — `Object.defineProperty(user, \"age\", { value: 30 })` leaves `writable` as `false`, so `user.age = 40` silently does nothing.", np: "<b>`defineProperty()` का default सामान्य property जस्तै हुन्छन् भन्ने ठान्नु</b> — `Object.defineProperty(user, \"age\", { value: 30 })` ले `writable` लाई `false` छोड्छ, त्यसैले `user.age = 40` ले चुपचाप केही गर्दैन।", jp: "<b>`defineProperty()` の既定値が普通のプロパティと同じだと思う</b> — `Object.defineProperty(user, \"age\", { value: 30 })` は `writable` が `false` のままなので、`user.age = 40` は黙って何も起きない。" },
-        { en: "<b>Using `value` together with `get` or `set`</b> — a descriptor cannot define both a data property and an accessor; it throws a `TypeError`.", np: "<b>`value` लाई `get` वा `set` सँगै प्रयोग गर्नु</b> — descriptor ले data property र accessor दुबै परिभाषित गर्न सक्दैन; यसले `TypeError` दिन्छ।", jp: "<b>`value` と `get`/`set` を同時に使う</b> — ディスクリプタはデータプロパティとアクセサの両方を定義できず、`TypeError` になる。" },
-        { en: "<b>Thinking `enumerable: false` makes a property private</b> — `user.password` still works. It only hides the property from enumeration.", np: "<b>`enumerable: false` ले property निजी बनाउँछ भन्ने ठान्नु</b> — `user.password` अझै काम गर्छ। यसले property लाई enumeration बाट लुकाउँछ मात्र।", jp: "<b>`enumerable: false` でプライベートになると思う</b> — `user.password` は依然として読める。列挙から隠すだけ。" },
-      ],
-      quiz: [
-        {
-          question: { en: "What does `writable: false` do?", np: "`writable: false` ले के गर्छ?", jp: "`writable: false` は何をするか?" },
-          options: [
-            { en: "Hides the property", np: "Property लुकाउँछ", jp: "プロパティを隠す" },
-            { en: "Prevents deleting the property", np: "Property मेटाउनबाट रोक्छ", jp: "プロパティの削除を防ぐ" },
-            { en: "Prevents changing its value", np: "यसको value बदल्नबाट रोक्छ", jp: "値の変更を防ぐ" },
-            { en: "Makes the property private", np: "Property निजी बनाउँछ", jp: "プロパティをプライベートにする" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "Hiding is `enumerable`, and preventing deletion is `configurable`.", np: "लुकाउने `enumerable` हो, र मेटाउन रोक्ने `configurable` हो।", jp: "隠すのは `enumerable`、削除を防ぐのは `configurable`。" },
-        },
-        {
-          question: { en: "What does `obj.x` print after `Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;`?", np: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` पछि `obj.x` ले के देखाउँछ?", jp: "`Object.defineProperty(obj, \"x\", { value: 10 }); obj.x = 20;` の後 `obj.x` は何を出すか?" },
-          options: [
-            { en: "`20`", np: "`20`", jp: "`20`" },
-            { en: "`10`", np: "`10`", jp: "`10`" },
+            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
+            { en: "`user`", np: "`user`", jp: "`user`" },
             { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`writable` was not specified, so it defaulted to `false` and the assignment was ignored.", np: "`writable` तोकिएको थिएन, त्यसैले default `false` भयो र assignment बेवास्ता भयो।", jp: "`writable` を指定しなかったので既定の `false` になり、代入は無視された。" },
-        },
-        {
-          question: { en: "Which descriptor is used for a computed property?", np: "गणना गरिने property का लागि कुन descriptor प्रयोग हुन्छ?", jp: "計算されるプロパティにはどのディスクリプタを使うか?" },
-          options: [
-            { en: "`get`", np: "`get`", jp: "`get`" },
-            { en: "`value`", np: "`value`", jp: "`value`" },
-            { en: "`writable`", np: "`writable`", jp: "`writable`" },
-            { en: "`enumerable`", np: "`enumerable`", jp: "`enumerable`" },
+            { en: "Error", np: "Error", jp: "エラー" },
           ],
           correctIndex: 0,
-          explanation: { en: "`get` (with an optional `set`) makes an accessor property, which cannot also use `value`.", np: "`get` (वैकल्पिक `set` सहित) ले accessor property बनाउँछ, जसले `value` पनि प्रयोग गर्न सक्दैन।", jp: "`get`（必要なら `set` も）でアクセサプロパティになる。`value` とは併用できない。" },
+          explanation: { en: "`bind()` fixed `this` to `user`, so calling `fn()` later still logs the name.", np: "`bind()` ले `this` लाई `user` मा स्थिर गर्‍यो, त्यसैले पछि `fn()` call गर्दा पनि नाम देखिन्छ।", jp: "`bind()` が `this` を `user` に固定したので、あとで `fn()` を呼んでも名前が出る。" },
         },
       ],
+      youtubeIds: ["75W8UPQ5l7k", "ke_y6z0xRpk"],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "How does JavaScript find a property that isn't directly on an object?", np: "Object मा सिधै नभएको property JS ले कसरी भेट्छ?", jp: "オブジェクトに直接ないプロパティをJSはどうやって見つける？" },
-      options: [{ en: "It throws a ReferenceError immediately", np: "यो तुरुन्तै ReferenceError throw गर्छ", jp: "即座にReferenceErrorをスローする" }, { en: "It walks the prototype chain until found or reaching null", np: "यो भेटिने वा null सम्म पुगुन्जेल prototype chain हिँड्छ", jp: "見つかるかnullに達するまでプロトタイプチェーンを歩く" }],
+      question: { en: "What is `this` inside a plain function call in strict mode?", np: "Strict mode मा plain function call भित्र `this` के हो?", jp: "strictモードでのプレーンな関数呼び出し内のthisは？" },
+      options: [{ en: "The global object", np: "Global object", jp: "グローバルオブジェクト" }, { en: "`undefined`", np: "`undefined`", jp: "`undefined`" }],
       correctIndex: 1,
-      explanation: { en: "Prototype chain lookup is how JavaScript implements inheritance.", np: "Prototype chain lookup नै JS को inheritance implementation हो।", jp: "プロトタイプチェーンの検索がJavaScriptの継承の実装方法。" },
+      explanation: { en: "Strict mode default binding does not fall back to the global object.", np: "Strict mode default binding ले global object मा फिर्ता जाँदैन।", jp: "strictモードのデフォルト束縛はグローバルオブジェクトにフォールバックしない。" },
     },
     {
-      question: { en: "Do all instances of a constructor share the same prototype methods in memory?", np: "Constructor का सबै instances ले memory मा उही prototype methods share गर्छन्?", jp: "コンストラクタのすべてのインスタンスはメモリ内で同じプロトタイプメソッドを共有する？" },
-      options: [{ en: "Yes — one copy shared via the chain", np: "हो — chain मार्फत एउटा copy share हुन्छ", jp: "はい — チェーン経由で1つのコピーが共有される" }, { en: "No — each gets its own copy", np: "होइन — हरेकले आफ्नै copy पाउँछ", jp: "いいえ — 各インスタンスが独自のコピーを持つ" }],
+      question: { en: "What happens to `this` when you extract a method off its object and call it bare?", np: "Method लाई object बाट extract गरेर bare call गर्दा `this` को हुन्छ?", jp: "オブジェクトからメソッドを取り出して生で呼び出すとthisはどうなる？" },
+      options: [{ en: "It's lost — falls back to default binding", np: "हराउन्छ — default binding मा फिर्ता जान्छ", jp: "失われる — デフォルト束縛にフォールバックする" }, { en: "It stays pointed at the original object", np: "मूल object मै रहन्छ", jp: "元のオブジェクトを指したままになる" }],
       correctIndex: 0,
-      explanation: { en: "This sharing is exactly what makes the prototype pattern memory-efficient.", np: "यही sharing ले prototype pattern लाई memory-efficient बनाउँछ।", jp: "この共有がプロトタイプパターンをメモリ効率的にする理由。" },
+      explanation: { en: "Without the object to the left of a dot at the call site, implicit binding cannot apply.", np: "Call site मा dot को बायाँ object नभई implicit binding लागू हुँदैन।", jp: "呼び出し場所でドットの左にオブジェクトがなければ暗黙的束縛は適用されない。" },
     },
     {
-      question: { en: "What is the modern, recommended way to inspect an object's prototype?", np: "Object को prototype inspect गर्ने modern, recommended तरिका के हो?", jp: "オブジェクトのプロトタイプを調べる現代的で推奨される方法は？" },
-      options: [{ en: "`obj.__proto__`", np: "`obj.__proto__`", jp: "`obj.__proto__`" }, { en: "`Object.getPrototypeOf(obj)`", np: "`Object.getPrototypeOf(obj)`", jp: "`Object.getPrototypeOf(obj)`" }],
+      question: { en: "Which binding rule wins if a function is both called with `new` and bound with `bind()`?", np: "Function `new` सँग call भएको छ र `bind()` ले पनि bind भएको छ भने कुन rule जित्छ?", jp: "関数が`new`で呼ばれ、かつ`bind()`で束縛されている場合、どちらのルールが勝つ？" },
+      options: [{ en: "Explicit binding always wins", np: "Explicit binding ले सधैं जित्छ", jp: "明示的束縛が常に勝つ" }, { en: "`new` binding — it has the highest priority", np: "`new` binding — highest priority", jp: "`new`束縛 — 最も優先度が高い" }],
       correctIndex: 1,
-      explanation: { en: "__proto__ is legacy; Object.getPrototypeOf is the standard API.", np: "__proto__ legacy हो; Object.getPrototypeOf standard API हो।", jp: "__proto__はレガシー。Object.getPrototypeOfが標準API。" },
+      explanation: { en: "new binding sits above explicit binding in the priority order of the four this rules.", np: "चार this rules को priority order मा new binding explicit binding भन्दा माथि छ।", jp: "4つのthisルールの優先順位では、new束縛は明示的束縛より上位にある。" },
     },
     {
-      question: { en: "Why must `Dog`'s constructor call `Animal.call(this, name)`?", np: "`Dog` को constructor ले `Animal.call(this, name)` किन call गर्नुपर्छ?", jp: "Dogのコンストラクタが`Animal.call(this, name)`を呼ぶ必要があるのはなぜ？" },
-      options: [{ en: "To run the parent's initialisation logic on the new instance", np: "नयाँ instance मा parent को initialisation logic चलाउन", jp: "新しいインスタンスに親の初期化ロジックを実行するため" }, { en: "It's unnecessary boilerplate with no effect", np: "यो असर नभएको अनावश्यक boilerplate हो", jp: "効果のない不要なボイラープレート" }],
+      question: { en: "Where does an arrow function's `this` come from?", np: "Arrow function को `this` कहाँबाट आउँछ?", jp: "アロー関数のthisはどこから来る？" },
+      options: [{ en: "The lexical scope surrounding it at creation time", np: "Creation बेलाको surrounding lexical scope", jp: "作成時の周囲のレキシカルスコープ" }, { en: "Whatever object it's later called on", np: "पछि जुन object मा call हुन्छ त्यही", jp: "後で呼び出されるオブジェクト" }],
       correctIndex: 0,
-      explanation: { en: "The prototype chain shares methods only, not constructor initialisation logic.", np: "Prototype chain ले methods मात्र share गर्छ, constructor initialisation logic होइन।", jp: "プロトタイプチェーンはメソッドのみを共有し、コンストラクタの初期化ロジックは共有しない。" },
+      explanation: { en: "Arrow functions have no dynamic this-binding — they inherit this from where they were defined.", np: "Arrow functions मा dynamic this-binding हुँदैन — यिनले define भएको ठाउँबाट this inherit गर्छन्।", jp: "アロー関数には動的なthis束縛がない。定義された場所からthisを継承する。" },
     },
     {
-      question: { en: "What's wrong with `Child.prototype = Parent.prototype` instead of `Object.create(Parent.prototype)`?", np: "`Object.create(Parent.prototype)` को सट्टा `Child.prototype = Parent.prototype` मा के गल्ती छ?", jp: "`Object.create(Parent.prototype)`の代わりに`Child.prototype = Parent.prototype`とすると何が問題？" },
-      options: [{ en: "Nothing, they're equivalent", np: "केही छैन, दुवै उस्तै", jp: "何も問題ない、同等" }, { en: "Child and Parent end up sharing the literal same prototype object", np: "Child र Parent ले उही literal prototype object share गर्छन्", jp: "ChildとParentが文字通り同じプロトタイプオブジェクトを共有する" }],
+      question: { en: "Is an arrow function a good choice for an object literal method like `{ inc: () => { this.count++ } }`?", np: "`{ inc: () => { this.count++ } }` जस्तो object literal method का लागि arrow function राम्रो choice हो?", jp: "`{ inc: () => { this.count++ } }`のようなオブジェクトリテラルのメソッドにアロー関数は適切？" },
+      options: [{ en: "Yes — it always refers to the object it's defined on", np: "हो — यो सधैं define भएको object लाई जनाउँछ", jp: "はい — 常に定義されたオブジェクトを指す" }, { en: "No — it captures this from the module scope, not the object", np: "होइन — यसले module scope बाट this capture गर्छ, object बाट होइन", jp: "いいえ — オブジェクトではなくモジュールスコープからthisをキャプチャする" }],
       correctIndex: 1,
-      explanation: { en: "Object.create makes a new linked object; direct assignment makes them literally the same object, so changes bleed both ways.", np: "Object.create ले नयाँ linked object बनाउँछ; direct assignment ले उही object बनाउँछ, त्यसैले परिवर्तन दुवैतिर फैलिन्छ।", jp: "Object.createは新しいリンクされたオブジェクトを作る。直接代入は文字通り同じオブジェクトにするため、変更が両方に影響する。" },
+      explanation: { en: "The arrow's lexical scope at creation time is the module, not the object literal being built.", np: "Arrow को creation बेलाको lexical scope module हो, बन्दै गरेको object literal होइन।", jp: "アローの作成時のレキシカルスコープは、構築中のオブジェクトリテラルではなくモジュール。" },
     },
     {
-      question: { en: "What does `Object.create(proto)` do without any constructor involved?", np: "Constructor बिना `Object.create(proto)` ले के गर्छ?", jp: "コンストラクタなしで`Object.create(proto)`は何をする？" },
-      options: [{ en: "Creates a new object whose prototype is exactly `proto`", np: "`proto` लाई ठ्याक्कै prototype बनाई नयाँ object बनाउँछ", jp: "protoをまさにプロトタイプとする新しいオブジェクトを作る" }, { en: "Copies all properties from proto into a new object", np: "proto का सबै properties नयाँ object मा copy गर्छ", jp: "protoのすべてのプロパティを新しいオブジェクトにコピーする" }],
+      question: { en: "Can `bind()` override an arrow function's `this`?", np: "`bind()` ले arrow function को `this` override गर्न सक्छ?", jp: "`bind()`はアロー関数のthisを上書きできる？" },
+      options: [{ en: "No — arrow functions ignore explicit binding entirely", np: "होइन — arrow functions ले explicit binding लाई पूर्ण बेवास्ता गर्छन्", jp: "いいえ — アロー関数は明示的束縛を完全に無視する" }, { en: "Yes, just like a regular function", np: "हो, regular function जस्तै", jp: "はい、通常の関数と同じ" }],
       correctIndex: 0,
-      explanation: { en: "Object.create links, it doesn't copy — the new object's prototype IS the passed-in object.", np: "Object.create ले link गर्छ, copy गर्दैन — नयाँ object को prototype नै pass गरिएको object हो।", jp: "Object.createはリンクするだけでコピーはしない。新しいオブジェクトのプロトタイプは渡されたオブジェクトそのもの。" },
+      explanation: { en: "There is no dynamic this-binding to override on an arrow function in the first place.", np: "Arrow function मा override गर्ने dynamic this-binding सुरुदेखि नै हुँदैन।", jp: "そもそもアロー関数には上書きすべき動的なthis束縛が存在しない。" },
     },
     {
-      question: { en: "What three flags does a property descriptor control besides its value?", np: "Value बाहेक property descriptor ले कुन तीन flags control गर्छ?", jp: "値以外にプロパティディスクリプタが制御する3つのフラグは？" },
-      options: [{ en: "static, private, async", np: "static, private, async", jp: "static、private、async" }, { en: "writable, enumerable, configurable", np: "writable, enumerable, configurable", jp: "writable、enumerable、configurable" }],
+      question: { en: "What is the key difference in how `call()` and `apply()` pass arguments?", np: "`call()` र `apply()` ले arguments pass गर्ने तरिकामा मुख्य फरक के हो?", jp: "`call()`と`apply()`の引数の渡し方の主な違いは？" },
+      options: [{ en: "They pass arguments identically", np: "दुवैले arguments उस्तै तरिकाले pass गर्छन्", jp: "両者は引数を同じように渡す" }, { en: "call takes individual arguments; apply takes a single array", np: "call ले individual arguments लिन्छ; apply ले single array लिन्छ", jp: "callは個別の引数を受け取る。applyは単一の配列を受け取る" }],
       correctIndex: 1,
-      explanation: { en: "These control reassignment, enumeration visibility, and whether the descriptor can be changed later.", np: "यीले reassignment, enumeration visibility, र descriptor बदलिने अनुमति control गर्छ।", jp: "これらは再割り当て・列挙可視性・ディスクリプタを後で変更できるかを制御する。" },
+      explanation: { en: "This is the sole functional difference between the two methods; both invoke immediately.", np: "यही दुई methods बीचको एकमात्र functional फरक हो; दुवैले तुरुन्तै invoke गर्छन्।", jp: "これが2つのメソッドの唯一の機能的な違い。両方とも即座に呼び出す。" },
     },
     {
-      question: { en: "Does `enumerable: false` prevent direct access to a property by name?", np: "`enumerable: false` ले नामले property मा direct access रोक्छ?", jp: "`enumerable: false`は名前によるプロパティへの直接アクセスを防ぐ？" },
-      options: [{ en: "No — it only hides it from Object.keys()/for...in", np: "होइन — यसले केवल Object.keys()/for...in बाट hide गर्छ", jp: "いいえ — Object.keys()/for...inから隠すだけ" }, { en: "Yes — it blocks all access", np: "हो — यसले सबै access block गर्छ", jp: "はい — すべてのアクセスをブロックする" }],
+      question: { en: "Does `bind()` invoke the function immediately?", np: "`bind()` ले function तुरुन्तै invoke गर्छ?", jp: "`bind()`は関数を即座に呼び出す？" },
+      options: [{ en: "No — it returns a new function for later use", np: "होइन — यसले पछि प्रयोगका लागि नयाँ function फर्काउँछ", jp: "いいえ — 後で使うための新しい関数を返す" }, { en: "Yes, immediately", np: "हो, तुरुन्तै", jp: "はい、即座に" }],
       correctIndex: 0,
-      explanation: { en: "enumerable only affects visibility during enumeration; the property is still directly readable/writable.", np: "enumerable ले enumeration बेलाको visibility मात्र असर गर्छ; property अझै directly readable/writable छ।", jp: "enumerableは列挙時の可視性にのみ影響する。プロパティは直接読み書き可能なままである。" },
+      explanation: { en: "bind() is the odd one out among the three — it never calls the function itself.", np: "तीनमध्ये bind() अलग हो — यसले function आफैं कहिल्यै call गर्दैन।", jp: "3つの中でbind()は例外的で、関数自体を決して呼び出さない。" },
     },
     {
-      question: { en: "How do you read a property defined via a `get()` descriptor?", np: "`get()` descriptor सँग define गरिएको property कसरी पढ्ने?", jp: "`get()`ディスクリプタで定義されたプロパティはどうやって読む？" },
-      options: [{ en: "As a method call: `obj.fullName()`", np: "Method call को रूपमा: `obj.fullName()`", jp: "メソッド呼び出しとして: `obj.fullName()`" }, { en: "Like a normal property, no parentheses: `obj.fullName`", np: "Normal property जस्तै, parentheses बिना: `obj.fullName`", jp: "通常のプロパティのように括弧なし: `obj.fullName`" }],
+      question: { en: "Why bind a class method used as an event handler in the constructor?", np: "Constructor मा event handler को रूपमा प्रयोग हुने class method किन bind गर्ने?", jp: "コンストラクタでイベントハンドラとして使うクラスメソッドをなぜbindするのか？" },
+      options: [{ en: "It's purely a stylistic convention with no functional effect", np: "यो कुनै functional असर नभएको केवल stylistic convention हो", jp: "機能的な効果はなく、純粋にスタイル上の慣習" }, { en: "So `this` stays correct once the method is detached and called by the event system", np: "ताकि method detach भएर event system ले call गर्दा पनि `this` सहि रहोस्", jp: "メソッドが切り離され、イベントシステムによって呼び出されてもthisが正しいままであるように" }],
       correctIndex: 1,
-      explanation: { en: "Getters run transparently on property access — no call syntax is needed or valid.", np: "Getters property access मा transparently चल्छन् — call syntax चाहिँदैन।", jp: "getterはプロパティアクセス時に透過的に実行される。呼び出し構文は不要。" },
+      explanation: { en: "Event systems call the handler bare, without the instance to the left of a dot, so binding is what preserves the correct this.", np: "Event system ले handler लाई bare call गर्छ, dot को बायाँ instance बिना, त्यसैले bind ले नै सहि this जोगाउँछ।", jp: "イベントシステムはハンドラをドットの左にインスタンスなしで生で呼び出すため、束縛が正しいthisを保持する。" },
     },
   ],
 };
