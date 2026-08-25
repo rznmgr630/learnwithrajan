@@ -42,6 +42,7 @@ const JS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   6:  JS_DAY_6_DETAIL,
   7:  JS_DAY_7_DETAIL,
   8:  JS_DAY_8_DETAIL,
+  9:  JS_DAY_9_DETAIL,
   10: JS_DAY_10_DETAIL,
   11: JS_DAY_11_DETAIL,
   12: JS_DAY_12_DETAIL,
