@@ -108,11 +108,11 @@ console.log("Other work"); // runs while slowOperation is still pending`,
         {
           question: { en: "What does an `async` function always return?", np: "`async` function ले सधैं के फर्काउँछ?", jp: "`async` 関数は常に何を返すか?" },
           options: [
-            { en: "The raw value", np: "कच्चा value", jp: "生の値" },
             { en: "A Promise", np: "एउटा Promise", jp: "Promise" },
+            { en: "The raw value", np: "कच्चा value", jp: "生の値" },
             { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Even `return \"Hello\"` comes back wrapped in a resolved Promise.", np: "`return \"Hello\"` पनि resolve भएको Promise मा लपेटिएर आउँछ।", jp: "`return \"Hello\"` でも解決済みのPromiseに包まれて返る。" },
         },
         {
@@ -129,10 +129,10 @@ console.log("Other work"); // runs while slowOperation is still pending`,
           question: { en: "What is `async/await` built on?", np: "`async/await` केमाथि बनेको छ?", jp: "`async/await` は何の上に作られているか?" },
           options: [
             { en: "Callbacks", np: "Callback", jp: "コールバック" },
-            { en: "Promises", np: "Promise", jp: "Promise" },
             { en: "Threads", np: "Thread", jp: "スレッド" },
+            { en: "Promises", np: "Promise", jp: "Promise" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "It is the same mechanism as `.then()`, written differently.", np: "यो `.then()` कै यन्त्र हो, फरक तरिकाले लेखिएको।", jp: "`.then()` と同じ仕組みを別の書き方にしたもの。" },
         },
         {
@@ -257,20 +257,20 @@ const fastest = await Promise.any([
           question: { en: "Which method resolves when the first Promise fulfills?", np: "पहिलो Promise fulfill हुँदा कुन method resolve हुन्छ?", jp: "最初のPromiseが成功したときに解決するのはどれか?" },
           options: [
             { en: "`Promise.race()`", np: "`Promise.race()`", jp: "`Promise.race()`" },
-            { en: "`Promise.any()`", np: "`Promise.any()`", jp: "`Promise.any()`" },
             { en: "`Promise.all()`", np: "`Promise.all()`", jp: "`Promise.all()`" },
+            { en: "`Promise.any()`", np: "`Promise.any()`", jp: "`Promise.any()`" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "`race()` would also settle on the first rejection; `any()` waits for a success.", np: "`race()` पहिलो rejection मा पनि settle हुन्थ्यो; `any()` ले सफलता कुर्छ।", jp: "`race()` は最初の拒否でも確定するが、`any()` は成功を待つ。" },
         },
         {
           question: { en: "What happens if one Promise rejects in `Promise.all()`?", np: "`Promise.all()` मा एउटा Promise reject भए के हुन्छ?", jp: "`Promise.all()` で1つのPromiseが拒否されるとどうなるか?" },
           options: [
-            { en: "It waits for everything", np: "सबै कुर्छ", jp: "すべてを待つ" },
-            { en: "It ignores the rejection", np: "Rejection बेवास्ता गर्छ", jp: "拒否を無視する" },
             { en: "It rejects immediately", np: "तुरुन्तै reject हुन्छ", jp: "即座に拒否される" },
+            { en: "It ignores the rejection", np: "Rejection बेवास्ता गर्छ", jp: "拒否を無視する" },
+            { en: "It waits for everything", np: "सबै कुर्छ", jp: "すべてを待つ" },
           ],
-          correctIndex: 2,
+          correctIndex: 0,
           explanation: { en: "The other promises keep running, but you never get their combined result.", np: "अरू promise चलिरहन्छन्, तर तपाईंले तिनको संयुक्त नतिजा कहिल्यै पाउनुहुन्न।", jp: "他のPromiseは動き続けるが、まとめた結果は得られない。" },
         },
         {
@@ -291,96 +291,93 @@ const fastest = await Promise.any([
       title: { en: "Parallel vs Sequential await", np: "Parallel vs Sequential await", jp: "並列awaitと逐次await" },
       durationMinutes: 9,
       explanation: {
-        en: "One of the most common `async`/`await` performance bugs is putting `await` directly inside a `for` loop when the iterations are independent of each other. Each `await fetchUser(id)` pauses the whole loop until that one request finishes before even <b>starting</b> the next one — five independent requests end up running one after another, so total time becomes roughly <b>5 × single-request time</b> instead of running concurrently.\n\nThe fix is to separate <b>starting</b> a Promise from <b>waiting</b> on it: use `.map()` to call the async function for every item first (this kicks off all the requests immediately, since calling an async function starts running it right away), collect the resulting array of Promises, and only then `await Promise.all(promises)` to wait for all of them together. Total time drops to roughly the <b>slowest single request</b>. Sequential `await` in a loop is still the <b>correct</b> choice, though, whenever step N genuinely needs the result of step N-1 before it can even begin.",
-        np: "सबैभन्दा common `async`/`await` performance bug भनेको independent iterations हुँदा पनि `for` loop भित्र सिधै `await` राख्नु हो। हरेक `await fetchUser(id)` ले अर्को request सुरु नै नहुँदै त्यो एउटा नसकिएसम्म पूरै loop pause गर्छ — पाँच independent requests एक-एक गरी क्रमैसँग चल्छन्, त्यसैले total time concurrently चल्नुको सट्टा लगभग <b>5 × single-request time</b> हुन्छ।\n\nसमाधान भनेको Promise <b>सुरु गर्नु</b> र त्यसमा <b>पर्खनु</b> लाई छुट्याउनु हो: पहिले हरेक item का लागि async function call गर्न `.map()` use गर्नुहोस् (async function call गर्नासाथ यो तुरुन्तै चल्न सुरु हुन्छ, त्यसैले सबै requests तुरुन्तै सुरु हुन्छन्), Promises को resulting array collect गर्नुहोस्, र त्यसपछि मात्र सबैलाई सँगै पर्खन `await Promise.all(promises)` गर्नुहोस्। Total time लगभग <b>सबैभन्दा ढिलो single request</b> बराबर घट्छ। Step N लाई साँच्चै step N-1 को result चाहिने भएमा भने loop भित्रको sequential `await` अझै <b>सहि</b> choice हो।",
-        jp: "最も一般的な`async`/`await`のパフォーマンスバグの1つは、反復が互いに独立しているのに`for`ループ内に直接`await`を置くこと。各`await fetchUser(id)`はその1件のリクエストが終わるまでループ全体を一時停止させ、次のリクエストを<b>開始する</b>ことすらできない。5件の独立したリクエストが結局1つずつ順番に実行されるため、合計時間は並行実行の場合ではなく、およそ<b>単一リクエスト時間の5倍</b>になってしまう。\n\n解決策はPromiseの<b>開始</b>と<b>待機</b>を分けること：まず`.map()`を使ってすべての項目に対してasync関数を呼び出す（async関数は呼び出した瞬間に実行が始まるため、これによってすべてのリクエストが即座に開始される）、結果として得られるPromiseの配列を集め、その後で初めて`await Promise.all(promises)`ですべてをまとめて待つ。合計時間はおよそ<b>最も遅い単一リクエスト</b>の時間まで下がる。ただし、ステップNが本当にステップN-1の結果を必要としてからでないと開始できない場合は、ループ内の逐次的な`await`が依然として<b>正しい</b>選択である。",
+        en: "<b>Sequential `await`</b> means each asynchronous operation waits for the previous one to finish before starting.\n\n```javascript\nfor (const id of ids) {\n  const user = await fetchUser(id);\n  console.log(user);\n}\n```\n\nIf each request takes about 1 second, 5 requests take roughly <b>5 seconds</b>.\n\n<b>Parallel execution</b> starts independent operations first, then waits for all of them together.\n\n```javascript\nconst promises = ids.map(id => fetchUser(id));\nconst users = await Promise.all(promises);\n```\n\nThe 5 requests can run concurrently, so total time is roughly the <b>slowest request</b>.\n\n---\n\n### 1. Basic — sequential\n\n```javascript\nconst a = await fetchUser(1);\nconst b = await fetchUser(2);\nconst c = await fetchUser(3);\n```\n\nEach request starts only after the previous one finishes.\n\n---\n\n### 2. Intermediate — parallel\n\n```javascript\nconst promises = [\n  fetchUser(1),\n  fetchUser(2),\n  fetchUser(3)\n];\n\nconst users = await Promise.all(promises);\n```\n\nAll requests start before `await` waits for the results.\n\n---\n\n### 3. Advanced — parallel with `map()`\n\n```javascript\nconst ids = [1, 2, 3, 4, 5];\n\nconst users = await Promise.all(\n  ids.map(id => fetchUser(id))\n);\n```\n\n`map()` starts the independent operations and returns an array of Promises. `Promise.all()` then waits for all of them.\n\n---\n\n### When sequential is the right answer\n\nIf the next operation depends on the previous result, keep it sequential:\n\n```javascript\nconst user = await fetchUser();\nconst orders = await fetchOrders(user.id);\n```\n\n`fetchOrders()` needs `user.id`, so it cannot start any earlier.",
+        np: "<b>Sequential `await`</b> को अर्थ हरेक asynchronous operation सुरु हुनुअघि अघिल्लो सकिन कुर्छ भन्ने हो।\n\n```javascript\nfor (const id of ids) {\n  const user = await fetchUser(id);\n  console.log(user);\n}\n```\n\nहरेक request लाई करिब 1 second लाग्छ भने, 5 request लाई लगभग <b>5 second</b> लाग्छ।\n\n<b>Parallel execution</b> ले पहिले स्वतन्त्र operation सुरु गर्छ, त्यसपछि सबैलाई सँगै कुर्छ।\n\n```javascript\nconst promises = ids.map(id => fetchUser(id));\nconst users = await Promise.all(promises);\n```\n\n5 request सँगसँगै चल्न सक्छन्, त्यसैले कुल समय लगभग <b>सबैभन्दा ढिलो request</b> जति हुन्छ।\n\n---\n\n### 1. आधारभूत — sequential\n\n```javascript\nconst a = await fetchUser(1);\nconst b = await fetchUser(2);\nconst c = await fetchUser(3);\n```\n\nहरेक request अघिल्लो सकिएपछि मात्र सुरु हुन्छ।\n\n---\n\n### 2. मध्यम — parallel\n\n```javascript\nconst promises = [\n  fetchUser(1),\n  fetchUser(2),\n  fetchUser(3)\n];\n\nconst users = await Promise.all(promises);\n```\n\n`await` ले नतिजा कुर्नुअघि नै सबै request सुरु हुन्छन्।\n\n---\n\n### 3. उन्नत — `map()` सँग parallel\n\n```javascript\nconst ids = [1, 2, 3, 4, 5];\n\nconst users = await Promise.all(\n  ids.map(id => fetchUser(id))\n);\n```\n\n`map()` ले स्वतन्त्र operation सुरु गर्छ र Promise को array फर्काउँछ। त्यसपछि `Promise.all()` ले सबैलाई कुर्छ।\n\n---\n\n### Sequential नै सही हुने बेला\n\nअर्को operation अघिल्लो नतिजामा निर्भर छ भने, sequential नै राख्नुहोस्:\n\n```javascript\nconst user = await fetchUser();\nconst orders = await fetchOrders(user.id);\n```\n\n`fetchOrders()` लाई `user.id` चाहिन्छ, त्यसैले यो अघि सुरु हुनै सक्दैन।",
+        jp: "<b>逐次的な `await`</b> とは、各非同期処理が前の処理の完了を待ってから始まることです。\n\n```javascript\nfor (const id of ids) {\n  const user = await fetchUser(id);\n  console.log(user);\n}\n```\n\n各リクエストに約1秒かかるなら、5件でおよそ<b>5秒</b>かかります。\n\n<b>並行実行</b>では、独立した処理を先に始めてから、まとめて待ちます。\n\n```javascript\nconst promises = ids.map(id => fetchUser(id));\nconst users = await Promise.all(promises);\n```\n\n5件のリクエストが同時に走れるので、合計時間はおよそ<b>いちばん遅いリクエスト</b>の分だけです。\n\n---\n\n### 1. 基本 — 逐次\n\n```javascript\nconst a = await fetchUser(1);\nconst b = await fetchUser(2);\nconst c = await fetchUser(3);\n```\n\n各リクエストは前が終わってから始まります。\n\n---\n\n### 2. 中級 — 並行\n\n```javascript\nconst promises = [\n  fetchUser(1),\n  fetchUser(2),\n  fetchUser(3)\n];\n\nconst users = await Promise.all(promises);\n```\n\n`await` が結果を待つ前に、すべてのリクエストが始まっています。\n\n---\n\n### 3. 上級 — `map()` で並行に\n\n```javascript\nconst ids = [1, 2, 3, 4, 5];\n\nconst users = await Promise.all(\n  ids.map(id => fetchUser(id))\n);\n```\n\n`map()` が独立した処理を開始してPromiseの配列を返し、`Promise.all()` がそのすべてを待ちます。\n\n---\n\n### 逐次が正しい場面\n\n次の処理が前の結果に依存するなら、逐次のままにします:\n\n```javascript\nconst user = await fetchUser();\nconst orders = await fetchOrders(user.id);\n```\n\n`fetchOrders()` には `user.id` が必要なので、これより早くは始められません。",
       },
-      diagram: `SEQUENTIAL (await inside the loop) — independent requests, wasted time
-  fetchUser(1) ████
-                   fetchUser(2) ████
-                                    fetchUser(3) ████
-  |----|----|----|----|----|----|----|----|----|----|----|----   time
-  total ≈ 3 × single request time
+      diagram: `Sequential await
 
-PARALLEL (start all first, then Promise.all) — same independent requests
-  fetchUser(1) ████
-  fetchUser(2) ████
-  fetchUser(3) ████
-  |----|----|----|----                                            time
-  total ≈ slowest single request time`,
+Request 1 ──────▶
+                 Request 2 ──────▶
+                                  Request 3 ──────▶
+                                                   Done
+
+
+Parallel execution
+
+Request 1 ──────▶
+Request 2 ─────▶
+Request 3 ─────────▶
+                    Done`,
       codeExample: {
-        title: { en: "await in a loop vs Promise.all — a common performance mistake", np: "Loop मा await vs Promise.all", jp: "ループ内のawait対Promise.all" },
-        code: `const userIds = [1, 2, 3, 4, 5];
+        title: { en: "Sequential, parallel, and when each is right", np: "Sequential, parallel, र कहिले कुन ठीक", jp: "逐次と並行、それぞれが正しい場面" },
+        code: `// ── 1. Basic — sequential, each waits for the last ────────────────
+const a = await fetchUser(1);
+const b = await fetchUser(2);
+const c = await fetchUser(3);
+// About 3 seconds if each takes 1
 
-// ❌ Sequential — each fetch waits for the previous one to fully finish
-// Total time ≈ 5 × fetchUser time, even though the requests don't depend on each other
-async function getSequential() {
-  const users = [];
-  for (const id of userIds) {
-    const user = await fetchUser(id);  // pauses the whole loop here, every time
-    users.push(user);
-  }
-  return users;
-}
+// ── 2. Intermediate — started together, awaited together ──────────
+const promises = [
+  fetchUser(1),
+  fetchUser(2),
+  fetchUser(3)
+];
 
-// ✅ Parallel — all requests start at once, then wait together
-// Total time ≈ slowest single fetchUser call
-async function getParallel() {
-  const promises = userIds.map(id => fetchUser(id));  // starts ALL requests immediately
-  return Promise.all(promises);                         // now wait for all of them
-}
+const users = await Promise.all(promises);
+// About 1 second — they overlap
 
-// ✅ Same idea, more compact
-async function getParallelAlt() {
-  return Promise.all(userIds.map(fetchUser));
-}
+// ── 3. Advanced — the same idea over a list ───────────────────────
+const ids = [1, 2, 3, 4, 5];
 
-// ── When sequential IS the correct choice ─────────────────────────
-// Use it when step N genuinely depends on the result of step N-1
-async function processInOrder() {
-  const user    = await fetchUser(1);           // need the user first
-  const orders  = await fetchOrders(user.id);   // needs user.id
-  const invoice = await createInvoice(orders);  // needs orders
-  return invoice;
-}`,
+const allUsers = await Promise.all(
+  ids.map(id => fetchUser(id))
+);
+
+// ── Keep it sequential when step two needs step one ───────────────
+const user = await fetchUser();
+const orders = await fetchOrders(user.id); // needs user.id, cannot start earlier`,
       },
       keyTakeaways: [
-        { en: "`await` inside a `for` loop runs independent async calls one at a time — total time grows to roughly N × single-call time instead of running them together.", np: "`for` loop भित्रको `await` ले independent async calls लाई एक-एक गरी चलाउँछ — total time सँगै चलाउनुको सट्टा लगभग N × single-call time हुन्छ।", jp: "`for`ループ内の`await`は独立した非同期呼び出しを1つずつ実行する — 合計時間はまとめて実行する代わりにおよそN×単一呼び出し時間まで増える。" },
-        { en: "Starting all Promises first with `.map()` and then `await Promise.all(promises)` runs them concurrently — total time drops to roughly the slowest single call.", np: "पहिले `.map()` सँग सबै Promises सुरु गरी त्यसपछि `await Promise.all(promises)` गर्दा ती concurrently चल्छन् — total time लगभग सबैभन्दा ढिलो single call बराबर हुन्छ।", jp: "まず`.map()`ですべてのPromiseを開始し、その後`await Promise.all(promises)`することで並行実行される — 合計時間はおよそ最も遅い単一呼び出しまで下がる。" },
-        { en: "Sequential `await` inside a loop is still correct when step N truly needs the output of step N-1 before it can start.", np: "Step N ले साँच्चै step N-1 को output चाहिने भएमा loop भित्रको sequential `await` अझै सहि हुन्छ।", jp: "ステップNが開始前に本当にステップN-1の出力を必要とする場合、ループ内の逐次的な`await`は依然として正しい。" },
+        { en: "<b>Sequential `await`</b> → one operation after another.", np: "<b>Sequential `await`</b> → एउटा पछि अर्को operation।", jp: "<b>逐次的な `await`</b> → 1つずつ順番に実行する。" },
+        { en: "<b>Parallel execution</b> → start independent operations together.", np: "<b>Parallel execution</b> → स्वतन्त्र operation सँगै सुरु गर्नु।", jp: "<b>並行実行</b> → 独立した処理を同時に始める。" },
+        { en: "Use `Promise.all()` when operations don't depend on each other.", np: "Operation एकअर्कामा निर्भर नभएको बेला `Promise.all()` प्रयोग गर्नुहोस्।", jp: "処理が互いに依存しないときは `Promise.all()` を使う。" },
+        { en: "Don't put `await` inside a loop unnecessarily.", np: "अनावश्यक रूपमा loop भित्र `await` नराख्नुहोस्।", jp: "必要もなくループの中に `await` を置かない。" },
+        { en: "Sequential `await` is correct when step N depends on the result of step N-1.", np: "चरण N ले चरण N-1 को नतिजामा निर्भर हुँदा sequential `await` सही हुन्छ।", jp: "ステップNがステップN-1の結果に依存するなら、逐次的な `await` が正しい。" },
       ],
       commonMistakes: [
-        { en: "Writing `for (const id of ids) { await fetchUser(id); }` for independent requests, accidentally serialising work that could run in parallel.", np: "Independent requests का लागि `for (const id of ids) { await fetchUser(id); }` लेख्नु, parallel चल्न सक्ने काम गल्तिले serialise गर्नु।", jp: "独立したリクエストに対して`for (const id of ids) { await fetchUser(id); }`と書き、並列実行できる作業を誤って直列化してしまうこと。" },
-        { en: "Reaching for `Promise.all(items.map(...))` even when each step actually depends on the previous step's result, producing wrong or undefined inputs.", np: "हरेक step अघिल्लो step को result मा साँच्चै depend गर्दा पनि `Promise.all(items.map(...))` use गर्नु, गलत वा undefined inputs निस्कने।", jp: "各ステップが実際には前のステップの結果に依存しているのに`Promise.all(items.map(...))`を使い、誤った、あるいはundefinedな入力を生み出すこと。" },
-        { en: "Assuming `userIds.map(id => fetchUser(id))` doesn't start any requests until it's awaited — calling an async function begins running it immediately, `.map()` alone already kicks everything off.", np: "`userIds.map(id => fetchUser(id))` ले await नहुँदासम्म कुनै request सुरु गर्दैन भन्ने ठान्नु — async function call गर्नासाथ यो तुरुन्तै चल्न सुरु हुन्छ, `.map()` ले नै सबै सुरु गरिसक्छ।", jp: "`userIds.map(id => fetchUser(id))`はawaitされるまでリクエストを開始しないと思い込むこと — async関数の呼び出しは即座に実行を開始し、`.map()`だけですでにすべてが始まっている。" },
+        { en: "<b>Accidentally making independent requests sequential</b> — `for (const id of ids) { await fetchUser(id); }` runs them one at a time. Start them together with `await Promise.all(ids.map(id => fetchUser(id)));`.", np: "<b>स्वतन्त्र request लाई गल्तिले sequential बनाउनु</b> — `for (const id of ids) { await fetchUser(id); }` ले एक-एक गरी चलाउँछ। `await Promise.all(ids.map(id => fetchUser(id)));` ले सँगै सुरु गर्नुहोस्।", jp: "<b>独立したリクエストをうっかり逐次にする</b> — `for (const id of ids) { await fetchUser(id); }` は1件ずつ実行する。`await Promise.all(ids.map(id => fetchUser(id)));` で同時に始める。" },
+        { en: "<b>Assuming `Promise.all()` is always better</b> — when the next call needs the previous result, as in `fetchOrders(user.id)`, sequential is the only correct option.", np: "<b>`Promise.all()` सधैं राम्रो हो भन्ने ठान्नु</b> — अर्को call लाई अघिल्लो नतिजा चाहिँदा, जस्तै `fetchOrders(user.id)`, sequential नै एक मात्र सही विकल्प हो।", jp: "<b>`Promise.all()` が常に優れていると思う</b> — `fetchOrders(user.id)` のように次の呼び出しが前の結果を必要とするなら、逐次だけが正しい。" },
+        { en: "<b>Creating the promises inside the `await` line one at a time</b> — the work starts when the function is called, so build the array first, then await it once.", np: "<b>`await` line भित्रै एक-एक गरी promise बनाउनु</b> — काम function call हुँदा सुरु हुन्छ, त्यसैले पहिले array बनाउनुहोस्, अनि एक पटक await गर्नुहोस्।", jp: "<b>`await` の行で1つずつPromiseを作る</b> — 処理は関数を呼んだ時点で始まるので、先に配列を作り、最後に一度awaitする。" },
       ],
       quiz: [
         {
-          question: { en: "If five independent `fetchUser(id)` calls are each `await`-ed one at a time inside a `for` loop, roughly how long does the total operation take compared to a single call?", np: "पाँच independent `fetchUser(id)` calls लाई `for` loop भित्र एक-एक गरी `await` गरियो भने, total operation एउटा single call को तुलनामा लगभग कति समय लिन्छ?", jp: "5つの独立した`fetchUser(id)`呼び出しを`for`ループ内で1つずつawaitすると、合計操作は単一呼び出しに比べておよそどれくらい時間がかかる？" },
+          question: { en: "Five independent API requests each take about 1 second. Which is usually faster?", np: "पाँच स्वतन्त्र API request लाई करिब 1 second लाग्छ। सामान्यतया कुन छिटो हुन्छ?", jp: "独立した5件のAPIリクエストが各約1秒。通常どちらが速いか?" },
           options: [
-            { en: "Roughly 5× a single call's time — they run one after another", np: "लगभग एउटा single call को 5× समय — ती एक पछि अर्को चल्छन्", jp: "単一呼び出しのおよそ5倍 — 1つずつ順番に実行される" },
-            { en: "Roughly the same as a single call — they run together", np: "लगभग एउटा single call जत्तिकै — ती सँगै चल्छन्", jp: "単一呼び出しとほぼ同じ — まとめて実行される" },
+            { en: "`Promise.all()`", np: "`Promise.all()`", jp: "`Promise.all()`" },
+            { en: "`await` inside a loop", np: "Loop भित्र `await`", jp: "ループ内の `await`" },
           ],
           correctIndex: 0,
-          explanation: { en: "Awaiting inside the loop makes each request wait for the previous one to fully finish before starting, serialising independent work.", np: "Loop भित्र await गर्दा हरेक request अघिल्लो पूर्ण नसकिएसम्म सुरु हुँदैन, independent काम serialise हुन्छ।", jp: "ループ内でawaitすると各リクエストは前のものが完全に終わるまで開始せず、独立した作業が直列化される。" },
+          explanation: { en: "The loop takes about 5 seconds; `Promise.all()` overlaps them and takes about 1.", np: "Loop लाई करिब 5 second लाग्छ; `Promise.all()` ले तिनलाई ओभरल्याप गरी करिब 1 मा सक्छ।", jp: "ループは約5秒。`Promise.all()` は重ねて実行するので約1秒。" },
         },
         {
-          question: { en: "What is the fix for the loop-await performance bug when the requests are independent?", np: "Requests independent हुँदा loop-await performance bug को समाधान के हो?", jp: "リクエストが独立している場合、ループawaitのパフォーマンスバグの修正方法は？" },
+          question: { en: "Should `const user = await fetchUser(); const orders = await fetchOrders(user.id);` run sequentially or concurrently?", np: "`const user = await fetchUser(); const orders = await fetchOrders(user.id);` sequential चल्नुपर्छ कि concurrent?", jp: "`const user = await fetchUser(); const orders = await fetchOrders(user.id);` は逐次か並行か?" },
           options: [
-            { en: "Start all Promises first (e.g. with .map()), then await them together with Promise.all", np: "पहिले सबै Promises सुरु गर्नुहोस् (जस्तै .map() सँग), त्यसपछि Promise.all सँग सँगै await गर्नुहोस्", jp: "まず（例えば.map()で）すべてのPromiseを開始し、その後Promise.allでまとめてawaitする" },
-            { en: "There is no fix — sequential is always the only option in a loop", np: "कुनै समाधान छैन — loop मा sequential नै एक मात्र option हो", jp: "修正方法はない — ループでは逐次実行だけが唯一の選択肢" },
+            { en: "Concurrently", np: "Concurrent", jp: "並行" },
+            { en: "Sequentially", np: "Sequential", jp: "逐次" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Starting every Promise immediately with .map() and awaiting the whole batch with Promise.all lets independent requests run concurrently.", np: ".map() सँग हरेक Promise तुरुन्तै सुरु गरी Promise.all सँग सम्पूर्ण batch await गर्दा independent requests concurrently चल्छन्।", jp: ".map()ですべてのPromiseを即座に開始し、Promise.allでバッチ全体をawaitすることで、独立したリクエストを並行実行できる。" },
+          correctIndex: 1,
+          explanation: { en: "`fetchOrders()` needs `user.id`, so it cannot begin until the first call resolves.", np: "`fetchOrders()` लाई `user.id` चाहिन्छ, त्यसैले पहिलो call resolve नभएसम्म सुरु हुन सक्दैन।", jp: "`fetchOrders()` は `user.id` を必要とするので、最初の呼び出しが解決するまで始められない。" },
         },
         {
-          question: { en: "Is sequential `await` inside a loop ever the correct choice?", np: "Loop भित्र sequential `await` कहिल्यै सहि choice हुन्छ?", jp: "ループ内の逐次的なawaitが正しい選択になることはある？" },
+          question: { en: "What does `const users = await Promise.all(ids.map(id => fetchUser(id)));` produce?", np: "`const users = await Promise.all(ids.map(id => fetchUser(id)));` ले के दिन्छ?", jp: "`const users = await Promise.all(ids.map(id => fetchUser(id)));` は何を返すか?" },
           options: [
-            { en: "Yes — when each step genuinely needs the previous step's result before it can start", np: "हो — हरेक step ले साँच्चै अघिल्लो step को result सुरु हुनु अघि नै चाहिँदा", jp: "はい — 各ステップが開始前に本当に前のステップの結果を必要とする場合" },
-            { en: "No — parallel with Promise.all is always strictly better", np: "होइन — Promise.all सँग parallel सधैं strictly राम्रो हुन्छ", jp: "いいえ — Promise.allでの並列実行が常に厳密に優れている" },
+            { en: "A single user object", np: "एउटा user object", jp: "1つのユーザーオブジェクト" },
+            { en: "An array containing all resolved users", np: "सबै resolve भएका user को array", jp: "解決したユーザーすべての配列" },
+            { en: "An array of pending promises", np: "Pending promise को array", jp: "保留中のPromiseの配列" },
           ],
-          correctIndex: 0,
-          explanation: { en: "When operations are truly dependent on each other's output, they cannot be parallelised safely — sequential await is the correct pattern there.", np: "Operations साँच्चै एक-अर्काको output मा dependent हुँदा safely parallelise गर्न सकिँदैन — त्यहाँ sequential await नै सहि pattern हो।", jp: "操作が本当に互いの出力に依存している場合、安全に並列化することはできない — そこでは逐次的なawaitが正しいパターンとなる。" },
+          correctIndex: 1,
+          explanation: { en: "`map()` builds the promises, and `Promise.all()` resolves to their values in the same order.", np: "`map()` ले promise बनाउँछ, र `Promise.all()` उही क्रममा तिनका value सँग resolve हुन्छ।", jp: "`map()` がPromiseを作り、`Promise.all()` が同じ順序でその値に解決する。" },
         },
       ],
     },
@@ -388,8 +385,8 @@ async function processInOrder() {
   finalQuiz: [
     {
       question: { en: "Does an `async function` always return a Promise, even when it returns a plain value?", np: "`async function` ले plain value return गरे पनि सधैं Promise return गर्छ?", jp: "`async function`はプレーンな値を返しても常にPromiseを返す？" },
-      options: [{ en: "Yes — the value is auto-wrapped in a Promise", np: "हो — value auto Promise मा wrap हुन्छ", jp: "はい — 値は自動的にPromiseでラップされる" }, { en: "No — only if you explicitly return a Promise", np: "होइन — explicitly Promise return गरेमा मात्र", jp: "いいえ — 明示的にPromiseを返した場合のみ" }],
-      correctIndex: 0,
+      options: [{ en: "No — only if you explicitly return a Promise", np: "होइन — explicitly Promise return गरेमा मात्र", jp: "いいえ — 明示的にPromiseを返した場合のみ" }, { en: "Yes — the value is auto-wrapped in a Promise", np: "हो — value auto Promise मा wrap हुन्छ", jp: "はい — 値は自動的にPromiseでラップされる" }],
+      correctIndex: 1,
       explanation: { en: "Every async function's return value, plain or not, is wrapped in Promise.resolve(...) automatically.", np: "हरेक async function को return value, plain होस् वा नहोस्, auto Promise.resolve(...) मा wrap हुन्छ।", jp: "async関数の戻り値はプレーンであってもなくても自動的にPromise.resolve(...)でラップされる。" },
     },
     {
@@ -400,8 +397,8 @@ async function processInOrder() {
     },
     {
       question: { en: "What construct replaces `.catch()` for handling errors with `await`?", np: "`await` सँग errors handle गर्न `.catch()` को सट्टा कुन construct प्रयोग हुन्छ?", jp: "`await`でエラーを処理するために`.catch()`の代わりに使う構文は？" },
-      options: [{ en: "A try/catch block wrapped around the await call", np: "await call वरिपरि wrap गरिएको try/catch block", jp: "await呼び出しを囲むtry/catchブロック" }, { en: "There is no replacement, errors are unhandled", np: "कुनै replacement छैन, errors unhandled रहन्छन्", jp: "代替はなく、エラーは未処理のままになる" }],
-      correctIndex: 0,
+      options: [{ en: "There is no replacement, errors are unhandled", np: "कुनै replacement छैन, errors unhandled रहन्छन्", jp: "代替はなく、エラーは未処理のままになる" }, { en: "A try/catch block wrapped around the await call", np: "await call वरिपरि wrap गरिएको try/catch block", jp: "await呼び出しを囲むtry/catchブロック" }],
+      correctIndex: 1,
       explanation: { en: "A rejection during await inside try jumps to the matching catch, just like a thrown exception.", np: "try भित्र await बेला rejection भयो भने thrown exception जस्तै matching catch मा जान्छ।", jp: "try内でのawait中のrejectは投げられた例外と同様に対応するcatchへ飛ぶ。" },
     },
     {
@@ -412,8 +409,8 @@ async function processInOrder() {
     },
     {
       question: { en: "Which method should you use when you want the outcome of every operation, including which ones failed, without losing successes?", np: "Succeed भएका नहराई हरेक operation को outcome (कुन fail भयो सहित) चाहिँदा कुन method use गर्नुपर्छ?", jp: "成功を失うことなく、どれが失敗したかを含めすべての操作の結果を知りたい場合、どのメソッドを使うべき？" },
-      options: [{ en: "Promise.allSettled", np: "Promise.allSettled", jp: "Promise.allSettled" }, { en: "Promise.race", np: "Promise.race", jp: "Promise.race" }],
-      correctIndex: 0,
+      options: [{ en: "Promise.race", np: "Promise.race", jp: "Promise.race" }, { en: "Promise.allSettled", np: "Promise.allSettled", jp: "Promise.allSettled" }],
+      correctIndex: 1,
       explanation: { en: "Promise.allSettled never rejects and reports a status per item, keeping every outcome visible.", np: "Promise.allSettled कहिल्यै reject हुँदैन र per-item status report गर्छ, हरेक outcome देखिन्छ।", jp: "Promise.allSettledは決して拒否せず項目ごとのステータスを報告し、すべての結果を可視化する。" },
     },
     {
@@ -424,8 +421,8 @@ async function processInOrder() {
     },
     {
       question: { en: "Why does await-ing inside a for loop hurt performance for independent async calls?", np: "Independent async calls का लागि for loop भित्र await गर्दा किन performance बिग्रन्छ?", jp: "独立した非同期呼び出しに対してforループ内でawaitするとなぜパフォーマンスが悪化する？" },
-      options: [{ en: "Each call waits for the previous one to finish before starting, serialising them", np: "हरेक call ले अघिल्लो नसकिएसम्म सुरु हुँदैन, serialise हुन्छ", jp: "各呼び出しは前のものが終わるまで開始せず、直列化される" }, { en: "It doesn't — loops always run concurrently by default", np: "यसले बिग्रँदैन — loops default मा सधैं concurrently चल्छन्", jp: "悪化しない — ループはデフォルトで常に並行実行される" }],
-      correctIndex: 0,
+      options: [{ en: "It doesn't — loops always run concurrently by default", np: "यसले बिग्रँदैन — loops default मा सधैं concurrently चल्छन्", jp: "悪化しない — ループはデフォルトで常に並行実行される" }, { en: "Each call waits for the previous one to finish before starting, serialising them", np: "हरेक call ले अघिल्लो नसकिएसम्म सुरु हुँदैन, serialise हुन्छ", jp: "各呼び出しは前のものが終わるまで開始せず、直列化される" }],
+      correctIndex: 1,
       explanation: { en: "Awaiting inside the loop body forces each iteration's request to fully complete before the next one even begins.", np: "Loop body भित्र await गर्दा हरेक iteration को request अघिल्लो पूर्ण नभई अर्को सुरु हुँदैन।", jp: "ループ本体内でawaitすると、各反復のリクエストは次が開始する前に完全に完了しなければならない。" },
     },
     {
@@ -436,8 +433,8 @@ async function processInOrder() {
     },
     {
       question: { en: "Is Promise.all() ever the wrong tool, even for a loop of async calls?", np: "Async calls को loop का लागि पनि Promise.all() कहिल्यै गलत tool हुन्छ?", jp: "非同期呼び出しのループに対しても、Promise.all()が間違ったツールになることはある？" },
-      options: [{ en: "Yes — when each step genuinely depends on the previous step's result", np: "हो — हरेक step ले साँच्चै अघिल्लो step को result मा depend गर्दा", jp: "はい — 各ステップが本当に前のステップの結果に依存している場合" }, { en: "No — Promise.all is always the correct choice for any loop", np: "होइन — जुनसुकै loop का लागि Promise.all सधैं सहि choice हो", jp: "いいえ — Promise.allはどんなループに対しても常に正しい選択" }],
-      correctIndex: 0,
+      options: [{ en: "No — Promise.all is always the correct choice for any loop", np: "होइन — जुनसुकै loop का लागि Promise.all सधैं सहि choice हो", jp: "いいえ — Promise.allはどんなループに対しても常に正しい選択" }, { en: "Yes — when each step genuinely depends on the previous step's result", np: "हो — हरेक step ले साँच्चै अघिल्लो step को result मा depend गर्दा", jp: "はい — 各ステップが本当に前のステップの結果に依存している場合" }],
+      correctIndex: 1,
       explanation: { en: "When operations have a real dependency chain, they must run sequentially with await, not blindly parallelised with Promise.all.", np: "Operations मा real dependency chain हुँदा, Promise.all सँग blindly parallelise नगरी await सँग sequentially चलाउनुपर्छ।", jp: "操作に本当の依存関係の連鎖がある場合、Promise.allで無闇に並列化するのではなく、awaitで逐次実行しなければならない。" },
     },
   ],
