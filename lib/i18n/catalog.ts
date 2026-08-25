@@ -728,6 +728,21 @@ export const UI_STRINGS = {
     np: "सिक्न सुरु गर्नुहोस् →",
     jp: "学習を始める →",
   },
+  "hub.loksewaEthnicGroups.title": {
+    en: "Ethnic Groups of Nepal",
+    np: "नेपालका जातजाति",
+    jp: "ネパールの民族",
+  },
+  "hub.loksewaEthnicGroups.subtitle": {
+    en: "Customs, festivals and settlements of Nepal's ethnic groups — Q&A for Loksewa prep",
+    np: "नेपालका जातजातिका चलन, चाडपर्व र बसोबास — लोकसेवा तयारीका लागि प्रश्नोत्तर",
+    jp: "ネパール各民族の風習・祭り・居住地 — ロークセワ対策の一問一答",
+  },
+  "hub.loksewaEthnicGroups.cta": {
+    en: "Start practicing →",
+    np: "अभ्यास सुरु गर्नुहोस् →",
+    jp: "練習を始める →",
+  },
   "hub.loksewaProducts.title": {
     en: "Products of Nepal",
     np: "नेपालका प्रसिद्ध उत्पादनहरू",
