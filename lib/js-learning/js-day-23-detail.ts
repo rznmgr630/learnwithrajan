@@ -3,228 +3,232 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_23_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "JavaScript manages memory automatically using garbage collection — you don't call `free()` like in C. But automatic does not mean perfect. Memory leaks happen when objects stay in memory longer than they should, and they are one of the hardest categories of bugs to find because they don't cause an immediate crash.",
-      np: "JavaScript ले garbage collection प्रयोग गरेर automatically memory manage गर्छ — C जस्तो `free()` call गर्नु पर्दैन। तर automatic भनेको perfect होइन। Memory leaks तब हुन्छ जब objects लाई आवश्यकता भन्दा बढी समय memory मा राखिन्छ — immediate crash नहुनाले find गर्न सबैभन्दा गाह्रो bugs मध्ये एक।",
-      jp: "JavaScriptはガベージコレクションで自動的にメモリを管理する。しかし自動=完璧ではない。オブジェクトが必要以上に長くメモリに残るとメモリリークが発生する。即座にクラッシュしないため発見が最も難しいバグの一つ。",
+      en: "Generators are functions that can be paused and resumed. Unlike a regular function that runs to completion and returns once, a generator can yield multiple values over time and be resumed from where it left off. They are the foundation of async generators, lazy sequences, and some state machine patterns.",
+      np: "Generators pause र resume गर्न सकिने functions हुन्। Regular function एक पटक run भएर return गर्छ, तर generator धेरै values yield गर्न सक्छ र रोकिएको ठाउँबाट resume हुन सक्छ। Async generators, lazy sequences, र state machines को foundation हो।",
+      jp: "ジェネレータは一時停止・再開できる関数。通常の関数は一度だけ実行して返るが、ジェネレータは複数の値を段階的にyieldし、停止した場所から再開できる。async generators・遅延シーケンス・ステートマシンの基盤。",
+    },
+    {
+      en: "Iterators are objects with a `next()` method that returns `{ value, done }`. Arrays, strings, Maps, Sets, and generators are all iterable — they implement the iterator protocol and work with `for...of`, spread, and destructuring. You can make your own objects iterable with `Symbol.iterator`.",
+      np: "Iterators `{ value, done }` return गर्ने `next()` method भएका objects हुन्। Arrays, strings, Maps, Sets, generators सबै iterable छन् — iterator protocol implement गर्छन् र `for...of`, spread, destructuring सँग काम गर्छन्। `Symbol.iterator` सँग आफ्नै objects iterable बनाउन सकिन्छ।",
+      jp: "イテレータは`{value, done}`を返す`next()`メソッドを持つオブジェクト。配列・文字列・Map・Set・ジェネレータは全てイテラブル。`Symbol.iterator`で独自オブジェクトをイテラブルにできる。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "LaxbdIyBkL0", title: "JavaScript Memory Management & Garbage Collection" },
+        { type: "youtube", videoId: "ategZqxHkz4", title: "JavaScript Generators — Complete Guide" },
       ],
     },
     {
-      title: { en: "Stack vs Heap", np: "Stack vs Heap", jp: "スタックとヒープ" },
+      title: { en: "Generator functions", np: "Generator functions", jp: "ジェネレータ関数" },
       blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "JavaScript uses two memory regions. The **stack** is fast and small — it stores primitive values (`number`, `string`, `boolean`, etc.) and function call frames. It is automatically managed as functions enter and exit. The **heap** is large and slower — it stores objects, arrays, functions, and closures. Heap memory is managed by the garbage collector.",
-            np: "JavaScript दुईवटा memory regions प्रयोग गर्छ। **Stack** fast र small छ — primitive values र function call frames store गर्छ। Functions enter/exit हुँदा automatically manage हुन्छ। **Heap** large र slower छ — objects, arrays, functions, closures store गर्छ। Heap memory garbage collector ले manage गर्छ।",
-            jp: "JavaScriptは2つのメモリ領域を使用。**スタック**は高速・小容量 — プリミティブ値と関数呼び出しフレームを格納。関数の出入りで自動管理。**ヒープ**は大容量・低速 — オブジェクト・配列・関数・クロージャを格納。GCが管理。",
-          },
-        },
-        {
           type: "code",
-          title: { en: "What goes where in memory", np: "Memory मा के कहाँ जान्छ", jp: "メモリのどこに何が格納されるか" },
-          code: `// ── Stack: primitive values ────────────────────────────────────────
-let a = 42;          // stored on the stack — copy semantics
-let b = a;           // b gets its OWN copy of 42
-b = 100;
-console.log(a);      // 42 — a is unchanged (primitives copy by value)
-
-let str = "hello";   // small strings are often stored on the stack or interned
-
-// ── Heap: objects and reference types ─────────────────────────────
-let obj1 = { x: 1 };  // OBJECT stored on the heap; obj1 is a REFERENCE (pointer) on the stack
-let obj2 = obj1;       // obj2 gets a copy of the REFERENCE, not the object
-obj2.x = 99;
-console.log(obj1.x);   // 99 — both variables point to the SAME object
-
-// ── How garbage collection decides what to free ───────────────────
-let user = { name: "Alice" };  // heap object — referenced by 'user'
-user = null;                   // no more references → eligible for GC
-
-function createClosure() {
-  const bigData = new Array(1000000).fill(0);  // on the heap
-  return function() {
-    return bigData.length;  // closure keeps bigData alive!
-  };
+          title: { en: "function*, yield, and the generator object", np: "function*, yield र generator object", jp: "function*・yield・ジェネレータオブジェクト" },
+          code: `// ── Defining a generator ──────────────────────────────────────────
+function* counter() {
+  console.log("start");
+  yield 1;           // pause here, return 1
+  console.log("resumed");
+  yield 2;           // pause here, return 2
+  yield 3;           // pause here, return 3
+  console.log("done");
+  return "finished"; // the final return value (done: true)
 }
 
-const fn = createClosure();  // bigData is NOT GC'd — fn holds a reference
-fn = null;                   // NOW bigData can be GC'd — no more references`,
-        },
-      ],
-    },
-    {
-      title: { en: "Garbage collection — Mark and Sweep", np: "Garbage collection — Mark and Sweep", jp: "ガベージコレクション — マークアンドスイープ" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Modern JavaScript engines use a **mark-and-sweep** algorithm. Starting from 'roots' (global variables, current call stack, closures), the GC marks every object it can reach by following references. Any object that was NOT marked is unreachable — meaning no code can ever access it — so its memory is freed. This is why circular references are no longer a problem in modern JS: if two objects only reference each other but neither is reachable from a root, they are both collected.",
-            np: "Modern JS engines **mark-and-sweep** algorithm प्रयोग गर्छन्। 'Roots' (global variables, current call stack, closures) बाट सुरु गरेर GC ले references follow गर्दै reach गर्न सकिने हरेक object mark गर्छ। Mark नभएका objects unreachable हुन् — कुनै code ले access गर्न सक्दैन — त्यसैले तिनीहरूको memory free हुन्छ।",
-            jp: "モダンJSエンジンは**マークアンドスイープ**アルゴリズムを使用。ルート（グローバル変数・コールスタック・クロージャ）から参照をたどって到達できる全オブジェクトをマーク。マークされないオブジェクトは到達不能→メモリを解放。循環参照もルートから辿れなければ収集される。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "The four classic memory leak patterns", np: "चार classic memory leak patterns", jp: "4つの典型的なメモリリークパターン" },
-          code: `// ── Leak 1: Forgotten event listeners ────────────────────────────
-// ❌ The element is removed from the DOM but the listener keeps it alive
-function setup() {
-  const btn = document.querySelector("#btn");
-  btn.addEventListener("click", handleClick);
-  // If btn is later removed from DOM without removing the listener,
-  // btn stays in memory because the event system holds a reference
+// ── Using the generator ───────────────────────────────────────────
+const gen = counter();  // calling the function creates the generator object — code doesn't run yet
+
+gen.next();  // { value: 1, done: false }  — "start" printed
+gen.next();  // { value: 2, done: false }  — "resumed" printed
+gen.next();  // { value: 3, done: false }
+gen.next();  // { value: "finished", done: true } — "done" printed
+
+// After done: true, further .next() calls return { value: undefined, done: true }
+
+// ── Iterating a generator with for...of ───────────────────────────
+for (const n of counter()) {
+  console.log(n);  // 1, 2, 3 (return value is ignored by for...of)
 }
 
-// ✅ Always remove listeners when no longer needed
-function setup() {
-  const btn = document.querySelector("#btn");
-  btn.addEventListener("click", handleClick);
+// ── Spreading a generator ─────────────────────────────────────────
+const values = [...counter()];  // [1, 2, 3]
 
-  return () => btn.removeEventListener("click", handleClick);  // cleanup
-}
-
-// ── Leak 2: Timers that never clear ──────────────────────────────
-// ❌ setInterval keeps closure alive forever
-function startPolling() {
-  const heavyData = loadLargeDataset();
-  setInterval(() => {
-    process(heavyData);  // heavyData is captured in the closure — never GC'd
-  }, 1000);
-}
-
-// ✅ Store the timer ID and clear it when done
-let timerId;
-function startPolling() {
-  const heavyData = loadLargeDataset();
-  timerId = setInterval(() => process(heavyData), 1000);
-}
-function stopPolling() {
-  clearInterval(timerId);
-}
-
-// ── Leak 3: Growing caches with no eviction ───────────────────────
-// ❌ Cache grows unbounded — objects never removed
-const cache = {};
-function rememberResult(key, fn) {
-  if (!cache[key]) cache[key] = fn();
-  return cache[key];
-}
-
-// ✅ Use a Map with a max size, or WeakMap for object keys
-const MAX = 1000;
-const lruCache = new Map();
-function rememberResult(key, fn) {
-  if (lruCache.has(key)) return lruCache.get(key);
-  const value = fn();
-  lruCache.set(key, value);
-  if (lruCache.size > MAX) {
-    // Delete the oldest entry (Maps preserve insertion order)
-    lruCache.delete(lruCache.keys().next().value);
+// ── Infinite generators — lazy sequences ──────────────────────────
+function* naturals(start = 1) {
+  let n = start;
+  while (true) {        // infinite loop is OK — the generator pauses at each yield
+    yield n++;
   }
-  return value;
 }
 
-// ── Leak 4: Closures holding large data unnecessarily ────────────
-// ❌ smallValue captures the whole bigData array via closure
-function processData(bigData) {
-  const smallValue = bigData[0];
-  setTimeout(() => {
-    console.log(bigData);  // whole bigData lives in memory until timeout fires
-  }, 10000);
+const nums = naturals();
+nums.next().value;  // 1
+nums.next().value;  // 2
+nums.next().value;  // 3
+
+// Take the first N values from an infinite generator:
+function take(n, iterable) {
+  const result = [];
+  for (const value of iterable) {
+    result.push(value);
+    if (result.length === n) break;
+  }
+  return result;
 }
 
-// ✅ Extract only what you need
-function processData(bigData) {
-  const firstItem = bigData[0];
-  bigData = null;            // explicitly allow GC (within this function scope)
-  setTimeout(() => {
-    console.log(firstItem);  // only firstItem is kept alive
-  }, 10000);
-}`,
+take(5, naturals(10));  // [10, 11, 12, 13, 14]
+
+// ── Passing values back with next(value) ──────────────────────────
+function* calculator() {
+  const a = yield "Enter first number:";
+  const b = yield "Enter second number:";
+  return a + b;
+}
+
+const calc = calculator();
+calc.next();        // { value: "Enter first number:", done: false }
+calc.next(10);      // { value: "Enter second number:", done: false }  — a = 10
+calc.next(20);      // { value: 30, done: true }  — b = 20, returns 10 + 20`,
         },
       ],
     },
     {
-      title: { en: "WeakMap and WeakSet — GC-friendly references", np: "WeakMap र WeakSet — GC-friendly references", jp: "WeakMapとWeakSet — GCに優しい参照" },
+      title: { en: "Iterators and the iterator protocol", np: "Iterators र iterator protocol", jp: "イテレータとイテレータプロトコル" },
       blocks: [
         {
           type: "code",
-          title: { en: "Storing metadata without preventing garbage collection", np: "GC prevent नगरी metadata store गर्नु", jp: "GCを妨げずにメタデータを格納する" },
-          code: `// ── Regular Map — holds strong references ────────────────────────
-const map = new Map();
-let user = { name: "Alice" };
-map.set(user, { clicks: 5 });
-user = null;
-// Even though user is null, { name: "Alice" } is NOT garbage collected
-// because the Map still holds a reference to it as a key
+          title: { en: "Making custom objects iterable with Symbol.iterator", np: "Symbol.iterator सँग custom objects iterable बनाउनु", jp: "Symbol.iteratorでカスタムオブジェクトをイテラブルにする" },
+          code: `// ── The iterator protocol ────────────────────────────────────────
+// An iterable has [Symbol.iterator]() that returns an iterator.
+// An iterator has next() that returns { value, done }.
 
-// ── WeakMap — holds WEAK references ──────────────────────────────
-const weakMap = new WeakMap();
-let user2 = { name: "Bob" };
-weakMap.set(user2, { clicks: 3 });
-user2 = null;
-// { name: "Bob" } CAN be garbage collected — WeakMap does not prevent GC
-// When user2 is GC'd, its WeakMap entry disappears automatically
+// ── Built-in iterables ────────────────────────────────────────────
+// Arrays, Strings, Maps, Sets, generators all implement this protocol
 
-// ── WeakMap use cases ────────────────────────────────────────────
-// 1. Attaching metadata to objects without memory leaks:
-const domCache = new WeakMap();
+const arr = [1, 2, 3];
+const iter = arr[Symbol.iterator]();
+iter.next();  // { value: 1, done: false }
+iter.next();  // { value: 2, done: false }
+iter.next();  // { value: 3, done: false }
+iter.next();  // { value: undefined, done: true }
 
-function getMetadata(element) {
-  if (!domCache.has(element)) {
-    domCache.set(element, { created: Date.now(), clicks: 0 });
+// for...of, spread, destructuring all use this protocol internally
+for (const char of "hello") console.log(char);  // h, e, l, l, o
+const [first, ...rest] = new Map([["a", 1], ["b", 2]]);
+
+// ── Making a custom class iterable ────────────────────────────────
+class Range {
+  constructor(start, end, step = 1) {
+    this.start = start;
+    this.end   = end;
+    this.step  = step;
   }
-  return domCache.get(element);
-}
-// When the DOM element is removed, its metadata is automatically GC'd
 
-// 2. Private data (before class private fields existed):
-const _private = new WeakMap();
+  [Symbol.iterator]() {
+    let current = this.start;
+    const end  = this.end;
+    const step = this.step;
 
-class Counter {
-  constructor() {
-    _private.set(this, { count: 0 });
+    return {
+      next() {
+        if (current <= end) {
+          const value = current;
+          current += step;
+          return { value, done: false };
+        }
+        return { value: undefined, done: true };
+      }
+    };
   }
-  increment() {
-    _private.get(this).count++;
-  }
-  get value() {
-    return _private.get(this).count;
-  }
-}
-
-// ── WeakMap limitations ───────────────────────────────────────────
-// Keys MUST be objects (not primitives)
-// Not iterable — no forEach, no .keys(), no .values()
-// Cannot check .size (GC timing is non-deterministic)
-
-// ── WeakSet — like a Set but with weak references ─────────────────
-const seen = new WeakSet();
-
-function processOnce(obj) {
-  if (seen.has(obj)) return;
-  seen.add(obj);
-  doProcess(obj);
-  // When obj is GC'd, the WeakSet entry is automatically removed
 }
 
-// ── WeakRef — a direct weak reference to an object ────────────────
-const cache = new Map();
+const range = new Range(1, 10, 2);
+[...range];                       // [1, 3, 5, 7, 9]
+for (const n of new Range(0, 4)) console.log(n);  // 0, 1, 2, 3, 4
 
-function storeInCache(key, value) {
-  cache.set(key, new WeakRef(value));
+// ── Simpler: use a generator as [Symbol.iterator] ─────────────────
+class Range2 {
+  constructor(start, end) { this.start = start; this.end = end; }
+
+  *[Symbol.iterator]() {
+    for (let i = this.start; i <= this.end; i++) yield i;
+  }
 }
 
-function getFromCache(key) {
-  const ref = cache.get(key);
-  return ref?.deref();  // returns the object or undefined if it was GC'd
+[...new Range2(1, 5)];  // [1, 2, 3, 4, 5]`,
+        },
+      ],
+    },
+    {
+      title: { en: "Async generators — paginating APIs lazily", np: "Async generators — lazily paginating APIs", jp: "async generator — APIの遅延ページング" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "async function* and for await...of", np: "async function* र for await...of", jp: "async function*とfor await...of" },
+          code: `// ── Async generator — yields Promises instead of plain values ──────
+async function* paginate(url) {
+  let nextUrl = url;
+
+  while (nextUrl) {
+    const response = await fetch(nextUrl);     // await inside a generator!
+    const data     = await response.json();
+
+    yield data.items;                          // yield a page of results
+
+    nextUrl = data.nextPageUrl ?? null;        // move to next page (or stop)
+  }
+}
+
+// ── Consuming with for await...of ─────────────────────────────────
+for await (const page of paginate("/api/products?page=1")) {
+  console.log("Got page:", page.length, "items");
+  // Process page here — the next page is only fetched when needed
+}
+
+// ── Flattening paginated results ───────────────────────────────────
+async function* flatPaginate(url) {
+  for await (const page of paginate(url)) {
+    yield* page;  // yield each item individually from the page array
+  }
+}
+
+for await (const product of flatPaginate("/api/products")) {
+  console.log(product.name);  // each product, one at a time
+}
+
+// ── Async generator with early exit ───────────────────────────────
+async function getFirst10Products() {
+  const products = [];
+  for await (const product of flatPaginate("/api/products")) {
+    products.push(product);
+    if (products.length >= 10) break;  // stops the async generator early
+  }
+  return products;
+}
+
+// ── Async iterable class ──────────────────────────────────────────
+class EventStream {
+  constructor(eventSource) { this.eventSource = eventSource; }
+
+  async *[Symbol.asyncIterator]() {
+    const queue = [];
+    let resolve;
+
+    const next = () => new Promise(r => { resolve = r; });
+
+    this.eventSource.onmessage = (event) => {
+      queue.push(event.data);
+      resolve?.();
+      resolve = null;
+    };
+
+    while (true) {
+      if (queue.length) yield queue.shift();
+      else await next();
+    }
+  }
 }`,
         },
       ],
@@ -232,19 +236,19 @@ function getFromCache(key) {
   ],
   faq: [
     {
-      question: { en: "How do I find memory leaks in JavaScript?", np: "JavaScript मा memory leaks कसरी find गर्ने?", jp: "JavaScriptのメモリリークを見つけるには？" },
+      question: { en: "What is the difference between a generator and an async function?", np: "Generator र async function मा के फरक?", jp: "ジェネレータとasync関数の違いは？" },
       answer: {
-        en: "Chrome DevTools Memory tab is your main tool. Take a heap snapshot before and after a suspected leak (e.g. open and close a modal 10 times), compare them, and look for objects that are growing. The Allocation Instrumentation on Timeline shows memory allocations over time — a steadily growing heap line (no drops after GC) indicates a leak. Also watch the Performance Monitor panel for JS heap size growing continuously. Common culprits: event listeners on detached DOM nodes, intervals/timeouts never cleared, closures over large data.",
-        np: "Chrome DevTools Memory tab मुख्य tool हो। Suspected leak भन्दा पहिले र पछि heap snapshot लिनुहोस् (modal 10 पटक open/close), compare गर्नुहोस्, growing objects हेर्नुहोस्। Allocation Instrumentation on Timeline ले time over memory allocations देखाउँछ। Common culprits: detached DOM nodes मा event listeners, clear नभएका intervals/timeouts, large data माथि closures।",
-        jp: "Chrome DevToolsのMemoryタブが主なツール。疑わしいリーク前後でヒープスナップショットを取り（モーダルを10回開閉など）比較して増加するオブジェクトを探す。Allocation Instrumentationでメモリ使用量の推移を確認。ヒープが継続的に増加（GC後も下がらない）はリークの兆候。主な原因：切り離されたDOMノードへのリスナー・未クリアのタイマー・大量データへのクロージャ。",
+        en: "An async function returns a single Promise that eventually resolves or rejects. It cannot produce multiple values over time. A generator can produce multiple values using `yield` — it is a pull-based producer (the caller asks for the next value). An async generator combines both: it can `yield` multiple values over time, and each yielded value can be awaited. Use generators for lazy sequences and custom iterables. Use async generators for lazy async data streams like API pagination.",
+        np: "Async function एउटा Promise return गर्छ जुन eventually resolve/reject हुन्छ — multiple values produce गर्न सक्दैन। Generator ले `yield` गरेर multiple values produce गर्छ — caller ले अर्को value माग्छ। Async generator ले दुवै combine गर्छ: lazy sequences र async streams का लागि।",
+        jp: "async関数は一つのPromiseを返すだけ。ジェネレータは`yield`で複数の値を段階的に生成できる（呼び出し側が次の値を要求するプル型）。async generatorは両者を組み合わせる。APIページングのような遅延非同期データストリームに使う。",
       },
     },
     {
-      question: { en: "What is the difference between WeakMap and Map?", np: "WeakMap र Map मा के फरक?", jp: "WeakMapとMapの違いは？" },
+      question: { en: "When would I actually use a generator in production?", np: "Production मा generator actually कहिले use गर्ने?", jp: "実際の本番コードでジェネレータをいつ使うか？" },
       answer: {
-        en: "A regular Map holds strong references to its keys — as long as the Map exists, the key objects are kept alive even if there are no other references to them. A WeakMap holds weak references — if the key object has no other references, it can be garbage collected, and the WeakMap entry disappears automatically. WeakMaps are not iterable and have no `size` property. Use WeakMap when you want to associate data with an object but don't want that data to prevent the object from being GC'd — typical for DOM node metadata, private state, and caches.",
-        np: "Regular Map ले keys लाई strong references hold गर्छ — Map exist जबसम्म key objects alive रहन्छन्। WeakMap ले weak references hold गर्छ — key object को कुनै अर्को reference छैन भने GC हुन सक्छ, WeakMap entry automatically disappear हुन्छ। DOM node metadata, private state, caches का लागि WeakMap।",
-        jp: "通常のMapはキーへの強参照を保持 — 他の参照がなくてもMapが存在する限りキーオブジェクトは生きている。WeakMapは弱参照 — 他に参照がなければGCされ、エントリも自動消去。イテレート不可・sizeプロパティなし。DOMノードのメタデータ・プライベート状態・キャッシュに使う。",
+        en: "Common production uses: (1) async pagination — yield each page from an API without loading all data at once; (2) infinite sequences that are consumed lazily; (3) implementing cancellable async workflows (the saga pattern in Redux-Saga); (4) streaming data processing — transform a stream item by item; (5) implementing custom iterables for domain objects. Generators are less common than Promises in day-to-day work, but understanding them is important for advanced patterns and interviews.",
+        np: "Production use cases: (1) async pagination — एकैसाथ सबै data load नगरी; (2) lazy infinite sequences; (3) cancellable async workflows (Redux-Saga); (4) streaming data processing; (5) domain objects मा custom iterables। Day-to-day Promises भन्दा कम common, तर advanced patterns र interviews का लागि important।",
+        jp: "本番での用途: (1)API非同期ページング; (2)遅延無限シーケンス; (3)キャンセル可能な非同期ワークフロー(Redux-Saga); (4)ストリームデータ処理; (5)ドメインオブジェクトのカスタムイテラブル。日常的にはPromiseより少ないが、高度なパターンと面接に重要。",
       },
     },
   ],

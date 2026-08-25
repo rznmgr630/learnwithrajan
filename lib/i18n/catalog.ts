@@ -133,9 +133,9 @@ export const UI_STRINGS = {
     jp: "JavaScript · 基礎から上級まで",
   },
   "hub.js.subtitle": {
-    en: "29 days covering variables, closures, prototypes, classes, async, event loop, TypeScript, and senior internals — with plain-English explanations and code examples.",
-    np: "२९ दिन: variables, closures, prototypes, async, event loop, TypeScript — plain English मा।",
-    jp: "29日：変数・クロージャ・プロトタイプ・async・イベントループ・TypeScriptなど — わかりやすい解説とコード例。",
+    en: "30 days covering variables, closures, prototypes, classes, async, event loop, TypeScript, and senior internals — with plain-English explanations and code examples.",
+    np: "३० दिन: variables, closures, prototypes, async, event loop, TypeScript — plain English मा।",
+    jp: "30日：変数・クロージャ・プロトタイプ・async・イベントループ・TypeScriptなど — わかりやすい解説とコード例。",
   },
   "hub.js.cta": {
     en: "Open roadmap →",
@@ -304,14 +304,14 @@ export const UI_STRINGS = {
     jp: "JavaScript · 基礎からシニアまで",
   },
   "jsRoadmap.subtitle": {
-    en: "29 days covering variables, closures, prototypes, async, event loop, TypeScript, and senior internals.",
-    np: "भेरिएबल, closure, prototype, async, event loop, TypeScript, र सिनियर internals — २९ दिन।",
-    jp: "変数、クロージャ、プロトタイプ、非同期、イベントループ、TypeScript、シニア向け内部仕様までの29日間。",
+    en: "30 days covering variables, closures, prototypes, async, event loop, TypeScript, and senior internals.",
+    np: "भेरिएबल, closure, prototype, async, event loop, TypeScript, र सिनियर internals — ३० दिन।",
+    jp: "変数、クロージャ、プロトタイプ、非同期、イベントループ、TypeScript、シニア向け内部仕様までの30日間。",
   },
   "jsRoadmap.daysListAria": {
-    en: "JavaScript course days 1 through 29",
-    np: "JavaScript पाठ्यक्रम दिन १ देखि २९",
-    jp: "JavaScript コース 1日目から29日目",
+    en: "JavaScript course days 1 through 30",
+    np: "JavaScript पाठ्यक्रम दिन १ देखि ३०",
+    jp: "JavaScript コース 1日目から30日目",
   },
   "jsRoadmap.overallProgress": {
     en: "Overall progress",
@@ -1370,7 +1370,7 @@ export const UI_STRINGS = {
   },
   "jpN4Roadmap.title": {
     en: "Japanese · JLPT N4 in 28 days",
-    np: "२९ दिनमा जापानी · JLPT N4",
+    np: "३० दिनमा जापानी · JLPT N4",
     jp: "28日で日本語 · JLPT N4",
   },
   "jpN4Roadmap.subtitle": {
@@ -1525,7 +1525,7 @@ export const UI_STRINGS = {
   },
   "jpN3Roadmap.title": {
     en: "Japanese · JLPT N3 in 28 days",
-    np: "२९ दिनमा जापानी · JLPT N3",
+    np: "३० दिनमा जापानी · JLPT N3",
     jp: "28日で日本語 · JLPT N3",
   },
   "jpN3Roadmap.subtitle": {

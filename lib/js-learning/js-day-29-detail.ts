@@ -3,203 +3,253 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_29_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Understanding what happens inside the JavaScript engine takes you from writing code that works to writing code that performs. V8 (Chrome and Node.js) uses hidden classes and inline caching to make property access fast — but only if your code follows predictable patterns. Profiling tools reveal exactly where your program spends its time.",
-      np: "JavaScript engine भित्र के हुन्छ बुझ्नाले तपाईंलाई 'works' हुने code बाट 'performs' हुने code तिर लैजान्छ। V8 ले hidden classes र inline caching प्रयोग गरेर property access fast बनाउँछ — तर code predictable patterns follow गर्दा मात्र। Profiling tools ले program कहाँ time spend गर्छ exactly reveal गर्छ।",
-      jp: "JavaScriptエンジン内部を理解することで「動く」コードから「速い」コードへ進化できる。V8は隠れクラスとインラインキャッシュでプロパティアクセスを高速化するが、コードが予測可能なパターンに従う必要がある。プロファイリングツールは時間を費やしている場所を正確に明らかにする。",
-    },
-    {
-      en: "This is senior-level material — most developers work effectively without knowing it. But it makes you better at debugging performance issues, reading profiler output, and understanding why certain JavaScript patterns are recommended (or avoided) in high-performance codebases.",
-      np: "यो senior-level material हो — अधिकांश developers यो थाहा नभई पनि effectively काम गर्छन्। तर यसले performance issues debug गर्न, profiler output read गर्न, र certain JavaScript patterns किन recommended (वा avoid) छन् बुझ्न बढी capable बनाउँछ।",
-      jp: "これはシニアレベルの内容 — 多くの開発者はこれを知らなくても有効に働ける。しかしパフォーマンス問題のデバッグ・プロファイラ出力の読み方・特定のJSパターンが推奨される理由の理解が深まる。",
+      en: "Node.js has a rich set of core modules for working with the filesystem, network, processes, and binary data. Streams let you process data in chunks without loading it all into memory. `Buffer` handles raw binary data. Child processes and Worker Threads let you run code in separate processes or threads — essential for CPU-intensive tasks and shell command execution.",
+      np: "Node.js सँग filesystem, network, processes, र binary data सँग काम गर्ने rich core modules छन्। Streams ले data को सबैकुरा memory मा नलोडी chunks मा process गर्दछ। `Buffer` ले raw binary data handle गर्छ। Child processes र Worker Threads ले CPU-intensive tasks र shell commands का लागि separate processes/threads मा code run गर्दछ।",
+      jp: "Node.jsにはファイルシステム・ネットワーク・プロセス・バイナリデータ用の豊富なコアモジュールがある。Streamsはデータを全てメモリに読み込まずチャンクで処理。`Buffer`は生のバイナリデータを扱う。Child processesとWorker Threadsは分離したプロセス/スレッドでコードを実行。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "p-iiEDtpy6I", title: "JavaScript V8 Engine Explained" },
+        { type: "youtube", videoId: "GlybFFMXXmQ", title: "Node.js Streams and Buffers — Net Ninja" },
       ],
     },
     {
-      title: { en: "How V8 compiles and optimizes JavaScript", np: "V8 ले JavaScript कसरी compile र optimize गर्छ", jp: "V8がJavaScriptをコンパイル・最適化する仕組み" },
+      title: { en: "Streams — the four types", np: "Streams — चार types", jp: "Streams — 4種類" },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "V8 does not interpret JavaScript line by line — it compiles it. When V8 sees code for the first time, it uses a fast but non-optimizing compiler called **Ignition** to quickly generate bytecode. As code runs repeatedly, V8's profiler marks 'hot' functions. **TurboFan**, the optimizing compiler, then generates highly optimized machine code for those hot functions based on type feedback — assumptions about what types the function has actually seen.",
-            np: "V8 ले JavaScript line by line interpret गर्दैन — compile गर्छ। Code पहिलो पटक देख्दा fast तर non-optimizing compiler **Ignition** प्रयोग गरेर bytecode generate गर्छ। Code बारम्बार run हुँदा V8 को profiler ले 'hot' functions mark गर्छ। **TurboFan** ले type feedback मा based optimized machine code generate गर्छ।",
-            jp: "V8はJavaScriptを行ごとに解釈せずコンパイルする。初回は高速だが非最適化のコンパイラ**Ignition**がバイトコードを生成。繰り返し実行されるとV8のプロファイラが「ホット」関数をマーク。**TurboFan**が型フィードバックに基づいて高度に最適化されたマシンコードを生成する。",
+            en: "A stream is an abstract interface for working with data that flows over time — you process it in chunks rather than waiting for it all. Node.js has four stream types: **Readable** (you read from it), **Writable** (you write to it), **Duplex** (both read and write, like a TCP socket), and **Transform** (reads in, modifies, writes out, like a gzip compressor).",
+            np: "Stream एउटा abstract interface हो time over data process गर्न — सबै आउनको प्रतीक्षा नगरी chunks मा process गर्नुहुन्छ। Node.js मा चार stream types छन्: **Readable**, **Writable**, **Duplex** (read + write), र **Transform** (modify गर्दै पास गर्छ)।",
+            jp: "ストリームは時間をかけてデータを流れるように処理するための抽象インターフェース。全て揃うのを待たずチャンクで処理。**Readable**・**Writable**・**Duplex**（TCP等）・**Transform**（圧縮等）の4種類。",
           },
         },
         {
           type: "code",
-          title: { en: "Hidden classes — why object shape consistency matters", np: "Hidden classes — object shape consistency किन important", jp: "隠れクラス — オブジェクト形状の一貫性が重要な理由" },
-          code: `// ── Hidden classes (also called Maps or Shapes) ───────────────────
-// V8 assigns a hidden class to every object based on its property shape.
-// Objects with the same shape share the same hidden class → fast lookups.
+          title: { en: "Reading, writing, and piping streams", np: "Streams read, write, र pipe गर्नु", jp: "ストリームの読み書きとパイプ" },
+          code: `const fs   = require("fs");
+const zlib = require("zlib");
+const { pipeline, Transform } = require("stream");
+const { promisify } = require("util");
+const pipelineAsync = promisify(pipeline);
 
-// ✅ Same hidden class — fast property access
-function Point(x, y) {
-  this.x = x;  // both properties added in same order
-  this.y = y;
-}
-const p1 = new Point(1, 2);
-const p2 = new Point(3, 4);
-// p1 and p2 share the same hidden class → V8 can use inline caching
-
-// ❌ Different hidden classes — degrades to slow lookup
-const a = {};
-a.x = 1;  // hidden class A (no properties)
-a.y = 2;  // hidden class B (has x)
-           // Each assignment transitions to a new hidden class
-
-const b = {};
-b.y = 1;  // different order! — different hidden class transition
-b.x = 2;  // b gets a DIFFERENT hidden class than a
-
-// V8 now has two different hidden classes for what looks like the same shape
-// → inline cache misses → slower
-
-// ── Best practices to avoid hidden class pollution ────────────────
-// 1. Always initialize all properties in the constructor
-function UserGood(name, email, role) {
-  this.name  = name;   // always add properties in the same order
-  this.email = email;
-  this.role  = role;
-}
-
-// 2. Don't add properties after construction
-function UserBad(name) {
-  this.name = name;
-}
-const u = new UserBad("Alice");
-u.email = "alice@test.com";  // adds a property after creation — new hidden class
-
-// 3. Don't delete properties
-delete u.email;  // deletes property — hidden class changes again
-
-// ── Monomorphic vs polymorphic inline caches ──────────────────────
-function getX(point) {
-  return point.x;
-}
-
-// Monomorphic — always called with same hidden class → V8 inlines lookup
-getX(new Point(1, 2));  // fast
-getX(new Point(3, 4));  // fast
-
-// Polymorphic — called with different hidden classes → slower
-getX({ x: 1 });         // different shape
-getX(new Point(1, 2));  // different shape
-// V8 must check which hidden class at each call`,
-        },
-      ],
-    },
-    {
-      title: { en: "Garbage collector internals", np: "Garbage collector internals", jp: "ガベージコレクタの内部" },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "V8's GC is generational — it is based on the observation that most objects die young (short-lived variables, loop temporaries). New objects are allocated in the **young generation** (small, GC'd frequently). Objects that survive a few collections are promoted to the **old generation** (larger, GC'd less often with a more expensive algorithm). This is why allocating many short-lived objects in a hot loop has a real cost — each one goes through the young generation GC.",
-            np: "V8 का GC generational छ — अधिकांश objects early मर्छन् (short-lived variables, loop temporaries)। नयाँ objects **young generation** मा allocate हुन्छन् (small, frequently GC'd)। केही collections survive गरेका objects **old generation** मा promote हुन्छन्। त्यसैले hot loop मा धेरै short-lived objects allocate गर्दा real cost छ।",
-            jp: "V8のGCは世代別 — ほとんどのオブジェクトは早期に死ぬという観察に基づく（短命な変数・ループの一時変数）。新しいオブジェクトは**若い世代**（小さく頻繁にGC）に割り当てられる。数回のコレクションを生き残ったオブジェクトは**古い世代**へ昇格。ホットループでの多数の短命オブジェクト生成がコストになる理由。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Avoiding GC pressure in hot code paths", np: "Hot code paths मा GC pressure avoid गर्नु", jp: "ホットコードパスでのGCプレッシャーの回避" },
-          code: `// ── GC-friendly patterns ─────────────────────────────────────────
-
-// ❌ Allocating objects inside a hot loop — triggers GC
-function processItems(items) {
-  for (const item of items) {
-    const result = {         // new object every iteration
-      id:    item.id,
-      value: item.value * 2,
-    };
-    sendToAPI(result);
-  }
-}
-
-// ✅ Object pooling — reuse a single object
-function processItemsFast(items) {
-  const result = { id: 0, value: 0 };  // allocate ONCE
-  for (const item of items) {
-    result.id    = item.id;             // reuse the same object
-    result.value = item.value * 2;
-    sendToAPI(result);
-  }
-}
-
-// ✅ Using typed arrays for numeric data — no object overhead
-const scores = new Float64Array(1000);  // contiguous memory, no GC pressure
-for (let i = 0; i < scores.length; i++) {
-  scores[i] = Math.random();
-}
-
-// ── Typed arrays — V8 uses unboxed representation ─────────────────
-// Regular arrays of mixed types → boxed (each element is a JS object)
-// Typed arrays (Int32Array, Float64Array) → unboxed (raw C numbers)
-
-const mixed = [1, 2, 3, "four", {}];  // boxed — slow for math
-const nums  = new Float64Array([1, 2, 3, 4, 5]);  // unboxed — fast for math`,
-        },
-      ],
-    },
-    {
-      title: { en: "Performance profiling tools", np: "Performance profiling tools", jp: "パフォーマンスプロファイリングツール" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Profiling with Chrome DevTools and Node.js --prof", np: "Chrome DevTools र Node.js --prof सँग profiling", jp: "Chrome DevToolsとNode.js --profによるプロファイリング" },
-          code: `// ── Performance.now() — high-resolution timer ────────────────────
-const start = performance.now();
-doExpensiveWork();
-const elapsed = performance.now() - start;
-console.log(\`Took \${elapsed.toFixed(2)}ms\`);
-
-// ── console.time / timeEnd — simple labelled timing ───────────────
-console.time("database-query");
-await db.query("SELECT * FROM products");
-console.timeEnd("database-query");  // logs "database-query: 45.2ms"
-
-// ── Node.js CPU profiling ────────────────────────────────────────
-// Run with --prof to generate a V8 profiling log:
-//   node --prof app.js
-// Process the log into human-readable form:
-//   node --prof-process isolate-*.log > profile.txt
-// Look for functions taking the most time in "Summary" and "[Bottom up]"
-
-// ── Performance API — measuring named sections ────────────────────
-performance.mark("fetchStart");
-await fetchUser(id);
-performance.mark("fetchEnd");
-performance.measure("fetchUser", "fetchStart", "fetchEnd");
-
-const [entry] = performance.getEntriesByName("fetchUser");
-console.log(\`fetchUser: \${entry.duration.toFixed(2)}ms\`);
-
-// ── Memory usage ──────────────────────────────────────────────────
-const mem = process.memoryUsage();
-console.log({
-  rss:      \`\${Math.round(mem.rss / 1024 / 1024)}MB\`,        // total memory
-  heapUsed: \`\${Math.round(mem.heapUsed / 1024 / 1024)}MB\`,   // JS objects
-  heapTotal:\`\${Math.round(mem.heapTotal / 1024 / 1024)}MB\`,  // allocated heap
-  external: \`\${Math.round(mem.external / 1024 / 1024)}MB\`,   // C++ objects (Buffers)
+// ── Readable stream — read a large file in chunks ─────────────────
+const readable = fs.createReadStream("large-file.csv", {
+  encoding: "utf8",
+  highWaterMark: 64 * 1024,  // 64KB chunks (default 16KB)
 });
 
-// ── Clinic.js — easy Node.js performance diagnosis ────────────────
-// npm install -g clinic
-// clinic doctor -- node app.js   → detect event loop lag, memory leaks, I/O issues
-// clinic flame  -- node app.js   → interactive flame graph of CPU usage`,
+readable.on("data", (chunk) => console.log("Got chunk:", chunk.length, "bytes"));
+readable.on("end",  ()      => console.log("Done reading"));
+readable.on("error",(err)   => console.error("Error:", err));
+
+// ── Writable stream — write to a file in chunks ───────────────────
+const writable = fs.createWriteStream("output.txt");
+writable.write("Hello\n");
+writable.write("World\n");
+writable.end();  // signal no more data
+
+// ── Pipe — connect readable to writable (handles backpressure) ─────
+// pipeline() is the modern, safe way (auto error propagation)
+await pipelineAsync(
+  fs.createReadStream("input.txt"),
+  zlib.createGzip(),                 // Transform: compress
+  fs.createWriteStream("input.txt.gz")
+);
+
+// ── Transform stream — modify data as it flows ────────────────────
+const upperCaseTransform = new Transform({
+  transform(chunk, encoding, callback) {
+    // Push the modified chunk downstream
+    this.push(chunk.toString().toUpperCase());
+    callback();  // signal chunk is processed
+  }
+});
+
+await pipelineAsync(
+  fs.createReadStream("input.txt"),
+  upperCaseTransform,
+  fs.createWriteStream("output.txt")
+);
+
+// ── Creating a custom Readable (useful for tests and generators) ───
+const { Readable } = require("stream");
+
+function createNumberStream(limit) {
+  let current = 1;
+  return new Readable({
+    objectMode: true,  // allow objects, not just Buffers/strings
+    read() {
+      if (current > limit) {
+        this.push(null);  // signal end of stream
+      } else {
+        this.push(current++);
+      }
+    }
+  });
+}
+
+for await (const num of createNumberStream(5)) {
+  console.log(num);  // 1, 2, 3, 4, 5
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Buffer — working with binary data", np: "Buffer — binary data सँग काम गर्नु", jp: "Buffer — バイナリデータの操作" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Creating, reading, and converting Buffers", np: "Buffers create, read, र convert गर्नु", jp: "Bufferの作成・読み取り・変換" },
+          code: `// ── Creating Buffers ──────────────────────────────────────────────
+const buf1 = Buffer.from("Hello, World!", "utf8");  // from string
+const buf2 = Buffer.from([72, 101, 108, 108, 111]);  // from byte array
+const buf3 = Buffer.alloc(10);                        // zero-filled, 10 bytes
+const buf4 = Buffer.allocUnsafe(10);                  // uninitialized (faster but unsafe)
+
+// ── Reading and converting ────────────────────────────────────────
+buf1.toString("utf8");    // "Hello, World!"
+buf1.toString("hex");     // "48656c6c6f2c20576f726c6421"
+buf1.toString("base64");  // "SGVsbG8sIFdvcmxkIQ=="
+
+buf1.length;          // 13 (bytes, not characters)
+buf1[0];              // 72 (byte value of 'H')
+buf1.readUInt8(0);    // 72 — same thing
+buf1.readUInt16BE(0); // 18533 — two bytes as unsigned 16-bit int, big-endian
+
+// ── Concatenating buffers ─────────────────────────────────────────
+const chunk1 = Buffer.from("Hello ");
+const chunk2 = Buffer.from("World");
+const combined = Buffer.concat([chunk1, chunk2]);
+combined.toString();  // "Hello World"
+
+// ── Common use case: collecting stream chunks ─────────────────────
+const chunks = [];
+readable.on("data", (chunk) => chunks.push(chunk));
+readable.on("end",  ()      => {
+  const fullBuffer = Buffer.concat(chunks);
+  const text = fullBuffer.toString("utf8");
+  // process the complete content
+});
+
+// ── Encoding detection and conversion ─────────────────────────────
+const base64Data = "SGVsbG8gV29ybGQ=";
+const decoded = Buffer.from(base64Data, "base64").toString("utf8");
+// "Hello World"
+
+// Encoding a file to base64 (for email attachments, JWT, etc.)
+const fileData = fs.readFileSync("image.png");
+const base64 = fileData.toString("base64");`,
+        },
+      ],
+    },
+    {
+      title: { en: "Child processes & Worker Threads", np: "Child processes र Worker Threads", jp: "子プロセスとWorker Threads" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "spawn, exec, fork, and worker_threads", np: "spawn, exec, fork, र worker_threads", jp: "spawn・exec・fork・worker_threads" },
+          code: `const { spawn, exec, fork }   = require("child_process");
+const { Worker, isMainThread, parentPort, workerData } = require("worker_threads");
+
+// ── exec — run a shell command, buffer the full output ─────────────
+exec("ls -la", (err, stdout, stderr) => {
+  if (err) return console.error(err);
+  console.log(stdout);
+});
+
+// Promisified (cleaner):
+const { exec: execAsync } = require("util").promisify(exec) ?? require("util");
+// OR:
+const { promisify } = require("util");
+const execPromise = promisify(exec);
+const { stdout } = await execPromise("git log --oneline -5");
+
+// ── spawn — run a process, stream output in chunks ─────────────────
+// Use for long-running commands or large output (don't buffer)
+const ls = spawn("ls", ["-la", "/tmp"]);
+ls.stdout.on("data", (data) => process.stdout.write(data));
+ls.stderr.on("data", (data) => process.stderr.write(data));
+ls.on("close", (code) => console.log("Exited with code:", code));
+
+// ── exec vs spawn ─────────────────────────────────────────────────
+// exec:  buffers all output — simple, but not for large or streaming output
+// spawn: streams output — correct for large output, interactive processes
+
+// ── fork — spawn a new Node.js process for IPC ────────────────────
+// worker.js:
+process.on("message", ({ numbers }) => {
+  const sum = numbers.reduce((a, b) => a + b, 0);
+  process.send({ sum });
+  process.exit(0);
+});
+
+// main.js:
+const child = fork("./worker.js");
+child.send({ numbers: [1, 2, 3, 4, 5] });
+child.on("message", ({ sum }) => console.log("Sum:", sum));
+
+// ── Worker Threads — CPU work on a real separate thread ───────────
+// Shares memory via SharedArrayBuffer and transferable objects
+// Unlike child_process, runs in the SAME process (lower overhead)
+
+// heavy-task.js:
+if (!isMainThread) {
+  const { numbers } = workerData;
+  const result = numbers.reduce((a, b) => a + b, 0);
+  parentPort.postMessage(result);
+}
+
+// main.js:
+function runInWorker(numbers) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(__filename, {
+      workerData: { numbers },
+    });
+    worker.on("message", resolve);
+    worker.on("error",   reject);
+  });
+}
+
+const sum = await runInWorker([1, 2, 3, 4, 5]);
+console.log("Sum:", sum);`,
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            { en: "**Use Chrome DevTools Performance tab** to record and analyse the flame graph of your frontend JavaScript. Look for long tasks (tasks > 50ms that block the main thread).", np: "**Chrome DevTools Performance tab** प्रयोग गर्नुहोस् frontend JS को flame graph analyse गर्न। Long tasks (main thread block गर्ने >50ms tasks) हेर्नुहोस्।", jp: "**Chrome DevTools Performanceタブ**でフロントエンドJSのフレームグラフを記録・分析。長いタスク（メインスレッドをブロックする50ms超のタスク）を探す。" },
-            { en: "**Measure before you optimize** — premature optimization is the root of all evil (Knuth). Profile first, find the actual bottleneck, then fix it. A 10× speedup in code that takes 1ms saves you 9ms. A 1.1× speedup in code that takes 500ms saves you 45ms.", np: "**Optimize गर्नु अघि measure गर्नुहोस्** — profile गर्नुहोस्, actual bottleneck find गर्नुहोस्, अनि fix गर्नुहोस्। 1ms लिने code मा 10× speedup भन्दा 500ms लिने code मा 1.1× speedup बढी valuable।", jp: "**最適化前に計測する** — まずプロファイルして実際のボトルネックを特定してから修正。1msのコードを10倍速くしても9ms節約。500msのコードを1.1倍速くすれば45ms節約。" },
-            { en: "**Async context tracking** — Node.js 16+ has `AsyncLocalStorage` for propagating context (like a request ID or user session) through async call chains without passing it explicitly through every function.", np: "**AsyncLocalStorage** (Node.js 16+) ले async call chains मार्फत context (request ID, user session) हर function मा explicitly pass नगरी propagate गर्छ।", jp: "**AsyncLocalStorage** (Node.js 16+)は非同期呼び出しチェーン全体でコンテキスト（リクエストIDやセッション）を明示的に渡さずに伝播させる。" },
+          type: "table",
+          caption: { en: "Choosing between concurrency options in Node.js", np: "Node.js concurrency options छान्नु", jp: "Node.jsの並行処理オプションの選択" },
+          headers: [
+            { en: "Option", np: "Option", jp: "オプション" },
+            { en: "Use for", np: "Use for", jp: "用途" },
+            { en: "Communication", np: "Communication", jp: "通信" },
+            { en: "Memory", np: "Memory", jp: "メモリ" },
+          ],
+          rows: [
+            [
+              { en: "Async/await", np: "Async/await", jp: "async/await" },
+              { en: "I/O-bound work (DB, network, files)", np: "I/O-bound", jp: "I/Oバウンド（DB・ネットワーク）" },
+              { en: "N/A — single thread", np: "Single thread", jp: "N/A（シングルスレッド）" },
+              { en: "Shared — single process", np: "Shared", jp: "共有（シングルプロセス）" },
+            ],
+            [
+              { en: "Worker Threads", np: "Worker Threads", jp: "Worker Threads" },
+              { en: "CPU-bound work (heavy computation)", np: "CPU-bound", jp: "CPUバウンド（重い計算）" },
+              { en: "postMessage / SharedArrayBuffer", np: "postMessage / SharedArrayBuffer", jp: "postMessage/SharedArrayBuffer" },
+              { en: "Mostly shared (same process)", np: "Mostly shared", jp: "ほぼ共有（同プロセス）" },
+            ],
+            [
+              { en: "Child process (fork)", np: "Child process", jp: "子プロセス（fork）" },
+              { en: "Isolated Node.js sub-programs, IPC", np: "Isolated sub-programs", jp: "独立したNode.jsサブプログラム・IPC" },
+              { en: "IPC via process.send()", np: "IPC", jp: "process.send() IPC" },
+              { en: "Separate — own memory", np: "Separate", jp: "独立（独自メモリ）" },
+            ],
+            [
+              { en: "spawn / exec", np: "spawn / exec", jp: "spawn / exec" },
+              { en: "Shell commands, external programs", np: "Shell commands", jp: "シェルコマンド・外部プログラム" },
+              { en: "stdin/stdout/stderr streams", np: "stdin/stdout/stderr", jp: "stdin/stdout/stderrストリーム" },
+              { en: "Separate — own memory", np: "Separate", jp: "独立（独自メモリ）" },
+            ],
           ],
         },
       ],
@@ -207,27 +257,19 @@ console.log({
   ],
   faq: [
     {
-      question: { en: "What are hidden classes and why do they matter?", np: "Hidden classes के हुन् र किन matter गर्छन्?", jp: "隠れクラスとは何か、なぜ重要か？" },
+      question: { en: "When should I use streams instead of reading an entire file?", np: "Entire file read गर्नुको सट्टा streams कहिले use गर्ने?", jp: "ファイル全体の読み込みの代わりにストリームを使うべき場面は？" },
       answer: {
-        en: "Hidden classes (also called Shapes or Maps in V8 documentation) are an internal optimization V8 uses to make property access fast. V8 assigns a hidden class to every object based on its current set of properties and their order. Objects that share the same hidden class can use the same optimized property lookup path (inline cache). Every time you add or delete a property, or add properties in a different order, V8 must create a new hidden class and potentially de-optimize code that assumed the previous shape. This is why object pooling, consistent constructor property ordering, and avoiding `delete` improve performance in hot paths.",
-        np: "Hidden classes V8 ले property access fast बनाउन use गर्ने internal optimization हो। हरेक object लाई current properties र तिनीहरूको order मा based hidden class assign गरिन्छ। Same hidden class share गर्ने objects ले same optimized property lookup path use गर्न सक्छन्। Property add/delete गर्दा वा फरक order मा add गर्दा V8 ले new hidden class create गर्छ।",
-        jp: "隠れクラス（V8ドキュメントではShapesまたはMaps）はプロパティアクセスを高速化するV8内部の最適化。各オブジェクトには現在のプロパティセットと順序に基づいて隠れクラスが割り当てられる。同じ隠れクラスを共有するオブジェクトは同じ最適化されたルックアップパスを使用できる。プロパティの追加・削除・異なる順序での追加で新しい隠れクラスが作成される。",
+        en: "Use streams when the data is large enough that loading it all into memory would be a problem — typically files over a few MB, or when you are piping to a response (HTTP response, database bulk insert, file copy). `fs.readFile` loads the entire file into a Buffer at once, which is fine for config files or small assets but will exhaust memory if many requests simultaneously read a 500MB CSV file. Streams keep memory usage flat regardless of file size.",
+        np: "Data memory मा load गर्नु problem हुने जति large छ भने streams — typically files over few MB, वा response मा pipe गर्दा। `fs.readFile` ले सम्पूर्ण file एकैसाथ Buffer मा load गर्छ — config files वा small assets मा ठीक तर 500MB CSV file धेरै requests एकैसाथ read गर्दा memory exhaust हुन्छ।",
+        jp: "データが全てメモリに読み込むと問題になるほど大きい場合にストリームを使う。通常数MB以上のファイルやHTTPレスポンスへのパイプ時。`fs.readFile`は全ファイルを一度にBufferに読み込む。500MBのCSVを多くのリクエストが同時に読むと大変なことに。ストリームはファイルサイズに関わらずメモリ使用量を一定に保つ。",
       },
     },
     {
-      question: { en: "What does 'deoptimization' mean in V8?", np: "'Deoptimization' भनेको V8 मा के हो?", jp: "V8での「非最適化」とは何か？" },
+      question: { en: "What is the difference between Worker Threads and child_process?", np: "Worker Threads र child_process मा के फरक?", jp: "Worker Threadsとchild_processの違いは？" },
       answer: {
-        en: "V8's TurboFan makes assumptions when optimizing a function — for example, that a parameter is always a number, or that an object always has a certain shape. If those assumptions turn out to be wrong (a string is passed where a number was expected), V8 deoptimizes — it throws away the optimized machine code and falls back to slower bytecode interpretation. You can see deoptimizations in Chrome DevTools by enabling 'V8 runtime call stats'. Frequent deoptimizations in hot code are a signal to make your types more consistent.",
-        np: "TurboFan ले function optimize गर्दा assumptions बनाउँछ — parameter हमेशा number हुन्छ, object हमेशा certain shape हुन्छ। Assumptions गलत भए V8 deoptimizes — optimized machine code throw away गर्छ र slower bytecode मा fall back गर्छ। Chrome DevTools मा 'V8 runtime call stats' enable गरेर deoptimizations देख्न सकिन्छ।",
-        jp: "TurboFanは最適化時に仮定を立てる（パラメータは常に数値、オブジェクトは常に特定の形状など）。仮定が外れると非最適化 — 最適化されたマシンコードを破棄してより遅いバイトコード解釈に戻る。Chrome DevToolsで「V8 runtime call stats」を有効にすると確認できる。ホットコードでの頻繁な非最適化は型の一貫性を高めるサイン。",
-      },
-    },
-    {
-      question: { en: "How do I find the actual performance bottleneck in my Node.js app?", np: "Node.js app मा actual performance bottleneck कसरी find गर्ने?", jp: "Node.jsアプリの実際のパフォーマンスボトルネックを見つけるには？" },
-      answer: {
-        en: "Start with `clinic doctor` (easiest) — it runs your app under load, detects event loop lag, memory leaks, and I/O issues, and gives a clear diagnosis. For CPU profiling, run `node --prof app.js` and process the output with `node --prof-process`. For memory profiling, take heap snapshots in Chrome DevTools (connect to Node.js with `node --inspect`). For production, use APM tools like Datadog, New Relic, or OpenTelemetry to continuously profile and track performance regressions over time.",
-        np: "`clinic doctor` बाट start गर्नुहोस् — event loop lag, memory leaks, I/O issues detect गर्छ। CPU profiling: `node --prof app.js` चलाएर `node --prof-process` सँग process। Memory: Chrome DevTools मा heap snapshots। Production: Datadog, New Relic, वा OpenTelemetry।",
-        jp: "まず`clinic doctor`（最も簡単） — イベントループ遅延・メモリリーク・I/O問題を検出して診断。CPUプロファイル: `node --prof`で実行して`node --prof-process`で処理。メモリ: Chrome DevToolsでヒープスナップショット。本番: Datadog・New Relic・OpenTelemetryで継続的なプロファイリング。",
+        en: "Worker Threads run in the same Node.js process — they share memory (via SharedArrayBuffer and transferable objects) and have lower overhead for starting up. They are ideal for CPU-heavy tasks like image processing, encryption, or complex calculations that would block the event loop. Child processes (`fork`, `spawn`, `exec`) run in a separate OS process with their own memory — they communicate via IPC messages or stdin/stdout. Use child_process when you need true process isolation, want to run a shell command, or need to spawn a completely different program.",
+        np: "Worker Threads same Node.js process मा run हुन्छ — memory share गर्छन्, startup overhead कम। CPU-heavy tasks (image processing, encryption) का लागि ideal। Child processes separate OS process मा run हुन्छ — IPC वा stdin/stdout मार्फत communicate। True process isolation, shell commands, वा अर्को program spawn गर्न child_process।",
+        jp: "Worker Threadsは同じNode.jsプロセスで実行 — メモリを共有し起動コストが低い。イベントループをブロックするCPU重処理（画像処理・暗号化）に最適。child_processは独立したOSプロセスで実行 — IPC/stdin/stdout通信。真のプロセス分離・シェルコマンド・別プログラムの起動はchild_process。",
       },
     },
   ],
