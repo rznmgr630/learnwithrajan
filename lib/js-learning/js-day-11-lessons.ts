@@ -2,494 +2,431 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_11_LESSONS: JsLessonDay = {
   day: 11,
-  title: { en: "The this Keyword — Contexts, call, apply & bind", np: "this Keyword — Contexts, call, apply, bind", jp: "this・call・apply・bind" },
+  title: { en: "Dates & Time", np: "Dates र Time", jp: "日付と時刻" },
   totalMinutes: 27,
-  difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
+  difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
   lessons: [
     {
-      id: "four-rules-of-this",
-      title: { en: "The Four Rules of this", np: "this का चार Rules", jp: "thisの4つのルール" },
+      id: "dates-instants-utc",
+      title: { en: "Instants, UTC & Local Time", np: "Instants, UTC र Local Time", jp: "瞬間・UTC・ローカル時刻" },
       durationMinutes: 9,
       explanation: {
-        en: "`this` is a special JavaScript value that tells you <b>which object a regular function is working with</b>.\n\nThe most important rule is:\n\n> <b>For regular functions, `this` is decided by how the function is called, not where it is written.</b>\n\nThere are four main ways `this` is determined:\n\n<b>Default binding</b> — a regular function is called by itself.\n\n<b>Implicit binding</b> — a function is called as an object method.\n\n<b>Explicit binding</b> — `call()`, `apply()`, or `bind()` chooses the value of `this`.\n\n<b>`new` binding</b> — `new` creates a new object and makes `this` refer to it.\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>Important:</b> Arrow functions are different. They do <b>not</b> create their own `this`; they use `this` from the surrounding scope.\n\n---\n\n### 1. Basic — Default Binding\n\nA regular function called by itself uses <b>default binding</b>.\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\nIn <b>strict mode</b> (`\"use strict\"`), `this` is `undefined`. Without strict mode in a browser, it can refer to the global object.\n\n---\n\n### 2. Basic — Implicit Binding\n\nWhen a function is called through an object, `this` refers to the object before the `.`.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe object before `.` is `user`, so:\n\n```text\nthis → user\n```\n\n---\n\n### 3. Intermediate — Explicit Binding with `call()`\n\n`call()` lets you choose what `this` should be.\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. Intermediate — `apply()`\n\n`apply()` works like `call()`, but function arguments are passed as an array.\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\nFor `this` they behave the same:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nThe main difference is how arguments are passed.\n\n---\n\n### 5. Intermediate — `bind()`\n\n`bind()` creates a <b>new function</b> with `this` permanently connected to the object you provide.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\nUnlike `call()` and `apply()`, `bind()` does <b>not</b> immediately run the function.\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. Advanced — Losing `this`\n\nThis is one of the most common `this` problems.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out of the object:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nWhy? `user.greet()` has an object before the `.`, but `greet()` does not, so the <b>implicit binding is lost</b>.\n\n---\n\n### 7. Advanced — Fixing a Callback with `bind()`\n\nThis commonly happens when passing an object method as a callback.\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nThe method is passed without its `user` object. Fix it with `bind()`:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. Advanced — `new` Binding\n\nWhen a function is called with `new`, JavaScript creates a new object and makes `this` refer to it.\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. Important — Arrow Functions\n\nArrow functions do <b>not</b> have their own `this`. They use `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nHere, the arrow function gets `this` from `greet()`. This is why arrow functions are very useful for callbacks.",
-        np: "`this` JavaScript को विशेष value हो जसले <b>सामान्य function कुन object सँग काम गर्दै छ</b> भन्ने बताउँछ।\n\nसबैभन्दा महत्वपूर्ण नियम:\n\n> <b>सामान्य function का लागि, `this` कहाँ लेखिएको छ भन्दा कसरी call गरिएको छ त्यसले तय गर्छ।</b>\n\n`this` तय हुने चार मुख्य तरिका छन्:\n\n<b>Default binding</b> — सामान्य function आफैं call हुन्छ।\n\n<b>Implicit binding</b> — function object method का रूपमा call हुन्छ।\n\n<b>Explicit binding</b> — `call()`, `apply()`, वा `bind()` ले `this` को value छान्छ।\n\n<b>`new` binding</b> — `new` ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>महत्वपूर्ण:</b> Arrow function फरक छन्। तिनले आफ्नै `this` <b>बनाउँदैनन्</b>; तिनले वरिपरिको scope बाट `this` लिन्छन्।\n\n---\n\n### 1. आधारभूत — Default Binding\n\nआफैं call हुने सामान्य function ले <b>default binding</b> प्रयोग गर्छ।\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>Strict mode</b> (`\"use strict\"`) मा, `this` `undefined` हुन्छ। Browser मा strict mode बिना, यो global object लाई जनाउन सक्छ।\n\n---\n\n### 2. आधारभूत — Implicit Binding\n\nFunction object मार्फत call हुँदा, `this` ले `.` अघिको object लाई जनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` अघिको object `user` हो, त्यसैले:\n\n```text\nthis → user\n```\n\n---\n\n### 3. मध्यम — `call()` सँग Explicit Binding\n\n`call()` ले `this` के हुनुपर्छ छान्न दिन्छ।\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. मध्यम — `apply()`\n\n`apply()` `call()` जस्तै काम गर्छ, तर function argument array रूपमा पठाइन्छन्।\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` का लागि दुबै उस्तै व्यवहार गर्छन्:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nमुख्य फरक argument कसरी पठाइन्छ भन्नेमा हो।\n\n---\n\n### 5. मध्यम — `bind()`\n\n`bind()` ले <b>नयाँ function</b> बनाउँछ जसको `this` तपाईंले दिएको object सँग स्थायी रूपमा जोडिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` र `apply()` भन्दा फरक, `bind()` ले function लाई तुरुन्तै <b>चलाउँदैन</b>।\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. उन्नत — `this` हराउनु\n\nयो `this` सँग सम्बन्धित सबैभन्दा सामान्य समस्यामध्ये एक हो।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method लाई object बाट बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nकिन? `user.greet()` मा `.` अघि object छ, तर `greet()` मा छैन, त्यसैले <b>implicit binding हराउँछ</b>।\n\n---\n\n### 7. उन्नत — `bind()` ले Callback ठीक गर्नु\n\nObject method लाई callback रूपमा पठाउँदा यो प्रायः हुन्छ।\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nMethod आफ्नो `user` object बिना पठाइन्छ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. उन्नत — `new` Binding\n\nFunction `new` सँग call हुँदा, JavaScript ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. महत्वपूर्ण — Arrow Functions\n\nArrow function का आफ्नै `this` <b>हुँदैन</b>। तिनले वरिपरिको code बाट `this` लिन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nयहाँ, arrow function ले `greet()` बाट `this` पाउँछ। त्यसैले callback का लागि arrow function धेरै उपयोगी हुन्छन्।",
-        jp: "`this` は、<b>通常の関数がどのオブジェクトを相手にしているか</b>を示すJavaScriptの特別な値です。\n\n最も重要な規則はこれです:\n\n> <b>通常の関数では、`this` は「どこに書かれたか」ではなく「どう呼ばれたか」で決まる。</b>\n\n`this` の決まり方は主に4つあります:\n\n<b>デフォルトバインディング</b> — 通常の関数がそれ単体で呼ばれる。\n\n<b>暗黙のバインディング</b> — 関数がオブジェクトのメソッドとして呼ばれる。\n\n<b>明示的バインディング</b> — `call()`・`apply()`・`bind()` が `this` の値を選ぶ。\n\n<b>`new` バインディング</b> — `new` が新しいオブジェクトを作り、`this` をそれに向ける。\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>重要:</b> アロー関数は別物です。自分の `this` を<b>作らず</b>、周囲のスコープの `this` を使います。\n\n---\n\n### 1. 基本 — デフォルトバインディング\n\n単体で呼ばれた通常の関数は<b>デフォルトバインディング</b>になります。\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>strictモード</b>（`\"use strict\"`）では `this` は `undefined` です。ブラウザでstrictモードでない場合はグローバルオブジェクトを指すことがあります。\n\n---\n\n### 2. 基本 — 暗黙のバインディング\n\nオブジェクト経由で呼ばれると、`this` は `.` の前のオブジェクトを指します。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` の前は `user` なので:\n\n```text\nthis → user\n```\n\n---\n\n### 3. 中級 — `call()` による明示的バインディング\n\n`call()` は `this` に何を使うかを選べます。\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. 中級 — `apply()`\n\n`apply()` は `call()` と同じ働きですが、引数を配列で渡します。\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` については同じ振る舞いです:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\n違いは引数の渡し方だけです。\n\n---\n\n### 5. 中級 — `bind()`\n\n`bind()` は、渡したオブジェクトに `this` が固定された<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` や `apply()` と違い、`bind()` はすぐには関数を<b>実行しません</b>。\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. 上級 — `this` を失う\n\nこれは `this` にまつわる最もよくある問題の1つです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドをオブジェクトの外に取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nなぜでしょう? `user.greet()` には `.` の前にオブジェクトがありますが、`greet()` にはありません。つまり<b>暗黙のバインディングが失われた</b>のです。\n\n---\n\n### 7. 上級 — `bind()` でコールバックを直す\n\nオブジェクトのメソッドをコールバックとして渡すときによく起こります。\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nメソッドが `user` オブジェクトなしで渡されています。`bind()` で直します:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. 上級 — `new` バインディング\n\n`new` を付けて関数を呼ぶと、JavaScriptは新しいオブジェクトを作り、`this` をそれに向けます。\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. 重要 — アロー関数\n\nアロー関数は自分の `this` を<b>持ちません</b>。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nここではアロー関数が `greet()` から `this` を受け取ります。だからアロー関数はコールバックにとても便利なのです。",
+        en: "JavaScript dates are one of the easiest places to write code that works perfectly on your machine and breaks in production.\n\nThe core problem is that a date can represent different things:\n\n• an <b>instant in time</b> — a precise moment globally\n• a <b>local date/time</b> — what someone sees on their clock\n• a <b>calendar date</b> — like `2026-08-26`, which may have no timezone at all\n\nJavaScript's classic `Date` object represents an <b>instant in time internally as milliseconds since the Unix epoch (UTC)</b>. The confusing part is that methods can interpret or display that instant in either UTC or the machine's local timezone.\n\n> <b>Store and exchange instants in UTC; convert them to the user's timezone only when displaying them.</b>\n\n---\n\n### 1. Basic — creating a Date\n\n```javascript\nconst now = new Date();\n\nconsole.log(now);\n```\n\nYou can also create a date from an ISO string:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// \"2026-08-26T12:00:00.000Z\"\n```\n\nThe `Z` means <b>UTC</b>.\n\n---\n\n### 2. Intermediate — UTC vs local time\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// UTC\n\nconsole.log(date.toString());\n// Your machine's local timezone\n```\n\nThese may display different clock times, but they represent the <b>same instant</b>.\n\nYou can also read UTC components explicitly:\n\n```javascript\nconsole.log(date.getUTCHours()); // the UTC hour\nconsole.log(date.getHours());    // the hour in the machine's local timezone\n```\n\n---\n\n### 3. Advanced — one instant, many local views\n\n```text\nUTC\n2026-08-26 12:00\n\n        ↓ timezone conversion\n\nJapan\n2026-08-26 21:00\n\n        ↓ timezone conversion\n\nNew York\n2026-08-26 08:00\n```\n\n<b>Same instant. Different local representations.</b>\n\n---\n\n### `Date` is mutable, and that bites\n\n```javascript\nconst date = new Date();\n\nconst tomorrow = date;\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n\nconsole.log(date);\n// Also changed!\n```\n\nBoth variables reference the same `Date` object. Create a new value instead:\n\n```javascript\nconst tomorrow = new Date(date);\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n```",
+        np: "JavaScript का date त्यस्ता ठाउँमध्ये एक हुन् जहाँ तपाईंको मेसिनमा राम्रोसँग चल्ने code production मा बिग्रन्छ।\n\nमूल समस्या यो हो कि date ले फरक-फरक कुरा जनाउन सक्छ:\n\n• <b>समयको एक क्षण</b> — विश्वव्यापी रूपमा निश्चित क्षण\n• <b>स्थानीय date/time</b> — कसैले आफ्नो घडीमा देख्ने\n• <b>पात्रोको मिति</b> — जस्तै `2026-08-26`, जसमा timezone नहुन सक्छ\n\nJavaScript को classic `Date` object ले <b>भित्री रूपमा Unix epoch (UTC) देखिको millisecond</b> का रूपमा समयको क्षण जनाउँछ। अलमल्याउने कुरा के हो भने method ले त्यो क्षणलाई UTC वा मेसिनको स्थानीय timezone दुबैमा व्याख्या वा प्रदर्शन गर्न सक्छन्।\n\n> <b>क्षणलाई UTC मा राख्नुहोस् र आदानप्रदान गर्नुहोस्; देखाउँदा मात्र user को timezone मा बदल्नुहोस्।</b>\n\n---\n\n### 1. आधारभूत — Date बनाउनु\n\n```javascript\nconst now = new Date();\n\nconsole.log(now);\n```\n\nISO string बाट पनि date बनाउन सक्नुहुन्छ:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// \"2026-08-26T12:00:00.000Z\"\n```\n\n`Z` को अर्थ <b>UTC</b> हो।\n\n---\n\n### 2. मध्यम — UTC vs स्थानीय समय\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// UTC\n\nconsole.log(date.toString());\n// Your machine's local timezone\n```\n\nयिनले फरक घडी समय देखाउन सक्छन्, तर <b>उही क्षण</b> जनाउँछन्।\n\nUTC भाग स्पष्ट रूपमा पनि पढ्न सक्नुहुन्छ:\n\n```javascript\nconsole.log(date.getUTCHours()); // the UTC hour\nconsole.log(date.getHours());    // the hour in the machine's local timezone\n```\n\n---\n\n### 3. उन्नत — एउटै क्षण, धेरै स्थानीय दृश्य\n\n```text\nUTC\n2026-08-26 12:00\n\n        ↓ timezone conversion\n\nJapan\n2026-08-26 21:00\n\n        ↓ timezone conversion\n\nNew York\n2026-08-26 08:00\n```\n\n<b>उही क्षण। फरक स्थानीय प्रतिनिधित्व।</b>\n\n---\n\n### `Date` mutable छ, र यसले टोक्छ\n\n```javascript\nconst date = new Date();\n\nconst tomorrow = date;\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n\nconsole.log(date);\n// Also changed!\n```\n\nदुबै variable ले उही `Date` object लाई देखाउँछन्। बरु नयाँ value बनाउनुहोस्:\n\n```javascript\nconst tomorrow = new Date(date);\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n```",
+        jp: "JavaScriptの日付は、自分の環境では完璧に動くのに本番で壊れるコードを書きやすい場所の1つです。\n\n根本の問題は、日付が異なるものを表しうることです:\n\n• <b>時刻の瞬間</b> — 世界共通の正確な一点\n• <b>ローカルの日時</b> — その人の時計に映るもの\n• <b>暦の日付</b> — `2026-08-26` のように、タイムゾーンを持たないこともある\n\nJavaScriptの従来の `Date` オブジェクトは、<b>内部的にはUnixエポック（UTC）からのミリ秒</b>として瞬間を表します。ややこしいのは、メソッドがその瞬間をUTCでも端末のローカルタイムゾーンでも解釈・表示できる点です。\n\n> <b>瞬間はUTCで保存・交換し、表示するときだけユーザーのタイムゾーンに変換する。</b>\n\n---\n\n### 1. 基本 — Dateを作る\n\n```javascript\nconst now = new Date();\n\nconsole.log(now);\n```\n\nISO文字列からも作れます:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// \"2026-08-26T12:00:00.000Z\"\n```\n\n`Z` は<b>UTC</b>を意味します。\n\n---\n\n### 2. 中級 — UTCとローカル時刻\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconsole.log(date.toISOString());\n// UTC\n\nconsole.log(date.toString());\n// Your machine's local timezone\n```\n\n表示される時刻は違っても、<b>同じ瞬間</b>を表しています。\n\nUTCの各要素を明示的に読むこともできます:\n\n```javascript\nconsole.log(date.getUTCHours()); // the UTC hour\nconsole.log(date.getHours());    // the hour in the machine's local timezone\n```\n\n---\n\n### 3. 上級 — 1つの瞬間、複数のローカル表示\n\n```text\nUTC\n2026-08-26 12:00\n\n        ↓ timezone conversion\n\nJapan\n2026-08-26 21:00\n\n        ↓ timezone conversion\n\nNew York\n2026-08-26 08:00\n```\n\n<b>同じ瞬間。異なるローカル表現。</b>\n\n---\n\n### `Date` はミュータブルで、それが噛みつく\n\n```javascript\nconst date = new Date();\n\nconst tomorrow = date;\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n\nconsole.log(date);\n// Also changed!\n```\n\nどちらの変数も同じ `Date` オブジェクトを参照しています。新しい値を作りましょう:\n\n```javascript\nconst tomorrow = new Date(date);\n\ntomorrow.setDate(tomorrow.getDate() + 1);\n```",
       },
-      diagram: `Regular Function
-
-        How was it called?
-               │
-     ┌─────────┼─────────┐
-     ↓         ↓         ↓
-   fn()     obj.fn()   fn.call(obj)
-     │         │         │
-     ↓         ↓         ↓
- Default    obj       chosen object
-
-
-Arrow Function
-
-        Where was it created?
-               │
-               ↓
-     Uses surrounding \`this\`
+      diagram: `                    Date / Time
+                         │
+             ┌───────────┴───────────┐
+             ↓                       ↓
+        UTC / Instant            Local Time
+       "What moment?"          "What does my
+                                clock show?"
+             │                       │
+             │       Timezone        │
+             └──────────┬────────────┘
+                        ↓
+                 User's display
 
 
-Easy rule to remember
+UTC        2026-08-26 12:00
+Japan      2026-08-26 21:00
+New York   2026-08-26 08:00
 
-fn()             → default
-obj.fn()         → obj
-fn.call(obj)     → obj
-fn.apply(obj)    → obj
-fn.bind(obj)     → fixed to obj
-new Fn()         → new object
-arrow function   → surrounding this`,
+Same instant, three local representations.`,
       codeExample: {
-        title: { en: "Every binding rule, one at a time", np: "हरेक binding नियम, एक-एक गरी", jp: "各バインディング規則を1つずつ" },
-        code: `// ── 1. Basic — default binding ────────────────────────────────────
-"use strict";
+        title: { en: "One instant, read two ways", np: "एउटै क्षण, दुई तरिकाले पढिएको", jp: "1つの瞬間、2つの読み方" },
+        code: `// ── 1. Basic — an instant from an ISO string ──────────────────────
+const now = new Date();
 
-function showThis() {
-  console.log(this); // undefined in strict mode
-}
+const date = new Date("2026-08-26T12:00:00Z"); // Z means UTC
 
-showThis();
+console.log(date.toISOString()); // "2026-08-26T12:00:00.000Z"
 
-// ── 2. Basic — implicit binding ───────────────────────────────────
-const user = {
-  name: "Rajan",
+// ── 2. Intermediate — the same instant, two readings ──────────────
+console.log(date.toISOString()); // UTC
+console.log(date.toString());    // this machine's local timezone
 
-  greet() {
-    console.log(this.name);
-  }
-};
+console.log(date.getUTCHours()); // 12 — always UTC
+console.log(date.getHours());    // depends where this runs
 
-user.greet(); // Rajan — the object before the dot
+// ── 3. Advanced — Date is mutable, so copy before changing ────────
+const start = new Date("2026-08-26T12:00:00Z");
 
-// ── 3. Intermediate — call() ──────────────────────────────────────
-function hello() {
-  console.log(\`Hello, \${this.name}\`);
-}
+const sameObject = start;
+sameObject.setDate(sameObject.getDate() + 1);
+console.log(start.toISOString()); // start moved too
 
-hello.call(user); // Hello, Rajan
-
-// ── 4. Intermediate — apply() passes arguments as an array ────────
-function introduce(city, country) {
-  console.log(\`\${this.name} lives in \${city}, \${country}\`);
-}
-
-introduce.apply(user, ["Tokyo", "Japan"]); // Rajan lives in Tokyo, Japan
-
-// ── 5. Intermediate — bind() returns a new function ───────────────
-const greetUser = hello.bind(user);
-greetUser(); // Hello, Rajan
-
-// ── 6. Advanced — losing this ─────────────────────────────────────
-const detached = user.greet;
-detached(); // undefined — no object before the dot
-
-// ── 7. Advanced — fixing a callback ───────────────────────────────
-setTimeout(user.greet, 1000);            // Hello, undefined
-setTimeout(user.greet.bind(user), 1000); // Rajan
-
-// ── 8. Advanced — new binding ─────────────────────────────────────
-function Person(name) {
-  this.name = name;
-}
-
-console.log(new Person("Rajan").name); // Rajan
-
-// ── 9. Arrow functions borrow the surrounding this ────────────────
-const account = {
-  name: "Rajan",
-
-  greet() {
-    const showName = () => console.log(this.name);
-    showName();
-  }
-};
-
-account.greet(); // Rajan`,
+const copy = new Date(start);
+copy.setDate(copy.getDate() + 1);
+console.log(start.toISOString()); // this time start is untouched`,
       },
       keyTakeaways: [
-        { en: "`this` depends on <b>how a regular function is called</b>.", np: "`this` <b>सामान्य function कसरी call भयो</b> त्यसमा निर्भर हुन्छ।", jp: "`this` は<b>通常の関数がどう呼ばれたか</b>で決まる。" },
-        { en: "`fn()` → <b>default binding</b>.", np: "`fn()` → <b>default binding</b>।", jp: "`fn()` → <b>デフォルトバインディング</b>。" },
-        { en: "`obj.fn()` → <b>implicit binding</b>, so `this` is `obj`.", np: "`obj.fn()` → <b>implicit binding</b>, त्यसैले `this` `obj` हुन्छ।", jp: "`obj.fn()` → <b>暗黙のバインディング</b>で `this` は `obj`。" },
-        { en: "`fn.call(obj)` and `fn.apply(obj)` → <b>explicit binding</b>, and both run immediately.", np: "`fn.call(obj)` र `fn.apply(obj)` → <b>explicit binding</b>, र दुबै तुरुन्तै चल्छन्।", jp: "`fn.call(obj)` と `fn.apply(obj)` → <b>明示的バインディング</b>。どちらもすぐ実行される。" },
-        { en: "`fn.bind(obj)` → creates a function with fixed `this`.", np: "`fn.bind(obj)` → स्थिर `this` भएको function बनाउँछ।", jp: "`fn.bind(obj)` → `this` が固定された関数を作る。" },
-        { en: "`new Person()` → `this` refers to the new object.", np: "`new Person()` → `this` ले नयाँ object लाई जनाउँछ।", jp: "`new Person()` → `this` は新しいオブジェクトを指す。" },
-        { en: "Taking `obj.method` out of the object can lose `this`.", np: "`obj.method` लाई object बाट बाहिर निकाल्दा `this` हराउन सक्छ।", jp: "`obj.method` をオブジェクトの外に取り出すと `this` を失うことがある。" },
-        { en: "Arrow functions <b>do not have their own `this`</b>; they take it from the surrounding scope.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>; तिनले वरिपरिको scope बाट लिन्छन्।", jp: "アロー関数は<b>自分の `this` を持たず</b>、周囲のスコープから受け取る。" },
+        { en: "A `Date` stores an <b>instant</b>: milliseconds since the Unix epoch, in UTC.", np: "`Date` ले <b>क्षण</b> राख्छ: Unix epoch देखिको millisecond, UTC मा।", jp: "`Date` は<b>瞬間</b>を保持する。UTCでのUnixエポックからのミリ秒。" },
+        { en: "The same instant has <b>different local representations</b> in different timezones.", np: "उही क्षणका फरक timezone मा <b>फरक स्थानीय प्रतिनिधित्व</b> हुन्छन्।", jp: "同じ瞬間でも、タイムゾーンが違えば<b>ローカル表現は異なる</b>。" },
+        { en: "`toISOString()` and `getUTCHours()` read UTC; `toString()` and `getHours()` read local time.", np: "`toISOString()` र `getUTCHours()` ले UTC पढ्छन्; `toString()` र `getHours()` ले स्थानीय समय।", jp: "`toISOString()` と `getUTCHours()` はUTCを、`toString()` と `getHours()` はローカル時刻を読む。" },
+        { en: "The `Z` in an ISO string means <b>UTC</b>.", np: "ISO string मा `Z` को अर्थ <b>UTC</b> हो।", jp: "ISO文字列の `Z` は<b>UTC</b>を意味する。" },
+        { en: "Store and exchange instants in UTC; convert only when displaying to a user.", np: "क्षणलाई UTC मा राख्नुहोस् र आदानप्रदान गर्नुहोस्; user लाई देखाउँदा मात्र बदल्नुहोस्।", jp: "瞬間はUTCで保存・交換し、ユーザーに表示するときだけ変換する。" },
+        { en: "`Date` is <b>mutable</b> — `setDate()` changes the object every reference sees.", np: "`Date` <b>mutable</b> छ — `setDate()` ले हरेक reference ले देख्ने object बदल्छ।", jp: "`Date` は<b>ミュータブル</b>。`setDate()` はすべての参照が見るオブジェクトを変える。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking `this` always means \"the current object\"</b> — after `const fn = user.greet;`, calling `fn()` no longer has `user` attached.", np: "<b>`this` सधैं \"वर्तमान object\" हो भन्ने ठान्नु</b> — `const fn = user.greet;` पछि, `fn()` call गर्दा `user` जोडिएको हुँदैन।", jp: "<b>`this` は常に「今のオブジェクト」だと思う</b> — `const fn = user.greet;` の後に `fn()` を呼んでも `user` は付いてこない。" },
-        { en: "<b>Confusing `call()` and `bind()`</b> — `greet.call(user)` runs the function now, while `greet.bind(user)` returns a new function to call later.", np: "<b>`call()` र `bind()` भ्रममा पार्नु</b> — `greet.call(user)` ले function अहिले चलाउँछ, जब कि `greet.bind(user)` ले पछि call गर्न नयाँ function फर्काउँछ।", jp: "<b>`call()` と `bind()` を混同する</b> — `greet.call(user)` は今すぐ実行し、`greet.bind(user)` は後で呼ぶ新しい関数を返す。" },
-        { en: "<b>Assuming arrow functions have their own `this`</b> — they don't; a top-level `const greet = () => console.log(this);` logs the surrounding `this`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने ठान्नु</b> — हुँदैन; top-level `const greet = () => console.log(this);` ले वरिपरिको `this` देखाउँछ।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — 持たない。トップレベルの `const greet = () => console.log(this);` は周囲の `this` を出す。" },
-        { en: "<b>Using an arrow function as an object method when you expect the object as `this`</b> — `greet: () => console.log(this.name)` usually logs `undefined`. Use a regular method: `greet() { ... }`.", np: "<b>Object लाई `this` चाहिँदा arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले सामान्यतया `undefined` देखाउँछ। सामान्य method प्रयोग गर्नुहोस्: `greet() { ... }`।", jp: "<b>オブジェクトを `this` にしたいのにアロー関数をメソッドにする</b> — `greet: () => console.log(this.name)` はたいてい `undefined` を出す。通常のメソッド `greet() { ... }` を使う。" },
+        { en: "<b>Assuming `Date` is immutable</b> — `const tomorrow = date; tomorrow.setDate(...)` moves `date` too. Copy first with `new Date(date)`.", np: "<b>`Date` immutable हो भन्ने ठान्नु</b> — `const tomorrow = date; tomorrow.setDate(...)` ले `date` पनि सार्छ। पहिले `new Date(date)` ले copy गर्नुहोस्।", jp: "<b>`Date` がイミュータブルだと思う</b> — `const tomorrow = date; tomorrow.setDate(...)` は `date` も動かす。`new Date(date)` で先にコピーする。" },
+        { en: "<b>Mixing UTC and local getters</b> — reading `getHours()` on a UTC instant gives whatever the machine's timezone says, which differs per environment.", np: "<b>UTC र स्थानीय getter मिसाउनु</b> — UTC क्षणमा `getHours()` पढ्दा मेसिनको timezone ले जे भन्छ त्यही आउँछ, जुन हरेक वातावरणमा फरक हुन्छ।", jp: "<b>UTCとローカルのゲッターを混ぜる</b> — UTCの瞬間に `getHours()` を使うと端末のタイムゾーン次第になり、環境ごとに変わる。" },
+        { en: "<b>Storing local wall-clock text</b> — `\"2026-08-26 21:00\"` has no timezone, so its meaning depends on who reads it. Store `\"2026-08-26T12:00:00Z\"` instead.", np: "<b>स्थानीय घडीको पाठ राख्नु</b> — `\"2026-08-26 21:00\"` मा timezone छैन, त्यसैले यसको अर्थ पढ्नेमा भर पर्छ। बरु `\"2026-08-26T12:00:00Z\"` राख्नुहोस्।", jp: "<b>ローカルの壁時計表記を保存する</b> — `\"2026-08-26 21:00\"` にはタイムゾーンがなく、読む人次第で意味が変わる。`\"2026-08-26T12:00:00Z\"` を保存する。" },
       ],
       quiz: [
         {
-          question: { en: "What determines `this` for a regular function?", np: "सामान्य function का लागि `this` के ले तय गर्छ?", jp: "通常の関数の `this` は何で決まるか?" },
+          question: { en: "What does the `Z` mean in `new Date(\"2026-08-26T12:00:00Z\")`?", np: "`new Date(\"2026-08-26T12:00:00Z\")` मा `Z` को अर्थ के हो?", jp: "`new Date(\"2026-08-26T12:00:00Z\")` の `Z` は何を意味するか?" },
           options: [
-            { en: "How the function is called", np: "Function कसरी call गरिएको छ", jp: "関数がどう呼ばれたか" },
-            { en: "Where the function is written", np: "Function कहाँ लेखिएको छ", jp: "関数がどこに書かれたか" },
-            { en: "The function's name", np: "Function को नाम", jp: "関数の名前" },
+            { en: "UTC", np: "UTC", jp: "UTC" },
+            { en: "Local time", np: "स्थानीय समय", jp: "ローカル時刻" },
+            { en: "Japan time", np: "जापान समय", jp: "日本時間" },
+            { en: "Daylight Saving Time", np: "Daylight Saving Time", jp: "サマータイム" },
           ],
           correctIndex: 0,
-          explanation: { en: "The call site decides it, which is why the same function can see different objects.", np: "Call site ले तय गर्छ, त्यसैले उही function ले फरक object देख्न सक्छ।", jp: "呼び出し側が決めるので、同じ関数でも別のオブジェクトを見ることがある。" },
+          explanation: { en: "`Z` is the ISO 8601 marker for zero offset, meaning UTC.", np: "`Z` शून्य offset को ISO 8601 चिन्ह हो, अर्थात् UTC।", jp: "`Z` はオフセット0を示すISO 8601の記号、つまりUTC。" },
         },
         {
-          question: { en: "Given `const user = { name: \"Rajan\", greet() { console.log(this.name); } }`, what is `this` in `user.greet()`?", np: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` मा, `user.greet()` भित्र `this` के हो?", jp: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` のとき `user.greet()` の `this` は?" },
+          question: { en: "What does a `Date` object actually store internally?", np: "`Date` object ले भित्री रूपमा वास्तवमा के राख्छ?", jp: "`Date` オブジェクトが内部で実際に保持するものは?" },
           options: [
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "`user`", np: "`user`", jp: "`user`" },
-            { en: "`window`", np: "`window`", jp: "`window`" },
+            { en: "A formatted local string", np: "ढाँचाबद्ध स्थानीय string", jp: "書式化されたローカル文字列" },
+            { en: "Milliseconds since the Unix epoch, in UTC", np: "Unix epoch देखिको millisecond, UTC मा", jp: "UTCでのUnixエポックからのミリ秒" },
+            { en: "A timezone name", np: "Timezone को नाम", jp: "タイムゾーン名" },
           ],
           correctIndex: 1,
-          explanation: { en: "Implicit binding: `this` is whatever sits before the dot at the call site.", np: "Implicit binding: call site मा `.` अघि जे छ त्यही `this` हुन्छ।", jp: "暗黙のバインディング: 呼び出し時にドットの前にあるものが `this` になる。" },
+          explanation: { en: "Everything else — local hours, formatted output — is derived from that number.", np: "बाँकी सबै — स्थानीय घण्टा, ढाँचाबद्ध output — त्यही संख्याबाट निस्कन्छ।", jp: "ローカルの時刻も書式化された出力も、すべてその数値から導かれる。" },
         },
         {
-          question: { en: "What does `bind()` do?", np: "`bind()` ले के गर्छ?", jp: "`bind()` は何をするか?" },
+          question: { en: "Why does `const tomorrow = date; tomorrow.setDate(...)` also change `date`?", np: "`const tomorrow = date; tomorrow.setDate(...)` ले `date` पनि किन बदल्छ?", jp: "なぜ `const tomorrow = date; tomorrow.setDate(...)` は `date` も変えるのか?" },
           options: [
-            { en: "Immediately runs the function", np: "Function तुरुन्तै चलाउँछ", jp: "関数をすぐ実行する" },
-            { en: "Deletes `this`", np: "`this` मेटाउँछ", jp: "`this` を削除する" },
-            { en: "Creates a new function with a chosen `this`", np: "छानिएको `this` भएको नयाँ function बनाउँछ", jp: "選んだ `this` を持つ新しい関数を作る" },
+            { en: "`setDate` is asynchronous", np: "`setDate` asynchronous छ", jp: "`setDate` が非同期だから" },
+            { en: "`const` copies the value", np: "`const` ले value copy गर्छ", jp: "`const` が値をコピーするから" },
+            { en: "Both names reference the same mutable `Date` object", np: "दुबै नामले उही mutable `Date` object लाई देखाउँछन्", jp: "どちらの名前も同じミュータブルな `Date` を参照しているから" },
           ],
           correctIndex: 2,
-          explanation: { en: "That is why it fixes callbacks: `setTimeout(user.greet.bind(user), 1000)`.", np: "त्यसैले यसले callback ठीक गर्छ: `setTimeout(user.greet.bind(user), 1000)`।", jp: "だからコールバックを直せる: `setTimeout(user.greet.bind(user), 1000)`。" },
-        },
-        {
-          question: { en: "What happens with `const greet = user.greet;` then `greet()`?", np: "`const greet = user.greet;` पछि `greet()` गर्दा के हुन्छ?", jp: "`const greet = user.greet;` の後に `greet()` するとどうなるか?" },
-          options: [
-            { en: "The object binding is lost", np: "Object binding हराउँछ", jp: "オブジェクトのバインディングが失われる" },
-            { en: "`this` automatically stays `user`", np: "`this` स्वतः `user` नै रहन्छ", jp: "`this` は自動的に `user` のまま" },
-            { en: "JavaScript creates a new object", np: "JavaScript ले नयाँ object बनाउँछ", jp: "JavaScriptが新しいオブジェクトを作る" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "There is no object before the dot any more, so it falls back to default binding.", np: "अब `.` अघि object छैन, त्यसैले यो default binding मा झर्छ।", jp: "もうドットの前にオブジェクトがないので、デフォルトバインディングに戻る。" },
-        },
-        {
-          question: { en: "What is special about arrow functions?", np: "Arrow function मा के विशेष छ?", jp: "アロー関数の特別な点は?" },
-          options: [
-            { en: "They always have `this` set to the global object", np: "तिनको `this` सधैं global object हुन्छ", jp: "`this` が常にグローバルオブジェクトになる" },
-            { en: "They use `this` from the surrounding scope", np: "तिनले वरिपरिको scope बाट `this` लिन्छन्", jp: "周囲のスコープの `this` を使う" },
-            { en: "They create their own `this`", np: "तिनले आफ्नै `this` बनाउँछन्", jp: "自分の `this` を作る" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "That makes them ideal inside a method, and wrong as the method itself.", np: "त्यसैले यी method भित्र उपयुक्त छन्, र method आफैं बन्दा गलत।", jp: "だからメソッドの内側では最適だが、メソッド自体には不向き。" },
-        },
-        {
-          question: { en: "What does `new` do to `this` in `function Person(name) { this.name = name; }`?", np: "`function Person(name) { this.name = name; }` मा `new` ले `this` लाई के गर्छ?", jp: "`function Person(name) { this.name = name; }` で `new` は `this` をどうするか?" },
-          options: [
-            { en: "`this` refers to `Person` itself", np: "`this` ले `Person` आफैंलाई जनाउँछ", jp: "`this` は `Person` 自身を指す" },
-            { en: "`this` is always `undefined`", np: "`this` सधैं `undefined` हुन्छ", jp: "`this` は常に `undefined`" },
-            { en: "`this` refers to the new object", np: "`this` ले नयाँ object लाई जनाउँछ", jp: "`this` は新しいオブジェクトを指す" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "`new` creates the object, points `this` at it, and returns it automatically.", np: "`new` ले object बनाउँछ, `this` लाई त्यसैतिर देखाउँछ, र स्वतः फर्काउँछ।", jp: "`new` はオブジェクトを作り、`this` をそれに向け、自動的に返す。" },
-        },
-      ],
-      youtubeIds: ["9T4z98JcHR0"],
-    },
-    {
-      id: "arrow-functions-and-this",
-      title: { en: "Arrow Functions & this", np: "Arrow Functions र this", jp: "アロー関数とthis" },
-      durationMinutes: 9,
-      explanation: {
-        en: "Arrow functions are different from normal functions because they <b>do not have their own `this`</b>.\n\nInstead, an arrow function uses the `this` from the <b>surrounding scope where it was created</b>. This is called <b>lexical `this`</b> (it gets `this` from the outside).\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nHere, `sayName` is an arrow function. It does not create its own `this`, so it uses the `this` from `greet()`.\n\n---\n\n### Important\n\nThe four normal `this` rules do <b>not</b> change an arrow function's `this`:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\nEven `call()`, `apply()`, and `bind()` cannot change an arrow function's `this`.\n\nThink of an arrow function as saying:\n\n> \"I won't create my own `this`. I'll use the `this` from outside.\"\n\n---\n\n### 1. Basic example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function gets `this` from `greet()`.\n\n---\n\n### 2. Very common callback example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function keeps the `this` from `greet()`. This is one of the main reasons arrow functions are useful for callbacks.\n\n---\n\n### 3. Arrow function as an object method — common mistake\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nWhy? Because the arrow function does <b>not</b> get `this` from `user`. The object does not create a new `this` for the arrow function.\n\nFor object methods, use a normal method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` cannot change arrow `this`\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nFor arrow functions, `call()`, `apply()`, and `bind()` cannot change `this`.",
-        np: "Arrow function सामान्य function भन्दा फरक छन् किनकि तिनका <b>आफ्नै `this` हुँदैन</b>।\n\nबरु, arrow function ले <b>आफू बनेको वरिपरिको scope</b> बाट `this` लिन्छ। यसलाई <b>lexical `this`</b> (बाहिरबाट `this` पाउने) भनिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nयहाँ, `sayName` arrow function हो। यसले आफ्नै `this` बनाउँदैन, त्यसैले `greet()` बाट `this` लिन्छ।\n\n---\n\n### महत्वपूर्ण\n\nसामान्य `this` का चार नियमले arrow function को `this` <b>बदल्दैनन्</b>:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\n`call()`, `apply()`, र `bind()` ले पनि arrow function को `this` बदल्न सक्दैनन्।\n\nArrow function यसो भन्छ जस्तै सोच्नुहोस्:\n\n> \"म आफ्नै `this` बनाउँदिन। म बाहिरको `this` प्रयोग गर्छु।\"\n\n---\n\n### 1. आधारभूत उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` बाट `this` पाउँछ।\n\n---\n\n### 2. धेरै सामान्य callback उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` को `this` राख्छ। Callback का लागि arrow function उपयोगी हुनुको यो मुख्य कारण हो।\n\n---\n\n### 3. Object method रूपमा arrow function — सामान्य गल्ती\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nकिन? किनकि arrow function ले `user` बाट `this` <b>पाउँदैन</b>। Object ले arrow function का लागि नयाँ `this` बनाउँदैन।\n\nObject method का लागि, सामान्य method प्रयोग गर्नुहोस्:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` ले arrow को `this` बदल्न सक्दैन\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nArrow function का लागि, `call()`, `apply()`, र `bind()` ले `this` बदल्न सक्दैनन्।",
-        jp: "アロー関数は通常の関数と違い、<b>自分の `this` を持ちません</b>。\n\n代わりに、<b>作られた場所の周囲のスコープ</b>の `this` を使います。これを<b>レキシカルな `this`</b>（外側から `this` を受け取る）と呼びます。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nここで `sayName` はアロー関数です。自分の `this` を作らないので、`greet()` の `this` を使います。\n\n---\n\n### 重要\n\n通常の `this` の4つの規則は、アロー関数の `this` を<b>変えません</b>:\n\n• デフォルトバインディング\n• 暗黙のバインディング\n• 明示的バインディング\n• `new` バインディング\n\n`call()`・`apply()`・`bind()` でさえ、アロー関数の `this` は変えられません。\n\nアロー関数はこう言っていると考えてください:\n\n> 「自分の `this` は作らない。外側の `this` を使う。」\n\n---\n\n### 1. 基本の例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` から `this` を受け取ります。\n\n---\n\n### 2. とてもよくあるコールバックの例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` の `this` を保ちます。アロー関数がコールバックに便利な主な理由の1つです。\n\n---\n\n### 3. オブジェクトのメソッドにするのはよくある間違い\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nなぜでしょう? アロー関数は `user` から `this` を<b>受け取らない</b>からです。オブジェクトはアロー関数のために新しい `this` を作りません。\n\nオブジェクトのメソッドには通常のメソッドを使います:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` はアロー関数の `this` を変えられない\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nアロー関数では `call()`・`apply()`・`bind()` のいずれも `this` を変えられません。",
-      },
-      diagram: `Normal function
-      │
-      └── this depends on HOW it is called
-
-
-Arrow function
-      │
-      └── this comes from WHERE it was created
-                    │
-                    ↓
-              surrounding scope`,
-      codeExample: {
-        title: { en: "Where the arrow gets its this, and where it doesn't", np: "Arrow ले `this` कहाँबाट पाउँछ, कहाँबाट पाउँदैन", jp: "アローが this を得る場所、得られない場所" },
-        code: `// ── 1. Basic — the arrow borrows this from greet() ────────────────
-const user = {
-  name: "Rajan",
-
-  greet() {
-    const sayHello = () => console.log(this.name);
-    sayHello();
-  }
-};
-
-user.greet(); // Rajan
-
-// ── 2. The common callback win ────────────────────────────────────
-const account = {
-  name: "Rajan",
-
-  greet() {
-    setTimeout(() => {
-      console.log(this.name); // Rajan — this survives the delay
-    }, 1000);
-  }
-};
-
-account.greet();
-
-// ── 3. Common mistake — arrow as the method itself ────────────────
-const broken = {
-  name: "Rajan",
-
-  greet: () => {
-    console.log(this.name); // undefined — no this from the object
-  }
-};
-
-broken.greet();
-
-// ── 4. call() cannot change an arrow function's this ──────────────
-const greet = () => console.log(this.name);
-
-greet.call(user); // still not user`,
-      },
-      keyTakeaways: [
-        { en: "Arrow functions <b>do not have their own `this`</b>.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>।", jp: "アロー関数は<b>自分の `this` を持たない</b>。" },
-        { en: "They use <b>lexical `this`</b> (the `this` from where they were created).", np: "तिनले <b>lexical `this`</b> (आफू बनेको ठाउँको `this`) प्रयोग गर्छन्।", jp: "<b>レキシカルな `this`</b>（作られた場所の `this`）を使う。" },
-        { en: "`call()`, `apply()`, and `bind()` <b>cannot change</b> an arrow function's `this`.", np: "`call()`, `apply()`, र `bind()` ले arrow function को `this` <b>बदल्न सक्दैनन्</b>।", jp: "`call()`・`apply()`・`bind()` はアロー関数の `this` を<b>変えられない</b>。" },
-        { en: "Arrow functions are great for <b>callbacks</b> when you want to keep the surrounding `this`.", np: "वरिपरिको `this` राख्न चाहँदा <b>callback</b> का लागि arrow function उत्तम छन्।", jp: "周囲の `this` を保ちたい<b>コールバック</b>にはアロー関数が最適。" },
-        { en: "Avoid arrow functions as <b>object methods</b> when you need `this` to refer to the object.", np: "`this` ले object लाई जनाउनुपर्दा <b>object method</b> रूपमा arrow function नचलाउनुहोस्।", jp: "`this` にオブジェクトを求めるなら、<b>オブジェクトのメソッド</b>にアロー関数を使わない。" },
-        { en: "Normal functions get `this` based on <b>how they are called</b>; arrow functions get it from <b>where they are created</b>.", np: "सामान्य function ले <b>कसरी call भयो</b> त्यसबाट `this` पाउँछन्; arrow function ले <b>कहाँ बनियो</b> त्यसबाट।", jp: "通常の関数は<b>どう呼ばれたか</b>で、アロー関数は<b>どこで作られたか</b>で `this` が決まる。" },
-      ],
-      commonMistakes: [
-        { en: "<b>Using an arrow function as an object method</b> — `greet: () => console.log(this.name)` never sees `user`, because the object literal creates no `this`.", np: "<b>Arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले `user` कहिल्यै देख्दैन, किनकि object literal ले `this` बनाउँदैन।", jp: "<b>アロー関数をオブジェクトのメソッドにする</b> — `greet: () => console.log(this.name)` は `user` を見られない。オブジェクトリテラルは `this` を作らないから。" },
-        { en: "<b>Thinking `bind()` can fix an arrow function</b> — `greet.bind(user)()` still uses the surrounding `this`.", np: "<b>`bind()` ले arrow function ठीक गर्न सक्छ भन्ने ठान्नु</b> — `greet.bind(user)()` ले अझै वरिपरिको `this` प्रयोग गर्छ।", jp: "<b>`bind()` でアロー関数を直せると思う</b> — `greet.bind(user)()` でも周囲の `this` のまま。" },
-        { en: "<b>Reaching for a normal function inside a method</b> — that is where an arrow shines, since `setTimeout(() => this.name, 1000)` keeps the method's `this`.", np: "<b>Method भित्र सामान्य function प्रयोग गर्नु</b> — त्यहीँ arrow उपयोगी हुन्छ, किनकि `setTimeout(() => this.name, 1000)` ले method को `this` राख्छ।", jp: "<b>メソッドの内側で通常の関数を使う</b> — そこはアローの出番。`setTimeout(() => this.name, 1000)` はメソッドの `this` を保つ。" },
-      ],
-      quiz: [
-        {
-          question: { en: "Does an arrow function have its own `this`?", np: "Arrow function को आफ्नै `this` हुन्छ?", jp: "アロー関数は自分の `this` を持つか?" },
-          options: [
-            { en: "No", np: "हुँदैन", jp: "いいえ" },
-            { en: "Yes", np: "हुन्छ", jp: "はい" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "It borrows `this` from the scope it was written in.", np: "यसले आफू लेखिएको scope बाट `this` लिन्छ।", jp: "書かれたスコープから `this` を借りる。" },
-        },
-        {
-          question: { en: "Where does an arrow function get `this` from?", np: "Arrow function ले `this` कहाँबाट पाउँछ?", jp: "アロー関数は `this` をどこから得るか?" },
-          options: [
-            { en: "The object to the left of `.`", np: "`.` को बायाँको object", jp: "`.` の左のオブジェクト" },
-            { en: "`new`", np: "`new`", jp: "`new`" },
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "The surrounding scope where it was created", np: "आफू बनेको वरिपरिको scope", jp: "作られた場所の周囲のスコープ" },
-          ],
-          correctIndex: 3,
-          explanation: { en: "None of the four binding rules apply to it.", np: "चारै binding नियम यसमा लागू हुँदैनन्।", jp: "4つのバインディング規則はいずれも適用されない。" },
-        },
-        {
-          question: { en: "What does this print? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", np: "यसले के देखाउँछ? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", jp: "何が出力されるか? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`" },
-          options: [
-            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
-            { en: "`null`", np: "`null`", jp: "`null`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "Error", np: "Error", jp: "エラー" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "`greet()` is a normal method, so its `this` is `user`, and the arrow inherits it.", np: "`greet()` सामान्य method हो, त्यसैले यसको `this` `user` हुन्छ, र arrow ले त्यही पाउँछ।", jp: "`greet()` は通常のメソッドなので `this` は `user`。アローがそれを受け継ぐ。" },
+          explanation: { en: "Copy it with `new Date(date)` before mutating.", np: "Mutate गर्नुअघि `new Date(date)` ले copy गर्नुहोस्।", jp: "変更する前に `new Date(date)` でコピーする。" },
         },
       ],
     },
     {
-      id: "call-apply-bind",
-      title: { en: "call, apply, and bind in Depth", np: "call, apply, bind विस्तारमा", jp: "call・apply・bindの詳細" },
+      id: "dates-parsing-formatting",
+      title: { en: "Parsing & Formatting Safely", np: "सुरक्षित Parsing र Formatting", jp: "安全な解析と書式化" },
       durationMinutes: 9,
       explanation: {
-        en: "`call()`, `apply()`, and `bind()` are methods that let you control what <b>`this`</b> refers to inside a normal function.\n\nThe main difference is <b>when the function runs</b> and <b>how arguments are given</b>.\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nThink of them like this:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — run immediately\n\n`call()` runs the function <b>right away</b>. Arguments are passed <b>one by one</b>.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nThis means:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — run immediately with an array\n\n`apply()` works almost like `call()`, but arguments are provided as <b>one array</b>.\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nThis is useful when your arguments are <b>already inside an array</b>.\n\n---\n\n### 3. `bind()` — create a new function\n\n`bind()` does <b>not</b> run the function immediately. Instead, it creates a <b>new function</b> with `this` fixed.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nThink of it as:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` can also fix arguments\n\nYou can provide arguments while creating the new function.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nHere `10` is already fixed as the first argument. This is called <b>partial application</b> (pre-filling some arguments).\n\n---\n\n### 5. The most common real-world use\n\nSuppose an object has a method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nThe connection to `user` is lost. Fix it with `bind()`:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nThis is one of the most common reasons to use `bind()`.\n\n---\n\n### 6. Modern JavaScript\n\nWith the spread operator (`...`), `apply()` is needed less often:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nSo today, you will often see `call()` plus spread instead of `apply()`.\n\n---\n\n### Easy memory trick\n\n> <b>Call = now + comma</b>\n> <b>Apply = now + array</b>\n> <b>Bind = later + new function</b>",
-        np: "`call()`, `apply()`, र `bind()` यस्ता method हुन् जसले सामान्य function भित्र <b>`this`</b> ले के जनाउँछ भन्ने नियन्त्रण गर्न दिन्छन्।\n\nमुख्य फरक <b>function कहिले चल्छ</b> र <b>argument कसरी दिइन्छ</b> भन्नेमा हो।\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — तुरुन्तै चलाउनु\n\n`call()` ले function <b>तुरुन्तै</b> चलाउँछ। Argument <b>एक-एक गरी</b> पठाइन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nयसको अर्थ:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — array सँग तुरुन्तै चलाउनु\n\n`apply()` `call()` जस्तै काम गर्छ, तर argument <b>एउटा array</b> मा दिइन्छन्।\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nArgument <b>पहिले नै array भित्र</b> हुँदा यो उपयोगी हुन्छ।\n\n---\n\n### 3. `bind()` — नयाँ function बनाउनु\n\n`bind()` ले function तुरुन्तै <b>चलाउँदैन</b>। बरु, `this` स्थिर भएको <b>नयाँ function</b> बनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` ले argument पनि तय गर्न सक्छ\n\nनयाँ function बनाउँदै argument दिन सक्नुहुन्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nयहाँ `10` पहिलो argument रूपमा पहिले नै तय भइसक्यो। यसलाई <b>partial application</b> (केही argument पहिले भर्नु) भनिन्छ।\n\n---\n\n### 5. सबैभन्दा सामान्य वास्तविक प्रयोग\n\nमानौं object सँग method छ:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` सँगको जोडाइ हराउँछ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\n`bind()` प्रयोग गर्ने सबैभन्दा सामान्य कारणमध्ये यो एक हो।\n\n---\n\n### 6. आधुनिक JavaScript\n\nSpread operator (`...`) सँग, `apply()` कम चाहिन्छ:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nत्यसैले आजकाल `apply()` को साटो `call()` सँगै spread प्रायः देखिन्छ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call = अहिले + comma</b>\n> <b>Apply = अहिले + array</b>\n> <b>Bind = पछि + नयाँ function</b>",
-        jp: "`call()`・`apply()`・`bind()` は、通常の関数の中で<b>`this`</b> が何を指すかを制御できるメソッドです。\n\n主な違いは<b>いつ関数が実行されるか</b>と<b>引数の渡し方</b>です。\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nこう考えてください:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — すぐ実行する\n\n`call()` は関数を<b>その場で</b>実行します。引数は<b>1つずつ</b>渡します。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nつまり:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — 配列ですぐ実行する\n\n`apply()` は `call()` とほぼ同じですが、引数を<b>1つの配列</b>で渡します。\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\n引数が<b>すでに配列に入っている</b>ときに便利です。\n\n---\n\n### 3. `bind()` — 新しい関数を作る\n\n`bind()` は関数をすぐには<b>実行しません</b>。代わりに `this` を固定した<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nこうイメージしてください:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` は引数も固定できる\n\n新しい関数を作るときに引数を与えられます。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nここでは `10` が第1引数として固定済みです。これを<b>部分適用</b>（一部の引数を先に埋めること）と呼びます。\n\n---\n\n### 5. 最もよくある実践的な用途\n\nオブジェクトにメソッドがあるとします:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドを取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` とのつながりが失われます。`bind()` で直します:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nこれが `bind()` を使う最もよくある理由の1つです。\n\n---\n\n### 6. 現代のJavaScript\n\nスプレッド構文（`...`）があるので `apply()` の出番は減りました:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\n今では `apply()` の代わりに `call()` とスプレッドの組み合わせをよく見かけます。\n\n---\n\n### 覚え方\n\n> <b>Call = 今すぐ + カンマ</b>\n> <b>Apply = 今すぐ + 配列</b>\n> <b>Bind = あとで + 新しい関数</b>",
+        en: "ISO 8601 strings are generally the safest format to exchange between systems:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n```\n\nBe careful with ambiguous strings such as `new Date(\"08/26/2026\")`. Different environments and assumptions can make non-ISO formats problematic.\n\n---\n\n### The classic date bug\n\nThis looks harmless:\n\n```javascript\nconst date = new Date(\"2026-08-26\");\n\nconsole.log(date);\n```\n\nA date-only ISO string is interpreted as a UTC-based date, which can produce a <b>different calendar day when displayed in a negative timezone</b>.\n\n```text\nDatabase:\n2026-08-26\n\nUser in another timezone:\n2026-08-25\n```\n\nThe bug isn't necessarily in JavaScript. The real question is:\n\n> <b>Did you mean a calendar date, or did you mean a moment in time?</b>\n\nThose are different concepts.\n\n---\n\n### `Intl.DateTimeFormat`\n\nDon't manually build localized dates like `` `${month}/${day}/${year}` ``. Use the internationalization API:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconst formatter = new Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"Asia/Tokyo\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n});\n\nconsole.log(formatter.format(date));\n// Wednesday, August 26, 2026 at 9:00 PM\n```\n\nFor New York:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"America/New_York\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n}).format(date);\n// Wednesday, August 26, 2026 at 8:00 AM\n```\n\nThe <b>instant never changed</b>. Only its presentation changed.\n\nYou can also change the locale:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\").format(date);\nnew Intl.DateTimeFormat(\"en-GB\").format(date);\nnew Intl.DateTimeFormat(\"ja-JP\").format(date);\n```\n\nThis is much safer than manually formatting month and day names.",
+        np: "प्रणालीबीच आदानप्रदान गर्न ISO 8601 string सामान्यतया सबैभन्दा सुरक्षित ढाँचा हो:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n```\n\n`new Date(\"08/26/2026\")` जस्ता अस्पष्ट string सँग होसियार हुनुहोस्। फरक वातावरण र अनुमानले non-ISO ढाँचालाई समस्याग्रस्त बनाउन सक्छन्।\n\n---\n\n### Classic date bug\n\nयो निर्दोष देखिन्छ:\n\n```javascript\nconst date = new Date(\"2026-08-26\");\n\nconsole.log(date);\n```\n\nDate-मात्र भएको ISO string लाई UTC-आधारित मिति मानिन्छ, जसले <b>ऋणात्मक timezone मा देखाउँदा फरक पात्रो दिन</b> दिन सक्छ।\n\n```text\nDatabase:\n2026-08-26\n\nUser in another timezone:\n2026-08-25\n```\n\nBug JavaScript मै छ भन्ने होइन। वास्तविक प्रश्न यो हो:\n\n> <b>तपाईंले पात्रोको मिति भन्न खोज्नुभयो, कि समयको क्षण?</b>\n\nती फरक अवधारणा हुन्।\n\n---\n\n### `Intl.DateTimeFormat`\n\n`` `${month}/${day}/${year}` `` जस्तो गरी हातले स्थानीयकृत मिति नबनाउनुहोस्। Internationalization API प्रयोग गर्नुहोस्:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconst formatter = new Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"Asia/Tokyo\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n});\n\nconsole.log(formatter.format(date));\n// Wednesday, August 26, 2026 at 9:00 PM\n```\n\nNew York का लागि:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"America/New_York\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n}).format(date);\n// Wednesday, August 26, 2026 at 8:00 AM\n```\n\n<b>क्षण कहिल्यै बदलिएन</b>। यसको प्रस्तुति मात्र बदलियो।\n\nLocale पनि बदल्न सक्नुहुन्छ:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\").format(date);\nnew Intl.DateTimeFormat(\"en-GB\").format(date);\nnew Intl.DateTimeFormat(\"ja-JP\").format(date);\n```\n\nमहिना र दिनका नाम हातले ढाँचामा राख्नु भन्दा यो धेरै सुरक्षित छ।",
+        jp: "システム間でやり取りするには、ISO 8601の文字列が一般に最も安全な形式です:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n```\n\n`new Date(\"08/26/2026\")` のような曖昧な文字列には注意してください。環境や前提の違いにより、ISO以外の形式は問題を起こしがちです。\n\n---\n\n### 典型的な日付のバグ\n\nこれは無害に見えます:\n\n```javascript\nconst date = new Date(\"2026-08-26\");\n\nconsole.log(date);\n```\n\n日付だけのISO文字列はUTC基準の日付として解釈されるため、<b>負のオフセットのタイムゾーンで表示すると暦の日がずれる</b>ことがあります。\n\n```text\nDatabase:\n2026-08-26\n\nUser in another timezone:\n2026-08-25\n```\n\nバグは必ずしもJavaScript側にありません。本当の問いはこれです:\n\n> <b>暦の日付のつもりだったのか、それとも時刻の瞬間のつもりだったのか?</b>\n\nこの2つは別の概念です。\n\n---\n\n### `Intl.DateTimeFormat`\n\n`` `${month}/${day}/${year}` `` のように手作業でローカライズしないでください。国際化APIを使います:\n\n```javascript\nconst date = new Date(\"2026-08-26T12:00:00Z\");\n\nconst formatter = new Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"Asia/Tokyo\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n});\n\nconsole.log(formatter.format(date));\n// Wednesday, August 26, 2026 at 9:00 PM\n```\n\nニューヨークなら:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\", {\n  timeZone: \"America/New_York\",\n  dateStyle: \"full\",\n  timeStyle: \"short\"\n}).format(date);\n// Wednesday, August 26, 2026 at 8:00 AM\n```\n\n<b>瞬間は変わっていません</b>。変わったのは見せ方だけです。\n\nロケールも変えられます:\n\n```javascript\nnew Intl.DateTimeFormat(\"en-US\").format(date);\nnew Intl.DateTimeFormat(\"en-GB\").format(date);\nnew Intl.DateTimeFormat(\"ja-JP\").format(date);\n```\n\n月名や曜日名を手で組み立てるよりずっと安全です。",
       },
-      diagram: `              Function
-                  │
-       ┌──────────┼──────────┐
-       ↓          ↓          ↓
-     call()    apply()    bind()
-       │          │          │
-   runs now    runs now   runs later
-       │          │          │
-   a, b, c     [a,b,c]    new function
+      diagram: `Exchange format
+
+"2026-08-26T12:00:00Z"     explicit instant, safest
+"2026-08-26T21:00:00+09:00" explicit offset, also fine
+"2026-08-26"                calendar date — no instant
+"08/26/2026"                ambiguous, avoid
 
 
-Method     Runs immediately?   Arguments
-------------------------------------------------
-call()     Yes                 One by one
-apply()    Yes                 Inside an array
-bind()     No                  Returns a new function`,
+The date-only trap
+
+new Date("2026-08-26")   → midnight UTC
+        ↓ displayed in UTC-05:00
+   2026-08-25            → yesterday
+
+
+Display
+
+Intl.DateTimeFormat(locale, { timeZone, dateStyle, timeStyle })
+        ↓
+one instant, formatted for whoever is reading`,
       codeExample: {
-        title: { en: "Run now, run now with an array, or run later", np: "अहिले चलाउनु, array सँग अहिले, वा पछि", jp: "今すぐ・配列で今すぐ・あとで" },
-        code: `const user = { name: "Rajan" };
+        title: { en: "ISO in, Intl out", np: "ISO भित्र, Intl बाहिर", jp: "入力はISO、出力はIntl" },
+        code: `// ── 1. Basic — parse an explicit instant ──────────────────────────
+const date = new Date("2026-08-26T12:00:00Z");
 
-function greet(age, city) {
-  console.log(this.name, age, city);
-}
+console.log(date.toISOString()); // "2026-08-26T12:00:00.000Z"
 
-// ── 1. call() — runs now, arguments one by one ────────────────────
-greet.call(user, 30, "Tokyo"); // Rajan 30 Tokyo
+// Avoid ambiguous, non-ISO input
+// new Date("08/26/2026"); // interpretation varies
 
-// ── 2. apply() — runs now, arguments in an array ──────────────────
-greet.apply(user, [30, "Tokyo"]); // Rajan 30 Tokyo
+// ── 2. Intermediate — the date-only trap ──────────────────────────
+const calendarish = new Date("2026-08-26"); // midnight UTC, not a local day
 
-// ── 3. bind() — returns a new function to call later ──────────────
-function sayName() {
-  console.log(this.name);
-}
+// Displayed west of UTC this can read as 2026-08-25
 
-const greetUser = sayName.bind(user);
-greetUser(); // Rajan
+// ── 3. Advanced — format, never hand-build ────────────────────────
+const tokyo = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Tokyo",
+  dateStyle: "full",
+  timeStyle: "short"
+});
 
-// ── 4. bind() can pre-fill arguments too ──────────────────────────
-function add(a, b) {
-  return a + b;
-}
+const newYork = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  dateStyle: "full",
+  timeStyle: "short"
+});
 
-const add10 = add.bind(null, 10);
-console.log(add10(5)); // 15
+console.log(tokyo.format(date));   // ...at 9:00 PM
+console.log(newYork.format(date)); // ...at 8:00 AM
 
-// ── 5. The classic fix — a method that lost its object ────────────
-const account = {
-  name: "Rajan",
-  greet() {
-    console.log(this.name);
-  }
-};
-
-const detached = account.greet;
-detached(); // undefined
-
-const bound = account.greet.bind(account);
-bound(); // Rajan
-
-// ── 6. Modern JS often uses call() plus spread instead of apply ───
-greet.call(user, ...[30, "Tokyo"]); // Rajan 30 Tokyo`,
+// Same instant, different locales
+console.log(new Intl.DateTimeFormat("en-GB").format(date));
+console.log(new Intl.DateTimeFormat("ja-JP").format(date));`,
       },
       keyTakeaways: [
-        { en: "<b>`call()`</b> → runs the function immediately with arguments <b>one by one</b>.", np: "<b>`call()`</b> → function तुरुन्तै चलाउँछ, argument <b>एक-एक गरी</b>।", jp: "<b>`call()`</b> → 引数を<b>1つずつ</b>渡して即座に実行する。" },
-        { en: "<b>`apply()`</b> → runs the function immediately with arguments in an <b>array</b>.", np: "<b>`apply()`</b> → function तुरुन्तै चलाउँछ, argument <b>array</b> मा।", jp: "<b>`apply()`</b> → 引数を<b>配列</b>で渡して即座に実行する。" },
-        { en: "<b>`bind()`</b> → returns a <b>new function</b> that can be called later.", np: "<b>`bind()`</b> → पछि call गर्न मिल्ने <b>नयाँ function</b> फर्काउँछ।", jp: "<b>`bind()`</b> → あとで呼べる<b>新しい関数</b>を返す。" },
-        { en: "All three can set `this` for <b>normal functions</b>, but none of them work on arrow functions.", np: "तीनैले <b>सामान्य function</b> का लागि `this` सेट गर्न सक्छन्, तर कुनैले पनि arrow function मा काम गर्दैनन्।", jp: "3つとも<b>通常の関数</b>の `this` を設定できるが、アロー関数には効かない。" },
-        { en: "`bind()` is useful when you need to keep `this` for a callback or event handler.", np: "Callback वा event handler का लागि `this` राख्नुपर्दा `bind()` उपयोगी हुन्छ।", jp: "コールバックやイベントハンドラで `this` を保ちたいときに `bind()` が役立つ。" },
-        { en: "`call()` and `apply()` <b>execute</b> the function; `bind()` <b>does not</b>.", np: "`call()` र `apply()` ले function <b>चलाउँछन्</b>; `bind()` ले <b>चलाउँदैन</b>।", jp: "`call()` と `apply()` は関数を<b>実行する</b>。`bind()` は<b>実行しない</b>。" },
-        { en: "Memory trick: <b>call = now + comma</b>, <b>apply = now + array</b>, <b>bind = later + new function</b>.", np: "सम्झने तरिका: <b>call = अहिले + comma</b>, <b>apply = अहिले + array</b>, <b>bind = पछि + नयाँ function</b>।", jp: "覚え方: <b>call = 今すぐ+カンマ</b>、<b>apply = 今すぐ+配列</b>、<b>bind = あとで+新しい関数</b>。" },
+        { en: "<b>ISO 8601</b> strings such as `\"2026-08-26T12:00:00Z\"` are the safest way to exchange instants.", np: "`\"2026-08-26T12:00:00Z\"` जस्ता <b>ISO 8601</b> string क्षण आदानप्रदान गर्ने सबैभन्दा सुरक्षित तरिका हुन्।", jp: "`\"2026-08-26T12:00:00Z\"` のような<b>ISO 8601</b>文字列が、瞬間をやり取りする最も安全な方法。" },
+        { en: "Ambiguous formats like `\"08/26/2026\"` are interpreted differently across environments.", np: "`\"08/26/2026\"` जस्ता अस्पष्ट ढाँचा फरक वातावरणमा फरक तरिकाले व्याख्या हुन्छन्।", jp: "`\"08/26/2026\"` のような曖昧な形式は、環境ごとに解釈が異なる。" },
+        { en: "A <b>date-only</b> string is read as midnight UTC, which can display as the previous day west of UTC.", np: "<b>Date-मात्र</b> string लाई UTC मध्यरात मानिन्छ, जुन UTC को पश्चिममा अघिल्लो दिन देखिन सक्छ।", jp: "<b>日付だけ</b>の文字列は真夜中UTCとして読まれ、UTCより西では前日として表示されうる。" },
+        { en: "Ask whether you meant a <b>calendar date</b> or a <b>moment in time</b> — they are different concepts.", np: "तपाईंले <b>पात्रोको मिति</b> भन्न खोज्नुभयो कि <b>समयको क्षण</b> सोध्नुहोस् — ती फरक अवधारणा हुन्।", jp: "<b>暦の日付</b>のつもりか<b>時刻の瞬間</b>のつもりかを問う。この2つは別物。" },
+        { en: "Use <b>`Intl.DateTimeFormat`</b> with a `timeZone` for display instead of building strings by hand.", np: "String हातले बनाउनुको साटो प्रदर्शनका लागि `timeZone` सहित <b>`Intl.DateTimeFormat`</b> प्रयोग गर्नुहोस्।", jp: "表示には文字列を手で組み立てず、`timeZone` を指定した<b>`Intl.DateTimeFormat`</b>を使う。" },
+        { en: "Formatting changes only the <b>presentation</b>; the underlying instant stays the same.", np: "Formatting ले <b>प्रस्तुति</b> मात्र बदल्छ; अन्तर्निहित क्षण उही रहन्छ।", jp: "書式化が変えるのは<b>見せ方</b>だけ。元の瞬間は変わらない。" },
       ],
       commonMistakes: [
-        { en: "<b>Thinking `bind()` runs the function</b> — `const greetUser = greet.bind(user);` runs nothing. You still need `greetUser()`.", np: "<b>`bind()` ले function चलाउँछ भन्ने ठान्नु</b> — `const greetUser = greet.bind(user);` ले केही चलाउँदैन। तपाईंलाई अझै `greetUser()` चाहिन्छ।", jp: "<b>`bind()` が関数を実行すると思う</b> — `const greetUser = greet.bind(user);` では何も動かない。`greetUser()` が必要。" },
-        { en: "<b>Confusing `call()` and `apply()`</b> — `fn.call(user, 10, 20)` passes arguments separately, `fn.apply(user, [10, 20])` passes them in an array.", np: "<b>`call()` र `apply()` भ्रममा पार्नु</b> — `fn.call(user, 10, 20)` ले argument छुट्टाछुट्टै पठाउँछ, `fn.apply(user, [10, 20])` ले array मा।", jp: "<b>`call()` と `apply()` を混同する</b> — `fn.call(user, 10, 20)` は個別に、`fn.apply(user, [10, 20])` は配列で渡す。" },
-        { en: "<b>Trying to use these to change an arrow function's `this`</b> — `greet.call(user)` on an arrow function changes nothing; arrows take `this` from their surrounding scope.", np: "<b>यिनले arrow function को `this` बदल्न खोज्नु</b> — arrow function मा `greet.call(user)` ले केही बदल्दैन; arrow ले वरिपरिको scope बाट `this` लिन्छ।", jp: "<b>これらでアロー関数の `this` を変えようとする</b> — アロー関数への `greet.call(user)` は何も変えない。アローは周囲のスコープから `this` を取る。" },
+        { en: "<b>Treating a calendar date as an instant</b> — `new Date(\"2026-08-26\")` is midnight UTC, so a user west of UTC sees the 25th.", np: "<b>पात्रोको मितिलाई क्षण मान्नु</b> — `new Date(\"2026-08-26\")` UTC मध्यरात हो, त्यसैले UTC को पश्चिमका user ले 25 देख्छन्।", jp: "<b>暦の日付を瞬間として扱う</b> — `new Date(\"2026-08-26\")` は真夜中UTCなので、UTCより西のユーザーには25日に見える。" },
+        { en: "<b>Parsing non-ISO strings</b> — `new Date(\"08/26/2026\")` relies on environment-specific interpretation. Send ISO 8601 instead.", np: "<b>Non-ISO string parse गर्नु</b> — `new Date(\"08/26/2026\")` वातावरण-निर्भर व्याख्यामा भर पर्छ। बरु ISO 8601 पठाउनुहोस्।", jp: "<b>ISO以外の文字列を解析する</b> — `new Date(\"08/26/2026\")` は環境依存の解釈に頼る。ISO 8601を送る。" },
+        { en: "<b>Hand-building localized output</b> — `` `${month}/${day}/${year}` `` gets month names, ordering and locales wrong. Use `Intl.DateTimeFormat`.", np: "<b>हातले स्थानीयकृत output बनाउनु</b> — `` `${month}/${day}/${year}` `` ले महिनाको नाम, क्रम र locale गलत पार्छ। `Intl.DateTimeFormat` प्रयोग गर्नुहोस्।", jp: "<b>ローカライズ表示を手で組み立てる</b> — `` `${month}/${day}/${year}` `` は月名・順序・ロケールを誤る。`Intl.DateTimeFormat` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "Which method runs the function immediately?", np: "कुन method ले function तुरुन्तै चलाउँछ?", jp: "関数をすぐに実行するのはどれか?" },
+          question: { en: "Which API should you use for timezone-aware display?", np: "Timezone-सचेत प्रदर्शनका लागि कुन API प्रयोग गर्नुपर्छ?", jp: "タイムゾーンを考慮した表示にはどのAPIを使うべきか?" },
           options: [
-            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "Both `bind()` and `call()`", np: "`bind()` र `call()` दुबै", jp: "`bind()` と `call()` の両方" },
-            { en: "None", np: "कुनै पनि होइन", jp: "どれでもない" },
-          ],
-          correctIndex: 1,
-          explanation: { en: "`apply()` also runs immediately; `bind()` is the one that waits.", np: "`apply()` पनि तुरुन्तै चल्छ; `bind()` चाहिँ कुर्छ।", jp: "`apply()` もすぐ実行する。待つのは `bind()`。" },
-        },
-        {
-          question: { en: "Which method expects arguments inside an array?", np: "कुन method ले argument array भित्र खोज्छ?", jp: "引数を配列で受け取るのはどれか?" },
-          options: [
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
-            { en: "`apply()`", np: "`apply()`", jp: "`apply()`" },
-            { en: "`map()`", np: "`map()`", jp: "`map()`" },
-          ],
-          correctIndex: 2,
-          explanation: { en: "Remember: apply = array.", np: "सम्झनुहोस्: apply = array।", jp: "覚え方: apply = array。" },
-        },
-        {
-          question: { en: "What does `bind()` return?", np: "`bind()` ले के फर्काउँछ?", jp: "`bind()` は何を返すか?" },
-          options: [
-            { en: "The function's result", np: "Function को नतिजा", jp: "関数の結果" },
-            { en: "An array", np: "एउटा array", jp: "配列" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "A new function", np: "नयाँ function", jp: "新しい関数" },
+            { en: "`parseInt()`", np: "`parseInt()`", jp: "`parseInt()`" },
+            { en: "`Object.keys()`", np: "`Object.keys()`", jp: "`Object.keys()`" },
+            { en: "`JSON.stringify()`", np: "`JSON.stringify()`", jp: "`JSON.stringify()`" },
+            { en: "`Intl.DateTimeFormat`", np: "`Intl.DateTimeFormat`", jp: "`Intl.DateTimeFormat`" },
           ],
           correctIndex: 3,
-          explanation: { en: "The returned function has `this` fixed, and any pre-filled arguments baked in.", np: "फर्काइएको function को `this` स्थिर हुन्छ, र पहिले भरिएका argument पनि समावेश हुन्छन्।", jp: "返される関数は `this` が固定され、先に埋めた引数も含まれている。" },
+          explanation: { en: "It takes a `timeZone` option and handles locale rules for you.", np: "यसले `timeZone` option लिन्छ र locale नियम आफैं सम्हाल्छ।", jp: "`timeZone` オプションを受け取り、ロケールの規則も処理してくれる。" },
         },
         {
-          question: { en: "What does this print? `const fn = greet.bind(user); fn();` where `user = { name: \"Rajan\" }`", np: "यसले के देखाउँछ? `const fn = greet.bind(user); fn();` जहाँ `user = { name: \"Rajan\" }`", jp: "何が出力されるか? `const fn = greet.bind(user); fn();`（`user = { name: \"Rajan\" }`）" },
+          question: { en: "Why can `const birthday = new Date(\"2026-08-26\")` be dangerous?", np: "`const birthday = new Date(\"2026-08-26\")` किन खतरनाक हुन सक्छ?", jp: "`const birthday = new Date(\"2026-08-26\")` はなぜ危険か?" },
           options: [
-            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
-            { en: "`user`", np: "`user`", jp: "`user`" },
-            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
-            { en: "Error", np: "Error", jp: "エラー" },
+            { en: "It may treat a calendar date as an instant and cause timezone-related date shifts", np: "यसले पात्रोको मितिलाई क्षण मान्न सक्छ र timezone-सम्बन्धी मिति सर्न सक्छ", jp: "暦の日付を瞬間として扱い、タイムゾーンによる日付のずれを起こしうるから" },
+            { en: "`Date` cannot store years", np: "`Date` ले वर्ष राख्न सक्दैन", jp: "`Date` は年を保持できないから" },
+            { en: "`Date` only works in UTC", np: "`Date` UTC मा मात्र काम गर्छ", jp: "`Date` はUTCでしか動かないから" },
+            { en: "It always returns `NaN`", np: "यसले सधैं `NaN` फर्काउँछ", jp: "常に `NaN` を返すから" },
           ],
           correctIndex: 0,
-          explanation: { en: "`bind()` fixed `this` to `user`, so calling `fn()` later still logs the name.", np: "`bind()` ले `this` लाई `user` मा स्थिर गर्‍यो, त्यसैले पछि `fn()` call गर्दा पनि नाम देखिन्छ।", jp: "`bind()` が `this` を `user` に固定したので、あとで `fn()` を呼んでも名前が出る。" },
+          explanation: { en: "Midnight UTC displayed west of UTC lands on the previous calendar day.", np: "UTC मध्यरात UTC को पश्चिममा देखाउँदा अघिल्लो पात्रो दिनमा पर्छ।", jp: "真夜中UTCをUTCより西で表示すると、前日の暦日になる。" },
+        },
+        {
+          question: { en: "Which is the best representation for an exact instant sent between a backend and frontend?", np: "Backend र frontend बीच पठाइने ठ्याक्कै क्षणका लागि उत्तम प्रतिनिधित्व कुन हो?", jp: "バックエンドとフロントエンド間で送る正確な瞬間の最適な表現は?" },
+          options: [
+            { en: "`\"August 26, 2026\"`", np: "`\"August 26, 2026\"`", jp: "`\"August 26, 2026\"`" },
+            { en: "`\"2026-08-26T12:00:00Z\"`", np: "`\"2026-08-26T12:00:00Z\"`", jp: "`\"2026-08-26T12:00:00Z\"`" },
+            { en: "`\"08/26/26\"`", np: "`\"08/26/26\"`", jp: "`\"08/26/26\"`" },
+            { en: "`\"Wednesday\"`", np: "`\"Wednesday\"`", jp: "`\"Wednesday\"`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "ISO 8601 with an explicit `Z` leaves no room for interpretation.", np: "स्पष्ट `Z` सहितको ISO 8601 ले व्याख्याको ठाउँ छोड्दैन।", jp: "明示的な `Z` を持つISO 8601なら解釈の余地がない。" },
         },
       ],
-      youtubeIds: ["75W8UPQ5l7k", "ke_y6z0xRpk"],
+    },
+    {
+      id: "dates-timezones-temporal",
+      title: { en: "Timezones, DST & Temporal", np: "Timezone, DST र Temporal", jp: "タイムゾーン・DST・Temporal" },
+      durationMinutes: 9,
+      explanation: {
+        en: "Never assume every day has exactly 24 local hours. Daylight Saving Time can change the length of a local calendar day.\n\n```text\nUTC\n│\n├── Instant\n│\n├── America/New_York\n│      ↓ DST rules\n│\n├── Europe/London\n│      ↓ DST rules\n│\n└── Asia/Tokyo\n       ↓ no DST currently\n```\n\nThis is why code like:\n\n```javascript\ndate.setHours(date.getHours() + 24);\n```\n\nis not always equivalent to \"give me the same local time tomorrow\". <b>Calendar arithmetic and elapsed-time arithmetic are different problems.</b>\n\n---\n\n### The Temporal API\n\nThe modern JavaScript solution to many of these problems is the <b>Temporal API</b>. Instead of forcing everything into one `Date` object, Temporal provides types that express what you actually mean:\n\n```text\nTemporal.Instant         an exact moment in time\nTemporal.PlainDate       a calendar date, no time or timezone\nTemporal.PlainTime       a time of day, no date\nTemporal.ZonedDateTime   date + time + timezone\n```\n\nFor example:\n\n```javascript\nconst birthday = Temporal.PlainDate.from(\"1996-10-11\");\n\nconsole.log(birthday);\n// 1996-10-11\n```\n\nThat is fundamentally different from `new Date(\"1996-10-11\")`, because a birthday is normally a <b>calendar date</b>, not an instant occurring at midnight UTC.\n\n---\n\n### Temporal examples\n\nFor an exact moment:\n\n```javascript\nconst instant = Temporal.Instant.from(\"2026-08-26T12:00:00Z\");\n```\n\nFor a timezone-aware appointment:\n\n```javascript\nconst appointment = Temporal.ZonedDateTime.from(\n  \"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"\n);\n```\n\nNow the timezone is <b>part of the value</b> instead of an assumption hidden somewhere in your application.\n\n---\n\n### Date vs Temporal\n\n```text\nProblem                     Date        Temporal\n──────────────────────────────────────────────────────\nExact instant               yes         Instant\nCalendar date               awkward     PlainDate\nTime only                   awkward     PlainTime\nTimezone-aware date/time    awkward     ZonedDateTime\nImmutable                   no          yes\nClear timezone semantics    unclear     yes\n```\n\n<b>Important:</b> Temporal availability depends on your runtime. Where it isn't natively available, use a polyfill or a well-maintained date/time library.\n\n---\n\n### Four rules to remember\n\n<b>1. Store instants in UTC.</b>\n\n<b>2. Don't manually calculate timezones.</b>\n\n<b>3. Distinguish a calendar date from an instant.</b>\n\n<b>4. Use `Intl.DateTimeFormat` for display, and Temporal when your environment supports it.</b>",
+        np: "हरेक दिन ठ्याक्कै 24 स्थानीय घण्टाको हुन्छ भन्ने कहिल्यै नठान्नुहोस्। Daylight Saving Time ले स्थानीय पात्रो दिनको लम्बाइ बदल्न सक्छ।\n\n```text\nUTC\n│\n├── Instant\n│\n├── America/New_York\n│      ↓ DST rules\n│\n├── Europe/London\n│      ↓ DST rules\n│\n└── Asia/Tokyo\n       ↓ no DST currently\n```\n\nत्यसैले यस्तो code:\n\n```javascript\ndate.setHours(date.getHours() + 24);\n```\n\nसधैं \"भोलि उही स्थानीय समय देऊ\" सँग बराबर हुँदैन। <b>पात्रो गणित र बितेको समयको गणित फरक समस्या हुन्।</b>\n\n---\n\n### Temporal API\n\nयीमध्ये धेरै समस्याको आधुनिक JavaScript समाधान <b>Temporal API</b> हो। सबै कुरा एउटै `Date` object मा कोच्नुको साटो, Temporal ले तपाईंले वास्तवमा भन्न खोजेको कुरा जनाउने type दिन्छ:\n\n```text\nTemporal.Instant         an exact moment in time\nTemporal.PlainDate       a calendar date, no time or timezone\nTemporal.PlainTime       a time of day, no date\nTemporal.ZonedDateTime   date + time + timezone\n```\n\nउदाहरणका लागि:\n\n```javascript\nconst birthday = Temporal.PlainDate.from(\"1996-10-11\");\n\nconsole.log(birthday);\n// 1996-10-11\n```\n\nयो `new Date(\"1996-10-11\")` भन्दा मौलिक रूपमै फरक हो, किनकि जन्मदिन सामान्यतया <b>पात्रोको मिति</b> हो, UTC मध्यरातमा हुने क्षण होइन।\n\n---\n\n### Temporal उदाहरण\n\nठ्याक्कै क्षणका लागि:\n\n```javascript\nconst instant = Temporal.Instant.from(\"2026-08-26T12:00:00Z\");\n```\n\nTimezone-सचेत appointment का लागि:\n\n```javascript\nconst appointment = Temporal.ZonedDateTime.from(\n  \"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"\n);\n```\n\nअब timezone तपाईंको application मा कतै लुकेको अनुमान नभई <b>value कै भाग</b> हो।\n\n---\n\n### Date vs Temporal\n\n```text\nProblem                     Date        Temporal\n──────────────────────────────────────────────────────\nExact instant               yes         Instant\nCalendar date               awkward     PlainDate\nTime only                   awkward     PlainTime\nTimezone-aware date/time    awkward     ZonedDateTime\nImmutable                   no          yes\nClear timezone semantics    unclear     yes\n```\n\n<b>महत्वपूर्ण:</b> Temporal उपलब्ध छ कि छैन तपाईंको runtime मा भर पर्छ। मूल रूपमा उपलब्ध नभएको ठाउँमा polyfill वा राम्ररी मर्मत गरिएको date/time library प्रयोग गर्नुहोस्।\n\n---\n\n### सम्झनुपर्ने चार नियम\n\n<b>1. क्षण UTC मा राख्नुहोस्।</b>\n\n<b>2. Timezone हातले गणना नगर्नुहोस्।</b>\n\n<b>3. पात्रोको मिति र क्षण छुट्याउनुहोस्।</b>\n\n<b>4. प्रदर्शनका लागि `Intl.DateTimeFormat`, र वातावरणले समर्थन गरे Temporal प्रयोग गर्नुहोस्।</b>",
+        jp: "すべての日がちょうど24ローカル時間だと思い込まないでください。サマータイムはローカルの暦日の長さを変えます。\n\n```text\nUTC\n│\n├── Instant\n│\n├── America/New_York\n│      ↓ DST rules\n│\n├── Europe/London\n│      ↓ DST rules\n│\n└── Asia/Tokyo\n       ↓ no DST currently\n```\n\nだから次のようなコード:\n\n```javascript\ndate.setHours(date.getHours() + 24);\n```\n\nは「明日の同じローカル時刻」と常に同じではありません。<b>暦の計算と経過時間の計算は別の問題です。</b>\n\n---\n\n### Temporal API\n\nこれらの問題に対する現代的な解決策が<b>Temporal API</b>です。すべてを1つの `Date` に押し込む代わりに、意図をそのまま表す型を提供します:\n\n```text\nTemporal.Instant         an exact moment in time\nTemporal.PlainDate       a calendar date, no time or timezone\nTemporal.PlainTime       a time of day, no date\nTemporal.ZonedDateTime   date + time + timezone\n```\n\n例:\n\n```javascript\nconst birthday = Temporal.PlainDate.from(\"1996-10-11\");\n\nconsole.log(birthday);\n// 1996-10-11\n```\n\nこれは `new Date(\"1996-10-11\")` とは本質的に違います。誕生日はふつう<b>暦の日付</b>であり、真夜中UTCに起こる瞬間ではないからです。\n\n---\n\n### Temporalの例\n\n正確な瞬間:\n\n```javascript\nconst instant = Temporal.Instant.from(\"2026-08-26T12:00:00Z\");\n```\n\nタイムゾーン付きの予定:\n\n```javascript\nconst appointment = Temporal.ZonedDateTime.from(\n  \"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"\n);\n```\n\nこれでタイムゾーンは、アプリのどこかに隠れた前提ではなく<b>値の一部</b>になります。\n\n---\n\n### DateとTemporal\n\n```text\nProblem                     Date        Temporal\n──────────────────────────────────────────────────────\nExact instant               yes         Instant\nCalendar date               awkward     PlainDate\nTime only                   awkward     PlainTime\nTimezone-aware date/time    awkward     ZonedDateTime\nImmutable                   no          yes\nClear timezone semantics    unclear     yes\n```\n\n<b>重要:</b> Temporalが使えるかはランタイム次第です。ネイティブに使えない環境では、ポリフィルか十分に保守された日時ライブラリを使ってください。\n\n---\n\n### 覚えておく4つの規則\n\n<b>1. 瞬間はUTCで保存する。</b>\n\n<b>2. タイムゾーンを手計算しない。</b>\n\n<b>3. 暦の日付と瞬間を区別する。</b>\n\n<b>4. 表示には `Intl.DateTimeFormat`、環境が対応していればTemporalを使う。</b>",
+      },
+      diagram: `Date represents an instant
+        ↓
+Internally based on UTC milliseconds
+        ↓
+Local methods display/use local timezone
+        ↓
+UTC methods display/use UTC
+        ↓
+Intl.DateTimeFormat handles presentation
+        ↓
+Temporal provides clearer date/time types
+
+
+Problem                     Date        Temporal
+──────────────────────────────────────────────────────
+Exact instant               yes         Instant
+Calendar date               awkward     PlainDate
+Time only                   awkward     PlainTime
+Timezone-aware date/time    awkward     ZonedDateTime
+Immutable                   no          yes`,
+      codeExample: {
+        title: { en: "Why 24 hours is not a day, and what Temporal fixes", np: "24 घण्टा किन दिन होइन, र Temporal ले के ठीक गर्छ", jp: "24時間が1日でない理由と、Temporalが直すもの" },
+        code: `// ── 1. Basic — adding 24 hours is not "tomorrow, same time" ───────
+const date = new Date("2026-03-08T12:00:00Z");
+
+date.setHours(date.getHours() + 24); // elapsed time, not calendar time
+// Across a DST boundary the local clock time can shift
+
+// ── 2. Intermediate — never hand-roll a timezone offset ───────────
+// const japanTime = utcHours + 9; // wrong: offsets and DST vary
+
+console.log(
+  new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    dateStyle: "full",
+    timeStyle: "short"
+  }).format(new Date("2026-08-26T12:00:00Z"))
+);
+
+// ── 3. Advanced — Temporal says what you actually mean ────────────
+// A birthday is a calendar date, not an instant at midnight UTC
+const birthday = Temporal.PlainDate.from("1996-10-11");
+
+// An exact moment
+const instant = Temporal.Instant.from("2026-08-26T12:00:00Z");
+
+// A meeting, with its timezone carried inside the value
+const appointment = Temporal.ZonedDateTime.from(
+  "2026-08-26T21:00:00+09:00[Asia/Tokyo]"
+);
+
+console.log(birthday.toString());    // 1996-10-11
+console.log(instant.toString());     // 2026-08-26T12:00:00Z
+console.log(appointment.toString()); // 2026-08-26T21:00:00+09:00[Asia/Tokyo]`,
+      },
+      keyTakeaways: [
+        { en: "Not every local day has 24 hours — <b>DST</b> changes the length of a calendar day.", np: "हरेक स्थानीय दिन 24 घण्टाको हुँदैन — <b>DST</b> ले पात्रो दिनको लम्बाइ बदल्छ।", jp: "すべてのローカル日が24時間とは限らない。<b>サマータイム</b>が暦日の長さを変える。" },
+        { en: "<b>Calendar arithmetic</b> and <b>elapsed-time arithmetic</b> are different problems.", np: "<b>पात्रो गणित</b> र <b>बितेको समयको गणित</b> फरक समस्या हुन्।", jp: "<b>暦の計算</b>と<b>経過時間の計算</b>は別の問題。" },
+        { en: "Never add a fixed offset by hand; offsets and DST rules vary by zone and by date.", np: "स्थिर offset हातले कहिल्यै नथप्नुहोस्; offset र DST नियम zone र मिति अनुसार फरक हुन्छन्।", jp: "固定のオフセットを手で足さない。オフセットもDSTの規則もゾーンと日付で変わる。" },
+        { en: "<b>Temporal</b> offers `Instant`, `PlainDate`, `PlainTime` and `ZonedDateTime` so a value says what it means.", np: "<b>Temporal</b> ले `Instant`, `PlainDate`, `PlainTime` र `ZonedDateTime` दिन्छ ताकि value ले आफ्नो अर्थ आफैं बताओस्।", jp: "<b>Temporal</b> は `Instant`・`PlainDate`・`PlainTime`・`ZonedDateTime` を提供し、値自身が意味を語る。" },
+        { en: "Temporal values are <b>immutable</b>, unlike `Date`.", np: "Temporal का value <b>immutable</b> हुन्छन्, `Date` भन्दा फरक।", jp: "Temporalの値は `Date` と違って<b>イミュータブル</b>。" },
+        { en: "Temporal availability depends on the runtime; use a polyfill or a maintained library where it is missing.", np: "Temporal उपलब्धता runtime मा भर पर्छ; नभएको ठाउँमा polyfill वा मर्मत गरिएको library प्रयोग गर्नुहोस्।", jp: "Temporalが使えるかはランタイム次第。ない環境ではポリフィルか保守されたライブラリを使う。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Manually converting timezones</b> — `const japanTime = utcTime + 9;` ignores DST and per-zone rules. Format with a `timeZone` option instead.", np: "<b>Timezone हातले बदल्नु</b> — `const japanTime = utcTime + 9;` ले DST र zone-अनुसारका नियम बेवास्ता गर्छ। बरु `timeZone` option ले format गर्नुहोस्।", jp: "<b>タイムゾーンを手で変換する</b> — `const japanTime = utcTime + 9;` はDSTやゾーン固有の規則を無視する。`timeZone` オプションで書式化する。" },
+        { en: "<b>Adding 24 hours to mean \"tomorrow\"</b> — across a DST boundary the local clock time shifts. Calendar steps and duration steps differ.", np: "<b>\"भोलि\" भन्न 24 घण्टा थप्नु</b> — DST सीमा पार गर्दा स्थानीय घडी समय सर्छ। पात्रो चरण र अवधि चरण फरक हुन्छन्।", jp: "<b>「明日」のつもりで24時間足す</b> — DSTの境界をまたぐとローカル時刻がずれる。暦の刻みと期間の刻みは違う。" },
+        { en: "<b>Using `Date` for something that has no time</b> — a birthday is a `PlainDate`, not an instant at midnight UTC.", np: "<b>समय नभएको कुराका लागि `Date` प्रयोग गर्नु</b> — जन्मदिन `PlainDate` हो, UTC मध्यरातको क्षण होइन।", jp: "<b>時刻のないものに `Date` を使う</b> — 誕生日は `PlainDate` であって、真夜中UTCの瞬間ではない。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What does `Temporal.PlainDate.from(\"2026-08-26\")` represent?", np: "`Temporal.PlainDate.from(\"2026-08-26\")` ले के जनाउँछ?", jp: "`Temporal.PlainDate.from(\"2026-08-26\")` は何を表すか?" },
+          options: [
+            { en: "An exact UTC instant", np: "ठ्याक्कै UTC क्षण", jp: "正確なUTCの瞬間" },
+            { en: "A Unix timestamp", np: "Unix timestamp", jp: "Unixタイムスタンプ" },
+            { en: "A calendar date without a timezone", np: "Timezone बिनाको पात्रो मिति", jp: "タイムゾーンのない暦の日付" },
+            { en: "A timezone offset", np: "Timezone offset", jp: "タイムゾーンのオフセット" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "That is exactly the concept `new Date(\"2026-08-26\")` fails to express.", np: "`new Date(\"2026-08-26\")` ले व्यक्त गर्न नसक्ने ठ्याक्कै यही अवधारणा हो।", jp: "まさに `new Date(\"2026-08-26\")` が表現できない概念。" },
+        },
+        {
+          question: { en: "Why is `date.setHours(date.getHours() + 24)` not always \"tomorrow, same local time\"?", np: "`date.setHours(date.getHours() + 24)` किन सधैं \"भोलि, उही स्थानीय समय\" हुँदैन?", jp: "なぜ `date.setHours(date.getHours() + 24)` は必ずしも「明日の同じローカル時刻」ではないのか?" },
+          options: [
+            { en: "Because DST can make a local day shorter or longer than 24 hours", np: "किनकि DST ले स्थानीय दिनलाई 24 घण्टा भन्दा छोटो वा लामो बनाउन सक्छ", jp: "サマータイムによりローカルの1日が24時間より短くも長くもなりうるから" },
+            { en: "Because `setHours` is asynchronous", np: "किनकि `setHours` asynchronous छ", jp: "`setHours` が非同期だから" },
+            { en: "Because `Date` cannot store hours", np: "किनकि `Date` ले घण्टा राख्न सक्दैन", jp: "`Date` が時間を保持できないから" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "Elapsed-time arithmetic and calendar arithmetic answer different questions.", np: "बितेको समयको गणित र पात्रो गणितले फरक प्रश्नको जवाफ दिन्छन्।", jp: "経過時間の計算と暦の計算は別の問いに答えている。" },
+        },
+        {
+          question: { en: "Which Temporal type carries its timezone inside the value?", np: "कुन Temporal type ले आफ्नो timezone value भित्रै बोक्छ?", jp: "タイムゾーンを値の中に持つTemporalの型はどれか?" },
+          options: [
+            { en: "`Temporal.Instant`", np: "`Temporal.Instant`", jp: "`Temporal.Instant`" },
+            { en: "`Temporal.ZonedDateTime`", np: "`Temporal.ZonedDateTime`", jp: "`Temporal.ZonedDateTime`" },
+            { en: "`Temporal.PlainTime`", np: "`Temporal.PlainTime`", jp: "`Temporal.PlainTime`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`\"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"` states the zone explicitly.", np: "`\"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"` ले zone स्पष्ट रूपमा बताउँछ।", jp: "`\"2026-08-26T21:00:00+09:00[Asia/Tokyo]\"` はゾーンを明示している。" },
+        },
+      ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "What is `this` inside a plain function call in strict mode?", np: "Strict mode मा plain function call भित्र `this` के हो?", jp: "strictモードでのプレーンな関数呼び出し内のthisは？" },
-      options: [{ en: "The global object", np: "Global object", jp: "グローバルオブジェクト" }, { en: "`undefined`", np: "`undefined`", jp: "`undefined`" }],
-      correctIndex: 1,
-      explanation: { en: "Strict mode default binding does not fall back to the global object.", np: "Strict mode default binding ले global object मा फिर्ता जाँदैन।", jp: "strictモードのデフォルト束縛はグローバルオブジェクトにフォールバックしない。" },
-    },
-    {
-      question: { en: "What happens to `this` when you extract a method off its object and call it bare?", np: "Method लाई object बाट extract गरेर bare call गर्दा `this` को हुन्छ?", jp: "オブジェクトからメソッドを取り出して生で呼び出すとthisはどうなる？" },
-      options: [{ en: "It's lost — falls back to default binding", np: "हराउन्छ — default binding मा फिर्ता जान्छ", jp: "失われる — デフォルト束縛にフォールバックする" }, { en: "It stays pointed at the original object", np: "मूल object मै रहन्छ", jp: "元のオブジェクトを指したままになる" }],
+      question: { en: "What does the `Z` mean in `new Date(\"2026-08-26T12:00:00Z\")`?", np: "`new Date(\"2026-08-26T12:00:00Z\")` मा `Z` को अर्थ के हो?", jp: "`new Date(\"2026-08-26T12:00:00Z\")` の `Z` は何を意味するか?" },
+      options: [
+        { en: "UTC", np: "UTC", jp: "UTC" },
+        { en: "Local time", np: "स्थानीय समय", jp: "ローカル時刻" },
+        { en: "Japan time", np: "जापान समय", jp: "日本時間" },
+        { en: "Daylight Saving Time", np: "Daylight Saving Time", jp: "サマータイム" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Without the object to the left of a dot at the call site, implicit binding cannot apply.", np: "Call site मा dot को बायाँ object नभई implicit binding लागू हुँदैन।", jp: "呼び出し場所でドットの左にオブジェクトがなければ暗黙的束縛は適用されない。" },
+      explanation: { en: "`Z` marks a zero UTC offset in ISO 8601.", np: "`Z` ले ISO 8601 मा शून्य UTC offset जनाउँछ।", jp: "`Z` はISO 8601でUTCオフセット0を示す。" },
     },
     {
-      question: { en: "Which binding rule wins if a function is both called with `new` and bound with `bind()`?", np: "Function `new` सँग call भएको छ र `bind()` ले पनि bind भएको छ भने कुन rule जित्छ?", jp: "関数が`new`で呼ばれ、かつ`bind()`で束縛されている場合、どちらのルールが勝つ？" },
-      options: [{ en: "Explicit binding always wins", np: "Explicit binding ले सधैं जित्छ", jp: "明示的束縛が常に勝つ" }, { en: "`new` binding — it has the highest priority", np: "`new` binding — highest priority", jp: "`new`束縛 — 最も優先度が高い" }],
+      question: { en: "Which API should you use for timezone-aware display?", np: "Timezone-सचेत प्रदर्शनका लागि कुन API प्रयोग गर्नुपर्छ?", jp: "タイムゾーンを考慮した表示にはどのAPIを使うべきか?" },
+      options: [
+        { en: "`parseInt()`", np: "`parseInt()`", jp: "`parseInt()`" },
+        { en: "`Intl.DateTimeFormat`", np: "`Intl.DateTimeFormat`", jp: "`Intl.DateTimeFormat`" },
+        { en: "`JSON.stringify()`", np: "`JSON.stringify()`", jp: "`JSON.stringify()`" },
+        { en: "`Object.keys()`", np: "`Object.keys()`", jp: "`Object.keys()`" },
+      ],
       correctIndex: 1,
-      explanation: { en: "new binding sits above explicit binding in the priority order of the four this rules.", np: "चार this rules को priority order मा new binding explicit binding भन्दा माथि छ।", jp: "4つのthisルールの優先順位では、new束縛は明示的束縛より上位にある。" },
+      explanation: { en: "Pass a `timeZone` and let it handle locale and DST rules.", np: "`timeZone` दिनुहोस् र locale र DST नियम यसैले सम्हालोस्।", jp: "`timeZone` を渡せば、ロケールとDSTの規則を任せられる。" },
     },
     {
-      question: { en: "Where does an arrow function's `this` come from?", np: "Arrow function को `this` कहाँबाट आउँछ?", jp: "アロー関数のthisはどこから来る？" },
-      options: [{ en: "The lexical scope surrounding it at creation time", np: "Creation बेलाको surrounding lexical scope", jp: "作成時の周囲のレキシカルスコープ" }, { en: "Whatever object it's later called on", np: "पछि जुन object मा call हुन्छ त्यही", jp: "後で呼び出されるオブジェクト" }],
+      question: { en: "What does `Temporal.PlainDate.from(\"2026-08-26\")` represent?", np: "`Temporal.PlainDate.from(\"2026-08-26\")` ले के जनाउँछ?", jp: "`Temporal.PlainDate.from(\"2026-08-26\")` は何を表すか?" },
+      options: [
+        { en: "An exact UTC instant", np: "ठ्याक्कै UTC क्षण", jp: "正確なUTCの瞬間" },
+        { en: "A Unix timestamp", np: "Unix timestamp", jp: "Unixタイムスタンプ" },
+        { en: "A calendar date without a timezone", np: "Timezone बिनाको पात्रो मिति", jp: "タイムゾーンのない暦の日付" },
+        { en: "A timezone offset", np: "Timezone offset", jp: "タイムゾーンのオフセット" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "A birthday is a calendar date, not a moment at midnight UTC.", np: "जन्मदिन पात्रोको मिति हो, UTC मध्यरातको क्षण होइन।", jp: "誕生日は暦の日付であり、真夜中UTCの瞬間ではない。" },
+    },
+    {
+      question: { en: "Why can `const birthday = new Date(\"2026-08-26\")` be dangerous?", np: "`const birthday = new Date(\"2026-08-26\")` किन खतरनाक हुन सक्छ?", jp: "`const birthday = new Date(\"2026-08-26\")` はなぜ危険か?" },
+      options: [
+        { en: "`Date` cannot store years", np: "`Date` ले वर्ष राख्न सक्दैन", jp: "`Date` は年を保持できないから" },
+        { en: "It always returns `NaN`", np: "यसले सधैं `NaN` फर्काउँछ", jp: "常に `NaN` を返すから" },
+        { en: "`Date` only works in UTC", np: "`Date` UTC मा मात्र काम गर्छ", jp: "`Date` はUTCでしか動かないから" },
+        { en: "It may treat a calendar date as an instant and cause timezone-related date shifts", np: "यसले पात्रोको मितिलाई क्षण मान्न सक्छ र timezone-सम्बन्धी मिति सर्न सक्छ", jp: "暦の日付を瞬間として扱い、タイムゾーンによる日付のずれを起こしうるから" },
+      ],
+      correctIndex: 3,
+      explanation: { en: "The string is read as midnight UTC, so western timezones show the previous day.", np: "String लाई UTC मध्यरात मानिन्छ, त्यसैले पश्चिमी timezone ले अघिल्लो दिन देखाउँछन्।", jp: "文字列は真夜中UTCとして読まれるため、西側のタイムゾーンでは前日になる。" },
+    },
+    {
+      question: { en: "Which is the best representation for an exact instant sent between a backend and frontend?", np: "Backend र frontend बीच पठाइने ठ्याक्कै क्षणका लागि उत्तम प्रतिनिधित्व कुन हो?", jp: "バックエンドとフロントエンド間で送る正確な瞬間の最適な表現は?" },
+      options: [
+        { en: "`\"2026-08-26T12:00:00Z\"`", np: "`\"2026-08-26T12:00:00Z\"`", jp: "`\"2026-08-26T12:00:00Z\"`" },
+        { en: "`\"08/26/26\"`", np: "`\"08/26/26\"`", jp: "`\"08/26/26\"`" },
+        { en: "`\"August 26, 2026\"`", np: "`\"August 26, 2026\"`", jp: "`\"August 26, 2026\"`" },
+        { en: "`\"Wednesday\"`", np: "`\"Wednesday\"`", jp: "`\"Wednesday\"`" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Arrow functions have no dynamic this-binding — they inherit this from where they were defined.", np: "Arrow functions मा dynamic this-binding हुँदैन — यिनले define भएको ठाउँबाट this inherit गर्छन्।", jp: "アロー関数には動的なthis束縛がない。定義された場所からthisを継承する。" },
+      explanation: { en: "ISO 8601 with an explicit offset removes all ambiguity.", np: "स्पष्ट offset सहितको ISO 8601 ले सबै अस्पष्टता हटाउँछ।", jp: "明示的なオフセット付きのISO 8601なら曖昧さがなくなる。" },
     },
     {
-      question: { en: "Is an arrow function a good choice for an object literal method like `{ inc: () => { this.count++ } }`?", np: "`{ inc: () => { this.count++ } }` जस्तो object literal method का लागि arrow function राम्रो choice हो?", jp: "`{ inc: () => { this.count++ } }`のようなオブジェクトリテラルのメソッドにアロー関数は適切？" },
-      options: [{ en: "Yes — it always refers to the object it's defined on", np: "हो — यो सधैं define भएको object लाई जनाउँछ", jp: "はい — 常に定義されたオブジェクトを指す" }, { en: "No — it captures this from the module scope, not the object", np: "होइन — यसले module scope बाट this capture गर्छ, object बाट होइन", jp: "いいえ — オブジェクトではなくモジュールスコープからthisをキャプチャする" }],
+      question: { en: "What does a `Date` object store internally?", np: "`Date` object ले भित्री रूपमा के राख्छ?", jp: "`Date` オブジェクトは内部で何を保持するか?" },
+      options: [
+        { en: "A local formatted string", np: "स्थानीय ढाँचाबद्ध string", jp: "ローカルの書式化文字列" },
+        { en: "Milliseconds since the Unix epoch, in UTC", np: "Unix epoch देखिको millisecond, UTC मा", jp: "UTCでのUnixエポックからのミリ秒" },
+        { en: "A timezone name", np: "Timezone को नाम", jp: "タイムゾーン名" },
+      ],
       correctIndex: 1,
-      explanation: { en: "The arrow's lexical scope at creation time is the module, not the object literal being built.", np: "Arrow को creation बेलाको lexical scope module हो, बन्दै गरेको object literal होइन।", jp: "アローの作成時のレキシカルスコープは、構築中のオブジェクトリテラルではなくモジュール。" },
+      explanation: { en: "Local hours and formatted output are all derived from that single number.", np: "स्थानीय घण्टा र ढाँचाबद्ध output सबै त्यही एउटा संख्याबाट निस्कन्छन्।", jp: "ローカルの時刻も書式化された出力も、すべてその1つの数値から導かれる。" },
     },
     {
-      question: { en: "Can `bind()` override an arrow function's `this`?", np: "`bind()` ले arrow function को `this` override गर्न सक्छ?", jp: "`bind()`はアロー関数のthisを上書きできる？" },
-      options: [{ en: "No — arrow functions ignore explicit binding entirely", np: "होइन — arrow functions ले explicit binding लाई पूर्ण बेवास्ता गर्छन्", jp: "いいえ — アロー関数は明示的束縛を完全に無視する" }, { en: "Yes, just like a regular function", np: "हो, regular function जस्तै", jp: "はい、通常の関数と同じ" }],
+      question: { en: "Is a `Date` object immutable?", np: "`Date` object immutable हो?", jp: "`Date` オブジェクトはイミュータブルか?" },
+      options: [
+        { en: "No — `setDate()` changes the object every reference shares", np: "होइन — `setDate()` ले हरेक reference ले बाँड्ने object बदल्छ", jp: "いいえ。`setDate()` はすべての参照が共有するオブジェクトを変える" },
+        { en: "Yes", np: "हो", jp: "はい" },
+      ],
       correctIndex: 0,
-      explanation: { en: "There is no dynamic this-binding to override on an arrow function in the first place.", np: "Arrow function मा override गर्ने dynamic this-binding सुरुदेखि नै हुँदैन।", jp: "そもそもアロー関数には上書きすべき動的なthis束縛が存在しない。" },
+      explanation: { en: "Copy with `new Date(original)` before mutating; Temporal values are immutable.", np: "Mutate गर्नुअघि `new Date(original)` ले copy गर्नुहोस्; Temporal का value immutable हुन्छन्।", jp: "変更前に `new Date(original)` でコピーする。Temporalの値はイミュータブル。" },
     },
     {
-      question: { en: "What is the key difference in how `call()` and `apply()` pass arguments?", np: "`call()` र `apply()` ले arguments pass गर्ने तरिकामा मुख्य फरक के हो?", jp: "`call()`と`apply()`の引数の渡し方の主な違いは？" },
-      options: [{ en: "They pass arguments identically", np: "दुवैले arguments उस्तै तरिकाले pass गर्छन्", jp: "両者は引数を同じように渡す" }, { en: "call takes individual arguments; apply takes a single array", np: "call ले individual arguments लिन्छ; apply ले single array लिन्छ", jp: "callは個別の引数を受け取る。applyは単一の配列を受け取る" }],
+      question: { en: "Why should you avoid `const japanTime = utcTime + 9`?", np: "`const japanTime = utcTime + 9` किन बच्नुपर्छ?", jp: "なぜ `const japanTime = utcTime + 9` を避けるべきか?" },
+      options: [
+        { en: "`utcTime` is always a string", np: "`utcTime` सधैं string हुन्छ", jp: "`utcTime` は常に文字列だから" },
+        { en: "Addition is slow", np: "जोड ढिलो हुन्छ", jp: "足し算が遅いから" },
+        { en: "Offsets and DST rules vary by zone and date, so a fixed number is wrong", np: "Offset र DST नियम zone र मिति अनुसार फरक हुन्छन्, त्यसैले स्थिर संख्या गलत हो", jp: "オフセットもDSTの規則もゾーンと日付で変わるため、固定の数値では誤りになるから" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Format with a `timeZone` option and let the platform apply the rules.", np: "`timeZone` option ले format गर्नुहोस् र platform लाई नियम लागू गर्न दिनुहोस्।", jp: "`timeZone` オプションで書式化し、規則の適用はプラットフォームに任せる。" },
+    },
+    {
+      question: { en: "Which Temporal type expresses a moment together with its timezone?", np: "कुन Temporal type ले क्षणलाई यसको timezone सँगै व्यक्त गर्छ?", jp: "瞬間とタイムゾーンを一緒に表すTemporalの型はどれか?" },
+      options: [
+        { en: "`Temporal.PlainDate`", np: "`Temporal.PlainDate`", jp: "`Temporal.PlainDate`" },
+        { en: "`Temporal.ZonedDateTime`", np: "`Temporal.ZonedDateTime`", jp: "`Temporal.ZonedDateTime`" },
+        { en: "`Temporal.PlainTime`", np: "`Temporal.PlainTime`", jp: "`Temporal.PlainTime`" },
+      ],
       correctIndex: 1,
-      explanation: { en: "This is the sole functional difference between the two methods; both invoke immediately.", np: "यही दुई methods बीचको एकमात्र functional फरक हो; दुवैले तुरुन्तै invoke गर्छन्।", jp: "これが2つのメソッドの唯一の機能的な違い。両方とも即座に呼び出す。" },
-    },
-    {
-      question: { en: "Does `bind()` invoke the function immediately?", np: "`bind()` ले function तुरुन्तै invoke गर्छ?", jp: "`bind()`は関数を即座に呼び出す？" },
-      options: [{ en: "No — it returns a new function for later use", np: "होइन — यसले पछि प्रयोगका लागि नयाँ function फर्काउँछ", jp: "いいえ — 後で使うための新しい関数を返す" }, { en: "Yes, immediately", np: "हो, तुरुन्तै", jp: "はい、即座に" }],
-      correctIndex: 0,
-      explanation: { en: "bind() is the odd one out among the three — it never calls the function itself.", np: "तीनमध्ये bind() अलग हो — यसले function आफैं कहिल्यै call गर्दैन।", jp: "3つの中でbind()は例外的で、関数自体を決して呼び出さない。" },
-    },
-    {
-      question: { en: "Why bind a class method used as an event handler in the constructor?", np: "Constructor मा event handler को रूपमा प्रयोग हुने class method किन bind गर्ने?", jp: "コンストラクタでイベントハンドラとして使うクラスメソッドをなぜbindするのか？" },
-      options: [{ en: "It's purely a stylistic convention with no functional effect", np: "यो कुनै functional असर नभएको केवल stylistic convention हो", jp: "機能的な効果はなく、純粋にスタイル上の慣習" }, { en: "So `this` stays correct once the method is detached and called by the event system", np: "ताकि method detach भएर event system ले call गर्दा पनि `this` सहि रहोस्", jp: "メソッドが切り離され、イベントシステムによって呼び出されてもthisが正しいままであるように" }],
-      correctIndex: 1,
-      explanation: { en: "Event systems call the handler bare, without the instance to the left of a dot, so binding is what preserves the correct this.", np: "Event system ले handler लाई bare call गर्छ, dot को बायाँ instance बिना, त्यसैले bind ले नै सहि this जोगाउँछ।", jp: "イベントシステムはハンドラをドットの左にインスタンスなしで生で呼び出すため、束縛が正しいthisを保持する。" },
+      explanation: { en: "The zone lives in the value, not in an assumption elsewhere in your code.", np: "Zone value मै रहन्छ, तपाईंको code मा अन्यत्र लुकेको अनुमानमा होइन।", jp: "ゾーンは値の中にあり、コードのどこかの前提に隠れていない。" },
     },
   ],
 };
