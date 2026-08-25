@@ -189,6 +189,7 @@ account.greet(); // Rajan`,
           explanation: { en: "`new` creates the object, points `this` at it, and returns it automatically.", np: "`new` ले object बनाउँछ, `this` लाई त्यसैतिर देखाउँछ, र स्वतः फर्काउँछ।", jp: "`new` はオブジェクトを作り、`this` をそれに向け、自動的に返す。" },
         },
       ],
+      youtubeIds: ["9T4z98JcHR0"],
     },
     {
       id: "arrow-functions-and-this",
@@ -305,95 +306,134 @@ greet.call(user); // still not user`,
       title: { en: "call, apply, and bind in Depth", np: "call, apply, bind विस्तारमा", jp: "call・apply・bindの詳細" },
       durationMinutes: 9,
       explanation: {
-        en: "All three methods explicitly control what `this` is inside a function, but they differ in when they run and how arguments are passed:\n\n• <b>call(thisArg, a, b, c)</b> — invokes the function immediately, with arguments passed individually\n• <b>apply(thisArg, [a, b, c])</b> — invokes the function immediately, with arguments passed as a single array — useful when your arguments already exist as an array\n• <b>bind(thisArg, a, b)</b> — does NOT invoke the function; it returns a brand-new function with `this` (and optionally some leading arguments) permanently fixed, ready to be called later\n\nA classic use case for `bind()` is fixing `this` for an event handler or a callback that will be invoked much later, by code that has no idea what object it \"belongs\" to. With the spread operator available in modern JS, `apply` is rarely needed on its own — `fn.call(thisArg, ...args)` covers the same case.",
-        np: "तीनैले `this` explicitly control गर्छन् तर फरक तरिकाले: call ले arguments individually लिन्छ, apply ले array मा लिन्छ, दुवैले तुरुन्तै call गर्छन्। bind ले तुरुन्तै call गर्दैन — this permanently fixed भएको नयाँ function फर्काउँछ, पछि call गर्न।",
-        jp: "3つとも明示的にthisを制御するが方法が異なる: callは個別引数、applyは配列引数で、両方とも即座に呼び出す。bindは即座に呼び出さず、thisが固定された新しい関数を返し後で使う。",
+        en: "`call()`, `apply()`, and `bind()` are methods that let you control what <b>`this`</b> refers to inside a normal function.\n\nThe main difference is <b>when the function runs</b> and <b>how arguments are given</b>.\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nThink of them like this:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — run immediately\n\n`call()` runs the function <b>right away</b>. Arguments are passed <b>one by one</b>.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nThis means:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — run immediately with an array\n\n`apply()` works almost like `call()`, but arguments are provided as <b>one array</b>.\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nThis is useful when your arguments are <b>already inside an array</b>.\n\n---\n\n### 3. `bind()` — create a new function\n\n`bind()` does <b>not</b> run the function immediately. Instead, it creates a <b>new function</b> with `this` fixed.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nThink of it as:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` can also fix arguments\n\nYou can provide arguments while creating the new function.\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nHere `10` is already fixed as the first argument. This is called <b>partial application</b> (pre-filling some arguments).\n\n---\n\n### 5. The most common real-world use\n\nSuppose an object has a method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nThe connection to `user` is lost. Fix it with `bind()`:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nThis is one of the most common reasons to use `bind()`.\n\n---\n\n### 6. Modern JavaScript\n\nWith the spread operator (`...`), `apply()` is needed less often:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nSo today, you will often see `call()` plus spread instead of `apply()`.\n\n---\n\n### Easy memory trick\n\n> <b>Call = now + comma</b>\n> <b>Apply = now + array</b>\n> <b>Bind = later + new function</b>",
+        np: "`call()`, `apply()`, र `bind()` यस्ता method हुन् जसले सामान्य function भित्र <b>`this`</b> ले के जनाउँछ भन्ने नियन्त्रण गर्न दिन्छन्।\n\nमुख्य फरक <b>function कहिले चल्छ</b> र <b>argument कसरी दिइन्छ</b> भन्नेमा हो।\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — तुरुन्तै चलाउनु\n\n`call()` ले function <b>तुरुन्तै</b> चलाउँछ। Argument <b>एक-एक गरी</b> पठाइन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nयसको अर्थ:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — array सँग तुरुन्तै चलाउनु\n\n`apply()` `call()` जस्तै काम गर्छ, तर argument <b>एउटा array</b> मा दिइन्छन्।\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\nArgument <b>पहिले नै array भित्र</b> हुँदा यो उपयोगी हुन्छ।\n\n---\n\n### 3. `bind()` — नयाँ function बनाउनु\n\n`bind()` ले function तुरुन्तै <b>चलाउँदैन</b>। बरु, `this` स्थिर भएको <b>नयाँ function</b> बनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nयसरी सोच्नुहोस्:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` ले argument पनि तय गर्न सक्छ\n\nनयाँ function बनाउँदै argument दिन सक्नुहुन्छ।\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nयहाँ `10` पहिलो argument रूपमा पहिले नै तय भइसक्यो। यसलाई <b>partial application</b> (केही argument पहिले भर्नु) भनिन्छ।\n\n---\n\n### 5. सबैभन्दा सामान्य वास्तविक प्रयोग\n\nमानौं object सँग method छ:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` सँगको जोडाइ हराउँछ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\n`bind()` प्रयोग गर्ने सबैभन्दा सामान्य कारणमध्ये यो एक हो।\n\n---\n\n### 6. आधुनिक JavaScript\n\nSpread operator (`...`) सँग, `apply()` कम चाहिन्छ:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\nत्यसैले आजकाल `apply()` को साटो `call()` सँगै spread प्रायः देखिन्छ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call = अहिले + comma</b>\n> <b>Apply = अहिले + array</b>\n> <b>Bind = पछि + नयाँ function</b>",
+        jp: "`call()`・`apply()`・`bind()` は、通常の関数の中で<b>`this`</b> が何を指すかを制御できるメソッドです。\n\n主な違いは<b>いつ関数が実行されるか</b>と<b>引数の渡し方</b>です。\n\n```text\nMethod     Runs immediately?   Arguments\n------------------------------------------------\ncall()     Yes                 One by one\napply()    Yes                 Inside an array\nbind()     No                  Returns a new function\n```\n\nこう考えてください:\n\n```text\ncall   → \"Run it now with this object.\"\napply  → \"Run it now with this object and these array arguments.\"\nbind   → \"Prepare a new function to run later.\"\n```\n\n---\n\n### 1. `call()` — すぐ実行する\n\n`call()` は関数を<b>その場で</b>実行します。引数は<b>1つずつ</b>渡します。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet(age, city) {\n  console.log(this.name, age, city);\n}\n\ngreet.call(user, 30, \"Tokyo\");\n// Rajan 30 Tokyo\n```\n\nつまり:\n\n```text\nthis → user\nage  → 30\ncity → Tokyo\n```\n\n---\n\n### 2. `apply()` — 配列ですぐ実行する\n\n`apply()` は `call()` とほぼ同じですが、引数を<b>1つの配列</b>で渡します。\n\n```javascript\nconst args = [30, \"Tokyo\"];\n\ngreet.apply(user, args);\n// Rajan 30 Tokyo\n```\n\n引数が<b>すでに配列に入っている</b>ときに便利です。\n\n---\n\n### 3. `bind()` — 新しい関数を作る\n\n`bind()` は関数をすぐには<b>実行しません</b>。代わりに `this` を固定した<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(this.name);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Rajan\n```\n\nこうイメージしてください:\n\n```text\ngreet\n  ↓\nbind(user)\n  ↓\nnew function\n  ↓\ncall later\n```\n\n---\n\n### 4. `bind()` は引数も固定できる\n\n新しい関数を作るときに引数を与えられます。\n\n```javascript\nfunction add(a, b) {\n  return a + b;\n}\n\nconst add10 = add.bind(null, 10);\n\nconsole.log(add10(5));\n// 15\n```\n\nここでは `10` が第1引数として固定済みです。これを<b>部分適用</b>（一部の引数を先に埋めること）と呼びます。\n\n---\n\n### 5. 最もよくある実践的な用途\n\nオブジェクトにメソッドがあるとします:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドを取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\n`user` とのつながりが失われます。`bind()` で直します:\n\n```javascript\nconst greet = user.greet.bind(user);\n\ngreet();\n// Rajan\n```\n\nこれが `bind()` を使う最もよくある理由の1つです。\n\n---\n\n### 6. 現代のJavaScript\n\nスプレッド構文（`...`）があるので `apply()` の出番は減りました:\n\n```javascript\nintroduce.call(user, ...[30, \"Tokyo\"]);\n```\n\n今では `apply()` の代わりに `call()` とスプレッドの組み合わせをよく見かけます。\n\n---\n\n### 覚え方\n\n> <b>Call = 今すぐ + カンマ</b>\n> <b>Apply = 今すぐ + 配列</b>\n> <b>Bind = あとで + 新しい関数</b>",
       },
-      diagram: `                 Calls now?   Arguments as        Returns
-call(obj,a,b)      YES        a, b (individual)   fn's return value
-apply(obj,[a,b])   YES        [a, b] (array)      fn's return value
-bind(obj,a,b)      NO         pre-filled (a, b)    a NEW function
+      diagram: `              Function
+                  │
+       ┌──────────┼──────────┐
+       ↓          ↓          ↓
+     call()    apply()    bind()
+       │          │          │
+   runs now    runs now   runs later
+       │          │          │
+   a, b, c     [a,b,c]    new function
 
-bind() is like currying 'this' itself — the returned function
-remembers its 'this' and any pre-filled args forever.`,
+
+Method     Runs immediately?   Arguments
+------------------------------------------------
+call()     Yes                 One by one
+apply()    Yes                 Inside an array
+bind()     No                  Returns a new function`,
       codeExample: {
-        title: { en: "call, apply, and bind side by side", np: "call, apply, bind एकैसाथ", jp: "call・apply・bindの比較" },
-        code: `function introduce(greeting, punctuation) {
-  console.log(\`\${greeting}, I'm \${this.name}\${punctuation}\`);
+        title: { en: "Run now, run now with an array, or run later", np: "अहिले चलाउनु, array सँग अहिले, वा पछि", jp: "今すぐ・配列で今すぐ・あとで" },
+        code: `const user = { name: "Rajan" };
+
+function greet(age, city) {
+  console.log(this.name, age, city);
 }
 
-const alice = { name: "Alice" };
-const bob   = { name: "Bob" };
+// ── 1. call() — runs now, arguments one by one ────────────────────
+greet.call(user, 30, "Tokyo"); // Rajan 30 Tokyo
 
-// ── call — pass 'this' and arguments one by one ───────────────────
-introduce.call(alice, "Hello", "!");   // "Hello, I'm Alice!"
-introduce.call(bob,   "Hi", ".");      // "Hi, I'm Bob."
+// ── 2. apply() — runs now, arguments in an array ──────────────────
+greet.apply(user, [30, "Tokyo"]); // Rajan 30 Tokyo
 
-// ── apply — pass 'this' and arguments as an array ──────────────────
-introduce.apply(alice, ["Hey", "?"]);  // "Hey, I'm Alice?"
-
-// ── bind — returns a NEW function with 'this' permanently fixed ────
-const aliceIntro = introduce.bind(alice, "Howdy");  // 'greeting' pre-filled too
-aliceIntro("!");  // "Howdy, I'm Alice!"
-aliceIntro("?");  // "Howdy, I'm Alice?"
-
-// ── Real use case: borrowing an array method for an array-like ─────
-function sumArguments() {
-  // 'arguments' is array-like but not a real array — borrow Array's reduce
-  return Array.prototype.reduce.call(arguments, (sum, n) => sum + n, 0);
+// ── 3. bind() — returns a new function to call later ──────────────
+function sayName() {
+  console.log(this.name);
 }
-sumArguments(1, 2, 3);  // 6
 
-// ── Real use case: fixing 'this' for an event handler ───────────────
-class Button {
-  constructor(label) {
-    this.label = label;
-    this.onClick = this.onClick.bind(this);  // permanently fix 'this' to the instance
+const greetUser = sayName.bind(user);
+greetUser(); // Rajan
+
+// ── 4. bind() can pre-fill arguments too ──────────────────────────
+function add(a, b) {
+  return a + b;
+}
+
+const add10 = add.bind(null, 10);
+console.log(add10(5)); // 15
+
+// ── 5. The classic fix — a method that lost its object ────────────
+const account = {
+  name: "Rajan",
+  greet() {
+    console.log(this.name);
   }
-  onClick() { console.log(\`\${this.label} clicked\`); }
-}
-const btn = new Button("Submit");
-// document.addEventListener("click", btn.onClick);  // 'this' stays correct even when detached`,
+};
+
+const detached = account.greet;
+detached(); // undefined
+
+const bound = account.greet.bind(account);
+bound(); // Rajan
+
+// ── 6. Modern JS often uses call() plus spread instead of apply ───
+greet.call(user, ...[30, "Tokyo"]); // Rajan 30 Tokyo`,
       },
       keyTakeaways: [
-        { en: "`call(thisArg, a, b)` and `apply(thisArg, [a, b])` both invoke the function immediately — they differ only in how arguments are passed (individually vs. as an array).", np: "`call(thisArg, a, b)` र `apply(thisArg, [a, b])` दुवैले function तुरुन्तै invoke गर्छन् — फरक arguments pass गर्ने तरिकामा मात्र (individual vs array)।", jp: "`call(thisArg, a, b)`と`apply(thisArg, [a, b])`はどちらも関数を即座に呼び出す。違いは引数の渡し方（個別か配列か）だけ。" },
-        { en: "`bind(thisArg)` does NOT call the function — it returns a new function with `this` permanently locked in, for use later as a callback or event handler.", np: "`bind(thisArg)` ले function call गर्दैन — यसले `this` permanently locked भएको नयाँ function फर्काउँछ, पछि callback वा event handler का लागि।", jp: "`bind(thisArg)`は関数を呼び出さない。thisが永久に固定された新しい関数を返し、後でコールバックやイベントハンドラとして使う。" },
-        { en: "A common real-world use of `bind()` is fixing `this` on a class method before passing it as a callback, so the method still works correctly once detached from the instance.", np: "`bind()` को सामान्य real-world use: callback को रूपमा pass गर्नुअघि class method मा `this` fix गर्नु, ताकि instance बाट detach भएपछि पनि सहि काम गरोस्।", jp: "`bind()`の一般的な実用例は、コールバックとして渡す前にクラスメソッドのthisを固定すること。インスタンスから切り離されても正しく動作する。" },
+        { en: "<b>`call()`</b> → runs the function immediately with arguments <b>one by one</b>.", np: "<b>`call()`</b> → function तुरुन्तै चलाउँछ, argument <b>एक-एक गरी</b>।", jp: "<b>`call()`</b> → 引数を<b>1つずつ</b>渡して即座に実行する。" },
+        { en: "<b>`apply()`</b> → runs the function immediately with arguments in an <b>array</b>.", np: "<b>`apply()`</b> → function तुरुन्तै चलाउँछ, argument <b>array</b> मा।", jp: "<b>`apply()`</b> → 引数を<b>配列</b>で渡して即座に実行する。" },
+        { en: "<b>`bind()`</b> → returns a <b>new function</b> that can be called later.", np: "<b>`bind()`</b> → पछि call गर्न मिल्ने <b>नयाँ function</b> फर्काउँछ।", jp: "<b>`bind()`</b> → あとで呼べる<b>新しい関数</b>を返す。" },
+        { en: "All three can set `this` for <b>normal functions</b>, but none of them work on arrow functions.", np: "तीनैले <b>सामान्य function</b> का लागि `this` सेट गर्न सक्छन्, तर कुनैले पनि arrow function मा काम गर्दैनन्।", jp: "3つとも<b>通常の関数</b>の `this` を設定できるが、アロー関数には効かない。" },
+        { en: "`bind()` is useful when you need to keep `this` for a callback or event handler.", np: "Callback वा event handler का लागि `this` राख्नुपर्दा `bind()` उपयोगी हुन्छ।", jp: "コールバックやイベントハンドラで `this` を保ちたいときに `bind()` が役立つ。" },
+        { en: "`call()` and `apply()` <b>execute</b> the function; `bind()` <b>does not</b>.", np: "`call()` र `apply()` ले function <b>चलाउँछन्</b>; `bind()` ले <b>चलाउँदैन</b>।", jp: "`call()` と `apply()` は関数を<b>実行する</b>。`bind()` は<b>実行しない</b>。" },
+        { en: "Memory trick: <b>call = now + comma</b>, <b>apply = now + array</b>, <b>bind = later + new function</b>.", np: "सम्झने तरिका: <b>call = अहिले + comma</b>, <b>apply = अहिले + array</b>, <b>bind = पछि + नयाँ function</b>।", jp: "覚え方: <b>call = 今すぐ+カンマ</b>、<b>apply = 今すぐ+配列</b>、<b>bind = あとで+新しい関数</b>。" },
       ],
       commonMistakes: [
-        { en: "Mixing up `call`'s individual-argument signature with `apply`'s array signature — passing an array to `call` sends the whole array as a single argument, not spread out.", np: "`call` को individual-argument signature र `apply` को array signature मिलाउनु — `call` मा array pass गर्दा array नै एउटा argument बन्छ, फैलिँदैन।", jp: "callの個別引数シグネチャとapplyの配列シグネチャを混同すること。callに配列を渡すと配列全体が1つの引数として送られる。" },
-        { en: "Calling `bind()` and expecting the function to run immediately — `bind()` only returns a new function; you still have to call that returned function.", np: "`bind()` call गरेर function तुरुन्तै चल्छ भन्ने आशा गर्नु — `bind()` ले नयाँ function मात्र फर्काउँछ; त्यो returned function लाई अझै call गर्नुपर्छ।", jp: "`bind()`を呼び出すと即座に関数が実行されると期待すること。`bind()`は新しい関数を返すだけで、その関数はまだ呼び出す必要がある。" },
-        { en: "Forgetting to bind a class method used as an event handler, then being confused why `this` is `undefined` inside it when the event fires.", np: "Event handler को रूपमा प्रयोग हुने class method bind गर्न बिर्सनु, अनि event fire हुँदा `this` `undefined` भएकोमा confuse हुनु।", jp: "イベントハンドラとして使うクラスメソッドをbindし忘れ、イベント発火時にthisがundefinedになって混乱すること。" },
+        { en: "<b>Thinking `bind()` runs the function</b> — `const greetUser = greet.bind(user);` runs nothing. You still need `greetUser()`.", np: "<b>`bind()` ले function चलाउँछ भन्ने ठान्नु</b> — `const greetUser = greet.bind(user);` ले केही चलाउँदैन। तपाईंलाई अझै `greetUser()` चाहिन्छ।", jp: "<b>`bind()` が関数を実行すると思う</b> — `const greetUser = greet.bind(user);` では何も動かない。`greetUser()` が必要。" },
+        { en: "<b>Confusing `call()` and `apply()`</b> — `fn.call(user, 10, 20)` passes arguments separately, `fn.apply(user, [10, 20])` passes them in an array.", np: "<b>`call()` र `apply()` भ्रममा पार्नु</b> — `fn.call(user, 10, 20)` ले argument छुट्टाछुट्टै पठाउँछ, `fn.apply(user, [10, 20])` ले array मा।", jp: "<b>`call()` と `apply()` を混同する</b> — `fn.call(user, 10, 20)` は個別に、`fn.apply(user, [10, 20])` は配列で渡す。" },
+        { en: "<b>Trying to use these to change an arrow function's `this`</b> — `greet.call(user)` on an arrow function changes nothing; arrows take `this` from their surrounding scope.", np: "<b>यिनले arrow function को `this` बदल्न खोज्नु</b> — arrow function मा `greet.call(user)` ले केही बदल्दैन; arrow ले वरिपरिको scope बाट `this` लिन्छ।", jp: "<b>これらでアロー関数の `this` を変えようとする</b> — アロー関数への `greet.call(user)` は何も変えない。アローは周囲のスコープから `this` を取る。" },
       ],
       quiz: [
         {
-          question: { en: "What is the main difference between `call()` and `apply()`?", np: "`call()` र `apply()` बीचको मुख्य फरक के हो?", jp: "`call()`と`apply()`の主な違いは？" },
+          question: { en: "Which method runs the function immediately?", np: "कुन method ले function तुरुन्तै चलाउँछ?", jp: "関数をすぐに実行するのはどれか?" },
           options: [
-            { en: "call passes arguments individually; apply passes them as a single array", np: "call ले arguments individually pass गर्छ; apply ले single array मा pass गर्छ", jp: "callは引数を個別に渡す。applyは単一の配列として渡す" },
-            { en: "call returns a new function; apply invokes immediately", np: "call ले नयाँ function फर्काउँछ; apply ले तुरुन्तै invoke गर्छ", jp: "callは新しい関数を返す。applyは即座に呼び出す" },
+            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "Both `bind()` and `call()`", np: "`bind()` र `call()` दुबै", jp: "`bind()` と `call()` の両方" },
+            { en: "None", np: "कुनै पनि होइन", jp: "どれでもない" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Both invoke the function right away with a given this — only the argument-passing format differs.", np: "दुवैले given this सँग तुरुन्तै function invoke गर्छन् — argument-passing format मात्र फरक हो।", jp: "両方とも指定されたthisで即座に関数を呼び出す。引数の渡し方だけが異なる。" },
+          correctIndex: 1,
+          explanation: { en: "`apply()` also runs immediately; `bind()` is the one that waits.", np: "`apply()` पनि तुरुन्तै चल्छ; `bind()` चाहिँ कुर्छ।", jp: "`apply()` もすぐ実行する。待つのは `bind()`。" },
         },
         {
-          question: { en: "Does `bind()` call the function immediately?", np: "`bind()` ले function तुरुन्तै call गर्छ?", jp: "`bind()`は関数を即座に呼び出す？" },
+          question: { en: "Which method expects arguments inside an array?", np: "कुन method ले argument array भित्र खोज्छ?", jp: "引数を配列で受け取るのはどれか?" },
           options: [
-            { en: "No — it returns a new function to be called later", np: "होइन — यसले पछि call गर्न नयाँ function फर्काउँछ", jp: "いいえ — 後で呼び出すための新しい関数を返す" },
-            { en: "Yes, exactly like call()", np: "हो, call() जस्तै ठ्याक्कै", jp: "はい、call()とまったく同じ" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "`apply()`", np: "`apply()`", jp: "`apply()`" },
+            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "bind() is the only one of the three that doesn't invoke — it produces a reusable, this-locked function instead.", np: "तीनमध्ये bind() मात्र invoke गर्दैन — बरु reusable, this-locked function उत्पादन गर्छ।", jp: "3つのうちbind()だけが呼び出さない。代わりに再利用可能なthis固定関数を生成する。" },
+          correctIndex: 1,
+          explanation: { en: "Remember: apply = array.", np: "सम्झनुहोस्: apply = array।", jp: "覚え方: apply = array。" },
         },
         {
-          question: { en: "Why is it common to write `this.onClick = this.onClick.bind(this)` inside a class constructor?", np: "Class constructor भित्र `this.onClick = this.onClick.bind(this)` लेख्नु किन सामान्य हो?", jp: "クラスのコンストラクタ内で`this.onClick = this.onClick.bind(this)`と書くのが一般的なのはなぜ？" },
+          question: { en: "What does `bind()` return?", np: "`bind()` ले के फर्काउँछ?", jp: "`bind()` は何を返すか?" },
           options: [
-            { en: "So the method keeps working correctly once it's passed elsewhere as a bare callback, detached from the instance", np: "ताकि method अन्यत्र bare callback को रूपमा pass हुँदा, instance बाट detach भए पनि सहि काम गर्न जारी राखोस्", jp: "メソッドが他の場所に生のコールバックとして渡され、インスタンスから切り離されても正しく動作し続けるように" },
-            { en: "It's required syntax for all class methods", np: "यो सबै class methods का लागि आवश्यक syntax हो", jp: "すべてのクラスメソッドに必要な構文だから" },
+            { en: "The function's result", np: "Function को नतिजा", jp: "関数の結果" },
+            { en: "An array", np: "एउटा array", jp: "配列" },
+            { en: "A new function", np: "नयाँ function", jp: "新しい関数" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Without binding, passing a method as a callback (e.g. to an event listener) loses implicit binding, and 'this' becomes undefined when it runs.", np: "Bind नगरे, method लाई callback को रूपमा pass गर्दा implicit binding हराउन्छ, र चलाउँदा 'this' undefined हुन्छ।", jp: "束縛しないと、メソッドをコールバックとして渡すと暗黙的束縛が失われ、実行時にthisがundefinedになる。" },
+          correctIndex: 2,
+          explanation: { en: "The returned function has `this` fixed, and any pre-filled arguments baked in.", np: "फर्काइएको function को `this` स्थिर हुन्छ, र पहिले भरिएका argument पनि समावेश हुन्छन्।", jp: "返される関数は `this` が固定され、先に埋めた引数も含まれている。" },
+        },
+        {
+          question: { en: "What does this print? `const fn = greet.bind(user); fn();` where `user = { name: \"Rajan\" }`", np: "यसले के देखाउँछ? `const fn = greet.bind(user); fn();` जहाँ `user = { name: \"Rajan\" }`", jp: "何が出力されるか? `const fn = greet.bind(user); fn();`（`user = { name: \"Rajan\" }`）" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`user`", np: "`user`", jp: "`user`" },
+            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
+            { en: "Error", np: "Error", jp: "エラー" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`bind()` fixed `this` to `user`, so calling `fn()` later still logs the name.", np: "`bind()` ले `this` लाई `user` मा स्थिर गर्‍यो, त्यसैले पछि `fn()` call गर्दा पनि नाम देखिन्छ।", jp: "`bind()` が `this` を `user` に固定したので、あとで `fn()` を呼んでも名前が出る。" },
         },
       ],
+      youtubeIds: ["75W8UPQ5l7k"],
     },
   ],
   finalQuiz: [
