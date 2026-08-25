@@ -699,14 +699,14 @@ export const UI_STRINGS = {
     jp: "練習を始める →",
   },
   "hub.loksewaGK.title": {
-    en: "General Knowledge",
-    np: "सामान्य ज्ञान",
-    jp: "一般常識",
+    en: "Types of Doctors",
+    np: "डाक्टरका प्रकार",
+    jp: "医師の種類",
   },
   "hub.loksewaGK.subtitle": {
-    en: "GK topics by category — types of doctors, and more",
-    np: "बिषयअनुसार सामान्य ज्ञान — डाक्टरका प्रकार, र थप",
-    jp: "カテゴリ別の一般常識 — 医師の種類など",
+    en: "Medical specialists and what each one treats — Q&A for Loksewa prep",
+    np: "चिकित्सा विशेषज्ञ र तिनले हेर्ने रोग — लोकसेवा तयारीका लागि प्रश्नोत्तर",
+    jp: "各分野の専門医と担当領域 — ロークセワ対策の一問一答",
   },
   "hub.loksewaGK.cta": {
     en: "Start practicing →",
