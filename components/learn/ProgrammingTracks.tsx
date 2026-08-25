@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, useEffect, type ReactNode } from "react";
+import { useId } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
 import { useGit7Progress } from "@/hooks/use-git-7-progress";
@@ -12,7 +12,6 @@ import { useNodejsProgress } from "@/hooks/use-nodejs-progress";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 import { useDevopsProgress } from "@/hooks/use-devops-progress";
-import type { UiStringKey } from "@/lib/i18n/catalog";
 import { TOTAL_DAYS } from "@/lib/challenge-data";
 import { GIT_TOTAL_DAYS } from "@/lib/git-learning/git-challenge-data";
 import { REACT_TOTAL_DAYS } from "@/lib/react-learning/react-challenge-data";
@@ -22,6 +21,7 @@ import { NODEJS_TOTAL_DAYS } from "@/lib/nodejs-learning/nodejs-challenge-data";
 import { DEVOPS_TOTAL_DAYS } from "@/lib/devops-learning/devops-challenge-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
+import { HubAccordionSection } from "@/components/learn/HubAccordionSection";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
@@ -35,83 +35,6 @@ import {
 } from "@/lib/react-native-learning/react-native-curriculum";
 import { REACT_NATIVE_TOTAL_DAYS } from "@/lib/react-native-learning/react-native-challenge-data";
 
-const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
-
-function ProgrammingAccordionSection({
-  sectionId,
-  titleKey,
-  hintKey,
-  defaultOpen = false,
-  children,
-}: {
-  sectionId: string;
-  titleKey: UiStringKey;
-  hintKey: UiStringKey;
-  defaultOpen?: boolean;
-  children: ReactNode;
-}) {
-  const { t } = useLocale();
-  const ref = useRef<HTMLDetailsElement>(null);
-  // Use titleKey as the storage key — it's a stable string unlike the useId()-based sectionId
-  const storageKey = `acc:${titleKey}`;
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let shouldScroll = false;
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved !== null) {
-        el.open = saved === "1";
-        // Scroll into view only if this is the section the user last navigated from
-        shouldScroll = saved === "1" && sessionStorage.getItem("acc:last") === storageKey;
-      }
-    } catch {}
-    if (shouldScroll) {
-      const timer = setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-      return () => clearTimeout(timer);
-    }
-    function onToggle() {
-      try {
-        sessionStorage.setItem(storageKey, el!.open ? "1" : "0");
-        if (el!.open) sessionStorage.setItem("acc:last", storageKey);
-      } catch {}
-    }
-    el.addEventListener("toggle", onToggle);
-    return () => el.removeEventListener("toggle", onToggle);
-  }, [storageKey]);
-
-  return (
-    <details
-      ref={ref}
-      id={sectionId}
-      className="open:[&_.programming-chevron]:rotate-180 overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_92%,transparent)] shadow-sm"
-      {...(defaultOpen ? { open: true } : {})}
-    >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] [&::-webkit-details-marker]:hidden">
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold tracking-tight text-[var(--text)]">{t(titleKey)}</h2>
-          <p className="mt-0.5 text-xs leading-snug text-[var(--muted)]">{t(hintKey)}</p>
-        </div>
-        <svg
-          className="programming-chevron h-5 w-5 shrink-0 text-[var(--muted)] transition-transform duration-200"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </summary>
-      <div className="border-t border-[var(--border)] px-4 pb-4 pt-4">
-        <div className={gridClass}>{children}</div>
-      </div>
-    </details>
-  );
-}
 
 export function ProgrammingTracks() {
   const { t } = useLocale();
@@ -139,7 +62,7 @@ export function ProgrammingTracks() {
 
   return (
     <div className="flex flex-col gap-4">
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-frontend`}
         titleKey="hub.programming.groupFrontend"
         hintKey="hub.programming.groupFrontendHint"
@@ -305,9 +228,9 @@ export function ProgrammingTracks() {
             {t("hub.nextjs.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-backend`}
         titleKey="hub.programming.groupBackend"
         hintKey="hub.programming.groupBackendHint"
@@ -428,9 +351,9 @@ export function ProgrammingTracks() {
             {t("hub.nodejs.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-database`}
         titleKey="hub.programming.groupDatabase"
         hintKey="hub.programming.groupDatabaseHint"
@@ -485,9 +408,9 @@ export function ProgrammingTracks() {
           </span>
         </Link>
 
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-baas`}
         titleKey="hub.programming.groupBaas"
         hintKey="hub.programming.groupBaasHint"
@@ -516,9 +439,9 @@ export function ProgrammingTracks() {
             {t("hub.supabase.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-messaging`}
         titleKey="hub.programming.groupMessaging"
         hintKey="hub.programming.groupMessagingHint"
@@ -572,9 +495,9 @@ export function ProgrammingTracks() {
             Start learning →
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-devops`}
         titleKey="hub.programming.groupDevops"
         hintKey="hub.programming.groupDevopsHint"
@@ -615,9 +538,9 @@ export function ProgrammingTracks() {
             {t("hub.backend.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-dsa`}
         titleKey="hub.programming.groupDsa"
         hintKey="hub.programming.groupDsaHint"
@@ -652,9 +575,9 @@ export function ProgrammingTracks() {
             {t("hub.dsa.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-tools`}
         titleKey="hub.programming.groupTools"
         hintKey="hub.programming.groupToolsHint"
@@ -695,9 +618,9 @@ export function ProgrammingTracks() {
             {t("hub.backend.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-websites`}
         titleKey="hub.programming.groupWebsites"
         hintKey="hub.programming.groupWebsitesHint"
@@ -781,9 +704,9 @@ export function ProgrammingTracks() {
             </span>
           </a>
         ))}
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
 
-      <ProgrammingAccordionSection
+      <HubAccordionSection
         sectionId={`${baseId}-interview`}
         titleKey="hub.programming.groupInterview"
         hintKey="hub.programming.groupInterviewHint"
@@ -837,7 +760,7 @@ export function ProgrammingTracks() {
             {t("hub.backendEngineering.cta")}
           </span>
         </Link>
-      </ProgrammingAccordionSection>
+      </HubAccordionSection>
     </div>
   );
 }
