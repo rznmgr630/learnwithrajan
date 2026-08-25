@@ -322,6 +322,7 @@ console.log(double(add1(5))); // 12`,
           explanation: { en: "The arrow function multiplies its input by two.", np: "Arrow function ले आफ्नो input लाई दुईले गुणन गर्छ।", jp: "アロー関数は入力を2倍にする。" },
         },
       ],
+      youtubeIds: ["vQcCNpuaJO8"],
     },
   ],
   finalQuiz: [
