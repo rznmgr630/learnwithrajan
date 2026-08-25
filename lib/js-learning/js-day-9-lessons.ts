@@ -134,109 +134,141 @@ console.log(Object.hasOwn(user1, "greet")); // false — on the prototype`,
           explanation: { en: "`__proto__` also works but is legacy; this is the standard accessor.", np: "`__proto__` पनि काम गर्छ तर legacy हो; यो मानक accessor हो।", jp: "`__proto__` も動くがレガシー。こちらが標準のアクセサ。" },
         },
       ],
+      youtubeIds: ["wstwjQ1yqWQ"],
     },
     {
       id: "prototype-inheritance",
       title: { en: "Prototype Inheritance", np: "Prototype Inheritance", jp: "プロトタイプ継承" },
       durationMinutes: 9,
       explanation: {
-        en: "To make one constructor inherit from another using plain prototypes (before ES6 classes existed), you wire up three things by hand: (1) call the parent constructor with `.call(this, ...)` so it initialises shared properties on the new object; (2) set `Child.prototype = Object.create(Parent.prototype)` so property lookups fall through to the parent's methods; (3) fix `Child.prototype.constructor = Child`, because `Object.create` overwrites it.\n\n`Object.create(proto)` is also useful on its own, without constructors at all — it builds a plain object whose prototype is exactly the object you pass in, which is the cleanest way to do prototypal inheritance directly.",
-        np: "Plain prototypes प्रयोग गरी एक constructor लाई अर्कोबाट inherit गराउन तीन कुरा manually setup गर्नुपर्छ: parent constructor call गर्नु, `Child.prototype = Object.create(Parent.prototype)` सेट गर्नु, र constructor reference fix गर्नु। `Object.create(proto)` ले सिधै prototypal inheritance पनि दिन्छ।",
-        jp: "コンストラクタ関数だけで継承を組むには3つを手動で設定する: 親コンストラクタの呼び出し、`Object.create`によるプロトタイプチェーンの設定、constructorの修正。`Object.create(proto)`単体でも直接的なプロトタイプ継承に使える。",
+        en: "<b>Prototype inheritance</b> means one object can use properties and methods from another object's prototype.\n\nBefore ES6 `class` syntax, this was commonly done using <b>constructor functions</b> and prototypes.\n\nThere are three important steps:\n\n1. Call the parent constructor with `Parent.call(this, ...)`.\n2. Connect the child prototype to the parent prototype using `Object.create()`.\n3. Fix the `constructor` property.\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nNow create a child constructor:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` runs the parent constructor using the new `Dog` object.\n\n---\n\n### 2. Connect the prototypes\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nNow the prototype chain becomes:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nSo a `Dog` can use methods from `Animal.prototype`.\n\n---\n\n### 3. Fix the constructor\n\n`Object.create()` replaces the child prototype, so the `constructor` property now points to `Animal`. Fix it:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nComplete example:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` is found through `Animal.prototype`, and `dog.bark()` is found on `Dog.prototype`.\n\n---\n\n### `Object.create()` by itself\n\nYou don't need constructors to use prototype inheritance.\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nHere:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` creates a new object whose prototype is `animal`.\n\n---\n\n### Easy memory trick\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
+        np: "<b>Prototype inheritance</b> को अर्थ एउटा object ले अर्को object को prototype का property र method प्रयोग गर्न सक्छ भन्ने हो।\n\nES6 `class` syntax अघि, यो सामान्यतया <b>constructor function</b> र prototype ले गरिन्थ्यो।\n\nतीन महत्वपूर्ण चरण छन्:\n\n1. `Parent.call(this, ...)` ले parent constructor call गर्नु।\n2. `Object.create()` ले child prototype लाई parent prototype सँग जोड्नु।\n3. `constructor` property ठीक गर्नु।\n\n---\n\n### 1. Parent constructor\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\nअब child constructor बनाउनुहोस्:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` ले नयाँ `Dog` object प्रयोग गरी parent constructor चलाउँछ।\n\n---\n\n### 2. Prototype जोड्नु\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nअब prototype chain यस्तो बन्छ:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\nत्यसैले `Dog` ले `Animal.prototype` का method प्रयोग गर्न सक्छ।\n\n---\n\n### 3. Constructor ठीक गर्नु\n\n`Object.create()` ले child prototype प्रतिस्थापन गर्छ, त्यसैले `constructor` property अब `Animal` तिर देखाउँछ। ठीक गर्नुहोस्:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\nपूरा उदाहरण:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\nOutput:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` `Animal.prototype` मार्फत भेटिन्छ, र `dog.bark()` `Dog.prototype` मा भेटिन्छ।\n\n---\n\n### `Object.create()` आफैं\n\nPrototype inheritance प्रयोग गर्न constructor चाहिँदैन।\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nयहाँ:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` ले `animal` prototype भएको नयाँ object बनाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
+        jp: "<b>プロトタイプ継承</b>とは、あるオブジェクトが別のオブジェクトのプロトタイプにあるプロパティやメソッドを使えることです。\n\nES6の `class` 構文が登場する前は、<b>コンストラクタ関数</b>とプロトタイプでこれを行うのが一般的でした。\n\n重要な手順は3つです:\n\n1. `Parent.call(this, ...)` で親のコンストラクタを呼ぶ。\n2. `Object.create()` で子のプロトタイプを親のプロトタイプにつなぐ。\n3. `constructor` プロパティを直す。\n\n---\n\n### 1. 親のコンストラクタ\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n```\n\n次に子のコンストラクタを作ります:\n\n```javascript\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n```\n\n`Animal.call(this, name)` は新しい `Dog` オブジェクトを使って親のコンストラクタを実行します。\n\n---\n\n### 2. プロトタイプをつなぐ\n\n```javascript\nDog.prototype = Object.create(Animal.prototype);\n```\n\nこれでプロトタイプチェーンはこうなります:\n\n```text\ndog\n ↓\nDog.prototype\n ↓\nAnimal.prototype\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Dog` は `Animal.prototype` のメソッドを使えます。\n\n---\n\n### 3. コンストラクタを直す\n\n`Object.create()` は子のプロトタイプを置き換えるので、`constructor` は `Animal` を指してしまいます。直しましょう:\n\n```javascript\nDog.prototype.constructor = Dog;\n```\n\n完成した例:\n\n```javascript\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function () {\n  console.log(`${this.name} makes a sound`);\n};\n\nfunction Dog(name, breed) {\n  Animal.call(this, name);\n  this.breed = breed;\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.bark = function () {\n  console.log(\"Woof!\");\n};\n\nconst dog = new Dog(\"Max\", \"Labrador\");\n\ndog.speak();\ndog.bark();\n```\n\n出力:\n\n```text\nMax makes a sound\nWoof!\n```\n\n`dog.speak()` は `Animal.prototype` 経由で、`dog.bark()` は `Dog.prototype` で見つかります。\n\n---\n\n### `Object.create()` 単体で\n\nプロトタイプ継承にコンストラクタは必須ではありません。\n\n```javascript\nconst animal = {\n  speak() {\n    console.log(\"Animal sound\");\n  }\n};\n\nconst dog = Object.create(animal);\n\ndog.speak();\n// Animal sound\n```\n\nここでは:\n\n```text\ndog\n ↓\nanimal\n ↓\nObject.prototype\n ↓\nnull\n```\n\n`Object.create(animal)` は `animal` をプロトタイプに持つ新しいオブジェクトを作ります。\n\n---\n\n### 覚え方\n\n> <b>Call → Connect → Fix</b>\n\n```text\nParent.call()\n      ↓\nObject.create()\n      ↓\nconstructor = Child\n```",
       },
-      diagram: `function Dog(name, breed) {
-  Animal.call(this, name);              ← 1. init shared 'name' property
-  this.breed = breed;
-}
-Dog.prototype = Object.create(Animal.prototype);   ← 2. wire up the chain
-Dog.prototype.constructor = Dog;                    ← 3. fix constructor ref
+      diagram: `Child object
+     │
+     ↓
+Child.prototype
+     │
+     ↓
+Parent.prototype
+     │
+     ↓
+Object.prototype
+     │
+     ↓
+null
 
-rex = new Dog(...)
-  │
-  ▼  own props: { name, breed }
-Dog.prototype       { bark }
-  │
-  ▼
-Animal.prototype     { speak }
-  │
-  ▼
-Object.prototype`,
+When JavaScript cannot find a method on the child object,
+it searches upward through this chain.
+
+
+Call → Connect → Fix
+
+Parent.call(this, ...)
+      ↓
+Object.create(Parent.prototype)
+      ↓
+Child.prototype.constructor = Child`,
       codeExample: {
-        title: { en: "Wiring up prototypal inheritance by hand", np: "Prototypal inheritance manually wire गर्नु", jp: "プロトタイプ継承を手動で設定する" },
-        code: `// ── Base constructor ────────────────────────────────────────────────
-function Animal(name) { this.name = name; }
-Animal.prototype.speak = function () { return \`\${this.name} makes a sound\`; };
+        title: { en: "Call the parent, connect, then fix", np: "Parent call गर्नु, जोड्नु, अनि ठीक गर्नु", jp: "親を呼ぶ・つなぐ・直す" },
+        code: `// ── 1. Parent constructor with a shared method ────────────────────
+function Animal(name) {
+  this.name = name;
+}
 
-// ── Derived constructor ───────────────────────────────────────────────
+Animal.prototype.speak = function () {
+  console.log(\`\${this.name} makes a sound\`);
+};
+
+// ── 2. Child constructor calls the parent ─────────────────────────
 function Dog(name, breed) {
-  Animal.call(this, name);    // 1. call parent constructor to initialise 'name'
+  Animal.call(this, name);
   this.breed = breed;
 }
 
-// 2. Wire up the prototype chain so Dog instances inherit from Animal.prototype
+// ── 3. Connect the prototypes, then fix the constructor ───────────
 Dog.prototype = Object.create(Animal.prototype);
-
-// 3. Fix the constructor reference (Object.create overwrites it)
 Dog.prototype.constructor = Dog;
 
-// 4. Add Dog-specific methods
-Dog.prototype.bark = function () { return "Woof!"; };
-
-const rex = new Dog("Rex", "Labrador");
-rex.speak();             // "Rex makes a sound" — found on Animal.prototype
-rex.bark();              // "Woof!" — found on Dog.prototype
-rex instanceof Dog;      // true
-rex instanceof Animal;   // true — Dog's chain includes Animal.prototype
-
-// ── Object.create used directly, no constructors at all ────────────
-const animalProto = {
-  init(name)  { this.name = name; return this; },
-  speak()     { return \`\${this.name} makes a sound\`; },
+Dog.prototype.bark = function () {
+  console.log("Woof!");
 };
-const dogProto = Object.create(animalProto);
-dogProto.bark = function () { return "Woof!"; };
 
-const buddy = Object.create(dogProto).init("Buddy");
-buddy.speak();  // "Buddy makes a sound"
-buddy.bark();   // "Woof!"`,
+const dog = new Dog("Max", "Labrador");
+
+dog.speak(); // Max makes a sound — from Animal.prototype
+dog.bark();  // Woof! — from Dog.prototype
+
+console.log(dog.constructor === Dog); // true, thanks to the fix
+
+// ── Object.create() on its own, no constructors needed ────────────
+const animal = {
+  speak() {
+    console.log("Animal sound");
+  }
+};
+
+const pet = Object.create(animal);
+pet.speak(); // Animal sound`,
       },
       keyTakeaways: [
-        { en: "Wiring up constructor-based inheritance takes three manual steps: call the parent constructor with `.call(this, ...)`, set the prototype chain with `Object.create()`, and re-fix the `constructor` reference.", np: "Constructor-based inheritance setup गर्न तीन manual steps चाहिन्छ: parent constructor call, prototype chain सेट, constructor reference fix।", jp: "コンストラクタベースの継承の設定には3つの手動ステップが必要: 親コンストラクタの呼び出し、`Object.create()`によるプロトタイプチェーンの設定、constructor参照の修正。" },
-        { en: "`Object.create(proto)` builds a brand-new object whose prototype is exactly the object you pass in — the most direct way to do prototypal inheritance without any constructor at all.", np: "`Object.create(proto)` ले pass गरिएको object लाई ठ्याक्कै prototype बनाएर नयाँ object बनाउँछ — constructor बिनै सबैभन्दा direct prototypal inheritance।", jp: "`Object.create(proto)`は渡されたオブジェクトをまさにプロトタイプとする新しいオブジェクトを作る。コンストラクタなしで最も直接的なプロトタイプ継承。" },
-        { en: "`Object.create()` overwrites the `.constructor` property on the new prototype object, so it must be manually restored if code relies on `instance.constructor` pointing to the right function.", np: "`Object.create()` ले नयाँ prototype object को `.constructor` property overwrite गर्छ, त्यसैले `instance.constructor` सहि function लाई point गर्नुपर्ने भए manually restore गर्नुपर्छ।", jp: "`Object.create()`は新しいプロトタイプオブジェクトの`.constructor`プロパティを上書きするため、`instance.constructor`が正しい関数を指す必要がある場合は手動で復元する必要がある。" },
+        { en: "<b>Prototype inheritance</b> lets one object use another object's methods.", np: "<b>Prototype inheritance</b> ले एउटा object लाई अर्को object का method प्रयोग गर्न दिन्छ।", jp: "<b>プロトタイプ継承</b>により、あるオブジェクトが別のオブジェクトのメソッドを使える。" },
+        { en: "`Parent.call(this, ...)` runs the parent constructor for the child object.", np: "`Parent.call(this, ...)` ले child object का लागि parent constructor चलाउँछ।", jp: "`Parent.call(this, ...)` は子オブジェクトのために親のコンストラクタを実行する。" },
+        { en: "`Object.create(Parent.prototype)` connects the child to the parent prototype.", np: "`Object.create(Parent.prototype)` ले child लाई parent prototype सँग जोड्छ।", jp: "`Object.create(Parent.prototype)` が子を親のプロトタイプにつなぐ。" },
+        { en: "`Child.prototype.constructor = Child` fixes the constructor reference.", np: "`Child.prototype.constructor = Child` ले constructor reference ठीक गर्छ।", jp: "`Child.prototype.constructor = Child` がコンストラクタ参照を直す。" },
+        { en: "`Object.create(proto)` can create an object directly from a prototype, with no constructor at all.", np: "`Object.create(proto)` ले constructor बिनै prototype बाट सिधै object बनाउन सक्छ।", jp: "`Object.create(proto)` はコンストラクタなしでプロトタイプから直接オブジェクトを作れる。" },
+        { en: "The child does <b>not</b> copy the parent's methods; it finds them through the prototype chain.", np: "Child ले parent का method copy <b>गर्दैन</b>; prototype chain मार्फत भेट्टाउँछ।", jp: "子は親のメソッドを<b>コピーしない</b>。プロトタイプチェーンをたどって見つける。" },
       ],
       commonMistakes: [
-        { en: "Forgetting to call `Parent.call(this, ...)` inside the child constructor, leaving properties the parent was supposed to set up completely missing.", np: "Child constructor भित्र `Parent.call(this, ...)` call गर्न बिर्सनु, parent ले setup गर्ने properties पूर्ण रूपमा हराउनु।", jp: "子コンストラクタ内で`Parent.call(this, ...)`を呼び忘れ、親が設定するはずのプロパティが完全に欠落すること。" },
-        { en: "Setting `Child.prototype = Parent.prototype` directly instead of `Object.create(Parent.prototype)` — this makes Child and Parent share the exact same prototype object, so adding a method to Child also adds it to Parent.", np: "`Object.create(Parent.prototype)` को सट्टा `Child.prototype = Parent.prototype` सिधै सेट गर्नु — यसले Child र Parent लाई उही prototype object share गराउँछ।", jp: "`Object.create(Parent.prototype)`の代わりに`Child.prototype = Parent.prototype`を直接設定すること。これはChildとParentに同じプロトタイプオブジェクトを共有させる。" },
-        { en: "Forgetting to restore `Child.prototype.constructor = Child` after `Object.create`, so `instance.constructor` incorrectly points to the parent.", np: "`Object.create` पछि `Child.prototype.constructor = Child` restore गर्न बिर्सनु, `instance.constructor` गलत रूपमा parent लाई point गर्नु।", jp: "`Object.create`後に`Child.prototype.constructor = Child`を復元し忘れ、`instance.constructor`が誤って親を指すこと。" },
+        { en: "<b>Forgetting `Parent.call()`</b> — without it, the properties the parent constructor sets are never initialised on the child.", np: "<b>`Parent.call()` बिर्सनु</b> — यसबिना, parent constructor ले सेट गर्ने property child मा कहिल्यै initialise हुँदैनन्।", jp: "<b>`Parent.call()` を忘れる</b> — 親のコンストラクタが設定するプロパティが子で初期化されない。" },
+        { en: "<b>Forgetting `Object.create()`</b> — writing `Dog.prototype = Animal.prototype;` makes both constructors share the <b>same</b> prototype object, so adding to one changes the other.", np: "<b>`Object.create()` बिर्सनु</b> — `Dog.prototype = Animal.prototype;` लेख्दा दुबै constructor ले <b>उही</b> prototype object बाँड्छन्, त्यसैले एउटामा थप्दा अर्को पनि बदलिन्छ।", jp: "<b>`Object.create()` を忘れる</b> — `Dog.prototype = Animal.prototype;` と書くと両者が<b>同じ</b>プロトタイプを共有し、片方への追加がもう片方にも影響する。" },
+        { en: "<b>Forgetting the constructor fix</b> — after `Dog.prototype = Object.create(Animal.prototype);`, `dog.constructor` reports `Animal` until you set `Dog.prototype.constructor = Dog;`.", np: "<b>Constructor ठीक गर्न बिर्सनु</b> — `Dog.prototype = Object.create(Animal.prototype);` पछि, `Dog.prototype.constructor = Dog;` नगरेसम्म `dog.constructor` ले `Animal` देखाउँछ।", jp: "<b>コンストラクタの修正を忘れる</b> — `Dog.prototype = Object.create(Animal.prototype);` の後、`Dog.prototype.constructor = Dog;` を書くまで `dog.constructor` は `Animal` を指す。" },
       ],
       quiz: [
         {
-          question: { en: "Why does `Dog` need to call `Animal.call(this, name)` inside its constructor?", np: "`Dog` को constructor भित्र `Animal.call(this, name)` किन call गर्नुपर्छ?", jp: "Dogのコンストラクタ内で`Animal.call(this, name)`を呼ぶ必要があるのはなぜ？" },
+          question: { en: "What does `Object.create(Animal.prototype)` do?", np: "`Object.create(Animal.prototype)` ले के गर्छ?", jp: "`Object.create(Animal.prototype)` は何をするか?" },
           options: [
-            { en: "So the parent constructor's setup logic runs against the new Dog instance, initialising shared properties like `name`", np: "ताकि parent constructor को setup logic नयाँ Dog instance मा चलोस्, `name` जस्ता shared properties initialize गरोस्", jp: "親コンストラクタの初期化ロジックが新しいDogインスタンスに対して実行され、`name`のような共有プロパティを初期化するように" },
-            { en: "It's optional — the prototype chain handles it automatically", np: "यो optional हो — prototype chain ले automatically handle गर्छ", jp: "オプション — プロトタイプチェーンが自動的に処理する" },
+            { en: "Copies all Animal methods", np: "Animal का सबै method copy गर्छ", jp: "Animalのメソッドをすべてコピーする" },
+            { en: "Connects the new object's prototype to `Animal.prototype`", np: "नयाँ object को prototype लाई `Animal.prototype` सँग जोड्छ", jp: "新しいオブジェクトのプロトタイプを `Animal.prototype` につなぐ" },
+            { en: "Creates a new Animal", np: "नयाँ Animal बनाउँछ", jp: "新しいAnimalを作る" },
+            { en: "Deletes the child prototype", np: "Child prototype मेटाउँछ", jp: "子のプロトタイプを削除する" },
           ],
-          correctIndex: 0,
-          explanation: { en: "The prototype chain only shares methods, not initialisation logic — calling the parent constructor explicitly is what sets instance properties.", np: "Prototype chain ले methods मात्र share गर्छ, initialisation logic होइन — parent constructor explicitly call गर्नाले instance properties सेट हुन्छ।", jp: "プロトタイプチェーンはメソッドのみを共有し、初期化ロジックは共有しない。親コンストラクタを明示的に呼ぶことでインスタンスプロパティが設定される。" },
+          correctIndex: 1,
+          explanation: { en: "Nothing is copied; the new object simply links upward to that prototype.", np: "केही copy हुँदैन; नयाँ object त्यो prototype तिर माथि जोडिन्छ मात्र।", jp: "何もコピーされない。新しいオブジェクトがそのプロトタイプへ上向きにリンクするだけ。" },
         },
         {
-          question: { en: "What's wrong with setting `Dog.prototype = Animal.prototype` directly instead of `Object.create(Animal.prototype)`?", np: "`Object.create(Animal.prototype)` को सट्टा `Dog.prototype = Animal.prototype` सिधै सेट गर्दा के गल्ती हुन्छ?", jp: "`Object.create(Animal.prototype)`の代わりに`Dog.prototype = Animal.prototype`を直接設定すると何が問題？" },
+          question: { en: "Why do we use `Animal.call(this, name)`?", np: "`Animal.call(this, name)` किन प्रयोग गर्छौं?", jp: "なぜ `Animal.call(this, name)` を使うのか?" },
           options: [
-            { en: "Dog and Animal end up sharing the exact same prototype object, so a method added to one appears on the other too", np: "Dog र Animal ले उही prototype object share गर्छन्, एकमा थपिएको method अर्कोमा पनि देखिन्छ", jp: "DogとAnimalが同じプロトタイプオブジェクトを共有し、片方に追加したメソッドが両方に現れる" },
-            { en: "Nothing — it's functionally identical to Object.create", np: "केही होइन — यो Object.create सँग functionally identical हो", jp: "何も問題ない — Object.createと機能的に同一" },
+            { en: "To create a prototype", np: "Prototype बनाउन", jp: "プロトタイプを作るため" },
+            { en: "To call the parent constructor for the child object", np: "Child object का लागि parent constructor call गर्न", jp: "子オブジェクトのために親のコンストラクタを呼ぶため" },
+            { en: "To create a new function", np: "नयाँ function बनाउन", jp: "新しい関数を作るため" },
+            { en: "To change `Object.prototype`", np: "`Object.prototype` बदल्न", jp: "`Object.prototype` を変えるため" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Object.create() makes a NEW object that merely links to Animal.prototype; direct assignment makes them literally the same object.", np: "Object.create() ले Animal.prototype लाई link मात्र गर्ने नयाँ object बनाउँछ; direct assignment ले तिनलाई एउटै object बनाउँछ।", jp: "Object.create()はAnimal.prototypeにリンクするだけの新しいオブジェクトを作る。直接代入は文字通り同じオブジェクトにする。" },
+          correctIndex: 1,
+          explanation: { en: "It runs the parent's setup with `this` pointing at the new child instance.", np: "यसले `this` लाई नयाँ child instance तिर देखाउँदै parent को setup चलाउँछ।", jp: "`this` を新しい子インスタンスに向けたまま親の初期化処理を実行する。" },
         },
         {
-          question: { en: "What does `Object.create(proto)` do?", np: "`Object.create(proto)` ले के गर्छ?", jp: "`Object.create(proto)`は何をする？" },
+          question: { en: "Why do we write `Dog.prototype.constructor = Dog;`?", np: "`Dog.prototype.constructor = Dog;` किन लेख्छौं?", jp: "なぜ `Dog.prototype.constructor = Dog;` と書くのか?" },
           options: [
-            { en: "Creates a brand-new object whose prototype is exactly the object passed in", np: "Pass गरिएको object लाई ठ्याक्कै prototype बनाई नयाँ object बनाउँछ", jp: "渡されたオブジェクトをまさにプロトタイプとする新しいオブジェクトを作る" },
-            { en: "Deep clones the object passed in", np: "Pass गरिएको object deep clone गर्छ", jp: "渡されたオブジェクトを深くクローンする" },
+            { en: "To create Dog", np: "Dog बनाउन", jp: "Dogを作るため" },
+            { en: "To fix the constructor reference", np: "Constructor reference ठीक गर्न", jp: "コンストラクタ参照を直すため" },
+            { en: "To call Dog", np: "Dog call गर्न", jp: "Dogを呼ぶため" },
+            { en: "To create inheritance", np: "Inheritance बनाउन", jp: "継承を作るため" },
           ],
-          correctIndex: 0,
-          explanation: { en: "This is the most direct, constructor-free way to establish prototypal inheritance in JavaScript.", np: "यो JS मा constructor-बिना prototypal inheritance स्थापित गर्ने सबैभन्दा direct तरिका हो।", jp: "これはJavaScriptでコンストラクタなしでプロトタイプ継承を確立する最も直接的な方法。" },
+          correctIndex: 1,
+          explanation: { en: "`Object.create()` replaced the prototype, so `constructor` pointed at `Animal` until this line.", np: "`Object.create()` ले prototype प्रतिस्थापन गर्‍यो, त्यसैले यो line नआउन्जेल `constructor` ले `Animal` देखाउँथ्यो।", jp: "`Object.create()` がプロトタイプを置き換えたため、この行までは `constructor` が `Animal` を指していた。" },
+        },
+        {
+          question: { en: "What does `Object.create(animal)` do?", np: "`Object.create(animal)` ले के गर्छ?", jp: "`Object.create(animal)` は何をするか?" },
+          options: [
+            { en: "Copies `animal`", np: "`animal` copy गर्छ", jp: "`animal` をコピーする" },
+            { en: "Creates an object whose prototype is `animal`", np: "`animal` prototype भएको object बनाउँछ", jp: "`animal` をプロトタイプに持つオブジェクトを作る" },
+            { en: "Deletes `animal`", np: "`animal` मेटाउँछ", jp: "`animal` を削除する" },
+            { en: "Converts `animal` into a class", np: "`animal` लाई class मा बदल्छ", jp: "`animal` をクラスに変換する" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "This is prototype inheritance without any constructor function.", np: "यो constructor function बिनाको prototype inheritance हो।", jp: "コンストラクタ関数なしのプロトタイプ継承。" },
         },
       ],
     },
