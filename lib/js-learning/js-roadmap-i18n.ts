@@ -90,7 +90,7 @@ const JS_DAY_TITLE: Record<number, LocalizedString> = {
 const JS_WEEK_TITLE: Record<string, LocalizedString> = {
   "js-w1":  { en: "Core syntax & fundamentals",      np: "मुख्य syntax र आधार",    jp: "コア構文と基礎" },
   "js-w2":  { en: "Functions, scope & closures",     np: "Functions, scope र closure", jp: "関数・スコープ・クロージャ" },
-  "js-w3":  { en: "Objects & Arrays",                np: "Objects र Arrays",        jp: "オブジェクトと配列" },
+  "js-w3":  { en: "Objects, Collections & Text",     np: "Objects, Collections र Text", jp: "オブジェクト・コレクション・テキスト" },
   "js-w4":  { en: "this, Prototypes & Classes",      np: "this, Prototype र Classes", jp: "this・プロトタイプ・クラス" },
   "js-w5":  { en: "Error handling & Modules",        np: "Error handling र Modules",  jp: "エラー処理とモジュール" },
   "js-w6":  { en: "Asynchronous JavaScript",         np: "Async JavaScript",          jp: "非同期JavaScript" },
