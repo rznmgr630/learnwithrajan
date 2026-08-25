@@ -3,7 +3,7 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 export const JS_DAY_2_LESSONS: JsLessonDay = {
   day: 2,
   title: { en: "Variables, Types & Hoisting", np: "Variables, Types र Hoisting", jp: "変数・型・ホイスティング" },
-  totalMinutes: 35,
+  totalMinutes: 44,
   difficulty: { en: "Beginner", np: "Beginner", jp: "初級" },
   lessons: [
     {
@@ -410,12 +410,121 @@ console.log(5 === "5"); // false`,
         },
       ],
     },
+    {
+      id: "numbers-precision",
+      title: { en: "Numbers & Precision", np: "Numbers र Precision", jp: "数値と精度" },
+      durationMinutes: 9,
+      explanation: {
+        en: "JavaScript uses the <b>IEEE-754 double-precision floating-point</b> format for its `Number` type. This means most decimal fractions are stored as approximations in binary, which creates famous results like:\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n```\n\nThis isn't a JavaScript bug — it's a consequence of representing decimal fractions using binary floating-point.\n\nFor precision-sensitive calculations, you need to understand <b>`Number.EPSILON`</b>, <b>safe integers</b>, <b>`BigInt`</b>, and how to format numbers correctly with <b>`Intl.NumberFormat`</b>.\n\n---\n\n### 1. Basic — floating-point precision\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n\nconsole.log(0.1 + 0.2 === 0.3);\n// false\n```\n\nDon't assume decimal arithmetic is exact when using `Number`.\n\n---\n\n### 2. Intermediate — `Number.EPSILON`\n\n`Number.EPSILON` represents the smallest difference between `1` and the next representable `Number`.\n\nFor approximate comparisons, you can use it as part of a tolerance check:\n\n```javascript\nconst a = 0.1 + 0.2;\nconst b = 0.3;\n\nconst equal = Math.abs(a - b) < Number.EPSILON;\n\nconsole.log(equal);\n// true\n```\n\nFor larger numbers or calculations with accumulated error, a fixed `Number.EPSILON` comparison may not be enough; the tolerance should be appropriate to the scale of the values.\n\n---\n\n### 3. Advanced — safe integers and `BigInt`\n\nJavaScript `Number` can represent integers exactly only up to:\n\n```javascript\nconsole.log(Number.MAX_SAFE_INTEGER);\n// 9007199254740991\n```\n\nBeyond that, integer precision can be lost:\n\n```javascript\nconsole.log(9007199254740991 + 1);\n// 9007199254740992\n\nconsole.log(9007199254740991 + 2);\n// 9007199254740992\n```\n\nUse `BigInt` when you need integers larger than the safe `Number` range:\n\n```javascript\nconst huge = 9007199254740991n + 2n;\n\nconsole.log(huge);\n// 9007199254740993n\n```\n\n`BigInt` and `Number` cannot normally be mixed directly:\n\n```javascript\n10n + 5;\n// TypeError\n```\n\nConvert explicitly when necessary.\n\n---\n\n### Why is money broken in JavaScript?\n\nMoney exposes floating-point problems because financial values are usually <b>decimal</b>, while `Number` uses <b>binary floating-point</b>.\n\n```javascript\nconst price = 0.1;\nconst tax = 0.2;\n\nconsole.log(price + tax);\n// 0.30000000000000004\n```\n\nA common approach is to store money as the smallest integer unit, such as cents:\n\n```javascript\nconst price = 10; // $0.10\nconst tax = 20;   // $0.20\n\nconst total = price + tax;\n\nconsole.log(total);\n// 30 cents\n```\n\nThen format the result for display:\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(total / 100));\n// \"$0.30\"\n```\n\nFor serious financial systems, the choice of representation and rounding rules should be deliberate; integer minor units work well when the currency and required precision fit that model.\n\n---\n\n### `Intl.NumberFormat`\n\n`Intl.NumberFormat` handles <b>locale-aware number formatting</b> without manually adding commas, currency symbols, or decimal formatting.\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(1234567.89));\n// \"$1,234,567.89\"\n```\n\nDifferent locales produce different representations:\n\n```javascript\nnew Intl.NumberFormat(\"de-DE\", {\n  style: \"currency\",\n  currency: \"EUR\"\n}).format(1234567.89);\n\n// \"1.234.567,89 €\"\n```",
+        np: "JavaScript ले आफ्नो `Number` type का लागि <b>IEEE-754 double-precision floating-point</b> ढाँचा प्रयोग गर्छ। यसको अर्थ धेरैजसो decimal अंश binary मा अनुमानित रूपमा राखिन्छन्, जसले यस्ता प्रसिद्ध नतिजा दिन्छ:\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n```\n\nयो JavaScript को bug होइन — decimal अंशलाई binary floating-point ले प्रतिनिधित्व गर्दाको परिणाम हो।\n\nPrecision-संवेदनशील गणनाका लागि, तपाईंले <b>`Number.EPSILON`</b>, <b>safe integer</b>, <b>`BigInt`</b>, र <b>`Intl.NumberFormat`</b> ले संख्या कसरी सही ढाँचामा देखाउने बुझ्नुपर्छ।\n\n---\n\n### 1. आधारभूत — floating-point precision\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n\nconsole.log(0.1 + 0.2 === 0.3);\n// false\n```\n\n`Number` प्रयोग गर्दा decimal गणित ठ्याक्कै सही हुन्छ भन्ने नठान्नुहोस्।\n\n---\n\n### 2. मध्यम — `Number.EPSILON`\n\n`Number.EPSILON` ले `1` र त्यसपछिको प्रतिनिधित्व गर्न मिल्ने `Number` बीचको सबैभन्दा सानो फरक जनाउँछ।\n\nअनुमानित तुलनाका लागि, तपाईं यसलाई tolerance जाँचको भागका रूपमा प्रयोग गर्न सक्नुहुन्छ:\n\n```javascript\nconst a = 0.1 + 0.2;\nconst b = 0.3;\n\nconst equal = Math.abs(a - b) < Number.EPSILON;\n\nconsole.log(equal);\n// true\n```\n\nठूला संख्या वा त्रुटि थुप्रिएका गणनाका लागि, स्थिर `Number.EPSILON` तुलना पर्याप्त नहुन सक्छ; tolerance value को स्केल अनुसार हुनुपर्छ।\n\n---\n\n### 3. उन्नत — safe integer र `BigInt`\n\nJavaScript को `Number` ले integer लाई ठ्याक्कै यतिसम्म मात्र प्रतिनिधित्व गर्न सक्छ:\n\n```javascript\nconsole.log(Number.MAX_SAFE_INTEGER);\n// 9007199254740991\n```\n\nत्यसपछि integer को precision हराउन सक्छ:\n\n```javascript\nconsole.log(9007199254740991 + 1);\n// 9007199254740992\n\nconsole.log(9007199254740991 + 2);\n// 9007199254740992\n```\n\nSafe `Number` दायरा भन्दा ठूला integer चाहिँदा `BigInt` प्रयोग गर्नुहोस्:\n\n```javascript\nconst huge = 9007199254740991n + 2n;\n\nconsole.log(huge);\n// 9007199254740993n\n```\n\n`BigInt` र `Number` लाई सामान्यतया सिधै मिसाउन मिल्दैन:\n\n```javascript\n10n + 5;\n// TypeError\n```\n\nआवश्यक भएमा स्पष्ट रूपमा बदल्नुहोस्।\n\n---\n\n### JavaScript मा पैसा किन बिग्रिन्छ?\n\nपैसाले floating-point समस्या देखाउँछ किनकि वित्तीय value सामान्यतया <b>decimal</b> हुन्छन्, जब कि `Number` ले <b>binary floating-point</b> प्रयोग गर्छ।\n\n```javascript\nconst price = 0.1;\nconst tax = 0.2;\n\nconsole.log(price + tax);\n// 0.30000000000000004\n```\n\nसामान्य उपाय भनेको पैसालाई सबैभन्दा सानो integer एकाइ, जस्तै cent, मा राख्नु हो:\n\n```javascript\nconst price = 10; // $0.10\nconst tax = 20;   // $0.20\n\nconst total = price + tax;\n\nconsole.log(total);\n// 30 cents\n```\n\nत्यसपछि देखाउनका लागि ढाँचामा राख्नुहोस्:\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(total / 100));\n// \"$0.30\"\n```\n\nगम्भीर वित्तीय प्रणालीका लागि, प्रतिनिधित्व र rounding नियमको छनोट सोचविचार गरी गर्नुपर्छ; मुद्रा र आवश्यक precision मिल्दा integer minor unit राम्रोसँग काम गर्छ।\n\n---\n\n### `Intl.NumberFormat`\n\n`Intl.NumberFormat` ले comma, मुद्रा चिन्ह वा decimal ढाँचा हातले नथपी <b>locale अनुसारको number formatting</b> सम्हाल्छ।\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(1234567.89));\n// \"$1,234,567.89\"\n```\n\nफरक locale ले फरक रूप दिन्छन्:\n\n```javascript\nnew Intl.NumberFormat(\"de-DE\", {\n  style: \"currency\",\n  currency: \"EUR\"\n}).format(1234567.89);\n\n// \"1.234.567,89 €\"\n```",
+        jp: "JavaScriptは `Number` 型に<b>IEEE-754 倍精度浮動小数点</b>形式を使います。つまり多くの小数は2進数の近似値として保存され、次のような有名な結果が生まれます:\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n```\n\nこれはJavaScriptのバグではなく、小数を2進浮動小数点で表現することの帰結です。\n\n精度が重要な計算では、<b>`Number.EPSILON`</b>、<b>安全な整数</b>、<b>`BigInt`</b>、そして<b>`Intl.NumberFormat`</b>による正しい書式化を理解する必要があります。\n\n---\n\n### 1. 基本 — 浮動小数点の精度\n\n```javascript\nconsole.log(0.1 + 0.2);\n// 0.30000000000000004\n\nconsole.log(0.1 + 0.2 === 0.3);\n// false\n```\n\n`Number` を使う限り、小数の計算が厳密だと思い込まないでください。\n\n---\n\n### 2. 中級 — `Number.EPSILON`\n\n`Number.EPSILON` は `1` と、その次に表現できる `Number` との最小の差を表します。\n\n近似的な比較では、許容誤差の判定に使えます:\n\n```javascript\nconst a = 0.1 + 0.2;\nconst b = 0.3;\n\nconst equal = Math.abs(a - b) < Number.EPSILON;\n\nconsole.log(equal);\n// true\n```\n\n大きな数値や誤差が積み重なる計算では、固定の `Number.EPSILON` では足りないことがあります。許容誤差は値の規模に見合ったものにすべきです。\n\n---\n\n### 3. 上級 — 安全な整数と `BigInt`\n\nJavaScriptの `Number` が正確に表せる整数の上限は:\n\n```javascript\nconsole.log(Number.MAX_SAFE_INTEGER);\n// 9007199254740991\n```\n\nこれを超えると整数の精度が失われることがあります:\n\n```javascript\nconsole.log(9007199254740991 + 1);\n// 9007199254740992\n\nconsole.log(9007199254740991 + 2);\n// 9007199254740992\n```\n\n安全な `Number` の範囲を超える整数が必要なときは `BigInt` を使います:\n\n```javascript\nconst huge = 9007199254740991n + 2n;\n\nconsole.log(huge);\n// 9007199254740993n\n```\n\n`BigInt` と `Number` は通常そのまま混ぜられません:\n\n```javascript\n10n + 5;\n// TypeError\n```\n\n必要なら明示的に変換します。\n\n---\n\n### なぜJavaScriptでお金が壊れるのか?\n\nお金は浮動小数点の問題を浮き彫りにします。金額は通常<b>10進数</b>なのに、`Number` は<b>2進浮動小数点</b>だからです。\n\n```javascript\nconst price = 0.1;\nconst tax = 0.2;\n\nconsole.log(price + tax);\n// 0.30000000000000004\n```\n\nよく使われる方法は、お金を最小の整数単位（セントなど）で保持することです:\n\n```javascript\nconst price = 10; // $0.10\nconst tax = 20;   // $0.20\n\nconst total = price + tax;\n\nconsole.log(total);\n// 30 cents\n```\n\n表示するときに書式化します:\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(total / 100));\n// \"$0.30\"\n```\n\n本格的な金融システムでは、表現方法と丸めの規則を意図的に選ぶべきです。通貨と必要な精度が合致するなら、整数の補助単位はうまく機能します。\n\n---\n\n### `Intl.NumberFormat`\n\n`Intl.NumberFormat` は、カンマや通貨記号、小数の書式を手で付けなくても<b>ロケールに応じた数値の書式化</b>を行います。\n\n```javascript\nconst formatter = new Intl.NumberFormat(\"en-US\", {\n  style: \"currency\",\n  currency: \"USD\"\n});\n\nconsole.log(formatter.format(1234567.89));\n// \"$1,234,567.89\"\n```\n\nロケールが変われば表現も変わります:\n\n```javascript\nnew Intl.NumberFormat(\"de-DE\", {\n  style: \"currency\",\n  currency: \"EUR\"\n}).format(1234567.89);\n\n// \"1.234.567,89 €\"\n```",
+      },
+      diagram: `Decimal value
+    ↓
+IEEE-754 binary floating-point
+    ↓
+Approximation
+    ↓
+0.1 + 0.2
+    ↓
+0.30000000000000004
+
+
+Number            exact integers up to 9007199254740991
+BigInt            exact integers beyond that, written 123n
+Number.EPSILON    tolerance for approximate comparisons
+Intl.NumberFormat display formatting, never arithmetic`,
+      codeExample: {
+        title: { en: "Precision, safe integers, and formatting money", np: "Precision, safe integer, र पैसाको formatting", jp: "精度・安全な整数・金額の書式化" },
+        code: `// ── 1. Basic — decimals are approximations ────────────────────────
+console.log(0.1 + 0.2);        // 0.30000000000000004
+console.log(0.1 + 0.2 === 0.3); // false
+
+// ── 2. Intermediate — compare with a tolerance ────────────────────
+const a = 0.1 + 0.2;
+const b = 0.3;
+
+console.log(Math.abs(a - b) < Number.EPSILON); // true
+
+// ── 3. Advanced — safe integers and BigInt ────────────────────────
+console.log(Number.MAX_SAFE_INTEGER);   // 9007199254740991
+console.log(9007199254740991 + 2);      // 9007199254740992 — precision lost
+
+const huge = 9007199254740991n + 2n;
+console.log(huge);                      // 9007199254740993n
+
+// 10n + 5;                             // TypeError — do not mix types
+
+// ── Money: keep integer minor units, format only for display ──────
+const priceInCents = 10; // $0.10
+const taxInCents = 20;   // $0.20
+const totalInCents = priceInCents + taxInCents; // 30
+
+const formatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD"
+});
+
+console.log(formatter.format(totalInCents / 100)); // "$0.30"
+console.log(formatter.format(1234567.89));         // "$1,234,567.89"`,
+      },
+      keyTakeaways: [
+        { en: "JavaScript `Number` uses <b>IEEE-754 double-precision floating point</b>.", np: "JavaScript को `Number` ले <b>IEEE-754 double-precision floating point</b> प्रयोग गर्छ।", jp: "JavaScriptの `Number` は<b>IEEE-754 倍精度浮動小数点</b>を使う。" },
+        { en: "Decimal fractions such as `0.1` often cannot be represented exactly in binary.", np: "`0.1` जस्ता decimal अंश प्रायः binary मा ठ्याक्कै प्रतिनिधित्व गर्न सकिँदैन।", jp: "`0.1` のような小数は、2進数では正確に表せないことが多い。" },
+        { en: "`0.1 + 0.2 !== 0.3` is a precision issue, not a random bug.", np: "`0.1 + 0.2 !== 0.3` precision को कुरा हो, अनियमित bug होइन।", jp: "`0.1 + 0.2 !== 0.3` は精度の問題であって、気まぐれなバグではない。" },
+        { en: "`Number.EPSILON` is useful for <b>approximate comparisons</b>, with scale-appropriate tolerances.", np: "`Number.EPSILON` <b>अनुमानित तुलना</b> का लागि उपयोगी छ, स्केल अनुसारको tolerance सहित।", jp: "`Number.EPSILON` は<b>近似的な比較</b>に役立つ。許容誤差は規模に合わせる。" },
+        { en: "`Number.MAX_SAFE_INTEGER` is `9007199254740991`.", np: "`Number.MAX_SAFE_INTEGER` `9007199254740991` हो।", jp: "`Number.MAX_SAFE_INTEGER` は `9007199254740991`。" },
+        { en: "Use <b>`BigInt`</b> for integers beyond the safe `Number` range, and don't mix it with `Number` implicitly.", np: "Safe `Number` दायरा नाघेका integer का लागि <b>`BigInt`</b> प्रयोग गर्नुहोस्, र यसलाई `Number` सँग बिना स्पष्टता नमिसाउनुहोस्।", jp: "安全な範囲を超える整数には<b>`BigInt`</b>を使い、`Number` と暗黙に混ぜない。" },
+        { en: "For money, consider <b>integer minor units</b> (such as cents) rather than floating-point decimals.", np: "पैसाका लागि, floating-point decimal भन्दा <b>integer minor unit</b> (जस्तै cent) विचार गर्नुहोस्।", jp: "金額には浮動小数点の小数ではなく<b>整数の補助単位</b>（セントなど）を検討する。" },
+        { en: "Use <b>`Intl.NumberFormat`</b> for locale-aware display formatting.", np: "Locale अनुसारको display formatting का लागि <b>`Intl.NumberFormat`</b> प्रयोग गर्नुहोस्।", jp: "ロケールに応じた表示の書式化には<b>`Intl.NumberFormat`</b>を使う。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Comparing floating-point results directly</b> — `0.1 + 0.2 === 0.3` is `false`. Compare with a tolerance: `Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON`.", np: "<b>Floating-point नतिजा सिधै तुलना गर्नु</b> — `0.1 + 0.2 === 0.3` `false` हो। Tolerance सँग तुलना गर्नुहोस्: `Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON`।", jp: "<b>浮動小数点の結果を直接比較する</b> — `0.1 + 0.2 === 0.3` は `false`。許容誤差で比較する: `Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON`。" },
+        { en: "<b>Using `Number` for arbitrarily large integers</b> — `9007199254740993` silently becomes `9007199254740992`. Write `9007199254740993n` when the exact value matters.", np: "<b>जति ठूलो पनि integer का लागि `Number` प्रयोग गर्नु</b> — `9007199254740993` चुपचाप `9007199254740992` बन्छ। ठ्याक्कै value महत्वपूर्ण भए `9007199254740993n` लेख्नुहोस्।", jp: "<b>任意の大きな整数に `Number` を使う</b> — `9007199254740993` は黙って `9007199254740992` になる。正確さが必要なら `9007199254740993n` と書く。" },
+        { en: "<b>Treating formatting as arithmetic</b> — a string like `\"$1,299.99\"` is for display only. Keep the numeric value separate from its formatted presentation.", np: "<b>Formatting लाई गणित मान्नु</b> — `\"$1,299.99\"` जस्तो string देखाउनका लागि मात्र हो। संख्यात्मक value लाई यसको ढाँचाबद्ध प्रस्तुतिबाट अलग राख्नुहोस्।", jp: "<b>書式化を計算だと考える</b> — `\"$1,299.99\"` のような文字列は表示専用。数値そのものと表示用の書式は分けておく。" },
+        { en: "<b>Mixing `BigInt` and `Number`</b> — `10n + 5` throws a `TypeError`. Convert one side explicitly first.", np: "<b>`BigInt` र `Number` मिसाउनु</b> — `10n + 5` ले `TypeError` दिन्छ। पहिले एउटा पक्ष स्पष्ट रूपमा बदल्नुहोस्।", jp: "<b>`BigInt` と `Number` を混ぜる</b> — `10n + 5` は `TypeError`。まず片方を明示的に変換する。" },
+      ],
+      quiz: [
+        {
+          question: { en: "Why does `0.1 + 0.2` give `0.30000000000000004`?", np: "`0.1 + 0.2` ले `0.30000000000000004` किन दिन्छ?", jp: "なぜ `0.1 + 0.2` は `0.30000000000000004` になるのか?" },
+          options: [
+            { en: "`0.1` is stored as a string", np: "`0.1` string रूपमा राखिन्छ", jp: "`0.1` が文字列として保存されるから" },
+            { en: "JavaScript randomly rounds numbers", np: "JavaScript ले अनियमित रूपमा संख्या round गर्छ", jp: "JavaScriptが数値をランダムに丸めるから" },
+            { en: "`+` is broken", np: "`+` बिग्रिएको छ", jp: "`+` が壊れているから" },
+            { en: "IEEE-754 binary floating-point cannot represent every decimal fraction exactly", np: "IEEE-754 binary floating-point ले हरेक decimal अंश ठ्याक्कै प्रतिनिधित्व गर्न सक्दैन", jp: "IEEE-754の2進浮動小数点はすべての小数を正確に表せないから" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "The same thing happens in most languages that use IEEE-754 doubles.", np: "IEEE-754 double प्रयोग गर्ने धेरैजसो भाषामा यही हुन्छ।", jp: "IEEE-754の倍精度を使うほとんどの言語で同じことが起こる。" },
+        },
+        {
+          question: { en: "What is the largest integer `Number` can represent safely?", np: "`Number` ले सुरक्षित रूपमा प्रतिनिधित्व गर्न सक्ने सबैभन्दा ठूलो integer कति हो?", jp: "`Number` が安全に表せる最大の整数は?" },
+          options: [
+            { en: "`999999999999999999`", np: "`999999999999999999`", jp: "`999999999999999999`" },
+            { en: "`4294967295`", np: "`4294967295`", jp: "`4294967295`" },
+            { en: "`9007199254740991`", np: "`9007199254740991`", jp: "`9007199254740991`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "That is `Number.MAX_SAFE_INTEGER`, or 2 to the 53rd minus 1.", np: "त्यो `Number.MAX_SAFE_INTEGER` हो, अर्थात् 2 को 53 घात घटाउ 1।", jp: "これが `Number.MAX_SAFE_INTEGER`、つまり2の53乗マイナス1。" },
+        },
+        {
+          question: { en: "Which should you use for an exact integer larger than the safe `Number` range?", np: "Safe `Number` दायरा भन्दा ठूलो ठ्याक्कै integer का लागि कुन प्रयोग गर्नुपर्छ?", jp: "安全な `Number` の範囲を超える正確な整数にはどれを使うべきか?" },
+          options: [
+            { en: "`parseInt()`", np: "`parseInt()`", jp: "`parseInt()`" },
+            { en: "`String`", np: "`String`", jp: "`String`" },
+            { en: "`Float32Array`", np: "`Float32Array`", jp: "`Float32Array`" },
+            { en: "`BigInt`", np: "`BigInt`", jp: "`BigInt`" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "Write the literal with an `n` suffix, and don't mix it with `Number` values.", np: "Literal लाई `n` प्रत्यय सहित लेख्नुहोस्, र `Number` value सँग नमिसाउनुहोस्।", jp: "リテラルに `n` を付けて書き、`Number` の値と混ぜない。" },
+        },
+      ],
+    },
   ],
   finalQuiz: [
     {
       question: { en: "Which keyword should you use by default for a variable you never plan to reassign?", np: "Reassign नगर्ने variable का लागि default मा कुन keyword?", jp: "再代入しない変数にデフォルトで使うキーワードは？" },
-      options: [{ en: "var", np: "var", jp: "var" }, { en: "const", np: "const", jp: "const" }, { en: "let", np: "let", jp: "let" }],
-      correctIndex: 1,
+      options: [{ en: "const", np: "const", jp: "const" }, { en: "var", np: "var", jp: "var" }, { en: "let", np: "let", jp: "let" }],
+      correctIndex: 0,
       explanation: { en: "const should be your default — it signals intent and prevents accidental reassignment.", np: "const default हुनुपर्छ — यसले intent देखाउँछ र गल्तिले reassignment हुनबाट जोगाउँछ।", jp: "constをデフォルトにすべき — 意図を示し誤った再代入を防ぐ。" },
     },
     {
@@ -426,26 +535,26 @@ console.log(5 === "5"); // false`,
     },
     {
       question: { en: "Which of these is NOT one of JavaScript's primitive types?", np: "यीमध्ये कुन JavaScript को primitive type होइन?", jp: "次のうちJavaScriptのプリミティブ型でないものは？" },
-      options: [{ en: "array", np: "array", jp: "array" }, { en: "symbol", np: "symbol", jp: "symbol" }, { en: "bigint", np: "bigint", jp: "bigint" }],
-      correctIndex: 0,
+      options: [{ en: "bigint", np: "bigint", jp: "bigint" }, { en: "symbol", np: "symbol", jp: "symbol" }, { en: "array", np: "array", jp: "array" }],
+      correctIndex: 2,
       explanation: { en: "Arrays are objects, not primitives. typeof [] returns \"object\".", np: "Array object हो, primitive होइन। typeof [] ले 'object' दिन्छ।", jp: "配列はオブジェクトであり、プリミティブではない。typeof []は'object'を返す。" },
     },
     {
       question: { en: "What does `typeof null` return?", np: "`typeof null` ले के फर्काउँछ?", jp: "`typeof null`は何を返す？" },
-      options: [{ en: "\"null\"", np: "\"null\"", jp: "\"null\"" }, { en: "\"object\"", np: "\"object\"", jp: "\"object\"" }, { en: "\"undefined\"", np: "\"undefined\"", jp: "\"undefined\"" }],
-      correctIndex: 1,
+      options: [{ en: "\"object\"", np: "\"object\"", jp: "\"object\"" }, { en: "\"null\"", np: "\"null\"", jp: "\"null\"" }, { en: "\"undefined\"", np: "\"undefined\"", jp: "\"undefined\"" }],
+      correctIndex: 0,
       explanation: { en: "A historic bug from JavaScript's 1995 implementation, never fixed for backwards compatibility.", np: "1995 देखिको bug, compatibility कारणले fix गरिएन।", jp: "1995年からのバグ。互換性のため修正されなかった。" },
     },
     {
       question: { en: "What is the practical difference between `null` and `undefined`?", np: "`null` र `undefined` को व्यावहारिक फरक के हो?", jp: "`null`と`undefined`の実用的な違いは？" },
-      options: [{ en: "null is explicit \"no value\"; undefined is JS's default for unset", np: "null explicit 'no value' हो; undefined JS को default हो", jp: "nullは明示的な「値なし」、undefinedはJSのデフォルト" }, { en: "No difference, they're interchangeable", np: "कुनै फरक छैन, interchangeable छन्", jp: "違いはなく、互換可能" }],
-      correctIndex: 0,
+      options: [{ en: "No difference, they're interchangeable", np: "कुनै फरक छैन, interchangeable छन्", jp: "違いはなく、互換可能" }, { en: "null is explicit \"no value\"; undefined is JS's default for unset", np: "null explicit 'no value' हो; undefined JS को default हो", jp: "nullは明示的な「値なし」、undefinedはJSのデフォルト" }],
+      correctIndex: 1,
       explanation: { en: "You choose null deliberately; JavaScript assigns undefined automatically when nothing has been set.", np: "null तपाईंले आफैं छान्नुहुन्छ; JS ले केही set नभएमा आफैं undefined दिन्छ।", jp: "nullは意図的に選ぶ。undefinedは何も設定されていない場合にJSが自動で割り当てる。" },
     },
     {
       question: { en: "What gets printed by `console.log(a); var a = 5;`?", np: "`console.log(a); var a = 5;` ले के print गर्छ?", jp: "`console.log(a); var a = 5;` は何を出力する？" },
-      options: [{ en: "undefined", np: "undefined", jp: "undefined" }, { en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" }, { en: "5", np: "5", jp: "5" }],
-      correctIndex: 0,
+      options: [{ en: "5", np: "5", jp: "5" }, { en: "ReferenceError", np: "ReferenceError", jp: "ReferenceError" }, { en: "undefined", np: "undefined", jp: "undefined" }],
+      correctIndex: 2,
       explanation: { en: "var is hoisted and pre-filled with undefined before the code runs.", np: "var hoist भई code चल्नु अघि undefined ले pre-fill हुन्छ।", jp: "varはコード実行前にホイストされundefinedで初期化される。" },
     },
     {
@@ -462,15 +571,35 @@ console.log(5 === "5"); // false`,
     },
     {
       question: { en: "What is the result of `\"5\" + 3`?", np: "`\"5\" + 3` को नतिजा के हो?", jp: "`\"5\" + 3` の結果は？" },
-      options: [{ en: "\"53\"", np: "\"53\"", jp: "\"53\"" }, { en: "8", np: "8", jp: "8" }, { en: "NaN", np: "NaN", jp: "NaN" }],
-      correctIndex: 0,
+      options: [{ en: "NaN", np: "NaN", jp: "NaN" }, { en: "8", np: "8", jp: "8" }, { en: "\"53\"", np: "\"53\"", jp: "\"53\"" }],
+      correctIndex: 2,
       explanation: { en: "+ prefers string concatenation when either operand is a string.", np: "एक side string भएमा `+` ले concatenation गर्छ।", jp: "一方が文字列なら`+`は連結を優先する。" },
     },
     {
       question: { en: "Which comparison operator should you use by default in JavaScript?", np: "JavaScript मा default मा कुन comparison operator प्रयोग गर्ने?", jp: "JavaScriptでデフォルトに使うべき比較演算子は？" },
-      options: [{ en: "==", np: "==", jp: "==" }, { en: "===", np: "===", jp: "===" }],
-      correctIndex: 1,
+      options: [{ en: "===", np: "===", jp: "===" }, { en: "==", np: "==", jp: "==" }],
+      correctIndex: 0,
       explanation: { en: "=== avoids implicit coercion surprises. == should only be used deliberately, e.g. `value == null`.", np: "=== ले implicit coercion का अनपेक्षित नतिजाबाट बचाउँछ। == लाई जानाजानी मात्र प्रयोग गर्नुहोस्।", jp: "===は暗黙の変換による驚きを避ける。==は`value == null`など意図的な場合のみ使う。" },
+    },
+    {
+      question: { en: "What does `0.1 + 0.2 === 0.3` evaluate to, and why?", np: "`0.1 + 0.2 === 0.3` को नतिजा के हुन्छ, र किन?", jp: "`0.1 + 0.2 === 0.3` の結果は? またその理由は?" },
+      options: [
+        { en: "`true`, because JavaScript rounds the result", np: "`true`, किनकि JavaScript ले नतिजा round गर्छ", jp: "`true`。JavaScriptが結果を丸めるから" },
+        { en: "`false`, because binary floating point cannot store 0.1 exactly", np: "`false`, किनकि binary floating point ले 0.1 ठ्याक्कै राख्न सक्दैन", jp: "`false`。2進浮動小数点は0.1を正確に保持できないから" },
+        { en: "`false`, because `===` never compares numbers", np: "`false`, किनकि `===` ले कहिल्यै संख्या तुलना गर्दैन", jp: "`false`。`===` は数値を比較しないから" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "Compare with a tolerance instead: `Math.abs(a - b) < Number.EPSILON`.", np: "बरु tolerance सँग तुलना गर्नुहोस्: `Math.abs(a - b) < Number.EPSILON`।", jp: "代わりに許容誤差で比較する: `Math.abs(a - b) < Number.EPSILON`。" },
+    },
+    {
+      question: { en: "How should you store a money amount to avoid floating-point drift?", np: "Floating-point भड्काव बच्न पैसाको रकम कसरी राख्नुपर्छ?", jp: "浮動小数点のズレを避けるには金額をどう保持すべきか?" },
+      options: [
+        { en: "As a decimal Number, always rounded", np: "सधैं round गरिएको decimal Number रूपमा", jp: "常に丸めた小数のNumberとして" },
+        { en: "As a formatted string like \"$1.99\"", np: "\"$1.99\" जस्तो ढाँचाबद्ध string रूपमा", jp: "\"$1.99\" のような書式化された文字列として" },
+        { en: "As integer minor units such as cents", np: "Cent जस्ता integer minor unit रूपमा", jp: "セントのような整数の補助単位として" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Do the arithmetic in whole cents, then use `Intl.NumberFormat` only for display.", np: "गणित पूरा cent मा गर्नुहोस्, अनि देखाउनका लागि मात्र `Intl.NumberFormat` प्रयोग गर्नुहोस्।", jp: "計算はセント単位の整数で行い、表示のときだけ `Intl.NumberFormat` を使う。" },
     },
   ],
 };
