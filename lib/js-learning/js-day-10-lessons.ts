@@ -94,10 +94,10 @@ console.log(admin.deleteUser()); // User deleted — found on Admin.prototype`,
         {
           question: { en: "Does `class User {}` create a `User` object?", np: "`class User {}` ले `User` object बनाउँछ?", jp: "`class User {}` は `User` オブジェクトを作るか?" },
           options: [
-            { en: "Yes", np: "बनाउँछ", jp: "はい" },
             { en: "No", np: "बनाउँदैन", jp: "いいえ" },
+            { en: "Yes", np: "बनाउँछ", jp: "はい" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "It only defines the blueprint; `new User()` creates the instance.", np: "यसले खाका मात्र परिभाषित गर्छ; `new User()` ले instance बनाउँछ।", jp: "設計図を定義するだけ。インスタンスを作るのは `new User()`。" },
         },
         {
@@ -113,11 +113,11 @@ console.log(admin.deleteUser()); // User deleted — found on Admin.prototype`,
         {
           question: { en: "What does `new User(\"John\")` do?", np: "`new User(\"John\")` ले के गर्छ?", jp: "`new User(\"John\")` は何をするか?" },
           options: [
-            { en: "Creates an instance and runs the constructor", np: "Instance बनाउँछ र constructor चलाउँछ", jp: "インスタンスを作りコンストラクタを実行する" },
-            { en: "Only creates the class", np: "Class मात्र बनाउँछ", jp: "クラスを作るだけ" },
             { en: "Copies every method into the object", np: "हरेक method object मा copy गर्छ", jp: "すべてのメソッドをオブジェクトにコピーする" },
+            { en: "Only creates the class", np: "Class मात्र बनाउँछ", jp: "クラスを作るだけ" },
+            { en: "Creates an instance and runs the constructor", np: "Instance बनाउँछ र constructor चलाउँछ", jp: "インスタンスを作りコンストラクタを実行する" },
           ],
-          correctIndex: 0,
+          correctIndex: 2,
           explanation: { en: "It links the new object to `User.prototype` first, then runs `constructor()`.", np: "यसले पहिले नयाँ object लाई `User.prototype` सँग जोड्छ, त्यसपछि `constructor()` चलाउँछ।", jp: "まず新しいオブジェクトを `User.prototype` にリンクし、その後 `constructor()` を実行する。" },
         },
       ],
@@ -214,11 +214,11 @@ console.log(new Teacher("Rajan").greet());
         {
           question: { en: "What does `extends` do?", np: "`extends` ले के गर्छ?", jp: "`extends` は何をするか?" },
           options: [
-            { en: "Creates a new object", np: "नयाँ object बनाउँछ", jp: "新しいオブジェクトを作る" },
             { en: "Creates inheritance between classes", np: "Class बीच inheritance बनाउँछ", jp: "クラス間に継承を作る" },
+            { en: "Creates a new object", np: "नयाँ object बनाउँछ", jp: "新しいオブジェクトを作る" },
             { en: "Copies all parent methods into the child", np: "Parent का सबै method child मा copy गर्छ", jp: "親のメソッドをすべて子にコピーする" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Nothing is copied; it links the child's prototype to the parent's.", np: "केही copy हुँदैन; यसले child को prototype लाई parent को सँग जोड्छ।", jp: "コピーはされない。子のプロトタイプを親につなぐだけ。" },
         },
         {
@@ -235,10 +235,10 @@ console.log(new Teacher("Rajan").greet());
           question: { en: "What happens with `class Student extends Person { greet() { return super.greet(); } }`?", np: "`class Student extends Person { greet() { return super.greet(); } }` मा के हुन्छ?", jp: "`class Student extends Person { greet() { return super.greet(); } }` では何が起こるか?" },
           options: [
             { en: "Calls `Student.greet()` again", np: "`Student.greet()` फेरि call गर्छ", jp: "`Student.greet()` をもう一度呼ぶ" },
-            { en: "Calls `Person.greet()`", np: "`Person.greet()` call गर्छ", jp: "`Person.greet()` を呼ぶ" },
             { en: "Creates a new `Person`", np: "नयाँ `Person` बनाउँछ", jp: "新しい `Person` を作る" },
+            { en: "Calls `Person.greet()`", np: "`Person.greet()` call गर्छ", jp: "`Person.greet()` を呼ぶ" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "`super.method()` reaches the parent's implementation without recursing.", np: "`super.method()` ले recursion नगरी parent को implementation मा पुग्छ।", jp: "`super.method()` は再帰せずに親の実装へ到達する。" },
         },
       ],
@@ -366,11 +366,11 @@ console.log(account.balance); // 500
         {
           question: { en: "Where does a static method belong?", np: "Static method कसको हुन्छ?", jp: "静的メソッドはどこに属するか?" },
           options: [
-            { en: "Every instance", np: "हरेक instance", jp: "各インスタンス" },
             { en: "The class itself", np: "Class आफैं", jp: "クラス自身" },
+            { en: "Every instance", np: "हरेक instance", jp: "各インスタンス" },
             { en: "`Object.prototype`", np: "`Object.prototype`", jp: "`Object.prototype`" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "That is why instances cannot call it, only `ClassName.method()` can.", np: "त्यसैले instance ले call गर्न सक्दैन, `ClassName.method()` ले मात्र सक्छ।", jp: "だからインスタンスからは呼べず、`ClassName.method()` でのみ呼べる。" },
         },
         {
@@ -396,11 +396,11 @@ console.log(account.balance); // 500
         {
           question: { en: "Which correctly calls `static double(n)` on `class MathUtils`?", np: "`class MathUtils` को `static double(n)` कसरी सही रूपमा call हुन्छ?", jp: "`class MathUtils` の `static double(n)` を正しく呼ぶのはどれか?" },
           options: [
-            { en: "`new MathUtils().double(5)`", np: "`new MathUtils().double(5)`", jp: "`new MathUtils().double(5)`" },
             { en: "`MathUtils.double(5)`", np: "`MathUtils.double(5)`", jp: "`MathUtils.double(5)`" },
+            { en: "`new MathUtils().double(5)`", np: "`new MathUtils().double(5)`", jp: "`new MathUtils().double(5)`" },
             { en: "`MathUtils.prototype.double(5)`", np: "`MathUtils.prototype.double(5)`", jp: "`MathUtils.prototype.double(5)`" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Static methods live on the class object, not on its prototype.", np: "Static method class object मा हुन्छन्, यसको prototype मा होइन।", jp: "静的メソッドはクラスオブジェクトにあり、プロトタイプにはない。" },
         },
       ],
@@ -415,8 +415,8 @@ console.log(account.balance); // 500
     },
     {
       question: { en: "What must you call before using `this` in a derived class's constructor?", np: "Derived class को constructor मा `this` प्रयोग गर्नुअघि के call गर्नुपर्छ?", jp: "派生クラスのコンストラクタでthisを使う前に何を呼ぶ必要がある？" },
-      options: [{ en: "`super(...)`", np: "`super(...)`", jp: "`super(...)`" }, { en: "Nothing — `this` is available immediately", np: "केही होइन — `this` तुरुन्तै available हुन्छ", jp: "何も — thisは即座に利用可能" }],
-      correctIndex: 0,
+      options: [{ en: "Nothing — `this` is available immediately", np: "केही होइन — `this` तुरुन्तै available हुन्छ", jp: "何も — thisは即座に利用可能" }, { en: "`super(...)`", np: "`super(...)`", jp: "`super(...)`" }],
+      correctIndex: 1,
       explanation: { en: "super() runs the parent constructor which sets up this; skipping it throws.", np: "super() ले parent constructor चलाउँछ जसले this सेटअप गर्छ; skip गर्दा throw हुन्छ।", jp: "super()は親コンストラクタを実行してthisを設定する。スキップするとスローする。" },
     },
     {
@@ -427,8 +427,8 @@ console.log(account.balance); // 500
     },
     {
       question: { en: "Does `Dog extends Animal` make a `Dog` instance `instanceof Animal`?", np: "`Dog extends Animal` ले `Dog` instance `instanceof Animal` बनाउँछ?", jp: "`Dog extends Animal`はDogインスタンスをinstanceof Animalにする？" },
-      options: [{ en: "Yes", np: "हो", jp: "はい" }, { en: "No — instanceof only checks the immediate class", np: "होइन — instanceof ले immediate class मात्र check गर्छ", jp: "いいえ — instanceofは直近のクラスのみを確認する" }],
-      correctIndex: 0,
+      options: [{ en: "No — instanceof only checks the immediate class", np: "होइन — instanceof ले immediate class मात्र check गर्छ", jp: "いいえ — instanceofは直近のクラスのみを確認する" }, { en: "Yes", np: "हो", jp: "はい" }],
+      correctIndex: 1,
       explanation: { en: "extends puts Animal.prototype into Dog's prototype chain, so instanceof recognises both.", np: "extends ले Animal.prototype लाई Dog को prototype chain मा राख्छ, त्यसैले instanceof ले दुवै चिन्छ।", jp: "extendsはAnimal.prototypeをDogのプロトタイプチェーンに入れるため、instanceofは両方を認識する。" },
     },
     {
@@ -439,8 +439,8 @@ console.log(account.balance); // 500
     },
     {
       question: { en: "What happens if code outside a class tries to access a `#privateField`?", np: "Class बाहिरको code ले `#privateField` access गर्ने प्रयास गर्दा के हुन्छ?", jp: "クラス外のコードが`#privateField`にアクセスしようとするとどうなる？" },
-      options: [{ en: "SyntaxError — enforced at the language level", np: "SyntaxError — language level मा enforce", jp: "SyntaxError — 言語レベルで強制される" }, { en: "It just returns undefined", np: "यसले केवल undefined फर्काउँछ", jp: "単にundefinedを返す" }],
-      correctIndex: 0,
+      options: [{ en: "It just returns undefined", np: "यसले केवल undefined फर्काउँछ", jp: "単にundefinedを返す" }, { en: "SyntaxError — enforced at the language level", np: "SyntaxError — language level मा enforce", jp: "SyntaxError — 言語レベルで強制される" }],
+      correctIndex: 1,
       explanation: { en: "Private fields are a real language feature, not a naming convention like _field.", np: "Private fields real language feature हो, _field जस्तो naming convention होइन।", jp: "プライベートフィールドは_fieldのような命名規則ではなく本物の言語機能。" },
     },
     {
@@ -451,8 +451,8 @@ console.log(account.balance); // 500
     },
     {
       question: { en: "Are classes hoisted the same way function declarations are?", np: "Classes function declarations जस्तै hoist हुन्छन्?", jp: "クラスは関数宣言のようにホイストされる？" },
-      options: [{ en: "No — they remain in the Temporal Dead Zone until declared", np: "होइन — declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — 宣言されるまでTemporal Dead Zoneに留まる" }, { en: "Yes, fully hoisted and usable before declaration", np: "हो, पूर्ण hoisted र declaration अघि प्रयोग योग्य", jp: "はい、完全にホイストされ宣言前でも使える" }],
-      correctIndex: 0,
+      options: [{ en: "Yes, fully hoisted and usable before declaration", np: "हो, पूर्ण hoisted र declaration अघि प्रयोग योग्य", jp: "はい、完全にホイストされ宣言前でも使える" }, { en: "No — they remain in the Temporal Dead Zone until declared", np: "होइन — declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — 宣言されるまでTemporal Dead Zoneに留まる" }],
+      correctIndex: 1,
       explanation: { en: "Classes behave like let/const for hoisting, unlike function declarations.", np: "Function declarations भन्दा फरक, hoisting का लागि classes let/const जस्तै behave गर्छन्।", jp: "関数宣言とは異なり、クラスはホイスティングの観点でlet/constのように動作する。" },
     },
     {

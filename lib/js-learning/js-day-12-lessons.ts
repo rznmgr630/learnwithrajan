@@ -113,10 +113,10 @@ getUser(userId, (err, user) => {
         {
           question: { en: "In the error-first callback convention `fn(err, data)`, what does a `null` first argument mean?", np: "Error-first callback convention `fn(err, data)` मा पहिलो argument `null` भएको मतलब के हो?", jp: "エラーファースト規約`fn(err, data)`で第一引数が`null`とはどういう意味？" },
           options: [
-            { en: "The operation succeeded — no error occurred", np: "Operation सफल भयो — कुनै error भएन", jp: "処理が成功した — エラーは発生していない" },
             { en: "The operation is still pending", np: "Operation अझै pending छ", jp: "処理はまだ保留中" },
+            { en: "The operation succeeded — no error occurred", np: "Operation सफल भयो — कुनै error भएन", jp: "処理が成功した — エラーは発生していない" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "By convention, `null` in the error slot signals success; any other value there signals failure and should be handled first.", np: "Convention अनुसार, error slot मा `null` ले सफलता जनाउँछ; अर्को कुनै value ले असफलता जनाउँछ र पहिले handle गर्नुपर्छ।", jp: "慣習として、エラー位置の`null`は成功を示す。それ以外の値は失敗を示し、最初に処理すべき。" },
         },
         {
@@ -131,10 +131,10 @@ getUser(userId, (err, user) => {
         {
           question: { en: "Is the error-first callback convention (`fn(err, data)`) enforced by the JavaScript language itself?", np: "Error-first callback convention (`fn(err, data)`) JavaScript language ले नै enforce गर्छ?", jp: "エラーファーストコールバック規約（`fn(err, data)`）はJavaScript言語自体によって強制される？" },
           options: [
-            { en: "No — it's just a widely followed convention, not a language rule", np: "होइन — यो व्यापक रूपमा followed convention मात्र हो, language rule होइन", jp: "いいえ — 広く従われている慣習にすぎず、言語規則ではない" },
             { en: "Yes — JavaScript requires all callbacks to follow this exact shape", np: "हो — JavaScript ले सबै callbacks लाई यही exact shape follow गर्न required गर्छ", jp: "はい — JavaScriptはすべてのコールバックがこの形に従うことを要求する" },
+            { en: "No — it's just a widely followed convention, not a language rule", np: "होइन — यो व्यापक रूपमा followed convention मात्र हो, language rule होइन", jp: "いいえ — 広く従われている慣習にすぎず、言語規則ではない" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "Nothing in JavaScript enforces this shape — it's a community/Node.js convention that most APIs happen to follow.", np: "JavaScript मा यो shape enforce गर्ने केही छैन — यो community/Node.js convention हो जुन धेरै APIs ले follow गर्छन्।", jp: "JavaScriptにはこの形を強制するものはない。ほとんどのAPIがたまたま従っているコミュニティ／Node.jsの慣習に過ぎない。" },
         },
       ],
@@ -265,10 +265,10 @@ readFilePromise("./config.json")
         {
           question: { en: "What is `.catch(fn)` shorthand for?", np: "`.catch(fn)` कसको shorthand हो?", jp: "`.catch(fn)`は何の糖衣構文？" },
           options: [
-            { en: "`.then(undefined, fn)`", np: "`.then(undefined, fn)`", jp: "`.then(undefined, fn)`" },
             { en: "`.then(fn, undefined)`", np: "`.then(fn, undefined)`", jp: "`.then(fn, undefined)`" },
+            { en: "`.then(undefined, fn)`", np: "`.then(undefined, fn)`", jp: "`.then(undefined, fn)`" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "`.catch()` registers only a rejection handler, which is exactly what passing `undefined` as `.then()`'s first argument and `fn` as the second does.", np: "`.catch()` ले rejection handler मात्र register गर्छ, जुन `.then()` को पहिलो argument मा `undefined` र दोस्रोमा `fn` पास गरेसरह हो।", jp: "`.catch()`はrejectionハンドラだけを登録する。これは`.then()`の第一引数に`undefined`、第二引数に`fn`を渡すのと同じこと。" },
         },
         {
@@ -383,10 +383,10 @@ getUser(userId)
         {
           question: { en: "What does calling `.then()` on a Promise return?", np: "Promise मा `.then()` call गर्दा के फर्काउँछ?", jp: "Promiseに対して`.then()`を呼ぶと何が返る？" },
           options: [
-            { en: "A brand-new Promise", np: "एउटा नयाँ Promise", jp: "新しいPromise" },
             { en: "The same Promise it was called on", np: "जुन Promise मा call गरिएको थियो त्यही", jp: "呼び出された同じPromise" },
+            { en: "A brand-new Promise", np: "एउटा नयाँ Promise", jp: "新しいPromise" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "Every `.then()` call produces a new Promise, which is exactly what allows further `.then()`/`.catch()` calls to be chained onto it.", np: "हरेक `.then()` call ले नयाँ Promise बनाउँछ, यसैले थप `.then()`/`.catch()` calls chain गर्न सकिन्छ।", jp: "各`.then()`呼び出しは新しいPromiseを生成する。これがさらに`.then()`/`.catch()`をチェーンできる理由。" },
         },
         {
@@ -401,10 +401,10 @@ getUser(userId)
         {
           question: { en: "In `.then(a).then(b).then(c).catch(err)`, if `b` throws an error, does `c`'s `.then()` callback still run?", np: "`.then(a).then(b).then(c).catch(err)` मा `b` ले error throw गर्यो भने `c` को `.then()` callback चल्छ?", jp: "`.then(a).then(b).then(c).catch(err)`で`b`がエラーを投げたら、`c`の`.then()`コールバックは実行される？" },
           options: [
-            { en: "No — the error skips straight to `.catch(err)`, bypassing `c`", np: "होइन — error सिधै `.catch(err)` मा जान्छ, `c` bypass गरेर", jp: "いいえ — エラーは`c`を飛ばして直接`.catch(err)`にジャンプする" },
             { en: "Yes — `c` still runs with the error as its argument", np: "हो — `c` अझै error लाई argument को रूपमा लिएर चल्छ", jp: "はい — `c`はエラーを引数として実行される" },
+            { en: "No — the error skips straight to `.catch(err)`, bypassing `c`", np: "होइन — error सिधै `.catch(err)` मा जान्छ, `c` bypass गरेर", jp: "いいえ — エラーは`c`を飛ばして直接`.catch(err)`にジャンプする" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "A thrown error inside a `.then()` callback propagates past every remaining `.then()` in the chain until it reaches a `.catch()`.", np: "`.then()` callback भित्र throw भएको error ले `.catch()` नभेट्दासम्म बाँकी सबै `.then()` लाई bypass गर्छ।", jp: "`.then()`コールバック内で投げられたエラーは、`.catch()`に到達するまでチェーン内の残りのすべての`.then()`を飛び越えて伝播する。" },
         },
       ],
@@ -419,8 +419,8 @@ getUser(userId)
     },
     {
       question: { en: "What is 'callback hell'?", np: "'Callback hell' के हो?", jp: "「コールバック地獄」とは何か？" },
-      options: [{ en: "Deeply nested callbacks for dependent async steps, hard to read and maintain", np: "Dependent async steps का लागि गहिरो nested callbacks, पढ्न/maintain गर्न गाह्रो", jp: "依存する非同期ステップのために深くネストされたコールバックで、読みにくく保守しにくい" }, { en: "A JavaScript runtime error thrown after too many callbacks", np: "धेरै callbacks पछि JavaScript runtime ले throw गर्ने error", jp: "コールバックが多すぎる後にJavaScriptランタイムが投げるエラー" }],
-      correctIndex: 0,
+      options: [{ en: "A JavaScript runtime error thrown after too many callbacks", np: "धेरै callbacks पछि JavaScript runtime ले throw गर्ने error", jp: "コールバックが多すぎる後にJavaScriptランタイムが投げるエラー" }, { en: "Deeply nested callbacks for dependent async steps, hard to read and maintain", np: "Dependent async steps का लागि गहिरो nested callbacks, पढ्न/maintain गर्न गाह्रो", jp: "依存する非同期ステップのために深くネストされたコールバックで、読みにくく保守しにくい" }],
+      correctIndex: 1,
       explanation: { en: "It's a readability/maintainability problem, not a runtime error — and it's exactly what Promises were designed to fix.", np: "यो readability/maintainability समस्या हो, runtime error होइन — र यही समस्या समाधान गर्न Promises बनाइयो।", jp: "これは可読性・保守性の問題であり、ランタイムエラーではない。まさにPromiseが解決するために設計されたもの。" },
     },
     {
@@ -431,8 +431,8 @@ getUser(userId)
     },
     {
       question: { en: "What runs the executor function passed to `new Promise((resolve, reject) => {...})`, and when?", np: "`new Promise((resolve, reject) => {...})` मा pass गरिएको executor function कहिले चल्छ?", jp: "`new Promise((resolve, reject) => {...})`に渡されたエグゼキュータ関数はいつ実行される？" },
-      options: [{ en: "Immediately, as soon as the Promise is constructed", np: "Promise construct हुनेबित्तिकै तुरुन्तै", jp: "Promiseが構築されるとすぐに" }, { en: "Only when `.then()` is called on the Promise", np: "Promise मा `.then()` call गरेपछि मात्र", jp: "Promiseに`.then()`が呼ばれたときのみ" }],
-      correctIndex: 0,
+      options: [{ en: "Only when `.then()` is called on the Promise", np: "Promise मा `.then()` call गरेपछि मात्र", jp: "Promiseに`.then()`が呼ばれたときのみ" }, { en: "Immediately, as soon as the Promise is constructed", np: "Promise construct हुनेबित्तिकै तुरुन्तै", jp: "Promiseが構築されるとすぐに" }],
+      correctIndex: 1,
       explanation: { en: "The executor runs synchronously and immediately when the Promise constructor is invoked, not later.", np: "Executor Promise constructor invoke हुनेबित्तिकै synchronously र immediately चल्छ, पछि होइन।", jp: "エグゼキュータはPromiseコンストラクタが呼ばれたときに同期的かつ即座に実行される。後からではない。" },
     },
     {
@@ -443,8 +443,8 @@ getUser(userId)
     },
     {
       question: { en: "What does `.catch(fn)` do internally?", np: "`.catch(fn)` ले internally के गर्छ?", jp: "`.catch(fn)`は内部で何をする？" },
-      options: [{ en: "It's shorthand for `.then(undefined, fn)`", np: "यो `.then(undefined, fn)` को shorthand हो", jp: "`.then(undefined, fn)`の糖衣構文" }, { en: "It creates a completely separate error-handling mechanism from `.then()`", np: "यसले `.then()` भन्दा पूर्ण फरक error-handling mechanism बनाउँछ", jp: "`.then()`とは完全に別のエラー処理メカニズムを作る" }],
-      correctIndex: 0,
+      options: [{ en: "It creates a completely separate error-handling mechanism from `.then()`", np: "यसले `.then()` भन्दा पूर्ण फरक error-handling mechanism बनाउँछ", jp: "`.then()`とは完全に別のエラー処理メカニズムを作る" }, { en: "It's shorthand for `.then(undefined, fn)`", np: "यो `.then(undefined, fn)` को shorthand हो", jp: "`.then(undefined, fn)`の糖衣構文" }],
+      correctIndex: 1,
       explanation: { en: "`.catch()` just registers a rejection handler, equivalent to passing `undefined` then `fn` into `.then()`.", np: "`.catch()` ले केवल rejection handler register गर्छ, `.then()` मा `undefined` अनि `fn` पास गरेसरह।", jp: "`.catch()`は単にrejectionハンドラを登録するだけで、`.then()`に`undefined`と`fn`を渡すのと同じ。" },
     },
     {
@@ -455,8 +455,8 @@ getUser(userId)
     },
     {
       question: { en: "If a `.then()` callback returns a plain value like `5` instead of a Promise, what happens to the chain?", np: "`.then()` callback ले Promise को सट्टा `5` जस्तो plain value फर्काए chain मा के हुन्छ?", jp: "`.then()`コールバックがPromiseの代わりに`5`のような通常の値を返すとチェーンはどうなる？" },
-      options: [{ en: "The value is automatically wrapped in a resolved Promise and the chain continues", np: "Value automatically resolved Promise मा wrap हुन्छ र chain जारी रहन्छ", jp: "その値は自動的に解決済みPromiseにラップされ、チェーンは続行する" }, { en: "The chain throws a TypeError because a non-Promise was returned", np: "Non-Promise फर्काएकोले chain ले TypeError throw गर्छ", jp: "Promise以外が返されたためチェーンはTypeErrorを投げる" }],
-      correctIndex: 0,
+      options: [{ en: "The chain throws a TypeError because a non-Promise was returned", np: "Non-Promise फर्काएकोले chain ले TypeError throw गर्छ", jp: "Promise以外が返されたためチェーンはTypeErrorを投げる" }, { en: "The value is automatically wrapped in a resolved Promise and the chain continues", np: "Value automatically resolved Promise मा wrap हुन्छ र chain जारी रहन्छ", jp: "その値は自動的に解決済みPromiseにラップされ、チェーンは続行する" }],
+      correctIndex: 1,
       explanation: { en: "Plain return values from `.then()` are automatically wrapped in an already-resolved Promise so chaining keeps working.", np: "`.then()` बाट फर्काएका plain values automatically resolved Promise मा wrap हुन्छन् ताकि chaining चलिरहोस्।", jp: "`.then()`から返された通常の値は自動的に解決済みPromiseにラップされ、チェーンが機能し続ける。" },
     },
     {
