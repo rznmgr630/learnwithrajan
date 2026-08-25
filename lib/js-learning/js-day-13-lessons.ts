@@ -11,120 +11,139 @@ export const JS_DAY_13_LESSONS: JsLessonDay = {
       title: { en: "async/await — Syntactic Sugar over Promises", np: "async/await — Promises माथिको Syntactic Sugar", jp: "async/await — Promiseの糖衣構文" },
       durationMinutes: 9,
       explanation: {
-        en: "`async`/`await` is not a new concurrency model — it's <b>syntactic sugar</b> over Promises that lets asynchronous code read top-to-bottom like synchronous code, without `.then()` chains. Two rules define it: an `async function` <b>always returns a Promise</b>, even if you write `return \"Hello\"` inside it (it gets auto-wrapped in `Promise.resolve(...)`); and `await` <b>pauses only the current async function</b> — it does not block the JavaScript engine or the rest of the program, which keeps running while that function waits.\n\nBecause `await` just unwraps a Promise's resolved value, a `.then()` chain can always be rewritten as a sequence of `await` statements inside a `try` block. Error handling shifts from `.catch()` to a plain <b>`try`/`catch`</b> wrapped around the `await` calls — any rejection anywhere in the `try` block jumps straight to `catch`, exactly like a thrown exception.",
-        np: "`async`/`await` नयाँ concurrency model होइन — यो Promises माथिको <b>syntactic sugar</b> हो जसले async code लाई `.then()` chain बिना top-to-bottom, sync जस्तै पढ्न दिन्छ। दुई नियम: `async function` ले <b>सधैं Promise return गर्छ</b>, `return \"Hello\"` लेखे पनि (यो auto `Promise.resolve(...)` मा wrap हुन्छ); र `await` ले <b>केवल current async function मात्र pause गर्छ</b> — JavaScript engine वा बाँकी program block हुँदैन, त्यो चलिरहन्छ।\n\n`await` ले Promise को resolved value unwrap मात्र गर्ने भएकाले, `.then()` chain लाई सधैं `try` block भित्रको sequential `await` statements मा rewrite गर्न सकिन्छ। Error handling `.catch()` बाट plain <b>`try`/`catch`</b> मा सर्छ — `try` block भित्र कहीं पनि rejection भयो भने सिधै `catch` मा जान्छ, thrown exception जस्तै।",
-        jp: "`async`/`await`は新しい並行処理モデルではなく、Promiseの上に成り立つ<b>糖衣構文</b>であり、`.then()`チェーンなしで非同期コードを上から下へ同期的に読めるようにする。2つのルールが本質：`async function`は<b>常にPromiseを返す</b>。`return \"Hello\"`と書いても自動的に`Promise.resolve(...)`でラップされる。そして`await`は<b>現在のasync関数のみを一時停止</b>する — JavaScriptエンジンやプログラムの他の部分はブロックされず、その関数が待っている間も実行を続ける。\n\n`await`はPromiseの解決値を取り出すだけなので、`.then()`チェーンは常に`try`ブロック内の逐次的な`await`文に書き換えられる。エラー処理は`.catch()`から普通の<b>`try`/`catch`</b>に移る — `try`ブロック内のどこかでrejectが起きると、投げられた例外と同じようにそのまま`catch`へ飛ぶ。",
+        en: "<b>`async/await`</b> is <b>syntactic sugar</b> (cleaner syntax) built on top of <b>Promises</b>. It doesn't create a new asynchronous model; it makes Promise-based code easier to read by allowing it to look more like synchronous code.\n\nTwo rules matter most:\n\n<b>`async` function</b> → always returns a Promise.\n\n```javascript\nasync function greet() {\n  return \"Hello\";\n}\n\ngreet().then(console.log);\n// Hello\n```\n\nThe returned `\"Hello\"` is automatically wrapped in a resolved Promise.\n\n<b>`await`</b> → waits for a Promise's result <b>inside the current async function</b>. It does <b>not block the JavaScript engine</b> or stop other code from running.\n\n```javascript\nasync function getUser() {\n  const user = await fetchUser();\n  console.log(user);\n}\n```\n\nWhile `getUser()` is waiting, JavaScript can continue handling other work.\n\n---\n\n### 1. `async` always returns a Promise\n\n```javascript\nasync function getMessage() {\n  return \"Hello\";\n}\n\nconst result = getMessage();\n\nconsole.log(result instanceof Promise);\n// true\n\nresult.then(message => {\n  console.log(message);\n});\n// Hello\n```\n\nEven though the function returns a normal string, the `async` keyword turns it into a Promise.\n\n---\n\n### 2. `await` unwraps a Promise\n\n```javascript\nfunction getUser() {\n  return Promise.resolve({ name: \"Rajan\" });\n}\n\nasync function showUser() {\n  const user = await getUser();\n\n  console.log(user.name);\n  // Rajan\n}\n\nshowUser();\n```\n\nWithout `await`, you'd receive the Promise itself:\n\n```javascript\nconst user = getUser();\n\nconsole.log(user);\n// Promise { ... }\n```\n\nWith `await`:\n\n```javascript\nconst user = await getUser();\n\nconsole.log(user);\n// { name: \"Rajan\" }\n```\n\n---\n\n### 3. Promise chain to `async/await`\n\nPromise version:\n\n```javascript\ngetUser()\n  .then(user => getOrders(user.id))\n  .then(orders => processOrders(orders))\n  .catch(err => console.error(err));\n```\n\n`async/await` version:\n\n```javascript\nasync function process() {\n  try {\n    const user = await getUser();\n    const orders = await getOrders(user.id);\n\n    processOrders(orders);\n  } catch (err) {\n    console.error(err);\n  }\n}\n```\n\nThe asynchronous behavior hasn't changed. Only the syntax has.",
+        np: "<b>`async/await`</b> <b>Promise</b> माथि बनेको <b>syntactic sugar</b> (सफा syntax) हो। यसले नयाँ asynchronous model बनाउँदैन; यसले Promise-आधारित code लाई synchronous जस्तै देखिन दिएर पढ्न सजिलो बनाउँछ।\n\nदुई नियम सबैभन्दा महत्वपूर्ण छन्:\n\n<b>`async` function</b> → सधैं Promise फर्काउँछ।\n\n```javascript\nasync function greet() {\n  return \"Hello\";\n}\n\ngreet().then(console.log);\n// Hello\n```\n\nफर्काइएको `\"Hello\"` स्वतः resolve भएको Promise मा लपेटिन्छ।\n\n<b>`await`</b> → <b>वर्तमान async function भित्र</b> Promise को नतिजा कुर्छ। यसले <b>JavaScript engine block गर्दैन</b> वा अरू code चल्नबाट रोक्दैन।\n\n```javascript\nasync function getUser() {\n  const user = await fetchUser();\n  console.log(user);\n}\n```\n\n`getUser()` कुर्दै गर्दा, JavaScript ले अरू काम सम्हालिरहन सक्छ।\n\n---\n\n### 1. `async` सधैं Promise फर्काउँछ\n\n```javascript\nasync function getMessage() {\n  return \"Hello\";\n}\n\nconst result = getMessage();\n\nconsole.log(result instanceof Promise);\n// true\n\nresult.then(message => {\n  console.log(message);\n});\n// Hello\n```\n\nFunction ले सामान्य string फर्काए पनि, `async` keyword ले यसलाई Promise बनाउँछ।\n\n---\n\n### 2. `await` ले Promise खोल्छ\n\n```javascript\nfunction getUser() {\n  return Promise.resolve({ name: \"Rajan\" });\n}\n\nasync function showUser() {\n  const user = await getUser();\n\n  console.log(user.name);\n  // Rajan\n}\n\nshowUser();\n```\n\n`await` बिना, तपाईंले Promise आफैं पाउनुहुन्छ:\n\n```javascript\nconst user = getUser();\n\nconsole.log(user);\n// Promise { ... }\n```\n\n`await` सँग:\n\n```javascript\nconst user = await getUser();\n\nconsole.log(user);\n// { name: \"Rajan\" }\n```\n\n---\n\n### 3. Promise chain बाट `async/await`\n\nPromise संस्करण:\n\n```javascript\ngetUser()\n  .then(user => getOrders(user.id))\n  .then(orders => processOrders(orders))\n  .catch(err => console.error(err));\n```\n\n`async/await` संस्करण:\n\n```javascript\nasync function process() {\n  try {\n    const user = await getUser();\n    const orders = await getOrders(user.id);\n\n    processOrders(orders);\n  } catch (err) {\n    console.error(err);\n  }\n}\n```\n\nAsynchronous व्यवहार बदलिएको छैन। Syntax मात्र बदलिएको हो।",
+        jp: "<b>`async/await`</b> は<b>Promise</b>の上に作られた<b>糖衣構文</b>（読みやすい書き方）です。新しい非同期のモデルを作るわけではなく、Promiseベースのコードを同期的なコードのように書けるようにして読みやすくします。\n\n重要な規則は2つです:\n\n<b>`async` 関数</b> → 常にPromiseを返す。\n\n```javascript\nasync function greet() {\n  return \"Hello\";\n}\n\ngreet().then(console.log);\n// Hello\n```\n\n返された `\"Hello\"` は自動的に解決済みのPromiseに包まれます。\n\n<b>`await`</b> → <b>今いるasync関数の中で</b>Promiseの結果を待ちます。<b>JavaScriptエンジンをブロックする</b>ことも、他のコードの実行を止めることもありません。\n\n```javascript\nasync function getUser() {\n  const user = await fetchUser();\n  console.log(user);\n}\n```\n\n`getUser()` が待っている間も、JavaScriptは他の処理を進められます。\n\n---\n\n### 1. `async` は常にPromiseを返す\n\n```javascript\nasync function getMessage() {\n  return \"Hello\";\n}\n\nconst result = getMessage();\n\nconsole.log(result instanceof Promise);\n// true\n\nresult.then(message => {\n  console.log(message);\n});\n// Hello\n```\n\n関数が普通の文字列を返しても、`async` キーワードがそれをPromiseにします。\n\n---\n\n### 2. `await` はPromiseを開く\n\n```javascript\nfunction getUser() {\n  return Promise.resolve({ name: \"Rajan\" });\n}\n\nasync function showUser() {\n  const user = await getUser();\n\n  console.log(user.name);\n  // Rajan\n}\n\nshowUser();\n```\n\n`await` がないとPromise自体を受け取ります:\n\n```javascript\nconst user = getUser();\n\nconsole.log(user);\n// Promise { ... }\n```\n\n`await` があれば:\n\n```javascript\nconst user = await getUser();\n\nconsole.log(user);\n// { name: \"Rajan\" }\n```\n\n---\n\n### 3. Promiseチェーンから `async/await` へ\n\nPromise版:\n\n```javascript\ngetUser()\n  .then(user => getOrders(user.id))\n  .then(orders => processOrders(orders))\n  .catch(err => console.error(err));\n```\n\n`async/await` 版:\n\n```javascript\nasync function process() {\n  try {\n    const user = await getUser();\n    const orders = await getOrders(user.id);\n\n    processOrders(orders);\n  } catch (err) {\n    console.error(err);\n  }\n}\n```\n\n非同期の振る舞いは変わっていません。変わったのは書き方だけです。",
       },
-      diagram: `async function run() {
-  console.log("start");                    ← runs immediately
-  const result = await someAsyncTask();    ← run() PAUSES here...
-  console.log("after await:", result);     ← ...resumes only when the Promise settles
-  console.log("end");
-}
+      diagram: `Promise-based code
 
-run();                    ← call starts run(), which pauses partway through
-console.log("outside");   ← this line does NOT wait — it runs while run() is paused!
+fetchUser()
+   ↓
+.then(user => fetchOrders(user))
+   ↓
+.then(orders => processOrders(orders))
+   ↓
+.catch(handleError)
 
-Output order:  "start"  →  "outside"  →  "after await: ..."  →  "end"
-               (only run() paused — the rest of the program kept going)`,
-      codeExample: {
-        title: { en: "Rewriting a Promise chain as async/await", np: "Promise chain लाई async/await मा rewrite गर्नु", jp: "Promiseチェーンをasync/awaitに書き直す" },
-        code: `// ── Promise chain version ──────────────────────────────────────────
-function getUserData(id) {
-  return fetchUser(id)
-    .then(user => fetchOrders(user.id))
-    .then(orders => ({ user, orders }))
-    .catch(err => console.error(err));
-}
 
-// ── Same logic with async/await — reads top to bottom ────────────────
-async function getUserData(id) {
+async/await
+
+async function process() {
   try {
-    const user = await fetchUser(id);         // pause until fetchUser resolves
-    const orders = await fetchOrders(user.id); // pause until fetchOrders resolves
-    return { user, orders };                   // return value is auto-wrapped in a Promise
+    const user = await fetchUser();
+    const orders = await fetchOrders(user);
+    processOrders(orders);
+  } catch (err) {
+    handleError(err);
+  }
+}
+
+The underlying Promise behaviour is still there —
+async/await simply gives you a cleaner way to write it.`,
+      codeExample: {
+        title: { en: "From a promise chain to await, step by step", np: "Promise chain बाट await सम्म, चरणबद्ध", jp: "Promiseチェーンからawaitへ、一歩ずつ" },
+        code: `// ── 1. async always returns a Promise ─────────────────────────────
+async function getMessage() {
+  return "Hello";
+}
+
+const result = getMessage();
+
+console.log(result instanceof Promise); // true
+result.then(message => console.log(message)); // Hello
+
+// ── 2. await unwraps the promise ──────────────────────────────────
+function getUser() {
+  return Promise.resolve({ name: "Rajan" });
+}
+
+async function showUser() {
+  console.log(getUser());       // Promise { ... }
+  console.log(await getUser()); // { name: "Rajan" }
+}
+
+showUser();
+
+// ── 3. The same work, written as a chain then with await ──────────
+getUser()
+  .then(user => getOrders(user.id))
+  .then(orders => processOrders(orders))
+  .catch(err => console.error(err));
+
+async function process() {
+  try {
+    const user = await getUser();
+    const orders = await getOrders(user.id);
+
+    processOrders(orders);
   } catch (err) {
     console.error(err);
   }
 }
 
-// ── An async function ALWAYS returns a Promise ────────────────────────
-async function greet() {
-  return "Hello";   // implicitly becomes Promise.resolve("Hello")
+// ── await pauses this function, not the engine ────────────────────
+async function test() {
+  await slowOperation();
+  console.log("Done");
 }
 
-greet().then(msg => console.log(msg));  // "Hello"
-// or, inside another async function:
-const msg = await greet();              // "Hello"
-
-// ── await pauses the CURRENT function only, not the whole program ────
-async function run() {
-  console.log("start");
-  const result = await someAsyncTask();  // pauses run() while the task runs
-  console.log("after await:", result);   // resumes when the task settles
-}
-run();
-console.log("outside"); // this still runs while run() is paused — proof await isn't blocking
-
-// ── Error handling with try/catch instead of .catch() ─────────────────
-async function fetchData(url) {
-  try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    // Network errors and HTTP errors both land here
-    console.error("Fetch failed:", err.message);
-    throw err;   // rethrow so the caller can also handle it
-  }
-}
-
-// ── Forgetting await is a classic bug ─────────────────────────────────
-console.log(fetchUser(1));        // Promise { <pending> } — NOT the user!
-console.log(await fetchUser(1));  // the actual user object`,
+test();
+console.log("Other work"); // runs while slowOperation is still pending`,
       },
       keyTakeaways: [
-        { en: "An `async function` always returns a Promise — even `return \"plain value\"` gets auto-wrapped in `Promise.resolve(...)`.", np: "`async function` ले सधैं Promise return गर्छ — `return \"plain value\"` लेखे पनि यो auto `Promise.resolve(...)` मा wrap हुन्छ।", jp: "`async function`は常にPromiseを返す — `return \"plain value\"`と書いても自動的に`Promise.resolve(...)`でラップされる。" },
-        { en: "`await` pauses only the <b>current</b> async function — it doesn't block the JS engine, so other code keeps running while it waits.", np: "`await` ले <b>current</b> async function मात्र pause गर्छ — JS engine block हुँदैन, त्यसैले अन्य code चलिरहन्छ।", jp: "`await`は<b>現在の</b>async関数のみを一時停止する — JSエンジンをブロックしないので、待っている間も他のコードは実行を続ける。" },
-        { en: "`try`/`catch` wraps `await` calls to handle rejections — any Promise that rejects inside the `try` block jumps straight to `catch`, just like a thrown exception.", np: "`try`/`catch` ले `await` calls लाई wrap गरी rejections handle गर्छ — `try` block भित्र कुनै Promise reject भयो भने सिधै `catch` मा जान्छ।", jp: "`try`/`catch`は`await`呼び出しをラップしてrejectを処理する — `try`ブロック内で拒否されたPromiseは投げられた例外のように直接`catch`へ飛ぶ。" },
+        { en: "<b>`async/await`</b> → syntactic sugar over Promises.", np: "<b>`async/await`</b> → Promise माथिको syntactic sugar।", jp: "<b>`async/await`</b> → Promiseの上の糖衣構文。" },
+        { en: "<b>`async`</b> → always returns a Promise.", np: "<b>`async`</b> → सधैं Promise फर्काउँछ।", jp: "<b>`async`</b> → 常にPromiseを返す。" },
+        { en: "<b>`await`</b> → unwraps a Promise's result.", np: "<b>`await`</b> → Promise को नतिजा खोल्छ।", jp: "<b>`await`</b> → Promiseの結果を取り出す。" },
+        { en: "<b>`await`</b> pauses only the current async function.", np: "<b>`await`</b> ले वर्तमान async function मात्र रोक्छ।", jp: "<b>`await`</b> は今いるasync関数だけを止める。" },
+        { en: "`await` does <b>not block the JavaScript engine</b>.", np: "`await` ले <b>JavaScript engine block गर्दैन</b>।", jp: "`await` は<b>JavaScriptエンジンをブロックしない</b>。" },
+        { en: "<b>`try/catch`</b> handles rejected Promises when using `await`.", np: "`await` प्रयोग गर्दा <b>`try/catch`</b> ले reject भएका Promise सम्हाल्छ।", jp: "`await` を使うときは<b>`try/catch`</b>が拒否されたPromiseを扱う。" },
+        { en: "`.then()` / `.catch()` and `async/await` use the same underlying Promise mechanism.", np: "`.then()` / `.catch()` र `async/await` ले उही आधारभूत Promise यन्त्र प्रयोग गर्छन्।", jp: "`.then()` / `.catch()` と `async/await` は同じPromiseの仕組みを使う。" },
       ],
       commonMistakes: [
-        { en: "Forgetting `await` — you get a pending Promise object back (`Promise { <pending> }`), not the resolved value.", np: "`await` भुल्नु — resolved value होइन, pending Promise object (`Promise { <pending> }`) फर्किन्छ।", jp: "`await`を忘れること — 解決された値ではなく保留中のPromiseオブジェクト（`Promise { <pending> }`）が返る。" },
-        { en: "Trying to use `await` outside an `async` function (or outside a module's top level), which is a syntax error.", np: "`async` function बाहिर (वा module को top level बाहिर) `await` use गर्ने प्रयास गर्नु, जुन syntax error हो।", jp: "`async`関数の外（またはモジュールのトップレベル以外）で`await`を使おうとすること。これは構文エラーになる。" },
-        { en: "Leaving `await` calls unwrapped in `try`/`catch`, so a rejection becomes an unhandled promise rejection instead of being caught and dealt with.", np: "`await` calls लाई `try`/`catch` मा नराख्नु, जसले गर्दा rejection catch नभई unhandled promise rejection बन्छ।", jp: "`await`呼び出しを`try`/`catch`で包まないこと。その結果rejectがキャッチされず未処理のPromise拒否になる。" },
+        { en: "<b>Thinking `async` returns the raw value</b> — `getNumber()` gives a Promise, not `42`. You need `await getNumber()` inside an async context.", np: "<b>`async` ले कच्चा value फर्काउँछ भन्ने ठान्नु</b> — `getNumber()` ले `42` होइन, Promise दिन्छ। Async context भित्र `await getNumber()` चाहिन्छ।", jp: "<b>`async` が生の値を返すと思う</b> — `getNumber()` は `42` ではなくPromiseを返す。async文脈で `await getNumber()` が必要。" },
+        { en: "<b>Thinking `await` blocks JavaScript</b> — it pauses only the enclosing function. Code after the call, such as a following `console.log`, still runs while the awaited work is pending.", np: "<b>`await` ले JavaScript block गर्छ भन्ने ठान्नु</b> — यसले घेर्ने function मात्र रोक्छ। Call पछिको code, जस्तै अर्को `console.log`, await गरिएको काम बाँकी हुँदै चल्छ।", jp: "<b>`await` がJavaScriptをブロックすると思う</b> — 止まるのは囲っている関数だけ。呼び出しの後のコード（例えば続く `console.log`）は、待っている間も実行される。" },
+        { en: "<b>Forgetting error handling</b> — if the awaited promise rejects, the whole `async` function rejects too. Wrap the risky part in `try/catch` when you can act on the failure.", np: "<b>Error handling बिर्सनु</b> — await गरिएको promise reject भए, पूरै `async` function पनि reject हुन्छ। Failure मा केही गर्न सक्ने भए जोखिमपूर्ण भाग `try/catch` मा राख्नुहोस्।", jp: "<b>エラー処理を忘れる</b> — awaitしたPromiseが拒否されると、その `async` 関数全体も拒否される。対処できるなら危険な部分を `try/catch` で囲む。" },
       ],
       quiz: [
         {
-          question: { en: "What does an `async function` always return, even if it returns a plain string?", np: "`async function` ले plain string return गरे पनि सधैं के return गर्छ?", jp: "`async function`はプレーンな文字列を返しても、常に何を返す？" },
+          question: { en: "What does an `async` function always return?", np: "`async` function ले सधैं के फर्काउँछ?", jp: "`async` 関数は常に何を返すか?" },
           options: [
-            { en: "A Promise, auto-wrapping the returned value", np: "एउटा Promise, return गरेको value auto-wrap गरेर", jp: "返された値を自動でラップしたPromise" },
-            { en: "The plain value itself, unchanged", np: "Plain value आफैं, अपरिवर्तित", jp: "プレーンな値そのもの、変更なし" },
+            { en: "The raw value", np: "कच्चा value", jp: "生の値" },
+            { en: "A Promise", np: "एउटा Promise", jp: "Promise" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Every async function returns a Promise; a plain returned value is automatically wrapped in Promise.resolve(...).", np: "हरेक async function ले Promise return गर्छ; plain returned value auto Promise.resolve(...) मा wrap हुन्छ।", jp: "すべてのasync関数はPromiseを返す。プレーンな戻り値は自動的にPromise.resolve(...)でラップされる。" },
+          correctIndex: 1,
+          explanation: { en: "Even `return \"Hello\"` comes back wrapped in a resolved Promise.", np: "`return \"Hello\"` पनि resolve भएको Promise मा लपेटिएर आउँछ।", jp: "`return \"Hello\"` でも解決済みのPromiseに包まれて返る。" },
         },
         {
-          question: { en: "When `await someAsyncTask()` pauses inside `run()`, does the rest of the program (outside `run()`) also stop?", np: "`run()` भित्र `await someAsyncTask()` pause हुँदा, `run()` बाहिरको बाँकी program पनि रुक्छ?", jp: "`run()`内で`await someAsyncTask()`が一時停止すると、`run()`の外のプログラムも止まる？" },
+          question: { en: "What does `await` do?", np: "`await` ले के गर्छ?", jp: "`await` は何をするか?" },
           options: [
-            { en: "No — only run() pauses; other code keeps executing", np: "होइन — केवल run() pause हुन्छ; अन्य code चलिरहन्छ", jp: "いいえ — run()のみが一時停止し、他のコードは実行を続ける" },
-            { en: "Yes — await blocks the entire JavaScript engine", np: "हो — await ले पूरै JavaScript engine block गर्छ", jp: "はい — awaitはJavaScriptエンジン全体をブロックする" },
+            { en: "Blocks the entire JavaScript engine", np: "पूरै JavaScript engine block गर्छ", jp: "JavaScriptエンジン全体をブロックする" },
+            { en: "Pauses only the current async function until the Promise settles", np: "Promise settle नहुँदासम्म वर्तमान async function मात्र रोक्छ", jp: "Promiseが確定するまで、今いるasync関数だけを止める" },
+            { en: "Converts a Promise into a callback", np: "Promise लाई callback मा बदल्छ", jp: "Promiseをコールバックに変換する" },
           ],
-          correctIndex: 0,
-          explanation: { en: "await only suspends the async function it's written in — it never blocks the JS engine or other running code.", np: "await ले त्यो लेखिएको async function मात्र suspend गर्छ — JS engine वा अन्य code कहिल्यै block गर्दैन।", jp: "awaitはそれが書かれたasync関数のみを一時停止する — JSエンジンや他の実行中のコードをブロックすることは決してない。" },
+          correctIndex: 1,
+          explanation: { en: "Other queued work keeps running while that one function waits.", np: "त्यो एउटा function कुर्दै गर्दा queue मा भएका अरू काम चलिरहन्छन्।", jp: "その関数が待っている間も、キューにある他の処理は動き続ける。" },
         },
         {
-          question: { en: "What should you use to handle a rejected Promise when using `await`, instead of a `.catch()` chain?", np: "`await` use गर्दा `.catch()` chain को सट्टा rejected Promise handle गर्न के use गर्नुपर्छ?", jp: "`await`使用時に`.catch()`チェーンの代わりに拒否されたPromiseを処理するために何を使うべき？" },
+          question: { en: "What is `async/await` built on?", np: "`async/await` केमाथि बनेको छ?", jp: "`async/await` は何の上に作られているか?" },
           options: [
-            { en: "A `try`/`catch` block wrapped around the `await` call", np: "`await` call वरिपरि wrap गरिएको `try`/`catch` block", jp: "`await`呼び出しを囲む`try`/`catch`ブロック" },
-            { en: "There is no way to catch errors with await", np: "await सँग errors catch गर्ने कुनै तरिका छैन", jp: "awaitでエラーをキャッチする方法はない" },
+            { en: "Callbacks", np: "Callback", jp: "コールバック" },
+            { en: "Promises", np: "Promise", jp: "Promise" },
+            { en: "Threads", np: "Thread", jp: "スレッド" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It is the same mechanism as `.then()`, written differently.", np: "यो `.then()` कै यन्त्र हो, फरक तरिकाले लेखिएको।", jp: "`.then()` と同じ仕組みを別の書き方にしたもの。" },
+        },
+        {
+          question: { en: "What handles a rejected Promise when using `await`?", np: "`await` प्रयोग गर्दा reject भएको Promise के ले सम्हाल्छ?", jp: "`await` を使うとき、拒否されたPromiseは何が扱うか?" },
+          options: [
+            { en: "`try/catch`", np: "`try/catch`", jp: "`try/catch`" },
+            { en: "`if/else`", np: "`if/else`", jp: "`if/else`" },
+            { en: "`switch`", np: "`switch`", jp: "`switch`" },
           ],
           correctIndex: 0,
-          explanation: { en: "A rejection during await inside a try block behaves like a thrown exception and jumps straight to the matching catch.", np: "try block भित्र await बेला rejection भयो भने thrown exception जस्तै behave गर्छ र सिधै catch मा जान्छ।", jp: "tryブロック内でのawait中のrejectは投げられた例外のように振る舞い、対応するcatchへ直接飛ぶ。" },
+          explanation: { en: "A rejection becomes a thrown error at the `await`, so `catch` receives it.", np: "Rejection `await` मा throw भएको error बन्छ, त्यसैले `catch` ले पाउँछ।", jp: "拒否は `await` の位置で例外になるので、`catch` が受け取る。" },
         },
       ],
     },
