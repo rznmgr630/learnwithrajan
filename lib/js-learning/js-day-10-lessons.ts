@@ -248,109 +248,160 @@ console.log(new Teacher("Rajan").greet());
       title: { en: "Static Methods, Getters/Setters & Private Fields", np: "Static Methods, Getters/Setters, Private Fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Static methods</b> belong to the class itself, not to any instance — you call them as `ClassName.method()` without ever creating an object, which is perfect for utilities and factory functions (e.g. `Calculator.add(2, 3)`). Calling a static method on an instance (`instance.staticMethod()`) throws, because static members only exist on the class.\n\n<b>Getters (`get`)</b> and <b>setters (`set`)</b> let a method be accessed like a plain property — no `()` — while still running code behind the scenes. A getter is handy for computed values (`get area() { return this.width * this.height; }`, read as `rect.area`), and a setter is handy for validating or transforming a value before it's stored, such as trimming whitespace or rejecting a negative age.\n\n<b>Private fields (`#name`)</b> take this further: a field declared with a `#` prefix is only accessible from inside that class's own body — accessing `obj.#balance` from outside code is a `SyntaxError`, not just a convention like `_balance`. Combining private fields with public methods (`deposit()`, `getBalance()`) lets the class fully control how its internal state is read or changed — this is the essence of <b>encapsulation</b>. One more subtlety: unlike function declarations, classes are not hoisted the same way — they sit in the Temporal Dead Zone (Day 3) until their declaration line runs, so a class can't be used before it's declared.",
-        np: "Static methods class को आफ्नै हो, instance को होइन — `ClassName.method()` बाट call हुन्छ, object नबनाई। Instance मा static method call गर्दा throw हुन्छ। Getter/setter ले method लाई property जस्तै access गर्न दिन्छ — getter ले computed value दिन्छ, setter ले store गर्नुअघि value validate/transform गर्छ। Private fields (`#name`) class body भित्र मात्र accessible हुन्छन् — बाहिरबाट access गर्दा SyntaxError, `_name` convention भन्दा बलियो — यसैले encapsulation सम्भव हुन्छ। Classes पनि function जस्तो hoist हुँदैनन्, declaration नचलुन्जेल Temporal Dead Zone मा रहन्छन्।",
-        jp: "staticメソッドはインスタンスではなくクラス自体に属し、オブジェクトを作らずに`ClassName.method()`として呼べる。インスタンスでstaticメソッドを呼ぶとスローする。getter/setterはメソッドをプロパティのようにアクセスさせる — getterは計算値を返し、setterは保存前に値を検証・変換する。プライベートフィールド(`#name`)はクラス本体内のみアクセス可能で、外部からアクセスするとSyntaxErrorになる（`_name`という慣習より強力）。これによりカプセル化が実現する。クラスも関数のようにはホイストされず、宣言されるまでTemporal Dead Zoneにある。",
+        en: "JavaScript classes provide several features for controlling <b>where functionality lives</b>, <b>how properties are accessed</b>, and <b>how internal data is protected</b>.\n\n• <b>Static methods</b> → belong to the class itself, not its instances.\n• <b>Getters</b> → read a value like a property while running a method behind the scenes.\n• <b>Setters</b> → assign a value like a property while running validation or transformation.\n• <b>Private fields</b> → use `#` to make class data accessible only inside the class.\n• Together, private fields and controlled methods provide <b>encapsulation</b>.\n\n---\n\n### 1. Static methods\n\nStatic methods belong to the <b>class</b>, so you don't need an instance.\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nThis does <b>not</b> work:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\nBecause `add()` belongs to `Calculator`, not `calculator`.\n\n---\n\n### 2. Getters\n\nA getter lets you access a method like a normal property.\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\nNotice there are <b>no parentheses</b>: `rectangle.area` instead of `rectangle.area()`.\n\n---\n\n### 3. Setters\n\nA setter lets you control what happens when a property is assigned.\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\nThe assignment `user.name = \"  Rajan  \";` automatically calls the setter.\n\n---\n\n### 4. Private fields\n\nPrivate fields use `#` and can only be accessed inside the class.\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` is genuinely private. `_balance` would only be a naming convention.\n\n---\n\n### 5. Combining everything\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nHere:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
+        np: "JavaScript का class ले <b>कार्यक्षमता कहाँ रहन्छ</b>, <b>property कसरी पहुँच गरिन्छ</b>, र <b>आन्तरिक data कसरी सुरक्षित हुन्छ</b> नियन्त्रण गर्न केही सुविधा दिन्छन्।\n\n• <b>Static method</b> → instance होइन, class आफैंको हुन्छ।\n• <b>Getter</b> → पर्दा पछाडि method चलाउँदै property जस्तै value पढ्न दिन्छ।\n• <b>Setter</b> → validation वा रूपान्तरण चलाउँदै property जस्तै value assign गर्न दिन्छ।\n• <b>Private field</b> → `#` प्रयोग गरी class को data class भित्र मात्र पहुँचयोग्य बनाउँछ।\n• Private field र नियन्त्रित method मिलेर <b>encapsulation</b> दिन्छन्।\n\n---\n\n### 1. Static method\n\nStatic method <b>class</b> को हुन्छ, त्यसैले instance चाहिँदैन।\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nयो काम <b>गर्दैन</b>:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\nकिनकि `add()` `calculator` होइन, `Calculator` को हो।\n\n---\n\n### 2. Getter\n\nGetter ले method लाई सामान्य property जस्तै पहुँच गर्न दिन्छ।\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\nध्यान दिनुहोस्, <b>कोष्ठक छैनन्</b>: `rectangle.area()` होइन `rectangle.area`।\n\n---\n\n### 3. Setter\n\nSetter ले property assign हुँदा के हुन्छ नियन्त्रण गर्न दिन्छ।\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\n`user.name = \"  Rajan  \";` assignment ले स्वतः setter call गर्छ।\n\n---\n\n### 4. Private field\n\nPrivate field ले `#` प्रयोग गर्छन् र class भित्र मात्र पहुँच गर्न सकिन्छ।\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` साँच्चै private हो। `_balance` भने नामकरण convention मात्र हुन्थ्यो।\n\n---\n\n### 5. सबै जोड्नु\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nयहाँ:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
+        jp: "JavaScriptのクラスには、<b>機能をどこに置くか</b>、<b>プロパティにどうアクセスするか</b>、<b>内部データをどう守るか</b>を制御する機能があります。\n\n• <b>静的メソッド</b> → インスタンスではなくクラス自身に属する。\n• <b>ゲッター</b> → 裏でメソッドを実行しつつ、プロパティのように値を読める。\n• <b>セッター</b> → 検証や変換を行いつつ、プロパティのように値を代入できる。\n• <b>プライベートフィールド</b> → `#` を使い、クラス内部からのみアクセスできるようにする。\n• プライベートフィールドと制御されたメソッドを合わせて<b>カプセル化</b>になる。\n\n---\n\n### 1. 静的メソッド\n\n静的メソッドは<b>クラス</b>に属するので、インスタンスは不要です。\n\n```javascript\nclass Calculator {\n  static add(a, b) {\n    return a + b;\n  }\n}\n\nconsole.log(Calculator.add(2, 3));\n// 5\n```\n\nこれは<b>動きません</b>:\n\n```javascript\nconst calculator = new Calculator();\n\ncalculator.add(2, 3);\n// TypeError\n```\n\n`add()` は `calculator` ではなく `Calculator` に属しているからです。\n\n---\n\n### 2. ゲッター\n\nゲッターを使うと、メソッドを普通のプロパティのように読めます。\n\n```javascript\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n\n  get area() {\n    return this.width * this.height;\n  }\n}\n\nconst rectangle = new Rectangle(10, 5);\n\nconsole.log(rectangle.area);\n// 50\n```\n\n<b>括弧がない</b>ことに注目してください: `rectangle.area()` ではなく `rectangle.area`。\n\n---\n\n### 3. セッター\n\nセッターを使うと、プロパティへの代入時の動作を制御できます。\n\n```javascript\nclass User {\n  set name(value) {\n    this._name = value.trim();\n  }\n\n  get name() {\n    return this._name;\n  }\n}\n\nconst user = new User();\n\nuser.name = \"  Rajan  \";\n\nconsole.log(user.name);\n// \"Rajan\"\n```\n\n`user.name = \"  Rajan  \";` という代入が自動的にセッターを呼びます。\n\n---\n\n### 4. プライベートフィールド\n\nプライベートフィールドは `#` を使い、クラス内部からのみアクセスできます。\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  deposit(amount) {\n    this.#balance += amount;\n  }\n\n  getBalance() {\n    return this.#balance;\n  }\n}\n\nconst account = new BankAccount();\n\naccount.deposit(100);\n\nconsole.log(account.getBalance());\n// 100\n\nconsole.log(account.#balance);\n// SyntaxError\n```\n\n`#balance` は本当にプライベートです。`_balance` は命名の慣習にすぎません。\n\n---\n\n### 5. すべてを組み合わせる\n\n```javascript\nclass BankAccount {\n  #balance = 0;\n\n  constructor(owner) {\n    this.owner = owner;\n  }\n\n  deposit(amount) {\n    if (amount <= 0) {\n      throw new Error(\"Amount must be positive\");\n    }\n\n    this.#balance += amount;\n  }\n\n  get balance() {\n    return this.#balance;\n  }\n\n  static create(owner) {\n    return new BankAccount(owner);\n  }\n}\n\nconst account = BankAccount.create(\"Rajan\");\n\naccount.deposit(500);\n\nconsole.log(account.balance);\n// 500\n```\n\nここでは:\n\n```text\nstatic create()  → class-level factory\n#balance         → private internal state\ndeposit()        → controlled modification\nget balance      → controlled reading\n```",
       },
-      diagram: `Calculator                            BankAccount
-  static add(a, b)                       #balance             ← private, class-only
-                                          get balance()         ← read like a property
-Calculator.add(5, 3)  → 8                set nickname(v)       ← write like a property
-(no 'new' needed)                        deposit(amount)
+      diagram: `                 Calculator
+              ┌───────────────┐
+              │ static add()  │ ← Class itself
+              └───────────────┘
+                      │
+                  Calculator.add()
+                      │
+                      ▼
+              ┌───────────────┐
+              │   instance    │
+              │               │
+              │ #balance      │ ← Private
+              │ balance       │
+              │ getBalance()  │
+              │ deposit()     │
+              └───────────────┘
 
-const acc = new BankAccount(...)
 
-acc.balance             ✅ getter runs, returns #balance
-acc.#balance             ❌ SyntaxError — outside the class body
-acc.deposit(500)         → updates #balance internally`,
+Class
+ └── static methods
+
+Instance
+ ├── public properties
+ ├── getters/setters
+ └── private fields (#)`,
       codeExample: {
-        title: { en: "Static methods, getters/setters, and private fields together", np: "Static methods, getters/setters, private fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
-        code: `// ── Static methods — belong to the class, not an instance ────────────
-class MathHelper {
-  static square(n) { return n * n; }
-}
-MathHelper.square(4);        // 16 — called on the class directly
-
-class User {
-  constructor(name) { this.name = name; }
-  static createGuest() { return new User("Guest"); }   // factory pattern
-}
-const guest = User.createGuest();
-guest.name;   // "Guest"
-
-// ── Getters — read like a property, no () ─────────────────────────────
-class Rectangle {
-  constructor(width, height) { this.width = width; this.height = height; }
-  get area() { return this.width * this.height; }
-}
-const rect = new Rectangle(5, 4);
-rect.area;    // 20 — not rect.area()
-
-// ── Setters — validate before storing ───────────────────────────────────
-class Person {
-  set age(value) {
-    if (value < 0) { console.log("Invalid age"); return; }
-    this._age = value;
+        title: { en: "Static, getter, setter and private field together", np: "Static, getter, setter र private field सँगै", jp: "静的メソッド・ゲッター・セッター・プライベートフィールド" },
+        code: `// ── 1. Static — called on the class, not an instance ──────────────
+class Calculator {
+  static add(a, b) {
+    return a + b;
   }
 }
-const person = new Person();
-person.age = -5;   // "Invalid age" — setter rejected it
 
-// ── Private fields (#) — real encapsulation ─────────────────────────────
-class BankAccount {
-  #balance = 0;                       // only this class can touch #balance
+console.log(Calculator.add(2, 3)); // 5
+// new Calculator().add(2, 3);     // TypeError
 
-  deposit(amount) { this.#balance += amount; }
-  withdraw(amount) { if (amount <= this.#balance) this.#balance -= amount; }
-  getBalance() { return this.#balance; }
+// ── 2. Getter — read like a property, no parentheses ──────────────
+class Rectangle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+
+  get area() {
+    return this.width * this.height;
+  }
 }
 
-const account = new BankAccount();
-account.deposit(500);
-account.withdraw(200);
-account.getBalance();     // 300
+console.log(new Rectangle(10, 5).area); // 50
 
-// account.#balance;      // SyntaxError — private fields can't be read from outside`,
+// ── 3. Setter — assignment runs your code ─────────────────────────
+class User {
+  set name(value) {
+    this._name = value.trim();
+  }
+
+  get name() {
+    return this._name;
+  }
+}
+
+const user = new User();
+user.name = "  Rajan  ";
+console.log(user.name); // "Rajan"
+
+// ── 4 and 5. Private state behind controlled access ───────────────
+class BankAccount {
+  #balance = 0;
+
+  constructor(owner) {
+    this.owner = owner;
+  }
+
+  deposit(amount) {
+    if (amount <= 0) throw new Error("Amount must be positive");
+    this.#balance += amount;
+  }
+
+  get balance() {
+    return this.#balance;
+  }
+
+  static create(owner) {
+    return new BankAccount(owner);
+  }
+}
+
+const account = BankAccount.create("Rajan");
+account.deposit(500);
+
+console.log(account.balance); // 500
+// account.#balance;          // SyntaxError — genuinely private`,
       },
       keyTakeaways: [
-        { en: "Static methods and properties belong to the class itself — call them as `ClassName.method()`, never on an instance.", np: "Static methods/properties class को आफ्नै हुन् — `ClassName.method()` को रूपमा call गर्ने, instance मा होइन।", jp: "staticメソッドとプロパティはクラス自体に属する。`ClassName.method()`として呼び、インスタンスでは呼ばない。" },
-        { en: "Getters (`get`) let you read a computed value like a plain property, with no `()`.", np: "Getters (`get`) ले computed value लाई plain property जस्तै पढ्न दिन्छ, `()` बिना।", jp: "getter（`get`）は計算値を`()`なしで通常のプロパティのように読ませる。" },
-        { en: "Setters (`set`) run validation or transformation logic before a value is actually stored.", np: "Setters (`set`) ले value वास्तवमा store हुनुअघि validation वा transformation logic चलाउँछ।", jp: "setter（`set`）は値が実際に保存される前に検証や変換ロジックを実行する。" },
-        { en: "Private fields (`#name`) are enforced by the language itself — accessing them outside the class throws a SyntaxError, giving real encapsulation rather than just a naming convention.", np: "Private fields (`#name`) language ले नै enforce गर्छ — class बाहिरबाट access गर्दा SyntaxError, यसैले real encapsulation हुन्छ, केवल naming convention होइन।", jp: "プライベートフィールド（`#name`）は言語自体によって強制される。クラス外からアクセスするとSyntaxErrorになり、単なる命名規則ではなく本物のカプセル化になる。" },
+        { en: "<b>`static`</b> → belongs to the class, not instances.", np: "<b>`static`</b> → instance होइन, class को हुन्छ।", jp: "<b>`static`</b> → インスタンスではなくクラスに属する。" },
+        { en: "<b>`get`</b> → access a method like a property.", np: "<b>`get`</b> → method लाई property जस्तै पहुँच गर्नु।", jp: "<b>`get`</b> → メソッドをプロパティのように読む。" },
+        { en: "<b>`set`</b> → assign through a method-like property.", np: "<b>`set`</b> → method जस्तो property मार्फत assign गर्नु।", jp: "<b>`set`</b> → メソッドのようなプロパティを通じて代入する。" },
+        { en: "<b>`#field`</b> → genuinely private class field.", np: "<b>`#field`</b> → साँच्चै private class field।", jp: "<b>`#field`</b> → 本当にプライベートなクラスフィールド。" },
+        { en: "<b>Encapsulation</b> → keep internal state private and expose controlled operations.", np: "<b>Encapsulation</b> → आन्तरिक state private राख्नु र नियन्त्रित operation मात्र देखाउनु।", jp: "<b>カプセル化</b> → 内部状態を隠し、制御された操作だけを公開する。" },
+        { en: "`static` methods are called with `ClassName.method()`.", np: "`static` method `ClassName.method()` ले call गरिन्छन्।", jp: "`static` メソッドは `ClassName.method()` で呼ぶ。" },
+        { en: "Private fields cannot be accessed from outside the class.", np: "Private field class बाहिरबाट पहुँच गर्न सकिँदैन।", jp: "プライベートフィールドはクラスの外からアクセスできない。" },
+        { en: "Classes themselves are in the <b>Temporal Dead Zone (TDZ)</b> until their declaration runs.", np: "Class आफैं आफ्नो declaration नचल्दासम्म <b>Temporal Dead Zone (TDZ)</b> मा हुन्छन्।", jp: "クラス自体も宣言が実行されるまで<b>一時的デッドゾーン（TDZ）</b>にある。" },
       ],
       commonMistakes: [
-        { en: "Calling a static method on an instance (`new MathHelper().square(4)`) instead of on the class (`MathHelper.square(4)`).", np: "Static method लाई instance मा call गर्नु (`new MathHelper().square(4)`) class मा नभई (`MathHelper.square(4)`)।", jp: "staticメソッドをクラス（`MathHelper.square(4)`）ではなくインスタンス（`new MathHelper().square(4)`）で呼ぶこと。" },
-        { en: "Calling a getter like a function (`user.fullName()`) — getters are accessed as plain properties, with no parentheses.", np: "Getter लाई function जस्तै call गर्नु (`user.fullName()`) — getters plain property जस्तै access हुन्छन्, parentheses बिना।", jp: "getterを関数のように呼ぶこと（`user.fullName()`）。getterは括弧なしで通常のプロパティとしてアクセスする。" },
-        { en: "Writing a setter with no validation at all, which defeats the purpose of using a setter in the first place.", np: "Setter मा कुनै validation नै नराख्नु, जसले setter प्रयोग गर्ने उद्देश्य नै हराउँछ।", jp: "検証を全く行わないsetterを書くこと。そもそもsetterを使う意味がなくなる。" },
-        { en: "Forgetting the `#` when referencing a private field inside a class method (`this.balance` instead of `this.#balance`), which silently reads or creates a different, non-private property.", np: "Class method भित्र private field reference गर्दा `#` बिर्सनु (`this.#balance` को सट्टा `this.balance`), जसले silently फरक, non-private property पढ्छ वा बनाउँछ।", jp: "クラスメソッド内でプライベートフィールドを参照する際に`#`を忘れること（`this.#balance`ではなく`this.balance`）。これは別の非プライベートなプロパティを黙って読み書きしてしまう。" },
+        { en: "<b>Calling a static method on an instance</b> — `new Calculator().add(2, 3)` throws a `TypeError`. Use `Calculator.add(2, 3)`.", np: "<b>Instance मा static method call गर्नु</b> — `new Calculator().add(2, 3)` ले `TypeError` दिन्छ। `Calculator.add(2, 3)` प्रयोग गर्नुहोस्।", jp: "<b>インスタンスから静的メソッドを呼ぶ</b> — `new Calculator().add(2, 3)` は `TypeError`。`Calculator.add(2, 3)` を使う。" },
+        { en: "<b>Calling a getter like a function</b> — `rectangle.area()` throws a `TypeError`; write `rectangle.area`.", np: "<b>Getter लाई function जस्तै call गर्नु</b> — `rectangle.area()` ले `TypeError` दिन्छ; `rectangle.area` लेख्नुहोस्।", jp: "<b>ゲッターを関数のように呼ぶ</b> — `rectangle.area()` は `TypeError`。`rectangle.area` と書く。" },
+        { en: "<b>Treating `_balance` as truly private</b> — the underscore is only a convention, and outside code can still read and write it. Use `#balance` for real privacy.", np: "<b>`_balance` लाई साँच्चै private मान्नु</b> — underscore convention मात्र हो, र बाहिरी code ले अझै पढ्न र लेख्न सक्छ। वास्तविक privacy का लागि `#balance` प्रयोग गर्नुहोस्।", jp: "<b>`_balance` を本当にプライベートだと思う</b> — アンダースコアは慣習にすぎず、外部から読み書きできる。本当に隠すなら `#balance`。" },
+        { en: "<b>Accessing a private field outside the class</b> — `account.#balance` is a `SyntaxError`. Expose a getter or method such as `account.balance`.", np: "<b>Class बाहिर private field पहुँच गर्नु</b> — `account.#balance` `SyntaxError` हो। `account.balance` जस्तो getter वा method देखाउनुहोस्।", jp: "<b>クラスの外でプライベートフィールドにアクセスする</b> — `account.#balance` は `SyntaxError`。`account.balance` のようなゲッターやメソッドを公開する。" },
       ],
       quiz: [
         {
-          question: { en: "What happens if code outside the class tries to access `obj.#balance`?", np: "Class बाहिरको code ले `obj.#balance` access गर्ने प्रयास गर्दा के हुन्छ?", jp: "クラス外のコードが`obj.#balance`にアクセスしようとするとどうなる？" },
+          question: { en: "Where does a static method belong?", np: "Static method कसको हुन्छ?", jp: "静的メソッドはどこに属するか?" },
           options: [
-            { en: "It returns `undefined`", np: "यसले `undefined` फर्काउँछ", jp: "`undefined`を返す" },
-            { en: "It throws a SyntaxError — private fields are enforced by the language", np: "यसले SyntaxError throw गर्छ — private fields language ले enforce गर्छ", jp: "SyntaxErrorをスローする — プライベートフィールドは言語によって強制される" },
+            { en: "Every instance", np: "हरेक instance", jp: "各インスタンス" },
+            { en: "The class itself", np: "Class आफैं", jp: "クラス自身" },
+            { en: "`Object.prototype`", np: "`Object.prototype`", jp: "`Object.prototype`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Unlike an underscore convention, # is a real language feature that makes external access a parse-time error.", np: "Underscore convention भन्दा फरक, # एक real language feature हो जसले external access लाई parse-time error बनाउँछ।", jp: "アンダースコアの慣習とは異なり、#は本物の言語機能であり、外部アクセスを解析時エラーにする。" },
+          explanation: { en: "That is why instances cannot call it, only `ClassName.method()` can.", np: "त्यसैले instance ले call गर्न सक्दैन, `ClassName.method()` ले मात्र सक्छ।", jp: "だからインスタンスからは呼べず、`ClassName.method()` でのみ呼べる。" },
         },
         {
-          question: { en: "How do you call a static method named `create` on a class `Widget`?", np: "`Widget` class मा `create` नामको static method कसरी call गर्ने?", jp: "`Widget`クラスの`create`という静的メソッドはどうやって呼ぶ？" },
+          question: { en: "How do you access a getter?", np: "Getter कसरी पहुँच गर्नुहुन्छ?", jp: "ゲッターにはどうアクセスするか?" },
           options: [
-            { en: "`new Widget().create()`", np: "`new Widget().create()`", jp: "`new Widget().create()`" },
-            { en: "`Widget.create()`", np: "`Widget.create()`", jp: "`Widget.create()`" },
+            { en: "`user.name()`", np: "`user.name()`", jp: "`user.name()`" },
+            { en: "`user.name`", np: "`user.name`", jp: "`user.name`" },
+            { en: "`get user.name`", np: "`get user.name`", jp: "`get user.name`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Static methods belong to the class itself, not to any instance, so they're called directly on the class name.", np: "Static methods class को नै हुन्, कुनै instance को होइन, त्यसैले class name मा सिधै call हुन्छ।", jp: "staticメソッドはインスタンスではなくクラス自体に属するため、クラス名で直接呼ばれる。" },
+          explanation: { en: "A getter looks like a property from the outside, so no parentheses.", np: "बाहिरबाट getter property जस्तै देखिन्छ, त्यसैले कोष्ठक हुँदैनन्।", jp: "外からはプロパティに見えるので、括弧は付けない。" },
         },
         {
-          question: { en: "Can you reference a `class` before its declaration line in the same scope, the way you can with a hoisted `function` declaration?", np: "Hoisted `function` declaration जस्तै same scope मा `class` लाई declaration अगाडि reference गर्न सकिन्छ?", jp: "ホイストされた関数宣言のように、同じスコープで宣言行より前にクラスを参照できる？" },
+          question: { en: "What does `#balance` mean?", np: "`#balance` को अर्थ के हो?", jp: "`#balance` は何を意味するか?" },
           options: [
-            { en: "No — classes sit in the Temporal Dead Zone until declared", np: "होइन — classes declared नभएसम्म Temporal Dead Zone मा रहन्छन्", jp: "いいえ — クラスは宣言されるまでTemporal Dead Zoneにある" },
-            { en: "Yes, classes are hoisted exactly like functions", np: "हो, classes functions जस्तै exactly hoist हुन्छन्", jp: "はい、クラスは関数と同じようにホイストされる" },
+            { en: "A naming convention", np: "नामकरण convention", jp: "命名の慣習" },
+            { en: "A protected field", np: "Protected field", jp: "protectedなフィールド" },
+            { en: "A genuinely private class field", np: "साँच्चै private class field", jp: "本当にプライベートなクラスフィールド" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Classes behave like let/const declarations for hoisting purposes — accessible only after the declaration executes.", np: "Hoisting का लागि classes let/const declarations जस्तै behave गर्छन् — declaration execute भएपछि मात्र accessible।", jp: "ホイスティングの観点ではクラスはlet/const宣言のように動作する。宣言が実行された後のみアクセス可能。" },
+          correctIndex: 2,
+          explanation: { en: "Reading it from outside is a `SyntaxError`, unlike the `_name` convention.", np: "बाहिरबाट पढ्दा `SyntaxError` हुन्छ, `_name` convention भन्दा फरक।", jp: "`_name` の慣習と違い、外から読むと `SyntaxError` になる。" },
+        },
+        {
+          question: { en: "Which correctly calls `static double(n)` on `class MathUtils`?", np: "`class MathUtils` को `static double(n)` कसरी सही रूपमा call हुन्छ?", jp: "`class MathUtils` の `static double(n)` を正しく呼ぶのはどれか?" },
+          options: [
+            { en: "`new MathUtils().double(5)`", np: "`new MathUtils().double(5)`", jp: "`new MathUtils().double(5)`" },
+            { en: "`MathUtils.double(5)`", np: "`MathUtils.double(5)`", jp: "`MathUtils.double(5)`" },
+            { en: "`MathUtils.prototype.double(5)`", np: "`MathUtils.prototype.double(5)`", jp: "`MathUtils.prototype.double(5)`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Static methods live on the class object, not on its prototype.", np: "Static method class object मा हुन्छन्, यसको prototype मा होइन।", jp: "静的メソッドはクラスオブジェクトにあり、プロトタイプにはない。" },
         },
       ],
     },
