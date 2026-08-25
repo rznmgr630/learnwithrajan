@@ -11,98 +11,127 @@ export const JS_DAY_9_LESSONS: JsLessonDay = {
       title: { en: "The Prototype Chain", np: "The Prototype Chain", jp: "プロトタイプチェーン" },
       durationMinutes: 9,
       explanation: {
-        en: "Every JavaScript object has an internal link to another object called its <b>prototype</b>. When you access a property and it isn't found directly on the object, JavaScript automatically walks up this chain — checking the prototype, then the prototype's prototype, and so on — until it finds the property or reaches `null`. This walk is exactly how inheritance works in JavaScript, with no copying involved.\n\nMethods added to a constructor's `.prototype` (like `User.prototype.greet`) are shared by ALL instances through this chain — memory-efficient, since there's only one copy of `greet` no matter how many users you create. `Object.getPrototypeOf(obj)` is the modern, correct way to inspect the chain (`obj.__proto__` is legacy and discouraged).",
-        np: "हरेक JS object सँग prototype भनिने अर्को object को link हुन्छ। Property नभेटिएमा JS ले automatically prototype chain मा माथि खोज्छ जबसम्म भेटिँदैन वा `null` सम्म पुग्दैन। Constructor को `.prototype` मा थपिएका methods सबै instances ले share गर्छन्।",
-        jp: "すべてのJSオブジェクトはプロトタイプという別のオブジェクトへのリンクを持つ。プロパティが見つからない場合、見つかるか`null`に達するまでチェーンを遡る。コンストラクタの`.prototype`に追加されたメソッドはすべてのインスタンスで共有される。",
+        en: "Every JavaScript <b>object</b> has an internal link to another object called its <b>prototype</b>.\n\nWhen you try to access a property, JavaScript first checks the object itself. If it doesn't find it, JavaScript looks at the object's prototype. If it still doesn't find it, it continues going up the <b>prototype chain</b> until it finds the property or reaches `null`.\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nThis is how JavaScript provides <b>inheritance</b> (sharing properties and methods between objects).\n\nNothing is copied from the prototype. The object simply <b>looks up</b> the chain when needed.\n\n---\n\n### 1. Property lookup\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\nThere is no `toString` directly inside `person`. JavaScript looks up the prototype chain:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nSo the method can still be used.\n\n---\n\n### 2. Adding a method to a prototype\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\nBoth objects can use `greet()` even though `greet` isn't stored directly on either object.\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nThere is <b>one shared `greet` function</b>, not one copy for every user.\n\n---\n\n### 3. Checking the prototype\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nThis is the modern way to inspect an object's prototype.\n\nYou may also see `user1.__proto__`, but `__proto__` is <b>legacy</b> (an older API) and should generally be avoided in new code.\n\n---\n\n### 4. Prototype lookup vs own property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` belongs directly to `user`:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` belongs to `User.prototype`:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript finds both because it searches the prototype chain.\n\n---\n\n### Easy memory trick\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
+        np: "हरेक JavaScript <b>object</b> को अर्को object सँग आन्तरिक जोडाइ हुन्छ, जसलाई यसको <b>prototype</b> भनिन्छ।\n\nतपाईंले property पहुँच गर्न खोज्दा, JavaScript ले पहिले object आफैंमा हेर्छ। नभेटे, object को prototype मा हेर्छ। त्यहाँ पनि नभेटे, property भेट्टाउनेसम्म वा `null` पुग्नेसम्म <b>prototype chain</b> माथि चढ्दै जान्छ।\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nयसै तरिकाले JavaScript ले <b>inheritance</b> (object बीच property र method बाँड्नु) दिन्छ।\n\nPrototype बाट केही copy हुँदैन। Object ले चाहिँदा chain <b>माथि खोज्छ</b> मात्र।\n\n---\n\n### 1. Property खोजी\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` भित्र सिधै `toString` छैन। JavaScript ले prototype chain माथि हेर्छ:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nत्यसैले method अझै प्रयोग गर्न सकिन्छ।\n\n---\n\n### 2. Prototype मा method थप्नु\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` कुनै पनि object मा सिधै नराखिए पनि दुबैले प्रयोग गर्न सक्छन्।\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nहरेक user का लागि छुट्टै copy होइन, <b>एउटै साझा `greet` function</b> हुन्छ।\n\n---\n\n### 3. Prototype जाँच्नु\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nयो object को prototype हेर्ने आधुनिक तरिका हो।\n\nतपाईंले `user1.__proto__` पनि देख्न सक्नुहुन्छ, तर `__proto__` <b>legacy</b> (पुरानो API) हो र नयाँ code मा सामान्यतया प्रयोग नगर्नु राम्रो।\n\n---\n\n### 4. Prototype खोजी vs आफ्नै property\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` सिधै `user` को हो:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` `User.prototype` को हो:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScript ले prototype chain खोज्ने हुनाले दुबै भेट्टाउँछ।\n\n---\n\n### सम्झने सजिलो तरिका\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
+        jp: "すべてのJavaScriptの<b>オブジェクト</b>は、<b>プロトタイプ</b>と呼ばれる別のオブジェクトへの内部的なリンクを持っています。\n\nプロパティにアクセスしようとすると、JavaScriptはまずそのオブジェクト自身を調べます。見つからなければプロトタイプを調べ、それでも見つからなければ、プロパティが見つかるか `null` に到達するまで<b>プロトタイプチェーン</b>をたどります。\n\n```text\nobject\n   ↓\nprototype\n   ↓\nprototype's prototype\n   ↓\n   ...\n   ↓\nnull\n```\n\nこれがJavaScriptの<b>継承</b>（オブジェクト間でプロパティやメソッドを共有すること）の仕組みです。\n\nプロトタイプから何かがコピーされるわけではありません。オブジェクトは必要なときにチェーンを<b>たどって探す</b>だけです。\n\n---\n\n### 1. プロパティの探索\n\n```javascript\nconst person = {\n  name: \"Rajan\"\n};\n\nconsole.log(person.toString());\n```\n\n`person` の中に `toString` は直接ありません。JavaScriptはプロトタイプチェーンをたどります:\n\n```text\nperson\n  ↓\nObject.prototype\n  ↓\ntoString() ✅\n```\n\nだからこのメソッドが使えます。\n\n---\n\n### 2. プロトタイプにメソッドを追加する\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(`Hello ${this.name}`);\n};\n\nconst user1 = new User(\"Rajan\");\nconst user2 = new User(\"Alex\");\n\nuser1.greet();\nuser2.greet();\n```\n\n`greet` はどちらのオブジェクトにも直接入っていませんが、両方から使えます。\n\n```text\nuser1 ──────┐\n            ↓\n      User.prototype\n            ↑\nuser2 ──────┘\n```\n\nユーザーごとのコピーではなく、<b>共有された1つの `greet` 関数</b>があります。\n\n---\n\n### 3. プロトタイプを調べる\n\n```javascript\nObject.getPrototypeOf(user1);\n```\n\nこれがオブジェクトのプロトタイプを調べる現代的な方法です。\n\n`user1.__proto__` も見かけますが、`__proto__` は<b>レガシー</b>（古いAPI）であり、新しいコードでは基本的に避けます。\n\n---\n\n### 4. プロトタイプ経由と自身のプロパティ\n\n```javascript\nfunction User(name) {\n  this.name = name;\n}\n\nUser.prototype.greet = function () {\n  console.log(\"Hello\");\n};\n\nconst user = new User(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n\nconsole.log(user.greet);\n// function\n```\n\n`name` は `user` 自身のものです:\n\n```text\nuser\n └── name ✅\n```\n\n`greet` は `User.prototype` のものです:\n\n```text\nuser\n   ↓\nUser.prototype\n └── greet ✅\n```\n\nJavaScriptはプロトタイプチェーンを探索するので、どちらも見つかります。\n\n---\n\n### 覚え方\n\n> <b>Object → Prototype → Prototype → ... → null</b>",
       },
-      diagram: `alice = { name: "Alice", age: 30 }
-   │
-   ▼  [[Prototype]]
-User.prototype { greet, isAdult }
-   │
-   ▼  [[Prototype]]
-Object.prototype { toString, hasOwnProperty, ... }
-   │
-   ▼
- null   ← chain ends here
+      diagram: `const user = new User("Rajan");
 
-Lookup order for alice.greet():
-1. alice's own props?  no  →  2. User.prototype?  YES, found`,
+user
+ ├── name: "Rajan"
+ │
+ └── [[Prototype]]
+          ↓
+     User.prototype
+     ├── greet()
+     │
+     └── [[Prototype]]
+              ↓
+         Object.prototype
+         ├── toString()
+         ├── hasOwnProperty()
+         │
+         └── [[Prototype]]
+                  ↓
+                null
+
+
+When you write user.greet(), JavaScript checks:
+
+1. Does user have greet?        no
+2. Does User.prototype have it? yes
+3. Found it, run it`,
       codeExample: {
-        title: { en: "Constructor functions, the prototype chain, and Object.create", np: "Constructor functions, prototype chain, Object.create", jp: "コンストラクタ関数・プロトタイプチェーン・Object.create" },
-        code: `// ── Constructor function (pre-ES6 way to share methods) ────────────
-function User(name, age) {
-  this.name = name;    // instance property — unique per object
-  this.age  = age;
+        title: { en: "Looking up the chain, and sharing one method", np: "Chain माथि खोज्नु, र एउटै method बाँड्नु", jp: "チェーンをたどる、1つのメソッドを共有する" },
+        code: `// ── 1. A method found further up the chain ────────────────────────
+const person = { name: "Rajan" };
+
+console.log(person.toString()); // from Object.prototype
+
+// ── 2. One shared method on the prototype ─────────────────────────
+function User(name) {
+  this.name = name;
 }
 
-// Methods on the prototype are shared across ALL instances
-User.prototype.greet = function () { return \`Hi, I'm \${this.name}\`; };
-User.prototype.isAdult = function () { return this.age >= 18; };
+User.prototype.greet = function () {
+  console.log(\`Hello \${this.name}\`);
+};
 
-const alice = new User("Alice", 30);
-alice.greet();     // "Hi, I'm Alice" — found on User.prototype, not on alice itself
+const user1 = new User("Rajan");
+const user2 = new User("Alex");
 
-// ── Lookup order ─────────────────────────────────────────────────────
-// 1. alice's own properties  → { name, age }
-// 2. User.prototype          → { greet, isAdult }
-// 3. Object.prototype        → { toString, hasOwnProperty, ... }
-// 4. null                    → not found, returns undefined
+user1.greet(); // Hello Rajan
+user2.greet(); // Hello Alex
 
-alice.hasOwnProperty("name");   // true  — own property
-alice.hasOwnProperty("greet");  // false — inherited via the prototype chain
+// Both share the very same function object
+console.log(user1.greet === user2.greet); // true
 
-// ── Inspecting the chain — the modern, correct way ──────────────────
-Object.getPrototypeOf(alice) === User.prototype;               // true
-Object.getPrototypeOf(User.prototype) === Object.prototype;    // true
+// ── 3. Inspecting the prototype ───────────────────────────────────
+console.log(Object.getPrototypeOf(user1) === User.prototype); // true
 
-// ── instanceof — checks if a prototype is somewhere in the chain ────
-alice instanceof User;    // true
-alice instanceof Object;  // true — every object chain reaches Object.prototype
-
-// ── Object.create — build an object with a chosen prototype directly ─
-const animal = { speak() { return \`\${this.name} makes a sound\`; } };
-const dog = Object.create(animal);
-dog.name = "Rex";
-dog.speak();  // "Rex makes a sound" — found on animal, dog's prototype`,
+// ── 4. Own property vs inherited one ──────────────────────────────
+console.log(Object.hasOwn(user1, "name"));  // true  — on the object
+console.log(Object.hasOwn(user1, "greet")); // false — on the prototype`,
       },
       keyTakeaways: [
-        { en: "Property lookup walks the prototype chain automatically: own property first, then the prototype, then its prototype, until `null` — this IS inheritance in JavaScript.", np: "Property lookup ले automatically prototype chain हिँड्छ: पहिले own property, त्यसपछि prototype, `null` सम्म — यही JS को inheritance हो।", jp: "プロパティ検索は自動的にプロトタイプチェーンを歩く: まず自身のプロパティ、次にプロトタイプ、nullまで — これがJSの継承。" },
-        { en: "Methods placed on `Constructor.prototype` are shared by every instance through the chain, rather than duplicated onto each individual object.", np: "`Constructor.prototype` मा राखिएका methods हरेक individual object मा duplicate नभई chain मार्फत हरेक instance ले share गर्छन्।", jp: "`Constructor.prototype`に配置されたメソッドは、各オブジェクトに複製されるのではなくチェーンを通じてすべてのインスタンスで共有される。" },
-        { en: "Use `Object.getPrototypeOf(obj)` to inspect an object's prototype — `obj.__proto__` is a legacy accessor and discouraged in modern code.", np: "Object को prototype inspect गर्न `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस् — `obj.__proto__` legacy हो र modern code मा discouraged छ।", jp: "オブジェクトのプロトタイプを調べるには`Object.getPrototypeOf(obj)`を使う。`obj.__proto__`はレガシーで現代のコードでは推奨されない。" },
+        { en: "Every object has an internal <b>prototype</b> link.", np: "हरेक object को आन्तरिक <b>prototype</b> जोडाइ हुन्छ।", jp: "すべてのオブジェクトは内部的な<b>プロトタイプ</b>リンクを持つ。" },
+        { en: "JavaScript searches the object first, then its prototype, then higher prototypes.", np: "JavaScript ले पहिले object, त्यसपछि यसको prototype, अनि माथिका prototype खोज्छ।", jp: "JavaScriptはまずオブジェクト、次にそのプロトタイプ、さらに上のプロトタイプを探す。" },
+        { en: "This search is called the <b>prototype chain</b>.", np: "यो खोजीलाई <b>prototype chain</b> भनिन्छ।", jp: "この探索を<b>プロトタイプチェーン</b>と呼ぶ。" },
+        { en: "The chain ends at <b>`null`</b>.", np: "Chain <b>`null`</b> मा सकिन्छ।", jp: "チェーンは<b>`null`</b>で終わる。" },
+        { en: "Prototypes provide <b>inheritance</b> (sharing properties and methods).", np: "Prototype ले <b>inheritance</b> (property र method बाँड्नु) दिन्छ।", jp: "プロトタイプは<b>継承</b>（プロパティとメソッドの共有）を提供する。" },
+        { en: "Prototype methods are <b>shared</b> between instances instead of being copied.", np: "Prototype का method copy नभई instance बीच <b>साझा</b> हुन्छन्।", jp: "プロトタイプのメソッドはコピーされず、インスタンス間で<b>共有</b>される。" },
+        { en: "Use `Object.getPrototypeOf(obj)` to inspect an object's prototype.", np: "Object को prototype हेर्न `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस्।", jp: "オブジェクトのプロトタイプを調べるには `Object.getPrototypeOf(obj)` を使う。" },
+        { en: "`__proto__` is a <b>legacy</b> API and should generally be avoided.", np: "`__proto__` <b>legacy</b> API हो र सामान्यतया प्रयोग नगर्नु राम्रो।", jp: "`__proto__` は<b>レガシー</b>なAPIで、基本的に避ける。" },
       ],
       commonMistakes: [
-        { en: "Using `\"key\" in obj` or a truthy check to test for an own property when you actually need `Object.hasOwn()` — `in` also matches inherited prototype properties.", np: "Own property test गर्नुपर्दा `\"key\" in obj` प्रयोग गर्नु — `in` ले inherited prototype properties पनि match गर्छ, `Object.hasOwn()` चाहिन्छ।", jp: "自身のプロパティを確認したいのに`\"key\" in obj`を使うこと。`in`は継承されたプロトタイプのプロパティにもマッチする。`Object.hasOwn()`が必要。" },
-        { en: "Assuming each instance gets its own private copy of a prototype method — they all share the exact same function in memory.", np: "हरेक instance ले prototype method को आफ्नै private copy पाउँछ भन्ने ठान्नु — सबैले memory मा उही function share गर्छन्।", jp: "各インスタンスがプロトタイプメソッドの独自のプライベートコピーを持つと思うこと。実際はすべて同じ関数をメモリ内で共有する。" },
-        { en: "Using the legacy `obj.__proto__` accessor instead of `Object.getPrototypeOf(obj)` / `Object.setPrototypeOf(obj, proto)` in modern code.", np: "Modern code मा `Object.getPrototypeOf(obj)` को सट्टा legacy `obj.__proto__` accessor प्रयोग गर्नु।", jp: "モダンなコードで`Object.getPrototypeOf(obj)`の代わりにレガシーな`obj.__proto__`アクセサを使うこと。" },
+        { en: "<b>Thinking prototype methods are copied</b> — `User.prototype.greet` is not copied into every `User` object; each one reaches it through the chain, so `user1.greet === user2.greet` is `true`.", np: "<b>Prototype का method copy हुन्छन् भन्ने ठान्नु</b> — `User.prototype.greet` हरेक `User` object मा copy हुँदैन; हरेकले chain मार्फत पुग्छ, त्यसैले `user1.greet === user2.greet` `true` हुन्छ।", jp: "<b>プロトタイプのメソッドがコピーされると思う</b> — `User.prototype.greet` は各 `User` にコピーされない。チェーン経由で参照するので `user1.greet === user2.greet` は `true`。" },
+        { en: "<b>Thinking JavaScript only checks the object itself</b> — even when `greet` isn't inside `user`, the search continues up the prototype chain.", np: "<b>JavaScript ले object आफैं मात्र हेर्छ भन्ने ठान्नु</b> — `greet` `user` भित्र नभए पनि, खोजी prototype chain माथि जारी रहन्छ।", jp: "<b>JavaScriptがオブジェクト自身しか見ないと思う</b> — `greet` が `user` になくても、探索はプロトタイプチェーンを上へ続く。" },
+        { en: "<b>Using `__proto__` as the preferred API</b> — it works, but prefer `Object.getPrototypeOf(user)` in new code.", np: "<b>`__proto__` लाई मुख्य API मान्नु</b> — काम गर्छ, तर नयाँ code मा `Object.getPrototypeOf(user)` प्रयोग गर्नुहोस्।", jp: "<b>`__proto__` を推奨APIとして使う</b> — 動くが、新しいコードでは `Object.getPrototypeOf(user)` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "If `alice.greet` is not an own property of `alice`, where does JavaScript find it?", np: "`alice.greet` `alice` को own property नभएमा JS ले यो कहाँ भेट्छ?", jp: "`alice.greet`が`alice`自身のプロパティでない場合、JSはどこで見つける？" },
+          question: { en: "What happens when a property isn't found on an object?", np: "Object मा property नभेटिए के हुन्छ?", jp: "オブジェクトにプロパティが見つからないとどうなるか?" },
           options: [
-            { en: "It walks up the prototype chain, e.g. to `User.prototype`", np: "यो prototype chain मा माथि हिँड्छ, जस्तै `User.prototype` सम्म", jp: "プロトタイプチェーンを遡る（例: `User.prototype`まで）" },
-            { en: "It throws a ReferenceError immediately", np: "यो तुरुन्तै ReferenceError throw गर्छ", jp: "即座にReferenceErrorをスローする" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "JavaScript automatically checks the object's prototype, then its prototype, and so on, before giving up.", np: "JS ले हार मान्नु अघि object को prototype, त्यसको prototype क्रमशः check गर्छ।", jp: "JSは諦める前にオブジェクトのプロトタイプ、さらにそのプロトタイプを順に確認する。" },
-        },
-        {
-          question: { en: "Do two different `User` instances share the same `greet` function in memory?", np: "दुई फरक `User` instances ले memory मा उही `greet` function share गर्छन्?", jp: "2つの異なる`User`インスタンスはメモリ内で同じ`greet`関数を共有する？" },
-          options: [
-            { en: "Yes — it lives once on `User.prototype` and is shared by all instances", np: "हो — यो `User.prototype` मा एकपल्ट रहन्छ र सबै instances ले share गर्छन्", jp: "はい — `User.prototype`に1つだけ存在し、すべてのインスタンスで共有される" },
-            { en: "No — each instance gets its own private copy", np: "होइन — हरेक instance ले आफ्नै private copy पाउँछ", jp: "いいえ — 各インスタンスが独自のプライベートコピーを持つ" },
-          ],
-          correctIndex: 0,
-          explanation: { en: "Prototype methods are defined once and looked up via the chain, which is exactly why the prototype pattern is memory-efficient.", np: "Prototype methods एकपल्ट define हुन्छन् र chain मार्फत lookup हुन्छन्, यही prototype pattern को memory efficiency हो।", jp: "プロトタイプメソッドは一度だけ定義されチェーン経由で検索される。これがプロトタイプパターンがメモリ効率的な理由。" },
-        },
-        {
-          question: { en: "What is the modern, correct way to read an object's prototype?", np: "Object को prototype पढ्ने modern, correct तरिका के हो?", jp: "オブジェクトのプロトタイプを読む現代的で正しい方法は？" },
-          options: [
-            { en: "`obj.__proto__`", np: "`obj.__proto__`", jp: "`obj.__proto__`" },
-            { en: "`Object.getPrototypeOf(obj)`", np: "`Object.getPrototypeOf(obj)`", jp: "`Object.getPrototypeOf(obj)`" },
+            { en: "JavaScript immediately throws an error", np: "JavaScript ले तुरुन्तै error दिन्छ", jp: "すぐにエラーを投げる" },
+            { en: "JavaScript searches the prototype chain", np: "JavaScript ले prototype chain खोज्छ", jp: "プロトタイプチェーンを探索する" },
+            { en: "JavaScript creates the property", np: "JavaScript ले property बनाउँछ", jp: "プロパティを作る" },
+            { en: "JavaScript searches the global scope", np: "JavaScript ले global scope खोज्छ", jp: "グローバルスコープを探す" },
           ],
           correctIndex: 1,
-          explanation: { en: "__proto__ is a legacy accessor kept for compatibility; Object.getPrototypeOf() is the standard, recommended API.", np: "__proto__ compatibility का लागि राखिएको legacy accessor हो; Object.getPrototypeOf() standard, recommended API हो।", jp: "__proto__は互換性のために残されたレガシーアクセサ。Object.getPrototypeOf()が標準の推奨API。" },
+          explanation: { en: "It keeps climbing until it finds the property or reaches `null`.", np: "यो property भेट्टाउनेसम्म वा `null` पुग्नेसम्म चढिरहन्छ।", jp: "プロパティが見つかるか `null` に達するまでたどり続ける。" },
+        },
+        {
+          question: { en: "Where are methods on `User.prototype` shared?", np: "`User.prototype` का method कहाँ साझा हुन्छन्?", jp: "`User.prototype` のメソッドはどこで共有されるか?" },
+          options: [
+            { en: "Only with the constructor", np: "Constructor सँग मात्र", jp: "コンストラクタとだけ" },
+            { en: "With all instances that use that prototype", np: "त्यो prototype प्रयोग गर्ने सबै instance सँग", jp: "そのプロトタイプを使うすべてのインスタンスと" },
+            { en: "Only with the first instance", np: "पहिलो instance सँग मात्र", jp: "最初のインスタンスとだけ" },
+            { en: "They are copied into every instance", np: "ती हरेक instance मा copy हुन्छन्", jp: "各インスタンスにコピーされる" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "One function object serves every instance, which saves memory.", np: "एउटै function object ले हरेक instance लाई काम गर्छ, जसले memory बचाउँछ।", jp: "1つの関数オブジェクトがすべてのインスタンスに使われ、メモリを節約できる。" },
+        },
+        {
+          question: { en: "What ends the prototype chain?", np: "Prototype chain के मा सकिन्छ?", jp: "プロトタイプチェーンは何で終わるか?" },
+          options: [
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`false`", np: "`false`", jp: "`false`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`0`", np: "`0`", jp: "`0`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`Object.prototype`'s own prototype is `null`, which stops the search.", np: "`Object.prototype` को आफ्नै prototype `null` हो, जसले खोजी रोक्छ।", jp: "`Object.prototype` のプロトタイプが `null` で、そこで探索が止まる。" },
+        },
+        {
+          question: { en: "What is the recommended way to get an object's prototype?", np: "Object को prototype लिने सिफारिस गरिएको तरिका कुन हो?", jp: "オブジェクトのプロトタイプを取得する推奨方法は?" },
+          options: [
+            { en: "`Object.prototype(user)`", np: "`Object.prototype(user)`", jp: "`Object.prototype(user)`" },
+            { en: "`Object.getPrototypeOf(user)`", np: "`Object.getPrototypeOf(user)`", jp: "`Object.getPrototypeOf(user)`" },
+            { en: "`Object.getProto(user)`", np: "`Object.getProto(user)`", jp: "`Object.getProto(user)`" },
+            { en: "`Object.prototypeOf(user)`", np: "`Object.prototypeOf(user)`", jp: "`Object.prototypeOf(user)`" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`__proto__` also works but is legacy; this is the standard accessor.", np: "`__proto__` पनि काम गर्छ तर legacy हो; यो मानक accessor हो।", jp: "`__proto__` も動くがレガシー。こちらが標準のアクセサ。" },
         },
       ],
     },
