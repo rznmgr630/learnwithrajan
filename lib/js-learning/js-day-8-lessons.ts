@@ -195,100 +195,108 @@ account.greet(); // Rajan`,
       title: { en: "Arrow Functions & this", np: "Arrow Functions र this", jp: "アロー関数とthis" },
       durationMinutes: 9,
       explanation: {
-        en: "Arrow functions do NOT have their own `this` at all. Instead, they capture the `this` of whatever function or scope contains them <b>at the moment they are created</b> — this is called lexical `this`. Because of that, none of the four binding rules from the previous lesson apply to them, and `call()`/`apply()`/`bind()` cannot override an arrow function's `this`.\n\nThis makes arrow functions perfect for callbacks inside a class method or another function, where you want `this` to stay pointed at the surrounding object — but it makes them the <b>wrong</b> choice for object methods defined directly with `{ method: () => {} }`, because at the moment that arrow is created, the surrounding scope is the module, not the object literal.",
-        np: "Arrow functions को आफ्नै `this` हुँदैन — यिनले create भएको बेलाको surrounding scope बाट `this` capture गर्छन् (lexical this)। यसैले class method भित्र callback का लागि उत्तम, तर object literal मा method को रूपमा गलत choice।",
-        jp: "アロー関数には独自のthisがない。作成時の周囲のスコープからthisをキャプチャする（レキシカルthis）。クラスメソッド内のコールバックには最適だが、オブジェクトリテラルのメソッドとしては誤った選択。",
+        en: "Arrow functions are different from normal functions because they <b>do not have their own `this`</b>.\n\nInstead, an arrow function uses the `this` from the <b>surrounding scope where it was created</b>. This is called <b>lexical `this`</b> (it gets `this` from the outside).\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nHere, `sayName` is an arrow function. It does not create its own `this`, so it uses the `this` from `greet()`.\n\n---\n\n### Important\n\nThe four normal `this` rules do <b>not</b> change an arrow function's `this`:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\nEven `call()`, `apply()`, and `bind()` cannot change an arrow function's `this`.\n\nThink of an arrow function as saying:\n\n> \"I won't create my own `this`. I'll use the `this` from outside.\"\n\n---\n\n### 1. Basic example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function gets `this` from `greet()`.\n\n---\n\n### 2. Very common callback example\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe arrow function keeps the `this` from `greet()`. This is one of the main reasons arrow functions are useful for callbacks.\n\n---\n\n### 3. Arrow function as an object method — common mistake\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nWhy? Because the arrow function does <b>not</b> get `this` from `user`. The object does not create a new `this` for the arrow function.\n\nFor object methods, use a normal method:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` cannot change arrow `this`\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nFor arrow functions, `call()`, `apply()`, and `bind()` cannot change `this`.",
+        np: "Arrow function सामान्य function भन्दा फरक छन् किनकि तिनका <b>आफ्नै `this` हुँदैन</b>।\n\nबरु, arrow function ले <b>आफू बनेको वरिपरिको scope</b> बाट `this` लिन्छ। यसलाई <b>lexical `this`</b> (बाहिरबाट `this` पाउने) भनिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nयहाँ, `sayName` arrow function हो। यसले आफ्नै `this` बनाउँदैन, त्यसैले `greet()` बाट `this` लिन्छ।\n\n---\n\n### महत्वपूर्ण\n\nसामान्य `this` का चार नियमले arrow function को `this` <b>बदल्दैनन्</b>:\n\n• Default binding\n• Implicit binding\n• Explicit binding\n• `new` binding\n\n`call()`, `apply()`, र `bind()` ले पनि arrow function को `this` बदल्न सक्दैनन्।\n\nArrow function यसो भन्छ जस्तै सोच्नुहोस्:\n\n> \"म आफ्नै `this` बनाउँदिन। म बाहिरको `this` प्रयोग गर्छु।\"\n\n---\n\n### 1. आधारभूत उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` बाट `this` पाउँछ।\n\n---\n\n### 2. धेरै सामान्य callback उदाहरण\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nArrow function ले `greet()` को `this` राख्छ। Callback का लागि arrow function उपयोगी हुनुको यो मुख्य कारण हो।\n\n---\n\n### 3. Object method रूपमा arrow function — सामान्य गल्ती\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nकिन? किनकि arrow function ले `user` बाट `this` <b>पाउँदैन</b>। Object ले arrow function का लागि नयाँ `this` बनाउँदैन।\n\nObject method का लागि, सामान्य method प्रयोग गर्नुहोस्:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` ले arrow को `this` बदल्न सक्दैन\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nArrow function का लागि, `call()`, `apply()`, र `bind()` ले `this` बदल्न सक्दैनन्।",
+        jp: "アロー関数は通常の関数と違い、<b>自分の `this` を持ちません</b>。\n\n代わりに、<b>作られた場所の周囲のスコープ</b>の `this` を使います。これを<b>レキシカルな `this`</b>（外側から `this` を受け取る）と呼びます。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayName = () => {\n      console.log(this.name);\n    };\n\n    sayName();\n  }\n};\n\nuser.greet(); // Rajan\n```\n\nここで `sayName` はアロー関数です。自分の `this` を作らないので、`greet()` の `this` を使います。\n\n---\n\n### 重要\n\n通常の `this` の4つの規則は、アロー関数の `this` を<b>変えません</b>:\n\n• デフォルトバインディング\n• 暗黙のバインディング\n• 明示的バインディング\n• `new` バインディング\n\n`call()`・`apply()`・`bind()` でさえ、アロー関数の `this` は変えられません。\n\nアロー関数はこう言っていると考えてください:\n\n> 「自分の `this` は作らない。外側の `this` を使う。」\n\n---\n\n### 1. 基本の例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const sayHello = () => {\n      console.log(this.name);\n    };\n\n    sayHello();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` から `this` を受け取ります。\n\n---\n\n### 2. とてもよくあるコールバックの例\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    setTimeout(() => {\n      console.log(this.name);\n    }, 1000);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nアロー関数は `greet()` の `this` を保ちます。アロー関数がコールバックに便利な主な理由の1つです。\n\n---\n\n### 3. オブジェクトのメソッドにするのはよくある間違い\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet: () => {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// undefined\n```\n\nなぜでしょう? アロー関数は `user` から `this` を<b>受け取らない</b>からです。オブジェクトはアロー関数のために新しい `this` を作りません。\n\nオブジェクトのメソッドには通常のメソッドを使います:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n---\n\n### 4. `call()` はアロー関数の `this` を変えられない\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nconst greet = () => {\n  console.log(this.name);\n};\n\ngreet.call(user);\n// does NOT make `this` become user\n```\n\nアロー関数では `call()`・`apply()`・`bind()` のいずれも `this` を変えられません。",
       },
-      diagram: `class Timer {
-  start() {
-    setInterval(function () { this.seconds++ }, 1000);
-    //          └── regular fn: 'this' is undefined here ❌
+      diagram: `Normal function
+      │
+      └── this depends on HOW it is called
 
-    setInterval(() => { this.seconds++ }, 1000);
-    //          └── arrow fn: captures 'this' from start() → the Timer instance ✅
-  }
-}
 
-const obj = {
-  count: 0,
-  bad:  () => { this.count++ },   // 'this' captured from MODULE scope, not obj ❌
-  good() { this.count++ },         // regular method — 'this' is obj when called obj.good() ✅
-};`,
+Arrow function
+      │
+      └── this comes from WHERE it was created
+                    │
+                    ↓
+              surrounding scope`,
       codeExample: {
-        title: { en: "Arrow functions capture this from their lexical context", np: "Arrow functions ले lexical context बाट this capture गर्छ", jp: "アロー関数はレキシカルコンテキストのthisをキャプチャする" },
-        code: `class Timer {
-  constructor() { this.seconds = 0; }
+        title: { en: "Where the arrow gets its this, and where it doesn't", np: "Arrow ले `this` कहाँबाट पाउँछ, कहाँबाट पाउँदैन", jp: "アローが this を得る場所、得られない場所" },
+        code: `// ── 1. Basic — the arrow borrows this from greet() ────────────────
+const user = {
+  name: "Rajan",
 
-  // ❌ Regular function — 'this' is undefined inside the callback
-  startBroken() {
-    setInterval(function () {
-      this.seconds++;   // TypeError: Cannot set property 'seconds' of undefined
-    }, 1000);
+  greet() {
+    const sayHello = () => console.log(this.name);
+    sayHello();
   }
-
-  // ✅ Arrow function — captures 'this' from startFixed's context (the Timer instance)
-  startFixed() {
-    setInterval(() => {
-      this.seconds++;   // 'this' is the Timer instance
-    }, 1000);
-  }
-}
-
-// ── Arrow function as an object method — wrong! ────────────────────
-const counter = {
-  count: 0,
-  // ❌ Captures 'this' from the surrounding module scope, not the object
-  increment: () => { this.count++; },
-  // ✅ Regular method — 'this' is the object when called as counter.incrementFixed()
-  incrementFixed() { this.count++; },
 };
 
-// ── The canonical, correct pattern ─────────────────────────────────
-class UserList {
-  constructor(users) { this.users = users; }
-  getNames() {
-    // Arrow function inside .map(): 'this' still refers to the UserList instance
-    return this.users.map(user => \`\${user.name} (list size: \${this.users.length})\`);
+user.greet(); // Rajan
+
+// ── 2. The common callback win ────────────────────────────────────
+const account = {
+  name: "Rajan",
+
+  greet() {
+    setTimeout(() => {
+      console.log(this.name); // Rajan — this survives the delay
+    }, 1000);
   }
-}`,
+};
+
+account.greet();
+
+// ── 3. Common mistake — arrow as the method itself ────────────────
+const broken = {
+  name: "Rajan",
+
+  greet: () => {
+    console.log(this.name); // undefined — no this from the object
+  }
+};
+
+broken.greet();
+
+// ── 4. call() cannot change an arrow function's this ──────────────
+const greet = () => console.log(this.name);
+
+greet.call(user); // still not user`,
       },
       keyTakeaways: [
-        { en: "Arrow functions have no `this` of their own — they capture `this` lexically from the enclosing scope at the moment they are created, and that binding never changes.", np: "Arrow functions को आफ्नै `this` हुँदैन — create भएको बेला enclosing scope बाट lexically `this` capture गर्छन्, र त्यो binding कहिल्यै बदलिँदैन।", jp: "アロー関数には独自のthisがない。作成時に囲むスコープからレキシカルにthisをキャプチャし、その束縛は変わらない。" },
-        { en: "Use an arrow function for a callback INSIDE a class method or function when you want `this` to stay pointed at the instance/enclosing scope.", np: "Class method वा function भित्र callback का लागि arrow function प्रयोग गर्नुहोस् जब `this` instance/enclosing scope मै रहनुपर्छ।", jp: "thisをインスタンス/囲むスコープに保ちたい場合、クラスメソッドや関数内のコールバックにアロー関数を使う。" },
-        { en: "Never use an arrow function to define an object literal method directly (`{ method: () => {} }`) — at creation time its lexical scope is the surrounding module, not the object.", np: "Object literal मा method को रूपमा arrow function कहिल्यै प्रयोग नगर्नुहोस् (`{ method: () => {} }`) — creation बेला lexical scope object होइन, module हो।", jp: "オブジェクトリテラルのメソッドを直接アロー関数で定義しない（`{ method: () => {} }`）。作成時のレキシカルスコープはオブジェクトではなく周囲のモジュール。" },
+        { en: "Arrow functions <b>do not have their own `this`</b>.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>।", jp: "アロー関数は<b>自分の `this` を持たない</b>。" },
+        { en: "They use <b>lexical `this`</b> (the `this` from where they were created).", np: "तिनले <b>lexical `this`</b> (आफू बनेको ठाउँको `this`) प्रयोग गर्छन्।", jp: "<b>レキシカルな `this`</b>（作られた場所の `this`）を使う。" },
+        { en: "`call()`, `apply()`, and `bind()` <b>cannot change</b> an arrow function's `this`.", np: "`call()`, `apply()`, र `bind()` ले arrow function को `this` <b>बदल्न सक्दैनन्</b>।", jp: "`call()`・`apply()`・`bind()` はアロー関数の `this` を<b>変えられない</b>。" },
+        { en: "Arrow functions are great for <b>callbacks</b> when you want to keep the surrounding `this`.", np: "वरिपरिको `this` राख्न चाहँदा <b>callback</b> का लागि arrow function उत्तम छन्।", jp: "周囲の `this` を保ちたい<b>コールバック</b>にはアロー関数が最適。" },
+        { en: "Avoid arrow functions as <b>object methods</b> when you need `this` to refer to the object.", np: "`this` ले object लाई जनाउनुपर्दा <b>object method</b> रूपमा arrow function नचलाउनुहोस्।", jp: "`this` にオブジェクトを求めるなら、<b>オブジェクトのメソッド</b>にアロー関数を使わない。" },
+        { en: "Normal functions get `this` based on <b>how they are called</b>; arrow functions get it from <b>where they are created</b>.", np: "सामान्य function ले <b>कसरी call भयो</b> त्यसबाट `this` पाउँछन्; arrow function ले <b>कहाँ बनियो</b> त्यसबाट।", jp: "通常の関数は<b>どう呼ばれたか</b>で、アロー関数は<b>どこで作られたか</b>で `this` が決まる。" },
       ],
       commonMistakes: [
-        { en: "Writing `setInterval(function() { this.x++ }, 1000)` inside a class method and being confused why `this` is `undefined` — a regular function loses the surrounding `this`.", np: "Class method भित्र `setInterval(function() { this.x++ }, 1000)` लेखेर `this` `undefined` किन भयो भनेर confuse हुनु।", jp: "クラスメソッド内で`setInterval(function() { this.x++ }, 1000)`と書き、thisがundefinedになる理由が分からず混乱すること。" },
-        { en: "Defining an object method as an arrow function (`increment: () => { this.count++ }`) expecting `this` to be the object — it captures the module scope instead.", np: "Object method लाई arrow function (`increment: () => { this.count++ }`) को रूपमा लेखेर `this` object हुनेछ भनी आशा गर्नु — बरु module scope capture हुन्छ।", jp: "オブジェクトメソッドをアロー関数（`increment: () => { this.count++ }`）として定義し、thisがオブジェクトになると期待すること。実際はモジュールスコープをキャプチャする。" },
-        { en: "Trying to use `.call()`, `.apply()`, or `.bind()` on an arrow function to change its `this` — arrow functions ignore all explicit binding attempts.", np: "Arrow function मा `this` बदलन `.call()`, `.apply()`, `.bind()` प्रयोग गर्ने प्रयास गर्नु — arrow functions ले सबै explicit binding लाई बेवास्ता गर्छन्।", jp: "アロー関数のthisを変更するために`.call()`、`.apply()`、`.bind()`を使おうとすること。アロー関数はすべての明示的束縛の試みを無視する。" },
+        { en: "<b>Using an arrow function as an object method</b> — `greet: () => console.log(this.name)` never sees `user`, because the object literal creates no `this`.", np: "<b>Arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले `user` कहिल्यै देख्दैन, किनकि object literal ले `this` बनाउँदैन।", jp: "<b>アロー関数をオブジェクトのメソッドにする</b> — `greet: () => console.log(this.name)` は `user` を見られない。オブジェクトリテラルは `this` を作らないから。" },
+        { en: "<b>Thinking `bind()` can fix an arrow function</b> — `greet.bind(user)()` still uses the surrounding `this`.", np: "<b>`bind()` ले arrow function ठीक गर्न सक्छ भन्ने ठान्नु</b> — `greet.bind(user)()` ले अझै वरिपरिको `this` प्रयोग गर्छ।", jp: "<b>`bind()` でアロー関数を直せると思う</b> — `greet.bind(user)()` でも周囲の `this` のまま。" },
+        { en: "<b>Reaching for a normal function inside a method</b> — that is where an arrow shines, since `setTimeout(() => this.name, 1000)` keeps the method's `this`.", np: "<b>Method भित्र सामान्य function प्रयोग गर्नु</b> — त्यहीँ arrow उपयोगी हुन्छ, किनकि `setTimeout(() => this.name, 1000)` ले method को `this` राख्छ।", jp: "<b>メソッドの内側で通常の関数を使う</b> — そこはアローの出番。`setTimeout(() => this.name, 1000)` はメソッドの `this` を保つ。" },
       ],
       quiz: [
         {
-          question: { en: "Where does an arrow function get its `this` from?", np: "Arrow function ले आफ्नो `this` कहाँबाट पाउँछ?", jp: "アロー関数はthisをどこから取得する？" },
+          question: { en: "Does an arrow function have its own `this`?", np: "Arrow function को आफ्नै `this` हुन्छ?", jp: "アロー関数は自分の `this` を持つか?" },
           options: [
-            { en: "From the object it is called on, like a regular method", np: "यसलाई call गरिने object बाट, regular method जस्तै", jp: "通常のメソッドのように呼び出されたオブジェクトから" },
-            { en: "From the enclosing lexical scope at the time it was created", np: "Create भएको बेलाको enclosing lexical scope बाट", jp: "作成時の囲むレキシカルスコープから" },
+            { en: "Yes", np: "हुन्छ", jp: "はい" },
+            { en: "No", np: "हुँदैन", jp: "いいえ" },
           ],
           correctIndex: 1,
-          explanation: { en: "Arrow functions have no this-binding mechanism of their own; they simply inherit whatever this was in scope when the arrow was defined.", np: "Arrow functions सँग आफ्नै this-binding mechanism हुँदैन; यिनले arrow define हुँदाको scope को this नै inherit गर्छन्।", jp: "アロー関数には独自のthis束縛機構がない。定義時のスコープにあったthisをそのまま継承する。" },
+          explanation: { en: "It borrows `this` from the scope it was written in.", np: "यसले आफू लेखिएको scope बाट `this` लिन्छ।", jp: "書かれたスコープから `this` を借りる。" },
         },
         {
-          question: { en: "Why is an arrow function the WRONG choice for `const obj = { count: 0, inc: () => { this.count++ } }`?", np: "`const obj = { count: 0, inc: () => { this.count++ } }` मा arrow function किन गलत choice हो?", jp: "`const obj = { count: 0, inc: () => { this.count++ } }`でアロー関数が間違った選択なのはなぜ？" },
+          question: { en: "Where does an arrow function get `this` from?", np: "Arrow function ले `this` कहाँबाट पाउँछ?", jp: "アロー関数は `this` をどこから得るか?" },
           options: [
-            { en: "Because at creation time, `this` is captured from the module scope, not from `obj`", np: "किनकि creation बेला `this` module scope बाट capture हुन्छ, `obj` बाट होइन", jp: "作成時にthisはobjからではなくモジュールスコープからキャプチャされるため" },
-            { en: "Because arrow functions can't access object properties at all", np: "किनकि arrow functions ले object properties access नै गर्न सक्दैनन्", jp: "アロー関数はオブジェクトのプロパティに全くアクセスできないため" },
+            { en: "The object to the left of `.`", np: "`.` को बायाँको object", jp: "`.` の左のオブジェクト" },
+            { en: "The surrounding scope where it was created", np: "आफू बनेको वरिपरिको scope", jp: "作られた場所の周囲のスコープ" },
+            { en: "`call()`", np: "`call()`", jp: "`call()`" },
+            { en: "`new`", np: "`new`", jp: "`new`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "The arrow is defined in the object literal's surrounding scope, not inside a call to inc() on obj, so it never sees obj as this.", np: "Arrow object literal को surrounding scope मा define हुन्छ, obj मा inc() call भित्र होइन, त्यसैले यसले कहिल्यै obj लाई this को रूपमा देख्दैन।", jp: "アローはobjに対するinc()の呼び出し内ではなく、オブジェクトリテラルを囲むスコープで定義されるため、objをthisとして見ることはない。" },
+          correctIndex: 1,
+          explanation: { en: "None of the four binding rules apply to it.", np: "चारै binding नियम यसमा लागू हुँदैनन्।", jp: "4つのバインディング規則はいずれも適用されない。" },
         },
         {
-          question: { en: "Can `.bind()` change what `this` refers to inside an arrow function?", np: "`.bind()` ले arrow function भित्र `this` ले के जनाउँछ बदल्न सक्छ?", jp: "`.bind()`はアロー関数内のthisが指すものを変更できる？" },
+          question: { en: "What does this print? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", np: "यसले के देखाउँछ? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`", jp: "何が出力されるか? `const user = { name: \"Rajan\", greet() { const fn = () => console.log(this.name); fn(); } }; user.greet();`" },
           options: [
-            { en: "No — arrow functions ignore all explicit binding attempts", np: "होइन — arrow functions ले सबै explicit binding प्रयासलाई बेवास्ता गर्छन्", jp: "いいえ — アロー関数はすべての明示的束縛の試みを無視する" },
-            { en: "Yes, exactly like a regular function", np: "हो, regular function जस्तै ठ्याक्कै", jp: "はい、通常の関数とまったく同じ" },
+            { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`null`", np: "`null`", jp: "`null`" },
+            { en: "`Rajan`", np: "`Rajan`", jp: "`Rajan`" },
+            { en: "Error", np: "Error", jp: "エラー" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Since arrow functions never had a dynamic this-binding mechanism to begin with, there is nothing for bind()/call()/apply() to override.", np: "Arrow functions मा सुरुदेखि नै dynamic this-binding mechanism नभएकाले, bind()/call()/apply() ले override गर्ने केही हुँदैन।", jp: "アロー関数には最初から動的なthis束縛機構がないため、bind()/call()/apply()が上書きするものが何もない。" },
+          correctIndex: 2,
+          explanation: { en: "`greet()` is a normal method, so its `this` is `user`, and the arrow inherits it.", np: "`greet()` सामान्य method हो, त्यसैले यसको `this` `user` हुन्छ, र arrow ले त्यही पाउँछ।", jp: "`greet()` は通常のメソッドなので `this` は `user`。アローがそれを受け継ぐ。" },
         },
       ],
     },
