@@ -53,7 +53,7 @@ const JS_DAY_TITLE: Record<number, LocalizedString> = {
   // Week 3 — Objects & Arrays
   6:  { en: "Objects — creation, methods, destructuring & spread", np: "Objects — creation, methods, destructuring", jp: "オブジェクト・メソッド・分割代入" },
   7:  { en: "Arrays — map, filter, reduce & all key methods", np: "Arrays — map, filter, reduce र key methods", jp: "配列 — map・filter・reduce・主要メソッド" },
-  8:  { en: "Set & Map — unique values and any-key collections", np: "Set र Map — unique value र जुनसुकै key का collection", jp: "SetとMap — 一意な値と任意のキーのコレクション" },
+  8:  { en: "Set, Map & iteration — unique values, any-key collections & loops", np: "Set, Map र iteration — unique value, जुनसुकै key का collection र loop", jp: "Set・Map・反復 — 一意な値、任意のキーのコレクション、ループ" },
   // Week 4 — this & OOP
   9:  { en: "The this keyword — contexts, call, apply & bind", np: "this keyword — contexts, call, apply, bind", jp: "this・call・apply・bind" },
   10:  { en: "Prototype system & prototype chain", np: "Prototype system र prototype chain", jp: "プロトタイプシステムと継承チェーン" },

@@ -2,8 +2,8 @@ import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 export const JS_DAY_8_LESSONS: JsLessonDay = {
   day: 8,
-  title: { en: "Set & Map", np: "Set र Map", jp: "SetとMap" },
-  totalMinutes: 18,
+  title: { en: "Set, Map & Iteration", np: "Set, Map र Iteration", jp: "Set・Map・反復" },
+  totalMinutes: 27,
   difficulty: { en: "Intermediate", np: "Intermediate", jp: "中級" },
   lessons: [
     {
@@ -227,6 +227,117 @@ console.log(new Set([user, user]).size); // 1 — same reference`,
         },
       ],
     },
+    {
+      id: "iteration",
+      title: { en: "Iteration", np: "Iteration", jp: "反復（Iteration）" },
+      durationMinutes: 9,
+      explanation: {
+        en: "<b>Iteration</b> means going through the values in a collection <b>one by one</b>. JavaScript provides several ways to iterate, and the best choice depends on whether you need <b>values, keys, indexes, transformation, filtering, or side effects</b>.\n\nFor modern JavaScript, `for...of` is usually the cleanest way to iterate over iterable values such as arrays, strings, Sets, and Maps.\n\n---\n\n### 1. Basic — `for...of`\n\n```javascript\nconst names = [\"Rajan\", \"John\", \"Sam\"];\n\nfor (const name of names) {\n  console.log(name);\n}\n```\n\nUse `for...of` when you need the <b>values</b>.\n\n---\n\n### 2. Intermediate — `for...in`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key, user[key]);\n}\n```\n\nUse `for...in` for an object's <b>enumerable keys</b>.\n\nAvoid using it for arrays, because it iterates over property keys rather than array values.\n\n---\n\n### 3. Advanced — iterating a `Map`\n\n```javascript\nconst users = new Map([\n  [1, \"Rajan\"],\n  [2, \"John\"]\n]);\n\nfor (const [id, name] of users) {\n  console.log(id, name);\n}\n```\n\n`Map` iteration naturally gives you `[key, value]` pairs.\n\n---\n\n### Common iteration methods\n\n```javascript\nfor (const value of array) {}   // for...of → values\nfor (const key in object) {}    // for...in  → object keys\n\narray.forEach(value => {});     // perform an action for every value\narray.map(value => {});         // transform every value into a new array\narray.filter(value => {});      // keep values that pass a condition\n```",
+        np: "<b>Iteration</b> को अर्थ collection का value लाई <b>एक-एक गरी</b> हेर्नु हो। JavaScript ले iterate गर्ने धेरै तरिका दिन्छ, र उत्तम छनोट तपाईंलाई <b>value, key, index, रूपान्तरण, filtering, वा side effect</b> मध्ये के चाहिन्छ त्यसमा निर्भर हुन्छ।\n\nआधुनिक JavaScript मा, array, string, Set र Map जस्ता iterable value मा घुम्न `for...of` प्रायः सबैभन्दा सफा तरिका हो।\n\n---\n\n### 1. आधारभूत — `for...of`\n\n```javascript\nconst names = [\"Rajan\", \"John\", \"Sam\"];\n\nfor (const name of names) {\n  console.log(name);\n}\n```\n\n<b>Value</b> चाहिँदा `for...of` प्रयोग गर्नुहोस्।\n\n---\n\n### 2. मध्यम — `for...in`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key, user[key]);\n}\n```\n\nObject का <b>enumerable key</b> का लागि `for...in` प्रयोग गर्नुहोस्।\n\nArray का लागि यो नचलाउनुहोस्, किनकि यसले array का value होइन, property key मा घुम्छ।\n\n---\n\n### 3. उन्नत — `Map` मा घुम्नु\n\n```javascript\nconst users = new Map([\n  [1, \"Rajan\"],\n  [2, \"John\"]\n]);\n\nfor (const [id, name] of users) {\n  console.log(id, name);\n}\n```\n\n`Map` को iteration ले स्वाभाविक रूपमा `[key, value]` जोडी दिन्छ।\n\n---\n\n### सामान्य iteration method\n\n```javascript\nfor (const value of array) {}   // for...of → values\nfor (const key in object) {}    // for...in  → object keys\n\narray.forEach(value => {});     // perform an action for every value\narray.map(value => {});         // transform every value into a new array\narray.filter(value => {});      // keep values that pass a condition\n```",
+        jp: "<b>反復（Iteration）</b>とは、コレクションの値を<b>1つずつ</b>処理することです。JavaScriptには反復の方法がいくつもあり、<b>値・キー・添字・変換・絞り込み・副作用</b>のどれが必要かで最適な選択が変わります。\n\n現代のJavaScriptでは、配列・文字列・Set・Mapのような反復可能な値をたどるには `for...of` がたいてい最もすっきりします。\n\n---\n\n### 1. 基本 — `for...of`\n\n```javascript\nconst names = [\"Rajan\", \"John\", \"Sam\"];\n\nfor (const name of names) {\n  console.log(name);\n}\n```\n\n<b>値</b>が必要なときは `for...of` を使います。\n\n---\n\n### 2. 中級 — `for...in`\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nfor (const key in user) {\n  console.log(key, user[key]);\n}\n```\n\nオブジェクトの<b>列挙可能なキー</b>には `for...in` を使います。\n\n配列には使わないでください。配列の値ではなくプロパティのキーを反復するからです。\n\n---\n\n### 3. 上級 — `Map` を反復する\n\n```javascript\nconst users = new Map([\n  [1, \"Rajan\"],\n  [2, \"John\"]\n]);\n\nfor (const [id, name] of users) {\n  console.log(id, name);\n}\n```\n\n`Map` の反復は自然に `[key, value]` の組を返します。\n\n---\n\n### よく使う反復の方法\n\n```javascript\nfor (const value of array) {}   // for...of → values\nfor (const key in object) {}    // for...in  → object keys\n\narray.forEach(value => {});     // perform an action for every value\narray.map(value => {});         // transform every value into a new array\narray.filter(value => {});      // keep values that pass a condition\n```",
+      },
+      diagram: `Collection
+
+["A", "B", "C"]
+    ↓
+  "A" → "B" → "C"
+    ↓     ↓     ↓
+ process each value
+
+
+for...of   → values
+for...in   → object keys
+forEach()  → side effects, returns undefined
+map()      → transform into a new array
+filter()   → keep what passes a condition`,
+      codeExample: {
+        title: { en: "Values, keys, pairs, and the right method", np: "Value, key, जोडी, र सही method", jp: "値・キー・組、そして正しいメソッド" },
+        code: `// ── 1. Basic — for...of gives you values ──────────────────────────
+const names = ["Rajan", "John", "Sam"];
+
+for (const name of names) {
+  console.log(name); // Rajan, John, Sam
+}
+
+// ── 2. Intermediate — for...in gives you object keys ──────────────
+const user = { name: "Rajan", age: 30 };
+
+for (const key in user) {
+  console.log(key, user[key]); // name Rajan, age 30
+}
+
+// On an array it hands you indexes as strings, not values
+for (const index in names) {
+  console.log(index); // "0", "1", "2"
+}
+
+// ── 3. Advanced — a Map yields [key, value] pairs ─────────────────
+const users = new Map([
+  [1, "Rajan"],
+  [2, "John"]
+]);
+
+for (const [id, name] of users) {
+  console.log(id, name); // 1 Rajan, 2 John
+}
+
+// ── Picking the method that matches your intent ───────────────────
+const numbers = [10, 20, 30];
+
+console.log(numbers.forEach(n => n * 2)); // undefined — side effects only
+console.log(numbers.map(n => n * 2));     // [20, 40, 60]
+console.log(numbers.filter(n => n > 15)); // [20, 30]`,
+      },
+      keyTakeaways: [
+        { en: "<b>Iteration</b> = processing collection items one by one.", np: "<b>Iteration</b> = collection का item एक-एक गरी process गर्नु।", jp: "<b>反復</b> = コレクションの要素を1つずつ処理すること。" },
+        { en: "`for...of` → best for <b>values</b>.", np: "`for...of` → <b>value</b> का लागि उत्तम।", jp: "`for...of` → <b>値</b>に最適。" },
+        { en: "`for...in` → best for <b>object keys</b>.", np: "`for...in` → <b>object का key</b> का लागि उत्तम।", jp: "`for...in` → <b>オブジェクトのキー</b>に最適。" },
+        { en: "`forEach()` → side effects; it returns `undefined`, not a new array.", np: "`forEach()` → side effect; यसले नयाँ array होइन, `undefined` फर्काउँछ।", jp: "`forEach()` → 副作用向け。新しい配列ではなく `undefined` を返す。" },
+        { en: "`map()` → transform values into a new array.", np: "`map()` → value लाई नयाँ array मा बदल्नु।", jp: "`map()` → 値を変換して新しい配列にする。" },
+        { en: "`filter()` → select the values that pass a condition.", np: "`filter()` → condition पास गर्ने value छान्नु।", jp: "`filter()` → 条件を満たす値を選ぶ。" },
+        { en: "`Map` and `Set` are <b>iterable</b> and work naturally with `for...of`.", np: "`Map` र `Set` <b>iterable</b> हुन् र `for...of` सँग स्वाभाविक रूपमा काम गर्छन्।", jp: "`Map` と `Set` は<b>反復可能</b>で、`for...of` と自然に組み合わせられる。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Using `for...in` for arrays</b> — it hands you `\"0\"`, `\"1\"`, `\"2\"` (keys as strings), not the values. Use `for...of` to read `10`, `20`, `30`.", np: "<b>Array का लागि `for...in` प्रयोग गर्नु</b> — यसले value होइन, `\"0\"`, `\"1\"`, `\"2\"` (string रूपमा key) दिन्छ। `10`, `20`, `30` पढ्न `for...of` प्रयोग गर्नुहोस्।", jp: "<b>配列に `for...in` を使う</b> — 値ではなく `\"0\"`・`\"1\"`・`\"2\"`（文字列のキー）が返る。`10`・`20`・`30` を読むには `for...of` を使う。" },
+        { en: "<b>Expecting `forEach()` to return a new array</b> — `numbers.forEach(n => n * 2)` is `undefined`. Use `map()` when you want the transformed array.", np: "<b>`forEach()` ले नयाँ array फर्काउँछ भन्ने आशा गर्नु</b> — `numbers.forEach(n => n * 2)` `undefined` हो। बदलिएको array चाहिँदा `map()` प्रयोग गर्नुहोस्।", jp: "<b>`forEach()` が新しい配列を返すと思う</b> — `numbers.forEach(n => n * 2)` は `undefined`。変換後の配列が欲しいなら `map()`。" },
+        { en: "<b>Reaching for `for...in` on a `Map`</b> — a `Map`'s entries are not plain properties. Iterate it directly with `for...of`, which yields `[key, value]`.", np: "<b>`Map` मा `for...in` प्रयोग गर्नु</b> — `Map` का entry साधारण property होइनन्। `for...of` ले सिधै iterate गर्नुहोस्, जसले `[key, value]` दिन्छ।", jp: "<b>`Map` に `for...in` を使う</b> — `Map` のエントリは普通のプロパティではない。`for...of` で直接反復すれば `[key, value]` が得られる。" },
+      ],
+      quiz: [
+        {
+          question: { en: "Which loop directly gives you values from an array?", np: "कुन loop ले array बाट सिधै value दिन्छ?", jp: "配列の値を直接くれるループはどれか?" },
+          options: [
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+            { en: "`for...keys`", np: "`for...keys`", jp: "`for...keys`" },
+            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+            { en: "`for...object`", np: "`for...object`", jp: "`for...object`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`for...in` would give you the indexes as strings instead.", np: "`for...in` ले बरु index लाई string रूपमा दिन्थ्यो।", jp: "`for...in` なら代わりに添字が文字列で返る。" },
+        },
+        {
+          question: { en: "Which is most appropriate for iterating an object's keys?", np: "Object का key मा घुम्न कुन सबैभन्दा उपयुक्त छ?", jp: "オブジェクトのキーを反復するのに最も適しているのは?" },
+          options: [
+            { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+            { en: "`reduce()`", np: "`reduce()`", jp: "`reduce()`" },
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "A plain object is not iterable, so `for...of` would throw; `for...in` walks its enumerable keys.", np: "साधारण object iterable होइन, त्यसैले `for...of` ले error दिन्थ्यो; `for...in` ले यसका enumerable key घुम्छ।", jp: "普通のオブジェクトは反復可能ではないので `for...of` はエラーになる。`for...in` が列挙可能なキーをたどる。" },
+        },
+        {
+          question: { en: "You need to transform every array element and create a new array. Which should you use?", np: "तपाईंले हरेक array element बदलेर नयाँ array बनाउनुपर्छ। कुन प्रयोग गर्नुपर्छ?", jp: "配列の各要素を変換して新しい配列を作りたい。どれを使うべきか?" },
+          options: [
+            { en: "`map()`", np: "`map()`", jp: "`map()`" },
+            { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+            { en: "`forEach()`", np: "`forEach()`", jp: "`forEach()`" },
+            { en: "`some()`", np: "`some()`", jp: "`some()`" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`forEach()` returns `undefined`; only `map()` hands back the transformed array.", np: "`forEach()` ले `undefined` फर्काउँछ; `map()` ले मात्र बदलिएको array दिन्छ।", jp: "`forEach()` は `undefined` を返す。変換後の配列を返すのは `map()` だけ。" },
+        },
+      ],
+    },
   ],
   finalQuiz: [
     {
@@ -318,6 +429,36 @@ console.log(new Set([user, user]).size); // 1 — same reference`,
       ],
       correctIndex: 2,
       explanation: { en: "That is why `for (const [key, value] of map)` destructures the pair.", np: "त्यसैले `for (const [key, value] of map)` ले जोडी destructure गर्छ।", jp: "だから `for (const [key, value] of map)` で組を分割代入する。" },
+    },
+    {
+      question: { en: "Which loop hands you the values of an array directly?", np: "कुन loop ले array का value सिधै दिन्छ?", jp: "配列の値を直接渡すループはどれか?" },
+      options: [
+        { en: "`for...of`", np: "`for...of`", jp: "`for...of`" },
+        { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+        { en: "`while`", np: "`while`", jp: "`while`" },
+      ],
+      correctIndex: 0,
+      explanation: { en: "`for...in` gives indexes as strings; `for...of` gives the values themselves.", np: "`for...in` ले index लाई string रूपमा दिन्छ; `for...of` ले value आफैं दिन्छ।", jp: "`for...in` は添字を文字列で返し、`for...of` は値そのものを返す。" },
+    },
+    {
+      question: { en: "What does iterating a `Map` with `for...of` give you on each step?", np: "`for...of` ले `Map` iterate गर्दा हरेक चरणमा के दिन्छ?", jp: "`for...of` で `Map` を反復すると各ステップで何が得られるか?" },
+      options: [
+        { en: "Only the key", np: "Key मात्र", jp: "キーだけ" },
+        { en: "A `[key, value]` pair", np: "`[key, value]` जोडी", jp: "`[key, value]` の組" },
+        { en: "Only the value", np: "Value मात्र", jp: "値だけ" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "That is why `for (const [id, name] of users)` destructures the pair.", np: "त्यसैले `for (const [id, name] of users)` ले जोडी destructure गर्छ।", jp: "だから `for (const [id, name] of users)` で組を分割代入する。" },
+    },
+    {
+      question: { en: "You want a new array with every value doubled. Which method fits?", np: "तपाईंलाई हरेक value दोब्बर भएको नयाँ array चाहिन्छ। कुन method मिल्छ?", jp: "各値を2倍にした新しい配列が欲しい。どのメソッドが適切か?" },
+      options: [
+        { en: "`forEach()`", np: "`forEach()`", jp: "`forEach()`" },
+        { en: "`for...in`", np: "`for...in`", jp: "`for...in`" },
+        { en: "`map()`", np: "`map()`", jp: "`map()`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "`forEach()` returns `undefined`; `map()` returns the transformed array.", np: "`forEach()` ले `undefined` फर्काउँछ; `map()` ले बदलिएको array फर्काउँछ।", jp: "`forEach()` は `undefined` を返し、`map()` は変換後の配列を返す。" },
     },
   ],
 };
