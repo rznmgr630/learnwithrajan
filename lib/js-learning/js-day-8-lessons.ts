@@ -11,91 +11,182 @@ export const JS_DAY_8_LESSONS: JsLessonDay = {
       title: { en: "The Four Rules of this", np: "this का चार Rules", jp: "thisの4つのルール" },
       durationMinutes: 9,
       explanation: {
-        en: "`this` is confusing because its value is decided by <b>how</b> a function is called, not where it is written — a single function can have a completely different `this` on every call. There are exactly four rules, checked in this priority order:\n\n• <b>Default binding</b> — called as a plain function (`showThis()`): `this` is `undefined` in strict mode, or the global object in sloppy mode\n• <b>Implicit binding</b> — called as a method on an object (`user.greet()`): `this` is the object to the left of the dot\n• <b>Explicit binding</b> — called via `call()`, `apply()`, or `bind()`: `this` is whatever you explicitly pass in\n• <b>new binding</b> — called with `new` (`new Person()`): `this` is a brand-new empty object\n\nA common gotcha is <b>losing implicit binding</b>: extracting a method off its object (`const fn = user.greet`) or passing it as a callback (`setTimeout(user.greet, 1000)`) detaches it from `user` — when it's called later, there's no object to the left of a dot anymore, so it falls back to default binding.",
-        np: "`this` को value function कसरी call भयो त्यसले निर्धारण गर्छ, कहाँ लेखियो त्यसले होइन। चार rules: default (plain call), implicit (object.method()), explicit (call/apply/bind), र new binding। Method extract गर्दा वा callback को रूपमा pass गर्दा implicit binding हराउन सक्छ।",
-        jp: "thisの値は関数の書かれた場所ではなく呼び出され方で決まる。4つのルール: デフォルト（プレーン呼び出し）、暗黙的（object.method()）、明示的（call/apply/bind）、new束縛。メソッドを取り出したりコールバックとして渡すと暗黙的束縛が失われる。",
+        en: "`this` is a special JavaScript value that tells you <b>which object a regular function is working with</b>.\n\nThe most important rule is:\n\n> <b>For regular functions, `this` is decided by how the function is called, not where it is written.</b>\n\nThere are four main ways `this` is determined:\n\n<b>Default binding</b> — a regular function is called by itself.\n\n<b>Implicit binding</b> — a function is called as an object method.\n\n<b>Explicit binding</b> — `call()`, `apply()`, or `bind()` chooses the value of `this`.\n\n<b>`new` binding</b> — `new` creates a new object and makes `this` refer to it.\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>Important:</b> Arrow functions are different. They do <b>not</b> create their own `this`; they use `this` from the surrounding scope.\n\n---\n\n### 1. Basic — Default Binding\n\nA regular function called by itself uses <b>default binding</b>.\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\nIn <b>strict mode</b> (`\"use strict\"`), `this` is `undefined`. Without strict mode in a browser, it can refer to the global object.\n\n---\n\n### 2. Basic — Implicit Binding\n\nWhen a function is called through an object, `this` refers to the object before the `.`.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nThe object before `.` is `user`, so:\n\n```text\nthis → user\n```\n\n---\n\n### 3. Intermediate — Explicit Binding with `call()`\n\n`call()` lets you choose what `this` should be.\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. Intermediate — `apply()`\n\n`apply()` works like `call()`, but function arguments are passed as an array.\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\nFor `this` they behave the same:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nThe main difference is how arguments are passed.\n\n---\n\n### 5. Intermediate — `bind()`\n\n`bind()` creates a <b>new function</b> with `this` permanently connected to the object you provide.\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\nUnlike `call()` and `apply()`, `bind()` does <b>not</b> immediately run the function.\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. Advanced — Losing `this`\n\nThis is one of the most common `this` problems.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nBut if you take the method out of the object:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nWhy? `user.greet()` has an object before the `.`, but `greet()` does not, so the <b>implicit binding is lost</b>.\n\n---\n\n### 7. Advanced — Fixing a Callback with `bind()`\n\nThis commonly happens when passing an object method as a callback.\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nThe method is passed without its `user` object. Fix it with `bind()`:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. Advanced — `new` Binding\n\nWhen a function is called with `new`, JavaScript creates a new object and makes `this` refer to it.\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. Important — Arrow Functions\n\nArrow functions do <b>not</b> have their own `this`. They use `this` from the surrounding code.\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nHere, the arrow function gets `this` from `greet()`. This is why arrow functions are very useful for callbacks.",
+        np: "`this` JavaScript को विशेष value हो जसले <b>सामान्य function कुन object सँग काम गर्दै छ</b> भन्ने बताउँछ।\n\nसबैभन्दा महत्वपूर्ण नियम:\n\n> <b>सामान्य function का लागि, `this` कहाँ लेखिएको छ भन्दा कसरी call गरिएको छ त्यसले तय गर्छ।</b>\n\n`this` तय हुने चार मुख्य तरिका छन्:\n\n<b>Default binding</b> — सामान्य function आफैं call हुन्छ।\n\n<b>Implicit binding</b> — function object method का रूपमा call हुन्छ।\n\n<b>Explicit binding</b> — `call()`, `apply()`, वा `bind()` ले `this` को value छान्छ।\n\n<b>`new` binding</b> — `new` ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>महत्वपूर्ण:</b> Arrow function फरक छन्। तिनले आफ्नै `this` <b>बनाउँदैनन्</b>; तिनले वरिपरिको scope बाट `this` लिन्छन्।\n\n---\n\n### 1. आधारभूत — Default Binding\n\nआफैं call हुने सामान्य function ले <b>default binding</b> प्रयोग गर्छ।\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>Strict mode</b> (`\"use strict\"`) मा, `this` `undefined` हुन्छ। Browser मा strict mode बिना, यो global object लाई जनाउन सक्छ।\n\n---\n\n### 2. आधारभूत — Implicit Binding\n\nFunction object मार्फत call हुँदा, `this` ले `.` अघिको object लाई जनाउँछ।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` अघिको object `user` हो, त्यसैले:\n\n```text\nthis → user\n```\n\n---\n\n### 3. मध्यम — `call()` सँग Explicit Binding\n\n`call()` ले `this` के हुनुपर्छ छान्न दिन्छ।\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. मध्यम — `apply()`\n\n`apply()` `call()` जस्तै काम गर्छ, तर function argument array रूपमा पठाइन्छन्।\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` का लागि दुबै उस्तै व्यवहार गर्छन्:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\nमुख्य फरक argument कसरी पठाइन्छ भन्नेमा हो।\n\n---\n\n### 5. मध्यम — `bind()`\n\n`bind()` ले <b>नयाँ function</b> बनाउँछ जसको `this` तपाईंले दिएको object सँग स्थायी रूपमा जोडिन्छ।\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` र `apply()` भन्दा फरक, `bind()` ले function लाई तुरुन्तै <b>चलाउँदैन</b>।\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. उन्नत — `this` हराउनु\n\nयो `this` सँग सम्बन्धित सबैभन्दा सामान्य समस्यामध्ये एक हो।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nतर method लाई object बाट बाहिर निकाले:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nकिन? `user.greet()` मा `.` अघि object छ, तर `greet()` मा छैन, त्यसैले <b>implicit binding हराउँछ</b>।\n\n---\n\n### 7. उन्नत — `bind()` ले Callback ठीक गर्नु\n\nObject method लाई callback रूपमा पठाउँदा यो प्रायः हुन्छ।\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nMethod आफ्नो `user` object बिना पठाइन्छ। `bind()` ले ठीक गर्नुहोस्:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. उन्नत — `new` Binding\n\nFunction `new` सँग call हुँदा, JavaScript ले नयाँ object बनाउँछ र `this` लाई त्यसैतिर देखाउँछ।\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. महत्वपूर्ण — Arrow Functions\n\nArrow function का आफ्नै `this` <b>हुँदैन</b>। तिनले वरिपरिको code बाट `this` लिन्छन्।\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nयहाँ, arrow function ले `greet()` बाट `this` पाउँछ। त्यसैले callback का लागि arrow function धेरै उपयोगी हुन्छन्।",
+        jp: "`this` は、<b>通常の関数がどのオブジェクトを相手にしているか</b>を示すJavaScriptの特別な値です。\n\n最も重要な規則はこれです:\n\n> <b>通常の関数では、`this` は「どこに書かれたか」ではなく「どう呼ばれたか」で決まる。</b>\n\n`this` の決まり方は主に4つあります:\n\n<b>デフォルトバインディング</b> — 通常の関数がそれ単体で呼ばれる。\n\n<b>暗黙のバインディング</b> — 関数がオブジェクトのメソッドとして呼ばれる。\n\n<b>明示的バインディング</b> — `call()`・`apply()`・`bind()` が `this` の値を選ぶ。\n\n<b>`new` バインディング</b> — `new` が新しいオブジェクトを作り、`this` をそれに向ける。\n\n```text\nHow is the function called?\n          │\n          ├── greet()\n          │      ↓\n          │   Default\n          │\n          ├── user.greet()\n          │      ↓\n          │   Implicit → user\n          │\n          ├── greet.call(user)\n          │      ↓\n          │   Explicit → user\n          │\n          └── new Person()\n                 ↓\n            New object\n```\n\n<b>重要:</b> アロー関数は別物です。自分の `this` を<b>作らず</b>、周囲のスコープの `this` を使います。\n\n---\n\n### 1. 基本 — デフォルトバインディング\n\n単体で呼ばれた通常の関数は<b>デフォルトバインディング</b>になります。\n\n```javascript\n\"use strict\";\n\nfunction showThis() {\n  console.log(this);\n}\n\nshowThis();\n// undefined\n```\n\n<b>strictモード</b>（`\"use strict\"`）では `this` は `undefined` です。ブラウザでstrictモードでない場合はグローバルオブジェクトを指すことがあります。\n\n---\n\n### 2. 基本 — 暗黙のバインディング\n\nオブジェクト経由で呼ばれると、`this` は `.` の前のオブジェクトを指します。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\n`.` の前は `user` なので:\n\n```text\nthis → user\n```\n\n---\n\n### 3. 中級 — `call()` による明示的バインディング\n\n`call()` は `this` に何を使うかを選べます。\n\n```javascript\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\ngreet.call(user);\n// Hello, Rajan\n```\n\n---\n\n### 4. 中級 — `apply()`\n\n`apply()` は `call()` と同じ働きですが、引数を配列で渡します。\n\n```javascript\nfunction introduce(city, country) {\n  console.log(`${this.name} lives in ${city}, ${country}`);\n}\n\nconst user = {\n  name: \"Rajan\"\n};\n\nintroduce.apply(user, [\"Tokyo\", \"Japan\"]);\n// Rajan lives in Tokyo, Japan\n```\n\n`this` については同じ振る舞いです:\n\n```text\ncall(user, arg1, arg2)\napply(user, [arg1, arg2])\n```\n\n違いは引数の渡し方だけです。\n\n---\n\n### 5. 中級 — `bind()`\n\n`bind()` は、渡したオブジェクトに `this` が固定された<b>新しい関数</b>を作ります。\n\n```javascript\nconst user = {\n  name: \"Rajan\"\n};\n\nfunction greet() {\n  console.log(`Hello, ${this.name}`);\n}\n\nconst greetUser = greet.bind(user);\n\ngreetUser();\n// Hello, Rajan\n```\n\n`call()` や `apply()` と違い、`bind()` はすぐには関数を<b>実行しません</b>。\n\n```text\ncall()  → runs now\napply() → runs now\nbind()  → creates a new function\n```\n\n---\n\n### 6. 上級 — `this` を失う\n\nこれは `this` にまつわる最もよくある問題の1つです。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    console.log(this.name);\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nしかしメソッドをオブジェクトの外に取り出すと:\n\n```javascript\nconst greet = user.greet;\n\ngreet();\n// undefined\n```\n\nなぜでしょう? `user.greet()` には `.` の前にオブジェクトがありますが、`greet()` にはありません。つまり<b>暗黙のバインディングが失われた</b>のです。\n\n---\n\n### 7. 上級 — `bind()` でコールバックを直す\n\nオブジェクトのメソッドをコールバックとして渡すときによく起こります。\n\n```javascript\nsetTimeout(user.greet, 1000);\n// Hello, undefined\n```\n\nメソッドが `user` オブジェクトなしで渡されています。`bind()` で直します:\n\n```javascript\nsetTimeout(user.greet.bind(user), 1000);\n// Hello, Rajan\n```\n\n---\n\n### 8. 上級 — `new` バインディング\n\n`new` を付けて関数を呼ぶと、JavaScriptは新しいオブジェクトを作り、`this` をそれに向けます。\n\n```javascript\nfunction Person(name) {\n  this.name = name;\n}\n\nconst user = new Person(\"Rajan\");\n\nconsole.log(user.name);\n// Rajan\n```\n\n```text\nnew Person()\n     │\n     ↓\nnew object\n     │\n     ↓\nthis → new object\n```\n\n---\n\n### 9. 重要 — アロー関数\n\nアロー関数は自分の `this` を<b>持ちません</b>。周囲のコードの `this` を使います。\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n\n  greet() {\n    const showName = () => {\n      console.log(this.name);\n    };\n\n    showName();\n  }\n};\n\nuser.greet();\n// Rajan\n```\n\nここではアロー関数が `greet()` から `this` を受け取ります。だからアロー関数はコールバックにとても便利なのです。",
       },
-      diagram: `Priority order (checked top to bottom):
+      diagram: `Regular Function
 
-1. new binding       new Person()          this = brand-new object
-2. Explicit binding   fn.call(obj)          this = obj (whatever you pass)
-3. Implicit binding   user.greet()          this = user (left of the dot)
-4. Default binding    showThis()            this = undefined (strict) / global
+        How was it called?
+               │
+     ┌─────────┼─────────┐
+     ↓         ↓         ↓
+   fn()     obj.fn()   fn.call(obj)
+     │         │         │
+     ↓         ↓         ↓
+ Default    obj       chosen object
 
-const fn = user.greet;   ← detached from 'user'!
-fn();                     ← falls back to Default binding — 'this' is lost`,
+
+Arrow Function
+
+        Where was it created?
+               │
+               ↓
+     Uses surrounding \`this\`
+
+
+Easy rule to remember
+
+fn()             → default
+obj.fn()         → obj
+fn.call(obj)     → obj
+fn.apply(obj)    → obj
+fn.bind(obj)     → fixed to obj
+new Fn()         → new object
+arrow function   → surrounding this`,
       codeExample: {
-        title: { en: "The four binding rules, in order of priority", np: "चार binding rules, priority order मा", jp: "優先順位順の4つの束縛ルール" },
-        code: `// ── Rule 1: Default binding — called as a plain function ─────────────
-function showThis() { console.log(this); }
-showThis();
-// Strict mode: undefined  |  Sloppy mode: window/global
+        title: { en: "Every binding rule, one at a time", np: "हरेक binding नियम, एक-एक गरी", jp: "各バインディング規則を1つずつ" },
+        code: `// ── 1. Basic — default binding ────────────────────────────────────
+"use strict";
 
-// ── Rule 2: Implicit binding — called as an object method ──────────
-const user = {
-  name: "Alice",
-  greet() { console.log(this.name); },   // 'this' is the object left of the dot
-};
-user.greet();  // "Alice"
-
-// ── Implicit binding LOST (common gotcha) ──────────────────────────
-const fn = user.greet;         // extracted — no longer attached to 'user'
-fn();                          // undefined — 'this' fell back to default binding
-setTimeout(user.greet, 1000);  // same problem — setTimeout calls it bare
-
-// ── Rule 3: Explicit binding — call(), apply(), bind() ─────────────
-function introduce(greeting) { console.log(\`\${greeting}, I'm \${this.name}\`); }
-const alice = { name: "Alice" };
-
-introduce.call(alice, "Hello");     // "Hello, I'm Alice" — args one by one
-introduce.apply(alice, ["Hey"]);    // "Hey, I'm Alice"   — args as an array
-const aliceIntro = introduce.bind(alice);  // returns a NEW function, 'this' fixed forever
-aliceIntro("Howdy");                 // "Howdy, I'm Alice"
-
-// ── Rule 4: new binding — called with new ─────────────────────────
-function Person(name) {
-  this.name = name;   // 'this' is a brand-new object created by 'new'
+function showThis() {
+  console.log(this); // undefined in strict mode
 }
-const p = new Person("Alice");
-p.name;  // "Alice"`,
+
+showThis();
+
+// ── 2. Basic — implicit binding ───────────────────────────────────
+const user = {
+  name: "Rajan",
+
+  greet() {
+    console.log(this.name);
+  }
+};
+
+user.greet(); // Rajan — the object before the dot
+
+// ── 3. Intermediate — call() ──────────────────────────────────────
+function hello() {
+  console.log(\`Hello, \${this.name}\`);
+}
+
+hello.call(user); // Hello, Rajan
+
+// ── 4. Intermediate — apply() passes arguments as an array ────────
+function introduce(city, country) {
+  console.log(\`\${this.name} lives in \${city}, \${country}\`);
+}
+
+introduce.apply(user, ["Tokyo", "Japan"]); // Rajan lives in Tokyo, Japan
+
+// ── 5. Intermediate — bind() returns a new function ───────────────
+const greetUser = hello.bind(user);
+greetUser(); // Hello, Rajan
+
+// ── 6. Advanced — losing this ─────────────────────────────────────
+const detached = user.greet;
+detached(); // undefined — no object before the dot
+
+// ── 7. Advanced — fixing a callback ───────────────────────────────
+setTimeout(user.greet, 1000);            // Hello, undefined
+setTimeout(user.greet.bind(user), 1000); // Rajan
+
+// ── 8. Advanced — new binding ─────────────────────────────────────
+function Person(name) {
+  this.name = name;
+}
+
+console.log(new Person("Rajan").name); // Rajan
+
+// ── 9. Arrow functions borrow the surrounding this ────────────────
+const account = {
+  name: "Rajan",
+
+  greet() {
+    const showName = () => console.log(this.name);
+    showName();
+  }
+};
+
+account.greet(); // Rajan`,
       },
       keyTakeaways: [
-        { en: "`this` is determined entirely by the call site (how a function is invoked), not by where the function was defined — the same function can have a different `this` every time it's called.", np: "`this` पूर्ण रूपमा call site (कसरी invoke भयो) ले निर्धारण गर्छ, function कहाँ define भयो त्यसले होइन।", jp: "thisは呼び出し場所（呼び出され方）によって完全に決まる。定義場所ではない。同じ関数でも呼ぶたびにthisが変わりうる。" },
-        { en: "The four rules have a strict priority order: `new` binding beats explicit binding, which beats implicit binding, which beats default binding.", np: "चार rules को strict priority order छ: new binding > explicit binding > implicit binding > default binding।", jp: "4つのルールには厳密な優先順位がある: new束縛 > 明示的束縛 > 暗黙的束縛 > デフォルト束縛。" },
-        { en: "Extracting a method from its object (`const fn = obj.method`) or passing it as a bare callback detaches `this` — the fix is `bind()`, an arrow function wrapper, or calling it through the object.", np: "Object बाट method extract गर्दा (`const fn = obj.method`) वा bare callback को रूपमा pass गर्दा `this` छुटिन्छ — fix: `bind()`, arrow function, वा object मार्फत call।", jp: "オブジェクトからメソッドを取り出す（`const fn = obj.method`）か、そのままコールバックとして渡すとthisが外れる。修正には`bind()`、アロー関数、またはオブジェクト経由の呼び出しを使う。" },
+        { en: "`this` depends on <b>how a regular function is called</b>.", np: "`this` <b>सामान्य function कसरी call भयो</b> त्यसमा निर्भर हुन्छ।", jp: "`this` は<b>通常の関数がどう呼ばれたか</b>で決まる。" },
+        { en: "`fn()` → <b>default binding</b>.", np: "`fn()` → <b>default binding</b>।", jp: "`fn()` → <b>デフォルトバインディング</b>。" },
+        { en: "`obj.fn()` → <b>implicit binding</b>, so `this` is `obj`.", np: "`obj.fn()` → <b>implicit binding</b>, त्यसैले `this` `obj` हुन्छ।", jp: "`obj.fn()` → <b>暗黙のバインディング</b>で `this` は `obj`。" },
+        { en: "`fn.call(obj)` and `fn.apply(obj)` → <b>explicit binding</b>, and both run immediately.", np: "`fn.call(obj)` र `fn.apply(obj)` → <b>explicit binding</b>, र दुबै तुरुन्तै चल्छन्।", jp: "`fn.call(obj)` と `fn.apply(obj)` → <b>明示的バインディング</b>。どちらもすぐ実行される。" },
+        { en: "`fn.bind(obj)` → creates a function with fixed `this`.", np: "`fn.bind(obj)` → स्थिर `this` भएको function बनाउँछ।", jp: "`fn.bind(obj)` → `this` が固定された関数を作る。" },
+        { en: "`new Person()` → `this` refers to the new object.", np: "`new Person()` → `this` ले नयाँ object लाई जनाउँछ।", jp: "`new Person()` → `this` は新しいオブジェクトを指す。" },
+        { en: "Taking `obj.method` out of the object can lose `this`.", np: "`obj.method` लाई object बाट बाहिर निकाल्दा `this` हराउन सक्छ।", jp: "`obj.method` をオブジェクトの外に取り出すと `this` を失うことがある。" },
+        { en: "Arrow functions <b>do not have their own `this`</b>; they take it from the surrounding scope.", np: "Arrow function का <b>आफ्नै `this` हुँदैन</b>; तिनले वरिपरिको scope बाट लिन्छन्।", jp: "アロー関数は<b>自分の `this` を持たず</b>、周囲のスコープから受け取る。" },
       ],
       commonMistakes: [
-        { en: "Passing `user.greet` as a callback (e.g. to `setTimeout` or an event listener) and being surprised `this` is no longer `user` when it runs.", np: "`user.greet` लाई callback को रूपमा (जस्तै `setTimeout` मा) pass गरेर, चलाउँदा `this` `user` नरहेकोमा अचम्मित हुनु।", jp: "`user.greet`を（`setTimeout`などに）コールバックとして渡し、実行時に`this`が`user`でなくなっていることに驚くこと。" },
-        { en: "Forgetting that arrow functions ignore all four `this` rules entirely — `call()`/`apply()`/`bind()` cannot change an arrow function's `this`.", np: "Arrow functions ले चारै `this` rules बेवास्ता गर्छन् भन्ने बिर्सनु — `call()`/`apply()`/`bind()` ले arrow function को `this` बदल्न सक्दैन।", jp: "アロー関数が4つのthisルールをすべて無視することを忘れること。`call()`/`apply()`/`bind()`はアロー関数のthisを変更できない。" },
-        { en: "Confusing `call()` and `apply()` argument order — `call` takes arguments one by one, `apply` takes a single array; mixing them up passes the wrong values.", np: "`call()` र `apply()` का arguments order मिलाउनु — `call` ले individual arguments लिन्छ, `apply` ले array लिन्छ।", jp: "`call()`と`apply()`の引数の渡し方を混同すること。callは個別、applyは配列で受け取る。" },
+        { en: "<b>Thinking `this` always means \"the current object\"</b> — after `const fn = user.greet;`, calling `fn()` no longer has `user` attached.", np: "<b>`this` सधैं \"वर्तमान object\" हो भन्ने ठान्नु</b> — `const fn = user.greet;` पछि, `fn()` call गर्दा `user` जोडिएको हुँदैन।", jp: "<b>`this` は常に「今のオブジェクト」だと思う</b> — `const fn = user.greet;` の後に `fn()` を呼んでも `user` は付いてこない。" },
+        { en: "<b>Confusing `call()` and `bind()`</b> — `greet.call(user)` runs the function now, while `greet.bind(user)` returns a new function to call later.", np: "<b>`call()` र `bind()` भ्रममा पार्नु</b> — `greet.call(user)` ले function अहिले चलाउँछ, जब कि `greet.bind(user)` ले पछि call गर्न नयाँ function फर्काउँछ।", jp: "<b>`call()` と `bind()` を混同する</b> — `greet.call(user)` は今すぐ実行し、`greet.bind(user)` は後で呼ぶ新しい関数を返す。" },
+        { en: "<b>Assuming arrow functions have their own `this`</b> — they don't; a top-level `const greet = () => console.log(this);` logs the surrounding `this`.", np: "<b>Arrow function का आफ्नै `this` हुन्छ भन्ने ठान्नु</b> — हुँदैन; top-level `const greet = () => console.log(this);` ले वरिपरिको `this` देखाउँछ।", jp: "<b>アロー関数が自分の `this` を持つと思う</b> — 持たない。トップレベルの `const greet = () => console.log(this);` は周囲の `this` を出す。" },
+        { en: "<b>Using an arrow function as an object method when you expect the object as `this`</b> — `greet: () => console.log(this.name)` usually logs `undefined`. Use a regular method: `greet() { ... }`.", np: "<b>Object लाई `this` चाहिँदा arrow function लाई object method बनाउनु</b> — `greet: () => console.log(this.name)` ले सामान्यतया `undefined` देखाउँछ। सामान्य method प्रयोग गर्नुहोस्: `greet() { ... }`।", jp: "<b>オブジェクトを `this` にしたいのにアロー関数をメソッドにする</b> — `greet: () => console.log(this.name)` はたいてい `undefined` を出す。通常のメソッド `greet() { ... }` を使う。" },
       ],
       quiz: [
         {
-          question: { en: "What is `this` inside `showThis()` when called as a plain function in strict mode?", np: "Strict mode मा plain function को रूपमा call हुँदा `showThis()` भित्र `this` के हो?", jp: "strictモードでプレーン関数として呼び出された`showThis()`内の`this`は？" },
+          question: { en: "What determines `this` for a regular function?", np: "सामान्य function का लागि `this` के ले तय गर्छ?", jp: "通常の関数の `this` は何で決まるか?" },
           options: [
-            { en: "The global object", np: "Global object", jp: "グローバルオブジェクト" },
+            { en: "Where the function is written", np: "Function कहाँ लेखिएको छ", jp: "関数がどこに書かれたか" },
+            { en: "How the function is called", np: "Function कसरी call गरिएको छ", jp: "関数がどう呼ばれたか" },
+            { en: "The function's name", np: "Function को नाम", jp: "関数の名前" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The call site decides it, which is why the same function can see different objects.", np: "Call site ले तय गर्छ, त्यसैले उही function ले फरक object देख्न सक्छ।", jp: "呼び出し側が決めるので、同じ関数でも別のオブジェクトを見ることがある。" },
+        },
+        {
+          question: { en: "Given `const user = { name: \"Rajan\", greet() { console.log(this.name); } }`, what is `this` in `user.greet()`?", np: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` मा, `user.greet()` भित्र `this` के हो?", jp: "`const user = { name: \"Rajan\", greet() { console.log(this.name); } }` のとき `user.greet()` の `this` は?" },
+          options: [
             { en: "`undefined`", np: "`undefined`", jp: "`undefined`" },
+            { en: "`user`", np: "`user`", jp: "`user`" },
+            { en: "`window`", np: "`window`", jp: "`window`" },
           ],
           correctIndex: 1,
-          explanation: { en: "Default binding in strict mode leaves `this` as undefined rather than falling back to the global object.", np: "Strict mode मा default binding ले `this` लाई global object मा नखसाई undefined नै राख्छ।", jp: "strictモードのデフォルト束縛では、グローバルオブジェクトにフォールバックせずthisはundefinedのままになる。" },
+          explanation: { en: "Implicit binding: `this` is whatever sits before the dot at the call site.", np: "Implicit binding: call site मा `.` अघि जे छ त्यही `this` हुन्छ।", jp: "暗黙のバインディング: 呼び出し時にドットの前にあるものが `this` になる。" },
         },
         {
-          question: { en: "What happens when you do `const fn = user.greet; fn();`?", np: "`const fn = user.greet; fn();` गर्दा के हुन्छ?", jp: "`const fn = user.greet; fn();`をすると何が起こる？" },
+          question: { en: "What does `bind()` do?", np: "`bind()` ले के गर्छ?", jp: "`bind()` は何をするか?" },
           options: [
-            { en: "`this` inside greet is still `user`", np: "greet भित्रको `this` अझै `user` नै हो", jp: "greet内のthisはまだuser" },
-            { en: "`this` is lost — greet is now called with default binding, not implicit binding", np: "`this` हराउन्छ — greet अब default binding मार्फत call हुन्छ, implicit binding होइन", jp: "thisが失われる — greetはデフォルト束縛で呼ばれ、暗黙的束縛ではない" },
+            { en: "Immediately runs the function", np: "Function तुरुन्तै चलाउँछ", jp: "関数をすぐ実行する" },
+            { en: "Creates a new function with a chosen `this`", np: "छानिएको `this` भएको नयाँ function बनाउँछ", jp: "選んだ `this` を持つ新しい関数を作る" },
+            { en: "Deletes `this`", np: "`this` मेटाउँछ", jp: "`this` を削除する" },
           ],
           correctIndex: 1,
-          explanation: { en: "Extracting the function detaches it from the object; when called bare, there's no object to the left of a dot, so implicit binding no longer applies.", np: "Function extract गर्दा object बाट छुट्छ; bare call हुँदा dot को बायाँतिर कुनै object नहुने भएकाले implicit binding लागू हुँदैन।", jp: "関数を取り出すとオブジェクトから切り離される。そのまま呼ばれるとドットの左にオブジェクトがないため暗黙的束縛は適用されない。" },
+          explanation: { en: "That is why it fixes callbacks: `setTimeout(user.greet.bind(user), 1000)`.", np: "त्यसैले यसले callback ठीक गर्छ: `setTimeout(user.greet.bind(user), 1000)`।", jp: "だからコールバックを直せる: `setTimeout(user.greet.bind(user), 1000)`。" },
         },
         {
-          question: { en: "Between `call()` and `bind()`, which one invokes the function immediately?", np: "`call()` र `bind()` मध्ये कुनले function तुरुन्तै invoke गर्छ?", jp: "`call()`と`bind()`のうち即座に関数を呼び出すのはどちら？" },
+          question: { en: "What happens with `const greet = user.greet;` then `greet()`?", np: "`const greet = user.greet;` पछि `greet()` गर्दा के हुन्छ?", jp: "`const greet = user.greet;` の後に `greet()` するとどうなるか?" },
           options: [
-            { en: "`call()`", np: "`call()`", jp: "`call()`" },
-            { en: "`bind()`", np: "`bind()`", jp: "`bind()`" },
+            { en: "`this` automatically stays `user`", np: "`this` स्वतः `user` नै रहन्छ", jp: "`this` は自動的に `user` のまま" },
+            { en: "The object binding is lost", np: "Object binding हराउँछ", jp: "オブジェクトのバインディングが失われる" },
+            { en: "JavaScript creates a new object", np: "JavaScript ले नयाँ object बनाउँछ", jp: "JavaScriptが新しいオブジェクトを作る" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "There is no object before the dot any more, so it falls back to default binding.", np: "अब `.` अघि object छैन, त्यसैले यो default binding मा झर्छ।", jp: "もうドットの前にオブジェクトがないので、デフォルトバインディングに戻る。" },
+        },
+        {
+          question: { en: "What is special about arrow functions?", np: "Arrow function मा के विशेष छ?", jp: "アロー関数の特別な点は?" },
+          options: [
+            { en: "They always have `this` set to the global object", np: "तिनको `this` सधैं global object हुन्छ", jp: "`this` が常にグローバルオブジェクトになる" },
+            { en: "They create their own `this`", np: "तिनले आफ्नै `this` बनाउँछन्", jp: "自分の `this` を作る" },
+            { en: "They use `this` from the surrounding scope", np: "तिनले वरिपरिको scope बाट `this` लिन्छन्", jp: "周囲のスコープの `this` を使う" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "That makes them ideal inside a method, and wrong as the method itself.", np: "त्यसैले यी method भित्र उपयुक्त छन्, र method आफैं बन्दा गलत।", jp: "だからメソッドの内側では最適だが、メソッド自体には不向き。" },
+        },
+        {
+          question: { en: "What does `new` do to `this` in `function Person(name) { this.name = name; }`?", np: "`function Person(name) { this.name = name; }` मा `new` ले `this` लाई के गर्छ?", jp: "`function Person(name) { this.name = name; }` で `new` は `this` をどうするか?" },
+          options: [
+            { en: "`this` refers to the new object", np: "`this` ले नयाँ object लाई जनाउँछ", jp: "`this` は新しいオブジェクトを指す" },
+            { en: "`this` is always `undefined`", np: "`this` सधैं `undefined` हुन्छ", jp: "`this` は常に `undefined`" },
+            { en: "`this` refers to `Person` itself", np: "`this` ले `Person` आफैंलाई जनाउँछ", jp: "`this` は `Person` 自身を指す" },
           ],
           correctIndex: 0,
-          explanation: { en: "call() and apply() invoke the function right away with the given this. bind() instead returns a new function for later use, without calling it.", np: "call() र apply() ले तुरुन्तै given this सँग function call गर्छन्। bind() ले पछि प्रयोग गर्न नयाँ function फर्काउँछ, call गर्दैन।", jp: "call()とapply()は指定されたthisで即座に関数を呼び出す。bind()は呼び出さずに後で使うための新しい関数を返す。" },
+          explanation: { en: "`new` creates the object, points `this` at it, and returns it automatically.", np: "`new` ले object बनाउँछ, `this` लाई त्यसैतिर देखाउँछ, र स्वतः फर्काउँछ।", jp: "`new` はオブジェクトを作り、`this` をそれに向け、自動的に返す。" },
         },
       ],
     },
