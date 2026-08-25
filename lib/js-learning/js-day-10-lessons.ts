@@ -128,113 +128,118 @@ console.log(admin.deleteUser()); // User deleted — found on Admin.prototype`,
       title: { en: "Inheritance with extends and super", np: "extends र super सँग Inheritance", jp: "extendsとsuperによる継承" },
       durationMinutes: 9,
       explanation: {
-        en: "<b>Inheritance</b> lets one class reuse another class's properties and methods instead of duplicating the same code across multiple classes. The class holding the shared logic is called the <b>parent</b> (or base) class; the class that reuses it is the <b>child</b> (or derived) class, connected with the `extends` keyword — e.g. `class Student extends Person {}` gives `Student` everything `Person` has, without rewriting a single line. Under the hood this sets up the entire prototype chain from Day 8 in one line, which is also why `instanceof` reflects the whole chain: a `Student` instance is `instanceof Student` AND `instanceof Person`.\n\nWhen the child defines its own `constructor(...)`, it must call `super(...)` first to run the parent's constructor and set up the inherited properties — using `this` before `super(...)` throws a `ReferenceError`, because the object doesn't exist yet until the parent has initialized it.\n\nA child can also <b>override</b> a method by redefining it with the same name — JavaScript then uses the child's version instead of the parent's. If the child still wants the parent's behaviour too, `super.method()` (no `new`, no parentheses after `super`) calls the parent's original implementation from inside the override. If a method isn't found directly on the child at all, JavaScript walks up to the parent's prototype and keeps looking until it finds it or reaches `Object` — this lookup is called the prototype chain.",
-        np: "Inheritance ले एउटा class को properties/methods अर्को class ले reuse गर्न दिन्छ, code duplicate नगरी। Parent class मा shared logic हुन्छ, child class ले `extends` प्रयोग गरेर त्यो inherit गर्छ — यसैले `instanceof` ले पूरै chain (parent + child दुवै) चिन्छ। Child को आफ्नै constructor भए `super(...)` पहिले call गर्नुपर्छ — नत्र `this` प्रयोग गर्दा ReferenceError हुन्छ। Child ले method override गर्न सक्छ, र `super.method()` ले parent को version पनि call गर्न सकिन्छ। भित्री रूपमा यो अझै prototype chain lookup नै हो।",
-        jp: "継承は、あるクラスのプロパティやメソッドを別のクラスが再利用できるようにする仕組みで、コードの重複を避けられる。共有ロジックを持つのが親クラス、`extends`で継承するのが子クラス — そのため`instanceof`はチェーン全体（親と子の両方）を認識する。子が独自のコンストラクタを持つ場合、まず`super(...)`を呼ぶ必要がある — それより前に`this`を使うとReferenceErrorになる。子はメソッドをオーバーライドでき、`super.method()`で親のバージョンも呼び出せる。内部的にはこれもプロトタイプチェーンによるルックアップ。",
+        en: "<b>Inheritance</b> lets one class reuse the properties and methods of another class instead of duplicating code.\n\n• <b>Parent class</b> → contains shared behavior.\n• <b>Child class</b> → inherits and can add or override behavior.\n• <b>`extends`</b> → connects the child to the parent.\n• <b>`super()`</b> → calls the parent constructor.\n• <b>`super.method()`</b> → calls a method from the parent class.\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\nUnder the hood, `extends` creates a <b>prototype chain</b>:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nThat's why:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. Basic inheritance\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\nThe child automatically gets the parent's methods.\n\n---\n\n### 2. `super()` in a constructor\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` runs the parent constructor so `this.name` can be initialized.\n\nIn a derived class, you <b>cannot use `this` before `super()`</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. Method overriding and `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\nThe child overrides `greet()`, but `super.greet()` lets it reuse the parent's implementation.",
+        np: "<b>Inheritance</b> ले एउटा class लाई code दोहोर्याउनुको साटो अर्को class का property र method पुनः प्रयोग गर्न दिन्छ।\n\n• <b>Parent class</b> → साझा behavior राख्छ।\n• <b>Child class</b> → inherit गर्छ र behavior थप्न वा override गर्न सक्छ।\n• <b>`extends`</b> → child लाई parent सँग जोड्छ।\n• <b>`super()`</b> → parent constructor call गर्छ।\n• <b>`super.method()`</b> → parent class को method call गर्छ।\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\nभित्री रूपमा, `extends` ले <b>prototype chain</b> बनाउँछ:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nत्यसैले:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. आधारभूत inheritance\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\nChild ले parent का method स्वतः पाउँछ।\n\n---\n\n### 2. Constructor मा `super()`\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` ले parent constructor चलाउँछ ताकि `this.name` initialise हुन सकोस्।\n\nDerived class मा, तपाईंले <b>`super()` अघि `this` प्रयोग गर्न सक्नुहुन्न</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. Method override र `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\nChild ले `greet()` override गर्छ, तर `super.greet()` ले parent को implementation पुनः प्रयोग गर्न दिन्छ।",
+        jp: "<b>継承</b>を使うと、コードを複製せずに、あるクラスが別のクラスのプロパティやメソッドを再利用できます。\n\n• <b>親クラス</b> → 共通の振る舞いを持つ。\n• <b>子クラス</b> → 継承し、振る舞いを追加したり上書きしたりできる。\n• <b>`extends`</b> → 子を親につなぐ。\n• <b>`super()`</b> → 親のコンストラクタを呼ぶ。\n• <b>`super.method()`</b> → 親クラスのメソッドを呼ぶ。\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n\n  greet() {\n    return `Hello, ${this.name}`;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);    // Rajan\nconsole.log(student.grade);   // 10\nconsole.log(student.greet()); // Hello, Rajan\n```\n\n内部では `extends` が<b>プロトタイプチェーン</b>を作ります:\n\n```text\nstudent\n   ↓\nStudent.prototype\n   ↓\nPerson.prototype\n   ↓\nObject.prototype\n   ↓\nnull\n```\n\nだからこうなります:\n\n```javascript\nstudent instanceof Student // true\nstudent instanceof Person  // true\n```\n\n---\n\n### 1. 基本の継承\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello!\";\n  }\n}\n\nclass Student extends Person {}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello!\n```\n\n子は親のメソッドを自動的に受け継ぎます。\n\n---\n\n### 2. コンストラクタでの `super()`\n\n```javascript\nclass Person {\n  constructor(name) {\n    this.name = name;\n  }\n}\n\nclass Student extends Person {\n  constructor(name, grade) {\n    super(name);\n    this.grade = grade;\n  }\n}\n\nconst student = new Student(\"Rajan\", 10);\n\nconsole.log(student.name);  // Rajan\nconsole.log(student.grade); // 10\n```\n\n`super(name)` が親のコンストラクタを実行するので `this.name` が初期化されます。\n\n派生クラスでは<b>`super()` より前に `this` を使えません</b>:\n\n```javascript\nclass Student extends Person {\n  constructor(name) {\n    this.name = name; // ReferenceError\n    super(name);\n  }\n}\n```\n\n---\n\n### 3. メソッドの上書きと `super.method()`\n\n```javascript\nclass Person {\n  greet() {\n    return \"Hello from Person\";\n  }\n}\n\nclass Student extends Person {\n  greet() {\n    return `${super.greet()} and hello from Student`;\n  }\n}\n\nconst student = new Student();\n\nconsole.log(student.greet());\n// Hello from Person and hello from Student\n```\n\n子は `greet()` を上書きしますが、`super.greet()` で親の実装を再利用できます。",
       },
-      diagram: `Person (parent)                       Student extends Person (child)
-  constructor(name, age)                 constructor(name, age, grade) {
-  introduce() { ... }                      super(name, age);   ← MUST run before 'this'
-                                            this.grade = grade;
-                                          }
-                                          study() { ... }
+      diagram: `             Person
+        ┌────────────────┐
+        │ name           │
+        │ greet()        │
+        └───────┬────────┘
+                │
+             extends
+                ↓
+            Student
+        ┌────────────────┐
+        │ grade          │
+        │ study()        │
+        └───────┬────────┘
+                │
+                ↓
+             student
+        ┌────────────────┐
+        │ name: "Rajan"  │
+        │ grade: 10      │
+        └────────────────┘
 
-john = new Student("John", 20, "A")
 
-john.study()          → found on Student                    ✅
-john.introduce()      → not on Student, look up the chain
-                      → found on Person (prototype lookup)  ✅
-
-john instanceof Student  → true
-john instanceof Person   → true   ← chain includes Person.prototype`,
+student.greet() is not found on student,
+so JavaScript walks up the chain to Person.prototype.`,
       codeExample: {
-        title: { en: "extends, super(), overriding, and calling the parent's method", np: "extends, super(), method override", jp: "extends・super()・メソッドのオーバーライド" },
-        code: `// ── Basic inheritance — reuse without rewriting ──────────────────────
-class Animal {
-  speak() { return "Animal makes a sound"; }
-}
-class Dog extends Animal {}   // Dog gets speak() for free, no code duplication
-
-const dog = new Dog();
-dog.speak();   // "Animal makes a sound" — inherited, not redefined
-
-// ── super() — initialize the inherited properties first ──────────────
+        title: { en: "Extending, calling super, then overriding", np: "Extend गर्नु, super call गर्नु, अनि override गर्नु", jp: "継承する・superを呼ぶ・上書きする" },
+        code: `// ── 1. Basic inheritance — the child gets the parent's methods ────
 class Person {
-  constructor(name) { this.name = name; }
-}
-class Student extends Person {
-  constructor(name, course) {
-    super(name);          // MUST run before touching 'this'
-    this.course = course;
+  constructor(name) {
+    this.name = name;
+  }
+
+  greet() {
+    return \`Hello, \${this.name}\`;
   }
 }
-const student = new Student("Alice", "JavaScript");
-student.name;    // "Alice" — set up by Person's constructor
-student.course;  // "JavaScript"
 
-// ── Overriding a method ────────────────────────────────────────────────
-class Cat extends Animal {
-  speak() { return "Meow!"; }   // replaces Animal's speak()
+class Student extends Person {
+  constructor(name, grade) {
+    super(name);      // must run before this is used
+    this.grade = grade;
+  }
 }
-new Cat().speak();   // "Meow!" — Cat's own version wins
 
-// ── Calling the parent's version too, via super.method() ─────────────
-class Puppy extends Animal {
-  speak() { return super.speak() + " ... and also, Woof!"; }
-}
-new Puppy().speak();   // "Animal makes a sound ... and also, Woof!"
+const student = new Student("Rajan", 10);
 
-// ── Real-world example ──────────────────────────────────────────────────
-class Employee {
-  constructor(name) { this.name = name; }
-  login() { return \`\${this.name} logged in.\`; }
+console.log(student.name);    // Rajan
+console.log(student.grade);   // 10
+console.log(student.greet()); // Hello, Rajan
+
+// ── 2. The chain extends built for us ─────────────────────────────
+console.log(student instanceof Student); // true
+console.log(student instanceof Person);  // true
+
+// ── 3. Overriding, and reusing the parent with super.method() ─────
+class Teacher extends Person {
+  greet() {
+    return \`\${super.greet()} and hello from Teacher\`;
+  }
 }
-class Manager extends Employee {
-  approveLeave() { return \`\${this.name} approved leave.\`; }
-}
-const manager = new Manager("Sarah");
-manager.login();         // "Sarah logged in." — inherited from Employee
-manager.approveLeave();  // "Sarah approved leave." — Manager's own method`,
+
+console.log(new Teacher("Rajan").greet());
+// Hello, Rajan and hello from Teacher`,
       },
       keyTakeaways: [
-        { en: "Inheritance lets a child class reuse a parent class's properties and methods via `extends`, instead of duplicating the same code in multiple classes.", np: "Inheritance ले child class लाई `extends` मार्फत parent class को properties/methods reuse गर्न दिन्छ, धेरै classes मा उही code duplicate नगरी।", jp: "継承は`extends`を通じて子クラスが親クラスのプロパティやメソッドを再利用できるようにし、複数のクラスで同じコードを重複させずに済む。" },
-        { en: "`super(...)` calls the parent's constructor and must run before any use of `this` in the child's constructor — using `this` first throws a ReferenceError.", np: "`super(...)` ले parent को constructor call गर्छ र child को constructor मा `this` प्रयोग गर्नुअघि चल्नुपर्छ — पहिले `this` प्रयोग गर्दा ReferenceError हुन्छ।", jp: "`super(...)`は親のコンストラクタを呼び、子のコンストラクタでthisを使う前に実行する必要がある。先にthisを使うとReferenceErrorになる。" },
-        { en: "A child class can override an inherited method by redefining it with the same name; `super.method()` lets it also call the parent's original version.", np: "Child class ले inherited method लाई उही नामले redefine गरेर override गर्न सक्छ; `super.method()` ले parent को original version पनि call गर्न दिन्छ।", jp: "子クラスは同じ名前で再定義することで継承したメソッドをオーバーライドできる。`super.method()`で親の元のバージョンも呼び出せる。" },
-        { en: "Behind the scenes, method lookup still walks the prototype chain from Day 8 — if a method isn't found on the child, JavaScript looks up to the parent, then further up until it's found.", np: "भित्री रूपमा method lookup अझै Day 8 को prototype chain मार्फत हुन्छ — child मा method नभेटिए JS ले parent मा, त्यसपछि माथि खोज्छ।", jp: "内部的にはメソッドの検索はDay 8のプロトタイプチェーンをたどる。子に見つからなければ親、さらに上へと探す。" },
+        { en: "<b>`extends`</b> → creates inheritance between classes.", np: "<b>`extends`</b> → class बीच inheritance बनाउँछ।", jp: "<b>`extends`</b> → クラス間に継承を作る。" },
+        { en: "<b>`super()`</b> → calls the parent constructor.", np: "<b>`super()`</b> → parent constructor call गर्छ।", jp: "<b>`super()`</b> → 親のコンストラクタを呼ぶ。" },
+        { en: "<b>`super.method()`</b> → calls the parent's method.", np: "<b>`super.method()`</b> → parent को method call गर्छ।", jp: "<b>`super.method()`</b> → 親のメソッドを呼ぶ。" },
+        { en: "A child can <b>override</b> parent methods.", np: "Child ले parent का method <b>override</b> गर्न सक्छ।", jp: "子は親のメソッドを<b>上書き</b>できる。" },
+        { en: "Child instances are `instanceof` both the child and the parent.", np: "Child instance child र parent दुबैको `instanceof` हुन्छ।", jp: "子のインスタンスは子と親の両方の `instanceof` になる。" },
+        { en: "Method lookup follows the <b>prototype chain</b>.", np: "Method खोजीले <b>prototype chain</b> पछ्याउँछ।", jp: "メソッドの探索は<b>プロトタイプチェーン</b>をたどる。" },
+        { en: "In a child constructor, <b>`super()` must run before `this` is used</b>.", np: "Child constructor मा, <b>`this` प्रयोग गर्नुअघि `super()` चल्नैपर्छ</b>।", jp: "子のコンストラクタでは、<b>`this` を使う前に `super()` を実行</b>しなければならない。" },
       ],
       commonMistakes: [
-        { en: "Forgetting `extends` entirely, so the child class doesn't inherit anything from the intended parent class.", np: "`extends` नै बिर्सनु, त्यसले child class ले चाहिएको parent class बाट केही inherit गर्दैन।", jp: "`extends`自体を書き忘れること。その結果、子クラスは意図した親クラスから何も継承しない。" },
-        { en: "Trying to use `this` in a derived class's constructor before calling `super(...)` — this always throws a ReferenceError.", np: "Derived class को constructor मा `super(...)` call गर्नुअघि `this` प्रयोग गर्ने प्रयास गर्नु — यसले सधैं ReferenceError throw गर्छ।", jp: "`super(...)`を呼ぶ前に派生クラスのコンストラクタでthisを使おうとすること。これは常にReferenceErrorをスローする。" },
-        { en: "Confusing inheritance with copying — a child doesn't get its own copy of the parent's methods, it accesses them through the prototype chain, which is memory efficient.", np: "Inheritance लाई copying सँग confuse गर्नु — child ले parent को methods को आफ्नै copy पाउँदैन, prototype chain मार्फत access गर्छ, जुन memory efficient छ।", jp: "継承をコピーと混同すること。子は親のメソッドの独自コピーを持たず、プロトタイプチェーンを通じてアクセスする。これはメモリ効率が良い。" },
-        { en: "Rewriting a method that's identical to the parent's version instead of simply letting the child inherit it unchanged.", np: "Parent को version सँग उस्तै method फेरि लेख्नु, child ले त्यसलाई unchanged inherit गर्न दिनुको सट्टा।", jp: "親のバージョンと同一のメソッドを書き直すこと。子にそのまま継承させれば十分な場合。" },
+        { en: "<b>Using `this` before `super()`</b> — `this.name = name;` above `super(name);` throws a `ReferenceError`. Call `super()` first, then assign.", np: "<b>`super()` अघि `this` प्रयोग गर्नु</b> — `super(name);` माथि `this.name = name;` ले `ReferenceError` दिन्छ। पहिले `super()` call गर्नुहोस्, त्यसपछि assign।", jp: "<b>`super()` の前に `this` を使う</b> — `super(name);` より上の `this.name = name;` は `ReferenceError`。先に `super()` を呼び、その後に代入する。" },
+        { en: "<b>Calling `super` like a normal object</b> — `super.greet()` is right for a parent method, but `super().greet()` is wrong. `super()` is only for the parent constructor.", np: "<b>`super` लाई सामान्य object जस्तै call गर्नु</b> — parent method का लागि `super.greet()` ठीक हो, तर `super().greet()` गलत। `super()` parent constructor का लागि मात्र हो।", jp: "<b>`super` を普通のオブジェクトのように呼ぶ</b> — 親のメソッドには `super.greet()` が正しく、`super().greet()` は誤り。`super()` は親のコンストラクタ専用。" },
+        { en: "<b>Forgetting that overriding replaces the parent's version</b> — once `Student` defines its own `greet()`, `student.greet()` uses that one. Call `super.greet()` when you also need the parent's behaviour.", np: "<b>Override ले parent को संस्करण प्रतिस्थापन गर्छ भनी बिर्सनु</b> — `Student` ले आफ्नै `greet()` परिभाषित गरेपछि, `student.greet()` ले त्यही प्रयोग गर्छ। Parent को behavior पनि चाहिए `super.greet()` call गर्नुहोस्।", jp: "<b>上書きが親の実装を置き換えることを忘れる</b> — `Student` が自前の `greet()` を定義すると `student.greet()` はそちらを使う。親の振る舞いも必要なら `super.greet()` を呼ぶ。" },
       ],
       quiz: [
         {
-          question: { en: "What must happen before you can use `this` inside a derived class's constructor?", np: "Derived class को constructor भित्र `this` प्रयोग गर्नुअघि के हुनुपर्छ?", jp: "派生クラスのコンストラクタ内でthisを使う前に何が必要？" },
+          question: { en: "What does `extends` do?", np: "`extends` ले के गर्छ?", jp: "`extends` は何をするか?" },
           options: [
-            { en: "Nothing special — `this` is always available", np: "विशेष केही होइन — `this` सधैं available हुन्छ", jp: "特別なことは何もない — thisは常に利用可能" },
-            { en: "`super(...)` must be called first", np: "पहिले `super(...)` call हुनुपर्छ", jp: "先に`super(...)`を呼ぶ必要がある" },
+            { en: "Creates a new object", np: "नयाँ object बनाउँछ", jp: "新しいオブジェクトを作る" },
+            { en: "Creates inheritance between classes", np: "Class बीच inheritance बनाउँछ", jp: "クラス間に継承を作る" },
+            { en: "Copies all parent methods into the child", np: "Parent का सबै method child मा copy गर्छ", jp: "親のメソッドをすべて子にコピーする" },
           ],
           correctIndex: 1,
-          explanation: { en: "The parent constructor sets up 'this' — accessing it beforehand throws a ReferenceError.", np: "Parent constructor ले 'this' सेटअप गर्छ — अगावै access गर्दा ReferenceError हुन्छ।", jp: "親コンストラクタがthisを設定する。それ以前にアクセスするとReferenceErrorをスローする。" },
+          explanation: { en: "Nothing is copied; it links the child's prototype to the parent's.", np: "केही copy हुँदैन; यसले child को prototype लाई parent को सँग जोड्छ।", jp: "コピーはされない。子のプロトタイプを親につなぐだけ。" },
         },
         {
-          question: { en: "What does `super.speak()` do inside an overriding `speak()` method?", np: "Overriding `speak()` method भित्र `super.speak()` ले के गर्छ?", jp: "オーバーライドする`speak()`メソッド内で`super.speak()`は何をする？" },
+          question: { en: "Why do we use `super()` in a child constructor?", np: "Child constructor मा `super()` किन प्रयोग गर्छौं?", jp: "子のコンストラクタでなぜ `super()` を使うのか?" },
           options: [
-            { en: "Calls the parent class's version of `speak()`", np: "Parent class को `speak()` version call गर्छ", jp: "親クラスの`speak()`のバージョンを呼ぶ" },
-            { en: "Calls `speak()` on every instance created so far", np: "अहिलेसम्म बनेका सबै instances मा `speak()` call गर्छ", jp: "今まで作られたすべてのインスタンスでspeak()を呼ぶ" },
+            { en: "To create a new class", np: "नयाँ class बनाउन", jp: "新しいクラスを作るため" },
+            { en: "To run the parent constructor", np: "Parent constructor चलाउन", jp: "親のコンストラクタを実行するため" },
+            { en: "To call any method", np: "जुनसुकै method call गर्न", jp: "任意のメソッドを呼ぶため" },
           ],
-          correctIndex: 0,
-          explanation: { en: "super.method() reaches up one level in the prototype chain to invoke the parent's implementation.", np: "super.method() ले prototype chain मा एक level माथि गएर parent को implementation call गर्छ।", jp: "super.method()はプロトタイプチェーンを1段上って親の実装を呼び出す。" },
+          correctIndex: 1,
+          explanation: { en: "It initialises the parent's properties, and must run before `this` is touched.", np: "यसले parent का property initialise गर्छ, र `this` छुनुअघि चल्नैपर्छ।", jp: "親のプロパティを初期化する。`this` に触れる前に実行しなければならない。" },
         },
         {
-          question: { en: "If `Dog extends Animal`, is a `Dog` instance `instanceof Animal`?", np: "`Dog extends Animal` भए `Dog` instance `instanceof Animal` हो?", jp: "`Dog extends Animal`の場合、Dogインスタンスはinstanceof Animalか？" },
+          question: { en: "What happens with `class Student extends Person { greet() { return super.greet(); } }`?", np: "`class Student extends Person { greet() { return super.greet(); } }` मा के हुन्छ?", jp: "`class Student extends Person { greet() { return super.greet(); } }` では何が起こるか?" },
           options: [
-            { en: "Yes — extends wires Dog's prototype chain to include Animal.prototype", np: "हो — extends ले Dog को prototype chain मा Animal.prototype समावेश गराउँछ", jp: "はい — extendsはDogのプロトタイプチェーンにAnimal.prototypeを含める" },
-            { en: "No — instanceof only recognises the direct class, not ancestors", np: "होइन — instanceof ले direct class मात्र चिन्छ, ancestors होइन", jp: "いいえ — instanceofは直接のクラスのみを認識し、祖先は認識しない" },
+            { en: "Calls `Student.greet()` again", np: "`Student.greet()` फेरि call गर्छ", jp: "`Student.greet()` をもう一度呼ぶ" },
+            { en: "Calls `Person.greet()`", np: "`Person.greet()` call गर्छ", jp: "`Person.greet()` を呼ぶ" },
+            { en: "Creates a new `Person`", np: "नयाँ `Person` बनाउँछ", jp: "新しい `Person` を作る" },
           ],
-          correctIndex: 0,
-          explanation: { en: "instanceof checks the entire prototype chain, and extends puts the parent's prototype into that chain.", np: "instanceof ले पूरै prototype chain check गर्छ, र extends ले parent को prototype त्यो chain मा राख्छ।", jp: "instanceofはプロトタイプチェーン全体を確認し、extendsはそのチェーンに親のプロトタイプを入れる。" },
+          correctIndex: 1,
+          explanation: { en: "`super.method()` reaches the parent's implementation without recursing.", np: "`super.method()` ले recursion नगरी parent को implementation मा पुग्छ।", jp: "`super.method()` は再帰せずに親の実装へ到達する。" },
         },
       ],
     },
