@@ -133,9 +133,9 @@ export const UI_STRINGS = {
     jp: "JavaScript · 基礎から上級まで",
   },
   "hub.js.subtitle": {
-    en: "27 days covering variables, closures, prototypes, classes, async, event loop, TypeScript, and senior internals — with plain-English explanations and code examples.",
-    np: "२७ दिन: variables, closures, prototypes, async, event loop, TypeScript — plain English मा।",
-    jp: "27日：変数・クロージャ・プロトタイプ・async・イベントループ・TypeScriptなど — わかりやすい解説とコード例。",
+    en: "28 days covering variables, closures, prototypes, classes, async, event loop, TypeScript, and senior internals — with plain-English explanations and code examples.",
+    np: "२८ दिन: variables, closures, prototypes, async, event loop, TypeScript — plain English मा।",
+    jp: "28日：変数・クロージャ・プロトタイプ・async・イベントループ・TypeScriptなど — わかりやすい解説とコード例。",
   },
   "hub.js.cta": {
     en: "Open roadmap →",
@@ -304,14 +304,14 @@ export const UI_STRINGS = {
     jp: "JavaScript · 基礎からシニアまで",
   },
   "jsRoadmap.subtitle": {
-    en: "27 days covering variables, closures, prototypes, async, event loop, TypeScript, and senior internals.",
-    np: "भेरिएबल, closure, prototype, async, event loop, TypeScript, र सिनियर internals — २७ दिन।",
-    jp: "変数、クロージャ、プロトタイプ、非同期、イベントループ、TypeScript、シニア向け内部仕様までの27日間。",
+    en: "28 days covering variables, closures, prototypes, async, event loop, TypeScript, and senior internals.",
+    np: "भेरिएबल, closure, prototype, async, event loop, TypeScript, र सिनियर internals — २८ दिन।",
+    jp: "変数、クロージャ、プロトタイプ、非同期、イベントループ、TypeScript、シニア向け内部仕様までの28日間。",
   },
   "jsRoadmap.daysListAria": {
-    en: "JavaScript course days 1 through 27",
-    np: "JavaScript पाठ्यक्रम दिन १ देखि २७",
-    jp: "JavaScript コース 1日目から27日目",
+    en: "JavaScript course days 1 through 28",
+    np: "JavaScript पाठ्यक्रम दिन १ देखि २८",
+    jp: "JavaScript コース 1日目から28日目",
   },
   "jsRoadmap.overallProgress": {
     en: "Overall progress",

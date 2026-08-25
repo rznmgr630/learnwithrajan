@@ -32,6 +32,7 @@ import { JS_DAY_19_LESSONS } from "@/lib/js-learning/js-day-19-lessons";
 import { JS_DAY_20_LESSONS } from "@/lib/js-learning/js-day-20-lessons";
 import { JS_DAY_21_LESSONS } from "@/lib/js-learning/js-day-21-lessons";
 import { JS_DAY_22_LESSONS } from "@/lib/js-learning/js-day-22-lessons";
+import { JS_DAY_23_LESSONS } from "@/lib/js-learning/js-day-23-lessons";
 import type { JsLessonDay } from "@/lib/js-learning/js-lesson-types";
 
 const TAG_PILL =
@@ -60,6 +61,7 @@ const LESSON_DAYS: Record<number, JsLessonDay> = {
   20: JS_DAY_20_LESSONS,
   21: JS_DAY_21_LESSONS,
   22: JS_DAY_22_LESSONS,
+  23: JS_DAY_23_LESSONS,
 };
 
 const LESSON_DAY_NUMBERS = Object.keys(LESSON_DAYS)

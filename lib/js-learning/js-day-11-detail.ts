@@ -3,233 +3,207 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_11_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "ES6 classes are syntactic sugar over the prototype system you learned yesterday. Under the hood they work exactly the same way — but the syntax is much cleaner and easier to reason about, especially for inheritance. Classes also introduce private fields, static methods, and getters/setters in a familiar way.",
-      np: "ES6 classes हिजो सिकेको prototype system माथि syntactic sugar हो। भित्री रूपमा ठ्याक्कै उही काम गर्छ — तर syntax धेरै clean र clear छ, खासगरी inheritance का लागि।",
-      jp: "ES6クラスは昨日学んだプロトタイプシステム上の糖衣構文。内部の動作は全く同じだが構文が格段にわかりやすくなる。プライベートフィールド・staticメソッド・getter/setterも自然に扱える。",
+      en: "The prototype system is the engine under the hood of every object in JavaScript. Classes (Day 9) are just a cleaner syntax on top of prototypes — understanding prototypes first means classes will make complete sense. Most developers skip this and then spend years confused about why things work the way they do.",
+      np: "Prototype system JavaScript को हरेक object को engine हो। Classes (Day 9) केवल prototypes माथि cleaner syntax हो — prototype पहिले बुझ्नाले classes पूरै sense गर्छन्। धेरैजसो developers यो skip गर्छन् र वर्षौंसम्म confused हुन्छन्।",
+      jp: "プロトタイプシステムはJavaScriptの全オブジェクトを動かすエンジン。クラス（Day 9）はプロトタイプの上に乗った糖衣構文。プロトタイプを先に理解するとクラスが完全に腑に落ちる。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "2ZphE5HcQPQ", title: "JavaScript Classes — ES6" },
+        { type: "youtube", videoId: "wstwjQ1yqWQ", title: "JavaScript Prototype and Prototype Chain" },
       ],
     },
     {
-      title: { en: "Class basics", np: "Class basics", jp: "クラスの基本" },
+      title: { en: "The prototype chain", np: "Prototype chain", jp: "プロトタイプチェーン" },
       blocks: [
         {
+          type: "paragraph",
+          text: {
+            en: "Every JavaScript object has an internal link to another object called its **prototype**. When you try to access a property on an object and it is not found, JavaScript automatically looks up the prototype chain — checking the prototype's prototype, and so on, until it reaches `null`. This is how inheritance works in JavaScript.",
+            np: "JavaScript को हरेक object सँग आफ्नो **prototype** भनिने अर्को object को internal link हुन्छ। Property access गर्दा नभेटेमा JavaScript automatically prototype chain मा माथि खोज्छ — prototype को prototype, र यसरी `null` सम्म। यही JavaScript को inheritance हो।",
+            jp: "JavaScriptのすべてのオブジェクトは**プロトタイプ**と呼ばれる別のオブジェクトへの内部リンクを持つ。プロパティが見つからないとJSは自動的にプロトタイプチェーンをたどり`null`まで検索する。これがJSの継承の仕組み。",
+          },
+        },
+        {
           type: "code",
-          title: { en: "Class syntax vs prototype syntax — side by side", np: "Class syntax vs prototype syntax — side by side", jp: "クラス構文とプロトタイプ構文の比較" },
-          code: `// ── Prototype way (Day 8) ───────────────────────────────────────────
-function UserOld(name, age) {
-  this.name = name;
+          title: { en: "prototype, __proto__, and Object.getPrototypeOf", np: "prototype, __proto__, Object.getPrototypeOf", jp: "prototype・__proto__・Object.getPrototypeOf" },
+          code: `// ── Constructor functions (pre-ES6 way to create objects with shared methods) ─
+function User(name, age) {
+  this.name = name;    // instance property — unique per object
   this.age  = age;
 }
-UserOld.prototype.greet = function () {
+
+// Methods added to the prototype are shared across ALL instances (memory efficient)
+User.prototype.greet = function () {
   return \`Hi, I'm \${this.name}\`;
 };
 
-// ── Class way (exactly equivalent under the hood) ────────────────────
-class User {
-  constructor(name, age) {   // called when you use 'new User(...)'
-    this.name = name;
-    this.age  = age;
-  }
-
-  // Instance methods — added to User.prototype automatically
-  greet() {
-    return \`Hi, I'm \${this.name}\`;
-  }
-
-  isAdult() {
-    return this.age >= 18;
-  }
-}
+User.prototype.isAdult = function () {
+  return this.age >= 18;
+};
 
 const alice = new User("Alice", 30);
-alice.greet();     // "Hi, I'm Alice"
-alice.isAdult();   // true
+const bob   = new User("Bob",   17);
 
-// Proof that classes compile to prototypes:
-typeof User;  // "function" — classes ARE functions
-Object.getPrototypeOf(alice) === User.prototype;  // true`,
+alice.greet();    // "Hi, I'm Alice" — found on User.prototype
+alice.isAdult();  // true
+
+// ── The prototype chain ─────────────────────────────────────────────────
+// alice's own properties: { name: "Alice", age: 30 }
+// alice.__proto__  → User.prototype { greet, isAdult }
+// User.prototype.__proto__ → Object.prototype { toString, hasOwnProperty, ... }
+// Object.prototype.__proto__ → null
+
+// Property lookup order:
+// 1. alice's own properties — found? use it
+// 2. User.prototype — found? use it
+// 3. Object.prototype — found? use it
+// 4. null — not found, return undefined
+
+alice.hasOwnProperty("name");  // true  — own property
+alice.hasOwnProperty("greet"); // false — on prototype, not own
+
+// ── The right way to check the prototype chain (not __proto__) ────────────
+Object.getPrototypeOf(alice) === User.prototype;  // true
+Object.getPrototypeOf(User.prototype) === Object.prototype;  // true
+
+// ── instanceof — checks if prototype is in the chain ──────────────────────
+alice instanceof User;   // true
+alice instanceof Object; // true — everything inherits from Object
+
+// ── Object.create — create an object with a specific prototype ─────────────
+const animal = {
+  speak() { return \`\${this.name} makes a sound\`; },
+};
+
+const dog = Object.create(animal);
+dog.name = "Rex";
+dog.speak();  // "Rex makes a sound" — found on animal (its prototype)
+
+Object.getPrototypeOf(dog) === animal;  // true`,
         },
       ],
     },
     {
-      title: { en: "Inheritance with extends and super", np: "extends र super सँग inheritance", jp: "extendsとsuperによる継承" },
+      title: { en: "Prototype inheritance", np: "Prototype inheritance", jp: "プロトタイプ継承" },
       blocks: [
         {
           type: "code",
-          title: { en: "Extending a class — cleaner than prototype chains", np: "Class extend गर्नु — prototype chain भन्दा clean", jp: "クラスの継承 — プロトタイプチェーンより明快" },
-          code: `class Animal {
-  constructor(name) {
-    this.name = name;
-  }
+          title: { en: "Extending a constructor function with prototypal inheritance", np: "Constructor function prototype inheritance सहित extend गर्नु", jp: "コンストラクタ関数のプロトタイプ継承" },
+          code: `// ── Base constructor ────────────────────────────────────────────────
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.speak = function () {
+  return \`\${this.name} makes a sound\`;
+};
 
-  speak() {
-    return \`\${this.name} makes a sound\`;
-  }
-
-  toString() {
-    return \`Animal(\${this.name})\`;
-  }
+// ── Derived constructor ───────────────────────────────────────────────
+function Dog(name, breed) {
+  Animal.call(this, name);    // 1. call parent constructor to initialise 'name'
+  this.breed = breed;
 }
 
-class Dog extends Animal {
-  constructor(name, breed) {
-    super(name);          // MUST call super() before accessing 'this'
-    this.breed = breed;
-  }
+// 2. Set up the prototype chain so Dog instances inherit from Animal.prototype
+Dog.prototype = Object.create(Animal.prototype);
 
-  // Override the parent method
-  speak() {
-    return \`\${this.name} barks!\`;
-  }
+// 3. Fix the constructor reference (Object.create breaks it)
+Dog.prototype.constructor = Dog;
 
-  // Call the parent method with super.method()
-  fullDescription() {
-    return \`\${super.speak()} — specifically, \${this.name} barks!\`;
-  }
-}
+// 4. Add Dog-specific methods
+Dog.prototype.bark = function () {
+  return "Woof!";
+};
 
 const rex = new Dog("Rex", "Labrador");
-rex.speak();            // "Rex barks!" — overridden method
-rex.fullDescription();  // "Rex makes a sound — specifically, Rex barks!"
-rex.toString();         // "Animal(Rex)" — inherited from Animal
+rex.speak();  // "Rex makes a sound" — from Animal.prototype
+rex.bark();   // "Woof!" — from Dog.prototype
+rex instanceof Dog;    // true
+rex instanceof Animal; // true — Dog.prototype chain includes Animal.prototype
 
-rex instanceof Dog;     // true
-rex instanceof Animal;  // true — Dog extends Animal
+// ── Modern alternative: Object.create for clean prototypal inheritance ───
+const animalProto = {
+  init(name) { this.name = name; return this; },
+  speak()    { return \`\${this.name} makes a sound\`; },
+};
 
-// ── Abstract-like pattern — base class that should not be instantiated ──
-class Shape {
-  constructor(color) {
-    if (new.target === Shape) {
-      throw new Error("Shape is abstract — use a subclass");
-    }
-    this.color = color;
-  }
+const dogProto = Object.create(animalProto);
+dogProto.initDog = function(name, breed) {
+  this.init(name);
+  this.breed = breed;
+  return this;
+};
+dogProto.bark = function() { return "Woof!"; };
 
-  area() { throw new Error("area() must be implemented"); }
-}
-
-class Circle extends Shape {
-  constructor(color, radius) {
-    super(color);
-    this.radius = radius;
-  }
-  area() { return Math.PI * this.radius ** 2; }
-}
-
-new Circle("red", 5).area();  // ~78.54
-// new Shape("blue");          // Error: Shape is abstract`,
+const buddy = Object.create(dogProto).initDog("Buddy", "Poodle");
+buddy.speak(); // "Buddy makes a sound"
+buddy.bark();  // "Woof!"`,
         },
       ],
     },
     {
-      title: { en: "Static methods, getters/setters & private fields", np: "Static methods, getters/setters र private fields", jp: "staticメソッド・getter/setter・プライベートフィールド" },
+      title: { en: "Property descriptors & Object.defineProperty", np: "Property descriptors र Object.defineProperty", jp: "プロパティディスクリプタとObject.defineProperty" },
       blocks: [
         {
           type: "code",
-          title: { en: "Advanced class features (ES2022+)", np: "Advanced class features", jp: "クラスの高度な機能" },
-          code: `class BankAccount {
-  // ── Private fields (#) — only accessible inside the class ─────────────
-  #balance;
-  #owner;
-  #transactions = [];
+          title: { en: "Controlling property behaviour with descriptors", np: "Descriptors सँग property behaviour control", jp: "ディスクリプタでプロパティ動作を制御" },
+          code: `// Every property has three hidden flags:
+// writable   — can the value be changed?
+// enumerable — does it show in for...in loops and Object.keys()?
+// configurable — can the descriptor itself be changed or the property deleted?
 
-  constructor(owner, initialBalance = 0) {
-    this.#owner   = owner;
-    this.#balance = initialBalance;
-  }
+const obj = {};
+Object.defineProperty(obj, "id", {
+  value:        42,
+  writable:     false,  // obj.id = 99 will silently fail (or throw in strict mode)
+  enumerable:   false,  // won't appear in for...in or Object.keys()
+  configurable: false,  // cannot delete obj.id or redefine this descriptor
+});
 
-  // ── Getter — accessed like a property, not a method call ───────────────
-  get balance() {
-    return this.#balance;
-  }
+obj.id;           // 42
+obj.id = 99;      // silently ignored in sloppy mode
+Object.keys(obj); // [] — id is not enumerable
 
-  get owner() {
-    return this.#owner;
-  }
+// ── Reading a property's descriptor ───────────────────────────────
+Object.getOwnPropertyDescriptor(obj, "id");
+// { value: 42, writable: false, enumerable: false, configurable: false }
 
-  // ── Setter — validates before assignment ──────────────────────────────
-  set nickname(value) {
-    if (typeof value !== "string" || value.length < 2) {
-      throw new Error("Nickname must be at least 2 characters");
-    }
-    this.#owner = value;
-  }
+// ── getters and setters via defineProperty ────────────────────────
+const person = { firstName: "John", lastName: "Doe" };
 
-  // ── Instance methods ──────────────────────────────────────────────────
-  deposit(amount) {
-    if (amount <= 0) throw new Error("Amount must be positive");
-    this.#balance += amount;
-    this.#transactions.push({ type: "deposit", amount, date: new Date() });
-    return this;  // return 'this' for method chaining
-  }
+Object.defineProperty(person, "fullName", {
+  get() { return \`\${this.firstName} \${this.lastName}\`; },
+  set(value) {
+    [this.firstName, this.lastName] = value.split(" ");
+  },
+  enumerable: true,
+  configurable: true,
+});
 
-  withdraw(amount) {
-    if (amount > this.#balance) throw new Error("Insufficient funds");
-    this.#balance -= amount;
-    this.#transactions.push({ type: "withdrawal", amount, date: new Date() });
-    return this;
-  }
-
-  // ── Static methods — called on the class, not instances ───────────────
-  static createSavingsAccount(owner) {
-    return new BankAccount(owner, 0);
-  }
-
-  static isValidAmount(amount) {
-    return typeof amount === "number" && amount > 0 && isFinite(amount);
-  }
-}
-
-const account = new BankAccount("Alice", 1000);
-
-// Getter — no ()
-account.balance;  // 1000
-
-// Method chaining (each method returns 'this')
-account.deposit(500).withdraw(200);
-account.balance;  // 1300
-
-// Private field — not accessible from outside
-// account.#balance;  // SyntaxError: Private field '#balance' must be declared
-
-// Static methods — called on the class
-BankAccount.isValidAmount(100);    // true
-BankAccount.isValidAmount(-50);    // false
-const savings = BankAccount.createSavingsAccount("Bob");`,
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            { en: "**Classes are NOT hoisted** the same way function declarations are. They sit in the TDZ until their definition — you cannot use a class before its declaration.", np: "**Classes hoist हुँदैन** function declarations जस्तो। Declaration सम्म TDZ मा — declaration अगाडि use गर्न मिल्दैन।", jp: "**クラスは関数宣言のようにはホイストされない**。TDZにあり、宣言前には使えない。" },
-            { en: "**Private fields (#)** are enforced at the language level — not just a convention like `_name`. Accessing them from outside the class always throws a SyntaxError.", np: "**Private fields (#)** language level मा enforce हुन्छ — `_name` जस्तो convention मात्र होइन। Class बाहिरबाट access गर्दा SyntaxError।", jp: "**プライベートフィールド(#)**は言語レベルで強制される。クラス外からのアクセスは常にSyntaxErrorになる。" },
-            { en: "**Static methods** belong to the class itself, not to instances. You call them with `ClassName.method()`. They are useful for factory methods and utilities related to the class.", np: "**Static methods** class को हो, instances को होइन। `ClassName.method()` ले call गर्नुहोस्। Factory methods र class-related utilities का लागि उपयोगी।", jp: "**staticメソッド**はクラス自体に属し、インスタンスには属さない。`ClassName.method()`で呼び出す。ファクトリメソッドや関連ユーティリティに使う。" },
-          ],
+person.fullName;        // "John Doe"
+person.fullName = "Jane Smith";
+person.firstName;       // "Jane"`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Are classes in JavaScript real classes (like Java/C++)?", np: "JavaScript का classes real classes हुन् (Java/C++ जस्तो)?", jp: "JavaScriptのクラスはJava/C++のような本当のクラスか？" },
+      question: { en: "What is the difference between prototype and __proto__?", np: "prototype र __proto__ मा के फरक?", jp: "prototypeと__proto__の違いは？" },
       answer: {
-        en: "No. JavaScript classes are syntactic sugar over the prototype system. There is no copy-based inheritance — methods are shared via the prototype chain, not copied into each instance. JavaScript is a prototype-based language that added class syntax in ES6 for developer convenience. The behaviour is fundamentally different from class-based languages: `class Dog extends Animal` creates a prototype chain, not a class hierarchy with separate method tables.",
-        np: "होइन। JavaScript classes prototype system माथि syntactic sugar हो। Copy-based inheritance छैन — methods prototype chain मार्फत shared हुन्छ। JS prototype-based language हो जसमा ES6 मा class syntax developer convenience का लागि थपियो। `class Dog extends Animal` ले prototype chain बनाउँछ — separate method tables सहितको class hierarchy होइन।",
-        jp: "いいえ。JavaScriptのクラスはプロトタイプシステム上の糖衣構文。コピーベースの継承ではなくプロトタイプチェーンでメソッドを共有する。`class Dog extends Animal`はプロトタイプチェーンを作るのであってクラス階層ではない。",
+        en: "`prototype` is a property on **constructor functions**. When you call `new MyFunction()`, the newly created object's internal `[[Prototype]]` is set to `MyFunction.prototype`. `__proto__` (and its modern equivalent `Object.getPrototypeOf()`) is a property on **instances** that gives you access to the object's prototype. Use `Object.getPrototypeOf(obj)` instead of `obj.__proto__` — `__proto__` is deprecated and not recommended.",
+        np: "`prototype` **constructor functions** मा property हो। `new MyFunction()` call गर्दा नयाँ object को `[[Prototype]]` = `MyFunction.prototype` हुन्छ। `__proto__` **instances** मा property हो जसले object को prototype access दिन्छ। `obj.__proto__` deprecated छ — `Object.getPrototypeOf(obj)` प्रयोग गर्नुहोस्।",
+        jp: "`prototype`は**コンストラクタ関数**のプロパティ。`new`で作られたオブジェクトの`[[Prototype]]`がこれになる。`__proto__`は**インスタンス**のプロパティで、オブジェクトのプロトタイプにアクセスする。`__proto__`はdeprecated、`Object.getPrototypeOf()`を使う。",
       },
     },
     {
-      question: { en: "When should I use a class vs a factory function?", np: "Class vs factory function — कहिले कुन?", jp: "クラスとファクトリ関数の使い分けは？" },
+      question: { en: "Do all objects inherit from Object.prototype?", np: "सबै objects Object.prototype बाट inherit गर्छन्?", jp: "すべてのオブジェクトはObject.prototypeを継承するか？" },
       answer: {
-        en: "Use a **class** when: you need inheritance, you are building something that genuinely models a hierarchy, or you are working with a framework that expects classes (React class components, TypeScript decorators). Use a **factory function** (`function createUser() { return { ...} }`) when: you want cleaner private state without `#`, you want functional composition over inheritance, or you want to avoid the `new` keyword and `this` complexity.",
-        np: "**Class** कहिले: inheritance चाहिए, hierarchy model गर्नुपर्छ, वा framework (React class components) ले expect गर्छ। **Factory function** कहिले: `#` बिना clean private state, functional composition, वा `new` र `this` complexity avoid गर्न।",
-        jp: "**クラス**: 継承が必要、階層モデルが必要、フレームワークがクラスを期待する場合。**ファクトリ関数**: `#`なしのきれいなプライベート状態、関数合成の優先、`new`と`this`の複雑さを避けたい場合。",
+        en: "Almost all objects do. The prototype chain of most objects ends at `Object.prototype`, which provides methods like `hasOwnProperty`, `toString`, `valueOf`, and `isPrototypeOf`. The exception is objects created with `Object.create(null)`, which have no prototype at all — useful for creating pure dictionaries with no inherited properties.",
+        np: "लगभग सबैले गर्छन्। अधिकांश objects को prototype chain `Object.prototype` मा समाप्त हुन्छ जसले `hasOwnProperty`, `toString` आदि दिन्छ। Exception: `Object.create(null)` ले prototype नै नभएको objects बनाउँछ — pure dictionaries का लागि उपयोगी।",
+        jp: "ほぼすべてのオブジェクトが継承する。ほとんどのオブジェクトのプロトタイプチェーンは`Object.prototype`で終わり、`hasOwnProperty`・`toString`などを提供する。例外は`Object.create(null)`で作られたオブジェクト（継承なし）。",
       },
     },
   ],
