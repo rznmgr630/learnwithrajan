@@ -3,313 +3,291 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const JS_DAY_22_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "TypeScript adds a type system on top of JavaScript. It catches type errors at compile time — before your code runs — and gives you better IDE autocomplete, refactoring support, and self-documenting interfaces. TypeScript compiles to plain JavaScript, so it works anywhere JavaScript runs.",
-      np: "TypeScript ले JavaScript माथि type system add गर्छ। Type errors compile time मा — code run हुनु अघि — catch गर्छ। Better IDE autocomplete, refactoring support, र self-documenting interfaces दिन्छ। TypeScript plain JavaScript मा compile हुन्छ।",
-      jp: "TypeScriptはJavaScriptに型システムを追加する。型エラーをコンパイル時（コード実行前）に検出。より良いIDEの自動補完・リファクタリング・自己文書化されたインターフェースを提供。TypeScriptは普通のJavaScriptにコンパイルされる。",
-    },
-    {
-      en: "You do not need to know every TypeScript feature to be productive — the 20% of features that cover 80% of real-world code are: basic types, interfaces, generics, and the utility types (`Partial`, `Required`, `Pick`, `Omit`, `Record`). That is what today covers.",
-      np: "Productive हुन हर TypeScript feature जान्नु पर्दैन — 80% real-world code cover गर्ने 20% features: basic types, interfaces, generics, र utility types (`Partial`, `Required`, `Pick`, `Omit`, `Record`)। आज यही cover गरिन्छ।",
-      jp: "生産的になるために全TypeScript機能を覚える必要はない — 実際のコードの80%をカバーする20%の機能: 基本型・インターフェース・ジェネリクス・ユーティリティ型が今日の内容。",
+      en: "Performance optimization in JavaScript comes down to doing less work, doing it less often, or doing it on a different thread. Debounce and throttle reduce how often a function runs. Memoization avoids repeating expensive calculations. Web Workers move heavy CPU work off the main thread so the UI stays responsive.",
+      np: "JavaScript performance optimization: कम काम गर्नु, कम पटक गर्नु, वा अर्को thread मा गर्नु। Debounce र throttle function run हुने frequency reduce गर्छ। Memoization expensive calculations repeat गर्न रोक्छ। Web Workers ले heavy CPU work main thread बाट सारेर UI responsive राख्छ।",
+      jp: "JavaScriptのパフォーマンス最適化: より少なく・より少ない頻度で・別スレッドで実行する。デバウンスとスロットルは実行頻度を下げる。メモ化は高コストな計算の繰り返しを避ける。Web Workersは重いCPU処理をメインスレッドから分離してUIを応答可能に保つ。",
     },
   ],
   sections: [
     {
       title: { en: "Watch", np: "हेर्नुहोस्", jp: "動画" },
       blocks: [
-        { type: "youtube", videoId: "BwuLxPH8IDs", title: "TypeScript Course for Beginners" },
+        { type: "youtube", videoId: "cjIswDCKgu0", title: "Debounce vs Throttle — JavaScript Interview Questions" },
       ],
     },
     {
-      title: { en: "Basic types and type annotations", np: "Basic types र type annotations", jp: "基本型と型アノテーション" },
+      title: { en: "Debounce", np: "Debounce", jp: "デバウンス" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Debounce delays execution until there has been a quiet period — a gap with no new calls. If a new call arrives before the timer fires, the timer resets. The function only runs after the user **stops** triggering it. Use debounce for events where only the final value matters: search-as-you-type, window resize, saving draft text.",
+            np: "Debounce ले execution delay गर्छ जबसम्म quiet period हुँदैन — नयाँ calls नआएसम्म। Timer fire हुनु अगाडि नयाँ call आयो भने timer reset हुन्छ। User **रोकेपछि** मात्र function run हुन्छ। Search-as-you-type, window resize, draft save का लागि।",
+            jp: "デバウンスは一定の静止期間が経過するまで実行を遅らせる。新しい呼び出しが来るとタイマーリセット。ユーザーが**止めた後**に一度だけ実行。検索入力・リサイズ・下書き保存に使う。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Debounce implementation and usage", np: "Debounce implementation र usage", jp: "デバウンスの実装と使用例" },
+          code: `// ── debounce implementation ────────────────────────────────────────
+function debounce(fn, delayMs) {
+  let timerId;
+
+  return function (...args) {
+    clearTimeout(timerId);   // cancel any pending call
+    timerId = setTimeout(() => {
+      fn.apply(this, args);  // call the original function after the quiet period
+    }, delayMs);
+  };
+}
+
+// ── Usage: search input that only fires when typing stops ──────────
+const searchInput = document.querySelector("#search");
+
+const debouncedSearch = debounce(async (query) => {
+  if (!query.trim()) return;
+  const results = await fetchSearchResults(query);
+  renderResults(results);
+}, 300);  // wait 300ms after the last keystroke
+
+searchInput.addEventListener("input", (e) => debouncedSearch(e.target.value));
+// User types "java" quickly → only ONE request, after they stop typing
+
+// ── With leading edge — run immediately, then ignore for delay ─────
+function debounceLeading(fn, delayMs) {
+  let timerId;
+  let lastArgs;
+
+  return function (...args) {
+    lastArgs = args;
+    if (!timerId) {
+      fn.apply(this, args);  // execute immediately on first call
+    }
+    clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      timerId = null;
+    }, delayMs);
+  };
+}
+
+// ── Built-in alternatives ─────────────────────────────────────────
+// lodash debounce (battle-tested, more options):
+// import { debounce } from "lodash";
+// const debouncedFn = debounce(fn, 300, { leading: true, trailing: false });`,
+        },
+      ],
+    },
+    {
+      title: { en: "Throttle", np: "Throttle", jp: "スロットル" },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Throttle guarantees a function runs at most once per time window — no matter how many times it is called. Unlike debounce (which waits for quiet), throttle fires immediately on the first call and then ignores calls until the window resets. Use throttle for continuous events where you need periodic updates: scroll position tracking, mouse move, real-time analytics.",
+            np: "Throttle ले guarantee गर्छ कि function time window मा maximum एक पटक run हुन्छ। Debounce (quiet को लागि wait) भन्दा फरक — throttle पहिलो call मा तुरन्त fire हुन्छ र window reset नभइकन calls ignore गर्छ। Scroll, mouse move, real-time analytics का लागि।",
+            jp: "スロットルは時間ウィンドウ内に関数が最大一度しか実行されないことを保証する。デバウンス（静止を待つ）と異なり、最初の呼び出しで即座に実行し、ウィンドウがリセットするまで無視する。スクロール・マウス移動・リアルタイム分析に使う。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Throttle implementation and the key difference from debounce", np: "Throttle vs debounce — key difference", jp: "スロットルの実装とデバウンスとの違い" },
+          code: `// ── throttle implementation ────────────────────────────────────────
+function throttle(fn, intervalMs) {
+  let lastCallTime = 0;
+
+  return function (...args) {
+    const now = Date.now();
+    if (now - lastCallTime >= intervalMs) {
+      lastCallTime = now;
+      return fn.apply(this, args);
+    }
+    // Otherwise ignore this call — too soon
+  };
+}
+
+// ── Usage: throttled scroll handler ───────────────────────────────
+const throttledOnScroll = throttle(() => {
+  const scrolled = window.scrollY;
+  updateProgressBar(scrolled);
+  loadMoreIfNearBottom(scrolled);
+}, 100);  // run at most every 100ms
+
+window.addEventListener("scroll", throttledOnScroll);
+// Even if scroll fires 60× per second, updateProgressBar runs max 10× per second
+
+// ── Debounce vs throttle — the mental model ────────────────────────
+// Imagine a user scrolling for 5 seconds:
+
+// Debounce (300ms): runs ONCE — 300ms after they STOP scrolling
+// Throttle (300ms): runs ~17× — once every 300ms WHILE they scroll
+
+// ── When to use which ─────────────────────────────────────────────
+//
+// DEBOUNCE — wait for the user to finish:
+//   ✓ Search input (only fetch when they stop typing)
+//   ✓ Form auto-save (save after they pause editing)
+//   ✓ Window resize (recalculate layout after resize ends)
+//   ✓ Button that should not be double-clicked
+//
+// THROTTLE — allow periodic updates during continuous action:
+//   ✓ Scroll event (update sticky header, progress bar, infinite scroll)
+//   ✓ Mouse move (drag and drop, cursor tracking)
+//   ✓ Real-time analytics (sample events, not every mousemove)
+//   ✓ Rate-limiting API calls (max N per second)`,
+        },
+      ],
+    },
+    {
+      title: { en: "Memoization", np: "Memoization", jp: "メモ化" },
       blocks: [
         {
           type: "code",
-          title: { en: "Annotating variables, functions and objects", np: "Variables, functions र objects annotate गर्नु", jp: "変数・関数・オブジェクトの型注釈" },
-          code: `// ── Primitive types ────────────────────────────────────────────────
-let name: string  = "Alice";
-let age:  number  = 30;
-let isAdmin: boolean = false;
+          title: { en: "Cache function results for the same inputs", np: "Same inputs का लागि function results cache गर्नु", jp: "同じ入力に対する関数結果をキャッシュ" },
+          code: `// ── Simple memoization for pure functions ─────────────────────────
+function memoize(fn) {
+  const cache = new Map();
 
-// ── Arrays ────────────────────────────────────────────────────────
-let scores: number[]       = [90, 85, 92];
-let tags:   Array<string>  = ["ts", "js"];  // generic syntax — same result
+  return function (...args) {
+    const key = JSON.stringify(args);  // serialize args as cache key
 
-// ── Tuple — fixed-length array with specific types at each index ──
-let point: [number, number] = [10, 20];
-let entry: [string, number] = ["age", 30];
+    if (cache.has(key)) {
+      return cache.get(key);           // return cached result
+    }
 
-// ── Union types — one OR the other ────────────────────────────────
-let id: string | number = 42;
-id = "abc123";  // also valid
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
 
-function printId(id: string | number) {
-  // TypeScript forces you to narrow the type before using string-only methods
-  if (typeof id === "string") {
-    console.log(id.toUpperCase());  // ✅ safe — narrowed to string
-  } else {
-    console.log(id.toFixed(2));     // ✅ safe — narrowed to number
+// ── Classic example: Fibonacci ─────────────────────────────────────
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fibonacci(40);  // ~1 billion operations — SLOW
+
+const memoFib = memoize(function fib(n) {
+  if (n <= 1) return n;
+  return memoFib(n - 1) + memoFib(n - 2);
+});
+
+memoFib(40);  // each value computed once, then cached — FAST
+
+// ── Real-world use: expensive calculations ─────────────────────────
+const parseMarkdown = memoize((text) => {
+  // Parsing markdown is expensive — cache the result
+  return heavyMarkdownParser(text);
+});
+
+// React's useMemo and useCallback are memoization:
+// useMemo(() => expensiveCalc(a, b), [a, b])  — recalculates only when a or b changes
+// useCallback(fn, [deps])  — returns the same function reference until deps change
+
+// ── Memoization with WeakMap (for object arguments, GC-friendly) ───
+function memoizeByObject(fn) {
+  const cache = new WeakMap();
+  return function (obj) {
+    if (cache.has(obj)) return cache.get(obj);
+    const result = fn(obj);
+    cache.set(obj, result);
+    return result;
+  };
+}`,
+        },
+      ],
+    },
+    {
+      title: { en: "Web Workers — off the main thread", np: "Web Workers — main thread बाट बाहिर", jp: "Web Workers — メインスレッドから外へ" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Moving heavy CPU work to a background thread", np: "Heavy CPU work background thread मा सार्नु", jp: "重いCPU処理をバックグラウンドスレッドへ" },
+          code: `// ── The problem: blocking the main thread ─────────────────────────
+// Heavy computation freezes the UI — clicks are not responded to
+function sortMillion() {
+  const arr = Array.from({ length: 1_000_000 }, () => Math.random());
+  arr.sort((a, b) => a - b);  // takes ~500ms — UI is unresponsive!
+  return arr;
+}
+
+// ── Solution: Web Worker runs on a separate thread ─────────────────
+
+// worker.js — runs in a background thread
+self.addEventListener("message", (event) => {
+  const { data, type } = event.data;
+
+  if (type === "sort") {
+    const sorted = data.sort((a, b) => a - b);  // does NOT block the UI thread
+    self.postMessage({ type: "sortResult", result: sorted });
   }
-}
+});
 
-// ── Literal types — only specific values allowed ──────────────────
-type Direction = "north" | "south" | "east" | "west";
-type StatusCode = 200 | 201 | 400 | 404 | 500;
+// main.js — UI thread
+const worker = new Worker("/worker.js");
 
-let heading: Direction = "north";
-// heading = "up";  // ❌ Error: not assignable to type Direction
+// Send data to the worker
+worker.postMessage({
+  type: "sort",
+  data: Array.from({ length: 1_000_000 }, () => Math.random()),
+});
 
-// ── Function type annotations ─────────────────────────────────────
-function add(a: number, b: number): number {
-  return a + b;
-}
-
-// Optional parameter with ?
-function greet(name: string, greeting?: string): string {
-  return \`\${greeting ?? "Hello"}, \${name}\`;
-}
-
-// Default parameters infer the type from the default value
-function repeat(str: string, times = 1) {  // times is inferred as number
-  return str.repeat(times);
-}
-
-// ── void — function that returns nothing ──────────────────────────
-function logError(message: string): void {
-  console.error(message);
-  // returning a value here would be a type error
-}
-
-// ── unknown vs any ────────────────────────────────────────────────
-// any — opts out of type checking (avoid — it defeats the purpose)
-let danger: any = "hello";
-danger.toUpperCase();   // no error — TS trusts you
-danger.nonExistent();   // no error — dangerous!
-
-// unknown — type-safe alternative to any
-let value: unknown = fetchSomething();
-// value.toUpperCase();  // ❌ Error — must narrow first
-if (typeof value === "string") {
-  value.toUpperCase();  // ✅ safe — narrowed
-}`,
-        },
-      ],
-    },
-    {
-      title: { en: "Interfaces and type aliases", np: "Interfaces र type aliases", jp: "インターフェースと型エイリアス" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Defining object shapes with interface and type", np: "interface र type सँग object shapes define गर्नु", jp: "interfaceとtypeでオブジェクトの形を定義" },
-          code: `// ── interface — describe object shape ─────────────────────────────
-interface User {
-  id:         number;
-  name:       string;
-  email:      string;
-  role?:      "admin" | "user";  // optional property
-  readonly createdAt: Date;       // cannot be changed after creation
-}
-
-// ── type alias — same result for object types ──────────────────────
-type Product = {
-  id:    string;
-  name:  string;
-  price: number;
+// Receive result asynchronously — UI stays responsive while worker runs
+worker.onmessage = (event) => {
+  if (event.data.type === "sortResult") {
+    console.log("Sorted!", event.data.result.length);
+  }
 };
 
-// ── interface vs type: which to use? ──────────────────────────────
-// interface: use for objects and classes — can be extended/merged
-// type: use for unions, tuples, primitives, and computed types
-// For plain objects either works — prefer interface when in doubt
+worker.onerror = (err) => console.error("Worker error:", err);
 
-// ── Extending interfaces ───────────────────────────────────────────
-interface Animal {
-  name: string;
-  speak(): void;
-}
+// Terminate the worker when done:
+worker.terminate();
 
-interface Dog extends Animal {
-  breed: string;
-  fetch(): void;
-}
+// ── Transferable objects — zero-copy large data ────────────────────
+// Transferring a large ArrayBuffer copies it by default (expensive for huge data).
+// Use transfer to move ownership (zero-copy):
+const buffer = new ArrayBuffer(1024 * 1024 * 100);  // 100MB
+worker.postMessage({ buffer }, [buffer]);  // transfer, not copy — buffer is now "neutered"
 
-// ── Intersection types — combine multiple types ────────────────────
-type Admin = User & { adminLevel: 1 | 2 | 3 };
-
-// ── Index signatures — objects with dynamic keys ───────────────────
-interface StringMap {
-  [key: string]: string;  // any string key, string value
-}
-
-const translations: StringMap = {
-  hello: "नमस्ते",
-  bye:   "बिदाई",
-};
-
-// ── Function types ────────────────────────────────────────────────
-interface Formatter {
-  (value: number, decimals?: number): string;
-}
-
-const formatPrice: Formatter = (n, d = 2) => n.toFixed(d);
-
-// ── Class implementing an interface ──────────────────────────────
-interface Serializable {
-  serialize(): string;
-  deserialize(data: string): void;
-}
-
-class Config implements Serializable {
-  private data: Record<string, unknown> = {};
-
-  serialize(): string { return JSON.stringify(this.data); }
-  deserialize(data: string): void { this.data = JSON.parse(data); }
-}`,
-        },
-      ],
-    },
-    {
-      title: { en: "Generics", np: "Generics", jp: "ジェネリクス" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Write reusable code that works with any type", np: "Any type सँग काम गर्ने reusable code लेख्नु", jp: "任意の型で動く再利用可能なコードを書く" },
-          code: `// ── Without generics — not type-safe ────────────────────────────
-function getFirstAny(arr: any[]): any { return arr[0]; }
-const first = getFirstAny([1, 2, 3]);
-// first is typed as 'any' — TypeScript cannot help you here
-
-// ── With generics — fully type-safe ──────────────────────────────
-function getFirst<T>(arr: T[]): T { return arr[0]; }
-
-const num  = getFirst([1, 2, 3]);       // T = number — inferred automatically
-const str  = getFirst(["a", "b", "c"]); // T = string
-const user = getFirst<User>([alice]);   // T = User — explicitly specified
-
-// ── Generic interfaces and classes ────────────────────────────────
-interface ApiResponse<T> {
-  data:    T;
-  status:  number;
-  message: string;
-}
-
-type UsersResponse    = ApiResponse<User[]>;
-type ProductResponse  = ApiResponse<Product>;
-
-async function fetchUsers(): Promise<ApiResponse<User[]>> {
-  const res = await fetch("/api/users");
-  return res.json();
-}
-
-// ── Generic constraints — T must have certain properties ──────────
-function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
-  return obj[key];
-}
-
-const user = { name: "Alice", age: 30 };
-getProperty(user, "name");  // "Alice" — return type is string
-getProperty(user, "age");   // 30 — return type is number
-// getProperty(user, "email");  // ❌ "email" doesn't exist on user
-
-// ── Multiple type parameters ───────────────────────────────────────
-function merge<A, B>(a: A, b: B): A & B {
-  return { ...a, ...b } as A & B;
-}
-
-const merged = merge({ name: "Alice" }, { age: 30 });
-merged.name;  // ✅ string
-merged.age;   // ✅ number`,
-        },
-      ],
-    },
-    {
-      title: { en: "Utility types", np: "Utility types", jp: "ユーティリティ型" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "The most useful built-in TypeScript utility types", np: "सबैभन्दा useful built-in TypeScript utility types", jp: "最も使われるTypeScript組み込みユーティリティ型" },
-          code: `interface User {
-  id:       number;
-  name:     string;
-  email:    string;
-  password: string;
-  role:     "admin" | "user";
-  createdAt: Date;
-}
-
-// ── Partial<T> — all properties become optional ────────────────────
-// Perfect for update/patch operations
-type UserUpdate = Partial<User>;
-function updateUser(id: number, changes: UserUpdate) { /* ... */ }
-updateUser(1, { name: "Bob" });          // only provide what changed
-
-// ── Required<T> — all properties become required ──────────────────
-type CompleteUser = Required<User>;      // removes all ? optionals
-
-// ── Pick<T, K> — keep only the listed properties ──────────────────
-type UserProfile = Pick<User, "id" | "name" | "email">;
-// { id: number; name: string; email: string }
-// Use for API response shaping — never return the password
-
-// ── Omit<T, K> — remove listed properties ─────────────────────────
-type PublicUser = Omit<User, "password" | "createdAt">;
-// { id: number; name: string; email: string; role: "admin" | "user" }
-
-// ── Record<K, V> — object with specific key and value types ────────
-type RolePermissions = Record<"admin" | "user", string[]>;
-const permissions: RolePermissions = {
-  admin: ["read", "write", "delete"],
-  user:  ["read"],
-};
-
-type IdMap = Record<string, User>;      // string keys → User values
-
-// ── ReturnType<T> — extract the return type of a function ─────────
-function createUser(name: string, email: string) {
-  return { id: Date.now(), name, email };
-}
-type NewUser = ReturnType<typeof createUser>;
-// { id: number; name: string; email: string }
-
-// ── Readonly<T> — all properties cannot be reassigned ─────────────
-type FrozenUser = Readonly<User>;
-const user: FrozenUser = { id: 1, name: "Alice", /* ... */ };
-// user.name = "Bob";  // ❌ Error: cannot assign to 'name' — it is read-only
-
-// ── NonNullable<T> — removes null and undefined ────────────────────
-type MaybeString = string | null | undefined;
-type DefiniteString = NonNullable<MaybeString>;  // string
-
-// ── Combining utility types ────────────────────────────────────────
-type CreateUserInput = Omit<User, "id" | "createdAt">;
-type UpdateUserInput = Partial<Omit<User, "id" | "createdAt">>;`,
+// ── Inline worker using a Blob URL ────────────────────────────────
+const workerCode = \`
+  self.onmessage = ({ data }) => {
+    const result = data.reduce((a, b) => a + b, 0);
+    self.postMessage(result);
+  };
+\`;
+const blob   = new Blob([workerCode], { type: "application/javascript" });
+const url    = URL.createObjectURL(blob);
+const worker = new Worker(url);`,
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "What is the difference between interface and type in TypeScript?", np: "TypeScript मा interface र type मा के फरक?", jp: "TypeScriptのinterfaceとtypeの違いは？" },
+      question: { en: "What is the difference between debounce and throttle?", np: "Debounce र throttle मा के फरक?", jp: "デバウンスとスロットルの違いは？" },
       answer: {
-        en: "For object shapes, they are almost identical and can often be used interchangeably. The key differences: (1) `interface` can be extended with `extends` and can be re-declared to merge declarations (declaration merging) — useful for augmenting third-party library types; (2) `type` can represent unions, tuples, primitive aliases, and computed types that `interface` cannot. Practical rule: use `interface` for objects and class contracts, use `type` for unions, mapped types, and utility-type combinations.",
-        np: "Object shapes का लागि लगभग identical — interchange गर्न सकिन्छ। Key differences: (1) `interface` `extends` गर्न र re-declare गर्न (declaration merging) सकिन्छ; (2) `type` unions, tuples, primitives, र computed types represent गर्न सक्छ। Rule: objects/classes का लागि `interface`, unions/mapped types का लागि `type`।",
-        jp: "オブジェクトの形については概ね互換。主な違い: (1)`interface`は`extends`による継承と再宣言マージが可能; (2)`type`はユニオン・タプル・プリミティブエイリアス・計算型が表現可能。実践ルール: オブジェクト/クラスには`interface`、ユニオン/マップ型には`type`。",
+        en: "Debounce fires ONCE after a quiet period — the function runs only when the user stops triggering it. If new calls keep coming, the timer keeps resetting. Throttle fires at a REGULAR INTERVAL regardless of how many calls come in — it executes immediately on the first call, then once per interval window. Rule of thumb: use debounce when you only care about the final value (search input, auto-save). Use throttle when you need periodic updates during continuous activity (scroll handler, drag position).",
+        np: "Debounce quiet period पछि एक पटक fire हुन्छ — user stop गरेपछि। New calls आउँदै रह्यो भने timer reset हुँदै रहन्छ। Throttle REGULAR INTERVAL मा fire हुन्छ — पहिलो call मा तुरन्त, त्यसपछि हर interval मा एक पटक। Search/save = debounce। Scroll/drag = throttle।",
+        jp: "デバウンスは静止後に一度だけ実行。新しい呼び出しが来るとタイマーリセット。スロットルは一定間隔で実行 — 最初の呼び出しで即座に、以降は一定間隔で一度ずつ。検索/自動保存=デバウンス。スクロール/ドラッグ=スロットル。",
       },
     },
     {
-      question: { en: "What does `unknown` mean and when should I use it instead of `any`?", np: "`unknown` भनेको के हो र `any` को सट्टा कहिले use गर्ने?", jp: "`unknown`の意味と`any`の代わりに使う場面は？" },
+      question: { en: "Can Web Workers access the DOM?", np: "Web Workers ले DOM access गर्न सक्छन्?", jp: "Web WorkersはDOMにアクセスできるか？" },
       answer: {
-        en: "`any` completely disables type checking for a variable — you can call any method, access any property, and TypeScript will not complain. `unknown` is the type-safe alternative: you can assign anything to it, but you cannot use it without first narrowing the type (using `typeof`, `instanceof`, or a type guard). Use `unknown` for values from external sources (API responses, user input, `JSON.parse`) — it forces you to validate before using. Use `any` only as a last resort when migrating JavaScript to TypeScript and you temporarily cannot type something.",
-        np: "`any` ले variable को type checking completely disable गर्छ। `unknown` type-safe alternative हो: assign गर्न सकिन्छ तर type narrow नगरी use गर्न मिल्दैन। External sources (API responses, user input, `JSON.parse`) का लागि `unknown` — use गर्नु अगाडि validate गर्न force गर्छ। `any` last resort मात्र।",
-        jp: "`any`は型チェックを完全に無効化。`unknown`はtype-safeな代替: 代入はできるが型を絞り込まないと使えない。外部ソース（APIレスポンス・ユーザー入力・JSON.parse）には`unknown`を使い、使用前の検証を強制する。`any`はJSからTSへの移行時の最後の手段として。",
+        en: "No. Web Workers run in a completely separate context — they have no access to `document`, `window`, `localStorage`, or any DOM API. They can only communicate with the main thread via `postMessage()` and `onmessage`. This is intentional: if workers could modify the DOM concurrently, you would need to synchronize DOM access across threads, which would be extremely complex. Workers are for pure computation — number crunching, sorting, parsing, image processing.",
+        np: "होइन। Web Workers पूरै separate context मा run हुन्छन् — `document`, `window`, `localStorage`, वा कुनै DOM API access छैन। `postMessage()` र `onmessage` मार्फत मात्र communicate गर्न सक्छन्। Workers pure computation का लागि — number crunching, sorting, parsing, image processing।",
+        jp: "いいえ。Web Workersは完全に独立したコンテキストで実行 — `document`・`window`・DOM APIへのアクセスなし。`postMessage()`と`onmessage`でのみメインスレッドと通信できる。Workersは純粋な計算用 — 数値計算・ソート・パース・画像処理。",
       },
     },
     {
-      question: { en: "When should I use generics?", np: "Generics कहिले use गर्ने?", jp: "ジェネリクスをいつ使うべきか？" },
+      question: { en: "When should I use memoization?", np: "Memoization कहिले use गर्ने?", jp: "メモ化はいつ使うべきか？" },
       answer: {
-        en: "Use generics when you have a function, class, or interface that works the same way regardless of the specific type — but you want the type information to flow through correctly. Classic examples: `Array<T>`, `Promise<T>`, `Map<K,V>`. You need generics when you find yourself writing the same function twice for different types, or when using `any` loses type information you want to preserve. The signal: if the return type depends on the input type, you likely need a generic.",
-        np: "Generics use गर्नुहोस् जब specific type जे भए पनि same तरिकाले काम गर्ने function/class/interface छ — तर type information correctly flow हुनुपर्छ। Classic examples: `Array<T>`, `Promise<T>`, `Map<K,V>`. Return type input type मा depend गर्छ भने likely generic चाहिन्छ।",
-        jp: "ジェネリクスは、具体的な型に関わらず同じ動作をする関数/クラス/インターフェースで型情報を正確に伝えたい時に使う。定番例: `Array<T>`・`Promise<T>`・`Map<K,V>`。戻り値の型が入力型に依存する場合がジェネリクスのシグナル。",
+        en: "Memoize when: (1) the function is pure — same inputs always produce the same output, with no side effects; (2) the function is called repeatedly with the same arguments; (3) the function is genuinely expensive — heavy computation, parsing, transformation. Do NOT memoize: functions that read from external state (current time, random numbers), functions that have side effects, or cheap functions — the cache lookup overhead is not worth it for trivial operations.",
+        np: "Memoize गर्नुहोस् जब: (1) function pure छ — same inputs = same output, side effects छैन; (2) function repeatedly same arguments सँग call हुन्छ; (3) function genuinely expensive छ। Memoize नगर्नुहोस्: external state read गर्ने functions, side effects भएका, वा cheap functions।",
+        jp: "メモ化する場合: (1)関数が純粋 — 同入力=同出力、副作用なし; (2)同じ引数で繰り返し呼ばれる; (3)本当にコストが高い。メモ化しない: 外部状態を読む関数（現在時刻・乱数）・副作用のある関数・軽い処理（キャッシュの手数料が割に合わない）。",
       },
     },
   ],
