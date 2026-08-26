@@ -9,6 +9,7 @@ import { NextjsDiagram, isNextjsRoadmapDiagram } from "@/components/learn/Nextjs
 import { LaravelDiagram, isLaravelRoadmapDiagram } from "@/components/learn/LaravelDiagrams";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
+import { LessonVideos } from "@/components/learn/LessonVideos";
 
 export type RoadmapDiagramTrack =
   | "backend"
@@ -88,10 +89,43 @@ export function DayDetailBlockRenderer({
   locale: Locale;
   diagramTrack?: RoadmapDiagramTrack;
 }) {
+  // Consecutive videos are shown as one tabbed player rather than stacked
+  // iframes, so a section with several parts stays readable.
+  const groupedInto = new Map<number, RoadmapDetailBlockResolved[]>();
+  const absorbed = new Set<number>();
+
+  for (let i = 0; i < blocks.length; i++) {
+    if (blocks[i].type !== "youtube" || absorbed.has(i)) continue;
+
+    let end = i;
+    while (end + 1 < blocks.length && blocks[end + 1].type === "youtube") end++;
+
+    if (end > i) {
+      groupedInto.set(i, blocks.slice(i, end + 1));
+      for (let j = i + 1; j <= end; j++) absorbed.add(j);
+    }
+  }
+
   return (
     <div className="mt-3 space-y-4">
       {blocks.map((block, i) => {
         const key = `${block.type}-${i}`;
+        if (absorbed.has(i)) return null;
+
+        const group = groupedInto.get(i);
+        if (group) {
+          return (
+            <LessonVideos
+              key={key}
+              videos={group.map((b) => ({
+                id: b.type === "youtube" ? b.videoId : "",
+                title: b.type === "youtube" ? b.title : undefined,
+              }))}
+              title="Video"
+            />
+          );
+        }
+
         switch (block.type) {
           case "paragraph":
             return (

@@ -346,7 +346,7 @@ function LessonAccordionItem({
 
           {lesson.youtubeIds?.length ? (
             <LessonVideos
-              videoIds={lesson.youtubeIds}
+              videos={lesson.youtubeIds.map((id) => ({ id }))}
               title={pickLocalized(lesson.title, locale)}
             />
           ) : null}
