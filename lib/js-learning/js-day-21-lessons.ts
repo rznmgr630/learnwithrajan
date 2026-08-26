@@ -11,114 +11,184 @@ export const JS_DAY_21_LESSONS: JsLessonDay = {
       title: { en: "The Fetch API", np: "Fetch API", jp: "Fetch API" },
       durationMinutes: 9,
       explanation: {
-        en: "`fetch(url)` sends an HTTP request and returns a <b>Promise</b> that resolves once the server responds — it pairs naturally with `async`/`await`, letting you write request code that reads top-to-bottom instead of nesting callbacks. The single biggest surprise for newcomers: `fetch` only <b>rejects</b> on a genuine network-level failure — the user is offline, DNS fails, or the request is blocked by CORS. A `404 Not Found` or `500 Server Error` still counts as a completed HTTP transaction, so the promise resolves normally. That means you must always check `response.ok` (`true` for status codes 200-299) — or inspect `response.status` directly — and throw your own error when it's `false`, otherwise a failed request will silently be treated as a success.\n\nOnce you have a `Response` object, you read its body with one of several methods: `response.json()` parses it as JSON, `response.text()` returns raw text, `response.blob()` gives you binary data (images, files), and `response.arrayBuffer()` returns a raw binary buffer — all of them return Promises of their own, so they need an `await` too. A `Response` body is a <b>stream that can only be consumed once</b>; calling `.json()` twice on the same response throws an error. If you genuinely need to read the body more than once (for example, logging the raw text while also parsing JSON), call `response.clone()` first and read from the clone.\n\nSending data works with the same function plus more options: a `POST` request sets `method: \"POST\"`, includes a `Content-Type: application/json` header so the server knows how to parse the body, and passes `body: JSON.stringify(data)` — the body itself is always a string (or Blob/FormData/ArrayBuffer), `fetch` never serializes objects for you. Other commonly used options include `headers` (any custom headers, like an `Authorization` token), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (whether to send cookies — `omit`/`same-origin`/`include`), and `cache` (how to interact with the browser's HTTP cache).",
-        np: "`fetch(url)` ले HTTP request पठाउँछ र server ले respond गरेपछि resolve हुने <b>Promise</b> फर्काउँछ — यो `async`/`await` सँग naturally मिल्छ, जसले callbacks nest नगरी top-to-bottom पढ्न मिल्ने request code लेख्न दिन्छ। नयाँ सिक्नेहरूलाई सबैभन्दा ठूलो surprise यही हो: `fetch` ले केवल genuine network-level failure मा मात्र <b>reject</b> गर्छ — user offline भएमा, DNS fail भएमा, वा request CORS ले block गरेमा। `404 Not Found` वा `500 Server Error` लाई पनि completed HTTP transaction नै मानिन्छ, त्यसैले promise normally resolve हुन्छ। यसैले सधैं `response.ok` (status codes 200-299 का लागि `true`) check गर्नुपर्छ — वा directly `response.status` जाँच गर्नुपर्छ — र `false` भएमा आफ्नै error throw गर्नुपर्छ, नत्र failed request लाई silently success मानिनेछ।\n\n`Response` object पाएपछि, यसको body कुनै एउटा method ले read गर्न सकिन्छ: `response.json()` ले JSON को रूपमा parse गर्छ, `response.text()` ले raw text फर्काउँछ, `response.blob()` ले binary data (images, files) दिन्छ, र `response.arrayBuffer()` ले raw binary buffer फर्काउँछ — यी सबैले आफ्नै Promise फर्काउँछन्, त्यसैले तिनलाई पनि `await` चाहिन्छ। `Response` body <b>एकपटक मात्र consume हुने stream</b> हो; same response मा `.json()` दुई पटक call गर्दा error आउँछ। साँच्चै body दुई पटक read गर्नुपर्ने भएमा (जस्तै raw text log गर्दै JSON पनि parse गर्ने), पहिले `response.clone()` call गरी clone बाट read गर्नुहोस्।\n\nData पठाउनु उही function मा थप options सँग हुन्छ: `POST` request मा `method: \"POST\"` set गरिन्छ, server लाई body कसरी parse गर्ने भन्न `Content-Type: application/json` header समावेश गरिन्छ, र `body: JSON.stringify(data)` pass गरिन्छ — body सधैं string (वा Blob/FormData/ArrayBuffer) नै हुन्छ, `fetch` ले objects आफै serialize गर्दैन। अन्य सामान्य options मा `headers` (जस्तै `Authorization` token जस्ता custom headers), `mode` (`cors`/`no-cors`/`same-origin`), `credentials` (cookies पठाउने कि नपठाउने — `omit`/`same-origin`/`include`), र `cache` (browser को HTTP cache सँग कसरी interact गर्ने) पर्छन्।",
-        jp: "`fetch(url)`はHTTPリクエストを送信し、サーバーが応答すると解決する<b>Promise</b>を返す — `async`/`await`と自然に組み合わさり、コールバックを入れ子にせず上から下へ読めるリクエストコードを書ける。初心者が最も驚くポイント: `fetch`は本当のネットワークレベルの失敗（オフライン・DNS失敗・CORSによるブロック）でのみ<b>reject</b>する。`404 Not Found`や`500 Server Error`もHTTPトランザクションとしては完了しているため、Promiseは正常に解決する。つまり常に`response.ok`（ステータスコード200-299で`true`）を確認するか`response.status`を直接調べ、`false`のときは自分でエラーをスローする必要がある。そうしないと失敗したリクエストが黙って成功として扱われてしまう。\n\n`Response`オブジェクトを取得したら、いくつかのメソッドでボディを読み取る: `response.json()`はJSONとして解析し、`response.text()`は生のテキストを返し、`response.blob()`はバイナリデータ（画像やファイル）を、`response.arrayBuffer()`は生のバイナリバッファを返す — すべて独自のPromiseを返すため`await`が必要。`Response`のボディは<b>一度しか消費できないストリーム</b>であり、同じレスポンスで`.json()`を2回呼ぶとエラーになる。どうしても2回読む必要がある場合（生テキストをログしつつJSONも解析するなど）は、先に`response.clone()`を呼びクローンから読む。\n\nデータ送信は同じ関数にオプションを追加するだけ: `POST`リクエストでは`method: \"POST\"`を設定し、サーバーがボディの解析方法を知るために`Content-Type: application/json`ヘッダーを付け、`body: JSON.stringify(data)`を渡す — ボディは常に文字列（またはBlob/FormData/ArrayBuffer）で、`fetch`がオブジェクトを自動でシリアライズすることはない。他によく使うオプションには`headers`（`Authorization`トークンなどのカスタムヘッダー）、`mode`（`cors`/`no-cors`/`same-origin`）、`credentials`（クッキーを送るか — `omit`/`same-origin`/`include`）、`cache`（ブラウザのHTTPキャッシュとの連携方法）がある。",
+        en: "The <b>Fetch API</b> is the modern JavaScript API for making HTTP requests from the browser and other JavaScript environments.\n\n```javascript\nconst response = await fetch(\"https://api.example.com/users\");\n```\n\nThe important thing to understand is that `fetch()` does <b>not</b> immediately give you the response data. It returns a <b>Promise</b>:\n\n```text\nfetch(url)\n   │\n   ▼\nPromise\n   │\n   │ server responds\n   ▼\nResponse object\n   │\n   ▼\nresponse.json()\n   │\n   ▼\nPromise\n   │\n   ▼\nJavaScript data\n```\n\nThis is why `fetch()` works naturally with `async`/`await`.\n\n---\n\n### 1. Basic — a GET request\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users\"\n);\n\nconst users = await response.json();\n\nconsole.log(users);\n```\n\nThere are actually <b>two asynchronous operations</b> here. `await fetch(url)` waits for the HTTP response, and `await response.json()` reads and parses the response body.\n\n---\n\n### 2. Intermediate — always check `response.ok`\n\nOne of the biggest `fetch()` mistakes is assuming that a `404` or `500` automatically causes `fetch()` to reject. It does not.\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users/999\"\n);\n\nconsole.log(response.ok);     // false\nconsole.log(response.status); // 404\n```\n\n```text\n404 Not Found\n\nfetch()\n   │\n   ▼\nPromise resolves\n   │\n   ▼\nResponse\n   │\n   ├── ok: false\n   └── status: 404\n```\n\nSo handle HTTP errors yourself:\n\n```javascript\nasync function getUser(id) {\n  const response = await fetch(\n    `https://api.example.com/users/${id}`\n  );\n\n  if (!response.ok) {\n    throw new Error(\n      `Request failed: ${response.status}`\n    );\n  }\n\n  return response.json();\n}\n```\n\n```javascript\ntry {\n  const user = await getUser(10);\n  console.log(user);\n} catch (error) {\n  console.error(error);\n}\n```\n\n<b>The distinction that matters:</b>\n\n```text\nNetwork-level failure\n       │\n       ▼\nfetch rejects\n\n\nHTTP error: 404 / 500\n       │\n       ▼\nfetch resolves\n       │\n       ▼\nresponse.ok === false\n```\n\nA dropped connection or DNS failure rejects the promise. A server that answers with an error status still counts as a completed HTTP transaction.\n\n---\n\n### 3. Advanced — POST JSON data\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst response = await fetch(\n  \"https://api.example.com/users\",\n  {\n    method: \"POST\",\n\n    headers: {\n      \"Content-Type\": \"application/json\"\n    },\n\n    body: JSON.stringify(user)\n  }\n);\n\nif (!response.ok) {\n  throw new Error(`HTTP ${response.status}`);\n}\n\nconst createdUser = await response.json();\n```\n\nNotice `body: JSON.stringify(user)`. `fetch()` does <b>not</b> automatically turn a JavaScript object into JSON — you serialize it explicitly:\n\n```text\nJavaScript object\n      │\n      │ JSON.stringify()\n      ▼\nJSON string\n      │\n      │ HTTP request\n      ▼\nServer\n```\n\nAnd the server's JSON response travels the opposite direction:\n\n```text\nJSON response\n      │\n      │ response.json()\n      ▼\nJavaScript object\n```\n\n---\n\n### Reading the response body\n\nA `Response` offers several ways to consume its body:\n\n```javascript\nconst data = await response.json();       // parsed JavaScript data\nconst text = await response.text();       // plain text, HTML, XML\nconst blob = await response.blob();       // binary data such as images\nconst buffer = await response.arrayBuffer(); // raw bytes\n```\n\nA blob is handy for files and images:\n\n```javascript\nconst imageResponse = await fetch(\"/image.png\");\nconst imageBlob = await imageResponse.blob();\n\nconst imageUrl = URL.createObjectURL(imageBlob);\n\ndocument.querySelector(\"img\").src = imageUrl;\n```\n\n---\n\n### The body can only be consumed once\n\n```javascript\nconst response = await fetch(url);\n\nconst data = await response.json();\nconst again = await response.json(); // error\n```\n\nThe body is a <b>stream</b> that has already been consumed:\n\n```text\nResponse body\n     │\n     ▼\n response.json()\n     │\n     ▼\n   consumed\n     │\n     ▼\n cannot consume again\n```\n\nIf you genuinely need two independent reads, clone the response first:\n\n```javascript\nconst response = await fetch(url);\n\nconst copy = response.clone();\n\nconst data = await response.json();\nconst raw = await copy.text();\n```\n\n---\n\n### Request configuration\n\n`fetch()` accepts a second argument with request options:\n\n```javascript\nfetch(url, {\n  method: \"POST\",\n\n  headers: {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer token\"\n  },\n\n  body: JSON.stringify({ name: \"Rajan\" })\n});\n```\n\n```text\nmethod       GET, POST, PUT, PATCH, DELETE...\nheaders      HTTP headers\nbody         data sent to the server\ncredentials  cookie handling\nmode         CORS behaviour\ncache        browser HTTP cache behaviour\n```\n\n<b>`credentials`</b> controls cookies:\n\n```javascript\nfetch(\"/api/profile\", { credentials: \"include\" });\n```\n\nThe common values are `\"omit\"`, `\"same-origin\"` and `\"include\"`. Including credentials is still subject to the browser's security rules and the server's CORS configuration.\n\n<b>`headers`</b> carry metadata about the request:\n\n```javascript\nconst response = await fetch(\"/api/users\", {\n  headers: {\n    \"Authorization\": \"Bearer abc123\",\n    \"Accept\": \"application/json\"\n  }\n});\n```\n\n---\n\n### GET vs POST\n\n```text\nGET\n────\nClient ───────────────► Server\n       \"Give me users\"\n\n\nPOST\n─────\nClient ───────────────► Server\n       \"Create this user\"\n       { name: \"Rajan\" }\n```\n\n---\n\n### Production error handling\n\nA production-ready request distinguishes <b>network errors</b> from <b>HTTP errors</b>:\n\n```javascript\nasync function fetchUsers() {\n  try {\n    const response = await fetch(\"/api/users\");\n\n    if (!response.ok) {\n      throw new Error(\n        `HTTP error: ${response.status}`\n      );\n    }\n\n    return await response.json();\n  } catch (error) {\n    console.error(\"Request failed:\", error);\n    throw error;\n  }\n}\n```\n\nThe `try/catch` handles a rejected `fetch()` as well as the error you explicitly throw for a non-2xx response.\n\n---\n\n### The five rules\n\n1. `fetch()` returns a Promise.\n2. `fetch()` does not reject just because the server returns 404 or 500.\n3. Always check `response.ok` or `response.status`.\n4. Reading the response body is another asynchronous operation.\n5. A response body can normally be consumed only once.\n\n> <b>`fetch()` handles the HTTP transaction; `Response` gives you the result; body methods such as `json()` actually consume and decode the data.</b>",
+        np: "<b>Fetch API</b> browser र अन्य JavaScript वातावरणबाट HTTP request गर्ने आधुनिक JavaScript API हो।\n\n```javascript\nconst response = await fetch(\"https://api.example.com/users\");\n```\n\nबुझ्नुपर्ने मुख्य कुरा — `fetch()` ले तुरुन्तै response को data दिँदैन। यसले <b>Promise</b> फर्काउँछ:\n\n```text\nfetch(url)\n   │\n   ▼\nPromise\n   │\n   │ server responds\n   ▼\nResponse object\n   │\n   ▼\nresponse.json()\n   │\n   ▼\nPromise\n   │\n   ▼\nJavaScript data\n```\n\nत्यसैले `fetch()` `async`/`await` सँग स्वाभाविक रूपमा मिल्छ।\n\n---\n\n### 1. आधारभूत — GET request\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users\"\n);\n\nconst users = await response.json();\n\nconsole.log(users);\n```\n\nयहाँ वास्तवमा <b>दुई asynchronous operation</b> छन्। `await fetch(url)` ले HTTP response कुर्छ, र `await response.json()` ले response body पढेर parse गर्छ।\n\n---\n\n### 2. मध्यम — सधैं `response.ok` जाँच्नुहोस्\n\n`fetch()` को सबैभन्दा ठूलो भ्रम — `404` वा `500` आउँदा `fetch()` आफैं reject हुन्छ भन्ने ठान्नु। हुँदैन।\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users/999\"\n);\n\nconsole.log(response.ok);     // false\nconsole.log(response.status); // 404\n```\n\n```text\n404 Not Found\n\nfetch()\n   │\n   ▼\nPromise resolves\n   │\n   ▼\nResponse\n   │\n   ├── ok: false\n   └── status: 404\n```\n\nत्यसैले HTTP error आफैं सम्हाल्नुहोस्:\n\n```javascript\nasync function getUser(id) {\n  const response = await fetch(\n    `https://api.example.com/users/${id}`\n  );\n\n  if (!response.ok) {\n    throw new Error(\n      `Request failed: ${response.status}`\n    );\n  }\n\n  return response.json();\n}\n```\n\n```javascript\ntry {\n  const user = await getUser(10);\n  console.log(user);\n} catch (error) {\n  console.error(error);\n}\n```\n\n<b>महत्वपूर्ण भिन्नता:</b>\n\n```text\nNetwork-level failure\n       │\n       ▼\nfetch rejects\n\n\nHTTP error: 404 / 500\n       │\n       ▼\nfetch resolves\n       │\n       ▼\nresponse.ok === false\n```\n\nConnection टुट्नु वा DNS असफल हुनुले promise reject गर्छ। Error status दिने server ले भने HTTP transaction पूरा गरेकै मानिन्छ।\n\n---\n\n### 3. उन्नत — JSON data POST गर्नु\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst response = await fetch(\n  \"https://api.example.com/users\",\n  {\n    method: \"POST\",\n\n    headers: {\n      \"Content-Type\": \"application/json\"\n    },\n\n    body: JSON.stringify(user)\n  }\n);\n\nif (!response.ok) {\n  throw new Error(`HTTP ${response.status}`);\n}\n\nconst createdUser = await response.json();\n```\n\n`body: JSON.stringify(user)` मा ध्यान दिनुहोस्। `fetch()` ले JavaScript object लाई स्वतः JSON बनाउँदैन — तपाईंले स्पष्ट रूपमा serialize गर्नुपर्छ:\n\n```text\nJavaScript object\n      │\n      │ JSON.stringify()\n      ▼\nJSON string\n      │\n      │ HTTP request\n      ▼\nServer\n```\n\nServer को JSON response उल्टो दिशामा आउँछ:\n\n```text\nJSON response\n      │\n      │ response.json()\n      ▼\nJavaScript object\n```\n\n---\n\n### Response body पढ्नु\n\n`Response` ले body खपत गर्ने धेरै तरिका दिन्छ:\n\n```javascript\nconst data = await response.json();       // parse भएको JavaScript data\nconst text = await response.text();       // सादा text, HTML, XML\nconst blob = await response.blob();       // image जस्तो binary data\nconst buffer = await response.arrayBuffer(); // कच्चा byte\n```\n\nFile र image का लागि blob उपयोगी छ:\n\n```javascript\nconst imageResponse = await fetch(\"/image.png\");\nconst imageBlob = await imageResponse.blob();\n\nconst imageUrl = URL.createObjectURL(imageBlob);\n\ndocument.querySelector(\"img\").src = imageUrl;\n```\n\n---\n\n### Body एक पटक मात्र खपत हुन्छ\n\n```javascript\nconst response = await fetch(url);\n\nconst data = await response.json();\nconst again = await response.json(); // error\n```\n\nBody एउटा <b>stream</b> हो जुन पहिले नै खपत भइसक्यो:\n\n```text\nResponse body\n     │\n     ▼\n response.json()\n     │\n     ▼\n   consumed\n     │\n     ▼\n cannot consume again\n```\n\nसाँच्चै दुई पटक पढ्नुपर्ने भए, पहिले response clone गर्नुहोस्:\n\n```javascript\nconst response = await fetch(url);\n\nconst copy = response.clone();\n\nconst data = await response.json();\nconst raw = await copy.text();\n```\n\n---\n\n### Request configuration\n\n`fetch()` ले request option भएको दोस्रो argument लिन्छ:\n\n```javascript\nfetch(url, {\n  method: \"POST\",\n\n  headers: {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer token\"\n  },\n\n  body: JSON.stringify({ name: \"Rajan\" })\n});\n```\n\n```text\nmethod       GET, POST, PUT, PATCH, DELETE...\nheaders      HTTP header\nbody         server लाई पठाइने data\ncredentials  cookie व्यवस्थापन\nmode         CORS व्यवहार\ncache        browser HTTP cache व्यवहार\n```\n\n<b>`credentials`</b> ले cookie नियन्त्रण गर्छ:\n\n```javascript\nfetch(\"/api/profile\", { credentials: \"include\" });\n```\n\nसामान्य मान `\"omit\"`, `\"same-origin\"` र `\"include\"` हुन्। Credential पठाउँदा पनि browser को सुरक्षा नियम र server को CORS विन्यास लागू हुन्छ।\n\n<b>`headers`</b> ले request बारे metadata बोक्छ:\n\n```javascript\nconst response = await fetch(\"/api/users\", {\n  headers: {\n    \"Authorization\": \"Bearer abc123\",\n    \"Accept\": \"application/json\"\n  }\n});\n```\n\n---\n\n### GET vs POST\n\n```text\nGET\n────\nClient ───────────────► Server\n       \"Give me users\"\n\n\nPOST\n─────\nClient ───────────────► Server\n       \"Create this user\"\n       { name: \"Rajan\" }\n```\n\n---\n\n### Production मा error handling\n\nProduction-योग्य request ले <b>network error</b> र <b>HTTP error</b> छुट्याउँछ:\n\n```javascript\nasync function fetchUsers() {\n  try {\n    const response = await fetch(\"/api/users\");\n\n    if (!response.ok) {\n      throw new Error(\n        `HTTP error: ${response.status}`\n      );\n    }\n\n    return await response.json();\n  } catch (error) {\n    console.error(\"Request failed:\", error);\n    throw error;\n  }\n}\n```\n\n`try/catch` ले reject भएको `fetch()` र non-2xx का लागि तपाईंले throw गरेको error दुबै सम्हाल्छ।\n\n---\n\n### पाँच नियम\n\n1. `fetch()` ले Promise फर्काउँछ।\n2. Server ले 404 वा 500 दिँदैमा `fetch()` reject हुँदैन।\n3. सधैं `response.ok` वा `response.status` जाँच्नुहोस्।\n4. Response body पढ्नु अर्को asynchronous operation हो।\n5. Response body सामान्यतया एक पटक मात्र खपत हुन्छ।\n\n> <b>`fetch()` ले HTTP transaction सम्हाल्छ; `Response` ले नतिजा दिन्छ; `json()` जस्ता body method ले वास्तवमा data खपत गरी decode गर्छन्।</b>",
+        jp: "<b>Fetch API</b> は、ブラウザなどのJavaScript環境からHTTPリクエストを送るための最新のAPIです。\n\n```javascript\nconst response = await fetch(\"https://api.example.com/users\");\n```\n\n大切なのは、`fetch()` がレスポンスのデータをすぐには返さないことです。返すのは<b>Promise</b>です:\n\n```text\nfetch(url)\n   │\n   ▼\nPromise\n   │\n   │ server responds\n   ▼\nResponse object\n   │\n   ▼\nresponse.json()\n   │\n   ▼\nPromise\n   │\n   ▼\nJavaScript data\n```\n\nだから `fetch()` は `async`/`await` と自然に噛み合います。\n\n---\n\n### 1. 基本 — GETリクエスト\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users\"\n);\n\nconst users = await response.json();\n\nconsole.log(users);\n```\n\nここには実は<b>2つの非同期処理</b>があります。`await fetch(url)` はHTTPレスポンスを待ち、`await response.json()` は本文を読み取って解析します。\n\n---\n\n### 2. 中級 — 必ず `response.ok` を確認する\n\n`fetch()` の最大の誤解は、`404` や `500` なら自動的に拒否されると思うことです。そうはなりません。\n\n```javascript\nconst response = await fetch(\n  \"https://api.example.com/users/999\"\n);\n\nconsole.log(response.ok);     // false\nconsole.log(response.status); // 404\n```\n\n```text\n404 Not Found\n\nfetch()\n   │\n   ▼\nPromise resolves\n   │\n   ▼\nResponse\n   │\n   ├── ok: false\n   └── status: 404\n```\n\nしたがってHTTPエラーは自分で扱います:\n\n```javascript\nasync function getUser(id) {\n  const response = await fetch(\n    `https://api.example.com/users/${id}`\n  );\n\n  if (!response.ok) {\n    throw new Error(\n      `Request failed: ${response.status}`\n    );\n  }\n\n  return response.json();\n}\n```\n\n```javascript\ntry {\n  const user = await getUser(10);\n  console.log(user);\n} catch (error) {\n  console.error(error);\n}\n```\n\n<b>重要な区別:</b>\n\n```text\nNetwork-level failure\n       │\n       ▼\nfetch rejects\n\n\nHTTP error: 404 / 500\n       │\n       ▼\nfetch resolves\n       │\n       ▼\nresponse.ok === false\n```\n\n接続断やDNSの失敗はPromiseを拒否します。エラーステータスを返すサーバーは、HTTPのやり取り自体は完了しています。\n\n---\n\n### 3. 上級 — JSONをPOSTする\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nconst response = await fetch(\n  \"https://api.example.com/users\",\n  {\n    method: \"POST\",\n\n    headers: {\n      \"Content-Type\": \"application/json\"\n    },\n\n    body: JSON.stringify(user)\n  }\n);\n\nif (!response.ok) {\n  throw new Error(`HTTP ${response.status}`);\n}\n\nconst createdUser = await response.json();\n```\n\n`body: JSON.stringify(user)` に注目してください。`fetch()` はJavaScriptオブジェクトを自動でJSONにはしません。明示的に直列化します:\n\n```text\nJavaScript object\n      │\n      │ JSON.stringify()\n      ▼\nJSON string\n      │\n      │ HTTP request\n      ▼\nServer\n```\n\nサーバーからのJSONは逆向きに流れます:\n\n```text\nJSON response\n      │\n      │ response.json()\n      ▼\nJavaScript object\n```\n\n---\n\n### レスポンス本文の読み方\n\n`Response` は本文を消費する方法をいくつか提供します:\n\n```javascript\nconst data = await response.json();       // 解析済みのデータ\nconst text = await response.text();       // テキスト・HTML・XML\nconst blob = await response.blob();       // 画像などのバイナリ\nconst buffer = await response.arrayBuffer(); // 生のバイト列\n```\n\nファイルや画像にはblobが便利です:\n\n```javascript\nconst imageResponse = await fetch(\"/image.png\");\nconst imageBlob = await imageResponse.blob();\n\nconst imageUrl = URL.createObjectURL(imageBlob);\n\ndocument.querySelector(\"img\").src = imageUrl;\n```\n\n---\n\n### 本文は一度しか消費できない\n\n```javascript\nconst response = await fetch(url);\n\nconst data = await response.json();\nconst again = await response.json(); // エラー\n```\n\n本文はすでに消費された<b>ストリーム</b>だからです:\n\n```text\nResponse body\n     │\n     ▼\n response.json()\n     │\n     ▼\n   consumed\n     │\n     ▼\n cannot consume again\n```\n\n本当に2回読む必要があるなら、先にレスポンスを複製します:\n\n```javascript\nconst response = await fetch(url);\n\nconst copy = response.clone();\n\nconst data = await response.json();\nconst raw = await copy.text();\n```\n\n---\n\n### リクエストの設定\n\n`fetch()` は第2引数にオプションを受け取ります:\n\n```javascript\nfetch(url, {\n  method: \"POST\",\n\n  headers: {\n    \"Content-Type\": \"application/json\",\n    \"Authorization\": \"Bearer token\"\n  },\n\n  body: JSON.stringify({ name: \"Rajan\" })\n});\n```\n\n```text\nmethod       GET, POST, PUT, PATCH, DELETE...\nheaders      HTTPヘッダー\nbody         サーバーへ送るデータ\ncredentials  クッキーの扱い\nmode         CORSの挙動\ncache        ブラウザHTTPキャッシュの挙動\n```\n\n<b>`credentials`</b> はクッキーを制御します:\n\n```javascript\nfetch(\"/api/profile\", { credentials: \"include\" });\n```\n\nよく使う値は `\"omit\"`・`\"same-origin\"`・`\"include\"` です。資格情報を含める場合も、ブラウザの安全規則とサーバーのCORS設定に従います。\n\n<b>`headers`</b> はリクエストのメタ情報を運びます:\n\n```javascript\nconst response = await fetch(\"/api/users\", {\n  headers: {\n    \"Authorization\": \"Bearer abc123\",\n    \"Accept\": \"application/json\"\n  }\n});\n```\n\n---\n\n### GETとPOST\n\n```text\nGET\n────\nClient ───────────────► Server\n       \"Give me users\"\n\n\nPOST\n─────\nClient ───────────────► Server\n       \"Create this user\"\n       { name: \"Rajan\" }\n```\n\n---\n\n### 本番向けのエラー処理\n\n本番のリクエストは<b>ネットワークエラー</b>と<b>HTTPエラー</b>を区別します:\n\n```javascript\nasync function fetchUsers() {\n  try {\n    const response = await fetch(\"/api/users\");\n\n    if (!response.ok) {\n      throw new Error(\n        `HTTP error: ${response.status}`\n      );\n    }\n\n    return await response.json();\n  } catch (error) {\n    console.error(\"Request failed:\", error);\n    throw error;\n  }\n}\n```\n\n`try/catch` は拒否された `fetch()` も、2xx以外に対して自分でthrowしたエラーも受け止めます。\n\n---\n\n### 5つの規則\n\n1. `fetch()` はPromiseを返す。\n2. サーバーが404や500を返しても `fetch()` は拒否しない。\n3. 必ず `response.ok` か `response.status` を確認する。\n4. 本文の読み取りはもう1つの非同期処理。\n5. レスポンス本文は通常1回しか消費できない。\n\n> <b>`fetch()` はHTTPのやり取りを担い、`Response` は結果を渡し、`json()` などの本文メソッドが実際にデータを消費して復号する。</b>",
       },
-      diagram: `fetch(url)  →  Promise<Response>
-                    │
-      ┌─────────────┴─────────────┐
-      │ network error (offline,   │  →  Promise REJECTS  (catch / try-catch)
-      │ DNS fail, CORS blocked)    │
-      └────────────────────────────┘
-      │ server responds (ANY       │  →  Promise RESOLVES (even for 404 / 500!)
-      │ status code: 200, 404, 500)│       ⚠ must check response.ok yourself
-      └────────────────────────────┘
+      diagram: `Your JavaScript
+      │
+      │ fetch()
+      ▼
+HTTP Request
+      │
+      ├── GET
+      ├── POST
+      ├── PUT
+      └── DELETE
+      │
+      ▼
+     Server
+      │
+      ▼
+HTTP Response
+      │
+      ▼
+Response object
+      │
+      ├── status
+      ├── headers
+      ├── ok
+      └── body
+             │
+             ▼
+       response.json()
+             │
+             ▼
+        JavaScript data
 
-response.ok            → true only for status 200-299
-response.status        → 200, 404, 500 ...
-response.json()        ┐
-response.text()        │  each reads the body ONCE, returns its own Promise
-response.blob()        │  need it twice? → response.clone() first
-response.arrayBuffer() ┘`,
+
+Two different failures, two different paths
+
+Network-level failure          HTTP error: 404 / 500
+       │                              │
+       ▼                              ▼
+ fetch rejects                  fetch resolves
+       │                              │
+       ▼                              ▼
+   catch block                 response.ok === false
+
+
+The body is a one-shot stream
+
+Response body
+     │
+     ▼
+ response.json()
+     │
+     ▼
+   consumed
+     │
+     ▼
+ cannot consume again`,
       codeExample: {
-        title: { en: "GET and POST requests with error handling", np: "Error handling सहित GET र POST requests", jp: "エラー処理付きのGET・POSTリクエスト" },
-        code: `// ── A basic GET request ───────────────────────────────────────────
-const res = await fetch("https://api.example.com/products/42");
-const product = await res.json();          // parse the JSON body
+        title: { en: "From request to parsed data", np: "Request देखि parse भएको data सम्म", jp: "リクエストから解析済みデータまで" },
+        code: `// ── 1. Basic — two awaits, not one ────────────────────────────────
+const response = await fetch("https://api.example.com/users");
+const users = await response.json(); // reading the body is async too
 
-// ── The #1 gotcha: fetch does NOT throw on HTTP error responses ────
-// A 404 or 500 still resolves successfully — you must check response.ok yourself
-async function getProduct(id) {
-  const res = await fetch(\`https://api.example.com/products/\${id}\`);
+// ── 2. Intermediate — a 404 still resolves ────────────────────────
+async function getUser(id) {
+  const response = await fetch(\`https://api.example.com/users/\${id}\`);
 
-  if (!res.ok) {
-    // res.status: 404, 500, etc. — res.statusText: "Not Found", "Internal Server Error"
-    throw new Error(\`Request failed: \${res.status} \${res.statusText}\`);
+  if (!response.ok) {
+    // fetch never threw here; the status has to be checked by hand
+    throw new Error(\`Request failed: \${response.status}\`);
   }
 
-  return res.json();     // still a Promise — must be awaited/returned
+  return response.json();
 }
 
-// ── Reading the response body — pick ONE, it can only be read once ──
-const textCopy = await res.clone().text();  // clone() first if you need it twice
-// res.json()         → parsed JSON
-// res.text()         → raw string
-// res.blob()         → binary (image, file download)
-// res.arrayBuffer()  → raw binary buffer
-
-// ── POST request — sending JSON to the server ───────────────────────
-async function createProduct(data) {
-  const res = await fetch("https://api.example.com/products", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",   // tells the server how to parse \`body\`
-      "Authorization": \`Bearer \${authToken}\`,
-    },
-    body: JSON.stringify(data),   // fetch never auto-serializes objects for you
-  });
-
-  if (!res.ok) throw new Error(\`Create failed: \${res.status}\`);
-  return res.json();
-}
-
-// ── The full set of request options ──────────────────────────────────
-fetch(url, {
-  method: "GET",                     // GET | POST | PUT | PATCH | DELETE
+// ── 3. Advanced — POST JSON with the right headers ────────────────
+const created = await fetch("https://api.example.com/users", {
+  method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),     // string | FormData | Blob | ArrayBuffer
-  mode: "cors",                      // cors | no-cors | same-origin
-  credentials: "same-origin",        // omit | same-origin | include (send cookies?)
-  cache: "no-cache",                 // default | no-cache | no-store | force-cache
-});`,
+  body: JSON.stringify({ name: "Rajan", age: 30 }), // not automatic
+});
+
+// ── Other ways to read the body ───────────────────────────────────
+// await response.text();        plain text, HTML, XML
+// await response.blob();        images and files
+// await response.arrayBuffer(); raw bytes
+
+// ── The body is consumed once, so clone for a second read ─────────
+const res = await fetch(url);
+const copy = res.clone();
+
+const data = await res.json();
+const raw = await copy.text();
+
+// ── Production shape: network errors and HTTP errors together ─────
+async function fetchUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(\`HTTP error: \${response.status}\`);
+    return await response.json();
+  } catch (error) {
+    console.error("Request failed:", error);
+    throw error;
+  }
+}`,
       },
       keyTakeaways: [
-        { en: "`fetch` only rejects on genuine network failures — a 404 or 500 still resolves, so you must always check `response.ok` (or `response.status`) yourself.", np: "`fetch` केवल genuine network failure मा मात्र reject हुन्छ — 404 वा 500 पनि resolve नै हुन्छ, त्यसैले सधैं आफैं `response.ok` (वा `response.status`) check गर्नुपर्छ।", jp: "`fetch`は本当のネットワーク障害でのみrejectする。404や500でもresolveするため、常に自分で`response.ok`（または`response.status`）を確認する必要がある。" },
-        { en: "The body can only be read once via `json()`/`text()`/`blob()`/`arrayBuffer()` — call `response.clone()` first if you need to read it a second time.", np: "Body `json()`/`text()`/`blob()`/`arrayBuffer()` मार्फत एकपटक मात्र read गर्न सकिन्छ — दुई पटक read गर्नुपर्ने भएमा पहिले `response.clone()` call गर्नुहोस्।", jp: "ボディは`json()`/`text()`/`blob()`/`arrayBuffer()`で一度しか読めない — 2回目に読む必要があれば先に`response.clone()`を呼ぶ。" },
-        { en: "A `POST` needs an explicit `method`, a `Content-Type` header, and a `JSON.stringify()`-ed body — `fetch` never serializes objects automatically.", np: "`POST` मा explicit `method`, `Content-Type` header, र `JSON.stringify()` गरिएको body चाहिन्छ — `fetch` ले objects आफैं serialize गर्दैन।", jp: "`POST`には明示的な`method`、`Content-Type`ヘッダー、`JSON.stringify()`されたボディが必要 — `fetch`がオブジェクトを自動でシリアライズすることはない。" },
+        { en: "`fetch()` returns a <b>`Promise<Response>`</b>, not the data itself.", np: "`fetch()` ले data होइन, <b>`Promise<Response>`</b> फर्काउँछ।", jp: "`fetch()` が返すのはデータではなく<b>`Promise<Response>`</b>。" },
+        { en: "Reading the body with `json()`, `text()` or `blob()` is a <b>second asynchronous step</b>.", np: "`json()`, `text()` वा `blob()` ले body पढ्नु <b>दोस्रो asynchronous चरण</b> हो।", jp: "`json()`・`text()`・`blob()` による本文の読み取りは<b>2つ目の非同期処理</b>。" },
+        { en: "`fetch()` <b>does not reject</b> on 404 or 500 — only network-level failures reject.", np: "404 वा 500 मा `fetch()` <b>reject हुँदैन</b> — network-स्तरका असफलतामा मात्र reject हुन्छ।", jp: "404や500で `fetch()` は<b>拒否されない</b>。拒否されるのはネットワークレベルの失敗だけ。" },
+        { en: "Always check <b>`response.ok`</b> or `response.status` before using the data.", np: "Data प्रयोग गर्नुअघि सधैं <b>`response.ok`</b> वा `response.status` जाँच्नुहोस्।", jp: "データを使う前に必ず<b>`response.ok`</b> か `response.status` を確認する。" },
+        { en: "`fetch()` does not serialize automatically — send objects with <b>`JSON.stringify()`</b> and a `Content-Type` header.", np: "`fetch()` ले स्वतः serialize गर्दैन — object पठाउँदा <b>`JSON.stringify()`</b> र `Content-Type` header दिनुहोस्।", jp: "`fetch()` は自動で直列化しない。オブジェクトは<b>`JSON.stringify()`</b> と `Content-Type` ヘッダーで送る。" },
+        { en: "A response body is a stream that can normally be <b>consumed only once</b>; use `response.clone()` for a second read.", np: "Response body एउटा stream हो जुन सामान्यतया <b>एक पटक मात्र खपत</b> हुन्छ; दोस्रो पटक पढ्न `response.clone()` प्रयोग गर्नुहोस्।", jp: "レスポンス本文は通常<b>1回しか消費できない</b>ストリーム。2回読むには `response.clone()`。" },
+        { en: "The second `fetch()` argument carries `method`, `headers`, `body`, `credentials`, `mode` and `cache`.", np: "`fetch()` को दोस्रो argument ले `method`, `headers`, `body`, `credentials`, `mode` र `cache` बोक्छ।", jp: "`fetch()` の第2引数が `method`・`headers`・`body`・`credentials`・`mode`・`cache` を運ぶ。" },
       ],
       commonMistakes: [
-        { en: "Assuming a `.catch()` or `try/catch` block will automatically catch a `404`/`500` response instead of checking `response.ok` explicitly.", np: "`404`/`500` response लाई `response.ok` explicitly check नगरी `.catch()` वा `try/catch` block ले automatic रूपमा catch गर्ने ठान्नु।", jp: "`response.ok`を明示的に確認せず、`404`/`500`レスポンスが`.catch()`や`try/catch`で自動的に捕捉されると思い込むこと。" },
-        { en: "Calling `response.json()` (or any body-reading method) twice on the same response without `clone()`, which throws an error.", np: "`clone()` बिना same response मा `response.json()` (वा कुनै body-reading method) दुई पटक call गर्नु, जसले error throw गर्छ।", jp: "`clone()`なしで同じレスポンスに対して`response.json()`（または他のボディ読み取りメソッド）を2回呼び、エラーを発生させること。" },
-        { en: "Forgetting the `Content-Type: application/json` header or forgetting to `JSON.stringify()` the body on a `POST`, so the server can't parse it correctly.", np: "`POST` मा `Content-Type: application/json` header बिर्सनु वा body `JSON.stringify()` गर्न बिर्सनु, जसले गर्दा server ले सहि parse गर्न सक्दैन।", jp: "`POST`で`Content-Type: application/json`ヘッダーを忘れる、またはボディを`JSON.stringify()`し忘れ、サーバーが正しく解析できなくなること。" },
+        { en: "<b>Assuming `fetch()` rejects on 404</b> — a `try/catch` around `fetch(\"/missing\")` still reaches the success branch, because the HTTP request itself completed. Check `response.ok` and throw yourself.", np: "<b>404 मा `fetch()` reject हुन्छ भन्ने ठान्नु</b> — `fetch(\"/missing\")` वरिपरिको `try/catch` अझै success शाखामै पुग्छ, किनकि HTTP request आफैं पूरा भयो। `response.ok` जाँचेर आफैं throw गर्नुहोस्।", jp: "<b>404で `fetch()` が拒否されると思う</b> — `fetch(\"/missing\")` を `try/catch` で囲んでも成功側に進む。HTTPのやり取り自体は完了しているため。`response.ok` を確認して自分でthrowする。" },
+        { en: "<b>Forgetting to parse the response</b> — `console.log(response)` prints a `Response` object, not your users. You still need `await response.json()`.", np: "<b>Response parse गर्न बिर्सनु</b> — `console.log(response)` ले तपाईंको user होइन, `Response` object देखाउँछ। `await response.json()` अझै चाहिन्छ।", jp: "<b>レスポンスの解析を忘れる</b> — `console.log(response)` はユーザーではなく `Response` オブジェクトを出す。`await response.json()` が必要。" },
+        { en: "<b>Forgetting `JSON.stringify()`</b> — passing `body: { name: \"Rajan\" }` does not send JSON. Serialize the object and set `Content-Type: application/json`.", np: "<b>`JSON.stringify()` बिर्सनु</b> — `body: { name: \"Rajan\" }` दिँदा JSON पठाइँदैन। Object serialize गरी `Content-Type: application/json` सेट गर्नुहोस्।", jp: "<b>`JSON.stringify()` を忘れる</b> — `body: { name: \"Rajan\" }` ではJSONは送られない。直列化し `Content-Type: application/json` を設定する。" },
+        { en: "<b>Reading the body twice</b> — calling `response.json()` and then `response.text()` on the same response throws, because the stream is already consumed. Call `response.clone()` first.", np: "<b>Body दुई पटक पढ्नु</b> — एउटै response मा `response.json()` अनि `response.text()` बोलाउँदा error आउँछ, किनकि stream पहिले नै खपत भइसक्यो। पहिले `response.clone()` बोलाउनुहोस्।", jp: "<b>本文を2回読む</b> — 同じレスポンスで `response.json()` の後に `response.text()` を呼ぶと例外になる。先に `response.clone()` を呼ぶ。" },
       ],
       quiz: [
         {
-          question: { en: "Does the `fetch` promise reject when the server responds with a `404 Not Found`?", np: "Server ले `404 Not Found` सँग respond गर्दा `fetch` promise reject हुन्छ?", jp: "サーバーが`404 Not Found`で応答した場合、`fetch`のPromiseはrejectする？" },
+          question: { en: "What does `fetch()` return?", np: "`fetch()` ले के फर्काउँछ?", jp: "`fetch()` は何を返すか?" },
           options: [
-            { en: "No — it resolves normally; you must check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुपर्छ", jp: "しない — 正常にresolveする。`response.ok`を確認する必要がある" },
-            { en: "Yes — fetch always throws on any 4xx/5xx status", np: "हो — fetch ले जुनसुकै 4xx/5xx status मा सधैं throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスでスローする" },
+            { en: "A `Response`", np: "एउटा `Response`", jp: "`Response`" },
+            { en: "A `Promise` that resolves to a `Response`", np: "`Response` मा resolve हुने `Promise`", jp: "`Response` に解決される `Promise`" },
+            { en: "A JSON object", np: "एउटा JSON object", jp: "JSONオブジェクト" },
+            { en: "A string", np: "एउटा string", jp: "文字列" },
           ],
-          correctIndex: 0,
-          explanation: { en: "fetch only rejects on network-level failures; a completed HTTP response, even an error status, resolves the promise normally.", np: "fetch ले network-level failure मा मात्र reject गर्छ; completed HTTP response, error status भए पनि, promise normally resolve गर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。完了したHTTPレスポンスはエラーステータスでも正常にPromiseを解決する。" },
+          correctIndex: 1,
+          explanation: { en: "That is why `fetch()` pairs naturally with `await`.", np: "त्यसैले `fetch()` `await` सँग स्वाभाविक रूपमा मिल्छ।", jp: "だから `fetch()` は `await` と自然に組み合わさる。" },
         },
         {
-          question: { en: "How many times can you successfully call `.json()` on the same `Response` object without `clone()`?", np: "`clone()` बिना same `Response` object मा कति पटक `.json()` सफलतापूर्वक call गर्न सकिन्छ?", jp: "`clone()`なしで同じ`Response`オブジェクトに対して`.json()`を何回成功させて呼べる？" },
+          question: { en: "What happens when the server returns `404`?", np: "Server ले `404` फर्काउँदा के हुन्छ?", jp: "サーバーが `404` を返すとどうなるか?" },
           options: [
-            { en: "Once — the body is a stream that can only be consumed once", np: "एकपटक — body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ", jp: "1回 — ボディは一度しか消費できないストリーム" },
-            { en: "As many times as you want", np: "जति चाहे त्यति पटक", jp: "何回でも" },
+            { en: "`fetch()` always rejects", np: "`fetch()` सधैं reject हुन्छ", jp: "`fetch()` は必ず拒否される" },
+            { en: "The browser crashes", np: "Browser crash हुन्छ", jp: "ブラウザがクラッシュする" },
+            { en: "`fetch()` resolves with `response.ok === false`", np: "`response.ok === false` सहित `fetch()` resolve हुन्छ", jp: "`response.ok === false` で解決される" },
+            { en: "`fetch()` retries automatically", np: "`fetch()` आफैं फेरि प्रयास गर्छ", jp: "`fetch()` が自動で再試行する" },
           ],
-          correctIndex: 0,
-          explanation: { en: "The response body is a stream; reading it a second time without cloning first throws an error.", np: "Response body एउटा stream हो; clone नगरी दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディはストリームであり、クローンせずに2回目に読むとエラーになる。" },
+          correctIndex: 2,
+          explanation: { en: "Only network-level failures reject the promise.", np: "Network-स्तरका असफलताले मात्र promise reject गर्छन्।", jp: "Promiseを拒否するのはネットワークレベルの失敗だけ。" },
         },
         {
-          question: { en: "What must you set to correctly send JSON data in a `POST` request body?", np: "`POST` request body मा JSON data सहि रूपमा पठाउन के set गर्नुपर्छ?", jp: "`POST`リクエストボディで正しくJSONデータを送るには何を設定する必要がある？" },
+          question: { en: "How do you parse a JSON response?", np: "JSON response कसरी parse गर्ने?", jp: "JSONレスポンスはどう解析するか?" },
           options: [
-            { en: "A `Content-Type: application/json` header and a `JSON.stringify()`-ed body", np: "`Content-Type: application/json` header र `JSON.stringify()` गरिएको body", jp: "`Content-Type: application/json`ヘッダーと`JSON.stringify()`されたボディ" },
-            { en: "Nothing — fetch detects and serializes plain objects automatically", np: "केही छैन — fetch ले plain objects आफैं detect र serialize गर्छ", jp: "何もない — fetchはプレーンオブジェクトを自動で検出・シリアライズする" },
+            { en: "`response.parse()`", np: "`response.parse()`", jp: "`response.parse()`" },
+            { en: "`response.json()`", np: "`response.json()`", jp: "`response.json()`" },
+            { en: "`JSON.parse(response)`", np: "`JSON.parse(response)`", jp: "`JSON.parse(response)`" },
+            { en: "`response.data()`", np: "`response.data()`", jp: "`response.data()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "fetch never serializes the body for you; you must stringify it yourself and tell the server its format via the header.", np: "fetch ले body कहिल्यै आफैं serialize गर्दैन; आफैं stringify गर्नुपर्छ र header मार्फत server लाई format बताउनुपर्छ।", jp: "fetchはボディを自動でシリアライズしない。自分でstringifyし、ヘッダーでサーバーに形式を伝える必要がある。" },
+          correctIndex: 1,
+          explanation: { en: "It returns a promise, so it needs its own `await`.", np: "यसले promise फर्काउँछ, त्यसैले छुट्टै `await` चाहिन्छ।", jp: "Promiseを返すので、それ自体に `await` が要る。" },
+        },
+        {
+          question: { en: "Why use `JSON.stringify()` when sending JSON?", np: "JSON पठाउँदा `JSON.stringify()` किन प्रयोग गर्ने?", jp: "JSONを送るとき `JSON.stringify()` を使う理由は?" },
+          options: [
+            { en: "To encrypt the request", np: "Request encrypt गर्न", jp: "リクエストを暗号化するため" },
+            { en: "To convert a JavaScript object into a JSON string", np: "JavaScript object लाई JSON string बनाउन", jp: "JavaScriptオブジェクトをJSON文字列に変換するため" },
+            { en: "To parse the response", np: "Response parse गर्न", jp: "レスポンスを解析するため" },
+            { en: "To create a Promise", np: "Promise बनाउन", jp: "Promiseを作るため" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "`fetch()` does not serialize the body for you.", np: "`fetch()` ले तपाईंका लागि body serialize गर्दैन।", jp: "`fetch()` は本文を代わりに直列化してくれない。" },
+        },
+        {
+          question: { en: "What happens when `response.json()` is called twice on the same response?", np: "एउटै response मा `response.json()` दुई पटक बोलाउँदा के हुन्छ?", jp: "同じレスポンスで `response.json()` を2回呼ぶとどうなるか?" },
+          options: [
+            { en: "Both calls work", np: "दुबै call काम गर्छन्", jp: "両方とも動く" },
+            { en: "The second returns the same data", np: "दोस्रोले उही data फर्काउँछ", jp: "2回目も同じデータを返す" },
+            { en: "The second consumption fails", np: "दोस्रो खपत असफल हुन्छ", jp: "2回目の消費が失敗する" },
+            { en: "The request runs twice", np: "Request दुई पटक चल्छ", jp: "リクエストが2回走る" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "Clone the response first when you genuinely need two reads.", np: "साँच्चै दुई पटक पढ्नुपर्ने भए पहिले response clone गर्नुहोस्।", jp: "本当に2回読むなら、先にレスポンスを複製する。" },
         },
       ],
     },
