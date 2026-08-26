@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
+import { LessonVideos } from "@/components/learn/LessonVideos";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
 import type { JsLesson, JsLessonDay, JsLessonQuizQuestion } from "@/lib/js-learning/js-lesson-types";
@@ -344,22 +345,10 @@ function LessonAccordionItem({
           </div>
 
           {lesson.youtubeIds?.length ? (
-            <div className="mt-4 flex flex-col gap-3">
-              {lesson.youtubeIds.map((videoId, i) => (
-                <div key={videoId} className="overflow-hidden rounded-xl border border-[var(--border)]">
-                  <div className="relative w-full pb-[56.25%]">
-                    <iframe
-                      className="absolute inset-0 h-full w-full"
-                      src={`https://www.youtube.com/embed/${videoId}`}
-                      title={`${pickLocalized(lesson.title, locale)} — ${i + 1}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <LessonVideos
+              videoIds={lesson.youtubeIds}
+              title={pickLocalized(lesson.title, locale)}
+            />
           ) : null}
         </div>
       ) : null}
