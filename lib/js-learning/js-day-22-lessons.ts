@@ -132,10 +132,10 @@ await retryWithBackoff(() =>
         {
           question: { en: "Why add random jitter to a retry's backoff delay?", np: "Retry को backoff delay मा random jitter किन थपिन्छ?", jp: "リトライのバックオフ遅延にランダムなジッターを加える理由は？" },
           options: [
-            { en: "To prevent many clients from retrying at the exact same synchronized instant", np: "धेरै clients लाई एउटै exact synchronized instant मा retry हुनबाट रोक्न", jp: "多数のクライアントが全く同じ同期した瞬間にリトライするのを防ぐため" },
             { en: "To make the retry function run faster", np: "Retry function लाई छिटो चलाउन", jp: "リトライ関数をより速く実行するため" },
+            { en: "To prevent many clients from retrying at the exact same synchronized instant", np: "धेरै clients लाई एउटै exact synchronized instant मा retry हुनबाट रोक्न", jp: "多数のクライアントが全く同じ同期した瞬間にリトライするのを防ぐため" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "If every client backs off with the exact same formula, they all retry in lockstep; jitter randomizes the delay so retries spread out instead of storming the service together.", np: "हरेक client ले उही formula प्रयोग गरी backoff गरे भने, सबैले lockstep मा retry गर्छन्; jitter ले delay लाई random बनाई retries एकसाथ storm नगरी फैलिन्छ।", jp: "全クライアントが全く同じ式でバックオフすると、全員が同期してリトライしてしまう。ジッターは遅延をランダム化し、リトライが一斉に押し寄せるのではなく分散するようにする。" },
         },
         {
@@ -267,10 +267,10 @@ await breaker.call();   // after 3 failures, every call fails instantly for 15s`
         {
           question: { en: "What does `Promise.race([a, b])` settle with?", np: "`Promise.race([a, b])` कुनसँग settle हुन्छ?", jp: "`Promise.race([a, b])`は何で確定する？" },
           options: [
-            { en: "Whichever of a or b settles first", np: "a वा b मध्ये जो पहिले settle हुन्छ", jp: "aかbのうち先に確定した方" },
             { en: "Always the result of a, ignoring b entirely", np: "सधैं a को result, b लाई पूर्ण रूपमा ignore गरी", jp: "常にaの結果で、bは完全に無視する" },
+            { en: "Whichever of a or b settles first", np: "a वा b मध्ये जो पहिले settle हुन्छ", jp: "aかbのうち先に確定した方" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "race() settles as soon as the first input promise settles, whether it resolves or rejects — the other is simply left running and ignored.", np: "race() पहिलो input promise settle हुने बित्तिकै settle हुन्छ, resolve वा reject जुनसुकै होस्; अर्को त simply चलिरहन्छ र ignore हुन्छ।", jp: "race()は最初のPromiseが確定した瞬間に確定する。resolveかrejectかは問わない — もう一方は単に動き続け無視される。" },
         },
         {
@@ -285,10 +285,10 @@ await breaker.call();   // after 3 failures, every call fails instantly for 15s`
         {
           question: { en: "In the circuit breaker pattern, what happens while the circuit is in the `open` state?", np: "Circuit breaker pattern मा, circuit `open` state मा हुँदा के हुन्छ?", jp: "サーキットブレーカーパターンで、サーキットが`open`状態にある間何が起こる？" },
           options: [
-            { en: "Calls fail immediately without being attempted, until a cooldown passes", np: "Cooldown नबितेसम्म calls प्रयास नगरी तुरुन्तै fail हुन्छन्", jp: "クールダウンが経過するまで、呼び出しは試みられることなく即座に失敗する" },
             { en: "Calls are retried immediately, faster than normal", np: "Calls तुरुन्तै, normal भन्दा छिटो retry हुन्छन्", jp: "呼び出しは通常より速く即座にリトライされる" },
+            { en: "Calls fail immediately without being attempted, until a cooldown passes", np: "Cooldown नबितेसम्म calls प्रयास नगरी तुरुन्तै fail हुन्छन्", jp: "クールダウンが経過するまで、呼び出しは試みられることなく即座に失敗する" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "The open state fails fast on purpose — no calls are even attempted until the cooldown elapses and the breaker moves to half-open to test recovery.", np: "Open state ले जानाजानी fail fast गर्छ — cooldown नबितेसम्म कुनै call प्रयास पनि हुँदैन, त्यसपछि breaker recovery test गर्न half-open मा जान्छ।", jp: "open状態は意図的に即座に失敗する — クールダウンが経過し、ブレーカーが回復をテストするためhalf-openに移るまで、呼び出しは試みられることさえない。" },
         },
       ],
@@ -421,10 +421,10 @@ await cachedFetchUser(1);   // instant — served from cache`,
         {
           question: { en: "When five components call `dedupedFetch(url)` for the same URL at the same time, what happens?", np: "पाँच components ले same URL का लागि same समयमा `dedupedFetch(url)` call गर्दा के हुन्छ?", jp: "5つのコンポーネントが同じURLに対して同時に`dedupedFetch(url)`を呼ぶとどうなる？" },
           options: [
-            { en: "All five share the same in-flight Promise, and only one network request is made", np: "पाँचैले उही in-flight Promise share गर्छन्, र केवल एउटा network request मात्र हुन्छ", jp: "5つすべてが同じ進行中のPromiseを共有し、ネットワークリクエストは1つだけ発生する" },
             { en: "Each call fires its own separate network request", np: "हरेक call ले आफ्नो छुट्टै network request fire गर्छ", jp: "各呼び出しがそれぞれ独自のネットワークリクエストを発火する" },
+            { en: "All five share the same in-flight Promise, and only one network request is made", np: "पाँचैले उही in-flight Promise share गर्छन्, र केवल एउटा network request मात्र हुन्छ", jp: "5つすべてが同じ進行中のPromiseを共有し、ネットワークリクエストは1つだけ発生する" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "The in-flight Map returns the same pending Promise to every caller with a matching key, so duplicate simultaneous requests collapse into one.", np: "In-flight Map ले matching key भएका हरेक caller लाई उही pending Promise फर्काउँछ, त्यसैले duplicate simultaneous requests एउटामा collapse हुन्छन्।", jp: "進行中のMapは一致するキーを持つすべての呼び出し元に同じ保留中のPromiseを返すため、重複する同時リクエストは1つに集約される。" },
         },
         {
@@ -448,8 +448,8 @@ await cachedFetchUser(1);   // instant — served from cache`,
     },
     {
       question: { en: "In exponential backoff, roughly how does the delay change between successive retries?", np: "Exponential backoff मा, क्रमिक retries बीच delay लगभग कसरी बदलिन्छ?", jp: "指数バックオフでは、連続するリトライ間の遅延はおおよそどのように変化する？" },
-      options: [{ en: "It roughly doubles each time, up to a capped maximum", np: "हरेक पटक लगभग दोब्बर हुन्छ, cap गरिएको maximum सम्म", jp: "上限まで、毎回おおよそ2倍になる" }, { en: "It stays exactly the same every time", np: "हरेक पटक ठ्याक्कै उही रहन्छ", jp: "毎回全く同じままである" }],
-      correctIndex: 0,
+      options: [{ en: "It stays exactly the same every time", np: "हरेक पटक ठ्याक्कै उही रहन्छ", jp: "毎回全く同じままである" }, { en: "It roughly doubles each time, up to a capped maximum", np: "हरेक पटक लगभग दोब्बर हुन्छ, cap गरिएको maximum सम्म", jp: "上限まで、毎回おおよそ2倍になる" }],
+      correctIndex: 1,
       explanation: { en: "baseDelayMs * 2 ** attempt roughly doubles the wait each retry, capped by maxDelayMs so it never grows unbounded.", np: "baseDelayMs * 2 ** attempt ले हरेक retry मा wait लाई लगभग दोब्बर बनाउँछ, maxDelayMs ले cap गरिएको ताकि असीमित नबढ्न।", jp: "baseDelayMs * 2 ** attemptは各リトライで待機時間をおおよそ2倍にし、maxDelayMsで上限が設けられ無限に増えることはない。" },
     },
     {
@@ -460,8 +460,8 @@ await cachedFetchUser(1);   // instant — served from cache`,
     },
     {
       question: { en: "What does `Promise.race([operation, timeoutPromise])` settle with if the operation is too slow?", np: "Operation धेरै slow भएमा `Promise.race([operation, timeoutPromise])` कुनसँग settle हुन्छ?", jp: "操作が遅すぎる場合、`Promise.race([operation, timeoutPromise])`は何で確定する？" },
-      options: [{ en: "The timeout promise's rejection, since it settles first", np: "Timeout promise को rejection, किनकि यो पहिले settle हुन्छ", jp: "先に確定するため、タイムアウトPromiseの拒否" }, { en: "The operation's eventual result, once it finally arrives", np: "Operation को eventual result, जब यो अन्तमा आउँछ", jp: "最終的に到着した操作の結果" }],
-      correctIndex: 0,
+      options: [{ en: "The operation's eventual result, once it finally arrives", np: "Operation को eventual result, जब यो अन्तमा आउँछ", jp: "最終的に到着した操作の結果" }, { en: "The timeout promise's rejection, since it settles first", np: "Timeout promise को rejection, किनकि यो पहिले settle हुन्छ", jp: "先に確定するため、タイムアウトPromiseの拒否" }],
+      correctIndex: 1,
       explanation: { en: "race() settles with whichever promise finishes first; a slow operation loses to a timeout that rejects sooner, and the slow operation's eventual result is simply discarded.", np: "race() जो promise पहिले पुग्छ त्यसैसँग settle हुन्छ; slow operation छिटो reject हुने timeout सँग हार्छ, र यसको eventual result simply discard हुन्छ।", jp: "race()はどちらか先に終わったPromiseで確定する。遅い操作はより早く拒否するタイムアウトに負け、その最終的な結果は単に捨てられる。" },
     },
     {
@@ -472,8 +472,8 @@ await cachedFetchUser(1);   // instant — served from cache`,
     },
     {
       question: { en: "In a circuit breaker, what triggers the move from `closed` to `open`?", np: "Circuit breaker मा, `closed` बाट `open` मा जाने trigger के हो?", jp: "サーキットブレーカーで、`closed`から`open`への移行を引き起こすものは？" },
-      options: [{ en: "The failure count reaching a configured threshold", np: "Failure count configured threshold मा पुग्नु", jp: "失敗回数が設定された閾値に達すること" }, { en: "A cooldown period elapsing", np: "Cooldown period बित्नु", jp: "クールダウン期間が経過すること" }],
-      correctIndex: 0,
+      options: [{ en: "A cooldown period elapsing", np: "Cooldown period बित्नु", jp: "クールダウン期間が経過すること" }, { en: "The failure count reaching a configured threshold", np: "Failure count configured threshold मा पुग्नु", jp: "失敗回数が設定された閾値に達すること" }],
+      correctIndex: 1,
       explanation: { en: "The circuit opens once accumulated failures hit the threshold; the cooldown elapsing is instead what moves it from open to half-open.", np: "Accumulated failures threshold मा पुगेपछि circuit open हुन्छ; cooldown बितेपछि त open बाट half-open मा जान्छ।", jp: "累積した失敗が閾値に達すると、サーキットはopenになる。クールダウンの経過はopenからhalf-openへの移行を引き起こす。" },
     },
     {
@@ -484,9 +484,39 @@ await cachedFetchUser(1);   // instant — served from cache`,
     },
     {
       question: { en: "What is the core difference between request deduplication and async memoization?", np: "Request deduplication र async memoization बीचको core फरक के हो?", jp: "リクエスト重複排除と非同期メモ化の核心的な違いは？" },
-      options: [{ en: "Dedup shares one in-flight Promise among concurrent calls; memoization caches results across time with a TTL", np: "Dedup ले concurrent calls बीच एउटै in-flight Promise share गर्छ; memoization ले TTL सहित समयभरि results cache गर्छ", jp: "重複排除は同時呼び出し間で1つの進行中Promiseを共有し、メモ化はTTLで時間をまたいで結果をキャッシュする" }, { en: "They are two names for the exact same technique", np: "यी उही technique का दुई नाम हुन्", jp: "これらは全く同じ手法の2つの名前である" }],
-      correctIndex: 0,
+      options: [{ en: "They are two names for the exact same technique", np: "यी उही technique का दुई नाम हुन्", jp: "これらは全く同じ手法の2つの名前である" }, { en: "Dedup shares one in-flight Promise among concurrent calls; memoization caches results across time with a TTL", np: "Dedup ले concurrent calls बीच एउटै in-flight Promise share गर्छ; memoization ले TTL सहित समयभरि results cache गर्छ", jp: "重複排除は同時呼び出し間で1つの進行中Promiseを共有し、メモ化はTTLで時間をまたいで結果をキャッシュする" }],
+      correctIndex: 1,
       explanation: { en: "Dedup solves overlapping calls happening at the same moment; memoization solves reusing a result for a later, non-overlapping call within a TTL window — they're often combined.", np: "Dedup ले उही moment मा overlap हुने calls solve गर्छ; memoization ले TTL window भित्र later, non-overlapping call का लागि result reuse गर्ने समस्या solve गर्छ — यी दुई प्राय: सँगै combine हुन्छन्।", jp: "重複排除は同じ瞬間に重なる呼び出しを解決し、メモ化はTTLウィンドウ内で後の重ならない呼び出しに結果を再利用する問題を解決する — この2つはよく組み合わされる。" },
+    },
+    {
+      question: { en: "Why add <b>jitter</b> to an exponential backoff delay?", np: "Exponential backoff को delay मा <b>jitter</b> किन थप्ने?", jp: "指数バックオフの遅延に<b>ジッター</b>を加えるのはなぜか?" },
+      options: [
+        { en: "To guarantee the request eventually succeeds", np: "Request अन्ततः सफल हुने ग्यारेन्टी गर्न", jp: "リクエストが最終的に成功することを保証するため" },
+        { en: "To make the total delay shorter", np: "कुल delay छोटो बनाउन", jp: "合計の遅延を短くするため" },
+        { en: "To spread retries out so many clients do not retry at the same instant", np: "Retry फैलाउन, ताकि धेरै client एकै क्षणमा retry नगरून्", jp: "リトライを散らし、多数のクライアントが同時に再試行しないようにするため" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Without it, every client that failed together retries together and re-creates the spike.", np: "यसबिना, सँगै असफल भएका हरेक client सँगै retry गर्छन् र फेरि उही भीड बनाउँछन्।", jp: "無ければ、同時に失敗したクライアントが同時に再試行し、同じ集中を再現する。" },
+    },
+    {
+      question: { en: "What does a circuit breaker's <b>half-open</b> state do?", np: "Circuit breaker को <b>half-open</b> अवस्थाले के गर्छ?", jp: "サーキットブレーカーの<b>ハーフオープン</b>状態は何をするか?" },
+      options: [
+        { en: "It rejects every request until a human resets it", np: "मान्छेले reset नगरेसम्म हरेक request अस्वीकार गर्छ", jp: "人が復旧させるまですべてのリクエストを拒否する" },
+        { en: "It retries every queued request at once", np: "Queue मा भएका सबै request एकैचोटि retry गर्छ", jp: "キューにある全リクエストを一度に再試行する" },
+        { en: "It lets a limited trial through to test whether the dependency recovered", np: "Dependency सुध्रियो कि भनी जाँच्न सीमित प्रयास मात्र जान दिन्छ", jp: "依存先が回復したか試すため、限られた試行だけ通す" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Success closes the breaker again; failure sends it straight back to open.", np: "सफल भए breaker फेरि बन्द हुन्छ; असफल भए सिधै open मा फर्किन्छ।", jp: "成功すれば再びクローズし、失敗すればすぐオープンへ戻る。" },
+    },
+    {
+      question: { en: "What goes wrong if an in-flight request cache never deletes failed entries?", np: "In-flight request cache ले असफल entry कहिल्यै नमेटे के बिग्रिन्छ?", jp: "実行中リクエストのキャッシュが失敗した項目を削除しないと何が起きるか?" },
+      options: [
+        { en: "The cache grows without bound but the results stay correct", np: "Cache असीमित बढ्छ तर नतिजा सही रहन्छ", jp: "キャッシュは無限に膨らむが結果は正しいまま" },
+        { en: "The requests are silently retried in the background", np: "Request चुपचाप background मा retry हुन्छन्", jp: "リクエストが裏で静かに再試行される" },
+        { en: "Every later caller receives the same rejection forever", np: "पछिका हरेक caller ले सधैं उही rejection पाउँछन्", jp: "以降のすべての呼び出し元が同じ拒否を永遠に受け取る" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Delete the entry in a `catch` or `finally` so a later call can try again.", np: "पछिको call ले फेरि प्रयास गर्न सकोस् भनेर `catch` वा `finally` मा entry मेट्नुहोस्।", jp: "後の呼び出しが再試行できるよう、`catch` か `finally` で項目を削除する。" },
     },
   ],
 };
