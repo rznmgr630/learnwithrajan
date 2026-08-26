@@ -11,117 +11,165 @@ export const JS_DAY_18_LESSONS: JsLessonDay = {
       title: { en: "The Call Stack", np: "The Call Stack", jp: "コールスタック" },
       durationMinutes: 9,
       explanation: {
-        en: "The <b>call stack</b> is the data structure JavaScript uses to track which function is currently running. It works <b>LIFO</b> — Last In, First Out — like a stack of plates: whichever function was called most recently is the one on top, and it must finish (return) before the function below it can continue. Every function call <b>pushes</b> a new frame onto the stack; every `return` <b>pops</b> that frame off.\n\nBecause JavaScript has exactly one call stack, it can only ever do <b>one thing at a time</b> — this is what \"single-threaded\" means in practice. If the stack is busy running synchronous code (a big loop, a slow calculation), nothing else can run: no click handlers, no timers, no rendering. And since each nested call adds another frame, calling a function that keeps calling itself without ever returning (unbounded recursion) keeps growing the stack until it runs out of space — a `RangeError: Maximum call stack size exceeded`, better known as a <b>stack overflow</b>.",
-        np: "<b>Call stack</b> भनेको JavaScript ले हाल कुन function चलिरहेको छ भनेर track गर्ने data structure हो। यो <b>LIFO</b> (Last In, First Out) तरिकाले काम गर्छ — plates को stack जस्तै: सबैभन्दा पछि call भएको function माथि हुन्छ, र तल भएको function जारी हुनु अघि यसले finish (return) गर्नुपर्छ। हरेक function call ले stack मा नयाँ frame <b>push</b> गर्छ; हरेक `return` ले त्यो frame <b>pop</b> गर्छ।\n\nJavaScript मा exactly एउटा मात्र call stack भएकोले, यसले एक पटकमा <b>एउटा मात्र काम</b> गर्न सक्छ — यही नै \"single-threaded\" को व्यावहारिक अर्थ हो। Stack synchronous code (ठूलो loop, slow calculation) चलाउन busy भएको बेला अरू केही चल्दैन — न click handlers, न timers, न rendering। अनि हरेक nested call ले थप frame add गर्ने भएकोले, कहिल्यै return नगरी आफैंलाई बारम्बार call गर्ने function (unbounded recursion) ले stack लाई space सकिन्जेल बढाउँदै लान्छ — `RangeError: Maximum call stack size exceeded`, जसलाई <b>stack overflow</b> भनिन्छ।",
-        jp: "<b>コールスタック</b>は、JavaScriptが現在実行中の関数を追跡するために使うデータ構造。<b>LIFO</b>（Last In, First Out、後入れ先出し）方式で動作する — 皿を積み重ねたスタックのように、最後に呼ばれた関数が一番上にあり、その下の関数が続行できるのはそれが終了（return）してからだ。関数を呼び出すたびに新しいフレームがスタックに<b>push</b>され、`return`のたびにそのフレームが<b>pop</b>される。\n\nJavaScriptにはコールスタックが1つしかないため、常に<b>一度に一つのこと</b>しかできない — これが「シングルスレッド」の実際の意味だ。スタックが同期コード（大きなループ、重い計算）の実行でふさがっている間は、クリックハンドラもタイマーも描画も何も動かない。さらに、ネストした呼び出しはフレームを増やし続けるため、決してreturnせずに自分自身を呼び続ける関数（無限再帰）はスタックの空きがなくなるまで積み上がり続け、`RangeError: Maximum call stack size exceeded`、いわゆる<b>スタックオーバーフロー</b>になる。",
+        en: "The <b>call stack</b> is the data structure JavaScript uses to keep track of <b>which function is currently executing</b>.\n\nIt follows <b>LIFO — Last In, First Out</b>. Think of it like a stack of plates: when a function is called, JavaScript <b>pushes</b> a new execution frame onto the stack, and when that function returns, JavaScript <b>pops</b> its frame off.\n\n> <b>The function on top of the stack is the function currently executing.</b>\n\n---\n\n### 1. Basic — push and pop\n\n```javascript\nfunction greet() {\n  console.log(\"Hello\");\n}\n\nconsole.log(\"Start\");\n\ngreet();\n\nconsole.log(\"End\");\n```\n\nWhen `greet()` is called:\n\n```text\n┌──────────────┐\n│ greet()      │\n├──────────────┤\n│ Global       │\n└──────────────┘\n```\n\nAfter `greet()` finishes:\n\n```text\n┌──────────────┐\n│ Global       │\n└──────────────┘\n```\n\n---\n\n### 2. Intermediate — nested function calls\n\n```javascript\nfunction login() {\n  validateUser();\n}\n\nfunction validateUser() {\n  checkDatabase();\n}\n\nfunction checkDatabase() {\n  console.log(\"Checking database...\");\n}\n\nlogin();\n```\n\nStack at the deepest point:\n\n```text\n┌──────────────────┐\n│ checkDatabase()  │\n├──────────────────┤\n│ validateUser()   │\n├──────────────────┤\n│ login()          │\n├──────────────────┤\n│ Global           │\n└──────────────────┘\n```\n\n`checkDatabase()` finishes first because it is at the top, then:\n\n```text\ncheckDatabase() → POP\nvalidateUser()  → POP\nlogin()         → POP\n```\n\nThis is <b>LIFO</b> in action.\n\n---\n\n### 3. Advanced — recursion and stack overflow\n\nA function can call itself:\n\n```javascript\nfunction count() {\n  count();\n}\n\ncount();\n```\n\nEvery call creates another stack frame, the function never returns, and eventually JavaScript runs out of call-stack space:\n\n```text\nRangeError: Maximum call stack size exceeded\n```\n\nThis is called a <b>stack overflow</b>. A recursive function needs a condition that eventually stops it:\n\n```javascript\nfunction countDown(n) {\n  if (n === 0) {\n    return;\n  }\n\n  console.log(n);\n  countDown(n - 1);\n}\n\ncountDown(3);\n```\n\nNow every call can return and the stack unwinds safely.\n\n---\n\n### Call stack and execution context\n\nWhen JavaScript starts a program, the <b>Global Execution Context</b> is placed on the stack. When a function is called, its execution context is pushed on top.\n\n```text\nFunction call\n     ↓\nNew execution context\n     ↓\nPush onto call stack\n     ↓\nFunction executes\n     ↓\nFunction returns\n     ↓\nExecution context removed\n```\n\nSo the call stack is the structure that manages the <b>order of execution contexts</b>.\n\n---\n\n### Why single-threaded matters\n\nJavaScript has one main call stack, so it can execute only <b>one piece of synchronous JavaScript at a time</b> on that thread.\n\n```javascript\nconsole.log(\"A\");\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive work\n}\n\nconsole.log(\"B\");\n```\n\nWhile the loop runs, the call stack is busy, which is why long-running synchronous JavaScript can make an application feel <b>frozen</b>.\n\n> <b>Single-threaded does not mean JavaScript cannot handle asynchronous operations.</b> The runtime uses mechanisms outside the call stack, such as the browser or Node.js environment and the event loop, to coordinate that work. Those concepts come next.\n\n---\n\n### Stack trace\n\n```javascript\nfunction first() {\n  second();\n}\n\nfunction second() {\n  third();\n}\n\nfunction third() {\n  throw new Error(\"Something went wrong\");\n}\n\nfirst();\n```\n\nJavaScript produces a <b>stack trace</b> showing how execution reached the error:\n\n```text\nError: Something went wrong\n    at third (...)\n    at second (...)\n    at first (...)\n```\n\nRead it from the top: `third()` was called by `second()`, which was called by `first()`.\n\n---\n\n### Call stack vs heap\n\nThe <b>call stack</b> manages function calls, execution order, local frames and return points. The <b>heap</b> holds dynamically allocated data such as objects, arrays and functions. They work together, but they are <b>not the same thing</b>.",
+        np: "<b>Call stack</b> JavaScript ले <b>अहिले कुन function चलिरहेको छ</b> भन्ने हिसाब राख्न प्रयोग गर्ने data structure हो।\n\nयसले <b>LIFO — Last In, First Out</b> पछ्याउँछ। यसलाई थालको चाङ जस्तै सोच्नुहोस्: function call हुँदा JavaScript ले नयाँ execution frame stack मा <b>push</b> गर्छ, र त्यो function return हुँदा यसको frame <b>pop</b> गर्छ।\n\n> <b>Stack को टुप्पोमा भएको function नै अहिले चलिरहेको function हो।</b>\n\n---\n\n### 1. आधारभूत — push र pop\n\n```javascript\nfunction greet() {\n  console.log(\"Hello\");\n}\n\nconsole.log(\"Start\");\n\ngreet();\n\nconsole.log(\"End\");\n```\n\n`greet()` call हुँदा:\n\n```text\n┌──────────────┐\n│ greet()      │\n├──────────────┤\n│ Global       │\n└──────────────┘\n```\n\n`greet()` सकिएपछि:\n\n```text\n┌──────────────┐\n│ Global       │\n└──────────────┘\n```\n\n---\n\n### 2. मध्यम — nested function call\n\n```javascript\nfunction login() {\n  validateUser();\n}\n\nfunction validateUser() {\n  checkDatabase();\n}\n\nfunction checkDatabase() {\n  console.log(\"Checking database...\");\n}\n\nlogin();\n```\n\nसबैभन्दा गहिरो बिन्दुमा stack:\n\n```text\n┌──────────────────┐\n│ checkDatabase()  │\n├──────────────────┤\n│ validateUser()   │\n├──────────────────┤\n│ login()          │\n├──────────────────┤\n│ Global           │\n└──────────────────┘\n```\n\n`checkDatabase()` टुप्पोमा भएकाले पहिले सकिन्छ, त्यसपछि:\n\n```text\ncheckDatabase() → POP\nvalidateUser()  → POP\nlogin()         → POP\n```\n\nयही <b>LIFO</b> व्यवहारमा हो।\n\n---\n\n### 3. उन्नत — recursion र stack overflow\n\nFunction ले आफैंलाई call गर्न सक्छ:\n\n```javascript\nfunction count() {\n  count();\n}\n\ncount();\n```\n\nहरेक call ले अर्को stack frame बनाउँछ, function कहिल्यै return हुँदैन, र अन्ततः JavaScript सँग call-stack ठाउँ सकिन्छ:\n\n```text\nRangeError: Maximum call stack size exceeded\n```\n\nयसलाई <b>stack overflow</b> भनिन्छ। Recursive function लाई अन्ततः रोक्ने condition चाहिन्छ:\n\n```javascript\nfunction countDown(n) {\n  if (n === 0) {\n    return;\n  }\n\n  console.log(n);\n  countDown(n - 1);\n}\n\ncountDown(3);\n```\n\nअब हरेक call return हुन सक्छ र stack सुरक्षित रूपमा खाली हुन्छ।\n\n---\n\n### Call stack र execution context\n\nJavaScript ले program सुरु गर्दा <b>Global Execution Context</b> stack मा राखिन्छ। Function call हुँदा यसको execution context माथि push हुन्छ।\n\n```text\nFunction call\n     ↓\nNew execution context\n     ↓\nPush onto call stack\n     ↓\nFunction executes\n     ↓\nFunction returns\n     ↓\nExecution context removed\n```\n\nत्यसैले call stack <b>execution context को क्रम</b> व्यवस्थापन गर्ने संरचना हो।\n\n---\n\n### Single-threaded हुनु किन महत्वपूर्ण छ\n\nJavaScript सँग एउटा मुख्य call stack हुन्छ, त्यसैले त्यो thread मा एक पटकमा <b>एउटा मात्र synchronous JavaScript</b> चल्न सक्छ।\n\n```javascript\nconsole.log(\"A\");\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive work\n}\n\nconsole.log(\"B\");\n```\n\nLoop चल्दै गर्दा call stack व्यस्त हुन्छ, त्यसैले लामो चल्ने synchronous JavaScript ले application <b>जमेको</b> जस्तो बनाउँछ।\n\n> <b>Single-threaded हुनुको अर्थ JavaScript ले asynchronous operation सम्हाल्न सक्दैन भन्ने होइन।</b> Runtime ले call stack बाहिरका संयन्त्र, जस्तै browser वा Node.js वातावरण र event loop, प्रयोग गरी त्यो काम मिलाउँछ। ती अवधारणा अब आउँछन्।\n\n---\n\n### Stack trace\n\n```javascript\nfunction first() {\n  second();\n}\n\nfunction second() {\n  third();\n}\n\nfunction third() {\n  throw new Error(\"Something went wrong\");\n}\n\nfirst();\n```\n\nJavaScript ले error सम्म कसरी पुग्यो देखाउने <b>stack trace</b> दिन्छ:\n\n```text\nError: Something went wrong\n    at third (...)\n    at second (...)\n    at first (...)\n```\n\nमाथिबाट पढ्नुहोस्: `third()` लाई `second()` ले call गर्‍यो, जसलाई `first()` ले call गर्‍यो।\n\n---\n\n### Call stack vs heap\n\n<b>Call stack</b> ले function call, execution क्रम, स्थानीय frame र return बिन्दु व्यवस्थापन गर्छ। <b>Heap</b> ले object, array र function जस्ता गतिशील रूपमा आवंटित data राख्छ। यी सँगै काम गर्छन्, तर <b>उही होइनन्</b>।",
+        jp: "<b>コールスタック</b>は、JavaScriptが<b>今どの関数を実行しているか</b>を追跡するためのデータ構造です。\n\n<b>LIFO（後入れ先出し）</b>に従います。皿の重なりだと考えてください。関数が呼ばれるとJavaScriptは新しい実行フレームをスタックに<b>push</b>し、その関数が戻るとフレームを<b>pop</b>します。\n\n> <b>スタックの一番上にある関数が、今実行されている関数。</b>\n\n---\n\n### 1. 基本 — pushとpop\n\n```javascript\nfunction greet() {\n  console.log(\"Hello\");\n}\n\nconsole.log(\"Start\");\n\ngreet();\n\nconsole.log(\"End\");\n```\n\n`greet()` が呼ばれたとき:\n\n```text\n┌──────────────┐\n│ greet()      │\n├──────────────┤\n│ Global       │\n└──────────────┘\n```\n\n`greet()` が終わったあと:\n\n```text\n┌──────────────┐\n│ Global       │\n└──────────────┘\n```\n\n---\n\n### 2. 中級 — 入れ子の関数呼び出し\n\n```javascript\nfunction login() {\n  validateUser();\n}\n\nfunction validateUser() {\n  checkDatabase();\n}\n\nfunction checkDatabase() {\n  console.log(\"Checking database...\");\n}\n\nlogin();\n```\n\n最も深い時点のスタック:\n\n```text\n┌──────────────────┐\n│ checkDatabase()  │\n├──────────────────┤\n│ validateUser()   │\n├──────────────────┤\n│ login()          │\n├──────────────────┤\n│ Global           │\n└──────────────────┘\n```\n\n`checkDatabase()` は一番上にあるので最初に終わり、その後:\n\n```text\ncheckDatabase() → POP\nvalidateUser()  → POP\nlogin()         → POP\n```\n\nこれが<b>LIFO</b>の動きです。\n\n---\n\n### 3. 上級 — 再帰とスタックオーバーフロー\n\n関数は自分自身を呼べます:\n\n```javascript\nfunction count() {\n  count();\n}\n\ncount();\n```\n\n呼び出しごとにフレームが増え、関数は決して戻らず、やがてコールスタックの領域が尽きます:\n\n```text\nRangeError: Maximum call stack size exceeded\n```\n\nこれが<b>スタックオーバーフロー</b>です。再帰関数には、いつか止まる条件が必要です:\n\n```javascript\nfunction countDown(n) {\n  if (n === 0) {\n    return;\n  }\n\n  console.log(n);\n  countDown(n - 1);\n}\n\ncountDown(3);\n```\n\nこれで各呼び出しが戻れるようになり、スタックは安全にほどけます。\n\n---\n\n### コールスタックと実行コンテキスト\n\nJavaScriptがプログラムを開始すると<b>グローバル実行コンテキスト</b>がスタックに置かれます。関数が呼ばれると、その実行コンテキストが上に積まれます。\n\n```text\nFunction call\n     ↓\nNew execution context\n     ↓\nPush onto call stack\n     ↓\nFunction executes\n     ↓\nFunction returns\n     ↓\nExecution context removed\n```\n\nつまりコールスタックは<b>実行コンテキストの順序</b>を管理する構造です。\n\n---\n\n### シングルスレッドであることの意味\n\nJavaScriptのメインのコールスタックは1つなので、そのスレッドでは一度に<b>1つの同期的なJavaScript</b>しか実行できません。\n\n```javascript\nconsole.log(\"A\");\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive work\n}\n\nconsole.log(\"B\");\n```\n\nループの間コールスタックは塞がっています。だから長く動く同期的なJavaScriptはアプリを<b>固まった</b>ように見せます。\n\n> <b>シングルスレッドは、非同期処理を扱えないという意味ではありません。</b> ランタイムは、ブラウザやNode.jsの環境とイベントループという、コールスタックの外の仕組みでその調整を行います。次はその話です。\n\n---\n\n### スタックトレース\n\n```javascript\nfunction first() {\n  second();\n}\n\nfunction second() {\n  third();\n}\n\nfunction third() {\n  throw new Error(\"Something went wrong\");\n}\n\nfirst();\n```\n\nJavaScriptは、どうやってエラーに至ったかを示す<b>スタックトレース</b>を出します:\n\n```text\nError: Something went wrong\n    at third (...)\n    at second (...)\n    at first (...)\n```\n\n上から読みます。`third()` は `second()` に呼ばれ、それは `first()` に呼ばれました。\n\n---\n\n### コールスタックとヒープ\n\n<b>コールスタック</b>は関数呼び出し・実行順序・ローカルのフレーム・戻り先を管理します。<b>ヒープ</b>はオブジェクト・配列・関数など動的に確保されるデータを保持します。協力して働きますが、<b>同じものではありません</b>。",
       },
-      diagram: `Call stack while running a();  (bottom → top)
+      diagram: `function first() { second(); }
+function second() { third(); }
+function third() { console.log("Hello"); }
+first();
 
-┌─────────────┐
-│   c()       │  ← top of stack — currently running, logs "c", then returns
-├─────────────┤
-│   b()       │  ← called c(), waiting for it to return
-├─────────────┤
-│   a()       │  ← called b(), waiting for it to return
-├─────────────┤
-│ (global)    │  ← bottom of stack — where execution started
-└─────────────┘
 
-push order: a() → b() → c()      pop order: c() → b() → a()   (LIFO)
+1. Program starts        2. first()              3. second()
 
-Unbounded recursion:
-┌─────────────┐
-│ recurse()   │
-│ recurse()   │  ← stack keeps growing, never pops
-│ recurse()   │
-│    ...      │
-└─────────────┘
-→ RangeError: Maximum call stack size exceeded`,
+┌──────────────┐        ┌──────────────┐        ┌──────────────┐
+│ Global       │        │ first()      │        │ second()     │
+└──────────────┘        ├──────────────┤        ├──────────────┤
+                        │ Global       │        │ first()      │
+                        └──────────────┘        ├──────────────┤
+                                                │ Global       │
+                                                └──────────────┘
+
+4. third() runs          5-7. each returns → POP
+
+┌──────────────┐        ┌──────────────┐
+│ third()      │ ← now  │ Global       │
+├──────────────┤        └──────────────┘
+│ second()     │
+├──────────────┤
+│ first()      │
+├──────────────┤
+│ Global       │
+└──────────────┘
+
+
+Call Stack   function frames, execution order, return points
+Heap         objects, arrays, functions — dynamically allocated data`,
       codeExample: {
-        title: { en: "Watching frames push and pop, and triggering a stack overflow", np: "Frames push/pop हेर्ने, र stack overflow ल्याउने", jp: "フレームのpush/popの観察とスタックオーバーフローの発生" },
-        code: `// ── Call stack in action ─────────────────────────────────────────
-function c() { console.log("c"); }
-function b() { c(); }
-function a() { b(); }
-
-a();
-// Stack frames (bottom to top) as a() runs:
-//   a()  → calls b()
-//   b()  → calls c()
-//   c()  → logs "c", returns → popped
-//   b()  → returns → popped
-//   a()  → returns → popped
-// Stack is empty again once a() finishes
-
-// ── Each call adds a frame, each return removes one ────────────────
-function square(n) {
-  return n * n;          // this frame is popped as soon as it returns
+        title: { en: "Pushing, popping, and running out of room", np: "Push गर्नु, pop गर्नु, र ठाउँ सकिनु", jp: "積む・降ろす・そして溢れる" },
+        code: `// ── 1. Basic — one frame pushed, then popped ──────────────────────
+function greet() {
+  console.log("Hello");
 }
-function sumOfSquares(a, b) {
-  return square(a) + square(b);   // square() is pushed, runs, pops — twice
-}
-sumOfSquares(3, 4); // 25
 
-// ── Stack overflow — unbounded recursion ────────────────────────────
-function recurse() {
-  return recurse();  // calls itself forever, never returns, never pops
-}
-// recurse();  // Uncaught RangeError: Maximum call stack size exceeded
+console.log("Start"); // Global frame
+greet();              // greet() pushed, logs, then popped
+console.log("End");
 
-// ── A correct base case keeps the stack bounded ─────────────────────
-function countdown(n) {
-  if (n <= 0) return;   // base case — stops pushing new frames
+// ── 2. Intermediate — nested calls unwind in LIFO order ───────────
+function login() {
+  validateUser();
+}
+
+function validateUser() {
+  checkDatabase();
+}
+
+function checkDatabase() {
+  console.log("Checking database...");
+}
+
+login();
+// Stack at the deepest point:
+// checkDatabase() → validateUser() → login() → Global
+// checkDatabase() finishes first, because it is on top
+
+// ── 3. Advanced — recursion needs a base case ─────────────────────
+function forever() {
+  forever(); // no base case
+}
+
+// forever(); // RangeError: Maximum call stack size exceeded
+
+function countDown(n) {
+  if (n === 0) return; // base case lets every frame return
   console.log(n);
-  countdown(n - 1);     // each call pops before the stack gets too deep
+  countDown(n - 1);
 }
-countdown(5); // 5, 4, 3, 2, 1
 
-// ── Synchronous code blocks the stack ────────────────────────────
-// While this runs, NOTHING else can happen — no clicks, no timers
-function blockFor3Seconds() {
-  const end = Date.now() + 3000;
-  while (Date.now() < end) {}  // busy loop — stack never empties
-  console.log("Done blocking");
-}
-// blockFor3Seconds();  // UI freezes for 3 seconds — CPU work on the main thread is bad`,
+countDown(3); // 3, 2, 1 — then the stack unwinds safely
+
+// ── A stack trace reads top-down: innermost call first ────────────
+function first() { second(); }
+function second() { third(); }
+function third() { throw new Error("Something went wrong"); }
+
+// first();
+// Error: Something went wrong
+//     at third (...)
+//     at second (...)
+//     at first (...)`,
       },
       keyTakeaways: [
-        { en: "The call stack is <b>LIFO</b> — the most recently called function is the one currently running, and it must return before the function that called it can continue.", np: "Call stack <b>LIFO</b> हो — सबैभन्दा पछि call भएको function नै हाल चलिरहेको हुन्छ, र यसलाई call गर्ने function जारी रहनु अघि यो return हुनुपर्छ।", jp: "コールスタックは<b>LIFO</b>（後入れ先出し）— 最後に呼ばれた関数が現在実行中で、それを呼んだ関数が続くにはそれがreturnする必要がある。" },
-        { en: "JavaScript has exactly one call stack, so it can only run one thing at a time — this single-threaded nature is why long-running synchronous code freezes everything else.", np: "JavaScript मा exactly एउटा मात्र call stack छ, त्यसैले एक पटकमा एउटा मात्र काम गर्न सक्छ — यही single-threaded nature ले गर्दा लामो synchronous code ले बाँकी सबै freeze गराउँछ।", jp: "JavaScriptにはコールスタックが1つしかないため、一度に1つのことしか実行できない — このシングルスレッドの性質が、長時間の同期コードが他のすべてを凍結させる理由。" },
-        { en: "Unbounded recursion (a function that calls itself without a base case that stops it) keeps pushing frames until the stack runs out of space, throwing a `RangeError: Maximum call stack size exceeded`.", np: "Unbounded recursion (आफैंलाई रोक्ने base case नभएको function) ले stack को space सकिन्जेल frames push गर्दै जान्छ, र `RangeError: Maximum call stack size exceeded` throw गर्छ।", jp: "無限再帰（それを止める基底ケースなしに自分自身を呼び続ける関数）はスタックの空きがなくなるまでフレームを積み続け、`RangeError: Maximum call stack size exceeded`をスローする。" },
+        { en: "The <b>call stack</b> tracks currently executing functions.", np: "<b>Call stack</b> ले अहिले चलिरहेका function को हिसाब राख्छ।", jp: "<b>コールスタック</b>は実行中の関数を追跡する。" },
+        { en: "It follows <b>LIFO — Last In, First Out</b>.", np: "यसले <b>LIFO — Last In, First Out</b> पछ्याउँछ।", jp: "<b>LIFO（後入れ先出し）</b>に従う。" },
+        { en: "Calling a function <b>pushes</b> a frame; returning <b>pops</b> it.", np: "Function call गर्दा frame <b>push</b> हुन्छ; return गर्दा <b>pop</b>।", jp: "関数を呼ぶとフレームが<b>push</b>され、戻ると<b>pop</b>される。" },
+        { en: "The function at the <b>top</b> is the one currently executing.", np: "<b>टुप्पो</b>को function नै अहिले चलिरहेको हो।", jp: "<b>一番上</b>の関数が今実行されている。" },
+        { en: "One main call stack means synchronous JavaScript executes <b>one thing at a time</b>.", np: "एउटा मुख्य call stack को अर्थ synchronous JavaScript ले <b>एक पटकमा एउटा</b> काम गर्छ।", jp: "メインのコールスタックが1つなので、同期的なJavaScriptは<b>一度に1つ</b>しか実行できない。" },
+        { en: "Deep or infinite recursion causes a <b>stack overflow</b> (`RangeError`).", np: "गहिरो वा अनन्त recursion ले <b>stack overflow</b> (`RangeError`) निम्त्याउँछ।", jp: "深い、あるいは無限の再帰は<b>スタックオーバーフロー</b>（`RangeError`）を起こす。" },
+        { en: "A <b>stack trace</b> shows the chain of calls that led to an error, innermost first.", np: "<b>Stack trace</b> ले error सम्म पुर्‍याउने call को शृंखला देखाउँछ, भित्रीबाट सुरु।", jp: "<b>スタックトレース</b>はエラーに至った呼び出しの連なりを、内側から順に示す。" },
+        { en: "The call stack manages <b>execution</b>; the <b>heap</b> holds dynamically allocated data.", np: "Call stack ले <b>execution</b> व्यवस्थापन गर्छ; <b>heap</b> ले गतिशील रूपमा आवंटित data राख्छ।", jp: "コールスタックは<b>実行</b>を管理し、<b>ヒープ</b>は動的に確保されたデータを保持する。" },
       ],
       commonMistakes: [
-        { en: "Writing a recursive function without a base case, so it never stops calling itself and eventually causes a stack overflow.", np: "Base case नराखी recursive function लेख्नु, जसले गर्दा यसले आफैंलाई कहिल्यै रोक्दैन र stack overflow निम्त्याउँछ।", jp: "基底ケースなしに再帰関数を書き、自分自身の呼び出しを止められず最終的にスタックオーバーフローを引き起こすこと。" },
-        { en: "Assuming that running a slow synchronous loop won't affect anything else — in reality it fully blocks the call stack, freezing clicks, timers, and rendering until it finishes.", np: "Slow synchronous loop चलाउँदा अरू केहीमा असर पर्दैन भन्ने ठान्नु — वास्तवमा यसले call stack लाई पूर्ण रूपमा block गर्छ, नसकिन्जेल clicks, timers, र rendering सबै freeze हुन्छ।", jp: "遅い同期ループを実行しても他に影響しないと思い込むこと — 実際にはコールスタックを完全にブロックし、終わるまでクリック・タイマー・描画がすべて凍結する。" },
-        { en: "Confusing the call stack (which tracks synchronous function execution) with the task/microtask queues — the stack has nothing to do with async scheduling by itself.", np: "Call stack (जसले synchronous function execution track गर्छ) र task/microtask queues बीच confuse हुनु — stack आफैंले async scheduling सँग कुनै सम्बन्ध राख्दैन।", jp: "コールスタック（同期的な関数実行を追跡する）とタスク/マイクロタスクキューを混同すること — スタック自体は非同期スケジューリングとは無関係。" },
+        { en: "<b>Thinking the stack stores every variable permanently</b> — it holds execution frames. When `greet()` finishes, its frame and local state are gone.", np: "<b>Stack ले हरेक variable सधैंका लागि राख्छ भन्ने ठान्नु</b> — यसले execution frame राख्छ। `greet()` सकिएपछि, यसको frame र स्थानीय state हराउँछ।", jp: "<b>スタックがすべての変数を永続的に保持すると思う</b> — 保持するのは実行フレーム。`greet()` が終わればフレームもローカルの状態も消える。" },
+        { en: "<b>Thinking asynchronous operations stay on the stack</b> — a `setTimeout` callback does not sit on the call stack for a second. The synchronous code finishes first, and the callback is scheduled later.", np: "<b>Asynchronous operation stack मै रहन्छ भन्ने ठान्नु</b> — `setTimeout` को callback एक सेकेन्ड call stack मा बस्दैन। Synchronous code पहिले सकिन्छ, र callback पछि schedule हुन्छ।", jp: "<b>非同期処理がスタックに居座ると思う</b> — `setTimeout` のコールバックは1秒間スタックにいない。同期コードが先に終わり、コールバックは後でスケジュールされる。" },
+        { en: "<b>Forgetting that recursion consumes stack space</b> — `function infinite() { infinite(); }` has no base case, so frames pile up until the stack overflows.", np: "<b>Recursion ले stack ठाउँ खान्छ भनी बिर्सनु</b> — `function infinite() { infinite(); }` मा base case छैन, त्यसैले stack overflow नहुन्जेल frame थुप्रिन्छन्।", jp: "<b>再帰がスタック領域を消費することを忘れる</b> — `function infinite() { infinite(); }` には基底条件がなく、溢れるまでフレームが積み上がる。" },
       ],
       quiz: [
         {
-          question: { en: "In which order does the call stack process function calls?", np: "Call stack ले function calls लाई कुन order मा process गर्छ?", jp: "コールスタックはどの順序で関数呼び出しを処理する？" },
+          question: { en: "What does LIFO mean?", np: "LIFO को अर्थ के हो?", jp: "LIFOとは何の略か?" },
           options: [
-            { en: "LIFO — the most recently called function returns first", np: "LIFO — सबैभन्दा पछि call भएको function पहिले return हुन्छ", jp: "LIFO — 最後に呼ばれた関数が最初にreturnする" },
-            { en: "FIFO — the first called function returns first", np: "FIFO — सबैभन्दा पहिले call भएको function पहिले return हुन्छ", jp: "FIFO — 最初に呼ばれた関数が最初にreturnする" },
+            { en: "Last In, First Out", np: "Last In, First Out", jp: "Last In, First Out" },
+            { en: "Last In, First Open", np: "Last In, First Open", jp: "Last In, First Open" },
+            { en: "Linear Input, Fast Output", np: "Linear Input, Fast Output", jp: "Linear Input, Fast Output" },
+            { en: "Local Input, Function Output", np: "Local Input, Function Output", jp: "Local Input, Function Output" },
           ],
           correctIndex: 0,
-          explanation: { en: "The call stack is Last In, First Out — like a stack of plates, the top (most recent) frame is popped first.", np: "Call stack Last In, First Out हो — plates को stack जस्तै, माथिको (सबैभन्दा पछिको) frame पहिले pop हुन्छ।", jp: "コールスタックはLast In, First Out — 皿の山のように、一番上（最新）のフレームが最初にpopされる。" },
+          explanation: { en: "The most recently pushed frame is the first one to be popped.", np: "सबैभन्दा पछि push भएको frame नै पहिले pop हुन्छ।", jp: "最後にpushされたフレームが最初にpopされる。" },
         },
         {
-          question: { en: "Why can JavaScript only run one thing at a time?", np: "JavaScript ले किन एक पटकमा एउटा मात्र काम गर्न सक्छ?", jp: "JavaScriptが一度に一つのことしか実行できないのはなぜ？" },
+          question: { en: "What happens when a function is called?", np: "Function call हुँदा के हुन्छ?", jp: "関数が呼ばれると何が起こるか?" },
           options: [
-            { en: "It has exactly one call stack, so only one function frame can execute at a time", np: "यसमा exactly एउटा मात्र call stack छ, त्यसैले एक पटकमा एउटा मात्र function frame execute हुन्छ", jp: "コールスタックが1つしかないため、一度に1つの関数フレームしか実行できない" },
-            { en: "It has multiple stacks but they are locked one at a time", np: "यसमा multiple stacks छन् तर एक पटकमा एउटा lock हुन्छ", jp: "複数のスタックがあるが一度に1つずつロックされる" },
+            { en: "Its frame is pushed onto the call stack", np: "यसको frame call stack मा push हुन्छ", jp: "そのフレームがコールスタックにpushされる" },
+            { en: "Its frame is deleted", np: "यसको frame मेटिन्छ", jp: "フレームが削除される" },
+            { en: "It is moved to the heap", np: "यो heap मा सारिन्छ", jp: "ヒープに移動される" },
+            { en: "The global context disappears", np: "Global context हराउँछ", jp: "グローバルコンテキストが消える" },
           ],
           correctIndex: 0,
-          explanation: { en: "JavaScript's single call stack is exactly what makes it single-threaded — only one function frame can be the 'currently running' one.", np: "JavaScript को एउटै call stack ले नै यसलाई single-threaded बनाउँछ — एक पटकमा एउटा मात्र function frame 'currently running' हुन सक्छ।", jp: "JavaScriptの1つのコールスタックこそがシングルスレッドたらしめる理由 — 一度に1つの関数フレームしか「実行中」になれない。" },
+          explanation: { en: "That frame carries the function's execution context and return point.", np: "त्यो frame ले function को execution context र return बिन्दु बोक्छ।", jp: "そのフレームが関数の実行コンテキストと戻り先を持つ。" },
         },
         {
-          question: { en: "What causes a `RangeError: Maximum call stack size exceeded`?", np: "`RangeError: Maximum call stack size exceeded` को कारण के हो?", jp: "`RangeError: Maximum call stack size exceeded`の原因は？" },
+          question: { en: "What happens when a function returns?", np: "Function return हुँदा के हुन्छ?", jp: "関数が戻ると何が起こるか?" },
           options: [
-            { en: "A recursive function with no base case, pushing frames forever without popping", np: "Base case नभएको recursive function, जसले pop नगरी frames बारम्बार push गर्छ", jp: "基底ケースのない再帰関数が、popせずにフレームを永遠にpushし続ける" },
-            { en: "Calling too many unrelated functions one after another in sequence", np: "क्रमशः धेरै असम्बन्धित functions call गर्नु", jp: "無関係な関数を次々と順番に呼び出しすぎること" },
+            { en: "A new frame is pushed", np: "नयाँ frame push हुन्छ", jp: "新しいフレームがpushされる" },
+            { en: "Its frame is popped from the call stack", np: "यसको frame call stack बाट pop हुन्छ", jp: "そのフレームがコールスタックからpopされる" },
+            { en: "The entire JavaScript program stops", np: "पूरै JavaScript program रोकिन्छ", jp: "JavaScriptプログラム全体が止まる" },
+            { en: "The function moves to the heap", np: "Function heap मा सर्छ", jp: "関数がヒープに移動する" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Execution resumes in whatever frame is now on top.", np: "अब टुप्पोमा जुन frame छ, execution त्यहीँ फर्किन्छ।", jp: "実行は、次に一番上になったフレームで再開する。" },
+        },
+        {
+          question: { en: "With `a()` calling `b()` calling `c()` which logs \"Hello\", which function is on top of the stack while \"Hello\" prints?", np: "`a()` ले `b()` लाई, `b()` ले `c()` लाई call गर्दा र `c()` ले \"Hello\" देखाउँदा, stack को टुप्पोमा कुन function हुन्छ?", jp: "`a()` が `b()` を、`b()` が `c()` を呼び、`c()` が \"Hello\" を出力するとき、スタックの一番上はどれか?" },
+          options: [
+            { en: "`a()`", np: "`a()`", jp: "`a()`" },
+            { en: "`b()`", np: "`b()`", jp: "`b()`" },
+            { en: "`c()`", np: "`c()`", jp: "`c()`" },
+            { en: "Global", np: "Global", jp: "グローバル" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "`c()` was pushed last, so it sits on top and runs first to completion.", np: "`c()` सबैभन्दा पछि push भयो, त्यसैले यो टुप्पोमा छ र पहिले सकिन्छ।", jp: "`c()` が最後にpushされたので一番上にあり、最初に完了する。" },
+        },
+        {
+          question: { en: "Why does `function forever() { forever(); } forever();` eventually fail?", np: "`function forever() { forever(); } forever();` अन्ततः किन असफल हुन्छ?", jp: "`function forever() { forever(); } forever();` はなぜ最終的に失敗するか?" },
+          options: [
+            { en: "Every call adds a frame and none return, so the stack runs out of space", np: "हरेक call ले frame थप्छ र कुनै return हुँदैन, त्यसैले stack को ठाउँ सकिन्छ", jp: "呼び出しごとにフレームが増え、どれも戻らないのでスタックの領域が尽きる" },
+            { en: "Recursion is not allowed in JavaScript", np: "JavaScript मा recursion अनुमति छैन", jp: "JavaScriptでは再帰が許されていないから" },
+            { en: "The function is moved to the heap", np: "Function heap मा सारिन्छ", jp: "関数がヒープに移動するから" },
           ],
           correctIndex: 0,
-          explanation: { en: "Unbounded recursion keeps pushing new frames without ever popping them off, until the stack exhausts its allotted space.", np: "Unbounded recursion ले pop नगरी नयाँ frames push गर्दै जान्छ, जबसम्म stack को space सकिँदैन।", jp: "無限再帰はフレームをpopせずに新しく積み続け、スタックに割り当てられた空間を使い果たす。" },
+          explanation: { en: "The result is a stack overflow: `RangeError: Maximum call stack size exceeded`.", np: "नतिजा stack overflow हो: `RangeError: Maximum call stack size exceeded`।", jp: "結果はスタックオーバーフロー: `RangeError: Maximum call stack size exceeded`。" },
         },
       ],
     },
