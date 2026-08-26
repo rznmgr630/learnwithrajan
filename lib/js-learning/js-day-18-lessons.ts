@@ -178,102 +178,158 @@ function third() { throw new Error("Something went wrong"); }
       title: { en: "Web APIs & the Callback Queue", np: "Web APIs र Callback Queue", jp: "Web APIとコールバックキュー" },
       durationMinutes: 9,
       explanation: {
-        en: "When you call `setTimeout`, register a DOM event listener, or start a `fetch`, JavaScript itself does not sit around waiting. Instead, it hands that work off to the browser's <b>Web APIs</b> — timers, network stack, DOM — which live outside the JS engine and run independently. Once the timer fires, the event happens, or the network response arrives, the Web API places the associated callback into the <b>callback queue</b> (also called the task queue or macrotask queue), ready to run.\n\nThe <b>event loop</b> has one simple, constantly repeating job: check whether the call stack is empty, and if it is, take the next callback from the queue and push it onto the stack to run. This is exactly why `setTimeout(fn, 0)` does <b>not</b> run immediately — \"0ms\" only tells the Web API when to move the callback into the queue; the callback still has to wait its turn until the call stack is completely empty and the event loop picks it up. If synchronous code is still running, the callback waits, no matter how short its delay was.",
-        np: "`setTimeout` call गर्दा, DOM event listener register गर्दा, वा `fetch` सुरु गर्दा, JavaScript आफैं बसेर पर्खिँदैन। बरु त्यो काम browser को <b>Web APIs</b> — timers, network stack, DOM — लाई दिन्छ, जुन JS engine बाहिर independently चल्छन्। Timer fire भएपछि, event भएपछि, वा network response आएपछि, Web API ले सम्बन्धित callback लाई <b>callback queue</b> (task queue वा macrotask queue) मा राख्छ, चल्न तयार।\n\n<b>Event loop</b> को एउटै simple, बारम्बार दोहोरिने काम छ: call stack empty छ कि छैन check गर्नु, र भए queue बाट अर्को callback लिएर stack मा push गर्नु। यही कारणले `setTimeout(fn, 0)` तुरुन्तै run <b>हुँदैन</b> — \"0ms\" ले Web API लाई callback कहिले queue मा सार्ने भन्छ मात्र; call stack पूर्ण रूपमा खाली नभएसम्म र event loop ले pick नगरेसम्म callback ले आफ्नो पालो पर्खनुपर्छ। Synchronous code अझै चलिरहेको छ भने, delay जति सानो भए पनि callback पर्खिरहन्छ।",
-        jp: "`setTimeout`を呼ぶ、DOMイベントリスナーを登録する、`fetch`を開始するとき、JavaScript自身は待ち続けたりしない。その代わり、その作業をブラウザの<b>Web API</b>（タイマー、ネットワークスタック、DOM）に渡す。これらはJSエンジンの外に存在し、独立して動作する。タイマーが発火する、イベントが起きる、ネットワーク応答が届くと、Web APIは対応するコールバックを<b>コールバックキュー</b>（タスクキューまたはマクロタスクキューとも呼ばれる）に入れ、実行準備を整える。\n\n<b>イベントループ</b>の仕事はシンプルで、絶えず繰り返される — コールスタックが空かどうかを確認し、空ならキューから次のコールバックを取り出してスタックにpushして実行する。これこそが`setTimeout(fn, 0)`が即座に<b>実行されない</b>理由だ。「0ms」はWeb APIにコールバックをいつキューに移すかを伝えるだけで、コールバックはコールスタックが完全に空になりイベントループに拾われるまで自分の順番を待たなければならない。同期コードがまだ実行中なら、遅延がどれだけ短くてもコールバックは待たされる。",
+        en: "When JavaScript encounters an asynchronous operation such as `setTimeout()`, a DOM event listener, or `fetch()`, the <b>JavaScript engine does not wait for it to finish</b>.\n\nInstead, the surrounding runtime — usually the <b>browser</b> — provides APIs that handle these operations outside the JavaScript call stack.\n\n```text\nJavaScript\n   │\n   │ \"Start this timer\"\n   ▼\nWeb API\n   │\n   │ waits independently\n   ▼\nTimer finishes\n   │\n   ▼\nCallback Queue\n   │\n   ▼\nEvent Loop\n   │\n   │ when Call Stack is empty\n   ▼\nCall Stack\n   │\n   ▼\nCallback executes\n```\n\n> <b>Web APIs perform or coordinate asynchronous work; the callback queue waits to have the callback executed by JavaScript.</b>\n\n---\n\n### 1. Basic — `setTimeout`\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 1000);\n\nconsole.log(\"End\");\n```\n\nOutput:\n\n```text\nStart\nEnd\nTimer\n```\n\n`setTimeout()` does not pause JavaScript for one second. It schedules work to happen later, and the synchronous code keeps running.\n\n---\n\n### 2. Intermediate — `setTimeout(..., 0)`\n\n```javascript\nconsole.log(\"A\");\n\nsetTimeout(() => {\n  console.log(\"B\");\n}, 0);\n\nconsole.log(\"C\");\n```\n\nOutput:\n\n```text\nA\nC\nB\n```\n\nMany beginners expect `A B C`. But `0` does <b>not</b> mean \"execute immediately.\" The callback still has to travel:\n\n```text\nWeb API\n   ↓\nCallback Queue\n   ↓\nEvent Loop\n   ↓\nEmpty Call Stack\n   ↓\nCallback executes\n```\n\nSo `setTimeout(fn, 0)` really means \"schedule `fn` to run as soon as possible after the timer is ready and JavaScript gets a chance to execute it.\"\n\n---\n\n### 3. Advanced — a busy call stack delays the callback\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 0);\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive synchronous work\n}\n\nconsole.log(\"End\");\n```\n\nThe timer has a delay of `0ms`, but `\"Timer\"` cannot execute while the loop occupies the call stack:\n\n```text\nCall Stack               Callback Queue\n┌────────────────┐      ┌────────────────┐\n│ huge for loop  │      │ timer callback │\n│ still running  │      │ waiting        │\n└────────────────┘      └────────────────┘\n```\n\nThis is why a `0ms` timer can execute much later.\n\n---\n\n### DOM events and network requests\n\nThe same idea covers more than timers:\n\n```javascript\nbutton.addEventListener(\"click\", () => {\n  console.log(\"Button clicked\");\n});\n```\n\nJavaScript registers the listener, the browser handles the interaction, and the callback only reaches the call stack after the click happens. It does not sit on the stack waiting for the user.\n\n```javascript\nfetch(\"/api/users\")\n  .then(response => response.json())\n  .then(users => {\n    console.log(users);\n  });\n```\n\nJavaScript starts the request and continues; the runtime handles the network work.\n\n> <b>Important:</b> Promise callbacks use the <b>microtask queue</b>, not the regular callback queue. That distinction is the next section.\n\n---\n\n### Callback queue vs call stack\n\n```text\nCALL STACK                 CALLBACK QUEUE\n\n┌───────────────┐          ┌───────────────┐\n│ currently     │          │ waiting       │\n│ executing     │          │ callbacks     │\n└───────────────┘          └───────────────┘\n```\n\nThe event loop is the coordinator between them. As a simplified mental model:\n\n```javascript\nwhile (true) {\n  if (callStackIsEmpty()) {\n    moveNextCallbackToStack();\n  }\n}\n```\n\nThis is why <b>JavaScript is single-threaded but can perform asynchronous operations</b>: the engine is not the thing doing the waiting.",
+        np: "JavaScript ले `setTimeout()`, DOM event listener, वा `fetch()` जस्तो asynchronous operation भेट्दा, <b>JavaScript engine ले यो सकिन कुर्दैन</b>।\n\nबरु, वरिपरिको runtime — प्रायः <b>browser</b> — ले यी operation JavaScript call stack बाहिर सम्हाल्ने API दिन्छ।\n\n```text\nJavaScript\n   │\n   │ \"Start this timer\"\n   ▼\nWeb API\n   │\n   │ waits independently\n   ▼\nTimer finishes\n   │\n   ▼\nCallback Queue\n   │\n   ▼\nEvent Loop\n   │\n   │ when Call Stack is empty\n   ▼\nCall Stack\n   │\n   ▼\nCallback executes\n```\n\n> <b>Web API ले asynchronous काम गर्छ वा मिलाउँछ; callback queue ले JavaScript ले callback चलाइदिने पर्खन्छ।</b>\n\n---\n\n### 1. आधारभूत — `setTimeout`\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 1000);\n\nconsole.log(\"End\");\n```\n\nOutput:\n\n```text\nStart\nEnd\nTimer\n```\n\n`setTimeout()` ले JavaScript लाई एक सेकेन्ड रोक्दैन। यसले पछि हुने काम schedule गर्छ, र synchronous code चलिरहन्छ।\n\n---\n\n### 2. मध्यम — `setTimeout(..., 0)`\n\n```javascript\nconsole.log(\"A\");\n\nsetTimeout(() => {\n  console.log(\"B\");\n}, 0);\n\nconsole.log(\"C\");\n```\n\nOutput:\n\n```text\nA\nC\nB\n```\n\nधेरै नयाँ सिक्नेले `A B C` अपेक्षा गर्छन्। तर `0` को अर्थ \"तुरुन्तै चलाऊ\" <b>होइन</b>। Callback ले अझै यात्रा गर्नुपर्छ:\n\n```text\nWeb API\n   ↓\nCallback Queue\n   ↓\nEvent Loop\n   ↓\nEmpty Call Stack\n   ↓\nCallback executes\n```\n\nत्यसैले `setTimeout(fn, 0)` को वास्तविक अर्थ \"timer तयार भएपछि र JavaScript ले मौका पाएपछि सकेसम्म चाँडो `fn` चलाउने schedule गर\" हो।\n\n---\n\n### 3. उन्नत — व्यस्त call stack ले callback ढिलो पार्छ\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 0);\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive synchronous work\n}\n\nconsole.log(\"End\");\n```\n\nTimer को delay `0ms` छ, तर loop ले call stack ओगटेसम्म `\"Timer\"` चल्न सक्दैन:\n\n```text\nCall Stack               Callback Queue\n┌────────────────┐      ┌────────────────┐\n│ huge for loop  │      │ timer callback │\n│ still running  │      │ waiting        │\n└────────────────┘      └────────────────┘\n```\n\nत्यसैले `0ms` को timer पनि धेरै पछि चल्न सक्छ।\n\n---\n\n### DOM event र network request\n\nयही विचार timer भन्दा धेरैमा लागू हुन्छ:\n\n```javascript\nbutton.addEventListener(\"click\", () => {\n  console.log(\"Button clicked\");\n});\n```\n\nJavaScript ले listener दर्ता गर्छ, browser ले अन्तरक्रिया सम्हाल्छ, र click भएपछि मात्र callback call stack मा पुग्छ। यो user कुर्दै stack मा बस्दैन।\n\n```javascript\nfetch(\"/api/users\")\n  .then(response => response.json())\n  .then(users => {\n    console.log(users);\n  });\n```\n\nJavaScript ले request सुरु गरी अगाडि बढ्छ; runtime ले network काम सम्हाल्छ।\n\n> <b>महत्वपूर्ण:</b> Promise का callback ले सामान्य callback queue होइन, <b>microtask queue</b> प्रयोग गर्छन्। त्यो भिन्नता अर्को section हो।\n\n---\n\n### Callback queue vs call stack\n\n```text\nCALL STACK                 CALLBACK QUEUE\n\n┌───────────────┐          ┌───────────────┐\n│ currently     │          │ waiting       │\n│ executing     │          │ callbacks     │\n└───────────────┘          └───────────────┘\n```\n\nEvent loop यी दुईबीचको समन्वयकर्ता हो। सरल मानसिक model:\n\n```javascript\nwhile (true) {\n  if (callStackIsEmpty()) {\n    moveNextCallbackToStack();\n  }\n}\n```\n\nत्यसैले <b>JavaScript single-threaded भए पनि asynchronous operation गर्न सक्छ</b>: कुर्ने काम engine ले गर्दैन।",
+        jp: "JavaScriptが `setTimeout()`・DOMのイベントリスナー・`fetch()` のような非同期処理に出会っても、<b>JavaScriptエンジンはその完了を待ちません</b>。\n\n代わりに、周囲のランタイム — たいていは<b>ブラウザ</b> — が、これらの処理をJavaScriptのコールスタックの外で扱うAPIを提供します。\n\n```text\nJavaScript\n   │\n   │ \"Start this timer\"\n   ▼\nWeb API\n   │\n   │ waits independently\n   ▼\nTimer finishes\n   │\n   ▼\nCallback Queue\n   │\n   ▼\nEvent Loop\n   │\n   │ when Call Stack is empty\n   ▼\nCall Stack\n   │\n   ▼\nCallback executes\n```\n\n> <b>Web APIが非同期の作業を行い、コールバックキューはJavaScriptに実行してもらうのを待つ。</b>\n\n---\n\n### 1. 基本 — `setTimeout`\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 1000);\n\nconsole.log(\"End\");\n```\n\n出力:\n\n```text\nStart\nEnd\nTimer\n```\n\n`setTimeout()` はJavaScriptを1秒止めません。後で実行する作業を予約し、同期コードは進み続けます。\n\n---\n\n### 2. 中級 — `setTimeout(..., 0)`\n\n```javascript\nconsole.log(\"A\");\n\nsetTimeout(() => {\n  console.log(\"B\");\n}, 0);\n\nconsole.log(\"C\");\n```\n\n出力:\n\n```text\nA\nC\nB\n```\n\n初学者の多くは `A B C` を期待します。しかし `0` は「すぐ実行する」という意味では<b>ありません</b>。コールバックはこの道のりを通ります:\n\n```text\nWeb API\n   ↓\nCallback Queue\n   ↓\nEvent Loop\n   ↓\nEmpty Call Stack\n   ↓\nCallback executes\n```\n\nつまり `setTimeout(fn, 0)` は「タイマーが整い、JavaScriptに機会が来たらできるだけ早く `fn` を実行するよう予約する」という意味です。\n\n---\n\n### 3. 上級 — 忙しいコールスタックがコールバックを遅らせる\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => {\n  console.log(\"Timer\");\n}, 0);\n\nfor (let i = 0; i < 1_000_000_000; i++) {\n  // expensive synchronous work\n}\n\nconsole.log(\"End\");\n```\n\nタイマーの遅延は `0ms` ですが、ループがコールスタックを占めている間 `\"Timer\"` は実行できません:\n\n```text\nCall Stack               Callback Queue\n┌────────────────┐      ┌────────────────┐\n│ huge for loop  │      │ timer callback │\n│ still running  │      │ waiting        │\n└────────────────┘      └────────────────┘\n```\n\nだから `0ms` のタイマーでもずっと後に実行されることがあります。\n\n---\n\n### DOMイベントとネットワーク\n\n同じ考え方はタイマー以外にも当てはまります:\n\n```javascript\nbutton.addEventListener(\"click\", () => {\n  console.log(\"Button clicked\");\n});\n```\n\nJavaScriptはリスナーを登録し、ブラウザが操作を扱い、クリックが起きて初めてコールバックがコールスタックに届きます。ユーザーを待ってスタックに居座るわけではありません。\n\n```javascript\nfetch(\"/api/users\")\n  .then(response => response.json())\n  .then(users => {\n    console.log(users);\n  });\n```\n\nJavaScriptはリクエストを開始して先へ進み、ネットワークの処理はランタイムが担います。\n\n> <b>重要:</b> Promiseのコールバックは通常のコールバックキューではなく<b>マイクロタスクキュー</b>を使います。その違いが次のセクションです。\n\n---\n\n### コールバックキューとコールスタック\n\n```text\nCALL STACK                 CALLBACK QUEUE\n\n┌───────────────┐          ┌───────────────┐\n│ currently     │          │ waiting       │\n│ executing     │          │ callbacks     │\n└───────────────┘          └───────────────┘\n```\n\nイベントループが両者の調整役です。簡略化したモデル:\n\n```javascript\nwhile (true) {\n  if (callStackIsEmpty()) {\n    moveNextCallbackToStack();\n  }\n}\n```\n\nだから<b>JavaScriptはシングルスレッドでも非同期処理ができる</b>のです。待っているのはエンジンではありません。",
       },
-      diagram: `┌─────────────┐   setTimeout/fetch/addEventListener   ┌───────────────┐
-│ Call Stack  │ ─────────────────────────────────────▶ │   Web APIs    │
-│  (JS engine)│                                         │ (timer, net,  │
-└─────────────┘                                         │  DOM — outside│
-       ▲                                                │  the JS engine)│
-       │  event loop pushes callback                    └───────┬───────┘
-       │  ONLY when stack is empty                               │ timer fires /
-       │                                                          │ response arrives
-┌──────┴──────┐                                          ┌───────▼───────┐
-│ Event Loop  │ ◀──────── picks next callback ────────── │ Callback Queue│
-│ "Is stack   │            when stack is empty            │ (macrotask/   │
-│  empty?"    │                                            │  task queue)  │
-└─────────────┘                                            └───────────────┘
+      diagram: `                 JavaScript Runtime
+┌─────────────────────────────────────────────┐
+│   ┌──────────────┐                          │
+│   │ Call Stack   │                          │
+│   └──────┬───────┘                          │
+│          │ start async operation            │
+│          ▼                                  │
+│   ┌──────────────┐                          │
+│   │   Web APIs   │                          │
+│   │ Timer        │                          │
+│   │ DOM Events   │                          │
+│   │ Network      │                          │
+│   └──────┬───────┘                          │
+│          │ callback ready                   │
+│          ▼                                  │
+│   ┌──────────────────┐                      │
+│   │ Callback Queue   │                      │
+│   └────────┬─────────┘                      │
+│            │ Event Loop                     │
+│            ▼                                │
+│      ┌──────────────┐                       │
+│      │ Call Stack   │                       │
+│      └──────────────┘                       │
+└─────────────────────────────────────────────┘
 
-console.log("1")           →  runs immediately (sync, on the stack)
-setTimeout(fn, 0)          →  handed to Web APIs, fn queued once timer fires
-console.log("3")           →  runs immediately (sync, on the stack)
-[stack now empty]          →  event loop moves fn from queue → stack → runs
-Output: 1, 3, 2   (NOT 1, 2, 3)`,
+
+Is the Call Stack empty?
+        │
+     ┌──┴──┐
+    NO     YES
+    │       │
+    │       ▼
+    │   Take callback from queue
+    │       │
+    │       ▼
+    │   Push onto Call Stack
+    │
+    └──→ Keep checking`,
       codeExample: {
-        title: { en: "setTimeout(fn, 0) still waits for the call stack to empty", np: "setTimeout(fn, 0) पनि call stack खाली हुने पर्खन्छ", jp: "setTimeout(fn, 0)もコールスタックが空になるのを待つ" },
-        code: `// ── Classic event loop output puzzle ──────────────────────────────
-console.log("1");          // sync — runs immediately, straight on the stack
+        title: { en: "Started here, finished somewhere else", np: "यहाँ सुरु, अन्तै समाप्त", jp: "ここで始まり、別の場所で終わる" },
+        code: `// ── 1. Basic — the timer does not pause JavaScript ────────────────
+console.log("Start");
 
 setTimeout(() => {
-  console.log("2");        // async — handed to Web APIs, then queued
+  console.log("Timer");
+}, 1000);
+
+console.log("End");
+// Start, End, then Timer a second later
+
+// ── 2. Intermediate — a zero delay still waits its turn ───────────
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
 }, 0);
 
-console.log("3");          // sync — runs immediately, straight on the stack
+console.log("C");
+// A, C, B — never A, B, C
 
-// Output: 1, 3, 2
-// Why? "2"'s callback sits in the callback queue. The event loop only
-// moves it onto the stack after the stack is empty — i.e. after "3" runs.
+// ── 3. Advanced — a busy stack delays a ready callback ────────────
+setTimeout(() => {
+  console.log("Timer");
+}, 0);
 
-// ── "0ms" means "as soon as possible", not "right now" ────────────
-// setTimeout(fn, 0) tells the Web API: start a 0ms timer, then queue fn.
-// fn still has to wait for:
-//   1. all remaining synchronous code to finish
-//   2. its turn in the callback queue
+for (let i = 0; i < 1_000_000_000; i++) {
+  // the callback is ready, but the stack is not free
+}
 
-// ── Multiple timers — order depends on delay and queue position ───
-setTimeout(() => console.log("A"), 0);
-setTimeout(() => console.log("B"), 0);
-setTimeout(() => console.log("C"), 100);
-// Output order: A, B, (~100ms pause), C
-// A and B enter the queue almost immediately (0ms delay, but still async)
-// C's timer takes longer to fire, so it enters the queue much later
+console.log("End"); // End prints first, then Timer
 
-// ── fetch works the same way — network I/O happens in the Web APIs ──
-console.log("start");
-fetch("/api/data").then((res) => console.log("got response"));
-console.log("end");
-// Output: "start", "end", then "got response" whenever the network responds
-// The fetch itself runs entirely outside the JS call stack`,
+// ── The same model covers events and network work ─────────────────
+button.addEventListener("click", () => {
+  console.log("Button clicked"); // browser holds this until a click
+});
+
+fetch("/api/users")
+  .then(response => response.json())
+  .then(users => console.log(users)); // promise work uses microtasks`,
       },
       keyTakeaways: [
-        { en: "`setTimeout`, DOM events, and `fetch` are handled by the browser's <b>Web APIs</b>, not the JS engine itself — JavaScript hands off the waiting and moves on.", np: "`setTimeout`, DOM events, र `fetch` लाई browser को <b>Web APIs</b> ले handle गर्छ, JS engine आफैंले होइन — JavaScript ले पर्खने काम अरूलाई दिएर अगाडि बढ्छ।", jp: "`setTimeout`・DOMイベント・`fetch`はJSエンジン自体ではなくブラウザの<b>Web API</b>が処理する — JavaScriptは待つ作業を渡して先に進む。" },
-        { en: "Once a Web API's work is done, its callback is placed in the <b>callback queue</b>, and the event loop only moves it onto the call stack when the stack is completely empty.", np: "Web API को काम सकिएपछि, यसको callback <b>callback queue</b> मा राखिन्छ, र event loop ले stack पूर्ण खाली भएमा मात्र यसलाई call stack मा सार्छ।", jp: "Web APIの作業が終わると、そのコールバックは<b>コールバックキュー</b>に置かれ、スタックが完全に空になったときにのみイベントループがコールスタックへ移す。" },
-        { en: "`setTimeout(fn, 0)` does not run immediately — the delay only controls when the callback enters the queue; it still waits for the current call stack to empty.", np: "`setTimeout(fn, 0)` तुरुन्तै run हुँदैन — delay ले callback कहिले queue मा पस्ने मात्र control गर्छ; यसले अझै हालको call stack खाली हुने पर्खनुपर्छ।", jp: "`setTimeout(fn, 0)`は即座に実行されない — 遅延はコールバックがいつキューに入るかを制御するだけで、現在のコールスタックが空になるのを待つ。" },
+        { en: "<b>Web APIs</b> handle browser-provided asynchronous capabilities such as timers, DOM events and networking.", np: "<b>Web API</b> ले timer, DOM event र networking जस्ता browser-प्रदत्त asynchronous क्षमता सम्हाल्छन्।", jp: "<b>Web API</b> はタイマー・DOMイベント・ネットワークなど、ブラウザが提供する非同期の機能を扱う。" },
+        { en: "They operate <b>outside the JavaScript call stack</b>.", np: "तिनी <b>JavaScript call stack बाहिर</b> काम गर्छन्।", jp: "それらは<b>JavaScriptのコールスタックの外</b>で動く。" },
+        { en: "When asynchronous work is ready, its callback is scheduled into a queue.", np: "Asynchronous काम तयार भएपछि, यसको callback queue मा schedule हुन्छ।", jp: "非同期の作業が整うと、そのコールバックはキューに入れられる。" },
+        { en: "The <b>event loop</b> decides when a queued callback can enter the call stack.", np: "<b>Event loop</b> ले queue मा भएको callback कहिले call stack मा पस्न पाउँछ तय गर्छ।", jp: "<b>イベントループ</b>が、キュー内のコールバックをいつコールスタックに入れるか決める。" },
+        { en: "`setTimeout(fn, 0)` does <b>not</b> mean \"run immediately\".", np: "`setTimeout(fn, 0)` को अर्थ \"तुरुन्तै चलाऊ\" <b>होइन</b>।", jp: "`setTimeout(fn, 0)` は「すぐ実行」という意味では<b>ない</b>。" },
+        { en: "A callback cannot execute while the call stack is busy, so long synchronous work delays timers, events and rendering.", np: "Call stack व्यस्त हुँदा callback चल्न सक्दैन, त्यसैले लामो synchronous काले timer, event र rendering ढिलो पार्छ।", jp: "コールスタックが塞がっている間コールバックは実行できず、長い同期処理はタイマー・イベント・描画を遅らせる。" },
+        { en: "The <b>callback queue</b> is different from the <b>microtask queue</b> used by Promise reactions.", np: "<b>Callback queue</b> Promise ले प्रयोग गर्ने <b>microtask queue</b> भन्दा फरक हो।", jp: "<b>コールバックキュー</b>は、Promiseが使う<b>マイクロタスクキュー</b>とは別物。" },
       ],
       commonMistakes: [
-        { en: "Believing `setTimeout(fn, 0)` runs synchronously or 'right now' — it always waits for the current call stack to fully empty first, no matter how small the delay.", np: "`setTimeout(fn, 0)` synchronously वा 'अहिले नै' चल्छ भन्ने ठान्नु — यसले सधैं हालको call stack पूर्ण खाली हुने पहिले पर्खन्छ, delay जति सानो भए पनि।", jp: "`setTimeout(fn, 0)`が同期的または「今すぐ」実行されると思い込むこと — 遅延がどれだけ小さくても必ず現在のコールスタックが完全に空になるのを待つ。" },
-        { en: "Thinking JavaScript itself performs the waiting for timers or network requests — the waiting actually happens in the browser's Web APIs, outside the JS engine.", np: "Timers वा network requests को पर्खाइ JavaScript आफैंले गर्छ भन्ने सोच्नु — त्यो पर्खाइ वास्तवमा JS engine बाहिर browser को Web APIs मा हुन्छ।", jp: "タイマーやネットワークリクエストの待機自体をJavaScriptが行っていると考えること — 実際の待機はJSエンジンの外、ブラウザのWeb APIで行われる。" },
-        { en: "Assuming callbacks in the callback queue run the instant they're queued — they still have to wait for the call stack to be empty and for the event loop to pick them up.", np: "Callback queue मा भएका callbacks queue मा पर्नासाथ तुरुन्तै चल्छन् भन्ने ठान्नु — तिनले अझै call stack खाली हुने र event loop ले pick गर्ने पर्खनुपर्छ।", jp: "コールバックキュー内のコールバックがキューに入った瞬間に実行されると思い込むこと — コールスタックが空になりイベントループに拾われるのを待つ必要がある。" },
+        { en: "<b>Thinking `setTimeout(fn, 0)` runs immediately</b> — with `console.log(\"World\")` after it, the output is `World` then `Hello`. The callback waits for the current synchronous work.", np: "<b>`setTimeout(fn, 0)` तुरुन्तै चल्छ भन्ने ठान्नु</b> — पछि `console.log(\"World\")` भए, output `World` अनि `Hello` हुन्छ। Callback ले वर्तमान synchronous काम कुर्छ।", jp: "<b>`setTimeout(fn, 0)` がすぐ実行されると思う</b> — 後ろに `console.log(\"World\")` があれば出力は `World` の次に `Hello`。コールバックは現在の同期処理を待つ。" },
+        { en: "<b>Thinking the timer callback sits on the call stack</b> — it does not wait there for a second. The Web API holds the timer, and the callback only arrives once the stack is free.", np: "<b>Timer को callback call stack मा बस्छ भन्ने ठान्नु</b> — यो त्यहाँ एक सेकेन्ड कुर्दैन। Web API ले timer राख्छ, र stack खाली भएपछि मात्र callback आउँछ।", jp: "<b>タイマーのコールバックがコールスタックに居ると思う</b> — そこで1秒待つわけではない。タイマーはWeb APIが保持し、スタックが空いてからコールバックが届く。" },
+        { en: "<b>Thinking asynchronous means another JavaScript call stack</b> — the runtime may use other threads internally, but your JavaScript still runs on one main stack.", np: "<b>Asynchronous को अर्थ अर्को JavaScript call stack हो भन्ने ठान्नु</b> — runtime ले भित्री रूपमा अरू thread प्रयोग गर्न सक्छ, तर तपाईंको JavaScript एउटै मुख्य stack मा चल्छ।", jp: "<b>非同期＝別のJavaScriptコールスタック、と思う</b> — ランタイムは内部で他スレッドを使いうるが、あなたのJavaScriptは1つのメインスタックで動く。" },
+        { en: "<b>Forgetting the call stack can block callbacks entirely</b> — with `while (true) {}` running, a ready timer callback never gets its turn.", np: "<b>Call stack ले callback पूरै रोक्न सक्छ भनी बिर्सनु</b> — `while (true) {}` चलिरहेको बेला, तयार timer callback ले कहिल्यै पालो पाउँदैन।", jp: "<b>コールスタックがコールバックを完全に塞ぐことを忘れる</b> — `while (true) {}` が動いている間、準備できたタイマーのコールバックは永遠に順番が来ない。" },
       ],
       quiz: [
         {
-          question: { en: "Where does the actual waiting for a `setTimeout` timer happen?", np: "`setTimeout` timer को actual पर्खाइ कहाँ हुन्छ?", jp: "`setTimeout`タイマーの実際の待機はどこで行われる？" },
+          question: { en: "Where does `setTimeout` wait while its timer is running?", np: "`setTimeout` को timer चल्दा यो कहाँ कुर्छ?", jp: "`setTimeout` のタイマーが動いている間、それはどこで待つか?" },
           options: [
-            { en: "In the browser's Web APIs, outside the JS engine's call stack", np: "Browser को Web APIs मा, JS engine को call stack बाहिर", jp: "JSエンジンのコールスタックの外、ブラウザのWeb API内" },
-            { en: "On the call stack itself, blocking other code", np: "Call stack मै, अरू code block गर्दै", jp: "コールスタック自体、他のコードをブロックしながら" },
+            { en: "Call Stack", np: "Call Stack", jp: "コールスタック" },
+            { en: "Web API / runtime timer", np: "Web API / runtime timer", jp: "Web API・ランタイムのタイマー" },
+            { en: "Callback Queue", np: "Callback Queue", jp: "コールバックキュー" },
+            { en: "Heap", np: "Heap", jp: "ヒープ" },
           ],
-          correctIndex: 0,
-          explanation: { en: "The Web APIs handle timers independently of the JS engine, freeing the call stack to keep running other synchronous code.", np: "Web APIs ले JS engine बाट independently timers handle गर्छ, call stack लाई अरू synchronous code चलाउन खाली राख्छ।", jp: "Web APIはJSエンジンとは独立してタイマーを処理し、コールスタックを他の同期コードの実行のために解放する。" },
+          correctIndex: 1,
+          explanation: { en: "Only once the timer fires does its callback move to the queue.", np: "Timer बजेपछि मात्र यसको callback queue मा जान्छ।", jp: "タイマーが発火して初めて、コールバックはキューへ移る。" },
         },
         {
-          question: { en: "Does `setTimeout(fn, 0)` run `fn` immediately, before any remaining synchronous code?", np: "`setTimeout(fn, 0)` ले `fn` लाई बाँकी synchronous code भन्दा पहिले तुरुन्तै run गर्छ?", jp: "`setTimeout(fn, 0)`は残りの同期コードより前に`fn`をすぐに実行する？" },
+          question: { en: "What does `setTimeout(fn, 0)` mean?", np: "`setTimeout(fn, 0)` को अर्थ के हो?", jp: "`setTimeout(fn, 0)` はどういう意味か?" },
           options: [
-            { en: "No — it waits for the call stack to empty first, then waits its turn in the queue", np: "होइन — यसले पहिले call stack खाली हुने पर्खन्छ, अनि queue मा आफ्नो पालो", jp: "いいえ — まずコールスタックが空になるのを待ち、その後キューで順番を待つ" },
-            { en: "Yes — a 0ms delay means it always runs before any other code", np: "हो — 0ms delay ले सधैं अरू code भन्दा पहिले चल्छ भन्ने अर्थ दिन्छ", jp: "はい — 0msの遅延は常に他のコードより先に実行されることを意味する" },
+            { en: "Run `fn` immediately", np: "`fn` तुरुन्तै चलाऊ", jp: "`fn` を即座に実行する" },
+            { en: "Run `fn` before the next line", np: "अर्को line अघि `fn` चलाऊ", jp: "次の行より前に `fn` を実行する" },
+            { en: "Make `fn` eligible to run as soon as scheduling allows", np: "Scheduling ले दिने बित्तिकै `fn` चल्न योग्य बनाऊ", jp: "スケジューリングが許し次第 `fn` を実行可能にする" },
+            { en: "Run `fn` synchronously", np: "`fn` लाई synchronously चलाऊ", jp: "`fn` を同期的に実行する" },
           ],
-          correctIndex: 0,
-          explanation: { en: "A 0ms delay only controls when the callback is queued; it always runs after the currently executing synchronous code finishes.", np: "0ms delay ले callback कहिले queue हुने मात्र control गर्छ; यो सधैं हाल चलिरहेको synchronous code सकिएपछि मात्र चल्छ।", jp: "0msの遅延はコールバックがいつキューに入るかを制御するだけで、現在実行中の同期コードが終わった後に必ず実行される。" },
+          correctIndex: 2,
+          explanation: { en: "The zero is a minimum delay, not a promise of immediate execution.", np: "शून्य न्यूनतम delay हो, तुरुन्तै चल्ने वाचा होइन।", jp: "0は最小の遅延であって、即時実行の保証ではない。" },
         },
         {
-          question: { en: "What is the event loop's core job?", np: "Event loop को core काम के हो?", jp: "イベントループの中心的な仕事は何？" },
+          question: { en: "What must generally happen before a queued callback can execute?", np: "Queue मा भएको callback चल्नुअघि सामान्यतया के हुनुपर्छ?", jp: "キュー内のコールバックが実行される前に、通常何が必要か?" },
           options: [
-            { en: "Check if the call stack is empty, and if so, move the next queued callback onto it", np: "Call stack खाली छ कि छैन check गर्नु, र भए queue बाट अर्को callback त्यसमा सार्नु", jp: "コールスタックが空かを確認し、空なら次のキューにあるコールバックをそこに移すこと" },
-            { en: "Execute all Web API requests directly on the call stack", np: "सबै Web API requests लाई call stack मै direct execute गर्नु", jp: "すべてのWeb APIリクエストをコールスタック上で直接実行すること" },
+            { en: "The timer must be exactly 0ms", np: "Timer ठ्याक्कै 0ms हुनुपर्छ", jp: "タイマーがちょうど0msである必要がある" },
+            { en: "The call stack must be available", np: "Call stack उपलब्ध हुनुपर्छ", jp: "コールスタックが空いている必要がある" },
+            { en: "The browser must close", np: "Browser बन्द हुनुपर्छ", jp: "ブラウザを閉じる必要がある" },
+            { en: "The callback must be manually invoked", np: "Callback हातले invoke गर्नुपर्छ", jp: "コールバックを手動で呼ぶ必要がある" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The event loop only moves a callback onto an empty stack.", np: "Event loop ले खाली stack मा मात्र callback सार्छ।", jp: "イベントループは空いたスタックにしかコールバックを移さない。" },
+        },
+        {
+          question: { en: "What is the output of `console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");`?", np: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");` को output के हो?", jp: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");` の出力は?" },
+          options: [
+            { en: "A, B, C", np: "A, B, C", jp: "A, B, C" },
+            { en: "A, C, B", np: "A, C, B", jp: "A, C, B" },
+            { en: "B, A, C", np: "B, A, C", jp: "B, A, C" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Both synchronous logs run first, then the queued callback.", np: "दुबै synchronous log पहिले चल्छन्, त्यसपछि queue को callback।", jp: "同期のログが両方先に実行され、その後にキューのコールバックが走る。" },
+        },
+        {
+          question: { en: "Why can a `0ms` timer still execute much later?", np: "`0ms` को timer किन धेरै पछि चल्न सक्छ?", jp: "なぜ `0ms` のタイマーがずっと後に実行されうるのか?" },
+          options: [
+            { en: "Because the callback waits for the current work to finish and the event loop to schedule it", np: "किनकि callback ले वर्तमान काम सकिने र event loop ले schedule गर्ने कुर्छ", jp: "コールバックが現在の処理の完了とイベントループのスケジューリングを待つから" },
+            { en: "Because timers are inaccurate by design", np: "किनकि timer डिजाइनले नै अशुद्ध हुन्छन्", jp: "タイマーは設計上不正確だから" },
+            { en: "Because the browser throttles all timers to one second", np: "किनकि browser ले सबै timer एक सेकेन्डमा सीमित गर्छ", jp: "ブラウザがすべてのタイマーを1秒に制限するから" },
           ],
           correctIndex: 0,
-          explanation: { en: "The event loop constantly checks stack emptiness and, when empty, pulls the next callback from the queue onto the stack to run.", np: "Event loop ले लगातार stack खाली छ कि छैन check गर्छ, र खाली भएमा queue बाट अर्को callback stack मा ल्याई चलाउँछ।", jp: "イベントループはスタックが空かを常に確認し、空であればキューから次のコールバックをスタックに移して実行する。" },
+          explanation: { en: "A long synchronous loop can hold the stack for as long as it runs.", np: "लामो synchronous loop ले चलेसम्म stack ओगट्न सक्छ।", jp: "長い同期ループは、動いている間ずっとスタックを占有しうる。" },
         },
       ],
     },
