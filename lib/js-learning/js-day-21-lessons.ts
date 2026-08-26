@@ -197,137 +197,204 @@ async function fetchUsers() {
       title: { en: "AbortController — Cancelling Requests", np: "AbortController — Requests Cancel गर्नु", jp: "AbortController — リクエストのキャンセル" },
       durationMinutes: 9,
       explanation: {
-        en: "An `AbortController` is a small standalone object with one job: giving you a way to cancel an in-flight operation. Calling `new AbortController()` gives you a `.signal` property (an `AbortSignal`) and an `.abort()` method. You pass the `signal` into `fetch`'s options object (`fetch(url, { signal })`), and later, calling `controller.abort()` immediately cancels that request — the `fetch` promise rejects with an error whose `.name` is `\"AbortError\"`. Because `AbortError` is a normal rejection, you distinguish it from a genuine failure inside your `catch` block by checking `err.name`, so you don't accidentally show the user an error message for a cancellation they caused on purpose.\n\nThis matters most inside component lifecycles: a component might start a `fetch` in a `useEffect`, but if the component unmounts (the user navigates away) before the response arrives, setting state from that stale response can throw warnings or cause bugs. The fix is to create one `AbortController` per effect run, pass its signal into `fetch`, and return a cleanup function that calls `controller.abort()` — React calls that cleanup automatically right before the effect re-runs or the component unmounts, so any request that hasn't resolved yet is cancelled cleanly.\n\nTwo very common patterns build directly on this. A <b>fetch timeout</b> — since `fetch` itself has no built-in timeout — pairs `AbortController` with `setTimeout`: start a timer that calls `controller.abort()` after N milliseconds, and clear that timer if the request finishes first. A <b>debounced search box</b> uses the same idea to avoid race conditions: every time the user types, abort whatever search request is still in flight before starting a new one, so an old, slow response can never overwrite the results of a newer, faster one.",
-        np: "`AbortController` एउटा सानो standalone object हो जसको काम एउटै हो: in-flight operation cancel गर्ने तरिका दिनु। `new AbortController()` ले `.signal` property (एउटा `AbortSignal`) र `.abort()` method दिन्छ। `signal` लाई `fetch` को options object मा pass गरिन्छ (`fetch(url, { signal })`), र पछि `controller.abort()` call गर्दा त्यो request तुरुन्तै cancel हुन्छ — `fetch` promise `.name` `\"AbortError\"` भएको error सँग reject हुन्छ। `AbortError` सामान्य rejection नै भएकाले, `catch` block भित्र `err.name` check गरेर यसलाई genuine failure बाट छुट्याउनुपर्छ, ताकि आफैले जानाजानी गरेको cancellation लाई error message को रूपमा user लाई नदेखाइन्।\n\nयो component lifecycles भित्र सबैभन्दा महत्वपूर्ण हुन्छ: कुनै component ले `useEffect` भित्र `fetch` सुरु गर्न सक्छ, तर response आउनु अघि नै component unmount भएमा (user अन्तै गएमा), त्यो stale response बाट state set गर्दा warnings वा bugs आउन सक्छन्। Fix भनेको हरेक effect run का लागि एउटा `AbortController` बनाउने, त्यसको signal `fetch` मा pass गर्ने, र `controller.abort()` call गर्ने cleanup function return गर्ने हो — React ले effect फेरि चल्नु अघि वा component unmount हुनु अघि नै त्यो cleanup automatic रूपमा call गर्छ, त्यसैले resolve नभएको जुनसुकै request cleanly cancel हुन्छ।\n\nयसैमा आधारित दुई निकै common patterns छन्। <b>Fetch timeout</b> — किनकि `fetch` मा आफैं built-in timeout हुँदैन — `AbortController` लाई `setTimeout` सँग जोड्छ: N milliseconds पछि `controller.abort()` call गर्ने timer सुरु गर्नुहोस्, र request पहिले नै पूरा भएमा त्यो timer clear गर्नुहोस्। <b>Debounced search box</b> ले उही idea प्रयोग गरी race conditions रोक्छ: user ले टाइप गर्दा हरेक पटक, नयाँ request सुरु गर्नु अघि in-flight रहेको पुरानो search request abort गरिन्छ, ताकि पुरानो ढिलो response ले नयाँ छिटो response को result कहिल्यै overwrite नगरोस्।",
-        jp: "`AbortController`は1つの仕事だけを持つ小さな単独オブジェクト — 実行中の処理をキャンセルする手段を提供する。`new AbortController()`は`.signal`プロパティ（`AbortSignal`）と`.abort()`メソッドを返す。その`signal`を`fetch`のオプションに渡し（`fetch(url, { signal })`）、後で`controller.abort()`を呼ぶとそのリクエストは即座にキャンセルされる — `fetch`のPromiseは`.name`が`\"AbortError\"`であるエラーでrejectされる。`AbortError`は通常のrejectionなので、`catch`ブロック内で`err.name`を確認して本当の失敗と区別する必要がある。そうしないと、自分で意図的に起こしたキャンセルに対してユーザーにエラーメッセージを表示してしまう。\n\nこれはコンポーネントのライフサイクル内で特に重要になる。コンポーネントが`useEffect`内で`fetch`を開始しても、応答が届く前にコンポーネントがアンマウントされる（ユーザーが離脱する）と、その古い応答からstateを設定すると警告やバグの原因になる。解決策は各エフェクト実行ごとに1つの`AbortController`を作り、そのsignalを`fetch`に渡し、`controller.abort()`を呼ぶクリーンアップ関数を返すこと — Reactはエフェクトが再実行される直前やコンポーネントがアンマウントされる直前にそのクリーンアップを自動で呼ぶため、まだ解決していないリクエストはきれいにキャンセルされる。\n\nこの上に2つの非常によくあるパターンが成り立つ。<b>fetchのタイムアウト</b> — `fetch`自体には組み込みのタイムアウトがないため — `AbortController`を`setTimeout`と組み合わせる: Nミリ秒後に`controller.abort()`を呼ぶタイマーを開始し、リクエストが先に完了したらそのタイマーをクリアする。<b>デバウンスされた検索ボックス</b>は同じ考え方でレースコンディションを防ぐ: ユーザーが入力するたびに、新しいリクエストを開始する前に実行中の古い検索リクエストをabortし、古く遅い応答が新しく速い応答の結果を上書きすることを防ぐ。",
+        en: "An <b>`AbortController`</b> gives you a standard way to <b>cancel an asynchronous operation</b> that supports cancellation, especially `fetch()` requests.\n\nThink of it as a remote control:\n\n```text\nAbortController\n      │\n      ├── signal ──────→ fetch()\n      │\n      └── abort() ─────→ CANCEL\n```\n\nYou create the controller, give its `signal` to `fetch()`, and later call `abort()` when the request should no longer continue.\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"/api/users\", {\n  signal: controller.signal\n});\n\ncontroller.abort();\n```\n\nOnce `abort()` is called, the fetch rejects with an error whose name is usually `\"AbortError\"`.\n\n---\n\n### 1. Basic — cancel a fetch\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"https://api.example.com/users\", {\n  signal: controller.signal\n})\n  .then(response => response.json())\n  .then(users => console.log(users))\n  .catch(error => {\n    console.log(error.name); // \"AbortError\"\n  });\n\ncontroller.abort();\n```\n\nThe request is cancelled, so the `fetch()` promise rejects.\n\n---\n\n### 2. Intermediate — handle cancellation separately\n\nCancellation is not necessarily a real application error. The user may have intentionally cancelled the request or navigated away.\n\n```javascript\nconst controller = new AbortController();\n\nasync function loadUsers() {\n  try {\n    const response = await fetch(\"/api/users\", {\n      signal: controller.signal\n    });\n\n    const users = await response.json();\n\n    console.log(users);\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      console.log(\"Request was cancelled\");\n      return;\n    }\n\n    console.error(\"Request failed:\", error);\n  }\n}\n\nloadUsers();\n\ncontroller.abort();\n```\n\n```text\nNetwork failure\n      ↓\nActual error\n\nAbortError\n      ↓\nIntentional cancellation\n```\n\nYou generally do not want to show \"Something went wrong\" to a user who simply navigated away.\n\n---\n\n### 3. Advanced — implement a fetch timeout\n\n`fetch()` does not give you a general request timeout on its own. Combine `AbortController` with `setTimeout()`:\n\n```javascript\nconst controller = new AbortController();\n\nconst timeout = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(\"/api/users\", {\n    signal: controller.signal\n  });\n\n  const users = await response.json();\n\n  console.log(users);\n} catch (error) {\n  if (error.name === \"AbortError\") {\n    console.log(\"Request timed out\");\n  } else {\n    console.error(error);\n  }\n} finally {\n  clearTimeout(timeout);\n}\n```\n\n```text\nStart fetch\n    │\n    ├──────────────→ Response arrives\n    │                     │\n    │                     ↓\n    │               clear timeout\n    │\n    └── 5 seconds ──→ controller.abort()\n                            │\n                            ↓\n                     Request cancelled\n```\n\nModern JavaScript also provides a built-in shortcut:\n\n```javascript\nfetch(\"/api/users\", {\n  signal: AbortSignal.timeout(5000)\n});\n```\n\n---\n\n### React cleanup\n\nA particularly important use case is cancelling a request when a component no longer cares about the result.\n\n```javascript\nuseEffect(() => {\n  const controller = new AbortController();\n\n  async function loadUser() {\n    try {\n      const response = await fetch(\"/api/user\", {\n        signal: controller.signal\n      });\n\n      const user = await response.json();\n\n      setUser(user);\n    } catch (error) {\n      if (error.name !== \"AbortError\") {\n        console.error(error);\n      }\n    }\n  }\n\n  loadUser();\n\n  return () => {\n    controller.abort();\n  };\n}, []);\n```\n\n```text\nComponent mounts\n      │\n      ↓\nCreate controller\n      │\n      ↓\nStart fetch\n      │\n      ├──── Response arrives\n      │          ↓\n      │       setState()\n      │\n      └──── Component unmounts\n                 ↓\n          controller.abort()\n                 ↓\n          Cancel stale request\n```\n\nThis prevents an old request from resolving into a component that is gone.\n\n---\n\n### Debounced search and stale results\n\nImagine the user types `r`, `re`, `rea`, `reac`, `react`. Without cancellation, several requests run at once:\n\n```text\n\"r\"       ───────────────→\n\"re\"         ────────────→\n\"rea\"           ─────────→\n\"reac\"             ──────→\n\"react\"              ────→\n```\n\nA slower old request can finish <b>after</b> the newer one and overwrite the correct results. With an `AbortController`:\n\n```javascript\nlet controller;\n\nasync function search(query) {\n  controller?.abort();\n\n  controller = new AbortController();\n\n  try {\n    const response = await fetch(\n      `/api/search?q=${encodeURIComponent(query)}`,\n      {\n        signal: controller.signal\n      }\n    );\n\n    return await response.json();\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      return;\n    }\n\n    throw error;\n  }\n}\n```\n\n```text\nSearch \"rea\"\n      │\n      ↓\nRequest A ──────────────X\n\n\nSearch \"react\"\n      │\n      ↓\nRequest B ─────────────────→ Results\n```\n\nThe old request is cancelled before it can interfere.\n\n---\n\n### `AbortController` vs `AbortSignal`\n\nThese are two separate objects:\n\n• <b>`AbortController`</b> controls the cancellation — you call `controller.abort()`.\n• <b>`AbortSignal`</b> represents the cancellation state and is what you pass to the operation, as `controller.signal`.\n\n```text\nController\n    │\n    │ owns\n    ↓\n Signal\n    │\n    │ passed to\n    ↓\n fetch()\n```\n\nThe operation does not call `abort()` itself. It watches the signal.\n\n---\n\n### Where cancellation pays off\n\nUse controllers for <b>timeouts</b>, <b>React cleanup</b>, <b>search cancellation</b> and <b>stale-request prevention</b>. One controller can drive several operations when they genuinely share a cancellation lifecycle.",
+        np: "<b>`AbortController`</b> ले cancellation समर्थन गर्ने <b>asynchronous operation रद्द गर्ने</b> मानक तरिका दिन्छ, विशेष गरी `fetch()` request।\n\nयसलाई remote control जस्तो ठान्नुहोस्:\n\n```text\nAbortController\n      │\n      ├── signal ──────→ fetch()\n      │\n      └── abort() ─────→ CANCEL\n```\n\nतपाईं controller बनाउनुहुन्छ, यसको `signal` `fetch()` लाई दिनुहुन्छ, र request अगाडि बढ्नु नपर्दा `abort()` बोलाउनुहुन्छ।\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"/api/users\", {\n  signal: controller.signal\n});\n\ncontroller.abort();\n```\n\n`abort()` बोलाएपछि, fetch त्यस्तो error सँग reject हुन्छ जसको नाम प्रायः `\"AbortError\"` हुन्छ।\n\n---\n\n### 1. आधारभूत — fetch रद्द गर्नु\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"https://api.example.com/users\", {\n  signal: controller.signal\n})\n  .then(response => response.json())\n  .then(users => console.log(users))\n  .catch(error => {\n    console.log(error.name); // \"AbortError\"\n  });\n\ncontroller.abort();\n```\n\nRequest रद्द हुन्छ, त्यसैले `fetch()` को promise reject हुन्छ।\n\n---\n\n### 2. मध्यम — cancellation छुट्टै सम्हाल्नु\n\nCancellation आवश्यक रूपमा वास्तविक application error होइन। User ले जानाजान रद्द गरेको वा अन्तै गएको हुन सक्छ।\n\n```javascript\nconst controller = new AbortController();\n\nasync function loadUsers() {\n  try {\n    const response = await fetch(\"/api/users\", {\n      signal: controller.signal\n    });\n\n    const users = await response.json();\n\n    console.log(users);\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      console.log(\"Request was cancelled\");\n      return;\n    }\n\n    console.error(\"Request failed:\", error);\n  }\n}\n\nloadUsers();\n\ncontroller.abort();\n```\n\n```text\nNetwork failure\n      ↓\nActual error\n\nAbortError\n      ↓\nIntentional cancellation\n```\n\nअन्तै गएको user लाई \"Something went wrong\" देखाउनु उचित हुँदैन।\n\n---\n\n### 3. उन्नत — fetch timeout बनाउनु\n\n`fetch()` ले आफैं सामान्य request timeout दिँदैन। `AbortController` लाई `setTimeout()` सँग जोड्नुहोस्:\n\n```javascript\nconst controller = new AbortController();\n\nconst timeout = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(\"/api/users\", {\n    signal: controller.signal\n  });\n\n  const users = await response.json();\n\n  console.log(users);\n} catch (error) {\n  if (error.name === \"AbortError\") {\n    console.log(\"Request timed out\");\n  } else {\n    console.error(error);\n  }\n} finally {\n  clearTimeout(timeout);\n}\n```\n\n```text\nStart fetch\n    │\n    ├──────────────→ Response arrives\n    │                     │\n    │                     ↓\n    │               clear timeout\n    │\n    └── 5 seconds ──→ controller.abort()\n                            │\n                            ↓\n                     Request cancelled\n```\n\nआधुनिक JavaScript ले भित्रैको छोटो बाटो पनि दिन्छ:\n\n```javascript\nfetch(\"/api/users\", {\n  signal: AbortSignal.timeout(5000)\n});\n```\n\n---\n\n### React cleanup\n\nComponent लाई नतिजाको मतलब नरहँदा request रद्द गर्नु विशेष महत्वपूर्ण प्रयोग हो।\n\n```javascript\nuseEffect(() => {\n  const controller = new AbortController();\n\n  async function loadUser() {\n    try {\n      const response = await fetch(\"/api/user\", {\n        signal: controller.signal\n      });\n\n      const user = await response.json();\n\n      setUser(user);\n    } catch (error) {\n      if (error.name !== \"AbortError\") {\n        console.error(error);\n      }\n    }\n  }\n\n  loadUser();\n\n  return () => {\n    controller.abort();\n  };\n}, []);\n```\n\n```text\nComponent mounts\n      │\n      ↓\nCreate controller\n      │\n      ↓\nStart fetch\n      │\n      ├──── Response arrives\n      │          ↓\n      │       setState()\n      │\n      └──── Component unmounts\n                 ↓\n          controller.abort()\n                 ↓\n          Cancel stale request\n```\n\nयसले हराइसकेको component मा पुरानो request resolve हुनबाट जोगाउँछ।\n\n---\n\n### Debounced search र बासी नतिजा\n\nUser ले `r`, `re`, `rea`, `reac`, `react` type गरेको कल्पना गर्नुहोस्। Cancellation नभए धेरै request सँगै चल्छन्:\n\n```text\n\"r\"       ───────────────→\n\"re\"         ────────────→\n\"rea\"           ─────────→\n\"reac\"             ──────→\n\"react\"              ────→\n```\n\nढिलो पुरानो request नयाँ भन्दा <b>पछि</b> सकिएर सही नतिजा मेट्न सक्छ। `AbortController` सँग:\n\n```javascript\nlet controller;\n\nasync function search(query) {\n  controller?.abort();\n\n  controller = new AbortController();\n\n  try {\n    const response = await fetch(\n      `/api/search?q=${encodeURIComponent(query)}`,\n      {\n        signal: controller.signal\n      }\n    );\n\n    return await response.json();\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      return;\n    }\n\n    throw error;\n  }\n}\n```\n\n```text\nSearch \"rea\"\n      │\n      ↓\nRequest A ──────────────X\n\n\nSearch \"react\"\n      │\n      ↓\nRequest B ─────────────────→ Results\n```\n\nपुरानो request बाधा पुर्‍याउनुअघि नै रद्द हुन्छ।\n\n---\n\n### `AbortController` vs `AbortSignal`\n\nयी दुई छुट्टै object हुन्:\n\n• <b>`AbortController`</b> ले cancellation नियन्त्रण गर्छ — तपाईं `controller.abort()` बोलाउनुहुन्छ।\n• <b>`AbortSignal`</b> ले cancellation अवस्था जनाउँछ र `controller.signal` का रूपमा operation लाई दिइन्छ।\n\n```text\nController\n    │\n    │ owns\n    ↓\n Signal\n    │\n    │ passed to\n    ↓\n fetch()\n```\n\nOperation आफैंले `abort()` बोलाउँदैन। यसले signal हेर्छ।\n\n---\n\n### Cancellation कहाँ काम लाग्छ\n\n<b>Timeout</b>, <b>React cleanup</b>, <b>search cancellation</b> र <b>बासी request रोक्न</b> controller प्रयोग गर्नुहोस्। एउटै cancellation जीवनचक्र बाँड्ने भए एउटा controller ले धेरै operation चलाउन सक्छ।",
+        jp: "<b>`AbortController`</b> は、キャンセルに対応した<b>非同期処理を中止する</b>標準的な方法を提供します。とくに `fetch()` でよく使われます。\n\nリモコンのようなものだと考えてください:\n\n```text\nAbortController\n      │\n      ├── signal ──────→ fetch()\n      │\n      └── abort() ─────→ CANCEL\n```\n\nコントローラーを作り、その `signal` を `fetch()` に渡し、続ける必要がなくなったら `abort()` を呼びます。\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"/api/users\", {\n  signal: controller.signal\n});\n\ncontroller.abort();\n```\n\n`abort()` を呼ぶと、fetchは通常 `\"AbortError\"` という名前のエラーで拒否されます。\n\n---\n\n### 1. 基本 — fetchを中止する\n\n```javascript\nconst controller = new AbortController();\n\nfetch(\"https://api.example.com/users\", {\n  signal: controller.signal\n})\n  .then(response => response.json())\n  .then(users => console.log(users))\n  .catch(error => {\n    console.log(error.name); // \"AbortError\"\n  });\n\ncontroller.abort();\n```\n\nリクエストが中止されるので、`fetch()` のPromiseは拒否されます。\n\n---\n\n### 2. 中級 — キャンセルは別扱いにする\n\nキャンセルは必ずしも本当のエラーではありません。ユーザーが意図的に中止したり、別のページへ移動したのかもしれません。\n\n```javascript\nconst controller = new AbortController();\n\nasync function loadUsers() {\n  try {\n    const response = await fetch(\"/api/users\", {\n      signal: controller.signal\n    });\n\n    const users = await response.json();\n\n    console.log(users);\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      console.log(\"Request was cancelled\");\n      return;\n    }\n\n    console.error(\"Request failed:\", error);\n  }\n}\n\nloadUsers();\n\ncontroller.abort();\n```\n\n```text\nNetwork failure\n      ↓\nActual error\n\nAbortError\n      ↓\nIntentional cancellation\n```\n\n離脱しただけのユーザーに「問題が発生しました」と出すべきではありません。\n\n---\n\n### 3. 上級 — fetchにタイムアウトを付ける\n\n`fetch()` 単体に汎用のタイムアウトはありません。`AbortController` と `setTimeout()` を組み合わせます:\n\n```javascript\nconst controller = new AbortController();\n\nconst timeout = setTimeout(() => {\n  controller.abort();\n}, 5000);\n\ntry {\n  const response = await fetch(\"/api/users\", {\n    signal: controller.signal\n  });\n\n  const users = await response.json();\n\n  console.log(users);\n} catch (error) {\n  if (error.name === \"AbortError\") {\n    console.log(\"Request timed out\");\n  } else {\n    console.error(error);\n  }\n} finally {\n  clearTimeout(timeout);\n}\n```\n\n```text\nStart fetch\n    │\n    ├──────────────→ Response arrives\n    │                     │\n    │                     ↓\n    │               clear timeout\n    │\n    └── 5 seconds ──→ controller.abort()\n                            │\n                            ↓\n                     Request cancelled\n```\n\n最近のJavaScriptには組み込みの近道もあります:\n\n```javascript\nfetch(\"/api/users\", {\n  signal: AbortSignal.timeout(5000)\n});\n```\n\n---\n\n### Reactのクリーンアップ\n\nコンポーネントが結果を必要としなくなったときに中止するのは、とくに重要な用途です。\n\n```javascript\nuseEffect(() => {\n  const controller = new AbortController();\n\n  async function loadUser() {\n    try {\n      const response = await fetch(\"/api/user\", {\n        signal: controller.signal\n      });\n\n      const user = await response.json();\n\n      setUser(user);\n    } catch (error) {\n      if (error.name !== \"AbortError\") {\n        console.error(error);\n      }\n    }\n  }\n\n  loadUser();\n\n  return () => {\n    controller.abort();\n  };\n}, []);\n```\n\n```text\nComponent mounts\n      │\n      ↓\nCreate controller\n      │\n      ↓\nStart fetch\n      │\n      ├──── Response arrives\n      │          ↓\n      │       setState()\n      │\n      └──── Component unmounts\n                 ↓\n          controller.abort()\n                 ↓\n          Cancel stale request\n```\n\nすでに消えたコンポーネントへ古いリクエストが返ってくるのを防げます。\n\n---\n\n### 検索と古い結果\n\nユーザーが `r`・`re`・`rea`・`reac`・`react` と打つ場面を想像してください。中止しなければ複数のリクエストが同時に走ります:\n\n```text\n\"r\"       ───────────────→\n\"re\"         ────────────→\n\"rea\"           ─────────→\n\"reac\"             ──────→\n\"react\"              ────→\n```\n\n遅い古いリクエストが新しいものより<b>後に</b>終わり、正しい結果を上書きしかねません。`AbortController` を使うと:\n\n```javascript\nlet controller;\n\nasync function search(query) {\n  controller?.abort();\n\n  controller = new AbortController();\n\n  try {\n    const response = await fetch(\n      `/api/search?q=${encodeURIComponent(query)}`,\n      {\n        signal: controller.signal\n      }\n    );\n\n    return await response.json();\n  } catch (error) {\n    if (error.name === \"AbortError\") {\n      return;\n    }\n\n    throw error;\n  }\n}\n```\n\n```text\nSearch \"rea\"\n      │\n      ↓\nRequest A ──────────────X\n\n\nSearch \"react\"\n      │\n      ↓\nRequest B ─────────────────→ Results\n```\n\n古いリクエストは邪魔をする前に中止されます。\n\n---\n\n### `AbortController` と `AbortSignal`\n\nこれは別々のオブジェクトです:\n\n• <b>`AbortController`</b> がキャンセルを制御します。`controller.abort()` を呼ぶのはこちら。\n• <b>`AbortSignal`</b> はキャンセルの状態を表し、`controller.signal` として処理に渡します。\n\n```text\nController\n    │\n    │ owns\n    ↓\n Signal\n    │\n    │ passed to\n    ↓\n fetch()\n```\n\n処理側が `abort()` を呼ぶのではなく、シグナルを見張ります。\n\n---\n\n### 効いてくる場面\n\n<b>タイムアウト</b>・<b>Reactのクリーンアップ</b>・<b>検索の中止</b>・<b>古いリクエストの排除</b>に使います。キャンセルの寿命を本当に共有するなら、1つのコントローラーで複数の処理を束ねられます。",
       },
-      diagram: `const controller = new AbortController();
-fetch(url, { signal: controller.signal })
-      │
-      ├─ request completes normally   → Promise RESOLVES
-      │
-      └─ controller.abort() called    → Promise REJECTS
-                                           err.name === "AbortError"
+      diagram: `1. Create controller
 
-Cleanup pattern (e.g. inside useEffect):
-
-  mount ──► new controller ──► fetch(url,{signal}) ──► setState(data)
-                                      │
-  unmount ─────────────────────► controller.abort()  ← cleanup fn, runs first
-
-Fetch timeout:                 Debounced search:
-  setTimeout(5000ms) ─┐          keystroke 1 → controller1 = new fetch
-  controller.abort() ◄┘          keystroke 2 → controller1.abort() [cancel old]
-  (fires if request               → controller2 = new fetch
-   is too slow)                  keystroke 3 → controller2.abort(), controller3 = new fetch
-                                   → only the LAST request's response survives`,
-      codeExample: {
-        title: { en: "Cancelling fetch requests with AbortController", np: "AbortController सँग fetch requests cancel गर्नु", jp: "AbortControllerでfetchリクエストをキャンセルする" },
-        code: `// ── Basic cancellation ────────────────────────────────────────────
 const controller = new AbortController();
 
-fetch("/api/report", { signal: controller.signal })
-  .then((res) => res.json())
-  .then((data) => console.log(data))
-  .catch((err) => {
-    if (err.name === "AbortError") {
-      console.log("Request was cancelled — not a real error");
-    } else {
-      console.error("Fetch actually failed:", err);
-    }
+
+2. Start request
+
+fetch("/api/users", {
+  signal: controller.signal
+});
+
+
+3. Request is running
+
+Browser
+   │
+   ├── Request ─────────────→ Server
+   │
+   └── controller.signal
+
+
+4. Cancel request
+
+controller.abort()
+        │
+        ↓
+   Request cancelled
+        │
+        ↓
+fetch() rejects with AbortError
+
+
+Controller owns the signal, the operation watches it
+
+Controller
+    │
+    │ owns
+    ↓
+ Signal
+    │
+    │ passed to
+    ↓
+ fetch()
+
+
+Timeout, built from the same two pieces
+
+Start fetch
+    │
+    ├──────────────→ Response arrives
+    │                     │
+    │                     ↓
+    │               clear timeout
+    │
+    └── 5 seconds ──→ controller.abort()
+                            │
+                            ↓
+                     Request cancelled`,
+      codeExample: {
+        title: { en: "Cancelling work that no longer matters", np: "अब चाहिँदैन भन्ने काम रद्द गर्नु", jp: "もう不要になった処理を中止する" },
+        code: `// ── 1. Basic — cancel a request in flight ─────────────────────────
+const controller = new AbortController();
+
+fetch("https://api.example.com/users", { signal: controller.signal })
+  .then(response => response.json())
+  .catch(error => console.log(error.name)); // "AbortError"
+
+controller.abort();
+
+// ── 2. Intermediate — cancellation is not a failure ───────────────
+try {
+  const response = await fetch("/api/users", { signal: controller.signal });
+  console.log(await response.json());
+} catch (error) {
+  if (error.name === "AbortError") return; // the user moved on, stay quiet
+  console.error("Request failed:", error);
+}
+
+// ── 3. Advanced — build a timeout from a controller and a timer ───
+const timeoutController = new AbortController();
+const timer = setTimeout(() => timeoutController.abort(), 5000);
+
+try {
+  const response = await fetch("/api/users", {
+    signal: timeoutController.signal,
   });
+  console.log(await response.json());
+} catch (error) {
+  if (error.name === "AbortError") console.log("Request timed out");
+} finally {
+  clearTimeout(timer); // always clear it, success or failure
+}
 
-controller.abort();   // cancel it — the promise above rejects with AbortError
+// Or use the built-in shortcut
+fetch("/api/users", { signal: AbortSignal.timeout(5000) });
 
-// ── Cancel on unmount inside a React component ─────────────────────
+// ── React cleanup: cancel when the component goes away ────────────
 useEffect(() => {
   const controller = new AbortController();
 
-  async function loadReport() {
-    try {
-      const res = await fetch("/api/report", { signal: controller.signal });
-      if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-      setReport(await res.json());
-    } catch (err) {
-      if (err.name !== "AbortError") setError(err);   // ignore expected cancellations
-    }
-  }
+  fetch("/api/user", { signal: controller.signal })
+    .then(response => response.json())
+    .then(setUser)
+    .catch(error => {
+      if (error.name !== "AbortError") console.error(error);
+    });
 
-  loadReport();
-  return () => controller.abort();   // runs before the next effect / on unmount
-}, [reportId]);
+  return () => controller.abort();
+}, []);
 
-// ── Timeout wrapper — abort if the server is too slow ───────────────
-async function fetchWithTimeout(url, timeoutMs = 5000, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+// ── Search: cancel the previous keystroke's request ───────────────
+let searchController;
 
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
-  } catch (err) {
-    if (err.name === "AbortError") throw new Error(\`Timed out after \${timeoutMs}ms\`);
-    throw err;
-  } finally {
-    clearTimeout(timer);   // no leftover timer either way
-  }
-}
+async function search(query) {
+  searchController?.abort(); // an old, slower reply can no longer win
+  searchController = new AbortController();
 
-// ── Debounced search — always cancel the previous in-flight request ─
-let activeController = null;
+  const response = await fetch(\`/api/search?q=\${encodeURIComponent(query)}\`, {
+    signal: searchController.signal,
+  });
 
-searchInput.addEventListener("input", async (event) => {
-  activeController?.abort();          // kill whatever search was still running
-  activeController = new AbortController();
-
-  try {
-    const res = await fetch(
-      \`/api/search?q=\${encodeURIComponent(event.target.value)}\`,
-      { signal: activeController.signal }
-    );
-    renderResults(await res.json());
-  } catch (err) {
-    if (err.name !== "AbortError") showError(err);
-  }
-});`,
+  return response.json();
+}`,
       },
       keyTakeaways: [
-        { en: "Pass `controller.signal` into `fetch`'s options; calling `controller.abort()` rejects that fetch with an `AbortError` — check `err.name` to tell it apart from a real failure.", np: "`controller.signal` लाई `fetch` को options मा pass गर्नुहोस्; `controller.abort()` call गर्दा त्यो fetch `AbortError` सँग reject हुन्छ — genuine failure बाट छुट्याउन `err.name` check गर्नुहोस्।", jp: "`controller.signal`を`fetch`のオプションに渡す。`controller.abort()`を呼ぶとそのfetchは`AbortError`でrejectされる — 本当の失敗と区別するには`err.name`を確認する。" },
-        { en: "Create one `AbortController` per effect run and call `.abort()` in the effect's cleanup function so a component never sets state from a stale, unmounted request.", np: "हरेक effect run का लागि एउटा `AbortController` बनाउनुहोस् र effect को cleanup function मा `.abort()` call गर्नुहोस्, ताकि component ले कहिल्यै stale, unmounted request बाट state set नगरोस्।", jp: "各エフェクト実行ごとに1つの`AbortController`を作り、エフェクトのクリーンアップ関数で`.abort()`を呼ぶことで、コンポーネントが古い・アンマウント済みのリクエストからstateを設定することを防ぐ。" },
-        { en: "A fetch timeout pairs `setTimeout` with `controller.abort()`; a debounced search aborts the previous controller before every new request so an old response can never overwrite a newer one.", np: "Fetch timeout ले `setTimeout` लाई `controller.abort()` सँग जोड्छ; debounced search ले हरेक नयाँ request अघि पुरानो controller abort गर्छ ताकि पुरानो response ले नयाँलाई कहिल्यै overwrite नगरोस्।", jp: "fetchのタイムアウトは`setTimeout`と`controller.abort()`を組み合わせる。デバウンスされた検索は新しいリクエストごとに前のコントローラーをabortし、古い応答が新しい応答を上書きすることを防ぐ。" },
+        { en: "`AbortController` provides cancellation control for operations that support it.", np: "`AbortController` ले समर्थन गर्ने operation का लागि cancellation नियन्त्रण दिन्छ।", jp: "`AbortController` は対応する処理にキャンセルの制御を与える。" },
+        { en: "<b>`controller.signal`</b> is what connects the controller to `fetch()`.", np: "<b>`controller.signal`</b> ले नै controller लाई `fetch()` सँग जोड्छ।", jp: "コントローラーと `fetch()` をつなぐのが<b>`controller.signal`</b>。" },
+        { en: "<b>`controller.abort()`</b> triggers the cancellation; the operation itself never calls it.", np: "<b>`controller.abort()`</b> ले cancellation सुरु गर्छ; operation आफैंले यो कहिल्यै बोलाउँदैन।", jp: "キャンセルを起こすのは<b>`controller.abort()`</b>。処理側が呼ぶことはない。" },
+        { en: "A cancelled `fetch()` rejects with an error whose `name` is <b>`\"AbortError\"`</b>.", np: "रद्द भएको `fetch()` त्यस्तो error सँग reject हुन्छ जसको `name` <b>`\"AbortError\"`</b> हुन्छ।", jp: "中止された `fetch()` は `name` が<b>`\"AbortError\"`</b> のエラーで拒否される。" },
+        { en: "Handle `AbortError` <b>separately</b> from genuine failures so cancelled work does not look broken.", np: "रद्द भएको काम बिग्रिएको नदेखियोस् भनेर `AbortError` लाई वास्तविक असफलताभन्दा <b>छुट्टै</b> सम्हाल्नुहोस्।", jp: "中止した処理が壊れて見えないよう、`AbortError` は本当の失敗と<b>別に</b>扱う。" },
+        { en: "`fetch()` has no built-in timeout — build one with `setTimeout()` plus `abort()`, or use `AbortSignal.timeout()`.", np: "`fetch()` मा भित्रैको timeout छैन — `setTimeout()` र `abort()` ले बनाउनुहोस्, वा `AbortSignal.timeout()` प्रयोग गर्नुहोस्।", jp: "`fetch()` に組み込みのタイムアウトはない。`setTimeout()` と `abort()` で作るか `AbortSignal.timeout()` を使う。" },
+        { en: "Cancellation prevents <b>stale requests</b> from overwriting newer results, and stops React state updates after unmount.", np: "Cancellation ले <b>बासी request</b> ले नयाँ नतिजा मेट्नबाट जोगाउँछ, र unmount पछिको React state update रोक्छ।", jp: "キャンセルは<b>古いリクエスト</b>が新しい結果を上書きするのを防ぎ、アンマウント後のReactの状態更新も止める。" },
       ],
       commonMistakes: [
-        { en: "Not checking `err.name === \"AbortError\"` in the `catch` block, so an intentional cancellation gets displayed to the user as a real error.", np: "`catch` block मा `err.name === \"AbortError\"` check नगर्नु, जसले गर्दा जानाजानी गरेको cancellation लाई user लाई real error को रूपमा देखाइन्छ।", jp: "`catch`ブロックで`err.name === \"AbortError\"`を確認せず、意図的なキャンセルがユーザーに本当のエラーとして表示されること。" },
-        { en: "Forgetting to call `controller.abort()` in a cleanup function, letting a stale request set state after the component has already unmounted.", np: "Cleanup function मा `controller.abort()` call गर्न बिर्सनु, component पहिले नै unmount भइसकेपछि stale request ले state set गर्न दिनु।", jp: "クリーンアップ関数で`controller.abort()`を呼び忘れ、コンポーネントがすでにアンマウントされた後に古いリクエストがstateを設定してしまうこと。" },
-        { en: "Reusing the same `AbortController` for multiple requests instead of creating a fresh one each time — once aborted, a controller's `signal` stays aborted forever.", np: "हरेक पटक नयाँ नबनाई same `AbortController` लाई multiple requests का लागि पुन: प्रयोग गर्नु — एकपटक abort भएपछि controller को `signal` सधैंभरि aborted नै रहन्छ।", jp: "毎回新しく作らず同じ`AbortController`を複数のリクエストに再利用すること — 一度abortされるとコントローラーの`signal`は永久にabort状態のままになる。" },
+        { en: "<b>Forgetting to pass the signal</b> — calling `fetch(\"/api/users\")` and then `controller.abort()` cancels nothing, because the request was never connected to the controller.", np: "<b>Signal पास गर्न बिर्सनु</b> — `fetch(\"/api/users\")` अनि `controller.abort()` गर्दा केही रद्द हुँदैन, किनकि request controller सँग जोडिएकै थिएन।", jp: "<b>signalを渡し忘れる</b> — `fetch(\"/api/users\")` の後に `controller.abort()` しても何も中止されない。リクエストがコントローラーとつながっていないため。" },
+        { en: "<b>Treating cancellation as an application error</b> — a bare `catch` that calls `showError(\"Failed to load users\")` shows a message to a user who simply navigated away. Return early on `AbortError`.", np: "<b>Cancellation लाई application error ठान्नु</b> — `showError(\"Failed to load users\")` बोलाउने खाली `catch` ले अन्तै गएको user लाई सन्देश देखाउँछ। `AbortError` मा अघि नै फर्किनुहोस्।", jp: "<b>キャンセルをアプリのエラー扱いする</b> — `showError(\"Failed to load users\")` を呼ぶだけの `catch` は、離脱しただけのユーザーにメッセージを出す。`AbortError` なら早期に戻る。" },
+        { en: "<b>Sharing one controller across unrelated requests</b> — giving the same signal to `/api/users` and `/api/posts` means one `abort()` cancels both. Use separate controllers when the operations are independent.", np: "<b>असम्बन्धित request मा एउटै controller बाँड्नु</b> — `/api/users` र `/api/posts` लाई उही signal दिँदा एउटै `abort()` ले दुबै रद्द गर्छ। Operation स्वतन्त्र भए छुट्टाछुट्टै controller प्रयोग गर्नुहोस्।", jp: "<b>無関係なリクエストで1つのコントローラーを共有する</b> — `/api/users` と `/api/posts` に同じシグナルを渡すと、1回の `abort()` で両方止まる。独立した処理には別々のコントローラーを使う。" },
+        { en: "<b>Forgetting to clear the timeout</b> — without `clearTimeout(timer)` in a `finally` block, a pending timer can abort a controller you no longer use.", np: "<b>Timeout clear गर्न बिर्सनु</b> — `finally` मा `clearTimeout(timer)` नभए, बाँकी timer ले अब प्रयोग नगरिने controller abort गर्न सक्छ।", jp: "<b>タイマーの解除を忘れる</b> — `finally` に `clearTimeout(timer)` がないと、残ったタイマーがもう使わないコントローラーを中止しうる。" },
       ],
       quiz: [
         {
-          question: { en: "What is the `.name` of the error a `fetch` promise rejects with when its request is aborted?", np: "Request abort हुँदा `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "リクエストがabortされたとき、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
+          question: { en: "What actually cancels a request?", np: "Request वास्तवमा कसले रद्द गर्छ?", jp: "実際にリクエストを中止するのはどれか?" },
           options: [
-            { en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" },
-            { en: "`\"NetworkError\"`", np: "`\"NetworkError\"`", jp: "`\"NetworkError\"`" },
+            { en: "`controller.cancel()`", np: "`controller.cancel()`", jp: "`controller.cancel()`" },
+            { en: "`signal.cancel()`", np: "`signal.cancel()`", jp: "`signal.cancel()`" },
+            { en: "`controller.abort()`", np: "`controller.abort()`", jp: "`controller.abort()`" },
+            { en: "`fetch.cancel()`", np: "`fetch.cancel()`", jp: "`fetch.cancel()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Aborting a fetch always produces an error whose name is AbortError, which is how you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常に名前がAbortErrorのエラーが生成される。これで意図的なキャンセルと本当の失敗を区別する。" },
+          correctIndex: 2,
+          explanation: { en: "The signal only reports the state; the controller triggers it.", np: "Signal ले अवस्था मात्र बताउँछ; controller ले सुरु गर्छ।", jp: "シグナルは状態を伝えるだけで、起こすのはコントローラー。" },
         },
         {
-          question: { en: "Where should `controller.abort()` be called to prevent a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを防ぐには、`controller.abort()`をどこで呼ぶべき？" },
+          question: { en: "What must be passed to `fetch()` to connect it to an `AbortController`?", np: "`fetch()` लाई `AbortController` सँग जोड्न के पास गर्नुपर्छ?", jp: "`fetch()` を `AbortController` につなぐには何を渡すか?" },
           options: [
-            { en: "Inside the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function भित्र", jp: "`useEffect`から返されるクリーンアップ関数の中" },
-            { en: "Inside the `.then()` success callback", np: "`.then()` success callback भित्र", jp: "`.then()`の成功コールバックの中" },
+            { en: "`controller`", np: "`controller`", jp: "`controller`" },
+            { en: "`controller.signal`", np: "`controller.signal`", jp: "`controller.signal`" },
+            { en: "`controller.abort`", np: "`controller.abort`", jp: "`controller.abort`" },
+            { en: "`AbortController.signal`", np: "`AbortController.signal`", jp: "`AbortController.signal`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "React automatically runs the effect's cleanup function on unmount (or before the next run), making it the correct place to cancel a pending request.", np: "React ले unmount हुँदा (वा अर्को run अघि) effect को cleanup function automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時（または次の実行前）にエフェクトのクリーンアップ関数を自動で実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
+          correctIndex: 1,
+          explanation: { en: "Without the signal, `abort()` has nothing to cancel.", np: "Signal नभए, `abort()` सँग रद्द गर्ने केही हुँदैन।", jp: "シグナルがなければ `abort()` に中止する対象がない。" },
         },
         {
-          question: { en: "In a debounced search box, what should happen the moment the user types a new character?", np: "Debounced search box मा user ले नयाँ character टाइप गर्ने क्षणमा के हुनुपर्छ?", jp: "デバウンスされた検索ボックスで、ユーザーが新しい文字を入力した瞬間に何が起こるべき？" },
+          question: { en: "What does a cancelled `fetch()` normally reject with?", np: "रद्द भएको `fetch()` सामान्यतया केसँग reject हुन्छ?", jp: "中止された `fetch()` は通常どれで拒否されるか?" },
           options: [
-            { en: "Abort the previous in-flight request before starting a new one", np: "नयाँ सुरु गर्नु अघि पुरानो in-flight request abort गर्नुपर्छ", jp: "新しいリクエストを開始する前に前の実行中リクエストをabortする" },
-            { en: "Let every previous request keep running and only render the last one", np: "हरेक पुरानो request चलिरहन दिनुपर्छ र अन्तिम मात्र render गर्नुपर्छ", jp: "すべての前のリクエストを実行させ続け、最後のものだけをレンダリングする" },
+            { en: "`TimeoutError`", np: "`TimeoutError`", jp: "`TimeoutError`" },
+            { en: "`NetworkError`", np: "`NetworkError`", jp: "`NetworkError`" },
+            { en: "`AbortError`", np: "`AbortError`", jp: "`AbortError`" },
+            { en: "`CancelError`", np: "`CancelError`", jp: "`CancelError`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Aborting the previous request prevents a race condition where an old, slower response could arrive after and overwrite the results of a newer search.", np: "पुरानो request abort गर्दा race condition रोकिन्छ जहाँ पुरानो, ढिलो response पछि आएर नयाँ search को result overwrite गर्न सक्छ।", jp: "前のリクエストをabortすることで、古く遅い応答が後から到着して新しい検索結果を上書きするというレースコンディションを防ぐ。" },
+          correctIndex: 2,
+          explanation: { en: "Check `error.name` to tell cancellation from a real failure.", np: "वास्तविक असफलता र cancellation छुट्याउन `error.name` जाँच्नुहोस्।", jp: "本当の失敗と区別するには `error.name` を確認する。" },
+        },
+        {
+          question: { en: "Why is cancellation useful for a search box?", np: "Search box का लागि cancellation किन उपयोगी छ?", jp: "検索ボックスでキャンセルが役立つ理由は?" },
+          options: [
+            { en: "It makes HTTP requests synchronous", np: "यसले HTTP request synchronous बनाउँछ", jp: "HTTPリクエストが同期になるから" },
+            { en: "It prevents older requests from overwriting newer results", np: "यसले पुराना request ले नयाँ नतिजा मेट्नबाट रोक्छ", jp: "古いリクエストが新しい結果を上書きするのを防ぐから" },
+            { en: "It makes the server respond faster", np: "यसले server लाई छिटो जवाफ दिन लगाउँछ", jp: "サーバーの応答が速くなるから" },
+            { en: "It caches results automatically", np: "यसले नतिजा स्वतः cache गर्छ", jp: "結果を自動でキャッシュするから" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "A slow reply to an earlier keystroke can otherwise land last.", np: "नत्र अघिल्लो keystroke को ढिलो जवाफ अन्तिममा आइपुग्न सक्छ।", jp: "そうしないと、前のキー入力への遅い応答が最後に届きうる。" },
+        },
+        {
+          question: { en: "What happens when `controller.abort()` is called right after a `fetch()` that received `controller.signal`?", np: "`controller.signal` पाएको `fetch()` पछि तुरुन्तै `controller.abort()` बोलाउँदा के हुन्छ?", jp: "`controller.signal` を受け取った `fetch()` の直後に `controller.abort()` を呼ぶとどうなるか?" },
+          options: [
+            { en: "The request continues normally", np: "Request सामान्य रूपमा जारी रहन्छ", jp: "リクエストはそのまま続く" },
+            { en: "The request is cancelled", np: "Request रद्द हुन्छ", jp: "リクエストは中止される" },
+            { en: "The response is cached", np: "Response cache हुन्छ", jp: "レスポンスがキャッシュされる" },
+            { en: "The request is retried", np: "Request फेरि प्रयास हुन्छ", jp: "リクエストが再試行される" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The promise rejects with an `AbortError` instead of resolving.", np: "Promise resolve नभई `AbortError` सँग reject हुन्छ।", jp: "Promiseは解決せず `AbortError` で拒否される。" },
         },
       ],
     },
