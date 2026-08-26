@@ -138,56 +138,56 @@ async function fetchUsers() {
         {
           question: { en: "What does `fetch()` return?", np: "`fetch()` ले के फर्काउँछ?", jp: "`fetch()` は何を返すか?" },
           options: [
-            { en: "A `Response`", np: "एउटा `Response`", jp: "`Response`" },
             { en: "A `Promise` that resolves to a `Response`", np: "`Response` मा resolve हुने `Promise`", jp: "`Response` に解決される `Promise`" },
+            { en: "A `Response`", np: "एउटा `Response`", jp: "`Response`" },
             { en: "A JSON object", np: "एउटा JSON object", jp: "JSONオブジェクト" },
             { en: "A string", np: "एउटा string", jp: "文字列" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "That is why `fetch()` pairs naturally with `await`.", np: "त्यसैले `fetch()` `await` सँग स्वाभाविक रूपमा मिल्छ।", jp: "だから `fetch()` は `await` と自然に組み合わさる。" },
         },
         {
           question: { en: "What happens when the server returns `404`?", np: "Server ले `404` फर्काउँदा के हुन्छ?", jp: "サーバーが `404` を返すとどうなるか?" },
           options: [
             { en: "`fetch()` always rejects", np: "`fetch()` सधैं reject हुन्छ", jp: "`fetch()` は必ず拒否される" },
-            { en: "The browser crashes", np: "Browser crash हुन्छ", jp: "ブラウザがクラッシュする" },
             { en: "`fetch()` resolves with `response.ok === false`", np: "`response.ok === false` सहित `fetch()` resolve हुन्छ", jp: "`response.ok === false` で解決される" },
+            { en: "The browser crashes", np: "Browser crash हुन्छ", jp: "ブラウザがクラッシュする" },
             { en: "`fetch()` retries automatically", np: "`fetch()` आफैं फेरि प्रयास गर्छ", jp: "`fetch()` が自動で再試行する" },
           ],
-          correctIndex: 2,
+          correctIndex: 1,
           explanation: { en: "Only network-level failures reject the promise.", np: "Network-स्तरका असफलताले मात्र promise reject गर्छन्।", jp: "Promiseを拒否するのはネットワークレベルの失敗だけ。" },
         },
         {
           question: { en: "How do you parse a JSON response?", np: "JSON response कसरी parse गर्ने?", jp: "JSONレスポンスはどう解析するか?" },
           options: [
             { en: "`response.parse()`", np: "`response.parse()`", jp: "`response.parse()`" },
-            { en: "`response.json()`", np: "`response.json()`", jp: "`response.json()`" },
             { en: "`JSON.parse(response)`", np: "`JSON.parse(response)`", jp: "`JSON.parse(response)`" },
+            { en: "`response.json()`", np: "`response.json()`", jp: "`response.json()`" },
             { en: "`response.data()`", np: "`response.data()`", jp: "`response.data()`" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "It returns a promise, so it needs its own `await`.", np: "यसले promise फर्काउँछ, त्यसैले छुट्टै `await` चाहिन्छ।", jp: "Promiseを返すので、それ自体に `await` が要る。" },
         },
         {
           question: { en: "Why use `JSON.stringify()` when sending JSON?", np: "JSON पठाउँदा `JSON.stringify()` किन प्रयोग गर्ने?", jp: "JSONを送るとき `JSON.stringify()` を使う理由は?" },
           options: [
             { en: "To encrypt the request", np: "Request encrypt गर्न", jp: "リクエストを暗号化するため" },
-            { en: "To convert a JavaScript object into a JSON string", np: "JavaScript object लाई JSON string बनाउन", jp: "JavaScriptオブジェクトをJSON文字列に変換するため" },
-            { en: "To parse the response", np: "Response parse गर्न", jp: "レスポンスを解析するため" },
             { en: "To create a Promise", np: "Promise बनाउन", jp: "Promiseを作るため" },
+            { en: "To parse the response", np: "Response parse गर्न", jp: "レスポンスを解析するため" },
+            { en: "To convert a JavaScript object into a JSON string", np: "JavaScript object लाई JSON string बनाउन", jp: "JavaScriptオブジェクトをJSON文字列に変換するため" },
           ],
-          correctIndex: 1,
+          correctIndex: 3,
           explanation: { en: "`fetch()` does not serialize the body for you.", np: "`fetch()` ले तपाईंका लागि body serialize गर्दैन।", jp: "`fetch()` は本文を代わりに直列化してくれない。" },
         },
         {
           question: { en: "What happens when `response.json()` is called twice on the same response?", np: "एउटै response मा `response.json()` दुई पटक बोलाउँदा के हुन्छ?", jp: "同じレスポンスで `response.json()` を2回呼ぶとどうなるか?" },
           options: [
-            { en: "Both calls work", np: "दुबै call काम गर्छन्", jp: "両方とも動く" },
-            { en: "The second returns the same data", np: "दोस्रोले उही data फर्काउँछ", jp: "2回目も同じデータを返す" },
             { en: "The second consumption fails", np: "दोस्रो खपत असफल हुन्छ", jp: "2回目の消費が失敗する" },
+            { en: "The second returns the same data", np: "दोस्रोले उही data फर्काउँछ", jp: "2回目も同じデータを返す" },
+            { en: "Both calls work", np: "दुबै call काम गर्छन्", jp: "両方とも動く" },
             { en: "The request runs twice", np: "Request दुई पटक चल्छ", jp: "リクエストが2回走る" },
           ],
-          correctIndex: 2,
+          correctIndex: 0,
           explanation: { en: "Clone the response first when you genuinely need two reads.", np: "साँच्चै दुई पटक पढ्नुपर्ने भए पहिले response clone गर्नुहोस्।", jp: "本当に2回読むなら、先にレスポンスを複製する。" },
         },
       ],
@@ -345,22 +345,22 @@ async function search(query) {
           question: { en: "What actually cancels a request?", np: "Request वास्तवमा कसले रद्द गर्छ?", jp: "実際にリクエストを中止するのはどれか?" },
           options: [
             { en: "`controller.cancel()`", np: "`controller.cancel()`", jp: "`controller.cancel()`" },
-            { en: "`signal.cancel()`", np: "`signal.cancel()`", jp: "`signal.cancel()`" },
             { en: "`controller.abort()`", np: "`controller.abort()`", jp: "`controller.abort()`" },
+            { en: "`signal.cancel()`", np: "`signal.cancel()`", jp: "`signal.cancel()`" },
             { en: "`fetch.cancel()`", np: "`fetch.cancel()`", jp: "`fetch.cancel()`" },
           ],
-          correctIndex: 2,
+          correctIndex: 1,
           explanation: { en: "The signal only reports the state; the controller triggers it.", np: "Signal ले अवस्था मात्र बताउँछ; controller ले सुरु गर्छ।", jp: "シグナルは状態を伝えるだけで、起こすのはコントローラー。" },
         },
         {
           question: { en: "What must be passed to `fetch()` to connect it to an `AbortController`?", np: "`fetch()` लाई `AbortController` सँग जोड्न के पास गर्नुपर्छ?", jp: "`fetch()` を `AbortController` につなぐには何を渡すか?" },
           options: [
             { en: "`controller`", np: "`controller`", jp: "`controller`" },
-            { en: "`controller.signal`", np: "`controller.signal`", jp: "`controller.signal`" },
             { en: "`controller.abort`", np: "`controller.abort`", jp: "`controller.abort`" },
+            { en: "`controller.signal`", np: "`controller.signal`", jp: "`controller.signal`" },
             { en: "`AbortController.signal`", np: "`AbortController.signal`", jp: "`AbortController.signal`" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "Without the signal, `abort()` has nothing to cancel.", np: "Signal नभए, `abort()` सँग रद्द गर्ने केही हुँदैन।", jp: "シグナルがなければ `abort()` に中止する対象がない。" },
         },
         {
@@ -368,21 +368,21 @@ async function search(query) {
           options: [
             { en: "`TimeoutError`", np: "`TimeoutError`", jp: "`TimeoutError`" },
             { en: "`NetworkError`", np: "`NetworkError`", jp: "`NetworkError`" },
-            { en: "`AbortError`", np: "`AbortError`", jp: "`AbortError`" },
             { en: "`CancelError`", np: "`CancelError`", jp: "`CancelError`" },
+            { en: "`AbortError`", np: "`AbortError`", jp: "`AbortError`" },
           ],
-          correctIndex: 2,
+          correctIndex: 3,
           explanation: { en: "Check `error.name` to tell cancellation from a real failure.", np: "वास्तविक असफलता र cancellation छुट्याउन `error.name` जाँच्नुहोस्।", jp: "本当の失敗と区別するには `error.name` を確認する。" },
         },
         {
           question: { en: "Why is cancellation useful for a search box?", np: "Search box का लागि cancellation किन उपयोगी छ?", jp: "検索ボックスでキャンセルが役立つ理由は?" },
           options: [
-            { en: "It makes HTTP requests synchronous", np: "यसले HTTP request synchronous बनाउँछ", jp: "HTTPリクエストが同期になるから" },
             { en: "It prevents older requests from overwriting newer results", np: "यसले पुराना request ले नयाँ नतिजा मेट्नबाट रोक्छ", jp: "古いリクエストが新しい結果を上書きするのを防ぐから" },
+            { en: "It makes HTTP requests synchronous", np: "यसले HTTP request synchronous बनाउँछ", jp: "HTTPリクエストが同期になるから" },
             { en: "It makes the server respond faster", np: "यसले server लाई छिटो जवाफ दिन लगाउँछ", jp: "サーバーの応答が速くなるから" },
             { en: "It caches results automatically", np: "यसले नतिजा स्वतः cache गर्छ", jp: "結果を自動でキャッシュするから" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "A slow reply to an earlier keystroke can otherwise land last.", np: "नत्र अघिल्लो keystroke को ढिलो जवाफ अन्तिममा आइपुग्न सक्छ।", jp: "そうしないと、前のキー入力への遅い応答が最後に届きうる。" },
         },
         {
@@ -403,175 +403,318 @@ async function search(query) {
       title: { en: "Web Storage — localStorage & sessionStorage", np: "Web Storage — localStorage र sessionStorage", jp: "Web Storage — localStorageとsessionStorage" },
       durationMinutes: 9,
       explanation: {
-        en: "`localStorage` and `sessionStorage` share the exact same simple API: `setItem(key, value)` saves a value, `getItem(key)` reads it back (or returns `null` if the key doesn't exist), `removeItem(key)` deletes one entry, and `clear()` wipes everything for that origin. The one rule that trips people up: <b>every key and value is always a string</b>. If you save a number or object directly, it gets silently coerced with `String()` — so the standard pattern is to `JSON.stringify()` an object before `setItem`, and `JSON.parse()` the result after `getItem`, wrapped in a `try/catch` in case the stored data is ever corrupted or missing.\n\nBoth storages share a browser-enforced quota of roughly <b>5-10 MB per origin</b> — try to exceed it and `setItem` throws a `QuotaExceededError`, which real code should catch rather than let crash the page. The difference between the two is lifetime and scope: `localStorage` persists indefinitely until code or the user explicitly clears it (surviving tab closes and browser restarts), while `sessionStorage` is scoped to a single tab and is wiped the moment that tab closes — even a duplicate tab of the same page starts with empty `sessionStorage`. A subtle detail about the `storage` event: it fires on `window` whenever `localStorage` changes, but only in <b>other</b> tabs/windows of the same origin — the tab that made the change never receives its own event, which makes it useful for syncing state (like a logout) across open tabs.\n\nWeb Storage isn't the only browser persistence option. Cookies hold far less data (~4KB) but are automatically sent to the server with every matching request, which is exactly why session/auth data historically lived there. `IndexedDB` sits at the other end — a full transactional database capable of storing hundreds of megabytes with structured querying, suited for offline apps and large datasets that Web Storage's flat string API can't handle well. On security: because any JavaScript running on your page — including an injected `XSS` payload — can freely read `localStorage`, it is <b>not</b> a safe place for sensitive, long-lived credentials like refresh tokens. The safer pattern is an `httpOnly` cookie for anything long-lived and sensitive (JavaScript cannot read `httpOnly` cookies at all), reserving `localStorage`/`sessionStorage` for non-sensitive UI state like theme, form drafts, or short-lived access tokens.",
-        np: "`localStorage` र `sessionStorage` ले ठ्याक्कै उही simple API share गर्छन्: `setItem(key, value)` ले value save गर्छ, `getItem(key)` ले फेरि read गर्छ (key नभएमा `null` फर्काउँछ), `removeItem(key)` ले एउटा entry delete गर्छ, र `clear()` ले त्यो origin को सबै कुरा हटाउँछ। मानिसहरू सबैभन्दा बिर्सने नियम: <b>हरेक key र value सधैं string हुन्छ</b>। Number वा object directly save गरेमा, यो silently `String()` ले coerce हुन्छ — त्यसैले standard pattern भनेको object लाई `setItem` अघि `JSON.stringify()` गर्ने, र `getItem` पछि result लाई `JSON.parse()` गर्ने हो, र stored data कहिलेकाहीं corrupted वा missing हुनसक्ने भएकोले `try/catch` मा wrap गर्ने हो।\n\nदुवै storages ले browser-enforced roughly <b>5-10 MB per origin</b> quota share गर्छन् — यो exceed गर्ने प्रयास गर्दा `setItem` ले `QuotaExceededError` throw गर्छ, जसलाई real code मा page crash हुन नदिन catch गर्नुपर्छ। दुई बीचको फरक भनेको lifetime र scope हो: `localStorage` code वा user ले explicitly clear नगरेसम्म (tab बन्द र browser restart पछि पनि बाँचेर) forever persist हुन्छ, जबकि `sessionStorage` एउटै tab मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै wipe हुन्छ — same page को duplicate tab पनि empty `sessionStorage` सँग सुरु हुन्छ। `storage` event को एउटा subtle detail: `localStorage` change हुनासाथ यो `window` मा fire हुन्छ, तर same origin को <b>अन्य</b> tabs/windows मा मात्र — change गर्ने tab ले आफ्नै event कहिल्यै पाउँदैन, जसले खुला tabs हरूमा state sync गर्न (जस्तै logout) उपयोगी बनाउँछ।\n\nWeb Storage मात्र browser persistence option होइन। Cookies ले धेरै कम data (~4KB) राख्छन् तर हरेक matching request सँग automatic रूपमा server मा पठाइन्छन्, जो नै session/auth data historically त्यहाँ राख्ने कारण हो। `IndexedDB` अर्को छेउमा छ — सयौं megabytes structured querying सहित store गर्न सक्ने full transactional database, offline apps र Web Storage को flat string API ले राम्ररी handle नगर्ने large datasets का लागि उपयुक्त। Security बारेमा: तपाईंको page मा चल्ने जुनसुकै JavaScript — injected `XSS` payload समावेश गरी — ले `localStorage` freely read गर्न सक्ने भएकोले, यो refresh tokens जस्ता sensitive, long-lived credentials का लागि <b>safe छैन</b>। सुरक्षित pattern भनेको long-lived र sensitive जुनसुकै कुरा का लागि `httpOnly` cookie हो (JavaScript ले `httpOnly` cookies बिल्कुल read गर्न सक्दैन), र `localStorage`/`sessionStorage` लाई theme, form drafts, वा short-lived access tokens जस्ता non-sensitive UI state का लागि छोड्ने हो।",
-        jp: "`localStorage`と`sessionStorage`はまったく同じシンプルなAPIを共有する: `setItem(key, value)`は値を保存し、`getItem(key)`は読み戻す（キーが存在しない場合は`null`を返す）、`removeItem(key)`は1つのエントリを削除し、`clear()`はそのオリジンのすべてを消す。多くの人が引っかかる唯一のルール: <b>キーと値は常に文字列</b>である。数値やオブジェクトを直接保存すると`String()`で暗黙に変換されてしまう — そのため標準的なパターンは、`setItem`の前にオブジェクトを`JSON.stringify()`し、`getItem`の後に結果を`JSON.parse()`することで、保存データが壊れていたり存在しない場合に備えて`try/catch`で囲む。\n\n両ストレージともブラウザが強制するオリジンあたり約<b>5-10 MB</b>のクォータを共有する — これを超えようとすると`setItem`は`QuotaExceededError`をスローするので、実際のコードはページをクラッシュさせず捕捉すべき。2つの違いは有効期間とスコープ: `localStorage`はコードやユーザーが明示的にクリアしない限り無期限に持続する（タブを閉じてもブラウザを再起動しても残る）。一方`sessionStorage`は単一タブにスコープされ、そのタブが閉じた瞬間に消える — 同じページの複製タブでも空の`sessionStorage`から始まる。`storage`イベントの微妙な点: `localStorage`が変更されると`window`上で発火するが、これは同一オリジンの<b>他の</b>タブ/ウィンドウのみである — 変更を行ったタブ自身は自分のイベントを受け取らない。これは開いているタブ間で状態（ログアウトなど）を同期させるのに便利。\n\nWeb Storageはブラウザの永続化オプションの唯一の手段ではない。Cookieはずっと少ないデータ（約4KB）しか保持できないが、一致するすべてのリクエストと共に自動的にサーバーへ送信される — これこそセッション/認証データが歴史的にそこに置かれてきた理由。`IndexedDB`はその対極にある — 数百メガバイトを構造化クエリ付きで保存できる完全なトランザクションデータベースで、オフラインアプリやWeb Storageのフラットな文字列APIではうまく扱えない大規模データに適している。セキュリティについて: ページ上で動く任意のJavaScript — 注入された`XSS`ペイロードも含む — が`localStorage`を自由に読めるため、リフレッシュトークンのような重要で長期的な認証情報を置くのに<b>安全ではない</b>。より安全なパターンは、長期的で重要なものには`httpOnly`Cookie（JavaScriptは`httpOnly`Cookieを一切読めない）を使い、`localStorage`/`sessionStorage`はテーマ・フォームの下書き・短命なアクセストークンなど非機密なUI状態に限定することである。",
+        en: "<b>Web Storage</b> provides two browser APIs for storing small amounts of client-side data:\n\n• <b>`localStorage`</b> — data survives page reloads, tab closes and browser restarts.\n• <b>`sessionStorage`</b> — data lasts only for the current browser tab session.\n\nBoth use the same simple key-value API:\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconst theme = localStorage.getItem(\"theme\");\n\nlocalStorage.removeItem(\"theme\");\n\nlocalStorage.clear();\n```\n\nThe most important rule:\n\n> <b>Web Storage stores strings only.</b>\n\nIf you store an object directly, JavaScript converts it to a string, which is almost never what you want.\n\n---\n\n### 1. Basic — store and retrieve values\n\n```javascript\nlocalStorage.setItem(\"username\", \"Rajan\");\n\nconst username = localStorage.getItem(\"username\");\n\nconsole.log(username); // \"Rajan\"\n```\n\nEverything comes back as a string:\n\n```javascript\nlocalStorage.setItem(\"age\", 30);\n\nconst age = localStorage.getItem(\"age\");\n\nconsole.log(age);        // \"30\"\nconsole.log(typeof age); // \"string\"\n```\n\nA missing key returns `null`:\n\n```javascript\nconsole.log(localStorage.getItem(\"missing\")); // null\n```\n\n---\n\n### 2. Intermediate — storing objects with JSON\n\nYou cannot store an object and expect it back as an object:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nlocalStorage.setItem(\"user\", user);\n\nconsole.log(localStorage.getItem(\"user\")); // \"[object Object]\"\n```\n\nSerialize when saving and parse when reading:\n\n```javascript\nlocalStorage.setItem(\"user\", JSON.stringify(user));\n\nconst storedUser = localStorage.getItem(\"user\");\n\nconst parsed = JSON.parse(storedUser);\n\nconsole.log(parsed.name); // \"Rajan\"\n```\n\nThe complete round trip:\n\n```text\nJavaScript object\n      │\n      ↓ JSON.stringify()\n    String\n      │\n      ↓ setItem()\n localStorage\n      │\n      ↓ getItem()\n    String\n      │\n      ↓ JSON.parse()\nJavaScript object\n```\n\n---\n\n### 3. Advanced — safely reading stored JSON\n\nStored data can be missing or corrupted, so production code should not call `JSON.parse()` blindly.\n\n```javascript\nfunction getUser() {\n  const stored = localStorage.getItem(\"user\");\n\n  if (!stored) {\n    return null;\n  }\n\n  try {\n    return JSON.parse(stored);\n  } catch {\n    localStorage.removeItem(\"user\");\n    return null;\n  }\n}\n\nconst user = getUser();\n```\n\nThis stops malformed storage data from crashing the application.\n\n---\n\n### `localStorage` vs `sessionStorage`\n\nThe APIs are almost identical; the difference is lifetime and scope.\n\n```text\n                      localStorage       sessionStorage\nPage reload           persists           persists\nClose the tab         persists           removed\nBrowser restart       persists           removed\nScope                 origin             origin + tab\nAPI                   same               same\nGood for              preferences        temporary tab state\n```\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");           // a user preference\n\nsessionStorage.setItem(\"checkoutStep\", \"payment\"); // only for this tab\n```\n\n---\n\n### Key methods\n\nBoth APIs share the same methods:\n\n```javascript\nstorage.setItem(key, value); // stores a string\nstorage.getItem(key);        // returns the string, or null\nstorage.removeItem(key);     // removes one key\nstorage.clear();             // removes everything for that origin\nstorage.length;              // number of stored keys\nstorage.key(index);          // the key at an index\n```\n\n```javascript\nlocalStorage.setItem(\"name\", \"Rajan\");\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconsole.log(localStorage.length); // 2\nconsole.log(localStorage.key(0)); // \"name\" — ordering is not guaranteed\n```\n\n---\n\n### The `storage` event\n\nThe browser fires a `storage` event that can synchronise state between tabs of the same origin.\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  console.log(\"Key:\", event.key);\n  console.log(\"Old value:\", event.oldValue);\n  console.log(\"New value:\", event.newValue);\n});\n```\n\n```text\nTab A                         Tab B\n  │                             │\n  │ localStorage.setItem()      │\n  │                             │\n  └────────────────────────────→│\n                                │\n                         storage event\n```\n\n> <b>The tab that makes the change does not receive its own `storage` event.</b>\n\nThat is exactly what makes it useful for cross-tab work. Logging out in one tab can push another tab to the login page:\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  if (event.key === \"loggedIn\" && event.newValue === \"false\") {\n    window.location.href = \"/login\";\n  }\n});\n```\n\n---\n\n### Web Storage vs cookies vs IndexedDB\n\n```text\n                        Web Storage    Cookies         IndexedDB\nStorage size            ~5-10 MB       ~4 KB each      much larger\nData type               strings        strings         structured data\nSent to the server      no             yes             no\nAsync API               no             no              yes\nComplex queries         no             no              yes\nGood for                small UI state server state    large offline data\n```\n\nUse Web Storage for small pieces of client-side state, and IndexedDB when you need a real client-side database or substantial offline storage. Cookies differ because matching cookies are attached to HTTP requests automatically.\n\n---\n\n### Security — do not treat storage as a vault\n\nJavaScript on the page can read `localStorage.getItem(\"token\")`. So if an attacker gets JavaScript to run through an <b>XSS vulnerability</b>, that code can read your storage too.\n\nThat is why <b>long-lived sensitive credentials such as refresh tokens generally should not live in `localStorage`</b>. An `HttpOnly` cookie has a property storage cannot match:\n\n```text\nJavaScript\n    │\n    ├── localStorage → can read\n    │\n    └── HttpOnly cookie → cannot read\n```\n\nThe browser still sends an `HttpOnly` cookie with the right requests, but `document.cookie` cannot see its value. A common split:\n\n```text\nNon-sensitive UI state\n        ↓\nlocalStorage / sessionStorage\n\nLong-lived sensitive credential\n        ↓\nSecure + HttpOnly cookie\n```\n\nReal decisions also involve `Secure`, `SameSite`, CSRF protection and your authentication architecture.\n\n---\n\n### Storage can fail\n\nStorage has browser-enforced quotas, and exceeding one throws:\n\n```javascript\ntry {\n  localStorage.setItem(\"largeData\", hugeString);\n} catch (error) {\n  if (error.name === \"QuotaExceededError\") {\n    console.log(\"Storage quota exceeded\");\n  }\n}\n```\n\nProduction code that writes large values should handle this.",
+        np: "<b>Web Storage</b> ले client-side मा सानो मात्रामा data राख्ने दुई browser API दिन्छ:\n\n• <b>`localStorage`</b> — data page reload, tab बन्द र browser restart पछि पनि रहन्छ।\n• <b>`sessionStorage`</b> — data हालको browser tab session सम्म मात्र रहन्छ।\n\nदुबैले उही सरल key-value API प्रयोग गर्छन्:\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconst theme = localStorage.getItem(\"theme\");\n\nlocalStorage.removeItem(\"theme\");\n\nlocalStorage.clear();\n```\n\nसबैभन्दा महत्वपूर्ण नियम:\n\n> <b>Web Storage ले string मात्र राख्छ।</b>\n\nObject सिधै राख्दा JavaScript ले त्यसलाई string बनाइदिन्छ, जुन प्रायः तपाईंले चाहेको हुँदैन।\n\n---\n\n### 1. आधारभूत — मान राख्नु र झिक्नु\n\n```javascript\nlocalStorage.setItem(\"username\", \"Rajan\");\n\nconst username = localStorage.getItem(\"username\");\n\nconsole.log(username); // \"Rajan\"\n```\n\nसबै कुरा string भएर फर्किन्छ:\n\n```javascript\nlocalStorage.setItem(\"age\", 30);\n\nconst age = localStorage.getItem(\"age\");\n\nconsole.log(age);        // \"30\"\nconsole.log(typeof age); // \"string\"\n```\n\nनभएको key ले `null` फर्काउँछ:\n\n```javascript\nconsole.log(localStorage.getItem(\"missing\")); // null\n```\n\n---\n\n### 2. मध्यम — JSON सँग object राख्नु\n\nObject राखेर object नै फर्कने अपेक्षा गर्न मिल्दैन:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nlocalStorage.setItem(\"user\", user);\n\nconsole.log(localStorage.getItem(\"user\")); // \"[object Object]\"\n```\n\nराख्दा serialize गर्नुहोस्, पढ्दा parse:\n\n```javascript\nlocalStorage.setItem(\"user\", JSON.stringify(user));\n\nconst storedUser = localStorage.getItem(\"user\");\n\nconst parsed = JSON.parse(storedUser);\n\nconsole.log(parsed.name); // \"Rajan\"\n```\n\nपूरा चक्र:\n\n```text\nJavaScript object\n      │\n      ↓ JSON.stringify()\n    String\n      │\n      ↓ setItem()\n localStorage\n      │\n      ↓ getItem()\n    String\n      │\n      ↓ JSON.parse()\nJavaScript object\n```\n\n---\n\n### 3. उन्नत — राखिएको JSON सुरक्षित रूपमा पढ्नु\n\nData हराउन वा बिग्रिन सक्छ, त्यसैले production code ले आँखा चिम्लेर `JSON.parse()` बोलाउनु हुँदैन।\n\n```javascript\nfunction getUser() {\n  const stored = localStorage.getItem(\"user\");\n\n  if (!stored) {\n    return null;\n  }\n\n  try {\n    return JSON.parse(stored);\n  } catch {\n    localStorage.removeItem(\"user\");\n    return null;\n  }\n}\n\nconst user = getUser();\n```\n\nयसले बिग्रिएको storage data ले application crash गर्नबाट रोक्छ।\n\n---\n\n### `localStorage` vs `sessionStorage`\n\nAPI झन्डै उस्तै छन्; भिन्नता आयु र दायरामा छ।\n\n```text\n                      localStorage       sessionStorage\nPage reload           रहन्छ              रहन्छ\nTab बन्द              रहन्छ              हट्छ\nBrowser restart       रहन्छ              हट्छ\nदायरा                 origin             origin + tab\nAPI                   उही                उही\nउपयुक्त               preference         अस्थायी tab state\n```\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");           // user को रुचि\n\nsessionStorage.setItem(\"checkoutStep\", \"payment\"); // यही tab का लागि मात्र\n```\n\n---\n\n### मुख्य method\n\nदुबै API मा उही method छन्:\n\n```javascript\nstorage.setItem(key, value); // string राख्छ\nstorage.getItem(key);        // string, वा null फर्काउँछ\nstorage.removeItem(key);     // एउटा key हटाउँछ\nstorage.clear();             // त्यो origin को सबै हटाउँछ\nstorage.length;              // राखिएका key को संख्या\nstorage.key(index);          // index मा भएको key\n```\n\n```javascript\nlocalStorage.setItem(\"name\", \"Rajan\");\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconsole.log(localStorage.length); // 2\nconsole.log(localStorage.key(0)); // \"name\" — क्रमको ग्यारेन्टी छैन\n```\n\n---\n\n### `storage` event\n\nBrowser ले `storage` event पठाउँछ जसले एउटै origin का tab बीच state मिलाउन सक्छ।\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  console.log(\"Key:\", event.key);\n  console.log(\"Old value:\", event.oldValue);\n  console.log(\"New value:\", event.newValue);\n});\n```\n\n```text\nTab A                         Tab B\n  │                             │\n  │ localStorage.setItem()      │\n  │                             │\n  └────────────────────────────→│\n                                │\n                         storage event\n```\n\n> <b>परिवर्तन गर्ने tab ले आफ्नै `storage` event पाउँदैन।</b>\n\nत्यसैले यो cross-tab काममा उपयोगी छ। एउटा tab मा logout गर्दा अर्को tab लाई login page मा पठाउन सकिन्छ:\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  if (event.key === \"loggedIn\" && event.newValue === \"false\") {\n    window.location.href = \"/login\";\n  }\n});\n```\n\n---\n\n### Web Storage vs cookie vs IndexedDB\n\n```text\n                        Web Storage    Cookie          IndexedDB\nआकार                    ~5-10 MB       प्रति ~4 KB      धेरै ठूलो\nData प्रकार             string         string          संरचित data\nServer मा पठाइन्छ?      पठाइँदैन       पठाइन्छ         पठाइँदैन\nAsync API               छैन            छैन             छ\nजटिल query              छैन            छैन             छ\nउपयुक्त                 सानो UI state  server state    ठूलो offline data\n```\n\nसानो client-side state का लागि Web Storage, र साँच्चै client-side database वा ठूलो offline भण्डारण चाहिँदा IndexedDB प्रयोग गर्नुहोस्। Cookie फरक छ किनकि मिल्ने cookie HTTP request सँग स्वतः जान्छन्।\n\n---\n\n### सुरक्षा — storage लाई तिजोरी नठान्नुहोस्\n\nPage को JavaScript ले `localStorage.getItem(\"token\")` पढ्न सक्छ। त्यसैले <b>XSS भेद्यता</b> मार्फत हमलावरले JavaScript चलाउन पाए, त्यो code ले तपाईंको storage पनि पढ्न सक्छ।\n\nत्यसैले <b>refresh token जस्ता दीर्घकालीन संवेदनशील credential सामान्यतया `localStorage` मा राख्नु हुँदैन</b>। `HttpOnly` cookie सँग storage ले दिन नसक्ने गुण छ:\n\n```text\nJavaScript\n    │\n    ├── localStorage → पढ्न सक्छ\n    │\n    └── HttpOnly cookie → पढ्न सक्दैन\n```\n\nBrowser ले `HttpOnly` cookie उपयुक्त request सँग पठाइरहन्छ, तर `document.cookie` ले यसको मान देख्दैन। सामान्य विभाजन:\n\n```text\nसंवेदनशील नभएको UI state\n        ↓\nlocalStorage / sessionStorage\n\nदीर्घकालीन संवेदनशील credential\n        ↓\nSecure + HttpOnly cookie\n```\n\nवास्तविक निर्णयमा `Secure`, `SameSite`, CSRF सुरक्षा र तपाईंको authentication संरचना पनि जोडिन्छ।\n\n---\n\n### Storage असफल हुन सक्छ\n\nStorage मा browser ले तोकेको quota हुन्छ, र नाघ्दा error आउँछ:\n\n```javascript\ntry {\n  localStorage.setItem(\"largeData\", hugeString);\n} catch (error) {\n  if (error.name === \"QuotaExceededError\") {\n    console.log(\"Storage quota exceeded\");\n  }\n}\n```\n\nठूलो मान लेख्ने production code ले यो सम्हाल्नुपर्छ।",
+        jp: "<b>Web Storage</b> は、少量のクライアント側データを保存する2つのブラウザAPIです:\n\n• <b>`localStorage`</b> — 再読み込み・タブを閉じる・ブラウザ再起動をまたいで残る。\n• <b>`sessionStorage`</b> — 現在のタブのセッションの間だけ残る。\n\nどちらも同じ単純なキーと値のAPIです:\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconst theme = localStorage.getItem(\"theme\");\n\nlocalStorage.removeItem(\"theme\");\n\nlocalStorage.clear();\n```\n\n最も重要な規則:\n\n> <b>Web Storageが保存できるのは文字列だけ。</b>\n\nオブジェクトをそのまま入れるとJavaScriptが文字列に変換してしまい、ほぼ望んだ結果になりません。\n\n---\n\n### 1. 基本 — 保存と取得\n\n```javascript\nlocalStorage.setItem(\"username\", \"Rajan\");\n\nconst username = localStorage.getItem(\"username\");\n\nconsole.log(username); // \"Rajan\"\n```\n\nすべて文字列で戻ります:\n\n```javascript\nlocalStorage.setItem(\"age\", 30);\n\nconst age = localStorage.getItem(\"age\");\n\nconsole.log(age);        // \"30\"\nconsole.log(typeof age); // \"string\"\n```\n\n存在しないキーは `null` です:\n\n```javascript\nconsole.log(localStorage.getItem(\"missing\")); // null\n```\n\n---\n\n### 2. 中級 — JSONでオブジェクトを保存する\n\nオブジェクトを入れてオブジェクトのまま戻ることは期待できません:\n\n```javascript\nconst user = {\n  name: \"Rajan\",\n  age: 30\n};\n\nlocalStorage.setItem(\"user\", user);\n\nconsole.log(localStorage.getItem(\"user\")); // \"[object Object]\"\n```\n\n保存時に直列化し、読み取り時に解析します:\n\n```javascript\nlocalStorage.setItem(\"user\", JSON.stringify(user));\n\nconst storedUser = localStorage.getItem(\"user\");\n\nconst parsed = JSON.parse(storedUser);\n\nconsole.log(parsed.name); // \"Rajan\"\n```\n\n往復の全体像:\n\n```text\nJavaScript object\n      │\n      ↓ JSON.stringify()\n    String\n      │\n      ↓ setItem()\n localStorage\n      │\n      ↓ getItem()\n    String\n      │\n      ↓ JSON.parse()\nJavaScript object\n```\n\n---\n\n### 3. 上級 — 保存済みJSONを安全に読む\n\nデータは欠けたり壊れたりします。本番のコードは無条件に `JSON.parse()` を呼ぶべきではありません。\n\n```javascript\nfunction getUser() {\n  const stored = localStorage.getItem(\"user\");\n\n  if (!stored) {\n    return null;\n  }\n\n  try {\n    return JSON.parse(stored);\n  } catch {\n    localStorage.removeItem(\"user\");\n    return null;\n  }\n}\n\nconst user = getUser();\n```\n\n壊れた保存データでアプリが落ちるのを防げます。\n\n---\n\n### `localStorage` と `sessionStorage`\n\nAPIはほぼ同じで、違うのは寿命と範囲です。\n\n```text\n                      localStorage       sessionStorage\n再読み込み            残る               残る\nタブを閉じる          残る               消える\nブラウザ再起動        残る               消える\n範囲                  オリジン           オリジン + タブ\nAPI                   同じ               同じ\n向いている用途        設定               一時的なタブの状態\n```\n\n```javascript\nlocalStorage.setItem(\"theme\", \"dark\");           // ユーザーの好み\n\nsessionStorage.setItem(\"checkoutStep\", \"payment\"); // このタブだけ\n```\n\n---\n\n### 主なメソッド\n\n両者は同じメソッドを持ちます:\n\n```javascript\nstorage.setItem(key, value); // 文字列を保存\nstorage.getItem(key);        // 文字列、なければnull\nstorage.removeItem(key);     // キーを1つ削除\nstorage.clear();             // そのオリジンの全件を削除\nstorage.length;              // 保存されたキーの数\nstorage.key(index);          // その位置のキー\n```\n\n```javascript\nlocalStorage.setItem(\"name\", \"Rajan\");\nlocalStorage.setItem(\"theme\", \"dark\");\n\nconsole.log(localStorage.length); // 2\nconsole.log(localStorage.key(0)); // \"name\" — 順序は保証されない\n```\n\n---\n\n### `storage` イベント\n\nブラウザは `storage` イベントを発火し、同じオリジンのタブ間で状態を同期できます。\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  console.log(\"Key:\", event.key);\n  console.log(\"Old value:\", event.oldValue);\n  console.log(\"New value:\", event.newValue);\n});\n```\n\n```text\nTab A                         Tab B\n  │                             │\n  │ localStorage.setItem()      │\n  │                             │\n  └────────────────────────────→│\n                                │\n                         storage event\n```\n\n> <b>変更を行ったタブ自身は `storage` イベントを受け取らない。</b>\n\nだからこそタブ間の同期に使えます。片方のタブでログアウトすると、もう一方をログイン画面へ送れます:\n\n```javascript\nwindow.addEventListener(\"storage\", event => {\n  if (event.key === \"loggedIn\" && event.newValue === \"false\") {\n    window.location.href = \"/login\";\n  }\n});\n```\n\n---\n\n### Web Storage・クッキー・IndexedDB\n\n```text\n                        Web Storage    クッキー        IndexedDB\n容量                    ~5-10 MB       1つ~4 KB        はるかに大きい\nデータ型                文字列         文字列          構造化データ\nサーバーへ自動送信      されない       される          されない\n非同期API               ない           ない            ある\n複雑なクエリ            不可           不可            可能\n向いている用途          小さなUI状態   サーバー状態    大きなオフラインデータ\n```\n\n小さなクライアント状態にはWeb Storage、本格的なクライアントDBや大きなオフライン保存にはIndexedDBを使います。クッキーは、条件に合うものがHTTPリクエストへ自動的に付く点で異なります。\n\n---\n\n### セキュリティ — 保管庫ではない\n\nページ上のJavaScriptは `localStorage.getItem(\"token\")` を読めます。つまり<b>XSSの脆弱性</b>で攻撃者のJavaScriptが動けば、その保存内容も読まれます。\n\nだから<b>リフレッシュトークンのような長命で機微な資格情報は、原則 `localStorage` に置かない</b>べきです。`HttpOnly` クッキーにはストレージにない性質があります:\n\n```text\nJavaScript\n    │\n    ├── localStorage → 読める\n    │\n    └── HttpOnly cookie → 読めない\n```\n\nブラウザは `HttpOnly` クッキーを適切なリクエストに付けて送りますが、`document.cookie` からは値が見えません。よくある切り分け:\n\n```text\n機微でないUIの状態\n        ↓\nlocalStorage / sessionStorage\n\n長命で機微な資格情報\n        ↓\nSecure + HttpOnly cookie\n```\n\n実際の判断には `Secure`・`SameSite`・CSRF対策・認証設計も関わります。\n\n---\n\n### 保存は失敗しうる\n\nストレージにはブラウザの割当があり、超えると例外になります:\n\n```javascript\ntry {\n  localStorage.setItem(\"largeData\", hugeString);\n} catch (error) {\n  if (error.name === \"QuotaExceededError\") {\n    console.log(\"Storage quota exceeded\");\n  }\n}\n```\n\n大きな値を書く本番コードはこれを扱うべきです。",
       },
-      diagram: `                 localStorage              sessionStorage
-lifetime          forever (until cleared)   until TAB closes
-scope             same origin, ALL tabs     current tab ONLY
-capacity          ~5-10 MB                  ~5-10 MB
+      diagram: `                    Web Storage
+                         │
+             ┌───────────┴───────────┐
+             ↓                       ↓
+       localStorage            sessionStorage
+             │                       │
+       survives reloads         survives reloads
+       survives tab close       until tab closes
+       survives restart         tab-specific
+             │                       │
+             └───────────┬───────────┘
+                         ↓
+                    String values
 
-API (identical for both):
-  setItem(key, value)   → value coerced to STRING
-  getItem(key)          → string | null
-  removeItem(key)
-  clear()
 
-Objects need JSON:
-  setItem("user", JSON.stringify({ name: "Alice" }))
-  JSON.parse(getItem("user"))          → { name: "Alice" }
+Objects need a round trip through JSON
 
-storage event:
-  Tab A: localStorage.setItem("theme","dark")
-  Tab A window ─── does NOT get "storage" event
-  Tab B window ─── DOES get "storage" event   ← fires in OTHER tabs only
+JavaScript object
+      │
+      ↓ JSON.stringify()
+    String
+      │
+      ↓ setItem()
+ localStorage
+      │
+      ↓ getItem()
+    String
+      │
+      ↓ JSON.parse()
+JavaScript object
 
-localStorage   ── XSS script CAN read it ──►  NOT safe for long-lived secrets
-httpOnly cookie ── JS cannot read it at all ──► safer for refresh tokens`,
+
+Cross-tab sync, and who does not get the event
+
+Tab A                         Tab B
+  │                             │
+  │ localStorage.setItem()      │
+  │                             │
+  └────────────────────────────→│
+                                │
+                         storage event
+
+
+What JavaScript can and cannot read
+
+JavaScript
+    │
+    ├── localStorage → can read
+    │
+    └── HttpOnly cookie → cannot read`,
       codeExample: {
-        title: { en: "Reading, writing and choosing the right storage", np: "सहि storage read, write र choose गर्नु", jp: "適切なストレージの読み書きと選択" },
-        code: `// ── Basic API — identical for localStorage and sessionStorage ──────
-localStorage.setItem("theme", "dark");
-localStorage.getItem("theme");        // "dark"
-localStorage.getItem("missingKey");   // null — not an error
-localStorage.removeItem("theme");
-localStorage.clear();                 // wipes EVERY key for this origin
+        title: { en: "Strings in, strings out", np: "String भित्र, string बाहिर", jp: "入るのも出るのも文字列" },
+        code: `// ── 1. Basic — everything comes back as a string ──────────────────
+localStorage.setItem("username", "Rajan");
+console.log(localStorage.getItem("username")); // "Rajan"
 
-// ── Values are always strings — JSON for anything else ──────────────
-const settings = { theme: "dark", fontSize: 16 };
-localStorage.setItem("settings", JSON.stringify(settings));
+localStorage.setItem("age", 30);
+console.log(typeof localStorage.getItem("age")); // "string", not "number"
+console.log(Number(localStorage.getItem("age")) + 1); // 31
 
-const stored = JSON.parse(localStorage.getItem("settings") ?? "null");
-console.log(stored?.fontSize);   // 16
+console.log(localStorage.getItem("missing")); // null
 
-// ── Safe read/write helpers that survive corrupted/missing data ─────
-function readStorage(key, fallback = null) {
+// ── 2. Intermediate — objects need JSON on both sides ─────────────
+const user = { name: "Rajan", age: 30 };
+
+localStorage.setItem("user", user);                 // "[object Object]"
+localStorage.setItem("user", JSON.stringify(user)); // correct
+
+const parsed = JSON.parse(localStorage.getItem("user"));
+
+// ── 3. Advanced — read defensively, storage can be corrupted ──────
+function getUser() {
+  const stored = localStorage.getItem("user");
+  if (!stored) return null;
+
   try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    return JSON.parse(stored);
   } catch {
-    return fallback;   // JSON.parse blew up — treat it as if it wasn't there
+    localStorage.removeItem("user"); // drop the bad value instead of crashing
+    return null;
   }
 }
 
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (err) {
-    // storage is full — roughly a 5-10MB ceiling per origin
-    console.error("QuotaExceededError:", err);
-  }
-}
+// ── Choosing the right lifetime ───────────────────────────────────
+localStorage.setItem("theme", "dark");             // outlives the tab
+sessionStorage.setItem("checkoutStep", "payment"); // dies with the tab
 
-// ── sessionStorage — same API, scoped to this tab only ──────────────
-sessionStorage.setItem("wizardStep", "2");    // cleared automatically when the tab closes
-// a duplicate of this tab in a new window starts with an EMPTY sessionStorage
-
-// ── Reacting to changes made in OTHER tabs ──────────────────────────
-window.addEventListener("storage", (event) => {
-  // Only fires here if a DIFFERENT tab changed localStorage — never this tab's own writes
-  if (event.key === "authToken" && event.newValue === null) {
-    // another tab logged out — mirror it here too
-    window.location.reload();
+// ── Cross-tab sync: the writing tab never hears its own event ─────
+window.addEventListener("storage", event => {
+  if (event.key === "loggedIn" && event.newValue === "false") {
+    window.location.href = "/login";
   }
 });
 
-// ── Security: don't put long-lived secrets in localStorage ──────────
-// localStorage.setItem("refreshToken", token);  // readable by any injected XSS script
-// Better: keep the refresh token in an httpOnly cookie (set by the server,
-// completely invisible to JavaScript) and hold only a short-lived access
-// token in memory (a plain JS variable, gone on page reload).`,
+// ── Writing can fail on quota ─────────────────────────────────────
+try {
+  localStorage.setItem("largeData", hugeString);
+} catch (error) {
+  if (error.name === "QuotaExceededError") console.log("Storage quota exceeded");
+}`,
       },
       keyTakeaways: [
-        { en: "`localStorage`/`sessionStorage` share the same `setItem`/`getItem`/`removeItem`/`clear` API but differ in lifetime (forever vs per-tab); values are always strings, so objects need `JSON.stringify`/`JSON.parse`.", np: "`localStorage`/`sessionStorage` ले उही `setItem`/`getItem`/`removeItem`/`clear` API share गर्छन् तर lifetime (forever vs per-tab) मा फरक हुन्छन्; values सधैं strings हुन्छन्, त्यसैले objects लाई `JSON.stringify`/`JSON.parse` चाहिन्छ।", jp: "`localStorage`/`sessionStorage`は同じ`setItem`/`getItem`/`removeItem`/`clear`APIを共有するが、有効期間（永続 vs タブ単位）が異なる。値は常に文字列なので、オブジェクトには`JSON.stringify`/`JSON.parse`が必要。" },
-        { en: "Both have a roughly 5-10MB per-origin quota (`QuotaExceededError` if exceeded); the `storage` event only fires in other tabs, never the tab that made the change.", np: "दुवैको roughly 5-10MB per-origin quota हुन्छ (exceed भएमा `QuotaExceededError`); `storage` event अन्य tabs मा मात्र fire हुन्छ, change गर्ने tab मा कहिल्यै फायर हुँदैन।", jp: "両方ともオリジンあたり約5-10MBのクォータがある（超えると`QuotaExceededError`）。`storage`イベントは他のタブでのみ発火し、変更したタブ自身では発火しない。" },
-        { en: "Cookies are smaller but auto-sent with every request, `IndexedDB` handles large structured data; avoid storing long-lived sensitive tokens in `localStorage` (XSS risk) — prefer `httpOnly` cookies.", np: "Cookies साना हुन्छन् तर हरेक request सँग auto-sent हुन्छन्, `IndexedDB` ले large structured data handle गर्छ; `localStorage` (XSS risk) मा long-lived sensitive tokens राख्नबाट जोगिनुहोस् — `httpOnly` cookies prefer गर्नुहोस्।", jp: "Cookieは小さいが全リクエストで自動送信され、`IndexedDB`は大きな構造化データを扱う。`localStorage`（XSSリスク）に長期的な機密トークンを保存するのは避け、`httpOnly`Cookieを優先する。" },
+        { en: "Web Storage stores <b>strings only</b> — every value comes back as a string.", np: "Web Storage ले <b>string मात्र</b> राख्छ — हरेक मान string भएर फर्किन्छ।", jp: "Web Storageが保存するのは<b>文字列だけ</b>。取り出す値も必ず文字列。" },
+        { en: "`localStorage` survives tab closes and browser restarts; `sessionStorage` dies with the tab.", np: "`localStorage` tab बन्द र browser restart पछि पनि रहन्छ; `sessionStorage` tab सँगै जान्छ।", jp: "`localStorage` はタブを閉じても再起動しても残り、`sessionStorage` はタブとともに消える。" },
+        { en: "Store objects with <b>`JSON.stringify()`</b> and read them back with <b>`JSON.parse()`</b>.", np: "Object <b>`JSON.stringify()`</b> ले राख्नुहोस् र <b>`JSON.parse()`</b> ले पढ्नुहोस्।", jp: "オブジェクトは<b>`JSON.stringify()`</b> で保存し、<b>`JSON.parse()`</b> で読み戻す。" },
+        { en: "`getItem()` returns <b>`null`</b> for a missing key — guard before parsing.", np: "नभएको key का लागि `getItem()` ले <b>`null`</b> फर्काउँछ — parse गर्नुअघि जाँच्नुहोस्।", jp: "存在しないキーで `getItem()` は<b>`null`</b> を返す。解析前に確認する。" },
+        { en: "Each tab has its <b>own</b> `sessionStorage`; it is never shared between tabs.", np: "हरेक tab को <b>आफ्नै</b> `sessionStorage` हुन्छ; यो tab बीच बाँडिँदैन।", jp: "`sessionStorage` はタブごとに<b>独立</b>しており、タブ間で共有されない。" },
+        { en: "The <b>`storage`</b> event syncs changes across tabs, but the writing tab does not receive it.", np: "<b>`storage`</b> event ले tab बीच परिवर्तन मिलाउँछ, तर लेख्ने tab ले यो पाउँदैन।", jp: "<b>`storage`</b> イベントはタブ間で変更を同期するが、書き込んだタブ自身には届かない。" },
+        { en: "Any script on the page can read storage, so keep long-lived credentials in a <b>`Secure` + `HttpOnly` cookie</b> instead.", np: "Page को कुनै पनि script ले storage पढ्न सक्छ, त्यसैले दीर्घकालीन credential बरु <b>`Secure` + `HttpOnly` cookie</b> मा राख्नुहोस्।", jp: "ページ上のどのスクリプトもストレージを読めるので、長命の資格情報は<b>`Secure` + `HttpOnly` クッキー</b>に置く。" },
+        { en: "`setItem()` can throw <b>`QuotaExceededError`</b> — handle it when writing large values.", np: "`setItem()` ले <b>`QuotaExceededError`</b> दिन सक्छ — ठूलो मान लेख्दा सम्हाल्नुहोस्।", jp: "`setItem()` は<b>`QuotaExceededError`</b> を投げうる。大きな値を書くときは扱う。" },
       ],
       commonMistakes: [
-        { en: "Storing an object or number directly without `JSON.stringify`, then getting back a coerced/broken string like `\"[object Object]\"`.", np: "`JSON.stringify` बिना object वा number directly store गर्नु, त्यसपछि `\"[object Object]\"` जस्तो coerced/broken string फर्किनु।", jp: "`JSON.stringify`せずにオブジェクトや数値を直接保存し、`\"[object Object]\"`のような変換された壊れた文字列が返ってくること。" },
-        { en: "Expecting the `storage` event to fire in the same tab/window that made the change, when it only fires in other tabs of the same origin.", np: "`storage` event change गर्ने same tab/window मा नै fire हुनेछ भनी आशा गर्नु, जब यो same origin को अन्य tabs मा मात्र fire हुन्छ।", jp: "`storage`イベントが変更を行った同じタブ/ウィンドウで発火すると期待するが、実際は同一オリジンの他のタブでのみ発火すること。" },
-        { en: "Storing a long-lived auth/refresh token in `localStorage`, exposing it to any injected XSS script instead of using an `httpOnly` cookie.", np: "`httpOnly` cookie प्रयोग गर्नुको सट्टा long-lived auth/refresh token `localStorage` मा store गर्नु, यसलाई injected XSS script मा exposed बनाउनु।", jp: "`httpOnly`Cookieを使う代わりに長期的な認証/リフレッシュトークンを`localStorage`に保存し、注入されたXSSスクリプトに晒すこと。" },
+        { en: "<b>Assuming storage preserves types</b> — after `localStorage.setItem(\"age\", 30)`, `localStorage.getItem(\"age\") + 1` is `\"301\"`. Convert with `Number(...)` first.", np: "<b>Storage ले type जोगाउँछ भन्ने ठान्नु</b> — `localStorage.setItem(\"age\", 30)` पछि `localStorage.getItem(\"age\") + 1` `\"301\"` हुन्छ। पहिले `Number(...)` ले बदल्नुहोस्।", jp: "<b>型が保たれると思う</b> — `localStorage.setItem(\"age\", 30)` の後、`localStorage.getItem(\"age\") + 1` は `\"301\"`。先に `Number(...)` で変換する。" },
+        { en: "<b>Storing objects directly</b> — `localStorage.setItem(\"user\", { name: \"Rajan\" })` saves the string `\"[object Object]\"`. Serialize with `JSON.stringify()`.", np: "<b>Object सिधै राख्नु</b> — `localStorage.setItem(\"user\", { name: \"Rajan\" })` ले `\"[object Object]\"` string राख्छ। `JSON.stringify()` ले serialize गर्नुहोस्।", jp: "<b>オブジェクトをそのまま入れる</b> — `localStorage.setItem(\"user\", { name: \"Rajan\" })` は `\"[object Object]\"` を保存する。`JSON.stringify()` で直列化する。" },
+        { en: "<b>Assuming `sessionStorage` is shared between tabs</b> — each tab has its own. Use `localStorage` or the `storage` event when state must cross tabs.", np: "<b>`sessionStorage` tab बीच बाँडिन्छ भन्ने ठान्नु</b> — हरेक tab को आफ्नै हुन्छ। State tab पार गर्नुपर्दा `localStorage` वा `storage` event प्रयोग गर्नुहोस्।", jp: "<b>`sessionStorage` がタブ間で共有されると思う</b> — 各タブが独自に持つ。タブをまたぐ状態には `localStorage` か `storage` イベントを使う。" },
+        { en: "<b>Treating `localStorage` as secure</b> — `localStorage.setItem(\"refreshToken\", token)` is readable by any script on the page, including injected XSS payloads.", np: "<b>`localStorage` लाई सुरक्षित ठान्नु</b> — `localStorage.setItem(\"refreshToken\", token)` page को कुनै पनि script ले पढ्न सक्छ, XSS मार्फत घुसाइएको समेत।", jp: "<b>`localStorage` を安全だと思う</b> — `localStorage.setItem(\"refreshToken\", token)` はXSSで注入されたものを含め、ページ上のどのスクリプトからも読める。" },
+        { en: "<b>Assuming `setItem()` never fails</b> — exceeding the browser quota throws `QuotaExceededError`. Wrap large writes in `try/catch`.", np: "<b>`setItem()` कहिल्यै असफल हुँदैन भन्ने ठान्नु</b> — browser को quota नाघ्दा `QuotaExceededError` आउँछ। ठूलो लेखन `try/catch` मा राख्नुहोस्।", jp: "<b>`setItem()` は失敗しないと思う</b> — 割当を超えると `QuotaExceededError` になる。大きな書き込みは `try/catch` で包む。" },
       ],
       quiz: [
         {
-          question: { en: "What type are all `localStorage` keys and values, no matter what you originally pass in?", np: "मूलतः जुनसुकै type pass गरे पनि सबै `localStorage` keys र values कुन type हुन्छन्?", jp: "元々何を渡したかにかかわらず、すべての`localStorage`のキーと値はどの型になる？" },
+          question: { en: "What type of values does Web Storage actually store?", np: "Web Storage ले वास्तवमा कस्तो प्रकारका मान राख्छ?", jp: "Web Storageが実際に保存する値の型は?" },
           options: [
-            { en: "Always strings", np: "सधैं strings", jp: "常に文字列" },
-            { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" },
+            { en: "Objects", np: "Object", jp: "オブジェクト" },
+            { en: "Numbers", np: "Number", jp: "数値" },
+            { en: "Strings", np: "String", jp: "文字列" },
+            { en: "Any JavaScript value", np: "कुनै पनि JavaScript मान", jp: "任意のJavaScriptの値" },
           ],
-          correctIndex: 0,
-          explanation: { en: "localStorage/sessionStorage coerce every key and value to a string; objects must be JSON.stringify'd first to survive round-tripping.", np: "localStorage/sessionStorage ले हरेक key र value लाई string मा coerce गर्छन्; objects बचाउन पहिले JSON.stringify गर्नुपर्छ।", jp: "localStorage/sessionStorageはすべてのキーと値を文字列に変換する。オブジェクトを正しく保存するには先にJSON.stringifyする必要がある。" },
+          correctIndex: 2,
+          explanation: { en: "Anything else is converted, which is why objects need `JSON.stringify()`.", np: "अरू सबै बदलिन्छन्, त्यसैले object लाई `JSON.stringify()` चाहिन्छ।", jp: "他は変換されるため、オブジェクトには `JSON.stringify()` が要る。" },
         },
         {
-          question: { en: "When is `sessionStorage` automatically cleared?", np: "`sessionStorage` automatic रूपमा कहिले clear हुन्छ?", jp: "`sessionStorage`はいつ自動的にクリアされる？" },
+          question: { en: "What happens to `sessionStorage` when its browser tab closes?", np: "Browser tab बन्द हुँदा `sessionStorage` को के हुन्छ?", jp: "タブを閉じると `sessionStorage` はどうなるか?" },
           options: [
-            { en: "When the tab it belongs to is closed", np: "यो belong भएको tab बन्द हुँदा", jp: "それが属するタブが閉じられたとき" },
-            { en: "Only when `clear()` is called manually", np: "`clear()` manually call गरेमा मात्र", jp: "手動で`clear()`が呼ばれたときのみ" },
+            { en: "It persists forever", np: "यो सधैंका लागि रहन्छ", jp: "永久に残る" },
+            { en: "It moves to `localStorage`", np: "यो `localStorage` मा सर्छ", jp: "`localStorage` へ移る" },
+            { en: "It is uploaded to the server", np: "यो server मा upload हुन्छ", jp: "サーバーへ送られる" },
+            { en: "It is removed", np: "यो हट्छ", jp: "削除される" },
           ],
-          correctIndex: 0,
-          explanation: { en: "sessionStorage is scoped to a single tab's session and is wiped automatically the moment that tab closes, unlike localStorage.", np: "sessionStorage एउटै tab को session मा scoped हुन्छ र त्यो tab बन्द भएको क्षणमै automatic रूपमा wipe हुन्छ, localStorage भन्दा फरक।", jp: "sessionStorageは単一タブのセッションにスコープされ、そのタブが閉じた瞬間に自動的にクリアされる。localStorageとは異なる。" },
+          correctIndex: 3,
+          explanation: { en: "Use `localStorage` when the value must outlive the tab.", np: "मान tab भन्दा बढी टिक्नुपर्ने भए `localStorage` प्रयोग गर्नुहोस्।", jp: "タブより長く残す必要があるなら `localStorage` を使う。" },
         },
         {
-          question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` is changed?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
+          question: { en: "What should you normally use to store an object?", np: "Object राख्न सामान्यतया के प्रयोग गर्नुपर्छ?", jp: "オブジェクトの保存に通常使うのは?" },
           options: [
-            { en: "Only other tabs of the same origin — never the tab that made the change", np: "Same origin को अन्य tabs मा मात्र — change गर्ने tab मा कहिल्यै होइन", jp: "同一オリジンの他のタブのみ — 変更を行ったタブでは決して発火しない" },
-            { en: "Every tab, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" },
+            { en: "`JSON.stringify()`", np: "`JSON.stringify()`", jp: "`JSON.stringify()`" },
+            { en: "`String.object()`", np: "`String.object()`", jp: "`String.object()`" },
+            { en: "`Object.stringify()`", np: "`Object.stringify()`", jp: "`Object.stringify()`" },
+            { en: "`JSON.convert()`", np: "`JSON.convert()`", jp: "`JSON.convert()`" },
           ],
           correctIndex: 0,
-          explanation: { en: "The storage event deliberately excludes the originating tab, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event ले originating tab लाई जानाजानी exclude गर्छ, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは意図的に発生元のタブを除外する。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
+          explanation: { en: "Read it back with `JSON.parse()`, guarding against corrupted values.", np: "बिग्रिएको मानबाट जोगिँदै `JSON.parse()` ले पढ्नुहोस्।", jp: "壊れた値に備えつつ `JSON.parse()` で読み戻す。" },
+        },
+        {
+          question: { en: "Which storage is readable by JavaScript running on the page?", np: "Page मा चलिरहेको JavaScript ले कुन storage पढ्न सक्छ?", jp: "ページ上で動くJavaScriptが読めるストレージは?" },
+          options: [
+            { en: "`localStorage` only", np: "`localStorage` मात्र", jp: "`localStorage` だけ" },
+            { en: "Both", np: "दुबै", jp: "両方" },
+            { en: "`sessionStorage` only", np: "`sessionStorage` मात्र", jp: "`sessionStorage` だけ" },
+            { en: "Neither", np: "कुनै पनि होइन", jp: "どちらも読めない" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "That is why an `HttpOnly` cookie suits long-lived credentials better.", np: "त्यसैले दीर्घकालीन credential का लागि `HttpOnly` cookie बढी उपयुक्त छ।", jp: "だから長命の資格情報には `HttpOnly` クッキーが向く。" },
+        },
+        {
+          question: { en: "Which option suits large structured offline datasets?", np: "ठूलो संरचित offline dataset का लागि कुन उपयुक्त छ?", jp: "大きな構造化オフラインデータに向くのは?" },
+          options: [
+            { en: "Cookies", np: "Cookie", jp: "クッキー" },
+            { en: "`localStorage`", np: "`localStorage`", jp: "`localStorage`" },
+            { en: "IndexedDB", np: "IndexedDB", jp: "IndexedDB" },
+            { en: "`sessionStorage`", np: "`sessionStorage`", jp: "`sessionStorage`" },
+          ],
+          correctIndex: 2,
+          explanation: { en: "Web Storage tops out at a few megabytes of strings.", np: "Web Storage केही megabyte का string सम्म मात्र सीमित छ।", jp: "Web Storageは数MBの文字列が上限。" },
+        },
+        {
+          question: { en: "Which event helps synchronise `localStorage` changes across tabs?", np: "Tab बीच `localStorage` परिवर्तन मिलाउन कुन event ले मद्दत गर्छ?", jp: "タブ間で `localStorage` の変更を同期できるイベントは?" },
+          options: [
+            { en: "`sync`", np: "`sync`", jp: "`sync`" },
+            { en: "`localstoragechange`", np: "`localstoragechange`", jp: "`localstoragechange`" },
+            { en: "`tabchange`", np: "`tabchange`", jp: "`tabchange`" },
+            { en: "`storage`", np: "`storage`", jp: "`storage`" },
+          ],
+          correctIndex: 3,
+          explanation: { en: "The tab that wrote the value does not receive the event itself.", np: "मान लेख्ने tab ले आफैं event पाउँदैन।", jp: "値を書き込んだタブ自身にはイベントは届かない。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "Does `fetch` reject its promise for a `404` or `500` response?", np: "`fetch` ले `404` वा `500` response का लागि आफ्नो promise reject गर्छ?", jp: "`fetch`は`404`や`500`レスポンスに対してPromiseをrejectする？" },
-      options: [{ en: "No — it resolves normally; check `response.ok`", np: "होइन — यो normally resolve हुन्छ; `response.ok` check गर्नुहोस्", jp: "しない — 正常にresolveする。`response.ok`を確認する" }, { en: "Yes — fetch always throws on 4xx/5xx status codes", np: "हो — fetch ले सधैं 4xx/5xx status codes मा throw गर्छ", jp: "する — fetchは常に4xx/5xxステータスコードでスローする" }],
+      question: { en: "What does `fetch()` return?", np: "`fetch()` ले के फर्काउँछ?", jp: "`fetch()` は何を返すか?" },
+      options: [
+        { en: "A `Promise` that resolves to a `Response`", np: "`Response` मा resolve हुने `Promise`", jp: "`Response` に解決される `Promise`" },
+        { en: "The parsed JSON data", np: "Parse भएको JSON data", jp: "解析済みのJSONデータ" },
+        { en: "A `Response` object directly", np: "सिधै `Response` object", jp: "`Response` オブジェクトそのもの" },
+      ],
       correctIndex: 0,
-      explanation: { en: "fetch only rejects on network-level failures; any completed HTTP response, including error statuses, resolves the promise, so you must check response.ok yourself.", np: "fetch ले network-level failure मा मात्र reject गर्छ; error statuses सहित कुनै पनि completed HTTP response ले promise resolve गर्छ, त्यसैले आफैं response.ok check गर्नुपर्छ।", jp: "fetchはネットワークレベルの失敗でのみrejectする。エラーステータスを含むあらゆる完了したHTTPレスポンスはPromiseを解決するため、自分でresponse.okを確認する必要がある。" },
+      explanation: { en: "Reading the body is a second asynchronous step.", np: "Body पढ्नु दोस्रो asynchronous चरण हो।", jp: "本文の読み取りは2つ目の非同期処理。" },
     },
     {
-      question: { en: "How many times can a `Response` body be read without calling `clone()` first?", np: "पहिले `clone()` call नगरी `Response` body कति पटक read गर्न सकिन्छ?", jp: "先に`clone()`を呼ばずに`Response`のボディは何回読める？" },
-      options: [{ en: "Once", np: "एकपटक", jp: "1回" }, { en: "Unlimited times", np: "असीमित पटक", jp: "無制限" }],
-      correctIndex: 0,
-      explanation: { en: "The response body is a stream that can only be consumed once; a second read without clone() throws an error.", np: "Response body एउटा stream हो जो एकपटक मात्र consume हुन सक्छ; clone() बिना दोस्रो पटक read गर्दा error आउँछ।", jp: "レスポンスボディは一度しか消費できないストリームであり、clone()なしで2回目に読むとエラーになる。" },
+      question: { en: "A server replies with `500`. What does `fetch()` do?", np: "Server ले `500` फर्कायो। `fetch()` ले के गर्छ?", jp: "サーバーが `500` を返したとき `fetch()` はどうするか?" },
+      options: [
+        { en: "Rejects the promise", np: "Promise reject गर्छ", jp: "Promiseを拒否する" },
+        { en: "Resolves with `response.ok === false`", np: "`response.ok === false` सहित resolve हुन्छ", jp: "`response.ok === false` で解決する" },
+        { en: "Retries the request", np: "Request फेरि प्रयास गर्छ", jp: "リクエストを再試行する" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "Only network-level failures reject; check the status yourself.", np: "Network-स्तरका असफलताले मात्र reject गर्छन्; status आफैं जाँच्नुहोस्।", jp: "拒否されるのはネットワークレベルの失敗だけ。ステータスは自分で確認する。" },
     },
     {
-      question: { en: "What must a `POST` request set so the server knows the body is JSON?", np: "Server ले body JSON हो भनेर थाहा पाउन `POST` request मा के set गर्नुपर्छ?", jp: "サーバーがボディがJSONであると認識するために`POST`リクエストで何を設定する必要がある？" },
-      options: [{ en: "A `Content-Type: application/json` header", np: "`Content-Type: application/json` header", jp: "`Content-Type: application/json`ヘッダー" }, { en: "Nothing — fetch detects it automatically", np: "केही छैन — fetch ले automatic रूपमा detect गर्छ", jp: "何もない — fetchが自動で検出する" }],
-      correctIndex: 0,
-      explanation: { en: "fetch never inspects or serializes the body for you; the Content-Type header plus a JSON.stringify'd body is required.", np: "fetch ले body कहिल्यै आफैं inspect वा serialize गर्दैन; Content-Type header र JSON.stringify गरिएको body दुवै चाहिन्छ।", jp: "fetchはボディを自動で検査・シリアライズすることはない。Content-TypeヘッダーとJSON.stringifyされたボディの両方が必要。" },
+      question: { en: "Why must you call `JSON.stringify()` when POSTing an object?", np: "Object POST गर्दा `JSON.stringify()` किन बोलाउनुपर्छ?", jp: "オブジェクトをPOSTするとき `JSON.stringify()` が必要な理由は?" },
+      options: [
+        { en: "It sets the `Content-Type` header", np: "यसले `Content-Type` header सेट गर्छ", jp: "`Content-Type` ヘッダーを設定するから" },
+        { en: "It encrypts the payload", np: "यसले payload encrypt गर्छ", jp: "ペイロードを暗号化するから" },
+        { en: "`fetch()` does not serialize the body for you", np: "`fetch()` ले तपाईंका लागि body serialize गर्दैन", jp: "`fetch()` は本文を代わりに直列化しないから" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Set `Content-Type: application/json` separately in the headers.", np: "`Content-Type: application/json` header मा छुट्टै सेट गर्नुहोस्।", jp: "`Content-Type: application/json` はヘッダーで別途設定する。" },
     },
     {
-      question: { en: "What is the `.name` of the error a `fetch` promise rejects with after `controller.abort()` is called?", np: "`controller.abort()` call गरेपछि `fetch` promise कुन `.name` भएको error सँग reject हुन्छ?", jp: "`controller.abort()`が呼ばれた後、`fetch`のPromiseはどの`.name`のエラーでrejectする？" },
-      options: [{ en: "`\"AbortError\"`", np: "`\"AbortError\"`", jp: "`\"AbortError\"`" }, { en: "`\"TypeError\"`", np: "`\"TypeError\"`", jp: "`\"TypeError\"`" }],
+      question: { en: "What happens when you call `response.json()` twice on one response?", np: "एउटै response मा `response.json()` दुई पटक बोलाउँदा के हुन्छ?", jp: "1つのレスポンスで `response.json()` を2回呼ぶとどうなるか?" },
+      options: [
+        { en: "The second call fails, the body is already consumed", np: "दोस्रो call असफल हुन्छ, body पहिले नै खपत भइसक्यो", jp: "2回目は失敗する。本文はすでに消費済み" },
+        { en: "Both calls return the same data", np: "दुबै call ले उही data फर्काउँछन्", jp: "どちらも同じデータを返す" },
+        { en: "The request is sent again", np: "Request फेरि पठाइन्छ", jp: "リクエストが再送される" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Aborting a fetch always produces an error named AbortError, letting you distinguish an intentional cancellation from a real failure.", np: "Fetch abort गर्दा सधैं AbortError नाम भएको error उत्पन्न हुन्छ, जसले जानाजानी गरेको cancellation लाई real failure बाट छुट्याउन दिन्छ।", jp: "fetchをabortすると常にAbortErrorという名前のエラーが生成され、意図的なキャンセルと本当の失敗を区別できる。" },
+      explanation: { en: "Call `response.clone()` first if you genuinely need two reads.", np: "साँच्चै दुई पटक पढ्नुपर्ने भए पहिले `response.clone()` बोलाउनुहोस्।", jp: "本当に2回読むなら先に `response.clone()` を呼ぶ。" },
     },
     {
-      question: { en: "Where should `controller.abort()` be called to stop a React component from setting state after it unmounts?", np: "Component unmount भएपछि state set हुनबाट रोक्न `controller.abort()` कहाँ call गर्नुपर्छ?", jp: "コンポーネントがアンマウントされた後にstateが設定されるのを止めるには、`controller.abort()`をどこで呼ぶべき？" },
-      options: [{ en: "In the cleanup function returned from `useEffect`", np: "`useEffect` बाट return हुने cleanup function मा", jp: "`useEffect`から返されるクリーンアップ関数の中" }, { en: "In the `.then()` success callback", np: "`.then()` success callback मा", jp: "`.then()`の成功コールバックの中" }],
-      correctIndex: 0,
-      explanation: { en: "React runs the effect's cleanup automatically on unmount or before the next run, making it the right place to cancel a pending request.", np: "React ले effect को cleanup unmount मा वा अर्को run अघि automatic रूपमा चलाउँछ, जसले pending request cancel गर्ने सहि ठाउँ बनाउँछ।", jp: "Reactはアンマウント時または次の実行前にエフェクトのクリーンアップを自動実行するため、保留中のリクエストをキャンセルする正しい場所となる。" },
+      question: { en: "What connects an `AbortController` to a `fetch()` call?", np: "`AbortController` लाई `fetch()` सँग के ले जोड्छ?", jp: "`AbortController` と `fetch()` をつなぐものは?" },
+      options: [
+        { en: "Passing `controller` as the second argument", np: "दोस्रो argument मा `controller` दिनु", jp: "第2引数に `controller` を渡すこと" },
+        { en: "Passing `signal: controller.signal` in the options", np: "Option मा `signal: controller.signal` दिनु", jp: "オプションに `signal: controller.signal` を渡すこと" },
+        { en: "Calling `fetch.abort()`", np: "`fetch.abort()` बोलाउनु", jp: "`fetch.abort()` を呼ぶこと" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "Without the signal, `abort()` has nothing to cancel.", np: "Signal नभए `abort()` सँग रद्द गर्ने केही हुँदैन।", jp: "シグナルがなければ `abort()` に中止する対象がない。" },
     },
     {
-      question: { en: "What type are all `localStorage` values stored as, regardless of what you pass to `setItem`?", np: "`setItem` मा जे pass गरे पनि सबै `localStorage` values कुन type मा store हुन्छन्?", jp: "`setItem`に何を渡しても、すべての`localStorage`の値はどの型で保存される？" },
-      options: [{ en: "Strings", np: "Strings", jp: "文字列" }, { en: "Whatever type was originally passed in", np: "मूलतः जुन type pass गरिएको थियो त्यही", jp: "元々渡した型のまま" }],
-      correctIndex: 0,
-      explanation: { en: "localStorage coerces every value to a string; objects must be JSON.stringify'd before storing and JSON.parse'd after reading.", np: "localStorage ले हरेक value लाई string मा coerce गर्छ; objects store गर्नु अघि JSON.stringify र read गरेपछि JSON.parse गर्नुपर्छ।", jp: "localStorageはすべての値を文字列に変換する。オブジェクトは保存前にJSON.stringify、読み取り後にJSON.parseする必要がある。" },
+      question: { en: "What error name does a cancelled `fetch()` reject with?", np: "रद्द भएको `fetch()` कुन नामको error सँग reject हुन्छ?", jp: "中止された `fetch()` はどの名前のエラーで拒否されるか?" },
+      options: [
+        { en: "`CancelError`", np: "`CancelError`", jp: "`CancelError`" },
+        { en: "`NetworkError`", np: "`NetworkError`", jp: "`NetworkError`" },
+        { en: "`AbortError`", np: "`AbortError`", jp: "`AbortError`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Check `error.name` so cancellation is not reported as a failure.", np: "Cancellation लाई असफलता नठानियोस् भनेर `error.name` जाँच्नुहोस्।", jp: "キャンセルを失敗として報告しないよう `error.name` を確認する。" },
     },
     {
-      question: { en: "Which tab(s) receive the `window` `\"storage\"` event when `localStorage` changes?", np: "`localStorage` change हुँदा `window` को `\"storage\"` event कुन tab(s) मा पाइन्छ?", jp: "`localStorage`が変更されたとき、`window`の`\"storage\"`イベントはどのタブで受け取られる？" },
-      options: [{ en: "Only other tabs of the same origin", np: "Same origin को अन्य tabs मा मात्र", jp: "同一オリジンの他のタブのみ" }, { en: "All tabs, including the one that made the change", np: "सबै tabs, change गर्ने tab सहित", jp: "変更を行ったタブも含むすべてのタブ" }],
+      question: { en: "How do you give `fetch()` a five-second timeout?", np: "`fetch()` लाई पाँच सेकेन्डको timeout कसरी दिने?", jp: "`fetch()` に5秒のタイムアウトを付けるには?" },
+      options: [
+        { en: "Abort a controller from a `setTimeout`, or use `AbortSignal.timeout(5000)`", np: "`setTimeout` बाट controller abort गर्ने, वा `AbortSignal.timeout(5000)` प्रयोग गर्ने", jp: "`setTimeout` からコントローラーを中止するか `AbortSignal.timeout(5000)` を使う" },
+        { en: "Pass `timeout: 5000` in the options", np: "Option मा `timeout: 5000` दिने", jp: "オプションに `timeout: 5000` を渡す" },
+        { en: "Wrap the call in `Promise.race` with `setInterval`", np: "`setInterval` सँग `Promise.race` मा बेर्ने", jp: "`setInterval` と `Promise.race` で包む" },
+      ],
       correctIndex: 0,
-      explanation: { en: "The storage event deliberately never fires in the tab that made the change, which is why it's used to sync state like a logout across other open tabs.", np: "Storage event change गर्ने tab मा जानाजानी कहिल्यै fire हुँदैन, त्यसैले यो अन्य खुला tabs मा logout जस्तो state sync गर्न प्रयोग हुन्छ।", jp: "storageイベントは変更を行ったタブでは意図的に発火しない。これが他の開いているタブでログアウトのような状態を同期するために使われる理由。" },
+      explanation: { en: "`fetch()` has no timeout option of its own.", np: "`fetch()` सँग आफ्नै timeout option छैन।", jp: "`fetch()` 自体にタイムアウトのオプションはない。" },
     },
     {
-      question: { en: "Why should a long-lived refresh token generally NOT be stored in `localStorage`?", np: "Long-lived refresh token लाई सामान्यतया `localStorage` मा किन store गर्नु हुँदैन?", jp: "長期的なリフレッシュトークンを一般的に`localStorage`に保存すべきでない理由は？" },
-      options: [{ en: "Any injected XSS script can freely read localStorage", np: "जुनसुकै injected XSS script ले localStorage freely read गर्न सक्छ", jp: "注入されたXSSスクリプトがlocalStorageを自由に読めるため" }, { en: "localStorage values get cleared too frequently", np: "localStorage values धेरै बारम्बार clear हुन्छन्", jp: "localStorageの値が頻繁にクリアされすぎるため" }],
+      question: { en: "What type does Web Storage actually store?", np: "Web Storage ले वास्तवमा कुन प्रकार राख्छ?", jp: "Web Storageが実際に保存する型は?" },
+      options: [
+        { en: "Any JavaScript value", np: "कुनै पनि JavaScript मान", jp: "任意のJavaScriptの値" },
+        { en: "Strings", np: "String", jp: "文字列" },
+        { en: "Only JSON objects", np: "JSON object मात्र", jp: "JSONオブジェクトのみ" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "`localStorage.setItem(\"age\", 30)` comes back as `\"30\"`.", np: "`localStorage.setItem(\"age\", 30)` `\"30\"` भएर फर्किन्छ।", jp: "`localStorage.setItem(\"age\", 30)` は `\"30\"` として戻る。" },
+    },
+    {
+      question: { en: "What happens to `sessionStorage` when the tab closes?", np: "Tab बन्द हुँदा `sessionStorage` को के हुन्छ?", jp: "タブを閉じると `sessionStorage` はどうなるか?" },
+      options: [
+        { en: "It persists like `localStorage`", np: "`localStorage` जस्तै रहन्छ", jp: "`localStorage` のように残る" },
+        { en: "It is shared with other tabs", np: "यो अरू tab सँग बाँडिन्छ", jp: "他のタブと共有される" },
+        { en: "It is removed", np: "यो हट्छ", jp: "削除される" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Each tab also has its own separate `sessionStorage`.", np: "हरेक tab को छुट्टै `sessionStorage` पनि हुन्छ।", jp: "各タブは独自の `sessionStorage` も持つ。" },
+    },
+    {
+      question: { en: "Why should a refresh token generally not live in `localStorage`?", np: "Refresh token सामान्यतया `localStorage` मा किन राख्नु हुँदैन?", jp: "リフレッシュトークンを原則 `localStorage` に置かない理由は?" },
+      options: [
+        { en: "Any script on the page, including an XSS payload, can read it", np: "Page को कुनै पनि script, XSS payload समेत, ले यो पढ्न सक्छ", jp: "XSSのペイロードを含め、ページ上のどのスクリプトも読めるから" },
+        { en: "Storage is wiped on every reload", np: "हरेक reload मा storage मेटिन्छ", jp: "再読み込みのたびに消えるから" },
+        { en: "It is automatically sent to every server", np: "यो स्वतः हरेक server मा पठाइन्छ", jp: "すべてのサーバーへ自動送信されるから" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Because localStorage is readable by any JavaScript on the page, an XSS vulnerability exposes long-lived tokens; httpOnly cookies are safer since JavaScript cannot read them at all.", np: "localStorage page मा चल्ने जुनसुकै JavaScript ले read गर्न सक्ने भएकोले, XSS vulnerability ले long-lived tokens expose गर्छ; httpOnly cookies बढी सुरक्षित छन् किनकि JavaScript ले तिनलाई बिल्कुल read गर्न सक्दैन।", jp: "localStorageはページ上の任意のJavaScriptから読めるため、XSS脆弱性が長期的なトークンを晒してしまう。httpOnly CookieはJavaScriptが一切読めないためより安全。" },
+      explanation: { en: "A `Secure` + `HttpOnly` cookie cannot be read from JavaScript.", np: "`Secure` + `HttpOnly` cookie JavaScript बाट पढ्न सकिँदैन।", jp: "`Secure` + `HttpOnly` クッキーはJavaScriptから読めない。" },
+    },
+    {
+      question: { en: "Which event lets one tab react to a `localStorage` change made in another?", np: "अर्को tab मा भएको `localStorage` परिवर्तनमा एउटा tab ले प्रतिक्रिया दिन कुन event ले दिन्छ?", jp: "別のタブでの `localStorage` の変更に反応できるイベントは?" },
+      options: [
+        { en: "`change`", np: "`change`", jp: "`change`" },
+        { en: "`storage`", np: "`storage`", jp: "`storage`" },
+        { en: "`sync`", np: "`sync`", jp: "`sync`" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "The tab that made the change does not receive the event.", np: "परिवर्तन गर्ने tab ले event पाउँदैन।", jp: "変更したタブ自身にはイベントは届かない。" },
+    },
+    {
+      question: { en: "What can `localStorage.setItem()` throw when a large value exceeds the browser limit?", np: "ठूलो मानले browser को सीमा नाघ्दा `localStorage.setItem()` ले के दिन सक्छ?", jp: "大きな値がブラウザの上限を超えると `localStorage.setItem()` は何を投げうるか?" },
+      options: [
+        { en: "`RangeError`", np: "`RangeError`", jp: "`RangeError`" },
+        { en: "Nothing, it fails silently", np: "केही होइन, चुपचाप असफल हुन्छ", jp: "何も投げず静かに失敗する" },
+        { en: "`QuotaExceededError`", np: "`QuotaExceededError`", jp: "`QuotaExceededError`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Wrap large writes in `try/catch` and degrade gracefully.", np: "ठूलो लेखन `try/catch` मा राखेर सहजै सम्हाल्नुहोस्।", jp: "大きな書き込みは `try/catch` で包み、穏やかに縮退させる。" },
     },
   ],
 };
