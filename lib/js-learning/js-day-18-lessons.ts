@@ -131,23 +131,23 @@ function third() { throw new Error("Something went wrong"); }
         {
           question: { en: "What happens when a function is called?", np: "Function call हुँदा के हुन्छ?", jp: "関数が呼ばれると何が起こるか?" },
           options: [
-            { en: "Its frame is pushed onto the call stack", np: "यसको frame call stack मा push हुन्छ", jp: "そのフレームがコールスタックにpushされる" },
             { en: "Its frame is deleted", np: "यसको frame मेटिन्छ", jp: "フレームが削除される" },
+            { en: "Its frame is pushed onto the call stack", np: "यसको frame call stack मा push हुन्छ", jp: "そのフレームがコールスタックにpushされる" },
             { en: "It is moved to the heap", np: "यो heap मा सारिन्छ", jp: "ヒープに移動される" },
             { en: "The global context disappears", np: "Global context हराउँछ", jp: "グローバルコンテキストが消える" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "That frame carries the function's execution context and return point.", np: "त्यो frame ले function को execution context र return बिन्दु बोक्छ।", jp: "そのフレームが関数の実行コンテキストと戻り先を持つ。" },
         },
         {
           question: { en: "What happens when a function returns?", np: "Function return हुँदा के हुन्छ?", jp: "関数が戻ると何が起こるか?" },
           options: [
             { en: "A new frame is pushed", np: "नयाँ frame push हुन्छ", jp: "新しいフレームがpushされる" },
-            { en: "Its frame is popped from the call stack", np: "यसको frame call stack बाट pop हुन्छ", jp: "そのフレームがコールスタックからpopされる" },
             { en: "The entire JavaScript program stops", np: "पूरै JavaScript program रोकिन्छ", jp: "JavaScriptプログラム全体が止まる" },
+            { en: "Its frame is popped from the call stack", np: "यसको frame call stack बाट pop हुन्छ", jp: "そのフレームがコールスタックからpopされる" },
             { en: "The function moves to the heap", np: "Function heap मा सर्छ", jp: "関数がヒープに移動する" },
           ],
-          correctIndex: 1,
+          correctIndex: 2,
           explanation: { en: "Execution resumes in whatever frame is now on top.", np: "अब टुप्पोमा जुन frame छ, execution त्यहीँ फर्किन्छ।", jp: "実行は、次に一番上になったフレームで再開する。" },
         },
         {
@@ -155,10 +155,10 @@ function third() { throw new Error("Something went wrong"); }
           options: [
             { en: "`a()`", np: "`a()`", jp: "`a()`" },
             { en: "`b()`", np: "`b()`", jp: "`b()`" },
-            { en: "`c()`", np: "`c()`", jp: "`c()`" },
             { en: "Global", np: "Global", jp: "グローバル" },
+            { en: "`c()`", np: "`c()`", jp: "`c()`" },
           ],
-          correctIndex: 2,
+          correctIndex: 3,
           explanation: { en: "`c()` was pushed last, so it sits on top and runs first to completion.", np: "`c()` सबैभन्दा पछि push भयो, त्यसैले यो टुप्पोमा छ र पहिले सकिन्छ।", jp: "`c()` が最後にpushされたので一番上にあり、最初に完了する。" },
         },
         {
@@ -172,6 +172,7 @@ function third() { throw new Error("Something went wrong"); }
           explanation: { en: "The result is a stack overflow: `RangeError: Maximum call stack size exceeded`.", np: "नतिजा stack overflow हो: `RangeError: Maximum call stack size exceeded`।", jp: "結果はスタックオーバーフロー: `RangeError: Maximum call stack size exceeded`。" },
         },
       ],
+      youtubeIds: ["8zKuNo4ay8E", "2WJL19wDH68"],
     },
     {
       id: "web-apis-callback-queue",
@@ -304,31 +305,31 @@ fetch("/api/users")
           question: { en: "What must generally happen before a queued callback can execute?", np: "Queue मा भएको callback चल्नुअघि सामान्यतया के हुनुपर्छ?", jp: "キュー内のコールバックが実行される前に、通常何が必要か?" },
           options: [
             { en: "The timer must be exactly 0ms", np: "Timer ठ्याक्कै 0ms हुनुपर्छ", jp: "タイマーがちょうど0msである必要がある" },
-            { en: "The call stack must be available", np: "Call stack उपलब्ध हुनुपर्छ", jp: "コールスタックが空いている必要がある" },
-            { en: "The browser must close", np: "Browser बन्द हुनुपर्छ", jp: "ブラウザを閉じる必要がある" },
             { en: "The callback must be manually invoked", np: "Callback हातले invoke गर्नुपर्छ", jp: "コールバックを手動で呼ぶ必要がある" },
+            { en: "The browser must close", np: "Browser बन्द हुनुपर्छ", jp: "ブラウザを閉じる必要がある" },
+            { en: "The call stack must be available", np: "Call stack उपलब्ध हुनुपर्छ", jp: "コールスタックが空いている必要がある" },
           ],
-          correctIndex: 1,
+          correctIndex: 3,
           explanation: { en: "The event loop only moves a callback onto an empty stack.", np: "Event loop ले खाली stack मा मात्र callback सार्छ।", jp: "イベントループは空いたスタックにしかコールバックを移さない。" },
         },
         {
           question: { en: "What is the output of `console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");`?", np: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");` को output के हो?", jp: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); console.log(\"C\");` の出力は?" },
           options: [
-            { en: "A, B, C", np: "A, B, C", jp: "A, B, C" },
             { en: "A, C, B", np: "A, C, B", jp: "A, C, B" },
+            { en: "A, B, C", np: "A, B, C", jp: "A, B, C" },
             { en: "B, A, C", np: "B, A, C", jp: "B, A, C" },
           ],
-          correctIndex: 1,
+          correctIndex: 0,
           explanation: { en: "Both synchronous logs run first, then the queued callback.", np: "दुबै synchronous log पहिले चल्छन्, त्यसपछि queue को callback।", jp: "同期のログが両方先に実行され、その後にキューのコールバックが走る。" },
         },
         {
           question: { en: "Why can a `0ms` timer still execute much later?", np: "`0ms` को timer किन धेरै पछि चल्न सक्छ?", jp: "なぜ `0ms` のタイマーがずっと後に実行されうるのか?" },
           options: [
-            { en: "Because the callback waits for the current work to finish and the event loop to schedule it", np: "किनकि callback ले वर्तमान काम सकिने र event loop ले schedule गर्ने कुर्छ", jp: "コールバックが現在の処理の完了とイベントループのスケジューリングを待つから" },
             { en: "Because timers are inaccurate by design", np: "किनकि timer डिजाइनले नै अशुद्ध हुन्छन्", jp: "タイマーは設計上不正確だから" },
+            { en: "Because the callback waits for the current work to finish and the event loop to schedule it", np: "किनकि callback ले वर्तमान काम सकिने र event loop ले schedule गर्ने कुर्छ", jp: "コールバックが現在の処理の完了とイベントループのスケジューリングを待つから" },
             { en: "Because the browser throttles all timers to one second", np: "किनकि browser ले सबै timer एक सेकेन्डमा सीमित गर्छ", jp: "ブラウザがすべてのタイマーを1秒に制限するから" },
           ],
-          correctIndex: 0,
+          correctIndex: 1,
           explanation: { en: "A long synchronous loop can hold the stack for as long as it runs.", np: "लामो synchronous loop ले चलेसम्म stack ओगट्न सक्छ।", jp: "長い同期ループは、動いている間ずっとスタックを占有しうる。" },
         },
       ],
@@ -338,181 +339,244 @@ fetch("/api/users")
       title: { en: "Microtask vs Macrotask Queue", np: "Microtask vs Macrotask Queue", jp: "マイクロタスクとマクロタスクの違い" },
       durationMinutes: 9,
       explanation: {
-        en: "Not everything async goes into the same queue. Promises (`.then`, `.catch`, `.finally`) and `queueMicrotask` schedule their callbacks in a separate, higher-priority <b>microtask queue</b>, while `setTimeout`, `setInterval`, and UI rendering go into the (lower-priority) <b>macrotask queue</b> — the callback queue from the previous lesson. The rule that decides the order: after the currently running script finishes, and after each macrotask completes, the event loop <b>fully drains the entire microtask queue</b> — running every microtask, including any new ones scheduled while draining — before it is allowed to pick up the next macrotask.\n\nThis is the classic interview question. Given `console.log(\"1\")`, then `setTimeout(() => console.log(\"2\"), 0)`, then `Promise.resolve().then(() => console.log(\"3\"))`, then `console.log(\"4\")` — the output is `1, 4, 3, 2`. `\"1\"` and `\"4\"` run synchronously first. Once the stack is empty, the event loop checks the microtask queue before the macrotask queue, so the Promise's `.then` (`\"3\"`) runs before the `setTimeout` callback (`\"2\"`), even though the timer was scheduled first and had a 0ms delay.",
-        np: "हरेक async काम एउटै queue मा जाँदैन। Promises (`.then`, `.catch`, `.finally`) र `queueMicrotask` ले आफ्ना callbacks छुट्टै, higher-priority <b>microtask queue</b> मा schedule गर्छन्, जबकि `setTimeout`, `setInterval`, र UI rendering (lower-priority) <b>macrotask queue</b> मा जान्छन् — अघिल्लो lesson को callback queue। Order तय गर्ने नियम यही हो: हाल चलिरहेको script सकिएपछि, र हरेक macrotask सकिएपछि, event loop ले <b>पूरै microtask queue drain गर्छ</b> — draining गर्दा schedule भएका नयाँ microtasks समेत — अनि मात्र अर्को macrotask लिन पाउँछ।\n\nयो classic interview question हो। `console.log(\"1\")`, त्यसपछि `setTimeout(() => console.log(\"2\"), 0)`, त्यसपछि `Promise.resolve().then(() => console.log(\"3\"))`, त्यसपछि `console.log(\"4\")` दिइएमा — output `1, 4, 3, 2` हुन्छ। `\"1\"` र `\"4\"` synchronously पहिले चल्छन्। Stack खाली भएपछि, event loop ले macrotask queue भन्दा पहिले microtask queue check गर्छ, त्यसैले Promise को `.then` (`\"3\"`) `setTimeout` callback (`\"2\"`) भन्दा पहिले चल्छ, timer पहिले schedule भई 0ms delay भए पनि।",
-        jp: "すべての非同期処理が同じキューに入るわけではない。Promise（`.then`・`.catch`・`.finally`）と`queueMicrotask`は、優先度の高い別の<b>マイクロタスクキュー</b>にコールバックをスケジュールする。一方`setTimeout`・`setInterval`・UIレンダリングは（優先度の低い）<b>マクロタスクキュー</b>、つまり前のレッスンのコールバックキューに入る。順序を決めるルールはこうだ — 現在実行中のスクリプトが終わった後、そして各マクロタスクが完了するたびに、イベントループは次のマクロタスクを取り出す前に<b>マイクロタスクキュー全体を完全に処理する</b>（処理中に新しくスケジュールされたものも含めて）。\n\nこれは定番の面接問題だ。`console.log(\"1\")`、次に`setTimeout(() => console.log(\"2\"), 0)`、次に`Promise.resolve().then(() => console.log(\"3\"))`、次に`console.log(\"4\")`とすると、出力は`1, 4, 3, 2`になる。「1」と「4」はまず同期的に実行される。スタックが空になると、イベントループはマクロタスクキューより先にマイクロタスクキューを確認するため、Promiseの`.then`（「3」）は`setTimeout`のコールバック（「2」）より先に実行される。タイマーが先にスケジュールされ、遅延が0msであってもだ。",
+        en: "Not all asynchronous JavaScript callbacks are scheduled in the same queue. JavaScript uses two important categories:\n\n• <b>Microtask queue</b> — higher priority\n• <b>Macrotask queue</b> — the regular task queue\n\n> <b>After the current synchronous code finishes, JavaScript completely drains the microtask queue before taking the next macrotask.</b>\n\nThis is why a Promise callback can run <b>before</b> a `setTimeout(..., 0)` callback, even when the timer was registered first.\n\n<b>Microtask sources:</b> `Promise.then()`, `Promise.catch()`, `Promise.finally()`, `queueMicrotask()`.\n\n<b>Macrotask sources:</b> `setTimeout()`, `setInterval()`, DOM events.\n\n---\n\n### 1. Basic — Promise vs setTimeout\n\n```javascript\nconsole.log(\"1\");\n\nsetTimeout(() => {\n  console.log(\"2\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"3\");\n});\n\nconsole.log(\"4\");\n```\n\nOutput:\n\n```text\n1\n4\n3\n2\n```\n\nSynchronous code runs first (`1`, `4`). Then the stack empties and the queues hold:\n\n```text\nMicrotask Queue:  Promise → \"3\"\nMacrotask Queue:  setTimeout → \"2\"\n```\n\nMicrotasks have priority, so `3` runs, and only then `2`.\n\n---\n\n### 2. Intermediate — microtasks created by microtasks\n\n```javascript\nconsole.log(\"start\");\n\nPromise.resolve().then(() => {\n  console.log(\"A\");\n\n  Promise.resolve().then(() => {\n    console.log(\"B\");\n  });\n});\n\nsetTimeout(() => {\n  console.log(\"C\");\n}, 0);\n\nconsole.log(\"end\");\n```\n\nOutput:\n\n```text\nstart\nend\nA\nB\nC\n```\n\nWhy does `B` run before `C`? While `A` is running it creates another microtask. The event loop <b>does not jump to the timer</b> — it keeps draining microtasks until the queue is empty.\n\n> <b>Microtasks created during microtask processing are also processed before the next macrotask.</b>\n\n---\n\n### 3. Advanced — microtask starvation\n\nBecause the microtask queue must be completely drained, continuously creating microtasks can prevent timers from ever running.\n\n```javascript\nfunction keepRunning() {\n  queueMicrotask(() => {\n    console.log(\"microtask\");\n\n    keepRunning();\n  });\n}\n\nsetTimeout(() => {\n  console.log(\"timer\");\n}, 0);\n\nkeepRunning();\n```\n\nThe timer keeps waiting because the microtask queue never becomes empty. This is called <b>microtask starvation</b>, and in real applications excessive microtask work delays timers, user interactions and rendering.\n\n---\n\n### Promise callbacks are microtasks\n\n```javascript\nPromise.resolve(\"Hello\")\n  .then(value => {\n    console.log(value);\n  });\n\nconsole.log(\"World\");\n```\n\nOutput: `World` then `Hello`. Even though the Promise is already resolved, `.then()` does not run immediately — it schedules a microtask.\n\n---\n\n### A more realistic ordering\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => console.log(\"Timer 1\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 1\"));\nsetTimeout(() => console.log(\"Timer 2\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 2\"));\n\nconsole.log(\"End\");\n```\n\nOutput:\n\n```text\nStart\nEnd\nPromise 1\nPromise 2\nTimer 1\nTimer 2\n```\n\nThe loop is: run synchronous code, drain <b>all</b> microtasks, run one macrotask, drain microtasks again, and so on.\n\n---\n\n### The one rule to remember\n\n> <b>After the current JavaScript task finishes, the event loop drains the entire microtask queue before moving to the next macrotask.</b>\n\nThat single rule explains most Promise versus `setTimeout` interview questions.",
+        np: "सबै asynchronous JavaScript callback एउटै queue मा schedule हुँदैनन्। JavaScript ले दुई महत्वपूर्ण वर्ग प्रयोग गर्छ:\n\n• <b>Microtask queue</b> — उच्च प्राथमिकता\n• <b>Macrotask queue</b> — सामान्य task queue\n\n> <b>वर्तमान synchronous code सकिएपछि, JavaScript ले अर्को macrotask लिनुअघि microtask queue पूरै खाली गर्छ।</b>\n\nत्यसैले timer पहिले दर्ता भए पनि Promise को callback `setTimeout(..., 0)` भन्दा <b>पहिले</b> चल्न सक्छ।\n\n<b>Microtask स्रोत:</b> `Promise.then()`, `Promise.catch()`, `Promise.finally()`, `queueMicrotask()`।\n\n<b>Macrotask स्रोत:</b> `setTimeout()`, `setInterval()`, DOM event।\n\n---\n\n### 1. आधारभूत — Promise vs setTimeout\n\n```javascript\nconsole.log(\"1\");\n\nsetTimeout(() => {\n  console.log(\"2\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"3\");\n});\n\nconsole.log(\"4\");\n```\n\nOutput:\n\n```text\n1\n4\n3\n2\n```\n\nSynchronous code पहिले चल्छ (`1`, `4`)। त्यसपछि stack खाली हुन्छ र queue मा हुन्छ:\n\n```text\nMicrotask Queue:  Promise → \"3\"\nMacrotask Queue:  setTimeout → \"2\"\n```\n\nMicrotask लाई प्राथमिकता छ, त्यसैले `3` चल्छ, अनि मात्र `2`।\n\n---\n\n### 2. मध्यम — microtask ले बनाएका microtask\n\n```javascript\nconsole.log(\"start\");\n\nPromise.resolve().then(() => {\n  console.log(\"A\");\n\n  Promise.resolve().then(() => {\n    console.log(\"B\");\n  });\n});\n\nsetTimeout(() => {\n  console.log(\"C\");\n}, 0);\n\nconsole.log(\"end\");\n```\n\nOutput:\n\n```text\nstart\nend\nA\nB\nC\n```\n\n`B` किन `C` भन्दा पहिले चल्छ? `A` चल्दै गर्दा यसले अर्को microtask बनाउँछ। Event loop <b>timer तिर हाम फाल्दैन</b> — queue खाली नहुन्जेल microtask नै खाली गरिरहन्छ।\n\n> <b>Microtask process गर्दै गर्दा बनेका microtask पनि अर्को macrotask अघि process हुन्छन्।</b>\n\n---\n\n### 3. उन्नत — microtask starvation\n\nMicrotask queue पूरै खाली गर्नुपर्ने भएकाले, लगातार microtask बनाइरहँदा timer कहिल्यै चल्न नपाउने हुन सक्छ।\n\n```javascript\nfunction keepRunning() {\n  queueMicrotask(() => {\n    console.log(\"microtask\");\n\n    keepRunning();\n  });\n}\n\nsetTimeout(() => {\n  console.log(\"timer\");\n}, 0);\n\nkeepRunning();\n```\n\nMicrotask queue कहिल्यै खाली नहुने भएकाले timer कुरिरहन्छ। यसलाई <b>microtask starvation</b> भनिन्छ, र वास्तविक application मा अत्यधिक microtask काले timer, user अन्तरक्रिया र rendering ढिलो पार्छ।\n\n---\n\n### Promise का callback microtask हुन्\n\n```javascript\nPromise.resolve(\"Hello\")\n  .then(value => {\n    console.log(value);\n  });\n\nconsole.log(\"World\");\n```\n\nOutput: `World` अनि `Hello`। Promise पहिले नै resolve भइसके पनि, `.then()` तुरुन्तै चल्दैन — यसले microtask schedule गर्छ।\n\n---\n\n### अझ वास्तविक क्रम\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => console.log(\"Timer 1\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 1\"));\nsetTimeout(() => console.log(\"Timer 2\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 2\"));\n\nconsole.log(\"End\");\n```\n\nOutput:\n\n```text\nStart\nEnd\nPromise 1\nPromise 2\nTimer 1\nTimer 2\n```\n\nLoop यस्तो हो: synchronous code चलाऊ, <b>सबै</b> microtask खाली गर, एउटा macrotask चलाऊ, फेरि microtask खाली गर, र यसै गरी।\n\n---\n\n### सम्झनुपर्ने एउटै नियम\n\n> <b>वर्तमान JavaScript task सकिएपछि, event loop ले अर्को macrotask मा जानुअघि पूरै microtask queue खाली गर्छ।</b>\n\nयही एउटा नियमले धेरैजसो Promise vs `setTimeout` interview प्रश्न व्याख्या गर्छ।",
+        jp: "すべての非同期コールバックが同じキューに入るわけではありません。JavaScriptは重要な2種類のキューを使います:\n\n• <b>マイクロタスクキュー</b> — 優先度が高い\n• <b>マクロタスクキュー</b> — 通常のタスクキュー\n\n> <b>現在の同期コードが終わると、JavaScriptは次のマクロタスクに移る前にマイクロタスクキューを完全に空にする。</b>\n\nだからタイマーを先に登録していても、Promiseのコールバックが `setTimeout(..., 0)` より<b>先に</b>走ることがあります。\n\n<b>マイクロタスクの発生源:</b> `Promise.then()`・`Promise.catch()`・`Promise.finally()`・`queueMicrotask()`。\n\n<b>マクロタスクの発生源:</b> `setTimeout()`・`setInterval()`・DOMイベント。\n\n---\n\n### 1. 基本 — PromiseとsetTimeout\n\n```javascript\nconsole.log(\"1\");\n\nsetTimeout(() => {\n  console.log(\"2\");\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log(\"3\");\n});\n\nconsole.log(\"4\");\n```\n\n出力:\n\n```text\n1\n4\n3\n2\n```\n\nまず同期コード（`1`・`4`）が走ります。スタックが空になると、キューはこうなっています:\n\n```text\nMicrotask Queue:  Promise → \"3\"\nMacrotask Queue:  setTimeout → \"2\"\n```\n\nマイクロタスクが優先されるので `3`、その後に `2` です。\n\n---\n\n### 2. 中級 — マイクロタスクが生むマイクロタスク\n\n```javascript\nconsole.log(\"start\");\n\nPromise.resolve().then(() => {\n  console.log(\"A\");\n\n  Promise.resolve().then(() => {\n    console.log(\"B\");\n  });\n});\n\nsetTimeout(() => {\n  console.log(\"C\");\n}, 0);\n\nconsole.log(\"end\");\n```\n\n出力:\n\n```text\nstart\nend\nA\nB\nC\n```\n\nなぜ `B` が `C` より先か? `A` の実行中に新しいマイクロタスクが作られるからです。イベントループは<b>タイマーへ飛ばず</b>、キューが空になるまでマイクロタスクを処理し続けます。\n\n> <b>マイクロタスクの処理中に生まれたマイクロタスクも、次のマクロタスクより先に処理される。</b>\n\n---\n\n### 3. 上級 — マイクロタスクの飢餓\n\nマイクロタスクキューは完全に空にされる必要があるため、作り続けるとタイマーが永遠に走れなくなります。\n\n```javascript\nfunction keepRunning() {\n  queueMicrotask(() => {\n    console.log(\"microtask\");\n\n    keepRunning();\n  });\n}\n\nsetTimeout(() => {\n  console.log(\"timer\");\n}, 0);\n\nkeepRunning();\n```\n\nキューが空にならないのでタイマーは待ち続けます。これを<b>マイクロタスクの飢餓</b>と呼び、実際のアプリでは過剰なマイクロタスクがタイマー・操作・描画を遅らせます。\n\n---\n\n### Promiseのコールバックはマイクロタスク\n\n```javascript\nPromise.resolve(\"Hello\")\n  .then(value => {\n    console.log(value);\n  });\n\nconsole.log(\"World\");\n```\n\n出力は `World` の次に `Hello`。すでに解決済みでも `.then()` は即座に走らず、マイクロタスクとして予約されます。\n\n---\n\n### より現実的な順序\n\n```javascript\nconsole.log(\"Start\");\n\nsetTimeout(() => console.log(\"Timer 1\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 1\"));\nsetTimeout(() => console.log(\"Timer 2\"), 0);\nPromise.resolve().then(() => console.log(\"Promise 2\"));\n\nconsole.log(\"End\");\n```\n\n出力:\n\n```text\nStart\nEnd\nPromise 1\nPromise 2\nTimer 1\nTimer 2\n```\n\n流れは、同期コードを走らせ、<b>すべて</b>のマイクロタスクを空にし、マクロタスクを1つ実行し、また空にする、の繰り返しです。\n\n---\n\n### 覚えるべき唯一の規則\n\n> <b>現在のJavaScriptタスクが終わると、イベントループは次のマクロタスクに移る前にマイクロタスクキュー全体を空にする。</b>\n\nこの規則ひとつで、Promise対 `setTimeout` の面接問題のほとんどが説明できます。",
       },
-      diagram: `Priority order the event loop always follows:
+      diagram: `                JavaScript Runtime
+                       │
+                       ▼
+                ┌─────────────┐
+                │  Call Stack │
+                └──────┬──────┘
+                       │ stack becomes empty
+                       ▼
+             ┌──────────────────┐
+             │ Microtask Queue  │
+             │ Promise.then()   │
+             │ Promise.catch()  │
+             │ queueMicrotask() │
+             └────────┬─────────┘
+                      │ DRAIN EVERYTHING
+                      ▼
+             ┌──────────────────┐
+             │ Macrotask Queue  │
+             │ setTimeout       │
+             │ setInterval      │
+             │ DOM events       │
+             └────────┬─────────┘
+                      ▼
+                Back to Stack
 
-  1. SYNCHRONOUS CODE   (call stack)          — runs first, top to bottom
-  2. MICROTASK QUEUE     (Promise.then/catch/finally, queueMicrotask)
-       → drained COMPLETELY, including new microtasks added while draining
-  3. MACROTASK QUEUE     (setTimeout, setInterval, UI rendering, I/O)
-       → only ONE macrotask runs per event loop turn
-       → then the loop goes back to step 2 and drains microtasks again
 
-console.log("1")                                   → sync, runs now
-setTimeout(() => console.log("2"), 0)              → queued as MACROTASK
-Promise.resolve().then(() => console.log("3"))     → queued as MICROTASK
-console.log("4")                                   → sync, runs now
+The cycle
 
-Timeline:
-sync:        1, 4
-stack empty  → drain microtasks:  3
-              → next macrotask:   2
+Call Stack → Microtasks → Macrotask → Microtasks → Macrotask → ...
 
-Output: 1, 4, 3, 2`,
+
+Feature              Microtask          Macrotask
+──────────────────────────────────────────────────────────
+Priority             Higher             Lower
+Examples             Promise.then()     setTimeout()
+                     queueMicrotask()   setInterval()
+Queue fully drained  Yes                No, one task at a time`,
       codeExample: {
-        title: { en: "Predict the output — the classic microtask vs macrotask puzzle", np: "Output predict गर्नुहोस् — classic microtask vs macrotask puzzle", jp: "出力を予測する — 定番のマイクロタスク対マクロタスク問題" },
-        code: `// ── The classic interview puzzle ───────────────────────────────────
-console.log("1");                                       // sync
+        title: { en: "Microtasks first, every time", np: "पहिले microtask, हरेक पटक", jp: "毎回、まずマイクロタスク" },
+        code: `// ── 1. Basic — the microtask beats the timer ──────────────────────
+console.log("1");
 
-setTimeout(() => console.log("2"), 0);                   // macrotask
+setTimeout(() => console.log("2"), 0);      // macrotask
+Promise.resolve().then(() => console.log("3")); // microtask
 
-Promise.resolve().then(() => console.log("3"));           // microtask
+console.log("4");
+// 1, 4, 3, 2
 
-console.log("4");                                        // sync
-
-// Output: 1, 4, 3, 2
-//
-// Why?
-// 1. Call stack runs console.log("1")               → logs "1"
-// 2. setTimeout callback → goes to the MACROTASK queue (waits)
-// 3. Promise.resolve().then() → callback goes to the MICROTASK queue
-// 4. Call stack runs console.log("4")               → logs "4"
-// 5. Call stack is now empty
-// 6. Event loop drains the microtask queue FIRST    → logs "3"
-// 7. Only now does it check the macrotask queue      → logs "2"
-
-// ── Chained .then() — all microtasks drain before the next macrotask ──
-console.log("1 — sync");
-
-setTimeout(() => console.log("5 — macrotask (setTimeout)"), 0);
-
-Promise.resolve()
-  .then(() => console.log("3 — microtask (Promise.then)"))
-  .then(() => console.log("4 — microtask (chained .then)"));
-
-console.log("2 — sync");
-
-// Output:
-// 1 — sync
-// 2 — sync
-// 3 — microtask (Promise.then)
-// 4 — microtask (chained .then)
-// 5 — macrotask (setTimeout)
-//
-// Even the SECOND .then() (a NEW microtask scheduled while draining)
-// still runs before the setTimeout callback — the microtask queue is
-// drained completely, however many microtasks get added along the way.
-
-// ── queueMicrotask — schedule a microtask directly ───────────────────
+// ── 2. Intermediate — a microtask that queues another ─────────────
 console.log("start");
-queueMicrotask(() => console.log("microtask"));
-setTimeout(() => console.log("macrotask"), 0);
-console.log("end");
-// Output: start, end, microtask, macrotask
 
-// ── Priority summary (highest to lowest) ──────────────────────────────
-// 1. Synchronous code (call stack)
-// 2. Microtasks   — Promise.then/catch/finally, queueMicrotask, MutationObserver
-// 3. Macrotasks   — setTimeout, setInterval, UI rendering, I/O callbacks`,
+Promise.resolve().then(() => {
+  console.log("A");
+  Promise.resolve().then(() => console.log("B")); // still drained first
+});
+
+setTimeout(() => console.log("C"), 0);
+
+console.log("end");
+// start, end, A, B, C — B beats C
+
+// ── 3. Advanced — microtask starvation ────────────────────────────
+function keepRunning() {
+  queueMicrotask(() => {
+    console.log("microtask");
+    keepRunning(); // the queue never empties
+  });
+}
+
+// setTimeout(() => console.log("timer"), 0);
+// keepRunning(); // the timer never gets a turn
+
+// ── A realistic ordering question ─────────────────────────────────
+console.log("Start");
+
+setTimeout(() => console.log("Timer 1"), 0);
+Promise.resolve().then(() => console.log("Promise 1"));
+setTimeout(() => console.log("Timer 2"), 0);
+Promise.resolve().then(() => console.log("Promise 2"));
+
+console.log("End");
+// Start, End, Promise 1, Promise 2, Timer 1, Timer 2`,
       },
       keyTakeaways: [
-        { en: "Promises (`.then`/`.catch`/`.finally`) and `queueMicrotask` schedule callbacks in the <b>microtask queue</b>, which has higher priority than the macrotask (`setTimeout`/`setInterval`) queue.", np: "Promises (`.then`/`.catch`/`.finally`) र `queueMicrotask` ले callbacks लाई <b>microtask queue</b> मा schedule गर्छन्, जसको priority macrotask (`setTimeout`/`setInterval`) queue भन्दा उच्च हुन्छ।", jp: "Promise（`.then`/`.catch`/`.finally`）と`queueMicrotask`はコールバックを<b>マイクロタスクキュー</b>にスケジュールし、これはマクロタスク（`setTimeout`/`setInterval`）キューより優先度が高い。" },
-        { en: "The event loop always <b>fully drains the microtask queue</b> — including any new microtasks scheduled while draining — before it picks up the next macrotask.", np: "Event loop ले सधैं <b>microtask queue पूर्ण drain</b> गर्छ — draining गर्दा schedule भएका नयाँ microtasks सहित — अर्को macrotask लिनु अघि।", jp: "イベントループは次のマクロタスクを取り出す前に、必ず<b>マイクロタスクキューを完全に処理する</b>（処理中に新しくスケジュールされたものも含めて）。" },
-        { en: "This is why `.then` callbacks always run before a `setTimeout(fn, 0)` callback scheduled earlier — microtasks win over macrotasks regardless of timer delay.", np: "यही कारणले `.then` callbacks सधैं पहिले schedule भएको `setTimeout(fn, 0)` callback भन्दा पहिले चल्छन् — timer delay जे भए पनि microtasks ले macrotasks लाई जित्छन्।", jp: "これが`.then`コールバックが先にスケジュールされた`setTimeout(fn, 0)`コールバックより常に先に実行される理由 — タイマーの遅延に関わらずマイクロタスクがマクロタスクに勝つ。" },
+        { en: "JavaScript has two queue categories: the <b>microtask queue</b> (higher priority) and the <b>macrotask queue</b>.", np: "JavaScript मा दुई queue वर्ग छन्: <b>microtask queue</b> (उच्च प्राथमिकता) र <b>macrotask queue</b>।", jp: "JavaScriptにはキューが2種類ある: <b>マイクロタスクキュー</b>（高優先）と<b>マクロタスクキュー</b>。" },
+        { en: "`Promise.then()`, `catch()`, `finally()` and `queueMicrotask()` schedule <b>microtasks</b>.", np: "`Promise.then()`, `catch()`, `finally()` र `queueMicrotask()` ले <b>microtask</b> schedule गर्छन्।", jp: "`Promise.then()`・`catch()`・`finally()`・`queueMicrotask()` は<b>マイクロタスク</b>を予約する。" },
+        { en: "`setTimeout()`, `setInterval()` and DOM events schedule <b>macrotasks</b>.", np: "`setTimeout()`, `setInterval()` र DOM event ले <b>macrotask</b> schedule गर्छन्।", jp: "`setTimeout()`・`setInterval()`・DOMイベントは<b>マクロタスク</b>を予約する。" },
+        { en: "The microtask queue is <b>fully drained</b> before the next macrotask runs.", np: "अर्को macrotask चल्नुअघि microtask queue <b>पूरै खाली</b> हुन्छ।", jp: "次のマクロタスクの前に、マイクロタスクキューは<b>完全に空</b>にされる。" },
+        { en: "Microtasks created <b>during</b> microtask processing are drained too, before any macrotask.", np: "Microtask process गर्दै <b>बनेका</b> microtask पनि कुनै macrotask अघि खाली हुन्छन्।", jp: "マイクロタスク処理<b>中</b>に生まれたものも、マクロタスクより先に処理される。" },
+        { en: "Endlessly queueing microtasks causes <b>microtask starvation</b>, delaying timers and rendering.", np: "अनन्त रूपमा microtask थप्दा <b>microtask starvation</b> हुन्छ, timer र rendering ढिलो हुन्छ।", jp: "際限なくマイクロタスクを積むと<b>マイクロタスクの飢餓</b>が起き、タイマーや描画が遅れる。" },
+        { en: "A resolved Promise's `.then()` still runs asynchronously — it schedules, it does not execute now.", np: "Resolve भइसकेको Promise को `.then()` पनि asynchronously चल्छ — यसले schedule गर्छ, अहिले चलाउँदैन।", jp: "解決済みPromiseの `.then()` も非同期に走る。今すぐ実行ではなく予約される。" },
       ],
       commonMistakes: [
-        { en: "Assuming code order alone determines output order — `setTimeout` scheduled before a Promise's `.then` can still run *after* it, because microtasks always drain before the next macrotask.", np: "Code को order ले मात्र output order तय गर्छ भन्ने ठान्नु — Promise को `.then` भन्दा पहिले schedule भएको `setTimeout` पनि *पछि* चल्न सक्छ, किनभने microtasks सधैं अर्को macrotask भन्दा पहिले drain हुन्छन्।", jp: "コードの順序だけが出力順序を決めると思い込むこと — Promiseの`.then`より先にスケジュールされた`setTimeout`でも、マイクロタスクは常に次のマクロタスクより前に処理されるため*後に*実行されることがある。" },
-        { en: "Forgetting that a microtask which schedules another microtask (a chained `.then`) still runs before the next macrotask — the queue keeps draining until it's truly empty.", np: "अर्को microtask schedule गर्ने microtask (chained `.then`) पनि अर्को macrotask भन्दा पहिले चल्छ भन्ने बिर्सनु — queue साँच्चै खाली नभएसम्म drain भइरहन्छ।", jp: "別のマイクロタスクをスケジュールするマイクロタスク（連鎖した`.then`）も次のマクロタスクより前に実行されることを忘れること — キューは本当に空になるまで処理され続ける。" },
-        { en: "Treating `setInterval`/`setTimeout` and Promise callbacks as if they share one queue with equal priority — they are two distinct queues with different priority levels.", np: "`setInterval`/`setTimeout` र Promise callbacks लाई एउटै equal-priority queue साझा गरेको जस्तो ठान्नु — तिनी फरक priority भएका दुई छुट्टाछुट्टै queues हुन्।", jp: "`setInterval`/`setTimeout`とPromiseコールバックが同等の優先度で1つのキューを共有していると扱うこと — 実際は優先度の異なる2つの別々のキュー。" },
+        { en: "<b>Thinking `setTimeout(fn, 0)` runs immediately</b> — with a `console.log(\"done\")` after it, `done` prints first. Zero is a minimum delay, not an instruction to run now.", np: "<b>`setTimeout(fn, 0)` तुरुन्तै चल्छ भन्ने ठान्नु</b> — पछि `console.log(\"done\")` भए, `done` पहिले देखिन्छ। शून्य न्यूनतम delay हो, अहिले चलाउने आदेश होइन।", jp: "<b>`setTimeout(fn, 0)` がすぐ走ると思う</b> — 後ろに `console.log(\"done\")` があれば `done` が先。0は最小の遅延であって即時実行の指示ではない。" },
+        { en: "<b>Thinking Promise callbacks run synchronously</b> — `console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); console.log(\"C\");` prints `A C B`.", np: "<b>Promise का callback synchronously चल्छन् भन्ने ठान्नु</b> — `console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); console.log(\"C\");` ले `A C B` देखाउँछ।", jp: "<b>Promiseのコールバックが同期的に走ると思う</b> — `console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); console.log(\"C\");` は `A C B` を出す。" },
+        { en: "<b>Thinking the queues alternate one-for-one</b> — it is not microtask, macrotask, microtask, macrotask. <b>All</b> queued microtasks drain before the next macrotask.", np: "<b>Queue एक-एक गरी पालो लिन्छन् भन्ने ठान्नु</b> — यो microtask, macrotask, microtask, macrotask होइन। अर्को macrotask अघि <b>सबै</b> microtask खाली हुन्छन्।", jp: "<b>キューが1つずつ交互だと思う</b> — マイクロ・マクロ・マイクロ・マクロではない。次のマクロタスクの前に<b>すべて</b>のマイクロタスクが処理される。" },
       ],
       quiz: [
         {
-          question: { en: "Which queue does a Promise's `.then()` callback go into?", np: "Promise को `.then()` callback कुन queue मा जान्छ?", jp: "Promiseの`.then()`コールバックはどのキューに入る？" },
+          question: { en: "What is the output of `console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); Promise.resolve().then(() => console.log(\"C\")); console.log(\"D\");`?", np: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); Promise.resolve().then(() => console.log(\"C\")); console.log(\"D\");` को output के हो?", jp: "`console.log(\"A\"); setTimeout(() => console.log(\"B\"), 0); Promise.resolve().then(() => console.log(\"C\")); console.log(\"D\");` の出力は?" },
           options: [
-            { en: "The microtask queue — higher priority than macrotasks", np: "Microtask queue — macrotasks भन्दा उच्च priority", jp: "マイクロタスクキュー — マクロタスクより優先度が高い" },
-            { en: "The same macrotask queue as setTimeout", np: "setTimeout जस्तै macrotask queue", jp: "setTimeoutと同じマクロタスクキュー" },
+            { en: "`A B C D`", np: "`A B C D`", jp: "`A B C D`" },
+            { en: "`A D B C`", np: "`A D B C`", jp: "`A D B C`" },
+            { en: "`A D C B`", np: "`A D C B`", jp: "`A D C B`" },
+            { en: "`C A D B`", np: "`C A D B`", jp: "`C A D B`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Promise callbacks (.then/.catch/.finally) and queueMicrotask are scheduled in the microtask queue, a separate, higher-priority queue.", np: "Promise callbacks (.then/.catch/.finally) र queueMicrotask microtask queue मा schedule हुन्छन्, जुन छुट्टै र उच्च-priority queue हो।", jp: "Promiseコールバック（.then/.catch/.finally）とqueueMicrotaskはマイクロタスクキューという別の優先度の高いキューにスケジュールされる。" },
+          correctIndex: 2,
+          explanation: { en: "Synchronous logs first, then the microtask, then the timer.", np: "पहिले synchronous log, त्यसपछि microtask, अनि timer।", jp: "まず同期のログ、次にマイクロタスク、最後にタイマー。" },
         },
         {
-          question: { en: "Given `setTimeout(() => console.log(\"a\"), 0)` followed by `Promise.resolve().then(() => console.log(\"b\"))`, which logs first?", np: "`setTimeout(() => console.log(\"a\"), 0)` पछि `Promise.resolve().then(() => console.log(\"b\"))` दिइएमा, कुन पहिले log हुन्छ?", jp: "`setTimeout(() => console.log(\"a\"), 0)`の後に`Promise.resolve().then(() => console.log(\"b\"))`があるとき、どちらが先にログされる？" },
+          question: { en: "Which has higher priority after the current task?", np: "वर्तमान task पछि कसको प्राथमिकता उच्च छ?", jp: "現在のタスクの後、優先度が高いのはどれか?" },
           options: [
-            { en: "\"b\" — the microtask queue always drains before the next macrotask", np: "\"b\" — microtask queue ले सधैं अर्को macrotask भन्दा पहिले drain हुन्छ", jp: "「b」— マイクロタスクキューは常に次のマクロタスクより先に処理される" },
-            { en: "\"a\" — setTimeout was scheduled first, so it wins", np: "\"a\" — setTimeout पहिले schedule भएको हुनाले यसले जित्छ", jp: "「a」— setTimeoutが先にスケジュールされたので勝つ" },
+            { en: "`setTimeout()`", np: "`setTimeout()`", jp: "`setTimeout()`" },
+            { en: "A DOM event", np: "DOM event", jp: "DOMイベント" },
+            { en: "`setInterval()`", np: "`setInterval()`", jp: "`setInterval()`" },
+            { en: "Promise `.then()`", np: "Promise `.then()`", jp: "Promise の `.then()`" },
           ],
-          correctIndex: 0,
-          explanation: { en: "Regardless of scheduling order, the event loop always fully drains the microtask queue before touching the next macrotask.", np: "Scheduling order जे भए पनि, event loop ले सधैं अर्को macrotask छुनु अघि microtask queue पूर्ण drain गर्छ।", jp: "スケジュール順序に関わらず、イベントループは次のマクロタスクに触れる前に必ずマイクロタスクキューを完全に処理する。" },
+          correctIndex: 3,
+          explanation: { en: "Promise callbacks are microtasks; the other three are macrotasks.", np: "Promise का callback microtask हुन्; बाँकी तीन macrotask हुन्।", jp: "Promiseのコールバックはマイクロタスク。他の3つはマクロタスク。" },
         },
         {
-          question: { en: "If a microtask schedules another microtask (e.g. a chained `.then`) while the queue is draining, does the new one still run before the next macrotask?", np: "Queue drain भइरहँदा एउटा microtask ले अर्को microtask (जस्तै chained `.then`) schedule गऱ्यो भने, नयाँ वाला अर्को macrotask भन्दा पहिले नै चल्छ?", jp: "キューの処理中にマイクロタスクが別のマイクロタスク（連鎖した`.then`など）をスケジュールした場合、新しいものは次のマクロタスクより前に実行される？" },
+          question: { en: "For `Promise.resolve().then(() => { console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); }); setTimeout(() => console.log(\"C\"), 0);` what is the order?", np: "`Promise.resolve().then(() => { console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); }); setTimeout(() => console.log(\"C\"), 0);` को क्रम के हो?", jp: "`Promise.resolve().then(() => { console.log(\"A\"); Promise.resolve().then(() => console.log(\"B\")); }); setTimeout(() => console.log(\"C\"), 0);` の順序は?" },
           options: [
-            { en: "Yes — the microtask queue keeps draining until it is completely empty", np: "हो — microtask queue पूर्ण खाली नभएसम्म drain भइरहन्छ", jp: "はい — マイクロタスクキューは完全に空になるまで処理され続ける" },
-            { en: "No — only microtasks that existed before draining started will run first", np: "होइन — drain सुरु हुनु अघिका microtasks मात्र पहिले चल्छन्", jp: "いいえ — 処理開始前に存在していたマイクロタスクのみが先に実行される" },
+            { en: "`A B C`", np: "`A B C`", jp: "`A B C`" },
+            { en: "`A C B`", np: "`A C B`", jp: "`A C B`" },
+            { en: "`C A B`", np: "`C A B`", jp: "`C A B`" },
+            { en: "`B A C`", np: "`B A C`", jp: "`B A C`" },
           ],
           correctIndex: 0,
-          explanation: { en: "The microtask queue is drained completely each time, including microtasks scheduled by other microtasks during the drain — none of them are deferred to the next macrotask cycle.", np: "हरेक पटक microtask queue पूर्ण रूपमा drain हुन्छ, draining बेला अरू microtasks ले schedule गरेका समेत — कुनैलाई पनि अर्को macrotask cycle मा टार्दैन।", jp: "マイクロタスクキューは毎回完全に処理される。処理中に他のマイクロタスクによってスケジュールされたものも含めて — どれも次のマクロタスクサイクルに先送りされない。" },
+          explanation: { en: "The microtask created inside a microtask is drained before the timer gets a turn.", np: "Microtask भित्र बनेको microtask timer ले पालो पाउनुअघि खाली हुन्छ।", jp: "マイクロタスク内で作られたマイクロタスクも、タイマーの順番より先に処理される。" },
+        },
+        {
+          question: { en: "What is microtask starvation?", np: "Microtask starvation के हो?", jp: "マイクロタスクの飢餓とは何か?" },
+          options: [
+            { en: "Microtasks that never get scheduled", np: "कहिल्यै schedule नहुने microtask", jp: "決してスケジュールされないマイクロタスク" },
+            { en: "Endlessly queued microtasks preventing macrotasks from running", np: "अनन्त रूपमा queue भएका microtask ले macrotask चल्न नदिनु", jp: "際限なく積まれたマイクロタスクがマクロタスクの実行を妨げること" },
+            { en: "A browser memory limit", np: "Browser को memory सीमा", jp: "ブラウザのメモリ上限" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Because the queue must fully drain, a self-requeuing microtask blocks timers forever.", np: "Queue पूरै खाली हुनुपर्ने भएकाले, आफैं फेरि queue हुने microtask ले timer सधैंका लागि रोक्छ।", jp: "キューは完全に空にされる必要があるため、自分を再登録し続けるマイクロタスクはタイマーを永久に阻む。" },
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: { en: "What data structure does JavaScript use to track the currently running function?", np: "JavaScript ले हाल चलिरहेको function track गर्न कुन data structure प्रयोग गर्छ?", jp: "JavaScriptは現在実行中の関数を追跡するのに何のデータ構造を使う？" },
-      options: [{ en: "The call stack (LIFO)", np: "Call stack (LIFO)", jp: "コールスタック（LIFO）" }, { en: "A FIFO queue", np: "FIFO queue", jp: "FIFOキュー" }],
+      question: { en: "What does the call stack keep track of?", np: "Call stack ले केको हिसाब राख्छ?", jp: "コールスタックは何を追跡するか?" },
+      options: [
+        { en: "Which function is currently executing", np: "अहिले कुन function चलिरहेको छ", jp: "今どの関数が実行中か" },
+        { en: "Every variable in the program", np: "Program का हरेक variable", jp: "プログラムのすべての変数" },
+        { en: "All pending network requests", np: "सबै बाँकी network request", jp: "保留中のすべてのネットワーク要求" },
+      ],
       correctIndex: 0,
-      explanation: { en: "The call stack is LIFO — the most recently called function runs and returns first.", np: "Call stack LIFO हो — सबैभन्दा पछि call भएको function पहिले चल्छ र return हुन्छ।", jp: "コールスタックはLIFOで、最後に呼ばれた関数が最初に実行・returnする。" },
+      explanation: { en: "It holds execution frames in LIFO order; the top frame is running.", np: "यसले execution frame लाई LIFO क्रममा राख्छ; टुप्पोको frame चलिरहेको हुन्छ।", jp: "実行フレームをLIFOで保持する。一番上のフレームが実行中。" },
     },
     {
-      question: { en: "Why does unbounded recursion eventually throw a RangeError?", np: "Unbounded recursion ले किन अन्तत: RangeError throw गर्छ?", jp: "無限再帰が最終的にRangeErrorをスローするのはなぜ？" },
-      options: [{ en: "It keeps pushing frames onto the call stack without popping any off", np: "यसले pop नगरी call stack मा frames थप्दै जान्छ", jp: "popすることなくコールスタックにフレームを積み続けるから" }, { en: "It runs too many separate, unrelated function calls", np: "यसले धेरै असम्बन्धित function calls चलाउँछ", jp: "無関係な関数呼び出しを多く実行しすぎるから" }],
-      correctIndex: 0,
-      explanation: { en: "Each recursive call adds a frame; without a base case to stop it, the stack overflows its allotted space.", np: "हरेक recursive call ले frame थप्छ; रोक्ने base case नभए, stack ले आफ्नो space overflow गर्छ।", jp: "各再帰呼び出しはフレームを追加する。止める基底ケースがなければ、スタックは割り当てられた空間を超える。" },
+      question: { en: "What happens when a function returns?", np: "Function return हुँदा के हुन्छ?", jp: "関数が戻ると何が起こるか?" },
+      options: [
+        { en: "A new frame is pushed", np: "नयाँ frame push हुन्छ", jp: "新しいフレームがpushされる" },
+        { en: "Its frame is popped from the stack", np: "यसको frame stack बाट pop हुन्छ", jp: "そのフレームがスタックからpopされる" },
+        { en: "It moves to the heap", np: "यो heap मा सर्छ", jp: "ヒープに移動する" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "Execution resumes in whichever frame is now on top.", np: "अब टुप्पोमा भएको frame मा execution फर्किन्छ।", jp: "実行は、次に一番上になったフレームで再開する。" },
     },
     {
-      question: { en: "Why does synchronous code freeze the UI while it runs?", np: "Synchronous code चलिरहँदा UI किन freeze हुन्छ?", jp: "同期コードの実行中にUIがフリーズするのはなぜ？" },
-      options: [{ en: "It occupies the single call stack, so nothing else — clicks, timers, rendering — can run", np: "यसले एउटै call stack ओगट्छ, त्यसैले clicks, timers, rendering केही पनि चल्न सक्दैन", jp: "唯一のコールスタックを占有し、クリック・タイマー・描画など他の何も実行できなくなるから" }, { en: "It pauses the Web APIs from accepting new work", np: "यसले Web APIs लाई नयाँ काम स्वीकार गर्नबाट रोक्छ", jp: "Web APIが新しい作業を受け付けるのを止めるから" }],
-      correctIndex: 0,
-      explanation: { en: "JavaScript has one call stack; while it's busy with synchronous code, the event loop cannot push any queued callback onto it.", np: "JavaScript मा एउटै call stack छ; synchronous code मा busy भएको बेला event loop ले कुनै queued callback त्यसमा push गर्न सक्दैन।", jp: "JavaScriptにはコールスタックが1つしかない。同期コードで忙しい間、イベントループはキューにあるコールバックをそこにpushできない。" },
+      question: { en: "Why does infinite recursion throw `RangeError: Maximum call stack size exceeded`?", np: "अनन्त recursion ले `RangeError: Maximum call stack size exceeded` किन दिन्छ?", jp: "無限再帰が `RangeError: Maximum call stack size exceeded` を投げるのはなぜか?" },
+      options: [
+        { en: "The heap runs out of memory", np: "Heap को memory सकिन्छ", jp: "ヒープのメモリが尽きるから" },
+        { en: "Recursion is disallowed in strict mode", np: "Strict mode मा recursion निषेध छ", jp: "strictモードでは再帰が禁止されているから" },
+        { en: "Frames accumulate because none of the calls ever return", np: "कुनै call return नहुने भएकाले frame थुप्रिन्छन्", jp: "どの呼び出しも戻らないためフレームが積み上がるから" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "A base case lets each frame return so the stack can unwind.", np: "Base case ले हरेक frame return गर्न दिन्छ ताकि stack खाली होस्।", jp: "基底条件があれば各フレームが戻れ、スタックがほどける。" },
     },
     {
-      question: { en: "Where does the actual waiting for a `setTimeout` or `fetch` happen?", np: "`setTimeout` वा `fetch` को actual पर्खाइ कहाँ हुन्छ?", jp: "`setTimeout`や`fetch`の実際の待機はどこで行われる？" },
-      options: [{ en: "In the browser's Web APIs, outside the JS engine", np: "Browser को Web APIs मा, JS engine बाहिर", jp: "JSエンジンの外、ブラウザのWeb API内" }, { en: "On the JS call stack itself", np: "JS call stack मै", jp: "JSコールスタック自体" }],
+      question: { en: "Where does a `setTimeout` timer wait while it counts down?", np: "`setTimeout` को timer गन्ती गर्दै गर्दा कहाँ कुर्छ?", jp: "`setTimeout` のタイマーはカウント中どこで待つか?" },
+      options: [
+        { en: "In the Web API / runtime, outside the call stack", np: "Call stack बाहिर, Web API / runtime मा", jp: "コールスタックの外、Web APIやランタイムの中" },
+        { en: "On the call stack", np: "Call stack मा", jp: "コールスタック上" },
+        { en: "In the heap", np: "Heap मा", jp: "ヒープの中" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Web APIs handle timers and network requests independently, freeing the call stack to keep running other code.", np: "Web APIs ले timers र network requests लाई independently handle गर्छ, call stack लाई अरू code चलाउन खाली राख्छ।", jp: "Web APIはタイマーとネットワークリクエストを独立して処理し、コールスタックを他のコードの実行のために解放する。" },
+      explanation: { en: "Only when it fires does the callback move into a queue.", np: "यो बजेपछि मात्र callback queue मा जान्छ।", jp: "発火して初めてコールバックがキューへ移る。" },
     },
     {
-      question: { en: "Does `setTimeout(fn, 0)` run `fn` immediately?", np: "`setTimeout(fn, 0)` ले `fn` तुरुन्तै चलाउँछ?", jp: "`setTimeout(fn, 0)`は`fn`をすぐに実行する？" },
-      options: [{ en: "No — it still waits for the call stack to empty and its turn in the queue", np: "होइन — यसले अझै call stack खाली हुने र queue मा आफ्नो पालो पर्खन्छ", jp: "いいえ — コールスタックが空になりキューでの順番を待つ" }, { en: "Yes — 0ms means it always runs before other code", np: "हो — 0ms ले सधैं अरू code भन्दा पहिले चल्छ भन्ने अर्थ दिन्छ", jp: "はい — 0msは常に他のコードより先に実行されることを意味する" }],
-      correctIndex: 0,
-      explanation: { en: "A 0ms delay only decides when the callback enters the callback queue — it still waits for the stack to be empty.", np: "0ms delay ले callback कहिले callback queue मा पस्ने मात्र तय गर्छ — यसले अझै stack खाली हुने पर्खनुपर्छ।", jp: "0msの遅延はコールバックがいつコールバックキューに入るかを決めるだけで、スタックが空になるのを待つ。" },
+      question: { en: "What does `setTimeout(fn, 0)` actually mean?", np: "`setTimeout(fn, 0)` को वास्तविक अर्थ के हो?", jp: "`setTimeout(fn, 0)` の実際の意味は?" },
+      options: [
+        { en: "Run `fn` before the next statement", np: "अर्को statement अघि `fn` चलाऊ", jp: "次の文より前に `fn` を実行する" },
+        { en: "Run `fn` as soon as scheduling allows, not immediately", np: "Scheduling ले दिने बित्तिकै `fn` चलाऊ, तुरुन्तै होइन", jp: "即時ではなく、スケジューリングが許し次第 `fn` を実行する" },
+        { en: "Run `fn` on another thread", np: "अर्को thread मा `fn` चलाऊ", jp: "別スレッドで `fn` を実行する" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "It still waits for the current synchronous work and the event loop.", np: "यसले अझै वर्तमान synchronous काम र event loop कुर्छ।", jp: "それでも現在の同期処理とイベントループを待つ。" },
     },
     {
-      question: { en: "What is the event loop's core job?", np: "Event loop को core काम के हो?", jp: "イベントループの中心的な仕事は何？" },
-      options: [{ en: "Check if the call stack is empty, then move the next queued callback onto it", np: "Call stack खाली छ कि छैन check गर्नु, अनि queue बाट अर्को callback त्यसमा सार्नु", jp: "コールスタックが空かを確認し、次のキューのコールバックをそこに移すこと" }, { en: "Execute Web API requests directly on the call stack", np: "Web API requests लाई call stack मै direct execute गर्नु", jp: "Web APIリクエストをコールスタック上で直接実行すること" }],
-      correctIndex: 0,
-      explanation: { en: "The event loop repeatedly checks whether the stack is empty and, if so, pulls the next callback from the queue.", np: "Event loop ले लगातार stack खाली छ कि छैन check गर्छ, र भए queue बाट अर्को callback ल्याउँछ।", jp: "イベントループはスタックが空かを繰り返し確認し、空なら次のコールバックをキューから取り出す。" },
+      question: { en: "Why can a long `for` loop delay a `0ms` timer callback?", np: "लामो `for` loop ले `0ms` timer callback किन ढिलो पार्छ?", jp: "長い `for` ループが `0ms` のタイマーコールバックを遅らせるのはなぜか?" },
+      options: [
+        { en: "Loops cancel pending timers", np: "Loop ले बाँकी timer रद्द गर्छ", jp: "ループが保留中のタイマーを取り消すから" },
+        { en: "The timer restarts each iteration", np: "हरेक iteration मा timer पुनः सुरु हुन्छ", jp: "反復ごとにタイマーが再開するから" },
+        { en: "The callback cannot run while the call stack is busy", np: "Call stack व्यस्त हुँदा callback चल्न सक्दैन", jp: "コールスタックが塞がっている間、コールバックは実行できないから" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "The event loop only moves a callback onto an empty stack.", np: "Event loop ले खाली stack मा मात्र callback सार्छ।", jp: "イベントループは空いたスタックにしかコールバックを移さない。" },
     },
     {
-      question: { en: "Which queue does a Promise's `.then()` callback go into?", np: "Promise को `.then()` callback कुन queue मा जान्छ?", jp: "Promiseの`.then()`コールバックはどのキューに入る？" },
-      options: [{ en: "The microtask queue", np: "Microtask queue", jp: "マイクロタスクキュー" }, { en: "The same macrotask queue as setTimeout", np: "setTimeout जस्तै macrotask queue", jp: "setTimeoutと同じマクロタスクキュー" }],
+      question: { en: "Which queue do `Promise.then()` callbacks use?", np: "`Promise.then()` का callback कुन queue प्रयोग गर्छन्?", jp: "`Promise.then()` のコールバックはどのキューを使うか?" },
+      options: [
+        { en: "The microtask queue", np: "Microtask queue", jp: "マイクロタスクキュー" },
+        { en: "The macrotask queue", np: "Macrotask queue", jp: "マクロタスクキュー" },
+        { en: "The call stack", np: "Call stack", jp: "コールスタック" },
+      ],
       correctIndex: 0,
-      explanation: { en: "Promise callbacks and queueMicrotask are scheduled in the separate, higher-priority microtask queue.", np: "Promise callbacks र queueMicrotask छुट्टै, उच्च-priority microtask queue मा schedule हुन्छन्।", jp: "Promiseコールバックとqueue Microtaskは別の優先度の高いマイクロタスクキューにスケジュールされる。" },
+      explanation: { en: "That is why a promise callback can beat a timer registered before it.", np: "त्यसैले अघि दर्ता भएको timer भन्दा promise को callback पहिले चल्न सक्छ।", jp: "だから先に登録されたタイマーより、Promiseのコールバックが先に走りうる。" },
     },
     {
-      question: { en: "Given `setTimeout(() => console.log(\"a\"), 0)` then `Promise.resolve().then(() => console.log(\"b\"))`, which logs first?", np: "`setTimeout(() => console.log(\"a\"), 0)` पछि `Promise.resolve().then(() => console.log(\"b\"))` दिइएमा कुन पहिले log हुन्छ?", jp: "`setTimeout(() => console.log(\"a\"), 0)`の後に`Promise.resolve().then(() => console.log(\"b\"))`、どちらが先にログされる？" },
-      options: [{ en: "\"b\" — microtasks always drain before the next macrotask", np: "\"b\" — microtasks सधैं अर्को macrotask भन्दा पहिले drain हुन्छ", jp: "「b」— マイクロタスクは常に次のマクロタスクより先に処理される" }, { en: "\"a\" — it was scheduled first", np: "\"a\" — यो पहिले schedule भएको थियो", jp: "「a」— 先にスケジュールされたから" }],
-      correctIndex: 0,
-      explanation: { en: "No matter the scheduling order, the event loop fully drains the microtask queue before touching the next macrotask.", np: "Scheduling order जे भए पनि, event loop ले अर्को macrotask छुनु अघि microtask queue पूर्ण drain गर्छ।", jp: "スケジュール順序に関わらず、イベントループは次のマクロタスクに触れる前にマイクロタスクキューを完全に処理する。" },
+      question: { en: "How many microtasks run before the next macrotask?", np: "अर्को macrotask अघि कति microtask चल्छन्?", jp: "次のマクロタスクの前にいくつのマイクロタスクが走るか?" },
+      options: [
+        { en: "Exactly one", np: "ठ्याक्कै एउटा", jp: "ちょうど1つ" },
+        { en: "All of them, including any queued during processing", np: "सबै, process गर्दै queue भएका समेत", jp: "処理中に積まれたものも含めてすべて" },
+        { en: "None — they alternate", np: "कुनै पनि होइन — तिनी पालैपालो आउँछन्", jp: "0個。交互に処理される" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "The queue is fully drained, which is what makes starvation possible.", np: "Queue पूरै खाली हुन्छ, त्यसैले starvation सम्भव हुन्छ।", jp: "キューは完全に空にされる。だからこそ飢餓が起こりうる。" },
     },
     {
-      question: { en: "If a microtask schedules another microtask while the queue is draining, does the new one still run before the next macrotask?", np: "Queue drain हुँदा एउटा microtask ले अर्को microtask schedule गऱ्यो भने, नयाँ वाला अर्को macrotask भन्दा पहिले चल्छ?", jp: "処理中にマイクロタスクが別のマイクロタスクをスケジュールしたら、新しいものは次のマクロタスクより先に実行される？" },
-      options: [{ en: "Yes — the microtask queue keeps draining until completely empty", np: "हो — microtask queue पूर्ण खाली नभएसम्म drain भइरहन्छ", jp: "はい — マイクロタスクキューは完全に空になるまで処理され続ける" }, { en: "No — it's deferred until after the next macrotask", np: "होइन — यो अर्को macrotask पछिसम्म पर्खिन्छ", jp: "いいえ — 次のマクロタスクの後まで先送りされる" }],
-      correctIndex: 0,
-      explanation: { en: "The microtask queue drains completely each turn, including newly scheduled microtasks — none are pushed to the next macrotask cycle.", np: "हरेक turn मा microtask queue पूर्ण drain हुन्छ, नयाँ schedule भएका समेत — कुनैलाई अर्को macrotask cycle मा धकेलिँदैन।", jp: "マイクロタスクキューは毎回完全に処理される。新しくスケジュールされたものも含めて — 次のマクロタスクサイクルに先送りされるものはない。" },
+      question: { en: "What is the output of `console.log(\"1\"); setTimeout(() => console.log(\"2\"), 0); Promise.resolve().then(() => console.log(\"3\")); console.log(\"4\");`?", np: "`console.log(\"1\"); setTimeout(() => console.log(\"2\"), 0); Promise.resolve().then(() => console.log(\"3\")); console.log(\"4\");` को output के हो?", jp: "`console.log(\"1\"); setTimeout(() => console.log(\"2\"), 0); Promise.resolve().then(() => console.log(\"3\")); console.log(\"4\");` の出力は?" },
+      options: [
+        { en: "`1 4 2 3`", np: "`1 4 2 3`", jp: "`1 4 2 3`" },
+        { en: "`1 2 3 4`", np: "`1 2 3 4`", jp: "`1 2 3 4`" },
+        { en: "`1 4 3 2`", np: "`1 4 3 2`", jp: "`1 4 3 2`" },
+      ],
+      correctIndex: 2,
+      explanation: { en: "Synchronous first, then the microtask, then the macrotask.", np: "पहिले synchronous, त्यसपछि microtask, अनि macrotask।", jp: "まず同期、次にマイクロタスク、最後にマクロタスク。" },
     },
   ],
 };
