@@ -788,6 +788,11 @@ export const UI_STRINGS = {
     np: "みんなの日本語 I · ३०-दिने पाठ्यक्रम · पछि JLPT N4",
     jp: "みんなの日本語 初級I · 30日シラバス · 将来的に N4",
   },
+  "dayDetail.finalQuiz": {
+    en: "Final quiz",
+    np: "अन्तिम quiz",
+    jp: "最終クイズ",
+  },
   "lessonVideos.label": {
     en: "Lesson videos",
     np: "पाठका video",
