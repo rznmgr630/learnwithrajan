@@ -6,6 +6,7 @@ import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, SYSTEM_DESIGN_SECTIONS, type SystemDesignConcept } from "@/lib/system-design/concepts";
 import { SYSTEM_DESIGN_DIAGRAMS } from "@/lib/system-design/diagrams";
 import { SdDiagram } from "@/components/learn/SdDiagram";
+import { LessonVideos } from "@/components/learn/LessonVideos";
 
 function renderLine(text: string) {
   const parts = text.split(/(<b>[^<]+<\/b>|`[^`]+`)/g);
@@ -254,6 +255,16 @@ function ConceptDrawer({
               {concept.interviewTip.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
+
+          {concept.youtubeIds && concept.youtubeIds.length > 0 && (
+            <section>
+              <SectionLabel label="Watch" color="accent" />
+              <LessonVideos
+                videos={concept.youtubeIds.map((id) => ({ id }))}
+                title={concept.title}
+              />
+            </section>
+          )}
 
           <LessonNav previous={previous} next={next} onNavigate={onNavigate} />
         </div>
