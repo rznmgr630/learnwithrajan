@@ -11,6 +11,8 @@ export interface SystemDesignConcept {
   diagramNote: string;
   example: string;
   interviewTip: string;
+  /** Companion videos shown at the bottom of the drawer. */
+  youtubeIds?: string[];
   tags: string[];
 }
 
@@ -942,6 +944,7 @@ export const SYSTEM_DESIGN_CONCEPTS: SystemDesignConcept[] = [
       "<b>1. A cache with 100 million keys</b>\nImagine you have a cache:\n\n```\nServer 1\nServer 2\nServer 3\nServer 4\n```\n\nYour application has <b>100 million cached keys</b>. With regular hashing, adding Server 5 can cause a very large percentage of those keys to map to different servers. That means lots of cache misses (the data is not found in the cache). The application then asks the database for the missing data, the database suddenly receives millions of requests, and the database gets overloaded.\n\nWith consistent hashing, Server 5 joins the hash ring and takes only a portion of the existing keys. Most cached data stays where it is, so you avoid a huge cache storm.\n\n<b>2. Where is it used?</b>\nYou will commonly hear about consistent hashing when discussing:\n• <b>Distributed caches</b> (a cache spread across multiple servers)\n• <b>Distributed databases</b>\n• <b>Sharding</b> (splitting data across multiple servers)\n• <b>Cassandra</b>\n• <b>Dynamo-style systems</b>\n• Load distribution across changing groups of servers\n\nThe exact implementation differs between systems, so do not assume every system uses classic hash-ring consistent hashing in exactly the same way.",
     interviewTip:
       "If an interviewer asks <b>\\\"how would you distribute data across servers while allowing servers to be added or removed?\\\"</b>, you can say:\n\n\\\"I'd use consistent hashing. Instead of using `hash(key) % N`, I'd put servers and keys on a hash ring. When a server is added or removed, only a portion of the keys need to move instead of remapping almost everything. I'd also use virtual nodes to distribute the load more evenly.\\\"\n\nTwo follow-ups worth being ready for: <b>how many keys actually move</b> (about 1/N, on a reasonably balanced ring) and <b>why virtual nodes exist</b> (one position per server leaves the ring uneven, so a server can end up owning far more of the range than its neighbours).\n\nBring consistent hashing up when the discussion turns to distributed caches, NoSQL stores such as Cassandra or DynamoDB, or any system where the set of servers changes while it is running.",
+    youtubeIds: ["IC5Y1EE-aj4"],
     tags: ["Consistent Hashing", "Hash Ring", "Virtual Nodes", "Cache Storm", "Cassandra", "DynamoDB", "Sharding"],
   },
   {
