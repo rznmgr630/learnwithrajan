@@ -25,6 +25,22 @@ function renderLine(text: string) {
 
 function renderParagraph(text: string, i: number) {
   const lines = text.split("\n");
+
+  // A ``` fenced block is ASCII art or a code sample: render it verbatim in a
+  // monospace box, since the default per-line <p> would collapse the spacing
+  // the diagram depends on.
+  if (lines[0].startsWith("```")) {
+    const body = lines.slice(1, lines[lines.length - 1].startsWith("```") ? -1 : undefined);
+    return (
+      <pre
+        key={i}
+        className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-3 font-mono text-[12px] leading-[1.5] text-[var(--text)]"
+      >
+        {body.join("\n")}
+      </pre>
+    );
+  }
+
   const elements = lines.map((line, j) => {
     if (/^\s*↳/.test(line)) {
       const content = line.replace(/^\s*↳\s*/, "");
@@ -188,6 +204,29 @@ function ConceptDrawer({
               {concept.whyItMatters.split("\n\n").map((para, i) => renderParagraph(para, i))}
             </div>
           </section>
+
+          {/* Reference images */}
+          {concept.images && concept.images.length > 0 && (
+            <section>
+              <SectionLabel label="Reference" color="accent" />
+              <div className="space-y-3">
+                {concept.images.map((image, i) => (
+                  <figure key={i} className="overflow-hidden rounded-xl border border-[var(--border)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      loading="lazy"
+                      className="block h-auto w-full bg-[var(--elevated)]"
+                    />
+                    <figcaption className="border-t border-[var(--border)] px-3 py-2 text-xs leading-relaxed text-[var(--faint)]">
+                      {image.alt}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Diagram */}
           {SYSTEM_DESIGN_DIAGRAMS[concept.id] && (
