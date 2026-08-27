@@ -254,6 +254,14 @@ export interface RoadmapDayFaqItem {
   callout?: LocalizedString;
 }
 
+/** One multiple-choice question for a day's closing quiz. */
+export interface RoadmapDayQuizQuestion {
+  question: LocalizedString;
+  options: LocalizedString[];
+  correctIndex: number;
+  explanation: LocalizedString;
+}
+
 /** Shown in the day detail panel when a card is opened. */
 export interface RoadmapDayDetail {
   /** One paragraph or several for longer write-ups. Omit when sections (or bullets alone) carry the narrative. */
@@ -262,6 +270,8 @@ export interface RoadmapDayDetail {
   sections?: RoadmapDayDetailSection[];
   /** Optional FAQ; answers show in an accordion (collapsed by default). */
   faq?: RoadmapDayFaqItem[];
+  /** Optional closing quiz, scored and stored like the lesson quizzes. */
+  quiz?: RoadmapDayQuizQuestion[];
   bullets?: LocalizedString[];
 }
 

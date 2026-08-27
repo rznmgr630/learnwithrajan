@@ -27,6 +27,7 @@ import {
 } from "@/lib/react-native-learning/react-native-challenge-data";
 import { localizeReactNativeRoadmapDayDetail } from "@/lib/react-native-learning/localize-react-native-roadmap-detail";
 import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
+import { LessonQuiz } from "@/components/learn/LessonQuiz";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
@@ -344,6 +345,21 @@ export function DayDetailPanel({
                   );
                 })}
               </ul>
+            </div>
+          ) : null}
+
+          {detail.quiz && detail.quiz.length > 0 ? (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {t("dayDetail.finalQuiz")}
+              </h3>
+              <div className="mt-3">
+                <LessonQuiz
+                  quizId={`${track}-day-${dayNumber}.final`}
+                  questions={detail.quiz}
+                  locale={locale}
+                />
+              </div>
             </div>
           ) : null}
 
