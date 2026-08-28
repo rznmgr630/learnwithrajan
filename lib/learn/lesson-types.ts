@@ -31,6 +31,20 @@ export interface LessonDay {
   /** Optional recall prompts shown between the lessons and the final quiz. */
   selfCheck?: SelfCheckItem[];
   finalQuiz: LessonQuizQuestion[];
-  /** Optional hands-on tasks shown at the bottom, after the final quiz. */
-  practice?: LocalizedString[];
+  /** Optional build slice shown at the bottom, after the final quiz. */
+  project?: LessonProject;
+}
+
+/** One day's slice of the app that grows across a whole track. */
+export interface LessonProject {
+  /** App name, shown as a pill (e.g. "InvoiceHub"). */
+  name: LocalizedString;
+  /** One line on what this day adds to it. */
+  goal: LocalizedString;
+  /** Why this slice comes now, and what it does not cover yet. */
+  brief: LocalizedString;
+  steps: LocalizedString[];
+  /** Checks that tell you the slice is finished. */
+  acceptance: LocalizedString[];
+  stretch?: LocalizedString[];
 }

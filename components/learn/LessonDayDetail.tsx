@@ -7,6 +7,7 @@ import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { LessonVideos } from "@/components/learn/LessonVideos";
 import { LessonQuiz } from "@/components/learn/LessonQuiz";
 import { SelfCheckList } from "@/components/learn/SelfCheckList";
+import { LessonProjectCard } from "@/components/learn/LessonProjectCard";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
 import type { Lesson, LessonDay } from "@/lib/learn/lesson-types";
@@ -340,20 +341,7 @@ export function LessonDayDetail({
             </div>
           </div>
 
-          {day.practice?.length ? (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {t("jpDetail.practiceChecklist")}
-              </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--muted)]">
-                {day.practice.map((line, i) => (
-                  <li key={i} className="pl-1">
-                    <RichText text={pickLocalized(line, locale)} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          {day.project ? <LessonProjectCard project={day.project} /> : null}
 
           {onNavigateDay ? (
             <LessonNav

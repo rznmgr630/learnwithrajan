@@ -1313,6 +1313,26 @@ export const UI_STRINGS = {
     np: "उदाहरण",
     jp: "例文",
   },
+  "lessonProject.heading": {
+    en: "Build the project",
+    np: "परियोजना बनाउनुहोस्",
+    jp: "プロジェクトを作る",
+  },
+  "lessonProject.steps": {
+    en: "Steps",
+    np: "चरणहरू",
+    jp: "手順",
+  },
+  "lessonProject.acceptance": {
+    en: "Done when",
+    np: "पूरा भयो जब",
+    jp: "完了の条件",
+  },
+  "lessonProject.stretch": {
+    en: "Stretch",
+    np: "थप चुनौती",
+    jp: "発展課題",
+  },
   "jpDetail.practiceChecklist": {
     en: "Practice checklist",
     np: "अभ्यास सूची",
