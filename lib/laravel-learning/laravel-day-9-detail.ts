@@ -3,142 +3,192 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_9_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Think of your database as a shared document your whole team edits — without version control, one developer adds a column manually and everyone else's app breaks.\n\n<b>Migrations</b> solve this: they are PHP files that describe a database change, so the whole team stays in sync by running `php artisan migrate`.\n\n• <b>Seeders</b> fill the database with test or static data (admin accounts, country lists)\n  ↳ Run with `php artisan db:seed`\n• <b>Factories</b> generate realistic fake data using the Faker library\n  ↳ Perfect for development and testing — create 100 posts in a single line of code",
-      np: "Migration database schema को version control। Seeder/Factory ले dev data तयार।",
-      jp: "マイグレーション はスキーマをバージョン管理します。Seeder・Factory と組み合わせて開発環境を一コマンドで再現できます。",
+      en: "Think of middleware as a series of checkpoints that every HTTP request must pass through before reaching your controller.\n\n<b>What does middleware do?</b>\n• It handles concerns that apply to many routes — instead of repeating logic in every controller\n  ↳ Authentication: is this user logged in? If not, redirect to login\n  ↳ Rate limiting: has this user sent too many requests? If so, return a 429 Too Many Requests\n  ↳ CORS headers: add the right headers so browsers allow cross-origin requests\n  ↳ Input trimming: strip whitespace from all string inputs automatically\n\n<b>Laravel 11 change</b>\n• In older versions, middleware was registered in `Http/Kernel.php`\n  ↳ That file no longer exists in Laravel 11 — all middleware registration happens in `bootstrap/app.php` using `->withMiddleware()`",
+      np: "Middleware HTTP pipeline मा — auth, rate limit, CORS। Laravel 11 मा `bootstrap/app.php` मा दर्ता।",
+      jp: "ミドルウェアはリクエストとコントローラの間に置かれ、認証・レート制限・CORS などを一元処理します。Laravel 11 では `bootstrap/app.php` に登録します。",
     },
     {
-      en: "Laravel gives you two ways to query the database, both powered by PDO under the hood.\n\n• <b>Query Builder</b> (`DB::table()`) — returns plain arrays or objects, no overhead\n  ↳ Great for raw aggregations, reports, or tables without a model\n• <b>Eloquent ORM</b> — returns model instances with built-in superpowers: relationships, casting, scopes, soft deletes, and more\n  ↳ The default choice for most application code\n\nRule of thumb: use Eloquent by default. Only switch to the Query Builder when you need a performance-critical aggregate and don't want the overhead of hydrating model objects.",
-      np: "Eloquent ORM र Query Builder दुवै PDO मा। Eloquent ले casting, relationship, scope थप्छ।",
-      jp: "Eloquent は PDO 上に ORM 機能を追加。キャスト・リレーション・スコープなどが使えます。集計だけのクエリはクエリビルダで十分です。",
+      en: "The <b>Request</b> object is your window into everything about the incoming HTTP request — and Laravel automatically injects it into your controller methods.\n\n<b>What you can read from the Request</b>\n• Form inputs and query string values\n• JSON body (when `Content-Type: application/json`)\n• Uploaded files\n• Headers, cookies, the client's IP address\n  ↳ No more `$_POST`, `$_GET`, or `$_FILES` — the Request object is cleaner and testable\n\n<b>URL generation helpers</b>\n• `route('name')`, `url('/path')`, `asset('file.js')` — generate absolute URLs tied to your app's domain\n  ↳ If your app moves domains, only `APP_URL` in `.env` needs to change — all URLs update automatically",
+      np: "Request object ले input, file, header सब expose गर्छ। URL helper ले link सही राख्छ।",
+      jp: "**Request** がコントローラにインジェクトされ、入力・ファイル・ヘッダなどすべて取得可能。URL ヘルパは `route()`・`url()`・`asset()` で一貫したリンクを生成します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Migrations & schema design",
-        np: "Migration र Schema डिजाइन",
-        jp: "マイグレーションとスキーマ設計",
+        en: "Creating & registering middleware",
+        np: "Middleware बनाउनु र दर्ता गर्नु",
+        jp: "ミドルウェアの作成と登録",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Imagine your database schema as source code — migrations are its commit history.\n\n• Use `php artisan make:migration create_posts_table` to create a new migration file\n  ↳ Laravel infers whether it's a `create` or `alter` operation from the name you give it\n• The `up()` method applies the change (add a table, add a column)\n• The `down()` method reverses it exactly — this is what `migrate:rollback` uses\n  ↳ Golden rule: <b>never edit a migration that has already been run in production</b> — create a new one instead",
-            np: "`up()` ले apply गर्छ; `down()` ले reverse। Production मा run भएको migration नबदल्नुस्।",
-            jp: "`up()` で適用・`down()` で巻き戻し。本番で実行済みのマイグレーションは絶対に編集せず、新しいマイグレーションを追加してください。",
+            en: "Every middleware is a PHP class with one key method — `handle()`. Laravel calls it on every matching request.\n\n<b>Inside `handle()`</b>\n• `$next($request)` — passes the request further down the pipeline (toward the controller)\n  ↳ Call this to continue; skip it to abort the request early (e.g. return a redirect or 403)\n• Code before `$next($request)` runs on the way in — this is a <b>before middleware</b>\n• Code after `$next($request)` runs on the way out — this is an <b>after middleware</b>\n  ↳ Capture the response: `$response = $next($request)`, modify it, then `return $response`",
+            np: "Artisan ले class बनाउँछ। `$next($request)` ले pipeline जारी राख्छ। After middleware ले response modify गर्न सकिन्छ।",
+            jp: "Artisan で生成。`handle()` が `$next($request)` を呼ぶとパイプライン継続。`$response = $next($request)` を取得してから変更する「after ミドルウェア」パターンも使えます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Create and write a migration",
-            np: "Migration बनाउनु र लेख्नु",
-            jp: "マイグレーションの生成と記述",
+            en: "Generate and implement middleware",
+            np: "Middleware बनाउनु",
+            jp: "ミドルウェアの生成と実装",
           },
-          code: `# Create migration (Laravel infers create vs alter from the name)
-php artisan make:migration create_posts_table
-php artisan make:migration add_published_at_to_posts_table
+          code: `# Generate
+php artisan make:middleware EnsureUserIsAdmin
 
-// database/migrations/xxxx_create_posts_table.php
+// app/Http/Middleware/EnsureUserIsAdmin.php
 <?php
 
-use Illuminate\\Database\\Migrations\\Migration;
-use Illuminate\\Database\\Schema\\Blueprint;
-use Illuminate\\Support\\Facades\\Schema;
+namespace App\\Http\\Middleware;
 
-return new class extends Migration
+use Closure;
+use Illuminate\\Http\\Request;
+use Symfony\\Component\\HttpFoundation\\Response;
+
+class EnsureUserIsAdmin
 {
-    public function up(): void
+    public function handle(Request $request, Closure $next): Response
     {
-        Schema::create('posts', function (Blueprint $table) {
-            $table->id();                                    // BIGINT UNSIGNED AUTO_INCREMENT PK
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');                         // VARCHAR(255)
-            $table->string('slug')->unique();
-            $table->text('body');
-            $table->string('excerpt', 500)->nullable();
-            $table->integer('views')->unsigned()->default(0);
-            $table->decimal('price', 8, 2)->nullable();
-            $table->boolean('is_published')->default(false);
-            $table->json('meta')->nullable();
-            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
-            $table->timestamp('published_at')->nullable();
-            $table->softDeletes();                           // deleted_at TIMESTAMP NULL
-            $table->timestamps();                            // created_at + updated_at
-        });
-    }
+        if (! $request->user()?->isAdmin()) {
+            return redirect('/dashboard')->with('error', 'Admins only.');
+        }
 
-    public function down(): void
+        return $next($request); // pass to controller
+    }
+}
+
+// --- After middleware: modify response on the way back ---
+class AddResponseHeader
+{
+    public function handle(Request $request, Closure $next): Response
     {
-        Schema::dropIfExists('posts');
+        $response = $next($request); // run controller first
+        $response->headers->set('X-App-Version', config('app.version'));
+        return $response;
     }
-};
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "In Laravel 11, you register all middleware in `bootstrap/app.php` inside the `->withMiddleware()` callback.\n\n<b>What you can do there</b>\n• `append()` / `prepend()` — add middleware to the global stack (runs on every request)\n• `alias()` — give a middleware a short name so you can use it in route definitions (`->middleware('admin')`)\n• `appendToGroup()` / `prependToGroup()` — add middleware to an existing group like `web` or `api`\n  ↳ Groups let you apply multiple middleware to a set of routes in one line",
+            np: "Laravel 11 मा `bootstrap/app.php` मा मात्र दर्ता। `Http/Kernel.php` छैन।",
+            jp: "**Laravel 11** では `bootstrap/app.php` のみで登録。`Http/Kernel.php` は廃止されました。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "bootstrap/app.php — aliases, groups, global append",
+            np: "bootstrap/app.php — दर्ता",
+            jp: "bootstrap/app.php への登録",
+          },
+          code: `// bootstrap/app.php
+use App\\Http\\Middleware\\EnsureUserIsAdmin;
+use App\\Http\\Middleware\\AddResponseHeader;
+use Illuminate\\Foundation\\Application;
+use Illuminate\\Foundation\\Configuration\\Middleware;
 
-# Run, rollback, and reset
-php artisan migrate
-php artisan migrate:rollback          # undo last batch
-php artisan migrate:rollback --step=3 # undo last 3 batches
-php artisan migrate:fresh             # drop ALL tables, re-run from scratch
-php artisan migrate:fresh --seed      # + run seeders`,
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(/* ... */)
+    ->withMiddleware(function (Middleware $middleware) {
+
+        // 1. Global append — runs on every request in the stack
+        $middleware->append(AddResponseHeader::class);
+
+        // 2. Named alias — use 'admin' in route definitions
+        $middleware->alias([
+            'admin' => EnsureUserIsAdmin::class,
+        ]);
+
+        // 3. Custom named group
+        $middleware->appendToGroup('admin-panel', [
+            EnsureUserIsAdmin::class,
+            AddResponseHeader::class,
+        ]);
+
+        // 4. Prepend to the existing 'web' group
+        $middleware->prependToGroup('web', AddResponseHeader::class);
+    })
+    ->create();
+
+// routes/web.php — using aliases and groups
+Route::get('/admin', [AdminController::class, 'index'])->middleware('admin');
+
+Route::middleware('admin-panel')->group(function () {
+    Route::resource('admin/posts', AdminPostController::class);
+});`,
         },
         {
           type: "table",
           caption: {
-            en: "Common column types",
-            np: "सामान्य column types",
-            jp: "よく使うカラム型",
+            en: "Built-in middleware aliases",
+            np: "Built-in middleware aliases",
+            jp: "組み込みエイリアス一覧",
           },
           headers: [
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "SQL type", np: "SQL type", jp: "SQL 型" },
-            { en: "Common use", np: "प्रयोग", jp: "用途" },
+            { en: "Alias", np: "Alias", jp: "エイリアス" },
+            { en: "What it does", np: "के गर्छ", jp: "動作" },
           ],
           rows: [
             [
-              { en: "`$table->id()`", np: "`id()`", jp: "`id()`" },
-              { en: "BIGINT UNSIGNED PK AI", np: "BIGINT PK", jp: "BIGINT PK AI" },
-              { en: "Primary key", np: "PK", jp: "主キー" },
+              { en: "`auth`", np: "`auth`", jp: "`auth`" },
+              {
+                en: "Redirect unauthenticated users to the login route",
+                np: "Unauthenticated user लाई login redirect",
+                jp: "未認証ユーザをログインにリダイレクト",
+              },
             ],
             [
-              { en: "`string('col', 100)`", np: "`string()`", jp: "`string()`" },
-              { en: "VARCHAR(n)", np: "VARCHAR", jp: "VARCHAR" },
-              { en: "Short text, names", np: "छोटो text", jp: "短いテキスト" },
+              { en: "`auth:sanctum`", np: "`auth:sanctum`", jp: "`auth:sanctum`" },
+              {
+                en: "Sanctum token or session auth for SPA/API",
+                np: "Sanctum token/session auth",
+                jp: "Sanctum のトークンまたはセッション認証",
+              },
             ],
             [
-              { en: "`text()` / `longText()`", np: "`text()`", jp: "`text()`" },
-              { en: "TEXT / LONGTEXT", np: "TEXT", jp: "TEXT / LONGTEXT" },
-              { en: "Long content, articles", np: "लामो content", jp: "長文コンテンツ" },
+              { en: "`throttle:60,1`", np: "`throttle:60,1`", jp: "`throttle:60,1`" },
+              {
+                en: "60 requests per 1 minute (fixed)",
+                np: "60 requests/minute fixed",
+                jp: "固定: 1 分に 60 リクエスト",
+              },
             ],
             [
-              { en: "`integer()` / `bigInteger()`", np: "`integer()`", jp: "`integer()`" },
-              { en: "INT / BIGINT", np: "INT", jp: "INT / BIGINT" },
-              { en: "Counts, IDs", np: "संख्या", jp: "数値・ID" },
+              { en: "`throttle:api`", np: "`throttle:api`", jp: "`throttle:api`" },
+              {
+                en: "Named rate limiter — configurable by user tier",
+                np: "Named limiter — user tier अनुसार सीमा",
+                jp: "名前付きリミッタ。ユーザープランで上限変更可",
+              },
             ],
             [
-              { en: "`decimal('col', 8, 2)`", np: "`decimal()`", jp: "`decimal()`" },
-              { en: "DECIMAL(8,2)", np: "DECIMAL", jp: "DECIMAL" },
-              { en: "Currency / prices", np: "मूल्य", jp: "金額・価格" },
+              { en: "`verified`", np: "`verified`", jp: "`verified`" },
+              {
+                en: "Require email verified before granting access",
+                np: "Email verified हुनु पर्छ",
+                jp: "メール認証済みのみアクセス許可",
+              },
             ],
             [
-              { en: "`boolean()`", np: "`boolean()`", jp: "`boolean()`" },
-              { en: "TINYINT(1)", np: "TINYINT(1)", jp: "TINYINT(1)" },
-              { en: "Flags, toggles", np: "flag", jp: "フラグ" },
+              { en: "`signed`", np: "`signed`", jp: "`signed`" },
+              {
+                en: "Validate HMAC signature on the URL",
+                np: "HMAC signature validate",
+                jp: "URL の HMAC 署名を検証",
+              },
             ],
             [
-              { en: "`json()`", np: "`json()`", jp: "`json()`" },
-              { en: "JSON", np: "JSON", jp: "JSON" },
-              { en: "Flexible attributes, settings", np: "लचिलो attribute", jp: "柔軟な属性・設定" },
-            ],
-            [
-              { en: "`foreignId('x_id')->constrained()`", np: "`foreignId()`", jp: "`foreignId()`" },
-              { en: "BIGINT UNSIGNED FK", np: "FK", jp: "外部キー" },
-              { en: "Relation to parent table", np: "सम्बन्ध", jp: "親テーブルへの参照" },
-            ],
-            [
-              { en: "`softDeletes()`", np: "`softDeletes()`", jp: "`softDeletes()`" },
-              { en: "TIMESTAMP NULL", np: "TIMESTAMP NULL", jp: "TIMESTAMP NULL" },
-              { en: "Soft delete timestamp column", np: "soft delete", jp: "ソフトデリート列" },
+              { en: "`can:permission`", np: "`can:permission`", jp: "`can:permission`" },
+              {
+                en: "Gate / Policy authorization check",
+                np: "Gate/Policy authorization",
+                jp: "Gate / Policy の認可チェック",
+              },
             ],
           ],
         },
@@ -146,286 +196,203 @@ php artisan migrate:fresh --seed      # + run seeders`,
     },
     {
       title: {
-        en: "Factories & Seeders",
-        np: "Factory र Seeder",
-        jp: "ファクトリとシーダー",
+        en: "Request object deep dive",
+        np: "Request object विस्तार",
+        jp: "Request オブジェクト詳細",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every developer on your team needs test data — factories and seeders make this reproducible with a single command.\n\n• <b>Factories</b> describe how to generate a fake version of a model using the Faker library\n  ↳ Define once in `database/factories/`, use anywhere in tests or seeders\n• <b>Seeders</b> call factories (or insert static data) and are the entry point for `php artisan db:seed`\n  ↳ The `DatabaseSeeder` class calls all other seeders in order\n\nEnd result: any developer can run `php artisan migrate:fresh --seed` and get a fully populated database identical to everyone else's.",
-            np: "Factory ले Faker द्वारा fake data। Seeder ले factory call गर्छ; DatabaseSeeder सबैको entry point।",
-            jp: "ファクトリは Faker でモデルの偽データを生成。シーダーがファクトリを呼び出し、`DatabaseSeeder` で一括実行します。",
+            en: "To access the current HTTP request in a controller, just type-hint `Request $request` in the method signature — Laravel injects it automatically.\n\n<b>Why this is better than PHP superglobals</b>\n• No more `$_POST['name']`, `$_GET['page']`, `$_FILES['avatar']`\n  ↳ The Request object provides clean, consistent methods for all of these\n• It's testable — you can pass a fake Request in unit tests without making a real HTTP call\n• Dot notation lets you read nested data: `$request->input('address.city')`",
+            np: "Controller method मा `Request $request` type-hint — container ले inject। `$_POST` आवश्यक छैन।",
+            jp: "コントローラメソッドに `Request $request` と型付けするだけでコンテナが自動注入します。`$_POST` などスーパーグローバルは不要です。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Create and define a Factory",
-            np: "Factory बनाउनु",
-            jp: "ファクトリの生成と定義",
+            en: "Reading input data",
+            np: "Input पढ्नु",
+            jp: "入力の読み取り",
           },
-          code: `php artisan make:model Post -mf   # model + migration + factory in one command
-php artisan make:factory PostFactory --model=Post
+          code: `use Illuminate\\Http\\Request;
 
-// database/factories/PostFactory.php
-<?php
-
-namespace Database\\Factories;
-
-use App\\Models\\User;
-use Illuminate\\Database\\Eloquent\\Factories\\Factory;
-use Illuminate\\Support\\Str;
-
-class PostFactory extends Factory
+public function store(Request $request)
 {
-    public function definition(): array
-    {
-        $title = fake()->sentence(6);
+    // ---- basic input ----
+    $name  = $request->input('name');               // null if missing
+    $name  = $request->input('name', 'Anonymous');  // with default
+    $all   = $request->all();
+    $sub   = $request->only(['name', 'email']);     // whitelist
+    $noPass = $request->except(['password', '_token']); // blacklist
 
-        return [
-            'user_id'      => User::factory(),          // creates a related user
-            'title'        => $title,
-            'slug'         => Str::slug($title),
-            'body'         => fake()->paragraphs(4, true),
-            'excerpt'      => fake()->sentence(20),
-            'is_published' => fake()->boolean(70),       // 70% chance true
-            'views'        => fake()->numberBetween(0, 10000),
-            'status'       => fake()->randomElement(['draft', 'published']),
-            'published_at' => fake()->optional()->dateTimeThisYear(),
-        ];
-    }
+    // ---- nested input (dot notation) ----
+    $city = $request->input('address.city');
+    $tag0 = $request->input('tags.0');
 
-    // Named state: Post::factory()->draft()->create()
-    public function draft(): static
-    {
-        return $this->state(['status' => 'draft', 'is_published' => false]);
-    }
+    // ---- presence checks ----
+    $request->has('name');       // key present (even if null)
+    $request->filled('name');    // present AND non-empty string
+    $request->missing('name');   // opposite of has()
+    $request->hasAny(['email', 'username']);
+
+    // ---- type-cast helpers ----
+    $active = $request->boolean('active');    // "1","true","on","yes" → true
+    $page   = $request->integer('page', 1);   // cast to int, default 1
+    $amount = $request->float('amount');
+    $date   = $request->date('dob', 'Y-m-d'); // Carbon instance
+
+    // ---- query string vs POST body ----
+    $q    = $request->query('search');         // ?search=foo only
+    $body = $request->post('field');           // POST body only
+
+    // ---- JSON body (Content-Type: application/json) ----
+    $payload = $request->json()->all();
+    $token   = $request->json('data.token');   // dot-notation on JSON
 }`,
         },
         {
           type: "code",
           title: {
-            en: "Seeders & running factories",
-            np: "Seeder र factory चलाउनु",
-            jp: "シーダーとファクトリの実行",
+            en: "File uploads & request metadata",
+            np: "File upload र metadata",
+            jp: "ファイルとリクエストメタデータ",
           },
-          code: `php artisan make:seeder PostSeeder
-
-// database/seeders/PostSeeder.php
-<?php
-
-namespace Database\\Seeders;
-
-use App\\Models\\Post;
-use App\\Models\\User;
-use Illuminate\\Database\\Seeder;
-
-class PostSeeder extends Seeder
+          code: `public function upload(Request $request)
 {
-    public function run(): void
-    {
-        // 5 users, each with 10 posts
-        User::factory(5)->has(Post::factory(10))->create();
-
-        // Posts for an existing user
-        $user = User::first();
-        Post::factory(50)->for($user)->create();
-
-        // Specific post with overrides
-        Post::factory()->draft()->create([
-            'title'   => 'Hello World',
-            'user_id' => $user->id,
-        ]);
+    // ---- files ----
+    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        $file = $request->file('avatar');
+        $path = $file->store('avatars', 'public'); // returns stored path
+        $orig = $file->getClientOriginalName();
+        $size = $file->getSize();                  // bytes
+        $mime = $file->getMimeType();
     }
-}
 
-// database/seeders/DatabaseSeeder.php
-public function run(): void
-{
-    $this->call([PostSeeder::class]);
-}
+    // ---- request metadata ----
+    $request->method();           // "GET" | "POST" | "PUT" | …
+    $request->isMethod('POST');   // boolean
+    $request->path();             // "admin/posts/1"
+    $request->url();              // without query string
+    $request->fullUrl();          // with query string
+    $request->ip();               // client IP (respects trusted proxies)
+    $request->userAgent();
+    $request->header('Accept');
+    $request->bearerToken();      // Authorization: Bearer <token>
+    $request->expectsJson();      // true when client wants JSON
+    $request->isJson();           // Content-Type: application/json
+    $request->ajax();             // X-Requested-With: XMLHttpRequest
 
-# Run seeders
-php artisan db:seed
-php artisan db:seed --class=PostSeeder
-php artisan migrate:fresh --seed    # fresh DB + all seeders`,
+    // ---- passing data from middleware to controller ----
+    // In middleware:  $request->merge(['tenant_id' => $tenant->id]);
+    // In controller: $tenantId = $request->integer('tenant_id');
+}`,
         },
       ],
     },
     {
       title: {
-        en: "Query Builder & Eloquent queries",
-        np: "Query Builder र Eloquent queries",
-        jp: "クエリビルダと Eloquent クエリ",
+        en: "URL generation helpers",
+        np: "URL generation helpers",
+        jp: "URL 生成ヘルパ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The key difference between the two is what you get back.\n\n• <b>Query Builder</b> returns plain arrays or `stdClass` objects — fast, lightweight, no overhead\n  ↳ Great for raw aggregations, reports, or when you don't need model methods\n• <b>Eloquent</b> returns full model instances — you can call relationships, use scopes, fire events\n  ↳ This process is called \"hydration\" — wrapping a database row into a PHP object\n\n<b>Local scopes</b> let you name common query conditions and chain them naturally:\n• Define `scopePublished($query)` on the model\n  ↳ Call it as `Post::published()->latest()->get()` — reads like plain English",
-            np: "Query Builder ले plain array; Eloquent ले model instance। Local scope ले common constraint मा नाम।",
-            jp: "クエリビルダは配列・`stdClass`、Eloquent はモデルインスタンスを返します。ローカルスコープで共通クエリ条件に名前を付けられます。",
+            en: "Hard-coding URLs like `/users/42` in your code is fragile — if you rename a route, every hard-coded link breaks.\n\nLaravel's URL helpers solve this:\n• `route('users.show', $user)` — generates a URL from a named route\n  ↳ If the route URI changes, only the route file needs updating — all links stay correct\n• `url('/about')` — builds an absolute URL from a path, using `APP_URL` from `.env`\n• `action([UserController::class, 'index'])` — generates a URL that points to a specific controller method\n• `asset('img/logo.png')` — generates a URL to a file in your `public/` folder\n  ↳ `secure_asset()` forces HTTPS",
+            np: "`route()`, `url()`, `action()`, `asset()` — `APP_URL` अनुसार absolute URL।",
+            jp: "`route()`・`url()`・`action()`・`asset()` は `APP_URL` を基にした絶対 URL を返します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Query Builder — filtering, aggregates, joins",
-            np: "Query Builder उदाहरण",
-            jp: "クエリビルダの使用例",
+            en: "route(), url(), asset() helpers",
+            np: "URL helper उदाहरण",
+            jp: "URL ヘルパの使用例",
           },
-          code: `use Illuminate\\Support\\Facades\\DB;
+          code: `use App\\Http\\Controllers\\UserController;
+use Illuminate\\Support\\Facades\\URL;
 
-// Basic select + where
-$users = DB::table('users')
-    ->select('id', 'name', 'email')
-    ->where('active', 1)
-    ->where('age', '>=', 18)
-    ->orWhere('is_admin', true)
-    ->whereIn('role', ['editor', 'author'])
-    ->whereBetween('created_at', [now()->subDays(30), now()])
-    ->whereNotNull('email_verified_at')
-    ->orderBy('name')
-    ->limit(50)
-    ->get();
+// Named route (most preferred — survives URI changes)
+$url = route('users.show', ['user' => $user]);    // /users/42
+$url = route('users.show', $user);               // Eloquent model auto-resolves ID
 
-// Aggregates
-$count = DB::table('posts')->where('is_published', true)->count();
-$total = DB::table('orders')->sum('amount');
-$avg   = DB::table('reviews')->avg('rating');
-$max   = DB::table('orders')->max('amount');
+// Absolute URL from path
+$url = url('/about');                            // https://app.test/about
+$url = url()->current();
+$url = url()->previous();
 
-// Group by + having
-DB::table('orders')
-    ->select('user_id', DB::raw('SUM(amount) as total'))
-    ->groupBy('user_id')
-    ->having('total', '>', 1000)
-    ->get();
+// Controller action URL
+$url = action([UserController::class, 'index']);
 
-// Joins
-DB::table('posts')
-    ->join('users', 'posts.user_id', '=', 'users.id')
-    ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
-    ->select('posts.*', 'users.name as author', 'categories.name as category')
-    ->get();
+// Static assets in public/
+$img = asset('img/logo.png');                    // https://app.test/img/logo.png
+$img = secure_asset('img/logo.png');             // forces https://
 
-// Chunking (avoids memory exhaustion on huge tables)
-DB::table('users')->orderBy('id')->chunk(500, function ($users) {
-    foreach ($users as $user) { /* process */ }
-});`,
+// Append query parameters to the current URL
+$url = URL::query(['page' => 2, 'sort' => 'name']);`,
         },
         {
           type: "code",
           title: {
-            en: "Eloquent CRUD & model configuration",
-            np: "Eloquent CRUD र model config",
-            jp: "Eloquent の CRUD とモデル設定",
+            en: "Signed URLs",
+            np: "Signed URL उदाहरण",
+            jp: "署名付き URL",
           },
-          code: `// app/Models/Post.php
-<?php
+          code: `use Illuminate\\Support\\Facades\\URL;
 
-namespace App\\Models;
+// Permanent signed URL (no expiry)
+$link = URL::signedRoute('unsubscribe', ['user' => $user->id]);
 
-use Illuminate\\Database\\Eloquent\\Model;
-use Illuminate\\Database\\Eloquent\\SoftDeletes;
-use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;
-use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
+// Temporary signed URL (valid for 30 minutes)
+$link = URL::temporarySignedRoute(
+    'password.reset',
+    now()->addMinutes(30),
+    ['token' => $token]
+);
 
-class Post extends Model
-{
-    use HasFactory, SoftDeletes;
+// Use the 'signed' middleware to auto-validate
+Route::get('/unsubscribe/{user}', [UnsubscribeController::class, 'destroy'])
+    ->name('unsubscribe')
+    ->middleware('signed');
 
-    // Mass-assignment whitelist (preferred)
-    protected $fillable = ['title', 'slug', 'body', 'user_id', 'status', 'published_at'];
-
-    // Attribute casting — automatic type conversion on get/set
-    protected $casts = [
-        'is_published'  => 'boolean',
-        'meta'          => 'array',     // JSON column <-> PHP array
-        'published_at'  => 'datetime',
-        'price'         => 'decimal:2',
-    ];
-
-    protected $hidden  = ['deleted_at'];
-    protected $appends = ['reading_time'];
-
-    // Accessor (Laravel 9+ syntax)
-    protected function readingTime(): Attribute
-    {
-        return Attribute::get(
-            fn () => ceil(str_word_count($this->body) / 200) . ' min'
-        );
-    }
-
-    // Local scope
-    public function scopePublished($query): void
-    {
-        $query->where('status', 'published')->whereNotNull('published_at');
-    }
-}
-
-// ---- CRUD operations ----
-$post  = Post::create(['title' => 'Hello', 'slug' => 'hello', 'body' => '...', 'user_id' => 1]);
-$post  = Post::find(1);                          // null if missing
-$post  = Post::findOrFail(1);                    // 404 if missing
-$posts = Post::where('status', 'published')->orderByDesc('published_at')->get();
-$post  = Post::firstOrCreate(['slug' => 'hello'], ['title' => 'Hello', 'body' => '...']);
-$post  = Post::updateOrCreate(['slug' => 'hello'], ['title' => 'Updated']);
-$post->update(['title' => 'New Title']);
-$post->delete();           // soft delete (SoftDeletes trait)
-Post::destroy([1, 2, 3]);  // delete by primary keys
-
-// Scope chaining
-$posts = Post::published()->orderByDesc('published_at')->paginate(10);`,
-        },
-        {
-          type: "diagram",
-          id: "laravel-eloquent-query",
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Pagination & scopes",
-        np: "Pagination र Scope",
-        jp: "ページネーションとスコープ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Pagination splits a large result set into pages — without it, fetching 100,000 posts at once would exhaust your server's memory.\n\nLaravel gives you three flavors:\n• <b>`paginate(15)`</b> — runs a `COUNT(*)` query to know the total, gives you full page metadata (first, last, total)\n  ↳ Best for traditional \"Page 2 of 14\" style navigation\n• <b>`simplePaginate(15)`</b> — skips the count query, only knows \"previous\" and \"next\"\n  ↳ Faster for huge tables where the total page count doesn't matter\n• <b>`cursorPaginate(20)`</b> — uses an opaque cursor token instead of page numbers, ideal for infinite scroll\n  ↳ The most performant option for real-time feeds and APIs",
-            np: "`paginate()` COUNT सहित; `simplePaginate()` prev/next; `cursorPaginate()` cursor — infinite scroll।",
-            jp: "`paginate()` は COUNT 付き全ページ情報。`simplePaginate()` は前後のみ。`cursorPaginate()` はカーソルベースで大規模データに最適です。",
-          },
+// Or validate manually
+if (! URL::hasValidSignature($request)) {
+    abort(401, 'Invalid or expired link.');
+}`,
         },
         {
           type: "code",
           title: {
-            en: "Pagination variants",
-            np: "Pagination उदाहरण",
-            jp: "ページネーションの使い方",
+            en: "Response helpers & custom headers",
+            np: "Response helpers",
+            jp: "レスポンスヘルパとカスタムヘッダ",
           },
-          code: `// Full pagination (includes total count + page links)
-$posts = Post::published()->latest()->paginate(15);
+          code: `// JSON response with custom header
+return response()
+    ->json(['status' => 'ok', 'data' => $data])
+    ->header('X-Request-Id', $requestId)
+    ->header('Cache-Control', 'no-store');
 
-// Simple (no count query — faster on huge tables)
-$posts = Post::published()->simplePaginate(15);
+// Redirect with flash message
+return redirect()->route('posts.index')->with('success', 'Post created!');
 
-// Cursor pagination (for infinite scroll / APIs)
-$posts = Post::published()->orderBy('id')->cursorPaginate(20);
+// Redirect back with validation errors
+return back()->withErrors($validator)->withInput();
 
-// Blade: renders Bootstrap or Tailwind links automatically
-{{ $posts->links() }}
+// File download
+return response()->download(storage_path('app/report.pdf'), 'report.pdf');
 
-// Preserve all current GET query parameters in pagination links
-{{ $posts->withQueryString()->links() }}
+// Stream large file without loading into memory
+return response()->streamDownload(function () use ($path) {
+    echo file_get_contents($path);
+}, 'export.csv');
 
-// API controller — JSON response includes pagination meta automatically
-return response()->json($posts);
-// JSON shape: { data: [...], current_page, last_page, per_page, total, next_page_url, ... }`,
+// No content (204)
+return response()->noContent();`,
         },
       ],
     },
@@ -433,74 +400,74 @@ return response()->json($posts);
   faq: [
     {
       question: {
-        en: "What is the difference between `migrate:fresh` and `migrate:rollback`?",
-        np: "`migrate:fresh` र `migrate:rollback` मा के फरक?",
-        jp: "`migrate:fresh` と `migrate:rollback` はどう違いますか？",
+        en: "How do I pass data from middleware to controllers?",
+        np: "Middleware बाट controller मा डेटा कसरी पठाउने?",
+        jp: "ミドルウェアからコントローラにデータを渡すには？",
       },
       answer: {
-        en: "These two are very different — don't confuse them.\n\n• <b>`migrate:rollback`</b> reverses only the <b>last batch</b> of migrations by calling their `down()` methods\n  ↳ Your data is preserved wherever possible\n  ↳ Safe to use on staging and production\n• <b>`migrate:fresh`</b> drops <b>every single table</b> in the database (skipping `down()`) then re-runs all migrations from scratch\n  ↳ All data is permanently destroyed\n  ↳ Only use this in local development\n\nRule: use `migrate:fresh --seed` for local dev; use `migrate` or `migrate:rollback` everywhere else.",
-        np: "`rollback` ले last batch undo; `fresh` ले सबै drop गरेर re-run। Production मा `fresh` नगर्नुस्।",
-        jp: "`rollback` は最新バッチだけ `down()` で巻き戻し。`fresh` は全テーブルをドロップしてゼロから再実行。本番では `fresh` は使いません。",
+        en: "Middleware often resolves something useful — like the current tenant or a decoded API token — and needs to hand it to the controller.\n\n<b>Two ways to do it:</b>\n• `$request->merge(['key' => $value])` — adds it to the input bag\n  ↳ Read in controller with `$request->input('key')`\n  ↳ Drawback: users could potentially send a form field with the same name and interfere\n• `$request->attributes->set('key', $value)` — adds it to the server-side attributes bag\n  ↳ Read in controller with `$request->attributes->get('key')`\n  ↳ This bag is completely separate from user-submitted data — safe for internal use",
+        np: "`$request->merge()` वा `$request->attributes->set()` ले controller मा data पठाउनुस्। `attributes` bag user-tamper-proof छ।",
+        jp: "`$request->merge()` か `$request->attributes->set()` でデータを付加し、コントローラで `$request->get()` か `attributes->get()` で読み取ります。`attributes` バッグはユーザー入力から独立しています。",
       },
     },
     {
       question: {
-        en: "What does `$fillable` protect against?",
-        np: "`$fillable` ले के बचाउँछ?",
-        jp: "`$fillable` は何を防ぎますか？",
+        en: "What is the difference between the `web` and `api` middleware groups?",
+        np: "`web` र `api` group मा के फरक?",
+        jp: "`web` と `api` ミドルウェアグループの違いは？",
       },
       answer: {
-        en: "`$fillable` protects against a security attack called <b>mass assignment</b>.\n\nHere's the problem: if you write `User::create($request->all())` without `$fillable`, a malicious user can POST `is_admin=true` in a form and it silently gets saved to the database.\n\n• `$fillable` is a whitelist — only the listed columns can be filled via `create()` or `fill()`\n  ↳ Everything not listed is silently ignored, not rejected with an error\n• `$guarded = []` disables protection entirely\n  ↳ Only safe for internal CLI-only models that never touch user input",
-        np: "Mass-assignment attack रोक्छ — `is_admin=true` submit भए। `$fillable` ले allowed columns मात्र accept।",
-        jp: "大量代入の脆弱性を防ぎます。`$fillable` がないと `is_admin=true` のようなフォーム改ざんが通ってしまいます。`$guarded = []` は保護を完全に無効化するため注意が必要です。",
+        en: "These two groups reflect two different ways applications work.\n\n<b>`web` group</b>\n• Enables cookies, sessions, and CSRF protection\n• Designed for browser-facing routes — the kind where a user logs in and gets a session cookie\n  ↳ Without CSRF protection, a malicious website could trick a logged-in user into submitting forms\n\n<b>`api` group</b>\n• Stateless — no session, no CSRF\n• Designed for mobile apps and frontends that send a token with every request instead of using cookies\n• Includes `throttle:api` rate limiting\n  ↳ Use `auth:sanctum` for token-based authentication on API routes, not `auth` (which relies on sessions)",
+        np: "`web` stateful (session, CSRF); `api` stateless (throttle)। API मा `auth:sanctum` प्रयोग।",
+        jp: "`web` はセッション・CSRF あり。`api` はステートレスでレート制限のみ。API には `auth:sanctum` などトークン認証を使います。",
       },
     },
     {
       question: {
-        en: "When should I use `firstOrCreate` versus `updateOrCreate`?",
-        np: "`firstOrCreate` बनाम `updateOrCreate` कहिले?",
-        jp: "`firstOrCreate` と `updateOrCreate` の使い分けは？",
+        en: "How does `throttle:api` differ from `throttle:60,1`?",
+        np: "`throttle:api` र `throttle:60,1` मा के फरक?",
+        jp: "`throttle:api` と `throttle:60,1` はどう違いますか？",
       },
       answer: {
-        en: "Both do \"find or create\" — the difference is what happens when the record already exists.\n\n• <b>`firstOrCreate(['slug' => 'hello'], $attributes)`</b>\n  ↳ Finds the record and returns it unchanged if found — <b>never updates</b>\n  ↳ Use for idempotent inserts (e.g. registering an OAuth provider for the first time)\n• <b>`updateOrCreate(['slug' => 'hello'], $newAttributes)`</b>\n  ↳ Finds the record, then <b>updates it</b> with the second array if it already exists\n  ↳ Use when syncing data from an external source (e.g. importing a CSV file)",
-        np: "`firstOrCreate`: नभए create, छ भने unchanged। `updateOrCreate`: नभए create, छ भने update।",
-        jp: "`firstOrCreate` は存在しなければ作成するだけ。`updateOrCreate` は存在する場合も第 2 配列で更新します。CSV インポートなど同期処理には `updateOrCreate`、OAuth 登録などには `firstOrCreate` が典型的です。",
+        en: "Both limit how many requests a user can make, but in different ways.\n\n<b>`throttle:60,1`</b>\n• Hard-coded: 60 requests per 1 minute for every single caller — no exceptions\n  ↳ Simple but inflexible — an admin user gets the same limit as a free-tier user\n\n<b>`throttle:api`</b>\n• Reads a named rate limiter called `api` that you define in `bootstrap/app.php`\n• The named limiter is a function, so it can return different limits depending on context:\n  ↳ Authenticated users get 1000 requests/minute, guests get 60\n  ↳ Premium plan users get unlimited, free users get 100\n• Much more practical for real applications where different users deserve different limits",
+        np: "`throttle:60,1` fixed 60/min; `throttle:api` named limiter — tier अनुसार लचिलो।",
+        jp: "`throttle:60,1` は固定。`throttle:api` は `RateLimiter::for('api',…)` の名前付きリミッタで、ユーザープランに応じて上限を変えられます。",
       },
     },
     {
       question: {
-        en: "How do I query JSON columns in Eloquent?",
-        np: "JSON column कसरी query गर्ने?",
-        jp: "JSON カラムをどうクエリしますか？",
+        en: "Can middleware modify the response after the controller runs?",
+        np: "Middleware ले controller पछि response बदल्न सक्छ?",
+        jp: "コントローラ実行後にミドルウェアがレスポンスを変更できますか？",
       },
       answer: {
-        en: "Laravel supports querying inside JSON columns using an arrow `->` notation inside `where()`.\n\n• `Post::where('meta->color', 'red')->get()` — query a top-level JSON key\n• `Post::where('meta->settings->theme', 'dark')` — query nested keys\n  ↳ Works on MySQL 5.7+, PostgreSQL, and SQLite 3.38+\n\nFor PHP-side access, cast the column as `'array'` in `$casts`, then access it like a normal PHP array: `$post->meta['color']`.",
-        np: "`->where('meta->color', 'red')` arrow notation। `$casts` मा `'array'` cast।",
-        jp: "`where('meta->color', 'red')` のように `->` で JSON パスを指定。`$casts` に `'array'` を設定すると PHP 側で配列として扱えます。",
+        en: "Yes — this is called <b>after middleware</b>, and it's just as common as before middleware.\n\n<b>How it works</b>\n• Instead of returning `$next($request)` directly, capture it: `$response = $next($request)`\n• The controller runs completely at that point\n• Now you can modify `$response` before returning it\n\n<b>Common uses</b>\n• Add security or debug headers to every response: `$response->headers->set('X-App-Version', '1.0')`\n• Log the HTTP status code of every response\n• Inject a debug toolbar (this is how Debugbar works)\n  ↳ Everything after `$next($request)` in `handle()` runs on the way back out",
+        np: "After middleware: `$response = $next($request)` capture, modify, return। Header थप्नु, log गर्नु।",
+        jp: "`$response = $next($request)` で取得後に変更して `return` する「after ミドルウェア」パターンです。レスポンスヘッダの追加や処理時間のログに使います。",
       },
     },
     {
       question: {
-        en: "What are Eloquent observers and when should I use them?",
-        np: "Eloquent observer के हो र कहिले प्रयोग गर्ने?",
-        jp: "Eloquent オブザーバとはいつ使いますか？",
+        en: "What is a signed URL and when should I use it?",
+        np: "Signed URL के हो र कहिले प्रयोग गर्ने?",
+        jp: "署名付き URL とはいつ使いますか？",
       },
       answer: {
-        en: "An <b>observer</b> is a class that groups all the lifecycle event hooks for a single model in one place.\n\nModels fire events at key moments: `creating`, `created`, `updating`, `updated`, `deleting`, `deleted`, `restored`.\n\n• Without an observer: you scatter these hooks across model `boot()` methods, service providers, or controllers\n• With an observer: all of a model's event logic lives in one clean class\n  ↳ Register it with `Post::observe(PostObserver::class)` in a service provider\n\nWhen to use one: if a model's event logic grows beyond a few lines, move it to an observer. For a single one-liner, an inline closure in `boot()` is perfectly fine.",
-        np: "Observer ले model event listeners एक class मा। `Post::observe(PostObserver::class)` गरेर register।",
-        jp: "オブザーバは `creating`・`updated` などのモデルイベントをまとめたクラスです。ロジックが複数行になったらオブザーバに移しましょう。",
+        en: "A signed URL is a regular URL with a cryptographic signature added to it — if anyone changes even one character of the URL, the signature becomes invalid.\n\n<b>How it works</b>\n• Laravel generates the URL with `URL::signedRoute()` and appends a `signature` query parameter\n• When the user visits the URL, Laravel checks the signature with the `signed` middleware\n  ↳ If it's valid, the request proceeds; if tampered, it returns a 403 error\n\n<b>When to use signed URLs</b>\n• Email unsubscribe links — so one user can't unsubscribe another user by guessing the URL\n• Password reset links\n• Invoice or file download links\n• Any unauthenticated action that should only work for a specific intended recipient\n\n<b>Adding an expiry</b>\n• Use `URL::temporarySignedRoute()` to make the link expire after a set time\n  ↳ Prevents old links from being reused indefinitely",
+        np: "HMAC signature भएको URL — tamper करे invalid। Email unsubscribe, password reset, invoice download को लागि।",
+        jp: "HMAC 署名付きの URL で、改ざんすると無効になります。`signed` ミドルウェアか `URL::hasValidSignature()` で検証。メール解除・パスワードリセット・請求書 DL などに使います。",
       },
     },
     {
       question: {
-        en: "How do I add an index to an existing column without re-creating the table?",
-        np: "Existing column मा index थप्ने?",
-        jp: "既存カラムにインデックスを追加するには？",
+        en: "How do I apply middleware only to specific HTTP methods on a resource controller?",
+        np: "Resource controller मा specific method मा मात्र middleware?",
+        jp: "リソースコントローラの特定メソッドだけにミドルウェアを適用するには？",
       },
       answer: {
-        en: "Create a new migration that modifies the existing table — never edit the original migration once it has been run.\n\nInside the new migration's `up()` method use `Schema::table()` (not `Schema::create()`): `$table->index('slug')` for a regular index, `$table->unique('email')` for a unique index, or `$table->index(['user_id', 'status'])` for a composite index.\n\n• A <b>composite index</b> on columns you always filter together (e.g. `WHERE user_id = 1 AND status = 'published'`) is far faster than two separate single-column indexes\n  ↳ The order of columns in a composite index matters — put the most selective column first",
-        np: "नयाँ migration मा `Schema::table` → `->index()` वा `->unique()`। Original migration नबदल्नुस्।",
-        jp: "新しいマイグレーションで `Schema::table` を使い `->index()` / `->unique()` を追加します。既存のマイグレーションは変更しません。複合インデックスは複数列でフィルタするクエリを大幅に高速化します。",
+        en: "Resource controllers register 7 routes (index, create, store, show, edit, update, destroy) by default — but you often only want middleware on some of them.\n\n<b>Option 1: Controller constructor</b>\n• Use `$this->middleware('auth')->only(['store', 'update', 'destroy'])` in the constructor\n  ↳ `index` and `show` stay public (no auth needed to browse)\n  ↳ `store`, `update`, `destroy` require authentication (write actions)\n• `->except(['index', 'show'])` is the inverse — apply to everything except the listed methods\n\n<b>Option 2: Route definition</b>\n• Use `->only()` or `->except()` on `Route::resource()` to limit which routes are even registered\n  ↳ Then attach middleware to individual named routes using their auto-generated names like `posts.store`",
+        np: "Controller constructor मा `$this->middleware('auth')->only(['store','update','destroy'])` — index/show public रहन्छ।",
+        jp: "コントローラのコンストラクタで `$this->middleware('auth')->only(['store','update','destroy'])` とすると、`index`・`show` は公開のまま書き込みだけ保護できます。",
       },
     },
   ],
