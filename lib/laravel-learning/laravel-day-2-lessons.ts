@@ -951,12 +951,29 @@ $service = app(PaymentGateway::class);
       explanation: "Work needing another service already available belongs in `boot()`.",
     },
   ],
-  practice: [
-    "Open each top-level directory in turn and say what it is for without looking at your notes. Anything you cannot answer is what to reread.",
-    "Point your browser at `/.env` on your dev server. You should get a 404. If you get your database password instead, your document root is wrong and that is the most urgent thing on this list.",
-    "Create `config/learning.php` returning an array with one value read via `env()`, add the matching key to `.env`, then read it in a route with `config('learning.your_key')`.",
-    "Run `php artisan config:cache`, change that `.env` value, reload, and watch nothing happen. Then run `php artisan config:clear` and watch it work again.",
-    "Write a small service class with one method, bind it in `AppServiceProvider::register()`, then type-hint it in a controller and call it. No `new` anywhere.",
-    "Run `php artisan about` and find which cache, queue and mail drivers your app is currently using.",
-  ],
+  project: {
+    name: "InvoiceHub",
+    goal: "Give it real configuration and its first service class.",
+    brief: "Right now InvoiceHub hard-codes everything inside a controller. That is fine for one afternoon and painful after that.\n\nToday you give it two things it currently lacks: a home for settings that change between machines, and a home for logic that was never the controller's job. Money arithmetic is the obvious candidate. A controller should not be the place where tax gets calculated.",
+    steps: [
+      "Create `config/invoicing.php` returning `company_name`, `currency` and `tax_rate`. Read each one with `env()` and give every key a sensible default.",
+      "Add the matching keys to both `.env` and `.env.example`. Remember which of those two gets committed.",
+      "Read those settings in your controller with `config('invoicing.currency')`. Never `env()` outside `config/`.",
+      "Turn your hard-coded invoices into invoices with <b>line items</b>, each with a description, quantity and unit price, so there is something real to add up.",
+      "Create `app/Services/InvoiceTotals.php` with a method that takes line items and returns subtotal, tax and total, using the tax rate from config.",
+      "Bind that service in `AppServiceProvider::register()`, then type-hint it in `InvoiceController`'s constructor. Do not write `new` in the controller.",
+      "Show the subtotal, tax and total on the invoice page, formatted with the currency from config.",
+      "Run `php artisan config:cache`, change the tax rate in `.env`, reload, and watch nothing happen. Then run `php artisan config:clear` and watch it work. That surprise is the whole lesson.",
+    ],
+    acceptance: [
+      "Changing `INVOICE_TAX_RATE` in `.env` changes the total on the page, once configuration is cleared.",
+      "Searching `app/` for `env(` returns nothing at all.",
+      "The controller does no arithmetic. Every calculation lives in `InvoiceTotals`.",
+      "`InvoiceTotals` reached the controller without `new` appearing anywhere.",
+    ],
+    stretch: [
+      "Add an invoice number prefix to config and use it when generating numbers, so `INV-001` becomes configurable.",
+      "Add a second currency and confirm nothing but the config value has to change.",
+    ],
+  },
 };

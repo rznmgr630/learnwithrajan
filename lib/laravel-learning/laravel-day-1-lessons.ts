@@ -862,12 +862,29 @@ class User extends Model
       explanation: "The web server points at `public/`, keeping `.env` and `config/` out of reach.",
     },
   ],
-  practice: [
-    "Create a fresh project with `composer create-project laravel/laravel my-app`, run `php artisan serve`, and get the welcome page open in a browser.",
-    "Change `APP_NAME` in `.env`, reload, and find where the new name shows up.",
-    "Run `php artisan list` and pick out three commands you have not used yet. You do not need to run them, just see what exists.",
-    "Add a `/hello` route that returns your name as plain text. Then move that logic into a controller and point the route at it instead.",
-    "Add a route with a `{name}` parameter, pass it to a Blade view, and render it on the page.",
-    "Comment out `APP_KEY` in `.env`, reload, read the error you get, then fix it with `php artisan key:generate`. Breaking it on purpose is how you learn to recognise it later.",
-  ],
+  project: {
+    name: "InvoiceHub",
+    goal: "Get the app running and put a list of invoices on screen.",
+    brief: "You are going to build one application across this whole track: <b>InvoiceHub</b>, a small invoicing tool. Clients, invoices, line items, payments. Every day from here adds another slice to the same codebase, so by Day 24 you are deploying something you actually built.\n\nToday it does not touch a database. There is no such thing yet. Today's job is narrower and more important: get the thing running, and prove a request can reach code you wrote and come back as a page. Hard-coded data is fine, and you will replace it on Day 8.",
+    steps: [
+      "Create the project with `composer create-project laravel/laravel invoicehub`, then `cd invoicehub` and start it with `php artisan serve`.",
+      "Set `APP_NAME=\"InvoiceHub\"` in `.env`, then confirm it with `php artisan about`.",
+      "Make a controller: `php artisan make:controller InvoiceController`.",
+      "Give it an `index()` method returning a hard-coded array of three invoices. Each one needs a number, a client name, an amount and a status of `draft`, `sent` or `paid`.",
+      "Register `Route::get('/invoices', [InvoiceController::class, 'index']);` in `routes/web.php`.",
+      "Create `resources/views/invoices/index.blade.php` and render the invoices as a table. Pass the data in with `view('invoices.index', ['invoices' => $invoices])`.",
+      "Add a `/invoices/{number}` route and a `show()` method that finds one invoice in the array and renders it on its own page.",
+      "Link each row in the table through to its own page.",
+    ],
+    acceptance: [
+      "`/invoices` lists three invoices in a table.",
+      "`/invoices/INV-001` shows that one invoice on its own page.",
+      "The controller holds the data and the view holds the markup. Neither does the other's job.",
+      "No invoice data is written inside the Blade file.",
+    ],
+    stretch: [
+      "Show a total of all invoice amounts under the table.",
+      "Give overdue invoices a different colour, based on a status the controller sets rather than a rule the view invents.",
+    ],
+  },
 };
