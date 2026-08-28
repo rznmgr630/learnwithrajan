@@ -340,6 +340,21 @@ export function LessonDayDetail({
             </div>
           </div>
 
+          {day.practice?.length ? (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                {t("jpDetail.practiceChecklist")}
+              </h3>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--muted)] marker:text-[var(--muted)]">
+                {day.practice.map((line, i) => (
+                  <li key={i} className="pl-1">
+                    <RichText text={pickLocalized(line, locale)} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {onNavigateDay ? (
             <LessonNav
               previous={previousDay}

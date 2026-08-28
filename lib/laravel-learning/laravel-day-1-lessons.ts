@@ -862,4 +862,12 @@ class User extends Model
       explanation: "The web server points at `public/`, keeping `.env` and `config/` out of reach.",
     },
   ],
+  practice: [
+    "Create a fresh project with `composer create-project laravel/laravel my-app`, run `php artisan serve`, and get the welcome page open in a browser.",
+    "Change `APP_NAME` in `.env`, reload, and find where the new name shows up.",
+    "Run `php artisan list` and pick out three commands you have not used yet. You do not need to run them, just see what exists.",
+    "Add a `/hello` route that returns your name as plain text. Then move that logic into a controller and point the route at it instead.",
+    "Add a route with a `{name}` parameter, pass it to a Blade view, and render it on the page.",
+    "Comment out `APP_KEY` in `.env`, reload, read the error you get, then fix it with `php artisan key:generate`. Breaking it on purpose is how you learn to recognise it later.",
+  ],
 };
