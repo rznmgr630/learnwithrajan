@@ -670,66 +670,6 @@ class User extends Model
       ],
     },
   ],
-  selfCheck: [
-    {
-      question: "What is a framework, and what does Laravel give you?",
-      answer: "A framework is a starting point that already answers the questions every web application has to answer: how routing works, how authentication works, how you talk to the database, how validation and errors are handled.\n\nWithout one you build all of it yourself, and every project ends up answering differently. Laravel's real value is not that its answers are the only good ones. It is that <b>every Laravel project answers the same way</b>, so you can open an unfamiliar codebase and already know where to look.",
-    },
-    {
-      question: "What do you need installed before you can create a Laravel project?",
-      answer: "Four things: <b>PHP 8.3 or newer</b>, <b>Composer</b>, a terminal, and a code editor.\n\nCheck the first two with `php -v` and `composer --version`. If either command is not found, that is your first job, before anything Laravel-related.",
-    },
-    {
-      question: "What is Composer, and what is its JavaScript equivalent?",
-      answer: "Composer is PHP's <b>dependency manager</b>: it downloads and manages the packages your project needs.\n\nThe mapping to JavaScript is direct: `npm` is `composer`, `package.json` is `composer.json`, and `node_modules/` is `vendor/`. Laravel itself lives in `vendor/`, installed by Composer.",
-    },
-    {
-      question: "What does `composer create-project laravel/laravel my-app` actually do?",
-      answer: "It downloads the Laravel starter skeleton into a new `my-app/` folder, then installs every package that skeleton depends on into `vendor/`.\n\nIt also creates your `.env` from `.env.example` and generates an `APP_KEY`, so the project is ready to run rather than ready to configure.",
-    },
-    {
-      question: "What is `artisan`?",
-      answer: "`artisan` is the command-line tool that ships with every Laravel project. You run it as `php artisan <command>`.\n\nIt is how you start the dev server, create controllers and models, run migrations, clear caches and inspect the application. Running `php artisan` with no arguments lists everything available, which is the fastest way to discover what Laravel can do for you.",
-      callout: "When you cannot remember a command, `php artisan list` is faster than searching the docs.",
-    },
-    {
-      question: "What does `php artisan serve` do, and is it what you use in production?",
-      answer: "It starts PHP's built-in development server, usually on `http://127.0.0.1:8000`, so you can open your application in a browser.\n\nIt is for local development only. In production a real web server such as Nginx or Apache serves the application, pointed at the `public/` directory.",
-    },
-    {
-      question: "What is `.env` for, and why is it not committed to git?",
-      answer: "`.env` holds the settings that change between machines: database credentials, API keys, mail settings, and whether debug mode is on.\n\nIt is not committed because those values are both <b>secret</b> and <b>machine-specific</b>. Your laptop's database password is not the production one. `.env.example` is committed instead: same keys, no real values, so a teammate knows what to fill in.",
-    },
-    {
-      question: "What is `APP_KEY` and what happens if it changes?",
-      answer: "`APP_KEY` is the random key Laravel uses to encrypt data, including session cookies.\n\nIf it changes, everything encrypted with the old key becomes unreadable: sessions break and users are logged out. `composer create-project` generates one for you; `php artisan key:generate` creates a new one when you need it, which is normally only once per environment.",
-    },
-    {
-      question: "What does MVC stand for, and what problem does it solve?",
-      answer: "<b>Model</b>, <b>View</b>, <b>Controller</b>.\n\nIt solves the mess you get when data access, page markup and request handling all live in the same file. Splitting them means each piece has one job, and you know where to go when something needs changing.",
-    },
-    {
-      question: "What is the Model's job?",
-      answer: "The Model is your data and the rules around it. It talks to the database, so a `User` model knows how to fetch, save and relate users.\n\nIt does not know anything about HTTP. A model should work the same whether it was reached from a web request, a queued job or an Artisan command.",
-    },
-    {
-      question: "What is the View's job?",
-      answer: "The View is what the user sees: the HTML, built with Blade templates in `resources/views/`.\n\nIt should mostly display data that was handed to it. A view that runs database queries is doing the controller's job and the model's job as well as its own.",
-    },
-    {
-      question: "What is the Controller's job?",
-      answer: "The Controller is the coordinator. It receives the request, validates input, asks the model for data, and decides what to return: a view, JSON, or a redirect.\n\nThe useful test is that a controller method should read like a short list of instructions. When it grows long, the work usually belongs in a model or a service.",
-    },
-    {
-      question: "Trace a request from URL to response.",
-      answer: "The browser sends a request, it reaches `public/index.php`, Laravel starts up, the router finds a matching route, and the controller runs.\n\nThe controller asks a model for data, hands that data to a view or builds JSON, and returns it. Laravel turns the return value into a real HTTP response and sends it back to the browser.",
-      callout: "Knowing this order is what makes debugging systematic: a 404 is the router, a login redirect is middleware, a 500 is usually your controller or model.",
-    },
-    {
-      question: "Why does Laravel keep routes in their own files rather than mixing them into controllers?",
-      answer: "Because a route file is a table of contents for your application. Open `routes/web.php` and you can see every URL the application answers, in one place.\n\nIf routes were declared next to the code that handles them, answering \"what URLs does this app expose?\" would mean reading every controller.",
-    },
-  ],
   finalQuiz: [
     {
       question: "What is Laravel?",

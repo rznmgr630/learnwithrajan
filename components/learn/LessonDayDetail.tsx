@@ -6,7 +6,6 @@ import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { LessonVideos } from "@/components/learn/LessonVideos";
 import { LessonQuiz } from "@/components/learn/LessonQuiz";
-import { SelfCheckList } from "@/components/learn/SelfCheckList";
 import { LessonProjectCard } from "@/components/learn/LessonProjectCard";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
@@ -255,7 +254,7 @@ export function LessonDayDetail({
   /** Namespaces stored quiz scores, so two tracks' day 3 do not collide. */
   track?: string;
 }) {
-  const { locale, t } = useLocale();
+  const { locale } = useLocale();
   const quizIdPrefix = `${track}-day-${day.day}`;
   const [expandedLesson, setExpandedLesson] = useState<number | null>(0);
   const { getResult } = useJsLessonQuizProgress();
@@ -316,17 +315,6 @@ export function LessonDayDetail({
               quizIdPrefix={quizIdPrefix}
             />
           ))}
-
-          {day.selfCheck?.length ? (
-            <SelfCheckList
-              key={quizIdPrefix}
-              items={day.selfCheck}
-              idPrefix={`${quizIdPrefix}-selfcheck`}
-              heading={t("backendDetail.selfCheckHeading")}
-              hint={t("backendDetail.selfCheckHint")}
-              locale={locale}
-            />
-          ) : null}
 
           <div className="mt-2 shrink-0 rounded-2xl border border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_6%,var(--elevated))] p-5">
             <div className="flex items-center justify-between">
