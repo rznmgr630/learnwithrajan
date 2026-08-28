@@ -64,6 +64,12 @@ function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
 
 export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
+    id: "laravel-w0",
+    title: laravelWeekTitle("laravel-w0"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#94a3b8)]",
+    days: [laravelDayRow(0, ["foundation", "tooling"])],
+  },
+  {
     id: "laravel-w1",
     title: laravelWeekTitle("laravel-w1"),
     dotClass: "bg-[var(--accent)]",

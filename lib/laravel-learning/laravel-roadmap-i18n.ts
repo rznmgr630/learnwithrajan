@@ -52,6 +52,7 @@ export function laravelTags(slugs: [string, string]): RoadmapTag[] {
 }
 
 const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
+  0: { en: "Phase 0 — Before You Start", np: "Phase 0 — सुरु गर्नुअघि", jp: "Phase 0 — はじめる前に" },
   1: {
     en: "MVC, Composer, install, project layout & Service Container",
     np: "MVC, Composer, स्थापना, परियोजना र Service Container",
@@ -165,6 +166,7 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
 };
 
 const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
+  "laravel-w0": { en: "Phase 0 · Preparation", np: "Phase 0 · तयारी", jp: "Phase 0 · 準備" },
   "laravel-w1": {
     en: "Foundation & routing",
     np: "आधार र रूटिङ",
