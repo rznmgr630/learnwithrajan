@@ -3,433 +3,452 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_7_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "When a user submits a form, you need to check the data before your app does anything with it — this is called validation.\n\n<b>Why validation matters</b>\n• Without it, a user could submit an empty email, a password with 1 character, or a negative price\n  ↳ Validation catches bad data at the door, before it reaches your database\n\n<b>How Laravel handles it</b>\n• Inline: call `$request->validate([...])` right inside your controller method — quick for simple forms\n• <b>Form Request</b>: a dedicated class that holds validation rules, authorization checks, and lifecycle hooks — better for complex forms\n• Built-in rules: Laravel ships with 70+ rules like `required`, `email`, `min:8`, `unique` — no extra code needed\n• Custom Rule classes: write your own rule when built-ins aren't enough\n\n<b>What happens when validation fails?</b>\n• Web request (browser form): Laravel automatically redirects back to the form with the errors flashed to the session\n• API request (JSON): Laravel returns a `422 Unprocessable Entity` response with a JSON `errors` object",
-      np: "Validation HTTP input र application logic बीचको gatekeeper। inline, built-in rules, custom Rule, Form Request। Web = redirect; API = 422 JSON।",
-      jp: "バリデーションは HTTP 入力とアプリロジックの門番です。インライン検証・組み込みルール・カスタムルール・フォームリクエストを使い分けます。Web は redirect、API は 422 JSON で失敗を返します。",
+      en: "<b>Blade</b> is how you build the HTML in your Laravel app. Instead of writing raw PHP inside HTML, you write clean template syntax — Blade converts it to PHP behind the scenes and caches the result so it's fast.\n\nBlade files live in `resources/views/` and use the `.blade.php` extension. The four main features you'll use:\n• <b>Inheritance</b> — define one master layout, then fill in the pieces from each page\n  ↳ Uses `@extends`, `@section`, and `@yield`\n• <b>Control flow</b> — `@if`, `@foreach`, `@forelse` — cleaner than raw PHP tags inside HTML\n• <b>Components</b> — reusable UI pieces like buttons, alerts, and cards\n• <b>Stacks</b> — let child pages inject their own scripts or styles into the shared layout",
+      np: "Blade Laravel को compiled template engine। `.blade.php` फाइल `resources/views/` मा। inheritance, control flow, components, stacks सब।",
+      jp: "Blade は Laravel のコンパイル済みテンプレートエンジン。`resources/views/` に `.blade.php` ファイルを配置。継承・制御フロー・コンポーネント・スタックが使えます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Built-in validation rules reference",
-        np: "Built-in validation rules सन्दर्भ",
-        jp: "組み込みバリデーションルール リファレンス",
+        en: "Template inheritance pattern",
+        np: "Template inheritance pattern",
+        jp: "テンプレート継承パターン",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel gives you two ways to write validation rules — and it matters which one you choose.\n\n<b>Pipe string syntax</b> `'required|email|max:255'`\n• Short and readable for simple rules\n  ↳ Gets messy when you mix in objects like `Rule::unique()` or `Rule::in()`\n\n<b>Array syntax</b> `['required', 'email', 'max:255']`\n• Cleaner when mixing plain string rules with `Rule::*` objects\n  ↳ Use this as your default — it scales better and avoids quoting issues",
-            np: "Rules pipe string `'required|email'` वा array `['required', 'email']`। `Rule::*` object सहित array syntax राम्रो।",
-            jp: "ルールはパイプ区切り文字列または配列で記述できます。`Rule::*` オブジェクトと混在させる場合は配列形式を使いましょう。",
+            en: "Think of your layout file as a page frame — the header, navigation, and footer that every page shares. You mark the spots where each page fills in its own content using `@yield('slot-name')`.\n\nEach page then uses that frame:\n• `@extends('layouts.app')` — says \"use this layout as my frame\"\n• `@section('content') ... @endsection` — fills in the slot named 'content'\n• `@parent` inside a section — keeps the layout's default content and adds to it\n\nOutputting data in Blade:\n• `{{ $var }}` — safe output, HTML-escaped automatically\n  ↳ Always use this for user-entered content — it prevents XSS attacks\n• `{!! $html !!}` — raw unescaped output\n  ↳ Only use with content you trust completely (e.g. HTML you generated yourself)\n• `{{-- comment --}}` — a Blade comment, never appears in the final HTML output",
+            np: "Layout मा `@yield`; child मा `@extends` + `@section`। `{{ $var }}` escaped; `{!! $html !!}` unescaped। `{{-- comment --}}`।",
+            jp: "レイアウトに `@yield`、子ビューで `@extends` + `@section` で埋めます。`{{ $var }}` は HTML エスケープ、`{!! $html !!}` は生の出力。`{{-- --}}` はコメント（出力なし）。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Inline validation with array syntax",
-            np: "Array syntax inline validation",
-            jp: "配列形式のインライン検証",
+            en: "Layout file: resources/views/layouts/app.blade.php",
+            np: "Layout file",
+            jp: "レイアウトファイル",
           },
-          code: `use Illuminate\\Validation\\Rule;
+          code: `<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <title>@yield('title', 'My App')</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
+</head>
+<body>
+    @include('partials.nav')
 
-$validated = $request->validate([
-    'name'     => ['required', 'string', 'max:255'],
-    'email'    => ['required', 'email:rfc,dns', Rule::unique('users')->ignore($user->id)],
-    'password' => ['required', 'string', 'min:8', 'confirmed'],  // expects password_confirmation
-    'age'      => ['nullable', 'integer', 'between:18,120'],
-    'role'     => ['required', Rule::in(['admin', 'editor', 'viewer'])],
-    'avatar'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-    'tags'     => ['nullable', 'array', 'max:5'],
-    'tags.*'   => ['string', 'max:50'],
-    'items.0.price' => ['required', 'numeric', 'min:0'],  // nested array
-], [
-    // Custom messages (field.rule => message)
-    'email.unique'    => 'That email is already taken.',
-    'password.min'    => 'Passwords must be at least 8 characters.',
-]);`,
+    <main>
+        @yield('content')
+    </main>
+
+    @stack('scripts')
+</body>
+</html>`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Child view: resources/views/posts/show.blade.php",
+            np: "Child view",
+            jp: "子ビュー",
+          },
+          code: `@extends('layouts.app')
+
+@section('title', $post->title)
+
+@section('content')
+    <article>
+        <h1>{{ $post->title }}</h1>
+
+        {{-- Unescaped — only use with sanitized/trusted HTML --}}
+        {!! $post->body_html !!}
+    </article>
+@endsection
+
+@push('scripts')
+    <script>console.log('post page loaded');</script>
+@endpush`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "To send data from your controller into the view, pick any of these three equivalent styles — they all work the same way:\n• `view('posts.show', ['post' => $post])` — explicit array, always clear and readable\n• `view('posts.show')->with('post', $post)` — chained helper, good for conditionally adding data\n• `view('posts.show', compact('post', 'comments'))` — PHP shorthand when your variable names already match the keys you want\n\nWhatever key name you use in the array becomes a `$variable` inside the template.",
+            np: "Controller बाट Blade मा data: `view('name', ['key' => $value])` वा `compact('post')`।",
+            jp: "コントローラから Blade へのデータ渡し：`view('name', ['key' => $value])`・`->with()`・`compact()` のいずれかを使います。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Control flow & loop variable",
+        np: "Control flow र loop variable",
+        jp: "制御フローとループ変数",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Conditionals",
+            np: "Conditionals",
+            jp: "条件分岐",
+          },
+          code: `@if ($user->isAdmin())
+    <span>Admin</span>
+@elseif ($user->isModerator())
+    <span>Mod</span>
+@else
+    <span>User</span>
+@endif
+
+@unless ($user->isVerified())
+    <p>Please verify your email.</p>
+@endunless
+
+@isset($post)
+    <p>{{ $post->title }}</p>
+@endisset
+
+@empty($posts)
+    <p>No posts found.</p>
+@endempty
+
+@auth
+    <a href="/logout">Log out</a>
+@endauth
+
+@guest
+    <a href="/login">Log in</a>
+@endguest`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "@foreach with the $loop variable",
+            np: "@foreach र $loop variable",
+            jp: "@foreach と $loop 変数",
+          },
+          code: `@foreach ($posts as $post)
+    {{-- $loop is always available inside @foreach --}}
+    <div class="{{ $loop->even ? 'bg-gray-50' : '' }}">
+        <span>{{ $loop->iteration }} / {{ $loop->count }}</span>
+
+        @if ($loop->first)
+            <span class="badge">Latest</span>
+        @endif
+
+        <h2>{{ $post->title }}</h2>
+
+        @if ($loop->last)
+            <hr>
+        @endif
+    </div>
+@endforeach
+
+{{-- @forelse: handles empty collections gracefully --}}
+@forelse ($comments as $comment)
+    <p>{{ $comment->body }}</p>
+@empty
+    <p>No comments yet.</p>
+@endforelse
+
+{{-- $loop->depth and $loop->parent for nested loops --}}
+@foreach ($categories as $category)
+    @foreach ($category->posts as $post)
+        {{-- $loop->parent->index = outer iteration --}}
+        <p>{{ $loop->parent->index }}: {{ $post->title }}</p>
+    @endforeach
+@endforeach`,
         },
         {
           type: "table",
           caption: {
-            en: "Most-used built-in validation rules",
-            np: "सबैभन्दा धेरै प्रयोग हुने rules",
-            jp: "よく使う組み込みバリデーションルール",
+            en: "Useful $loop properties",
+            np: "$loop properties",
+            jp: "$loop の主なプロパティ",
           },
           headers: [
-            { en: "Rule", np: "Rule", jp: "ルール" },
+            { en: "Property", np: "Property", jp: "プロパティ" },
+            { en: "Type", np: "Type", jp: "型" },
             { en: "Description", np: "विवरण", jp: "内容" },
           ],
           rows: [
             [
-              { en: "`required`", np: "`required`", jp: "`required`" },
-              { en: "Field must be present and not empty", np: "उपस्थित र non-empty", jp: "存在かつ空でないこと" },
+              { en: "`$loop->index`", np: "`$loop->index`", jp: "`$loop->index`" },
+              { en: "int (0-based)", np: "int (0 start)", jp: "int（0 始まり）" },
+              { en: "Current iteration index", np: "current index", jp: "現在のインデックス" },
             ],
             [
-              { en: "`nullable`", np: "`nullable`", jp: "`nullable`" },
-              { en: "Allow null / empty (combine with other rules)", np: "null/empty अनुमति", jp: "null や空を許可（他ルールと併用）" },
+              { en: "`$loop->iteration`", np: "`$loop->iteration`", jp: "`$loop->iteration`" },
+              { en: "int (1-based)", np: "int (1 start)", jp: "int（1 始まり）" },
+              { en: "Current iteration (human-friendly)", np: "1 start iteration", jp: "現在の繰り返し数" },
             ],
             [
-              { en: "`sometimes`", np: "`sometimes`", jp: "`sometimes`" },
-              { en: "Apply rules only when the field is present in the request", np: "field present भएमा मात्र check", jp: "フィールドがリクエストに存在する場合のみ適用" },
+              { en: "`$loop->count`", np: "`$loop->count`", jp: "`$loop->count`" },
+              { en: "int", np: "int", jp: "int" },
+              { en: "Total items in the collection", np: "कुल items", jp: "コレクションの総件数" },
             ],
             [
-              { en: "`string` / `integer` / `numeric` / `boolean` / `array`", np: "type rules", jp: "型ルール" },
-              { en: "Type constraints", np: "type check", jp: "型チェック" },
+              { en: "`$loop->first`", np: "`$loop->first`", jp: "`$loop->first`" },
+              { en: "bool", np: "bool", jp: "bool" },
+              { en: "True on the first iteration", np: "पहिलो iteration", jp: "最初の繰り返しで true" },
             ],
             [
-              { en: "`email`", np: "`email`", jp: "`email`" },
-              { en: "Valid email format (use `email:rfc,dns` for stricter checks)", np: "valid email; `rfc,dns` कडा check", jp: "メールアドレス形式。`email:rfc,dns` で厳密に" },
+              { en: "`$loop->last`", np: "`$loop->last`", jp: "`$loop->last`" },
+              { en: "bool", np: "bool", jp: "bool" },
+              { en: "True on the last iteration", np: "अन्तिम iteration", jp: "最後の繰り返しで true" },
             ],
             [
-              { en: "`url`", np: "`url`", jp: "`url`" },
-              { en: "Valid URL", np: "valid URL", jp: "有効な URL" },
+              { en: "`$loop->odd` / `$loop->even`", np: "`odd` / `even`", jp: "`odd` / `even`" },
+              { en: "bool", np: "bool", jp: "bool" },
+              { en: "Odd / even iteration (useful for row striping)", np: "odd/even row", jp: "行の色分けに便利" },
             ],
             [
-              { en: "`min:n` / `max:n`", np: "`min` / `max`", jp: "`min` / `max`" },
-              { en: "Min/max length (string), value (numeric), size (file KB)", np: "min/max length, value, file KB", jp: "最小/最大 — 文字長・数値・ファイルサイズ" },
+              { en: "`$loop->depth`", np: "`$loop->depth`", jp: "`$loop->depth`" },
+              { en: "int", np: "int", jp: "int" },
+              { en: "Nesting depth (1 = outermost)", np: "nesting depth", jp: "ネスト深さ（1 = 最外）" },
             ],
             [
-              { en: "`between:min,max`", np: "`between`", jp: "`between`" },
-              { en: "Value/length/size between two boundaries", np: "min～max 間", jp: "2 つの境界値の間" },
-            ],
-            [
-              { en: "`in:a,b,c`", np: "`in`", jp: "`in`" },
-              { en: "Value must be one of the listed options", np: "listed values मा हुनुपर्छ", jp: "列挙された値のどれか" },
-            ],
-            [
-              { en: "`not_in:a,b`", np: "`not_in`", jp: "`not_in`" },
-              { en: "Value must NOT be in the listed options", np: "listed values मा हुनु हुँदैन", jp: "列挙値に含まれないこと" },
-            ],
-            [
-              { en: "`unique:table,column,ignore`", np: "`unique`", jp: "`unique`" },
-              { en: "Value must be unique in a DB column; ignore a specific ID on update", np: "DB unique; update मा ignore", jp: "DB カラムで一意。更新時に自分の ID を除外" },
-            ],
-            [
-              { en: "`exists:table,column`", np: "`exists`", jp: "`exists`" },
-              { en: "Value must exist in a DB column", np: "DB column मा exist", jp: "DB カラムに存在すること" },
-            ],
-            [
-              { en: "`confirmed`", np: "`confirmed`", jp: "`confirmed`" },
-              { en: "Field must have a matching `{field}_confirmation` field", np: "`{field}_confirmation` match हुनुपर्छ", jp: "`{field}_confirmation` フィールドと一致すること" },
-            ],
-            [
-              { en: "`date` / `date_format:Y-m-d`", np: "`date`", jp: "`date`" },
-              { en: "Valid date string (optionally with specific format)", np: "valid date; optional format", jp: "有効な日付文字列（フォーマット指定可）" },
-            ],
-            [
-              { en: "`regex:/pattern/`", np: "`regex`", jp: "`regex`" },
-              { en: "Value must match a regular expression", np: "regex match हुनुपर्छ", jp: "正規表現にマッチすること" },
-            ],
-            [
-              { en: "`image`", np: "`image`", jp: "`image`" },
-              { en: "Uploaded file must be an image (jpg/png/gif/svg/webp)", np: "image file", jp: "画像ファイル（jpg/png/gif/svg/webp）" },
-            ],
-            [
-              { en: "`mimes:jpg,pdf`", np: "`mimes`", jp: "`mimes`" },
-              { en: "Uploaded file must match given MIME types", np: "MIME type check", jp: "指定 MIME タイプのファイルであること" },
-            ],
-            [
-              { en: "`file`", np: "`file`", jp: "`file`" },
-              { en: "Field must be a successfully uploaded file", np: "uploaded file", jp: "正常にアップロードされたファイル" },
-            ],
-            [
-              { en: "`size:n`", np: "`size`", jp: "`size`" },
-              { en: "File size must equal n kilobytes exactly", np: "file size n KB", jp: "ファイルサイズが n KB であること" },
-            ],
-            [
-              { en: "`required_if:other,value`", np: "`required_if`", jp: "`required_if`" },
-              { en: "Required when another field equals a given value", np: "अर्को field value हुँदा required", jp: "別フィールドが指定値のとき必須" },
-            ],
-            [
-              { en: "`required_unless:other,value`", np: "`required_unless`", jp: "`required_unless`" },
-              { en: "Required unless another field equals a given value", np: "अर्को field value नहुँदा required", jp: "別フィールドが指定値でない限り必須" },
-            ],
-            [
-              { en: "`required_with:field1,field2`", np: "`required_with`", jp: "`required_with`" },
-              { en: "Required when any of the listed fields are present", np: "listed fields present हुँदा required", jp: "列挙フィールドのどれかが存在するとき必須" },
+              { en: "`$loop->parent`", np: "`$loop->parent`", jp: "`$loop->parent`" },
+              { en: "object|null", np: "object|null", jp: "object|null" },
+              { en: "Parent loop's `$loop` variable in nested loops", np: "outer loop $loop", jp: "外側ループの $loop" },
             ],
           ],
         },
-        {
-          type: "code",
-          title: {
-            en: "Fluent Rule objects and conditional rules",
-            np: "Fluent Rule objects र conditional rules",
-            jp: "Fluent Rule オブジェクトと条件ルール",
-          },
-          code: `use Illuminate\\Validation\\Rule;
-use Illuminate\\Validation\\Rules\\Password;
-
-$request->validate([
-    // Unique, ignoring the current record on update
-    'email' => [
-        'required',
-        'email',
-        Rule::unique('users', 'email')->ignore($user->id),
-    ],
-
-    // Exists scoped to a condition
-    'country_id' => [
-        'required',
-        Rule::exists('countries', 'id')->where('active', 1),
-    ],
-
-    // Built-in Password rule (min 8, mixed case, symbols, uncompromised)
-    'password' => ['required', 'confirmed', Password::defaults()],
-
-    // Conditional: only validate 'company' when 'type' is 'business'
-    'company' => Rule::when(
-        fn () => $request->input('type') === 'business',
-        ['required', 'string', 'max:100'],
-    ),
-]);`,
-        },
       ],
     },
     {
       title: {
-        en: "Custom Rule classes",
-        np: "Custom Rule classes",
-        jp: "カスタムルールクラス",
+        en: "Anonymous & class components",
+        np: "Anonymous र class components",
+        jp: "匿名コンポーネントとクラスコンポーネント",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Sometimes Laravel's built-in rules won't cover your exact need — for example, validating that a username contains no spaces, or that a product code follows a company-specific format.\n\n<b>Custom Rule classes let you package that logic cleanly</b>\n• Generate one with `php artisan make:rule RuleName`\n• Implement the `validate()` method — call `$fail('message')` if the value is invalid\n  ↳ If `$fail()` is never called, the rule passes\n• In Laravel 10/11, implement `ValidationRule` — the single-method modern approach\n  ↳ The older `Rule` interface still works but the modern style is cleaner",
-            np: "Built-in rules पुग्दैन भने custom Rule class बनाउनुस्। Laravel 10/11 मा `ValidationRule` implement गर्ने `validate()` method modern approach।",
-            jp: "組み込みルールで対応できない場合はカスタムルールクラスを作成します。Laravel 10/11 では `ValidationRule` の `validate()` メソッドを実装するのが現代的なアプローチです。",
+            en: "Components let you build reusable UI pieces — like a button, alert box, or card — that you can drop into any view with a single tag.\n\n<b>Anonymous components</b>\n• Just a `.blade.php` file in `resources/views/components/` — no PHP class needed\n  ↳ Declare what props it accepts with `@props(['variant' => 'primary'])`\n• Use `$slot` to render whatever content goes between the component's opening and closing tags\n• Use `$attributes->merge(['class' => '...'])` to pass through any extra HTML attributes the caller adds\n• Render with `<x-button variant=\"primary\">Save</x-button>`\n\n<b>Class components</b>\n• Add a PHP class alongside the view — useful when you need computed properties or logic in the component\n  ↳ Generate both files at once: `php artisan make:component Alert`\n  ↳ The class lives in `app/View/Components/`, the view in `resources/views/components/`",
+            np: "Anonymous: `resources/views/components/` मा blade file। `<x-name>` ले render। Class component: PHP class + view — `make:component`।",
+            jp: "匿名コンポーネントは `resources/views/components/` の Blade ファイルだけ。クラスコンポーネントは `make:component` で PHP クラス + ビューを生成します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Generate a custom rule",
-            np: "Custom rule बनाउने",
-            jp: "カスタムルールの生成",
+            en: "Anonymous component — resources/views/components/button.blade.php",
+            np: "Anonymous component — button.blade.php",
+            jp: "匿名コンポーネント — button.blade.php",
           },
-          code: `php artisan make:rule Uppercase`,
+          code: `{{-- resources/views/components/button.blade.php --}}
+@props(['variant' => 'primary', 'type' => 'button'])
+
+<button
+    type="{{ $type }}"
+    {{ $attributes->merge(['class' => "btn btn-$variant"]) }}
+>
+    {{ $slot }}
+</button>`,
         },
         {
           type: "code",
           title: {
-            en: "app/Rules/Uppercase.php — modern ValidationRule",
-            np: "Uppercase.php — modern style",
-            jp: "Uppercase.php — 現代スタイル",
+            en: "Using an anonymous component",
+            np: "Anonymous component प्रयोग",
+            jp: "匿名コンポーネントの利用",
+          },
+          code: `{{-- Renders <button class="btn btn-primary extra">Save</button> --}}
+<x-button variant="primary" class="extra">Save</x-button>
+
+{{-- Submit button --}}
+<x-button type="submit" variant="danger">Delete</x-button>
+
+{{-- Named slots --}}
+{{-- resources/views/components/card.blade.php --}}
+<div class="card">
+    <div class="card-header">{{ $header }}</div>
+    <div class="card-body">{{ $slot }}</div>
+    @isset($footer)
+        <div class="card-footer">{{ $footer }}</div>
+    @endisset
+</div>
+
+{{-- Usage with named slots --}}
+<x-card>
+    <x-slot:header>Card Title</x-slot:header>
+    Card body content here.
+    <x-slot:footer>Footer text</x-slot:footer>
+</x-card>`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Class component — make:component Alert",
+            np: "Class component — Alert",
+            jp: "クラスコンポーネント — Alert",
+          },
+          code: `# Generates: app/View/Components/Alert.php + resources/views/components/alert.blade.php
+php artisan make:component Alert`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/View/Components/Alert.php",
+            np: "Alert.php PHP class",
+            jp: "Alert.php クラス",
           },
           code: `<?php
-namespace App\\Rules;
+namespace App\\View\\Components;
 
-use Closure;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
+use Illuminate\\View\\Component;
+use Illuminate\\View\\View;
 
-class Uppercase implements ValidationRule
+class Alert extends Component
 {
-    /**
-     * Run the validation rule.
-     * Call $fail() with a message to indicate failure.
-     */
-    public function validate(string $attribute, mixed $value, Closure $fail): void
+    public function __construct(
+        public string $type = 'info',
+        public string $title = '',
+    ) {}
+
+    // Computed property usable in the view as $iconClass
+    public function iconClass(): string
     {
-        if (strtoupper((string) $value) !== (string) $value) {
-            $fail("The :attribute must be uppercase.");
-        }
+        return match ($this->type) {
+            'success' => 'text-green-500',
+            'error'   => 'text-red-500',
+            default   => 'text-blue-500',
+        };
+    }
+
+    public function render(): View
+    {
+        return view('components.alert');
     }
 }`,
         },
         {
           type: "code",
           title: {
-            en: "Using a custom rule in validation",
-            np: "Validation मा custom rule प्रयोग",
-            jp: "バリデーションでカスタムルールを使う",
+            en: "resources/views/components/alert.blade.php",
+            np: "alert.blade.php view",
+            jp: "alert.blade.php ビュー",
           },
-          code: `use App\\Rules\\Uppercase;
+          code: `{{-- $type, $title, and $iconClass() are available from the PHP class --}}
+<div class="alert alert-{{ $type }}">
+    @if ($title)
+        <strong class="{{ $iconClass() }}">{{ $title }}</strong>
+    @endif
+    {{ $slot }}
+</div>
 
-$request->validate([
-    'code' => ['required', 'string', 'max:10', new Uppercase],
-]);
-
-// Or in a Form Request's rules()
-public function rules(): array
-{
-    return [
-        'code' => ['required', 'string', 'max:10', new Uppercase],
-    ];
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Rule with constructor arguments",
-            np: "Constructor arguments सहित Rule",
-            jp: "コンストラクタ引数付きのルール",
-          },
-          code: `<?php
-namespace App\\Rules;
-
-use Closure;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
-
-class AllowedDomain implements ValidationRule
-{
-    public function __construct(private array $domains) {}
-
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        $domain = substr(strrchr((string) $value, '@'), 1);
-
-        if (! in_array($domain, $this->domains, true)) {
-            $fail("The :attribute must use an allowed email domain.");
-        }
-    }
-}
-
-// Usage
-'email' => ['required', 'email', new AllowedDomain(['example.com', 'company.org'])],`,
+{{-- Usage --}}
+<x-alert type="success" title="Saved!">
+    Your post has been published.
+</x-alert>`,
         },
       ],
     },
     {
       title: {
-        en: "Form Requests in depth",
-        np: "Form Requests विस्तारमा",
-        jp: "フォームリクエストの深掘り",
+        en: "Form helpers & Vite",
+        np: "Form helpers र Vite",
+        jp: "フォームヘルパと Vite",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A Form Request is a dedicated PHP class that bundles everything related to handling a form — all in one place.\n\n<b>The two required methods</b>\n• `authorize()` — returns `true` if the current user is allowed to make this request, `false` for a 403 Forbidden\n• `rules()` — returns the array of validation rules\n\n<b>Optional lifecycle hooks</b>\n• `prepareForValidation()` — runs before rules, lets you normalize input (e.g. trim whitespace, lowercase an email)\n• `passedValidation()` — runs after rules pass, lets you enrich data (e.g. generate a slug)\n• `messages()` — customize the error messages for specific rules\n• `attributes()` — rename field labels in error messages (e.g. `bio` → `biography`)\n\n<b>The key benefit: `$request->validated()`</b>\n• Returns only the fields defined in `rules()` — nothing more\n  ↳ Safe to pass directly to `Model::create($request->validated())` without mass-assignment risk",
-            np: "Form Request: `authorize()`, `rules()`, `prepareForValidation()`, `passedValidation()`, `messages()`, `attributes()`। `$request->validated()` ले rules मा defined fields मात्र।",
-            jp: "フォームリクエストは `authorize()`・`rules()` に加えて複数のライフサイクルフックを持ちます。`$request->validated()` は `rules()` に定義されたフィールドのみを返すので、`Model::create()` に安全に渡せます。",
+            en: "Four directives you'll use on almost every form:\n\n<b>`@csrf`</b>\n• Adds a hidden token field that proves the form was submitted from your own site\n  ↳ Without it, Laravel rejects the request with a 419 error — never skip it on web forms\n\n<b>`@method('PUT')`</b>\n• Browsers can only send GET and POST natively — HTML forms can't send PUT, PATCH, or DELETE\n  ↳ This directive adds a hidden field so Laravel knows which HTTP method you actually intended\n\n<b>`@error('field')`</b>\n• Renders an inline error message when that field fails validation\n  ↳ Only shows up when there's an error — renders nothing when the field passes\n\n<b>`@vite(['resources/css/app.css', 'resources/js/app.js'])`</b>\n• Generates the correct `<link>` and `<script>` tags for your CSS and JS\n  ↳ In development: points to the Vite dev server with hot-module reload (HMR) for instant updates\n  ↳ In production: uses hashed filenames from the build manifest for cache-busting",
+            np: "`@csrf` — CSRF token; `@method('PUT')` — verb spoof; `@error` — validation error; `@vite()` — Vite assets (HMR dev)।",
+            jp: "`@csrf` は CSRF トークンフィールド。`@method('PUT')` で動詞を偽装。`@error` でフィールドエラー表示。`@vite()` で Vite アセットを読み込み（開発時は HMR 付き）。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Full Form Request with all hooks",
-            np: "सबै hooks सहित Form Request",
-            jp: "すべてのフックを持つフォームリクエスト",
+            en: "@csrf, @method, @error in a form",
+            np: "@csrf, @method, @error form मा",
+            jp: "@csrf・@method・@error のフォーム利用例",
           },
-          code: `<?php
-namespace App\\Http\\Requests;
+          code: `<form action="{{ route('posts.update', $post) }}" method="POST">
+    @csrf
+    @method('PUT')  {{-- Browser sends POST; Laravel reads X-HTTP-Method-Override --}}
 
-use App\\Rules\\AllowedDomain;
-use Illuminate\\Foundation\\Http\\FormRequest;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
-use Illuminate\\Validation\\Rule;
-use Illuminate\\Validation\\Rules\\Password;
+    <div>
+        <label for="title">Title</label>
+        <input
+            id="title"
+            name="title"
+            type="text"
+            value="{{ old('title', $post->title) }}"
+            class="{{ $errors->has('title') ? 'border-red-500' : '' }}"
+        >
+        @error('title')
+            <p class="text-red-500 text-sm">{{ $message }}</p>
+        @enderror
+    </div>
 
-class UpdateUserRequest extends FormRequest
-{
-    /**
-     * false → 403 Forbidden. Can also return Gate::allows() result.
-     */
-    public function authorize(): bool
-    {
-        $user = $this->route('user'); // model bound from route {user}
-        return $this->user()->can('update', $user);
-    }
+    <div>
+        <label for="body">Body</label>
+        <textarea id="body" name="body">{{ old('body', $post->body) }}</textarea>
+        @error('body')
+            <p class="text-red-500 text-sm">{{ $message }}</p>
+        @enderror
+    </div>
 
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        $userId = $this->route('user')->id;
-
-        return [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => [
-                'required',
-                'email:rfc',
-                Rule::unique('users', 'email')->ignore($userId),
-                new AllowedDomain(['example.com']),
-            ],
-            'password' => ['sometimes', 'confirmed', Password::min(8)->mixedCase()->numbers()],
-            'bio'      => ['nullable', 'string', 'max:1000'],
-            'avatar'   => ['nullable', 'image', 'mimes:jpg,png,webp', 'max:2048'],
-            'role'     => ['required', Rule::in(['admin', 'editor', 'viewer'])],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.unique'       => 'That email address is already registered.',
-            'password.confirmed' => 'The password confirmation does not match.',
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-            'bio'    => 'biography',
-            'avatar' => 'profile photo',
-        ];
-    }
-
-    /**
-     * Runs BEFORE rules(). Normalize or transform raw input here.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'name'  => trim($this->name ?? ''),
-            'email' => strtolower(trim($this->email ?? '')),
-        ]);
-    }
-
-    /**
-     * Runs AFTER rules() pass. Enrich or log here.
-     */
-    protected function passedValidation(): void
-    {
-        // e.g. $this->merge(['slug' => Str::slug($this->name)]);
-    }
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Forms sometimes send arrays of data — like a list of order items. Laravel handles this cleanly with dot notation.\n\n• `'items' => ['required', 'array', 'min:1']` — validate the array itself first (must exist, must have at least 1 item)\n• `'items.*.name'` — validate the `name` key on every item in the array\n  ↳ The `*` is a wildcard that means \"every element\"\n• `'items.0.price'` — validate the `price` of the first element only\n  ↳ Use a number index when you need to target a specific position",
-            np: "Nested arrays: `'items.*.name'` ले every item को `name` validate। `'items.0.price'` पहिलो element।",
-            jp: "ネスト配列はドット記法で: `'items.*.name'` で全要素の `name` を検証。`'items.0.price'` で最初の要素だけ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Displaying errors in Blade",
-            np: "Blade मा errors देखाउने",
-            jp: "Blade でエラーを表示する",
-          },
-          code: `{{-- Single field error --}}
-<input name="email" value="{{ old('email') }}">
-@error('email')
-    <p class="text-red-500 text-sm">{{ $message }}</p>
-@enderror
-
-{{-- Check if a field has any error --}}
-<input class="{{ $errors->has('name') ? 'border-red-500' : '' }}" name="name">
-
-{{-- All errors as a list --}}
-@if ($errors->any())
-    <ul class="alert alert-danger">
-        @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-@endif
-
-{{-- Named error bag (multiple forms on one page) --}}
-<form>
-    @error('email', 'loginForm')
-        <span>{{ $message }}</span>
-    @enderror
+    <button type="submit">Update Post</button>
 </form>`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "@vite — Vite asset integration",
+            np: "@vite — Vite assets",
+            jp: "@vite — Vite アセット統合",
+          },
+          code: `{{-- In your layout <head> --}}
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
+{{-- Output in production (hashed filenames from manifest.json):
+<link rel="stylesheet" href="/build/assets/app-3c4a5b6c.css">
+<script type="module" src="/build/assets/app-9d8e7f10.js"></script>
+
+  Output in development (with HMR hot-reload script injected):
+<script type="module" src="http://localhost:5173/@vite/client"></script>
+<script type="module" src="http://localhost:5173/resources/js/app.js"></script>
+--}}`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "@stack and @push — injecting assets from child templates",
+            np: "@stack / @push — child template बाट asset inject",
+            jp: "@stack / @push — 子テンプレートからアセット注入",
+          },
+          code: `{{-- Layout defines the stack slot --}}
+@stack('scripts')
+
+{{-- Any child view or component can push into it --}}
+@push('scripts')
+    <script src="{{ asset('js/chart.min.js') }}"></script>
+@endpush
+
+{{-- @prepend to insert at the top of the stack --}}
+@prepend('scripts')
+    <script>const appEnv = '{{ app()->environment() }}';</script>
+@endprepend`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel has four ways to pull in a partial view — pick the right one for your situation:\n• `@include('partials.nav')` — simple include, like a copy-paste of that file into this spot\n• `@includeIf('partials.banner')` — only includes if the file exists, silently skips it otherwise\n  ↳ Useful for optional UI elements that may not exist in every project variant\n• `@includeWhen($user->isAdmin(), 'partials.admin-nav')` — only includes when a condition is true\n• `@includeFirst(['custom.nav', 'partials.nav'])` — tries each file in order, uses the first one that exists\n  ↳ Useful for themes or overridable templates where some projects customize the default",
+            np: "`@include` — file reuse। `@includeIf` — file छैन भने skip। `@includeWhen` — conditional। `@includeFirst` — पहिलो available file।",
+            jp: "`@include` で部分ビューを読み込み。`@includeIf` はファイルが無い場合にスキップ。`@includeWhen` で条件付き。`@includeFirst` で存在する最初のファイルを使用。",
+          },
         },
       ],
     },
@@ -437,62 +456,62 @@ class UpdateUserRequest extends FormRequest
   faq: [
     {
       question: {
-        en: "What is the difference between `$request->validate()` and a Form Request?",
-        np: "`validate()` र Form Request को फरक?",
-        jp: "`$request->validate()` とフォームリクエストの違いは？",
+        en: "How do I pass data from a controller to a Blade view?",
+        np: "Controller बाट Blade view मा data कसरी पठाउने?",
+        jp: "コントローラから Blade ビューへのデータ渡し方は？",
       },
       answer: {
-        en: "Both use the same validation engine under the hood — the difference is where the logic lives.\n\n• `$request->validate([...])` — written directly inside your controller method\n  ↳ Great for simple forms with 2–4 rules\n  ↳ Gets messy when rules grow, authorization is needed, or error messages need customizing\n• <b>Form Request</b> — a separate class dedicated to one form\n  ↳ Keeps the controller clean — the controller just calls `$request->validated()` and moves on\n  ↳ Better when rules are complex, when you need `authorize()`, or when you want `prepareForValidation()`\n  ↳ Easier to unit-test in isolation\n\nRule of thumb: start with `$request->validate()`, switch to a Form Request once you need more than rules.",
-        np: "दुवैले same validation engine। `validate()` inline, simple। Form Request — complex, auth, lifecycle hooks, testable।",
-        jp: "どちらも同じ検証エンジンを使います。`validate()` はインラインで簡潔。フォームリクエストはルール・認可・フックを専用クラスに分離し、単体テストもしやすくなります。",
+        en: "Three ways, all equivalent — choose whichever feels most readable for your situation:\n• `return view('posts.show', ['post' => $post])` — explicit array, always clear\n• `return view('posts.show')->with('post', $post)` — chain as many `->with()` calls as you need\n• `return view('posts.show', compact('post', 'comments'))` — PHP shorthand when your local variable names already match the keys you want\n\nIn all three cases, the key name becomes a `$variable` inside the template.",
+        np: "`view('name', ['key' => $val])`, `->with('key', $val)`, `compact('post')` — तिनीहरू सबै equivalent।",
+        jp: "連想配列・`->with()` チェーン・`compact()` の 3 通り。配列のキーがテンプレート内の変数名になります。",
       },
     },
     {
       question: {
-        en: "How do I show all validation errors at once?",
-        np: "सबै validation errors एकैपटक कसरी देखाउने?",
-        jp: "全バリデーションエラーを一度に表示するには？",
+        en: "What is the difference between `@include` and `<x-component>`?",
+        np: "`@include` र `<x-component>` को फरक?",
+        jp: "`@include` と `<x-component>` の違いは？",
       },
       answer: {
-        en: "Laravel automatically passes validation errors to your Blade views — no manual passing needed.\n\n• `$errors->any()` — returns `true` if there are any errors at all (use to show/hide an error banner)\n• `$errors->all()` — returns a flat array of all error messages across all fields\n• `@error('fieldname') ... @enderror` — Blade directive that only renders when that specific field has an error\n  ↳ `$message` inside the block contains the error text\n• `$errors->first('fieldname')` — returns just the first error for a specific field\n\n<b>On API requests:</b>\n• The `$errors` variable is not used\n  ↳ Laravel returns a `422` JSON response with an `errors` object keyed by field name",
-        np: "`$errors->all()` ले सबै messages। `@error('field')` single field। API = 422 JSON `errors` object।",
-        jp: "`$errors->all()` で全メッセージを取得。フィールド別は `@error('field')`。API では 422 JSON の `errors` オブジェクトを参照します。",
+        en: "Both pull in another template, but they work very differently:\n\n<b>`@include('partials.nav')`</b>\n• Simple file paste — the included file can see all variables from the parent view automatically\n  ↳ Good for static partials like a nav bar or footer that don't need their own props\n\n<b>`<x-component>`</b>\n• More like a reusable building block with a clear, defined interface\n  ↳ Accepts explicit <b>props</b> (declared inputs), keeping the caller in control of what data goes in\n  ↳ Supports <b>slots</b> (default and named) for injecting content between the tags\n  ↳ Forwards extra HTML attributes with `$attributes->merge()`\n  ↳ Can have a PHP class behind it for computed properties or logic\n\nRule of thumb: use `@include` for simple one-off partials, use components for any UI you'll reuse in multiple places.",
+        np: "`@include` — simple file paste, parent scope accessible। `<x-component>` — props, slots, attributes, PHP class।",
+        jp: "`@include` は親スコープをすべて引き継ぐシンプルな埋め込み。`<x-component>` は props・スロット・属性マージ・PHP クラスロジックをサポートします。",
       },
     },
     {
       question: {
-        en: "How do I validate file uploads?",
-        np: "File upload validate कसरी गर्ने?",
-        jp: "ファイルアップロードの検証方法は？",
+        en: "Can I use `{{ }}` for JavaScript template literals?",
+        np: "JavaScript मा `{{ }}` प्रयोग गर्न सकिन्छ?",
+        jp: "Blade の `{{ }}` は JavaScript テンプレートリテラルと衝突しない？",
       },
       answer: {
-        en: "File validation uses the same `validate()` call — just with file-specific rules.\n\n<b>Common file rules</b>\n• `'file'` — any successfully uploaded file\n• `'image'` — image file only (jpg, png, gif, svg, webp)\n• `'mimes:jpg,png,pdf'` — restrict to specific file types\n• `'max:2048'` — maximum file size in kilobytes (2 MB here)\n• `'dimensions:min_width=100,min_height=100'` — image dimension constraints\n\n<b>Storing the file safely</b>\n• Never use the original filename from the user — it could contain path traversal characters\n  ↳ Use `$request->file('avatar')->store('avatars', 'public')` — Laravel generates a safe random filename\n\n<b>One more thing to check</b>\n• Your HTML form must have `enctype=\"multipart/form-data\"` for file uploads to work\n  ↳ Without it, the file will not be sent to PHP at all",
-        np: "`file`, `image`, `mimes`, `max` (KB), `dimensions`। Store: `->store('dir', 'public')`। Form: `enctype=\"multipart/form-data\"`।",
-        jp: "`file`・`image`・`mimes`・`max`（KB 単位）・`dimensions` を組み合わせます。保存は `->store()` を使用。フォームには `enctype=\"multipart/form-data\"` が必要です。",
+        en: "Blade processes all `{{ }}` on the server before the HTML is sent to the browser. If you're using a JavaScript framework like Vue.js or Alpine.js that also uses `{{ }}` syntax, you have two options to stop Blade from touching them:\n\n• Prefix with `@`: write `@{{ message }}` — Blade strips the `@` and outputs the literal text `{{ message }}` for JavaScript to process\n  ↳ Best for one or two expressions\n• Wrap a whole block in `@verbatim ... @endverbatim` — Blade leaves everything inside completely untouched\n  ↳ Best when you have many JavaScript expressions in one section",
+        np: "Blade `{{ }}` process गर्छ। Vue/Alpine को लागि `@{{ message }}` वा `@verbatim` block प्रयोग गर्नुस्।",
+        jp: "Blade は `{{ $var }}` をサーバで処理します。Vue/Alpine 向けにリテラル `{{ }}` を出力するには `@{{ message }}` か `@verbatim ... @endverbatim` ブロックを使います。",
       },
     },
     {
       question: {
-        en: "What does the `sometimes` rule do?",
-        np: "`sometimes` rule के गर्छ?",
-        jp: "`sometimes` ルールは何をする？",
+        en: "How does `@stack` differ from `@section`?",
+        np: "`@stack` र `@section` को फरक?",
+        jp: "`@stack` と `@section` の違いは？",
       },
       answer: {
-        en: "By default, if a field is missing from the request, Laravel still runs all its rules — which can cause unexpected failures.\n\n`sometimes` fixes this by making all other rules on that field conditional:\n• <b>Without `sometimes`</b>: a missing `phone` field fails `max:20` even if the user didn't send it\n• <b>With `sometimes`</b>: rules only apply when the field is actually present in the request\n  ↳ If the field is absent, all rules are skipped\n\n<b>When to use it:</b>\n• PATCH endpoints — only changed fields are sent, not the entire form\n• Optional fields that still need validation rules when they are provided (e.g. a phone number field that, if filled, must be max 20 characters)",
-        np: "`sometimes` ले field present भएमा मात्र अन्य rules apply गर्छ। PATCH endpoint वा optional field मा उपयोगी।",
-        jp: "`sometimes` は他のルールを「フィールドが存在するときのみ」に限定します。PATCH エンドポイントや、入力があれば検証したいオプションフィールドに便利です。",
+        en: "They solve different problems:\n\n<b>`@section` / `@yield`</b>\n• One slot, one value — a child view fills it in once\n  ↳ If two children both define the same `@section`, the last one wins\n  ↳ Use `@parent` if you want to keep the layout's default content and add to it\n\n<b>`@stack` / `@push`</b>\n• Additive — every `@push` call adds to the stack, they all accumulate in order\n  ↳ Multiple components on the same page can each push their own scripts to `@stack('scripts')`\n  ↳ Great for page-specific JavaScript or CSS that different components on the page need to inject",
+        np: "`@section` — एकपटक override। `@stack` — additive; multiple `@push` सबै accumulate। scripts/styles inject गर्न ideal।",
+        jp: "`@section` は 1 回だけ上書き。`@stack` は **累積型**で、複数の `@push` が順番に積まれます。ページ内複数コンポーネントがスクリプトを注入するのに向いています。",
       },
     },
     {
       question: {
-        en: "How do I validate a JSON body in an API controller?",
-        np: "API controller मा JSON body validate कसरी?",
-        jp: "API コントローラで JSON ボディを検証するには？",
+        en: "How do I escape a `{{` in Blade so it appears literally in the HTML?",
+        np: "Blade मा `{{` literal HTML मा कसरी?",
+        jp: "Blade で `{{` をそのまま HTML に出力するには？",
       },
       answer: {
-        en: "The same validation code works for both browser forms and API JSON requests — no changes needed.\n\n<b>What happens automatically</b>\n• When the client sends `Content-Type: application/json`, Laravel reads and parses the JSON body\n• Add `Accept: application/json` in the request header to tell Laravel you want a JSON error response\n  ↳ Without it, Laravel might redirect instead of returning JSON on failure\n\n<b>On failure</b>\n• Laravel returns a `422 Unprocessable Entity` response with an `errors` JSON object\n  ↳ No redirect, no flashed session data — just clean JSON your frontend can read\n\n<b>Tip:</b> Routes inside the `api` middleware group always return JSON errors, even without the `Accept` header",
-        np: "Same `validate()` वा Form Request। `Content-Type: application/json` भए JSON body read। fail = 422 JSON। `Accept: application/json` चाहिन्छ।",
-        jp: "全く同じ方法です。`Content-Type: application/json` で Laravel は JSON ボディを読みます。失敗時は **422 JSON** を返します。`Accept: application/json` ヘッダーがない場合も API ルートグループなら JSON レスポンスになります。",
+        en: "Two ways — same ones as escaping for JavaScript frameworks:\n• Write `@{{ message }}` — Blade strips the `@` and outputs `{{ message }}` as literal HTML text\n  ↳ Use this for one or two expressions\n• Wrap a large block in `@verbatim ... @endverbatim` — Blade ignores everything between those tags\n  ↳ Use this when you have many `{{ }}` expressions in a section and don't want to prefix each one individually",
+        np: "`@{{ message }}` लेख्नुस् — Blade `@` हटाएर `{{ message }}` literal output दिन्छ। ठूलो block मा `@verbatim`।",
+        jp: "`@{{ message }}` と書くと Blade は `@` を除去し `{{ message }}` をそのまま出力します。大きなブロックには `@verbatim ... @endverbatim` を使います。",
       },
     },
   ],
