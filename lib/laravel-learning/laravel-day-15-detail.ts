@@ -3,134 +3,247 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "A <b>REST API</b> is how your Laravel backend talks to the outside world — mobile apps, React frontends, third-party services.\n\nThink of it like a restaurant:\n• The <b>client</b> (mobile app, browser) is the customer\n• The <b>API</b> is the menu and the waiter — it defines what you can order and carries requests to the kitchen\n• The <b>server and database</b> are the kitchen — they do the actual work\n\nEvery request uses one of five HTTP verbs:\n• <b>GET</b> — read data (show me the menu)\n• <b>POST</b> — create something new (place an order)\n• <b>PUT / PATCH</b> — update something that exists (change my order)\n• <b>DELETE</b> — remove something (cancel my order)\n\n<b>Why does Sanctum protect the API?</b>\nWithout protection, anyone on the internet could read or delete your data. Sanctum requires every request to carry a token — like showing your membership card at the door. No card, no entry.",
-      np: "REST API = backend र client बीचको communication। Sanctum ले token द्वारा सुरक्षित गर्छ। GET/POST/PUT/DELETE verbs।",
-      jp: "REST API はバックエンドと外部の通信手段。Sanctum がトークンでリクエストを保護します。",
-    },
-    {
-      en: "In this day we build a complete, working API with authentication and full Posts CRUD:\n\n<b>Auth endpoints (no token needed to call these)</b>\n• `POST /api/register` — create a new account, returns a token\n• `POST /api/login` — log in with email + password, returns a token\n\n<b>Protected endpoints (require `Authorization: Bearer <token>` header)</b>\n• `POST /api/logout` — revoke the current token\n• `GET /api/user` — get the currently logged-in user's profile\n• `GET /api/posts` — list all posts belonging to the logged-in user\n• `POST /api/posts` — create a new post\n• `GET /api/posts/{id}` — get one post by ID\n• `PUT /api/posts/{id}` — update a post\n• `DELETE /api/posts/{id}` — delete a post",
-      np: "Auth endpoints (register, login) + protected CRUD endpoints (posts) build गर्छौं।",
-      jp: "認証エンドポイント（register・login）と Posts の CRUD を実装します。",
+      en: "Writing tests sounds like extra work, but it's actually the fastest way to move forward without fear.\n• A good test suite means you can change code confidently — if something breaks, you find out in seconds, not after a user reports a bug\n\n<b>What Laravel gives you</b>\n• <b>Pest</b> — a modern, readable testing framework built on top of PHPUnit\n  ↳ No class boilerplate — just `it('does something', fn() => ...)` functions\n• <b>HTTP helpers</b> — simulate requests like `$this->get('/users')` without a real browser\n• <b>Database helpers</b> — check that data was saved or deleted correctly\n• <b>Fake facades</b> — intercept emails, queued jobs, and events so tests stay fast and isolated",
+      np: "Laravel testing first-class। Pest = PHPUnit माथि functional syntax। HTTP, DB, mail, queue assert।",
+      jp: "Laravel はテストを標準サポート。Pest は PHPUnit 上のクリーンな構文。HTTP・DB・メール・キューのアサーションが簡単。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Sanctum recap & API project setup",
-        np: "Sanctum recap र setup",
-        jp: "Sanctum の確認とセットアップ",
+        en: "Pest setup & syntax",
+        np: "Pest setup र syntax",
+        jp: "Pest のセットアップと構文",
+      },
+      blocks: [
+        {
+          type: "diagram",
+          id: "laravel-test-pyramid",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "PHPUnit is the traditional PHP testing framework — it works, but every test file requires a class, every method name starts with `test_`, and the assertion syntax can feel clunky.\n\n<b>Pest is the modern alternative</b>\n• It wraps PHPUnit under the hood — every PHPUnit assertion still works, nothing is lost\n• But the outer syntax is much cleaner:\n  ↳ No class required — just call `it()` or `test()` with a closure\n  ↳ `it('can create a post', fn() => ...)` reads like a plain English sentence\n  ↳ The `expect()` API chains naturally: `expect($user)->not->toBeNull()->name->toBe('Alice')`\n• Laravel 11 ships with Pest pre-installed — zero extra setup needed",
+            np: "Pest Laravel 11 मा pre-installed। PHPUnit को wrapper। Class boilerplate छैन।",
+            jp: "Pest は Laravel 11 にプリインストール。PHPUnit のラッパーなのでアサーションはすべて使える。クラス不要で `it()` / `test()` だけ。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Install Pest in Laravel 10", np: "Laravel 10 मा install", jp: "Laravel 10 でのインストール" },
+          code: `composer require pestphp/pest --dev --with-all-dependencies
+composer require pestphp/pest-plugin-laravel --dev
+
+# Initialize Pest (creates Pest.php, updates phpunit.xml)
+php artisan pest:install
+
+# Generate test files
+php artisan make:test PostTest --pest           # Feature test (in tests/Feature/)
+php artisan make:test PostUnitTest --pest --unit # Unit test (in tests/Unit/)`,
+        },
+        {
+          type: "code",
+          title: { en: "Pest test anatomy", np: "Pest test structure", jp: "Pest テストの構造" },
+          code: `<?php
+// tests/Feature/PostTest.php
+
+use App\\Models\\{Post, User};
+
+// beforeEach runs before every test in this file
+beforeEach(function () {
+    $this->user = User::factory()->create();
+});
+
+// 'it' reads as a sentence: "it can create a post"
+it('can create a post', function () {
+    $response = $this->actingAs($this->user)
+        ->post('/posts', [
+            'title' => 'Hello World',
+            'body'  => 'My first post.',
+        ]);
+
+    $response->assertRedirect('/posts');
+    expect(Post::count())->toBe(1);
+});
+
+// 'test' is an alias
+test('guests cannot create posts', function () {
+    $response = $this->post('/posts', ['title' => 'Hack']);
+    $response->assertRedirect('/login');
+});
+
+// Datasets — run the same test with multiple inputs
+it('validates post title length', function (string $title) {
+    $this->actingAs($this->user)
+         ->post('/posts', ['title' => $title, 'body' => 'x'])
+         ->assertSessionHasErrors('title');
+})->with([
+    'empty string'    => [''],
+    'too long'        => [str_repeat('a', 256)],
+]);`,
+        },
+        {
+          type: "code",
+          title: { en: "Pest expectations cheat-sheet", np: "Expectations", jp: "Expectations チートシート" },
+          code: `// Pest's expect() wraps PHPUnit assertions in a fluent API
+
+expect($value)
+    ->toBe(42)                  // strict equality (===)
+    ->toEqual(['a' => 1])       // loose equality (==)
+    ->toBeNull()                // === null
+    ->not->toBeNull()           // negation
+    ->toBeTrue()                // === true
+    ->toBeFalse()               // === false
+    ->toBeString()
+    ->toBeInt()
+    ->toBeArray()
+    ->toBeInstanceOf(User::class)
+    ->toContain('needle')       // string or array contains
+    ->toHaveCount(3)            // array/collection count
+    ->toHaveKey('id')           // array has key
+    ->toHaveKeys(['id', 'name'])
+    ->toMatchArray(['name' => 'Alice'])  // subset match
+    ->toThrow(\\Exception::class)
+    ->toThrow(\\Exception::class, 'message')
+    ->toBeGreaterThan(0)
+    ->toBeLessThanOrEqual(100);
+
+// Multiple assertions chained
+expect(User::find(1))
+    ->not->toBeNull()
+    ->name->toBe('Alice')
+    ->email->toContain('@');`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "HTTP feature tests",
+        np: "HTTP feature test",
+        jp: "HTTP フィーチャーテスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Sanctum is already included in Laravel 11 — you don't need to install anything extra for token-based auth. Three things to verify before writing any endpoints:\n\n• <b>`HasApiTokens` trait on your User model</b> — this adds the `createToken()` method\n  ↳ Without this, calling `$user->createToken()` will throw an error\n• <b>`routes/api.php` is registered</b> — in Laravel 11 it's wired up in `bootstrap/app.php` via `->withRouting()`\n  ↳ All routes in this file are automatically prefixed with `/api`\n• <b>`SANCTUM_STATEFUL_DOMAINS`</b> — you only need this for SPA cookie mode (same-domain React/Vue)\n  ↳ For token mode (mobile apps, separate frontends), leave it empty",
-            np: "Laravel 11 मा Sanctum built-in। `HasApiTokens`, `api.php`, stateful domains (token mode मा चाहिँदैन)।",
-            jp: "Laravel 11 は Sanctum 組み込み済み。`HasApiTokens` の確認と `api.php` の登録を確認。",
+            en: "A feature test simulates a real HTTP request through your entire application — the route resolves, middleware runs, the controller executes, and the database is hit.\n• You don't need a running server or a browser — Laravel handles the full request/response cycle in memory\n  ↳ `$this->get('/posts')` fires a GET request and returns a response object you can assert against\n  ↳ `$this->actingAs($user)->post('/posts', [...])` simulates a logged-in user submitting a form\n• These tests are the most valuable kind — they test your app the same way a real user would interact with it",
+            np: "Feature test = full stack। Real server चाहिँदैन। Response assert methods।",
+            jp: "フィーチャーテストはルーティングから DB まで全スタックを通す。実サーバーは不要。",
           },
         },
         {
           type: "code",
-          title: { en: "User model + api.php skeleton", np: "User model र api.php", jp: "User モデルと api.php" },
-          code: `// app/Models/User.php
-use Laravel\\Sanctum\\HasApiTokens;
+          title: { en: "Full HTTP test example with actingAs", np: "HTTP test + actingAs", jp: "actingAs を使った HTTP テスト" },
+          code: `<?php
+// tests/Feature/PostControllerTest.php
 
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, Notifiable;
-}
+use App\\Models\\{Post, User};
+use Illuminate\\Http\\UploadedFile;
+use Illuminate\\Support\\Facades\\Storage;
 
-// routes/api.php
-use Illuminate\\Support\\Facades\\Route;
-use App\\Http\\Controllers\\Api\\AuthController;
-use App\\Http\\Controllers\\Api\\PostController;
+uses(\\Illuminate\\Foundation\\Testing\\RefreshDatabase::class);
 
-// Public routes — no token needed
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+it('shows a paginated list of posts', function () {
+    Post::factory()->count(20)->create();
 
-// Protected routes — require a valid Sanctum token
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout',      [AuthController::class, 'logout']);
-    Route::get('/user',         [AuthController::class, 'me']);
-    Route::apiResource('posts', PostController::class);
+    $response = $this->get('/posts');
+
+    $response
+        ->assertStatus(200)    // same as assertOk()
+        ->assertSee('Posts')
+        ->assertViewIs('posts.index')
+        ->assertViewHas('posts');
+});
+
+it('authenticated user can create a post', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/posts', [
+        'title' => 'Test Post',
+        'body'  => 'Some body content here.',
+    ]);
+
+    $response->assertRedirect(route('posts.index'));
+    $this->assertDatabaseHas('posts', [
+        'title'   => 'Test Post',
+        'user_id' => $user->id,
+    ]);
+});
+
+it('returns 401 for unauthenticated API request', function () {
+    $this->getJson('/api/posts')->assertUnauthorized(); // 401
+});
+
+it('returns JSON post list from API', function () {
+    $user  = User::factory()->create();
+    $posts = Post::factory()->count(3)->for($user)->create();
+
+    $this->actingAs($user, 'sanctum')
+         ->getJson('/api/posts')
+         ->assertOk()
+         ->assertJsonCount(3, 'data')
+         ->assertJsonStructure([
+             'data' => [['id', 'title', 'body', 'author']],
+             'links',
+             'meta',
+         ]);
+});
+
+it('validates post creation fields', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+         ->post('/posts', [])              // empty payload
+         ->assertSessionHasErrors(['title', 'body']);
+});
+
+it('redirects guests to login', function () {
+    $this->get('/dashboard')->assertRedirect('/login');
 });`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>api.php vs web.php — what is the difference?</b>\n\n• <b>`routes/api.php`</b> — for stateless API requests\n  ↳ No session, no CSRF token required\n  ↳ Routes are automatically prefixed with `/api` (so `Route::get('/posts')` becomes `/api/posts`)\n  ↳ Authentication is done via the `Authorization: Bearer <token>` header\n• <b>`routes/web.php`</b> — for browser-based pages\n  ↳ Uses session cookies to remember who is logged in\n  ↳ Requires a CSRF token on every POST/PUT/DELETE form submission\n  ↳ No automatic prefix",
-            np: "`api.php` — stateless, `/api` prefix, no CSRF। `web.php` — session, CSRF, browser।",
-            jp: "`api.php` はステートレスで `/api` プレフィックス付き。`web.php` はセッションと CSRF が必要。",
-          },
         },
         {
           type: "table",
           caption: {
-            en: "All endpoints we will build — method, path, auth required, and what it does",
-            np: "सबै endpoints — method, path, auth, विवरण",
-            jp: "全エンドポイント一覧",
+            en: "Common response assertion methods",
+            np: "Response assertions",
+            jp: "主要レスポンスアサーション",
           },
           headers: [
             { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "Endpoint", np: "Endpoint", jp: "エンドポイント" },
-            { en: "Auth?", np: "Auth?", jp: "認証?" },
-            { en: "Description", np: "विवरण", jp: "説明" },
+            { en: "What it checks", np: "के check गर्छ", jp: "確認内容" },
           ],
           rows: [
             [
-              { en: "POST", np: "POST", jp: "POST" },
-              { en: "`/api/register`", np: "`/api/register`", jp: "`/api/register`" },
-              { en: "No", np: "छैन", jp: "不要" },
-              { en: "Create account, returns token", np: "नयाँ account, token फर्काउँछ", jp: "アカウント作成・トークン返却" },
+              { en: "`assertStatus(200)`", np: "`assertStatus(200)`", jp: "`assertStatus(200)`" },
+              { en: "HTTP status code", np: "Status code", jp: "HTTP ステータスコード" },
             ],
             [
-              { en: "POST", np: "POST", jp: "POST" },
-              { en: "`/api/login`", np: "`/api/login`", jp: "`/api/login`" },
-              { en: "No", np: "छैन", jp: "不要" },
-              { en: "Login, returns token", np: "Login, token फर्काउँछ", jp: "ログイン・トークン返却" },
+              { en: "`assertOk()` / `assertNotFound()`", np: "`assertOk()`", jp: "`assertOk()`" },
+              { en: "200 / 404 shorthand", np: "Shorthand", jp: "200 / 404 の省略形" },
             ],
             [
-              { en: "POST", np: "POST", jp: "POST" },
-              { en: "`/api/logout`", np: "`/api/logout`", jp: "`/api/logout`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Revoke current token", np: "Token मेट्छ", jp: "トークン削除" },
+              { en: "`assertJson(['key' => 'val'])`", np: "`assertJson()`", jp: "`assertJson()`" },
+              { en: "JSON contains subset", np: "JSON subset", jp: "JSON のサブセット一致" },
             ],
             [
-              { en: "GET", np: "GET", jp: "GET" },
-              { en: "`/api/user`", np: "`/api/user`", jp: "`/api/user`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Get logged-in user profile", np: "User profile", jp: "ログインユーザー取得" },
+              { en: "`assertJsonCount(3, 'data')`", np: "`assertJsonCount()`", jp: "`assertJsonCount()`" },
+              { en: "Array length at JSON path", np: "Array length", jp: "JSON パスの配列長" },
             ],
             [
-              { en: "GET", np: "GET", jp: "GET" },
-              { en: "`/api/posts`", np: "`/api/posts`", jp: "`/api/posts`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "List all posts (current user only)", np: "Posts list", jp: "投稿一覧（自分のみ）" },
+              { en: "`assertSee('text')`", np: "`assertSee()`", jp: "`assertSee()`" },
+              { en: "Text appears in response body", np: "Text present", jp: "レスポンスボディにテキスト存在" },
             ],
             [
-              { en: "POST", np: "POST", jp: "POST" },
-              { en: "`/api/posts`", np: "`/api/posts`", jp: "`/api/posts`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Create a new post", np: "Post बनाउने", jp: "投稿作成" },
+              { en: "`assertRedirect('/login')`", np: "`assertRedirect()`", jp: "`assertRedirect()`" },
+              { en: "Location header matches", np: "Redirect", jp: "リダイレクト先の一致" },
             ],
             [
-              { en: "GET", np: "GET", jp: "GET" },
-              { en: "`/api/posts/{id}`", np: "`/api/posts/{id}`", jp: "`/api/posts/{id}`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Get one post by ID", np: "एउटा post", jp: "投稿の詳細取得" },
+              { en: "`assertSessionHasErrors('field')`", np: "`assertSessionHasErrors()`", jp: "`assertSessionHasErrors()`" },
+              { en: "Validation error in session", np: "Validation error", jp: "セッションにバリデーションエラー" },
             ],
             [
-              { en: "PUT", np: "PUT", jp: "PUT" },
-              { en: "`/api/posts/{id}`", np: "`/api/posts/{id}`", jp: "`/api/posts/{id}`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Update a post", np: "Post update", jp: "投稿の更新" },
-            ],
-            [
-              { en: "DELETE", np: "DELETE", jp: "DELETE" },
-              { en: "`/api/posts/{id}`", np: "`/api/posts/{id}`", jp: "`/api/posts/{id}`" },
-              { en: "Yes", np: "हो", jp: "必要" },
-              { en: "Delete a post", np: "Post मेट्ने", jp: "投稿の削除" },
+              { en: "`assertUnauthorized()` / `assertForbidden()`", np: "401 / 403", jp: "401 / 403" },
+              { en: "401 / 403 responses", np: "401 / 403", jp: "401 / 403 レスポンス" },
             ],
           ],
         },
@@ -138,429 +251,257 @@ Route::middleware('auth:sanctum')->group(function () {
     },
     {
       title: {
-        en: "Auth endpoints — register, login, logout & /me",
-        np: "Auth endpoints — register, login, logout, /me",
-        jp: "認証エンドポイント",
+        en: "Database testing",
+        np: "Database testing",
+        jp: "データベーステスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Think of API authentication like a gym membership:\n• <b>Register</b> — sign up at the front desk, get a membership card (token)\n• <b>Login</b> — show your ID at the desk, get a new card if you lost the last one\n• <b>Use the card</b> — swipe it at the door every time you enter (send the token with every request)\n• <b>Logout</b> — hand the card back in, it gets shredded (token is deleted from the database)\n\nThe token is just a long random string. The client (mobile app, browser) stores it and sends it in the `Authorization` header on every protected request:\n`Authorization: Bearer 1|abc123xyz...`",
-            np: "Token auth = gym membership analogy। Register → token मिल्छ। प्रत्येक request मा Bearer header।",
-            jp: "ジム会員証の比喩で認証を説明。登録→トークン取得→毎回 Bearer ヘッダーで送信→ログアウトで削除。",
+            en: "Tests that touch the database need a clean slate before each test — otherwise results from one test bleed into the next.\n\n<b>`RefreshDatabase`</b> handles this automatically:\n• Before the first test runs, it migrates the database from scratch\n• Before each subsequent test, it wraps everything in a transaction — then rolls it back after\n  ↳ Every test starts with a completely empty database\n\n<b>Factories</b> are how you create test data without hand-writing SQL `INSERT` statements:\n• `User::factory()->create()` — creates a real database row with realistic fake data\n• `User::factory()->count(10)->create()` — create 10 rows at once\n• `User::factory()->admin()->create()` — use a custom state defined in the factory class",
+            np: "`RefreshDatabase` — clean DB। Factory ले test data बनाउँछ।",
+            jp: "`RefreshDatabase` でテストごとに DB をクリーン。Factory でリアルなテストデータを生成。",
           },
         },
         {
           type: "code",
-          title: { en: "AuthController — register, login, logout, me", np: "AuthController", jp: "AuthController" },
+          title: { en: "RefreshDatabase + assertDatabaseHas", np: "DB assert", jp: "DB アサーション" },
           code: `<?php
-// app/Http/Controllers/Api/AuthController.php
-namespace App\\Http\\Controllers\\Api;
+// tests/Feature/UserRegistrationTest.php
 
-use App\\Http\\Controllers\\Controller;
 use App\\Models\\User;
-use Illuminate\\Http\\JsonResponse;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Hash;
+use Illuminate\\Foundation\\Testing\\RefreshDatabase;
 
-class AuthController extends Controller
-{
-    public function register(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'unique:users'],
-            'password' => ['required', 'min:8', 'confirmed'],
-        ]);
+uses(RefreshDatabase::class);
 
-        $user  = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+it('registers a new user', function () {
+    $response = $this->post('/register', [
+        'name'                  => 'Alice',
+        'email'                 => 'alice@example.com',
+        'password'              => 'password',
+        'password_confirmation' => 'password',
+    ]);
 
-        $token = $user->createToken('api')->plainTextToken;
+    $response->assertRedirect('/dashboard');
 
-        return response()->json([
-            'user'  => $user,
-            'token' => $token,
-        ], 201);
-    }
+    // Assert a row exists with exact column values
+    $this->assertDatabaseHas('users', [
+        'name'  => 'Alice',
+        'email' => 'alice@example.com',
+    ]);
 
-    public function login(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        $user = User::where('email', $data['email'])->first();
-
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        // Delete old tokens so only one active session exists (optional)
-        $user->tokens()->delete();
-
-        $token = $user->createToken('api')->plainTextToken;
-
-        return response()->json([
-            'user'  => $user,
-            'token' => $token,
-        ]);
-    }
-
-    public function logout(Request $request): JsonResponse
-    {
-        // Delete only the token used for this request
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Logged out successfully']);
-    }
-
-    public function me(Request $request): JsonResponse
-    {
-        return response()->json($request->user());
-    }
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>What is `plainTextToken` and why does it matter?</b>\n\n`createToken()` returns a `NewAccessToken` object. It has two parts:\n• <b>`plainTextToken`</b> — the raw string you return to the client. Looks like `1|abc123xyz...`\n  ↳ This is the only time you can read it — Laravel hashes it immediately after creation\n  ↳ <b>Never log this value</b> — if it leaks, anyone with it can act as that user\n• <b>The token record</b> — stored in the `personal_access_tokens` table as a hash (like a hashed password)\n  ↳ Even if someone reads your database, they cannot recover the original token\n\nThe client should store `plainTextToken` securely — in iOS Keychain, Android Keystore, or an HttpOnly cookie in a browser.",
-            np: "`plainTextToken` एक पटक मात्र पढ्न मिल्छ। Database मा hash हुन्छ। Log नगर्नुस्।",
-            jp: "`plainTextToken` は一度だけ取得可能。DB にはハッシュで保存。絶対にログに残さないこと。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Auth routes in routes/api.php", np: "Auth routes", jp: "認証ルート" },
-          code: `// routes/api.php
-use App\\Http\\Controllers\\Api\\AuthController;
-
-// No token required
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
-
-// Token required
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user',    [AuthController::class, 'me']);
-});`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Posts CRUD endpoints",
-        np: "Posts CRUD endpoints",
-        jp: "Posts の CRUD エンドポイント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "REST APIs follow a naming convention that maps HTTP verbs to actions. Instead of writing 5 routes by hand, Laravel's `Route::apiResource()` registers all of them in one line:\n\n• `GET /api/posts` → `index()` — list resources\n• `POST /api/posts` → `store()` — create a resource\n• `GET /api/posts/{id}` → `show()` — get one resource\n• `PUT /api/posts/{id}` → `update()` — replace/update a resource\n• `DELETE /api/posts/{id}` → `destroy()` — delete a resource\n\n`apiResource()` skips `create()` and `edit()` (which serve HTML forms — APIs don't need them).",
-            np: "`Route::apiResource()` ले 5 routes एकैपटक register गर्छ।",
-            jp: "`Route::apiResource()` で 5 つのルートを一括登録。HTML フォーム用の `create`/`edit` は除外。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Post model & migration", np: "Post model र migration", jp: "Post モデルとマイグレーション" },
-          code: `// database/migrations/xxxx_create_posts_table.php
-Schema::create('posts', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->string('title');
-    $table->text('body');
-    $table->timestamp('published_at')->nullable();
-    $table->timestamps();
+    // Assert user count
+    $this->assertDatabaseCount('users', 1);
 });
 
-// app/Models/Post.php
-class Post extends Model
-{
-    protected $fillable = ['user_id', 'title', 'body', 'published_at'];
+it('does not store plain-text password', function () {
+    $this->post('/register', [
+        'name'                  => 'Bob',
+        'email'                 => 'bob@example.com',
+        'password'              => 'secret123',
+        'password_confirmation' => 'secret123',
+    ]);
 
-    protected $casts = [
-        'published_at' => 'datetime',
-    ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "PostController — full CRUD", np: "PostController", jp: "PostController（CRUD 全メソッド）" },
-          code: `<?php
-// app/Http/Controllers/Api/PostController.php
-namespace App\\Http\\Controllers\\Api;
-
-use App\\Http\\Controllers\\Controller;
-use App\\Models\\Post;
-use Illuminate\\Http\\JsonResponse;
-use Illuminate\\Http\\Request;
-
-class PostController extends Controller
-{
-    // GET /api/posts — list posts belonging to the logged-in user
-    public function index(Request $request): JsonResponse
-    {
-        $posts = Post::where('user_id', $request->user()->id)
-                     ->latest()
-                     ->get();
-
-        return response()->json($posts);
-    }
-
-    // POST /api/posts — create a new post
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
-            'body'         => ['required', 'string'],
-            'published_at' => ['nullable', 'date'],
-        ]);
-
-        $post = Post::create([
-            'user_id'      => $request->user()->id,
-            'title'        => $data['title'],
-            'body'         => $data['body'],
-            'published_at' => $data['published_at'] ?? null,
-        ]);
-
-        return response()->json($post, 201);
-    }
-
-    // GET /api/posts/{post} — get one post
-    public function show(Request $request, Post $post): JsonResponse
-    {
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        return response()->json($post);
-    }
-
-    // PUT /api/posts/{post} — update a post
-    public function update(Request $request, Post $post): JsonResponse
-    {
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $data = $request->validate([
-            'title'        => ['sometimes', 'string', 'max:255'],
-            'body'         => ['sometimes', 'string'],
-            'published_at' => ['nullable', 'date'],
-        ]);
-
-        $post->update($data);
-
-        return response()->json($post);
-    }
-
-    // DELETE /api/posts/{post} — delete a post
-    public function destroy(Request $request, Post $post): JsonResponse
-    {
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $post->delete();
-
-        return response()->json(null, 204);
-    }
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Why check ownership on every method?</b>\n\nThe `auth:sanctum` middleware only proves that the request has a valid token — it confirms the user is logged in. It does <b>not</b> check whether they own the specific post being accessed.\n\nWithout the ownership check:\n• User A logs in and gets a token\n• User A sends `DELETE /api/posts/99` where post 99 belongs to User B\n• The request passes `auth:sanctum` because User A has a valid token\n• Without the check, User A deletes User B's post\n\nAlways verify `$post->user_id === $request->user()->id` before reading, updating, or deleting. This is called an <b>object-level authorization check</b> (OWASP calls missing it the #1 API security vulnerability).",
-            np: "`auth:sanctum` = logged in मात्र। Ownership check = आफ्नै post मात्र access।",
-            jp: "`auth:sanctum` はログイン確認のみ。所有権チェックがないと他のユーザーのデータを操作できてしまう。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Complete routes/api.php", np: "पूरा api.php", jp: "api.php の完成版" },
-          code: `// routes/api.php
-use Illuminate\\Support\\Facades\\Route;
-use App\\Http\\Controllers\\Api\\AuthController;
-use App\\Http\\Controllers\\Api\\PostController;
-
-// Public — no token
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
-
-// Protected — requires valid Sanctum token
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user',    [AuthController::class, 'me']);
-
-    // Registers: GET /posts, POST /posts,
-    //            GET /posts/{post}, PUT /posts/{post}, DELETE /posts/{post}
-    Route::apiResource('posts', PostController::class);
+    // Row should NOT have this value
+    $this->assertDatabaseMissing('users', [
+        'email'    => 'bob@example.com',
+        'password' => 'secret123',
+    ]);
 });`,
         },
-      ],
-    },
-    {
-      title: {
-        en: "Token abilities & scopes",
-        np: "Token abilities र scopes",
-        jp: "トークンのアビリティとスコープ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Token abilities are like access levels on a keycard system:\n• A cleaner's keycard opens the office door but not the server room\n• A manager's keycard opens everything\n\nIn Sanctum, you define abilities when creating a token, then check them before sensitive actions. This lets you issue different tokens for different purposes:\n• A <b>read-only API key</b> for a dashboard that should only view data\n• A <b>full-access token</b> for a mobile app that can create and delete\n\nAbilities are stored in the `personal_access_tokens` table alongside the token.",
-            np: "Abilities = keycard access level। Read-only token vs full-access token।",
-            jp: "アビリティはキーカードのアクセスレベルのようなもの。読み取り専用と全権トークンを使い分けられる。",
-          },
-        },
         {
           type: "code",
-          title: { en: "Creating tokens with abilities & checking them", np: "Abilities सहित token", jp: "アビリティ付きトークンの作成と確認" },
-          code: `// 1. Issue a token with specific abilities on login
-$token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
-               ->plainTextToken;
+          title: { en: "Factories — creating test data", np: "Factory", jp: "Factory でテストデータ生成" },
+          code: `// Basic factory usage
+$user    = User::factory()->create();         // persisted
+$user    = User::factory()->make();           // in memory only
+$users   = User::factory()->count(10)->create();
 
-// 2. Issue a read-only token (e.g. for a dashboard integration)
-$readOnlyToken = $user->createToken('dashboard', ['posts:read'])
-                      ->plainTextToken;
+// States defined in the factory class
+$admin   = User::factory()->admin()->create();
+$unverified = User::factory()->unverified()->create();
 
-// 3. Check abilities inside a controller
-public function store(Request $request): JsonResponse
+// With relationships
+$post = Post::factory()
+    ->for(User::factory()->create())    // belongsTo
+    ->has(Comment::factory()->count(3)) // hasMany
+    ->create();
+
+// Inline attribute override
+$post = Post::factory()->create([
+    'title'     => 'Custom Title',
+    'published' => true,
+]);
+
+// UserFactory example
+// database/factories/UserFactory.php
+public function definition(): array
 {
-    if (! $request->user()->tokenCan('posts:write')) {
-        return response()->json(['message' => 'This token cannot create posts'], 403);
-    }
-
-    // ... create post
+    return [
+        'name'              => fake()->name(),
+        'email'             => fake()->unique()->safeEmail(),
+        'password'          => Hash::make('password'),
+        'email_verified_at' => now(),
+    ];
 }
 
-// 4. Check in a route definition using middleware
-Route::middleware(['auth:sanctum', 'abilities:posts:write'])
-    ->post('/posts', [PostController::class, 'store']);
-
-// 5. Check for any of multiple abilities
-Route::middleware(['auth:sanctum', 'ability:posts:read,posts:write'])
-    ->get('/posts', [PostController::class, 'index']);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Abilities vs Policies — when to use which?</b>\n\n• <b>Token abilities</b> answer: what is this token allowed to do?\n  ↳ Use for different client types — a read-only dashboard token vs a full mobile app token\n  ↳ Checked with `tokenCan('ability')`\n• <b>Policies</b> answer: can this user perform this action on this specific resource?\n  ↳ Use for per-record ownership — can User A edit Post 42?\n  ↳ Checked with `Gate::authorize()` or `$this->authorize()`\n\nIn a real app you use both together: the token ability checks what the client can do, the policy checks what the user owns.",
-            np: "Abilities = client type। Policies = resource ownership। दुवै सँगै प्रयोग।",
-            jp: "アビリティはクライアントの種類に、Policy はリソースの所有権に使う。実際のアプリでは両方を組み合わせる。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Consistent JSON responses & error handling",
-        np: "Consistent JSON responses र error handling",
-        jp: "一貫した JSON レスポンスとエラー処理",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Imagine every API endpoint returns a different shape:\n• `/api/posts` returns `[{...}, {...}]` (bare array)\n• `/api/login` returns `{token: '...', user: {...}}`\n• `/api/store` returns `{data: {...}, success: true}`\n\nEvery client developer has to learn a different structure for every endpoint — that is a maintenance nightmare.\n\nA <b>consistent response shape</b> means every success response looks the same and every error response looks the same. Clients can write one piece of parsing code and it works everywhere.",
-            np: "Consistent shape = clients को लागि predictable। सबै response एउटै structure।",
-            jp: "一貫したレスポンス形式により、クライアントは1つのパース処理で全エンドポイントに対応できる。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "ApiResponse helper trait", np: "ApiResponse trait", jp: "ApiResponse ヘルパー" },
-          code: `<?php
-// app/Http/Controllers/Api/Concerns/ApiResponse.php
-namespace App\\Http\\Controllers\\Api\\Concerns;
-
-use Illuminate\\Http\\JsonResponse;
-
-trait ApiResponse
+public function admin(): static
 {
-    protected function success(mixed $data, int $status = 200, string $message = ''): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data'    => $data,
-        ], $status);
-    }
-
-    protected function error(string $message, int $status = 400, mixed $errors = null): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message,
-            'errors'  => $errors,
-        ], $status);
-    }
+    return $this->state(['role' => 'admin']);
 }
 
-// Using it in PostController
-class PostController extends Controller
+public function unverified(): static
 {
-    use ApiResponse;
-
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([...]);
-        $post = Post::create([...]);
-
-        return $this->success($post, 201, 'Post created');
-    }
-
-    public function destroy(Request $request, Post $post): JsonResponse
-    {
-        if ($post->user_id !== $request->user()->id) {
-            return $this->error('You do not own this post', 403);
-        }
-
-        $post->delete();
-        return response()->json(null, 204);
-    }
+    return $this->state(['email_verified_at' => null]);
 }`,
         },
+      ],
+    },
+    {
+      title: {
+        en: "Faking external services",
+        np: "External service fake",
+        jp: "外部サービスのフェイク",
+      },
+      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>HTTP status codes every API developer needs to know</b>\n\n• <b>200 OK</b> — request succeeded (GET, PUT responses)\n• <b>201 Created</b> — a new resource was created (POST responses)\n• <b>204 No Content</b> — succeeded but nothing to return (DELETE responses)\n• <b>400 Bad Request</b> — the client sent something malformed\n• <b>401 Unauthorized</b> — no token, expired token, or invalid token\n  ↳ Laravel's `auth:sanctum` returns this automatically for missing/invalid tokens\n• <b>403 Forbidden</b> — authenticated but not allowed (valid token, wrong owner)\n• <b>404 Not Found</b> — the resource doesn't exist\n• <b>422 Unprocessable Entity</b> — validation failed\n  ↳ Laravel's `$request->validate()` returns this automatically with a JSON errors object",
-            np: "200, 201, 204, 400, 401, 403, 404, 422 — सबै REST status codes।",
-            jp: "主要 HTTP ステータスコード一覧。401 は Sanctum が自動返却、422 は validate() が自動返却。",
+            en: "Testing code that calls external services (email, queues, events) is tricky — you don't want real emails sent or real jobs running during tests.\n\n<b>Laravel's fake facades solve this</b>\n• Call `Mail::fake()`, `Queue::fake()`, or `Event::fake()` at the start of a test\n  ↳ From that point on, nothing is actually sent or dispatched — Laravel just records what would have happened\n• After running the code under test, use assertion methods to verify the right things were triggered:\n  ↳ `Mail::assertSent(WelcomeMail::class)` — was this email triggered?\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — was this job queued?\n  ↳ `Event::assertDispatched(OrderShipped::class)` — was this event fired?\n• Tests stay fast (no network calls) and reliable (no flaky external dependencies)",
+            np: "Fake facade ले real implementation replace। Assert ले check। Real service hit हुँदैन।",
+            jp: "フェイクファサードは実装をスタブに差し替え。実際には何も送らずアサーションのみ。高速・決定的。",
           },
         },
         {
           type: "code",
-          title: { en: "Return JSON on unauthenticated API requests (Laravel 11)", np: "401 JSON response", jp: "未認証時の JSON レスポンス設定" },
-          code: `// bootstrap/app.php
-// By default, unauthenticated requests get redirected to /login (HTML page).
-// For API routes, we want a JSON 401 response instead.
+          title: { en: "Mail::fake() — email assertions", np: "Mail fake", jp: "Mail::fake()" },
+          code: `<?php
+use App\\Mail\\WelcomeMail;
+use Illuminate\\Support\\Facades\\Mail;
 
-use Illuminate\\Auth\\AuthenticationException;
+it('sends a welcome email after registration', function () {
+    Mail::fake();
 
-->withExceptions(function (Exceptions $exceptions) {
-    $exceptions->render(function (AuthenticationException $e, Request $request) {
-        if ($request->is('api/*') || $request->expectsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated. Please provide a valid token.',
-            ], 401);
-        }
+    $this->post('/register', [
+        'name'                  => 'Carol',
+        'email'                 => 'carol@example.com',
+        'password'              => 'password',
+        'password_confirmation' => 'password',
+    ]);
+
+    // Assert a specific mailable was sent to an address
+    Mail::assertSent(WelcomeMail::class, function (WelcomeMail $mail) {
+        return $mail->hasTo('carol@example.com');
     });
-})`,
+
+    // Assert exactly one email was sent
+    Mail::assertSent(WelcomeMail::class, 1);
+
+    // Assert nothing else was sent
+    Mail::assertNothingQueued();
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Queue::fake() — job assertions", np: "Queue fake", jp: "Queue::fake()" },
+          code: `<?php
+use App\\Jobs\\SendWelcomeEmail;
+use App\\Jobs\\GenerateThumbnail;
+use Illuminate\\Support\\Facades\\Queue;
+
+it('dispatches a welcome email job on registration', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/posts', ['title' => 'Hi', 'body' => 'World']);
+
+    Queue::assertPushed(GenerateThumbnail::class);
+
+    Queue::assertPushedOn('emails', SendWelcomeEmail::class);
+
+    Queue::assertPushed(SendWelcomeEmail::class, function ($job) use ($user) {
+        return $job->user->id === $user->id;
+    });
+
+    // Opposite — nothing of this type was dispatched
+    Queue::assertNotPushed(SomeOtherJob::class);
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Event::fake() — event & notification assertions", np: "Event fake", jp: "Event::fake()" },
+          code: `<?php
+use App\\Events\\OrderShipped;
+use App\\Notifications\\OrderShippedNotification;
+use Illuminate\\Support\\Facades\\{Event, Notification};
+
+it('fires OrderShipped event when order is shipped', function () {
+    Event::fake();
+
+    $order = Order::factory()->create();
+    $order->ship();
+
+    Event::assertDispatched(OrderShipped::class, function ($event) use ($order) {
+        return $event->order->id === $order->id;
+    });
+
+    Event::assertDispatchedTimes(OrderShipped::class, 1);
+    Event::assertNotDispatched(SomeOtherEvent::class);
+});
+
+it('notifies user when order ships', function () {
+    Notification::fake();
+
+    $user  = User::factory()->create();
+    $order = Order::factory()->for($user)->create();
+    $order->ship();
+
+    Notification::assertSentTo($user, OrderShippedNotification::class);
+    Notification::assertSentToTimes($user, OrderShippedNotification::class, 1);
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Storage::fake() + Http::fake() + artisan command tests", np: "Other fakes", jp: "その他のフェイク" },
+          code: `<?php
+use Illuminate\\Http\\UploadedFile;
+use Illuminate\\Support\\Facades\\{Http, Storage};
+
+// Storage::fake — test file uploads without touching disk
+it('stores an uploaded avatar', function () {
+    Storage::fake('avatars');
+
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->image('avatar.jpg', 200, 200);
+
+    $this->actingAs($user)
+         ->post('/profile/avatar', ['avatar' => $file])
+         ->assertOk();
+
+    Storage::disk('avatars')->assertExists("avatars/{$user->id}.jpg");
+});
+
+// Http::fake — fake outbound HTTP calls
+it('syncs data from external API', function () {
+    Http::fake([
+        'api.example.com/items' => Http::response([
+            ['id' => 1, 'name' => 'Widget'],
+            ['id' => 2, 'name' => 'Gadget'],
+        ], 200),
+        '*' => Http::response([], 500), // catch-all fallback
+    ]);
+
+    $this->artisan('app:sync-items')->assertSuccessful();
+    $this->assertDatabaseCount('items', 2);
+});
+
+// Artisan command tests
+it('runs the weekly report command', function () {
+    $this->artisan('reports:weekly')
+         ->expectsOutput('Report generated.')
+         ->assertExitCode(0);   // or assertSuccessful()
+});`,
         },
       ],
     },
@@ -568,74 +509,86 @@ use Illuminate\\Auth\\AuthenticationException;
   faq: [
     {
       question: {
-        en: "How do I test these endpoints in Postman or Insomnia?",
-        np: "Postman वा Insomnia मा endpoints कसरी test गर्ने?",
-        jp: "Postman や Insomnia でエンドポイントをテストする方法は？",
+        en: "Should I use Pest or PHPUnit?",
+        np: "Pest वा PHPUnit?",
+        jp: "Pest と PHPUnit どちらを使うべき？",
       },
       answer: {
-        en: "Step-by-step:\n\n• <b>Step 1 — Register or Login</b>\n  ↳ Send `POST http://localhost:8000/api/login` with a JSON body: `{\"email\": \"you@example.com\", \"password\": \"yourpassword\"}`\n  ↳ Copy the `token` value from the response\n\n• <b>Step 2 — Add the token to your request</b>\n  ↳ In Postman: open the request → Authorization tab → Type: Bearer Token → paste the token\n  ↳ In Insomnia: Header tab → add `Authorization` → value: `Bearer <paste token here>`\n\n• <b>Step 3 — Make protected requests</b>\n  ↳ The token is now sent automatically on every request from that collection\n  ↳ Try `GET /api/posts` — you should see your posts list\n\n• <b>Tip</b>: in Postman you can save the token as an environment variable and reference it as `{{token}}` in all requests — saves re-pasting every time.",
-        np: "Login → token copy → Authorization: Bearer header। Postman environment variable सुझाव।",
-        jp: "ログインでトークン取得 → Authorization: Bearer で設定 → 保護されたルートへリクエスト。",
+        en: "<b>Pest</b> is the recommended default for all new Laravel projects — here's why:\n• Less boilerplate: no class, no `setUp()`, no `public function test_...` naming convention\n  ↳ A Pest test is just an `it()` call with a closure — much easier to read and write\n• Better assertions: `expect($value)->toBe(42)` reads more like English than `$this->assertEquals(42, $value)`\n• Extras built in: datasets (`it()->with([...])`), architecture tests (`arch()`), and parallel test execution\n• No feature loss: it compiles to PHPUnit under the hood — every PHPUnit assertion works inside Pest\n\nThe only reason to stick with PHPUnit is if you have an existing test suite you're not ready to migrate yet.",
+        np: "New project मा Pest। PHPUnit wrapper, feature loss छैन। Old project छ भने PHPUnit ठीक।",
+        jp: "新規プロジェクトは Pest が推奨。PHPUnit のラッパーなので機能差なし。既存スイートがある場合は PHPUnit をそのまま使ってよい。",
       },
     },
     {
       question: {
-        en: "What is the difference between 401 and 403?",
-        np: "401 र 403 मा के फरक छ?",
-        jp: "401 と 403 の違いは何ですか？",
+        en: "What does `RefreshDatabase` do to performance?",
+        np: "`RefreshDatabase` performance मा असर?",
+        jp: "`RefreshDatabase` はパフォーマンスにどう影響しますか？",
       },
       answer: {
-        en: "Think of a concert venue:\n\n• <b>401 Unauthorized</b> — you didn't show a ticket at all\n  ↳ The API doesn't know who you are — no token, wrong token, or expired token\n  ↳ Laravel's `auth:sanctum` middleware returns this automatically\n  ↳ The fix: log in and get a fresh token\n\n• <b>403 Forbidden</b> — you showed a valid ticket, but it's for the wrong section\n  ↳ The API knows exactly who you are, but you're not allowed to do this specific thing\n  ↳ Example: you're authenticated but you're trying to delete someone else's post\n  ↳ The fix: you either need more permissions, or you're trying to access something you don't own\n\nRule of thumb: 401 means 'prove who you are first'. 403 means 'I know who you are, but no'.",
-        np: "401 = token छैन। 403 = token छ तर permission छैन।",
-        jp: "401 は未認証（トークンなし・無効）。403 は認証済みだが権限なし（他人のリソースへのアクセスなど）。",
+        en: "`RefreshDatabase` is the most common approach and works like this:\n• <b>First test in the suite</b>: runs all your migrations from scratch against the test database\n• <b>Every subsequent test</b>: wraps the test in a database transaction, then rolls it back after\n  ↳ Each test starts clean without re-running migrations — so it's fast after the first one\n\n<b>Speed tips</b>\n• Use an in-memory SQLite database for tests: set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`\n  ↳ SQLite migrations run almost instantly — great for local development\n• For very large migration suites, `LazilyRefreshDatabase` only migrates when a test actually needs the database",
+        np: "First test मा migrate एकपटक, बाकी transaction rollback। SQLite in-memory सबभन्दा fast।",
+        jp: "最初の 1 回だけマイグレーション実行、以降はトランザクションロールバック。SQLite インメモリが最速。",
       },
     },
     {
       question: {
-        en: "Should I use Route::apiResource() or write routes manually?",
-        np: "`apiResource()` वा manual routes?",
-        jp: "`Route::apiResource()` と手動ルートどちらを使うべきですか？",
+        en: "How do I test validation errors?",
+        np: "Validation error test कसरी?",
+        jp: "バリデーションエラーをテストする方法は？",
       },
       answer: {
-        en: "Use `Route::apiResource()` by default — it registers all 5 standard CRUD routes in one line and follows the REST naming convention automatically.\n\nWrite routes manually when:\n• You need a <b>custom action</b> that isn't one of the 5 standard ones\n  ↳ Example: `POST /api/posts/{post}/publish` — there's no `publish` verb in apiResource\n• You only want a <b>subset of the 5 routes</b>\n  ↳ `Route::apiResource('posts', PostController::class)->only(['index', 'store'])` (read + create only)\n  ↳ `Route::apiResource('posts', PostController::class)->except(['destroy'])` (everything except delete)\n• You need a <b>different URL structure</b> that doesn't match the REST convention",
-        np: "`apiResource()` = 5 routes एकैपटक। Custom action को लागि manual।",
-        jp: "標準 CRUD は `apiResource()` を使用。カスタムアクションやルートの一部のみ必要な場合は手動で記述。",
+        en: "It depends on whether the route returns HTML or JSON:\n\n<b>Web (Blade) routes</b> — validation errors are flashed to the session and the user is redirected back:\n• `->assertSessionHasErrors('title')` — one field failed\n• `->assertSessionHasErrors(['title', 'body'])` — multiple fields failed\n\n<b>API (JSON) routes</b> — Laravel returns a 422 response with an errors object:\n• `->assertUnprocessable()` — confirms a 422 status code\n• `->assertJsonValidationErrors('email')` — confirms the field appears in the errors list\n• `->assertJsonValidationErrors(['email' => 'The email field is required.'])` — checks the exact message",
+        np: "Web: `assertSessionHasErrors()`। API: `assertJsonValidationErrors()`। 422 = `assertUnprocessable()`।",
+        jp: "Web は `assertSessionHasErrors()`、API は `assertJsonValidationErrors()` と `assertUnprocessable()`（422）。",
       },
     },
     {
       question: {
-        en: "How do I revoke all tokens when a user changes their password?",
-        np: "Password change हुँदा सबै tokens कसरी revoke गर्ने?",
-        jp: "パスワード変更時に全トークンを無効化するには？",
+        en: "How do I assert a notification was sent?",
+        np: "Notification send भयो कि भएन assert?",
+        jp: "通知が送信されたことをアサートする方法は？",
       },
       answer: {
-        en: "Call `$user->tokens()->delete()` inside your password update handler. This deletes every token in the `personal_access_tokens` table for that user — they will need to log in again on all devices.\n\nWhere to put it:\n• In your `ProfileController::updatePassword()` method, after calling `$user->update(['password' => Hash::make($new)])`\n• Also useful after a password reset flow\n\nIf you want <b>granular expiry</b> rather than full revocation, Sanctum supports `tokenExpiredAt`:\n`$user->createToken('app', ['*'], now()->addDays(30))` — the token automatically becomes invalid after 30 days.\n\nYou can also set a global expiry in `config/sanctum.php` via the `expiration` key (minutes).",
-        np: "`$user->tokens()->delete()` ले सबै tokens delete। `tokenExpiredAt` ले expiry set गर्न सकिन्छ।",
-        jp: "`$user->tokens()->delete()` で全トークン削除。期限付きは `tokenExpiredAt` または `config/sanctum.php` の `expiration` を使用。",
+        en: "Call `Notification::fake()` at the start of your test — after that, no notifications actually go out.\n\nThen, after running the action that should trigger the notification:\n• `Notification::assertSentTo($user, MyNotification::class)` — was this notification sent to this user?\n• Pass a callback as a third argument to check the notification's data:\n  ↳ `Notification::assertSentTo($user, MyNotification::class, fn($n) => $n->order->id === 5)`\n• `Notification::assertNothingSent()` — confirms nothing was sent at all\n\nThis works regardless of which channel the notification uses — email, Slack, SMS, database — because `Notification::fake()` intercepts all of them.",
+        np: "`Notification::fake()` → assert। `assertSentTo()` user र class दिनु।",
+        jp: "`Notification::fake()` 後に `assertSentTo($user, MyNotification::class)`。チャンネル問わず動作。",
       },
     },
     {
       question: {
-        en: "Can I use Sanctum with React or Vue on a different domain?",
-        np: "अलग domain मा React/Vue सँग Sanctum प्रयोग गर्न मिल्छ?",
-        jp: "別ドメインの React/Vue と Sanctum を使えますか？",
+        en: "Can I test middleware in isolation?",
+        np: "Middleware isolation मा test?",
+        jp: "ミドルウェアを独立してテストできますか？",
       },
       answer: {
-        en: "Yes — but the approach depends on whether your frontend and API share the same domain.\n\n• <b>Same domain</b> (e.g., both on `myapp.com`): use <b>SPA cookie mode</b>\n  ↳ The frontend gets a session cookie automatically, no token to manage\n  ↳ Set `SANCTUM_STATEFUL_DOMAINS=myapp.com` in `.env`\n\n• <b>Different domain</b> (e.g., React on `localhost:3000`, Laravel on `localhost:8000`):\n  ↳ Use <b>API token mode</b> — login returns a token, send it as `Authorization: Bearer <token>`\n  ↳ You also need to configure CORS so browsers allow the cross-origin request\n  ↳ Edit `config/cors.php`: set `'allowed_origins' => ['http://localhost:3000']` and `'supports_credentials' => true`\n  ↳ Add `'Access-Control-Allow-Origin'` to `'exposed_headers'`",
-        np: "Same domain = SPA cookie mode। Different domain = token mode + CORS configure।",
-        jp: "同一ドメインは SPA クッキーモード、別ドメインは API トークンモード + `config/cors.php` の設定が必要。",
+        en: "Yes, though the most practical approach is to test middleware <b>indirectly through feature tests</b>:\n• `$this->get('/dashboard')->assertRedirect('/login')` — confirms the auth middleware is working\n  ↳ You don't need to instantiate the middleware class itself — the full stack proves it\n\nFor direct unit testing of a middleware class:\n• Instantiate it, pass a `Request` object and a `$next` closure, and assert the response\n  ↳ Useful when middleware has complex internal logic that's hard to test via HTTP\n\nTo isolate a controller by skipping middleware in a test, call `$this->withoutMiddleware()` at the top — it disables all middleware for that test only.",
+        np: "Feature test मा indirect test सजिलो। Direct unit test को लागि Request र Closure pass।",
+        jp: "HTTPテストで間接的にテストが一般的。直接 `new Middleware()` して Request と Closure を渡す方法もある。",
       },
     },
     {
       question: {
-        en: "How do I return paginated results from my API?",
-        np: "API बाट paginated results कसरी फर्काउने?",
-        jp: "API でページネーション付きの結果を返すには？",
+        en: "How do I test exception handling?",
+        np: "Exception handling test?",
+        jp: "例外処理をテストする方法は？",
       },
       answer: {
-        en: "Replace `->get()` with `->paginate(15)`. Laravel automatically returns a JSON object with everything your client needs:\n\n• `data` — the array of records for this page\n• `current_page` — which page you're on\n• `last_page` — total number of pages\n• `per_page` — how many records per page\n• `total` — total number of records across all pages\n• `next_page_url` / `prev_page_url` — ready-to-use links for the next and previous pages\n\nThe client requests a specific page by adding `?page=2` to the URL: `GET /api/posts?page=2`.\n\nIf you want to control the page size from the request: `->paginate($request->integer('per_page', 15))` — defaults to 15 but lets the client override it.",
-        np: "`->paginate(15)` = automatic pagination JSON। `?page=2` ले page navigate।",
-        jp: "`->paginate(15)` で自動的に `data`・`current_page`・`total` 等を含む JSON を返す。`?page=2` でページ指定。",
+        en: "For <b>HTTP responses</b>, assert the status code — that's usually all you need:\n• `->assertNotFound()` — 404 (e.g. when a model isn't found)\n• `->assertForbidden()` — 403 (e.g. when authorization fails)\n• `->assertStatus(500)` — any specific code\n\nFor <b>non-HTTP code</b> that throws an exception, use Pest's `expect()` wrapper:\n• `expect(fn() => $thing->doSomething())->toThrow(ModelNotFoundException::class)`\n\n<b>Debugging tip</b>: by default, Laravel's exception handler catches exceptions and converts them to HTTP responses (like a 500 page). If you want to see the raw exception instead of a response, call `$this->withoutExceptionHandling()` at the top of your test.",
+        np: "HTTP: status code assert। Raw exception: `toThrow()`। `withoutExceptionHandling()` debug को लागि।",
+        jp: "HTTP は `assertNotFound()` など。例外を直接テストは `toThrow()`。`withoutExceptionHandling()` で生の例外を確認。",
+      },
+    },
+    {
+      question: {
+        en: "How do I test that a queued mailable was queued (not sent immediately)?",
+        np: "Queued mailable test कसरी?",
+        jp: "キューに入れられたメールをテストする方法は？",
+      },
+      answer: {
+        en: "There are two different assertion methods and they check different things:\n\n• `Mail::assertSent()` — checks for mail that was sent <b>immediately</b> (synchronous, no queue)\n• `Mail::assertQueued()` — checks for mail that was <b>pushed onto the queue</b> (the mailable implements `ShouldQueue`)\n\nIf your mailable implements `ShouldQueue` and you use `assertSent()`, the assertion will fail even if the code is working — because the mail was queued, not sent directly.\n\nUse `assertQueued()` for any mailable with `ShouldQueue`. After calling `Mail::fake()`, both kinds are intercepted — no real email goes out either way.",
+        np: "`Mail::assertQueued()` — `assertSent()` होइन। `ShouldQueue` implement भएको mailable को लागि।",
+        jp: "`ShouldQueue` を実装したメールは `assertQueued()` でチェック。`assertSent()` は同期送信のみ。",
       },
     },
   ],
