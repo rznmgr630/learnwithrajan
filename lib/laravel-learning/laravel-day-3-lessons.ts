@@ -1048,4 +1048,14 @@ it('charges the customer', function () {
       explanation: "Route names have nothing to do with container resolution.",
     },
   ],
+  practice: [
+    "Build the payment exercise end to end: a `PaymentGateway` interface, a `StripePaymentGateway` that implements it, a binding in `AppServiceProvider::register()`, and a `CheckoutController` that type-hints the interface and calls `charge(100)`. Write no `new` inside the controller.",
+    "Now add `PayPalPaymentGateway`, change only the binding, and confirm the route still works. If you had to touch `CheckoutController`, something is still wired to the implementation.",
+    "Write a middleware that logs the URL of every request, register it, and watch it run before your controller does.",
+    "Delete your binding, hit the route, and read the `Target [PaymentGateway] is not instantiable` error properly. Recognising it on sight saves you time later.",
+    "Bind a class with `bind()`, resolve it twice in one request, and compare `spl_object_id()` on both. Switch the binding to `singleton()` and compare again.",
+    "Inject a dependency into an Artisan command through `handle()` and run it, so you see the container working outside a web request.",
+    "Write a `FakePaymentGateway` that records its charges, bind it in a test, and assert the controller charged 100. Notice that the controller under test is the real one.",
+    "Stretch: write a small service, register it in a provider, and expose it through a facade. Facades are not covered until later, so treat this as a reach and lean on the Laravel docs.",
+  ],
 };

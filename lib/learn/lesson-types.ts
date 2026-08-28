@@ -31,4 +31,6 @@ export interface LessonDay {
   /** Optional recall prompts shown between the lessons and the final quiz. */
   selfCheck?: SelfCheckItem[];
   finalQuiz: LessonQuizQuestion[];
+  /** Optional hands-on tasks shown at the bottom, after the final quiz. */
+  practice?: LocalizedString[];
 }
