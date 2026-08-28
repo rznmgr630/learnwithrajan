@@ -15,7 +15,7 @@ function deserialize(raw: string): Set<number> | null {
     const arr = JSON.parse(raw) as unknown;
     if (!Array.isArray(arr)) return null;
     return new Set(
-      arr.filter((n): n is number => typeof n === "number" && n >= 1 && n <= LARAVEL_TOTAL_DAYS),
+      arr.filter((n): n is number => typeof n === "number" && n >= 0 && n <= LARAVEL_TOTAL_DAYS),
     );
   } catch {
     return null;
@@ -60,7 +60,8 @@ export function useLaravelProgress() {
   const snapshot = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const completed = useMemo(() => new Set(JSON.parse(snapshot) as number[]), [snapshot]);
 
-  const completedCount = completed.size;
+  // Phase 0 (day 0) is preparation, not one of the counted days.
+  const completedCount = completed.has(0) ? completed.size - 1 : completed.size;
   const percent = useMemo(
     () => Math.round((Math.min(completedCount, LARAVEL_TOTAL_DAYS) / LARAVEL_TOTAL_DAYS) * 100),
     [completedCount],

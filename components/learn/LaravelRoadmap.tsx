@@ -6,6 +6,8 @@ import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
+import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import { LARAVEL_PHASE_0_LESSONS } from "@/lib/laravel-learning/laravel-phase-0-lessons";
 import { LARAVEL_ROADMAP_WEEKS, LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 
@@ -16,6 +18,7 @@ export function LaravelRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useLaravelProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
+  const [lessonOpen, setLessonOpen] = useState(false);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / LARAVEL_TOTAL_DAYS) * 100))}%`,
@@ -121,7 +124,7 @@ export function LaravelRoadmap() {
                         type="button"
                         aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                         className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                        onClick={() => setDetailDay(d.day)}
+                        onClick={() => (d.day === 0 ? setLessonOpen(true) : setDetailDay(d.day))}
                       >
                         <span
                           className={[
@@ -179,6 +182,15 @@ export function LaravelRoadmap() {
           {t("laravelRoadmap.bottomBlurb")}
         </p>
       </div>
+
+      {lessonOpen && (
+        <LessonDayDetail
+          open
+          onClose={() => setLessonOpen(false)}
+          day={LARAVEL_PHASE_0_LESSONS}
+          track="laravel"
+        />
+      )}
 
       <DayDetailPanel
         key={detailDay === null ? "closed" : `laravel-day-${detailDay}`}

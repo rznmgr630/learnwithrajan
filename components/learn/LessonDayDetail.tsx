@@ -8,7 +8,7 @@ import { LessonVideos } from "@/components/learn/LessonVideos";
 import { LessonQuiz } from "@/components/learn/LessonQuiz";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
-import type { JsLesson, JsLessonDay } from "@/lib/js-learning/js-lesson-types";
+import type { Lesson, LessonDay } from "@/lib/learn/lesson-types";
 import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 type Tab = "explanation" | "diagram" | "code" | "takeaways" | "mistakes" | "quiz";
@@ -97,7 +97,7 @@ function LessonAccordionItem({
   onToggle,
   quizIdPrefix,
 }: {
-  lesson: JsLesson;
+  lesson: Lesson;
   index: number;
   locale: "en" | "np" | "jp";
   expanded: boolean;
@@ -235,23 +235,26 @@ function LessonAccordionItem({
   );
 }
 
-export function JsLessonDayDetail({
+export function LessonDayDetail({
   open,
   onClose,
   day,
   previousDay,
   nextDay,
   onNavigateDay,
+  track = "js",
 }: {
   open: boolean;
   onClose: () => void;
-  day: JsLessonDay;
+  day: LessonDay;
   previousDay?: LessonNavTarget | null;
   nextDay?: LessonNavTarget | null;
   onNavigateDay?: (day: number) => void;
+  /** Namespaces stored quiz scores, so two tracks' day 3 do not collide. */
+  track?: string;
 }) {
   const { locale } = useLocale();
-  const quizIdPrefix = `js-day-${day.day}`;
+  const quizIdPrefix = `${track}-day-${day.day}`;
   const [expandedLesson, setExpandedLesson] = useState<number | null>(0);
   const { getResult } = useJsLessonQuizProgress();
   const finalResult = getResult(`${quizIdPrefix}.final`);

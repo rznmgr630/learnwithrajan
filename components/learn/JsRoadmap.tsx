@@ -6,7 +6,7 @@ import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
-import { JsLessonDayDetail } from "@/components/learn/JsLessonDayDetail";
+import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import { JS_ROADMAP_WEEKS, JS_TOTAL_DAYS } from "@/lib/js-learning/js-challenge-data";
 import { useJsProgress } from "@/hooks/use-js-progress";
@@ -273,7 +273,7 @@ export function JsRoadmap() {
       />
 
       {lessonDay !== null ? (
-        <JsLessonDayDetail
+        <LessonDayDetail
           key={`js-lesson-day-${lessonDay}`}
           open
           onClose={() => setLessonDay(null)}
