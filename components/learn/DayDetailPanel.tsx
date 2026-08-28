@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { DayDetailBlockRenderer } from "@/components/learn/DayDetailBlockRenderer";
 import type { RoadmapDiagramTrack } from "@/components/learn/DayDetailBlockRenderer";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
+import { SelfCheckList } from "@/components/learn/SelfCheckList";
 import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadmap-detail";
 import { localizeGitRoadmapDayDetail } from "@/lib/git-learning/localize-git-roadmap-detail";
 import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
@@ -26,7 +27,6 @@ import {
   resolveReactNativeDayDetail,
 } from "@/lib/react-native-learning/react-native-challenge-data";
 import { localizeReactNativeRoadmapDayDetail } from "@/lib/react-native-learning/localize-react-native-roadmap-detail";
-import { splitFaqAnswerIntoParagraphs } from "@/lib/faq-answer-paragraphs";
 import { LessonQuiz } from "@/components/learn/LessonQuiz";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
@@ -132,11 +132,6 @@ export function DayDetailPanel({
                   ? localizeDevopsRoadmapDayDetail(detailRaw, locale)
                   : localizeRoadmapDayDetail(detailRaw, locale)
     : null;
-  const [openFaq, setOpenFaq] = useState<Set<number>>(() => new Set());
-
-  useEffect(() => {
-    setOpenFaq(new Set());
-  }, [dayNumber, track]);
 
   useEffect(() => {
     if (!open) return;
@@ -248,16 +243,12 @@ export function DayDetailPanel({
             </div>
           ))}
 
-          {faq.length > 0 ? (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {t("backendDetail.selfCheckHeading")}
-                <span className="ml-1 font-mono text-[11px] font-normal text-[var(--faint)]">
-                  ({faq.length})
-                </span>
-              </h3>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                {track === "git"
+          <SelfCheckList
+            key={`${track}-${dayNumber}`}
+            items={faq}
+            idPrefix={`faq-${dayNumber}`}
+            heading={t("backendDetail.selfCheckHeading")}
+            hint={track === "git"
                   ? t("gitDetail.selfCheckHint")
                   : track === "react"
                     ? t("reactDetail.selfCheckHint")
@@ -272,81 +263,8 @@ export function DayDetailPanel({
                             : track === "devops"
                               ? t("devopsDetail.selfCheckHint")
                               : t("backendDetail.selfCheckHint")}
-              </p>
-              <ul className="mt-3 space-y-2" role="list">
-                {faq.map((item, i) => {
-                  const expanded = openFaq.has(i);
-                  return (
-                    <li
-                      key={i}
-                      className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_28%,transparent)]"
-                    >
-                      <button
-                        type="button"
-                        aria-expanded={expanded}
-                        id={`faq-q-${dayNumber}-${i}`}
-                        aria-controls={`faq-a-${dayNumber}-${i}`}
-                        onClick={() => {
-                          setOpenFaq((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(i)) next.delete(i);
-                            else next.add(i);
-                            return next;
-                          });
-                        }}
-                        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-[var(--text)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)]"
-                      >
-                        <span className="min-w-0 leading-snug">
-                          <span className="mr-2 font-mono text-xs text-[var(--muted)] tabular-nums">
-                            {String(i + 1).padStart(2, "0")}.
-                          </span>
-                          <RichText text={stripLessonTimingFromTitle(item.question)} />
-                        </span>
-                        <svg
-                          className={`mt-0.5 h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                      {expanded ? (
-                        <div
-                          id={`faq-a-${dayNumber}-${i}`}
-                          role="region"
-                          aria-labelledby={`faq-q-${dayNumber}-${i}`}
-                          className="border-t border-[var(--border)] px-4 py-3 text-sm leading-relaxed text-[var(--muted)]"
-                        >
-                          {item.tag ? (
-                            <p className="mb-3">
-                              <span className="inline-flex rounded-full border border-[var(--border)]/90 bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] px-2.5 py-0.5 text-xs font-medium text-[var(--text)]">
-                                <RichText text={item.tag} />
-                              </span>
-                            </p>
-                          ) : null}
-                          <div className="space-y-3">
-                            {splitFaqAnswerIntoParagraphs(item.answer).map((para, pi) => (
-                              <RichParagraph key={pi} text={para} />
-                            ))}
-                          </div>
-                          {item.callout ? (
-                            <blockquote className="mt-4 border-l-2 border-[var(--border)] pl-3 text-sm text-[var(--muted)]">
-                              <RichText text={item.callout} />
-                            </blockquote>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : null}
+            locale={locale}
+          />
 
           {detail.quiz && detail.quiz.length > 0 ? (
             <div>
