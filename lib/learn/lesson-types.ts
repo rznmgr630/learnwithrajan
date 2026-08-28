@@ -1,5 +1,4 @@
 import type { LocalizedString } from "@/lib/i18n/types";
-import type { SelfCheckItem } from "@/lib/learn/self-check-types";
 
 export interface LessonQuizQuestion {
   question: LocalizedString;
@@ -28,8 +27,6 @@ export interface LessonDay {
   totalMinutes: number;
   difficulty: LocalizedString;
   lessons: Lesson[];
-  /** Optional recall prompts shown between the lessons and the final quiz. */
-  selfCheck?: SelfCheckItem[];
   finalQuiz: LessonQuizQuestion[];
   /** Optional build slice shown at the bottom, after the final quiz. */
   project?: LessonProject;
