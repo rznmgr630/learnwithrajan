@@ -65,9 +65,9 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "リクエストライフサイクルとサービスコンテナ（詳細）",
   },
   4: {
-    en: "Routes — verbs, parameters, names, groups & resource routes",
-    np: "रूट — verbs, params, नाम, समूह र resource routes",
-    jp: "ルート（HTTP・パラメータ・名前・グループ・リソース）",
+    en: "Routing — verbs, parameters, names, groups & model binding",
+    np: "Routing — verbs, params, नाम, समूह र model binding",
+    jp: "ルーティング（HTTP・パラメータ・名前・グループ・モデル束縛）",
   },
   5: {
     en: "Controllers, Form Requests, resource controllers & HTTP responses",
@@ -174,9 +174,14 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
 const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
   "laravel-w0": { en: "Phase 0 · Preparation", np: "Phase 0 · तयारी", jp: "Phase 0 · 準備" },
   "laravel-w1": {
-    en: "Foundation & routing",
-    np: "आधार र रूटिङ",
-    jp: "基礎とルーティング",
+    en: "Foundations",
+    np: "आधार",
+    jp: "基礎",
+  },
+  "laravel-w1b": {
+    en: "Phase 2 · The Basics",
+    np: "Phase 2 · आधारभूत",
+    jp: "Phase 2 · 基本",
   },
   "laravel-w2": {
     en: "Controllers & Blade",
