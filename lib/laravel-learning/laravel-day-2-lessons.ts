@@ -720,6 +720,73 @@ $service = app(PaymentGateway::class);
       ],
     },
   ],
+  selfCheck: [
+    {
+      question: "What lives in `app/`?",
+      answer: "Your application's PHP code: models, controllers, middleware, jobs, events, services and providers.\n\nThis is where you spend most of your time. Laravel's own framework code is <b>not</b> here, it is in `vendor/`.",
+    },
+    {
+      question: "What is in `vendor/`, and why should you never edit it?",
+      answer: "`vendor/` holds every package Composer installed, including Laravel itself.\n\nNever edit it because Composer owns it. The next `composer install` or `composer update` overwrites your change without warning, and the change is not in git, so nobody else has it either. When you need different behaviour, change your own code or configuration.",
+    },
+    {
+      question: "Where do routes live, and what is a route?",
+      answer: "In `routes/`. A route is a rule connecting a URL to the code that answers it.\n\n`web.php` holds browser routes. Depending on the application you may also see `console.php` for Artisan commands and an API route file.",
+    },
+    {
+      question: "What does `database/` hold?",
+      answer: "Three things: <b>migrations</b> (the shape of your tables, described in PHP), <b>factories</b> (recipes for generating fake records) and <b>seeders</b> (code that inserts starting data).\n\nA migration means you create tables in code that lives in git, instead of clicking around a database tool that nobody else can replay.",
+    },
+    {
+      question: "Why must the web server point at `public/` rather than the project root?",
+      answer: "Because `public/` is the only directory that is safe to expose. Everything sensitive sits outside it: `.env` with your database password and API keys, `config/`, `database/` and all of `app/`.\n\nPoint the server at the project root and a request for `/.env` returns your credentials in plain text. This is the single most consequential setup detail in a Laravel project.",
+      callout: "If you can fetch `/.env` over HTTP, stop and fix the document root before anything else.",
+    },
+    {
+      question: "You are following a tutorial that says to edit `app/Http/Kernel.php`, but the file does not exist. What is going on?",
+      answer: "Nothing is broken. Modern Laravel removed that file and moved what it did into `bootstrap/app.php`.\n\nA tutorial mentioning `app/Http/Kernel.php` is telling you its age. Look for the same idea in `bootstrap/app.php` instead of trying to recreate the old file.",
+    },
+    {
+      question: "What is configured in `bootstrap/app.php`?",
+      answer: "The application's wiring: routing, middleware and exception handling.\n\nIt is the file you open when you want to register a middleware globally, change how errors are reported, or adjust which route files load.",
+    },
+    {
+      question: "What is middleware, in one sentence?",
+      answer: "Code that runs before and after your controller, and can inspect the request, change it, or stop it entirely.\n\nAuthentication is the obvious example: the middleware checks whether someone is logged in, and if not the controller never runs at all.",
+    },
+    {
+      question: "Describe the chain from a value in `.env` to your application code.",
+      answer: "`.env` holds the raw value. A file in `config/` reads it with `env()` and gives it a name. Your code reads that name with `config()`.\n\n```text\n.env  →  config/*.php via env()  →  your code via config()\n```\n\nThe indirection is what lets configuration be cached later.",
+    },
+    {
+      question: "Why should `env()` only ever appear inside `config/` files?",
+      answer: "Because once you run `config:cache`, Laravel loads one pre-built configuration file and stops reading `.env` at all. Any `env()` call outside `config/` then returns `null`.\n\nThe symptom is nasty: the code works locally, and silently breaks in production where configuration is cached. Read configuration with `config()` and the problem cannot happen.",
+    },
+    {
+      question: "What does `php artisan config:cache` do, and what does it break?",
+      answer: "It combines every file in `config/` into one cached file, so Laravel does not read them individually on each request. It is a production speed-up.\n\nWhat it breaks is `env()` outside config files, as above, and it also means edits to `.env` have no effect until you clear the cache.",
+    },
+    {
+      question: "You edited `.env`, reloaded the page, and nothing changed. What do you check?",
+      answer: "Almost always a stale configuration cache. Run `php artisan config:clear`.\n\nIf you are running `php artisan serve`, also restart it, since the process read your environment when it started.",
+    },
+    {
+      question: "What is the Service Container?",
+      answer: "Laravel's system for creating and handing out the objects your application needs.\n\nWhen a controller says it needs a `PaymentService`, the container is what builds one and passes it in. You have been using it since your first controller without having to think about it.",
+    },
+    {
+      question: "What is Dependency Injection, in plain terms?",
+      answer: "Giving a class the objects it needs from outside, instead of letting it build them itself.\n\nIn practice: type-hint what you need in the constructor rather than writing `new` inside a method. The class stops being responsible for knowing how its dependencies get built.",
+    },
+    {
+      question: "Why does an interface need a binding when a normal class does not?",
+      answer: "A normal class can be built: the container reads its type hints and constructs it. An interface has no code to run and may have several implementing classes.\n\nSo the container genuinely cannot guess which one you meant, and you have to say: `$this->app->bind(PaymentGateway::class, StripePaymentGateway::class)`.",
+    },
+    {
+      question: "What is the difference between `register()` and `boot()` in a service provider?",
+      answer: "`register()` is where you declare bindings. Nothing else is guaranteed to exist yet, so it should only tell the container what to hand out.\n\n`boot()` runs after every provider has registered, so by then the whole application is wired up. Anything that needs another service already available belongs there.",
+    },
+  ],
   finalQuiz: [
     {
       question: "Where does most of your application's PHP code live?",

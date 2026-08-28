@@ -1,3 +1,4 @@
+import type { SelfCheckItem } from "@/lib/learn/self-check-types";
 import type { LocalizedString } from "@/lib/i18n/types";
 import { backendDayTitle, backendTags, backendWeekTitle } from "./backend-learning/backend-roadmap-i18n";
 import { DAY_1_DETAIL } from "./backend-learning/day-1-detail";
@@ -245,14 +246,7 @@ export interface RoadmapDayDetailSection {
 }
 
 /** One self-check question with a hidden answer (accordion). */
-export interface RoadmapDayFaqItem {
-  question: LocalizedString;
-  answer: LocalizedString;
-  /** Optional pill above the answer (e.g. topic label). */
-  tag?: LocalizedString;
-  /** Optional left-border quote below the main answer paragraphs. */
-  callout?: LocalizedString;
-}
+export type RoadmapDayFaqItem = SelfCheckItem;
 
 /** One multiple-choice question for a day's closing quiz. */
 export interface RoadmapDayQuizQuestion {
