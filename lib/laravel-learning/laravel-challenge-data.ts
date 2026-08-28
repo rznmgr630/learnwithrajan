@@ -77,8 +77,13 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
       laravelDayRow(1, ["foundation", "tooling"]),
       laravelDayRow(2, ["foundation", "tooling"]),
       laravelDayRow(3, ["foundation", "http"]),
-      laravelDayRow(4, ["routing", "http"]),
     ],
+  },
+  {
+    id: "laravel-w1b",
+    title: laravelWeekTitle("laravel-w1b"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_86%,#818cf8)]",
+    days: [laravelDayRow(4, ["routing", "http"])],
   },
   {
     id: "laravel-w2",
