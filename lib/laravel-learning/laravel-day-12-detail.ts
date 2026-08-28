@@ -3,410 +3,369 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_12_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "These are two different questions every app needs to answer:\n\n<b>Authentication = who are you?</b>\n• Are you logged in? Who is this user?\n  ↳ Covered in Day 11 — sessions, tokens, Breeze\n\n<b>Authorization = what can you do?</b>\n• Can this logged-in user edit this post? Delete someone else's account?\n  ↳ That's what Day 12 covers — Gates and Policies\n\n<b>API Resources</b> — a separate but related topic: they control exactly what your JSON responses look like, so you don't accidentally expose sensitive model fields to API consumers.",
-      np: "Auth = who. Authz = what. Gate र Policy authz को लागि। API Resource = clean JSON।",
-      jp: "認証は「誰か」、認可は「何ができるか」。Gate はシンプルなクロージャ、Policy はモデル単位のクラス。API Resource で JSON を整形。",
+      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
+      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
+      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Gates — simple closure-based authorization",
-        np: "Gate — closure-based authorization",
-        jp: "Gate — クロージャベースの認可",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A <b>Gate</b> is the simplest form of authorization — just a closure that returns `true` (allowed) or `false` (denied).\n\nThink of it like a bouncer at a door: you describe the rule once ('only admins and editors can enter'), then check it anywhere in your app.\n\n• Gates are defined in a service provider, usually inside `AppServiceProvider::boot()`\n• The first argument is always the authenticated user — Laravel injects it automatically\n• You can pass extra arguments (like a model) as additional parameters\n• Use Gates for one-off actions that don't belong to a specific model\n  ↳ Example: 'can this user view the analytics dashboard?' — not tied to any single record",
-            np: "Gate ले simple closure मा authorization। `AppServiceProvider::boot()` मा define।",
-            jp: "Gate はクロージャで認可ルールを定義。`AppServiceProvider::boot()` に記述するのが一般的。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Defining and checking Gates", np: "Gate define र check", jp: "Gate の定義と確認" },
-          code: `// app/Providers/AppServiceProvider.php
-use Illuminate\\Support\\Facades\\Gate;
-use App\\Models\\{Post, User};
-
-public function boot(): void
-{
-    // Simple gate — no model
-    Gate::define('view-reports', function (User $user): bool {
-        return in_array($user->role, ['admin', 'editor']);
-    });
-
-    // Gate with a model argument
-    Gate::define('update-post', function (User $user, Post $post): bool {
-        return $user->id === $post->user_id;
-    });
-
-    // Gate with before hook (super-admin bypass)
-    Gate::before(function (User $user, string $ability): ?bool {
-        if ($user->isSuperAdmin()) {
-            return true; // short-circuit all checks
-        }
-        return null;     // defer to normal gates
-    });
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Checking Gates in controllers & Blade", np: "Check गर्ने तरिका", jp: "Gate のチェック方法" },
-          code: `// In a controller
-use Illuminate\\Support\\Facades\\Gate;
-
-// Returns bool — use for conditional logic
-if (Gate::allows('update-post', $post)) {
-    // authorized
-}
-
-if (Gate::denies('update-post', $post)) {
-    abort(403);
-}
-
-// Throws HttpException 403 automatically
-Gate::authorize('update-post', $post);
-
-// Via the request user (equivalent to Gate::allows)
-if ($request->user()->can('update-post', $post)) {
-    // authorized
-}
-
-// In Blade
-@can('update-post', $post)
-    <button>Edit</button>
-@elsecan('delete-post', $post)
-    <button>Delete</button>
-@endcan
-
-@cannot('view-reports')
-    <p>Access denied.</p>
-@endcannot`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Policies — model-bound authorization",
-        np: "Policy — model-bound authorization",
-        jp: "Policy — モデルに紐づく認可",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When you have many rules that all relate to one model — 'who can view a Post, create a Post, update a Post, delete a Post?' — putting them all in individual Gates gets messy fast. That's what <b>Policies</b> are for.\n\nA Policy is a PHP class where each method is one authorization rule for that model:\n• `viewAny` — can the user see the list?\n• `view` — can the user see this specific record?\n• `create` — can the user create a new one?\n• `update` — can the user edit this record?\n• `delete` — can the user delete this record?\n\nLaravel auto-discovers policies using naming convention: `Post` model → `PostPolicy` class. No manual registration needed.",
-            np: "Policy ले model को सबै authorization logic एकठाउँ। `make:policy` ले generate।",
-            jp: "Policy は 1 モデルの認可ロジックをクラスにまとめたもの。命名規則で自動検出される。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Generate & implement a Policy", np: "Policy generate", jp: "Policy の生成と実装" },
-          code: `php artisan make:policy PostPolicy --model=Post`,
-        },
-        {
-          type: "code",
-          title: { en: "PostPolicy class", np: "Policy class", jp: "Policy クラス" },
-          code: `// app/Policies/PostPolicy.php
-namespace App\\Policies;
-
-use App\\Models\\{Post, User};
-use Illuminate\\Auth\\Access\\HandlesAuthorization;
-
-class PostPolicy
-{
-    use HandlesAuthorization;
-
-    /** Any user can list posts */
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
-
-    /** Any authenticated user can view a published post */
-    public function view(User $user, Post $post): bool
-    {
-        return $post->published || $user->id === $post->user_id;
-    }
-
-    /** Any authenticated user can create */
-    public function create(User $user): bool
-    {
-        return true;
-    }
-
-    /** Only the owner can update */
-    public function update(User $user, Post $post): bool
-    {
-        return $user->id === $post->user_id;
-    }
-
-    /** Only the owner or an admin can delete */
-    public function delete(User $user, Post $post): bool
-    {
-        return $user->id === $post->user_id || $user->role === 'admin';
-    }
-
-    public function restore(User $user, Post $post): bool
-    {
-        return $user->role === 'admin';
-    }
-
-    public function forceDelete(User $user, Post $post): bool
-    {
-        return $user->role === 'admin';
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Using policies in controllers & Blade", np: "Controller र Blade मा", jp: "コントローラと Blade での使用" },
-          code: `// Controller — throws 403 if policy denies
-class PostController extends Controller
-{
-    public function update(Request $request, Post $post): RedirectResponse
-    {
-        $this->authorize('update', $post); // uses PostPolicy::update
-
-        $post->update($request->validated());
-        return redirect()->route('posts.show', $post);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $this->authorize('create', Post::class); // no model instance needed
-        // ...
-    }
-}
-
-// Route-model binding with middleware approach
-Route::put('/posts/{post}', [PostController::class, 'update'])
-    ->middleware('can:update,post'); // auto-resolves policy
-
-// Blade directives
-@can('update', $post)
-    <a href="{{ route('posts.edit', $post) }}">Edit</a>
-@endcan
-
-@can('delete', $post)
-    <form method="POST" action="{{ route('posts.destroy', $post) }}">
-        @csrf @method('DELETE')
-        <button>Delete</button>
-    </form>
-@endcan`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Need to manage roles and permissions from a database — so you can assign or revoke them at runtime without deploying code? The <b>Spatie Laravel Permission</b> package is the standard choice. It adds `assignRole()`, `hasRole()`, `givePermissionTo()`, and `can()` methods backed by database tables.",
-            np: "Roles/permissions को लागि Spatie package। DB मा store।",
-            jp: "大規模な RBAC には Spatie Laravel Permission パッケージが便利。DB ベースで権限を管理。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "API Resources — transform Eloquent to JSON",
-        np: "API Resource — Eloquent लाई JSON बनाउने",
-        jp: "API Resource — Eloquent を JSON に変換",
+        en: "Auth guards & session-based login",
+        np: "Auth guard र session login",
+        jp: "Auth ガードとセッションログイン",
       },
       blocks: [
         {
           type: "diagram",
-          id: "laravel-api-resource",
+          id: "laravel-auth-guard",
         },
         {
           type: "paragraph",
           text: {
-            en: "When you return an Eloquent model directly from a controller, every column in the database gets sent to the client — including things like `password`, `remember_token`, or internal timestamps you'd rather keep private.\n\n<b>API Resources</b> sit between your models and your JSON responses. They are a transformation layer where you decide exactly:\n• Which fields to include (and which to hide)\n• How to rename or reformat fields\n• Which relationships to include (and only if they're already loaded, to avoid N+1 queries)\n• Which fields to show only to certain users (like admins)\n\nThis keeps your API clean, consistent, and safe — your internal database structure stays private.",
-            np: "API Resource ले model र JSON बीच layer। `toArray()` मा field control।",
-            jp: "API Resource は Eloquent とレスポンスの間の変換レイヤー。公開フィールドを完全にコントロール。",
+            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
+            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
+            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
           },
         },
         {
           type: "code",
-          title: { en: "Generate and implement a Resource", np: "Resource generate", jp: "Resource の生成と実装" },
-          code: `php artisan make:resource PostResource
-php artisan make:resource PostCollection  # or use ::collection()`,
-        },
-        {
-          type: "code",
-          title: { en: "PostResource class", np: "PostResource", jp: "PostResource クラス" },
-          code: `// app/Http/Resources/PostResource.php
-namespace App\\Http\\Resources;
+          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
 
-use Illuminate\\Http\\Request;
-use Illuminate\\Http\\Resources\\Json\\JsonResource;
-
-class PostResource extends JsonResource
-{
-    public function toArray(Request $request): array
-    {
-        return [
-            'id'         => $this->id,
-            'title'      => $this->title,
-            'slug'       => $this->slug,
-            'body'       => $this->body,
-            'published'  => $this->published_at?->toIso8601String(),
-            'author'     => [
-                'id'   => $this->user->id,
-                'name' => $this->user->name,
-            ],
-
-            // Only include 'views' for admin users
-            'views' => $this->when(
-                $request->user()?->role === 'admin',
-                $this->view_count
-            ),
-
-            // Only include 'comments' if already eager-loaded (avoids N+1)
-            'comments' => CommentResource::collection(
-                $this->whenLoaded('comments')
-            ),
-
-            // Merge additional fields conditionally
-            $this->mergeWhen($this->trashed(), [
-                'deleted_at' => $this->deleted_at,
-            ]),
-
-            'created_at' => $this->created_at->toIso8601String(),
-        ];
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Returning Resources from controllers", np: "Controller मा return", jp: "コントローラで Resource を返す" },
-          code: `use App\\Http\\Resources\\PostResource;
-use App\\Models\\Post;
-
-class PostController extends Controller
-{
-    // Single resource
-    public function show(Post $post): PostResource
-    {
-        $post->load('comments', 'user');
-        return new PostResource($post);
-    }
-
-    // Collection (adds 'data' wrapper automatically)
-    public function index(): AnonymousResourceCollection
-    {
-        $posts = Post::with('user')->latest()->paginate(15);
-        return PostResource::collection($posts);
-        // Pagination metadata is included automatically
-    }
+// Check if a user is logged in
+if (Auth::check()) {
+    $user = Auth::user();   // returns Authenticatable|null
+    $id   = Auth::id();     // returns int|null
 }
 
-// JSON response for single resource:
-// { "data": { "id": 1, "title": "...", ... } }
+// Attempt login (returns bool)
+$credentials = ['email' => $email, 'password' => $password];
+if (Auth::attempt($credentials, $remember)) {
+    $request->session()->regenerate();   // prevent session fixation
+    return redirect()->intended('/dashboard');
+}
 
-// JSON response for collection with pagination:
-// {
-//   "data": [ {...}, {...} ],
-//   "links": { "first": "...", "next": "...", ... },
-//   "meta": { "current_page": 1, "total": 42, ... }
-// }`,
+// Manual login (e.g., after registration)
+Auth::login($user);
+Auth::loginUsingId(1);
+
+// Logout
+Auth::logout();
+$request->session()->invalidate();
+$request->session()->regenerateToken();`,
         },
         {
           type: "paragraph",
           text: {
-            en: "For <b>API versioning</b>, group your routes under a version prefix and keep controllers in versioned namespaces.\n\n• Routes go in: `routes/api/v1.php`\n• Controllers live in: `App\\Http\\Controllers\\Api\\V1\\`\n• You can use different Resource classes per version if the response shape changes between versions\n\nThis way, old API clients keep working on `v1` while new clients use `v2`.",
-            np: "API versioning: `v1` prefix र versioned namespace।",
-            jp: "API バージョニングは `v1` プレフィックスと名前空間で管理。バージョンごとに Resource クラスを切り替えることもできます。",
+            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
+            np: "`auth` middleware route सुरक्षित गर्छ।",
+            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
           },
         },
         {
           type: "code",
-          title: { en: "API versioning route setup", np: "API versioning", jp: "API バージョン設定" },
-          code: `// routes/api.php
-use App\\Http\\Controllers\\Api\\V1\\PostController as V1PostController;
-use App\\Http\\Controllers\\Api\\V2\\PostController as V2PostController;
-
-Route::prefix('v1')->group(function () {
-    Route::apiResource('posts', V1PostController::class);
+          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
+          code: `// routes/web.php
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
+    Route::resource('posts', PostController::class);
 });
 
-Route::prefix('v2')->group(function () {
-    Route::apiResource('posts', V2PostController::class);
+// Email-verified gate
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/billing', BillingController::class);
+});
+
+// API guard (Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/api/user', fn (Request $request) => $request->user());
 });`,
         },
       ],
     },
     {
       title: {
-        en: "Sanctum API tokens in practice",
-        np: "Sanctum API token व्यवहारमा",
-        jp: "Sanctum API トークンの実践",
+        en: "Laravel Breeze install & what it gives you",
+        np: "Breeze install र features",
+        jp: "Breeze のインストールと提供機能",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Here's the full flow of a typical token-authenticated API:\n\n• Client sends `POST /api/login` with email and password\n• Laravel verifies credentials, issues a token, returns it in the response\n• Client stores the token and sends it as `Authorization: Bearer <token>` on every subsequent request\n• API controllers return <b>API Resources</b> so responses are clean and consistent\n\nIf the API will be called from a web browser on a different domain, you also need to configure CORS to allow that domain.",
-            np: "Login → token → Bearer header → API Resource response। Browser को लागि CORS।",
-            jp: "ログイン → トークン取得 → Bearer ヘッダーで送信 → API Resource で応答。ブラウザは CORS 設定が必要。",
+            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
+            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
+            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
           },
         },
         {
           type: "code",
-          title: { en: "Full Sanctum API auth flow", np: "Sanctum flow", jp: "Sanctum 認証フロー" },
-          code: `// routes/api.php
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
+          code: `# 1. Require the package
+composer require laravel/breeze --dev
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', fn (Request $request) => new UserResource($request->user()));
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::apiResource('posts', PostController::class);
-});
+# 2. Scaffold (choose a stack)
+php artisan breeze:install blade        # Blade + Alpine.js (default)
+php artisan breeze:install livewire     # Livewire full-page
+php artisan breeze:install react        # Inertia + React
+php artisan breeze:install vue          # Inertia + Vue
+php artisan breeze:install api          # API-only (no views, for SPAs)
 
-// app/Http/Controllers/Api/AuthController.php
-class AuthController extends Controller
-{
-    public function login(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+# 3. Install frontend dependencies & build
+npm install
+npm run dev
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        $user  = Auth::user();
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'user'  => new UserResource($user),
-            'token' => $token,
-        ]);
-    }
-
-    public function logout(Request $request): JsonResponse
-    {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logged out successfully']);
-    }
-}
-
-// config/cors.php — allow your SPA origin
-'allowed_origins' => ['https://app.example.com'],
-'supports_credentials' => true,`,
+# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
+php artisan migrate`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
+              np: "Login — rate limiting सहित।",
+              jp: "ログイン — レート制限（5回/分）付き。",
+            },
+            {
+              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
+              np: "Registration — `bcrypt` पासवर्ड।",
+              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
+            },
+            {
+              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
+              np: "Password reset — signed mail।",
+              jp: "パスワードリセット — 署名付きメールで送信。",
+            },
+            {
+              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
+              np: "Email verify — `MustVerifyEmail` interface।",
+              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
+            },
+            {
+              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
+              np: "Profile edit पनि।",
+              jp: "プロフィール編集・アカウント削除もあり。",
+            },
+          ],
         },
         {
           type: "paragraph",
           text: {
-            en: "For a <b>same-domain SPA</b> (your React/Vue frontend is served from the same domain as the API), you can skip tokens entirely and use cookie-based auth instead:\n\n• Call `GET /sanctum/csrf-cookie` first — this sets the CSRF cookie in the browser\n• Then log in normally via `POST /login`\n• The browser automatically sends the session cookie with every request\n• No `Authorization: Bearer` header needed",
-            np: "SPA cookie auth: `/sanctum/csrf-cookie` पहिले call। Bearer token चाहिँदैन।",
-            jp: "SPA クッキー認証は `/sanctum/csrf-cookie` で初期化後、通常ログイン。Bearer 不要。",
+            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
+            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
+            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
           },
+        },
+        {
+          type: "code",
+          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
+use Illuminate\\Support\\Facades\\Hash;
+use App\\Models\\User;
+
+public function store(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'name'     => ['required', 'string', 'max:255'],
+        'email'    => ['required', 'email', 'unique:users'],
+        'password' => ['required', 'min:8', 'confirmed'],
+    ]);
+
+    $user = User::create([
+        'name'     => $validated['name'],
+        'email'    => $validated['email'],
+        'password' => Hash::make($validated['password']),
+    ]);
+
+    Auth::login($user);
+
+    return redirect('/dashboard');
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanctum: API tokens & SPA auth",
+        np: "Sanctum: token र SPA auth",
+        jp: "Sanctum: API トークンと SPA 認証",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
+            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
+            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
+          code: `# Install (already included in Laravel 11 by default)
+composer require laravel/sanctum
+
+# Publish config + migrations
+php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
+
+php artisan migrate`,
+        },
+        {
+          type: "code",
+          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
+          code: `// app/Models/User.php
+use Laravel\\Sanctum\\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
+          code: `// Issue a token on login
+public function login(Request $request): JsonResponse
+{
+    $user = User::where('email', $request->email)->first();
+
+    if (! $user || ! Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
+    // Create token with optional abilities (scopes)
+    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
+                   ->plainTextToken;
+
+    return response()->json(['token' => $token]);
+}
+
+// Revoke current token (logout)
+public function logout(Request $request): JsonResponse
+{
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Logged out']);
+}
+
+// Revoke all tokens (e.g. "log out everywhere")
+$user->tokens()->delete();
+
+// Protect API routes — routes/api.php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+});`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "SPA cookie auth vs API token auth",
+            np: "दुई mode तुलना",
+            jp: "SPA クッキー vs API トークン",
+          },
+          headers: [
+            { en: "Mode", np: "Mode", jp: "モード" },
+            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
+            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
+            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
+          ],
+          rows: [
+            [
+              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
+              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
+              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
+              { en: "Yes", np: "हो", jp: "Yes" },
+            ],
+            [
+              { en: "API Token", np: "API Token", jp: "API トークン" },
+              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
+              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
+              { en: "No", np: "होइन", jp: "No" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Password reset & email verification",
+        np: "Password reset र email verification",
+        jp: "パスワードリセットとメール確認",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
+            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
+            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Password;
+
+// 1. Send reset link
+$status = Password::sendResetLink($request->only('email'));
+
+if ($status === Password::RESET_LINK_SENT) {
+    return back()->with('status', __($status));
+}
+return back()->withErrors(['email' => __($status)]);
+
+// 2. Reset password (called from reset form)
+$status = Password::reset(
+    $request->only('email', 'password', 'password_confirmation', 'token'),
+    function (User $user, string $password) {
+        $user->forceFill(['password' => Hash::make($password)])
+             ->setRememberToken(Str::random(60));
+        $user->save();
+        event(new PasswordReset($user));
+    }
+);
+
+return $status === Password::PASSWORD_RESET
+    ? redirect()->route('login')->with('status', __($status))
+    : back()->withErrors(['email' => __($status)]);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
+            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
+            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
+          code: `// app/Models/User.php
+use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
+
+class User extends Authenticatable implements MustVerifyEmail
+{
+    // Registration automatically sends verification email
+}
+
+// Check in code
+if (Auth::user()->hasVerifiedEmail()) {
+    // proceed
+}
+
+// Manually trigger verification email
+$user->sendEmailVerificationNotification();
+
+// routes/web.php — Breeze adds these automatically
+Route::get('/email/verify', EmailVerificationPromptController::class)
+    ->middleware('auth')
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->name('verification.verify');`,
         },
       ],
     },
@@ -414,74 +373,86 @@ class AuthController extends Controller
   faq: [
     {
       question: {
-        en: "What is the difference between a Gate and a Policy?",
-        np: "Gate र Policy फरक के हो?",
-        jp: "Gate と Policy の違いは？",
+        en: "What is the difference between Breeze, Jetstream, and Fortify?",
+        np: "Breeze, Jetstream, Fortify फरक के हो?",
+        jp: "Breeze・Jetstream・Fortify の違いは？",
       },
       answer: {
-        en: "Both are authorization tools — they check whether a user is allowed to do something. The difference is scope:\n\n• <b>Gates</b> — a single closure for a single one-off rule. Best for actions not tied to a specific model (e.g. 'can this user view the reports dashboard?').\n• <b>Policies</b> — a class that groups all the rules for one model. Best when you have multiple CRUD-style checks on the same model (view, create, update, delete).\n\nInternally, calling `$this->authorize('update', $post)` in a controller automatically resolves to `PostPolicy::update` — you don't need to register anything manually.",
-        np: "Gate = simple, model-agnostic। Policy = model-specific class। Controller मा `authorize()` ले auto resolve।",
-        jp: "Gate はシンプルなクロージャ、Policy はモデル単位のクラス。`authorize()` は Policy を自動解決。",
+        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
+        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
+        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
       },
     },
     {
       question: {
-        en: "How do I return a 403 from a policy?",
-        np: "Policy मा 403 कसरी फर्काउने?",
-        jp: "Policy から 403 を返す方法は？",
+        en: "Is Sanctum suitable for mobile apps?",
+        np: "Mobile app को लागि Sanctum ठीक छ?",
+        jp: "Sanctum はモバイルアプリに適していますか？",
       },
       answer: {
-        en: "Return `false` from a policy method. When you call `$this->authorize()` in a controller and the policy returns `false`, Laravel automatically throws a 403 `AuthorizationException`.\n\nIf you want to include a custom error message, return a `Response` object instead:\n`return Response::deny('You do not own this post.', 403)`\n\nNote: in Blade, `@can` simply hides or shows the HTML — it doesn't throw an exception.",
-        np: "`false` return गर्नु → 403। `Response::deny()` custom message।",
-        jp: "`false` を返すと 403 になる。`Response::deny('message')` でカスタムメッセージも可能。",
+        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
+        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
+        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
       },
     },
     {
       question: {
-        en: "Can `@can` check policies in Blade?",
-        np: "`@can` ले Blade मा policy check गर्छ?",
-        jp: "`@can` で Blade に Policy をチェックできますか？",
+        en: "How do I add roles to authenticated users?",
+        np: "User मा role कसरी थप्ने?",
+        jp: "認証済みユーザーにロールを追加する方法は？",
       },
       answer: {
-        en: "Yes. `@can('update', $post)` works exactly the same as `Gate::allows('update', $post)` — it resolves `PostPolicy::update` automatically.\n\n• Pass the model instance when checking model-bound rules: `@can('update', $post)`\n• Pass the class name when there's no instance yet (for create): `@can('create', App\\Models\\Post::class)`\n\n`@can` just shows or hides HTML — it doesn't abort the request. Always also check in the controller or use `$this->authorize()` to enforce the rule on the server side.",
-        np: "`@can('update', $post)` — Policy::update call। Model class pass गर्न सकिन्छ।",
-        jp: "`@can('update', $post)` は Gate と同じ仕組みで Policy を解決します。",
+        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 12) to authorize actions without needing a formal role system at all.",
+        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
+        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
       },
     },
     {
       question: {
-        en: "How do I add metadata to an API Resource response?",
-        np: "API Resource response मा metadata थप्ने?",
-        jp: "API Resource レスポンスにメタデータを追加する方法は？",
+        en: "What is the `remember_token` field for?",
+        np: "`remember_token` किस लागि?",
+        jp: "`remember_token` フィールドは何のためにあるの？",
       },
       answer: {
-        en: "Override the `with(Request $request): array` method in your Resource or ResourceCollection class. Whatever you return from `with()` appears alongside `data` at the top level of the JSON response.\n\nFor example: `return ['meta' => ['version' => 'v1', 'generated_at' => now()]]`\n\nAlternatively, in the controller you can call `->additional(['meta' => [...]])` when constructing the resource — useful when the metadata depends on something only the controller knows.",
-        np: "`with()` method override गर्नु वा `additional()` call।",
-        jp: "`with()` をオーバーライドするか、コントローラで `additional()` を呼ぶとメタデータを追加できます。",
+        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
+        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
+        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
       },
     },
     {
       question: {
-        en: "How do I version an API in Laravel?",
-        np: "Laravel मा API version कसरी?",
-        jp: "Laravel で API をバージョニングする方法は？",
+        en: "Can I have multiple auth guards?",
+        np: "धेरै auth guard राख्न मिल्छ?",
+        jp: "複数の認証ガードは持てますか？",
       },
       answer: {
-        en: "The simplest and most practical approach is <b>URL versioning</b>:\n\n• Prefix your routes: `Route::prefix('v1')->group(...)`\n• Keep controllers in versioned namespaces: `App\\Http\\Controllers\\Api\\V1\\`\n• Use separate Resource classes per version if the response shape changes\n\nAvoid header-based versioning (sending a version in HTTP headers) — it's harder to test, harder to debug in a browser, and harder to document.\n\nLaravel 11 supports loading dedicated route files per version via `bootstrap/app.php`.",
-        np: "URL prefix `v1`, `v2`। Versioned namespace। Header versioning सिफारिश होइन।",
-        jp: "URL プレフィックス `v1`/`v2` が最もシンプル。バージョン別に名前空間とリソースを分ける。",
+        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
+        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
+        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
       },
     },
     {
       question: {
-        en: "What is the `api_token` field vs Sanctum tokens?",
-        np: "`api_token` column र Sanctum tokens फरक?",
-        jp: "`api_token` カラムと Sanctum トークンの違いは？",
+        en: "How do I protect a route for specific user types?",
+        np: "विशेष user type को लागि route protect?",
+        jp: "特定ユーザータイプのみルートを保護する方法は？",
       },
       answer: {
-        en: "The old `api_token` column was Laravel's original built-in token system (`driver: token` in `config/auth.php`). It stored a single plain-text token directly in the `users` table — one token per user, no scopes, no revocation, no tracking. Very basic.\n\n<b>Sanctum</b> is the modern replacement. It uses a separate `personal_access_tokens` table and supports:\n• Multiple tokens per user (different apps, different devices)\n• Abilities (scopes) to limit what each token can do\n• Last-used tracking\n• Individual or bulk revocation\n\nNever use the legacy `api_token` approach in a new project.",
-        np: "`api_token` पुरानो simple approach। Sanctum ले `personal_access_tokens` table use गर्छ।",
-        jp: "`api_token` は古い単一トークン方式。Sanctum は複数トークン・スコープ・失効管理対応の現代的な仕組みです。",
+        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 12.",
+        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
+        jp: "カスタムミドルウェアか Gate/Policy（Day 12 参照）。`abort(403)` で弾く。",
+      },
+    },
+    {
+      question: {
+        en: "How do I test authentication in feature tests?",
+        np: "Feature test मा auth कसरी test गर्ने?",
+        jp: "フィーチャーテストで認証をテストする方法は？",
+      },
+      answer: {
+        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
+        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
+        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
       },
     },
   ],

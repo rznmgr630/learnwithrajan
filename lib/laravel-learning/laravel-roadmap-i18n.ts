@@ -52,113 +52,114 @@ export function laravelTags(slugs: [string, string]): RoadmapTag[] {
 }
 
 const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
+  1: { en: "Install and set up Laravel", np: "Laravel install र setup", jp: "Laravelの導入とセットアップ" },
   0: { en: "Phase 0 — Before You Start", np: "Phase 0 — सुरु गर्नुअघि", jp: "Phase 0 — はじめる前に" },
-  1: {
+  2: {
     en: "MVC, Composer, install, project layout & Service Container",
     np: "MVC, Composer, स्थापना, परियोजना र Service Container",
     jp: "MVC・Composer・インストール・構成・サービスコンテナ",
   },
-  2: {
+  3: {
     en: "Routes — verbs, parameters, names, groups & resource routes",
     np: "रूट — verbs, params, नाम, समूह र resource routes",
     jp: "ルート（HTTP・パラメータ・名前・グループ・リソース）",
   },
-  3: {
+  4: {
     en: "Controllers, Form Requests, resource controllers & HTTP responses",
     np: "Controllers, Form Request, resource controller र responses",
     jp: "コントローラ・Form Request・リソースコントローラ・レスポンス",
   },
-  4: {
+  5: {
     en: "Blade — inheritance, components, directives & includes",
     np: "Blade — inheritance, components, directive र include",
     jp: "Blade（継承・コンポーネント・ディレクティブ・インクルード）",
   },
-  5: {
+  6: {
     en: "Validation — built-in rules, custom rules & Form Request classes",
     np: "Validation — नियम, custom rule र Form Request",
     jp: "バリデーション（組み込みルール・カスタム・Form Request）",
   },
-  6: {
+  7: {
     en: "Middleware, Request object, responses & URL generation",
     np: "Middleware, Request, responses र URL generation",
     jp: "ミドルウェア・Request・レスポンス・URL 生成",
   },
-  7: {
+  8: {
     en: "Migrations, Query Builder, Eloquent models & CRUD patterns",
     np: "Migrations, Query Builder, Eloquent र CRUD",
     jp: "マイグレーション・クエリビルダ・Eloquent・CRUD",
   },
-  8: {
+  9: {
     en: "Session, flash data, caching & localization",
     np: "Session, flash, caching र localization",
     jp: "セッション・フラッシュ・キャッシュ・多言語",
   },
-  9: {
+  10: {
     en: "Eloquent relationships, eager loading & soft deletes",
     np: "Eloquent relationships, eager loading र soft deletes",
     jp: "Eloquent リレーション・Eager load・ソフトデリート",
   },
-  10: {
+  11: {
     en: "File storage, HTTP client, mail & Notifications",
     np: "File storage, HTTP client, mail र Notifications",
     jp: "ファイルストレージ・HTTP クライアント・メール・通知",
   },
-  11: {
+  12: {
     en: "Authentication — Breeze, Sanctum & user registration",
     np: "Authentication — Breeze, Sanctum र user registration",
     jp: "認証 — Breeze・Sanctum・ユーザー登録",
   },
-  12: {
+  13: {
     en: "Authorization — Gates, Policies & API Resources",
     np: "Authorization — Gates, Policies र API Resources",
     jp: "認可 — Gates・Policies・API リソース",
   },
-  13: {
+  14: {
     en: "Queues, Jobs, Events, Listeners & Task Scheduling",
     np: "Queues, Jobs, Events, Listeners र Task Scheduling",
     jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
   },
-  14: {
+  15: {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
-  15: {
+  16: {
     en: "Sanctum REST API — auth endpoints & full CRUD",
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
-  16: {
+  17: {
     en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
     np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
     jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
   },
-  17: {
+  18: {
     en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
     np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
     jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
   },
-  18: {
+  19: {
     en: "Custom Artisan commands — arguments, options & console I/O",
     np: "Custom Artisan commands — arguments, options र console I/O",
     jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
   },
-  19: {
+  20: {
     en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
     np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
     jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
   },
-  20: {
+  21: {
     en: "Frontend integration — Livewire, Inertia.js & Vite",
     np: "Frontend — Livewire, Inertia.js र Vite",
     jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
   },
-  21: {
+  22: {
     en: "Performance — query optimization, N+1, Redis & queue scaling",
     np: "Performance — query optimization, N+1, Redis र queue scaling",
     jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
   },
-  22: {
+  23: {
     en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
     np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
     jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",
