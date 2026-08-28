@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const LARAVEL_DAY_1_LESSONS: LessonDay = {
   day: 1,
   title: { en: "Install and set up Laravel", np: "Laravel install र setup", jp: "Laravelの導入とセットアップ" },
-  totalMinutes: 26,
+  totalMinutes: 35,
   difficulty: { en: "Beginner", np: "प्रारम्भिक", jp: "初級" },
   lessons: [
     {
@@ -490,6 +490,201 @@ php artisan key:generate  # then give this copy its own key
         },
       ],
     },
+    {
+      id: "mvc-and-the-request",
+      title: { en: "MVC and how a request travels", np: "MVC र request कसरी यात्रा गर्छ", jp: "MVCと、リクエストの旅" },
+      durationMinutes: 9,
+      explanation: {
+        en: "Your application runs. Now the mental model everything else hangs off.\n\nLaravel follows <b>MVC</b> (Model-View-Controller), a way of splitting application code by <b>responsibility</b> rather than by feature.\n\n```text\n             MVC\n              │\n      ┌───────┼───────┐\n      ↓       ↓       ↓\n    Model   View   Controller\n      │       │       │\n    Data      UI     Request\n```\n\n---\n\n### 1. Basic — the three parts\n\nA <b>Model</b> (a PHP class that represents and works with application data) usually talks to one database table:\n\n```text\nUser Model\n    │\n    ↓\nusers table\n```\n\nLaravel's <b>Eloquent ORM</b> (Laravel's system for working with database rows as PHP objects) means you write this:\n\n```php\n$user = User::find(10);\n```\n\ninstead of hand-writing SQL for every read.\n\nA <b>View</b> (the part responsible for showing information to the user) produces the interface. Laravel uses <b>Blade</b> (Laravel's template system for generating HTML), in files like `resources/views/home.blade.php`:\n\n```blade\n<h1>Hello, {{ $name }}</h1>\n```\n\nA <b>Controller</b> (a class that receives a request and coordinates what happens) sits between the two:\n\n```php\nclass UserController\n{\n    public function show(int $id)\n    {\n        $user = User::find($id);\n\n        return view('users.show', [\n            'user' => $user,\n        ]);\n    }\n}\n```\n\nRead what it actually does — it receives the request, asks the model for a user, hands that user to a view, and returns the result. It does not query the database itself, and it does not build HTML itself. That restraint is the whole point of the pattern.\n\n---\n\n### 2. Intermediate — MVC end to end\n\nSomeone visits `/users/10`:\n\n```text\nBrowser\n   │ GET /users/10\n   ↓\nRoute\n   ↓\nController\n   ↓\nModel\n   ↓\nDatabase\n   ↓\nModel\n   ↓\nController\n   ↓\nView\n   ↓\nHTML\n   ↓\nBrowser\n```\n\nNotice it goes <b>down</b> to the database and back <b>up</b> the same path. The controller is visited twice: once to ask for data, once to turn it into a response.\n\n---\n\n### 3. Advanced — the real request lifecycle\n\nMVC is the shape of your code. The <b>request lifecycle</b> is the route a request actually takes through the framework, and it has two stops MVC does not mention:\n\n```text\nBrowser\n   │ HTTP Request\n   ↓\npublic/index.php          the entry point\n   ↓\nLaravel Application\n   ↓\nMiddleware                checks before your code runs\n   ↓\nRouter\n   ↓\nController\n   ↓\nModel / Services\n   ↓\nDatabase\n   ↓\nController\n   ↓\nResponse\n   ↓\nMiddleware                and again on the way out\n   ↓\nBrowser\n```\n\n<b>`public/index.php`</b> is the entry point — the single file a web request actually reaches. Everything else in your project sits behind it, which is why the web server points at `public/` and not at the project root.\n\n<b>Middleware</b> (code that sits between a request and your application logic) gets first look at every request, and last look at every response. Authentication, permission checks and rate limits all live there. Think of airport security:\n\n```text\nPassenger\n   ↓\nSecurity check\n   ↓\nPassport check\n   ↓\nGate\n```\n\nEach layer can wave the request through or turn it back before it ever reaches the gate.\n\nYou are not building any of these boxes today. Days 3 to 7 build them one at a time — routes, then controllers, then middleware. Recognising the shape is what makes those days feel like filling in a diagram rather than learning disconnected tricks.",
+        np: "तपाईंको application चल्यो। अब बाँकी सबै अडिने मानसिक model।\n\nLaravel ले <b>MVC</b> (Model-View-Controller) पछ्याउँछ, जुन application code लाई feature होइन <b>जिम्मेवारी</b> अनुसार बाँड्ने तरिका हो।\n\n```text\n             MVC\n              │\n      ┌───────┼───────┐\n      ↓       ↓       ↓\n    Model   View   Controller\n      │       │       │\n    Data      UI     Request\n```\n\n---\n\n### 1. आधारभूत — तीन भाग\n\n<b>Model</b> (application data जनाउने र त्यससँग काम गर्ने PHP class) प्रायः एउटा database table सँग कुरा गर्छ:\n\n```text\nUser Model\n    │\n    ↓\nusers table\n```\n\nLaravel को <b>Eloquent ORM</b> (database row लाई PHP object का रूपमा चलाउने Laravel को प्रणाली) ले यसो लेख्न दिन्छ:\n\n```php\n$user = User::find(10);\n```\n\nहरेक पढाइका लागि हातले SQL नलेखी।\n\n<b>View</b> (user लाई जानकारी देखाउने जिम्मेवारी भएको भाग) ले interface बनाउँछ। Laravel ले <b>Blade</b> (HTML बनाउने Laravel को template प्रणाली) प्रयोग गर्छ, `resources/views/home.blade.php` जस्ता file मा:\n\n```blade\n<h1>Hello, {{ $name }}</h1>\n```\n\n<b>Controller</b> (request लिने र के हुने मिलाउने class) दुबैको बीचमा बस्छ:\n\n```php\nclass UserController\n{\n    public function show(int $id)\n    {\n        $user = User::find($id);\n\n        return view('users.show', [\n            'user' => $user,\n        ]);\n    }\n}\n```\n\nयसले वास्तवमा के गर्छ पढ्नुहोस् — request लिन्छ, model सँग user माग्छ, त्यो user view लाई दिन्छ, र नतिजा फर्काउँछ। यसले आफैं database query गर्दैन, न आफैं HTML बनाउँछ। यही संयम pattern को पूरा उद्देश्य हो।\n\n---\n\n### 2. मध्यम — MVC सुरुदेखि अन्त्यसम्म\n\nकसैले `/users/10` खोल्छ:\n\n```text\nBrowser\n   │ GET /users/10\n   ↓\nRoute\n   ↓\nController\n   ↓\nModel\n   ↓\nDatabase\n   ↓\nModel\n   ↓\nController\n   ↓\nView\n   ↓\nHTML\n   ↓\nBrowser\n```\n\nख्याल गर्नुहोस्, यो database सम्म <b>तल</b> जान्छ र उही बाटो <b>माथि</b> फर्किन्छ। Controller दुई पटक भेटिन्छ: एक पटक data माग्न, एक पटक त्यसलाई response बनाउन।\n\n---\n\n### 3. उन्नत — वास्तविक request lifecycle\n\nMVC तपाईंको code को आकार हो। <b>Request lifecycle</b> request ले framework हुँदै लिने वास्तविक बाटो हो, र यसमा MVC ले नभनेका दुई पडाव छन्:\n\n```text\nBrowser\n   │ HTTP Request\n   ↓\npublic/index.php          प्रवेश बिन्दु\n   ↓\nLaravel Application\n   ↓\nMiddleware                तपाईंको code चल्नुअघिका जाँच\n   ↓\nRouter\n   ↓\nController\n   ↓\nModel / Services\n   ↓\nDatabase\n   ↓\nController\n   ↓\nResponse\n   ↓\nMiddleware                र फर्कँदा पनि\n   ↓\nBrowser\n```\n\n<b>`public/index.php`</b> प्रवेश बिन्दु हो — web request वास्तवमा पुग्ने एउटै file। तपाईंको project का बाँकी सबै यसकै पछाडि हुन्छन्, त्यसैले web server ले project को जरा होइन, `public/` तिर देखाउँछ।\n\n<b>Middleware</b> (request र तपाईंको application logic बीच बस्ने code) ले हरेक request पहिले हेर्छ, र हरेक response अन्तिममा। Authentication, अनुमति जाँच र rate limit त्यहीँ बस्छन्। Airport security जस्तै सोच्नुहोस्:\n\n```text\nयात्रु\n   ↓\nSecurity जाँच\n   ↓\nPassport जाँच\n   ↓\nGate\n```\n\nहरेक तहले request लाई अघि पठाउन वा gate सम्म पुग्नुअघि नै फर्काउन सक्छ।\n\nआज तपाईं यीमध्ये कुनै बाकस बनाउँदै हुनुहुन्न। तेस्रोदेखि सातौं दिनसम्म एक-एक गरी बन्छन् — route, अनि controller, अनि middleware। आकार चिन्नुले नै ती दिनलाई छुट्टाछुट्टै जुक्ति सिकेको होइन, diagram भरेको जस्तो बनाउँछ।",
+        jp: "アプリは動いた。次は、これから先すべてがぶら下がる考え方だ。\n\nLaravelは<b>MVC</b>（Model-View-Controller）に従う。機能ではなく<b>責務</b>でコードを分ける方法だ。\n\n```text\n             MVC\n              │\n      ┌───────┼───────┐\n      ↓       ↓       ↓\n    Model   View   Controller\n      │       │       │\n    Data      UI     Request\n```\n\n---\n\n### 1. 基本 — 3つの部分\n\n<b>モデル</b>（アプリのデータを表し、扱うPHPクラス）はたいてい1つのテーブルと話す:\n\n```text\nUser Model\n    │\n    ↓\nusers table\n```\n\nLaravelの<b>Eloquent ORM</b>（DBの行をPHPのオブジェクトとして扱う仕組み）のおかげで、こう書ける:\n\n```php\n$user = User::find(10);\n```\n\n読み取りのたびにSQLを手で書かずに済む。\n\n<b>ビュー</b>（利用者に情報を見せる責務を持つ部分）は画面を作る。Laravelは<b>Blade</b>（HTMLを生成するテンプレート機構）を使い、`resources/views/home.blade.php` のようなファイルに置く:\n\n```blade\n<h1>Hello, {{ $name }}</h1>\n```\n\n<b>コントローラ</b>（リクエストを受け取り、何が起きるかを取りまとめるクラス）はその間に座る:\n\n```php\nclass UserController\n{\n    public function show(int $id)\n    {\n        $user = User::find($id);\n\n        return view('users.show', [\n            'user' => $user,\n        ]);\n    }\n}\n```\n\n実際に何をしているか読んでほしい。リクエストを受け、モデルにユーザーを求め、それをビューへ渡し、結果を返す。自分でDBに問い合わせず、自分でHTMLも組まない。この抑制こそがこのパターンの狙いだ。\n\n---\n\n### 2. 中級 — MVCを端から端まで\n\n誰かが `/users/10` を開く:\n\n```text\nBrowser\n   │ GET /users/10\n   ↓\nRoute\n   ↓\nController\n   ↓\nModel\n   ↓\nDatabase\n   ↓\nModel\n   ↓\nController\n   ↓\nView\n   ↓\nHTML\n   ↓\nBrowser\n```\n\nデータベースまで<b>下り</b>、同じ道を<b>上って</b>戻る点に注目。コントローラは2回通る。1回はデータを求めるため、もう1回はそれをレスポンスに変えるためだ。\n\n---\n\n### 3. 上級 — 本当のリクエストライフサイクル\n\nMVCはコードの形。<b>リクエストライフサイクル</b>はリクエストが実際にフレームワークを通る経路で、MVCが触れない停留所が2つある:\n\n```text\nBrowser\n   │ HTTP Request\n   ↓\npublic/index.php          入口\n   ↓\nLaravel Application\n   ↓\nMiddleware                自分のコードの前の検査\n   ↓\nRouter\n   ↓\nController\n   ↓\nModel / Services\n   ↓\nDatabase\n   ↓\nController\n   ↓\nResponse\n   ↓\nMiddleware                帰り道でも通る\n   ↓\nBrowser\n```\n\n<b>`public/index.php`</b> は入口だ。Webのリクエストが実際に届く唯一のファイルで、プロジェクトの他はすべてその奥にある。だからWebサーバーはプロジェクトの根ではなく `public/` を指す。\n\n<b>ミドルウェア</b>（リクエストとアプリのロジックの間に座るコード）は、すべてのリクエストを最初に、すべてのレスポンスを最後に見る。認証・権限確認・レート制限はここに住む。空港の保安検査を思い浮かべるとよい:\n\n```text\n乗客\n   ↓\n保安検査\n   ↓\nパスポート確認\n   ↓\nゲート\n```\n\n各層が、通すか、ゲートに着く前に引き返させるかを決められる。\n\n今日はこれらの箱を作らない。3日目から7日目にかけて、ルート、コントローラ、ミドルウェアと1つずつ作る。形を見分けられることが、それらの日を「バラバラの小技を覚える日」ではなく「図を埋めていく日」に変える。",
+      },
+      diagram: `MVC splits code by responsibility
+
+             MVC
+              │
+      ┌───────┼───────┐
+      ↓       ↓       ↓
+    Model   View   Controller
+      │       │       │
+    Data      UI     Request
+
+Model       talks to the database
+View        produces what the user sees
+Controller  receives the request, coordinates the other two
+
+
+Down to the database and back up
+
+Browser → Route → Controller → Model → Database
+                                          │
+Browser ← HTML ← View ← Controller ← Model ┘
+
+the controller is visited twice: once to ask, once to answer
+
+
+The real lifecycle adds two stops MVC does not mention
+
+Browser
+   ↓
+public/index.php     the single file a request reaches
+   ↓
+Middleware           first look on the way in
+   ↓
+Router
+   ↓
+Controller
+   ↓
+Model / Services → Database
+   ↓
+Controller → Response
+   ↓
+Middleware           last look on the way out
+   ↓
+Browser
+
+
+Middleware is airport security
+
+Passenger → Security check → Passport check → Gate
+
+each layer can wave it through, or turn it back`,
+      codeExample: {
+        title: { en: "One request, through all three parts", np: "एउटै request, तीनै भाग हुँदै", jp: "1つのリクエストが3つの部分を通る" },
+        code: `<?php
+
+// ── The route: a URL matched to code ──────────────────────────────
+// routes/web.php
+Route::get('/users/{id}', [UserController::class, 'show']);
+
+// ── The controller: coordinates, does not do the work itself ──────
+// app/Http/Controllers/UserController.php
+class UserController
+{
+    public function show(int $id)
+    {
+        $user = User::find($id);        // ask the model
+
+        return view('users.show', [     // hand it to the view
+            'user' => $user,
+        ]);
+    }
+}
+// Note what is NOT here: no SQL, no HTML. That restraint is the pattern.
+
+// ── The model: represents one table ───────────────────────────────
+// app/Models/User.php
+class User extends Model
+{
+    // Eloquent gives you find(), where(), create() and the rest,
+    // so you rarely write SQL by hand.
+}
+
+// ── The view: produces what the user sees ─────────────────────────
+// resources/views/users/show.blade.php
+//   <h1>Hello, {{ $user->name }}</h1>
+
+// ── The journey, for GET /users/10 ────────────────────────────────
+// public/index.php   the one file the web request reaches
+//        ↓
+// Middleware         authentication, permissions, rate limits
+//        ↓
+// Router             matches /users/{id}
+//        ↓
+// Controller         show(10)
+//        ↓
+// Model → Database   User::find(10)
+//        ↓
+// Controller → View → HTML
+//        ↓
+// Middleware         on the way back out
+//        ↓
+// Browser
+
+// You build none of these today. Days 3 to 7 build them one at a time.`,
+      },
+      keyTakeaways: [
+        { en: "<b>MVC</b> splits code by responsibility: data, interface, and coordination.", np: "<b>MVC</b> ले code लाई जिम्मेवारी अनुसार बाँड्छ: data, interface, र समन्वय।", jp: "<b>MVC</b> は責務でコードを分ける。データ・画面・取りまとめ。" },
+        { en: "A <b>Model</b> represents application data and usually maps to one database table.", np: "<b>Model</b> ले application data जनाउँछ र प्रायः एउटा database table सँग मिल्छ।", jp: "<b>モデル</b>はアプリのデータを表し、たいてい1つのテーブルに対応する。" },
+        { en: "A <b>View</b> produces what the user sees; Laravel uses <b>Blade</b> templates.", np: "<b>View</b> ले user ले देख्ने कुरा बनाउँछ; Laravel ले <b>Blade</b> template प्रयोग गर्छ।", jp: "<b>ビュー</b>は利用者が見るものを作る。Laravelは<b>Blade</b>テンプレートを使う。" },
+        { en: "A <b>Controller</b> coordinates — it neither queries the database nor builds HTML itself.", np: "<b>Controller</b> ले समन्वय गर्छ — यसले न database query गर्छ, न आफैं HTML बनाउँछ।", jp: "<b>コントローラ</b>は取りまとめ役。自分でDBに問い合わせず、HTMLも組まない。" },
+        { en: "<b>`public/index.php`</b> is the single entry point, which is why the web server points at `public/`.", np: "<b>`public/index.php`</b> एउटै प्रवेश बिन्दु हो, त्यसैले web server ले `public/` तिर देखाउँछ।", jp: "<b>`public/index.php`</b> が唯一の入口。だからWebサーバーは `public/` を指す。" },
+        { en: "<b>Middleware</b> sees every request on the way in and every response on the way out.", np: "<b>Middleware</b> ले हरेक request भित्र आउँदा र हरेक response बाहिर जाँदा देख्छ।", jp: "<b>ミドルウェア</b>は入るリクエストも出るレスポンスもすべて見る。" },
+        { en: "The lifecycle diagram is worth remembering — days 3 to 7 build one box at a time.", np: "Lifecycle diagram सम्झन लायक छ — तेस्रोदेखि सातौं दिनसम्म एक-एक बाकस बन्छ।", jp: "ライフサイクルの図は覚える価値がある。3〜7日目に箱を1つずつ作る。" },
+      ],
+      commonMistakes: [
+        { en: "<b>Querying the database inside a view</b> — a Blade template that calls `User::all()` puts data logic in the layer meant only to display it, and hides the query from anyone reading the controller.", np: "<b>View भित्र database query गर्नु</b> — `User::all()` बोलाउने Blade template ले देखाउने मात्र काम भएको तहमा data logic राख्छ, र controller पढ्नेबाट query लुकाउँछ।", jp: "<b>ビューの中でDBに問い合わせる</b> — `User::all()` を呼ぶBladeは、表示専用の層にデータの論理を持ち込み、コントローラを読む人からクエリを隠す。" },
+        { en: "<b>Putting business logic in the controller</b> — a controller that also calculates prices and sends email is doing three jobs. It should coordinate, and hand the work to models and services.", np: "<b>Controller मा business logic राख्नु</b> — मूल्य गणना गर्ने र email पठाउने controller ले तीन काम गर्दैछ। यसले समन्वय गर्नुपर्छ, र काम model तथा service लाई दिनुपर्छ।", jp: "<b>コントローラにビジネスロジックを置く</b> — 価格計算もメール送信もするコントローラは3つの仕事をしている。取りまとめ、作業はモデルやサービスに渡す。" },
+        { en: "<b>Pointing the web server at the project root</b> — that exposes `.env`, `config/` and `database/` to the internet. It must point at `public/`.", np: "<b>Web server लाई project को जरा तिर देखाउनु</b> — त्यसले `.env`, `config/` र `database/` internet मा खोल्छ। यो `public/` तिर देखाउनैपर्छ।", jp: "<b>Webサーバーをプロジェクトの根に向ける</b> — `.env`・`config/`・`database/` をインターネットに晒す。向ける先は `public/`。" },
+        { en: "<b>Trying to memorise the lifecycle today</b> — you will build each box yourself over the next week. Recognising the shape is all that is needed now.", np: "<b>आजै lifecycle रट्न खोज्नु</b> — आउँदो हप्ता तपाईं आफैं हरेक बाकस बनाउनुहुनेछ। अहिले आकार चिने पुग्छ।", jp: "<b>今日ライフサイクルを暗記しようとする</b> — 各箱はこの先1週間で自分が作る。今は形が分かれば十分。" },
+      ],
+      quiz: [
+        {
+          question: { en: "What does MVC stand for?", np: "MVC को पूरा रूप के हो?", jp: "MVCは何の略か?" },
+          options: [
+            { en: "Model View Controller", np: "Model View Controller", jp: "Model View Controller" },
+            { en: "Main View Code", np: "Main View Code", jp: "Main View Code" },
+            { en: "Model Variable Controller", np: "Model Variable Controller", jp: "Model Variable Controller" },
+            { en: "Middleware View Cache", np: "Middleware View Cache", jp: "Middleware View Cache" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "It splits code by responsibility: data, interface, coordination.", np: "यसले code लाई जिम्मेवारी अनुसार बाँड्छ: data, interface, समन्वय।", jp: "責務で分ける。データ・画面・取りまとめ。" },
+        },
+        {
+          question: { en: "What does a Model usually represent?", np: "Model ले सामान्यतया के जनाउँछ?", jp: "モデルは通常何を表すか?" },
+          options: [
+            { en: "A database-related entity", np: "Database सँग सम्बन्धित entity", jp: "データベースに関わる実体" },
+            { en: "A browser", np: "एउटा browser", jp: "ブラウザ" },
+            { en: "A route", np: "एउटा route", jp: "ルート" },
+            { en: "A Git branch", np: "एउटा Git branch", jp: "Gitのブランチ" },
+          ],
+          correctIndex: 0,
+          explanation: { en: "`User::find(10)` reads from the `users` table through Eloquent.", np: "`User::find(10)` ले Eloquent मार्फत `users` table बाट पढ्छ।", jp: "`User::find(10)` はEloquent経由で `users` テーブルから読む。" },
+        },
+        {
+          question: { en: "What does a Controller do?", np: "Controller ले के गर्छ?", jp: "コントローラは何をするか?" },
+          options: [
+            { en: "Stores database tables", np: "Database table राख्छ", jp: "DBのテーブルを保存する" },
+            { en: "Receives a request and coordinates the work", np: "Request लिन्छ र काम मिलाउँछ", jp: "リクエストを受け、作業を取りまとめる" },
+            { en: "Installs PHP", np: "PHP install गर्छ", jp: "PHPを入れる" },
+            { en: "Stores environment variables", np: "Environment variable राख्छ", jp: "環境変数を保存する" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "It should not query the database or build HTML itself.", np: "यसले आफैं database query वा HTML बनाउनु हुँदैन।", jp: "自分でDBに問い合わせたりHTMLを組んだりしない。" },
+        },
+        {
+          question: { en: "What is `public/index.php`?", np: "`public/index.php` के हो?", jp: "`public/index.php` とは?" },
+          options: [
+            { en: "A database model", np: "एउटा database model", jp: "DBのモデル" },
+            { en: "The entry point a web request actually reaches", np: "Web request वास्तवमा पुग्ने प्रवेश बिन्दु", jp: "Webリクエストが実際に届く入口" },
+            { en: "A configuration file", np: "एउटा configuration file", jp: "設定ファイル" },
+            { en: "A migration", np: "एउटा migration", jp: "マイグレーション" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "That is why the web server points at `public/`, not the project root.", np: "त्यसैले web server ले project को जरा होइन, `public/` तिर देखाउँछ।", jp: "だからWebサーバーはプロジェクトの根ではなく `public/` を指す。" },
+        },
+        {
+          question: { en: "Where does middleware sit in the lifecycle?", np: "Lifecycle मा middleware कहाँ बस्छ?", jp: "ライフサイクルでミドルウェアはどこに座るか?" },
+          options: [
+            { en: "Only after the controller returns", np: "Controller return गरेपछि मात्र", jp: "コントローラが戻った後だけ" },
+            { en: "Before the router on the way in, and again on the way out", np: "भित्र आउँदा router अघि, र बाहिर जाँदा फेरि", jp: "行きはルーターの前、帰りにもう一度" },
+            { en: "Inside the database", np: "Database भित्र", jp: "データベースの中" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "Authentication, permissions and rate limits all live there.", np: "Authentication, अनुमति र rate limit त्यहीँ बस्छन्।", jp: "認証・権限・レート制限はそこに住む。" },
+        },
+        {
+          question: { en: "In the MVC flow, how many times is the controller involved?", np: "MVC प्रवाहमा, controller कति पटक संलग्न हुन्छ?", jp: "MVCの流れで、コントローラは何回関わるか?" },
+          options: [
+            { en: "Once, at the start", np: "एक पटक, सुरुमा", jp: "最初の1回だけ" },
+            { en: "Twice — once to ask for data, once to turn it into a response", np: "दुई पटक — एक पटक data माग्न, एक पटक response बनाउन", jp: "2回。データを求めるときと、レスポンスに変えるとき" },
+            { en: "Never, the router calls the view directly", np: "कहिल्यै होइन, router ले सिधै view बोलाउँछ", jp: "関わらない。ルーターが直接ビューを呼ぶ" },
+          ],
+          correctIndex: 1,
+          explanation: { en: "The request goes down to the database and back up the same path.", np: "Request database सम्म तल जान्छ र उही बाटो माथि फर्किन्छ।", jp: "リクエストはDBまで下り、同じ道を上って戻る。" },
+        },
+      ],
+    },
   ],
   finalQuiz: [
     {
@@ -600,6 +795,27 @@ php artisan key:generate  # then give this copy its own key
       ],
       correctIndex: 0,
       explanation: { en: "The generated auth and frontend are what the course teaches you to build.", np: "बनेको auth र frontend नै course ले बनाउन सिकाउने कुरा हुन्।", jp: "生成される認証とフロントこそ、講座で作れるようになるもの。" },
+    },
+    {
+      question: { en: "What does MVC stand for?", np: "MVC को पूरा रूप के हो?", jp: "MVCは何の略か?" },
+      options: [
+        { en: "Model View Controller", np: "Model View Controller", jp: "Model View Controller" },
+        { en: "Main View Code", np: "Main View Code", jp: "Main View Code" },
+        { en: "Model Variable Controller", np: "Model Variable Controller", jp: "Model Variable Controller" },
+        { en: "Middleware View Cache", np: "Middleware View Cache", jp: "Middleware View Cache" },
+      ],
+      correctIndex: 0,
+      explanation: { en: "It splits application code by responsibility.", np: "यसले application code जिम्मेवारी अनुसार बाँड्छ।", jp: "アプリのコードを責務で分ける。" },
+    },
+    {
+      question: { en: "What is `public/index.php`?", np: "`public/index.php` के हो?", jp: "`public/index.php` とは?" },
+      options: [
+        { en: "A database model", np: "एउटा database model", jp: "DBのモデル" },
+        { en: "The entry point a web request actually reaches", np: "Web request वास्तवमा पुग्ने प्रवेश बिन्दु", jp: "Webリクエストが実際に届く入口" },
+        { en: "A configuration file", np: "एउटा configuration file", jp: "設定ファイル" },
+      ],
+      correctIndex: 1,
+      explanation: { en: "The web server points at `public/`, keeping `.env` and `config/` out of reach.", np: "Web server ले `public/` तिर देखाउँछ, `.env` र `config/` पहुँच बाहिर राख्दै।", jp: "Webサーバーは `public/` を指し、`.env` や `config/` を手の届かない場所に保つ。" },
     },
   ],
 };
