@@ -55,9 +55,9 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
   1: { en: "Install and set up Laravel", np: "Laravel install र setup", jp: "Laravelの導入とセットアップ" },
   0: { en: "Phase 0 — Before You Start", np: "Phase 0 — सुरु गर्नुअघि", jp: "Phase 0 — はじめる前に" },
   2: {
-    en: "MVC, Composer, install, project layout & Service Container",
-    np: "MVC, Composer, स्थापना, परियोजना र Service Container",
-    jp: "MVC・Composer・インストール・構成・サービスコンテナ",
+    en: "Directory structure, configuration & the Service Container",
+    np: "Directory structure, configuration र Service Container",
+    jp: "ディレクトリ構造・設定・サービスコンテナ",
   },
   3: {
     en: "Routes — verbs, parameters, names, groups & resource routes",

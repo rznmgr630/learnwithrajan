@@ -10,6 +10,7 @@ import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { LARAVEL_PHASE_0_LESSONS } from "@/lib/laravel-learning/laravel-phase-0-lessons";
 import { LARAVEL_DAY_1_LESSONS } from "@/lib/laravel-learning/laravel-day-1-lessons";
+import { LARAVEL_DAY_2_LESSONS } from "@/lib/laravel-learning/laravel-day-2-lessons";
 import { LARAVEL_ROADMAP_WEEKS, LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 
@@ -19,6 +20,7 @@ const TAG_PILL =
 const LARAVEL_LESSON_DAYS: Record<number, LessonDay> = {
   0: LARAVEL_PHASE_0_LESSONS,
   1: LARAVEL_DAY_1_LESSONS,
+  2: LARAVEL_DAY_2_LESSONS,
 };
 
 export function LaravelRoadmap() {
