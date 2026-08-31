@@ -3,452 +3,357 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_7_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "<b>Blade</b> is how you build the HTML in your Laravel app. Instead of writing raw PHP inside HTML, you write clean template syntax — Blade converts it to PHP behind the scenes and caches the result so it's fast.\n\nBlade files live in `resources/views/` and use the `.blade.php` extension. The four main features you'll use:\n• <b>Inheritance</b> — define one master layout, then fill in the pieces from each page\n  ↳ Uses `@extends`, `@section`, and `@yield`\n• <b>Control flow</b> — `@if`, `@foreach`, `@forelse` — cleaner than raw PHP tags inside HTML\n• <b>Components</b> — reusable UI pieces like buttons, alerts, and cards\n• <b>Stacks</b> — let child pages inject their own scripts or styles into the shared layout",
-      np: "Blade Laravel को compiled template engine। `.blade.php` फाइल `resources/views/` मा। inheritance, control flow, components, stacks सब।",
-      jp: "Blade は Laravel のコンパイル済みテンプレートエンジン。`resources/views/` に `.blade.php` ファイルを配置。継承・制御フロー・コンポーネント・スタックが使えます。",
+      en: "When a user hits a URL, something has to decide what to do. That something is a <b>Controller</b> — a PHP class that receives the request, does the work (or calls a service to do it), and sends back a response.\n\nAs your app grows, two more ideas keep things clean:\n• <b>Service Container</b> — Laravel automatically creates the objects your controller needs, so you don't have to `new` them up yourself\n  ↳ You just type-hint what you need in the constructor, and Laravel provides it\n• <b>Form Requests</b> — instead of putting validation rules inside your controller, you move them to their own dedicated class\n  ↳ Keeps each controller method short and focused on one thing",
+      np: "Controllers HTTP logic PHP class मा। Form Requests validation र authorization अलग class मा राख्छन्।",
+      jp: "コントローラはリクエスト処理ロジックをクラスにまとめます。フォームリクエストで検証と認可を分離し、コントローラを薄く保ちます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Template inheritance pattern",
-        np: "Template inheritance pattern",
-        jp: "テンプレート継承パターン",
+        en: "Controller types",
+        np: "Controller types",
+        jp: "コントローラの種類",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Think of your layout file as a page frame — the header, navigation, and footer that every page shares. You mark the spots where each page fills in its own content using `@yield('slot-name')`.\n\nEach page then uses that frame:\n• `@extends('layouts.app')` — says \"use this layout as my frame\"\n• `@section('content') ... @endsection` — fills in the slot named 'content'\n• `@parent` inside a section — keeps the layout's default content and adds to it\n\nOutputting data in Blade:\n• `{{ $var }}` — safe output, HTML-escaped automatically\n  ↳ Always use this for user-entered content — it prevents XSS attacks\n• `{!! $html !!}` — raw unescaped output\n  ↳ Only use with content you trust completely (e.g. HTML you generated yourself)\n• `{{-- comment --}}` — a Blade comment, never appears in the final HTML output",
-            np: "Layout मा `@yield`; child मा `@extends` + `@section`। `{{ $var }}` escaped; `{!! $html !!}` unescaped। `{{-- comment --}}`।",
-            jp: "レイアウトに `@yield`、子ビューで `@extends` + `@section` で埋めます。`{{ $var }}` は HTML エスケープ、`{!! $html !!}` は生の出力。`{{-- --}}` はコメント（出力なし）。",
+            en: "Laravel gives you three types of controllers — pick the one that fits your task:\n\n<b>Basic controller</b>\n• A class with any number of public methods, one per action\n  ↳ Good for grouping related actions together (e.g. all user-related actions in one file)\n\n<b>Single-action (invokable) controller</b>\n• A class with exactly one method called `__invoke`\n  ↳ Use when one action is complex enough to deserve its own file — like publishing a post or processing a payment\n  ↳ Route to it directly: `Route::post('/posts/{post}/publish', PublishPostController::class)`\n\n<b>Resource controller</b>\n• Scaffolds 7 standard CRUD methods automatically with `--resource`\n  ↳ index (list all), create (show form), store (save new), show (view one), edit (show edit form), update (save edit), destroy (delete)\n• Use `--api` to get 5 methods — skips `create` and `edit` because APIs return JSON, not HTML forms",
+            np: "Basic, single-action (`__invoke`), resource (`--resource` = 7), API resource (`--api` = 5)।",
+            jp: "基本・シングルアクション（`__invoke`）・リソース（`--resource` 7 メソッド）・API リソース（`--api` 5 メソッド）。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Layout file: resources/views/layouts/app.blade.php",
-            np: "Layout file",
-            jp: "レイアウトファイル",
+            en: "Artisan scaffolding",
+            np: "Artisan scaffolding",
+            jp: "Artisan でコントローラ生成",
           },
-          code: `<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <title>@yield('title', 'My App')</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('styles')
-</head>
-<body>
-    @include('partials.nav')
+          code: `# Basic controller
+php artisan make:controller UserController
 
-    <main>
-        @yield('content')
-    </main>
+# Single-action (invokable) controller
+php artisan make:controller ShowDashboard --invokable
 
-    @stack('scripts')
-</body>
-</html>`,
+# Resource controller (7 methods)
+php artisan make:controller PostController --resource
+
+# API resource controller (5 methods, no create/edit)
+php artisan make:controller Api\\PostController --api --model=Post`,
         },
         {
           type: "code",
           title: {
-            en: "Child view: resources/views/posts/show.blade.php",
-            np: "Child view",
-            jp: "子ビュー",
-          },
-          code: `@extends('layouts.app')
-
-@section('title', $post->title)
-
-@section('content')
-    <article>
-        <h1>{{ $post->title }}</h1>
-
-        {{-- Unescaped — only use with sanitized/trusted HTML --}}
-        {!! $post->body_html !!}
-    </article>
-@endsection
-
-@push('scripts')
-    <script>console.log('post page loaded');</script>
-@endpush`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "To send data from your controller into the view, pick any of these three equivalent styles — they all work the same way:\n• `view('posts.show', ['post' => $post])` — explicit array, always clear and readable\n• `view('posts.show')->with('post', $post)` — chained helper, good for conditionally adding data\n• `view('posts.show', compact('post', 'comments'))` — PHP shorthand when your variable names already match the keys you want\n\nWhatever key name you use in the array becomes a `$variable` inside the template.",
-            np: "Controller बाट Blade मा data: `view('name', ['key' => $value])` वा `compact('post')`।",
-            jp: "コントローラから Blade へのデータ渡し：`view('name', ['key' => $value])`・`->with()`・`compact()` のいずれかを使います。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Control flow & loop variable",
-        np: "Control flow र loop variable",
-        jp: "制御フローとループ変数",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Conditionals",
-            np: "Conditionals",
-            jp: "条件分岐",
-          },
-          code: `@if ($user->isAdmin())
-    <span>Admin</span>
-@elseif ($user->isModerator())
-    <span>Mod</span>
-@else
-    <span>User</span>
-@endif
-
-@unless ($user->isVerified())
-    <p>Please verify your email.</p>
-@endunless
-
-@isset($post)
-    <p>{{ $post->title }}</p>
-@endisset
-
-@empty($posts)
-    <p>No posts found.</p>
-@endempty
-
-@auth
-    <a href="/logout">Log out</a>
-@endauth
-
-@guest
-    <a href="/login">Log in</a>
-@endguest`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "@foreach with the $loop variable",
-            np: "@foreach र $loop variable",
-            jp: "@foreach と $loop 変数",
-          },
-          code: `@foreach ($posts as $post)
-    {{-- $loop is always available inside @foreach --}}
-    <div class="{{ $loop->even ? 'bg-gray-50' : '' }}">
-        <span>{{ $loop->iteration }} / {{ $loop->count }}</span>
-
-        @if ($loop->first)
-            <span class="badge">Latest</span>
-        @endif
-
-        <h2>{{ $post->title }}</h2>
-
-        @if ($loop->last)
-            <hr>
-        @endif
-    </div>
-@endforeach
-
-{{-- @forelse: handles empty collections gracefully --}}
-@forelse ($comments as $comment)
-    <p>{{ $comment->body }}</p>
-@empty
-    <p>No comments yet.</p>
-@endforelse
-
-{{-- $loop->depth and $loop->parent for nested loops --}}
-@foreach ($categories as $category)
-    @foreach ($category->posts as $post)
-        {{-- $loop->parent->index = outer iteration --}}
-        <p>{{ $loop->parent->index }}: {{ $post->title }}</p>
-    @endforeach
-@endforeach`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Useful $loop properties",
-            np: "$loop properties",
-            jp: "$loop の主なプロパティ",
-          },
-          headers: [
-            { en: "Property", np: "Property", jp: "プロパティ" },
-            { en: "Type", np: "Type", jp: "型" },
-            { en: "Description", np: "विवरण", jp: "内容" },
-          ],
-          rows: [
-            [
-              { en: "`$loop->index`", np: "`$loop->index`", jp: "`$loop->index`" },
-              { en: "int (0-based)", np: "int (0 start)", jp: "int（0 始まり）" },
-              { en: "Current iteration index", np: "current index", jp: "現在のインデックス" },
-            ],
-            [
-              { en: "`$loop->iteration`", np: "`$loop->iteration`", jp: "`$loop->iteration`" },
-              { en: "int (1-based)", np: "int (1 start)", jp: "int（1 始まり）" },
-              { en: "Current iteration (human-friendly)", np: "1 start iteration", jp: "現在の繰り返し数" },
-            ],
-            [
-              { en: "`$loop->count`", np: "`$loop->count`", jp: "`$loop->count`" },
-              { en: "int", np: "int", jp: "int" },
-              { en: "Total items in the collection", np: "कुल items", jp: "コレクションの総件数" },
-            ],
-            [
-              { en: "`$loop->first`", np: "`$loop->first`", jp: "`$loop->first`" },
-              { en: "bool", np: "bool", jp: "bool" },
-              { en: "True on the first iteration", np: "पहिलो iteration", jp: "最初の繰り返しで true" },
-            ],
-            [
-              { en: "`$loop->last`", np: "`$loop->last`", jp: "`$loop->last`" },
-              { en: "bool", np: "bool", jp: "bool" },
-              { en: "True on the last iteration", np: "अन्तिम iteration", jp: "最後の繰り返しで true" },
-            ],
-            [
-              { en: "`$loop->odd` / `$loop->even`", np: "`odd` / `even`", jp: "`odd` / `even`" },
-              { en: "bool", np: "bool", jp: "bool" },
-              { en: "Odd / even iteration (useful for row striping)", np: "odd/even row", jp: "行の色分けに便利" },
-            ],
-            [
-              { en: "`$loop->depth`", np: "`$loop->depth`", jp: "`$loop->depth`" },
-              { en: "int", np: "int", jp: "int" },
-              { en: "Nesting depth (1 = outermost)", np: "nesting depth", jp: "ネスト深さ（1 = 最外）" },
-            ],
-            [
-              { en: "`$loop->parent`", np: "`$loop->parent`", jp: "`$loop->parent`" },
-              { en: "object|null", np: "object|null", jp: "object|null" },
-              { en: "Parent loop's `$loop` variable in nested loops", np: "outer loop $loop", jp: "外側ループの $loop" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Anonymous & class components",
-        np: "Anonymous र class components",
-        jp: "匿名コンポーネントとクラスコンポーネント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Components let you build reusable UI pieces — like a button, alert box, or card — that you can drop into any view with a single tag.\n\n<b>Anonymous components</b>\n• Just a `.blade.php` file in `resources/views/components/` — no PHP class needed\n  ↳ Declare what props it accepts with `@props(['variant' => 'primary'])`\n• Use `$slot` to render whatever content goes between the component's opening and closing tags\n• Use `$attributes->merge(['class' => '...'])` to pass through any extra HTML attributes the caller adds\n• Render with `<x-button variant=\"primary\">Save</x-button>`\n\n<b>Class components</b>\n• Add a PHP class alongside the view — useful when you need computed properties or logic in the component\n  ↳ Generate both files at once: `php artisan make:component Alert`\n  ↳ The class lives in `app/View/Components/`, the view in `resources/views/components/`",
-            np: "Anonymous: `resources/views/components/` मा blade file। `<x-name>` ले render। Class component: PHP class + view — `make:component`।",
-            jp: "匿名コンポーネントは `resources/views/components/` の Blade ファイルだけ。クラスコンポーネントは `make:component` で PHP クラス + ビューを生成します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Anonymous component — resources/views/components/button.blade.php",
-            np: "Anonymous component — button.blade.php",
-            jp: "匿名コンポーネント — button.blade.php",
-          },
-          code: `{{-- resources/views/components/button.blade.php --}}
-@props(['variant' => 'primary', 'type' => 'button'])
-
-<button
-    type="{{ $type }}"
-    {{ $attributes->merge(['class' => "btn btn-$variant"]) }}
->
-    {{ $slot }}
-</button>`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Using an anonymous component",
-            np: "Anonymous component प्रयोग",
-            jp: "匿名コンポーネントの利用",
-          },
-          code: `{{-- Renders <button class="btn btn-primary extra">Save</button> --}}
-<x-button variant="primary" class="extra">Save</x-button>
-
-{{-- Submit button --}}
-<x-button type="submit" variant="danger">Delete</x-button>
-
-{{-- Named slots --}}
-{{-- resources/views/components/card.blade.php --}}
-<div class="card">
-    <div class="card-header">{{ $header }}</div>
-    <div class="card-body">{{ $slot }}</div>
-    @isset($footer)
-        <div class="card-footer">{{ $footer }}</div>
-    @endisset
-</div>
-
-{{-- Usage with named slots --}}
-<x-card>
-    <x-slot:header>Card Title</x-slot:header>
-    Card body content here.
-    <x-slot:footer>Footer text</x-slot:footer>
-</x-card>`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Class component — make:component Alert",
-            np: "Class component — Alert",
-            jp: "クラスコンポーネント — Alert",
-          },
-          code: `# Generates: app/View/Components/Alert.php + resources/views/components/alert.blade.php
-php artisan make:component Alert`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "app/View/Components/Alert.php",
-            np: "Alert.php PHP class",
-            jp: "Alert.php クラス",
+            en: "Single-action (invokable) controller",
+            np: "Invokable controller",
+            jp: "シングルアクションコントローラ",
           },
           code: `<?php
-namespace App\\View\\Components;
+namespace App\\Http\\Controllers;
 
-use Illuminate\\View\\Component;
-use Illuminate\\View\\View;
+use App\\Models\\Post;
+use Illuminate\\Http\\RedirectResponse;
 
-class Alert extends Component
+class PublishPostController extends Controller
 {
-    public function __construct(
-        public string $type = 'info',
-        public string $title = '',
-    ) {}
-
-    // Computed property usable in the view as $iconClass
-    public function iconClass(): string
+    // Route: Route::post('/posts/{post}/publish', PublishPostController::class)
+    public function __invoke(Post $post): RedirectResponse
     {
-        return match ($this->type) {
-            'success' => 'text-green-500',
-            'error'   => 'text-red-500',
-            default   => 'text-blue-500',
-        };
-    }
+        $post->update(['published_at' => now()]);
 
-    public function render(): View
-    {
-        return view('components.alert');
+        return redirect()->route('posts.show', $post)
+            ->with('success', 'Post published.');
     }
 }`,
         },
         {
           type: "code",
           title: {
-            en: "resources/views/components/alert.blade.php",
-            np: "alert.blade.php view",
-            jp: "alert.blade.php ビュー",
+            en: "Resource controller with constructor injection",
+            np: "Resource controller constructor injection सहित",
+            jp: "コンストラクタ注入付きリソースコントローラ",
           },
-          code: `{{-- $type, $title, and $iconClass() are available from the PHP class --}}
-<div class="alert alert-{{ $type }}">
-    @if ($title)
-        <strong class="{{ $iconClass() }}">{{ $title }}</strong>
-    @endif
-    {{ $slot }}
-</div>
+          code: `<?php
+namespace App\\Http\\Controllers;
 
-{{-- Usage --}}
-<x-alert type="success" title="Saved!">
-    Your post has been published.
-</x-alert>`,
+use App\\Models\\Post;
+use App\\Services\\PostService;
+use Illuminate\\Http\\RedirectResponse;
+use Illuminate\\View\\View;
+
+class PostController extends Controller
+{
+    // Service Container resolves PostService automatically
+    public function __construct(private PostService $posts) {}
+
+    public function index(): View
+    {
+        return view('posts.index', ['posts' => $this->posts->paginate()]);
+    }
+
+    public function store(StorePostRequest $request): RedirectResponse
+    {
+        $post = Post::create($request->validated());
+
+        return redirect()->route('posts.show', $post)
+            ->with('success', 'Post created.');
+    }
+
+    public function show(Post $post): View
+    {
+        return view('posts.show', compact('post'));
+    }
+
+    public function update(UpdatePostRequest $request, Post $post): RedirectResponse
+    {
+        $post->update($request->validated());
+
+        return redirect()->route('posts.show', $post);
+    }
+
+    public function destroy(Post $post): RedirectResponse
+    {
+        $post->delete();
+
+        return redirect()->route('posts.index');
+    }
+}`,
         },
       ],
     },
     {
       title: {
-        en: "Form helpers & Vite",
-        np: "Form helpers र Vite",
-        jp: "フォームヘルパと Vite",
+        en: "Form Requests — validation objects",
+        np: "Form Requests — validation objects",
+        jp: "フォームリクエスト — バリデーションオブジェクト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Four directives you'll use on almost every form:\n\n<b>`@csrf`</b>\n• Adds a hidden token field that proves the form was submitted from your own site\n  ↳ Without it, Laravel rejects the request with a 419 error — never skip it on web forms\n\n<b>`@method('PUT')`</b>\n• Browsers can only send GET and POST natively — HTML forms can't send PUT, PATCH, or DELETE\n  ↳ This directive adds a hidden field so Laravel knows which HTTP method you actually intended\n\n<b>`@error('field')`</b>\n• Renders an inline error message when that field fails validation\n  ↳ Only shows up when there's an error — renders nothing when the field passes\n\n<b>`@vite(['resources/css/app.css', 'resources/js/app.js'])`</b>\n• Generates the correct `<link>` and `<script>` tags for your CSS and JS\n  ↳ In development: points to the Vite dev server with hot-module reload (HMR) for instant updates\n  ↳ In production: uses hashed filenames from the build manifest for cache-busting",
-            np: "`@csrf` — CSRF token; `@method('PUT')` — verb spoof; `@error` — validation error; `@vite()` — Vite assets (HMR dev)।",
-            jp: "`@csrf` は CSRF トークンフィールド。`@method('PUT')` で動詞を偽装。`@error` でフィールドエラー表示。`@vite()` で Vite アセットを読み込み（開発時は HMR 付き）。",
+            en: "A <b>Form Request</b> is a dedicated class that handles two things before your controller method even runs:\n\n<b>1. Authorization — are you allowed to do this?</b>\n• The `authorize()` method returns `true` (allowed) or `false` (not allowed)\n  ↳ Returning `false` automatically sends a 403 Forbidden response — your controller code never runs\n\n<b>2. Validation — is the data valid?</b>\n• The `rules()` method returns an array of validation rules\n  ↳ If any rule fails, Laravel stops and sends the user back with error messages automatically\n\nTo use it, just type-hint the Form Request class in your controller method — Laravel runs both checks for you.\nAlways retrieve the validated data with `$request->validated()`, not `$request->all()` — `validated()` returns only the fields that passed the rules, nothing more.",
+            np: "Form Request मा `authorize()` (false = 403) र `rules()`। type-hint गर्दा auto check। `$request->validated()` ले validated data मात्र।",
+            jp: "フォームリクエストは `authorize()`（false で 403）と `rules()` をカプセル化します。型ヒントを書くだけで自動検証。`$request->validated()` で安全なデータのみ取得。",
           },
         },
         {
           type: "code",
           title: {
-            en: "@csrf, @method, @error in a form",
-            np: "@csrf, @method, @error form मा",
-            jp: "@csrf・@method・@error のフォーム利用例",
+            en: "Generate a Form Request",
+            np: "Form Request बनाउने",
+            jp: "フォームリクエスト生成",
           },
-          code: `<form action="{{ route('posts.update', $post) }}" method="POST">
-    @csrf
-    @method('PUT')  {{-- Browser sends POST; Laravel reads X-HTTP-Method-Override --}}
-
-    <div>
-        <label for="title">Title</label>
-        <input
-            id="title"
-            name="title"
-            type="text"
-            value="{{ old('title', $post->title) }}"
-            class="{{ $errors->has('title') ? 'border-red-500' : '' }}"
-        >
-        @error('title')
-            <p class="text-red-500 text-sm">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <div>
-        <label for="body">Body</label>
-        <textarea id="body" name="body">{{ old('body', $post->body) }}</textarea>
-        @error('body')
-            <p class="text-red-500 text-sm">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <button type="submit">Update Post</button>
-</form>`,
+          code: `php artisan make:request StorePostRequest`,
         },
         {
           type: "code",
           title: {
-            en: "@vite — Vite asset integration",
-            np: "@vite — Vite assets",
-            jp: "@vite — Vite アセット統合",
+            en: "StorePostRequest — complete example",
+            np: "StorePostRequest — पूर्ण उदाहरण",
+            jp: "StorePostRequest の完全な例",
           },
-          code: `{{-- In your layout <head> --}}
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+          code: `<?php
+namespace App\\Http\\Requests;
 
-{{-- Output in production (hashed filenames from manifest.json):
-<link rel="stylesheet" href="/build/assets/app-3c4a5b6c.css">
-<script type="module" src="/build/assets/app-9d8e7f10.js"></script>
+use Illuminate\\Foundation\\Http\\FormRequest;
+use Illuminate\\Contracts\\Validation\\ValidationRule;
 
-  Output in development (with HMR hot-reload script injected):
-<script type="module" src="http://localhost:5173/@vite/client"></script>
-<script type="module" src="http://localhost:5173/resources/js/app.js"></script>
---}}`,
+class StorePostRequest extends FormRequest
+{
+    /**
+     * Return false to send a 403 Forbidden response.
+     */
+    public function authorize(): bool
+    {
+        return $this->user() !== null;
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'title'     => ['required', 'string', 'max:255'],
+            'body'      => ['required', 'string'],
+            'category'  => ['required', 'exists:categories,id'],
+            'tags'      => ['nullable', 'array', 'max:5'],
+            'tags.*'    => ['string', 'max:50'],
+            'published' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Custom error messages (optional).
+     */
+    public function messages(): array
+    {
+        return [
+            'title.required'  => 'A post title is required.',
+            'category.exists' => 'Please choose a valid category.',
+        ];
+    }
+
+    /**
+     * Override field labels in error messages (optional).
+     */
+    public function attributes(): array
+    {
+        return ['body' => 'post body'];
+    }
+
+    /**
+     * Normalize input BEFORE validation runs.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['title' => trim($this->title ?? '')]);
+    }
+
+    /**
+     * Hook called AFTER validation passes.
+     */
+    protected function passedValidation(): void
+    {
+        // log, enrich, or transform validated data here
+    }
+}`,
         },
         {
           type: "code",
           title: {
-            en: "@stack and @push — injecting assets from child templates",
-            np: "@stack / @push — child template बाट asset inject",
-            jp: "@stack / @push — 子テンプレートからアセット注入",
+            en: "Using StorePostRequest in a controller",
+            np: "Controller मा Form Request प्रयोग",
+            jp: "コントローラでのフォームリクエスト利用",
           },
-          code: `{{-- Layout defines the stack slot --}}
-@stack('scripts')
+          code: `<?php
+namespace App\\Http\\Controllers;
 
-{{-- Any child view or component can push into it --}}
-@push('scripts')
-    <script src="{{ asset('js/chart.min.js') }}"></script>
-@endpush
+use App\\Http\\Requests\\StorePostRequest;
+use App\\Models\\Post;
+use Illuminate\\Http\\RedirectResponse;
 
-{{-- @prepend to insert at the top of the stack --}}
-@prepend('scripts')
-    <script>const appEnv = '{{ app()->environment() }}';</script>
-@endprepend`,
+class PostController extends Controller
+{
+    // authorize() + rules() run automatically before this method body
+    public function store(StorePostRequest $request): RedirectResponse
+    {
+        // validated() returns ONLY fields that passed rules()
+        $post = Post::create($request->validated());
+
+        return redirect()->route('posts.show', $post)
+            ->with('success', 'Post created!');
+    }
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Response types reference",
+        np: "Response types सन्दर्भ",
+        jp: "レスポンス種別リファレンス",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "View, JSON, redirect, download & stream",
+            np: "View, JSON, redirect, download",
+            jp: "ビュー・JSON・リダイレクト・ダウンロード",
+          },
+          code: `<?php
+// View (Blade)
+return view('posts.show', compact('post'));
+return view('posts.index', ['posts' => Post::paginate(15)]);
+
+// JSON (API)
+return response()->json(['data' => $post], 200);
+return response()->json(['created' => true], 201);
+return response()->json(null, 204);  // DELETE — no body
+
+// Redirects
+return redirect('/dashboard');
+return redirect()->route('posts.index');
+return redirect()->back();
+return redirect()->back()->withInput()->withErrors(['title' => 'Required']);
+return redirect()->route('posts.edit', $post)
+    ->with('warning', 'Review before publishing.');
+
+// Download & file (inline in browser)
+return response()->download(storage_path('app/report.pdf'), 'report.pdf');
+return response()->file(storage_path('app/logo.png'));
+
+// Custom headers + status
+return response('Unauthorized text', 401)
+    ->header('X-Custom', 'value');`,
         },
         {
-          type: "paragraph",
-          text: {
-            en: "Laravel has four ways to pull in a partial view — pick the right one for your situation:\n• `@include('partials.nav')` — simple include, like a copy-paste of that file into this spot\n• `@includeIf('partials.banner')` — only includes if the file exists, silently skips it otherwise\n  ↳ Useful for optional UI elements that may not exist in every project variant\n• `@includeWhen($user->isAdmin(), 'partials.admin-nav')` — only includes when a condition is true\n• `@includeFirst(['custom.nav', 'partials.nav'])` — tries each file in order, uses the first one that exists\n  ↳ Useful for themes or overridable templates where some projects customize the default",
-            np: "`@include` — file reuse। `@includeIf` — file छैन भने skip। `@includeWhen` — conditional। `@includeFirst` — पहिलो available file।",
-            jp: "`@include` で部分ビューを読み込み。`@includeIf` はファイルが無い場合にスキップ。`@includeWhen` で条件付き。`@includeFirst` で存在する最初のファイルを使用。",
+          type: "table",
+          caption: {
+            en: "Common HTTP status codes",
+            np: "सामान्य HTTP status codes",
+            jp: "よく使う HTTP ステータスコード",
           },
+          headers: [
+            { en: "Code", np: "Code", jp: "コード" },
+            { en: "Meaning", np: "अर्थ", jp: "意味" },
+            { en: "Typical use", np: "प्रयोग", jp: "典型的な用途" },
+          ],
+          rows: [
+            [
+              { en: "200", np: "200", jp: "200" },
+              { en: "OK", np: "OK", jp: "OK" },
+              { en: "Successful GET", np: "सफल GET", jp: "成功した GET" },
+            ],
+            [
+              { en: "201", np: "201", jp: "201" },
+              { en: "Created", np: "सिर्जित", jp: "作成完了" },
+              { en: "Resource created via POST", np: "POST बाट resource", jp: "POST でリソース作成" },
+            ],
+            [
+              { en: "204", np: "204", jp: "204" },
+              { en: "No Content", np: "सामग्री छैन", jp: "内容なし" },
+              { en: "Successful DELETE (no body)", np: "DELETE, body छैन", jp: "DELETE 成功（ボディなし）" },
+            ],
+            [
+              { en: "301", np: "301", jp: "301" },
+              { en: "Moved Permanently", np: "स्थायी redirect", jp: "恒久リダイレクト" },
+              { en: "Permanent URL redirect", np: "स्थायी redirect", jp: "恒久的な転送" },
+            ],
+            [
+              { en: "302", np: "302", jp: "302" },
+              { en: "Found (Redirect)", np: "अस्थायी redirect", jp: "一時リダイレクト" },
+              { en: "`redirect()` default in Laravel", np: "Laravel default", jp: "Laravel の `redirect()` デフォルト" },
+            ],
+            [
+              { en: "401", np: "401", jp: "401" },
+              { en: "Unauthorized", np: "अप्रमाणित", jp: "未認証" },
+              { en: "No or invalid auth token", np: "token छैन वा गलत", jp: "認証なし（トークン無効）" },
+            ],
+            [
+              { en: "403", np: "403", jp: "403" },
+              { en: "Forbidden", np: "निषिद्ध", jp: "アクセス拒否" },
+              { en: "Authenticated but not authorized", np: "प्रमाणित, अनुमति छैन", jp: "認証済みだが権限なし" },
+            ],
+            [
+              { en: "404", np: "404", jp: "404" },
+              { en: "Not Found", np: "फेला परेन", jp: "リソース不在" },
+              { en: "Route or model not found", np: "route वा model भेटिएन", jp: "ルートやモデルが見つからない" },
+            ],
+            [
+              { en: "422", np: "422", jp: "422" },
+              { en: "Unprocessable Content", np: "validation असफल", jp: "バリデーション失敗" },
+              { en: "Validation failure (API JSON)", np: "API validation fail", jp: "API バリデーション失敗" },
+            ],
+            [
+              { en: "500", np: "500", jp: "500" },
+              { en: "Internal Server Error", np: "सर्भर त्रुटि", jp: "サーバ内部エラー" },
+              { en: "Unhandled exception", np: "unhandled exception", jp: "未処理の例外" },
+            ],
+          ],
         },
       ],
     },
@@ -456,62 +361,62 @@ class Alert extends Component
   faq: [
     {
       question: {
-        en: "How do I pass data from a controller to a Blade view?",
-        np: "Controller बाट Blade view मा data कसरी पठाउने?",
-        jp: "コントローラから Blade ビューへのデータ渡し方は？",
+        en: "When should I use a Form Request instead of inline `$request->validate()`?",
+        np: "Inline `validate()` र Form Request — कहिले कुन?",
+        jp: "インライン `validate()` とフォームリクエストの使い分けは？",
       },
       answer: {
-        en: "Three ways, all equivalent — choose whichever feels most readable for your situation:\n• `return view('posts.show', ['post' => $post])` — explicit array, always clear\n• `return view('posts.show')->with('post', $post)` — chain as many `->with()` calls as you need\n• `return view('posts.show', compact('post', 'comments'))` — PHP shorthand when your local variable names already match the keys you want\n\nIn all three cases, the key name becomes a `$variable` inside the template.",
-        np: "`view('name', ['key' => $val])`, `->with('key', $val)`, `compact('post')` — तिनीहरू सबै equivalent।",
-        jp: "連想配列・`->with()` チェーン・`compact()` の 3 通り。配列のキーがテンプレート内の変数名になります。",
+        en: "Use <b>inline validation</b> (`$request->validate([...])`) when you have a simple form with just 2–3 rules and no special logic.\n\nSwitch to a <b>Form Request</b> when:\n• The rules are complex or too long to keep readable inside a controller\n• You need to check authorization at the same time (e.g. only the post owner can edit it)\n• Multiple controller methods share the same rules and you don't want to copy-paste them\n• You want to write unit tests specifically for your validation rules\n\nForm Requests also give you two useful lifecycle hooks:\n• `prepareForValidation()` — runs before rules are checked, lets you clean or transform input\n  ↳ E.g. trim whitespace from a name field before validating it\n• `passedValidation()` — runs after all rules pass, useful for side effects like logging",
+        np: "Simple = inline। Complex, auth, reuse = Form Request। lifecycle hooks पनि मिल्छ।",
+        jp: "シンプルな検証はインライン。ルールが複雑・認可が伴う・複数アクションで共有の場合はフォームリクエスト。ライフサイクルフックも利用できます。",
       },
     },
     {
       question: {
-        en: "What is the difference between `@include` and `<x-component>`?",
-        np: "`@include` र `<x-component>` को फरक?",
-        jp: "`@include` と `<x-component>` の違いは？",
+        en: "What does `authorize()` return and what happens when it returns `false`?",
+        np: "`authorize()` false भए के हुन्छ?",
+        jp: "`authorize()` が `false` を返すとどうなる？",
       },
       answer: {
-        en: "Both pull in another template, but they work very differently:\n\n<b>`@include('partials.nav')`</b>\n• Simple file paste — the included file can see all variables from the parent view automatically\n  ↳ Good for static partials like a nav bar or footer that don't need their own props\n\n<b>`<x-component>`</b>\n• More like a reusable building block with a clear, defined interface\n  ↳ Accepts explicit <b>props</b> (declared inputs), keeping the caller in control of what data goes in\n  ↳ Supports <b>slots</b> (default and named) for injecting content between the tags\n  ↳ Forwards extra HTML attributes with `$attributes->merge()`\n  ↳ Can have a PHP class behind it for computed properties or logic\n\nRule of thumb: use `@include` for simple one-off partials, use components for any UI you'll reuse in multiple places.",
-        np: "`@include` — simple file paste, parent scope accessible। `<x-component>` — props, slots, attributes, PHP class।",
-        jp: "`@include` は親スコープをすべて引き継ぐシンプルな埋め込み。`<x-component>` は props・スロット・属性マージ・PHP クラスロジックをサポートします。",
+        en: "When `authorize()` returns `false`, Laravel throws an `AuthorizationException` automatically — you don't have to handle it yourself.\n\nWhat the user gets depends on how the request was made:\n• <b>Web request</b> — a 403 Forbidden page\n• <b>API request (JSON)</b> — a 403 response with `{\"message\": \"This action is unauthorized.\"}`\n\nIf you want to customize the error message, return a `Gate::response()` object instead of a plain `false` — it lets you set a specific message for the 403.",
+        np: "`false` = `AuthorizationException` → 403। `Gate::response()` ले message customize। API मा JSON।",
+        jp: "`false` で `AuthorizationException` がスローされ **403 Forbidden** に変換。`Gate::response()` でメッセージをカスタマイズ可。API では JSON ボディになります。",
       },
     },
     {
       question: {
-        en: "Can I use `{{ }}` for JavaScript template literals?",
-        np: "JavaScript मा `{{ }}` प्रयोग गर्न सकिन्छ?",
-        jp: "Blade の `{{ }}` は JavaScript テンプレートリテラルと衝突しない？",
+        en: "How do I return a 422 from a controller manually (without a Form Request)?",
+        np: "Controller बाट manually 422 कसरी?",
+        jp: "コントローラから手動で 422 を返すには？",
       },
       answer: {
-        en: "Blade processes all `{{ }}` on the server before the HTML is sent to the browser. If you're using a JavaScript framework like Vue.js or Alpine.js that also uses `{{ }}` syntax, you have two options to stop Blade from touching them:\n\n• Prefix with `@`: write `@{{ message }}` — Blade strips the `@` and outputs the literal text `{{ message }}` for JavaScript to process\n  ↳ Best for one or two expressions\n• Wrap a whole block in `@verbatim ... @endverbatim` — Blade leaves everything inside completely untouched\n  ↳ Best when you have many JavaScript expressions in one section",
-        np: "Blade `{{ }}` process गर्छ। Vue/Alpine को लागि `@{{ message }}` वा `@verbatim` block प्रयोग गर्नुस्।",
-        jp: "Blade は `{{ $var }}` をサーバで処理します。Vue/Alpine 向けにリテラル `{{ }}` を出力するには `@{{ message }}` か `@verbatim ... @endverbatim` ブロックを使います。",
+        en: "You have three options depending on how much control you need:\n\n• Throw a `ValidationException` with specific field errors:\n  ↳ `throw \\Illuminate\\Validation\\ValidationException::withMessages(['field' => ['Error message']])`\n  ↳ Laravel formats this as a 422 with an `errors` key — the same format Form Requests produce\n• Use `abort(422)` for a quick generic 422 with no field detail\n• Use `response()->json(['errors' => [...]], 422)` for full manual control in an API — you build the JSON yourself",
+        np: "`ValidationException::withMessages([...])` throw → 422। `abort(422)` वा `response()->json([...], 422)` पनि।",
+        jp: "`ValidationException::withMessages([...])` をスローすると 422 になります。`abort(422)` や `response()->json(['errors' => [...]], 422)` も使えます。",
       },
     },
     {
       question: {
-        en: "How does `@stack` differ from `@section`?",
-        np: "`@stack` र `@section` को फरक?",
-        jp: "`@stack` と `@section` の違いは？",
+        en: "Can a single controller handle both web (Blade) and API (JSON) responses?",
+        np: "एउटै controller ले web र API दुवै handle गर्न?",
+        jp: "1 つのコントローラで Web と API 両方を扱える？",
       },
       answer: {
-        en: "They solve different problems:\n\n<b>`@section` / `@yield`</b>\n• One slot, one value — a child view fills it in once\n  ↳ If two children both define the same `@section`, the last one wins\n  ↳ Use `@parent` if you want to keep the layout's default content and add to it\n\n<b>`@stack` / `@push`</b>\n• Additive — every `@push` call adds to the stack, they all accumulate in order\n  ↳ Multiple components on the same page can each push their own scripts to `@stack('scripts')`\n  ↳ Great for page-specific JavaScript or CSS that different components on the page need to inject",
-        np: "`@section` — एकपटक override। `@stack` — additive; multiple `@push` सबै accumulate। scripts/styles inject गर्न ideal।",
-        jp: "`@section` は 1 回だけ上書き。`@stack` は **累積型**で、複数の `@push` が順番に積まれます。ページ内複数コンポーネントがスクリプトを注入するのに向いています。",
+        en: "Technically yes — you can check `$request->expectsJson()` inside a method and return a view or JSON based on that.\n\nIn practice though, keeping them separate is much cleaner and easier to maintain:\n• `App\\Http\\Controllers\\PostController` — handles web requests, returns views and redirects\n• `App\\Http\\Controllers\\Api\\PostController` — handles API requests, returns JSON only\n  ↳ The API version skips `create` and `edit` methods since APIs don't serve HTML forms",
+        np: "`$request->expectsJson()` ले branch। तर अलग controller cleaner।",
+        jp: "技術的には可能。ただし `Api\\` 名前空間にコントローラを分けた方が明確です。",
       },
     },
     {
       question: {
-        en: "How do I escape a `{{` in Blade so it appears literally in the HTML?",
-        np: "Blade मा `{{` literal HTML मा कसरी?",
-        jp: "Blade で `{{` をそのまま HTML に出力するには？",
+        en: "How do I test HTTP responses in Laravel?",
+        np: "HTTP response test कसरी?",
+        jp: "HTTP レスポンスのテスト方法は？",
       },
       answer: {
-        en: "Two ways — same ones as escaping for JavaScript frameworks:\n• Write `@{{ message }}` — Blade strips the `@` and outputs `{{ message }}` as literal HTML text\n  ↳ Use this for one or two expressions\n• Wrap a large block in `@verbatim ... @endverbatim` — Blade ignores everything between those tags\n  ↳ Use this when you have many `{{ }}` expressions in a section and don't want to prefix each one individually",
-        np: "`@{{ message }}` लेख्नुस् — Blade `@` हटाएर `{{ message }}` literal output दिन्छ। ठूलो block मा `@verbatim`।",
-        jp: "`@{{ message }}` と書くと Blade は `@` を除去し `{{ message }}` をそのまま出力します。大きなブロックには `@verbatim ... @endverbatim` を使います。",
+        en: "Laravel gives you simple HTTP test helpers that simulate real requests without a browser:\n\n• To test a GET route: `$this->get('/posts')->assertOk()->assertViewIs('posts.index')`\n• To test an API endpoint: `$this->postJson('/api/posts', $data)->assertCreated()->assertJsonPath('data.title', 'My Post')`\n• To test as a logged-in user: chain `actingAs($user)` before the request\n  ↳ E.g. `$this->actingAs($user)->get('/dashboard')->assertOk()`\n\nRun the full test suite with `php artisan test` (PHPUnit) or `./vendor/bin/pest` (Pest).",
+        np: "`$this->get()->assertOk()`, `postJson()->assertCreated()`, `actingAs($user)` — `php artisan test`।",
+        jp: "`$this->get('/posts')->assertOk()` や `postJson(...)->assertCreated()` のヘルパを使います。`actingAs($user)` で認証再現。`php artisan test` か `pest` で実行。",
       },
     },
   ],
