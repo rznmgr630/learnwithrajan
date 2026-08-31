@@ -3,329 +3,392 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_28_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "A slow app is a broken app — users leave pages that take more than 3 seconds to load, and search engines penalise slow sites. Performance in Laravel is mostly about three things: <b>database queries</b> (too many, or poorly structured), <b>caching</b> (not caching what you could), and <b>background work</b> (doing expensive work synchronously that could run in a queue). Most apps have at least one of these problems by default.",
-      np: "Slow app = broken app। Laravel performance: database queries optimize गर्नुस्, caching प्रयोग गर्नुस्, expensive work queue मा पठाउनुस्।",
-      jp: "遅いアプリは壊れたアプリ。Laravel のパフォーマンスは主に DB クエリ・キャッシュ・バックグラウンド処理の 3 点。",
+      en: "Modern Laravel apps almost always have a frontend story. You have three main paths: <b>Blade + Livewire</b> (server-rendered, reactive without writing JavaScript), <b>Inertia.js</b> (SPA feel with Vue or React, using Laravel routing and controllers), or a fully decoupled <b>API + frontend</b> (Sanctum + Next.js/Nuxt — covered in Day 21). Today covers Livewire and Inertia — the two \"integrated\" approaches that keep your team in one codebase.",
+      np: "Laravel frontend: Livewire (PHP-centric, reactive), Inertia.js (Vue/React + Laravel routing), वा Sanctum API। आज Livewire र Inertia cover गर्छौं।",
+      jp: "Laravel のフロントエンド: Livewire（PHP 中心）、Inertia.js（Vue/React + Laravel ルーティング）、Sanctum API の 3 択。今日は Livewire と Inertia を学ぶ。",
     },
     {
-      en: "<b>N+1 query problem</b> — the single most common performance bug in Laravel apps\n↳ One query to get 100 posts, then 100 queries to get each post's author = 101 queries\n\n<b>Eager loading & withCount</b> — solving N+1 with `with()` and `withCount()`\n↳ Two queries instead of 101, regardless of how many records you have\n\n<b>Query debugging</b> — Laravel Telescope and Debugbar to spot slow queries\n↳ See every query, its execution time, and where it was called from\n\n<b>Redis caching</b> — caching query results, computed values, and sessions\n↳ ~1ms Redis read vs ~50ms database query\n\n<b>Laravel Horizon</b> — queue monitoring, worker scaling, and failure tracking\n↳ Dashboard showing throughput, wait time, and failed job stack traces",
-      np: "N+1 problem, eager loading, Telescope, Redis caching, Horizon — यी 5 topics cover हुन्छन्।",
-      jp: "N+1 問題、Eager ロード、Telescope、Redis キャッシュ、Horizon の 5 トピックを学ぶ。",
+      en: "What each option is best for:\n\n<b>Livewire</b> — best when your team prefers PHP and minimal JavaScript\n↳ Think of it as interactive Blade — components re-render server-side on user interaction\n• No JavaScript framework to learn\n• Two-way data binding with `wire:model`\n• Full access to Laravel validation, auth, and Eloquent\n\n<b>Inertia.js</b> — best when your team knows Vue or React and wants a proper SPA\n↳ Think of it as using Laravel as a JSON API but with server-side routing (no `/api` prefix, no token management)\n• Controllers return Inertia responses instead of JSON\n• Vue/React page components receive props directly from controllers\n\n<b>Vite</b> — the asset bundler used by both; replaces Laravel Mix\n↳ Hot Module Replacement, near-instant builds, works with React, Vue, TypeScript",
+      np: "Livewire: PHP-first, reactive Blade। Inertia: Vue/React + Laravel routing। Vite: asset bundler (Laravel Mix को replacement)।",
+      jp: "Livewire: PHP 重視・Blade 拡張。Inertia: Vue/React + Laravel ルーティング。Vite: アセットバンドラー（Mix の後継）。",
     },
   ],
   sections: [
     {
       title: {
-        en: "The N+1 query problem",
-        np: "N+1 query problem",
-        jp: "N+1 クエリ問題",
+        en: "Vite — asset bundling in Laravel",
+        np: "Vite — asset bundling",
+        jp: "Vite — アセットバンドル",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>N+1</b> is when you run 1 query to get a list of records, then run 1 more query for EACH record to fetch related data. With 100 posts, that is 101 database round trips instead of 2.\n\nIt's named \"N+1\" because:\n• 1 query to get the list (the \"1\")\n• N queries to get each item's related data (the \"N\")\n• Total: N+1 queries\n\nEach round trip has overhead: network latency, connection setup, query parsing, index lookup. At scale this tanks response time. A page that loads in 50ms with 10 items takes 5 seconds with 1,000 items.",
-            np: "N+1 = 1 query list लिन + N queries प्रत्येक item को related data लिन। 100 posts = 101 queries! Eager loading ले यो fix गर्छ।",
-            jp: "N+1 は 1 回のリスト取得 + N 回の関連データ取得。100 件で 101 クエリ。Eager loading で解決。",
+            en: "Before diving into Livewire or Inertia, you need to understand the asset pipeline. <b>Vite</b> is a build tool — it takes your JS, CSS, and TypeScript files and bundles them for the browser. It replaced Laravel Mix in Laravel 10+.\n\nThe key win over Mix:\n• Dev server starts instantly (no webpack cold start)\n• Hot-reloads changes in milliseconds instead of seconds\n• Native TypeScript and JSX support with zero config\n• Smaller production bundles via tree-shaking",
+            np: "Vite = JS/CSS build tool। Laravel 10+ मा Laravel Mix को replacement। Hot reload instant छ।",
+            jp: "Vite は JS/CSS ビルドツール。Laravel 10 以降 Mix の後継。ホットリロードが高速。",
           },
         },
         {
           type: "code",
-          title: { en: "N+1 problem and the fix", np: "N+1 र fix", jp: "N+1 と解決策" },
-          code: `// BAD — N+1 problem (101 queries for 100 posts)
-$posts = Post::all(); // 1 query
-foreach ($posts as $post) {
-    echo $post->author->name; // 1 query per post = 100 more queries
-    echo $post->comments->count(); // another 100 queries!
-}
+          title: { en: "vite.config.js + Blade integration", np: "vite.config.js", jp: "vite.config.js" },
+          code: `// vite.config.js (default Laravel setup)
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 
-// GOOD — Eager loading (3 queries total, regardless of count)
-$posts = Post::with(['author', 'comments'])->get();
-// Query 1: SELECT * FROM posts
-// Query 2: SELECT * FROM users WHERE id IN (1, 2, 3, ...)
-// Query 3: SELECT * FROM comments WHERE post_id IN (1, 2, 3, ...)
-
-// BETTER — withCount when you only need the count, not the records
-$posts = Post::with('author')->withCount('comments')->get();
-// $post->comments_count is now available as a virtual column
-// Only 2 queries total — no loading all comment rows into memory
-
-// DETECT N+1 in development — add to AppServiceProvider::boot()
-if (app()->isLocal()) {
-    \\Illuminate\\Database\\Eloquent\\Model::preventLazyLoading(true);
-    // Now Laravel throws an exception instantly when lazy loading is detected
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The `preventLazyLoading(true)` call is the single most effective way to catch N+1 before it reaches production. It throws a `LazyLoadingViolationException` with the model name and relationship that was lazily loaded, so you can fix it immediately.\n\nUseful variants:\n• `Post::with(['author:id,name', 'tags:id,name'])` — only load specific columns from related models\n• `Post::with(['comments' => fn($q) => $q->latest()->limit(3)])` — constrain eager load queries\n• `$posts->load('author')` — eager load on an already-retrieved collection",
-            np: "`preventLazyLoading(true)` production deployment अघि N+1 catch गर्ने best tool हो।",
-            jp: "`preventLazyLoading(true)` は N+1 を本番前に検出する最良の方法。関係の制約にも対応。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Query optimization — indexes, select & chunking",
-        np: "Query optimization — indexes, select र chunking",
-        jp: "クエリ最適化 — インデックス・select・チャンク",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Even with N+1 solved, individual queries can be slow. Three common causes:\n\n• <b>Missing indexes</b> — without an index, the database reads every row to find matches\n  ↳ Think of it like a book with no index — you'd read every page to find a word\n  ↳ Add indexes on columns you filter (`WHERE`), sort (`ORDER BY`), or join on\n• <b>Selecting too many columns</b> — `SELECT *` loads every column even if you use only 2\n  ↳ A `posts` table with a `body` TEXT column sends megabytes of data you don't render\n• <b>Loading too many rows at once</b> — `Post::all()` on a million-row table exhausts PHP memory",
-            np: "Missing indexes, SELECT *, र large datasets — यी तीन common query performance issues हुन्।",
-            jp: "インデックス不足・SELECT * による過剰取得・大量行ロードが遅いクエリの主な原因。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Indexes, column selection & chunking", np: "Indexes, select, chunk", jp: "インデックス・select・チャンク" },
-          code: `// INDEXES — add to your migrations
-Schema::table('posts', function (Blueprint $table) {
-    $table->index('user_id');                        // single column
-    $table->index(['user_id', 'published_at']);      // composite (queries filter both)
-    $table->index('published_at');                   // for ORDER BY published_at DESC
-});
-
-// COLUMN SELECTION — only load what you need
-Post::select(['id', 'title', 'published_at', 'user_id'])
-    ->with('author:id,name')  // constrain relation columns too
-    ->get();
-
-// CHUNKING — process large tables without exhausting memory
-// chunk(): loads 500 rows at a time
-Post::chunk(500, function (\\Illuminate\\Support\\Collection $posts) {
-    foreach ($posts as $post) {
-        // process each post
-    }
-});
-
-// cursor(): memory-efficient generator (one row at a time)
-// Good for very large tables; holds DB connection open throughout
-foreach (Post::cursor() as $post) {
-    // process each post
-}
-
-// LOG ALL QUERIES in development
-\\DB::enableQueryLog();
-$posts = Post::with('author')->get();
-$queries = \\DB::getQueryLog();
-// $queries is an array of ['query' => '...', 'bindings' => [...], 'time' => 1.23]
-
-// Use DB::listen() for live logging
-\\DB::listen(function ($query) {
-    if ($query->time > 100) { // log queries slower than 100ms
-        logger()->warning("Slow query: {$query->sql}", ['time' => $query->time]);
-    }
-});`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "For production query analysis, install Laravel Telescope (`composer require laravel/telescope --dev`) — it records every query with its SQL, bindings, execution time, and the exact line of code that triggered it. It also highlights slow queries in red. Never run Telescope in production without restricting access to admin IPs.",
-            np: "Production मा Laravel Telescope install गर्नुस् — सबै queries देखिन्छन् execution time सहित।",
-            jp: "本番のクエリ分析には Laravel Telescope を使用。SQL・実行時間・呼び出し元を記録し、遅いクエリを赤でハイライト。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Caching with Redis",
-        np: "Redis caching",
-        jp: "Redis によるキャッシュ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Caching means storing the result of an expensive operation so you can reuse it without re-computing. <b>Redis</b> is an in-memory key-value store — reads take ~1ms vs ~50ms for a database query.\n\nAnalogy: Redis is like keeping a sticky note on your desk (instant) vs going to the filing cabinet (slower) vs going to the library archive (slowest).\n\nUse Redis for:\n• Frequently-read data that changes rarely (featured posts, nav menus, config)\n• Computed aggregates (leaderboards, total counts)\n• Sessions (faster than database sessions)\n• Rate limiting (Laravel's throttle middleware uses Redis by default)\n• Queue backend (jobs stored in Redis, consumed by workers)",
-            np: "Redis = in-memory key-value store। ~1ms read। Frequently-read data, sessions, queues, rate limiting मा प्रयोग गर्नुस्।",
-            jp: "Redis はメモリ内 KV ストア。読み取り約 1ms。頻繁に読まれるデータ・セッション・キュー・レート制限に活用。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Cache::remember, tags & invalidation", np: "Cache examples", jp: "キャッシュの例" },
-          code: `// Basic caching — compute on miss, serve from cache on hit
-$posts = Cache::remember('posts.featured', 3600, function () {
-    return Post::featured()->with('author')->orderByDesc('views')->limit(10)->get();
-});
-// 3600 = TTL in seconds (1 hour)
-
-// Invalidate when data changes (e.g. in PostObserver)
-public function updated(Post $post): void
-{
-    Cache::forget('posts.featured');
-}
-
-// Tag-based invalidation — requires Redis (not available with file driver)
-// Cache all post-related data under the 'posts' tag
-$featured = Cache::tags(['posts'])->remember('featured', 3600, fn() => ...);
-$trending = Cache::tags(['posts'])->remember('trending', 1800, fn() => ...);
-
-// Invalidate ALL post caches at once
-Cache::tags(['posts'])->flush();
-
-// Per-user cache (prevents cache key collisions)
-$key = "user:{$userId}:dashboard";
-$dashboard = Cache::remember($key, 600, fn() => buildDashboard($userId));
-
-// Store arbitrary data
-Cache::put('maintenance_mode', true, 300); // expires in 5 minutes
-Cache::forever('app_version', '2.4.1');    // no expiry
-$value = Cache::get('app_version', 'unknown'); // default if missing
-
-// .env configuration
-// CACHE_DRIVER=redis
-// REDIS_HOST=127.0.0.1
-// REDIS_PORT=6379
-// SESSION_DRIVER=redis  (store sessions in Redis)`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Cache key naming rules</b>:\n• Be specific: `posts.featured` is wrong if multiple tenants share a cache\n• Include IDs: `\"user:{$userId}:posts\"` instead of `\"user_posts\"`\n• Include version if the data structure changes: `\"posts.v2.featured\"`\n• Set sensible TTLs — cache that never expires grows forever and goes stale\n\n<b>When NOT to cache</b>:\n• Data that must be real-time (inventory counts, account balances)\n• Data that changes on every request without a user-specific key\n• Tiny queries that are already fast (single-row primary key lookups — DB buffers those itself)",
-            np: "Cache key naming: specific र unique राख्नुस्। TTL sensible राख्नुस्। Inventory/balance जस्ता real-time data cache नगर्नुस्।",
-            jp: "キャッシュキーは具体的かつユニークに。TTL を適切に設定。在庫・残高などリアルタイムデータはキャッシュ不可。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Laravel Horizon — queue monitoring & scaling",
-        np: "Laravel Horizon — queue monitoring",
-        jp: "Laravel Horizon — キュー監視とスケーリング",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Horizon is a dashboard and process manager for Laravel queues. Without it, you manage queue workers manually — launching them with supervisor, guessing how many you need, flying blind when jobs fail.\n\nHorizon gives you:\n• Live dashboard with jobs-per-minute, wait time, throughput\n• Failed jobs with full stack traces and retry button\n• Auto-balancing workers across queues based on real load\n• Slack/email alerts when jobs fail or queues back up",
-            np: "Horizon = queue dashboard + process manager। Failed jobs, throughput, auto-balancing — सबै एकै ठाउँमा।",
-            jp: "Horizon はキューのダッシュボード＋プロセスマネージャー。失敗ジョブ・スループット・自動バランスを一元管理。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Horizon setup & config", np: "Horizon setup", jp: "Horizon セットアップ" },
-          code: `// Install
-composer require laravel/horizon
-php artisan horizon:install
-php artisan migrate  // creates horizon tables
-
-// config/horizon.php — define worker environments
-'environments' => [
-    'production' => [
-        'supervisor-1' => [
-            'connection'   => 'redis',
-            'queue'        => ['high', 'default', 'low'],
-            'balance'      => 'auto',     // smart auto-scaling
-            'maxProcesses' => 10,         // max total worker processes
-            'memory'       => 128,        // MB per worker (restart if exceeded)
-            'timeout'      => 60,         // job time limit in seconds
-            'tries'        => 3,          // retry failed jobs 3 times
-        ],
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true, // auto-refresh Blade on change
+        }),
     ],
-    'local' => [
-        'supervisor-1' => [
-            'connection'   => 'redis',
-            'queue'        => ['default'],
-            'balance'      => 'simple',
-            'maxProcesses' => 3,
-        ],
+});
+
+// Adding React support
+// npm install @vitejs/plugin-react
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+    plugins: [
+        laravel({ input: ['resources/js/app.jsx'], refresh: true }),
+        react(),
     ],
-],
+});
 
-// Run Horizon
-php artisan horizon         // start in foreground (dev)
-php artisan horizon:status  // check if running
-php artisan horizon:pause   // pause all workers
-php artisan horizon:continue
+// In Blade layouts — include compiled assets
+// resources/views/layouts/app.blade.php
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
-// Prioritise critical jobs
-SendWelcomeEmail::dispatch($user)->onQueue('high');
-GenerateReport::dispatch($data)->onQueue('low');
-
-// Supervisor config for production (/etc/supervisor/conf.d/horizon.conf)
-// [program:horizon]
-// command=php /var/www/artisan horizon
-// autostart=true
-// autorestart=true
-// user=www-data`,
+// Dev: npm run dev   (starts Vite dev server with HMR)
+// Prod: npm run build  (outputs to public/build/ with hashed filenames)`,
         },
         {
           type: "paragraph",
           text: {
-            en: "`balance: auto` monitors each queue's depth and spins up more workers for queues with a backlog — it responds to real load rather than distributing blindly. Key settings:\n• `maxProcesses` — set to your server's CPU count (not total RAM)\n• `memory: 128` — worker restarts after using 128MB, preventing gradual memory leaks\n• `tries: 3` — retries a failing job 3 times before marking it as \"failed\"\n• `timeout: 60` — kills a job that runs longer than 60 seconds (prevents zombie workers)\n\nAlways monitor the Horizon dashboard after a new deployment — a new bug can cause jobs to fail silently without Horizon.",
-            np: "`balance: auto` real load हेरेर workers थप्छ। `maxProcesses`, `memory`, `tries`, `timeout` सेट गर्नुस्।",
-            jp: "`balance: auto` はキューの深さに応じてワーカーを増減。`maxProcesses`・`memory`・`tries`・`timeout` を適切に設定。",
+            en: "Vite in production (`npm run build`) outputs versioned files to `public/build/manifest.json`. The `@vite()` directive reads this manifest to inject the correct hashed filenames. Never commit the `public/build/` folder to git — always run `npm run build` in your CI/CD pipeline.",
+            np: "Production मा `npm run build` चलाउनुस्। `public/build/` git मा commit नगर्नुस् — CI/CD मा build गर्नुस्।",
+            jp: "本番は `npm run build`。`public/build/` は git に含めず、CI/CD でビルドする。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Telescope — profiling in development",
-        np: "Telescope — development debugging",
-        jp: "Telescope — 開発時のプロファイリング",
+        en: "Livewire — reactive PHP components",
+        np: "Livewire — reactive PHP components",
+        jp: "Livewire — リアクティブ PHP コンポーネント",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel Telescope is a development debugging dashboard. It records every request, query, job, mail, notification, cache hit/miss, schedule firing, and exception — with full context.\n\nAnalogy: it's like having a flight data recorder for your application — when something goes wrong, you replay exactly what happened.\n\nInstall it in development only — never in production without IP restrictions, as it exposes sensitive request data, query results, and environment variables.",
-            np: "Telescope = development debugging dashboard। Requests, queries, jobs, mails, exceptions सबै record गर्छ।",
-            jp: "Telescope は開発用デバッグダッシュボード。リクエスト・クエリ・ジョブ・例外をすべて記録。本番では IP 制限必須。",
+            en: "Livewire works by rendering a component as HTML on the server, sending it to the browser, and then — when the user interacts (types, clicks, submits) — sending a small Ajax request back to re-render just that component. No page refresh, no JavaScript state management, no REST API needed.\n\nAnalogy: it's like a turbo-charged Blade component that can react to user input.",
+            np: "Livewire = server-side HTML render गर्छ। User interact गर्दा Ajax request पठाउँछ, component फेरि render हुन्छ। JavaScript framework चाहिँदैन।",
+            jp: "Livewire はサーバー側で HTML をレンダリングし、ユーザー操作時に Ajax で再レンダリング。JS フレームワーク不要。",
           },
         },
         {
           type: "code",
-          title: { en: "Telescope install & restrict to local", np: "Telescope setup", jp: "Telescope のセットアップ" },
-          code: `// Install (dev-only)
-composer require laravel/telescope --dev
-php artisan telescope:install
-php artisan migrate
+          title: { en: "SearchPosts Livewire component", np: "Livewire component example", jp: "Livewire コンポーネント例" },
+          code: `// php artisan make:livewire SearchPosts
+// Creates: app/Livewire/SearchPosts.php + resources/views/livewire/search-posts.blade.php
 
-// Visit /telescope in your browser
+// app/Livewire/SearchPosts.php
+namespace App\\Livewire;
 
-// Restrict to local environment — app/Providers/TelescopeServiceProvider.php
-use Laravel\\Telescope\\Telescope;
+use Livewire\\Component;
+use App\\Models\\Post;
 
-protected function gate(): void
+class SearchPosts extends Component
 {
-    Gate::define('viewTelescope', function ($user = null) {
-        return app()->isLocal() || in_array($user?->email, [
-            'admin@example.com',
+    public string $search = '';
+
+    // Runs automatically whenever $search changes
+    public function updatedSearch(): void
+    {
+        $this->resetPage(); // reset pagination on new search
+    }
+
+    public function render()
+    {
+        return view('livewire.search-posts', [
+            'posts' => Post::where('title', 'like', "%{$this->search}%")
+                ->latest()
+                ->limit(20)
+                ->get(),
         ]);
-    });
+    }
 }
 
-// Only register in local environment (prevents telescope from loading in prod)
-// bootstrap/providers.php — wrap in env check:
-// Or in AppServiceProvider::register():
-if ($this->app->isLocal()) {
-    $this->app->register(\\Laravel\\Telescope\\TelescopeServiceProvider::class);
-}
+// resources/views/livewire/search-posts.blade.php
+<div>
+    <input wire:model.live.debounce.300ms="search"
+           type="text"
+           placeholder="Search posts..."
+           class="w-full border rounded px-3 py-2" />
 
-// Key things to watch in Telescope:
-// /telescope/requests  — all HTTP requests with query count + duration
-// /telescope/queries   — all SQL queries; red = slow (>100ms)
-// /telescope/jobs      — queued jobs with payload, attempts, execution time
-// /telescope/cache     — hits vs misses per key
-// /telescope/exceptions — full stack trace with request context`,
+    <ul class="mt-4 space-y-2">
+        @foreach ($posts as $post)
+            <li>{{ $post->title }}</li>
+        @endforeach
+    </ul>
+</div>
+
+{{-- Include in any Blade view --}}
+<livewire:search-posts />`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Key performance metrics to monitor in Telescope:\n• <b>More than 10 queries per request</b> → likely N+1; add `with()` eager loading\n• <b>Any query over 100ms</b> → missing index, or a JOIN scanning too many rows\n• <b>Cache miss rate over 50%</b> → TTL too short, or cache never warming on first request\n• <b>Job memory > 64MB</b> → loading too much data into memory; use `chunk()` or `cursor()`\n• <b>Many duplicate queries</b> → same query running in a loop; move it outside the loop\n\nRun Telescope for a week after every major launch to build a performance baseline before optimising.",
-            np: "10+ queries per request → N+1। 100ms+ query → missing index। Cache miss 50%+ → TTL छोटो।",
-            jp: "10 クエリ以上→ N+1。100ms 超→インデックス不足。キャッシュミス 50% 超→ TTL 短すぎ。",
+            en: "Key Livewire directives:\n• `wire:model` — two-way data binding (input ↔ PHP property)\n  ↳ `wire:model.live` updates on every keystroke; `wire:model.blur` updates on focus-out\n  ↳ `wire:model.live.debounce.300ms` waits 300ms after the user stops typing\n• `wire:click` — call a PHP method on click: `wire:click=\"deletePost({{ $post->id }})\"`\n• `wire:submit` — handle form submission server-side\n• `wire:loading` — show/hide an element while a network request is in flight\n  ↳ `wire:loading.class=\"opacity-50\"` dims the component while loading",
+            np: "`wire:model`, `wire:click`, `wire:submit`, `wire:loading` — Livewire का मुख्य directives।",
+            jp: "`wire:model`（双方向バインド）、`wire:click`（メソッド呼び出し）、`wire:submit`、`wire:loading` が主なディレクティブ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Livewire — forms, validation & lifecycle hooks",
+        np: "Livewire forms, validation र lifecycle",
+        jp: "Livewire のフォーム・バリデーション・ライフサイクル",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Livewire form handling feels like writing a normal PHP form but without the redirect cycle. Define properties, validate with the same rules as Form Requests, and show errors with `@error`. For complex forms, use the `Form` object class (Livewire 3) to encapsulate form state and validation in one place.",
+            np: "Livewire forms = PHP properties + validate() + @error। Redirect cycle नभई direct update हुन्छ।",
+            jp: "Livewire のフォームは PHP プロパティ + `validate()` + `@error`。リダイレットなしで即更新。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "CreatePost Livewire form", np: "CreatePost form", jp: "CreatePost フォーム" },
+          code: `// app/Livewire/CreatePost.php
+namespace App\\Livewire;
+
+use Livewire\\Component;
+use App\\Models\\Post;
+
+class CreatePost extends Component
+{
+    public string $title = '';
+    public string $body  = '';
+
+    // Livewire 3: attribute-based validation
+    #[\\Livewire\\Attributes\\Validate('required|min:3|max:255')]
+    public string $titleField = '';
+
+    protected $rules = [
+        'title' => 'required|min:3|max:255',
+        'body'  => 'required|min:10',
+    ];
+
+    public function save(): void
+    {
+        $validated = $this->validate();
+
+        Post::create([
+            ...$validated,
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->reset(['title', 'body']); // clear form
+        session()->flash('message', 'Post created successfully.');
+    }
+
+    public function render()
+    {
+        return view('livewire.create-post');
+    }
+}
+
+{{-- resources/views/livewire/create-post.blade.php --}}
+<form wire:submit="save">
+    <div>
+        <input wire:model="title" type="text" placeholder="Post title" />
+        @error('title') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <div class="mt-3">
+        <textarea wire:model="body" placeholder="Post body"></textarea>
+        @error('body') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <button type="submit" wire:loading.attr="disabled">
+        <span wire:loading>Saving...</span>
+        <span wire:loading.remove>Save Post</span>
+    </button>
+</form>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Livewire lifecycle hooks</b>:\n• `mount()` — runs once when the component is first created (like a constructor)\n  ↳ Use it to load initial data: `$this->post = Post::find($id)`\n• `updated($property)` — runs after any property changes\n  ↳ Avoid expensive queries here; debounce or use `updatedTitle()` for specific properties\n• `hydrate()` / `dehydrate()` — run before/after each network request\n  ↳ Use for re-initialising non-serialisable state (e.g. DB connections)\n• `#[Lazy]` attribute — defers component rendering until after the page loads (great for heavy components)",
+            np: "`mount()`, `updated()`, `hydrate()`/`dehydrate()` — Livewire lifecycle hooks।",
+            jp: "`mount()`（初期化）、`updated()`（プロパティ変更後）、`hydrate()`/`dehydrate()`（リクエスト前後）が主なライフサイクル。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Inertia.js — SPA feel, server-side routing",
+        np: "Inertia.js — SPA feel with server-side routing",
+        jp: "Inertia.js — SPA 感覚＋サーバー側ルーティング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Inertia is not a framework — it's a protocol. It sits between Laravel (server) and Vue/React (client) and lets them speak the same language.\n\nYour Laravel controller returns an Inertia response: `Inertia::render('PostIndex', ['posts' => $posts])`. On first load, the full HTML is returned. Subsequent navigations return a JSON payload that swaps out just the current page component — no full page reload, no routing library needed on the frontend.\n\nAnalogy: imagine a TV remote that changes what's showing on screen without turning the TV off and on again.",
+            np: "Inertia = Laravel controller + Vue/React page components। Page navigation = JSON swap (no full reload)।",
+            jp: "Inertia は Laravel コントローラーと Vue/React ページコンポーネントをつなぐプロトコル。ページ遷移は JSON スワップ（フルリロードなし）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Inertia setup + controller + Vue page", np: "Inertia example", jp: "Inertia の例" },
+          code: `// Install
+// composer require inertiajs/inertia-laravel
+// npm install @inertiajs/vue3 vue
+
+// resources/views/app.blade.php (root layout)
+<!DOCTYPE html>
+<html>
+<head>
+    @vite(['resources/js/app.js'])
+    @inertiaHead
+</head>
+<body>
+    @inertia
+</body>
+</html>
+
+// resources/js/app.js
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+
+createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+        return pages[\`./Pages/\${name}.vue\`];
+    },
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .mount(el);
+    },
+});
+
+// app/Http/Controllers/PostController.php
+use Inertia\\Inertia;
+use App\\Http\\Resources\\PostResource;
+
+public function index()
+{
+    return Inertia::render('Posts/Index', [
+        'posts' => PostResource::collection(Post::with('author')->latest()->paginate(15)),
+    ]);
+}
+
+// resources/js/Pages/Posts/Index.vue
+<script setup>
+import { Link } from '@inertiajs/vue3';
+
+defineProps({ posts: Object });
+</script>
+
+<template>
+  <div>
+    <Link href="/posts/create">New Post</Link>
+    <div v-for="post in posts.data" :key="post.id">
+      <Link :href="\`/posts/\${post.id}\`">{{ post.title }}</Link>
+    </div>
+  </div>
+</template>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Shared data</b> — auth user, flash messages, and app-wide props belong in `HandleInertiaRequests` middleware's `share()` method, so they're available in every page component:\n• `auth.user` → `usePage().props.auth.user` in Vue/React\n• `flash.message` → show success/error banners globally\n• `ziggy` → share named routes to the frontend (with the Ziggy package)\n\nThis is the Inertia equivalent of Blade's `@auth` / `view()->share()` — define once, use everywhere.",
+            np: "`HandleInertiaRequests::share()` मा auth user, flash messages राख्नुस् — सबै pages मा available हुन्छ।",
+            jp: "`HandleInertiaRequests::share()` に認証ユーザーやフラッシュを設定すると全ページで利用できる。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Choosing your stack & SSR considerations",
+        np: "Stack छनोट र SSR",
+        jp: "スタック選択と SSR",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Which frontend approach to choose — the honest decision matrix:\n• Full PHP team, existing Blade app → add Livewire incrementally to specific components\n  ↳ No big rewrite; Blade and Livewire coexist perfectly\n• Vue/React team, wants tight Laravel integration → Inertia\n  ↳ Controllers, validation, auth all stay in PHP — just the views move to Vue/React\n• Separate mobile app OR third-party consumers → Sanctum API (Day 21)\n  ↳ Completely decoupled; frontend can be any technology\n• Need SEO on a Vue/React Inertia app → enable Inertia SSR with `php artisan inertia:start-ssr`",
+            np: "PHP team → Livewire। Vue/React team → Inertia। Mobile/API → Sanctum। SEO चाहिने → Inertia SSR।",
+            jp: "PHP チーム→ Livewire。Vue/React チーム→ Inertia。モバイル/API→ Sanctum。SEO 必要→ Inertia SSR。",
+          },
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Frontend approach comparison",
+            np: "Frontend approaches",
+            jp: "フロントエンドアプローチ比較",
+          },
+          headers: [
+            { en: "Approach", np: "Approach", jp: "アプローチ" },
+            { en: "JS required", np: "JS", jp: "JS 必要" },
+            { en: "Routing", np: "Routing", jp: "ルーティング" },
+            { en: "Auth", np: "Auth", jp: "認証" },
+            { en: "SEO", np: "SEO", jp: "SEO" },
+            { en: "Best for", np: "Best for", jp: "向いている用途" },
+          ],
+          rows: [
+            [
+              { en: "Blade", np: "Blade", jp: "Blade" },
+              { en: "None", np: "नभएको", jp: "不要" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Content sites", np: "Content sites", jp: "コンテンツサイト" },
+            ],
+            [
+              { en: "Livewire", np: "Livewire", jp: "Livewire" },
+              { en: "Minimal", np: "न्यूनतम", jp: "最小限" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Admin UIs / forms", np: "Admin UIs", jp: "管理 UI・フォーム" },
+            ],
+            [
+              { en: "Inertia + Vue/React", np: "Inertia", jp: "Inertia" },
+              { en: "Vue or React", np: "Vue वा React", jp: "Vue か React" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Needs SSR", np: "SSR चाहिन्छ", jp: "SSR が必要" },
+              { en: "SPA with Laravel backend", np: "SPA + Laravel", jp: "Laravel バックエンド SPA" },
+            ],
+            [
+              { en: "Decoupled API", np: "API", jp: "分離 API" },
+              { en: "Any framework", np: "कुनै पनि", jp: "任意" },
+              { en: "Client-side", np: "Client", jp: "クライアント" },
+              { en: "Sanctum tokens", np: "Sanctum tokens", jp: "Sanctum トークン" },
+              { en: "Client-side", np: "Client", jp: "クライアント側" },
+              { en: "Mobile / headless", np: "Mobile / headless", jp: "モバイル・ヘッドレス" },
+            ],
+          ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Inertia SSR runs a Node.js server (`php artisan inertia:start-ssr`) that renders the first page server-side for SEO and faster initial load. It's an opt-in — most admin apps don't need it. For public-facing marketing pages with SEO requirements, enable SSR or use a static site generator for those specific pages.",
+            np: "Inertia SSR: Node.js server ले first page server-side render गर्छ। SEO चाहिने apps मा enable गर्नुस्।",
+            jp: "Inertia SSR: Node.js が初回ページをサーバー側でレンダリング。SEO が必要な場合に有効化。",
           },
         },
       ],
@@ -334,62 +397,62 @@ if ($this->app->isLocal()) {
   faq: [
     {
       question: {
-        en: "What is the difference between Cache::remember() and Cache::rememberForever()?",
-        np: "`Cache::remember()` र `Cache::rememberForever()` को फरक के हो?",
-        jp: "`Cache::remember()` と `Cache::rememberForever()` の違いは?",
+        en: "Can I mix Livewire and Inertia in the same app?",
+        np: "एउटै app मा Livewire र Inertia दुवै प्रयोग गर्न सकिन्छ?",
+        jp: "同じアプリで Livewire と Inertia を混在できますか?",
       },
       answer: {
-        en: "`remember()` takes a TTL in seconds; the cache auto-expires and re-computes on the next access. `rememberForever()` never expires — you must manually call `Cache::forget()` when the data changes. Use `rememberForever()` only when you have a reliable cache-busting strategy (e.g. invalidate in a model observer or event listener). If you forget to bust the cache, users see stale data indefinitely.",
-        np: "`remember()` = TTL पछि auto-expire। `rememberForever()` = manual forget चाहिन्छ। Observer मा invalidate गर्नुस्।",
-        jp: "`remember()` は TTL 後に自動失効。`rememberForever()` は手動 `forget()` が必要。Observer で確実に無効化できる場合のみ使用。",
+        en: "Technically yes, but it creates two frontend systems to maintain. Typical pattern: use Inertia for the main app and Blade/Livewire for a simpler admin panel. Mixing them in the same views is unsupported and creates confusing state management.",
+        np: "हुन्छ, तर maintenance double हुन्छ। Main app मा Inertia, admin panel मा Livewire — यो common pattern हो।",
+        jp: "技術的には可能ですが、2 つのフロントエンドシステムを管理することになります。メインアプリに Inertia、管理パネルに Livewire が一般的なパターンです。",
       },
     },
     {
       question: {
-        en: "Does with() always fix N+1?",
-        np: "`with()` ले हमेशा N+1 fix गर्छ?",
-        jp: "`with()` は常に N+1 を修正しますか?",
+        en: "Does Livewire work with Alpine.js?",
+        np: "Livewire र Alpine.js सँगसँगै काम गर्छन्?",
+        jp: "Livewire は Alpine.js と連携できますか?",
       },
       answer: {
-        en: "`with()` fixes N+1 for standard Eloquent relationships when you define the eager load upfront. It does NOT help when: (1) you call a relationship method inside a loop on an already-loaded collection (use `$posts->load('author')` instead), (2) a relationship is accessed in a computed attribute that doesn't know about the eager load, (3) you use raw DB queries instead of Eloquent. Enable `preventLazyLoading()` in development to catch all cases automatically.",
-        np: "`with()` standard relationships fix गर्छ। Loop भित्र lazy access गर्दा `$posts->load()` प्रयोग गर्नुस्।",
-        jp: "`with()` は標準リレーションに有効。ループ内のアクセスには `$posts->load()` を。`preventLazyLoading()` で全ケースを検出。",
+        en: "Yes, they are designed to work together. Alpine.js handles client-side interactions (toggles, animations, dropdowns) while Livewire handles server interactions. Livewire ships with Alpine included — you don't need to install it separately. Rule: use `x-data`, `x-show`, `x-on:click` for purely visual JavaScript; use `wire:click` when a server round-trip is needed.",
+        np: "हो, सँगसँगै काम गर्छन्। Alpine = client-side UI। Livewire = server interactions। Alpine Livewire मा included छ।",
+        jp: "はい、一緒に使えます。Alpine は UI インタラクション、Livewire はサーバー通信を担当。Livewire に Alpine が同梱されています。",
       },
     },
     {
       question: {
-        en: "How many queue workers should I run?",
-        np: "कति queue workers चलाउनु पर्छ?",
-        jp: "キューワーカーはいくつ実行すべきですか?",
+        en: "How does Inertia handle form validation errors?",
+        np: "Inertia मा form validation errors कसरी handle हुन्छ?",
+        jp: "Inertia のフォームバリデーションエラーはどう扱いますか?",
       },
       answer: {
-        en: "Start with 1 worker per CPU core. Monitor queue depth with Horizon — if jobs are consistently waiting more than 5 seconds, add workers. For mixed-priority workloads, run dedicated workers for the `high` queue (customer-facing, fast) and shared workers for `default` and `low` (background processing). Memory is usually the bottleneck before CPU — if workers are restarting frequently due to the `memory` limit, your jobs are loading too much data.",
-        np: "CPU core प्रति 1 worker बाट सुरु गर्नुस्। Horizon मा queue depth monitor गर्नुस्। High queue मा dedicated workers राख्नुस्।",
-        jp: "CPU コアあたり 1 ワーカーから開始。Horizon でキュー深度を監視し、待機が多ければ増やす。優先度別のキューには専用ワーカーを。",
+        en: "Inertia redirects back with a 422 response (Laravel validation failure) and includes the errors in the Inertia shared props. Use the `useForm()` helper in Vue/React — it automatically populates `form.errors` from the 422 response. No manual error parsing needed.",
+        np: "`useForm()` helper प्रयोग गर्नुस्। 422 response आउँदा `form.errors` automatically populate हुन्छ।",
+        jp: "`useForm()` ヘルパーを使うと、422 レスポンスから `form.errors` が自動的に設定されます。",
       },
     },
     {
       question: {
-        en: "What is the difference between chunk() and cursor()?",
-        np: "`chunk()` र `cursor()` को फरक के हो?",
-        jp: "`chunk()` と `cursor()` の違いは?",
+        en: "What is the performance impact of Livewire's network requests?",
+        np: "Livewire का network requests को performance impact के हो?",
+        jp: "Livewire のネットワークリクエストがパフォーマンスに与える影響は?",
       },
       answer: {
-        en: "`chunk()` loads N records at a time into memory, processes them, discards them, then loads the next N. Good for batch operations (bulk inserts, file exports). `cursor()` uses a database cursor — it returns a PHP generator that loads one record at a time, using constant memory regardless of table size. `cursor()` holds the database connection open for the entire operation. Rule: use `cursor()` for read-only iteration over huge tables; use `chunk()` when you need the records as a Collection (for batch DB writes).",
-        np: "`chunk()` = N rows एकैपटक memory मा। `cursor()` = one row at a time (generator)। `cursor()` memory-efficient, `chunk()` batch operations मा राम्रो।",
-        jp: "`chunk()` は N 件ずつロード。`cursor()` はジェネレーターで 1 件ずつ、メモリ使用量一定。巨大テーブルの読み取りには `cursor()`、バッチ書き込みには `chunk()`。",
+        en: "Every `wire:model.live` keystroke triggers a network request. For search inputs, use `wire:model.live.debounce.500ms` to delay the request 500ms after the user stops typing. For non-interactive updates, use `wire:model.blur` (only fires on focus-out). Profile with browser DevTools network tab to see the frequency and payload size.",
+        np: "प्रत्येक keystroke मा request जान्छ। `wire:model.live.debounce.500ms` प्रयोग गर्नुस् search inputs मा।",
+        jp: "キーストロークごとにリクエストが発生します。検索入力には `wire:model.live.debounce.500ms` を使い、不要なリクエストを減らしましょう。",
       },
     },
     {
       question: {
-        en: "When should I NOT use Redis caching?",
-        np: "Redis caching कहिले प्रयोग नगर्ने?",
-        jp: "Redis キャッシュを使うべきでない場合は?",
+        en: "Can Vite handle TypeScript out of the box?",
+        np: "Vite ले TypeScript automatically handle गर्छ?",
+        jp: "Vite は TypeScript をそのまま扱えますか?",
       },
       answer: {
-        en: "Don't cache: (1) data that must always be fresh — inventory counts, account balances, anything where a stale read causes a real problem; (2) data that changes on every request without a user-specific cache key (you'd always miss); (3) tiny queries that are already fast — single-row primary key lookups are served from the DB's own buffer cache; (4) data the user just wrote — always read directly from DB after writes to avoid showing stale data (read-your-own-writes consistency).",
-        np: "Real-time data (inventory, balance), per-request changing data, fast PK lookups — यिनीहरू cache नगर्नुस्।",
-        jp: "在庫・残高などリアルタイムデータ、毎リクエスト変わるデータ、高速な PK ルックアップはキャッシュ不要。書き込み直後は DB から直接読む。",
+        en: "Yes. Vite processes TypeScript natively via esbuild without needing a separate `ts-loader`. Add `@types/node` and a `tsconfig.json`, then rename files to `.ts` or `.tsx`. Important caveat: Vite skips type-checking for speed — run `tsc --noEmit` separately in CI to catch type errors before deployment.",
+        np: "हो, Vite ले TypeScript native support गर्छ (esbuild मार्फत)। CI मा `tsc --noEmit` छुट्टै चलाउनुस्।",
+        jp: "はい、esbuild 経由でネイティブ対応。ただし型チェックはスキップされるため、CI で `tsc --noEmit` を別途実行してください。",
       },
     },
   ],
