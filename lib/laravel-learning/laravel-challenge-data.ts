@@ -1,6 +1,5 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { LARAVEL_DAY_12_DETAIL } from "@/lib/laravel-learning/laravel-day-12-detail";
 import { LARAVEL_DAY_13_DETAIL } from "@/lib/laravel-learning/laravel-day-13-detail";
 import { LARAVEL_DAY_14_DETAIL } from "@/lib/laravel-learning/laravel-day-14-detail";
 import { LARAVEL_DAY_15_DETAIL } from "@/lib/laravel-learning/laravel-day-15-detail";
@@ -16,14 +15,14 @@ import { LARAVEL_DAY_24_DETAIL } from "@/lib/laravel-learning/laravel-day-24-det
 import { LARAVEL_DAY_25_DETAIL } from "@/lib/laravel-learning/laravel-day-25-detail";
 import { LARAVEL_DAY_26_DETAIL } from "@/lib/laravel-learning/laravel-day-26-detail";
 import { LARAVEL_DAY_27_DETAIL } from "@/lib/laravel-learning/laravel-day-27-detail";
+import { LARAVEL_DAY_28_DETAIL } from "@/lib/laravel-learning/laravel-day-28-detail";
 import { laravelDayTitle, laravelTags, laravelWeekTitle } from "@/lib/laravel-learning/laravel-roadmap-i18n";
 
 export const LARAVEL_CURRENT_DAY = 1;
 
-export const LARAVEL_TOTAL_DAYS = 27;
+export const LARAVEL_TOTAL_DAYS = 28;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  12: LARAVEL_DAY_12_DETAIL,
   13: LARAVEL_DAY_13_DETAIL,
   14: LARAVEL_DAY_14_DETAIL,
   15: LARAVEL_DAY_15_DETAIL,
@@ -39,6 +38,7 @@ const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   25: LARAVEL_DAY_25_DETAIL,
   26: LARAVEL_DAY_26_DETAIL,
   27: LARAVEL_DAY_27_DETAIL,
+  28: LARAVEL_DAY_28_DETAIL,
 };
 
 function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -87,9 +87,10 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w4"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_58%,#fb923c)]",
     days: [
-      laravelDayRow(12, ["eloquent", "database"]),
-      laravelDayRow(13, ["session", "caching"]),
-      laravelDayRow(14, ["relations", "eloquent"]),
+      laravelDayRow(12, ["database", "transactions"]),
+      laravelDayRow(13, ["eloquent", "database"]),
+      laravelDayRow(14, ["session", "caching"]),
+      laravelDayRow(15, ["relations", "eloquent"]),
     ],
   },
   {
@@ -97,9 +98,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#38bdf8)]",
     days: [
-      laravelDayRow(15, ["mail", "foundation"]),
-      laravelDayRow(16, ["auth", "foundation"]),
-      laravelDayRow(17, ["authorization", "api"]),
+      laravelDayRow(16, ["mail", "foundation"]),
+      laravelDayRow(17, ["auth", "foundation"]),
+      laravelDayRow(18, ["authorization", "api"]),
     ],
   },
   {
@@ -107,9 +108,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w6"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#a78bfa)]",
     days: [
-      laravelDayRow(18, ["queues", "events"]),
-      laravelDayRow(19, ["testing", "pest"]),
-      laravelDayRow(20, ["sanctum", "rest-api"]),
+      laravelDayRow(19, ["queues", "events"]),
+      laravelDayRow(20, ["testing", "pest"]),
+      laravelDayRow(21, ["sanctum", "rest-api"]),
     ],
   },
   {
@@ -117,10 +118,10 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w7"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#f87171)]",
     days: [
-      laravelDayRow(21, ["advanced-eloquent", "eloquent"]),
-      laravelDayRow(22, ["security", "middleware"]),
-      laravelDayRow(23, ["artisan", "foundation"]),
-      laravelDayRow(24, ["broadcasting", "events"]),
+      laravelDayRow(22, ["advanced-eloquent", "eloquent"]),
+      laravelDayRow(23, ["security", "middleware"]),
+      laravelDayRow(24, ["artisan", "foundation"]),
+      laravelDayRow(25, ["broadcasting", "events"]),
     ],
   },
   {
@@ -128,9 +129,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w8"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_34%,#4ade80)]",
     days: [
-      laravelDayRow(25, ["livewire", "inertia"]),
-      laravelDayRow(26, ["performance", "redis"]),
-      laravelDayRow(27, ["deployment", "devops"]),
+      laravelDayRow(26, ["livewire", "inertia"]),
+      laravelDayRow(27, ["performance", "redis"]),
+      laravelDayRow(28, ["deployment", "devops"]),
     ],
   },
 ];
