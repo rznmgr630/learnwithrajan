@@ -3,505 +3,394 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_20_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Writing tests sounds like extra work, but it's actually the fastest way to move forward without fear.\n• A good test suite means you can change code confidently — if something breaks, you find out in seconds, not after a user reports a bug\n\n<b>What Laravel gives you</b>\n• <b>Pest</b> — a modern, readable testing framework built on top of PHPUnit\n  ↳ No class boilerplate — just `it('does something', fn() => ...)` functions\n• <b>HTTP helpers</b> — simulate requests like `$this->get('/users')` without a real browser\n• <b>Database helpers</b> — check that data was saved or deleted correctly\n• <b>Fake facades</b> — intercept emails, queued jobs, and events so tests stay fast and isolated",
-      np: "Laravel testing first-class। Pest = PHPUnit माथि functional syntax। HTTP, DB, mail, queue assert।",
-      jp: "Laravel はテストを標準サポート。Pest は PHPUnit 上のクリーンな構文。HTTP・DB・メール・キューのアサーションが簡単。",
+      en: "Today covers three tools for doing work <b>outside</b> the web request cycle.\n\n<b>Queues</b> — for tasks that are too slow for a web request (sending emails, resizing images, calling external APIs)\n  ↳ Hand the work off to a background worker so users get an instant response\n\n<b>Events & Listeners</b> — for notifying different parts of your app when something happens\n  ↳ Instead of calling services directly, you fire an event and let listeners react independently\n\n<b>Task Scheduling</b> — for running commands on a timer (daily reports, cleanup jobs)\n  ↳ One PHP file replaces a messy pile of cron job configs on the server",
+      np: "Queue (slow task), Event/Listener (decoupled), Scheduling (cron)। तीन tool एउटै day।",
+      jp: "Queue は重い処理を非同期化、Event/Listener は疎結合な通知、Scheduling は cron の代替。3 つのツールを習得。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Pest setup & syntax",
-        np: "Pest setup र syntax",
-        jp: "Pest のセットアップと構文",
+        en: "Jobs & queue dispatching",
+        np: "Job र queue dispatch",
+        jp: "Job とキューディスパッチ",
       },
       blocks: [
         {
           type: "diagram",
-          id: "laravel-test-pyramid",
+          id: "laravel-queue-job",
         },
         {
           type: "paragraph",
           text: {
-            en: "PHPUnit is the traditional PHP testing framework — it works, but every test file requires a class, every method name starts with `test_`, and the assertion syntax can feel clunky.\n\n<b>Pest is the modern alternative</b>\n• It wraps PHPUnit under the hood — every PHPUnit assertion still works, nothing is lost\n• But the outer syntax is much cleaner:\n  ↳ No class required — just call `it()` or `test()` with a closure\n  ↳ `it('can create a post', fn() => ...)` reads like a plain English sentence\n  ↳ The `expect()` API chains naturally: `expect($user)->not->toBeNull()->name->toBe('Alice')`\n• Laravel 11 ships with Pest pre-installed — zero extra setup needed",
-            np: "Pest Laravel 11 मा pre-installed। PHPUnit को wrapper। Class boilerplate छैन।",
-            jp: "Pest は Laravel 11 にプリインストール。PHPUnit のラッパーなのでアサーションはすべて使える。クラス不要で `it()` / `test()` だけ。",
+            en: "Think of a queue like a restaurant ticket system — the waiter (your web request) takes the order and hands a ticket to the kitchen (the worker), then immediately goes back to take the next customer's order.\n\n<b>Why use queues?</b>\n• Some tasks are slow: sending emails, resizing images, calling external APIs\n  ↳ If you do these during a web request, the user waits 3–5 seconds staring at a spinner\n• With a queue, the web request finishes in milliseconds and hands the slow work to a background worker\n  ↳ The user gets a response immediately — the email sends a second later\n\n<b>How it works</b>\n• Create a <b>Job class</b> — a PHP class that implements `ShouldQueue` with a `handle()` method\n• <b>Dispatch</b> the job from your controller — Laravel serializes it and puts it on the queue\n• A separate <b>worker process</b> (`php artisan queue:work`) runs in the background, picks jobs off the queue, and calls `handle()`\n  ↳ The worker runs independently of your web server — you can scale them separately",
+            np: "`ShouldQueue` implement गर्नु। Worker ले `handle()` call। HTTP fast।",
+            jp: "`ShouldQueue` を実装したクラスがジョブ。ワーカーが `handle()` を実行。HTTP を速く保つ。",
           },
-        },
-        {
-          type: "code",
-          title: { en: "Install Pest in Laravel 10", np: "Laravel 10 मा install", jp: "Laravel 10 でのインストール" },
-          code: `composer require pestphp/pest --dev --with-all-dependencies
-composer require pestphp/pest-plugin-laravel --dev
-
-# Initialize Pest (creates Pest.php, updates phpunit.xml)
-php artisan pest:install
-
-# Generate test files
-php artisan make:test PostTest --pest           # Feature test (in tests/Feature/)
-php artisan make:test PostUnitTest --pest --unit # Unit test (in tests/Unit/)`,
-        },
-        {
-          type: "code",
-          title: { en: "Pest test anatomy", np: "Pest test structure", jp: "Pest テストの構造" },
-          code: `<?php
-// tests/Feature/PostTest.php
-
-use App\\Models\\{Post, User};
-
-// beforeEach runs before every test in this file
-beforeEach(function () {
-    $this->user = User::factory()->create();
-});
-
-// 'it' reads as a sentence: "it can create a post"
-it('can create a post', function () {
-    $response = $this->actingAs($this->user)
-        ->post('/posts', [
-            'title' => 'Hello World',
-            'body'  => 'My first post.',
-        ]);
-
-    $response->assertRedirect('/posts');
-    expect(Post::count())->toBe(1);
-});
-
-// 'test' is an alias
-test('guests cannot create posts', function () {
-    $response = $this->post('/posts', ['title' => 'Hack']);
-    $response->assertRedirect('/login');
-});
-
-// Datasets — run the same test with multiple inputs
-it('validates post title length', function (string $title) {
-    $this->actingAs($this->user)
-         ->post('/posts', ['title' => $title, 'body' => 'x'])
-         ->assertSessionHasErrors('title');
-})->with([
-    'empty string'    => [''],
-    'too long'        => [str_repeat('a', 256)],
-]);`,
-        },
-        {
-          type: "code",
-          title: { en: "Pest expectations cheat-sheet", np: "Expectations", jp: "Expectations チートシート" },
-          code: `// Pest's expect() wraps PHPUnit assertions in a fluent API
-
-expect($value)
-    ->toBe(42)                  // strict equality (===)
-    ->toEqual(['a' => 1])       // loose equality (==)
-    ->toBeNull()                // === null
-    ->not->toBeNull()           // negation
-    ->toBeTrue()                // === true
-    ->toBeFalse()               // === false
-    ->toBeString()
-    ->toBeInt()
-    ->toBeArray()
-    ->toBeInstanceOf(User::class)
-    ->toContain('needle')       // string or array contains
-    ->toHaveCount(3)            // array/collection count
-    ->toHaveKey('id')           // array has key
-    ->toHaveKeys(['id', 'name'])
-    ->toMatchArray(['name' => 'Alice'])  // subset match
-    ->toThrow(\\Exception::class)
-    ->toThrow(\\Exception::class, 'message')
-    ->toBeGreaterThan(0)
-    ->toBeLessThanOrEqual(100);
-
-// Multiple assertions chained
-expect(User::find(1))
-    ->not->toBeNull()
-    ->name->toBe('Alice')
-    ->email->toContain('@');`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "HTTP feature tests",
-        np: "HTTP feature test",
-        jp: "HTTP フィーチャーテスト",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A feature test simulates a real HTTP request through your entire application — the route resolves, middleware runs, the controller executes, and the database is hit.\n• You don't need a running server or a browser — Laravel handles the full request/response cycle in memory\n  ↳ `$this->get('/posts')` fires a GET request and returns a response object you can assert against\n  ↳ `$this->actingAs($user)->post('/posts', [...])` simulates a logged-in user submitting a form\n• These tests are the most valuable kind — they test your app the same way a real user would interact with it",
-            np: "Feature test = full stack। Real server चाहिँदैन। Response assert methods।",
-            jp: "フィーチャーテストはルーティングから DB まで全スタックを通す。実サーバーは不要。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Full HTTP test example with actingAs", np: "HTTP test + actingAs", jp: "actingAs を使った HTTP テスト" },
-          code: `<?php
-// tests/Feature/PostControllerTest.php
-
-use App\\Models\\{Post, User};
-use Illuminate\\Http\\UploadedFile;
-use Illuminate\\Support\\Facades\\Storage;
-
-uses(\\Illuminate\\Foundation\\Testing\\RefreshDatabase::class);
-
-it('shows a paginated list of posts', function () {
-    Post::factory()->count(20)->create();
-
-    $response = $this->get('/posts');
-
-    $response
-        ->assertStatus(200)    // same as assertOk()
-        ->assertSee('Posts')
-        ->assertViewIs('posts.index')
-        ->assertViewHas('posts');
-});
-
-it('authenticated user can create a post', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->post('/posts', [
-        'title' => 'Test Post',
-        'body'  => 'Some body content here.',
-    ]);
-
-    $response->assertRedirect(route('posts.index'));
-    $this->assertDatabaseHas('posts', [
-        'title'   => 'Test Post',
-        'user_id' => $user->id,
-    ]);
-});
-
-it('returns 401 for unauthenticated API request', function () {
-    $this->getJson('/api/posts')->assertUnauthorized(); // 401
-});
-
-it('returns JSON post list from API', function () {
-    $user  = User::factory()->create();
-    $posts = Post::factory()->count(3)->for($user)->create();
-
-    $this->actingAs($user, 'sanctum')
-         ->getJson('/api/posts')
-         ->assertOk()
-         ->assertJsonCount(3, 'data')
-         ->assertJsonStructure([
-             'data' => [['id', 'title', 'body', 'author']],
-             'links',
-             'meta',
-         ]);
-});
-
-it('validates post creation fields', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-         ->post('/posts', [])              // empty payload
-         ->assertSessionHasErrors(['title', 'body']);
-});
-
-it('redirects guests to login', function () {
-    $this->get('/dashboard')->assertRedirect('/login');
-});`,
         },
         {
           type: "table",
           caption: {
-            en: "Common response assertion methods",
-            np: "Response assertions",
-            jp: "主要レスポンスアサーション",
+            en: "Queue driver comparison",
+            np: "Queue driver तुलना",
+            jp: "Queue ドライバー比較",
           },
           headers: [
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "What it checks", np: "के check गर्छ", jp: "確認内容" },
+            { en: "Driver", np: "Driver", jp: "ドライバー" },
+            { en: "Best for", np: "प्रयोग", jp: "用途" },
+            { en: "Requires", np: "आवश्यक", jp: "必要なもの" },
+            { en: "Production-ready?", np: "Production?", jp: "本番対応？" },
           ],
           rows: [
             [
-              { en: "`assertStatus(200)`", np: "`assertStatus(200)`", jp: "`assertStatus(200)`" },
-              { en: "HTTP status code", np: "Status code", jp: "HTTP ステータスコード" },
+              { en: "`sync`", np: "`sync`", jp: "`sync`" },
+              { en: "Local development / testing", np: "Dev/test", jp: "開発・テスト用" },
+              { en: "Nothing", np: "केही होइन", jp: "不要" },
+              { en: "No (runs inline)", np: "होइन", jp: "No（同期実行）" },
             ],
             [
-              { en: "`assertOk()` / `assertNotFound()`", np: "`assertOk()`", jp: "`assertOk()`" },
-              { en: "200 / 404 shorthand", np: "Shorthand", jp: "200 / 404 の省略形" },
+              { en: "`database`", np: "`database`", jp: "`database`" },
+              { en: "Small apps, low volume", np: "Small app", jp: "小規模アプリ" },
+              { en: "`jobs` table migration", np: "`jobs` table", jp: "`jobs` テーブル" },
+              { en: "Yes (limited throughput)", np: "हो (सीमित)", jp: "Yes（低スループット）" },
             ],
             [
-              { en: "`assertJson(['key' => 'val'])`", np: "`assertJson()`", jp: "`assertJson()`" },
-              { en: "JSON contains subset", np: "JSON subset", jp: "JSON のサブセット一致" },
+              { en: "`redis`", np: "`redis`", jp: "`redis`" },
+              { en: "High-volume production", np: "High volume", jp: "高負荷本番" },
+              { en: "Redis server + predis/phpredis", np: "Redis", jp: "Redis サーバー" },
+              { en: "Yes (recommended)", np: "हो (सिफारिश)", jp: "Yes（推奨）" },
             ],
             [
-              { en: "`assertJsonCount(3, 'data')`", np: "`assertJsonCount()`", jp: "`assertJsonCount()`" },
-              { en: "Array length at JSON path", np: "Array length", jp: "JSON パスの配列長" },
-            ],
-            [
-              { en: "`assertSee('text')`", np: "`assertSee()`", jp: "`assertSee()`" },
-              { en: "Text appears in response body", np: "Text present", jp: "レスポンスボディにテキスト存在" },
-            ],
-            [
-              { en: "`assertRedirect('/login')`", np: "`assertRedirect()`", jp: "`assertRedirect()`" },
-              { en: "Location header matches", np: "Redirect", jp: "リダイレクト先の一致" },
-            ],
-            [
-              { en: "`assertSessionHasErrors('field')`", np: "`assertSessionHasErrors()`", jp: "`assertSessionHasErrors()`" },
-              { en: "Validation error in session", np: "Validation error", jp: "セッションにバリデーションエラー" },
-            ],
-            [
-              { en: "`assertUnauthorized()` / `assertForbidden()`", np: "401 / 403", jp: "401 / 403" },
-              { en: "401 / 403 responses", np: "401 / 403", jp: "401 / 403 レスポンス" },
+              { en: "`sqs`", np: "`sqs`", jp: "`sqs`" },
+              { en: "AWS-hosted workloads", np: "AWS", jp: "AWS 環境" },
+              { en: "AWS credentials + `aws/aws-sdk-php`", np: "AWS credentials", jp: "AWS 認証情報" },
+              { en: "Yes (fully managed)", np: "हो (managed)", jp: "Yes（フルマネージド）" },
             ],
           ],
         },
-      ],
-    },
-    {
-      title: {
-        en: "Database testing",
-        np: "Database testing",
-        jp: "データベーステスト",
-      },
-      blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "Tests that touch the database need a clean slate before each test — otherwise results from one test bleed into the next.\n\n<b>`RefreshDatabase`</b> handles this automatically:\n• Before the first test runs, it migrates the database from scratch\n• Before each subsequent test, it wraps everything in a transaction — then rolls it back after\n  ↳ Every test starts with a completely empty database\n\n<b>Factories</b> are how you create test data without hand-writing SQL `INSERT` statements:\n• `User::factory()->create()` — creates a real database row with realistic fake data\n• `User::factory()->count(10)->create()` — create 10 rows at once\n• `User::factory()->admin()->create()` — use a custom state defined in the factory class",
-            np: "`RefreshDatabase` — clean DB। Factory ले test data बनाउँछ।",
-            jp: "`RefreshDatabase` でテストごとに DB をクリーン。Factory でリアルなテストデータを生成。",
-          },
+          type: "code",
+          title: { en: "Creating a Job", np: "Job बनाउने", jp: "Job の作成" },
+          code: `php artisan make:job SendWelcomeEmail`,
         },
         {
           type: "code",
-          title: { en: "RefreshDatabase + assertDatabaseHas", np: "DB assert", jp: "DB アサーション" },
-          code: `<?php
-// tests/Feature/UserRegistrationTest.php
+          title: { en: "Job class anatomy", np: "Job class", jp: "Job クラスの構造" },
+          code: `// app/Jobs/SendWelcomeEmail.php
+namespace App\\Jobs;
 
 use App\\Models\\User;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
+use App\\Mail\\WelcomeMail;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Foundation\\Bus\\Dispatchable;
+use Illuminate\\Queue\\InteractsWithQueue;
+use Illuminate\\Queue\\SerializesModels;
+use Illuminate\\Support\\Facades\\Mail;
 
-uses(RefreshDatabase::class);
+class SendWelcomeEmail implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-it('registers a new user', function () {
-    $response = $this->post('/register', [
-        'name'                  => 'Alice',
-        'email'                 => 'alice@example.com',
-        'password'              => 'password',
-        'password_confirmation' => 'password',
-    ]);
+    /** Number of times the job may be attempted. */
+    public int $tries = 3;
 
-    $response->assertRedirect('/dashboard');
+    /** Timeout in seconds before the job is considered failed. */
+    public int $timeout = 60;
 
-    // Assert a row exists with exact column values
-    $this->assertDatabaseHas('users', [
-        'name'  => 'Alice',
-        'email' => 'alice@example.com',
-    ]);
+    /** Number of seconds to wait before retrying. */
+    public int $backoff = 30;
 
-    // Assert user count
-    $this->assertDatabaseCount('users', 1);
-});
+    public function __construct(
+        public readonly User $user
+    ) {}
 
-it('does not store plain-text password', function () {
-    $this->post('/register', [
-        'name'                  => 'Bob',
-        'email'                 => 'bob@example.com',
-        'password'              => 'secret123',
-        'password_confirmation' => 'secret123',
-    ]);
-
-    // Row should NOT have this value
-    $this->assertDatabaseMissing('users', [
-        'email'    => 'bob@example.com',
-        'password' => 'secret123',
-    ]);
-});`,
+    public function handle(): void
+    {
+        Mail::to($this->user->email)
+            ->send(new WelcomeMail($this->user));
+    }
+}`,
         },
         {
           type: "code",
-          title: { en: "Factories — creating test data", np: "Factory", jp: "Factory でテストデータ生成" },
-          code: `// Basic factory usage
-$user    = User::factory()->create();         // persisted
-$user    = User::factory()->make();           // in memory only
-$users   = User::factory()->count(10)->create();
+          title: { en: "Dispatching jobs", np: "Job dispatch", jp: "Job のディスパッチ" },
+          code: `use App\\Jobs\\SendWelcomeEmail;
+use App\\Jobs\\GenerateThumbnail;
+use App\\Jobs\\SendInvoice;
+use Illuminate\\Support\\Facades\\Bus;
 
-// States defined in the factory class
-$admin   = User::factory()->admin()->create();
-$unverified = User::factory()->unverified()->create();
+// Immediate dispatch
+SendWelcomeEmail::dispatch($user);
 
-// With relationships
-$post = Post::factory()
-    ->for(User::factory()->create())    // belongsTo
-    ->has(Comment::factory()->count(3)) // hasMany
-    ->create();
+// Delayed dispatch — run 5 minutes from now
+SendWelcomeEmail::dispatch($user)->delay(now()->addMinutes(5));
 
-// Inline attribute override
-$post = Post::factory()->create([
-    'title'     => 'Custom Title',
-    'published' => true,
-]);
+// Specific queue channel
+SendWelcomeEmail::dispatch($user)->onQueue('emails');
 
-// UserFactory example
-// database/factories/UserFactory.php
-public function definition(): array
-{
-    return [
-        'name'              => fake()->name(),
-        'email'             => fake()->unique()->safeEmail(),
-        'password'          => Hash::make('password'),
-        'email_verified_at' => now(),
-    ];
-}
+// Dispatch to a specific connection + queue
+SendWelcomeEmail::dispatch($user)
+    ->onConnection('redis')
+    ->onQueue('high');
 
-public function admin(): static
-{
-    return $this->state(['role' => 'admin']);
-}
+// Chained jobs — run sequentially, stop on failure
+Bus::chain([
+    new GenerateThumbnail($post),
+    new SendInvoice($order),
+    new SendWelcomeEmail($user),
+])->onQueue('default')->dispatch();
 
-public function unverified(): static
-{
-    return $this->state(['email_verified_at' => null]);
-}`,
+// Run queue worker
+// php artisan queue:work --queue=high,emails,default
+// php artisan queue:work redis --tries=3 --timeout=90`,
         },
       ],
     },
     {
       title: {
-        en: "Faking external services",
-        np: "External service fake",
-        jp: "外部サービスのフェイク",
+        en: "Failed jobs & retry strategy",
+        np: "Failed job र retry",
+        jp: "失敗したジョブとリトライ戦略",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Testing code that calls external services (email, queues, events) is tricky — you don't want real emails sent or real jobs running during tests.\n\n<b>Laravel's fake facades solve this</b>\n• Call `Mail::fake()`, `Queue::fake()`, or `Event::fake()` at the start of a test\n  ↳ From that point on, nothing is actually sent or dispatched — Laravel just records what would have happened\n• After running the code under test, use assertion methods to verify the right things were triggered:\n  ↳ `Mail::assertSent(WelcomeMail::class)` — was this email triggered?\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — was this job queued?\n  ↳ `Event::assertDispatched(OrderShipped::class)` — was this event fired?\n• Tests stay fast (no network calls) and reliable (no flaky external dependencies)",
-            np: "Fake facade ले real implementation replace। Assert ले check। Real service hit हुँदैन।",
-            jp: "フェイクファサードは実装をスタブに差し替え。実際には何も送らずアサーションのみ。高速・決定的。",
+            en: "Even reliable workers fail sometimes — the email service goes down, a network request times out, or bad data causes an exception.\n\n<b>What happens when a job fails</b>\n• If a job throws an exception, Laravel retries it up to `$tries` times (you set this on the job class)\n  ↳ Between retries it waits `$backoff` seconds — giving external services time to recover\n• After all retries are exhausted, the job is marked as <b>failed</b> and stored in the `failed_jobs` database table\n  ↳ Laravel records the exception message and stack trace so you can see exactly what went wrong\n• The `failed(Throwable $exception)` method on the job is called — use it to clean up partial work or send an alert\n\n<b>What you can do next</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific failed job back onto the queue\n• `php artisan queue:flush` — delete all records from `failed_jobs`",
+            np: "`$tries` पार भए `failed_jobs` table। `failed()` method clean up गर्न।",
+            jp: "`$tries` を超えるか例外が起きると `failed_jobs` に記録。`failed()` でクリーンアップ。",
           },
         },
         {
           type: "code",
-          title: { en: "Mail::fake() — email assertions", np: "Mail fake", jp: "Mail::fake()" },
-          code: `<?php
-use App\\Mail\\WelcomeMail;
-use Illuminate\\Support\\Facades\\Mail;
+          title: { en: "failed() method + artisan commands", np: "failed() र artisan", jp: "failed() とコマンド" },
+          code: `// Inside the job class
+public function failed(\\Throwable $exception): void
+{
+    // Notify the user, clean up partial work, send alert
+    $this->user->notify(new JobFailedNotification($exception->getMessage()));
 
-it('sends a welcome email after registration', function () {
-    Mail::fake();
-
-    $this->post('/register', [
-        'name'                  => 'Carol',
-        'email'                 => 'carol@example.com',
-        'password'              => 'password',
-        'password_confirmation' => 'password',
+    Log::error('SendWelcomeEmail failed', [
+        'user_id' => $this->user->id,
+        'error'   => $exception->getMessage(),
     ]);
+}
 
-    // Assert a specific mailable was sent to an address
-    Mail::assertSent(WelcomeMail::class, function (WelcomeMail $mail) {
-        return $mail->hasTo('carol@example.com');
-    });
+// Manually fail from inside handle()
+public function handle(): void
+{
+    if (! $this->user->isActive()) {
+        $this->fail(new \\RuntimeException('User is not active'));
+        return;
+    }
+    // ...
+}
 
-    // Assert exactly one email was sent
-    Mail::assertSent(WelcomeMail::class, 1);
-
-    // Assert nothing else was sent
-    Mail::assertNothingQueued();
-});`,
+// Artisan commands for failed jobs
+// php artisan queue:failed              — list all failed jobs
+// php artisan queue:retry <id>          — retry one job by ID
+// php artisan queue:retry all           — retry all failed jobs
+// php artisan queue:forget <id>         — delete one failed job
+// php artisan queue:flush               — delete ALL failed jobs
+// php artisan queue:failed-table        — create failed_jobs migration`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Laravel Horizon</b> is a real-time dashboard for Redis queues — think of it as the control room for all your background workers.\n• Install it with `composer require laravel/horizon` then visit `/horizon` in your browser\n• It shows: how many jobs are waiting, how fast they're being processed, which ones failed, and how long each one took\n  ↳ Essential for production systems where you need to catch problems before users notice them",
+            np: "Horizon — Redis queue dashboard। `/horizon` UI। Production मा essential।",
+            jp: "Horizon は Redis キューのダッシュボード。スループット・失敗・深さをリアルタイム表示。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Events & Listeners",
+        np: "Event र Listener",
+        jp: "イベントとリスナー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Imagine a package delivery system: when an order ships, you want to (1) email the customer, (2) update the inventory, and (3) log it for analytics.\n\n<b>The naive approach</b>\n• Call each service directly from your controller — works, but your controller now knows about email, inventory, AND analytics\n  ↳ When you add a fourth action, you have to touch the controller again\n\n<b>The Event / Listener approach</b>\n• Fire a single `OrderShipped` <b>event</b> from your controller — it just carries the order data\n• Three separate <b>Listeners</b> each subscribe to that event and handle their own piece\n  ↳ Your controller only knows it shipped an order — it doesn't care what happens next\n  ↳ Adding a fourth action means adding a fourth listener, not touching the controller\n• In Laravel 11, listeners are auto-discovered — no registration file needed",
+            np: "Event = something happened। Listener = respond। Laravel 11 मा auto-discover।",
+            jp: "Event は「何かが起きた」の通知、Listener が「対応する」。Laravel 11 は自動検出。",
+          },
         },
         {
           type: "code",
-          title: { en: "Queue::fake() — job assertions", np: "Queue fake", jp: "Queue::fake()" },
-          code: `<?php
-use App\\Jobs\\SendWelcomeEmail;
-use App\\Jobs\\GenerateThumbnail;
-use Illuminate\\Support\\Facades\\Queue;
-
-it('dispatches a welcome email job on registration', function () {
-    Queue::fake();
-
-    $user = User::factory()->create();
-    $this->actingAs($user)->post('/posts', ['title' => 'Hi', 'body' => 'World']);
-
-    Queue::assertPushed(GenerateThumbnail::class);
-
-    Queue::assertPushedOn('emails', SendWelcomeEmail::class);
-
-    Queue::assertPushed(SendWelcomeEmail::class, function ($job) use ($user) {
-        return $job->user->id === $user->id;
-    });
-
-    // Opposite — nothing of this type was dispatched
-    Queue::assertNotPushed(SomeOtherJob::class);
-});`,
+          title: { en: "Generate Event & Listener", np: "Generate", jp: "生成コマンド" },
+          code: `php artisan make:event OrderShipped
+php artisan make:listener SendShipmentNotification --event=OrderShipped
+php artisan make:listener UpdateInventory --event=OrderShipped`,
         },
         {
           type: "code",
-          title: { en: "Event::fake() — event & notification assertions", np: "Event fake", jp: "Event::fake()" },
-          code: `<?php
+          title: { en: "Event class", np: "Event class", jp: "Event クラス" },
+          code: `// app/Events/OrderShipped.php
+namespace App\\Events;
+
+use App\\Models\\Order;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+use Illuminate\\Queue\\SerializesModels;
+
+class OrderShipped
+{
+    use Dispatchable, SerializesModels;
+
+    public function __construct(
+        public readonly Order $order
+    ) {}
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Queueable Listener", np: "Queueable Listener", jp: "キュー対応リスナー" },
+          code: `// app/Listeners/SendShipmentNotification.php
+namespace App\\Listeners;
+
 use App\\Events\\OrderShipped;
 use App\\Notifications\\OrderShippedNotification;
-use Illuminate\\Support\\Facades\\{Event, Notification};
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Queue\\InteractsWithQueue;
 
-it('fires OrderShipped event when order is shipped', function () {
-    Event::fake();
+class SendShipmentNotification implements ShouldQueue
+{
+    use InteractsWithQueue;
 
-    $order = Order::factory()->create();
-    $order->ship();
+    public string $queue = 'notifications';
+    public int $delay = 10; // seconds
 
-    Event::assertDispatched(OrderShipped::class, function ($event) use ($order) {
-        return $event->order->id === $order->id;
-    });
+    public function handle(OrderShipped $event): void
+    {
+        $event->order->user->notify(
+            new OrderShippedNotification($event->order)
+        );
+    }
 
-    Event::assertDispatchedTimes(OrderShipped::class, 1);
-    Event::assertNotDispatched(SomeOtherEvent::class);
-});
-
-it('notifies user when order ships', function () {
-    Notification::fake();
-
-    $user  = User::factory()->create();
-    $order = Order::factory()->for($user)->create();
-    $order->ship();
-
-    Notification::assertSentTo($user, OrderShippedNotification::class);
-    Notification::assertSentToTimes($user, OrderShippedNotification::class, 1);
-});`,
+    public function failed(OrderShipped $event, \\Throwable $exception): void
+    {
+        Log::error('Shipment notification failed', ['order' => $event->order->id]);
+    }
+}`,
         },
         {
           type: "code",
-          title: { en: "Storage::fake() + Http::fake() + artisan command tests", np: "Other fakes", jp: "その他のフェイク" },
-          code: `<?php
-use Illuminate\\Http\\UploadedFile;
-use Illuminate\\Support\\Facades\\{Http, Storage};
+          title: { en: "Dispatching events", np: "Event dispatch", jp: "Event のディスパッチ" },
+          code: `use App\\Events\\OrderShipped;
 
-// Storage::fake — test file uploads without touching disk
-it('stores an uploaded avatar', function () {
-    Storage::fake('avatars');
+// Option 1: global helper
+event(new OrderShipped($order));
 
-    $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg', 200, 200);
+// Option 2: static dispatch method (same result)
+OrderShipped::dispatch($order);
 
-    $this->actingAs($user)
-         ->post('/profile/avatar', ['avatar' => $file])
-         ->assertOk();
+// Option 3: fire-and-forget on Eloquent model event
+// (define in boot() or as Model::observe())
+Order::created(fn (Order $order) => OrderShipped::dispatch($order));
 
-    Storage::disk('avatars')->assertExists("avatars/{$user->id}.jpg");
-});
+// Manual registration (Laravel 10 / if auto-discovery disabled)
+// app/Providers/EventServiceProvider.php
+protected $listen = [
+    OrderShipped::class => [
+        SendShipmentNotification::class,
+        UpdateInventory::class,
+    ],
+];`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Sometimes you want to push an event to the browser in real time — for example, updating a live dashboard when a job finishes.\n• This is called <b>broadcasting</b> and uses a WebSocket server (Pusher, Ably, or a self-hosted Soketi)\n• The event implements `ShouldBroadcast`, and your frontend JavaScript subscribes using Laravel Echo\n  ↳ This is a more advanced topic — see the official Laravel Broadcasting docs when you're ready for it",
+            np: "Broadcasting — Pusher/Soketi। Frontend subscribe गर्छ। Separate topic।",
+            jp: "ブロードキャストは Pusher/Soketi でフロントエンドにリアルタイム通知。`ShouldBroadcast` を実装。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Task Scheduling",
+        np: "Task Scheduling",
+        jp: "タスクスケジューリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Cron jobs are powerful but painful to manage — each one is a separate line in a server config file, and you need server access to add or change them.\n\n<b>Laravel's scheduler solves this</b>\n• You add <b>one single cron entry</b> to the server that runs every minute: `* * * * * php artisan schedule:run`\n• Then you define every scheduled task in your PHP code — no more touching server config files\n  ↳ In Laravel 11 all schedules live in `routes/console.php`\n  ↳ In Laravel 10 they live in `app/Console/Kernel.php`\n• This means schedules are version-controlled, reviewable in pull requests, and testable locally\n  ↳ `php artisan schedule:work` polls every minute in your terminal so you can test without deploying",
+            np: "One cron entry (every minute), baaki sab PHP maa। Laravel 11 मा `routes/console.php`।",
+            jp: "1 分ごとの cron 1 エントリーで動く。Laravel 11 は `routes/console.php` にスケジュール定義。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Creating a scheduled command", np: "Command बनाउने", jp: "コマンドの作成" },
+          code: `php artisan make:command SendWeeklyReport`,
+        },
+        {
+          type: "code",
+          title: { en: "Schedule definitions (Laravel 11 — routes/console.php)", np: "Schedule define", jp: "スケジュール定義" },
+          code: `// routes/console.php (Laravel 11)
+use Illuminate\\Support\\Facades\\Schedule;
 
-// Http::fake — fake outbound HTTP calls
-it('syncs data from external API', function () {
-    Http::fake([
-        'api.example.com/items' => Http::response([
-            ['id' => 1, 'name' => 'Widget'],
-            ['id' => 2, 'name' => 'Gadget'],
-        ], 200),
-        '*' => Http::response([], 500), // catch-all fallback
-    ]);
+// Artisan commands
+Schedule::command('emails:send')->dailyAt('09:00');
+Schedule::command('reports:weekly')->weekly()->mondays()->at('08:00');
+Schedule::command('db:backup')->daily()->timezone('Asia/Kathmandu');
+Schedule::command('queue:prune-failed', ['--hours=48'])->daily();
 
-    $this->artisan('app:sync-items')->assertSuccessful();
-    $this->assertDatabaseCount('items', 2);
-});
+// Every N minutes
+Schedule::command('app:sync-inventory')->everyFiveMinutes();
+Schedule::command('app:poll-webhooks')->everyMinute();
 
-// Artisan command tests
-it('runs the weekly report command', function () {
-    $this->artisan('reports:weekly')
-         ->expectsOutput('Report generated.')
-         ->assertExitCode(0);   // or assertSuccessful()
-});`,
+// Closures (for quick one-off tasks)
+Schedule::call(function () {
+    DB::table('sessions')->where('last_activity', '<', now()->subHours(2))->delete();
+})->hourly();
+
+// Overlap prevention — skip if previous run still executing
+Schedule::command('app:process-images')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+// Run in background (don't block the scheduler process)
+Schedule::command('app:heavy-report')
+    ->daily()
+    ->runInBackground()
+    ->onSuccess(function () { Log::info('Report done'); })
+    ->onFailure(function () { Log::error('Report failed'); });
+
+// Send output to a log file
+Schedule::command('inspire')
+    ->hourly()
+    ->appendOutputTo(storage_path('logs/inspire.log'));`,
+        },
+        {
+          type: "code",
+          title: { en: "Single server cron entry (add to server crontab)", np: "Server cron", jp: "サーバーの cron エントリー" },
+          code: `# Run this ONE entry on your server — Laravel handles the rest
+* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
+
+# For local development
+php artisan schedule:work    # polls every minute in foreground
+
+# Test a specific scheduled task immediately
+php artisan schedule:run
+
+# List all scheduled tasks
+php artisan schedule:list`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you run multiple servers (a cluster), every server runs the scheduler every minute — by default, the same scheduled task runs on every server simultaneously.\n• Add `->onOneServer()` to prevent this — only the first server to claim the job actually runs it\n  ↳ It uses a shared Redis cache as a locking mechanism to coordinate across servers\n  ↳ Requires `CACHE_STORE=redis` in `.env` so all servers see the same lock",
+            np: "Cluster मा एक मात्र server मा run: `->onOneServer()`। Shared cache चाहिन्छ।",
+            jp: "クラスター環境で 1 台だけ実行したい場合は `->onOneServer()`。共有キャッシュが必要。",
+          },
         },
       ],
     },
@@ -509,86 +398,86 @@ it('runs the weekly report command', function () {
   faq: [
     {
       question: {
-        en: "Should I use Pest or PHPUnit?",
-        np: "Pest वा PHPUnit?",
-        jp: "Pest と PHPUnit どちらを使うべき？",
+        en: "When should I use Queues vs Events?",
+        np: "Queue र Event कहिले प्रयोग गर्ने?",
+        jp: "Queue と Event はどう使い分けますか？",
       },
       answer: {
-        en: "<b>Pest</b> is the recommended default for all new Laravel projects — here's why:\n• Less boilerplate: no class, no `setUp()`, no `public function test_...` naming convention\n  ↳ A Pest test is just an `it()` call with a closure — much easier to read and write\n• Better assertions: `expect($value)->toBe(42)` reads more like English than `$this->assertEquals(42, $value)`\n• Extras built in: datasets (`it()->with([...])`), architecture tests (`arch()`), and parallel test execution\n• No feature loss: it compiles to PHPUnit under the hood — every PHPUnit assertion works inside Pest\n\nThe only reason to stick with PHPUnit is if you have an existing test suite you're not ready to migrate yet.",
-        np: "New project मा Pest। PHPUnit wrapper, feature loss छैन। Old project छ भने PHPUnit ठीक।",
-        jp: "新規プロジェクトは Pest が推奨。PHPUnit のラッパーなので機能差なし。既存スイートがある場合は PHPUnit をそのまま使ってよい。",
+        en: "Think of it this way:\n\n<b>Use a Queue when</b>\n• You have a single slow task (sending an email, calling an external API, generating a PDF)\n• The task doesn't need to happen before the user gets a response\n  ↳ The user clicks 'Register' → your code creates the account → then a queued job sends the welcome email separately\n\n<b>Use Events when</b>\n• Multiple unrelated parts of your app need to react when something happens\n• You want those reactions to stay decoupled from the code that triggered them\n  ↳ An order ships → email the customer AND update inventory AND log analytics — three listeners, all independent\n\nThey're not mutually exclusive — a listener can also implement `ShouldQueue` to run its logic in the background too.",
+        np: "Queue = slow deferred task। Event = decoupled reaction। Listener लाई ShouldQueue थप्न सकिन्छ।",
+        jp: "Queue は遅い単発タスクの非同期化、Event は複数の疎結合な反応。Listener に `ShouldQueue` を付ければ両立できます。",
       },
     },
     {
       question: {
-        en: "What does `RefreshDatabase` do to performance?",
-        np: "`RefreshDatabase` performance मा असर?",
-        jp: "`RefreshDatabase` はパフォーマンスにどう影響しますか？",
+        en: "How do I monitor queue workers in production?",
+        np: "Production मा queue worker monitor?",
+        jp: "本番でキューワーカーを監視する方法は？",
       },
       answer: {
-        en: "`RefreshDatabase` is the most common approach and works like this:\n• <b>First test in the suite</b>: runs all your migrations from scratch against the test database\n• <b>Every subsequent test</b>: wraps the test in a database transaction, then rolls it back after\n  ↳ Each test starts clean without re-running migrations — so it's fast after the first one\n\n<b>Speed tips</b>\n• Use an in-memory SQLite database for tests: set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`\n  ↳ SQLite migrations run almost instantly — great for local development\n• For very large migration suites, `LazilyRefreshDatabase` only migrates when a test actually needs the database",
-        np: "First test मा migrate एकपटक, बाकी transaction rollback। SQLite in-memory सबभन्दा fast।",
-        jp: "最初の 1 回だけマイグレーション実行、以降はトランザクションロールバック。SQLite インメモリが最速。",
+        en: "For <b>Redis queues</b>: install <b>Laravel Horizon</b> — it gives you a live web dashboard at `/horizon` showing job throughput, failures, and queue depth. Horizon also integrates with Supervisor (a Linux process manager) to keep your workers running automatically.\n\nFor <b>non-Redis queues</b>: use Supervisor directly with a config that keeps `php artisan queue:work --tries=3` running as a service.\n\nWhenever you deploy new code, run `php artisan horizon:terminate` (or restart the queue:work process) so workers pick up the latest code — stale workers run old code indefinitely otherwise.",
+        np: "Horizon — Redis dashboard। Supervisor — process manager। Deploy मा `horizon:terminate`।",
+        jp: "Redis なら Horizon が最適。Supervisor でワーカープロセスを管理。デプロイ後は `horizon:terminate`。",
       },
     },
     {
       question: {
-        en: "How do I test validation errors?",
-        np: "Validation error test कसरी?",
-        jp: "バリデーションエラーをテストする方法は？",
+        en: "What happens if a job fails all retries?",
+        np: "Job सबै retry fail भए के हुन्छ?",
+        jp: "全リトライが失敗したらどうなりますか？",
       },
       answer: {
-        en: "It depends on whether the route returns HTML or JSON:\n\n<b>Web (Blade) routes</b> — validation errors are flashed to the session and the user is redirected back:\n• `->assertSessionHasErrors('title')` — one field failed\n• `->assertSessionHasErrors(['title', 'body'])` — multiple fields failed\n\n<b>API (JSON) routes</b> — Laravel returns a 422 response with an errors object:\n• `->assertUnprocessable()` — confirms a 422 status code\n• `->assertJsonValidationErrors('email')` — confirms the field appears in the errors list\n• `->assertJsonValidationErrors(['email' => 'The email field is required.'])` — checks the exact message",
-        np: "Web: `assertSessionHasErrors()`। API: `assertJsonValidationErrors()`। 422 = `assertUnprocessable()`।",
-        jp: "Web は `assertSessionHasErrors()`、API は `assertJsonValidationErrors()` と `assertUnprocessable()`（422）。",
+        en: "When all retries are exhausted, the job lands in the `failed_jobs` database table along with the full exception and stack trace.\n\n<b>What you can do</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific job back onto the queue\n• `php artisan queue:retry all` — retry every failed job at once\n• `php artisan queue:flush` — delete all records from `failed_jobs`\n\nTip: define a `failed(Throwable $exception)` method on your job class and use it to send a Slack alert or undo partial work (like rolling back a payment attempt).",
+        np: "`failed_jobs` table मा जान्छ। `failed()` call। `queue:retry` ले retry।",
+        jp: "`failed_jobs` テーブルに移動し `failed()` が呼ばれる。`queue:retry` で再試行可能。",
       },
     },
     {
       question: {
-        en: "How do I assert a notification was sent?",
-        np: "Notification send भयो कि भएन assert?",
-        jp: "通知が送信されたことをアサートする方法は？",
+        en: "How do I test queued jobs?",
+        np: "Queued job test कसरी?",
+        jp: "キュージョブをテストする方法は？",
       },
       answer: {
-        en: "Call `Notification::fake()` at the start of your test — after that, no notifications actually go out.\n\nThen, after running the action that should trigger the notification:\n• `Notification::assertSentTo($user, MyNotification::class)` — was this notification sent to this user?\n• Pass a callback as a third argument to check the notification's data:\n  ↳ `Notification::assertSentTo($user, MyNotification::class, fn($n) => $n->order->id === 5)`\n• `Notification::assertNothingSent()` — confirms nothing was sent at all\n\nThis works regardless of which channel the notification uses — email, Slack, SMS, database — because `Notification::fake()` intercepts all of them.",
-        np: "`Notification::fake()` → assert। `assertSentTo()` user र class दिनु।",
-        jp: "`Notification::fake()` 後に `assertSentTo($user, MyNotification::class)`。チャンネル問わず動作。",
+        en: "You don't want tests to actually send emails or hit external services — use `Queue::fake()` to intercept jobs without running them.\n\n• Call `Queue::fake()` at the top of your test\n• Run the code that should dispatch a job\n• Assert the job was (or wasn't) pushed:\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — confirms the job was dispatched\n  ↳ `Queue::assertPushedOn('emails', SendWelcomeEmail::class)` — confirms it was sent to the right queue\n  ↳ `Queue::assertNotPushed(SomeOtherJob::class)` — confirms a job was NOT dispatched\n\nTo test the job's logic itself, just call `(new SendWelcomeEmail($user))->handle()` directly — no queue or worker needed.",
+        np: "`Queue::fake()` — job push assert। `handle()` direct call test।",
+        jp: "`Queue::fake()` でキューを偽装し `assertPushed()` で確認。`handle()` の単体テストは直接呼び出す。",
       },
     },
     {
       question: {
-        en: "Can I test middleware in isolation?",
-        np: "Middleware isolation मा test?",
-        jp: "ミドルウェアを独立してテストできますか？",
+        en: "Can I dispatch an event inside a job?",
+        np: "Job भित्र event dispatch गर्न मिल्छ?",
+        jp: "Job の中でイベントをディスパッチできますか？",
       },
       answer: {
-        en: "Yes, though the most practical approach is to test middleware <b>indirectly through feature tests</b>:\n• `$this->get('/dashboard')->assertRedirect('/login')` — confirms the auth middleware is working\n  ↳ You don't need to instantiate the middleware class itself — the full stack proves it\n\nFor direct unit testing of a middleware class:\n• Instantiate it, pass a `Request` object and a `$next` closure, and assert the response\n  ↳ Useful when middleware has complex internal logic that's hard to test via HTTP\n\nTo isolate a controller by skipping middleware in a test, call `$this->withoutMiddleware()` at the top — it disables all middleware for that test only.",
-        np: "Feature test मा indirect test सजिलो। Direct unit test को लागि Request र Closure pass।",
-        jp: "HTTPテストで間接的にテストが一般的。直接 `new Middleware()` して Request と Closure を渡す方法もある。",
+        en: "Yes — calling `event(new SomeEvent($data))` or `SomeEvent::dispatch($data)` inside a job's `handle()` method works fine.\n\nOne thing to watch: if that event has queueable listeners, those listeners are queued separately and fail independently.\n  ↳ A failing listener won't automatically roll back or fail the parent job\n  ↳ If you need strict ordering (do A, then B, then C — stop if any fail), use `Bus::chain()` instead of events",
+        np: "`handle()` भित्र `event()` call गर्न मिल्छ। Listener failure parent job rollback गर्दैन।",
+        jp: "`handle()` 内で `event()` を呼べます。リスナー失敗は親ジョブをロールバックしません。順序が必要なら `Bus::chain()` を使用。",
       },
     },
     {
       question: {
-        en: "How do I test exception handling?",
-        np: "Exception handling test?",
-        jp: "例外処理をテストする方法は？",
+        en: "How does `->withoutOverlapping()` work?",
+        np: "`withoutOverlapping()` कसरी काम गर्छ?",
+        jp: "`->withoutOverlapping()` の仕組みは？",
       },
       answer: {
-        en: "For <b>HTTP responses</b>, assert the status code — that's usually all you need:\n• `->assertNotFound()` — 404 (e.g. when a model isn't found)\n• `->assertForbidden()` — 403 (e.g. when authorization fails)\n• `->assertStatus(500)` — any specific code\n\nFor <b>non-HTTP code</b> that throws an exception, use Pest's `expect()` wrapper:\n• `expect(fn() => $thing->doSomething())->toThrow(ModelNotFoundException::class)`\n\n<b>Debugging tip</b>: by default, Laravel's exception handler catches exceptions and converts them to HTTP responses (like a 500 page). If you want to see the raw exception instead of a response, call `$this->withoutExceptionHandling()` at the top of your test.",
-        np: "HTTP: status code assert। Raw exception: `toThrow()`। `withoutExceptionHandling()` debug को लागि।",
-        jp: "HTTP は `assertNotFound()` など。例外を直接テストは `toThrow()`。`withoutExceptionHandling()` で生の例外を確認。",
+        en: "Before running a scheduled task, `->withoutOverlapping()` tries to claim an atomic lock in your cache.\n• If the lock is free, the task runs and holds the lock until it's done\n• If the lock is already claimed (the previous run is still going), this invocation is skipped entirely\n  ↳ The lock expires after 24 hours by default so a crashed job doesn't block things forever\n\n<b>When to use it</b>\n• Any long-running command that runs more frequently than it takes to finish\n  ↳ Example: a 90-second image processing command scheduled every minute would normally stack up — `->withoutOverlapping()` prevents this\n\nRequires a cache driver that supports atomic locks: Redis, Memcached, or `database`.",
+        np: "Cache lock acquire। Previous run चलिरहेको छ भने skip। Redis/DB cache चाहिन्छ।",
+        jp: "アトミックキャッシュロックを取得。前の実行が残っていればスキップ。Redis か DB キャッシュが必要。",
       },
     },
     {
       question: {
-        en: "How do I test that a queued mailable was queued (not sent immediately)?",
-        np: "Queued mailable test कसरी?",
-        jp: "キューに入れられたメールをテストする方法は？",
+        en: "How do I handle tasks that must run only on one server in a cluster?",
+        np: "Cluster मा एक server मा मात्र run?",
+        jp: "クラスターで 1 台だけ実行する方法は？",
       },
       answer: {
-        en: "There are two different assertion methods and they check different things:\n\n• `Mail::assertSent()` — checks for mail that was sent <b>immediately</b> (synchronous, no queue)\n• `Mail::assertQueued()` — checks for mail that was <b>pushed onto the queue</b> (the mailable implements `ShouldQueue`)\n\nIf your mailable implements `ShouldQueue` and you use `assertSent()`, the assertion will fail even if the code is working — because the mail was queued, not sent directly.\n\nUse `assertQueued()` for any mailable with `ShouldQueue`. After calling `Mail::fake()`, both kinds are intercepted — no real email goes out either way.",
-        np: "`Mail::assertQueued()` — `assertSent()` होइन। `ShouldQueue` implement भएको mailable को लागि।",
-        jp: "`ShouldQueue` を実装したメールは `assertQueued()` でチェック。`assertSent()` は同期送信のみ。",
+        en: "Without `->onOneServer()`, every server in your cluster runs every scheduled task independently — you'd send the daily report email three times if you have three servers.\n\n• Chain `->onOneServer()` to any scheduled task\n  ↳ All servers race to claim a shared cache lock when the scheduler fires\n  ↳ Only the winner runs the task — the others see the lock is taken and skip\n• Example: `Schedule::command('reports:generate')->daily()->onOneServer()`\n• Requires a shared Redis cache (`CACHE_STORE=redis` in `.env`) so all servers see the same lock",
+        np: "`->onOneServer()` — shared cache lock। पहिलो server मात्र run।",
+        jp: "`->onOneServer()` で共有キャッシュロックを使い 1 台だけ実行。Redis の共有キャッシュが必要。",
       },
     },
   ],

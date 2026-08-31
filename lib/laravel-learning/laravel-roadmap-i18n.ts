@@ -21,6 +21,7 @@ const LARAVEL_TAG: Record<string, LocalizedString> = {
   errors: { en: "errors", np: "त्रुटि", jp: "エラー" },
   logging: { en: "logging", np: "लगिङ", jp: "ロギング" },
   transactions: { en: "transactions", np: "ट्रान्जेक्शन", jp: "トランザクション" },
+  pagination: { en: "pagination", np: "पेजिनेसन", jp: "ページネーション" },
   i18n: { en: "localization", np: "स्थानीयकरण", jp: "多言語" },
   relations: { en: "relationships", np: "सम्बन्ध", jp: "リレーション" },
   mail: { en: "mail", np: "मेल", jp: "メール" },
@@ -114,81 +115,86 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "データベース接続・生クエリ・トランザクション",
   },
   13: {
+    en: "Query Builder & pagination",
+    np: "Query Builder र pagination",
+    jp: "クエリビルダとページネーション",
+  },
+  14: {
     en: "Migrations, Query Builder, Eloquent models & CRUD patterns",
     np: "Migrations, Query Builder, Eloquent र CRUD",
     jp: "マイグレーション・クエリビルダ・Eloquent・CRUD",
   },
-  14: {
+  15: {
     en: "Caching & localization",
     np: "Caching र localization",
     jp: "キャッシュと多言語",
   },
-  15: {
+  16: {
     en: "Eloquent relationships, eager loading & soft deletes",
     np: "Eloquent relationships, eager loading र soft deletes",
     jp: "Eloquent リレーション・Eager load・ソフトデリート",
   },
-  16: {
+  17: {
     en: "File storage, HTTP client, mail & Notifications",
     np: "File storage, HTTP client, mail र Notifications",
     jp: "ファイルストレージ・HTTP クライアント・メール・通知",
   },
-  17: {
+  18: {
     en: "Authentication — Breeze, Sanctum & user registration",
     np: "Authentication — Breeze, Sanctum र user registration",
     jp: "認証 — Breeze・Sanctum・ユーザー登録",
   },
-  18: {
+  19: {
     en: "Authorization — Gates, Policies & API Resources",
     np: "Authorization — Gates, Policies र API Resources",
     jp: "認可 — Gates・Policies・API リソース",
   },
-  19: {
+  20: {
     en: "Queues, Jobs, Events, Listeners & Task Scheduling",
     np: "Queues, Jobs, Events, Listeners र Task Scheduling",
     jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
   },
-  20: {
+  21: {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
-  21: {
+  22: {
     en: "Sanctum REST API — auth endpoints & full CRUD",
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
-  22: {
+  23: {
     en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
     np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
     jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
   },
-  23: {
+  24: {
     en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
     np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
     jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
   },
-  24: {
+  25: {
     en: "Custom Artisan commands — arguments, options & console I/O",
     np: "Custom Artisan commands — arguments, options र console I/O",
     jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
   },
-  25: {
+  26: {
     en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
     np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
     jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
   },
-  26: {
+  27: {
     en: "Frontend integration — Livewire, Inertia.js & Vite",
     np: "Frontend — Livewire, Inertia.js र Vite",
     jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
   },
-  27: {
+  28: {
     en: "Performance — query optimization, N+1, Redis & queue scaling",
     np: "Performance — query optimization, N+1, Redis र queue scaling",
     jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
   },
-  28: {
+  29: {
     en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
     np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
     jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",

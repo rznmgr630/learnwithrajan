@@ -3,467 +3,398 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_16_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Most real applications need to save files (profile pictures, PDF invoices, CSV exports) and call external APIs (payment gateways, weather data, third-party services). Today covers both.\n\n<b>File storage</b>\n• Laravel's `Storage` facade gives you one consistent API whether you're saving files to your local server or to Amazon S3\n  ↳ Swap from local disk to S3 by changing one line in `.env` — no code changes needed\n\n<b>HTTP Client</b>\n• Laravel's built-in HTTP Client lets you call external APIs cleanly, with retry logic and easy test support\n  ↳ No need to install Guzzle yourself — it wraps Guzzle behind a simple, readable interface",
-      np: "Storage facade ले local/S3 abstract। HTTP Client ले Guzzle wrap — fluent API।",
-      jp: "Storage ファサードでローカル・S3・クラウドを抽象化。HTTP クライアントは Guzzle を流暢な API でラップします。",
+      en: "Think of Eloquent relationships like the connections between people in real life — a user has many posts, a post belongs to a user, a student belongs to many courses.\n\nEloquent turns these real-world connections into simple PHP methods so you never have to write raw SQL joins.\n\n<b>The four core relationship types</b>\n• <b>hasOne</b> — one parent, one child (a user has one profile)\n• <b>hasMany</b> — one parent, many children (a user has many posts)\n• <b>belongsTo</b> — the child points back to its parent (a post belongs to a user)\n• <b>belongsToMany</b> — two models connected through a middle table called a pivot (a user belongs to many roles)\n\nRelationships are <b>lazy by default</b> — they only hit the database when you actually access them, not when you define them.",
+      np: "Eloquent relationship ले FK joins PHP methods मा। hasOne/hasMany parent; belongsTo child; belongsToMany pivot।",
+      jp: "Eloquent リレーションは外部キー結合を PHP メソッドで表現します。hasOne/hasMany が親側、belongsTo が子側、belongsToMany が多対多のピボットです。",
     },
     {
-      en: "<b>Mail</b>\n• Laravel represents each type of email as its own class called a <b>Mailable</b>\n  ↳ You define the subject, template, and attachments in that class — then just call `Mail::to($user)->send(new WelcomeEmail($user))`\n• Works with any mail provider: SMTP, Mailgun, Amazon SES, Postmark — all swappable via `.env`\n\n<b>Notifications</b>\n• Notifications are a step above email — one Notification class can deliver the same message through multiple channels at once\n  ↳ Send an email AND store a record in the database AND ping Slack — all from one `$user->notify()` call\n• Think of it as a universal alert system for your app",
-      np: "Mail: Mailable class, SMTP/Mailgun/SES driver। Notification: mail, database, Slack एकैपटक।",
-      jp: "Mail は Mailable クラスで SMTP・Mailgun・SES などに対応。Notification はメール・SMS・Slack・DB など複数チャネルを 1 クラスで管理します。",
+      en: "Three more concepts round out this day:\n\n<b>N+1 problem</b>\n• Loading 100 posts then looping to get each post's author fires 101 queries — one for posts, then one per post for its author\n  ↳ Fix: use `with('author')` to load everything in 2 queries instead of 101\n\n<b>Soft deletes</b>\n• Instead of physically deleting a row, Laravel marks it with a timestamp in a `deleted_at` column\n  ↳ The row stays in the table but is invisible to normal queries — you can restore it any time\n\n<b>Observers</b>\n• An observer is a class that listens for model events (created, updated, deleted) and runs your code automatically\n  ↳ Keeps model-related side effects out of controllers and in one organised place",
+      np: "N+1 problem: `with()` ले solve। Soft delete: row physically remove नगरी mark। Observer ले event logic centralize।",
+      jp: "N+1 問題は `with()` で解決します。ソフトデリートは行を物理削除せず `deleted_at` を記録。オブザーバでモデルイベントロジックを集中管理できます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "File storage & uploads",
-        np: "File storage र uploads",
-        jp: "ファイルストレージとアップロード",
+        en: "Core relationship types",
+        np: "Core relationship types",
+        jp: "基本のリレーション型",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel uses the concept of <b>disks</b> — named storage locations you configure once and then refer to by name throughout your code.\n\n<b>The two built-in disks</b>\n• `local` — saves files to `storage/app` on your server (not accessible via browser URL)\n  ↳ Use for private files like invoices, internal reports, or anything users shouldn't access directly\n• `public` — saves files to `storage/app/public` and makes them web-accessible at `/storage/filename`\n  ↳ Before this works, run `php artisan storage:link` once to create the symlink from `public/storage` to `storage/app/public`\n\n<b>Using S3</b>\n• Add your AWS credentials to `.env` and set `FILESYSTEM_DISK=s3`\n  ↳ Every `Storage::put()` call now saves to S3 instead of local — same code, different destination",
-            np: "`config/filesystems.php` मा disk configure। `php artisan storage:link` ले symlink बनाउँछ। S3 को लागि `.env` मा credentials।",
-            jp: "`config/filesystems.php` でディスクを設定。S3 は `.env` に認証情報を追加し `FILESYSTEM_DISK=s3` に設定。`php artisan storage:link` でシンボリックリンクを作成します。",
+            en: "Laravel figures out the foreign key automatically by looking at the model name.\n\n<b>How the naming convention works</b>\n• If you call `belongsTo(User::class)`, Laravel looks for a `user_id` column on the current table\n  ↳ It takes the model name, converts it to snake_case, and adds `_id`\n• You can override this by passing the column name as the second argument: `$this->belongsTo(User::class, 'author_id')`\n\n<b>Avoiding null errors with `withDefault()`</b>\n• If a post has no `user_id`, accessing `$post->user` returns `null` — which causes a crash if you then try `$post->user->name`\n  ↳ `withDefault(['name' => 'Anonymous'])` returns a placeholder User model instead of `null`\n  ↳ Much safer when dealing with optional relationships",
+            np: "Convention ले `user_id` infer। Override गर्न explicit argument। `withDefault()` ले null बाट जोगिन सकिन्छ।",
+            jp: "規約で `user_id` などを自動推定。上書きするには関係メソッドに引数を渡します。`withDefault()` で外部キーが null のとき空モデルを返せます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Storage facade — read, write, delete",
-            np: "Storage facade उदाहरण",
-            jp: "Storage ファサードの操作",
+            en: "hasOne, hasMany, belongsTo",
+            np: "hasOne, hasMany, belongsTo उदाहरण",
+            jp: "hasOne・hasMany・belongsTo の定義",
           },
-          code: `use Illuminate\\Support\\Facades\\Storage;
-
-// ---- Write ----
-Storage::put('reports/report.txt', $content);
-Storage::disk('s3')->put('exports/data.csv', $csvContent);
-Storage::prepend('logs/app.log', 'New entry');   // add to top
-Storage::append('logs/app.log', 'New entry');    // add to bottom
-
-// ---- Read ----
-$content = Storage::get('reports/report.txt');
-$url     = Storage::url('images/photo.jpg');     // public URL
-$tempUrl = Storage::temporaryUrl('private/doc.pdf', now()->addMinutes(10)); // S3 only
-
-// ---- Existence / metadata ----
-Storage::exists('images/photo.jpg');
-Storage::missing('images/photo.jpg');
-Storage::size('images/photo.jpg');               // bytes
-Storage::lastModified('images/photo.jpg');       // Unix timestamp
-Storage::mimeType('images/photo.jpg');
-
-// ---- Delete / copy / move ----
-Storage::delete('images/old.jpg');
-Storage::delete(['old1.jpg', 'old2.jpg']);
-Storage::copy('from.jpg', 'to.jpg');
-Storage::move('old.jpg', 'new.jpg');
-
-// ---- List files ----
-$files = Storage::files('avatars');
-$all   = Storage::allFiles('avatars');           // recursive`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "File upload in a controller",
-            np: "Controller मा file upload",
-            jp: "コントローラでのファイルアップロード",
-          },
-          code: `use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Storage;
-
-public function store(Request $request)
+          code: `// app/Models/User.php
+class User extends Model
 {
-    $request->validate([
-        'avatar' => ['required', 'image', 'max:2048'], // 2 MB limit
-    ]);
-
-    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-        $file = $request->file('avatar');
-
-        // store() auto-generates a unique filename and returns the path
-        $path = $file->store('avatars', 'public');
-
-        // storeAs() lets you set the filename explicitly
-        $path = $file->storeAs('avatars', 'user-' . auth()->id() . '.jpg', 'public');
-
-        // storeAs() on S3
-        $path = $file->storeAs('avatars', $file->hashName(), 's3');
-
-        // File metadata
-        $originalName = $file->getClientOriginalName();  // original filename
-        $extension    = $file->getClientOriginalExtension();
-        $size         = $file->getSize();                 // bytes
-        $mime         = $file->getMimeType();             // e.g. image/jpeg
-
-        // Save path to DB
-        auth()->user()->update(['avatar' => $path]);
-
-        // Public URL
-        $url = Storage::disk('public')->url($path);
+    // One user → one profile (FK: profiles.user_id)
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+        // Override FK: $this->hasOne(Profile::class, 'user_id', 'id');
     }
 
-    return back()->with('success', 'Avatar uploaded!');
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "S3 configuration (.env)",
-            np: "S3 configuration",
-            jp: "S3 の設定",
-          },
-          code: `# .env
-FILESYSTEM_DISK=s3
-
-AWS_ACCESS_KEY_ID=your-key-id
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_DEFAULT_REGION=ap-southeast-1
-AWS_BUCKET=my-app-bucket
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-# composer
-composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies`,
-        },
-      ],
-    },
+    // One user → many posts (FK: posts.user_id)
+    public function posts(): HasMany
     {
-      title: {
-        en: "HTTP Client",
-        np: "HTTP Client",
-        jp: "HTTP クライアント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When your app needs to talk to an external API — a payment processor, a weather service, a CRM — Laravel's HTTP Client makes it clean and straightforward.\n\n<b>What it gives you</b>\n• A readable, chainable interface: `Http::withToken($token)->get('https://api.example.com/users')`\n  ↳ No manual Guzzle setup — just chain methods to build your request\n• Built-in retry logic: `->retry(3, 500)` tries the request 3 times with a 500ms gap between attempts\n• Easy response helpers:\n  ↳ `->json()` — decode the JSON response body into a PHP array\n  ↳ `->status()` — get the HTTP status code (200, 404, 500…)\n  ↳ `->successful()` — returns `true` if the status code is in the 2xx range\n  ↳ `->throw()` — throws an exception automatically if the request fails\n• Test-friendly: `Http::fake()` intercepts outgoing requests in tests so you never make real API calls",
-            np: "`Http` facade ले Guzzle wrap। `->json()`, `->status()`, `->successful()`, `->throw()`। Test मा `Http::fake()`।",
-            jp: "`Http` ファサードは Guzzle をラップ。`->json()`・`->status()`・`->successful()`・`->throw()` などで便利に操作。テストは `Http::fake()` で完結します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "GET, POST with headers, auth, retries",
-            np: "HTTP Client — GET, POST, headers, auth",
-            jp: "GET・POST・認証・リトライの使用例",
-          },
-          code: `use Illuminate\\Support\\Facades\\Http;
-
-// ---- GET ----
-$response = Http::get('https://api.example.com/users');
-$users    = $response->json();             // decode JSON body as array
-$status   = $response->status();          // 200, 404, etc.
-$ok       = $response->successful();      // 2xx
-$failed   = $response->failed();          // 4xx or 5xx
-$body     = $response->body();            // raw string
-
-// ---- POST with JSON body ----
-$response = Http::post('https://api.example.com/users', [
-    'name'  => 'Alice',
-    'email' => 'alice@example.com',
-]);
-
-// ---- POST as form data (application/x-www-form-urlencoded) ----
-$response = Http::asForm()->post('https://api.example.com/login', [
-    'username' => 'alice',
-    'password' => 'secret',
-]);
-
-// ---- Custom headers ----
-$response = Http::withHeaders([
-    'X-App-Key'  => config('services.example.key'),
-    'Accept'     => 'application/json',
-])->get('https://api.example.com/items');
-
-// ---- Authentication ----
-Http::withToken($apiToken)->get('https://api.example.com/me');          // Bearer
-Http::withBasicAuth('user', 'pass')->get('https://api.example.com/');   // Basic
-
-// ---- Timeout & retry ----
-$response = Http::timeout(10)
-    ->retry(3, 500)   // 3 attempts, 500ms delay between
-    ->get('https://api.example.com/slow-endpoint');
-
-// ---- Throw on HTTP error (4xx / 5xx) ----
-$response = Http::throw()->get('https://api.example.com/users');
-// throws Illuminate\\Http\\Client\\RequestException on error
-
-// Throw conditionally
-$response->throwIf($response->status() === 429, 'Rate limited.');
-$response->throwUnlessStatus(200);
-
-// ---- Query parameters ----
-Http::get('https://api.example.com/search', ['q' => 'laravel', 'page' => 2]);
-
-// ---- File upload ----
-Http::attach('photo', file_get_contents($path), 'photo.jpg')
-    ->post('https://api.example.com/upload');`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Testing with Http::fake()",
-            np: "Http::fake() — testing",
-            jp: "Http::fake() でテスト",
-          },
-          code: `// In your test
-Http::fake([
-    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Alice'], 200),
-    'api.example.com/error' => Http::response(['message' => 'Not Found'], 404),
-    '*' => Http::response([], 200), // catch-all fallback
-]);
-
-// Assert requests were made
-Http::assertSent(function ($request) {
-    return $request->url() === 'https://api.example.com/users'
-        && $request->method() === 'GET';
-});
-
-Http::assertNotSent(fn ($r) => str_contains($r->url(), 'payment'));`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Mailable classes & mail config",
-        np: "Mailable classes र mail config",
-        jp: "Mailable クラスとメール設定",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A <b>Mailable</b> is a PHP class that represents one type of email — like a welcome email, a password reset, or an invoice receipt.\n\n<b>Three methods you define</b>\n• `envelope()` — sets the subject line, the from address, CC, and BCC\n  ↳ Think of this as filling in the email's header information before writing the body\n• `content()` — points to the Blade view (or Markdown template) that becomes the email body\n  ↳ Any public property on the Mailable class is automatically available in that view\n• `attachments()` — returns an array of files to attach to the email\n  ↳ Can attach local files, Storage disk files, or files from S3\n\n<b>A note on performance</b>\n• Sending email via SMTP during a web request blocks the user from getting a response until the mail server replies\n  ↳ Always use `Mail::to($user)->queue(new WelcomeEmail($user))` in production — it hands the work off to a background queue worker so the user's response is instant",
-            np: "Mailable: `envelope()` (subject/from), `content()` (view), `attachments()`। Production मा queue।",
-            jp: "Mailable は `envelope()` で件名・差出人、`content()` でテンプレート、`attachments()` で添付ファイルを設定します。本番の遅い SMTP には必ずキュー送信を使います。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Create and define a Mailable",
-            np: "Mailable बनाउनु",
-            jp: "Mailable の生成と定義",
-          },
-          code: `php artisan make:mail WelcomeEmail
-php artisan make:mail InvoicePaid --markdown=emails.invoice  # Markdown template
-
-// app/Mail/WelcomeEmail.php
-<?php
-
-namespace App\\Mail;
-
-use App\\Models\\User;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Mail\\Mailable;
-use Illuminate\\Mail\\Mailables\\Content;
-use Illuminate\\Mail\\Mailables\\Envelope;
-use Illuminate\\Queue\\SerializesModels;
-
-class WelcomeEmail extends Mailable
-{
-    use Queueable, SerializesModels; // SerializesModels for queueing
-
-    public function __construct(
-        public readonly User $user, // public = auto-available in the view
-    ) {}
-
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            from: new Address('noreply@myapp.com', 'MyApp'),
-            replyTo: [new Address('support@myapp.com', 'Support')],
-            subject: 'Welcome to MyApp, ' . $this->user->name . '!',
-        );
+        return $this->hasMany(Post::class);
     }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.welcome',          // resources/views/emails/welcome.blade.php
-            // markdown: 'emails.welcome',   // or Markdown-based
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [
-            // Attachment::fromPath('/path/to/file.pdf')->as('guide.pdf'),
-        ];
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Sending mail & SMTP .env config",
-            np: "Mail पठाउनु र .env config",
-            jp: "メール送信と .env 設定",
-          },
-          code: `use App\\Mail\\WelcomeEmail;
-use Illuminate\\Support\\Facades\\Mail;
-
-// Send immediately
-Mail::to($user->email)->send(new WelcomeEmail($user));
-
-// Send to multiple
-Mail::to($user)
-    ->cc('manager@myapp.com')
-    ->bcc('audit@myapp.com')
-    ->send(new WelcomeEmail($user));
-
-// Queue (async — much better for production SMTP)
-Mail::to($user)->queue(new WelcomeEmail($user));
-
-// Queue with delay
-Mail::to($user)->later(now()->addMinutes(5), new WelcomeEmail($user));
-
-// ---- .env SMTP config ----
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com          # or smtp.mailgun.org, email-smtp.us-east-1.amazonaws.com
-MAIL_PORT=587
-MAIL_USERNAME=your@gmail.com
-MAIL_PASSWORD="your-app-password"  # Gmail: use App Password, NOT your account password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@myapp.com
-MAIL_FROM_NAME="MyApp"
-
-# Preview emails locally without sending (catches all mail to log file)
-MAIL_MAILER=log
-
-# Or use Mailpit (https://github.com/axllent/mailpit) — an SMTP trap with web UI
-MAIL_MAILER=smtp
-MAIL_HOST=127.0.0.1
-MAIL_PORT=1025`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Notifications",
-        np: "Notifications",
-        jp: "通知",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A <b>Notification</b> is like a Mailable but smarter — it can deliver the same message through multiple channels at the same time.\n\n<b>How it works</b>\n• You define a `via()` method that returns the list of channels to use: `return ['mail', 'database']`\n  ↳ Laravel calls the matching method for each channel: `toMail()`, `toDatabase()`, `toBroadcast()`, etc.\n• Every channel gets the same information — you just shape it differently per channel\n  ↳ Email gets a nicely formatted `MailMessage`; the database channel gets a plain PHP array\n\n<b>Built-in channels</b>\n• `mail` — send an email\n• `database` — store a record in a `notifications` table for in-app notification bells\n• `broadcast` — push to the browser via WebSockets for real-time alerts\n• `vonage` — send an SMS\n• Community packages add Slack, Telegram, Discord, and more",
-            np: "Notification ले `via()` method मा multiple channel define गर्छ — mail, database, Slack।",
-            jp: "Notification は `via()` で複数チャネルを宣言します。組み込みは `mail`・`database`・`broadcast`。コミュニティ製の Slack・Telegram チャネルも豊富です。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Create and define a Notification",
-            np: "Notification बनाउनु",
-            jp: "Notification の生成と定義",
-          },
-          code: `php artisan make:notification InvoicePaid
-
-// app/Notifications/InvoicePaid.php
-<?php
-
-namespace App\\Notifications;
-
-use App\\Models\\Invoice;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Notifications\\Notification;
-use Illuminate\\Notifications\\Messages\\MailMessage;
-
-class InvoicePaid extends Notification
-{
-    use Queueable;
-
-    public function __construct(
-        public readonly Invoice $invoice,
-    ) {}
-
-    // Which channels to use
-    public function via(object $notifiable): array
-    {
-        return ['mail', 'database'];  // send email AND store in DB
-    }
-
-    // Mail channel
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('Invoice #' . $this->invoice->id . ' Paid')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your invoice has been paid.')
-            ->action('View Invoice', route('invoices.show', $this->invoice))
-            ->line('Thank you for your business!');
-    }
-
-    // Database channel — stored in notifications table
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'invoice_id' => $this->invoice->id,
-            'amount'     => $this->invoice->amount,
-            'message'    => 'Invoice #' . $this->invoice->id . ' was paid.',
-        ];
-    }
-
-    // toArray() is used by the database channel if toDatabase() is absent
-    public function toArray(object $notifiable): array
-    {
-        return $this->toDatabase($notifiable);
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Sending notifications & reading from DB",
-            np: "Notification पठाउनु र DB बाट पढ्नु",
-            jp: "通知の送信と DB からの読み取り",
-          },
-          code: `use App\\Notifications\\InvoicePaid;
-use Illuminate\\Support\\Facades\\Notification;
-
-// ---- Send to a single user (using Notifiable trait) ----
-// The User model uses Illuminate\\Notifications\\Notifiable;
-$user->notify(new InvoicePaid($invoice));
-
-// ---- Send to multiple users at once ----
-Notification::send($users, new InvoicePaid($invoice));
-
-// ---- On-demand notification (no User model needed) ----
-Notification::route('mail', 'client@example.com')
-    ->notify(new InvoicePaid($invoice));
-
-// ---- Database notifications table ----
-// Run: php artisan notifications:table && php artisan migrate
-
-// Read unread notifications
-$unread = $user->unreadNotifications;   // Collection of DatabaseNotification
-foreach ($unread as $notification) {
-    $data = $notification->data;        // the array from toDatabase()
-    echo $data['message'];
 }
 
-// Mark as read
-$user->unreadNotifications->markAsRead();
-$notification->markAsRead();
+// app/Models/Post.php
+class Post extends Model
+{
+    // Many posts → one user (FK: posts.user_id)
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
-// All notifications (read + unread)
-$all = $user->notifications;
+    // withDefault: returns empty User model when user_id is null
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')
+            ->withDefault(['name' => 'Anonymous']);
+    }
+}
 
-// Delete old notifications
-$user->notifications()->delete();
+// ---- Accessing relationships ----
+$user    = User::find(1);
+$profile = $user->profile;          // hasOne → single model or null
+$posts   = $user->posts;            // hasMany → Collection
+$author  = Post::first()->user;     // belongsTo → single model or null`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "belongsToMany — pivot table operations",
+            np: "belongsToMany — pivot operations",
+            jp: "belongsToMany とピボットテーブル操作",
+          },
+          code: `// Pivot table convention: alphabetical singular model names → role_user
+// Migration: $table->foreignId('user_id'); $table->foreignId('role_id');
 
-// ---- Notifiable trait on User model ----
-// The User model must use Illuminate\\Notifications\\Notifiable;
-// This adds: notifications(), unreadNotifications(), readNotifications()`,
+// app/Models/User.php
+public function roles(): BelongsToMany
+{
+    return $this->belongsToMany(Role::class)
+        ->withTimestamps()                // created_at, updated_at on pivot
+        ->withPivot('assigned_by');       // extra pivot column
+}
+
+// app/Models/Role.php
+public function users(): BelongsToMany
+{
+    return $this->belongsToMany(User::class)->withTimestamps();
+}
+
+// ---- Pivot operations ----
+$user = User::find(1);
+
+$user->roles()->attach($roleId);              // add a role
+$user->roles()->attach($roleId, ['assigned_by' => auth()->id()]); // with pivot data
+$user->roles()->detach($roleId);              // remove a role
+$user->roles()->detach();                     // remove ALL roles
+
+// sync: detaches roles NOT in the array, attaches new ones
+$user->roles()->sync([1, 2, 3]);
+
+// syncWithoutDetaching: only attaches, never removes
+$user->roles()->syncWithoutDetaching([4]);
+
+// toggle: attaches if missing, detaches if present
+$user->roles()->toggle([1, 2]);
+
+// Access pivot columns
+foreach ($user->roles as $role) {
+    echo $role->pivot->assigned_by;
+    echo $role->pivot->created_at;
+}`,
+        },
+        {
+          type: "diagram",
+          id: "laravel-eloquent-relations",
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Pivot tables & advanced relations",
+        np: "Pivot tables र advanced relations",
+        jp: "ピボットテーブルと高度なリレーション",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Sometimes two models are connected through a third, and you want to jump straight to the end without a direct foreign key.\n\n<b>hasManyThrough explained with an analogy</b>\n• Think of it like: Country → has many Users → each User has many Posts\n  ↳ You want to ask \"give me all posts written by users in this country\" — but there's no direct `country_id` on the `posts` table\n• `hasManyThrough(Post::class, User::class)` builds the two-step join for you automatically\n  ↳ Laravel figures out the chain — you don't have to write raw SQL",
+            np: "hasOneThrough/hasManyThrough: Country→Users→Posts — direct FK बिना। Country ले Posts access।",
+            jp: "hasOneThrough / hasManyThrough で 2 つの外部キーをまたいでモデルにアクセス。Country→Users→Posts が典型例です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "hasOneThrough / hasManyThrough",
+            np: "hasManyThrough उदाहरण",
+            jp: "hasManyThrough の使用例",
+          },
+          code: `// app/Models/Country.php
+class Country extends Model
+{
+    // Country → Users → Posts (through users)
+    public function posts(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Post::class,    // final model
+            User::class,    // intermediate model
+            'country_id',   // FK on users table
+            'user_id',      // FK on posts table
+            'id',           // local key on countries
+            'id',           // local key on users
+        );
+    }
+}
+
+$country = Country::find(1);
+$posts   = $country->posts; // all posts by users in this country`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "A polymorphic relationship lets one model belong to multiple different model types — without creating a separate table for each.\n\n<b>Real-world example: comments</b>\n• Imagine you want users to leave comments on both blog posts and videos\n  ↳ Without polymorphism you'd need a `post_comments` table AND a `video_comments` table\n  ↳ With polymorphism, one `comments` table serves both — using two special columns\n• `commentable_type` stores which model owns the comment (e.g., `App\\Models\\Post` or `App\\Models\\Video`)\n• `commentable_id` stores the ID of that specific post or video\n  ↳ Together they uniquely identify the parent — no matter what type it is",
+            np: "Polymorphic: Comment ले Post वा Video दुवैमा belong गर्न सक्छ। `commentable_type` र `commentable_id`।",
+            jp: "ポリモーフィック関係で 1 つのリレーションが複数のモデル型につながります。Comment が Post にも Video にも属せる典型例です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Polymorphic morphMany / morphTo",
+            np: "Polymorphic उदाहरण",
+            jp: "ポリモーフィックリレーションの例",
+          },
+          code: `// Migration: comments table
+// $table->morphs('commentable');
+// → adds commentable_type (VARCHAR) and commentable_id (BIGINT UNSIGNED)
+
+// app/Models/Comment.php
+class Comment extends Model
+{
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo(); // resolves to Post or Video
+    }
+}
+
+// app/Models/Post.php
+class Post extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// app/Models/Video.php
+class Video extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// ---- Usage ----
+$post->comments()->create(['body' => 'Great post!']);
+$video->comments()->create(['body' => 'Nice video!']);
+
+$comment = Comment::first();
+$parent  = $comment->commentable; // returns Post or Video instance`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Eager loading & the N+1 problem",
+        np: "Eager loading र N+1 problem",
+        jp: "Eager loading と N+1 問題",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The N+1 problem is the most common performance mistake in Eloquent — and the easiest to fix once you spot it.\n\n<b>What is the N+1 problem?</b>\n• Imagine you load 100 blog posts, then loop through them to get each post's author\n  ↳ That's 1 query to get the posts + 100 queries to get each author = 101 total\n• The number of extra queries grows with your data — at 1,000 posts it becomes 1,001 queries\n  ↳ This kills performance and is easy to miss in development where datasets are small\n\n<b>The fix: eager loading with `with()`</b>\n• `Post::with('user')->get()` runs exactly 2 SQL queries — one for posts, one for all their users at once\n  ↳ Laravel connects them in memory — no extra query per post in the loop\n• Always use `with()` when you know you'll be accessing a relationship inside a loop",
+            np: "N+1: loop भित्र lazy relationship access — 1+N queries। `with()` ले 1+1 queries मात्र।",
+            jp: "N+1 問題はループ内で遅延リレーションにアクセスすることで発生。`with()` で `WHERE IN (...)` の 1 クエリに置き換えます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "N+1 demonstration — before and after",
+            np: "N+1 problem — before/after",
+            jp: "N+1 問題の before/after",
+          },
+          code: `// ❌ N+1 problem — fires 1 + N queries
+$posts = Post::all(); // 1 query: SELECT * FROM posts
+foreach ($posts as $post) {
+    echo $post->user->name; // N queries: SELECT * FROM users WHERE id = ?
+}
+// If $posts has 100 rows → 101 SQL queries
+
+// ✅ Eager loading — fires exactly 2 queries
+$posts = Post::with('user')->get();
+// query 1: SELECT * FROM posts
+// query 2: SELECT * FROM users WHERE id IN (1, 2, 3, …)
+foreach ($posts as $post) {
+    echo $post->user->name; // no extra query — already loaded
+}
+
+// ---- Deep / nested eager loading ----
+$posts = Post::with('user.profile')->get(); // posts + users + profiles
+$users = User::with(['posts', 'posts.comments'])->get(); // nested
+
+// ---- Constrained eager load ----
+$users = User::with(['posts' => function ($query) {
+    $query->published()->latest()->limit(5);
+}])->get();
+
+// Shorter closure syntax (PHP 7.4+)
+$users = User::with(['posts' => fn ($q) => $q->published()->latest()])->get();
+
+// ---- Lazy eager loading (after query already ran) ----
+$users = User::all();           // already fetched
+$users->load('posts');          // load relationship in-place
+$users->loadMissing('posts');   // only load if not already loaded
+
+// ---- withCount: get relation count without hydrating models ----
+$users = User::withCount('posts')->get();
+echo $users->first()->posts_count; // no extra query for each user`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Soft deletes & model events",
+        np: "Soft deletes र Model events",
+        jp: "ソフトデリートとモデルイベント",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Soft deletes give you a safety net — deleted records aren't really gone, just hidden.\n\n<b>How soft deletes work</b>\n• When you call `$post->delete()` on a model using `SoftDeletes`, Laravel sets `deleted_at` to the current timestamp instead of running `DELETE FROM posts`\n  ↳ The row stays in the database — it's just marked as deleted\n• All normal queries automatically add `WHERE deleted_at IS NULL` so soft-deleted rows are invisible\n  ↳ You don't need to add any filtering yourself — it's handled behind the scenes\n\n<b>Working with soft-deleted records</b>\n• `Post::withTrashed()->get()` — returns all records, including soft-deleted ones\n• `Post::onlyTrashed()->get()` — returns only the soft-deleted records\n• `$post->restore()` — clears `deleted_at` and brings the record back\n• `$post->forceDelete()` — physically removes the row from the database permanently",
+            np: "`SoftDeletes` trait ले `deleted_at` set गर्छ। Normal query मा filter। `withTrashed()` ले सब देखाउँछ।",
+            jp: "`SoftDeletes` トレイトは物理削除の代わりに `deleted_at` を記録。通常クエリは自動的にフィルタ。`withTrashed()` で全件、`onlyTrashed()` で削除済みのみ取得できます。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "SoftDeletes trait — setup and usage",
+            np: "SoftDeletes trait उदाहरण",
+            jp: "SoftDeletes トレイトの設定と使用",
+          },
+          code: `// Migration: add the column
+$table->softDeletes(); // deleted_at TIMESTAMP NULL DEFAULT NULL
+
+// app/Models/Post.php
+use Illuminate\\Database\\Eloquent\\SoftDeletes;
+
+class Post extends Model
+{
+    use SoftDeletes;
+}
+
+// ---- Soft delete operations ----
+$post = Post::find(1);
+$post->delete();          // sets deleted_at = now()  (soft delete)
+$post->forceDelete();     // physically removes the row from DB
+
+// ---- Querying soft-deleted records ----
+Post::all();              // excludes soft-deleted rows
+Post::withTrashed()->find(1);       // includes soft-deleted
+Post::withTrashed()->where('user_id', 1)->get();
+Post::onlyTrashed()->get();         // only soft-deleted
+
+// ---- Restore ----
+Post::withTrashed()->find(1)->restore(); // clears deleted_at
+
+// ---- Cascade soft deletes manually (no DB cascade for soft deletes) ----
+// In a model observer or in the delete() method:
+// $post->comments()->delete(); // soft-deletes related comments`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Model events let you run code automatically when something happens to a model — like auto-generating a slug when a post is created, or soft-deleting related comments when a post is deleted.\n\n<b>When each event fires</b>\n• `creating` / `created` — fires before and after a new record is inserted into the database\n• `updating` / `updated` — fires before and after an existing record is changed\n• `saving` / `saved` — fires on both creates and updates (a catch-all for either)\n• `deleting` / `deleted` — fires before and after a record is deleted\n• `restoring` / `restored` — fires when a soft-deleted record is brought back\n\n<b>Two ways to listen to events</b>\n• For simple cases: add an inline closure inside `boot()` in your model\n  ↳ Quick and easy, but gets messy when you stack up multiple events\n• For complex cases: create a dedicated <b>Observer</b> class with one method per event\n  ↳ All event logic lives in one organised file — easier to read, test, and maintain",
+            np: "Model events: `creating`, `created`, `updating`, `deleted` आदि। Simple: `boot()` मा inline। Complex: observer class।",
+            jp: "モデルイベントはライフサイクルの各段階で発火。シンプルなら `boot()` に直接、複雑なロジックはオブザーバクラスに切り出します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Observer pattern — PostObserver",
+            np: "Observer उदाहरण",
+            jp: "オブザーバパターンの例",
+          },
+          code: `php artisan make:observer PostObserver --model=Post
+
+// app/Observers/PostObserver.php
+<?php
+
+namespace App\\Observers;
+
+use App\\Models\\Post;
+use Illuminate\\Support\\Str;
+
+class PostObserver
+{
+    public function creating(Post $post): void
+    {
+        // Auto-generate slug if not provided
+        if (empty($post->slug)) {
+            $post->slug = Str::slug($post->title);
+        }
+    }
+
+    public function created(Post $post): void
+    {
+        // Notify subscribers after a post is published
+        if ($post->is_published) {
+            // NotifySubscribers::dispatch($post);
+        }
+    }
+
+    public function deleting(Post $post): void
+    {
+        // Soft-delete related comments when post is deleted
+        $post->comments()->delete();
+    }
+}
+
+// Register in app/Providers/AppServiceProvider.php (or bootstrap/app.php)
+use App\\Models\\Post;
+use App\\Observers\\PostObserver;
+
+public function boot(): void
+{
+    Post::observe(PostObserver::class);
+}`,
         },
       ],
     },
@@ -471,74 +402,62 @@ $user->notifications()->delete();
   faq: [
     {
       question: {
-        en: "How do I configure S3 storage and make files publicly accessible?",
-        np: "S3 storage configure गरेर files public कसरी गर्ने?",
-        jp: "S3 ストレージの設定とファイルの公開方法は？",
+        en: "How does Laravel know the foreign key name for a relationship?",
+        np: "Laravel ले foreign key name कसरी थाहा पाउँछ?",
+        jp: "Laravel はどうやって外部キー名を知りますか？",
       },
       answer: {
-        en: "Four steps to connect S3:\n\n• Add your AWS credentials to `.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`\n• Set `FILESYSTEM_DISK=s3` in `.env`\n• Run `composer require league/flysystem-aws-s3-v3` to install the S3 adapter\n• That's it — all `Storage::put()` calls now go to S3\n\n<b>Public vs private files</b>\n• For files you want anyone to access via a URL (profile pictures, public downloads):\n  ↳ Use `Storage::disk('s3')->setVisibility($path, 'public')` after uploading, or set the S3 bucket ACL\n• For files that should only be accessible to specific users (contracts, private documents):\n  ↳ Use `Storage::temporaryUrl($path, now()->addMinutes(30))` to generate a signed URL that expires automatically",
-        np: "`.env` मा AWS credentials, `FILESYSTEM_DISK=s3`, flysystem package install। Public: visibility `public`; Private: `temporaryUrl()`।",
-        jp: "`.env` に AWS 認証情報を設定し `FILESYSTEM_DISK=s3`、`league/flysystem-aws-s3-v3` をインストール。公開ファイルは `setVisibility('path', 'public')`、非公開は `temporaryUrl()` を使います。",
+        en: "Laravel follows a naming convention so you don't have to spell out every column name.\n\n• For `belongsTo(User::class)` — Laravel looks for a `user_id` column on the current table\n• For `hasMany(Post::class)` on a `User` model — Laravel looks for `user_id` on the `posts` table\n  ↳ The pattern is always: the related model name in snake_case + `_id`\n\nIf your column has a different name (like `author_id` instead of `user_id`), pass it as the second argument:\n`$this->belongsTo(User::class, 'author_id')`\n  ↳ The third argument overrides the local key on your own table (defaults to `id`)",
+        np: "Snake_case model name + `_id`। Override: `$this->belongsTo(User::class, 'author_id')`।",
+        jp: "スネークケースのモデル名 + `_id` が規約です。上書きするには `$this->belongsTo(User::class, 'author_id')` のように第 2 引数で指定します。",
       },
     },
     {
       question: {
-        en: "What is the difference between `store()` and `storeAs()`?",
-        np: "`store()` र `storeAs()` मा के फरक?",
-        jp: "`store()` と `storeAs()` の違いは？",
+        en: "What if my pivot table has a different name than the convention?",
+        np: "Pivot table को नाम convention अनुसार नभए?",
+        jp: "ピボットテーブル名が規約と異なる場合は？",
       },
       answer: {
-        en: "Both methods save a file — they just handle the filename differently.\n\n• `store('avatars', 'public')` — Laravel generates a random unique filename automatically (based on a hash)\n  ↳ Safe from filename collisions: two users uploading `photo.jpg` won't overwrite each other\n  ↳ Use this for most uploads where the filename doesn't matter\n• `storeAs('avatars', 'user-42-avatar.jpg', 'public')` — you choose the exact filename\n  ↳ Use this when the filename needs to be predictable — like replacing a user's avatar each time they upload",
-        np: "`store()` ले random unique name। `storeAs()` ले exact name। Collision-free upload: `store()`।",
-        jp: "`store()` はハッシュベースのランダムなファイル名を生成。`storeAs()` はファイル名を指定します。衝突を避けたいアップロードには `store()`、ファイル名が決まっている場合は `storeAs()` を使います。",
+        en: "By convention, Laravel expects the pivot table to be named using both model names in alphabetical order, singular, joined with an underscore — for example, `role_user` for User and Role.\n\nIf your table has a different name, pass it as the second argument:\n`$this->belongsToMany(Role::class, 'user_role_assignments')`\n\nIf your foreign key column names also don't match the convention, pass them as the third and fourth arguments:\n`$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`\n  ↳ Third argument = the foreign key pointing to the current model's table\n  ↳ Fourth argument = the foreign key pointing to the related model's table",
+        np: "`$this->belongsToMany(Role::class, 'user_role_assignments')` — table name explicit।",
+        jp: "`belongsToMany(Role::class, 'user_role_assignments')` のように第 2 引数でテーブル名を指定します。外部キー列名は第 3・第 4 引数で上書きできます。",
       },
     },
     {
       question: {
-        en: "How do I preview emails locally without sending them?",
-        np: "Local मा email send नगरी preview कसरी?",
-        jp: "メールをローカルで送信せずにプレビューするには？",
+        en: "How do I filter records based on a related model's columns?",
+        np: "Related model को column अनुसार filter गर्ने?",
+        jp: "リレーションのカラムでフィルタするには？",
       },
       answer: {
-        en: "You have three good options for developing with email locally without actually sending anything:\n\n• <b>Log driver</b> — set `MAIL_MAILER=log` and all emails get written to `storage/logs/laravel.log` as plain text\n  ↳ Easiest option — no extra tools needed, just check the log file\n• <b>Mailpit</b> — a local SMTP trap that catches all outgoing mail and shows it in a web UI at `localhost:8025`\n  ↳ Set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025` — emails show up visually, exactly as the user would see them\n  ↳ Laravel Sail includes Mailpit automatically\n• <b>Route preview</b> — return a Mailable directly from a route for instant browser rendering:\n`Route::get('/preview', fn() => new WelcomeEmail(User::first()))`\n  ↳ Great for tweaking the email design — just refresh the browser to see changes",
-        np: "`MAIL_MAILER=log` (log file मा लेख्छ); Mailpit (local SMTP trap); route मा Mailable return गरेर preview।",
-        jp: "`MAIL_MAILER=log` でログファイルに書き出し、Mailpit でローカル SMTP トラップ、またはルートから Mailable を直接返してブラウザプレビューできます。",
+        en: "Use `whereHas()` — it lets you filter parent models based on a condition in their related records.\n\n<b>Examples</b>\n• Get all posts that have at least one approved comment:\n`Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`\n  ↳ Only returns posts where a matching comment exists — posts with no approved comments are excluded\n• `whereDoesntHave('comments')` — returns posts with zero comments (the inverse)\n• `has('comments', '>=', 3)` — returns posts with 3 or more comments\n\n<b>Counting without loading</b>\n• `withCount('comments')` adds a `comments_count` integer to each post — without loading the actual comment models\n  ↳ Perfect for showing \"12 comments\" in a list without fetching all 12 comment rows",
+        np: "`whereHas('comments', fn($q) => $q->where('approved', true))` — related condition। `withCount()` ले count।",
+        jp: "`whereHas('comments', fn($q) => $q->where('approved', true))` で条件付きリレーションフィルタ。`withCount()` は件数を追加属性として取得します。",
       },
     },
     {
       question: {
-        en: "What is the `Notifiable` trait and which models need it?",
-        np: "`Notifiable` trait के हो र कुन model मा चाहिन्छ?",
-        jp: "`Notifiable` トレイトとはどのモデルに必要ですか？",
+        en: "What is `withCount` and when should I use it?",
+        np: "`withCount` के हो र कहिले प्रयोग?",
+        jp: "`withCount` とは何ですか、どんな場面で使いますか？",
       },
       answer: {
-        en: "The `Notifiable` trait is what gives a model the ability to receive notifications.\n\n<b>What it adds to your model</b>\n• `$user->notify(new InvoicePaid($invoice))` — send a notification to that model\n• `$user->notifications` — fetch all notifications (read + unread) from the database\n• `$user->unreadNotifications` — fetch only unread ones\n• `$user->readNotifications` — fetch only already-read ones\n\n<b>Who needs it?</b>\n• The default `User` model already has it — you don't need to add anything\n• If you want to send notifications to a different model (like a `Team` or a `Company`), just add `use Notifiable;` to that class\n\n<b>Custom routing</b>\n• If your model stores the email address in a column other than `email`, define a `routeNotificationForMail()` method to return the right address\n  ↳ Same pattern for other channels: `routeNotificationForVonage()`, `routeNotificationForSlack()`, etc.",
-        np: "`Notifiable` trait ले `notify()` र notification relationships थप्छ। User model मा default छ। अरू model मा manually use।",
-        jp: "`Notifiable` トレイトは `notify()` と関係ヘルパを追加します。デフォルトの `User` モデルに含まれています。他のモデルにも `use Notifiable;` で追加できます。",
+        en: "`withCount()` gives you a number attached to each model — without loading all the related records.\n\n• `User::withCount('posts')->get()` adds a `posts_count` attribute to every User\n  ↳ Laravel runs a `COUNT(*)` in the SQL — no Post models are loaded into memory\n• Use it when you want to show \"Rajan has 12 posts\" in a list — you just need the number, not the posts themselves\n• You can also sort by it: `->orderByDesc('posts_count')` to rank users by most posts\n  ↳ Much more efficient than loading all posts and counting them in PHP",
+        np: "`withCount('posts')` ले `posts_count` attribute add — Post models load गर्दैन। List display को लागि।",
+        jp: "`withCount('posts')` は `posts_count` 属性を追加しますが Post モデルはロードしません。「X 件の投稿」表示や `orderByDesc('posts_count')` による並び替えに最適です。",
       },
     },
     {
       question: {
-        en: "How do database notifications differ from email notifications?",
-        np: "Database notification र email notification मा के फरक?",
-        jp: "データベース通知とメール通知の違いは？",
+        en: "How do observers differ from listening to model events directly in boot()?",
+        np: "Observer र `boot()` direct event listener मा के फरक?",
+        jp: "オブザーバと `boot()` での直接イベントリスニングの違いは？",
       },
       answer: {
-        en: "They serve completely different purposes — most real apps use both at once.\n\n<b>Email notifications</b>\n• Go to an external mail server and that's it — you can't read them back in PHP\n  ↳ Great for alerts the user sees in their inbox (new message, invoice ready)\n  ↳ Your app has no record of whether they read it\n\n<b>Database notifications</b>\n• Stored in a `notifications` table in your own database — fully queryable\n  ↳ Run `php artisan notifications:table && php artisan migrate` to create the table first\n  ↳ Access them with `$user->unreadNotifications` — perfect for in-app notification bells\n  ↳ You can track read/unread status, show a history, and mark individual notifications as read\n\n• Use both together by returning `['mail', 'database']` from `via()` — one `notify()` call handles both channels",
-        np: "Email notification fire-and-forget; Database notification `notifications` table मा store — PHP बाट read गर्न सकिन्छ। In-app bell को लागि।",
-        jp: "メール通知は送りっぱなし。データベース通知は `notifications` テーブルに保存され、`$user->unreadNotifications` で参照可能。アプリ内の通知ベルや履歴表示に最適です。`via()` で両チャネルを同時に指定できます。",
-      },
-    },
-    {
-      question: {
-        en: "How does Laravel's HTTP Client handle retries and what happens on failure?",
-        np: "HTTP Client retry कसरी काम गर्छ र failure मा के हुन्छ?",
-        jp: "HTTP クライアントのリトライの仕組みと失敗時の動作は？",
-      },
-      answer: {
-        en: "`->retry($times, $sleepMilliseconds)` automatically re-attempts a request when it fails — useful for flaky APIs or temporary network hiccups.\n\n<b>How it works</b>\n• `->retry(3, 500)` — tries up to 3 times, waiting 500 milliseconds between each attempt\n  ↳ Retries on connection errors and 5xx server errors (like 503 Service Unavailable)\n  ↳ Does NOT retry on 4xx errors — those mean your request was wrong, not the server\n• If all 3 attempts fail, Laravel throws a `RequestException`\n  ↳ Catch it with `try/catch` to handle the failure gracefully\n\n<b>Throwing on failure</b>\n• `->throw()` — throw an exception automatically for any 4xx or 5xx response (without needing retry)\n• `->throwIf($condition)` — throw only when a custom condition is true\n• `->throwUnlessStatus(200)` — throw unless the status code is exactly 200",
-        np: "`->retry(3, 500)` ले 3 attempts। सबै fail भए `RequestException`। `->throw()` ले 4xx/5xx मा exception।",
-        jp: "`->retry(3, 500)` で最大 3 回、500ms 間隔でリトライ。全て失敗すると `RequestException` がスロー。`->throw()` で 4xx/5xx を常に例外にします。",
+        en: "Both approaches work the same way at runtime — the difference is about keeping your code clean.\n\n<b>Inline listeners in `boot()`</b>\n• Quick to write for one or two simple events\n  ↳ Can get hard to read when you stack up many event closures in one method\n\n<b>Observer class</b>\n• All event methods (creating, updating, deleting, etc.) live in one file\n  ↳ Easy to find, read, test independently, and temporarily disable during tests\n\nAs a rule of thumb: use an observer as soon as you have more than 2–3 model events, or when the event logic is more than a couple of lines.",
+        np: "Runtime मा same। Observer ले सबै event एक file मा — test गर्न सजिलो। 2-3 events भन्दा बढी भए observer।",
+        jp: "ランタイムでの動作は同じ。オブザーバは全イベントを 1 ファイルにまとめ、テストでのモックや一時的な無効化が容易です。イベントが 2〜3 件を超えたらオブザーバへ移しましょう。",
       },
     },
   ],
