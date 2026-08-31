@@ -1,7 +1,5 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { LARAVEL_DAY_10_DETAIL } from "@/lib/laravel-learning/laravel-day-10-detail";
-import { LARAVEL_DAY_11_DETAIL } from "@/lib/laravel-learning/laravel-day-11-detail";
 import { LARAVEL_DAY_12_DETAIL } from "@/lib/laravel-learning/laravel-day-12-detail";
 import { LARAVEL_DAY_13_DETAIL } from "@/lib/laravel-learning/laravel-day-13-detail";
 import { LARAVEL_DAY_14_DETAIL } from "@/lib/laravel-learning/laravel-day-14-detail";
@@ -25,8 +23,6 @@ export const LARAVEL_CURRENT_DAY = 1;
 export const LARAVEL_TOTAL_DAYS = 27;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  10: LARAVEL_DAY_10_DETAIL,
-  11: LARAVEL_DAY_11_DETAIL,
   12: LARAVEL_DAY_12_DETAIL,
   13: LARAVEL_DAY_13_DETAIL,
   14: LARAVEL_DAY_14_DETAIL,
