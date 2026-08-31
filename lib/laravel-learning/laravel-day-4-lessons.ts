@@ -2,8 +2,8 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_4_LESSONS: LessonDay = {
   day: 4,
-  title: "Routing — verbs, parameters, names, groups & model binding",
-  totalMinutes: 71,
+  title: "Routing & URL generation — verbs, parameters, names, groups & model binding",
+  totalMinutes: 83,
   difficulty: "Beginner",
   lessons: [
     {
@@ -594,6 +594,161 @@ Route::domain('{tenant}.invoicehub.test')->group(function () {
           ],
           correctIndex: 0,
           explanation: "Failing loudly at the point of the mistake is the main advantage over a hard-coded URL.",
+        },
+      ],
+    },
+    {
+      id: "generating-urls",
+      title: "Generating URLs, assets and signed links",
+      durationMinutes: 12,
+      explanation: "Named routes gave you `route()`. That is one member of a family.\n\n<b>URL generation</b> is building a URL from something stable, a route name or a file path, rather than typing the path into your templates. A <b>signed URL</b> is a generated URL carrying a signature Laravel can verify, so a link can be trusted without the person clicking it being logged in.\n\n---\n\n### 1. Basic — the helpers\n\nFour helpers cover almost everything:\n\n```php\nroute('invoices.show', ['invoice' => 10]);   // from a route name\nurl('/invoices/10');                          // from a path\nasset('css/app.css');                         // from a file in public/\naction([InvoiceController::class, 'show'], ['invoice' => 10]);\n```\n\nAll four return an absolute URL built on your `APP_URL`:\n\n```text\nAPP_URL=https://invoicehub.test\n\nasset('css/app.css')  →  https://invoicehub.test/css/app.css\nurl('/invoices')      →  https://invoicehub.test/invoices\n```\n\nThat is the reason `asset()` exists rather than you writing `/css/app.css` by hand. Move the application into a subdirectory, or serve assets from a CDN, and every hard-coded path is wrong while every `asset()` call is still right.\n\n`url()` with no argument returns a builder describing the request you are already in:\n\n```php\nurl()->current();    // https://invoicehub.test/invoices   (no query string)\nurl()->full();       // https://invoicehub.test/invoices?status=paid\nurl()->previous();   // where the user came from\n```\n\n`url()->previous()` is what a Cancel link should point at.\n\nPrefer `route()` whenever a name exists, for the reason from the last lesson: it survives a URL change and fails loudly on a typo. Reach for `url()` when there genuinely is no route, which in practice means external links and paths to static files.\n\n---\n\n### 2. Intermediate — active links and query strings\n\nNavigation has to know which page it is on. The fragile way compares paths:\n\n```blade\n{{-- breaks when the URL changes --}}\n<a class=\"{{ request()->is('invoices*') ? 'active' : '' }}\">Invoices</a>\n```\n\nThe durable way asks about the route name, which does not change when the URL does:\n\n```blade\n<a class=\"{{ request()->routeIs('invoices.*') ? 'active' : '' }}\">Invoices</a>\n```\n\n```text\nrequest()->is('admin/*')          matches on the URL path\nrequest()->routeIs('invoices.*')  matches on the route name\n                                  ↑ survives a URL change\n```\n\nBoth take `*` as a wildcard, so `routeIs('invoices.*')` is true on `invoices.index`, `invoices.show` and `invoices.edit` alike, which is usually what a nav link wants.\n\nExtra parameters handed to `route()` become a query string on their own:\n\n```php\nroute('invoices.index', ['status' => 'paid']);   // /invoices?status=paid\n```\n\nThat is worth knowing in both directions. It is convenient here, and it is also why a misspelt route parameter ends up quietly in the query string instead of raising an error, which was one of the mistakes on the previous lesson.\n\n`URL::query()` does the same job for a plain path, and merges rather than replaces:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::query('/invoices', ['status' => 'paid']);         // /invoices?status=paid\nURL::query('/invoices?page=2', ['status' => 'paid']);  // /invoices?page=2&status=paid\n```\n\nWhen you want a relative URL rather than an absolute one, pass `false` as the third argument:\n\n```php\nroute('invoices.show', ['invoice' => 10], false);   // /invoices/10\n```\n\n---\n\n### 3. Advanced — signed URLs\n\nSome links have to work for someone who is not logged in, and must still not work for anybody else. An unsubscribe link in an email. A password reset. A download link for one particular invoice.\n\nRequiring a login defeats the purpose. Putting a bare id in the URL means anyone can change the number and read someone else's data.\n\nA <b>signed URL</b> settles this by appending a signature of the URL itself:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::signedRoute('unsubscribe', ['user' => 1]);\n```\n\n```text\n/unsubscribe/1?signature=8f14e45fceea167a5a36...\n                         ↑\n        a hash of this exact URL plus your APP_KEY\n```\n\nChange any part of the URL and the signature stops matching, so `/unsubscribe/2` is refused. Only your application can produce a valid signature, because only it holds the key.\n\nCheck it with the `signed` middleware, which returns a 403 when the signature is missing or wrong:\n\n```php\nRoute::get('/unsubscribe/{user}', UnsubscribeController::class)\n    ->name('unsubscribe')\n    ->middleware('signed');\n```\n\nOr check it yourself, when you want to control the response:\n\n```php\nif (! $request->hasValidSignature()) {\n    abort(403);\n}\n```\n\nFor a link that should stop working, add an expiry:\n\n```php\nURL::temporarySignedRoute(\n    'invoices.download',\n    now()->addMinutes(30),\n    ['invoice' => 10],\n);\n```\n\nThe expiry rides along in the URL and is covered by the signature, so it cannot be edited either.\n\nThree things to be clear about, because a signed URL is easy to over-trust.\n\n<b>It is not encryption.</b> The parameters are plainly readable. The signature proves the URL was not tampered with, and nothing more.\n\n<b>It is a bearer token.</b> Anyone holding the link can use it, so treat it like a password in the address bar. It will end up in browser history, server logs and forwarded email. `temporarySignedRoute` is the mitigation, and for anything sensitive the window should be minutes rather than weeks.\n\n<b>It depends on `APP_KEY`.</b> Rotate the key and every signed URL you have ever sent stops working at once, which matters when some of them are sitting in inboxes.",
+      diagram: `Four ways to build a URL
+
+  route('invoices.show', ['invoice' => 10])   ← from a name     PREFER
+  url('/invoices/10')                         ← from a path
+  asset('css/app.css')                        ← from a file
+  action([InvoiceController::class, 'show'])  ← from a method
+
+  every one of them resolves against APP_URL
+                    ↓
+  https://invoicehub.test/invoices/10
+
+
+Active nav links
+
+  request()->is('invoices*')        request()->routeIs('invoices.*')
+        │                                      │
+  URL changes to /bills            URL changes to /bills
+        │                                      │
+        ↓                                      ↓
+  highlight breaks                     still correct
+
+
+A signed URL
+
+  URL::signedRoute('unsubscribe', ['user' => 1])
+              │
+              ├── this URL     /unsubscribe/1
+              └── + APP_KEY    →  hash
+                                    │
+  /unsubscribe/1?signature=8f14e45fce...
+              │
+       someone edits it to /unsubscribe/2
+              ↓
+  the signature no longer matches  →  403`,
+      codeExample: {
+        title: "The helpers, active links, and signed routes",
+        code: `<?php
+// routes/web.php
+
+use App\\Http\\Controllers\\InvoiceController;
+use App\\Http\\Controllers\\UnsubscribeController;
+use Illuminate\\Support\\Facades\\Route;
+use Illuminate\\Support\\Facades\\URL;
+
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+
+// Signed routes: no login needed, but a valid signature is.
+Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])
+    ->name('invoices.download')
+    ->middleware('signed');
+
+Route::get('/unsubscribe/{user}', UnsubscribeController::class)
+    ->name('unsubscribe')
+    ->middleware('signed');
+
+
+// ---------- Generating them ----------
+
+route('invoices.show', ['invoice' => 10]);          // /invoices/10
+route('invoices.index', ['status' => 'paid']);      // /invoices?status=paid
+route('invoices.show', ['invoice' => 10], false);   // relative
+
+url('/invoices/10');
+url()->current();     // this URL, without the query string
+url()->previous();    // where they came from
+
+asset('css/app.css');
+URL::query('/invoices?page=2', ['status' => 'paid']);
+
+// Thirty minutes, then 403.
+URL::temporarySignedRoute('invoices.download', now()->addMinutes(30), ['invoice' => 10]);
+
+// No expiry, still tamper-proof.
+URL::signedRoute('unsubscribe', ['user' => 1]);
+?>
+
+{{-- resources/views/partials/nav.blade.php --}}
+<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+<a href="{{ route('invoices.index') }}"
+   class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+    Invoices
+</a>
+
+<a href="{{ url()->previous() }}">Cancel</a>`,
+      },
+      keyTakeaways: [
+        "`route()` builds from a name, `url()` from a path, `asset()` from a file in `public/`. Prefer `route()` whenever a name exists.",
+        "All of them resolve against `APP_URL`, which is why `asset()` survives the app moving to a subdirectory or a CDN and a hard-coded path does not.",
+        "<b>`url()->current()`</b>, <b>`url()->full()`</b> and <b>`url()->previous()`</b> describe the request you are in. `previous()` is what Cancel links want.",
+        "<b>`request()->routeIs('invoices.*')`</b> highlights active nav links and survives a URL change; `request()->is()` matches the path and does not.",
+        "Extra parameters passed to `route()` become a query string, which is handy and is also why a misspelt parameter fails quietly.",
+        "<b>`URL::signedRoute()`</b> appends a signature of the URL, so a link works without a login and breaks the moment anyone edits it.",
+        "<b>`URL::temporarySignedRoute()`</b> adds an expiry, and the `signed` middleware turns a bad or expired signature into a 403.",
+      ],
+      commonMistakes: [
+        "<b>Hard-coding asset paths.</b> `/css/app.css` breaks the day the app is served from a subdirectory or a CDN. `asset('css/app.css')` does not.",
+        "<b>Using `request()->is()` for active nav links.</b> It matches on the URL, so changing the route silently breaks the highlighting and nothing fails.",
+        "<b>Treating a signed URL as private.</b> The parameters are readable and the signature is not encryption. It proves the link is unedited, nothing more.",
+        "<b>Signing a link with no expiry and emailing it.</b> Anyone who ever reaches that inbox has a working link forever. Use `temporarySignedRoute` for anything that matters.",
+        "<b>Forgetting that signatures depend on `APP_KEY`.</b> Rotating the key invalidates every signed URL already sent, including the ones sitting in people's email.",
+      ],
+      quiz: [
+        {
+          question: "Why prefer `asset('css/app.css')` over writing `/css/app.css` by hand?",
+          options: [
+            "It minifies the file",
+            "It resolves against `APP_URL`, so it survives the app moving",
+            "It is required inside Blade",
+            "It loads the file faster",
+          ],
+          correctIndex: 1,
+          explanation: "Hard-coded paths break when the app is served from a subdirectory or assets move to a CDN.",
+        },
+        {
+          question: "Which check highlights an active nav link without breaking when the URL changes?",
+          options: [
+            "`request()->is('invoices*')`",
+            "`request()->routeIs('invoices.*')`",
+            "`url()->current()`",
+            "`route('invoices.index')`",
+          ],
+          correctIndex: 1,
+          explanation: "Route names survive a URL change; path matching does not.",
+        },
+        {
+          question: "What does the signature on a signed URL actually prove?",
+          options: [
+            "The parameters are encrypted",
+            "The person clicking it is logged in",
+            "The URL came from your app and has not been edited",
+            "The link has not expired",
+          ],
+          correctIndex: 2,
+          explanation: "It is a tamper check, not encryption and not authentication. Expiry only comes with `temporarySignedRoute`.",
+        },
+        {
+          question: "What happens to signed URLs you have already sent if you rotate `APP_KEY`?",
+          options: [
+            "Nothing, the signatures are stored in the database",
+            "They all stop validating",
+            "They quietly fall back to unsigned",
+            "Only the expired ones break",
+          ],
+          correctIndex: 1,
+          explanation: "The signature is derived from the key, so rotating it invalidates every link in the wild at once.",
         },
       ],
     },
