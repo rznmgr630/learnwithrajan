@@ -32,10 +32,10 @@ function parseInlineBackticks(input: string): Segment[] {
 
 /**
  * Split <b>bold</b> and <i>italic</i> HTML tags inside plain text runs.
- * Unclosed tags stay literal. Content inside a span is itself run through
- * backtick parsing, so `<b>\`code\` and text</b>` still renders its inline
- * code — parsing backticks globally first would cut the tags into separate
- * fragments whenever a code span sits inside them, leaving the tags literal.
+ * Unclosed tags stay literal. Content inside a span is parsed again from the
+ * top, so tags nest and inline code survives — parsing backticks globally
+ * first would cut the tags into separate fragments whenever a code span sits
+ * inside them, leaving the tags literal.
  */
 function parseInlineHtml(input: string): Segment[] {
   const tags = [
@@ -59,7 +59,7 @@ function parseInlineHtml(input: string): Segment[] {
     const close = input.indexOf(found.tag.close, contentStart);
     if (close === -1) { out.push({ kind: "text", value: input.slice(found.at) }); break; }
 
-    out.push({ kind: found.tag.kind, children: parseInlineBackticks(input.slice(contentStart, close)) });
+    out.push({ kind: found.tag.kind, children: parseInlineFormatting(input.slice(contentStart, close)) });
     i = close + found.tag.close.length;
   }
   return mergeTextRuns(out);
