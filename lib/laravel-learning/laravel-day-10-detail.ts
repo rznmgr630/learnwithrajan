@@ -109,9 +109,9 @@ COOKIE
         {
           type: "paragraph",
           text: {
-            en: "A <b>session driver</b> is simply the place Laravel stores session data. Same code in your controllers, different storage behind it.\n\n<i>A note on timing: the `database` driver needs a `sessions` table, and tables come from migrations, which is tomorrow on Day 11. Stay on `file` today and switch the driver once migrations feel familiar.</i>",
-            np: "Session driver = Laravel session data कहाँ राख्छ। `database` driver लाई migration चाहिन्छ (Day 11)।",
-            jp: "セッションドライバは保存先の選択です。`database` ドライバには `sessions` テーブル（Day 11 のマイグレーション）が必要です。",
+            en: "A <b>session driver</b> is simply the place Laravel stores session data. Same code in your controllers, different storage behind it.\n\n<i>A note on timing: the `database` driver needs a `sessions` table, and tables come from migrations, which is tomorrow on Day 12. Stay on `file` today and switch the driver once migrations feel familiar.</i>",
+            np: "Session driver = Laravel session data कहाँ राख्छ। `database` driver लाई migration चाहिन्छ (Day 12)।",
+            jp: "セッションドライバは保存先の選択です。`database` ドライバには `sessions` テーブル（Day 12 のマイグレーション）が必要です。",
           },
         },
         {
@@ -276,7 +276,7 @@ $request->session()->flush();          // removes EVERYTHING
           },
           code: `public function login(Request $request)
 {
-    // Authentication would normally happen here (Day 15).
+    // Authentication would normally happen here (Day 16).
 
     $request->session()->put('user_id', 123);
 
@@ -640,7 +640,7 @@ With a prefix     →  myapp_session:123`,
         jp: "最初はどのセッションドライバを使うべきですか？",
       },
       answer: {
-        en: "Start with `file` and change it only when something forces you to.\n\n• <b>`file`</b> is the default and needs zero setup. Sessions land in `storage/framework/sessions/`.\n  ↳ Perfectly fine for local development and small single-server sites\n• <b>`database`</b> when you want sessions queryable alongside your data, or when you run more than one application server.\n  ↳ Needs a `sessions` table, which means a migration. That is Day 11.\n• <b>`redis`</b> when session reads and writes become a bottleneck, or you have several servers behind a load balancer.\n  ↳ Fastest option, but now Redis is one more service you have to keep running\n• <b>`cookie`</b> when you want no server-side storage at all.\n  ↳ Practically limited by the roughly 4KB a cookie can hold\n\nThe useful part is that your controller code does not change. Swapping `SESSION_DRIVER` in `.env` is the whole migration path.",
+        en: "Start with `file` and change it only when something forces you to.\n\n• <b>`file`</b> is the default and needs zero setup. Sessions land in `storage/framework/sessions/`.\n  ↳ Perfectly fine for local development and small single-server sites\n• <b>`database`</b> when you want sessions queryable alongside your data, or when you run more than one application server.\n  ↳ Needs a `sessions` table, which means a migration. That is Day 12.\n• <b>`redis`</b> when session reads and writes become a bottleneck, or you have several servers behind a load balancer.\n  ↳ Fastest option, but now Redis is one more service you have to keep running\n• <b>`cookie`</b> when you want no server-side storage at all.\n  ↳ Practically limited by the roughly 4KB a cookie can hold\n\nThe useful part is that your controller code does not change. Swapping `SESSION_DRIVER` in `.env` is the whole migration path.",
         np: "`file` बाट सुरु गर्नुस्; बहु-server भएपछि `database` वा `redis` मा जानुस्। Controller code बदलिन्न।",
         jp: "まず `file` で始め、複数サーバーや性能要件が出てきたら `database`／`redis` に切り替えます。コントローラのコードは変わりません。",
       },

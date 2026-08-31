@@ -805,7 +805,7 @@ class User extends Model
   project: {
     name: "InvoiceHub",
     goal: "Get the app running and put a list of invoices on screen.",
-    brief: "You are going to build one application across this whole track: <b>InvoiceHub</b>, a small invoicing tool. Clients, invoices, line items, payments. Every day from here adds another slice to the same codebase, so by Day 26 you are deploying something you actually built.\n\nToday it does not touch a database. There is no such thing yet. Today's job is narrower and more important: get the thing running, and prove a request can reach code you wrote and come back as a page. Hard-coded data is fine, and you will replace it on Day 11.",
+    brief: "You are going to build one application across this whole track: <b>InvoiceHub</b>, a small invoicing tool. Clients, invoices, line items, payments. Every day from here adds another slice to the same codebase, so by Day 27 you are deploying something you actually built.\n\nToday it does not touch a database. There is no such thing yet. Today's job is narrower and more important: get the thing running, and prove a request can reach code you wrote and come back as a page. Hard-coded data is fine, and you will replace it on Day 12.",
     steps: [
       "Create the project with `composer create-project laravel/laravel invoicehub`, then `cd invoicehub` and start it with `php artisan serve`.",
       "Set `APP_NAME=\"InvoiceHub\"` in `.env`, then confirm it with `php artisan about`.",
