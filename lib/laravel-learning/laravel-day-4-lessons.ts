@@ -2,1484 +2,1162 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_4_LESSONS: LessonDay = {
   day: 4,
-  title: "Routing & URL generation — verbs, parameters, names, groups & model binding",
-  totalMinutes: 85,
+  title: "Service Providers & Facades",
+  totalMinutes: 66,
   difficulty: "Beginner",
   lessons: [
     {
-      id: "what-routing-is",
-      title: "What routing is, and where routes live",
+      id: "providers-in-the-lifecycle",
+      title: "Providers in the startup sequence",
       durationMinutes: 9,
-      explanation: "Yesterday you followed a request through Laravel. One of the stops was the router. Today that stop gets a whole day.\n\nA <b>route</b> is one rule pairing a URL and an HTTP method with the code that should answer it. The <b>router</b> is the part of Laravel that reads each incoming request and finds the route that matches. <b>Routing</b> is the whole job of getting from a URL to the right code.\n\nRouting answers one question:\n\n```text\nWhen someone visits this URL with this HTTP method,\nwhat code should run?\n```\n\n```text\nGET /invoices\n       ↓\nInvoiceController@index\n\nGET /invoices/10\n       ↓\nInvoiceController@show\n\nPOST /invoices\n       ↓\nInvoiceController@store\n```\n\n---\n\n### 1. Basic — the three parts of a route\n\nEvery route is the same shape:\n\n```php\nRoute::get('/invoices', function () {\n    return 'Invoices';\n});\n```\n\nRead it as three pieces:\n\n```text\nRoute\n  │\n  ├── HTTP method → get\n  ├── URL         → /invoices\n  └── handler     → the code that answers\n```\n\nThe <b>handler</b> (the code that runs when the route matches) can be a closure, as above, or a controller method, which is what you will use in real applications:\n\n```php\nRoute::get('/invoices', [InvoiceController::class, 'index']);\n```\n\nThat is genuinely all a route is. Everything else today is a convenience on top of these three parts.\n\n---\n\n### 2. Intermediate — the two route files\n\nRoutes live in `routes/`:\n\n```text\nroutes/\n├── web.php   → pages people open in a browser\n└── api.php   → endpoints other programs call\n```\n\nThe split is not cosmetic. The two files get different middleware, which changes how requests behave.\n\n<b>`web.php`</b> routes get sessions, cookies and CSRF protection:\n\n```php\nRoute::get('/invoices', function () {\n    return view('invoices.index');\n});\n```\n\nSessions mean Laravel can remember who is logged in between requests. CSRF protection means a form posted from another site is rejected. Both matter for a browser and neither makes sense for an API.\n\n<b>`api.php`</b> routes are stateless. Every request carries its own credentials, usually a token:\n\n```php\nRoute::get('/invoices', function () {\n    return Invoice::all();\n});\n```\n\nThey are also prefixed with `/api` automatically, so that route answers `/api/invoices`.\n\n```text\nweb.php  →  /invoices       sessions, cookies, CSRF\napi.php  →  /api/invoices   stateless, token auth\n```\n\n---\n\n### 3. Advanced — api.php may not exist yet\n\nA fresh Laravel application ships with `web.php` only. This surprises people who expect both.\n\nAdd API routing when you need it:\n\n```bash\nphp artisan install:api\n```\n\nThat creates `routes/api.php`, registers it, and installs Sanctum for token authentication.\n\n```text\nFresh install\n      ↓\nroutes/web.php only\n      ↓\nphp artisan install:api\n      ↓\nroutes/web.php + routes/api.php\n```\n\nIf you are following a tutorial that opens `routes/api.php` and yours is missing, you have not broken anything. You just have not run that command yet.\n\nWhich file should a route go in? Ask who is calling it. A person with a browser gets `web.php`. A mobile app, a JavaScript front end, or another server gets `api.php`.",
-      diagram: `Two files, two kinds of caller
+      explanation: "A <b>service provider</b> (a class that registers and prepares services when Laravel starts) is a term you already have. Day 2 pointed at the list that loads them, and on Day 3 you wrote bindings inside one. What neither day showed is how a provider actually runs.\n\nToday's three words:\n\n```text\nService Provider  → \"here is what exists, and how to prepare it\"\nService Container → \"I store it, and I hand it out\"            ← Day 3\nFacade            → \"here is a short way to reach it\"          ← new today\n```\n\nThe recap, in four lines:\n\n```text\nDay 2   bootstrap/providers.php lists your application's providers\nDay 3   the container resolves whatever those providers bind\nDay 3   bindings belong in a provider's register() method\nDay 3   the PaymentGateway binding is why a provider was worth having\n```\n\nIf any of those feels fuzzy, go back rather than forward. Everything below assumes them.\n\n---\n\n### 1. Basic — a provider is more than a place for bindings\n\nBindings are the part you have seen, and they are not the only thing a provider does. A provider is your application's <b>startup configuration</b> (setup that has to happen once, before any request is handled):\n\n• container bindings, the Day 3 material\n• event listeners, wired up once at boot\n• view composers, data shared into a view every time it renders\n• Blade directives and macros, extending things the framework already owns\n• authorization gates and policies\n\nOne way to hold it: a provider is a setup class, not a working class. It arranges. The services it registers do the work.\n\n```text\nProvider          \"here is InvoiceTotals, and here is how to build it\"\nInvoiceTotals     actually adds up an invoice\n```\n\nIf you find yourself generating a report or sending mail inside a provider, the code is in the wrong file.\n\n---\n\n### 2. Intermediate — your providers, and the framework's\n\nThere are two populations of providers, and you only manage one.\n\n```text\nAPPLICATION PROVIDERS           FRAMEWORK PROVIDERS\nyours                           Laravel's own\n\nlisted by you in                loaded by the framework\nbootstrap/providers.php         itself\n\nAppServiceProvider              database, cache, queue,\nInvoiceServiceProvider          filesystem, routing, events,\nPaymentServiceProvider          mail, sessions, validation\n```\n\nEverything you take for granted is a framework provider doing its job. `DB` works because a provider registered the database manager. Routing works because a provider registered the router. You do not list those and you do not maintain them.\n\nPackages behave the same way. A modern package declares its own provider through Composer, so installing it is usually enough, which is why `bootstrap/providers.php` stays short. It holds your application's providers only.\n\n---\n\n### 3. Advanced — creating one, and the two phases\n\nArtisan writes the file:\n\n```bash\nphp artisan make:provider InvoiceServiceProvider\n```\n\n```text\napp/Providers/InvoiceServiceProvider.php\n```\n\nWhat comes back is almost empty:\n\n```php\nclass InvoiceServiceProvider extends ServiceProvider\n{\n    public function register(): void {}\n\n    public function boot(): void {}\n}\n```\n\nTwo methods, and that is the entire surface of a provider. Which matters more than it looks, because those two methods are not called one after the other for your provider. They are two separate passes over every provider in the application:\n\n```text\nLaravel starts\n      ↓\nbootstrap/providers.php  +  framework providers\n      ↓\nPASS 1   register() on every provider\n      ↓\nPASS 2   boot() on every provider\n      ↓\napplication ready\n```\n\nDay 2 gave you the one-line rule: `register()` declares what exists, `boot()` is for everything else. That rule is easy to repeat and easy to break, because breaking it often appears to work. The next lesson is why.",
+      diagram: `Where providers sit, and the two passes
 
-                     Request
-                        │
-          ┌─────────────┴─────────────┐
-          ↓                           ↓
-      web.php                      api.php
-          │                           │
-  a person in a browser      another program
-          │                           │
-          ↓                           ↓
-  sessions, cookies, CSRF      stateless, token auth
-          │                           │
-          ↓                           ↓
-      /invoices                  /api/invoices
-
-
-The anatomy of any route
-
-  Route::get('/invoices', [InvoiceController::class, 'index']);
-         │        │                    │
-         │        │                    └── handler: what runs
-         │        └── URL: what was requested
-         └── HTTP method: what kind of request`,
-      codeExample: {
-        title: "The same route, four ways to write it",
-        code: `<?php
-// routes/web.php
-
-use App\\Http\\Controllers\\InvoiceController;
-use Illuminate\\Support\\Facades\\Route;
-
-// 1. A closure. Fine for a quick test, awkward once there is real logic.
-Route::get('/invoices', function () {
-    return 'Invoices';
-});
-
-// 2. A controller method. What you will use in practice.
-Route::get('/invoices', [InvoiceController::class, 'index']);
-
-// 3. Returning a view.
-Route::get('/invoices', function () {
-    return view('invoices.index', ['invoices' => []]);
-});
-
-// 4. A view with no logic at all has its own shortcut.
-Route::view('/about', 'about');
+              Laravel starts
+                     │
+                     ↓
+        ┌────────────────────────────┐
+        │  bootstrap/providers.php   │   yours
+        │  + framework providers     │   Laravel's, loaded for you
+        └─────────────┬──────────────┘
+                      ↓
+┌─────────────────────────────────────────────┐
+│  PASS 1   register() on EVERY provider      │
+│           declarations only                 │
+└─────────────────────┬───────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────┐
+│  PASS 2   boot() on EVERY provider          │
+│           everything now exists             │
+└─────────────────────┬───────────────────────┘
+                      ↓
+              application ready
 
 
-// routes/api.php  (only exists after: php artisan install:api)
-// Note the URL: this answers /api/invoices, not /invoices.
-Route::get('/invoices', function () {
-    return ['data' => []];
-});`,
-      },
-      keyTakeaways: [
-        "A route connects an <b>HTTP method</b> and a <b>URL</b> to a <b>handler</b>. Everything else is convenience on top.",
-        "The handler can be a closure or, more usually, a controller method.",
-        "<b>`routes/web.php`</b> is for browsers: sessions, cookies and CSRF protection.",
-        "<b>`routes/api.php`</b> is for other programs: stateless, token-authenticated, and automatically prefixed with `/api`.",
-        "A fresh Laravel application has no `api.php`. Run `php artisan install:api` to add it.",
-        "Choose the file by asking who calls the route, not by what it returns.",
-      ],
-      commonMistakes: [
-        "<b>Expecting `routes/api.php` in a fresh install.</b> It is not there until you run `php artisan install:api`. Nothing is broken.",
-        "<b>Forgetting that `api.php` adds `/api` for you.</b> Writing `Route::get('/api/invoices', ...)` in `api.php` gives you `/api/api/invoices`.",
-        "<b>Putting browser routes in `api.php`.</b> They lose sessions, so `auth()->user()` is empty and login appears not to work.",
-        "<b>Posting a form to a `web.php` route without a CSRF token.</b> You get a 419 error. Add `@csrf` inside the form.",
-      ],
-      quiz: [
-        {
-          question: "What three things does a route connect?",
-          options: [
-            "A model, a view and a controller",
-            "An HTTP method, a URL and a handler",
-            "A database, a query and a result",
-            "A request, a session and a cookie",
-          ],
-          correctIndex: 1,
-          explanation: "Everything else in routing is a convenience built on those three.",
-        },
-        {
-          question: "What is the main difference between `web.php` and `api.php`?",
-          options: [
-            "`api.php` is faster",
-            "`web.php` cannot return JSON",
-            "They get different middleware: sessions and CSRF versus stateless token auth",
-            "There is no difference",
-          ],
-          correctIndex: 2,
-          explanation: "The split changes how requests behave, not just where the code sits.",
-        },
-        {
-          question: "You cannot find `routes/api.php`. What is wrong?",
-          options: [
-            "The install failed",
-            "Nothing. Run `php artisan install:api` to add it",
-            "It is hidden by `.gitignore`",
-            "You need a package",
-          ],
-          correctIndex: 1,
-          explanation: "Fresh Laravel applications ship with `web.php` only.",
-        },
-        {
-          question: "A route in `api.php` is written as `/invoices`. What URL answers it?",
-          options: [
-            "`/invoices`",
-            "Both of the first two",
-            "`/api/api/invoices`",
-            "`/api/invoices`",
-          ],
-          correctIndex: 3,
-          explanation: "The `/api` prefix is added for you, which is why you should not write it yourself.",
-        },
-      ],
-    },
-    {
-      id: "http-verbs",
-      title: "HTTP verbs and what each one means",
-      durationMinutes: 9,
-      explanation: "A URL on its own is not enough. `/invoices` could mean \"show me the invoices\" or \"create an invoice\". The <b>HTTP method</b> (the verb describing what the request wants to do) is what separates them.\n\n```php\nRoute::get('/invoices', ...);    // show them\nRoute::post('/invoices', ...);   // create one\n```\n\nSame URL. Different intent. Different code.\n\n---\n\n### 1. Basic — the four you will use constantly\n\n<b>`GET`</b> retrieves something and changes nothing:\n\n```php\nRoute::get('/invoices', [InvoiceController::class, 'index']);\nRoute::get('/invoices/{id}', [InvoiceController::class, 'show']);\n```\n\n<b>`POST`</b> creates something:\n\n```php\nRoute::post('/invoices', [InvoiceController::class, 'store']);\n```\n\n<b>`PUT`</b> and <b>`PATCH`</b> both update, and the difference is how much:\n\n```php\nRoute::put('/invoices/{id}', ...);    // replace the whole thing\nRoute::patch('/invoices/{id}', ...);  // change part of it\n```\n\n<b>`DELETE`</b> removes something:\n\n```php\nRoute::delete('/invoices/{id}', ...);\n```\n\n```text\nGET     read, changes nothing\nPOST    create\nPUT     replace entirely\nPATCH   change part\nDELETE  remove\n```\n\n---\n\n### 2. Intermediate — why GET must not change anything\n\nThis is the rule people break first, so it is worth being blunt about.\n\nA `GET` request must be <b>safe</b>: calling it should leave the application unchanged. Browsers, search engines and link previewers all assume this and will happily fetch a URL without being asked.\n\nSo this is a genuine bug:\n\n```php\n// Never do this.\nRoute::get('/invoices/{id}/delete', ...);\n```\n\nIt looks harmless. Then a crawler follows every link on the page and deletes your invoices. Nobody clicked anything.\n\nDeletion is a `DELETE`, or at minimum a `POST`:\n\n```php\nRoute::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);\n```\n\n<b>PUT vs PATCH</b>, concretely. An invoice has a client, an amount and a status:\n\n```text\nPUT /invoices/10\n{ \"client\": \"Acme\", \"amount\": 500, \"status\": \"sent\" }\n   ↓ send every field; what you omit is wiped\n\nPATCH /invoices/10\n{ \"status\": \"paid\" }\n   ↓ change only what you send; everything else stays\n```\n\nIn practice most applications use `PATCH` for edits, because forms rarely submit every field.\n\n---\n\n### 3. Advanced — browsers only speak GET and POST\n\nAn HTML form cannot send `PUT`, `PATCH` or `DELETE`. It has two options and that is it.\n\nLaravel works around this with a hidden field:\n\n```html\n<form method=\"POST\" action=\"/invoices/10\">\n    @csrf\n    @method('DELETE')\n    <button>Delete</button>\n</form>\n```\n\nThe browser sends a `POST`. Laravel sees `_method=DELETE` and routes it to your `DELETE` route.\n\n```text\nBrowser sends:   POST /invoices/10  (_method=DELETE)\n                         ↓\nLaravel reads _method and treats it as:\n                 DELETE /invoices/10\n```\n\nThis only applies to HTML forms. JavaScript, mobile apps and API clients send the real verb.\n\nTwo catch-all methods exist. Use them sparingly:\n\n```php\nRoute::match(['get', 'post'], '/search', ...);  // just these two\nRoute::any('/webhook', ...);                    // every method\n```\n\n`any()` is almost always a mistake in application code. Being explicit documents what a URL accepts and lets Laravel return a proper <i>405 Method Not Allowed</i> for the rest, instead of silently accepting a `DELETE` you never intended.",
-      diagram: `One URL, several meanings
+A PROVIDER IS A SETUP CLASS, NOT A WORKING CLASS
 
-  /invoices
-      ├── GET    → list them
-      └── POST   → create one
-
-  /invoices/10
-      ├── GET    → show it
-      ├── PUT    → replace it entirely
-      ├── PATCH  → change part of it
-      └── DELETE → remove it
-
-
-PUT vs PATCH on the same invoice
-
-  Before   { client: Acme, amount: 500, status: sent }
-
-  PUT      { status: paid }
-    ↓      { client: null, amount: null, status: paid }
-           everything you left out is gone
-
-  PATCH    { status: paid }
-    ↓      { client: Acme, amount: 500, status: paid }
-           only what you sent changed
-
-
-How a browser sends DELETE (it cannot)
-
-  <form method="POST"> + @method('DELETE')
-                ↓
-  POST /invoices/10  with _method=DELETE
-                ↓
-  Laravel routes it to the DELETE route`,
-      codeExample: {
-        title: "Every verb, and the form trick",
-        code: `<?php
-// routes/web.php
-
-use App\\Http\\Controllers\\InvoiceController;
-use Illuminate\\Support\\Facades\\Route;
-
-Route::get('/invoices', [InvoiceController::class, 'index']);
-Route::get('/invoices/{id}', [InvoiceController::class, 'show']);
-Route::post('/invoices', [InvoiceController::class, 'store']);
-Route::put('/invoices/{id}', [InvoiceController::class, 'replace']);
-Route::patch('/invoices/{id}', [InvoiceController::class, 'update']);
-Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
-
-// Responds to two methods only.
-Route::match(['get', 'post'], '/search', [SearchController::class, 'handle']);
-
-// Responds to all of them. Rarely what you want.
-Route::any('/webhook', [WebhookController::class, 'handle']);
-
-
-// This is a bug, not a shortcut. A crawler following links will
-// delete your data without anyone clicking anything.
-// Route::get('/invoices/{id}/delete', ...);
-?>
-
-{{-- resources/views/invoices/show.blade.php --}}
-{{-- A browser can only send GET and POST, so spoof the verb. --}}
-<form method="POST" action="/invoices/{{ $invoice['number'] }}">
-    @csrf
-    @method('DELETE')
-    <button type="submit">Delete invoice</button>
-</form>
-
-{{-- Same idea for an update --}}
-<form method="POST" action="/invoices/{{ $invoice['number'] }}">
-    @csrf
-    @method('PATCH')
-    <input name="status" value="paid">
-    <button type="submit">Mark paid</button>
-</form>`,
-      },
-      keyTakeaways: [
-        "The HTTP method is what lets one URL mean several different things.",
-        "<b>`GET`</b> must be safe: it reads and changes nothing.",
-        "<b>`POST`</b> creates, <b>`PUT`</b> replaces entirely, <b>`PATCH`</b> changes part, <b>`DELETE`</b> removes.",
-        "Most edit forms want `PATCH`, because they rarely submit every field.",
-        "HTML forms can only send `GET` and `POST`. Use `@method('DELETE')` to spoof the rest.",
-        "Prefer explicit verbs over `any()`, so Laravel can reject the methods you did not intend.",
-      ],
-      commonMistakes: [
-        "<b>Using `GET` for anything destructive.</b> A `GET /invoices/10/delete` route will eventually be followed by a crawler or a link preview, and your data goes with it.",
-        "<b>Forgetting `@method('PATCH')` on an edit form.</b> The request arrives as a `POST`, no route matches, and you get a confusing 405.",
-        "<b>Sending a partial payload to a `PUT` route.</b> Fields you omit are meant to be wiped. If that surprises you, you wanted `PATCH`.",
-        "<b>Reaching for `Route::any()` to make an error go away.</b> It hides the real problem, which is usually a form sending the wrong method.",
-      ],
-      quiz: [
-        {
-          question: "Which HTTP method should never change data?",
-          options: [
-            "POST",
-            "PATCH",
-            "GET",
-            "DELETE",
-          ],
-          correctIndex: 2,
-          explanation: "Crawlers and link previewers fetch URLs without being asked, so `GET` must be safe.",
-        },
-        {
-          question: "What is the difference between PUT and PATCH?",
-          options: [
-            "PUT is faster",
-            "They are identical",
-            "PATCH is for APIs only",
-            "PUT replaces the whole resource; PATCH changes only what you send",
-          ],
-          correctIndex: 3,
-          explanation: "Fields omitted from a `PUT` are meant to be wiped.",
-        },
-        {
-          question: "Why do you need `@method('DELETE')` in a form?",
-          options: [
-            "To add security",
-            "To make it faster",
-            "Because HTML forms can only send GET and POST",
-            "To enable CSRF",
-          ],
-          correctIndex: 2,
-          explanation: "Laravel reads the hidden `_method` field and routes it as a DELETE.",
-        },
-        {
-          question: "Why is `Route::any()` usually a poor choice?",
-          options: [
-            "It is slow",
-            "It breaks caching",
-            "It cannot use controllers",
-            "It accepts methods you never intended and hides form bugs",
-          ],
-          correctIndex: 3,
-          explanation: "Explicit verbs let Laravel return a proper 405 instead.",
-        },
-      ],
-    },
-    {
-      id: "route-parameters",
-      title: "Parameters, optional values and constraints",
-      durationMinutes: 11,
-      explanation: "Most URLs carry information. `/invoices/10` is not a fixed page, it is a pattern with a value in it.\n\nA <b>route parameter</b> (a named placeholder written in braces, like `{id}`) is the part of the URL that changes. A <b>constraint</b> is a rule limiting what that placeholder will match, so `/invoices/abc` can be turned away by the router instead of by your code.\n\n```text\n/invoices/{id}\n          │\n          ↓\n    /invoices/10\n          │\n          ↓\n      id = 10\n```\n\n---\n\n### 1. Basic — capturing values from the URL\n\nWrap the changing part in braces and accept it as an argument:\n\n```php\nRoute::get('/invoices/{id}', function ($id) {\n    return $id;   // \"10\"\n});\n```\n\nYou can have as many as you need. They arrive <b>in the order they appear in the URL</b>, not by name:\n\n```php\nRoute::get('/clients/{client}/invoices/{invoice}', function ($client, $invoice) {\n    return \"Client {$client}, invoice {$invoice}\";\n});\n```\n\n```text\n/clients/10/invoices/50\n         │           │\n         ↓           ↓\n     client=10   invoice=50\n```\n\nSwap the argument names in your function and Laravel will not notice. Position is what counts, which is a good reason to keep the names matching.\n\n---\n\n### 2. Intermediate — optional parameters\n\nA required parameter means the route does not match without it:\n\n```php\nRoute::get('/invoices/{id}', ...);\n```\n\n```text\n/invoices/10   ✓ matches\n/invoices      ✗ no match, 404\n```\n\nAdd `?` to make it optional, and give the PHP argument a default:\n\n```php\nRoute::get('/invoices/{status?}', function ($status = 'all') {\n    return \"Showing {$status} invoices\";\n});\n```\n\n```text\n/invoices/paid  →  \"Showing paid invoices\"\n/invoices       →  \"Showing all invoices\"\n```\n\nThe default is not optional. Leave it out and PHP throws an <i>ArgumentCountError</i> as soon as someone omits the parameter, because the function still expects an argument.\n\nOptional parameters must also come last. `{a?}/{b}` cannot work: there is no way to tell which value you meant.\n\n---\n\n### 3. Advanced — constraining what a parameter accepts\n\nNothing so far stops this:\n\n```text\n/invoices/banana\n```\n\nThe route matches, `$id` is `\"banana\"`, and your controller goes looking for it. A <b>constraint</b> (a rule limiting what a parameter can contain) stops it at the router instead:\n\n```php\nRoute::get('/invoices/{id}', ...)->whereNumber('id');\n```\n\n```text\n/invoices/10       ✓ matches\n/invoices/banana   ✗ no match → 404\n```\n\nThat 404 is the point. Bad input never reaches your code, so your controller does not need to defend against it.\n\nLaravel ships readable helpers:\n\n```php\n->whereNumber('id')                              // digits\n->whereAlpha('name')                             // letters\n->whereAlphaNumeric('code')                      // letters and digits\n->whereUuid('id')                                // a UUID\n->whereIn('status', ['draft', 'sent', 'paid'])   // an allowed list\n```\n\n`whereIn` is the one people underuse. It turns a whole class of invalid input into a 404 for free:\n\n```php\nRoute::get('/invoices/status/{status}', ...)\n    ->whereIn('status', ['draft', 'sent', 'paid']);\n```\n\n```text\n/invoices/status/paid       ✓\n/invoices/status/exploded   ✗ 404\n```\n\nFor anything the helpers do not cover, a <b>regular expression</b> (a pattern describing which text is allowed) works:\n\n```php\nRoute::get('/invoices/{number}', ...)->where('number', 'INV-[0-9]{3}');\n```\n\n```text\n/invoices/INV-001   ✓\n/invoices/INV-1     ✗\n/invoices/10        ✗\n```\n\nYou do not need to be good at regular expressions to use Laravel. Reach for the named helpers first and drop to `where()` only when your format is genuinely custom, as an invoice number is.\n\nOne ordering rule worth knowing: Laravel matches routes <b>top to bottom, first match wins</b>. So a broad route placed above a specific one will swallow it:\n\n```php\nRoute::get('/invoices/{id}', ...);      // matches /invoices/create too\nRoute::get('/invoices/create', ...);    // never reached\n```\n\nPut the specific route first, or constrain the broad one so it cannot match.",
-      diagram: `Capturing values
-
-  /clients/{client}/invoices/{invoice}
-            │                  │
-            ↓                  ↓
-  /clients/10/invoices/50
-            │                  │
-        client=10          invoice=50
-
-  Arguments arrive by POSITION, not by name.
-
-
-Required vs optional
-
-  {id}     /invoices/10  ✓      /invoices  ✗ 404
-  {id?}    /invoices/10  ✓      /invoices  ✓ uses the default
-
-  Optional parameters must come last.
-
-
-Constraints stop bad input at the router
-
-  /invoices/banana
+  InvoiceServiceProvider
+        │ registers
         ↓
-  whereNumber('id')
-        ↓
-     ✗ no match
-        ↓
-      404          ← your controller never runs
+  InvoiceTotals            ← the work happens here
+        │
+   ┌────┴────┐
+   ↓         ↓
+Controller  Facade
 
 
-Order matters: first match wins
+WHAT A PROVIDER SETS UP
 
-  Route::get('/invoices/{id}')      ← swallows everything
-  Route::get('/invoices/create')    ← never reached
-
-  Put the specific route ABOVE the general one.`,
+  container bindings            ← Day 3
+  event listeners
+  view composers
+  Blade directives and macros
+  authorization gates`,
       codeExample: {
-        title: "Parameters and every constraint helper",
+        title: "A generated provider, and the list that loads it",
         code: `<?php
-// routes/web.php
 
-// One parameter
-Route::get('/invoices/{id}', function ($id) {
-    return $id;
-});
+// php artisan make:provider InvoiceServiceProvider
+// → app/Providers/InvoiceServiceProvider.php
 
-// Several. They arrive in URL order, not by name.
-Route::get('/clients/{client}/invoices/{invoice}', function ($client, $invoice) {
-    return "Client {$client}, invoice {$invoice}";
-});
+namespace App\\Providers;
 
-// Optional, with a PHP default. The default is required.
-Route::get('/invoices/{status?}', function ($status = 'all') {
-    return "Showing {$status} invoices";
-});
+use App\\Services\\Invoicing\\InvoiceTotals;
+use Illuminate\\Support\\ServiceProvider;
 
-// Constraints: the readable helpers
-Route::get('/invoices/{id}', fn ($id) => $id)->whereNumber('id');
-Route::get('/clients/{name}', fn ($name) => $name)->whereAlpha('name');
-Route::get('/codes/{code}', fn ($code) => $code)->whereAlphaNumeric('code');
-Route::get('/jobs/{id}', fn ($id) => $id)->whereUuid('id');
-
-// An allowed list. Anything else is a 404.
-Route::get('/invoices/status/{status}', fn ($status) => $status)
-    ->whereIn('status', ['draft', 'sent', 'paid']);
-
-// A custom format needs a regular expression.
-Route::get('/invoices/{number}', fn ($number) => $number)
-    ->where('number', 'INV-[0-9]{3}');
-
-// Several constraints at once
-Route::get('/clients/{client}/invoices/{number}', fn ($client, $number) => "$client $number")
-    ->where(['client' => '[0-9]+', 'number' => 'INV-[0-9]{3}']);
-
-
-// ORDER MATTERS. This is wrong:
-// Route::get('/invoices/{id}', ...);      // matches "create" as an id
-// Route::get('/invoices/create', ...);    // unreachable
-
-// Either put the specific route first:
-Route::get('/invoices/create', [InvoiceController::class, 'create']);
-Route::get('/invoices/{id}', [InvoiceController::class, 'show']);
-
-// Or constrain the general one so it cannot match:
-Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->whereNumber('id');`,
-      },
-      keyTakeaways: [
-        "Wrap the changing part of a URL in braces to capture it as a parameter.",
-        "Parameters arrive <b>in URL order</b>, not matched by name, so keep the names aligned anyway.",
-        "`{param?}` makes a parameter optional, and the PHP argument then <b>needs a default value</b>.",
-        "Optional parameters must be last, or Laravel cannot tell which value you meant.",
-        "A <b>constraint</b> turns invalid input into a 404 at the router, before your controller runs.",
-        "Prefer `whereNumber`, `whereIn` and friends over raw regular expressions; drop to `where()` only for genuinely custom formats.",
-        "Routes match <b>top to bottom, first match wins</b>, so a broad route above a specific one hides it.",
-      ],
-      commonMistakes: [
-        "<b>Marking a parameter optional but giving the function no default.</b> The route matches, then PHP throws an <i>ArgumentCountError</i> the moment someone omits it.",
-        "<b>Putting an optional parameter before a required one.</b> `{a?}/{b}` is unmatchable, because there is no way to know which value is which.",
-        "<b>Defining `/invoices/{id}` above `/invoices/create`.</b> The first route wins and treats `create` as an id, so the create page 404s or explodes.",
-        "<b>Validating a parameter's format inside the controller.</b> A constraint does it at the router, keeps the controller clean, and returns a proper 404.",
-        "<b>Assuming parameters arrive as the right type.</b> `/invoices/10` gives you the string `\"10\"`. Type-hint `int $id` if you want a number.",
-      ],
-      quiz: [
-        {
-          question: "How do route parameters get passed to your function?",
-          options: [
-            "In the order they appear in the URL",
-            "Matched by name",
-            "As one array",
-            "Alphabetically",
-          ],
-          correctIndex: 0,
-          explanation: "Renaming the arguments changes nothing, so keep them aligned for readability.",
-        },
-        {
-          question: "What must you add when a parameter is optional?",
-          options: [
-            "A constraint",
-            "A name for the route",
-            "A default value on the PHP argument",
-            "A middleware",
-          ],
-          correctIndex: 2,
-          explanation: "Without it PHP throws an ArgumentCountError when the parameter is omitted.",
-        },
-        {
-          question: "What does `whereNumber('id')` do when someone visits `/invoices/banana`?",
-          options: [
-            "The route does not match, so Laravel returns 404",
-            "Throws an exception",
-            "Passes it through as a string",
-            "Converts it to 0",
-          ],
-          correctIndex: 0,
-          explanation: "Bad input is stopped at the router and never reaches your controller.",
-        },
-        {
-          question: "Why does `/invoices/create` 404 when `/invoices/{id}` is defined above it?",
-          options: [
-            "Laravel caches the first route",
-            "`create` is a reserved word",
-            "You need a constraint on `create`",
-            "Routes match top to bottom and the first match wins",
-          ],
-          correctIndex: 3,
-          explanation: "The broad route treats `create` as an id, so the specific one is never reached.",
-        },
-      ],
-    },
-    {
-      id: "named-routes-and-groups",
-      title: "Named routes and route groups",
-      durationMinutes: 11,
-      explanation: "Two features that stop route files becoming unmaintainable. One removes hard-coded URLs from your application; the other removes repetition from the route file itself.\n\nA <b>named route</b> is a route given a label, so the rest of your application refers to it by that label rather than by its URL. A <b>route group</b> is a set of routes that share settings, written once around them instead of repeated on each one.\n\n---\n\n### 1. Basic — naming a route\n\nGive a route a name:\n\n```php\nRoute::get('/invoices/{id}', [InvoiceController::class, 'show'])\n    ->name('invoices.show');\n```\n\nNow build URLs from the name instead of typing them:\n\n```php\nroute('invoices.show', ['id' => 10]);   // \"/invoices/10\"\n```\n\nIn Blade:\n\n```blade\n<a href=\"{{ route('invoices.show', ['id' => $invoice['number']]) }}\">View</a>\n```\n\nThe convention is `resource.action`: `invoices.index`, `invoices.show`, `invoices.store`.\n\n---\n\n### 2. Intermediate — why this matters more than it looks\n\nSuppose you hard-code URLs everywhere:\n\n```blade\n<a href=\"/invoices/{{ $id }}\">View</a>\n```\n\nThen the business decides invoices are now called bills. You change the route to `/bills/{id}` and every one of those links breaks. Silently. They still render, they still look like links, they just 404 when clicked. Nothing tells you which files to fix except searching and hoping.\n\nWith names, you change the route:\n\n```php\nRoute::get('/bills/{id}', ...)->name('invoices.show');\n```\n\nand every `route('invoices.show')` in the application produces the new URL. Nothing else changes.\n\n```text\nHard-coded         Named\n/invoices/10       route('invoices.show', ...)\n     ↓                      ↓\nURL changes        URL changes\n     ↓                      ↓\nlinks silently     every link updates\nbreak                itself\n```\n\nThere is a second benefit: `route()` fails loudly. Misspell a route name and you get an exception naming the route, immediately. A misspelt hard-coded URL is a 404 you find in production.\n\n---\n\n### 3. Advanced — grouping shared configuration\n\nRoutes that share settings can be grouped instead of repeating them.\n\nA <b>prefix</b> puts text at the front of each URL:\n\n```php\nRoute::prefix('admin')->group(function () {\n    Route::get('/invoices', ...);   // /admin/invoices\n    Route::get('/clients', ...);    // /admin/clients\n});\n```\n\nA <b>name prefix</b> does the same for names. Note the trailing dot, which is easy to forget:\n\n```php\nRoute::name('admin.')->group(function () {\n    Route::get('/invoices', ...)->name('invoices');   // admin.invoices\n});\n```\n\n<b>Middleware</b> applies to everything in the group at once:\n\n```php\nRoute::middleware('auth')->group(function () {\n    Route::get('/profile', ...);\n    Route::get('/invoices', ...);\n});\n```\n\nThis is the one that matters for security. Protecting routes one by one means the day you add a route and forget the middleware, it is public and nothing warns you. Put the group around them and new routes are protected by default.\n\nA <b>controller group</b> saves naming the same class repeatedly:\n\n```php\nRoute::controller(InvoiceController::class)->group(function () {\n    Route::get('/invoices', 'index');\n    Route::get('/invoices/{id}', 'show');\n});\n```\n\nThey combine, and this is how real route files are written:\n\n```php\nRoute::prefix('admin')\n    ->name('admin.')\n    ->middleware(['auth', 'can:manage-invoices'])\n    ->group(function () {\n        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');\n    });\n```\n\n```text\nURL         /admin/invoices\nName        admin.invoices\nMiddleware  auth, can:manage-invoices\n```\n\nGroups also nest, and settings accumulate as you go down.\n\nFinally, groups can be split by <b>domain</b>, which is how subdomains get handled:\n\n```php\nRoute::domain('admin.invoicehub.test')->group(function () {\n    Route::get('/invoices', ...);\n});\n```\n\nA subdomain can even be a parameter, captured like any other:\n\n```php\nRoute::domain('{tenant}.invoicehub.test')->group(function () {\n    Route::get('/invoices', function ($tenant) {\n        return \"Invoices for {$tenant}\";\n    });\n});\n```",
-      diagram: `Why names beat hard-coded URLs
-
-  HARD-CODED                      NAMED
-  <a href="/invoices/10">         route('invoices.show', ...)
-        │                                   │
-  route changes to /bills/10       route changes to /bills/10
-        │                                   │
-        ↓                                   ↓
-  every link 404s, silently        every link updates itself
-  found by users, in production    nothing to change
-
-
-Groups stack their settings
-
-  Route::prefix('admin')
-       ->name('admin.')
-       ->middleware('auth')
-       ->group(...)
-              │
-    ┌─────────┼─────────┐
-    ↓         ↓         ↓
-  prefix    name     middleware
-  /admin    admin.     auth
-    │         │         │
-    └─────────┼─────────┘
-              ↓
-    Route::get('/invoices')->name('invoices')
-              ↓
-  URL:   /admin/invoices
-  Name:  admin.invoices
-  Guard: auth
-
-
-Middleware on the group, not the route
-
-  one by one            on the group
-  ─────────             ────────────
-  route ✓ auth          ┌─ route
-  route ✓ auth          │  route      all covered,
-  route ✗ FORGOT        │  route      including the
-  → publicly exposed    └─ route      one you add next`,
-      codeExample: {
-        title: "Names, groups, and how they combine",
-        code: `<?php
-// routes/web.php
-
-use App\\Http\\Controllers\\InvoiceController;
-use Illuminate\\Support\\Facades\\Route;
-
-// ---------- Naming ----------
-Route::get('/invoices/{id}', [InvoiceController::class, 'show'])
-    ->name('invoices.show');
-
-// Build URLs from the name, never by hand:
-//   route('invoices.show', ['id' => 10])       => /invoices/10
-//   route('invoices.show', ['id' => 10], false) => relative URL
-
-
-// ---------- Prefix ----------
-Route::prefix('admin')->group(function () {
-    Route::get('/invoices', ...);   // /admin/invoices
-    Route::get('/clients', ...);    // /admin/clients
-});
-
-
-// ---------- Name prefix (mind the trailing dot) ----------
-Route::name('admin.')->group(function () {
-    Route::get('/invoices', ...)->name('invoices');   // admin.invoices
-});
-
-
-// ---------- Middleware for the whole group ----------
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', ...);
-    Route::get('/invoices', ...);
-});
-
-
-// ---------- Controller once, methods by name ----------
-Route::controller(InvoiceController::class)->group(function () {
-    Route::get('/invoices', 'index')->name('invoices.index');
-    Route::get('/invoices/{id}', 'show')->name('invoices.show');
-});
-
-
-// ---------- All of it together: how real route files look ----------
-Route::prefix('admin')
-    ->name('admin.')
-    ->middleware(['auth', 'can:manage-invoices'])
-    ->group(function () {
-        Route::get('/invoices', [InvoiceController::class, 'index'])
-            ->name('invoices');          // /admin/invoices, admin.invoices
-
-        Route::get('/clients', [ClientController::class, 'index'])
-            ->name('clients');           // /admin/clients, admin.clients
-    });
-
-
-// ---------- Subdomains, including as a parameter ----------
-Route::domain('{tenant}.invoicehub.test')->group(function () {
-    Route::get('/invoices', function ($tenant) {
-        return "Invoices for {$tenant}";
-    });
-});`,
-      },
-      keyTakeaways: [
-        "`->name('invoices.show')` lets you build URLs with `route('invoices.show', [...])` instead of typing them.",
-        "Named routes mean changing a URL updates every link automatically; hard-coded URLs break silently.",
-        "`route()` throws immediately on a misspelt name, whereas a bad hard-coded URL becomes a production 404.",
-        "<b>`prefix()`</b> adds to the URL, <b>`name()`</b> adds to the route name (remember the trailing dot).",
-        "<b>`middleware()`</b> on a group protects every route inside it, including ones you add later.",
-        "Groups combine and nest, and their settings accumulate downward.",
-        "<b>`domain()`</b> splits routes by subdomain, and the subdomain itself can be a parameter.",
-      ],
-      commonMistakes: [
-        "<b>Forgetting the trailing dot in a name prefix.</b> `Route::name('admin')` gives you `admininvoices` rather than `admin.invoices`.",
-        "<b>Hard-coding URLs in Blade.</b> They keep rendering after a route change and only fail when a user clicks, which is the worst time to find out.",
-        "<b>Applying auth middleware route by route.</b> Sooner or later you add a route and forget, and it is public with nothing to warn you.",
-        "<b>Reusing a route name in two places.</b> The last one silently wins, and `route()` starts returning a URL you did not expect.",
-        "<b>Passing the wrong parameter key to `route()`.</b> Extra keys become a query string instead of failing, so `/invoices/10?id=10` is a clue you named it wrong.",
-      ],
-      quiz: [
-        {
-          question: "Why use named routes instead of hard-coded URLs?",
-          options: [
-            "They render faster",
-            "Changing the URL updates every link automatically",
-            "They are required for controllers",
-            "They add security",
-          ],
-          correctIndex: 1,
-          explanation: "Hard-coded URLs keep rendering after a change and 404 only when clicked.",
-        },
-        {
-          question: "What does `Route::name('admin')` (no trailing dot) produce for a route named `invoices`?",
-          options: [
-            "`admin.invoices`",
-            "`invoices`",
-            "`admininvoices`",
-            "An error",
-          ],
-          correctIndex: 2,
-          explanation: "The prefix is concatenated literally, so the dot has to be part of it.",
-        },
-        {
-          question: "Why apply auth middleware to a group rather than each route?",
-          options: [
-            "Routes you add later are protected by default",
-            "It is faster",
-            "Routes cannot take middleware individually",
-            "It avoids caching issues",
-          ],
-          correctIndex: 0,
-          explanation: "Protecting them one by one means one forgotten route is silently public.",
-        },
-        {
-          question: "What happens if you misspell a route name in `route()`?",
-          options: [
-            "Laravel throws an exception naming the route",
-            "It returns an empty string",
-            "It returns the home page",
-            "It returns a 404 page",
-          ],
-          correctIndex: 0,
-          explanation: "Failing loudly at the point of the mistake is the main advantage over a hard-coded URL.",
-        },
-      ],
-    },
-    {
-      id: "generating-urls",
-      title: "Generating URLs, assets and signed links",
-      durationMinutes: 14,
-      explanation: "Named routes gave you `route()`. That is one member of a family.\n\n<b>URL generation</b> is building a URL from something stable, a route name or a file path, rather than typing the path into your templates. A <b>signed URL</b> is a generated URL carrying a signature Laravel can verify, so a link can be trusted without the person clicking it being logged in.\n\n---\n\n### 1. Basic — the helpers\n\nFour helpers cover almost everything:\n\n```php\nroute('invoices.show', ['invoice' => 10]);   // from a route name\nurl('/invoices/10');                          // from a path\nasset('css/app.css');                         // from a file in public/\naction([InvoiceController::class, 'show'], ['invoice' => 10]);\n```\n\nAll four return an absolute URL built on your `APP_URL`:\n\n```text\nAPP_URL=https://invoicehub.test\n\nasset('css/app.css')  →  https://invoicehub.test/css/app.css\nurl('/invoices')      →  https://invoicehub.test/invoices\n```\n\nThat is the reason `asset()` exists rather than you writing `/css/app.css` by hand. Move the application into a subdirectory, or serve assets from a CDN, and every hard-coded path is wrong while every `asset()` call is still right.\n\n`url()` with no argument returns a builder describing the request you are already in:\n\n```php\nurl()->current();    // https://invoicehub.test/invoices   (no query string)\nurl()->full();       // https://invoicehub.test/invoices?status=paid\nurl()->previous();   // where the user came from\n```\n\n`url()->previous()` is what a Cancel link should point at.\n\nPrefer `route()` whenever a name exists, for the reason from the last lesson: it survives a URL change and fails loudly on a typo. Reach for `url()` when there genuinely is no route, which in practice means external links and paths to static files.\n\nOne more thing `route()` accepts is a model. Hand it the record instead of the id and Laravel asks the model for its route key:\n\n```php\nroute('invoices.show', $invoice);   // /invoices/10\n```\n\nThis is the same route key that `getRouteKeyName()` controls, which the route model binding lesson later today covers. Set that to a slug and the slug is what comes out of `route()` too, so the links you generate and the URLs your routes accept never drift apart.\n\n<i>A note on timing: models come from Eloquent, which InvoiceHub does not have until Day 10. Read this now so the shape is familiar, and it will click properly when the database arrives.</i>\n\n---\n\n### 2. Intermediate — active links and query strings\n\nNavigation has to know which page it is on. The fragile way compares paths:\n\n```blade\n{{-- breaks when the URL changes --}}\n<a class=\"{{ request()->is('invoices*') ? 'active' : '' }}\">Invoices</a>\n```\n\nThe durable way asks about the route name, which does not change when the URL does:\n\n```blade\n<a class=\"{{ request()->routeIs('invoices.*') ? 'active' : '' }}\">Invoices</a>\n```\n\n```text\nrequest()->is('admin/*')          matches on the URL path\nrequest()->routeIs('invoices.*')  matches on the route name\n                                  ↑ survives a URL change\n```\n\nBoth take `*` as a wildcard, so `routeIs('invoices.*')` is true on `invoices.index`, `invoices.show` and `invoices.edit` alike, which is usually what a nav link wants.\n\nExtra parameters handed to `route()` become a query string on their own:\n\n```php\nroute('invoices.index', ['status' => 'paid']);   // /invoices?status=paid\n```\n\nThat is worth knowing in both directions. It is convenient here, and it is also why a misspelt route parameter ends up quietly in the query string instead of raising an error, which was one of the mistakes on the previous lesson.\n\n`URL::query()` does the same job for a plain path, and merges rather than replaces:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::query('/invoices', ['status' => 'paid']);         // /invoices?status=paid\nURL::query('/invoices?page=2', ['status' => 'paid']);  // /invoices?page=2&status=paid\n```\n\nWhen you want a relative URL rather than an absolute one, pass `false` as the third argument:\n\n```php\nroute('invoices.show', ['invoice' => 10], false);   // /invoices/10\n```\n\nOptional parameters work in both directions. A route written `/search/{query?}` matches `/search` and `/search/laravel` alike, so `route()` is happy with or without the value:\n\n```php\nRoute::get('/search/{query?}', SearchController::class)->name('search');\n\nroute('search');                          // /search\nroute('search', ['query' => 'laravel']);   // /search/laravel\n```\n\nA parameter can also be given a default value once, with `URL::defaults()`, which is the usual answer for something like a locale that appears in every URL and would otherwise have to be passed on every single `route()` call.\n\n---\n\n### 3. Advanced — signed URLs\n\nSome links have to work for someone who is not logged in, and must still not work for anybody else. An unsubscribe link in an email. A password reset. A download link for one particular invoice.\n\nRequiring a login defeats the purpose. Putting a bare id in the URL means anyone can change the number and read someone else's data.\n\nA <b>signed URL</b> settles this by appending a signature of the URL itself:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::signedRoute('unsubscribe', ['user' => 1]);\n```\n\n```text\n/unsubscribe/1?signature=8f14e45fceea167a5a36...\n                         ↑\n        a hash of this exact URL plus your APP_KEY\n```\n\nChange any part of the URL and the signature stops matching, so `/unsubscribe/2` is refused. Only your application can produce a valid signature, because only it holds the key.\n\nCheck it with the `signed` middleware, which returns a 403 when the signature is missing or wrong:\n\n```php\nRoute::get('/unsubscribe/{user}', UnsubscribeController::class)\n    ->name('unsubscribe')\n    ->middleware('signed');\n```\n\nOr check it yourself, when you want to control the response:\n\n```php\nif (! $request->hasValidSignature()) {\n    abort(403);\n}\n```\n\nLinks picked up in the wild often grow query parameters you did not sign. An email client or an ad platform appends its own tracking, the URL is no longer the one you hashed, and a perfectly legitimate click gets a 403. Laravel lets validation ignore named parameters for exactly this:\n\n```php\n// Everything else must match the signature. These may vary.\nif (! $request->hasValidSignatureWhileIgnoring(['utm_source', 'utm_campaign'])) {\n    abort(403);\n}\n```\n\nThe principle is what matters. Signed parameters have to arrive intact, ignored ones are free to change without breaking the signature, and anything you ignore is no longer protected. So name the specific parameters you know are noise, never a blanket ignore, and never the ones that decide what the link actually does.\n\nFor a link that should stop working, add an expiry:\n\n```php\nURL::temporarySignedRoute(\n    'invoices.download',\n    now()->addMinutes(30),\n    ['invoice' => 10],\n);\n```\n\nThe expiry rides along in the URL and is covered by the signature, so it cannot be edited either.\n\nThree things to be clear about, because a signed URL is easy to over-trust.\n\n<b>It is not encryption.</b> The parameters are plainly readable. The signature proves the URL was not tampered with, and nothing more.\n\n<b>It is a bearer token.</b> Anyone holding the link can use it, so treat it like a password in the address bar. It will end up in browser history, server logs and forwarded email. `temporarySignedRoute` is the mitigation, and for anything sensitive the window should be minutes rather than weeks.\n\n<b>It depends on `APP_KEY`.</b> Rotate the key and every signed URL you have ever sent stops working at once, which matters when some of them are sitting in inboxes.",
-      diagram: `Four ways to build a URL
-
-  route('invoices.show', ['invoice' => 10])   ← from a name     PREFER
-  url('/invoices/10')                         ← from a path
-  asset('css/app.css')                        ← from a file
-  action([InvoiceController::class, 'show'])  ← from a method
-
-  every one of them resolves against APP_URL
-                    ↓
-  https://invoicehub.test/invoices/10
-
-
-Active nav links
-
-  request()->is('invoices*')        request()->routeIs('invoices.*')
-        │                                      │
-  URL changes to /bills            URL changes to /bills
-        │                                      │
-        ↓                                      ↓
-  highlight breaks                     still correct
-
-
-A signed URL
-
-  URL::signedRoute('unsubscribe', ['user' => 1])
-              │
-              ├── this URL     /unsubscribe/1
-              └── + APP_KEY    →  hash
-                                    │
-  /unsubscribe/1?signature=8f14e45fce...
-              │
-       someone edits it to /unsubscribe/2
-              ↓
-  the signature no longer matches  →  403`,
-      codeExample: {
-        title: "The helpers, active links, and signed routes",
-        code: `<?php
-// routes/web.php
-
-use App\\Http\\Controllers\\InvoiceController;
-use App\\Http\\Controllers\\UnsubscribeController;
-use Illuminate\\Support\\Facades\\Route;
-use Illuminate\\Support\\Facades\\URL;
-
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-
-// Signed routes: no login needed, but a valid signature is.
-Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])
-    ->name('invoices.download')
-    ->middleware('signed');
-
-Route::get('/unsubscribe/{user}', UnsubscribeController::class)
-    ->name('unsubscribe')
-    ->middleware('signed');
-
-
-// ---------- Generating them ----------
-
-route('invoices.show', ['invoice' => 10]);          // /invoices/10
-route('invoices.index', ['status' => 'paid']);      // /invoices?status=paid
-route('invoices.show', ['invoice' => 10], false);   // relative
-
-url('/invoices/10');
-url()->current();     // this URL, without the query string
-url()->previous();    // where they came from
-
-asset('css/app.css');
-URL::query('/invoices?page=2', ['status' => 'paid']);
-
-// Thirty minutes, then 403.
-URL::temporarySignedRoute('invoices.download', now()->addMinutes(30), ['invoice' => 10]);
-
-// No expiry, still tamper-proof.
-URL::signedRoute('unsubscribe', ['user' => 1]);
-?>
-
-{{-- resources/views/partials/nav.blade.php --}}
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
-
-<a href="{{ route('invoices.index') }}"
-   class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}">
-    Invoices
-</a>
-
-<a href="{{ url()->previous() }}">Cancel</a>`,
-      },
-      keyTakeaways: [
-        "`route()` builds from a name, `url()` from a path, `asset()` from a file in `public/`. Prefer `route()` whenever a name exists.",
-        "All of them resolve against `APP_URL`, which is why `asset()` survives the app moving to a subdirectory or a CDN and a hard-coded path does not.",
-        "<b>`url()->current()`</b>, <b>`url()->full()`</b> and <b>`url()->previous()`</b> describe the request you are in. `previous()` is what Cancel links want.",
-        "<b>`request()->routeIs('invoices.*')`</b> highlights active nav links and survives a URL change; `request()->is()` matches the path and does not.",
-        "Extra parameters passed to `route()` become a query string, which is handy and is also why a misspelt parameter fails quietly.",
-        "<b>`URL::signedRoute()`</b> appends a signature of the URL, so a link works without a login and breaks the moment anyone edits it.",
-        "<b>`URL::temporarySignedRoute()`</b> adds an expiry, and the `signed` middleware turns a bad or expired signature into a 403.",
-        "Pass a model to `route()` and Laravel uses its route key, so a custom `getRouteKeyName()` flows straight through to the URLs you generate.",
-        "Signature validation can ignore named query parameters such as tracking tags. Whatever you ignore stops being protected, so name them one by one.",
-      ],
-      commonMistakes: [
-        "<b>Hard-coding asset paths.</b> `/css/app.css` breaks the day the app is served from a subdirectory or a CDN. `asset('css/app.css')` does not.",
-        "<b>Using `request()->is()` for active nav links.</b> It matches on the URL, so changing the route silently breaks the highlighting and nothing fails.",
-        "<b>Treating a signed URL as private.</b> The parameters are readable and the signature is not encryption. It proves the link is unedited, nothing more.",
-        "<b>Signing a link with no expiry and emailing it.</b> Anyone who ever reaches that inbox has a working link forever. Use `temporarySignedRoute` for anything that matters.",
-        "<b>Forgetting that signatures depend on `APP_KEY`.</b> Rotating the key invalidates every signed URL already sent, including the ones sitting in people's email.",
-        "<b>Ignoring too much when validating a signature.</b> Skipping a tracking tag is fine. Skipping the parameter that says which invoice to download hands the URL back to anyone who can edit it.",
-      ],
-      quiz: [
-        {
-          question: "Why prefer `asset('css/app.css')` over writing `/css/app.css` by hand?",
-          options: [
-            "It minifies the file",
-            "It resolves against `APP_URL`, so it survives the app moving",
-            "It is required inside Blade",
-            "It loads the file faster",
-          ],
-          correctIndex: 1,
-          explanation: "Hard-coded paths break when the app is served from a subdirectory or assets move to a CDN.",
-        },
-        {
-          question: "Which check highlights an active nav link without breaking when the URL changes?",
-          options: [
-            "`request()->is('invoices*')`",
-            "`request()->routeIs('invoices.*')`",
-            "`url()->current()`",
-            "`route('invoices.index')`",
-          ],
-          correctIndex: 1,
-          explanation: "Route names survive a URL change; path matching does not.",
-        },
-        {
-          question: "What does the signature on a signed URL actually prove?",
-          options: [
-            "The parameters are encrypted",
-            "The person clicking it is logged in",
-            "The URL came from your app and has not been edited",
-            "The link has not expired",
-          ],
-          correctIndex: 2,
-          explanation: "It is a tamper check, not encryption and not authentication. Expiry only comes with `temporarySignedRoute`.",
-        },
-        {
-          question: "What happens to signed URLs you have already sent if you rotate `APP_KEY`?",
-          options: [
-            "Nothing, the signatures are stored in the database",
-            "They all stop validating",
-            "They quietly fall back to unsigned",
-            "Only the expired ones break",
-          ],
-          correctIndex: 1,
-          explanation: "The signature is derived from the key, so rotating it invalidates every link in the wild at once.",
-        },
-        {
-          question: "You tell signature validation to ignore `utm_source`. What is now true of that parameter?",
-          options: [
-            "It is stripped from the request before your code runs",
-            "It is still covered by the signature, just not read",
-            "It can be changed by anyone without invalidating the link",
-            "The whole URL stops being validated",
-          ],
-          correctIndex: 2,
-          explanation: "Ignoring a parameter removes it from the tamper check, so only ignore ones that do not decide what the link does.",
-        },
-      ],
-    },
-    {
-      id: "resource-routes",
-      title: "Resource routes and nesting",
-      durationMinutes: 11,
-      explanation: "Almost every resource in an application needs the same seven routes. Laravel will write them for you.\n\nA <b>resource</b> is one kind of thing your application stores: invoices, clients, users. A <b>resource route</b> is a single declaration that registers all seven of those routes for one resource, pointing them at the controller method names Laravel expects.\n\n---\n\n### 1. Basic — seven routes in one line\n\nBy hand, a full CRUD resource looks like this:\n\n```php\nRoute::get('/invoices',            [InvoiceController::class, 'index']);\nRoute::get('/invoices/create',     [InvoiceController::class, 'create']);\nRoute::post('/invoices',           [InvoiceController::class, 'store']);\nRoute::get('/invoices/{invoice}',  [InvoiceController::class, 'show']);\nRoute::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit']);\nRoute::put('/invoices/{invoice}',  [InvoiceController::class, 'update']);\nRoute::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);\n```\n\nAll of that is one line:\n\n```php\nRoute::resource('invoices', InvoiceController::class);\n```\n\nYou also get the names for free: `invoices.index`, `invoices.create`, `invoices.store`, `invoices.show`, `invoices.edit`, `invoices.update`, `invoices.destroy`.\n\nGenerate the matching controller with every method already stubbed:\n\n```bash\nphp artisan make:controller InvoiceController --resource\n```\n\n```text\nMethod     URL                       Controller  Name\nGET        /invoices                 index       invoices.index\nGET        /invoices/create          create      invoices.create\nPOST       /invoices                 store       invoices.store\nGET        /invoices/{invoice}       show        invoices.show\nGET        /invoices/{invoice}/edit  edit        invoices.edit\nPUT/PATCH  /invoices/{invoice}       update      invoices.update\nDELETE     /invoices/{invoice}       destroy     invoices.destroy\n```\n\nTwo of those return HTML forms rather than data: `create` shows a blank form, `edit` shows a filled one. The other five do the work.\n\n---\n\n### 2. Intermediate — trimming it down\n\nAn API has no forms, so `create` and `edit` are pointless:\n\n```php\nRoute::apiResource('invoices', InvoiceController::class);\n```\n\nThat gives five routes instead of seven, dropping `/create` and `/edit`.\n\n```bash\nphp artisan make:controller InvoiceController --api\n```\n\nYou can also take only what you need:\n\n```php\nRoute::resource('invoices', InvoiceController::class)->only(['index', 'show']);\nRoute::resource('invoices', InvoiceController::class)->except(['destroy']);\n```\n\n`only()` is worth preferring over `except()`. It states what exists rather than what does not, so adding a method later is a deliberate decision instead of an accident.\n\nOne ordering trap: `Route::resource` registers `/invoices/create` before `/invoices/{invoice}`, so the create page works. Hand-written routes are where people get this wrong.\n\n---\n\n### 3. Advanced — nesting, and why shallow exists\n\nResources often belong to other resources. An invoice has payments:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class);\n```\n\n```text\nGET    /invoices/{invoice}/payments\nPOST   /invoices/{invoice}/payments\nGET    /invoices/{invoice}/payments/{payment}\nPUT    /invoices/{invoice}/payments/{payment}\nDELETE /invoices/{invoice}/payments/{payment}\n```\n\nController methods now receive both:\n\n```php\npublic function show(string $invoice, string $payment) { /* ... */ }\n```\n\nThe relationship is visible in the URL, which is the appeal.\n\nThe problem shows up on the deeper routes. To view payment 50 you must write:\n\n```text\n/invoices/10/payments/50\n```\n\nBut payment 50 already knows which invoice it belongs to. The `10` is redundant, and worse, it is a second thing that can be wrong.\n\n<b>Shallow nesting</b> keeps the parent only where it is genuinely needed:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class)->shallow();\n```\n\n```text\nNeeds the parent:              Does not:\nGET  /invoices/10/payments     GET    /payments/50\nPOST /invoices/10/payments     PUT    /payments/50\n                               DELETE /payments/50\n```\n\nListing and creating need to know which invoice. Showing, updating and deleting an existing payment do not.\n\nThe rule of thumb: nest one level, and use `shallow()`. Two levels of nesting produces URLs like `/clients/1/invoices/10/payments/50/notes/3`, which nobody enjoys building or debugging.",
-      diagram: `One line, seven routes
-
-  Route::resource('invoices', InvoiceController::class)
-                        │
-   ┌──────────┬─────────┼─────────┬──────────┐
-   ↓          ↓         ↓         ↓          ↓
- index     create     store     show      edit/update/destroy
-   │          │         │         │              │
-   ↓          ↓         ↓         ↓              ↓
-GET        GET       POST       GET        GET/PUT/DELETE
-/invoices  /create   /invoices  /{invoice}  /{invoice}[/edit]
-
-  resource     → 7 routes (create + edit return forms)
-  apiResource  → 5 routes (no forms in an API)
-
-
-Shallow nesting: keep the parent only where it is needed
-
-  FULL NESTING                    SHALLOW
-  /invoices/10/payments           /invoices/10/payments      ← needs parent
-  /invoices/10/payments  (POST)   /invoices/10/payments      ← needs parent
-  /invoices/10/payments/50        /payments/50               ← does not
-  /invoices/10/payments/50 (PUT)  /payments/50               ← does not
-  /invoices/10/payments/50 (DEL)  /payments/50               ← does not
-
-  Payment 50 already knows its invoice.
-  Repeating it is redundant, and a second thing to get wrong.`,
-      codeExample: {
-        title: "Resource routes, trimmed and nested",
-        code: `<?php
-// routes/web.php
-
-use App\\Http\\Controllers\\InvoiceController;
-use App\\Http\\Controllers\\PaymentController;
-use Illuminate\\Support\\Facades\\Route;
-
-// Seven routes and seven names, in one line.
-Route::resource('invoices', InvoiceController::class);
-
-// Five routes: no /create or /edit, because an API has no forms.
-Route::apiResource('invoices', InvoiceController::class);
-
-// Only what you need. Prefer only() over except().
-Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
-Route::resource('invoices', InvoiceController::class)->except(['destroy']);
-
-// Rename the URL segment without renaming the routes.
-Route::resource('invoices', InvoiceController::class)
-    ->parameters(['invoices' => 'number']);   // /invoices/{number}
-
-// Nested: payments belong to an invoice.
-Route::resource('invoices.payments', PaymentController::class);
-
-// Shallow: parent only where it is actually needed.
-Route::resource('invoices.payments', PaymentController::class)->shallow();
-
-// Resources work inside groups like anything else.
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::resource('invoices', InvoiceController::class);
-    // /admin/invoices ... named admin.invoices.index, etc.
-});
-?>
-
-<?php
-// app/Http/Controllers/PaymentController.php
-// Generated with: php artisan make:controller PaymentController --resource
-
-class PaymentController extends Controller
+class InvoiceServiceProvider extends ServiceProvider
 {
-    // Nested routes pass the parent first, then the child.
-    public function index(string $invoice)
+    /**
+     * PASS 1. Declarations only.
+     * Runs before some other providers have registered anything.
+     */
+    public function register(): void
     {
-        return "Payments for invoice {$invoice}";
+        $this->app->singleton(InvoiceTotals::class);
     }
 
-    public function show(string $invoice, string $payment)
+    /**
+     * PASS 2. Runs after every provider has registered.
+     * Safe to reach for other services here.
+     */
+    public function boot(): void
     {
-        return "Payment {$payment} on invoice {$invoice}";
-    }
-
-    // With ->shallow() this route is /payments/{payment},
-    // so the parent is no longer passed at all.
-}`,
-      },
-      keyTakeaways: [
-        "<b>`Route::resource`</b> creates the seven standard CRUD routes and names them for you.",
-        "<b>`Route::apiResource`</b> creates five, dropping `/create` and `/edit`, which only exist to show forms.",
-        "`php artisan make:controller X --resource` (or `--api`) stubs the matching methods.",
-        "Use <b>`only()`</b> to state which routes exist, rather than `except()` to state which do not.",
-        "Nested resources put the relationship in the URL: `/invoices/{invoice}/payments/{payment}`.",
-        "<b>`shallow()`</b> keeps the parent for index and store, and drops it once the child's own id is enough.",
-        "Nest one level at most. Deeper URLs get painful to build and to debug.",
-      ],
-      commonMistakes: [
-        "<b>Writing `/invoices/{invoice}` above `/invoices/create` by hand.</b> `Route::resource` orders these correctly; hand-written routes are where the create page mysteriously 404s.",
-        "<b>Using `resource()` for an API.</b> You get two dead routes that return forms nobody will ever request.",
-        "<b>Nesting more than one level.</b> `/clients/1/invoices/10/payments/50` is miserable to generate and to read.",
-        "<b>Forgetting nested routes pass the parent first.</b> `show(string $payment)` on a nested route silently receives the invoice id instead.",
-        "<b>Assuming `resource()` protects anything.</b> It generates routes, not authorization. Anyone can hit `destroy` until you add middleware or a policy.",
-      ],
-      quiz: [
-        {
-          question: "How many routes does `Route::resource` create?",
-          options: [
-            "Five",
-            "Seven",
-            "Four",
-            "Ten",
-          ],
-          correctIndex: 1,
-          explanation: "Two of them, `create` and `edit`, exist only to show HTML forms.",
-        },
-        {
-          question: "Why does `apiResource` create fewer routes than `resource`?",
-          options: [
-            "An API has no forms, so `create` and `edit` are pointless",
-            "APIs are simpler",
-            "APIs cannot delete",
-            "It is a performance optimisation",
-          ],
-          correctIndex: 0,
-          explanation: "That drops it from seven routes to five.",
-        },
-        {
-          question: "What does `shallow()` do to a nested resource?",
-          options: [
-            "Removes all nesting",
-            "Limits nesting depth to two",
-            "Makes routes faster",
-            "Keeps the parent for index and store, drops it once the child's id is enough",
-          ],
-          correctIndex: 3,
-          explanation: "Payment 50 already knows its invoice, so repeating it adds nothing.",
-        },
-        {
-          question: "In a nested resource, what does `show()` receive first?",
-          options: [
-            "The parent id",
-            "The child id",
-            "An array of both",
-            "The request",
-          ],
-          correctIndex: 0,
-          explanation: "Parameters arrive in URL order, so the parent comes first.",
-        },
-      ],
-    },
-    {
-      id: "route-model-binding",
-      title: "Route model binding",
-      durationMinutes: 12,
-      explanation: "So far your route parameters have been strings you then have to look up. Laravel can do the lookup for you.\n\n<b>Route model binding</b> is Laravel using a route parameter to fetch the record itself, handing your code the model instead of the raw value. When no record matches, it returns a 404 before your code runs.\n\n<i>A note on timing: this lesson uses Eloquent models and a database, which InvoiceHub does not have until Day 10. Read it now so the pattern is familiar, and it will click properly when the database arrives.</i>\n\n---\n\n### 1. Basic — from id to model\n\nWithout binding, every controller method starts the same way:\n\n```php\nRoute::get('/invoices/{id}', function ($id) {\n    $invoice = Invoice::findOrFail($id);\n\n    return $invoice;\n});\n```\n\nWith <b>route model binding</b> (Laravel resolving a model from a route parameter automatically), you ask for the model directly:\n\n```php\nRoute::get('/invoices/{invoice}', function (Invoice $invoice) {\n    return $invoice;\n});\n```\n\n```text\n/invoices/10\n     ↓\n{invoice} = 10\n     ↓\ntype hint says Invoice\n     ↓\nInvoice::findOrFail(10)\n     ↓\n$invoice\n```\n\nTwo conditions make this work, and both matter:\n\n```text\n1. The route parameter is named {invoice}\n2. The argument is type-hinted Invoice\n```\n\nThe names must match. `{id}` with an `Invoice $invoice` argument will not bind, and the failure is quiet: you get a fresh empty model rather than an error, which is a confusing afternoon.\n\nYou also get 404 handling for free. No matching record means Laravel returns a 404 before your code runs, so there is no null to check.\n\n---\n\n### 2. Intermediate — binding on something other than the id\n\nBy default Laravel looks up the primary key. Often the public URL should show something more meaningful.\n\nSpecify the column inline:\n\n```php\nRoute::get('/invoices/{invoice:number}', function (Invoice $invoice) {\n    return $invoice;\n});\n```\n\n```text\nDefault:  /invoices/10\n              ↓\n          WHERE id = 10\n\nCustom:   /invoices/INV-001\n              ↓\n          WHERE number = 'INV-001'\n```\n\nIf a model should <i>always</i> bind on that column, say so once on the model:\n\n```php\nclass Invoice extends Model\n{\n    public function getRouteKeyName(): string\n    {\n        return 'number';\n    }\n}\n```\n\nRecent Laravel versions also let you mark it as an attribute on the property with `#[RouteKey]`. Both express the same idea, so check which your version supports:\n\n```text\n#[RouteKey]\n     ↓\n\"bind on this property\"\n```\n\nWhichever column you bind on needs to be <b>unique and indexed</b>. Unique because two matches means Laravel silently takes the first. Indexed because every request now queries that column, and an unindexed lookup on a large table is a slow page nobody attributes to routing.\n\n---\n\n### 3. Advanced — nested models and scoped bindings\n\nHere is a real security problem. Consider:\n\n```php\nRoute::get('/invoices/{invoice}/payments/{payment}', ...);\n```\n\nSomeone requests `/invoices/10/payments/50`, where payment 50 actually belongs to invoice 20. By default Laravel resolves each parameter independently:\n\n```text\nInvoice::find(10)   ✓ found\nPayment::find(50)   ✓ found\n                    ↓\nBoth exist, so the request proceeds\n```\n\nNothing checked that they are related. Your page happily shows another invoice's payment.\n\n<b>Scoped binding</b> resolves the child <i>through</i> the parent:\n\n```php\nRoute::get('/invoices/{invoice}/payments/{payment}', ...)->scopeBindings();\n```\n\n```text\nInvoice::find(10)\n     ↓\n$invoice->payments()->where('id', 50)->firstOrFail()\n     ↓\nNot related? → 404\n```\n\nNow the relationship is enforced by the router. On a resource:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class)->scoped();\n```\n\nLaravel applies this automatically when the child uses a custom key, for example `{payment:reference}`. It does <b>not</b> when both use ids, which is the common case and exactly where the hole is. Ask for it explicitly.\n\nYou can also apply it to a whole group:\n\n```php\nRoute::scopeBindings()->group(function () {\n    // every nested route here is scoped\n});\n```\n\nThis is worth treating as a security default rather than a nicety. It is not authorization, which comes on Day 15, but it does stop one whole category of accidental data exposure.",
-      diagram: `Binding turns an id into a model
-
-  /invoices/10
-       ↓
-  {invoice} = "10"
-       ↓
-  type hint: Invoice $invoice
-       ↓
-  Invoice::findOrFail(10)
-       ↓
-  no record? → 404 before your code runs
-
-  BOTH must line up:
-    parameter named {invoice}   +   argument typed Invoice
-  Mismatch binds nothing and hands you an empty model, silently.
-
-
-Why scoped bindings matter
-
-  /invoices/10/payments/50      (payment 50 belongs to invoice 20)
-
-  WITHOUT scopeBindings()          WITH scopeBindings()
-  Invoice::find(10)   ✓            Invoice::find(10)   ✓
-  Payment::find(50)   ✓                    ↓
-        ↓                          $invoice->payments()
-  both exist → proceed                  ->where('id', 50)
-        ↓                                 ->firstOrFail()
-  another invoice's payment                    ↓
-  rendered on your page                     404 ✓`,
-      codeExample: {
-        title: "Implicit, custom-key and scoped binding",
-        code: `<?php
-// routes/web.php
-
-// ---------- Without binding ----------
-Route::get('/invoices/{id}', function ($id) {
-    $invoice = Invoice::findOrFail($id);
-    return $invoice;
-});
-
-// ---------- With implicit binding ----------
-// Parameter name and type hint must match.
-Route::get('/invoices/{invoice}', function (Invoice $invoice) {
-    return $invoice;
-});
-
-// In a controller, the same thing:
-Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
-
-// ---------- Bind on a different column ----------
-Route::get('/invoices/{invoice:number}', function (Invoice $invoice) {
-    return $invoice;   // WHERE number = 'INV-001'
-});
-
-// ---------- Nested, and scoped so the child must belong to the parent ----------
-Route::get('/invoices/{invoice}/payments/{payment}', function (Invoice $invoice, Payment $payment) {
-    return $payment;
-})->scopeBindings();
-
-Route::resource('invoices.payments', PaymentController::class)->scoped();
-
-Route::scopeBindings()->group(function () {
-    // every nested route in here is scoped
-});
-?>
-
-<?php
-// app/Models/Invoice.php
-
-class Invoice extends Model
-{
-    // Always bind on \`number\` instead of \`id\`, everywhere.
-    // The column must be unique AND indexed: unique so two rows
-    // cannot match, indexed so every request is not a table scan.
-    public function getRouteKeyName(): string
-    {
-        return 'number';
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
+        //
     }
 }
 
 
-// app/Http/Controllers/InvoiceController.php
+// ---------- bootstrap/providers.php ----------
+// Your providers only. The framework's own are loaded for you.
 
-class InvoiceController extends Controller
+return [
+    App\\Providers\\AppServiceProvider::class,
+    App\\Providers\\InvoiceServiceProvider::class,
+];
+
+
+// ---------- The work does NOT live in the provider ----------
+namespace App\\Services\\Invoicing;
+
+class InvoiceTotals
 {
-    // No findOrFail, no null check. A missing invoice 404s
-    // before this method is ever called.
-    public function show(Invoice $invoice)
+    public function for(string $number): array
     {
-        return view('invoices.show', ['invoice' => $invoice]);
-    }
-
-    public function update(Request $request, Invoice $invoice)
-    {
-        $invoice->update($request->validated());
-
-        return redirect()->route('invoices.show', $invoice);
+        // Adding up an invoice is this class's job.
+        // The provider only said that this class exists.
+        return ['subtotal' => 4000.00, 'tax' => 200.00, 'total' => 4200.00];
     }
 }`,
       },
       keyTakeaways: [
-        "<b>Route model binding</b> turns a route parameter into a model, so you skip the `findOrFail` in every method.",
-        "It needs the parameter name and the type hint to match: `{invoice}` with `Invoice $invoice`.",
-        "A missing record becomes a <b>404 before your controller runs</b>, so there is no null to handle.",
-        "`{invoice:number}` binds on another column; `getRouteKeyName()` makes that the default for the model.",
-        "A custom binding column must be <b>unique and indexed</b>, or you get wrong results and slow pages.",
-        "<b>`scopeBindings()`</b> resolves a child through its parent, so unrelated records 404 instead of rendering.",
-        "Scoping is not automatic when both parameters use ids, which is exactly the case that needs it.",
+        "A provider is your application's <b>startup configuration</b>: bindings, listeners, view composers, directives, macros, gates.",
+        "A provider is a setup class, not a working class. It arranges services, it does not do their work.",
+        "You manage only your own providers, in `bootstrap/providers.php`. Framework and package providers load themselves.",
+        "`php artisan make:provider NameServiceProvider` writes the file with both methods stubbed out.",
+        "A provider has exactly two methods, and Laravel calls them in two separate passes over all providers.",
+        "Pass one is every `register()`. Pass two is every `boot()`. Never one provider start to finish.",
+        "Almost every provider bug is something sitting in the wrong pass.",
       ],
       commonMistakes: [
-        "<b>Mismatching the parameter name and the type hint.</b> `{id}` with `Invoice $invoice` binds nothing and hands you an empty model, with no error to explain it.",
-        "<b>Calling `findOrFail` on a bound model.</b> The lookup already happened. Doing it again runs a second query for no reason.",
-        "<b>Binding on a column that is not unique.</b> Two matching rows means Laravel takes the first, and which one is anybody's guess.",
-        "<b>Binding on an unindexed column.</b> Every request now scans the table, and the slow page rarely gets blamed on routing.",
-        "<b>Assuming nested bindings check the relationship.</b> Without `scopeBindings()` they do not, and one invoice's payment renders happily under another.",
-        "<b>Treating scoped binding as authorization.</b> It proves the records are related, not that this user may see them.",
+        "<b>Making a provider for every class you write.</b> A plain concrete class needs no provider, because the container can already build it. Reach for one when there is a decision or some setup to record.",
+        "<b>Doing the actual work inside a provider.</b> Generating a report, sending mail or calling an API belongs in the service the provider registers.",
+        "<b>Trying to manage Laravel's own providers.</b> The database, cache and routing providers are the framework's business.",
+        "<b>Expecting `register()` and `boot()` to run back to back for your provider.</b> Every provider registers before any provider boots, which is the source of most surprises.",
       ],
       quiz: [
         {
-          question: "What two things must match for implicit binding to work?",
+          question: "Besides container bindings, what else does a provider set up?",
           options: [
-            "The route name and the controller name",
-            "The parameter name and the type-hinted class",
-            "The URL and the view name",
-            "The model and the migration",
+            "Database tables and seeders",
+            "Event listeners, view composers, Blade directives and gates",
+            "Route parameters",
+            "Composer dependencies",
           ],
           correctIndex: 1,
-          explanation: "`{invoice}` with `Invoice $invoice`. A mismatch binds nothing, silently.",
+          explanation: "A provider holds startup configuration, not just bindings.",
         },
         {
-          question: "What happens when a bound model is not found?",
+          question: "Which providers do you list yourself?",
           options: [
-            "You get null",
-            "Laravel returns a 404 before your controller runs",
-            "An empty model is created",
-            "The route is skipped",
+            "Every provider, including Laravel's",
+            "Only your application's providers",
+            "Only package providers",
+            "None, Laravel scans `app/Providers`",
           ],
           correctIndex: 1,
-          explanation: "Which is why bound methods need no null check.",
+          explanation: "Framework and modern package providers load themselves.",
         },
         {
-          question: "Why must a custom binding column be unique and indexed?",
+          question: "How does Laravel call the two provider methods?",
           options: [
-            "Laravel requires it",
-            "To enable caching",
-            "Non-unique silently picks the first match, and unindexed scans the table on every request",
-            "For migrations to run",
+            "One provider at a time, `register()` then `boot()`",
+            "`boot()` on all providers, then `register()` on all providers",
+            "Two passes: every `register()` first, then every `boot()`",
+            "Only `register()`, unless you enable booting",
           ],
           correctIndex: 2,
-          explanation: "Both failure modes are quiet, which is what makes them dangerous.",
+          explanation: "That two-pass order is what makes `boot()` safe and `register()` restricted.",
         },
         {
-          question: "What does `scopeBindings()` prevent?",
+          question: "Which of these does NOT belong in a service provider?",
           options: [
-            "Slow queries",
-            "Duplicate route names",
-            "Unauthenticated access",
-            "Loading a child record that belongs to a different parent",
+            "Binding an interface to an implementation",
+            "Registering a Blade directive",
+            "Generating a customer's monthly report",
+            "Registering an event listener",
           ],
-          correctIndex: 3,
-          explanation: "Without it, `/invoices/10/payments/50` renders even when payment 50 belongs elsewhere.",
+          correctIndex: 2,
+          explanation: "That is work. It belongs in a service the provider registers.",
         },
       ],
     },
     {
-      id: "fallbacks-and-tooling",
-      title: "Fallbacks, route:list and caching",
-      durationMinutes: 8,
-      explanation: "Three things that make working with a large route file bearable.\n\nA <b>fallback route</b> is the one that runs when nothing else matched, so you decide what a 404 looks like instead of taking Laravel's default. <b>Route caching</b> compiles every route into a single file, so the router stops re-reading your route files on each request.\n\n---\n\n### 1. Basic — catching what nothing matched\n\nWhen no route matches, Laravel returns its default 404. You can decide what happens instead:\n\n```php\nRoute::fallback(function () {\n    return response()->view('errors.404', [], 404);\n});\n```\n\nFor an API, JSON is more useful than an HTML page:\n\n```php\nRoute::fallback(function () {\n    return response()->json(['message' => 'Not Found'], 404);\n});\n```\n\n```text\nRequest\n   ↓\nroute matching\n   ├── match → controller\n   └── no match → fallback → your 404\n```\n\nTwo rules. The fallback must be defined <b>last</b>, because routes match top to bottom and a fallback declared early would swallow everything below it. And keep returning a real 404 status: a friendly page that returns 200 tells search engines the page exists.\n\n---\n\n### 2. Intermediate — seeing what you actually have\n\nOnce an application has a few hundred routes, reading the route file stops being a reliable way to know what exists. Ask Laravel:\n\n```bash\nphp artisan route:list\n```\n\n```text\nGET|HEAD   invoices                invoices.index    InvoiceController@index\nPOST       invoices                invoices.store    InvoiceController@store\nGET|HEAD   invoices/create         invoices.create   InvoiceController@create\nGET|HEAD   invoices/{invoice}      invoices.show     InvoiceController@show\nPUT|PATCH  invoices/{invoice}      invoices.update   InvoiceController@update\nDELETE     invoices/{invoice}      invoices.destroy  InvoiceController@destroy\n```\n\nThe filters are what make it usable:\n\n```bash\nphp artisan route:list --path=invoices     # only URLs containing \"invoices\"\nphp artisan route:list --name=invoices     # only routes whose name matches\nphp artisan route:list --method=POST       # only POST routes\nphp artisan route:list --except-vendor     # hide package routes\nphp artisan route:list -v                  # show middleware too\n```\n\nThis is the fastest way to answer three questions people usually guess at: is my route registered at all, what is its real name, and what middleware is actually on it. `-v` in particular settles a lot of \"why is this route public\" arguments.\n\n---\n\n### 3. Advanced — caching, and the closure trap\n\nIn production, Laravel can compile every route into a single file:\n\n```bash\nphp artisan route:cache\n```\n\nOn a large application this is a real speed-up, because Laravel loads one prepared file instead of executing every route definition on every request.\n\nThen the catch. <b>Closure routes cannot be cached.</b> Serialising a closure is not possible, so the command fails:\n\n```text\nLogicException: Unable to prepare route [/] for serialization.\nUses Closure.\n```\n\nWhich means this is fine in development and fatal at deploy time:\n\n```php\nRoute::get('/health', function () {\n    return 'ok';\n});\n```\n\nThe fix is to move it to a controller:\n\n```php\nRoute::get('/health', [HealthController::class, 'show']);\n```\n\nThis is the honest reason production applications put everything in controllers. Not purity, cacheability.\n\nTwo more things about caching that catch people out:\n\n```text\nRoutes changed but the app still serves the old ones\n    → the cache is stale. Run route:clear, or re-run route:cache.\n```\n\nCache in deployment, never in development. Otherwise every route edit appears to do nothing, and you lose twenty minutes before remembering why.\n\n```text\nDeploy\n  ↓\ninstall code\n  ↓\nphp artisan route:cache\nphp artisan config:cache\n  ↓\nserve\n```\n\n`php artisan optimize` runs the caching commands together, and `php artisan optimize:clear` undoes them all, which is the one to reach for when something inexplicable is being served.",
-      diagram: `Fallback catches what nothing matched
+      id: "register-and-boot",
+      title: "register() and boot() in depth",
+      durationMinutes: 13,
+      explanation: "This is the lesson that pays for the day.\n\n<b>`register()`</b> (the provider method where you only declare services with the container) and <b>`boot()`</b> (the provider method that runs after every provider has been registered) look interchangeable. They are not, and putting something in the wrong one produces a bug that comes and goes with no obvious cause.\n\nOne line to keep:\n\n```text\nregister()  →  REGISTER\nboot()      →  USE / CONFIGURE\n```\n\n---\n\n### 1. Basic — register() only declares\n\n`register()` exists for one purpose: putting things into the container.\n\n```php\npublic function register(): void\n{\n    $this->app->singleton(InvoiceTotals::class);\n\n    $this->app->bind(ExchangeRates::class, FixerExchangeRates::class);\n}\n```\n\nNotice what those two lines do not do. Nothing is called. Nothing is read. No other service is touched. You are writing rules the container will follow later, when somebody actually resolves something.\n\n```text\nregister()  →  writes the rule\nlater       →  someone resolves, and the rule is used\n```\n\nWhat `bind()`, `singleton()` and `scoped()` mean is Day 3's material, and the `PaymentGateway` binding you wrote there has exactly this shape. The only new fact is how strict the rule is about what else may appear beside them.\n\n---\n\n### 2. Intermediate — what must never go in register(), and why\n\n`register()` must not perform any action that depends on another service already being ready. So none of this:\n\n```php\npublic function register(): void\n{\n    $rate = DB::table('settings')->value('tax_rate');  // no\n    Mail::to($admin)->send(new Booted());              // no\n    Route::get('/health', fn () => 'ok');              // no\n    Event::listen(InvoicePaid::class, SendReceipt::class);  // no\n    config(['invoicing.gateway' => 'stripe']);         // no\n}\n```\n\nThe reason is timing, and it is worth being precise about it. While your `register()` runs, Laravel is part way down the provider list. Some providers have registered. Some have not. The database manager, the mailer, the router and the event dispatcher each arrive with their own provider, and you have no idea whether yours runs before or after them.\n\nSo the outcome depends on the order of a list you did not write:\n\n```text\nyour provider runs BEFORE the mail provider   →  it breaks\nyour provider runs AFTER  the mail provider   →  it works\n```\n\nThat is the worst kind of bug, because \"it works on my machine\" is technically true. Install a package, reorder the list, upgrade the framework, and the same code fails with an error that points at Laravel's internals rather than at your provider.\n\nThink of building a house:\n\n```text\nregister()  →  run the cable through the walls\n                 the power is not on yet.\n                 do not plug the kettle in to test it.\n\n     ↓  every provider finishes its wiring\n\nboot()      →  the power is on\n                 now switch things on and check them\n```\n\nYou would not plug an appliance into a socket while the electrician is still pulling cable through the wall. `register()` is the cable stage. So: <b>register services, do not use them.</b>\n\n---\n\n### 3. Advanced — why boot() has to exist\n\nNow the other side. `boot()` runs only after every provider in the application has been registered, so by then the container knows about everything.\n\n```text\nLaravel starts\n     ↓\nProvider A register()  →  Provider B register()  →  Provider C register()\n     ↓\nall services registered\n     ↓\nProvider A boot()      →  Provider B boot()      →  Provider C boot()\n     ↓\napplication ready\n```\n\nRead that diagram with a question in mind: suppose Provider B needs something Provider A registers.\n\n```text\nduring register()\n  B runs after  A  →  it exists      ✓\n  B runs before A  →  it does not    ✗\n  and you do not control which\n\nduring boot()\n  pass 1 finished for everybody\n  before pass 2 started for anybody   ✓ always\n```\n\nThat is the entire reason `boot()` exists. It is not a second place to write bindings, and it is not a constructor. It is the phase where you are finally allowed to assume the rest of the application is there.\n\nWhich also explains the mirror-image mistake. Bindings in `boot()` usually seem fine, because most resolution happens later, during a request. But anything resolved during another provider's `register()` or early `boot()` will not see your binding, and you get the same intermittent failure from the opposite direction.\n\n```text\nbindings in boot()      →  works until something resolves early\nusing services in       →  works until the order changes\n  register()\n```\n\nBoth failures are the same mistake: assuming an order that is not guaranteed. Put declarations in `register()`, put everything else in `boot()`, and the order stops mattering.",
+      diagram: `Two passes, and why the order is the whole point
 
-  Request
-     ↓
-  route matching, top to bottom
-     ├── match found → controller
-     └── nothing matched
-              ↓
-          fallback        ← must be defined LAST
-              ↓
-     your 404 page, with a real 404 status
+Laravel starts
+      │
+      ↓
+┌──────────────────────────────────────────────┐
+│ PASS 1   every provider's register()         │
+│                                              │
+│   Provider A register()                      │
+│   Provider B register()                      │
+│   Provider C register()                      │
+│                                              │
+│   declarations only.                         │
+│   nothing may be USED here, because the      │
+│   provider you need may not have run yet.    │
+└───────────────────────┬──────────────────────┘
+                        ↓
+          all services now registered
+                        ↓
+┌──────────────────────────────────────────────┐
+│ PASS 2   every provider's boot()             │
+│                                              │
+│   Provider A boot()                          │
+│   Provider B boot()                          │
+│   Provider C boot()                          │
+│                                              │
+│   safe to use anything at all.               │
+└───────────────────────┬──────────────────────┘
+                        ↓
+                application ready
 
 
-route:list answers what guessing cannot
+THE BUG THIS PREVENTS
 
-  is it registered?     route:list --path=invoices
-  what is it named?     route:list --name=invoices
-  what guards it?       route:list -v
+  DB::table('settings') inside register()
+            │
+            ├── database provider already ran   →  works
+            └── database provider has not run   →  breaks
+                        ↑
+        decided by a list you did not write.
+        install a package and the answer changes.
 
 
-Caching, and the trap
+BUILDING A HOUSE
 
-  php artisan route:cache
-            ↓
-  ┌─────────────────────────┐
-  │ any closure routes?     │
-  └───────────┬─────────────┘
-        ┌─────┴─────┐
-        ↓           ↓
-       yes          no
-        ↓           ↓
-  LogicException   one compiled file,
-  "Uses Closure"   loaded fast
-        ↓
-  move it to a controller
+  register()   run the cable through the walls
+               power is off. plug nothing in.
 
-  Cache on deploy. Never in development,
-  or every route edit appears to do nothing.`,
+  boot()       power is on
+               switch things on and check them`,
       codeExample: {
-        title: "Fallback, and making routes cacheable",
+        title: "The same provider, wrong then right",
         code: `<?php
-// routes/web.php
 
-use App\\Http\\Controllers\\HealthController;
-use Illuminate\\Support\\Facades\\Route;
+namespace App\\Providers;
 
-// ... all your other routes ...
+use App\\Events\\InvoicePaid;
+use App\\Listeners\\SendReceipt;
+use App\\Services\\Invoicing\\ExchangeRates;
+use App\\Services\\Invoicing\\FixerExchangeRates;
+use App\\Services\\Invoicing\\InvoiceTotals;
+use Illuminate\\Support\\Facades\\DB;
+use Illuminate\\Support\\Facades\\Event;
+use Illuminate\\Support\\Facades\\View;
+use Illuminate\\Support\\ServiceProvider;
+
+class InvoiceServiceProvider extends ServiceProvider
+{
+    // ─────────── WRONG ───────────
+    public function register(): void
+    {
+        // The database provider may not have run yet. This works or
+        // explodes depending on the order of the provider list.
+        $rate = DB::table('settings')->value('tax_rate');
+
+        // Same problem: the event dispatcher might not be there yet.
+        Event::listen(InvoicePaid::class, SendReceipt::class);
+
+        $this->app->singleton(InvoiceTotals::class);
+    }
 
 
-// The fallback MUST come last. Routes match top to bottom,
-// so a fallback defined early swallows everything below it.
-Route::fallback(function () {
-    return response()->view('errors.404', [], 404);
-});
+    // ─────────── RIGHT ───────────
+    public function register(): void
+    {
+        // Declarations only. Nothing called, nothing read.
+        $this->app->singleton(InvoiceTotals::class);
 
-// For an API, JSON is more useful than an HTML page:
-// Route::fallback(fn () => response()->json(['message' => 'Not Found'], 404));
+        $this->app->bind(ExchangeRates::class, FixerExchangeRates::class);
+    }
 
+    public function boot(): void
+    {
+        // Every provider has registered, so the database, the event
+        // dispatcher and the view layer all exist now.
+        $rate = DB::table('settings')->value('tax_rate');
 
-// ---------- Cacheable vs not ----------
+        Event::listen(InvoicePaid::class, SendReceipt::class);
 
-// NOT cacheable. route:cache fails with:
-//   LogicException: Unable to prepare route [health] for serialization. Uses Closure.
-// Route::get('/health', function () {
-//     return 'ok';
-// });
+        View::composer('invoices.show', function ($view) {
+            $view->with('taxRate', config('invoicing.tax_rate'));
+        });
+    }
+}
 
-// Cacheable. This is the real reason production apps use controllers.
-Route::get('/health', [HealthController::class, 'show']);
-?>
-
-# ---------- Inspecting routes ----------
-php artisan route:list
-php artisan route:list --path=invoices      # URLs containing "invoices"
-php artisan route:list --name=invoices      # names matching
-php artisan route:list --method=POST        # one verb
-php artisan route:list --except-vendor      # hide package routes
-php artisan route:list -v                   # include middleware
-
-# ---------- Deployment ----------
-php artisan route:cache
-php artisan config:cache
-php artisan view:cache
-
-# All three at once
-php artisan optimize
-
-# Undo them all. Reach for this when something inexplicable is served.
-php artisan optimize:clear
-
-# Just the routes
-php artisan route:clear`,
+// And the mirror-image mistake, worth seeing once:
+//
+//   public function boot(): void
+//   {
+//       $this->app->bind(ExchangeRates::class, FixerExchangeRates::class);
+//   }
+//
+// Usually fine, because most resolving happens during a request. But
+// anything resolved earlier misses the binding entirely, and you get the
+// same intermittent failure from the other direction.`,
       },
       keyTakeaways: [
-        "<b>`Route::fallback`</b> decides what happens when nothing matches, and must be defined last.",
-        "Keep a real 404 status on your fallback; a friendly page returning 200 tells search engines it exists.",
-        "<b>`php artisan route:list`</b> is the reliable answer to what is registered, what it is named, and what guards it.",
-        "`--path`, `--name`, `--method` and `-v` are what make that output usable on a real application.",
-        "<b>`route:cache`</b> compiles routes into one file and is a genuine production speed-up.",
-        "<b>Closure routes cannot be cached.</b> `route:cache` fails outright, which is the practical reason to use controllers.",
-        "Cache on deploy, never in development, and reach for `optimize:clear` when stale caches are serving old behaviour.",
+        "`register()` is only for putting things into the container. Declarations, and nothing beside them.",
+        "Never call `DB`, `Mail`, `Route`, `Event` or `config([...])` from `register()`. The provider behind them may not have run yet.",
+        "Whether such a call works is decided by the order of the provider list, which is why the bug is intermittent.",
+        "`boot()` runs only after every provider has registered, so using other services there cannot fail on ordering.",
+        "House wiring: `register()` pulls the cable, `boot()` is when the power is on.",
+        "Writing bindings in `boot()` is the mirror mistake. Anything resolved early will not see them.",
+        "Both failures are the same error: assuming a provider order that Laravel never promised.",
       ],
       commonMistakes: [
-        "<b>Defining the fallback anywhere but last.</b> Routes match top to bottom, so an early fallback swallows every route below it.",
-        "<b>Returning a 200 from a custom 404 page.</b> Crawlers take you at your word and index a page that does not exist.",
-        "<b>Running `route:cache` in development.</b> Every route change then appears to do nothing until you clear it.",
-        "<b>Deploying with a closure route.</b> `route:cache` fails at deploy time, when you least want to be converting routes to controllers.",
-        "<b>Forgetting to re-cache after deploying route changes.</b> The old compiled file keeps being served.",
+        "<b>Doing application work in `register()`</b>, for example `DB::table('users')->get()`. It may pass today and fail after an unrelated package changes the order.",
+        "<b>Registering event listeners or view composers in `register()`.</b> Both reach into other services, so both belong in `boot()`.",
+        "<b>Writing bindings in `boot()`.</b> It often appears to work, right up to the first thing that resolves during startup.",
+        "<b>Assuming your provider runs before somebody else's.</b> If order matters to you, what you wanted was `boot()`.",
+        "<b>Treating `boot()` as a constructor.</b> It runs once while the application starts, not once per object and not per request handler.",
       ],
       quiz: [
         {
-          question: "Where must a fallback route be defined?",
+          question: "What belongs in `register()`?",
           options: [
-            "First, so it catches everything",
-            "Last, after every other route",
-            "In `api.php` only",
-            "Anywhere",
+            "Event listeners",
+            "Container bindings, and nothing beside them",
+            "Database queries",
+            "Route definitions",
           ],
           correctIndex: 1,
-          explanation: "Routes match top to bottom, so an early fallback swallows the rest.",
+          explanation: "It writes rules the container follows later. It never uses another service.",
         },
         {
-          question: "Why does `php artisan route:cache` fail on some applications?",
+          question: "Why is `DB::table(...)` inside `register()` dangerous rather than simply wrong?",
           options: [
-            "Too many routes",
-            "Duplicate route names",
-            "Missing config cache",
-            "Closure routes cannot be serialised",
+            "Queries are always slow at startup",
+            "It works or fails depending on the provider order, so the bug is intermittent",
+            "`register()` cannot return values",
+            "Laravel blocks all facades in providers",
           ],
-          correctIndex: 3,
-          explanation: "This is the practical reason production applications put handlers in controllers.",
+          correctIndex: 1,
+          explanation: "\"It works on my machine\" can be true, until a package reorders the list.",
         },
         {
-          question: "Which command shows the middleware on each route?",
+          question: "Provider B needs something Provider A registers. Where is that guaranteed to work?",
           options: [
-            "`route:list --path=x`",
-            "`route:cache`",
-            "`route:list -v`",
-            "`route:clear`",
+            "In B's `register()`",
+            "In A's `register()`",
+            "In B's `boot()`",
+            "Anywhere, Laravel sorts providers by dependency",
           ],
           correctIndex: 2,
-          explanation: "It settles most \"why is this route public\" questions immediately.",
+          explanation: "Pass one finished for every provider before pass two started for any of them.",
         },
         {
-          question: "You changed a route and the old behaviour is still served. What is likely?",
+          question: "What is the mirror-image mistake to using services in `register()`?",
           options: [
-            "A stale route cache; run `route:clear`",
-            "A syntax error",
-            "The wrong HTTP method",
-            "A missing controller",
+            "Putting bindings in `boot()`",
+            "Having an empty `boot()`",
+            "Listing a provider twice",
+            "Using a facade in a controller",
           ],
           correctIndex: 0,
-          explanation: "Caching in development is the usual cause of this particular confusion.",
+          explanation: "Anything resolved during startup will not see a binding written in `boot()`.",
+        },
+      ],
+    },
+    {
+      id: "inside-boot-and-deferred-providers",
+      title: "Inside boot(), and providers that wait",
+      durationMinutes: 10,
+      explanation: "Lesson 2 gave you the rule. This lesson is the list.\n\n<b>`boot()`</b> (the provider phase that runs once every provider has been registered) has a small set of real jobs, and knowing them tells you when you need a provider at all.\n\n---\n\n### 1. Basic — the five things boot() is really for\n\n<b>Event listeners.</b> Connecting something that happens to something that should follow:\n\n```php\nEvent::listen(InvoicePaid::class, SendReceipt::class);\n```\n\n<b>View composers.</b> A <b>view composer</b> (a callback that adds data to a view every time it renders) saves you passing the same variable from twenty places:\n\n```php\nView::composer('invoices.*', function ($view) {\n    $view->with('company', config('invoicing.company'));\n});\n```\n\n<b>Blade directives.</b> A <b>Blade directive</b> (a custom `@something` you can use in templates) is registered once here:\n\n```php\nBlade::directive('money', function ($amount) {\n    return \"<?php echo number_format({$amount}, 2); ?>\";\n});\n```\n\n<b>Macros.</b> A <b>macro</b> (a method added to an existing framework class from outside it) lets you extend classes you do not own:\n\n```php\nStr::macro('invoiceNumber', fn (int $id) => 'INV-' . str_pad($id, 4, '0', STR_PAD_LEFT));\n```\n\n<b>Authorization setup.</b> Gates and policies are declared here too:\n\n```php\nGate::define('view-invoice', fn ($user, $invoice) => $user->id === $invoice->owner_id);\n```\n\nOne thing every item on that list has in common: each reaches into a service somebody else registered. That is exactly why they cannot be done in pass one.\n\n```text\nregister()   put things in the container\nboot()       reach into what everyone put there\n```\n\n---\n\n### 2. Intermediate — the cost of always being loaded\n\nHere is the price of this arrangement. Every listed provider runs both passes on every single request, whether or not anything needs it.\n\nPicture an application with payments, PDF generation, analytics and image processing:\n\n```text\nrequest for the invoice list\n     ↓\npayments provider     loads   (not needed)\nPDF provider          loads   (not needed)\nanalytics provider    loads   (not needed)\nimage provider        loads   (not needed)\n     ↓\nrender a list of invoices\n```\n\nFor a binding, that is nothing worth worrying about. For a provider that reads a config file, builds a client or opens a connection, it is work nobody asked for, repeated on every request.\n\n---\n\n### 3. Advanced — deferred providers\n\nA <b>deferred provider</b> (a provider loaded only when one of its services is actually resolved) fixes that.\n\n```text\nNORMAL\napplication starts  →  provider loads  →  service registered\n                       every request, whether used or not\n\nDEFERRED\napplication starts  →  provider does NOT load\n                            ↓\n            something resolves PdfRenderer\n                            ↓\n            provider loads now, registers, done\n```\n\nTwo pieces make it work: implement `DeferrableProvider`, and declare what the provider provides so Laravel knows which resolution should wake it.\n\n```php\nclass PdfServiceProvider extends ServiceProvider implements DeferrableProvider\n{\n    public function register(): void\n    {\n        $this->app->singleton(PdfRenderer::class);\n    }\n\n    public function provides(): array\n    {\n        return [PdfRenderer::class];\n    }\n}\n```\n\nTwo conditions come with it. A deferred provider is for bindings only, because there is no meaningful boot phase for a provider that has not been loaded. And `provides()` must be complete: a service you forget to list will never resolve, since nothing tells Laravel to load the provider that binds it.\n\nLaravel leans on deferred providers heavily inside the framework, which is part of why a large framework starts as quickly as it does. In your own application you usually do not need them. Reach for one when a provider is genuinely expensive to set up and most requests never touch it. Correct first, deferred later.",
+      diagram: `What boot() is actually for
+
+  boot()
+    │
+    ├── Event::listen(...)        something happens → something follows
+    ├── View::composer(...)       data added to a view on every render
+    ├── Blade::directive(...)     your own @money in templates
+    ├── Str::macro(...)           a method bolted onto a framework class
+    └── Gate::define(...)         who is allowed to do what
+
+  every one of those reaches into a service
+  somebody ELSE registered.
+  that is why none of them can happen in pass one.
+
+
+NORMAL vs DEFERRED
+
+  request 1 ──→ provider loads ──→ PdfRenderer ready   (unused)
+  request 2 ──→ provider loads ──→ PdfRenderer ready   (unused)
+  request 3 ──→ provider loads ──→ PdfRenderer ready   (used)
+                    two loads wasted
+
+
+  request 1 ──→ nothing happens
+  request 2 ──→ nothing happens
+  request 3 ──→ resolves PdfRenderer
+                        │
+                        ↓
+                  provider loads now
+                        ↓
+                  binding registered
+
+
+  implements DeferrableProvider
+  provides()  →  [PdfRenderer::class]
+                     ↑
+        forget an entry here and that service
+        can never be resolved at all`,
+      codeExample: {
+        title: "A provider that boots properly, and one that waits",
+        code: `<?php
+
+namespace App\\Providers;
+
+use App\\Events\\InvoicePaid;
+use App\\Listeners\\SendReceipt;
+use Illuminate\\Support\\Facades\\Blade;
+use Illuminate\\Support\\Facades\\Event;
+use Illuminate\\Support\\Facades\\Gate;
+use Illuminate\\Support\\Facades\\View;
+use Illuminate\\Support\\Str;
+use Illuminate\\Support\\ServiceProvider;
+
+class InvoiceServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        // 1. React to something happening.
+        Event::listen(InvoicePaid::class, SendReceipt::class);
+
+        // 2. Share data with every invoice view, without passing it
+        //    from every controller method.
+        View::composer('invoices.*', function ($view) {
+            $view->with('company', config('invoicing.company'));
+        });
+
+        // 3. @money(4200) in any Blade template.
+        Blade::directive('money', function ($amount) {
+            return "<?php echo number_format({$amount}, 2); ?>";
+        });
+
+        // 4. Add a method to a framework class you do not own.
+        Str::macro('invoiceNumber', function (int $id) {
+            return 'INV-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT);
+        });
+
+        // 5. Who may see an invoice.
+        Gate::define('view-invoice', function ($user, $invoice) {
+            return $user->id === $invoice->owner_id;
+        });
+    }
+}
+
+
+// ---------- A deferred provider ----------
+namespace App\\Providers;
+
+use App\\Services\\Pdf\\PdfRenderer;
+use Illuminate\\Contracts\\Support\\DeferrableProvider;
+use Illuminate\\Support\\ServiceProvider;
+
+class PdfServiceProvider extends ServiceProvider implements DeferrableProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(PdfRenderer::class, function ($app) {
+            // Expensive setup that most requests never need.
+            return new PdfRenderer(config('pdf.binary_path'));
+        });
+    }
+
+    /**
+     * Laravel loads this provider only when one of these is resolved.
+     * Anything missing from this list can never be resolved at all.
+     */
+    public function provides(): array
+    {
+        return [PdfRenderer::class];
+    }
+}`,
+      },
+      keyTakeaways: [
+        "`boot()` has a short list of real jobs: event listeners, view composers, Blade directives, macros, authorization gates.",
+        "A <b>view composer</b> adds data to a view every time it renders, instead of passing it from every controller.",
+        "A <b>macro</b> adds a method to a framework class you do not own. A <b>Blade directive</b> adds your own `@something` to templates.",
+        "Everything on that list reaches into a service someone else registered, which is why none of it fits in `register()`.",
+        "Every listed provider runs on every request, needed or not.",
+        "A <b>deferred provider</b> loads only when one of its services is resolved, using `DeferrableProvider` plus `provides()`.",
+        "Deferred providers hold bindings only, and `provides()` must list every one of them.",
+      ],
+      commonMistakes: [
+        "<b>Registering the same event listener in two providers.</b> `boot()` runs once per application start, so the listener fires twice per event.",
+        "<b>Defining a Blade directive or macro on every request instead of in `boot()`.</b> Startup configuration belongs at startup, declared once.",
+        "<b>Deferring a provider but forgetting an entry in `provides()`.</b> That service will never resolve, because nothing tells Laravel to load the provider.",
+        "<b>Putting `boot()` work in a deferred provider.</b> There is no reliable boot phase for a provider that has not been loaded. Deferred means bindings only.",
+        "<b>Deferring everything for speed.</b> A binding that costs nothing to declare gains nothing from waiting, and you have made startup harder to follow.",
+      ],
+      quiz: [
+        {
+          question: "What is a view composer?",
+          options: [
+            "A Blade template that renders other templates",
+            "A callback that adds data to a view every time it renders",
+            "A controller that returns views",
+            "A macro on the View class",
+          ],
+          correctIndex: 1,
+          explanation: "Registered in `boot()`, so you stop passing the same variable from everywhere.",
+        },
+        {
+          question: "Why do listeners, composers, directives and gates all belong in `boot()`?",
+          options: [
+            "They are slower than bindings",
+            "Each one reaches into a service another provider registered",
+            "`register()` cannot contain closures",
+            "They only apply to web requests",
+          ],
+          correctIndex: 1,
+          explanation: "In pass one that service might not exist yet.",
+        },
+        {
+          question: "What is a deferred provider?",
+          options: [
+            "A provider that runs last in the list",
+            "A provider loaded only when one of its services is resolved",
+            "A provider with no `register()` method",
+            "A provider that runs after the response is sent",
+          ],
+          correctIndex: 1,
+          explanation: "It keeps expensive setup off requests that never touch the service.",
+        },
+        {
+          question: "You defer a provider and leave one binding out of `provides()`. What happens?",
+          options: [
+            "Laravel loads the provider anyway",
+            "That binding is registered twice",
+            "That service can never be resolved, because the provider is never loaded",
+            "The provider stops being deferred",
+          ],
+          correctIndex: 2,
+          explanation: "`provides()` is the only hint Laravel has about when to wake it.",
+        },
+      ],
+    },
+    {
+      id: "what-a-facade-is",
+      title: "What a facade is",
+      durationMinutes: 13,
+      explanation: "A <b>facade</b> (a static-looking interface that gives you access to an object managed by the service container) is why so much Laravel code reads as short as it does.\n\nYou write this:\n\n```php\nCache::get('user');\n```\n\ninstead of this:\n\n```php\n$cache = app(CacheManager::class);\n\n$cache->get('user');\n```\n\nSame work, one line.\n\n---\n\n### 1. Basic — the shortcut\n\nFacades are names you have already been typing:\n\n```php\nCache::get('user');\nLog::info('Invoice paid');\nDB::table('invoices')->get();\nStorage::put('invoice.pdf', $bytes);\n```\n\nEach one is a small class in `Illuminate\\Support\\Facades`, standing in front of a real service the container manages. The pattern never changes:\n\n```text\nFacade  →  Laravel service  →  the actual work\n```\n\nThe ones you will meet most:\n\n• `Cache::get()` and `Cache::put()`\n• `Log::info()`\n• `DB::table()`\n• `Mail::to()`\n• `Storage::put()`\n• `Http::get()`\n• `Queue::push()`\n• `Event::dispatch()`\n\n---\n\n### 2. Intermediate — how a static-looking call reaches an object\n\nHere is the part worth understanding, because it explains almost everything else about facades.\n\n<b>Facades are not static classes.</b> The `Cache` facade has no `get()` method at all. Look inside and you find one small method:\n\n```php\nclass Cache extends Facade\n{\n    protected static function getFacadeAccessor(): string\n    {\n        return 'cache';\n    }\n}\n```\n\nThat string is a container key. When you call `Cache::get('user')`, PHP finds no `get()` method, so it falls back to `__callStatic()` on the parent `Facade` class, which does three things: read the accessor, resolve that key from the container, then forward your call to the object it gets back.\n\n```text\nCache::get('user')\n      ↓\nno get() method here\n      ↓\n__callStatic() catches the call\n      ↓\ngetFacadeAccessor() says 'cache'\n      ↓\nthe container resolves 'cache'\n      ↓\nCacheManager instance  →  ->get('user')\n```\n\nSo the call looks static and is not. You are talking to an ordinary object, resolved from the container, through a very short piece of syntax. `Log::info('Invoice paid')` takes the same journey to the logger service.\n\nThis is why \"facades are just static helpers\" causes trouble as a mental model. Everything a facade touches is container-managed, which is exactly what makes the next two lessons possible: you can change what sits behind a facade, and you can replace it in a test.\n\n---\n\n### 3. Advanced — a facade for your own service\n\nNone of this is reserved for the framework. Take a service of your own:\n\n```php\nnamespace App\\Services;\n\nclass NotificationService\n{\n    public function send(string $message): void\n    {\n        // ...\n    }\n}\n```\n\nRegister it in a provider, the way you did in lesson 2:\n\n```php\npublic function register(): void\n{\n    $this->app->singleton(NotificationService::class);\n}\n```\n\nThen write a facade whose accessor is that container key:\n\n```php\nnamespace App\\Facades;\n\nuse Illuminate\\Support\\Facades\\Facade;\n\nclass Notification extends Facade\n{\n    protected static function getFacadeAccessor(): string\n    {\n        return \\App\\Services\\NotificationService::class;\n    }\n}\n```\n\nAnd now:\n\n```php\nNotification::send('Invoice INV-0001 is paid');\n```\n\nThe pieces line up like this:\n\n```text\nProvider  register()  →  Container  →  NotificationService\n                                            ↑        ↑\n                                     injection    facade\n```\n\nTwo doors into the same object. Choosing between them is the next lesson.",
+      diagram: `Cache::get('user') step by step
+
+  Your code
+      │  Cache::get('user')             looks like a static call
+      ↓
+  ┌────────────────────────────────────┐
+  │  Cache facade                      │
+  │                                    │
+  │  has no get() method of its own    │
+  │  __callStatic() catches the call   │
+  │  getFacadeAccessor() returns the   │
+  │  container key: 'cache'            │
+  └─────────────────┬──────────────────┘
+                    │  resolve 'cache'
+                    ↓
+  ┌────────────────────────────────────┐
+  │  Service Container                 │
+  └─────────────────┬──────────────────┘
+                    │  hands back a real object
+                    ↓
+  ┌────────────────────────────────────┐
+  │  CacheManager instance             │
+  │  ->get('user')                     │
+  └─────────────────┬──────────────────┘
+                    ↓
+                the value
+
+
+The pattern never changes
+
+  Log::info()      →  logger service      →  writes a line
+  DB::table()      →  database manager    →  runs a query
+  Storage::put()   →  filesystem          →  saves a file
+  Http::get()      →  HTTP client         →  calls an API
+  Queue::push()    →  queue manager       →  queues a job
+
+
+Your own service, two doors in
+
+  Provider register()
+          ↓
+     Container
+          ↓
+  NotificationService
+       ↑       ↑
+  injection  facade`,
+      codeExample: {
+        title: "A facade for your own service",
+        code: `<?php
+
+// ---------- 1. The service ----------
+namespace App\\Services;
+
+class NotificationService
+{
+    public function send(string $message): void
+    {
+        // Real work lives here, not in the facade.
+    }
+}
+
+
+// ---------- 2. Register it in a provider ----------
+namespace App\\Providers;
+
+use App\\Services\\NotificationService;
+use Illuminate\\Support\\ServiceProvider;
+
+class NotificationServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(NotificationService::class);
+    }
+}
+
+// ...then add it to bootstrap/providers.php:
+//   App\\Providers\\NotificationServiceProvider::class,
+
+
+// ---------- 3. The facade ----------
+namespace App\\Facades;
+
+use Illuminate\\Support\\Facades\\Facade;
+
+class Notification extends Facade
+{
+    /** The container key every call is forwarded to. */
+    protected static function getFacadeAccessor(): string
+    {
+        return \\App\\Services\\NotificationService::class;
+    }
+}
+
+
+// ---------- 4. Two ways to use the same object ----------
+
+// Facade
+use App\\Facades\\Notification;
+
+Notification::send('Invoice INV-0001 is paid');
+
+
+// Injection
+use App\\Services\\NotificationService;
+
+class InvoiceController extends Controller
+{
+    public function __construct(
+        private NotificationService $notifications
+    ) {}
+
+    public function pay()
+    {
+        $this->notifications->send('Invoice INV-0001 is paid');
+    }
+}`,
+      },
+      keyTakeaways: [
+        "A <b>facade</b> is a static-looking interface to an object the service container manages.",
+        "Facades are not static classes. `Cache` has no `get()` method of its own.",
+        "`__callStatic()` catches the call, `getFacadeAccessor()` names a container key, and the call is forwarded to the resolved object.",
+        "The shape is always <b>facade → Laravel service → actual work</b>.",
+        "`Cache`, `Log`, `DB`, `Mail`, `Storage`, `Http`, `Queue` and `Event` are the ones you will meet most.",
+        "You can write a facade for your own service: register the service in a provider, then return that container key from `getFacadeAccessor()`.",
+        "Because everything behind a facade is container-managed, it can be changed or replaced without touching the calling code.",
+      ],
+      commonMistakes: [
+        "<b>Thinking facades are ordinary static classes.</b> `Cache::get()` forwards to a container-managed object. Read it as an instance call in disguise.",
+        "<b>Putting logic inside the facade class.</b> A facade should contain `getFacadeAccessor()` and nothing else. Behaviour belongs in the service.",
+        "<b>Writing a facade for a service that is not registered.</b> The accessor is a container key, so an unregistered service means the facade resolves nothing.",
+        "<b>Confusing `App\\Facades\\Notification` with `Illuminate\\Support\\Facades\\Notification`.</b> Two different classes with the same short name. Check the `use` line when calls go somewhere unexpected.",
+        "<b>Calling a facade inside a provider's `register()`.</b> It resolves from the container, and in pass one the service behind it may not be there yet.",
+      ],
+      quiz: [
+        {
+          question: "What is a facade?",
+          options: [
+            "A static utility class with all its logic inside",
+            "A static-looking interface to an object managed by the container",
+            "A Blade template helper",
+            "A kind of middleware",
+          ],
+          correctIndex: 1,
+          explanation: "It forwards your call to a real instance resolved from the container.",
+        },
+        {
+          question: "What does `getFacadeAccessor()` return?",
+          options: [
+            "The method to call",
+            "An HTML string",
+            "A container key naming the service behind the facade",
+            "The facade's own class name",
+          ],
+          correctIndex: 2,
+          explanation: "The facade resolves that key and forwards the call to whatever comes back.",
+        },
+        {
+          question: "Why does `Cache::get('user')` work when `Cache` has no `get()` method?",
+          options: [
+            "PHP creates it automatically",
+            "`__callStatic()` catches the call and forwards it to the resolved service",
+            "Laravel compiles the facade into a real class",
+            "`get()` is inherited from `Facade`",
+          ],
+          correctIndex: 1,
+          explanation: "That is the whole mechanism: catch, resolve, forward.",
+        },
+        {
+          question: "To give your own service a facade, what has to be true?",
+          options: [
+            "The service must be registered in the container",
+            "The service must extend `Facade`",
+            "The service must be bound in `boot()`",
+            "The service must live in `app/Facades`",
+          ],
+          correctIndex: 0,
+          explanation: "The accessor is a container key, so the container must know how to build it.",
+        },
+      ],
+    },
+    {
+      id: "facades-injection-helpers",
+      title: "Facades, injection and helpers",
+      durationMinutes: 12,
+      explanation: "Three routes now lead to the same object, and you have met two of them.\n\nA <b>helper function</b> (a plain global function Laravel defines for convenience, such as `config()`, `route()`, `app()`, `response()` or `now()`) is the third, alongside the facade and the injected dependency. Helpers are a different mechanism from facades, not a kind of facade.\n\n```text\nFacade      Cache::get('user')      static-looking access to a service\nHelper      config('app.name')      a convenient global function\nInjection   $this->cache->get()     an explicit, declared dependency\n```\n\n---\n\n### 1. Basic — facade or injection\n\nThe same controller, both ways. With a facade:\n\n```php\nuse Illuminate\\Support\\Facades\\Cache;\n\nclass UserController extends Controller\n{\n    public function show()\n    {\n        return Cache::get('user');\n    }\n}\n```\n\nWith injection, which is Day 3's material:\n\n```php\nuse Illuminate\\Contracts\\Cache\\Repository;\n\nclass UserController extends Controller\n{\n    public function __construct(\n        private Repository $cache\n    ) {}\n\n    public function show()\n    {\n        return $this->cache->get('user');\n    }\n}\n```\n\nBoth reach the same cache. What differs is what a reader can see.\n\nFacades are short, easy to read and idiomatic Laravel. Injection makes the dependency explicit: the constructor lists everything the class needs, which matters for a class you will reuse, test in isolation, or point at an interface.\n\nA workable rule: <b>use a facade when it keeps ordinary Laravel code simple, and use injection when you want a class's dependencies to be visible.</b> A one-line `Log::info()` in a controller is a facade. A service a whole feature depends on gets injected.\n\n---\n\n### 2. Intermediate — helpers, and the three side by side\n\nHelpers are ordinary functions, available everywhere:\n\n```php\nconfig('invoicing.gateway');\nroute('invoices.show', ['number' => 'INV-0001']);\nnow()->addDays(30);\napp(InvoiceTotals::class);\nresponse()->json(['ok' => true]);\n```\n\nCompare two ways of reaching the cache:\n\n```php\n// helper, resolving by hand\n$cache = app('cache');\n$value = $cache->get('user');\n\n// facade\n$value = Cache::get('user');\n```\n\nThe facade is plainly cleaner, and that is a large part of why Laravel code feels expressive.\n\nOne caution on `app()`. Resolving out of the container by hand is convenient, and it hides the dependency completely, from readers and from tests. Treat `app()` as a tool for places that cannot use injection, not as a habit inside your own classes.\n\n```text\n                    reads short   dependency visible   easy to replace\nFacade                  yes             no                  yes\nHelper app()            yes             no                  no\nInjection               no              yes                 yes\n```\n\n---\n\n### 3. Advanced — real-time facades\n\nA <b>real-time facade</b> (a way to call your own class with facade syntax, without writing a facade class) removes the third step from the last lesson.\n\nTake a plain service:\n\n```php\nnamespace App\\Services;\n\nclass Podcast\n{\n    public function publish(): void\n    {\n        // ...\n    }\n}\n```\n\nImport it with a `Facades\\` prefix and call it statically:\n\n```php\nuse Facades\\App\\Services\\Podcast;\n\nPodcast::publish();\n```\n\nNote the prefix. There is no `Facades\\App\\Services` directory and no `PodcastFacade.php`. Laravel sees the prefix and generates the facade behaviour at runtime, resolving `App\\Services\\Podcast` from the container.\n\n```text\nFacades\\App\\Services\\Podcast::publish()\n            ↓\nLaravel sees the Facades\\ prefix\n            ↓\nresolves App\\Services\\Podcast from the container\n            ↓\n->publish()\n```\n\nUseful, and easy to overuse. Facade syntax hides your application's own dependencies just as effectively as it hides the framework's, and your own services are the ones a reader most needs to see. For most application code, ordinary injection is clearer:\n\n```php\nclass PodcastController extends Controller\n{\n    public function __construct(\n        private Podcast $podcast\n    ) {}\n}\n```\n\nThe honest use for a real-time facade is a class buried somewhere injection cannot reach, or making an existing static-feeling call replaceable in a test. Do not turn every service into one.",
+      diagram: `Three doors, one object
+
+                    ┌─────────────────────┐
+                    │  Service Container  │
+                    └──────────┬──────────┘
+                               ↓
+                    ┌─────────────────────┐
+                    │  CacheManager       │
+                    └──────────┬──────────┘
+              ┌────────────────┼────────────────┐
+              ↑                ↑                ↑
+      Cache::get('user')  app('cache')   $this->cache->get()
+         FACADE              HELPER          INJECTION
+      short, idiomatic    convenient,    explicit, listed
+      dependency hidden   hides the      in the constructor
+                          dependency
+
+
+WHEN TO REACH FOR WHICH
+
+  one-off framework call in a controller   →  facade
+    Log::info(), Cache::get(), DB::table()
+
+  a service the class genuinely depends on →  injection
+    InvoiceTotals, PaymentGateway
+
+  config, routes, dates, responses         →  helper
+    config(), route(), now(), response()
+
+  resolving by hand inside your own class  →  usually a smell
+    app(Something::class)
+
+
+REAL-TIME FACADE
+
+  use Facades\\App\\Services\\Podcast;
+  Podcast::publish();
+            ↓
+  the Facades\\ prefix is the whole trick.
+  no facade class is written. Laravel generates it at runtime.
+  handy, and easy to overuse.`,
+      codeExample: {
+        title: "The same job three ways, plus a real-time facade",
+        code: `<?php
+
+// ---------- Facade: short, idiomatic, dependency hidden ----------
+namespace App\\Http\\Controllers;
+
+use Illuminate\\Support\\Facades\\Cache;
+use Illuminate\\Support\\Facades\\Log;
+
+class InvoiceController extends Controller
+{
+    public function show(string $number)
+    {
+        Log::info('Invoice viewed', ['number' => $number]);
+
+        return Cache::get("invoice.{$number}");
+    }
+}
+
+
+// ---------- Injection: explicit, testable, reusable ----------
+use App\\Services\\Invoicing\\InvoiceTotals;
+use Illuminate\\Contracts\\Cache\\Repository;
+
+class InvoiceTotalsController extends Controller
+{
+    // A reader sees everything this class needs, in one place.
+    public function __construct(
+        private InvoiceTotals $totals,
+        private Repository $cache,
+    ) {}
+
+    public function show(string $number)
+    {
+        return $this->cache->remember(
+            "totals.{$number}",
+            60,
+            fn () => $this->totals->for($number),
+        );
+    }
+}
+
+
+// ---------- Helpers: convenient globals ----------
+$gateway = config('invoicing.gateway');
+$url     = route('invoices.show', ['number' => 'INV-0001']);
+$due     = now()->addDays(30);
+
+// Works, but hides the dependency from readers and tests.
+// Prefer injection inside your own classes.
+$totals = app(InvoiceTotals::class);
+
+
+// ---------- Real-time facade: no facade class written ----------
+namespace App\\Services;
+
+class Podcast
+{
+    public function publish(): void
+    {
+        // ...
+    }
+}
+
+// Elsewhere. Note the Facades\\ prefix on the import.
+use Facades\\App\\Services\\Podcast;
+
+Podcast::publish();
+
+// Laravel generates the facade behaviour at runtime and resolves
+// App\\Services\\Podcast from the container. Convenient, but it hides
+// your own dependencies, so do not make it the default.`,
+      },
+      keyTakeaways: [
+        "Facade, helper and injection all reach the same container-managed object through different syntax.",
+        "Facades win on brevity and read as idiomatic Laravel. Injection wins on making dependencies explicit.",
+        "Rule of thumb: facade for a one-off framework call, injection for a service the class truly depends on.",
+        "<b>Helper functions</b> like `config()`, `route()`, `now()` and `response()` are plain globals, a different mechanism from facades.",
+        "`app(Something::class)` inside your own class hides the dependency. Prefer a constructor parameter.",
+        "A <b>real-time facade</b> gives facade syntax to your own class through the `Facades\\` import prefix, with no facade class written.",
+        "Do not turn every service into a real-time facade. Your own dependencies are the ones a reader most needs to see.",
+      ],
+      commonMistakes: [
+        "<b>Treating the choice as a style war.</b> Both are correct Laravel. Judge each case on whether the reader needs to see that dependency.",
+        "<b>Reaching for `app()` all over a class.</b> The class now has hidden dependencies that no constructor and no test can see.",
+        "<b>Injecting a concrete framework class instead of its contract.</b> Type-hint `Illuminate\\Contracts\\Cache\\Repository`, not a specific manager, so it stays swappable.",
+        "<b>Making a real-time facade out of every service.</b> Facade syntax hides your application's own wiring, which is where clarity matters most.",
+        "<b>Forgetting the `Facades\\` prefix on a real-time facade import.</b> Without it PHP looks for real static methods on your class and the call fails.",
+      ],
+      quiz: [
+        {
+          question: "What is a helper function in Laravel?",
+          options: [
+            "A method on a facade",
+            "A plain global function such as `config()` or `route()`",
+            "A trait added to controllers",
+            "A container binding",
+          ],
+          correctIndex: 1,
+          explanation: "Helpers are a separate mechanism from facades, not a kind of facade.",
+        },
+        {
+          question: "What is the main advantage of injection over a facade?",
+          options: [
+            "It runs faster",
+            "It avoids the container",
+            "The class's dependencies are explicit and visible in one place",
+            "It works without a provider",
+          ],
+          correctIndex: 2,
+          explanation: "That visibility is what makes a class easy to read, reuse and test.",
+        },
+        {
+          question: "What marks a real-time facade?",
+          options: [
+            "A `RealTime` attribute on the class",
+            "The `Facades\\` prefix on the import",
+            "Extending `Facade` in your service",
+            "Listing it in `bootstrap/providers.php`",
+          ],
+          correctIndex: 1,
+          explanation: "Laravel sees the prefix and generates the facade behaviour at runtime.",
+        },
+        {
+          question: "Why is `app(InvoiceTotals::class)` inside a class usually worse than injecting it?",
+          options: [
+            "It is deprecated",
+            "It bypasses the provider",
+            "It hides the dependency from readers and from tests",
+            "It creates a new container",
+          ],
+          correctIndex: 2,
+          explanation: "Nothing in the constructor tells anyone the class needs it.",
+        },
+      ],
+    },
+    {
+      id: "testing-with-fakes",
+      title: "Testing with fakes",
+      durationMinutes: 9,
+      explanation: "Now the payoff for everything above.\n\nA <b>fake</b> (a stand-in that records what your code asked for instead of actually doing it) is what `Mail::fake()` slides in behind the mail facade for the length of a test.\n\n```php\nMail::fake();\n\n$this->post('/register');\n\nMail::assertSent(WelcomeMail::class);\n```\n\nNo email left the machine, and you still proved the code tried to send one.\n\n---\n\n### 1. Basic — why this is possible at all\n\nRemember what a facade really is. `Mail::to(...)` does not do the sending. It resolves the mail service from the container and forwards the call. So there is a swap point, and `Mail::fake()` uses it: it replaces the container binding with a recording object.\n\n```text\nREAL\nController  →  Mail facade  →  real mail system  →  an email leaves\n\nTEST\nMail::fake()\n     ↓ rebinds the container\nController  →  Mail facade  →  fake mail system  →  nothing sent,\n                                                    everything recorded\n```\n\nDay 3 showed you the manual version: bind a fake implementation and the class under test never notices. A facade fake is the same idea in one line, handed to you by the framework.\n\nNotice what you are testing. Not \"did an email arrive\", which is not your application's job, but \"did my code ask for the right email to be sent\". That is the behaviour you actually own.\n\n---\n\n### 2. Intermediate — the assertions\n\nCalling `fake()` is half of it. The other half is asking what was recorded.\n\n```php\nMail::fake();\n\n$this->post('/invoices/INV-0001/pay');\n\nMail::assertSent(PaymentReceipt::class);\nMail::assertNotSent(PaymentFailed::class);\nMail::assertSentCount(1);\n```\n\nNotifications work the same way:\n\n```php\nNotification::fake();\n\n$this->post('/register');\n\nNotification::assertSentTo($user, WelcomeNotification::class);\nNotification::assertNothingSent();\n```\n\nMost assertions also take a closure, so you can check the contents rather than only the class:\n\n```php\nMail::assertSent(PaymentReceipt::class, function ($mail) {\n    return $mail->invoiceNumber === 'INV-0001';\n});\n```\n\nThe negative assertions matter as much as the positive ones. \"No receipt is sent when payment fails\" is a rule worth locking down, and `assertNotSent()` is how you say it.\n\n---\n\n### 3. Advanced — the family, and where fakes stop\n\nThe same trick runs across the framework:\n\n• `Mail::fake()` with `assertSent`, `assertNotSent`, `assertQueued`\n• `Notification::fake()` with `assertSentTo`, `assertNothingSent`\n• `Queue::fake()` with `assertPushed`, so jobs are recorded instead of dispatched\n• `Bus::fake()` for dispatched commands and batches\n• `Event::fake()` with `assertDispatched`\n• `Storage::fake('invoices')` for a throwaway disk\n• `Http::fake()` for stubbed outbound API responses\n\nThe reason to care is not tidiness. Without fakes, a test suite either sends real email, queues real jobs and calls real APIs, or you write your code so those calls can be switched off by hand, which is worse. Fakes give you tests that are fast, repeatable and safe to run a hundred times a day.\n\nTwo limits worth knowing. A fake replaces the service, so nothing downstream of it runs. If your mailable's `build()` method has a bug, `assertSent()` will not find it, and a test that renders the mailable will. And `Event::fake()` in particular silences every listener, including ones the rest of the test relies on, so prefer faking only the specific events you are asserting on.\n\n```text\nfake()      →  swap the service in the container\nact         →  hit the route or call the code\nassert*()   →  ask what the fake recorded\n```\n\nThat is the shape of most Laravel feature tests, and it exists because facades resolve through the container instead of doing the work themselves.",
+      diagram: `Why a fake can slot in at all
+
+REAL RUN
+  Controller
+      │  Mail::to($user)->send(new PaymentReceipt())
+      ↓
+  Mail facade
+      │  resolve 'mailer' from the container
+      ↓
+  real mail system  ──→  SMTP  ──→  an email arrives
+
+
+UNDER TEST
+  Mail::fake()
+      │  rebinds 'mailer' in the container
+      ↓
+  Controller
+      │  the exact same line of code
+      ↓
+  Mail facade
+      │  resolve 'mailer' from the container
+      ↓
+  fake mailer
+      │  records the call, sends nothing
+      ↓
+  Mail::assertSent(PaymentReceipt::class)   ✓
+
+
+THE SHAPE OF THE TEST
+
+  fake()      swap the service
+     ↓
+  act         post to the route
+     ↓
+  assert*()   ask the fake what it recorded
+
+
+AVAILABLE FAKES
+
+  Mail    Notification    Queue    Bus
+  Event   Storage         Http`,
+      codeExample: {
+        title: "A feature test built on fakes",
+        code: `<?php
+
+namespace Tests\\Feature;
+
+use App\\Jobs\\GenerateInvoicePdf;
+use App\\Mail\\PaymentFailed;
+use App\\Mail\\PaymentReceipt;
+use App\\Notifications\\InvoicePaid;
+use Illuminate\\Support\\Facades\\Mail;
+use Illuminate\\Support\\Facades\\Notification;
+use Illuminate\\Support\\Facades\\Queue;
+use Tests\\TestCase;
+
+class PayInvoiceTest extends TestCase
+{
+    public function test_paying_an_invoice_sends_a_receipt(): void
+    {
+        // 1. Swap the real services for recorders.
+        Mail::fake();
+        Notification::fake();
+        Queue::fake();
+
+        // 2. Act. The controller code is completely unchanged.
+        $response = $this->post('/invoices/INV-0001/pay');
+
+        $response->assertRedirect('/invoices/INV-0001');
+
+        // 3. Ask what was recorded.
+        Mail::assertSent(PaymentReceipt::class, function ($mail) {
+            return $mail->invoiceNumber === 'INV-0001';
+        });
+
+        Mail::assertSentCount(1);
+
+        Notification::assertSentTo(
+            $this->accountsUser(),
+            InvoicePaid::class
+        );
+
+        Queue::assertPushed(GenerateInvoicePdf::class);
+    }
+
+    public function test_a_failed_payment_sends_no_receipt(): void
+    {
+        Mail::fake();
+
+        $this->post('/invoices/INV-9999/pay')
+            ->assertSessionHasErrors();
+
+        // The negative assertion is the rule worth locking down.
+        Mail::assertNotSent(PaymentReceipt::class);
+        Mail::assertSent(PaymentFailed::class);
+    }
+}
+
+// Nothing left the machine. No SMTP, no queue worker, no API call.
+// This works only because the facade resolves through the container,
+// which is the whole reason the swap is possible.`,
+      },
+      keyTakeaways: [
+        "A <b>fake</b> replaces a service with an object that records calls instead of performing them.",
+        "`Mail::fake()` works because the facade resolves from the container, so the binding can be swapped.",
+        "The shape is always the same: `fake()`, act, then `assert*()`.",
+        "`assertSent`, `assertNotSent`, `assertSentCount` and `assertSentTo` are the ones you will use most.",
+        "Most assertions take a closure, so you can check the contents of the mail or notification, not just its class.",
+        "`Queue`, `Bus`, `Event`, `Storage` and `Http` all offer the same kind of fake.",
+        "You are testing that your code asked for the right thing, not that an email physically arrived.",
+      ],
+      commonMistakes: [
+        "<b>Calling `fake()` after the action.</b> The swap has to happen before the code runs, or the real service has already done the work.",
+        "<b>Asserting only the positive case.</b> \"No receipt when payment fails\" matters just as much, and `assertNotSent()` is how you state it.",
+        "<b>Believing a passing `assertSent()` means the email is correct.</b> The fake never rendered it. Add a test that builds the mailable if the content matters.",
+        "<b>Reaching for `Event::fake()` broadly.</b> It silences every listener, including ones the rest of the test depends on. Fake only the events you assert on.",
+        "<b>Sending real email from the test suite because the code called `new Mailer()` directly.</b> Nothing created outside the container can be faked, which is the practical argument for everything taught today.",
+      ],
+      quiz: [
+        {
+          question: "Why can `Mail::fake()` replace the mail system?",
+          options: [
+            "It rewrites the facade class",
+            "The facade resolves from the container, so the binding can be swapped",
+            "It edits your `.env` file",
+            "It patches SMTP at the network level",
+          ],
+          correctIndex: 1,
+          explanation: "Everything behind a facade is container-managed, which is what makes the swap possible.",
+        },
+        {
+          question: "What does `Mail::assertSent(PaymentReceipt::class)` prove?",
+          options: [
+            "An email reached the inbox",
+            "SMTP is configured correctly",
+            "Your code asked for that mail to be sent",
+            "The mailable renders without errors",
+          ],
+          correctIndex: 2,
+          explanation: "The fake records intent. It never renders or delivers anything.",
+        },
+        {
+          question: "Where must `Notification::fake()` be called?",
+          options: [
+            "Before the code under test runs",
+            "After the assertions",
+            "Inside the controller",
+            "In `bootstrap/providers.php`",
+          ],
+          correctIndex: 0,
+          explanation: "The swap has to be in place before anything resolves the real service.",
+        },
+        {
+          question: "Which of these has no facade fake of its own?",
+          options: [
+            "`Queue`",
+            "`Storage`",
+            "`Http`",
+            "A service you built with `new` inside a controller",
+          ],
+          correctIndex: 3,
+          explanation: "Anything created outside the container cannot be swapped or faked.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What three things does a route connect?",
+      question: "How does Laravel run your providers?",
       options: [
-        "A model, a view and a controller",
-        "An HTTP method, a URL and a handler",
-        "A request, a session and a response",
-        "A prefix, a name and a group",
+        "One provider fully at a time, `register()` then `boot()`",
+        "Two passes: every `register()` first, then every `boot()`",
+        "`boot()` first, then `register()` on demand",
+        "In alphabetical order, both methods together",
       ],
       correctIndex: 1,
-      explanation: "Everything else in routing is convenience on top of those three.",
+      explanation: "That two-pass order is what makes `boot()` safe and `register()` restricted.",
     },
     {
-      question: "What is the practical difference between `web.php` and `api.php`?",
+      question: "Which of these must NOT go in `register()`?",
       options: [
-        "Different middleware: sessions and CSRF versus stateless token auth",
-        "`api.php` is faster",
-        "`web.php` cannot return JSON",
-        "None",
-      ],
-      correctIndex: 0,
-      explanation: "`api.php` is also prefixed with `/api` automatically.",
-    },
-    {
-      question: "Which HTTP method must never change data?",
-      options: [
-        "GET",
-        "DELETE",
-        "POST",
-        "PATCH",
-      ],
-      correctIndex: 0,
-      explanation: "Crawlers fetch URLs unprompted, so a destructive GET route will eventually fire on its own.",
-    },
-    {
-      question: "What is the difference between PUT and PATCH?",
-      options: [
-        "PUT is for APIs only",
-        "PUT replaces the whole resource; PATCH changes only what you send",
-        "PATCH is faster",
-        "They are the same",
-      ],
-      correctIndex: 1,
-      explanation: "Fields omitted from a PUT are meant to be wiped.",
-    },
-    {
-      question: "Why does an HTML form need `@method('DELETE')`?",
-      options: [
-        "For CSRF protection",
-        "Because forms can only send GET and POST",
-        "To speed up the request",
-        "To name the route",
-      ],
-      correctIndex: 1,
-      explanation: "Laravel reads the hidden `_method` field and routes it accordingly.",
-    },
-    {
-      question: "How are route parameters passed to your handler?",
-      options: [
-        "Matched by name",
-        "Alphabetically",
-        "As an array",
-        "In the order they appear in the URL",
-      ],
-      correctIndex: 3,
-      explanation: "Renaming the arguments changes nothing, which surprises people on nested routes.",
-    },
-    {
-      question: "What must accompany an optional `{param?}`?",
-      options: [
-        "A default value on the PHP argument",
-        "A route name",
-        "A constraint",
-        "A middleware",
-      ],
-      correctIndex: 0,
-      explanation: "Without it PHP throws an ArgumentCountError when the parameter is omitted.",
-    },
-    {
-      question: "What does a constraint like `whereNumber('id')` do to bad input?",
-      options: [
-        "Casts it to an integer",
-        "Throws an exception",
-        "The route does not match, so Laravel returns 404",
-        "Passes it through",
+        "`$this->app->bind(...)`",
+        "`$this->app->singleton(...)`",
+        "`DB::table('settings')->value('tax_rate')`",
+        "A closure binding",
       ],
       correctIndex: 2,
-      explanation: "Invalid input is rejected at the router, before your controller runs.",
+      explanation: "The database provider may not have run yet, so it works or fails by accident.",
     },
     {
-      question: "Why does `/invoices/create` 404 when `/invoices/{id}` sits above it?",
+      question: "Which of these belongs in `boot()`?",
       options: [
-        "`create` is reserved",
-        "It needs a name",
-        "Routes match top to bottom and the first match wins",
-        "Resource routes are required",
-      ],
-      correctIndex: 2,
-      explanation: "The broad route treats `create` as an id. `Route::resource` orders these correctly for you.",
-    },
-    {
-      question: "What is the main benefit of named routes?",
-      options: [
-        "Faster rendering",
-        "They add authorization",
-        "They enable caching",
-        "Changing a URL updates every link automatically",
-      ],
-      correctIndex: 3,
-      explanation: "Hard-coded URLs keep rendering after a change and 404 only when someone clicks.",
-    },
-    {
-      question: "Why put auth middleware on a group rather than each route?",
-      options: [
-        "It is faster",
-        "Routes added later are protected by default",
-        "Routes cannot take middleware individually",
-        "It enables route caching",
-      ],
-      correctIndex: 1,
-      explanation: "One forgotten route is otherwise silently public.",
-    },
-    {
-      question: "How many routes does `Route::resource` create, and `apiResource`?",
-      options: [
-        "Five and three",
-        "Seven and seven",
-        "Six and four",
-        "Seven and five",
-      ],
-      correctIndex: 3,
-      explanation: "`apiResource` drops `create` and `edit`, which exist only to return forms.",
-    },
-    {
-      question: "What does `shallow()` do to a nested resource?",
-      options: [
-        "Removes nesting entirely",
-        "Limits nesting to two levels",
-        "Keeps the parent for index and store, drops it once the child's id is enough",
-        "Caches the routes",
-      ],
-      correctIndex: 2,
-      explanation: "The child already knows its parent, so repeating it adds nothing.",
-    },
-    {
-      question: "What two things must line up for implicit model binding?",
-      options: [
-        "The model and the migration",
-        "The route name and the controller",
-        "The parameter name and the type-hinted class",
-        "The URL and the view",
-      ],
-      correctIndex: 2,
-      explanation: "A mismatch binds nothing and hands you an empty model, with no error.",
-    },
-    {
-      question: "What does `scopeBindings()` prevent?",
-      options: [
-        "Slow queries",
-        "Loading a child that belongs to a different parent",
-        "Unauthenticated access",
-        "Duplicate route names",
-      ],
-      correctIndex: 1,
-      explanation: "Without it, `/invoices/10/payments/50` renders even when payment 50 belongs elsewhere.",
-    },
-    {
-      question: "Why must a custom route key column be unique and indexed?",
-      options: [
-        "Non-unique picks the first match silently, and unindexed scans the table each request",
-        "Laravel refuses otherwise",
-        "To allow caching",
-        "For scoped bindings to work",
+        "A view composer",
+        "Binding an interface to an implementation",
+        "Registering a singleton",
+        "Nothing, `boot()` is optional decoration",
       ],
       correctIndex: 0,
-      explanation: "Both failure modes are quiet, which is what makes them costly.",
+      explanation: "It reaches into the view layer, which another provider registered.",
     },
     {
-      question: "Why can `php artisan route:cache` fail?",
+      question: "What is a deferred provider?",
       options: [
-        "Closure routes cannot be serialised",
-        "Duplicate names",
-        "Too many routes",
-        "Missing config cache",
+        "A provider that runs after the response is sent",
+        "A provider loaded only when one of its services is resolved",
+        "A provider with an empty `register()`",
+        "A provider Laravel loads twice",
       ],
-      correctIndex: 0,
-      explanation: "This is the real reason production applications keep handlers in controllers.",
+      correctIndex: 1,
+      explanation: "It needs `DeferrableProvider` plus a complete `provides()` list.",
     },
     {
-      question: "Where must `Route::fallback` be defined?",
+      question: "What actually happens when you call `Cache::get('user')`?",
       options: [
-        "First",
-        "Inside a group",
-        "In `api.php` only",
-        "Last, after every other route",
+        "A static method on the `Cache` class runs",
+        "Laravel opens a new cache connection each time",
+        "`__callStatic()` resolves a container key and forwards the call to a real object",
+        "The value is read straight from a global array",
       ],
-      correctIndex: 3,
-      explanation: "Routes match top to bottom, so an early fallback swallows everything below.",
+      correctIndex: 2,
+      explanation: "That container hop is also why test fakes can replace what sits behind a facade.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Give it a real routing layer: resource routes, constraints and named URLs.",
-    brief: "InvoiceHub currently has two routes you wrote by hand, and Blade templates with URLs typed into them. That works at two routes and stops working at twenty.\n\nToday you replace all of it with the routing you have just learned. There is still no database, so the controller keeps returning its hard-coded array. Route model binding has to wait for Day 10, and that is fine: everything else on this list works without it.",
+    goal: "Give invoice totals a service of their own, wire it up in a provider you write, then reach it two ways.",
+    brief: "Day 3 left InvoiceHub taking payments through a contract the container resolved. The totals, though, are still added up wherever they happen to be needed.\n\nToday you give that logic a service, register it in a provider of your own, use `boot()` for the one piece of setup that needs it, and then reach the service twice: once by injection and once through a facade you add. Doing both is the point. By the end you should be able to say which one you would keep, and why.\n\nThere is still no database until Day 11, so invoices stay hard-coded in an array or a config file. That is fine. Today's subject is wiring, not storage.",
     steps: [
-      "Regenerate the controller with every CRUD method stubbed: `php artisan make:controller InvoiceController --resource`. Move your existing `index` and `show` logic into it.",
-      "Replace your two hand-written routes with `Route::resource('invoices', InvoiceController::class)`. Implement `index`, `show`, `create` and `edit` against the hard-coded array; `store`, `update` and `destroy` can redirect back with a message for now.",
-      "Constrain the invoice parameter to your number format with `->where('invoice', 'INV-[0-9]{3}')`, so `/invoices/banana` returns a 404 from the router rather than an error from your code.",
-      "Replace every hard-coded URL in your Blade files with `route('invoices.show', ...)` and friends. There should be no `/invoices` string left in a template.",
-      "Wrap an admin section in a group with a prefix, a name prefix and middleware: `Route::prefix('admin')->name('admin.')->middleware('auth')->group(...)`. Put a second invoice list inside it.",
-      "Move the pay route from Day 3 into that group, and confirm it is now `/admin/invoices/{invoice}/pay` with the name `admin.invoices.pay`.",
-      "Add a `Route::fallback` returning a friendly 404 view, and make sure it returns a real 404 status. Put it last.",
-      "Run `php artisan route:list --path=invoices` and check the methods, names and URLs are what you expect.",
-      "Run `php artisan route:cache`. If it fails with <i>Uses Closure</i>, find the closure route and move it into a controller. Then run `php artisan route:clear`, because you do not want a route cache in development.",
+      "Create `app/Services/Invoicing/InvoiceTotals.php` with `for(string $number): array` returning subtotal, tax and total from a hard-coded list of invoices.",
+      "Run `php artisan make:provider InvoiceServiceProvider`, bind `InvoiceTotals` as a `singleton()` in `register()`, and check the provider is listed in `bootstrap/providers.php`.",
+      "Inject `InvoiceTotals` into `InvoiceController::show()` and render the totals on the invoice page.",
+      "Move the tax rate into `config/invoicing.php`. Read it in `boot()`, never in `register()`, and add a one-line comment saying why.",
+      "In the same `boot()`, register a view composer that shares the company name with every `invoices.*` view, and delete the variable from the controller that used to pass it.",
+      "Add a `@money` Blade directive in `boot()` and use it for the totals in the view.",
+      "Add `app/Facades/Totals.php` extending `Facade`, returning `InvoiceTotals::class` from `getFacadeAccessor()`.",
+      "Add a second route or a partial that uses `Totals::for('INV-0001')` instead of the injected service, and confirm the numbers match.",
+      "Write down, in the provider file or a scratch note, which of the two you would keep for this service and why.",
+      "Add a feature test that calls `Mail::fake()`, pays an invoice, and asserts a receipt was sent with the right invoice number.",
     ],
     acceptance: [
-      "`php artisan route:list --path=invoices` shows the seven resource routes, named `invoices.*`.",
-      "No Blade file contains a hard-coded invoice URL. Every link goes through `route()`.",
-      "`/invoices/banana` returns a 404 from the constraint, not an exception from your controller.",
-      "`php artisan route:cache` completes without error, which means no closure routes are left.",
-      "Changing the resource from `invoices` to `bills` in one line changes every URL, and no template needs editing.",
+      "`InvoiceTotals` is bound in your own provider, and the provider is listed in `bootstrap/providers.php`.",
+      "The invoice page renders totals through the injected service, and the second route renders the same numbers through the facade.",
+      "`register()` contains bindings only. The config read, the view composer and the Blade directive all live in `boot()`.",
+      "No controller passes the company name to a view any more, and the pages still show it.",
+      "The `Mail::fake()` test passes and sends no real email.",
     ],
     stretch: [
-      "Add `Route::resource('invoices.payments', PaymentController::class)->shallow()` and compare the generated URLs with the non-shallow version in `route:list`.",
-      "Add a `--method=POST` filter to `route:list` and check every state-changing route is a POST, PATCH, PUT or DELETE, and never a GET.",
-      "Put the admin section on its own subdomain with `Route::domain(...)` and see what `route:list` reports.",
+      "Move the config read from `boot()` back into `register()` and see whether it still works. Then explain why \"it worked\" is not the same as \"it is correct\".",
+      "Make `InvoiceServiceProvider` deferrable: implement `DeferrableProvider`, add `provides()`, and confirm the page still works. Then remove an entry from `provides()` and watch it break.",
+      "Try a real-time facade instead of your own facade class: `use Facades\\App\\Services\\Invoicing\\InvoiceTotals;` and call it statically. Delete `app/Facades/Totals.php` and see whether you miss it.",
     ],
   },
 };

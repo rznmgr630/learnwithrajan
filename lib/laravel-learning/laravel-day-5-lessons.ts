@@ -2,1481 +2,1484 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_5_LESSONS: LessonDay = {
   day: 5,
-  title: "Middleware — the checkpoint between a request and your code",
-  totalMinutes: 74,
+  title: "Routing & URL generation — verbs, parameters, names, groups & model binding",
+  totalMinutes: 85,
   difficulty: "Beginner",
   lessons: [
     {
-      id: "what-middleware-is",
-      title: "What middleware is, and where it sits",
-      durationMinutes: 10,
-      explanation: "You have met middleware twice already: once in the request lifecycle on Day 3, once as a route group on Day 4. Today it gets its own day, because almost everything cross-cutting in a Laravel application ends up living here.\n\n<b>Middleware</b> is a class that sits between a request arriving and your route's code running. It can inspect the request, change it, or reject it outright before your controller is ever called, and it gets another turn on the way back out to act on the response.\n\nOne sentence:\n\n```text\nMiddleware is a checkpoint a request must pass\nbefore it reaches your controller.\n```\n\n---\n\n### 1. Basic — the checkpoint\n\nThink of an airport:\n\n```text\nPassenger → Security → Passport → Boarding gate → Plane\n```\n\nNobody reaches the plane without clearing every checkpoint, and any one of them can turn you back.\n\n```text\nRequest → Auth → Permissions → Rate limit → Controller\n```\n\nEach layer gets to say one of two things:\n\n```text\n\"Carry on.\"      → the request continues\n\"Stop here.\"     → the controller never runs\n```\n\nThat second option is the whole point. When an unauthenticated visitor asks for `/invoices`, your controller is not asked to check anything, because it is never called.\n\n---\n\n### 2. Intermediate — why not just check inside the controller?\n\nYou could. The check is three lines:\n\n```php\npublic function index()\n{\n    if (! auth()->check()) {\n        return redirect('/login');\n    }\n\n    // ... the actual work\n}\n```\n\nNow write those three lines in all forty controller methods that need them. The problem is not the typing. It is that one day you add method forty-one and forget, and nothing tells you. There is no error, no failing test, no warning. Just an endpoint that is quietly public.\n\nMiddleware inverts that:\n\n```php\nRoute::middleware('auth')->group(function () {\n    // everything in here is protected, including\n    // whatever you add next month\n});\n```\n\nForgetting is now the safe direction. A route you add inside the group is protected by default; a route you add outside it is obviously outside it.\n\nThis is what \"cross-cutting\" means in practice: a concern that applies to many routes, does not belong to any one of them, and is dangerous to handle by repetition.\n\n```text\nBelongs in a controller        Belongs in middleware\n────────────────────────       ─────────────────────\n\"fetch this invoice\"           \"is anyone logged in?\"\n\"calculate the total\"          \"is this request too frequent?\"\n\"save the payment\"             \"does this response need a header?\"\n```\n\n---\n\n### 3. Advanced — it wraps, it does not just precede\n\nThe picture most people carry is a queue: middleware runs, then the controller runs. That is half of it.\n\nMiddleware <b>wraps</b> the controller. The request goes down through every layer, the controller runs at the bottom, and the response comes back up through the same layers in reverse:\n\n```text\nRequest\n   ↓\n Auth ──────────────┐\n   ↓                │\n Permissions ────┐  │\n   ↓             │  │\n Rate limit ──┐  │  │\n   ↓          │  │  │\nController    │  │  │\n   ↓          │  │  │\nResponse ─────┘  │  │\n   ↓             │  │\n back up ────────┘  │\n   ↓                │\n back up ───────────┘\n   ↓\nBrowser\n```\n\nSo a single middleware can act before the controller, after it, or both. Adding a header to every response, timing how long a request took, logging the status code: all of that is the same mechanism, on the way back out.\n\nThe order this creates is worth noticing now, because it explains behaviour later: the <b>first</b> middleware in is the <b>last</b> one out. Layers, not a queue.",
-      diagram: `Middleware wraps the controller, it does not just precede it
+      id: "what-routing-is",
+      title: "What routing is, and where routes live",
+      durationMinutes: 9,
+      explanation: "Yesterday you followed a request through Laravel. One of the stops was the router. Today that stop gets a whole day.\n\nA <b>route</b> is one rule pairing a URL and an HTTP method with the code that should answer it. The <b>router</b> is the part of Laravel that reads each incoming request and finds the route that matches. <b>Routing</b> is the whole job of getting from a URL to the right code.\n\nRouting answers one question:\n\n```text\nWhen someone visits this URL with this HTTP method,\nwhat code should run?\n```\n\n```text\nGET /invoices\n       ↓\nInvoiceController@index\n\nGET /invoices/10\n       ↓\nInvoiceController@show\n\nPOST /invoices\n       ↓\nInvoiceController@store\n```\n\n---\n\n### 1. Basic — the three parts of a route\n\nEvery route is the same shape:\n\n```php\nRoute::get('/invoices', function () {\n    return 'Invoices';\n});\n```\n\nRead it as three pieces:\n\n```text\nRoute\n  │\n  ├── HTTP method → get\n  ├── URL         → /invoices\n  └── handler     → the code that answers\n```\n\nThe <b>handler</b> (the code that runs when the route matches) can be a closure, as above, or a controller method, which is what you will use in real applications:\n\n```php\nRoute::get('/invoices', [InvoiceController::class, 'index']);\n```\n\nThat is genuinely all a route is. Everything else today is a convenience on top of these three parts.\n\n---\n\n### 2. Intermediate — the two route files\n\nRoutes live in `routes/`:\n\n```text\nroutes/\n├── web.php   → pages people open in a browser\n└── api.php   → endpoints other programs call\n```\n\nThe split is not cosmetic. The two files get different middleware, which changes how requests behave.\n\n<b>`web.php`</b> routes get sessions, cookies and CSRF protection:\n\n```php\nRoute::get('/invoices', function () {\n    return view('invoices.index');\n});\n```\n\nSessions mean Laravel can remember who is logged in between requests. CSRF protection means a form posted from another site is rejected. Both matter for a browser and neither makes sense for an API.\n\n<b>`api.php`</b> routes are stateless. Every request carries its own credentials, usually a token:\n\n```php\nRoute::get('/invoices', function () {\n    return Invoice::all();\n});\n```\n\nThey are also prefixed with `/api` automatically, so that route answers `/api/invoices`.\n\n```text\nweb.php  →  /invoices       sessions, cookies, CSRF\napi.php  →  /api/invoices   stateless, token auth\n```\n\n---\n\n### 3. Advanced — api.php may not exist yet\n\nA fresh Laravel application ships with `web.php` only. This surprises people who expect both.\n\nAdd API routing when you need it:\n\n```bash\nphp artisan install:api\n```\n\nThat creates `routes/api.php`, registers it, and installs Sanctum for token authentication.\n\n```text\nFresh install\n      ↓\nroutes/web.php only\n      ↓\nphp artisan install:api\n      ↓\nroutes/web.php + routes/api.php\n```\n\nIf you are following a tutorial that opens `routes/api.php` and yours is missing, you have not broken anything. You just have not run that command yet.\n\nWhich file should a route go in? Ask who is calling it. A person with a browser gets `web.php`. A mobile app, a JavaScript front end, or another server gets `api.php`.",
+      diagram: `Two files, two kinds of caller
 
-              Request
-                 │
-        ┌────────▼────────┐
-        │  Authentication │ ──────────────┐
-        └────────┬────────┘               │
-                 │                        │
-        ┌────────▼────────┐               │
-        │  Authorization  │ ───────────┐  │
-        └────────┬────────┘            │  │
-                 │                     │  │
-        ┌────────▼────────┐            │  │
-        │  Rate limiting  │ ────────┐  │  │
-        └────────┬────────┘         │  │  │
-                 │                  │  │  │
-        ┌────────▼────────┐         │  │  │
-        │   Controller    │         │  │  │
-        └────────┬────────┘         │  │  │
-                 │                  │  │  │
-              Response ─────────────┘  │  │
-                 │  on the way back up │  │
-                 └─────────────────────┘  │
-                 └────────────────────────┘
-                          │
-                       Browser
-
-  First one in is the LAST one out.
+                     Request
+                        │
+          ┌─────────────┴─────────────┐
+          ↓                           ↓
+      web.php                      api.php
+          │                           │
+  a person in a browser      another program
+          │                           │
+          ↓                           ↓
+  sessions, cookies, CSRF      stateless, token auth
+          │                           │
+          ↓                           ↓
+      /invoices                  /api/invoices
 
 
-Why not check inside the controller?
+The anatomy of any route
 
-  IN EVERY CONTROLLER            ON THE GROUP
-  method 1  ✓ checks             ┌─ method 1
-  method 2  ✓ checks             │  method 2     all covered,
-  method 3  ✗ FORGOT             │  method 3     including the
-     → silently public           └─ method 4     one added next`,
+  Route::get('/invoices', [InvoiceController::class, 'index']);
+         │        │                    │
+         │        │                    └── handler: what runs
+         │        └── URL: what was requested
+         └── HTTP method: what kind of request`,
       codeExample: {
-        title: "The same guard, two ways",
+        title: "The same route, four ways to write it",
         code: `<?php
-// ---------- 1. Checked by hand, in every method ----------
-class InvoiceController extends Controller
-{
-    public function index()
-    {
-        if (! auth()->check()) {
-            return redirect('/login');
-        }
-
-        return view('invoices.index');
-    }
-
-    public function show(string $invoice)
-    {
-        if (! auth()->check()) {          // repeated
-            return redirect('/login');
-        }
-
-        return view('invoices.show');
-    }
-
-    public function destroy(string $invoice)
-    {
-        // ... and the day you forget it here, this is public,
-        // with no error and no failing test to tell you.
-        return redirect()->route('invoices.index');
-    }
-}
-
-
-// ---------- 2. Stated once, in the route file ----------
 // routes/web.php
 
-Route::middleware('auth')->group(function () {
-    Route::resource('invoices', InvoiceController::class);
-    // Every route here is protected, including the ones
-    // you add next month.
+use App\\Http\\Controllers\\InvoiceController;
+use Illuminate\\Support\\Facades\\Route;
+
+// 1. A closure. Fine for a quick test, awkward once there is real logic.
+Route::get('/invoices', function () {
+    return 'Invoices';
 });
 
-// The controller now only does its own job.
-class InvoiceController extends Controller
-{
-    public function index()
-    {
-        return view('invoices.index');
-    }
-}`,
-      },
-      keyTakeaways: [
-        "Middleware is a <b>checkpoint</b> between the request and your controller, and it can stop a request outright.",
-        "It exists for <b>cross-cutting</b> concerns: things many routes need that belong to none of them.",
-        "Checking in every controller works until the day you forget once, and nothing warns you.",
-        "On a group, forgetting becomes the safe direction: new routes inside are protected by default.",
-        "Middleware <b>wraps</b> the controller. The request goes down through the layers and the response comes back up.",
-        "The first middleware in is the <b>last one out</b>, which explains ordering behaviour you will meet later.",
-      ],
-      commonMistakes: [
-        "<b>Picturing middleware as a queue that runs before the controller.</b> It wraps the controller, which is why after-response work is possible at all.",
-        "<b>Putting business logic in middleware.</b> Fetching an invoice is the controller's job. Middleware answers questions about the request, not about your domain.",
-        "<b>Protecting routes one at a time.</b> It works right up until the once you forget, and that failure is completely silent.",
-        "<b>Assuming a middleware that returns nothing still passes the request on.</b> It does not. Forgetting to return `$next($request)` gives you a blank response.",
-      ],
-      quiz: [
-        {
-          question: "What is middleware, in one sentence?",
-          options: [
-            "A checkpoint between the request and your controller",
-            "Code that queries the database",
-            "A way to define routes",
-            "A template engine",
-          ],
-          correctIndex: 0,
-          explanation: "Its defining ability is that it can stop a request before the controller runs.",
-        },
-        {
-          question: "Why put an auth check in middleware rather than each controller method?",
-          options: [
-            "Forgetting becomes the safe direction, so new routes are protected by default",
-            "It runs faster",
-            "Controllers cannot check auth",
-            "It uses less memory",
-          ],
-          correctIndex: 0,
-          explanation: "A forgotten check in one method is a silently public endpoint.",
-        },
-        {
-          question: "How does middleware relate to the controller?",
-          options: [
-            "It runs entirely before, then stops",
-            "It runs after the controller only",
-            "It wraps the controller: down on the way in, back up on the way out",
-            "It replaces the controller",
-          ],
-          correctIndex: 2,
-          explanation: "That is why the same middleware can also modify the response.",
-        },
-        {
-          question: "Which of these belongs in middleware rather than a controller?",
-          options: [
-            "Calculating an invoice total",
-            "Fetching an invoice by number",
-            "Checking whether the request is rate limited",
-            "Rendering a Blade view",
-          ],
-          correctIndex: 2,
-          explanation: "It is a question about the request, not about your domain.",
-        },
-      ],
-    },
-    {
-      id: "next-and-blocking",
-      title: "$next, before, after, and stopping a request",
-      durationMinutes: 11,
-      explanation: "Every middleware is one method. Understanding that one method is most of the topic.\n\n<b>$next</b> is the callable Laravel hands you for passing the request on to the rest of the pipeline. A <b>before middleware</b> does its work before calling `$next`; an <b>after middleware</b> does its work after `$next` comes back with a response. <b>Short-circuiting</b> is returning without ever calling `$next`, so nothing downstream runs at all.\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    return $next($request);\n}\n```\n\nThat is a middleware that does nothing: it receives the request and passes it on unchanged.\n\n---\n\n### 1. Basic — what `$next` actually is\n\n`$next` is a closure meaning <i>the rest of the application</i>: every middleware after this one, and eventually the controller.\n\n```php\nreturn $next($request);\n```\n\nRead it as: \"I am done. Carry on.\"\n\n```text\nMiddleware A\n     │\n  $next($request)\n     ↓\nMiddleware B\n     │\n  $next($request)\n     ↓\nController\n```\n\nCalling `$next($request)` hands control forward. What comes <b>back</b> from that call is the response, which is the part people miss at first:\n\n```php\n$response = $next($request);   // the whole rest of the app ran here\n```\n\nBy the time that line finishes, your controller has already executed.\n\n---\n\n### 2. Intermediate — before, after, and both\n\n<b>Before</b> the controller: do your work, then pass on.\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    // runs before the controller\n    Log::info('Request in', ['url' => $request->url()]);\n\n    return $next($request);\n}\n```\n\n<b>After</b> the controller: pass on first, then work with what comes back.\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    $response = $next($request);\n\n    // runs after the controller\n    $response->headers->set('X-App', 'InvoiceHub');\n\n    return $response;\n}\n```\n\n<b>Both</b>, in one middleware. This is how request timing works:\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    $start = microtime(true);         // before\n\n    $response = $next($request);      // the app runs\n\n    $ms = round((microtime(true) - $start) * 1000);\n    $response->headers->set('X-Duration', \"{$ms}ms\");   // after\n\n    return $response;\n}\n```\n\nThe position of `$next($request)` is the only thing that decides whether your code is \"before\" or \"after\". There is no separate mechanism.\n\n---\n\n### 3. Advanced — stopping the request\n\nTo block a request, simply do not call `$next`. Return a response instead:\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    if (! $request->user()) {\n        return response()->json(['message' => 'You must log in.'], 401);\n    }\n\n    return $next($request);\n}\n```\n\n```text\nRequest\n   ↓\nIs the user logged in?\n   ├── YES → $next($request) → controller\n   └── NO  → 401, and nothing below ever runs\n```\n\nEverything downstream is skipped: later middleware, the controller, the database queries it would have made. That is the efficiency argument for middleware as well as the security one.\n\nYou have three reasonable ways to stop:\n\n```php\nreturn redirect('/login');                        // browsers\nreturn response()->json([...], 401);              // APIs\nabort(403, 'Not allowed');                        // throws, handled centrally\n```\n\n`abort()` throws an exception rather than returning, so it works from anywhere in the call stack and produces a consistent error page or JSON body depending on the request. For a plain \"you may not do this\", it is usually the tidiest.\n\nNow the mistake that costs people an afternoon:\n\n```php\npublic function handle(Request $request, Closure $next)\n{\n    $next($request);      // called, but not returned\n}\n```\n\nThe application runs perfectly. The controller executes, the query runs, the invoice is created. And the browser gets a blank page, because the middleware returned `null` and `null` is what gets sent. Nothing errors. The clue is that the side effects happened but the screen is empty.\n\nAlways `return` the result of `$next($request)`.",
-      diagram: `One method, three behaviours, decided by where $next sits
-
-BEFORE                    AFTER                     BOTH
-──────                    ─────                     ────
-// work                   $r = $next($request);     $start = ...
-return $next($request);   // work                   $r = $next($request);
-                          return $r;                // work
-                                                    return $r;
-
-  $next($request) IS the rest of the application.
-  When that line returns, your controller has already run.
-
-
-Blocking: just do not call $next
-
-  Request
-     ↓
-  Is the user logged in?
-     ├── YES → $next($request) → later middleware → controller → response
-     └── NO  → return 401
-                    ↓
-         nothing below runs at all:
-         no middleware, no controller, no queries
-
-
-The silent failure
-
-  $next($request);          ← called, not returned
-        ↓
-  controller runs, invoice IS created
-        ↓
-  middleware returns null
-        ↓
-  browser gets a BLANK PAGE, no error
-
-  Side effects happened but the screen is empty? Check your returns.`,
-      codeExample: {
-        title: "Before, after, both, and blocking",
-        code: `<?php
-
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Log;
-
-// ---------- Before ----------
-class LogIncoming
-{
-    public function handle(Request $request, Closure $next)
-    {
-        Log::info('Request in', ['url' => $request->url()]);
-
-        return $next($request);
-    }
-}
-
-
-// ---------- After ----------
-class AddAppHeader
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $response = $next($request);      // the whole app runs here
-
-        $response->headers->set('X-App', 'InvoiceHub');
-
-        return $response;
-    }
-}
-
-
-// ---------- Both: timing a request ----------
-class MeasureDuration
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $start = microtime(true);
-
-        $response = $next($request);
-
-        $ms = round((microtime(true) - $start) * 1000);
-        $response->headers->set('X-Duration', "{$ms}ms");
-
-        return $response;
-    }
-}
-
-
-// ---------- Blocking ----------
-class EnsureInvoiceIsPayable
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $invoice = $request->route('invoice');
-
-        if ($invoice === null) {
-            abort(404);
-        }
-
-        if ($this->alreadyPaid($invoice)) {
-            // Do not call $next. Nothing below this line runs.
-            return redirect()
-                ->route('invoices.show', $invoice)
-                ->with('error', 'That invoice is already paid.');
-        }
-
-        return $next($request);
-    }
-}
-
-
-// ---------- The bug that produces a blank page ----------
-class Broken
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $next($request);     // BUG: the app runs, but null is returned
-    }                        // No error. Just an empty response.
-}`,
-      },
-      keyTakeaways: [
-        "<b>`$next`</b> is a closure standing for the rest of the application: later middleware, then the controller.",
-        "`$next($request)` <b>returns the response</b>, so after that line your controller has already run.",
-        "Code before `$next` runs on the way in; code after it runs on the way out. That is the only difference.",
-        "To block a request, do not call `$next`. Return a redirect, a JSON response, or call `abort()`.",
-        "Blocking skips everything downstream: later middleware, the controller, and its queries.",
-        "<b>Always `return` `$next($request)`.</b> Calling it without returning gives a blank page and no error.",
-      ],
-      commonMistakes: [
-        "<b>Calling `$next($request)` without returning it.</b> The application runs and the browser gets a blank page. Side effects with an empty screen is the tell.",
-        "<b>Expecting code after `$next` to run when the request was blocked upstream.</b> An earlier middleware returning a response means yours is never entered.",
-        "<b>Modifying the response before calling `$next`.</b> There is no response yet. It does not exist until `$next` returns.",
-        "<b>Using `abort()` when you wanted a redirect.</b> `abort(403)` shows an error page; a logged-out browser visitor usually wants to be sent to the login form.",
-        "<b>Assuming a blocked request still logs or records.</b> Anything downstream, including your own logging middleware, is skipped entirely.",
-      ],
-      quiz: [
-        {
-          question: "What does `$next($request)` represent?",
-          options: [
-            "The current controller only",
-            "The rest of the application: later middleware and the controller",
-            "The previous middleware",
-            "The HTTP response",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why the line returns a response once everything downstream has run.",
-        },
-        {
-          question: "How do you make code run after the controller?",
-          options: [
-            "Put it after `$next($request)` in `handle()`",
-            "Use a separate `after()` method",
-            "Use `terminate()` only",
-            "It is not possible",
-          ],
-          correctIndex: 0,
-          explanation: "The position of `$next` is the only thing that decides before or after.",
-        },
-        {
-          question: "How do you block a request in middleware?",
-          options: [
-            "Call `$next(null)`",
-            "Return `false`",
-            "Do not call `$next`; return a response instead",
-            "Throw any exception",
-          ],
-          correctIndex: 2,
-          explanation: "Everything downstream is then skipped entirely.",
-        },
-        {
-          question: "Your middleware calls `$next($request)` but does not return it. What happens?",
-          options: [
-            "A 500 error",
-            "The app runs and the browser gets a blank page",
-            "The request is blocked",
-            "Laravel returns it automatically",
-          ],
-          correctIndex: 1,
-          explanation: "No error is raised, which is what makes it hard to spot.",
-        },
-      ],
-    },
-    {
-      id: "writing-middleware",
-      title: "Writing your own middleware",
-      durationMinutes: 10,
-      explanation: "Time to build one.\n\nThe <b>handle()</b> method is the single entry point Laravel calls on a middleware. It takes the request and `$next`, and everything your middleware does happens inside it.\n\n```bash\nphp artisan make:middleware EnsureInvoiceIsPayable\n```\n\n```text\napp/\n└── Http/\n    └── Middleware/\n        └── EnsureInvoiceIsPayable.php\n```\n\n---\n\n### 1. Basic — the skeleton\n\nLaravel gives you this:\n\n```php\n<?php\n\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\nuse Symfony\\Component\\HttpFoundation\\Response;\n\nclass EnsureInvoiceIsPayable\n{\n    public function handle(Request $request, Closure $next): Response\n    {\n        return $next($request);\n    }\n}\n```\n\nOne method, two arguments, one return. Everything you write goes in `handle()`.\n\nNaming is worth a moment. Laravel's own middleware reads as a sentence: `EnsureEmailIsVerified`, `RedirectIfAuthenticated`, `ValidateSignature`. Follow that and a route file explains itself:\n\n```php\nRoute::post('/invoices/{invoice}/pay', ...)\n    ->middleware(EnsureInvoiceIsPayable::class);\n```\n\nA class called `InvoiceMiddleware` tells the next reader nothing.\n\n---\n\n### 2. Intermediate — reading the request\n\nMiddleware runs before your controller, so the request is what you have to work with. The useful methods:\n\n```php\n$request->user();                    // the logged-in user, or null\n$request->route('invoice');          // a route parameter\n$request->header('X-App-Version');   // a header\n$request->hasHeader('X-App-Version');\n$request->ip();\n$request->isMethod('post');\n$request->expectsJson();             // API client or browser?\n$request->is('admin/*');             // does the path match?\n```\n\nThat last pair matter more than they look. `expectsJson()` is how one middleware serves both browsers and API clients correctly:\n\n```php\nif (! $request->user()) {\n    return $request->expectsJson()\n        ? response()->json(['message' => 'Unauthenticated.'], 401)\n        : redirect()->route('login');\n}\n```\n\nA browser gets sent to the login page. An API client gets a 401 it can actually parse. Same middleware, right answer for each.\n\nA worked example, requiring an API version header:\n\n```php\npublic function handle(Request $request, Closure $next): Response\n{\n    if (! $request->hasHeader('X-App-Version')) {\n        return response()->json([\n            'message' => 'The X-App-Version header is required.',\n        ], 400);\n    }\n\n    return $next($request);\n}\n```\n\n---\n\n### 3. Advanced — modifying the request\n\nMiddleware can change the request before your controller sees it. Two things are commonly useful.\n\n<b>Adding data</b> the rest of the application can rely on:\n\n```php\npublic function handle(Request $request, Closure $next): Response\n{\n    $request->merge([\n        'tenant_id' => $this->resolveTenant($request),\n    ]);\n\n    return $next($request);\n}\n```\n\nYour controller now reads `$request->input('tenant_id')` without knowing how it was worked out.\n\n<b>Cleaning input</b> before validation runs:\n\n```php\n$request->merge([\n    'email' => strtolower(trim($request->input('email', ''))),\n]);\n```\n\nLaravel ships two middleware doing exactly this: `TrimStrings` and `ConvertEmptyStringsToNull`. That second one is why a blank form field arrives as `null` rather than `\"\"`, which is worth knowing when a validation rule behaves unexpectedly.\n\nOne caution. Middleware can also resolve services from the container:\n\n```php\npublic function __construct(private InvoiceRepository $invoices) {}\n```\n\nThat works, and it is occasionally right. But it is also the point where middleware starts absorbing business logic that belongs in a controller or a service. The test: middleware should answer <i>may this request proceed</i>, or <i>what should be true of every request</i>. If it is deciding what the response should contain, it has gone too far.",
-      diagram: `Anatomy of a middleware
-
-  php artisan make:middleware EnsureInvoiceIsPayable
-                        ↓
-  app/Http/Middleware/EnsureInvoiceIsPayable.php
-
-  class EnsureInvoiceIsPayable
-  {
-      public function handle(Request $request, Closure $next): Response
-      {                    │              │
-      //                   │              └── the rest of the app
-      //                   └── everything you know about this request
-          return $next($request);
-      }
-  }
-
-
-Serving browsers and APIs from one middleware
-
-              request fails the check
-                        │
-             $request->expectsJson()
-                 ┌──────┴──────┐
-                yes            no
-                 │              │
-                 ↓              ↓
-     401 JSON response   redirect to /login
-     (API client can      (browser shows the
-      parse this)          login form)
-
-
-Where the line is
-
-  MIDDLEWARE                      NOT MIDDLEWARE
-  may this request proceed?       what should the response contain?
-  is the header present?          fetch the invoice
-  normalise the email             calculate the total
-  add tenant_id to the request    decide which view to render`,
-      codeExample: {
-        title: "Three middleware you would actually write",
-        code: `<?php
-
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Symfony\\Component\\HttpFoundation\\Response;
-
-// ---------- 1. Require a header, API style ----------
-class RequireAppVersion
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        if (! $request->hasHeader('X-App-Version')) {
-            return response()->json([
-                'message' => 'The X-App-Version header is required.',
-            ], 400);
-        }
-
-        return $next($request);
-    }
-}
-
-
-// ---------- 2. One middleware, correct for browsers AND APIs ----------
-class EnsureUserIsActive
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        if ($request->user()?->is_active) {
-            return $next($request);
-        }
-
-        return $request->expectsJson()
-            ? response()->json(['message' => 'Your account is suspended.'], 403)
-            : redirect()->route('suspended');
-    }
-}
-
-
-// ---------- 3. Normalise input before validation sees it ----------
-class NormaliseInvoiceInput
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        $request->merge([
-            'number' => strtoupper(trim($request->input('number', ''))),
-            'email'  => strtolower(trim($request->input('email', ''))),
-        ]);
-
-        // The controller and the validator both see the cleaned values.
-        return $next($request);
-    }
-}
-
-
-// ---------- Reading the request: the useful methods ----------
-// $request->user();                  the logged-in user, or null
-// $request->route('invoice');        a route parameter
-// $request->header('X-App-Version'); a header
-// $request->ip();
-// $request->isMethod('post');
-// $request->expectsJson();           API client or browser?
-// $request->is('admin/*');           path matching`,
-      },
-      keyTakeaways: [
-        "`php artisan make:middleware Name` creates the class in `app/Http/Middleware/`.",
-        "Everything happens in <b>`handle(Request $request, Closure $next)`</b>.",
-        "Name middleware as a sentence, like `EnsureInvoiceIsPayable`, so route files read clearly.",
-        "<b>`$request->expectsJson()`</b> lets one middleware redirect browsers and return 401 JSON to API clients.",
-        "<b>`$request->merge([...])`</b> adds or cleans data before the controller and the validator see it.",
-        "Laravel's `TrimStrings` and `ConvertEmptyStringsToNull` work this way, which is why empty fields arrive as `null`.",
-        "Middleware answers <i>may this proceed</i>. Deciding what the response contains is the controller's job.",
-      ],
-      commonMistakes: [
-        "<b>Always redirecting on an auth failure.</b> An API client receives an HTML login page it cannot parse. Branch on `expectsJson()`.",
-        "<b>Naming middleware after a noun.</b> `InvoiceMiddleware` says nothing; `EnsureInvoiceIsPayable` says exactly what it guards.",
-        "<b>Putting business logic in middleware.</b> Fetching records and building responses belongs downstream, where it can be tested directly.",
-        "<b>Assuming `$request->user()` is set.</b> If your middleware runs before the auth middleware, it is `null`. Use `?->` and mind the ordering.",
-        "<b>Reading raw input and forgetting Laravel already normalised it.</b> An empty text field is `null`, not an empty string, because a built-in middleware converted it.",
-      ],
-      quiz: [
-        {
-          question: "Which command creates a middleware class?",
-          options: [
-            "`php artisan new:middleware`",
-            "`php artisan make:middleware Name`",
-            "`php artisan middleware:create`",
-            "`composer make:middleware`",
-          ],
-          correctIndex: 1,
-          explanation: "It lands in `app/Http/Middleware/`.",
-        },
-        {
-          question: "What does `$request->expectsJson()` let you do?",
-          options: [
-            "Force a JSON response",
-            "Validate JSON input",
-            "Answer browsers with a redirect and API clients with JSON",
-            "Convert the response to JSON",
-          ],
-          correctIndex: 2,
-          explanation: "One middleware then behaves correctly for both kinds of caller.",
-        },
-        {
-          question: "What does `$request->merge([...])` do?",
-          options: [
-            "Adds or replaces input data before the controller sees it",
-            "Merges two requests",
-            "Merges middleware groups",
-            "Combines route parameters",
-          ],
-          correctIndex: 0,
-          explanation: "Laravel's own TrimStrings middleware works this way.",
-        },
-        {
-          question: "Which of these does NOT belong in middleware?",
-          options: [
-            "Checking a required header",
-            "Fetching an invoice and deciding which view to render",
-            "Normalising an email address",
-            "Blocking a suspended account",
-          ],
-          correctIndex: 1,
-          explanation: "Middleware decides whether a request proceeds, not what the response contains.",
-        },
-      ],
-    },
-    {
-      id: "registering-middleware",
-      title: "Registering middleware in bootstrap/app.php",
-      durationMinutes: 12,
-      explanation: "Writing a middleware does nothing on its own. Laravel has to be told when to run it, and there are four different answers depending on how widely it should apply.\n\n<b>Global middleware</b> runs on every single request. A <b>middleware group</b> is a named bundle of middleware applied together, like `web` or `api`. A <b>middleware alias</b> is a short name standing in for a class, so you can write `auth` instead of a full class path. <b>Route middleware</b> is middleware attached to one route or one route group and nothing else.\n\nAll of it happens in `bootstrap/app.php`, the file you met on Day 2:\n\n```php\n->withMiddleware(function (Middleware $middleware) {\n    // everything in this lesson goes here\n})\n```\n\n<i>If a tutorial tells you to edit `app/Http/Kernel.php`, it predates this file. Same job, older Laravel.</i>\n\n---\n\n### 1. Basic — on a single route, or a group\n\nThe narrowest option needs no registration at all. Name the class in the route:\n\n```php\nRoute::post('/invoices/{invoice}/pay', [PaymentController::class, 'store'])\n    ->middleware(EnsureInvoiceIsPayable::class);\n```\n\nOr on a group, which is where most application middleware belongs:\n\n```php\nRoute::middleware(['auth', EnsureUserIsActive::class])->group(function () {\n    Route::resource('invoices', InvoiceController::class);\n});\n```\n\nIf a middleware applies to some routes and not others, stop here. The route file is the most obvious place for it, because the guard is visible next to what it guards.\n\n---\n\n### 2. Intermediate — globally, and by alias\n\nSome middleware genuinely applies to every request: forcing HTTPS, adding a security header, logging.\n\n```php\n->withMiddleware(function (Middleware $middleware) {\n    $middleware->append(AddSecurityHeaders::class);    // runs last\n    $middleware->prepend(ForceHttps::class);           // runs first\n})\n```\n\n```text\nprepend()  →  before Laravel's own middleware\nappend()   →  after Laravel's own middleware\n```\n\nThe choice matters more than it sounds. `ForceHttps` must run before anything reads the request, so it prepends. A middleware adding a response header can append, because on the way back out it still gets its turn.\n\nTyping full class names in route files gets old, so give them short names with <b>`alias()`</b>:\n\n```php\n$middleware->alias([\n    'payable' => EnsureInvoiceIsPayable::class,\n    'active'  => EnsureUserIsActive::class,\n]);\n```\n\n```php\nRoute::post('/invoices/{invoice}/pay', ...)->middleware('payable');\n```\n\nYou have already used aliases without knowing: `auth`, `guest`, `throttle` and `signed` are all Laravel's own. `signed` is the one you have seen up close, on Day 4 with signed URLs.\n\n---\n\n### 3. Advanced — groups, and the two you already have\n\nA <b>middleware group</b> is a named bundle that runs together. Laravel gives you two, and Day 4 explained the consequences without naming the mechanism.\n\n```text\nweb                              api\n├── cookies                      ├── (stateless)\n├── session                      └── throttle, if you add it\n├── CSRF verification\n└── share errors with views\n```\n\nThat is why a `web.php` route knows who is logged in and an `api.php` route does not: they run through different groups.\n\nAdd to a group rather than replacing it:\n\n```php\n$middleware->appendToGroup('web', [MeasureDuration::class]);\n$middleware->prependToGroup('api', [RequireAppVersion::class]);\n```\n\nDefine your own bundle when several middleware always travel together:\n\n```php\n$middleware->group('admin', [\n    'auth',\n    EnsureUserIsActive::class,\n    EnsureUserIsAdmin::class,\n]);\n```\n\n```php\nRoute::middleware('admin')->prefix('admin')->group(function () {\n    Route::resource('invoices', InvoiceController::class);\n});\n```\n\nThree guards, one word, and adding a fourth later updates every admin route at once.\n\nYou can also remove middleware, which is occasionally necessary:\n\n```php\n$middleware->remove(TrimStrings::class);\n$middleware->validateCsrfTokens(except: ['stripe/webhook']);\n```\n\nThat second line is one you will genuinely need. A payment provider posting to your webhook has no CSRF token and cannot get one, so the request would be rejected with a 419. Excepting the route is the correct fix, not disabling CSRF everywhere.\n\nChoosing between the four:\n\n```text\nEvery request?              append() or prepend()\nEvery browser request?      appendToGroup('web', ...)\nA named bundle of routes?   group('admin', [...])\nSome routes only?           ->middleware(...) in the route file\n```\n\nDefault to the narrowest one that works. Global middleware runs on your health check, your webhooks and your asset routes too.",
-      diagram: `Four scopes, narrowest first
-
-  ROUTE          Route::post(...)->middleware('payable')
-    │            visible right next to what it guards
-    ↓
-  GROUP          Route::middleware('admin')->group(...)
-    │            a named bundle you defined
-    ↓
-  WEB / API      $middleware->appendToGroup('web', [...])
-    │            every browser request, or every API request
-    ↓
-  GLOBAL         $middleware->append(...)
-                 EVERY request: health checks, webhooks, assets
-
-
-prepend vs append
-
-  prepend  →  [ yours ][ Laravel's own middleware ]   runs first
-  append   →  [ Laravel's own middleware ][ yours ]   runs last
-
-  ForceHttps must prepend: nothing should read the
-  request before it. A response header can append.
-
-
-Why web.php knows who is logged in and api.php does not
-
-  web group                     api group
-  ├── cookies                   ├── stateless
-  ├── session      ← this       └── throttle
-  ├── CSRF
-  └── share errors
-
-  Same routing, different bundle. That is the whole difference.`,
-      codeExample: {
-        title: "All four registration scopes",
-        code: `<?php
-// bootstrap/app.php
-
-use App\\Http\\Middleware\\AddSecurityHeaders;
-use App\\Http\\Middleware\\EnsureInvoiceIsPayable;
-use App\\Http\\Middleware\\EnsureUserIsActive;
-use App\\Http\\Middleware\\ForceHttps;
-use App\\Http\\Middleware\\RequireAppVersion;
-use Illuminate\\Foundation\\Configuration\\Middleware;
-
-return Application::configure(basePath: dirname(__DIR__))
-    ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-    )
-    ->withMiddleware(function (Middleware $middleware) {
-
-        // ---------- Global: every single request ----------
-        $middleware->prepend(ForceHttps::class);          // before Laravel's own
-        $middleware->append(AddSecurityHeaders::class);   // after Laravel's own
-
-        // ---------- Into an existing group ----------
-        $middleware->appendToGroup('web', [MeasureDuration::class]);
-        $middleware->prependToGroup('api', [RequireAppVersion::class]);
-
-        // ---------- Your own named bundle ----------
-        $middleware->group('admin', [
-            'auth',
-            EnsureUserIsActive::class,
-            EnsureUserIsAdmin::class,
-        ]);
-
-        // ---------- Short names for route files ----------
-        $middleware->alias([
-            'payable' => EnsureInvoiceIsPayable::class,
-            'active'  => EnsureUserIsActive::class,
-        ]);
-
-        // ---------- Exceptions ----------
-        // A payment provider's webhook has no CSRF token and cannot get one.
-        // Except the route; do not disable CSRF everywhere.
-        $middleware->validateCsrfTokens(except: [
-            'stripe/webhook',
-        ]);
-    })
-    ->create();
-?>
-
-<?php
-// routes/web.php — the narrowest scope, and usually the right one
-
-// One route
-Route::post('/invoices/{invoice}/pay', [PaymentController::class, 'store'])
-    ->middleware('payable');
-
-// A group of routes
-Route::middleware(['auth', 'active'])->group(function () {
-    Route::resource('invoices', InvoiceController::class);
+// 2. A controller method. What you will use in practice.
+Route::get('/invoices', [InvoiceController::class, 'index']);
+
+// 3. Returning a view.
+Route::get('/invoices', function () {
+    return view('invoices.index', ['invoices' => []]);
 });
 
-// Your named bundle: three guards, one word
-Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('invoices', InvoiceController::class);
+// 4. A view with no logic at all has its own shortcut.
+Route::view('/about', 'about');
+
+
+// routes/api.php  (only exists after: php artisan install:api)
+// Note the URL: this answers /api/invoices, not /invoices.
+Route::get('/invoices', function () {
+    return ['data' => []];
 });`,
       },
       keyTakeaways: [
-        "All middleware registration happens in <b>`bootstrap/app.php`</b>, inside `->withMiddleware(...)`.",
-        "<b>`append()`</b> and <b>`prepend()`</b> apply a middleware to every request, before or after Laravel's own.",
-        "<b>`alias()`</b> gives a short name for route files. `auth`, `guest` and `throttle` are Laravel's own aliases.",
-        "<b>`appendToGroup()`</b> adds to the existing `web` or `api` bundles rather than replacing them.",
-        "<b>`group()`</b> defines your own bundle, so several guards can be applied with one word.",
-        "The `web` and `api` groups are why browser routes have sessions and CSRF while API routes do not.",
-        "<b>Prefer the narrowest scope that works.</b> Global middleware also runs on webhooks, health checks and assets.",
+        "A route connects an <b>HTTP method</b> and a <b>URL</b> to a <b>handler</b>. Everything else is convenience on top.",
+        "The handler can be a closure or, more usually, a controller method.",
+        "<b>`routes/web.php`</b> is for browsers: sessions, cookies and CSRF protection.",
+        "<b>`routes/api.php`</b> is for other programs: stateless, token-authenticated, and automatically prefixed with `/api`.",
+        "A fresh Laravel application has no `api.php`. Run `php artisan install:api` to add it.",
+        "Choose the file by asking who calls the route, not by what it returns.",
       ],
       commonMistakes: [
-        "<b>Looking for `app/Http/Kernel.php`.</b> It no longer exists. Middleware is configured in `bootstrap/app.php`.",
-        "<b>Making a middleware global when only some routes need it.</b> It now also runs on your health check and your webhooks, where it may be actively wrong.",
-        "<b>Replacing the `web` group instead of appending to it.</b> You lose sessions and CSRF, and login mysteriously stops persisting.",
-        "<b>Disabling CSRF globally because a webhook returns 419.</b> Except that one route with `validateCsrfTokens(except: [...])` and leave the protection on everywhere else.",
-        "<b>Using `append()` for something that must run first.</b> `ForceHttps` after Laravel's middleware is too late to be useful.",
+        "<b>Expecting `routes/api.php` in a fresh install.</b> It is not there until you run `php artisan install:api`. Nothing is broken.",
+        "<b>Forgetting that `api.php` adds `/api` for you.</b> Writing `Route::get('/api/invoices', ...)` in `api.php` gives you `/api/api/invoices`.",
+        "<b>Putting browser routes in `api.php`.</b> They lose sessions, so `auth()->user()` is empty and login appears not to work.",
+        "<b>Posting a form to a `web.php` route without a CSRF token.</b> You get a 419 error. Add `@csrf` inside the form.",
       ],
       quiz: [
         {
-          question: "Where is middleware registered in a modern Laravel application?",
+          question: "What three things does a route connect?",
           options: [
-            "`app/Http/Kernel.php`",
-            "`config/middleware.php`",
-            "`routes/web.php`",
-            "`bootstrap/app.php`",
+            "A model, a view and a controller",
+            "An HTTP method, a URL and a handler",
+            "A database, a query and a result",
+            "A request, a session and a cookie",
           ],
-          correctIndex: 3,
-          explanation: "`Kernel.php` was the old location and no longer exists.",
+          correctIndex: 1,
+          explanation: "Everything else in routing is a convenience built on those three.",
         },
         {
-          question: "What is the difference between `append()` and `prepend()`?",
+          question: "What is the main difference between `web.php` and `api.php`?",
           options: [
-            "Append is faster",
-            "Prepend only works in groups",
-            "Append is for API routes",
-            "Prepend runs before Laravel's own middleware, append runs after",
+            "`api.php` is faster",
+            "`web.php` cannot return JSON",
+            "They get different middleware: sessions and CSRF versus stateless token auth",
+            "There is no difference",
           ],
-          correctIndex: 3,
-          explanation: "Something like ForceHttps must prepend, because nothing should read the request first.",
+          correctIndex: 2,
+          explanation: "The split changes how requests behave, not just where the code sits.",
         },
         {
-          question: "What does `alias()` do?",
+          question: "You cannot find `routes/api.php`. What is wrong?",
           options: [
-            "Gives a middleware class a short name for route files",
-            "Renames a route",
-            "Creates a middleware group",
-            "Duplicates a middleware",
+            "The install failed",
+            "Nothing. Run `php artisan install:api` to add it",
+            "It is hidden by `.gitignore`",
+            "You need a package",
           ],
-          correctIndex: 0,
-          explanation: "`auth`, `guest` and `throttle` are aliases Laravel defines for you.",
+          correctIndex: 1,
+          explanation: "Fresh Laravel applications ship with `web.php` only.",
         },
         {
-          question: "A payment webhook returns 419. What is the correct fix?",
+          question: "A route in `api.php` is written as `/invoices`. What URL answers it?",
           options: [
-            "Disable CSRF protection globally",
-            "Add `Route::any()`",
-            "Move it to `api.php` and hope",
-            "Except that route with `validateCsrfTokens(except: [...])`",
+            "`/invoices`",
+            "Both of the first two",
+            "`/api/api/invoices`",
+            "`/api/invoices`",
           ],
           correctIndex: 3,
-          explanation: "The provider has no CSRF token and cannot get one, but only that route should be excepted.",
+          explanation: "The `/api` prefix is added for you, which is why you should not write it yourself.",
         },
       ],
     },
     {
-      id: "middleware-parameters",
-      title: "Parameters and controller attributes",
-      durationMinutes: 11,
-      explanation: "One middleware often needs to answer slightly different questions on different routes. Rather than writing `EnsureUserIsAdmin`, `EnsureUserIsManager` and `EnsureUserIsAccountant`, pass the answer in.\n\nA <b>middleware parameter</b> is an argument passed to a middleware from the route, written after a colon like `role:admin`. It lets one class cover several variations instead of you writing a class per variation.\n\n---\n\n### 1. Basic — passing a parameter\n\nAnything after a colon in the route becomes an argument:\n\n```php\nRoute::get('/admin', ...)->middleware('role:admin');\n```\n\nYour middleware receives it after `$next`:\n\n```php\npublic function handle(Request $request, Closure $next, string $role): Response\n{\n    if ($request->user()?->role !== $role) {\n        abort(403);\n    }\n\n    return $next($request);\n}\n```\n\n```text\n'role:admin'\n      │\n      ↓\n  $role = 'admin'\n```\n\nSeveral parameters are comma-separated:\n\n```php\nRoute::get('/reports', ...)->middleware('role:admin,manager');\n```\n\n```php\npublic function handle(Request $request, Closure $next, string ...$roles): Response\n{\n    if (! in_array($request->user()?->role, $roles)) {\n        abort(403);\n    }\n\n    return $next($request);\n}\n```\n\nThe variadic `...$roles` is worth preferring over naming each argument. It accepts one role or five without changing the signature.\n\nYou have used this already. `throttle:60,1` is a parameterised middleware: sixty requests per one minute.\n\n---\n\n### 2. Intermediate — building the string safely\n\nRoute strings are easy to typo, and a typo here fails open or closed in confusing ways. Laravel lets a middleware build its own:\n\n```php\nclass EnsureUserHasRole\n{\n    public static function using(string ...$roles): string\n    {\n        return static::class.':'.implode(',', $roles);\n    }\n\n    public function handle(Request $request, Closure $next, string ...$roles): Response\n    {\n        // ...\n    }\n}\n```\n\n```php\nRoute::get('/reports', ...)\n    ->middleware(EnsureUserHasRole::using('admin', 'manager'));\n```\n\nNow your editor autocompletes it and a misspelt class fails immediately, instead of `'roles:admin'` silently matching no registered alias.\n\n---\n\n### 3. Advanced — declaring middleware on the controller\n\nMiddleware does not have to live in the route file. Recent Laravel versions let you declare it as a PHP <b>attribute</b> (metadata written with `#[...]`) on the controller itself:\n\n```php\n#[Middleware('auth')]\nclass InvoiceController extends Controller\n{\n    // every method requires auth\n}\n```\n\nOr on one method:\n\n```php\nclass InvoiceController extends Controller\n{\n    #[Middleware(['auth', 'payable'])]\n    public function pay(string $invoice)\n    {\n        // ...\n    }\n}\n```\n\nAnd you can subtract, for a single public method on an otherwise protected controller:\n\n```php\n#[Middleware('auth')]\nclass InvoiceController extends Controller\n{\n    #[WithoutMiddleware('auth')]\n    public function publicPreview(string $invoice)\n    {\n        // deliberately reachable by anyone\n    }\n}\n```\n\nThe older equivalent, which works in every version, is a static method on the controller:\n\n```php\npublic static function middleware(): array\n{\n    return [\n        'auth',\n        new Middleware('payable', only: ['pay']),\n    ];\n}\n```\n\nWhich should you use? There is a genuine trade-off, and it is not obvious.\n\n```text\nIN THE ROUTE FILE              ON THE CONTROLLER\none place shows every guard    the guard sits next to the code\nroute:list tells the truth     survives a route being redefined\neasy to audit before a         easy to see while editing the\n  release                        method\n```\n\nThe argument for route files is auditability: one file answers \"what is protected?\" for the whole application. The argument for attributes is proximity: someone editing `pay()` sees its guard without opening another file.\n\nA workable rule: keep <b>authentication</b> in route groups, where it can be audited at a glance, and use attributes for guards specific to one method. And whichever you choose, `php artisan route:list -v` shows what is actually applied, which beats reading either file.\n\n`#[WithoutMiddleware]` deserves particular care. It is the only construct here that <i>removes</i> protection, and a reader skimming the class sees `#[Middleware('auth')]` at the top and may not notice the exception below it. Use it rarely, and make the method name say it is public.",
-      diagram: `Parameters after the colon
+      id: "http-verbs",
+      title: "HTTP verbs and what each one means",
+      durationMinutes: 9,
+      explanation: "A URL on its own is not enough. `/invoices` could mean \"show me the invoices\" or \"create an invoice\". The <b>HTTP method</b> (the verb describing what the request wants to do) is what separates them.\n\n```php\nRoute::get('/invoices', ...);    // show them\nRoute::post('/invoices', ...);   // create one\n```\n\nSame URL. Different intent. Different code.\n\n---\n\n### 1. Basic — the four you will use constantly\n\n<b>`GET`</b> retrieves something and changes nothing:\n\n```php\nRoute::get('/invoices', [InvoiceController::class, 'index']);\nRoute::get('/invoices/{id}', [InvoiceController::class, 'show']);\n```\n\n<b>`POST`</b> creates something:\n\n```php\nRoute::post('/invoices', [InvoiceController::class, 'store']);\n```\n\n<b>`PUT`</b> and <b>`PATCH`</b> both update, and the difference is how much:\n\n```php\nRoute::put('/invoices/{id}', ...);    // replace the whole thing\nRoute::patch('/invoices/{id}', ...);  // change part of it\n```\n\n<b>`DELETE`</b> removes something:\n\n```php\nRoute::delete('/invoices/{id}', ...);\n```\n\n```text\nGET     read, changes nothing\nPOST    create\nPUT     replace entirely\nPATCH   change part\nDELETE  remove\n```\n\n---\n\n### 2. Intermediate — why GET must not change anything\n\nThis is the rule people break first, so it is worth being blunt about.\n\nA `GET` request must be <b>safe</b>: calling it should leave the application unchanged. Browsers, search engines and link previewers all assume this and will happily fetch a URL without being asked.\n\nSo this is a genuine bug:\n\n```php\n// Never do this.\nRoute::get('/invoices/{id}/delete', ...);\n```\n\nIt looks harmless. Then a crawler follows every link on the page and deletes your invoices. Nobody clicked anything.\n\nDeletion is a `DELETE`, or at minimum a `POST`:\n\n```php\nRoute::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);\n```\n\n<b>PUT vs PATCH</b>, concretely. An invoice has a client, an amount and a status:\n\n```text\nPUT /invoices/10\n{ \"client\": \"Acme\", \"amount\": 500, \"status\": \"sent\" }\n   ↓ send every field; what you omit is wiped\n\nPATCH /invoices/10\n{ \"status\": \"paid\" }\n   ↓ change only what you send; everything else stays\n```\n\nIn practice most applications use `PATCH` for edits, because forms rarely submit every field.\n\n---\n\n### 3. Advanced — browsers only speak GET and POST\n\nAn HTML form cannot send `PUT`, `PATCH` or `DELETE`. It has two options and that is it.\n\nLaravel works around this with a hidden field:\n\n```html\n<form method=\"POST\" action=\"/invoices/10\">\n    @csrf\n    @method('DELETE')\n    <button>Delete</button>\n</form>\n```\n\nThe browser sends a `POST`. Laravel sees `_method=DELETE` and routes it to your `DELETE` route.\n\n```text\nBrowser sends:   POST /invoices/10  (_method=DELETE)\n                         ↓\nLaravel reads _method and treats it as:\n                 DELETE /invoices/10\n```\n\nThis only applies to HTML forms. JavaScript, mobile apps and API clients send the real verb.\n\nTwo catch-all methods exist. Use them sparingly:\n\n```php\nRoute::match(['get', 'post'], '/search', ...);  // just these two\nRoute::any('/webhook', ...);                    // every method\n```\n\n`any()` is almost always a mistake in application code. Being explicit documents what a URL accepts and lets Laravel return a proper <i>405 Method Not Allowed</i> for the rest, instead of silently accepting a `DELETE` you never intended.",
+      diagram: `One URL, several meanings
 
-  ->middleware('role:admin,manager')
-                 │      │      │
-                 │      └──────┴── arguments
-                 └── the alias
+  /invoices
+      ├── GET    → list them
+      └── POST   → create one
 
-  public function handle($request, Closure $next, string ...$roles)
-                                                  │
-                          $roles = ['admin', 'manager']
-
-  You already use this: throttle:60,1 = 60 requests per 1 minute
-
-
-Where to declare it, and what you trade
-
-  ROUTE FILE                     CONTROLLER ATTRIBUTE
-
-  Route::middleware('auth')      #[Middleware('auth')]
-       ->group(function () {     class InvoiceController
-         Route::resource(...)    {
-       });                           public function pay() {}
-                                 }
-
-  one file lists every guard     guard sits beside the code
-  easy to audit in one pass      easy to see while editing
-  ─────────────────────────────────────────────────────────
-  Rule of thumb: auth in route groups (auditable),
-  method-specific guards as attributes.
-
-  Either way, route:list -v shows what is REALLY applied.
+  /invoices/10
+      ├── GET    → show it
+      ├── PUT    → replace it entirely
+      ├── PATCH  → change part of it
+      └── DELETE → remove it
 
 
-#[WithoutMiddleware] removes protection
+PUT vs PATCH on the same invoice
 
-  #[Middleware('auth')]          ← reader sees this
-  class InvoiceController
-  {
-      #[WithoutMiddleware('auth')]   ← and may miss this
-      public function publicPreview() {}
-  }
+  Before   { client: Acme, amount: 500, status: sent }
 
-  Name the method so it announces itself.`,
+  PUT      { status: paid }
+    ↓      { client: null, amount: null, status: paid }
+           everything you left out is gone
+
+  PATCH    { status: paid }
+    ↓      { client: Acme, amount: 500, status: paid }
+           only what you sent changed
+
+
+How a browser sends DELETE (it cannot)
+
+  <form method="POST"> + @method('DELETE')
+                ↓
+  POST /invoices/10  with _method=DELETE
+                ↓
+  Laravel routes it to the DELETE route`,
       codeExample: {
-        title: "Parameterised middleware and attributes",
+        title: "Every verb, and the form trick",
         code: `<?php
-
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Symfony\\Component\\HttpFoundation\\Response;
-
-class EnsureUserHasRole
-{
-    // Build the middleware string in a type-safe way:
-    //   ->middleware(EnsureUserHasRole::using('admin', 'manager'))
-    public static function using(string ...$roles): string
-    {
-        return static::class.':'.implode(',', $roles);
-    }
-
-    // Variadic, so one role or five needs no signature change.
-    public function handle(Request $request, Closure $next, string ...$roles): Response
-    {
-        if (! in_array($request->user()?->role, $roles, strict: true)) {
-            abort(403, 'You do not have access to this area.');
-        }
-
-        return $next($request);
-    }
-}
-?>
-
-<?php
 // routes/web.php
 
-// By alias, with parameters
-Route::get('/admin', ...)->middleware('role:admin');
-Route::get('/reports', ...)->middleware('role:admin,manager');
+use App\\Http\\Controllers\\InvoiceController;
+use Illuminate\\Support\\Facades\\Route;
 
-// Type-safe, autocompleted, fails loudly on a typo
-Route::get('/reports', ...)->middleware(EnsureUserHasRole::using('admin', 'manager'));
+Route::get('/invoices', [InvoiceController::class, 'index']);
+Route::get('/invoices/{id}', [InvoiceController::class, 'show']);
+Route::post('/invoices', [InvoiceController::class, 'store']);
+Route::put('/invoices/{id}', [InvoiceController::class, 'replace']);
+Route::patch('/invoices/{id}', [InvoiceController::class, 'update']);
+Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
 
-// Laravel's own parameterised middleware: 60 requests per minute
-Route::post('/invoices', ...)->middleware('throttle:60,1');
+// Responds to two methods only.
+Route::match(['get', 'post'], '/search', [SearchController::class, 'handle']);
+
+// Responds to all of them. Rarely what you want.
+Route::any('/webhook', [WebhookController::class, 'handle']);
+
+
+// This is a bug, not a shortcut. A crawler following links will
+// delete your data without anyone clicking anything.
+// Route::get('/invoices/{id}/delete', ...);
+?>
+
+{{-- resources/views/invoices/show.blade.php --}}
+{{-- A browser can only send GET and POST, so spoof the verb. --}}
+<form method="POST" action="/invoices/{{ $invoice['number'] }}">
+    @csrf
+    @method('DELETE')
+    <button type="submit">Delete invoice</button>
+</form>
+
+{{-- Same idea for an update --}}
+<form method="POST" action="/invoices/{{ $invoice['number'] }}">
+    @csrf
+    @method('PATCH')
+    <input name="status" value="paid">
+    <button type="submit">Mark paid</button>
+</form>`,
+      },
+      keyTakeaways: [
+        "The HTTP method is what lets one URL mean several different things.",
+        "<b>`GET`</b> must be safe: it reads and changes nothing.",
+        "<b>`POST`</b> creates, <b>`PUT`</b> replaces entirely, <b>`PATCH`</b> changes part, <b>`DELETE`</b> removes.",
+        "Most edit forms want `PATCH`, because they rarely submit every field.",
+        "HTML forms can only send `GET` and `POST`. Use `@method('DELETE')` to spoof the rest.",
+        "Prefer explicit verbs over `any()`, so Laravel can reject the methods you did not intend.",
+      ],
+      commonMistakes: [
+        "<b>Using `GET` for anything destructive.</b> A `GET /invoices/10/delete` route will eventually be followed by a crawler or a link preview, and your data goes with it.",
+        "<b>Forgetting `@method('PATCH')` on an edit form.</b> The request arrives as a `POST`, no route matches, and you get a confusing 405.",
+        "<b>Sending a partial payload to a `PUT` route.</b> Fields you omit are meant to be wiped. If that surprises you, you wanted `PATCH`.",
+        "<b>Reaching for `Route::any()` to make an error go away.</b> It hides the real problem, which is usually a form sending the wrong method.",
+      ],
+      quiz: [
+        {
+          question: "Which HTTP method should never change data?",
+          options: [
+            "POST",
+            "PATCH",
+            "GET",
+            "DELETE",
+          ],
+          correctIndex: 2,
+          explanation: "Crawlers and link previewers fetch URLs without being asked, so `GET` must be safe.",
+        },
+        {
+          question: "What is the difference between PUT and PATCH?",
+          options: [
+            "PUT is faster",
+            "They are identical",
+            "PATCH is for APIs only",
+            "PUT replaces the whole resource; PATCH changes only what you send",
+          ],
+          correctIndex: 3,
+          explanation: "Fields omitted from a `PUT` are meant to be wiped.",
+        },
+        {
+          question: "Why do you need `@method('DELETE')` in a form?",
+          options: [
+            "To add security",
+            "To make it faster",
+            "Because HTML forms can only send GET and POST",
+            "To enable CSRF",
+          ],
+          correctIndex: 2,
+          explanation: "Laravel reads the hidden `_method` field and routes it as a DELETE.",
+        },
+        {
+          question: "Why is `Route::any()` usually a poor choice?",
+          options: [
+            "It is slow",
+            "It breaks caching",
+            "It cannot use controllers",
+            "It accepts methods you never intended and hides form bugs",
+          ],
+          correctIndex: 3,
+          explanation: "Explicit verbs let Laravel return a proper 405 instead.",
+        },
+      ],
+    },
+    {
+      id: "route-parameters",
+      title: "Parameters, optional values and constraints",
+      durationMinutes: 11,
+      explanation: "Most URLs carry information. `/invoices/10` is not a fixed page, it is a pattern with a value in it.\n\nA <b>route parameter</b> (a named placeholder written in braces, like `{id}`) is the part of the URL that changes. A <b>constraint</b> is a rule limiting what that placeholder will match, so `/invoices/abc` can be turned away by the router instead of by your code.\n\n```text\n/invoices/{id}\n          │\n          ↓\n    /invoices/10\n          │\n          ↓\n      id = 10\n```\n\n---\n\n### 1. Basic — capturing values from the URL\n\nWrap the changing part in braces and accept it as an argument:\n\n```php\nRoute::get('/invoices/{id}', function ($id) {\n    return $id;   // \"10\"\n});\n```\n\nYou can have as many as you need. They arrive <b>in the order they appear in the URL</b>, not by name:\n\n```php\nRoute::get('/clients/{client}/invoices/{invoice}', function ($client, $invoice) {\n    return \"Client {$client}, invoice {$invoice}\";\n});\n```\n\n```text\n/clients/10/invoices/50\n         │           │\n         ↓           ↓\n     client=10   invoice=50\n```\n\nSwap the argument names in your function and Laravel will not notice. Position is what counts, which is a good reason to keep the names matching.\n\n---\n\n### 2. Intermediate — optional parameters\n\nA required parameter means the route does not match without it:\n\n```php\nRoute::get('/invoices/{id}', ...);\n```\n\n```text\n/invoices/10   ✓ matches\n/invoices      ✗ no match, 404\n```\n\nAdd `?` to make it optional, and give the PHP argument a default:\n\n```php\nRoute::get('/invoices/{status?}', function ($status = 'all') {\n    return \"Showing {$status} invoices\";\n});\n```\n\n```text\n/invoices/paid  →  \"Showing paid invoices\"\n/invoices       →  \"Showing all invoices\"\n```\n\nThe default is not optional. Leave it out and PHP throws an <i>ArgumentCountError</i> as soon as someone omits the parameter, because the function still expects an argument.\n\nOptional parameters must also come last. `{a?}/{b}` cannot work: there is no way to tell which value you meant.\n\n---\n\n### 3. Advanced — constraining what a parameter accepts\n\nNothing so far stops this:\n\n```text\n/invoices/banana\n```\n\nThe route matches, `$id` is `\"banana\"`, and your controller goes looking for it. A <b>constraint</b> (a rule limiting what a parameter can contain) stops it at the router instead:\n\n```php\nRoute::get('/invoices/{id}', ...)->whereNumber('id');\n```\n\n```text\n/invoices/10       ✓ matches\n/invoices/banana   ✗ no match → 404\n```\n\nThat 404 is the point. Bad input never reaches your code, so your controller does not need to defend against it.\n\nLaravel ships readable helpers:\n\n```php\n->whereNumber('id')                              // digits\n->whereAlpha('name')                             // letters\n->whereAlphaNumeric('code')                      // letters and digits\n->whereUuid('id')                                // a UUID\n->whereIn('status', ['draft', 'sent', 'paid'])   // an allowed list\n```\n\n`whereIn` is the one people underuse. It turns a whole class of invalid input into a 404 for free:\n\n```php\nRoute::get('/invoices/status/{status}', ...)\n    ->whereIn('status', ['draft', 'sent', 'paid']);\n```\n\n```text\n/invoices/status/paid       ✓\n/invoices/status/exploded   ✗ 404\n```\n\nFor anything the helpers do not cover, a <b>regular expression</b> (a pattern describing which text is allowed) works:\n\n```php\nRoute::get('/invoices/{number}', ...)->where('number', 'INV-[0-9]{3}');\n```\n\n```text\n/invoices/INV-001   ✓\n/invoices/INV-1     ✗\n/invoices/10        ✗\n```\n\nYou do not need to be good at regular expressions to use Laravel. Reach for the named helpers first and drop to `where()` only when your format is genuinely custom, as an invoice number is.\n\nOne ordering rule worth knowing: Laravel matches routes <b>top to bottom, first match wins</b>. So a broad route placed above a specific one will swallow it:\n\n```php\nRoute::get('/invoices/{id}', ...);      // matches /invoices/create too\nRoute::get('/invoices/create', ...);    // never reached\n```\n\nPut the specific route first, or constrain the broad one so it cannot match.",
+      diagram: `Capturing values
+
+  /clients/{client}/invoices/{invoice}
+            │                  │
+            ↓                  ↓
+  /clients/10/invoices/50
+            │                  │
+        client=10          invoice=50
+
+  Arguments arrive by POSITION, not by name.
+
+
+Required vs optional
+
+  {id}     /invoices/10  ✓      /invoices  ✗ 404
+  {id?}    /invoices/10  ✓      /invoices  ✓ uses the default
+
+  Optional parameters must come last.
+
+
+Constraints stop bad input at the router
+
+  /invoices/banana
+        ↓
+  whereNumber('id')
+        ↓
+     ✗ no match
+        ↓
+      404          ← your controller never runs
+
+
+Order matters: first match wins
+
+  Route::get('/invoices/{id}')      ← swallows everything
+  Route::get('/invoices/create')    ← never reached
+
+  Put the specific route ABOVE the general one.`,
+      codeExample: {
+        title: "Parameters and every constraint helper",
+        code: `<?php
+// routes/web.php
+
+// One parameter
+Route::get('/invoices/{id}', function ($id) {
+    return $id;
+});
+
+// Several. They arrive in URL order, not by name.
+Route::get('/clients/{client}/invoices/{invoice}', function ($client, $invoice) {
+    return "Client {$client}, invoice {$invoice}";
+});
+
+// Optional, with a PHP default. The default is required.
+Route::get('/invoices/{status?}', function ($status = 'all') {
+    return "Showing {$status} invoices";
+});
+
+// Constraints: the readable helpers
+Route::get('/invoices/{id}', fn ($id) => $id)->whereNumber('id');
+Route::get('/clients/{name}', fn ($name) => $name)->whereAlpha('name');
+Route::get('/codes/{code}', fn ($code) => $code)->whereAlphaNumeric('code');
+Route::get('/jobs/{id}', fn ($id) => $id)->whereUuid('id');
+
+// An allowed list. Anything else is a 404.
+Route::get('/invoices/status/{status}', fn ($status) => $status)
+    ->whereIn('status', ['draft', 'sent', 'paid']);
+
+// A custom format needs a regular expression.
+Route::get('/invoices/{number}', fn ($number) => $number)
+    ->where('number', 'INV-[0-9]{3}');
+
+// Several constraints at once
+Route::get('/clients/{client}/invoices/{number}', fn ($client, $number) => "$client $number")
+    ->where(['client' => '[0-9]+', 'number' => 'INV-[0-9]{3}']);
+
+
+// ORDER MATTERS. This is wrong:
+// Route::get('/invoices/{id}', ...);      // matches "create" as an id
+// Route::get('/invoices/create', ...);    // unreachable
+
+// Either put the specific route first:
+Route::get('/invoices/create', [InvoiceController::class, 'create']);
+Route::get('/invoices/{id}', [InvoiceController::class, 'show']);
+
+// Or constrain the general one so it cannot match:
+Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->whereNumber('id');`,
+      },
+      keyTakeaways: [
+        "Wrap the changing part of a URL in braces to capture it as a parameter.",
+        "Parameters arrive <b>in URL order</b>, not matched by name, so keep the names aligned anyway.",
+        "`{param?}` makes a parameter optional, and the PHP argument then <b>needs a default value</b>.",
+        "Optional parameters must be last, or Laravel cannot tell which value you meant.",
+        "A <b>constraint</b> turns invalid input into a 404 at the router, before your controller runs.",
+        "Prefer `whereNumber`, `whereIn` and friends over raw regular expressions; drop to `where()` only for genuinely custom formats.",
+        "Routes match <b>top to bottom, first match wins</b>, so a broad route above a specific one hides it.",
+      ],
+      commonMistakes: [
+        "<b>Marking a parameter optional but giving the function no default.</b> The route matches, then PHP throws an <i>ArgumentCountError</i> the moment someone omits it.",
+        "<b>Putting an optional parameter before a required one.</b> `{a?}/{b}` is unmatchable, because there is no way to know which value is which.",
+        "<b>Defining `/invoices/{id}` above `/invoices/create`.</b> The first route wins and treats `create` as an id, so the create page 404s or explodes.",
+        "<b>Validating a parameter's format inside the controller.</b> A constraint does it at the router, keeps the controller clean, and returns a proper 404.",
+        "<b>Assuming parameters arrive as the right type.</b> `/invoices/10` gives you the string `\"10\"`. Type-hint `int $id` if you want a number.",
+      ],
+      quiz: [
+        {
+          question: "How do route parameters get passed to your function?",
+          options: [
+            "In the order they appear in the URL",
+            "Matched by name",
+            "As one array",
+            "Alphabetically",
+          ],
+          correctIndex: 0,
+          explanation: "Renaming the arguments changes nothing, so keep them aligned for readability.",
+        },
+        {
+          question: "What must you add when a parameter is optional?",
+          options: [
+            "A constraint",
+            "A name for the route",
+            "A default value on the PHP argument",
+            "A middleware",
+          ],
+          correctIndex: 2,
+          explanation: "Without it PHP throws an ArgumentCountError when the parameter is omitted.",
+        },
+        {
+          question: "What does `whereNumber('id')` do when someone visits `/invoices/banana`?",
+          options: [
+            "The route does not match, so Laravel returns 404",
+            "Throws an exception",
+            "Passes it through as a string",
+            "Converts it to 0",
+          ],
+          correctIndex: 0,
+          explanation: "Bad input is stopped at the router and never reaches your controller.",
+        },
+        {
+          question: "Why does `/invoices/create` 404 when `/invoices/{id}` is defined above it?",
+          options: [
+            "Laravel caches the first route",
+            "`create` is a reserved word",
+            "You need a constraint on `create`",
+            "Routes match top to bottom and the first match wins",
+          ],
+          correctIndex: 3,
+          explanation: "The broad route treats `create` as an id, so the specific one is never reached.",
+        },
+      ],
+    },
+    {
+      id: "named-routes-and-groups",
+      title: "Named routes and route groups",
+      durationMinutes: 11,
+      explanation: "Two features that stop route files becoming unmaintainable. One removes hard-coded URLs from your application; the other removes repetition from the route file itself.\n\nA <b>named route</b> is a route given a label, so the rest of your application refers to it by that label rather than by its URL. A <b>route group</b> is a set of routes that share settings, written once around them instead of repeated on each one.\n\n---\n\n### 1. Basic — naming a route\n\nGive a route a name:\n\n```php\nRoute::get('/invoices/{id}', [InvoiceController::class, 'show'])\n    ->name('invoices.show');\n```\n\nNow build URLs from the name instead of typing them:\n\n```php\nroute('invoices.show', ['id' => 10]);   // \"/invoices/10\"\n```\n\nIn Blade:\n\n```blade\n<a href=\"{{ route('invoices.show', ['id' => $invoice['number']]) }}\">View</a>\n```\n\nThe convention is `resource.action`: `invoices.index`, `invoices.show`, `invoices.store`.\n\n---\n\n### 2. Intermediate — why this matters more than it looks\n\nSuppose you hard-code URLs everywhere:\n\n```blade\n<a href=\"/invoices/{{ $id }}\">View</a>\n```\n\nThen the business decides invoices are now called bills. You change the route to `/bills/{id}` and every one of those links breaks. Silently. They still render, they still look like links, they just 404 when clicked. Nothing tells you which files to fix except searching and hoping.\n\nWith names, you change the route:\n\n```php\nRoute::get('/bills/{id}', ...)->name('invoices.show');\n```\n\nand every `route('invoices.show')` in the application produces the new URL. Nothing else changes.\n\n```text\nHard-coded         Named\n/invoices/10       route('invoices.show', ...)\n     ↓                      ↓\nURL changes        URL changes\n     ↓                      ↓\nlinks silently     every link updates\nbreak                itself\n```\n\nThere is a second benefit: `route()` fails loudly. Misspell a route name and you get an exception naming the route, immediately. A misspelt hard-coded URL is a 404 you find in production.\n\n---\n\n### 3. Advanced — grouping shared configuration\n\nRoutes that share settings can be grouped instead of repeating them.\n\nA <b>prefix</b> puts text at the front of each URL:\n\n```php\nRoute::prefix('admin')->group(function () {\n    Route::get('/invoices', ...);   // /admin/invoices\n    Route::get('/clients', ...);    // /admin/clients\n});\n```\n\nA <b>name prefix</b> does the same for names. Note the trailing dot, which is easy to forget:\n\n```php\nRoute::name('admin.')->group(function () {\n    Route::get('/invoices', ...)->name('invoices');   // admin.invoices\n});\n```\n\n<b>Middleware</b> applies to everything in the group at once:\n\n```php\nRoute::middleware('auth')->group(function () {\n    Route::get('/profile', ...);\n    Route::get('/invoices', ...);\n});\n```\n\nThis is the one that matters for security. Protecting routes one by one means the day you add a route and forget the middleware, it is public and nothing warns you. Put the group around them and new routes are protected by default.\n\nA <b>controller group</b> saves naming the same class repeatedly:\n\n```php\nRoute::controller(InvoiceController::class)->group(function () {\n    Route::get('/invoices', 'index');\n    Route::get('/invoices/{id}', 'show');\n});\n```\n\nThey combine, and this is how real route files are written:\n\n```php\nRoute::prefix('admin')\n    ->name('admin.')\n    ->middleware(['auth', 'can:manage-invoices'])\n    ->group(function () {\n        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');\n    });\n```\n\n```text\nURL         /admin/invoices\nName        admin.invoices\nMiddleware  auth, can:manage-invoices\n```\n\nGroups also nest, and settings accumulate as you go down.\n\nFinally, groups can be split by <b>domain</b>, which is how subdomains get handled:\n\n```php\nRoute::domain('admin.invoicehub.test')->group(function () {\n    Route::get('/invoices', ...);\n});\n```\n\nA subdomain can even be a parameter, captured like any other:\n\n```php\nRoute::domain('{tenant}.invoicehub.test')->group(function () {\n    Route::get('/invoices', function ($tenant) {\n        return \"Invoices for {$tenant}\";\n    });\n});\n```",
+      diagram: `Why names beat hard-coded URLs
+
+  HARD-CODED                      NAMED
+  <a href="/invoices/10">         route('invoices.show', ...)
+        │                                   │
+  route changes to /bills/10       route changes to /bills/10
+        │                                   │
+        ↓                                   ↓
+  every link 404s, silently        every link updates itself
+  found by users, in production    nothing to change
+
+
+Groups stack their settings
+
+  Route::prefix('admin')
+       ->name('admin.')
+       ->middleware('auth')
+       ->group(...)
+              │
+    ┌─────────┼─────────┐
+    ↓         ↓         ↓
+  prefix    name     middleware
+  /admin    admin.     auth
+    │         │         │
+    └─────────┼─────────┘
+              ↓
+    Route::get('/invoices')->name('invoices')
+              ↓
+  URL:   /admin/invoices
+  Name:  admin.invoices
+  Guard: auth
+
+
+Middleware on the group, not the route
+
+  one by one            on the group
+  ─────────             ────────────
+  route ✓ auth          ┌─ route
+  route ✓ auth          │  route      all covered,
+  route ✗ FORGOT        │  route      including the
+  → publicly exposed    └─ route      one you add next`,
+      codeExample: {
+        title: "Names, groups, and how they combine",
+        code: `<?php
+// routes/web.php
+
+use App\\Http\\Controllers\\InvoiceController;
+use Illuminate\\Support\\Facades\\Route;
+
+// ---------- Naming ----------
+Route::get('/invoices/{id}', [InvoiceController::class, 'show'])
+    ->name('invoices.show');
+
+// Build URLs from the name, never by hand:
+//   route('invoices.show', ['id' => 10])       => /invoices/10
+//   route('invoices.show', ['id' => 10], false) => relative URL
+
+
+// ---------- Prefix ----------
+Route::prefix('admin')->group(function () {
+    Route::get('/invoices', ...);   // /admin/invoices
+    Route::get('/clients', ...);    // /admin/clients
+});
+
+
+// ---------- Name prefix (mind the trailing dot) ----------
+Route::name('admin.')->group(function () {
+    Route::get('/invoices', ...)->name('invoices');   // admin.invoices
+});
+
+
+// ---------- Middleware for the whole group ----------
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', ...);
+    Route::get('/invoices', ...);
+});
+
+
+// ---------- Controller once, methods by name ----------
+Route::controller(InvoiceController::class)->group(function () {
+    Route::get('/invoices', 'index')->name('invoices.index');
+    Route::get('/invoices/{id}', 'show')->name('invoices.show');
+});
+
+
+// ---------- All of it together: how real route files look ----------
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'can:manage-invoices'])
+    ->group(function () {
+        Route::get('/invoices', [InvoiceController::class, 'index'])
+            ->name('invoices');          // /admin/invoices, admin.invoices
+
+        Route::get('/clients', [ClientController::class, 'index'])
+            ->name('clients');           // /admin/clients, admin.clients
+    });
+
+
+// ---------- Subdomains, including as a parameter ----------
+Route::domain('{tenant}.invoicehub.test')->group(function () {
+    Route::get('/invoices', function ($tenant) {
+        return "Invoices for {$tenant}";
+    });
+});`,
+      },
+      keyTakeaways: [
+        "`->name('invoices.show')` lets you build URLs with `route('invoices.show', [...])` instead of typing them.",
+        "Named routes mean changing a URL updates every link automatically; hard-coded URLs break silently.",
+        "`route()` throws immediately on a misspelt name, whereas a bad hard-coded URL becomes a production 404.",
+        "<b>`prefix()`</b> adds to the URL, <b>`name()`</b> adds to the route name (remember the trailing dot).",
+        "<b>`middleware()`</b> on a group protects every route inside it, including ones you add later.",
+        "Groups combine and nest, and their settings accumulate downward.",
+        "<b>`domain()`</b> splits routes by subdomain, and the subdomain itself can be a parameter.",
+      ],
+      commonMistakes: [
+        "<b>Forgetting the trailing dot in a name prefix.</b> `Route::name('admin')` gives you `admininvoices` rather than `admin.invoices`.",
+        "<b>Hard-coding URLs in Blade.</b> They keep rendering after a route change and only fail when a user clicks, which is the worst time to find out.",
+        "<b>Applying auth middleware route by route.</b> Sooner or later you add a route and forget, and it is public with nothing to warn you.",
+        "<b>Reusing a route name in two places.</b> The last one silently wins, and `route()` starts returning a URL you did not expect.",
+        "<b>Passing the wrong parameter key to `route()`.</b> Extra keys become a query string instead of failing, so `/invoices/10?id=10` is a clue you named it wrong.",
+      ],
+      quiz: [
+        {
+          question: "Why use named routes instead of hard-coded URLs?",
+          options: [
+            "They render faster",
+            "Changing the URL updates every link automatically",
+            "They are required for controllers",
+            "They add security",
+          ],
+          correctIndex: 1,
+          explanation: "Hard-coded URLs keep rendering after a change and 404 only when clicked.",
+        },
+        {
+          question: "What does `Route::name('admin')` (no trailing dot) produce for a route named `invoices`?",
+          options: [
+            "`admin.invoices`",
+            "`invoices`",
+            "`admininvoices`",
+            "An error",
+          ],
+          correctIndex: 2,
+          explanation: "The prefix is concatenated literally, so the dot has to be part of it.",
+        },
+        {
+          question: "Why apply auth middleware to a group rather than each route?",
+          options: [
+            "Routes you add later are protected by default",
+            "It is faster",
+            "Routes cannot take middleware individually",
+            "It avoids caching issues",
+          ],
+          correctIndex: 0,
+          explanation: "Protecting them one by one means one forgotten route is silently public.",
+        },
+        {
+          question: "What happens if you misspell a route name in `route()`?",
+          options: [
+            "Laravel throws an exception naming the route",
+            "It returns an empty string",
+            "It returns the home page",
+            "It returns a 404 page",
+          ],
+          correctIndex: 0,
+          explanation: "Failing loudly at the point of the mistake is the main advantage over a hard-coded URL.",
+        },
+      ],
+    },
+    {
+      id: "generating-urls",
+      title: "Generating URLs, assets and signed links",
+      durationMinutes: 14,
+      explanation: "Named routes gave you `route()`. That is one member of a family.\n\n<b>URL generation</b> is building a URL from something stable, a route name or a file path, rather than typing the path into your templates. A <b>signed URL</b> is a generated URL carrying a signature Laravel can verify, so a link can be trusted without the person clicking it being logged in.\n\n---\n\n### 1. Basic — the helpers\n\nFour helpers cover almost everything:\n\n```php\nroute('invoices.show', ['invoice' => 10]);   // from a route name\nurl('/invoices/10');                          // from a path\nasset('css/app.css');                         // from a file in public/\naction([InvoiceController::class, 'show'], ['invoice' => 10]);\n```\n\nAll four return an absolute URL built on your `APP_URL`:\n\n```text\nAPP_URL=https://invoicehub.test\n\nasset('css/app.css')  →  https://invoicehub.test/css/app.css\nurl('/invoices')      →  https://invoicehub.test/invoices\n```\n\nThat is the reason `asset()` exists rather than you writing `/css/app.css` by hand. Move the application into a subdirectory, or serve assets from a CDN, and every hard-coded path is wrong while every `asset()` call is still right.\n\n`url()` with no argument returns a builder describing the request you are already in:\n\n```php\nurl()->current();    // https://invoicehub.test/invoices   (no query string)\nurl()->full();       // https://invoicehub.test/invoices?status=paid\nurl()->previous();   // where the user came from\n```\n\n`url()->previous()` is what a Cancel link should point at.\n\nPrefer `route()` whenever a name exists, for the reason from the last lesson: it survives a URL change and fails loudly on a typo. Reach for `url()` when there genuinely is no route, which in practice means external links and paths to static files.\n\nOne more thing `route()` accepts is a model. Hand it the record instead of the id and Laravel asks the model for its route key:\n\n```php\nroute('invoices.show', $invoice);   // /invoices/10\n```\n\nThis is the same route key that `getRouteKeyName()` controls, which the route model binding lesson later today covers. Set that to a slug and the slug is what comes out of `route()` too, so the links you generate and the URLs your routes accept never drift apart.\n\n<i>A note on timing: models come from Eloquent, which InvoiceHub does not have until Day 11. Read this now so the shape is familiar, and it will click properly when the database arrives.</i>\n\n---\n\n### 2. Intermediate — active links and query strings\n\nNavigation has to know which page it is on. The fragile way compares paths:\n\n```blade\n{{-- breaks when the URL changes --}}\n<a class=\"{{ request()->is('invoices*') ? 'active' : '' }}\">Invoices</a>\n```\n\nThe durable way asks about the route name, which does not change when the URL does:\n\n```blade\n<a class=\"{{ request()->routeIs('invoices.*') ? 'active' : '' }}\">Invoices</a>\n```\n\n```text\nrequest()->is('admin/*')          matches on the URL path\nrequest()->routeIs('invoices.*')  matches on the route name\n                                  ↑ survives a URL change\n```\n\nBoth take `*` as a wildcard, so `routeIs('invoices.*')` is true on `invoices.index`, `invoices.show` and `invoices.edit` alike, which is usually what a nav link wants.\n\nExtra parameters handed to `route()` become a query string on their own:\n\n```php\nroute('invoices.index', ['status' => 'paid']);   // /invoices?status=paid\n```\n\nThat is worth knowing in both directions. It is convenient here, and it is also why a misspelt route parameter ends up quietly in the query string instead of raising an error, which was one of the mistakes on the previous lesson.\n\n`URL::query()` does the same job for a plain path, and merges rather than replaces:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::query('/invoices', ['status' => 'paid']);         // /invoices?status=paid\nURL::query('/invoices?page=2', ['status' => 'paid']);  // /invoices?page=2&status=paid\n```\n\nWhen you want a relative URL rather than an absolute one, pass `false` as the third argument:\n\n```php\nroute('invoices.show', ['invoice' => 10], false);   // /invoices/10\n```\n\nOptional parameters work in both directions. A route written `/search/{query?}` matches `/search` and `/search/laravel` alike, so `route()` is happy with or without the value:\n\n```php\nRoute::get('/search/{query?}', SearchController::class)->name('search');\n\nroute('search');                          // /search\nroute('search', ['query' => 'laravel']);   // /search/laravel\n```\n\nA parameter can also be given a default value once, with `URL::defaults()`, which is the usual answer for something like a locale that appears in every URL and would otherwise have to be passed on every single `route()` call.\n\n---\n\n### 3. Advanced — signed URLs\n\nSome links have to work for someone who is not logged in, and must still not work for anybody else. An unsubscribe link in an email. A password reset. A download link for one particular invoice.\n\nRequiring a login defeats the purpose. Putting a bare id in the URL means anyone can change the number and read someone else's data.\n\nA <b>signed URL</b> settles this by appending a signature of the URL itself:\n\n```php\nuse Illuminate\\Support\\Facades\\URL;\n\nURL::signedRoute('unsubscribe', ['user' => 1]);\n```\n\n```text\n/unsubscribe/1?signature=8f14e45fceea167a5a36...\n                         ↑\n        a hash of this exact URL plus your APP_KEY\n```\n\nChange any part of the URL and the signature stops matching, so `/unsubscribe/2` is refused. Only your application can produce a valid signature, because only it holds the key.\n\nCheck it with the `signed` middleware, which returns a 403 when the signature is missing or wrong:\n\n```php\nRoute::get('/unsubscribe/{user}', UnsubscribeController::class)\n    ->name('unsubscribe')\n    ->middleware('signed');\n```\n\nOr check it yourself, when you want to control the response:\n\n```php\nif (! $request->hasValidSignature()) {\n    abort(403);\n}\n```\n\nLinks picked up in the wild often grow query parameters you did not sign. An email client or an ad platform appends its own tracking, the URL is no longer the one you hashed, and a perfectly legitimate click gets a 403. Laravel lets validation ignore named parameters for exactly this:\n\n```php\n// Everything else must match the signature. These may vary.\nif (! $request->hasValidSignatureWhileIgnoring(['utm_source', 'utm_campaign'])) {\n    abort(403);\n}\n```\n\nThe principle is what matters. Signed parameters have to arrive intact, ignored ones are free to change without breaking the signature, and anything you ignore is no longer protected. So name the specific parameters you know are noise, never a blanket ignore, and never the ones that decide what the link actually does.\n\nFor a link that should stop working, add an expiry:\n\n```php\nURL::temporarySignedRoute(\n    'invoices.download',\n    now()->addMinutes(30),\n    ['invoice' => 10],\n);\n```\n\nThe expiry rides along in the URL and is covered by the signature, so it cannot be edited either.\n\nThree things to be clear about, because a signed URL is easy to over-trust.\n\n<b>It is not encryption.</b> The parameters are plainly readable. The signature proves the URL was not tampered with, and nothing more.\n\n<b>It is a bearer token.</b> Anyone holding the link can use it, so treat it like a password in the address bar. It will end up in browser history, server logs and forwarded email. `temporarySignedRoute` is the mitigation, and for anything sensitive the window should be minutes rather than weeks.\n\n<b>It depends on `APP_KEY`.</b> Rotate the key and every signed URL you have ever sent stops working at once, which matters when some of them are sitting in inboxes.",
+      diagram: `Four ways to build a URL
+
+  route('invoices.show', ['invoice' => 10])   ← from a name     PREFER
+  url('/invoices/10')                         ← from a path
+  asset('css/app.css')                        ← from a file
+  action([InvoiceController::class, 'show'])  ← from a method
+
+  every one of them resolves against APP_URL
+                    ↓
+  https://invoicehub.test/invoices/10
+
+
+Active nav links
+
+  request()->is('invoices*')        request()->routeIs('invoices.*')
+        │                                      │
+  URL changes to /bills            URL changes to /bills
+        │                                      │
+        ↓                                      ↓
+  highlight breaks                     still correct
+
+
+A signed URL
+
+  URL::signedRoute('unsubscribe', ['user' => 1])
+              │
+              ├── this URL     /unsubscribe/1
+              └── + APP_KEY    →  hash
+                                    │
+  /unsubscribe/1?signature=8f14e45fce...
+              │
+       someone edits it to /unsubscribe/2
+              ↓
+  the signature no longer matches  →  403`,
+      codeExample: {
+        title: "The helpers, active links, and signed routes",
+        code: `<?php
+// routes/web.php
+
+use App\\Http\\Controllers\\InvoiceController;
+use App\\Http\\Controllers\\UnsubscribeController;
+use Illuminate\\Support\\Facades\\Route;
+use Illuminate\\Support\\Facades\\URL;
+
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+
+// Signed routes: no login needed, but a valid signature is.
+Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])
+    ->name('invoices.download')
+    ->middleware('signed');
+
+Route::get('/unsubscribe/{user}', UnsubscribeController::class)
+    ->name('unsubscribe')
+    ->middleware('signed');
+
+
+// ---------- Generating them ----------
+
+route('invoices.show', ['invoice' => 10]);          // /invoices/10
+route('invoices.index', ['status' => 'paid']);      // /invoices?status=paid
+route('invoices.show', ['invoice' => 10], false);   // relative
+
+url('/invoices/10');
+url()->current();     // this URL, without the query string
+url()->previous();    // where they came from
+
+asset('css/app.css');
+URL::query('/invoices?page=2', ['status' => 'paid']);
+
+// Thirty minutes, then 403.
+URL::temporarySignedRoute('invoices.download', now()->addMinutes(30), ['invoice' => 10]);
+
+// No expiry, still tamper-proof.
+URL::signedRoute('unsubscribe', ['user' => 1]);
+?>
+
+{{-- resources/views/partials/nav.blade.php --}}
+<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+<a href="{{ route('invoices.index') }}"
+   class="{{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+    Invoices
+</a>
+
+<a href="{{ url()->previous() }}">Cancel</a>`,
+      },
+      keyTakeaways: [
+        "`route()` builds from a name, `url()` from a path, `asset()` from a file in `public/`. Prefer `route()` whenever a name exists.",
+        "All of them resolve against `APP_URL`, which is why `asset()` survives the app moving to a subdirectory or a CDN and a hard-coded path does not.",
+        "<b>`url()->current()`</b>, <b>`url()->full()`</b> and <b>`url()->previous()`</b> describe the request you are in. `previous()` is what Cancel links want.",
+        "<b>`request()->routeIs('invoices.*')`</b> highlights active nav links and survives a URL change; `request()->is()` matches the path and does not.",
+        "Extra parameters passed to `route()` become a query string, which is handy and is also why a misspelt parameter fails quietly.",
+        "<b>`URL::signedRoute()`</b> appends a signature of the URL, so a link works without a login and breaks the moment anyone edits it.",
+        "<b>`URL::temporarySignedRoute()`</b> adds an expiry, and the `signed` middleware turns a bad or expired signature into a 403.",
+        "Pass a model to `route()` and Laravel uses its route key, so a custom `getRouteKeyName()` flows straight through to the URLs you generate.",
+        "Signature validation can ignore named query parameters such as tracking tags. Whatever you ignore stops being protected, so name them one by one.",
+      ],
+      commonMistakes: [
+        "<b>Hard-coding asset paths.</b> `/css/app.css` breaks the day the app is served from a subdirectory or a CDN. `asset('css/app.css')` does not.",
+        "<b>Using `request()->is()` for active nav links.</b> It matches on the URL, so changing the route silently breaks the highlighting and nothing fails.",
+        "<b>Treating a signed URL as private.</b> The parameters are readable and the signature is not encryption. It proves the link is unedited, nothing more.",
+        "<b>Signing a link with no expiry and emailing it.</b> Anyone who ever reaches that inbox has a working link forever. Use `temporarySignedRoute` for anything that matters.",
+        "<b>Forgetting that signatures depend on `APP_KEY`.</b> Rotating the key invalidates every signed URL already sent, including the ones sitting in people's email.",
+        "<b>Ignoring too much when validating a signature.</b> Skipping a tracking tag is fine. Skipping the parameter that says which invoice to download hands the URL back to anyone who can edit it.",
+      ],
+      quiz: [
+        {
+          question: "Why prefer `asset('css/app.css')` over writing `/css/app.css` by hand?",
+          options: [
+            "It minifies the file",
+            "It resolves against `APP_URL`, so it survives the app moving",
+            "It is required inside Blade",
+            "It loads the file faster",
+          ],
+          correctIndex: 1,
+          explanation: "Hard-coded paths break when the app is served from a subdirectory or assets move to a CDN.",
+        },
+        {
+          question: "Which check highlights an active nav link without breaking when the URL changes?",
+          options: [
+            "`request()->is('invoices*')`",
+            "`request()->routeIs('invoices.*')`",
+            "`url()->current()`",
+            "`route('invoices.index')`",
+          ],
+          correctIndex: 1,
+          explanation: "Route names survive a URL change; path matching does not.",
+        },
+        {
+          question: "What does the signature on a signed URL actually prove?",
+          options: [
+            "The parameters are encrypted",
+            "The person clicking it is logged in",
+            "The URL came from your app and has not been edited",
+            "The link has not expired",
+          ],
+          correctIndex: 2,
+          explanation: "It is a tamper check, not encryption and not authentication. Expiry only comes with `temporarySignedRoute`.",
+        },
+        {
+          question: "What happens to signed URLs you have already sent if you rotate `APP_KEY`?",
+          options: [
+            "Nothing, the signatures are stored in the database",
+            "They all stop validating",
+            "They quietly fall back to unsigned",
+            "Only the expired ones break",
+          ],
+          correctIndex: 1,
+          explanation: "The signature is derived from the key, so rotating it invalidates every link in the wild at once.",
+        },
+        {
+          question: "You tell signature validation to ignore `utm_source`. What is now true of that parameter?",
+          options: [
+            "It is stripped from the request before your code runs",
+            "It is still covered by the signature, just not read",
+            "It can be changed by anyone without invalidating the link",
+            "The whole URL stops being validated",
+          ],
+          correctIndex: 2,
+          explanation: "Ignoring a parameter removes it from the tamper check, so only ignore ones that do not decide what the link does.",
+        },
+      ],
+    },
+    {
+      id: "resource-routes",
+      title: "Resource routes and nesting",
+      durationMinutes: 11,
+      explanation: "Almost every resource in an application needs the same seven routes. Laravel will write them for you.\n\nA <b>resource</b> is one kind of thing your application stores: invoices, clients, users. A <b>resource route</b> is a single declaration that registers all seven of those routes for one resource, pointing them at the controller method names Laravel expects.\n\n---\n\n### 1. Basic — seven routes in one line\n\nBy hand, a full CRUD resource looks like this:\n\n```php\nRoute::get('/invoices',            [InvoiceController::class, 'index']);\nRoute::get('/invoices/create',     [InvoiceController::class, 'create']);\nRoute::post('/invoices',           [InvoiceController::class, 'store']);\nRoute::get('/invoices/{invoice}',  [InvoiceController::class, 'show']);\nRoute::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit']);\nRoute::put('/invoices/{invoice}',  [InvoiceController::class, 'update']);\nRoute::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy']);\n```\n\nAll of that is one line:\n\n```php\nRoute::resource('invoices', InvoiceController::class);\n```\n\nYou also get the names for free: `invoices.index`, `invoices.create`, `invoices.store`, `invoices.show`, `invoices.edit`, `invoices.update`, `invoices.destroy`.\n\nGenerate the matching controller with every method already stubbed:\n\n```bash\nphp artisan make:controller InvoiceController --resource\n```\n\n```text\nMethod     URL                       Controller  Name\nGET        /invoices                 index       invoices.index\nGET        /invoices/create          create      invoices.create\nPOST       /invoices                 store       invoices.store\nGET        /invoices/{invoice}       show        invoices.show\nGET        /invoices/{invoice}/edit  edit        invoices.edit\nPUT/PATCH  /invoices/{invoice}       update      invoices.update\nDELETE     /invoices/{invoice}       destroy     invoices.destroy\n```\n\nTwo of those return HTML forms rather than data: `create` shows a blank form, `edit` shows a filled one. The other five do the work.\n\n---\n\n### 2. Intermediate — trimming it down\n\nAn API has no forms, so `create` and `edit` are pointless:\n\n```php\nRoute::apiResource('invoices', InvoiceController::class);\n```\n\nThat gives five routes instead of seven, dropping `/create` and `/edit`.\n\n```bash\nphp artisan make:controller InvoiceController --api\n```\n\nYou can also take only what you need:\n\n```php\nRoute::resource('invoices', InvoiceController::class)->only(['index', 'show']);\nRoute::resource('invoices', InvoiceController::class)->except(['destroy']);\n```\n\n`only()` is worth preferring over `except()`. It states what exists rather than what does not, so adding a method later is a deliberate decision instead of an accident.\n\nOne ordering trap: `Route::resource` registers `/invoices/create` before `/invoices/{invoice}`, so the create page works. Hand-written routes are where people get this wrong.\n\n---\n\n### 3. Advanced — nesting, and why shallow exists\n\nResources often belong to other resources. An invoice has payments:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class);\n```\n\n```text\nGET    /invoices/{invoice}/payments\nPOST   /invoices/{invoice}/payments\nGET    /invoices/{invoice}/payments/{payment}\nPUT    /invoices/{invoice}/payments/{payment}\nDELETE /invoices/{invoice}/payments/{payment}\n```\n\nController methods now receive both:\n\n```php\npublic function show(string $invoice, string $payment) { /* ... */ }\n```\n\nThe relationship is visible in the URL, which is the appeal.\n\nThe problem shows up on the deeper routes. To view payment 50 you must write:\n\n```text\n/invoices/10/payments/50\n```\n\nBut payment 50 already knows which invoice it belongs to. The `10` is redundant, and worse, it is a second thing that can be wrong.\n\n<b>Shallow nesting</b> keeps the parent only where it is genuinely needed:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class)->shallow();\n```\n\n```text\nNeeds the parent:              Does not:\nGET  /invoices/10/payments     GET    /payments/50\nPOST /invoices/10/payments     PUT    /payments/50\n                               DELETE /payments/50\n```\n\nListing and creating need to know which invoice. Showing, updating and deleting an existing payment do not.\n\nThe rule of thumb: nest one level, and use `shallow()`. Two levels of nesting produces URLs like `/clients/1/invoices/10/payments/50/notes/3`, which nobody enjoys building or debugging.",
+      diagram: `One line, seven routes
+
+  Route::resource('invoices', InvoiceController::class)
+                        │
+   ┌──────────┬─────────┼─────────┬──────────┐
+   ↓          ↓         ↓         ↓          ↓
+ index     create     store     show      edit/update/destroy
+   │          │         │         │              │
+   ↓          ↓         ↓         ↓              ↓
+GET        GET       POST       GET        GET/PUT/DELETE
+/invoices  /create   /invoices  /{invoice}  /{invoice}[/edit]
+
+  resource     → 7 routes (create + edit return forms)
+  apiResource  → 5 routes (no forms in an API)
+
+
+Shallow nesting: keep the parent only where it is needed
+
+  FULL NESTING                    SHALLOW
+  /invoices/10/payments           /invoices/10/payments      ← needs parent
+  /invoices/10/payments  (POST)   /invoices/10/payments      ← needs parent
+  /invoices/10/payments/50        /payments/50               ← does not
+  /invoices/10/payments/50 (PUT)  /payments/50               ← does not
+  /invoices/10/payments/50 (DEL)  /payments/50               ← does not
+
+  Payment 50 already knows its invoice.
+  Repeating it is redundant, and a second thing to get wrong.`,
+      codeExample: {
+        title: "Resource routes, trimmed and nested",
+        code: `<?php
+// routes/web.php
+
+use App\\Http\\Controllers\\InvoiceController;
+use App\\Http\\Controllers\\PaymentController;
+use Illuminate\\Support\\Facades\\Route;
+
+// Seven routes and seven names, in one line.
+Route::resource('invoices', InvoiceController::class);
+
+// Five routes: no /create or /edit, because an API has no forms.
+Route::apiResource('invoices', InvoiceController::class);
+
+// Only what you need. Prefer only() over except().
+Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+Route::resource('invoices', InvoiceController::class)->except(['destroy']);
+
+// Rename the URL segment without renaming the routes.
+Route::resource('invoices', InvoiceController::class)
+    ->parameters(['invoices' => 'number']);   // /invoices/{number}
+
+// Nested: payments belong to an invoice.
+Route::resource('invoices.payments', PaymentController::class);
+
+// Shallow: parent only where it is actually needed.
+Route::resource('invoices.payments', PaymentController::class)->shallow();
+
+// Resources work inside groups like anything else.
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::resource('invoices', InvoiceController::class);
+    // /admin/invoices ... named admin.invoices.index, etc.
+});
 ?>
 
 <?php
-// app/Http/Controllers/InvoiceController.php
+// app/Http/Controllers/PaymentController.php
+// Generated with: php artisan make:controller PaymentController --resource
 
-use Illuminate\\Routing\\Controllers\\Middleware;
-use Illuminate\\Routing\\Controllers\\HasMiddleware;
-
-#[Middleware('auth')]
-class InvoiceController extends Controller
+class PaymentController extends Controller
 {
-    #[Middleware(['payable', 'throttle:10,1'])]
-    public function pay(string $invoice)
+    // Nested routes pass the parent first, then the child.
+    public function index(string $invoice)
     {
-        // ...
+        return "Payments for invoice {$invoice}";
     }
 
-    // Deliberately public. The method name says so, because a reader
-    // sees #[Middleware('auth')] above the class and may miss this.
-    #[WithoutMiddleware('auth')]
-    public function publicPreview(string $invoice)
+    public function show(string $invoice, string $payment)
     {
-        // ...
+        return "Payment {$payment} on invoice {$invoice}";
+    }
+
+    // With ->shallow() this route is /payments/{payment},
+    // so the parent is no longer passed at all.
+}`,
+      },
+      keyTakeaways: [
+        "<b>`Route::resource`</b> creates the seven standard CRUD routes and names them for you.",
+        "<b>`Route::apiResource`</b> creates five, dropping `/create` and `/edit`, which only exist to show forms.",
+        "`php artisan make:controller X --resource` (or `--api`) stubs the matching methods.",
+        "Use <b>`only()`</b> to state which routes exist, rather than `except()` to state which do not.",
+        "Nested resources put the relationship in the URL: `/invoices/{invoice}/payments/{payment}`.",
+        "<b>`shallow()`</b> keeps the parent for index and store, and drops it once the child's own id is enough.",
+        "Nest one level at most. Deeper URLs get painful to build and to debug.",
+      ],
+      commonMistakes: [
+        "<b>Writing `/invoices/{invoice}` above `/invoices/create` by hand.</b> `Route::resource` orders these correctly; hand-written routes are where the create page mysteriously 404s.",
+        "<b>Using `resource()` for an API.</b> You get two dead routes that return forms nobody will ever request.",
+        "<b>Nesting more than one level.</b> `/clients/1/invoices/10/payments/50` is miserable to generate and to read.",
+        "<b>Forgetting nested routes pass the parent first.</b> `show(string $payment)` on a nested route silently receives the invoice id instead.",
+        "<b>Assuming `resource()` protects anything.</b> It generates routes, not authorization. Anyone can hit `destroy` until you add middleware or a policy.",
+      ],
+      quiz: [
+        {
+          question: "How many routes does `Route::resource` create?",
+          options: [
+            "Five",
+            "Seven",
+            "Four",
+            "Ten",
+          ],
+          correctIndex: 1,
+          explanation: "Two of them, `create` and `edit`, exist only to show HTML forms.",
+        },
+        {
+          question: "Why does `apiResource` create fewer routes than `resource`?",
+          options: [
+            "An API has no forms, so `create` and `edit` are pointless",
+            "APIs are simpler",
+            "APIs cannot delete",
+            "It is a performance optimisation",
+          ],
+          correctIndex: 0,
+          explanation: "That drops it from seven routes to five.",
+        },
+        {
+          question: "What does `shallow()` do to a nested resource?",
+          options: [
+            "Removes all nesting",
+            "Limits nesting depth to two",
+            "Makes routes faster",
+            "Keeps the parent for index and store, drops it once the child's id is enough",
+          ],
+          correctIndex: 3,
+          explanation: "Payment 50 already knows its invoice, so repeating it adds nothing.",
+        },
+        {
+          question: "In a nested resource, what does `show()` receive first?",
+          options: [
+            "The parent id",
+            "The child id",
+            "An array of both",
+            "The request",
+          ],
+          correctIndex: 0,
+          explanation: "Parameters arrive in URL order, so the parent comes first.",
+        },
+      ],
+    },
+    {
+      id: "route-model-binding",
+      title: "Route model binding",
+      durationMinutes: 12,
+      explanation: "So far your route parameters have been strings you then have to look up. Laravel can do the lookup for you.\n\n<b>Route model binding</b> is Laravel using a route parameter to fetch the record itself, handing your code the model instead of the raw value. When no record matches, it returns a 404 before your code runs.\n\n<i>A note on timing: this lesson uses Eloquent models and a database, which InvoiceHub does not have until Day 11. Read it now so the pattern is familiar, and it will click properly when the database arrives.</i>\n\n---\n\n### 1. Basic — from id to model\n\nWithout binding, every controller method starts the same way:\n\n```php\nRoute::get('/invoices/{id}', function ($id) {\n    $invoice = Invoice::findOrFail($id);\n\n    return $invoice;\n});\n```\n\nWith <b>route model binding</b> (Laravel resolving a model from a route parameter automatically), you ask for the model directly:\n\n```php\nRoute::get('/invoices/{invoice}', function (Invoice $invoice) {\n    return $invoice;\n});\n```\n\n```text\n/invoices/10\n     ↓\n{invoice} = 10\n     ↓\ntype hint says Invoice\n     ↓\nInvoice::findOrFail(10)\n     ↓\n$invoice\n```\n\nTwo conditions make this work, and both matter:\n\n```text\n1. The route parameter is named {invoice}\n2. The argument is type-hinted Invoice\n```\n\nThe names must match. `{id}` with an `Invoice $invoice` argument will not bind, and the failure is quiet: you get a fresh empty model rather than an error, which is a confusing afternoon.\n\nYou also get 404 handling for free. No matching record means Laravel returns a 404 before your code runs, so there is no null to check.\n\n---\n\n### 2. Intermediate — binding on something other than the id\n\nBy default Laravel looks up the primary key. Often the public URL should show something more meaningful.\n\nSpecify the column inline:\n\n```php\nRoute::get('/invoices/{invoice:number}', function (Invoice $invoice) {\n    return $invoice;\n});\n```\n\n```text\nDefault:  /invoices/10\n              ↓\n          WHERE id = 10\n\nCustom:   /invoices/INV-001\n              ↓\n          WHERE number = 'INV-001'\n```\n\nIf a model should <i>always</i> bind on that column, say so once on the model:\n\n```php\nclass Invoice extends Model\n{\n    public function getRouteKeyName(): string\n    {\n        return 'number';\n    }\n}\n```\n\nRecent Laravel versions also let you mark it as an attribute on the property with `#[RouteKey]`. Both express the same idea, so check which your version supports:\n\n```text\n#[RouteKey]\n     ↓\n\"bind on this property\"\n```\n\nWhichever column you bind on needs to be <b>unique and indexed</b>. Unique because two matches means Laravel silently takes the first. Indexed because every request now queries that column, and an unindexed lookup on a large table is a slow page nobody attributes to routing.\n\n---\n\n### 3. Advanced — nested models and scoped bindings\n\nHere is a real security problem. Consider:\n\n```php\nRoute::get('/invoices/{invoice}/payments/{payment}', ...);\n```\n\nSomeone requests `/invoices/10/payments/50`, where payment 50 actually belongs to invoice 20. By default Laravel resolves each parameter independently:\n\n```text\nInvoice::find(10)   ✓ found\nPayment::find(50)   ✓ found\n                    ↓\nBoth exist, so the request proceeds\n```\n\nNothing checked that they are related. Your page happily shows another invoice's payment.\n\n<b>Scoped binding</b> resolves the child <i>through</i> the parent:\n\n```php\nRoute::get('/invoices/{invoice}/payments/{payment}', ...)->scopeBindings();\n```\n\n```text\nInvoice::find(10)\n     ↓\n$invoice->payments()->where('id', 50)->firstOrFail()\n     ↓\nNot related? → 404\n```\n\nNow the relationship is enforced by the router. On a resource:\n\n```php\nRoute::resource('invoices.payments', PaymentController::class)->scoped();\n```\n\nLaravel applies this automatically when the child uses a custom key, for example `{payment:reference}`. It does <b>not</b> when both use ids, which is the common case and exactly where the hole is. Ask for it explicitly.\n\nYou can also apply it to a whole group:\n\n```php\nRoute::scopeBindings()->group(function () {\n    // every nested route here is scoped\n});\n```\n\nThis is worth treating as a security default rather than a nicety. It is not authorization, which comes on Day 16, but it does stop one whole category of accidental data exposure.",
+      diagram: `Binding turns an id into a model
+
+  /invoices/10
+       ↓
+  {invoice} = "10"
+       ↓
+  type hint: Invoice $invoice
+       ↓
+  Invoice::findOrFail(10)
+       ↓
+  no record? → 404 before your code runs
+
+  BOTH must line up:
+    parameter named {invoice}   +   argument typed Invoice
+  Mismatch binds nothing and hands you an empty model, silently.
+
+
+Why scoped bindings matter
+
+  /invoices/10/payments/50      (payment 50 belongs to invoice 20)
+
+  WITHOUT scopeBindings()          WITH scopeBindings()
+  Invoice::find(10)   ✓            Invoice::find(10)   ✓
+  Payment::find(50)   ✓                    ↓
+        ↓                          $invoice->payments()
+  both exist → proceed                  ->where('id', 50)
+        ↓                                 ->firstOrFail()
+  another invoice's payment                    ↓
+  rendered on your page                     404 ✓`,
+      codeExample: {
+        title: "Implicit, custom-key and scoped binding",
+        code: `<?php
+// routes/web.php
+
+// ---------- Without binding ----------
+Route::get('/invoices/{id}', function ($id) {
+    $invoice = Invoice::findOrFail($id);
+    return $invoice;
+});
+
+// ---------- With implicit binding ----------
+// Parameter name and type hint must match.
+Route::get('/invoices/{invoice}', function (Invoice $invoice) {
+    return $invoice;
+});
+
+// In a controller, the same thing:
+Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
+
+// ---------- Bind on a different column ----------
+Route::get('/invoices/{invoice:number}', function (Invoice $invoice) {
+    return $invoice;   // WHERE number = 'INV-001'
+});
+
+// ---------- Nested, and scoped so the child must belong to the parent ----------
+Route::get('/invoices/{invoice}/payments/{payment}', function (Invoice $invoice, Payment $payment) {
+    return $payment;
+})->scopeBindings();
+
+Route::resource('invoices.payments', PaymentController::class)->scoped();
+
+Route::scopeBindings()->group(function () {
+    // every nested route in here is scoped
+});
+?>
+
+<?php
+// app/Models/Invoice.php
+
+class Invoice extends Model
+{
+    // Always bind on \`number\` instead of \`id\`, everywhere.
+    // The column must be unique AND indexed: unique so two rows
+    // cannot match, indexed so every request is not a table scan.
+    public function getRouteKeyName(): string
+    {
+        return 'number';
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }
 
 
-// The version-independent equivalent:
-class PaymentController extends Controller implements HasMiddleware
+// app/Http/Controllers/InvoiceController.php
+
+class InvoiceController extends Controller
 {
-    public static function middleware(): array
+    // No findOrFail, no null check. A missing invoice 404s
+    // before this method is ever called.
+    public function show(Invoice $invoice)
     {
-        return [
-            'auth',
-            new Middleware('payable', only: ['store']),
-            new Middleware('throttle:10,1', except: ['index']),
-        ];
+        return view('invoices.show', ['invoice' => $invoice]);
+    }
+
+    public function update(Request $request, Invoice $invoice)
+    {
+        $invoice->update($request->validated());
+
+        return redirect()->route('invoices.show', $invoice);
     }
 }`,
       },
       keyTakeaways: [
-        "Anything after a colon becomes an argument: `'role:admin'` arrives as `$role`.",
-        "Comma-separate several, and accept them with a <b>variadic</b> `string ...$roles`.",
-        "`throttle:60,1` is a parameterised middleware you have already been using.",
-        "A static `using()` helper builds the string type-safely, so typos fail loudly.",
-        "<b>`#[Middleware]`</b> declares middleware on a controller class or a single method.",
-        "<b>`#[WithoutMiddleware]`</b> removes it, and should be rare and obviously named.",
-        "Keep authentication in route groups for auditability; use attributes for method-specific guards.",
-        "`php artisan route:list -v` shows what is actually applied, wherever it was declared.",
+        "<b>Route model binding</b> turns a route parameter into a model, so you skip the `findOrFail` in every method.",
+        "It needs the parameter name and the type hint to match: `{invoice}` with `Invoice $invoice`.",
+        "A missing record becomes a <b>404 before your controller runs</b>, so there is no null to handle.",
+        "`{invoice:number}` binds on another column; `getRouteKeyName()` makes that the default for the model.",
+        "A custom binding column must be <b>unique and indexed</b>, or you get wrong results and slow pages.",
+        "<b>`scopeBindings()`</b> resolves a child through its parent, so unrelated records 404 instead of rendering.",
+        "Scoping is not automatic when both parameters use ids, which is exactly the case that needs it.",
       ],
       commonMistakes: [
-        "<b>Forgetting parameters come after `$next`.</b> The signature is `handle($request, $next, $role)`, and getting the order wrong produces confusing type errors.",
-        "<b>Typos in a middleware string.</b> `'roles:admin'` matches no alias and fails in a way that does not name the mistake. A `using()` helper avoids this entirely.",
-        "<b>Writing one middleware per role.</b> `EnsureUserIsAdmin`, `EnsureUserIsManager` and so on is the duplication parameters exist to prevent.",
-        "<b>Scattering `#[WithoutMiddleware]` through a controller.</b> Every one is a hole in protection that a reader skimming the class will miss.",
-        "<b>Declaring guards in both the route file and the controller.</b> Both apply, and now two places have to agree. Pick one per concern.",
+        "<b>Mismatching the parameter name and the type hint.</b> `{id}` with `Invoice $invoice` binds nothing and hands you an empty model, with no error to explain it.",
+        "<b>Calling `findOrFail` on a bound model.</b> The lookup already happened. Doing it again runs a second query for no reason.",
+        "<b>Binding on a column that is not unique.</b> Two matching rows means Laravel takes the first, and which one is anybody's guess.",
+        "<b>Binding on an unindexed column.</b> Every request now scans the table, and the slow page rarely gets blamed on routing.",
+        "<b>Assuming nested bindings check the relationship.</b> Without `scopeBindings()` they do not, and one invoice's payment renders happily under another.",
+        "<b>Treating scoped binding as authorization.</b> It proves the records are related, not that this user may see them.",
       ],
       quiz: [
         {
-          question: "How does a middleware receive `'role:admin'`?",
+          question: "What two things must match for implicit binding to work?",
           options: [
-            "As a route parameter",
-            "Through the constructor",
-            "Via `$request->input()`",
-            "As an argument after `$next`",
+            "The route name and the controller name",
+            "The parameter name and the type-hinted class",
+            "The URL and the view name",
+            "The model and the migration",
           ],
-          correctIndex: 3,
-          explanation: "The signature becomes `handle($request, $next, $role)`.",
+          correctIndex: 1,
+          explanation: "`{invoice}` with `Invoice $invoice`. A mismatch binds nothing, silently.",
         },
         {
-          question: "How do you accept a variable number of middleware parameters?",
+          question: "What happens when a bound model is not found?",
           options: [
-            "An array argument",
-            "A JSON string",
-            "A variadic `string ...$roles`",
-            "You cannot",
+            "You get null",
+            "Laravel returns a 404 before your controller runs",
+            "An empty model is created",
+            "The route is skipped",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why bound methods need no null check.",
+        },
+        {
+          question: "Why must a custom binding column be unique and indexed?",
+          options: [
+            "Laravel requires it",
+            "To enable caching",
+            "Non-unique silently picks the first match, and unindexed scans the table on every request",
+            "For migrations to run",
           ],
           correctIndex: 2,
-          explanation: "One role or five then needs no change to the signature.",
+          explanation: "Both failure modes are quiet, which is what makes them dangerous.",
         },
         {
-          question: "What is `throttle:60,1`?",
+          question: "What does `scopeBindings()` prevent?",
           options: [
-            "A route name",
-            "A parameterised middleware allowing 60 requests per minute",
-            "A cache setting",
-            "A queue configuration",
+            "Slow queries",
+            "Duplicate route names",
+            "Unauthenticated access",
+            "Loading a child record that belongs to a different parent",
           ],
-          correctIndex: 1,
-          explanation: "Parameterised middleware is something you have used since before today.",
-        },
-        {
-          question: "What is the main argument for declaring auth in route groups rather than attributes?",
-          options: [
-            "It runs faster",
-            "One file answers what is protected, so it can be audited at a glance",
-            "Attributes do not work for auth",
-            "It is required by Laravel",
-          ],
-          correctIndex: 1,
-          explanation: "Attributes win on proximity; route files win on auditability.",
+          correctIndex: 3,
+          explanation: "Without it, `/invoices/10/payments/50` renders even when payment 50 belongs elsewhere.",
         },
       ],
     },
     {
-      id: "order-and-terminable",
-      title: "Execution order, priority and terminate()",
-      durationMinutes: 11,
-      explanation: "Middleware runs in an order, and when that order is wrong the failures are strange rather than loud.\n\n<b>Middleware priority</b> is the order Laravel runs your middleware in, and it is something you can set explicitly when the default order is wrong for you. <b>Terminable middleware</b> is a middleware with a `terminate()` method, which Laravel calls after the response has already been sent to the browser.\n\n---\n\n### 1. Basic — down and back up\n\nThree middleware around a controller:\n\n```text\nRequest\n   ↓\n  A  (before)\n   ↓\n  B  (before)\n   ↓\n  C  (before)\n   ↓\nController\n   ↓\n  C  (after)\n   ↓\n  B  (after)\n   ↓\n  A  (after)\n   ↓\nResponse\n```\n\nThe first one in is the last one out. Nesting, not a queue.\n\nThis falls out of how `$next` works. `A` calls `$next`, which is `B`, which calls `$next`, which is `C`. Each is still sitting inside its own `handle()` waiting for that call to return.\n\nThe practical consequence: a middleware that wants to <b>see the finished response</b> should be early in the list, because early means outermost, and outermost sees the response last, after everyone else has modified it.\n\n```text\nwant to guard the request first?      → run early\nwant to see the final response?       → run early (you unwind last)\nwant to modify the request last       → run late\n  before the controller sees it?\n```\n\n---\n\n### 2. Intermediate — when order goes wrong\n\nThe classic:\n\n```php\nRoute::middleware(['role:admin', 'auth'])->group(...);\n```\n\n`role:admin` runs first and asks `$request->user()?->role`. Nobody has authenticated yet, so `user()` is `null`, the role is `null`, and every request is rejected with a 403. Including the requests from actual admins.\n\nYou get a 403 where you expected a login page, which sends people hunting through their roles table rather than looking at ordering.\n\nReversed, it works:\n\n```php\nRoute::middleware(['auth', 'role:admin'])->group(...);\n```\n\n```text\nauth        → is anyone logged in?  no → redirect to login\n   ↓\nrole:admin  → is that person an admin?  no → 403\n   ↓\nController\n```\n\nRoute middleware runs in the order you list it. Read the list as a sentence and it usually reads correctly or obviously wrongly.\n\n---\n\n### 3. Advanced — priority, and work after the response\n\nRoute order is under your control. Order <b>between</b> sources is not: Laravel's own middleware, group middleware and route middleware all arrive from different places.\n\nFor that, Laravel keeps a priority list, and you can set it:\n\n```php\n->withMiddleware(function (Middleware $middleware) {\n    $middleware->priority([\n        \\Illuminate\\Cookie\\Middleware\\EncryptCookies::class,\n        \\Illuminate\\Session\\Middleware\\StartSession::class,\n        \\Illuminate\\Auth\\Middleware\\Authenticate::class,\n        \\App\\Http\\Middleware\\EnsureUserIsActive::class,\n    ]);\n})\n```\n\nAnything in that list runs in that order regardless of where it was registered. You will rarely need this, and when you do, it is usually because a middleware depends on the session or the authenticated user existing.\n\nNow the other tool. Sometimes work should happen <b>after the response has already gone to the browser</b>. Logging is the obvious case: the user should not wait for it.\n\nAdd a `terminate()` method:\n\n```php\nclass LogRequest\n{\n    public function handle(Request $request, Closure $next): Response\n    {\n        return $next($request);\n    }\n\n    public function terminate(Request $request, Response $response): void\n    {\n        Log::info('Request completed', [\n            'url'      => $request->url(),\n            'status'   => $response->status(),\n            'duration' => microtime(true) - LARAVEL_START,\n        ]);\n    }\n}\n```\n\n```text\nRequest → middleware → controller → response → BROWSER\n                                                  │\n                                            terminate()\n                                                  ↓\n                                            logging, cleanup\n```\n\nThe distinction:\n\n```text\nhandle()      part of producing the response; the user waits for it\nterminate()   after the response is sent; the user does not wait\n```\n\nTwo caveats worth knowing before you rely on it.\n\nIt only helps on setups that can close the connection early, such as PHP-FPM. On some setups the work still happens before the process is free, so it is a latency improvement, not a guarantee.\n\nAnd `terminate()` is not a queue. If the work is slow or can fail, it belongs in a queued job, which arrives on Day 16. Use `terminate()` for quick, fire-and-forget things where losing one occasionally does not matter.",
-      diagram: `First in, last out
+      id: "fallbacks-and-tooling",
+      title: "Fallbacks, route:list and caching",
+      durationMinutes: 8,
+      explanation: "Three things that make working with a large route file bearable.\n\nA <b>fallback route</b> is the one that runs when nothing else matched, so you decide what a 404 looks like instead of taking Laravel's default. <b>Route caching</b> compiles every route into a single file, so the router stops re-reading your route files on each request.\n\n---\n\n### 1. Basic — catching what nothing matched\n\nWhen no route matches, Laravel returns its default 404. You can decide what happens instead:\n\n```php\nRoute::fallback(function () {\n    return response()->view('errors.404', [], 404);\n});\n```\n\nFor an API, JSON is more useful than an HTML page:\n\n```php\nRoute::fallback(function () {\n    return response()->json(['message' => 'Not Found'], 404);\n});\n```\n\n```text\nRequest\n   ↓\nroute matching\n   ├── match → controller\n   └── no match → fallback → your 404\n```\n\nTwo rules. The fallback must be defined <b>last</b>, because routes match top to bottom and a fallback declared early would swallow everything below it. And keep returning a real 404 status: a friendly page that returns 200 tells search engines the page exists.\n\n---\n\n### 2. Intermediate — seeing what you actually have\n\nOnce an application has a few hundred routes, reading the route file stops being a reliable way to know what exists. Ask Laravel:\n\n```bash\nphp artisan route:list\n```\n\n```text\nGET|HEAD   invoices                invoices.index    InvoiceController@index\nPOST       invoices                invoices.store    InvoiceController@store\nGET|HEAD   invoices/create         invoices.create   InvoiceController@create\nGET|HEAD   invoices/{invoice}      invoices.show     InvoiceController@show\nPUT|PATCH  invoices/{invoice}      invoices.update   InvoiceController@update\nDELETE     invoices/{invoice}      invoices.destroy  InvoiceController@destroy\n```\n\nThe filters are what make it usable:\n\n```bash\nphp artisan route:list --path=invoices     # only URLs containing \"invoices\"\nphp artisan route:list --name=invoices     # only routes whose name matches\nphp artisan route:list --method=POST       # only POST routes\nphp artisan route:list --except-vendor     # hide package routes\nphp artisan route:list -v                  # show middleware too\n```\n\nThis is the fastest way to answer three questions people usually guess at: is my route registered at all, what is its real name, and what middleware is actually on it. `-v` in particular settles a lot of \"why is this route public\" arguments.\n\n---\n\n### 3. Advanced — caching, and the closure trap\n\nIn production, Laravel can compile every route into a single file:\n\n```bash\nphp artisan route:cache\n```\n\nOn a large application this is a real speed-up, because Laravel loads one prepared file instead of executing every route definition on every request.\n\nThen the catch. <b>Closure routes cannot be cached.</b> Serialising a closure is not possible, so the command fails:\n\n```text\nLogicException: Unable to prepare route [/] for serialization.\nUses Closure.\n```\n\nWhich means this is fine in development and fatal at deploy time:\n\n```php\nRoute::get('/health', function () {\n    return 'ok';\n});\n```\n\nThe fix is to move it to a controller:\n\n```php\nRoute::get('/health', [HealthController::class, 'show']);\n```\n\nThis is the honest reason production applications put everything in controllers. Not purity, cacheability.\n\nTwo more things about caching that catch people out:\n\n```text\nRoutes changed but the app still serves the old ones\n    → the cache is stale. Run route:clear, or re-run route:cache.\n```\n\nCache in deployment, never in development. Otherwise every route edit appears to do nothing, and you lose twenty minutes before remembering why.\n\n```text\nDeploy\n  ↓\ninstall code\n  ↓\nphp artisan route:cache\nphp artisan config:cache\n  ↓\nserve\n```\n\n`php artisan optimize` runs the caching commands together, and `php artisan optimize:clear` undoes them all, which is the one to reach for when something inexplicable is being served.",
+      diagram: `Fallback catches what nothing matched
 
   Request
      ↓
-   A before ─────────────────────────────┐
-     ↓                                   │
-   B before ──────────────────┐          │
-     ↓                        │          │
-   C before ───────┐          │          │
-     ↓             │          │          │
-  Controller       │          │          │
-     ↓             │          │          │
-   C after ────────┘          │          │
-     ↓                        │          │
-   B after ───────────────────┘          │
-     ↓                                   │
-   A after ──────────────────────────────┘
-     ↓
-  Response
-
-  A guards first and sees the finished response last.
+  route matching, top to bottom
+     ├── match found → controller
+     └── nothing matched
+              ↓
+          fallback        ← must be defined LAST
+              ↓
+     your 404 page, with a real 404 status
 
 
-The ordering bug you will actually hit
+route:list answers what guessing cannot
 
-  WRONG                          RIGHT
-  ['role:admin', 'auth']         ['auth', 'role:admin']
-        │                              │
-  role runs first                auth runs first
-        ↓                              ↓
-  user() is null                 user is known
-        ↓                              ↓
-  role is null → 403             role checked properly
-        ↓                              ↓
-  EVERYONE rejected,             admins get in,
-  including real admins          others get 403
-
-  Symptom: a 403 where you expected a login redirect.
+  is it registered?     route:list --path=invoices
+  what is it named?     route:list --name=invoices
+  what guards it?       route:list -v
 
 
-handle() vs terminate()
+Caching, and the trap
 
-  handle()      response ───→ browser   user waits
-  terminate()   response ───→ browser
-                                 ↓
-                            terminate()   user does not wait
+  php artisan route:cache
+            ↓
+  ┌─────────────────────────┐
+  │ any closure routes?     │
+  └───────────┬─────────────┘
+        ┌─────┴─────┐
+        ↓           ↓
+       yes          no
+        ↓           ↓
+  LogicException   one compiled file,
+  "Uses Closure"   loaded fast
+        ↓
+  move it to a controller
 
-  Not a queue. Slow or failure-prone work belongs in a job.`,
+  Cache on deploy. Never in development,
+  or every route edit appears to do nothing.`,
       codeExample: {
-        title: "Ordering, priority and terminable middleware",
+        title: "Fallback, and making routes cacheable",
         code: `<?php
-// routes/web.php — route middleware runs in the order you list it
+// routes/web.php
 
-// WRONG: role runs before anyone is authenticated, so user() is null
-// and every request 403s, including real admins.
-Route::middleware(['role:admin', 'auth'])->group(function () {
-    Route::get('/admin/invoices', ...);
+use App\\Http\\Controllers\\HealthController;
+use Illuminate\\Support\\Facades\\Route;
+
+// ... all your other routes ...
+
+
+// The fallback MUST come last. Routes match top to bottom,
+// so a fallback defined early swallows everything below it.
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
 });
 
-// RIGHT: establish who they are, then what they may do.
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/invoices', ...);
-});
+// For an API, JSON is more useful than an HTML page:
+// Route::fallback(fn () => response()->json(['message' => 'Not Found'], 404));
+
+
+// ---------- Cacheable vs not ----------
+
+// NOT cacheable. route:cache fails with:
+//   LogicException: Unable to prepare route [health] for serialization. Uses Closure.
+// Route::get('/health', function () {
+//     return 'ok';
+// });
+
+// Cacheable. This is the real reason production apps use controllers.
+Route::get('/health', [HealthController::class, 'show']);
 ?>
 
-<?php
-// bootstrap/app.php — order BETWEEN sources, when you cannot control the list
+# ---------- Inspecting routes ----------
+php artisan route:list
+php artisan route:list --path=invoices      # URLs containing "invoices"
+php artisan route:list --name=invoices      # names matching
+php artisan route:list --method=POST        # one verb
+php artisan route:list --except-vendor      # hide package routes
+php artisan route:list -v                   # include middleware
 
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->priority([
-        \\Illuminate\\Cookie\\Middleware\\EncryptCookies::class,
-        \\Illuminate\\Session\\Middleware\\StartSession::class,
-        \\Illuminate\\View\\Middleware\\ShareErrorsFromSession::class,
-        \\Illuminate\\Auth\\Middleware\\Authenticate::class,
-        \\App\\Http\\Middleware\\EnsureUserIsActive::class,   // needs the user
-        \\Illuminate\\Routing\\Middleware\\SubstituteBindings::class,
-    ]);
-})
-?>
+# ---------- Deployment ----------
+php artisan route:cache
+php artisan config:cache
+php artisan view:cache
 
-<?php
+# All three at once
+php artisan optimize
 
-namespace App\\Http\\Middleware;
+# Undo them all. Reach for this when something inexplicable is served.
+php artisan optimize:clear
 
-use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Log;
-use Symfony\\Component\\HttpFoundation\\Response;
-
-class LogRequest
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        // Part of producing the response. The user waits for this.
-        return $next($request);
-    }
-
-    // Runs AFTER the response has been sent to the browser.
-    // Good for quick fire-and-forget work like logging.
-    // Not a queue: if it can be slow or fail, use a queued job instead.
-    public function terminate(Request $request, Response $response): void
-    {
-        Log::info('Request completed', [
-            'url'    => $request->url(),
-            'method' => $request->method(),
-            'status' => $response->status(),
-            'user'   => $request->user()?->id,
-        ]);
-    }
-}`,
+# Just the routes
+php artisan route:clear`,
       },
       keyTakeaways: [
-        "Middleware nests: the <b>first one in is the last one out</b>.",
-        "Route middleware runs in the order you list it, so read the list as a sentence.",
-        "<b>`['role:admin', 'auth']` is a real bug</b>: the role check sees a null user and rejects everyone, including admins.",
-        "The symptom of that bug is a 403 where you expected a login redirect.",
-        "<b>`priority()`</b> fixes ordering between middleware arriving from different sources.",
-        "<b>`terminate()`</b> runs after the response has been sent, so the user does not wait for it.",
-        "`terminate()` is not a queue. Slow or failure-prone work belongs in a queued job.",
+        "<b>`Route::fallback`</b> decides what happens when nothing matches, and must be defined last.",
+        "Keep a real 404 status on your fallback; a friendly page returning 200 tells search engines it exists.",
+        "<b>`php artisan route:list`</b> is the reliable answer to what is registered, what it is named, and what guards it.",
+        "`--path`, `--name`, `--method` and `-v` are what make that output usable on a real application.",
+        "<b>`route:cache`</b> compiles routes into one file and is a genuine production speed-up.",
+        "<b>Closure routes cannot be cached.</b> `route:cache` fails outright, which is the practical reason to use controllers.",
+        "Cache on deploy, never in development, and reach for `optimize:clear` when stale caches are serving old behaviour.",
       ],
       commonMistakes: [
-        "<b>Putting an authorization check before authentication.</b> `user()` is null, the check fails, and every request 403s including the ones that should succeed.",
-        "<b>Debugging that 403 by looking at roles.</b> The roles are fine. The ordering is not.",
-        "<b>Expecting a middleware to see the final response when it is registered last.</b> Last in means first out, so it unwinds before the others have touched the response.",
-        "<b>Doing slow work in `terminate()`.</b> On some setups it still delays the worker, and there is no retry if it fails.",
-        "<b>Using `terminate()` for anything that must not be lost.</b> There is no guarantee and no retry. Queue it.",
+        "<b>Defining the fallback anywhere but last.</b> Routes match top to bottom, so an early fallback swallows every route below it.",
+        "<b>Returning a 200 from a custom 404 page.</b> Crawlers take you at your word and index a page that does not exist.",
+        "<b>Running `route:cache` in development.</b> Every route change then appears to do nothing until you clear it.",
+        "<b>Deploying with a closure route.</b> `route:cache` fails at deploy time, when you least want to be converting routes to controllers.",
+        "<b>Forgetting to re-cache after deploying route changes.</b> The old compiled file keeps being served.",
       ],
       quiz: [
         {
-          question: "In what order does middleware unwind after the controller?",
+          question: "Where must a fallback route be defined?",
           options: [
-            "The same order it ran in",
-            "Alphabetically",
-            "Reverse order: first in, last out",
-            "Randomly",
-          ],
-          correctIndex: 2,
-          explanation: "Each middleware is still inside its own `handle()`, waiting for `$next` to return.",
-        },
-        {
-          question: "What happens with `->middleware(['role:admin', 'auth'])`?",
-          options: [
-            "It works fine",
-            "It throws an exception",
-            "Laravel reorders it automatically",
-            "The role check sees a null user and rejects everyone, including admins",
-          ],
-          correctIndex: 3,
-          explanation: "The symptom is a 403 where you expected a login redirect.",
-        },
-        {
-          question: "When does `terminate()` run?",
-          options: [
-            "After the response has been sent to the browser",
-            "Instead of `handle()`",
-            "Before the controller",
-            "Only on failures",
-          ],
-          correctIndex: 0,
-          explanation: "Which is why the user does not wait for it.",
-        },
-        {
-          question: "Why should slow work not go in `terminate()`?",
-          options: [
-            "It is not allowed",
-            "There is no retry and it can still delay the worker",
-            "It runs twice",
-            "It blocks the browser",
+            "First, so it catches everything",
+            "Last, after every other route",
+            "In `api.php` only",
+            "Anywhere",
           ],
           correctIndex: 1,
-          explanation: "Anything that must not be lost belongs in a queued job.",
+          explanation: "Routes match top to bottom, so an early fallback swallows the rest.",
         },
-      ],
-    },
-    {
-      id: "proxies-and-hosts",
-      title: "Trusted proxies and trusted hosts",
-      durationMinutes: 9,
-      explanation: "Two pieces of middleware you will not write and will eventually need to configure. Both are about the same thing: deciding which parts of an incoming request you are willing to believe.\n\nA <b>trusted proxy</b> is a server you tell Laravel to believe, so the headers it adds about the real client IP and protocol are treated as true instead of ignored. A <b>trusted host</b> is a domain you tell Laravel to accept in a request's Host header, so a request claiming to come from any other domain is refused.\n\n---\n\n### 1. Basic — what a proxy does to your request\n\nIn production your application usually sits behind something:\n\n```text\nUser (203.0.113.10)\n      ↓\nCloudflare / load balancer (10.0.0.5)\n      ↓\nLaravel\n```\n\nLaravel's connection is with the load balancer, not the user. So by default:\n\n```php\n$request->ip();          // 10.0.0.5   the load balancer\n$request->isSecure();    // false      even though the user used HTTPS\n```\n\nThe real information is not lost; the proxy forwards it in headers:\n\n```text\nX-Forwarded-For    203.0.113.10\nX-Forwarded-Proto  https\nX-Forwarded-Host   invoicehub.com\n```\n\nLaravel ignores those headers unless you tell it the proxy is trustworthy. And it is right to: anyone can send an `X-Forwarded-For` header claiming to be any IP address. Believing it unconditionally would mean IP-based rate limiting and blocking could be bypassed by typing a header.\n\n<b>Trusted proxies</b> configuration says: when the request comes from <i>this</i> proxy, its forwarding headers can be believed.\n\n---\n\n### 2. Intermediate — configuring it, and what breaks without it\n\nIn `bootstrap/app.php`:\n\n```php\n->withMiddleware(function (Middleware $middleware) {\n    $middleware->trustProxies(at: [\n        '10.0.0.5',\n        '192.168.1.0/24',\n    ]);\n})\n```\n\nIf your application only ever receives traffic through a load balancer you control, trusting all of them is acceptable:\n\n```php\n$middleware->trustProxies(at: '*');\n```\n\nOnly when nothing can reach the application directly. If your origin server is also reachable on its public IP, `'*'` means anyone can spoof any header.\n\nThree things break in specific, confusing ways when this is not configured:\n\n```text\nRate limiting     every request looks like it came from the load\n                  balancer, so all your users share one bucket and\n                  throttle each other\n\nHTTPS detection   isSecure() is false, so Laravel generates http://\n                  URLs, which browsers then block as mixed content\n\nLogging           every log line and audit record shows the same\n                  internal IP, so you cannot trace anything\n```\n\nThat first one is worth dwelling on. `throttle:60,1` behind an unconfigured proxy is not sixty requests per user per minute. It is sixty requests <i>in total</i>, shared by everyone, because Laravel thinks every request came from the same address. It looks like a mysterious rate-limiting bug under load.\n\n---\n\n### 3. Advanced — trusted hosts\n\nThe other one concerns the `Host` header, which says which domain the request thinks it is for.\n\nLaravel uses that header to generate absolute URLs: password reset links, email links, redirects. And the header is supplied by the client, so it can be a lie:\n\n```text\nGET /forgot-password\nHost: attacker.example.com\n```\n\nIf nothing validates it, your application generates a reset link pointing at `attacker.example.com`, and emails it to a real user. They click a link in a genuine email from you and hand over their token. This class of bug is called host header injection.\n\n<b>Trusted hosts</b> validates the header against a list:\n\n```php\n->withMiddleware(function (Middleware $middleware) {\n    $middleware->trustHosts(at: [\n        'invoicehub.com',\n        'www.invoicehub.com',\n    ]);\n})\n```\n\nYou can include subdomains:\n\n```php\n$middleware->trustHosts(at: ['invoicehub.com'], subdomains: true);\n```\n\n```text\nIncoming Host header\n        ↓\n   in the list?\n   ┌────┴────┐\n  yes        no\n   ↓          ↓\n allow    400 Bad Request\n```\n\nWhether this matters depends on your setup: if your web server already rejects unknown hostnames before Laravel sees them, you have the same protection a layer earlier. Configuring both is cheap and means the application is safe wherever it is deployed.\n\nA related setting worth knowing:\n\n```php\n// config/app.php\n'url' => env('APP_URL', 'http://localhost'),\n```\n\nQueued jobs and Artisan commands have no incoming request to read a host from, so they build URLs from `APP_URL`. If your emailed links work from the browser and are wrong when sent from a queue worker, that is the setting to check.",
-      diagram: `Why Laravel ignores forwarding headers by default
-
-  User 203.0.113.10
-        ↓
-  Proxy 10.0.0.5      adds X-Forwarded-For: 203.0.113.10
-        ↓
-  Laravel             sees a connection from 10.0.0.5
-
-  Believe the header unconditionally?
-        ↓
-  Anyone can send X-Forwarded-For: 1.2.3.4
-        ↓
-  IP blocking and rate limiting bypassed by typing a header
-
-  trustProxies(at: [...]) = "from THIS proxy, believe them"
-
-
-What silently breaks when it is not configured
-
-  throttle:60,1   every request looks like the load balancer
-                  → 60 requests TOTAL, shared by all users
-                  → users throttle each other under load
-
-  isSecure()      false, so links generate as http://
-                  → browsers block them as mixed content
-
-  logs            every entry shows the same internal IP
-
-
-Host header injection
-
-  GET /forgot-password
-  Host: attacker.example.com        ← supplied by the client
-
-  no trustHosts                     with trustHosts
-        ↓                                 ↓
-  reset link built for              Host not in the list
-  attacker.example.com                    ↓
-        ↓                           400 Bad Request
-  emailed to a real user
-        ↓
-  they click a genuine email
-  and hand over their token`,
-      codeExample: {
-        title: "Configuring proxies and hosts",
-        code: `<?php
-// bootstrap/app.php
-
-use Illuminate\\Foundation\\Configuration\\Middleware;
-use Illuminate\\Http\\Request;
-
-->withMiddleware(function (Middleware $middleware) {
-
-    // ---------- Trusted proxies ----------
-    // Believe X-Forwarded-* headers, but only from these addresses.
-    $middleware->trustProxies(at: [
-        '10.0.0.5',
-        '192.168.1.0/24',
-    ]);
-
-    // Trust any proxy. ONLY when nothing can reach the app directly.
-    // If the origin is also reachable on its public IP, this lets
-    // anyone spoof any forwarded header.
-    $middleware->trustProxies(at: '*');
-
-    // Choose which headers to honour, if your proxy differs.
-    $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR
-        | Request::HEADER_X_FORWARDED_HOST
-        | Request::HEADER_X_FORWARDED_PORT
-        | Request::HEADER_X_FORWARDED_PROTO);
-
-
-    // ---------- Trusted hosts ----------
-    // Reject requests whose Host header is not one of ours, so a
-    // forged Host cannot end up inside a password reset link.
-    $middleware->trustHosts(at: [
-        'invoicehub.com',
-        'www.invoicehub.com',
-    ]);
-
-    // Include every subdomain of the listed hosts.
-    $middleware->trustHosts(at: ['invoicehub.com'], subdomains: true);
-})
-?>
-
-# ---------- Checking it worked ----------
-# Behind a correctly configured proxy:
-#   $request->ip()        the real client IP, not the load balancer
-#   $request->isSecure()  true when the user connected over HTTPS
-#   url('/invoices')      https://invoicehub.com/invoices
-
-# .env — queued jobs and Artisan commands have no incoming request,
-# so they build URLs from this instead of a Host header.
-APP_URL=https://invoicehub.com`,
-      },
-      keyTakeaways: [
-        "Behind a proxy, Laravel sees the <b>proxy's</b> IP and connection, not the user's.",
-        "The real details arrive in `X-Forwarded-*` headers, which Laravel ignores until you say the proxy is trusted.",
-        "That default is correct: anyone can forge those headers, so trusting them blindly defeats IP blocking.",
-        "<b>`trustProxies(at: [...])`</b> configures it; `'*'` is only safe when nothing can reach the app directly.",
-        "Unconfigured, `throttle:60,1` becomes 60 requests <b>shared by everyone</b>, because all requests look identical.",
-        "It also breaks HTTPS detection, so generated links come out as `http://` and browsers block them.",
-        "<b>`trustHosts(at: [...])`</b> rejects forged `Host` headers, preventing poisoned password reset links.",
-        "Queued jobs have no request to read, so they build URLs from <b>`APP_URL`</b>.",
-      ],
-      commonMistakes: [
-        "<b>Deploying behind a load balancer without configuring trusted proxies.</b> Rate limiting, HTTPS detection and logging all break quietly and at once.",
-        "<b>Blaming the rate limiter when users throttle each other.</b> They share one bucket because every request appears to come from the proxy.",
-        "<b>Using `trustProxies(at: '*')` on a server that is also publicly reachable.</b> Anyone can then spoof any forwarded header.",
-        "<b>Chasing mixed-content errors in your asset pipeline.</b> If `isSecure()` is false behind a proxy, every generated URL is `http://`.",
-        "<b>Leaving `APP_URL` at its default.</b> Links in queued emails point at `localhost`, while the same links work fine from the browser.",
-      ],
-      quiz: [
         {
-          question: "Behind a load balancer, what does `$request->ip()` return by default?",
+          question: "Why does `php artisan route:cache` fail on some applications?",
           options: [
-            "The user's real IP",
-            "The server's IP",
-            "null",
-            "The load balancer's IP",
+            "Too many routes",
+            "Duplicate route names",
+            "Missing config cache",
+            "Closure routes cannot be serialised",
           ],
           correctIndex: 3,
-          explanation: "The real IP is in `X-Forwarded-For`, which Laravel ignores until the proxy is trusted.",
+          explanation: "This is the practical reason production applications put handlers in controllers.",
         },
         {
-          question: "Why does Laravel ignore `X-Forwarded-For` by default?",
+          question: "Which command shows the middleware on each route?",
           options: [
-            "It is slow to parse",
-            "It is only for HTTPS",
-            "It is deprecated",
-            "Anyone can forge it, which would defeat IP blocking and rate limiting",
-          ],
-          correctIndex: 3,
-          explanation: "Trusting it unconditionally would let a header bypass your protections.",
-        },
-        {
-          question: "What happens to `throttle:60,1` behind an unconfigured proxy?",
-          options: [
-            "All users share one 60-request bucket and throttle each other",
-            "It stops working entirely",
-            "Each user gets 60 requests as normal",
-            "It throws an exception",
-          ],
-          correctIndex: 0,
-          explanation: "Every request appears to come from the same address.",
-        },
-        {
-          question: "What does `trustHosts` prevent?",
-          options: [
-            "Slow requests",
-            "CSRF attacks",
-            "A forged Host header ending up in generated links such as password resets",
-            "SQL injection",
+            "`route:list --path=x`",
+            "`route:cache`",
+            "`route:list -v`",
+            "`route:clear`",
           ],
           correctIndex: 2,
-          explanation: "The user clicks a genuine email from you and lands on the attacker's domain.",
+          explanation: "It settles most \"why is this route public\" questions immediately.",
+        },
+        {
+          question: "You changed a route and the old behaviour is still served. What is likely?",
+          options: [
+            "A stale route cache; run `route:clear`",
+            "A syntax error",
+            "The wrong HTTP method",
+            "A missing controller",
+          ],
+          correctIndex: 0,
+          explanation: "Caching in development is the usual cause of this particular confusion.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What is middleware?",
+      question: "What three things does a route connect?",
       options: [
-        "A database layer",
-        "A checkpoint between the request and your controller",
-        "A template engine",
-        "A routing method",
+        "A model, a view and a controller",
+        "An HTTP method, a URL and a handler",
+        "A request, a session and a response",
+        "A prefix, a name and a group",
       ],
       correctIndex: 1,
-      explanation: "Its defining ability is stopping a request before the controller runs.",
+      explanation: "Everything else in routing is convenience on top of those three.",
     },
     {
-      question: "How does middleware relate to the controller?",
+      question: "What is the practical difference between `web.php` and `api.php`?",
       options: [
-        "It wraps the controller: down on the way in, back up on the way out",
-        "It replaces the controller",
-        "It runs before and stops",
-        "It runs only after",
+        "Different middleware: sessions and CSRF versus stateless token auth",
+        "`api.php` is faster",
+        "`web.php` cannot return JSON",
+        "None",
       ],
       correctIndex: 0,
-      explanation: "Which is why the same middleware can also modify the response.",
+      explanation: "`api.php` is also prefixed with `/api` automatically.",
     },
     {
-      question: "What does `$next($request)` represent?",
+      question: "Which HTTP method must never change data?",
       options: [
-        "The response object",
-        "The previous middleware",
-        "The rest of the application: later middleware and the controller",
-        "The route",
-      ],
-      correctIndex: 2,
-      explanation: "The line returns a response once everything downstream has run.",
-    },
-    {
-      question: "How do you make code run after the controller?",
-      options: [
-        "Use an `after()` method",
-        "It is not possible",
-        "Use `terminate()` only",
-        "Put it after `$next($request)`",
-      ],
-      correctIndex: 3,
-      explanation: "The position of `$next` is the only thing that decides before or after.",
-    },
-    {
-      question: "How do you block a request in middleware?",
-      options: [
-        "Return `false`",
-        "Call `$next(null)`",
-        "Do not call `$next`; return a response instead",
-        "Throw any exception",
-      ],
-      correctIndex: 2,
-      explanation: "Everything downstream is then skipped entirely.",
-    },
-    {
-      question: "Your middleware calls `$next($request)` without returning it. What happens?",
-      options: [
-        "A 500 error",
-        "The app runs and the browser gets a blank page",
-        "The request is blocked",
-        "Laravel returns it for you",
-      ],
-      correctIndex: 1,
-      explanation: "No error is raised, which is what makes it hard to find.",
-    },
-    {
-      question: "Which command creates a middleware class?",
-      options: [
-        "`composer require middleware`",
-        "`php artisan new:middleware`",
-        "`php artisan middleware:make`",
-        "`php artisan make:middleware Name`",
-      ],
-      correctIndex: 3,
-      explanation: "It lands in `app/Http/Middleware/`.",
-    },
-    {
-      question: "What does `$request->expectsJson()` let one middleware do?",
-      options: [
-        "Force JSON output",
-        "Parse the request body",
-        "Validate JSON",
-        "Redirect browsers and return 401 JSON to API clients",
-      ],
-      correctIndex: 3,
-      explanation: "The same guard then behaves correctly for both kinds of caller.",
-    },
-    {
-      question: "Where is middleware registered in a modern Laravel application?",
-      options: [
-        "`app/Http/Kernel.php`",
-        "`bootstrap/app.php`",
-        "`config/middleware.php`",
-        "`routes/web.php`",
-      ],
-      correctIndex: 1,
-      explanation: "`Kernel.php` was the old location and no longer exists.",
-    },
-    {
-      question: "What is the difference between `append()` and `prepend()`?",
-      options: [
-        "Append is faster",
-        "Prepend runs before Laravel's own middleware, append runs after",
-        "Prepend is for APIs",
-        "There is none",
-      ],
-      correctIndex: 1,
-      explanation: "Something like ForceHttps must prepend to be useful.",
-    },
-    {
-      question: "What does `alias()` do?",
-      options: [
-        "Renames a route",
-        "Creates a group",
-        "Gives a middleware class a short name for route files",
-        "Duplicates middleware",
-      ],
-      correctIndex: 2,
-      explanation: "`auth`, `guest` and `throttle` are aliases Laravel defines for you.",
-    },
-    {
-      question: "Why do `web.php` routes have sessions while `api.php` routes do not?",
-      options: [
-        "They run through different middleware groups",
-        "Different route files are cached differently",
-        "APIs cannot use sessions",
-        "It is a configuration bug",
+        "GET",
+        "DELETE",
+        "POST",
+        "PATCH",
       ],
       correctIndex: 0,
-      explanation: "The `web` group includes session and CSRF middleware; the `api` group is stateless.",
+      explanation: "Crawlers fetch URLs unprompted, so a destructive GET route will eventually fire on its own.",
     },
     {
-      question: "How does a middleware receive `'role:admin'`?",
+      question: "What is the difference between PUT and PATCH?",
       options: [
-        "Through the constructor",
-        "Via `$request->input()`",
-        "As an argument after `$next`",
-        "As a route parameter",
+        "PUT is for APIs only",
+        "PUT replaces the whole resource; PATCH changes only what you send",
+        "PATCH is faster",
+        "They are the same",
       ],
-      correctIndex: 2,
-      explanation: "The signature becomes `handle($request, $next, $role)`.",
+      correctIndex: 1,
+      explanation: "Fields omitted from a PUT are meant to be wiped.",
     },
     {
-      question: "What does `#[WithoutMiddleware]` do?",
+      question: "Why does an HTML form need `@method('DELETE')`?",
       options: [
-        "Removes middleware from a route or method",
-        "Adds middleware",
-        "Reorders middleware",
-        "Disables all middleware",
+        "For CSRF protection",
+        "Because forms can only send GET and POST",
+        "To speed up the request",
+        "To name the route",
       ],
-      correctIndex: 0,
-      explanation: "It removes protection, so it should be rare and obviously named.",
+      correctIndex: 1,
+      explanation: "Laravel reads the hidden `_method` field and routes it accordingly.",
     },
     {
-      question: "In what order does middleware unwind after the controller?",
+      question: "How are route parameters passed to your handler?",
       options: [
-        "The same order it ran in",
+        "Matched by name",
         "Alphabetically",
-        "Reverse order: first in, last out",
-        "By priority only",
+        "As an array",
+        "In the order they appear in the URL",
+      ],
+      correctIndex: 3,
+      explanation: "Renaming the arguments changes nothing, which surprises people on nested routes.",
+    },
+    {
+      question: "What must accompany an optional `{param?}`?",
+      options: [
+        "A default value on the PHP argument",
+        "A route name",
+        "A constraint",
+        "A middleware",
+      ],
+      correctIndex: 0,
+      explanation: "Without it PHP throws an ArgumentCountError when the parameter is omitted.",
+    },
+    {
+      question: "What does a constraint like `whereNumber('id')` do to bad input?",
+      options: [
+        "Casts it to an integer",
+        "Throws an exception",
+        "The route does not match, so Laravel returns 404",
+        "Passes it through",
       ],
       correctIndex: 2,
-      explanation: "Each middleware is still inside its own `handle()` waiting for `$next` to return.",
+      explanation: "Invalid input is rejected at the router, before your controller runs.",
     },
     {
-      question: "What is wrong with `->middleware(['role:admin', 'auth'])`?",
+      question: "Why does `/invoices/create` 404 when `/invoices/{id}` sits above it?",
       options: [
-        "Nothing",
-        "It needs a group",
-        "Roles cannot be checked in middleware",
-        "The role check runs before anyone is authenticated, so it rejects everyone",
+        "`create` is reserved",
+        "It needs a name",
+        "Routes match top to bottom and the first match wins",
+        "Resource routes are required",
+      ],
+      correctIndex: 2,
+      explanation: "The broad route treats `create` as an id. `Route::resource` orders these correctly for you.",
+    },
+    {
+      question: "What is the main benefit of named routes?",
+      options: [
+        "Faster rendering",
+        "They add authorization",
+        "They enable caching",
+        "Changing a URL updates every link automatically",
       ],
       correctIndex: 3,
-      explanation: "The symptom is a 403 where you expected a login redirect.",
+      explanation: "Hard-coded URLs keep rendering after a change and 404 only when someone clicks.",
     },
     {
-      question: "When does `terminate()` run?",
+      question: "Why put auth middleware on a group rather than each route?",
       options: [
-        "Before the controller",
-        "Only on errors",
-        "Instead of `handle()`",
-        "After the response has been sent to the browser",
-      ],
-      correctIndex: 3,
-      explanation: "Which is why the user does not wait for it.",
-    },
-    {
-      question: "Why should slow work not go in `terminate()`?",
-      options: [
-        "There is no retry and it can still delay the worker",
-        "It runs twice",
-        "It is not allowed",
-        "It blocks the browser",
-      ],
-      correctIndex: 0,
-      explanation: "Anything that must not be lost belongs in a queued job.",
-    },
-    {
-      question: "What breaks when trusted proxies are not configured behind a load balancer?",
-      options: [
-        "Nothing",
-        "Rate limiting, HTTPS detection and logging all break quietly",
-        "Routing stops working",
-        "Sessions are disabled",
+        "It is faster",
+        "Routes added later are protected by default",
+        "Routes cannot take middleware individually",
+        "It enables route caching",
       ],
       correctIndex: 1,
-      explanation: "All users share one rate-limit bucket because every request looks identical.",
+      explanation: "One forgotten route is otherwise silently public.",
     },
     {
-      question: "What does `trustHosts` prevent?",
+      question: "How many routes does `Route::resource` create, and `apiResource`?",
       options: [
-        "A forged Host header ending up in generated links",
-        "SQL injection",
-        "CSRF attacks",
+        "Five and three",
+        "Seven and seven",
+        "Six and four",
+        "Seven and five",
+      ],
+      correctIndex: 3,
+      explanation: "`apiResource` drops `create` and `edit`, which exist only to return forms.",
+    },
+    {
+      question: "What does `shallow()` do to a nested resource?",
+      options: [
+        "Removes nesting entirely",
+        "Limits nesting to two levels",
+        "Keeps the parent for index and store, drops it once the child's id is enough",
+        "Caches the routes",
+      ],
+      correctIndex: 2,
+      explanation: "The child already knows its parent, so repeating it adds nothing.",
+    },
+    {
+      question: "What two things must line up for implicit model binding?",
+      options: [
+        "The model and the migration",
+        "The route name and the controller",
+        "The parameter name and the type-hinted class",
+        "The URL and the view",
+      ],
+      correctIndex: 2,
+      explanation: "A mismatch binds nothing and hands you an empty model, with no error.",
+    },
+    {
+      question: "What does `scopeBindings()` prevent?",
+      options: [
         "Slow queries",
+        "Loading a child that belongs to a different parent",
+        "Unauthenticated access",
+        "Duplicate route names",
+      ],
+      correctIndex: 1,
+      explanation: "Without it, `/invoices/10/payments/50` renders even when payment 50 belongs elsewhere.",
+    },
+    {
+      question: "Why must a custom route key column be unique and indexed?",
+      options: [
+        "Non-unique picks the first match silently, and unindexed scans the table each request",
+        "Laravel refuses otherwise",
+        "To allow caching",
+        "For scoped bindings to work",
       ],
       correctIndex: 0,
-      explanation: "Otherwise a password reset link can be built for an attacker's domain.",
+      explanation: "Both failure modes are quiet, which is what makes them costly.",
+    },
+    {
+      question: "Why can `php artisan route:cache` fail?",
+      options: [
+        "Closure routes cannot be serialised",
+        "Duplicate names",
+        "Too many routes",
+        "Missing config cache",
+      ],
+      correctIndex: 0,
+      explanation: "This is the real reason production applications keep handlers in controllers.",
+    },
+    {
+      question: "Where must `Route::fallback` be defined?",
+      options: [
+        "First",
+        "Inside a group",
+        "In `api.php` only",
+        "Last, after every other route",
+      ],
+      correctIndex: 3,
+      explanation: "Routes match top to bottom, so an early fallback swallows everything below.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Put real checkpoints in front of the app, and see what runs when.",
-    brief: "You wrote one middleware on Day 3 without much explanation of how it worked. Today you build the layer properly.\n\nInvoiceHub still has no database and no real authentication, which is fine. You can build and register every kind of middleware here against a fake user in the session, and everything you write will keep working when real auth arrives on Day 14. The goal today is to feel the ordering, not to secure anything for production.",
+    goal: "Give it a real routing layer: resource routes, constraints and named URLs.",
+    brief: "InvoiceHub currently has two routes you wrote by hand, and Blade templates with URLs typed into them. That works at two routes and stops working at twenty.\n\nToday you replace all of it with the routing you have just learned. There is still no database, so the controller keeps returning its hard-coded array. Route model binding has to wait for Day 11, and that is fine: everything else on this list works without it.",
     steps: [
-      "Create `MeasureDuration` with `php artisan make:middleware MeasureDuration`. Record the time before `$next`, and set an `X-Duration` header after it. Append it to the `web` group in `bootstrap/app.php` and confirm the header appears in your browser's network tab.",
-      "Deliberately break it: remove the `return` from in front of `$next($request)` and reload. You should get a blank page with no error. Put it back, and remember what that symptom means.",
-      "Create `EnsureUserHasRole` taking a variadic `string ...$roles`. For now, read a fake role out of the session, defaulting to `guest`. Give it a `using()` static helper.",
-      "Alias it as `role` in `bootstrap/app.php` and protect your admin group from Day 4 with `role:admin`.",
-      "Add a quick route that sets `session(['role' => 'admin'])` and another that clears it, so you can switch between admin and guest while testing.",
-      "Define a `group('admin', [...])` bundle containing your role check plus anything else the admin section needs, and use the single word `admin` on the group instead of listing them.",
-      "Create `LogRequest` with an empty `handle()` and a `terminate()` that logs the URL and response status. Watch `storage/logs/laravel.log` and confirm entries appear after pages load.",
-      "Prove ordering to yourself: write two throwaway middleware that each log on the way in and on the way out, register both on one route, and read the log. You should see A-in, B-in, B-out, A-out.",
-      "Set `trustProxies(at: '*')` and `trustHosts(at: ['localhost', '127.0.0.1'])` in `bootstrap/app.php`. Then request the site with a bogus `Host` header using `curl -H \"Host: evil.test\" http://127.0.0.1:8000/invoices` and confirm it is rejected.",
+      "Regenerate the controller with every CRUD method stubbed: `php artisan make:controller InvoiceController --resource`. Move your existing `index` and `show` logic into it.",
+      "Replace your two hand-written routes with `Route::resource('invoices', InvoiceController::class)`. Implement `index`, `show`, `create` and `edit` against the hard-coded array; `store`, `update` and `destroy` can redirect back with a message for now.",
+      "Constrain the invoice parameter to your number format with `->where('invoice', 'INV-[0-9]{3}')`, so `/invoices/banana` returns a 404 from the router rather than an error from your code.",
+      "Replace every hard-coded URL in your Blade files with `route('invoices.show', ...)` and friends. There should be no `/invoices` string left in a template.",
+      "Wrap an admin section in a group with a prefix, a name prefix and middleware: `Route::prefix('admin')->name('admin.')->middleware('auth')->group(...)`. Put a second invoice list inside it.",
+      "Move the pay route from Day 3 into that group, and confirm it is now `/admin/invoices/{invoice}/pay` with the name `admin.invoices.pay`.",
+      "Add a `Route::fallback` returning a friendly 404 view, and make sure it returns a real 404 status. Put it last.",
+      "Run `php artisan route:list --path=invoices` and check the methods, names and URLs are what you expect.",
+      "Run `php artisan route:cache`. If it fails with <i>Uses Closure</i>, find the closure route and move it into a controller. Then run `php artisan route:clear`, because you do not want a route cache in development.",
     ],
     acceptance: [
-      "Every page response carries an `X-Duration` header.",
-      "Visiting the admin section as a guest is rejected, and works after you set the session role to admin.",
-      "You can explain, from your own log output, why the order is A-in, B-in, B-out, A-out.",
-      "`storage/logs/laravel.log` gains an entry per request, written from `terminate()` rather than `handle()`.",
-      "A request with a forged `Host` header is rejected before it reaches any controller.",
-      "`php artisan route:list -v` shows the middleware you expect on the admin routes, and nothing unexpected elsewhere.",
+      "`php artisan route:list --path=invoices` shows the seven resource routes, named `invoices.*`.",
+      "No Blade file contains a hard-coded invoice URL. Every link goes through `route()`.",
+      "`/invoices/banana` returns a 404 from the constraint, not an exception from your controller.",
+      "`php artisan route:cache` completes without error, which means no closure routes are left.",
+      "Changing the resource from `invoices` to `bills` in one line changes every URL, and no template needs editing.",
     ],
     stretch: [
-      "Swap your role middleware order to `['role:admin', 'auth']` once real auth exists on Day 14, observe the 403, and confirm it matches the ordering bug from this lesson.",
-      "Write `NormaliseInvoiceInput` that upper-cases the invoice number with `$request->merge()`, and prove the controller sees the cleaned value.",
-      "Add `throttle:5,1` to the pay route and hit it six times quickly to see the 429.",
+      "Add `Route::resource('invoices.payments', PaymentController::class)->shallow()` and compare the generated URLs with the non-shallow version in `route:list`.",
+      "Add a `--method=POST` filter to `route:list` and check every state-changing route is a POST, PATCH, PUT or DELETE, and never a GET.",
+      "Put the admin section on its own subdomain with `Route::domain(...)` and see what `route:list` reports.",
     ],
   },
 };
