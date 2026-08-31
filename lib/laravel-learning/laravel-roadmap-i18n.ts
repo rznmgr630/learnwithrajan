@@ -65,9 +65,9 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "リクエストライフサイクルとサービスコンテナ（詳細）",
   },
   4: {
-    en: "Routing — verbs, parameters, names, groups & model binding",
-    np: "Routing — verbs, params, नाम, समूह र model binding",
-    jp: "ルーティング（HTTP・パラメータ・名前・グループ・モデル束縛）",
+    en: "Routing & URL generation — verbs, parameters, names, groups & model binding",
+    np: "Routing र URL generation — verbs, params, नाम, समूह र model binding",
+    jp: "ルーティングとURL生成（HTTP・パラメータ・名前・グループ・モデル束縛）",
   },
   5: {
     en: "Middleware — the checkpoint between a request and your code",
