@@ -3,429 +3,467 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_12_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Think of your database as a shared document your whole team edits — without version control, one developer adds a column manually and everyone else's app breaks.\n\n<b>Migrations</b> solve this: they are PHP files that describe a database change, so the whole team stays in sync by running `php artisan migrate`.\n\n• <b>Seeders</b> fill the database with test or static data (admin accounts, country lists)\n  ↳ Run with `php artisan db:seed`\n• <b>Factories</b> generate realistic fake data using the Faker library\n  ↳ Perfect for development and testing — create 100 posts in a single line of code",
-      np: "Migration database schema को version control। Seeder/Factory ले dev data तयार।",
-      jp: "マイグレーション はスキーマをバージョン管理します。Seeder・Factory と組み合わせて開発環境を一コマンドで再現できます。",
+      en: "Most real applications need to save files (profile pictures, PDF invoices, CSV exports) and call external APIs (payment gateways, weather data, third-party services). Day 10 covers both.\n\n<b>File storage</b>\n• Laravel's `Storage` facade gives you one consistent API whether you're saving files to your local server or to Amazon S3\n  ↳ Swap from local disk to S3 by changing one line in `.env` — no code changes needed\n\n<b>HTTP Client</b>\n• Laravel's built-in HTTP Client lets you call external APIs cleanly, with retry logic and easy test support\n  ↳ No need to install Guzzle yourself — it wraps Guzzle behind a simple, readable interface",
+      np: "Storage facade ले local/S3 abstract। HTTP Client ले Guzzle wrap — fluent API।",
+      jp: "Storage ファサードでローカル・S3・クラウドを抽象化。HTTP クライアントは Guzzle を流暢な API でラップします。",
     },
     {
-      en: "Laravel gives you two ways to query the database, both powered by PDO under the hood.\n\n• <b>Query Builder</b> (`DB::table()`) — returns plain arrays or objects, no overhead\n  ↳ Great for raw aggregations, reports, or tables without a model\n• <b>Eloquent ORM</b> — returns model instances with built-in superpowers: relationships, casting, scopes, soft deletes, and more\n  ↳ The default choice for most application code\n\nRule of thumb: use Eloquent by default. Only switch to the Query Builder when you need a performance-critical aggregate and don't want the overhead of hydrating model objects.",
-      np: "Eloquent ORM र Query Builder दुवै PDO मा। Eloquent ले casting, relationship, scope थप्छ।",
-      jp: "Eloquent は PDO 上に ORM 機能を追加。キャスト・リレーション・スコープなどが使えます。集計だけのクエリはクエリビルダで十分です。",
+      en: "<b>Mail</b>\n• Laravel represents each type of email as its own class called a <b>Mailable</b>\n  ↳ You define the subject, template, and attachments in that class — then just call `Mail::to($user)->send(new WelcomeEmail($user))`\n• Works with any mail provider: SMTP, Mailgun, Amazon SES, Postmark — all swappable via `.env`\n\n<b>Notifications</b>\n• Notifications are a step above email — one Notification class can deliver the same message through multiple channels at once\n  ↳ Send an email AND store a record in the database AND ping Slack — all from one `$user->notify()` call\n• Think of it as a universal alert system for your app",
+      np: "Mail: Mailable class, SMTP/Mailgun/SES driver। Notification: mail, database, Slack एकैपटक।",
+      jp: "Mail は Mailable クラスで SMTP・Mailgun・SES などに対応。Notification はメール・SMS・Slack・DB など複数チャネルを 1 クラスで管理します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Migrations & schema design",
-        np: "Migration र Schema डिजाइन",
-        jp: "マイグレーションとスキーマ設計",
+        en: "File storage & uploads",
+        np: "File storage र uploads",
+        jp: "ファイルストレージとアップロード",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Imagine your database schema as source code — migrations are its commit history.\n\n• Use `php artisan make:migration create_posts_table` to create a new migration file\n  ↳ Laravel infers whether it's a `create` or `alter` operation from the name you give it\n• The `up()` method applies the change (add a table, add a column)\n• The `down()` method reverses it exactly — this is what `migrate:rollback` uses\n  ↳ Golden rule: <b>never edit a migration that has already been run in production</b> — create a new one instead",
-            np: "`up()` ले apply गर्छ; `down()` ले reverse। Production मा run भएको migration नबदल्नुस्।",
-            jp: "`up()` で適用・`down()` で巻き戻し。本番で実行済みのマイグレーションは絶対に編集せず、新しいマイグレーションを追加してください。",
+            en: "Laravel uses the concept of <b>disks</b> — named storage locations you configure once and then refer to by name throughout your code.\n\n<b>The two built-in disks</b>\n• `local` — saves files to `storage/app` on your server (not accessible via browser URL)\n  ↳ Use for private files like invoices, internal reports, or anything users shouldn't access directly\n• `public` — saves files to `storage/app/public` and makes them web-accessible at `/storage/filename`\n  ↳ Before this works, run `php artisan storage:link` once to create the symlink from `public/storage` to `storage/app/public`\n\n<b>Using S3</b>\n• Add your AWS credentials to `.env` and set `FILESYSTEM_DISK=s3`\n  ↳ Every `Storage::put()` call now saves to S3 instead of local — same code, different destination",
+            np: "`config/filesystems.php` मा disk configure। `php artisan storage:link` ले symlink बनाउँछ। S3 को लागि `.env` मा credentials।",
+            jp: "`config/filesystems.php` でディスクを設定。S3 は `.env` に認証情報を追加し `FILESYSTEM_DISK=s3` に設定。`php artisan storage:link` でシンボリックリンクを作成します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Create and write a migration",
-            np: "Migration बनाउनु र लेख्नु",
-            jp: "マイグレーションの生成と記述",
+            en: "Storage facade — read, write, delete",
+            np: "Storage facade उदाहरण",
+            jp: "Storage ファサードの操作",
           },
-          code: `# Create migration (Laravel infers create vs alter from the name)
-php artisan make:migration create_posts_table
-php artisan make:migration add_published_at_to_posts_table
+          code: `use Illuminate\\Support\\Facades\\Storage;
 
-// database/migrations/xxxx_create_posts_table.php
-<?php
+// ---- Write ----
+Storage::put('reports/report.txt', $content);
+Storage::disk('s3')->put('exports/data.csv', $csvContent);
+Storage::prepend('logs/app.log', 'New entry');   // add to top
+Storage::append('logs/app.log', 'New entry');    // add to bottom
 
-use Illuminate\\Database\\Migrations\\Migration;
-use Illuminate\\Database\\Schema\\Blueprint;
-use Illuminate\\Support\\Facades\\Schema;
+// ---- Read ----
+$content = Storage::get('reports/report.txt');
+$url     = Storage::url('images/photo.jpg');     // public URL
+$tempUrl = Storage::temporaryUrl('private/doc.pdf', now()->addMinutes(10)); // S3 only
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('posts', function (Blueprint $table) {
-            $table->id();                                    // BIGINT UNSIGNED AUTO_INCREMENT PK
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');                         // VARCHAR(255)
-            $table->string('slug')->unique();
-            $table->text('body');
-            $table->string('excerpt', 500)->nullable();
-            $table->integer('views')->unsigned()->default(0);
-            $table->decimal('price', 8, 2)->nullable();
-            $table->boolean('is_published')->default(false);
-            $table->json('meta')->nullable();
-            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
-            $table->timestamp('published_at')->nullable();
-            $table->softDeletes();                           // deleted_at TIMESTAMP NULL
-            $table->timestamps();                            // created_at + updated_at
-        });
-    }
+// ---- Existence / metadata ----
+Storage::exists('images/photo.jpg');
+Storage::missing('images/photo.jpg');
+Storage::size('images/photo.jpg');               // bytes
+Storage::lastModified('images/photo.jpg');       // Unix timestamp
+Storage::mimeType('images/photo.jpg');
 
-    public function down(): void
-    {
-        Schema::dropIfExists('posts');
-    }
-};
+// ---- Delete / copy / move ----
+Storage::delete('images/old.jpg');
+Storage::delete(['old1.jpg', 'old2.jpg']);
+Storage::copy('from.jpg', 'to.jpg');
+Storage::move('old.jpg', 'new.jpg');
 
-# Run, rollback, and reset
-php artisan migrate
-php artisan migrate:rollback          # undo last batch
-php artisan migrate:rollback --step=3 # undo last 3 batches
-php artisan migrate:fresh             # drop ALL tables, re-run from scratch
-php artisan migrate:fresh --seed      # + run seeders`,
+// ---- List files ----
+$files = Storage::files('avatars');
+$all   = Storage::allFiles('avatars');           // recursive`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Common column types",
-            np: "सामान्य column types",
-            jp: "よく使うカラム型",
+          type: "code",
+          title: {
+            en: "File upload in a controller",
+            np: "Controller मा file upload",
+            jp: "コントローラでのファイルアップロード",
           },
-          headers: [
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "SQL type", np: "SQL type", jp: "SQL 型" },
-            { en: "Common use", np: "प्रयोग", jp: "用途" },
-          ],
-          rows: [
-            [
-              { en: "`$table->id()`", np: "`id()`", jp: "`id()`" },
-              { en: "BIGINT UNSIGNED PK AI", np: "BIGINT PK", jp: "BIGINT PK AI" },
-              { en: "Primary key", np: "PK", jp: "主キー" },
-            ],
-            [
-              { en: "`string('col', 100)`", np: "`string()`", jp: "`string()`" },
-              { en: "VARCHAR(n)", np: "VARCHAR", jp: "VARCHAR" },
-              { en: "Short text, names", np: "छोटो text", jp: "短いテキスト" },
-            ],
-            [
-              { en: "`text()` / `longText()`", np: "`text()`", jp: "`text()`" },
-              { en: "TEXT / LONGTEXT", np: "TEXT", jp: "TEXT / LONGTEXT" },
-              { en: "Long content, articles", np: "लामो content", jp: "長文コンテンツ" },
-            ],
-            [
-              { en: "`integer()` / `bigInteger()`", np: "`integer()`", jp: "`integer()`" },
-              { en: "INT / BIGINT", np: "INT", jp: "INT / BIGINT" },
-              { en: "Counts, IDs", np: "संख्या", jp: "数値・ID" },
-            ],
-            [
-              { en: "`decimal('col', 8, 2)`", np: "`decimal()`", jp: "`decimal()`" },
-              { en: "DECIMAL(8,2)", np: "DECIMAL", jp: "DECIMAL" },
-              { en: "Currency / prices", np: "मूल्य", jp: "金額・価格" },
-            ],
-            [
-              { en: "`boolean()`", np: "`boolean()`", jp: "`boolean()`" },
-              { en: "TINYINT(1)", np: "TINYINT(1)", jp: "TINYINT(1)" },
-              { en: "Flags, toggles", np: "flag", jp: "フラグ" },
-            ],
-            [
-              { en: "`json()`", np: "`json()`", jp: "`json()`" },
-              { en: "JSON", np: "JSON", jp: "JSON" },
-              { en: "Flexible attributes, settings", np: "लचिलो attribute", jp: "柔軟な属性・設定" },
-            ],
-            [
-              { en: "`foreignId('x_id')->constrained()`", np: "`foreignId()`", jp: "`foreignId()`" },
-              { en: "BIGINT UNSIGNED FK", np: "FK", jp: "外部キー" },
-              { en: "Relation to parent table", np: "सम्बन्ध", jp: "親テーブルへの参照" },
-            ],
-            [
-              { en: "`softDeletes()`", np: "`softDeletes()`", jp: "`softDeletes()`" },
-              { en: "TIMESTAMP NULL", np: "TIMESTAMP NULL", jp: "TIMESTAMP NULL" },
-              { en: "Soft delete timestamp column", np: "soft delete", jp: "ソフトデリート列" },
-            ],
-          ],
+          code: `use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Storage;
+
+public function store(Request $request)
+{
+    $request->validate([
+        'avatar' => ['required', 'image', 'max:2048'], // 2 MB limit
+    ]);
+
+    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        $file = $request->file('avatar');
+
+        // store() auto-generates a unique filename and returns the path
+        $path = $file->store('avatars', 'public');
+
+        // storeAs() lets you set the filename explicitly
+        $path = $file->storeAs('avatars', 'user-' . auth()->id() . '.jpg', 'public');
+
+        // storeAs() on S3
+        $path = $file->storeAs('avatars', $file->hashName(), 's3');
+
+        // File metadata
+        $originalName = $file->getClientOriginalName();  // original filename
+        $extension    = $file->getClientOriginalExtension();
+        $size         = $file->getSize();                 // bytes
+        $mime         = $file->getMimeType();             // e.g. image/jpeg
+
+        // Save path to DB
+        auth()->user()->update(['avatar' => $path]);
+
+        // Public URL
+        $url = Storage::disk('public')->url($path);
+    }
+
+    return back()->with('success', 'Avatar uploaded!');
+}`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "S3 configuration (.env)",
+            np: "S3 configuration",
+            jp: "S3 の設定",
+          },
+          code: `# .env
+FILESYSTEM_DISK=s3
+
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_DEFAULT_REGION=ap-southeast-1
+AWS_BUCKET=my-app-bucket
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# composer
+composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies`,
         },
       ],
     },
     {
       title: {
-        en: "Factories & Seeders",
-        np: "Factory र Seeder",
-        jp: "ファクトリとシーダー",
+        en: "HTTP Client",
+        np: "HTTP Client",
+        jp: "HTTP クライアント",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every developer on your team needs test data — factories and seeders make this reproducible with a single command.\n\n• <b>Factories</b> describe how to generate a fake version of a model using the Faker library\n  ↳ Define once in `database/factories/`, use anywhere in tests or seeders\n• <b>Seeders</b> call factories (or insert static data) and are the entry point for `php artisan db:seed`\n  ↳ The `DatabaseSeeder` class calls all other seeders in order\n\nEnd result: any developer can run `php artisan migrate:fresh --seed` and get a fully populated database identical to everyone else's.",
-            np: "Factory ले Faker द्वारा fake data। Seeder ले factory call गर्छ; DatabaseSeeder सबैको entry point।",
-            jp: "ファクトリは Faker でモデルの偽データを生成。シーダーがファクトリを呼び出し、`DatabaseSeeder` で一括実行します。",
+            en: "When your app needs to talk to an external API — a payment processor, a weather service, a CRM — Laravel's HTTP Client makes it clean and straightforward.\n\n<b>What it gives you</b>\n• A readable, chainable interface: `Http::withToken($token)->get('https://api.example.com/users')`\n  ↳ No manual Guzzle setup — just chain methods to build your request\n• Built-in retry logic: `->retry(3, 500)` tries the request 3 times with a 500ms gap between attempts\n• Easy response helpers:\n  ↳ `->json()` — decode the JSON response body into a PHP array\n  ↳ `->status()` — get the HTTP status code (200, 404, 500…)\n  ↳ `->successful()` — returns `true` if the status code is in the 2xx range\n  ↳ `->throw()` — throws an exception automatically if the request fails\n• Test-friendly: `Http::fake()` intercepts outgoing requests in tests so you never make real API calls",
+            np: "`Http` facade ले Guzzle wrap। `->json()`, `->status()`, `->successful()`, `->throw()`। Test मा `Http::fake()`।",
+            jp: "`Http` ファサードは Guzzle をラップ。`->json()`・`->status()`・`->successful()`・`->throw()` などで便利に操作。テストは `Http::fake()` で完結します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Create and define a Factory",
-            np: "Factory बनाउनु",
-            jp: "ファクトリの生成と定義",
+            en: "GET, POST with headers, auth, retries",
+            np: "HTTP Client — GET, POST, headers, auth",
+            jp: "GET・POST・認証・リトライの使用例",
           },
-          code: `php artisan make:model Post -mf   # model + migration + factory in one command
-php artisan make:factory PostFactory --model=Post
+          code: `use Illuminate\\Support\\Facades\\Http;
 
-// database/factories/PostFactory.php
+// ---- GET ----
+$response = Http::get('https://api.example.com/users');
+$users    = $response->json();             // decode JSON body as array
+$status   = $response->status();          // 200, 404, etc.
+$ok       = $response->successful();      // 2xx
+$failed   = $response->failed();          // 4xx or 5xx
+$body     = $response->body();            // raw string
+
+// ---- POST with JSON body ----
+$response = Http::post('https://api.example.com/users', [
+    'name'  => 'Alice',
+    'email' => 'alice@example.com',
+]);
+
+// ---- POST as form data (application/x-www-form-urlencoded) ----
+$response = Http::asForm()->post('https://api.example.com/login', [
+    'username' => 'alice',
+    'password' => 'secret',
+]);
+
+// ---- Custom headers ----
+$response = Http::withHeaders([
+    'X-App-Key'  => config('services.example.key'),
+    'Accept'     => 'application/json',
+])->get('https://api.example.com/items');
+
+// ---- Authentication ----
+Http::withToken($apiToken)->get('https://api.example.com/me');          // Bearer
+Http::withBasicAuth('user', 'pass')->get('https://api.example.com/');   // Basic
+
+// ---- Timeout & retry ----
+$response = Http::timeout(10)
+    ->retry(3, 500)   // 3 attempts, 500ms delay between
+    ->get('https://api.example.com/slow-endpoint');
+
+// ---- Throw on HTTP error (4xx / 5xx) ----
+$response = Http::throw()->get('https://api.example.com/users');
+// throws Illuminate\\Http\\Client\\RequestException on error
+
+// Throw conditionally
+$response->throwIf($response->status() === 429, 'Rate limited.');
+$response->throwUnlessStatus(200);
+
+// ---- Query parameters ----
+Http::get('https://api.example.com/search', ['q' => 'laravel', 'page' => 2]);
+
+// ---- File upload ----
+Http::attach('photo', file_get_contents($path), 'photo.jpg')
+    ->post('https://api.example.com/upload');`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Testing with Http::fake()",
+            np: "Http::fake() — testing",
+            jp: "Http::fake() でテスト",
+          },
+          code: `// In your test
+Http::fake([
+    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Alice'], 200),
+    'api.example.com/error' => Http::response(['message' => 'Not Found'], 404),
+    '*' => Http::response([], 200), // catch-all fallback
+]);
+
+// Assert requests were made
+Http::assertSent(function ($request) {
+    return $request->url() === 'https://api.example.com/users'
+        && $request->method() === 'GET';
+});
+
+Http::assertNotSent(fn ($r) => str_contains($r->url(), 'payment'));`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Mailable classes & mail config",
+        np: "Mailable classes र mail config",
+        jp: "Mailable クラスとメール設定",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A <b>Mailable</b> is a PHP class that represents one type of email — like a welcome email, a password reset, or an invoice receipt.\n\n<b>Three methods you define</b>\n• `envelope()` — sets the subject line, the from address, CC, and BCC\n  ↳ Think of this as filling in the email's header information before writing the body\n• `content()` — points to the Blade view (or Markdown template) that becomes the email body\n  ↳ Any public property on the Mailable class is automatically available in that view\n• `attachments()` — returns an array of files to attach to the email\n  ↳ Can attach local files, Storage disk files, or files from S3\n\n<b>A note on performance</b>\n• Sending email via SMTP during a web request blocks the user from getting a response until the mail server replies\n  ↳ Always use `Mail::to($user)->queue(new WelcomeEmail($user))` in production — it hands the work off to a background queue worker so the user's response is instant",
+            np: "Mailable: `envelope()` (subject/from), `content()` (view), `attachments()`। Production मा queue।",
+            jp: "Mailable は `envelope()` で件名・差出人、`content()` でテンプレート、`attachments()` で添付ファイルを設定します。本番の遅い SMTP には必ずキュー送信を使います。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Create and define a Mailable",
+            np: "Mailable बनाउनु",
+            jp: "Mailable の生成と定義",
+          },
+          code: `php artisan make:mail WelcomeEmail
+php artisan make:mail InvoicePaid --markdown=emails.invoice  # Markdown template
+
+// app/Mail/WelcomeEmail.php
 <?php
 
-namespace Database\\Factories;
+namespace App\\Mail;
 
 use App\\Models\\User;
-use Illuminate\\Database\\Eloquent\\Factories\\Factory;
-use Illuminate\\Support\\Str;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Mail\\Mailable;
+use Illuminate\\Mail\\Mailables\\Content;
+use Illuminate\\Mail\\Mailables\\Envelope;
+use Illuminate\\Queue\\SerializesModels;
 
-class PostFactory extends Factory
+class WelcomeEmail extends Mailable
 {
-    public function definition(): array
-    {
-        $title = fake()->sentence(6);
+    use Queueable, SerializesModels; // SerializesModels for queueing
 
-        return [
-            'user_id'      => User::factory(),          // creates a related user
-            'title'        => $title,
-            'slug'         => Str::slug($title),
-            'body'         => fake()->paragraphs(4, true),
-            'excerpt'      => fake()->sentence(20),
-            'is_published' => fake()->boolean(70),       // 70% chance true
-            'views'        => fake()->numberBetween(0, 10000),
-            'status'       => fake()->randomElement(['draft', 'published']),
-            'published_at' => fake()->optional()->dateTimeThisYear(),
-        ];
+    public function __construct(
+        public readonly User $user, // public = auto-available in the view
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            from: new Address('noreply@myapp.com', 'MyApp'),
+            replyTo: [new Address('support@myapp.com', 'Support')],
+            subject: 'Welcome to MyApp, ' . $this->user->name . '!',
+        );
     }
 
-    // Named state: Post::factory()->draft()->create()
-    public function draft(): static
+    public function content(): Content
     {
-        return $this->state(['status' => 'draft', 'is_published' => false]);
+        return new Content(
+            view: 'emails.welcome',          // resources/views/emails/welcome.blade.php
+            // markdown: 'emails.welcome',   // or Markdown-based
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [
+            // Attachment::fromPath('/path/to/file.pdf')->as('guide.pdf'),
+        ];
     }
 }`,
         },
         {
           type: "code",
           title: {
-            en: "Seeders & running factories",
-            np: "Seeder र factory चलाउनु",
-            jp: "シーダーとファクトリの実行",
+            en: "Sending mail & SMTP .env config",
+            np: "Mail पठाउनु र .env config",
+            jp: "メール送信と .env 設定",
           },
-          code: `php artisan make:seeder PostSeeder
+          code: `use App\\Mail\\WelcomeEmail;
+use Illuminate\\Support\\Facades\\Mail;
 
-// database/seeders/PostSeeder.php
-<?php
+// Send immediately
+Mail::to($user->email)->send(new WelcomeEmail($user));
 
-namespace Database\\Seeders;
+// Send to multiple
+Mail::to($user)
+    ->cc('manager@myapp.com')
+    ->bcc('audit@myapp.com')
+    ->send(new WelcomeEmail($user));
 
-use App\\Models\\Post;
-use App\\Models\\User;
-use Illuminate\\Database\\Seeder;
+// Queue (async — much better for production SMTP)
+Mail::to($user)->queue(new WelcomeEmail($user));
 
-class PostSeeder extends Seeder
-{
-    public function run(): void
-    {
-        // 5 users, each with 10 posts
-        User::factory(5)->has(Post::factory(10))->create();
+// Queue with delay
+Mail::to($user)->later(now()->addMinutes(5), new WelcomeEmail($user));
 
-        // Posts for an existing user
-        $user = User::first();
-        Post::factory(50)->for($user)->create();
+// ---- .env SMTP config ----
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com          # or smtp.mailgun.org, email-smtp.us-east-1.amazonaws.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD="your-app-password"  # Gmail: use App Password, NOT your account password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@myapp.com
+MAIL_FROM_NAME="MyApp"
 
-        // Specific post with overrides
-        Post::factory()->draft()->create([
-            'title'   => 'Hello World',
-            'user_id' => $user->id,
-        ]);
-    }
-}
+# Preview emails locally without sending (catches all mail to log file)
+MAIL_MAILER=log
 
-// database/seeders/DatabaseSeeder.php
-public function run(): void
-{
-    $this->call([PostSeeder::class]);
-}
-
-# Run seeders
-php artisan db:seed
-php artisan db:seed --class=PostSeeder
-php artisan migrate:fresh --seed    # fresh DB + all seeders`,
+# Or use Mailpit (https://github.com/axllent/mailpit) — an SMTP trap with web UI
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025`,
         },
       ],
     },
     {
       title: {
-        en: "Query Builder & Eloquent queries",
-        np: "Query Builder र Eloquent queries",
-        jp: "クエリビルダと Eloquent クエリ",
+        en: "Notifications",
+        np: "Notifications",
+        jp: "通知",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The key difference between the two is what you get back.\n\n• <b>Query Builder</b> returns plain arrays or `stdClass` objects — fast, lightweight, no overhead\n  ↳ Great for raw aggregations, reports, or when you don't need model methods\n• <b>Eloquent</b> returns full model instances — you can call relationships, use scopes, fire events\n  ↳ This process is called \"hydration\" — wrapping a database row into a PHP object\n\n<b>Local scopes</b> let you name common query conditions and chain them naturally:\n• Define `scopePublished($query)` on the model\n  ↳ Call it as `Post::published()->latest()->get()` — reads like plain English",
-            np: "Query Builder ले plain array; Eloquent ले model instance। Local scope ले common constraint मा नाम।",
-            jp: "クエリビルダは配列・`stdClass`、Eloquent はモデルインスタンスを返します。ローカルスコープで共通クエリ条件に名前を付けられます。",
+            en: "A <b>Notification</b> is like a Mailable but smarter — it can deliver the same message through multiple channels at the same time.\n\n<b>How it works</b>\n• You define a `via()` method that returns the list of channels to use: `return ['mail', 'database']`\n  ↳ Laravel calls the matching method for each channel: `toMail()`, `toDatabase()`, `toBroadcast()`, etc.\n• Every channel gets the same information — you just shape it differently per channel\n  ↳ Email gets a nicely formatted `MailMessage`; the database channel gets a plain PHP array\n\n<b>Built-in channels</b>\n• `mail` — send an email\n• `database` — store a record in a `notifications` table for in-app notification bells\n• `broadcast` — push to the browser via WebSockets for real-time alerts\n• `vonage` — send an SMS\n• Community packages add Slack, Telegram, Discord, and more",
+            np: "Notification ले `via()` method मा multiple channel define गर्छ — mail, database, Slack।",
+            jp: "Notification は `via()` で複数チャネルを宣言します。組み込みは `mail`・`database`・`broadcast`。コミュニティ製の Slack・Telegram チャネルも豊富です。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Query Builder — filtering, aggregates, joins",
-            np: "Query Builder उदाहरण",
-            jp: "クエリビルダの使用例",
+            en: "Create and define a Notification",
+            np: "Notification बनाउनु",
+            jp: "Notification の生成と定義",
           },
-          code: `use Illuminate\\Support\\Facades\\DB;
+          code: `php artisan make:notification InvoicePaid
 
-// Basic select + where
-$users = DB::table('users')
-    ->select('id', 'name', 'email')
-    ->where('active', 1)
-    ->where('age', '>=', 18)
-    ->orWhere('is_admin', true)
-    ->whereIn('role', ['editor', 'author'])
-    ->whereBetween('created_at', [now()->subDays(30), now()])
-    ->whereNotNull('email_verified_at')
-    ->orderBy('name')
-    ->limit(50)
-    ->get();
-
-// Aggregates
-$count = DB::table('posts')->where('is_published', true)->count();
-$total = DB::table('orders')->sum('amount');
-$avg   = DB::table('reviews')->avg('rating');
-$max   = DB::table('orders')->max('amount');
-
-// Group by + having
-DB::table('orders')
-    ->select('user_id', DB::raw('SUM(amount) as total'))
-    ->groupBy('user_id')
-    ->having('total', '>', 1000)
-    ->get();
-
-// Joins
-DB::table('posts')
-    ->join('users', 'posts.user_id', '=', 'users.id')
-    ->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
-    ->select('posts.*', 'users.name as author', 'categories.name as category')
-    ->get();
-
-// Chunking (avoids memory exhaustion on huge tables)
-DB::table('users')->orderBy('id')->chunk(500, function ($users) {
-    foreach ($users as $user) { /* process */ }
-});`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Eloquent CRUD & model configuration",
-            np: "Eloquent CRUD र model config",
-            jp: "Eloquent の CRUD とモデル設定",
-          },
-          code: `// app/Models/Post.php
+// app/Notifications/InvoicePaid.php
 <?php
 
-namespace App\\Models;
+namespace App\\Notifications;
 
-use Illuminate\\Database\\Eloquent\\Model;
-use Illuminate\\Database\\Eloquent\\SoftDeletes;
-use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;
-use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
+use App\\Models\\Invoice;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Notifications\\Notification;
+use Illuminate\\Notifications\\Messages\\MailMessage;
 
-class Post extends Model
+class InvoicePaid extends Notification
 {
-    use HasFactory, SoftDeletes;
+    use Queueable;
 
-    // Mass-assignment whitelist (preferred)
-    protected $fillable = ['title', 'slug', 'body', 'user_id', 'status', 'published_at'];
+    public function __construct(
+        public readonly Invoice $invoice,
+    ) {}
 
-    // Attribute casting — automatic type conversion on get/set
-    protected $casts = [
-        'is_published'  => 'boolean',
-        'meta'          => 'array',     // JSON column <-> PHP array
-        'published_at'  => 'datetime',
-        'price'         => 'decimal:2',
-    ];
-
-    protected $hidden  = ['deleted_at'];
-    protected $appends = ['reading_time'];
-
-    // Accessor (Laravel 9+ syntax)
-    protected function readingTime(): Attribute
+    // Which channels to use
+    public function via(object $notifiable): array
     {
-        return Attribute::get(
-            fn () => ceil(str_word_count($this->body) / 200) . ' min'
-        );
+        return ['mail', 'database'];  // send email AND store in DB
     }
 
-    // Local scope
-    public function scopePublished($query): void
+    // Mail channel
+    public function toMail(object $notifiable): MailMessage
     {
-        $query->where('status', 'published')->whereNotNull('published_at');
+        return (new MailMessage)
+            ->subject('Invoice #' . $this->invoice->id . ' Paid')
+            ->greeting('Hello ' . $notifiable->name . '!')
+            ->line('Your invoice has been paid.')
+            ->action('View Invoice', route('invoices.show', $this->invoice))
+            ->line('Thank you for your business!');
     }
-}
 
-// ---- CRUD operations ----
-$post  = Post::create(['title' => 'Hello', 'slug' => 'hello', 'body' => '...', 'user_id' => 1]);
-$post  = Post::find(1);                          // null if missing
-$post  = Post::findOrFail(1);                    // 404 if missing
-$posts = Post::where('status', 'published')->orderByDesc('published_at')->get();
-$post  = Post::firstOrCreate(['slug' => 'hello'], ['title' => 'Hello', 'body' => '...']);
-$post  = Post::updateOrCreate(['slug' => 'hello'], ['title' => 'Updated']);
-$post->update(['title' => 'New Title']);
-$post->delete();           // soft delete (SoftDeletes trait)
-Post::destroy([1, 2, 3]);  // delete by primary keys
-
-// Scope chaining
-$posts = Post::published()->orderByDesc('published_at')->paginate(10);`,
-        },
-        {
-          type: "diagram",
-          id: "laravel-eloquent-query",
-        },
-      ],
-    },
+    // Database channel — stored in notifications table
+    public function toDatabase(object $notifiable): array
     {
-      title: {
-        en: "Pagination & scopes",
-        np: "Pagination र Scope",
-        jp: "ページネーションとスコープ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Pagination splits a large result set into pages — without it, fetching 100,000 posts at once would exhaust your server's memory.\n\nLaravel gives you three flavors:\n• <b>`paginate(15)`</b> — runs a `COUNT(*)` query to know the total, gives you full page metadata (first, last, total)\n  ↳ Best for traditional \"Page 2 of 14\" style navigation\n• <b>`simplePaginate(15)`</b> — skips the count query, only knows \"previous\" and \"next\"\n  ↳ Faster for huge tables where the total page count doesn't matter\n• <b>`cursorPaginate(20)`</b> — uses an opaque cursor token instead of page numbers, ideal for infinite scroll\n  ↳ The most performant option for real-time feeds and APIs",
-            np: "`paginate()` COUNT सहित; `simplePaginate()` prev/next; `cursorPaginate()` cursor — infinite scroll।",
-            jp: "`paginate()` は COUNT 付き全ページ情報。`simplePaginate()` は前後のみ。`cursorPaginate()` はカーソルベースで大規模データに最適です。",
-          },
+        return [
+            'invoice_id' => $this->invoice->id,
+            'amount'     => $this->invoice->amount,
+            'message'    => 'Invoice #' . $this->invoice->id . ' was paid.',
+        ];
+    }
+
+    // toArray() is used by the database channel if toDatabase() is absent
+    public function toArray(object $notifiable): array
+    {
+        return $this->toDatabase($notifiable);
+    }
+}`,
         },
         {
           type: "code",
           title: {
-            en: "Pagination variants",
-            np: "Pagination उदाहरण",
-            jp: "ページネーションの使い方",
+            en: "Sending notifications & reading from DB",
+            np: "Notification पठाउनु र DB बाट पढ्नु",
+            jp: "通知の送信と DB からの読み取り",
           },
-          code: `// Full pagination (includes total count + page links)
-$posts = Post::published()->latest()->paginate(15);
+          code: `use App\\Notifications\\InvoicePaid;
+use Illuminate\\Support\\Facades\\Notification;
 
-// Simple (no count query — faster on huge tables)
-$posts = Post::published()->simplePaginate(15);
+// ---- Send to a single user (using Notifiable trait) ----
+// The User model uses Illuminate\\Notifications\\Notifiable;
+$user->notify(new InvoicePaid($invoice));
 
-// Cursor pagination (for infinite scroll / APIs)
-$posts = Post::published()->orderBy('id')->cursorPaginate(20);
+// ---- Send to multiple users at once ----
+Notification::send($users, new InvoicePaid($invoice));
 
-// Blade: renders Bootstrap or Tailwind links automatically
-{{ $posts->links() }}
+// ---- On-demand notification (no User model needed) ----
+Notification::route('mail', 'client@example.com')
+    ->notify(new InvoicePaid($invoice));
 
-// Preserve all current GET query parameters in pagination links
-{{ $posts->withQueryString()->links() }}
+// ---- Database notifications table ----
+// Run: php artisan notifications:table && php artisan migrate
 
-// API controller — JSON response includes pagination meta automatically
-return response()->json($posts);
-// JSON shape: { data: [...], current_page, last_page, per_page, total, next_page_url, ... }`,
+// Read unread notifications
+$unread = $user->unreadNotifications;   // Collection of DatabaseNotification
+foreach ($unread as $notification) {
+    $data = $notification->data;        // the array from toDatabase()
+    echo $data['message'];
+}
+
+// Mark as read
+$user->unreadNotifications->markAsRead();
+$notification->markAsRead();
+
+// All notifications (read + unread)
+$all = $user->notifications;
+
+// Delete old notifications
+$user->notifications()->delete();
+
+// ---- Notifiable trait on User model ----
+// The User model must use Illuminate\\Notifications\\Notifiable;
+// This adds: notifications(), unreadNotifications(), readNotifications()`,
         },
       ],
     },
@@ -433,74 +471,74 @@ return response()->json($posts);
   faq: [
     {
       question: {
-        en: "What is the difference between `migrate:fresh` and `migrate:rollback`?",
-        np: "`migrate:fresh` र `migrate:rollback` मा के फरक?",
-        jp: "`migrate:fresh` と `migrate:rollback` はどう違いますか？",
+        en: "How do I configure S3 storage and make files publicly accessible?",
+        np: "S3 storage configure गरेर files public कसरी गर्ने?",
+        jp: "S3 ストレージの設定とファイルの公開方法は？",
       },
       answer: {
-        en: "These two are very different — don't confuse them.\n\n• <b>`migrate:rollback`</b> reverses only the <b>last batch</b> of migrations by calling their `down()` methods\n  ↳ Your data is preserved wherever possible\n  ↳ Safe to use on staging and production\n• <b>`migrate:fresh`</b> drops <b>every single table</b> in the database (skipping `down()`) then re-runs all migrations from scratch\n  ↳ All data is permanently destroyed\n  ↳ Only use this in local development\n\nRule: use `migrate:fresh --seed` for local dev; use `migrate` or `migrate:rollback` everywhere else.",
-        np: "`rollback` ले last batch undo; `fresh` ले सबै drop गरेर re-run। Production मा `fresh` नगर्नुस्।",
-        jp: "`rollback` は最新バッチだけ `down()` で巻き戻し。`fresh` は全テーブルをドロップしてゼロから再実行。本番では `fresh` は使いません。",
+        en: "Four steps to connect S3:\n\n• Add your AWS credentials to `.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`\n• Set `FILESYSTEM_DISK=s3` in `.env`\n• Run `composer require league/flysystem-aws-s3-v3` to install the S3 adapter\n• That's it — all `Storage::put()` calls now go to S3\n\n<b>Public vs private files</b>\n• For files you want anyone to access via a URL (profile pictures, public downloads):\n  ↳ Use `Storage::disk('s3')->setVisibility($path, 'public')` after uploading, or set the S3 bucket ACL\n• For files that should only be accessible to specific users (contracts, private documents):\n  ↳ Use `Storage::temporaryUrl($path, now()->addMinutes(30))` to generate a signed URL that expires automatically",
+        np: "`.env` मा AWS credentials, `FILESYSTEM_DISK=s3`, flysystem package install। Public: visibility `public`; Private: `temporaryUrl()`।",
+        jp: "`.env` に AWS 認証情報を設定し `FILESYSTEM_DISK=s3`、`league/flysystem-aws-s3-v3` をインストール。公開ファイルは `setVisibility('path', 'public')`、非公開は `temporaryUrl()` を使います。",
       },
     },
     {
       question: {
-        en: "What does `$fillable` protect against?",
-        np: "`$fillable` ले के बचाउँछ?",
-        jp: "`$fillable` は何を防ぎますか？",
+        en: "What is the difference between `store()` and `storeAs()`?",
+        np: "`store()` र `storeAs()` मा के फरक?",
+        jp: "`store()` と `storeAs()` の違いは？",
       },
       answer: {
-        en: "`$fillable` protects against a security attack called <b>mass assignment</b>.\n\nHere's the problem: if you write `User::create($request->all())` without `$fillable`, a malicious user can POST `is_admin=true` in a form and it silently gets saved to the database.\n\n• `$fillable` is a whitelist — only the listed columns can be filled via `create()` or `fill()`\n  ↳ Everything not listed is silently ignored, not rejected with an error\n• `$guarded = []` disables protection entirely\n  ↳ Only safe for internal CLI-only models that never touch user input",
-        np: "Mass-assignment attack रोक्छ — `is_admin=true` submit भए। `$fillable` ले allowed columns मात्र accept।",
-        jp: "大量代入の脆弱性を防ぎます。`$fillable` がないと `is_admin=true` のようなフォーム改ざんが通ってしまいます。`$guarded = []` は保護を完全に無効化するため注意が必要です。",
+        en: "Both methods save a file — they just handle the filename differently.\n\n• `store('avatars', 'public')` — Laravel generates a random unique filename automatically (based on a hash)\n  ↳ Safe from filename collisions: two users uploading `photo.jpg` won't overwrite each other\n  ↳ Use this for most uploads where the filename doesn't matter\n• `storeAs('avatars', 'user-42-avatar.jpg', 'public')` — you choose the exact filename\n  ↳ Use this when the filename needs to be predictable — like replacing a user's avatar each time they upload",
+        np: "`store()` ले random unique name। `storeAs()` ले exact name। Collision-free upload: `store()`।",
+        jp: "`store()` はハッシュベースのランダムなファイル名を生成。`storeAs()` はファイル名を指定します。衝突を避けたいアップロードには `store()`、ファイル名が決まっている場合は `storeAs()` を使います。",
       },
     },
     {
       question: {
-        en: "When should I use `firstOrCreate` versus `updateOrCreate`?",
-        np: "`firstOrCreate` बनाम `updateOrCreate` कहिले?",
-        jp: "`firstOrCreate` と `updateOrCreate` の使い分けは？",
+        en: "How do I preview emails locally without sending them?",
+        np: "Local मा email send नगरी preview कसरी?",
+        jp: "メールをローカルで送信せずにプレビューするには？",
       },
       answer: {
-        en: "Both do \"find or create\" — the difference is what happens when the record already exists.\n\n• <b>`firstOrCreate(['slug' => 'hello'], $attributes)`</b>\n  ↳ Finds the record and returns it unchanged if found — <b>never updates</b>\n  ↳ Use for idempotent inserts (e.g. registering an OAuth provider for the first time)\n• <b>`updateOrCreate(['slug' => 'hello'], $newAttributes)`</b>\n  ↳ Finds the record, then <b>updates it</b> with the second array if it already exists\n  ↳ Use when syncing data from an external source (e.g. importing a CSV file)",
-        np: "`firstOrCreate`: नभए create, छ भने unchanged। `updateOrCreate`: नभए create, छ भने update।",
-        jp: "`firstOrCreate` は存在しなければ作成するだけ。`updateOrCreate` は存在する場合も第 2 配列で更新します。CSV インポートなど同期処理には `updateOrCreate`、OAuth 登録などには `firstOrCreate` が典型的です。",
+        en: "You have three good options for developing with email locally without actually sending anything:\n\n• <b>Log driver</b> — set `MAIL_MAILER=log` and all emails get written to `storage/logs/laravel.log` as plain text\n  ↳ Easiest option — no extra tools needed, just check the log file\n• <b>Mailpit</b> — a local SMTP trap that catches all outgoing mail and shows it in a web UI at `localhost:8025`\n  ↳ Set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025` — emails show up visually, exactly as the user would see them\n  ↳ Laravel Sail includes Mailpit automatically\n• <b>Route preview</b> — return a Mailable directly from a route for instant browser rendering:\n`Route::get('/preview', fn() => new WelcomeEmail(User::first()))`\n  ↳ Great for tweaking the email design — just refresh the browser to see changes",
+        np: "`MAIL_MAILER=log` (log file मा लेख्छ); Mailpit (local SMTP trap); route मा Mailable return गरेर preview।",
+        jp: "`MAIL_MAILER=log` でログファイルに書き出し、Mailpit でローカル SMTP トラップ、またはルートから Mailable を直接返してブラウザプレビューできます。",
       },
     },
     {
       question: {
-        en: "How do I query JSON columns in Eloquent?",
-        np: "JSON column कसरी query गर्ने?",
-        jp: "JSON カラムをどうクエリしますか？",
+        en: "What is the `Notifiable` trait and which models need it?",
+        np: "`Notifiable` trait के हो र कुन model मा चाहिन्छ?",
+        jp: "`Notifiable` トレイトとはどのモデルに必要ですか？",
       },
       answer: {
-        en: "Laravel supports querying inside JSON columns using an arrow `->` notation inside `where()`.\n\n• `Post::where('meta->color', 'red')->get()` — query a top-level JSON key\n• `Post::where('meta->settings->theme', 'dark')` — query nested keys\n  ↳ Works on MySQL 5.7+, PostgreSQL, and SQLite 3.38+\n\nFor PHP-side access, cast the column as `'array'` in `$casts`, then access it like a normal PHP array: `$post->meta['color']`.",
-        np: "`->where('meta->color', 'red')` arrow notation। `$casts` मा `'array'` cast।",
-        jp: "`where('meta->color', 'red')` のように `->` で JSON パスを指定。`$casts` に `'array'` を設定すると PHP 側で配列として扱えます。",
+        en: "The `Notifiable` trait is what gives a model the ability to receive notifications.\n\n<b>What it adds to your model</b>\n• `$user->notify(new InvoicePaid($invoice))` — send a notification to that model\n• `$user->notifications` — fetch all notifications (read + unread) from the database\n• `$user->unreadNotifications` — fetch only unread ones\n• `$user->readNotifications` — fetch only already-read ones\n\n<b>Who needs it?</b>\n• The default `User` model already has it — you don't need to add anything\n• If you want to send notifications to a different model (like a `Team` or a `Company`), just add `use Notifiable;` to that class\n\n<b>Custom routing</b>\n• If your model stores the email address in a column other than `email`, define a `routeNotificationForMail()` method to return the right address\n  ↳ Same pattern for other channels: `routeNotificationForVonage()`, `routeNotificationForSlack()`, etc.",
+        np: "`Notifiable` trait ले `notify()` र notification relationships थप्छ। User model मा default छ। अरू model मा manually use।",
+        jp: "`Notifiable` トレイトは `notify()` と関係ヘルパを追加します。デフォルトの `User` モデルに含まれています。他のモデルにも `use Notifiable;` で追加できます。",
       },
     },
     {
       question: {
-        en: "What are Eloquent observers and when should I use them?",
-        np: "Eloquent observer के हो र कहिले प्रयोग गर्ने?",
-        jp: "Eloquent オブザーバとはいつ使いますか？",
+        en: "How do database notifications differ from email notifications?",
+        np: "Database notification र email notification मा के फरक?",
+        jp: "データベース通知とメール通知の違いは？",
       },
       answer: {
-        en: "An <b>observer</b> is a class that groups all the lifecycle event hooks for a single model in one place.\n\nModels fire events at key moments: `creating`, `created`, `updating`, `updated`, `deleting`, `deleted`, `restored`.\n\n• Without an observer: you scatter these hooks across model `boot()` methods, service providers, or controllers\n• With an observer: all of a model's event logic lives in one clean class\n  ↳ Register it with `Post::observe(PostObserver::class)` in a service provider\n\nWhen to use one: if a model's event logic grows beyond a few lines, move it to an observer. For a single one-liner, an inline closure in `boot()` is perfectly fine.",
-        np: "Observer ले model event listeners एक class मा। `Post::observe(PostObserver::class)` गरेर register।",
-        jp: "オブザーバは `creating`・`updated` などのモデルイベントをまとめたクラスです。ロジックが複数行になったらオブザーバに移しましょう。",
+        en: "They serve completely different purposes — most real apps use both at once.\n\n<b>Email notifications</b>\n• Go to an external mail server and that's it — you can't read them back in PHP\n  ↳ Great for alerts the user sees in their inbox (new message, invoice ready)\n  ↳ Your app has no record of whether they read it\n\n<b>Database notifications</b>\n• Stored in a `notifications` table in your own database — fully queryable\n  ↳ Run `php artisan notifications:table && php artisan migrate` to create the table first\n  ↳ Access them with `$user->unreadNotifications` — perfect for in-app notification bells\n  ↳ You can track read/unread status, show a history, and mark individual notifications as read\n\n• Use both together by returning `['mail', 'database']` from `via()` — one `notify()` call handles both channels",
+        np: "Email notification fire-and-forget; Database notification `notifications` table मा store — PHP बाट read गर्न सकिन्छ। In-app bell को लागि।",
+        jp: "メール通知は送りっぱなし。データベース通知は `notifications` テーブルに保存され、`$user->unreadNotifications` で参照可能。アプリ内の通知ベルや履歴表示に最適です。`via()` で両チャネルを同時に指定できます。",
       },
     },
     {
       question: {
-        en: "How do I add an index to an existing column without re-creating the table?",
-        np: "Existing column मा index थप्ने?",
-        jp: "既存カラムにインデックスを追加するには？",
+        en: "How does Laravel's HTTP Client handle retries and what happens on failure?",
+        np: "HTTP Client retry कसरी काम गर्छ र failure मा के हुन्छ?",
+        jp: "HTTP クライアントのリトライの仕組みと失敗時の動作は？",
       },
       answer: {
-        en: "Create a new migration that modifies the existing table — never edit the original migration once it has been run.\n\nInside the new migration's `up()` method use `Schema::table()` (not `Schema::create()`): `$table->index('slug')` for a regular index, `$table->unique('email')` for a unique index, or `$table->index(['user_id', 'status'])` for a composite index.\n\n• A <b>composite index</b> on columns you always filter together (e.g. `WHERE user_id = 1 AND status = 'published'`) is far faster than two separate single-column indexes\n  ↳ The order of columns in a composite index matters — put the most selective column first",
-        np: "नयाँ migration मा `Schema::table` → `->index()` वा `->unique()`। Original migration नबदल्नुस्।",
-        jp: "新しいマイグレーションで `Schema::table` を使い `->index()` / `->unique()` を追加します。既存のマイグレーションは変更しません。複合インデックスは複数列でフィルタするクエリを大幅に高速化します。",
+        en: "`->retry($times, $sleepMilliseconds)` automatically re-attempts a request when it fails — useful for flaky APIs or temporary network hiccups.\n\n<b>How it works</b>\n• `->retry(3, 500)` — tries up to 3 times, waiting 500 milliseconds between each attempt\n  ↳ Retries on connection errors and 5xx server errors (like 503 Service Unavailable)\n  ↳ Does NOT retry on 4xx errors — those mean your request was wrong, not the server\n• If all 3 attempts fail, Laravel throws a `RequestException`\n  ↳ Catch it with `try/catch` to handle the failure gracefully\n\n<b>Throwing on failure</b>\n• `->throw()` — throw an exception automatically for any 4xx or 5xx response (without needing retry)\n• `->throwIf($condition)` — throw only when a custom condition is true\n• `->throwUnlessStatus(200)` — throw unless the status code is exactly 200",
+        np: "`->retry(3, 500)` ले 3 attempts। सबै fail भए `RequestException`। `->throw()` ले 4xx/5xx मा exception।",
+        jp: "`->retry(3, 500)` で最大 3 回、500ms 間隔でリトライ。全て失敗すると `RequestException` がスロー。`->throw()` で 4xx/5xx を常に例外にします。",
       },
     },
   ],
