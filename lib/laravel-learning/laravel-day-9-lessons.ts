@@ -1405,7 +1405,7 @@ class ValidInvoiceNumber implements ValidationRule
   project: {
     name: "InvoiceHub",
     goal: "Put a real gate in front of the data, and show errors people can act on.",
-    brief: "InvoiceHub accepts anything you type. Today it stops.\n\nThe database still arrives tomorrow, so `unique` and `exists` cannot be tested against real tables yet. Write those rules anyway and comment them with what they will do; everything else on this list works today. The Form Request classes you build now are the ones Day 11 will start saving through.",
+    brief: "InvoiceHub accepts anything you type. Today it stops.\n\nThe database still arrives tomorrow, so `unique` and `exists` cannot be tested against real tables yet. Write those rules anyway and comment them with what they will do; everything else on this list works today. The Form Request classes you build now are the ones Day 12 will start saving through.",
     steps: [
       "Create `StoreInvoiceRequest` with `php artisan make:request`. Move your rules out of the controller: `number` required and matching `INV-###`, `client` required, `amount` required and numeric, `notes` nullable.",
       "Type-hint it in `store()` and delete the manual checks. The method should be down to three lines: validate, create, redirect.",
