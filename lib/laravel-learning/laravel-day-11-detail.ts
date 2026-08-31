@@ -3,396 +3,398 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_11_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Think of middleware as a series of checkpoints that every HTTP request must pass through before reaching your controller.\n\n<b>What does middleware do?</b>\n• It handles concerns that apply to many routes — instead of repeating logic in every controller\n  ↳ Authentication: is this user logged in? If not, redirect to login\n  ↳ Rate limiting: has this user sent too many requests? If so, return a 429 Too Many Requests\n  ↳ CORS headers: add the right headers so browsers allow cross-origin requests\n  ↳ Input trimming: strip whitespace from all string inputs automatically\n\n<b>Laravel 11 change</b>\n• In older versions, middleware was registered in `Http/Kernel.php`\n  ↳ That file no longer exists in Laravel 11 — all middleware registration happens in `bootstrap/app.php` using `->withMiddleware()`",
-      np: "Middleware HTTP pipeline मा — auth, rate limit, CORS। Laravel 11 मा `bootstrap/app.php` मा दर्ता।",
-      jp: "ミドルウェアはリクエストとコントローラの間に置かれ、認証・レート制限・CORS などを一元処理します。Laravel 11 では `bootstrap/app.php` に登録します。",
+      en: "Think of Eloquent relationships like the connections between people in real life — a user has many posts, a post belongs to a user, a student belongs to many courses.\n\nEloquent turns these real-world connections into simple PHP methods so you never have to write raw SQL joins.\n\n<b>The four core relationship types</b>\n• <b>hasOne</b> — one parent, one child (a user has one profile)\n• <b>hasMany</b> — one parent, many children (a user has many posts)\n• <b>belongsTo</b> — the child points back to its parent (a post belongs to a user)\n• <b>belongsToMany</b> — two models connected through a middle table called a pivot (a user belongs to many roles)\n\nRelationships are <b>lazy by default</b> — they only hit the database when you actually access them, not when you define them.",
+      np: "Eloquent relationship ले FK joins PHP methods मा। hasOne/hasMany parent; belongsTo child; belongsToMany pivot।",
+      jp: "Eloquent リレーションは外部キー結合を PHP メソッドで表現します。hasOne/hasMany が親側、belongsTo が子側、belongsToMany が多対多のピボットです。",
     },
     {
-      en: "The <b>Request</b> object is your window into everything about the incoming HTTP request — and Laravel automatically injects it into your controller methods.\n\n<b>What you can read from the Request</b>\n• Form inputs and query string values\n• JSON body (when `Content-Type: application/json`)\n• Uploaded files\n• Headers, cookies, the client's IP address\n  ↳ No more `$_POST`, `$_GET`, or `$_FILES` — the Request object is cleaner and testable\n\n<b>URL generation helpers</b>\n• `route('name')`, `url('/path')`, `asset('file.js')` — generate absolute URLs tied to your app's domain\n  ↳ If your app moves domains, only `APP_URL` in `.env` needs to change — all URLs update automatically",
-      np: "Request object ले input, file, header सब expose गर्छ। URL helper ले link सही राख्छ।",
-      jp: "**Request** がコントローラにインジェクトされ、入力・ファイル・ヘッダなどすべて取得可能。URL ヘルパは `route()`・`url()`・`asset()` で一貫したリンクを生成します。",
+      en: "Three more concepts round out this day:\n\n<b>N+1 problem</b>\n• Loading 100 posts then looping to get each post's author fires 101 queries — one for posts, then one per post for its author\n  ↳ Fix: use `with('author')` to load everything in 2 queries instead of 101\n\n<b>Soft deletes</b>\n• Instead of physically deleting a row, Laravel marks it with a timestamp in a `deleted_at` column\n  ↳ The row stays in the table but is invisible to normal queries — you can restore it any time\n\n<b>Observers</b>\n• An observer is a class that listens for model events (created, updated, deleted) and runs your code automatically\n  ↳ Keeps model-related side effects out of controllers and in one organised place",
+      np: "N+1 problem: `with()` ले solve। Soft delete: row physically remove नगरी mark। Observer ले event logic centralize।",
+      jp: "N+1 問題は `with()` で解決します。ソフトデリートは行を物理削除せず `deleted_at` を記録。オブザーバでモデルイベントロジックを集中管理できます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Creating & registering middleware",
-        np: "Middleware बनाउनु र दर्ता गर्नु",
-        jp: "ミドルウェアの作成と登録",
+        en: "Core relationship types",
+        np: "Core relationship types",
+        jp: "基本のリレーション型",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every middleware is a PHP class with one key method — `handle()`. Laravel calls it on every matching request.\n\n<b>Inside `handle()`</b>\n• `$next($request)` — passes the request further down the pipeline (toward the controller)\n  ↳ Call this to continue; skip it to abort the request early (e.g. return a redirect or 403)\n• Code before `$next($request)` runs on the way in — this is a <b>before middleware</b>\n• Code after `$next($request)` runs on the way out — this is an <b>after middleware</b>\n  ↳ Capture the response: `$response = $next($request)`, modify it, then `return $response`",
-            np: "Artisan ले class बनाउँछ। `$next($request)` ले pipeline जारी राख्छ। After middleware ले response modify गर्न सकिन्छ।",
-            jp: "Artisan で生成。`handle()` が `$next($request)` を呼ぶとパイプライン継続。`$response = $next($request)` を取得してから変更する「after ミドルウェア」パターンも使えます。",
+            en: "Laravel figures out the foreign key automatically by looking at the model name.\n\n<b>How the naming convention works</b>\n• If you call `belongsTo(User::class)`, Laravel looks for a `user_id` column on the current table\n  ↳ It takes the model name, converts it to snake_case, and adds `_id`\n• You can override this by passing the column name as the second argument: `$this->belongsTo(User::class, 'author_id')`\n\n<b>Avoiding null errors with `withDefault()`</b>\n• If a post has no `user_id`, accessing `$post->user` returns `null` — which causes a crash if you then try `$post->user->name`\n  ↳ `withDefault(['name' => 'Anonymous'])` returns a placeholder User model instead of `null`\n  ↳ Much safer when dealing with optional relationships",
+            np: "Convention ले `user_id` infer। Override गर्न explicit argument। `withDefault()` ले null बाट जोगिन सकिन्छ।",
+            jp: "規約で `user_id` などを自動推定。上書きするには関係メソッドに引数を渡します。`withDefault()` で外部キーが null のとき空モデルを返せます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Generate and implement middleware",
-            np: "Middleware बनाउनु",
-            jp: "ミドルウェアの生成と実装",
+            en: "hasOne, hasMany, belongsTo",
+            np: "hasOne, hasMany, belongsTo उदाहरण",
+            jp: "hasOne・hasMany・belongsTo の定義",
           },
-          code: `# Generate
-php artisan make:middleware EnsureUserIsAdmin
-
-// app/Http/Middleware/EnsureUserIsAdmin.php
-<?php
-
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-use Symfony\\Component\\HttpFoundation\\Response;
-
-class EnsureUserIsAdmin
+          code: `// app/Models/User.php
+class User extends Model
 {
-    public function handle(Request $request, Closure $next): Response
+    // One user → one profile (FK: profiles.user_id)
+    public function profile(): HasOne
     {
-        if (! $request->user()?->isAdmin()) {
-            return redirect('/dashboard')->with('error', 'Admins only.');
-        }
+        return $this->hasOne(Profile::class);
+        // Override FK: $this->hasOne(Profile::class, 'user_id', 'id');
+    }
 
-        return $next($request); // pass to controller
+    // One user → many posts (FK: posts.user_id)
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
     }
 }
 
-// --- After middleware: modify response on the way back ---
-class AddResponseHeader
+// app/Models/Post.php
+class Post extends Model
 {
-    public function handle(Request $request, Closure $next): Response
+    // Many posts → one user (FK: posts.user_id)
+    public function user(): BelongsTo
     {
-        $response = $next($request); // run controller first
-        $response->headers->set('X-App-Version', config('app.version'));
-        return $response;
+        return $this->belongsTo(User::class);
     }
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "In Laravel 11, you register all middleware in `bootstrap/app.php` inside the `->withMiddleware()` callback.\n\n<b>What you can do there</b>\n• `append()` / `prepend()` — add middleware to the global stack (runs on every request)\n• `alias()` — give a middleware a short name so you can use it in route definitions (`->middleware('admin')`)\n• `appendToGroup()` / `prependToGroup()` — add middleware to an existing group like `web` or `api`\n  ↳ Groups let you apply multiple middleware to a set of routes in one line",
-            np: "Laravel 11 मा `bootstrap/app.php` मा मात्र दर्ता। `Http/Kernel.php` छैन।",
-            jp: "**Laravel 11** では `bootstrap/app.php` のみで登録。`Http/Kernel.php` は廃止されました。",
-          },
+
+    // withDefault: returns empty User model when user_id is null
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')
+            ->withDefault(['name' => 'Anonymous']);
+    }
+}
+
+// ---- Accessing relationships ----
+$user    = User::find(1);
+$profile = $user->profile;          // hasOne → single model or null
+$posts   = $user->posts;            // hasMany → Collection
+$author  = Post::first()->user;     // belongsTo → single model or null`,
         },
         {
           type: "code",
           title: {
-            en: "bootstrap/app.php — aliases, groups, global append",
-            np: "bootstrap/app.php — दर्ता",
-            jp: "bootstrap/app.php への登録",
+            en: "belongsToMany — pivot table operations",
+            np: "belongsToMany — pivot operations",
+            jp: "belongsToMany とピボットテーブル操作",
           },
-          code: `// bootstrap/app.php
-use App\\Http\\Middleware\\EnsureUserIsAdmin;
-use App\\Http\\Middleware\\AddResponseHeader;
-use Illuminate\\Foundation\\Application;
-use Illuminate\\Foundation\\Configuration\\Middleware;
+          code: `// Pivot table convention: alphabetical singular model names → role_user
+// Migration: $table->foreignId('user_id'); $table->foreignId('role_id');
 
-return Application::configure(basePath: dirname(__DIR__))
-    ->withRouting(/* ... */)
-    ->withMiddleware(function (Middleware $middleware) {
+// app/Models/User.php
+public function roles(): BelongsToMany
+{
+    return $this->belongsToMany(Role::class)
+        ->withTimestamps()                // created_at, updated_at on pivot
+        ->withPivot('assigned_by');       // extra pivot column
+}
 
-        // 1. Global append — runs on every request in the stack
-        $middleware->append(AddResponseHeader::class);
+// app/Models/Role.php
+public function users(): BelongsToMany
+{
+    return $this->belongsToMany(User::class)->withTimestamps();
+}
 
-        // 2. Named alias — use 'admin' in route definitions
-        $middleware->alias([
-            'admin' => EnsureUserIsAdmin::class,
-        ]);
+// ---- Pivot operations ----
+$user = User::find(1);
 
-        // 3. Custom named group
-        $middleware->appendToGroup('admin-panel', [
-            EnsureUserIsAdmin::class,
-            AddResponseHeader::class,
-        ]);
+$user->roles()->attach($roleId);              // add a role
+$user->roles()->attach($roleId, ['assigned_by' => auth()->id()]); // with pivot data
+$user->roles()->detach($roleId);              // remove a role
+$user->roles()->detach();                     // remove ALL roles
 
-        // 4. Prepend to the existing 'web' group
-        $middleware->prependToGroup('web', AddResponseHeader::class);
-    })
-    ->create();
+// sync: detaches roles NOT in the array, attaches new ones
+$user->roles()->sync([1, 2, 3]);
 
-// routes/web.php — using aliases and groups
-Route::get('/admin', [AdminController::class, 'index'])->middleware('admin');
+// syncWithoutDetaching: only attaches, never removes
+$user->roles()->syncWithoutDetaching([4]);
 
-Route::middleware('admin-panel')->group(function () {
-    Route::resource('admin/posts', AdminPostController::class);
-});`,
+// toggle: attaches if missing, detaches if present
+$user->roles()->toggle([1, 2]);
+
+// Access pivot columns
+foreach ($user->roles as $role) {
+    echo $role->pivot->assigned_by;
+    echo $role->pivot->created_at;
+}`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Built-in middleware aliases",
-            np: "Built-in middleware aliases",
-            jp: "組み込みエイリアス一覧",
-          },
-          headers: [
-            { en: "Alias", np: "Alias", jp: "エイリアス" },
-            { en: "What it does", np: "के गर्छ", jp: "動作" },
-          ],
-          rows: [
-            [
-              { en: "`auth`", np: "`auth`", jp: "`auth`" },
-              {
-                en: "Redirect unauthenticated users to the login route",
-                np: "Unauthenticated user लाई login redirect",
-                jp: "未認証ユーザをログインにリダイレクト",
-              },
-            ],
-            [
-              { en: "`auth:sanctum`", np: "`auth:sanctum`", jp: "`auth:sanctum`" },
-              {
-                en: "Sanctum token or session auth for SPA/API",
-                np: "Sanctum token/session auth",
-                jp: "Sanctum のトークンまたはセッション認証",
-              },
-            ],
-            [
-              { en: "`throttle:60,1`", np: "`throttle:60,1`", jp: "`throttle:60,1`" },
-              {
-                en: "60 requests per 1 minute (fixed)",
-                np: "60 requests/minute fixed",
-                jp: "固定: 1 分に 60 リクエスト",
-              },
-            ],
-            [
-              { en: "`throttle:api`", np: "`throttle:api`", jp: "`throttle:api`" },
-              {
-                en: "Named rate limiter — configurable by user tier",
-                np: "Named limiter — user tier अनुसार सीमा",
-                jp: "名前付きリミッタ。ユーザープランで上限変更可",
-              },
-            ],
-            [
-              { en: "`verified`", np: "`verified`", jp: "`verified`" },
-              {
-                en: "Require email verified before granting access",
-                np: "Email verified हुनु पर्छ",
-                jp: "メール認証済みのみアクセス許可",
-              },
-            ],
-            [
-              { en: "`signed`", np: "`signed`", jp: "`signed`" },
-              {
-                en: "Validate HMAC signature on the URL",
-                np: "HMAC signature validate",
-                jp: "URL の HMAC 署名を検証",
-              },
-            ],
-            [
-              { en: "`can:permission`", np: "`can:permission`", jp: "`can:permission`" },
-              {
-                en: "Gate / Policy authorization check",
-                np: "Gate/Policy authorization",
-                jp: "Gate / Policy の認可チェック",
-              },
-            ],
-          ],
+          type: "diagram",
+          id: "laravel-eloquent-relations",
         },
       ],
     },
     {
       title: {
-        en: "Request object deep dive",
-        np: "Request object विस्तार",
-        jp: "Request オブジェクト詳細",
+        en: "Pivot tables & advanced relations",
+        np: "Pivot tables र advanced relations",
+        jp: "ピボットテーブルと高度なリレーション",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "To access the current HTTP request in a controller, just type-hint `Request $request` in the method signature — Laravel injects it automatically.\n\n<b>Why this is better than PHP superglobals</b>\n• No more `$_POST['name']`, `$_GET['page']`, `$_FILES['avatar']`\n  ↳ The Request object provides clean, consistent methods for all of these\n• It's testable — you can pass a fake Request in unit tests without making a real HTTP call\n• Dot notation lets you read nested data: `$request->input('address.city')`",
-            np: "Controller method मा `Request $request` type-hint — container ले inject। `$_POST` आवश्यक छैन।",
-            jp: "コントローラメソッドに `Request $request` と型付けするだけでコンテナが自動注入します。`$_POST` などスーパーグローバルは不要です。",
+            en: "Sometimes two models are connected through a third, and you want to jump straight to the end without a direct foreign key.\n\n<b>hasManyThrough explained with an analogy</b>\n• Think of it like: Country → has many Users → each User has many Posts\n  ↳ You want to ask \"give me all posts written by users in this country\" — but there's no direct `country_id` on the `posts` table\n• `hasManyThrough(Post::class, User::class)` builds the two-step join for you automatically\n  ↳ Laravel figures out the chain — you don't have to write raw SQL",
+            np: "hasOneThrough/hasManyThrough: Country→Users→Posts — direct FK बिना। Country ले Posts access।",
+            jp: "hasOneThrough / hasManyThrough で 2 つの外部キーをまたいでモデルにアクセス。Country→Users→Posts が典型例です。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Reading input data",
-            np: "Input पढ्नु",
-            jp: "入力の読み取り",
+            en: "hasOneThrough / hasManyThrough",
+            np: "hasManyThrough उदाहरण",
+            jp: "hasManyThrough の使用例",
           },
-          code: `use Illuminate\\Http\\Request;
-
-public function store(Request $request)
+          code: `// app/Models/Country.php
+class Country extends Model
 {
-    // ---- basic input ----
-    $name  = $request->input('name');               // null if missing
-    $name  = $request->input('name', 'Anonymous');  // with default
-    $all   = $request->all();
-    $sub   = $request->only(['name', 'email']);     // whitelist
-    $noPass = $request->except(['password', '_token']); // blacklist
-
-    // ---- nested input (dot notation) ----
-    $city = $request->input('address.city');
-    $tag0 = $request->input('tags.0');
-
-    // ---- presence checks ----
-    $request->has('name');       // key present (even if null)
-    $request->filled('name');    // present AND non-empty string
-    $request->missing('name');   // opposite of has()
-    $request->hasAny(['email', 'username']);
-
-    // ---- type-cast helpers ----
-    $active = $request->boolean('active');    // "1","true","on","yes" → true
-    $page   = $request->integer('page', 1);   // cast to int, default 1
-    $amount = $request->float('amount');
-    $date   = $request->date('dob', 'Y-m-d'); // Carbon instance
-
-    // ---- query string vs POST body ----
-    $q    = $request->query('search');         // ?search=foo only
-    $body = $request->post('field');           // POST body only
-
-    // ---- JSON body (Content-Type: application/json) ----
-    $payload = $request->json()->all();
-    $token   = $request->json('data.token');   // dot-notation on JSON
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "File uploads & request metadata",
-            np: "File upload र metadata",
-            jp: "ファイルとリクエストメタデータ",
-          },
-          code: `public function upload(Request $request)
-{
-    // ---- files ----
-    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-        $file = $request->file('avatar');
-        $path = $file->store('avatars', 'public'); // returns stored path
-        $orig = $file->getClientOriginalName();
-        $size = $file->getSize();                  // bytes
-        $mime = $file->getMimeType();
+    // Country → Users → Posts (through users)
+    public function posts(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Post::class,    // final model
+            User::class,    // intermediate model
+            'country_id',   // FK on users table
+            'user_id',      // FK on posts table
+            'id',           // local key on countries
+            'id',           // local key on users
+        );
     }
+}
 
-    // ---- request metadata ----
-    $request->method();           // "GET" | "POST" | "PUT" | …
-    $request->isMethod('POST');   // boolean
-    $request->path();             // "admin/posts/1"
-    $request->url();              // without query string
-    $request->fullUrl();          // with query string
-    $request->ip();               // client IP (respects trusted proxies)
-    $request->userAgent();
-    $request->header('Accept');
-    $request->bearerToken();      // Authorization: Bearer <token>
-    $request->expectsJson();      // true when client wants JSON
-    $request->isJson();           // Content-Type: application/json
-    $request->ajax();             // X-Requested-With: XMLHttpRequest
+$country = Country::find(1);
+$posts   = $country->posts; // all posts by users in this country`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "A polymorphic relationship lets one model belong to multiple different model types — without creating a separate table for each.\n\n<b>Real-world example: comments</b>\n• Imagine you want users to leave comments on both blog posts and videos\n  ↳ Without polymorphism you'd need a `post_comments` table AND a `video_comments` table\n  ↳ With polymorphism, one `comments` table serves both — using two special columns\n• `commentable_type` stores which model owns the comment (e.g., `App\\Models\\Post` or `App\\Models\\Video`)\n• `commentable_id` stores the ID of that specific post or video\n  ↳ Together they uniquely identify the parent — no matter what type it is",
+            np: "Polymorphic: Comment ले Post वा Video दुवैमा belong गर्न सक्छ। `commentable_type` र `commentable_id`।",
+            jp: "ポリモーフィック関係で 1 つのリレーションが複数のモデル型につながります。Comment が Post にも Video にも属せる典型例です。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Polymorphic morphMany / morphTo",
+            np: "Polymorphic उदाहरण",
+            jp: "ポリモーフィックリレーションの例",
+          },
+          code: `// Migration: comments table
+// $table->morphs('commentable');
+// → adds commentable_type (VARCHAR) and commentable_id (BIGINT UNSIGNED)
 
-    // ---- passing data from middleware to controller ----
-    // In middleware:  $request->merge(['tenant_id' => $tenant->id]);
-    // In controller: $tenantId = $request->integer('tenant_id');
-}`,
+// app/Models/Comment.php
+class Comment extends Model
+{
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo(); // resolves to Post or Video
+    }
+}
+
+// app/Models/Post.php
+class Post extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// app/Models/Video.php
+class Video extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// ---- Usage ----
+$post->comments()->create(['body' => 'Great post!']);
+$video->comments()->create(['body' => 'Nice video!']);
+
+$comment = Comment::first();
+$parent  = $comment->commentable; // returns Post or Video instance`,
         },
       ],
     },
     {
       title: {
-        en: "URL generation helpers",
-        np: "URL generation helpers",
-        jp: "URL 生成ヘルパ",
+        en: "Eager loading & the N+1 problem",
+        np: "Eager loading र N+1 problem",
+        jp: "Eager loading と N+1 問題",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Hard-coding URLs like `/users/42` in your code is fragile — if you rename a route, every hard-coded link breaks.\n\nLaravel's URL helpers solve this:\n• `route('users.show', $user)` — generates a URL from a named route\n  ↳ If the route URI changes, only the route file needs updating — all links stay correct\n• `url('/about')` — builds an absolute URL from a path, using `APP_URL` from `.env`\n• `action([UserController::class, 'index'])` — generates a URL that points to a specific controller method\n• `asset('img/logo.png')` — generates a URL to a file in your `public/` folder\n  ↳ `secure_asset()` forces HTTPS",
-            np: "`route()`, `url()`, `action()`, `asset()` — `APP_URL` अनुसार absolute URL।",
-            jp: "`route()`・`url()`・`action()`・`asset()` は `APP_URL` を基にした絶対 URL を返します。",
+            en: "The N+1 problem is the most common performance mistake in Eloquent — and the easiest to fix once you spot it.\n\n<b>What is the N+1 problem?</b>\n• Imagine you load 100 blog posts, then loop through them to get each post's author\n  ↳ That's 1 query to get the posts + 100 queries to get each author = 101 total\n• The number of extra queries grows with your data — at 1,000 posts it becomes 1,001 queries\n  ↳ This kills performance and is easy to miss in development where datasets are small\n\n<b>The fix: eager loading with `with()`</b>\n• `Post::with('user')->get()` runs exactly 2 SQL queries — one for posts, one for all their users at once\n  ↳ Laravel connects them in memory — no extra query per post in the loop\n• Always use `with()` when you know you'll be accessing a relationship inside a loop",
+            np: "N+1: loop भित्र lazy relationship access — 1+N queries। `with()` ले 1+1 queries मात्र।",
+            jp: "N+1 問題はループ内で遅延リレーションにアクセスすることで発生。`with()` で `WHERE IN (...)` の 1 クエリに置き換えます。",
           },
         },
         {
           type: "code",
           title: {
-            en: "route(), url(), asset() helpers",
-            np: "URL helper उदाहरण",
-            jp: "URL ヘルパの使用例",
+            en: "N+1 demonstration — before and after",
+            np: "N+1 problem — before/after",
+            jp: "N+1 問題の before/after",
           },
-          code: `use App\\Http\\Controllers\\UserController;
-use Illuminate\\Support\\Facades\\URL;
+          code: `// ❌ N+1 problem — fires 1 + N queries
+$posts = Post::all(); // 1 query: SELECT * FROM posts
+foreach ($posts as $post) {
+    echo $post->user->name; // N queries: SELECT * FROM users WHERE id = ?
+}
+// If $posts has 100 rows → 101 SQL queries
 
-// Named route (most preferred — survives URI changes)
-$url = route('users.show', ['user' => $user]);    // /users/42
-$url = route('users.show', $user);               // Eloquent model auto-resolves ID
+// ✅ Eager loading — fires exactly 2 queries
+$posts = Post::with('user')->get();
+// query 1: SELECT * FROM posts
+// query 2: SELECT * FROM users WHERE id IN (1, 2, 3, …)
+foreach ($posts as $post) {
+    echo $post->user->name; // no extra query — already loaded
+}
 
-// Absolute URL from path
-$url = url('/about');                            // https://app.test/about
-$url = url()->current();
-$url = url()->previous();
+// ---- Deep / nested eager loading ----
+$posts = Post::with('user.profile')->get(); // posts + users + profiles
+$users = User::with(['posts', 'posts.comments'])->get(); // nested
 
-// Controller action URL
-$url = action([UserController::class, 'index']);
+// ---- Constrained eager load ----
+$users = User::with(['posts' => function ($query) {
+    $query->published()->latest()->limit(5);
+}])->get();
 
-// Static assets in public/
-$img = asset('img/logo.png');                    // https://app.test/img/logo.png
-$img = secure_asset('img/logo.png');             // forces https://
+// Shorter closure syntax (PHP 7.4+)
+$users = User::with(['posts' => fn ($q) => $q->published()->latest()])->get();
 
-// Append query parameters to the current URL
-$url = URL::query(['page' => 2, 'sort' => 'name']);`,
+// ---- Lazy eager loading (after query already ran) ----
+$users = User::all();           // already fetched
+$users->load('posts');          // load relationship in-place
+$users->loadMissing('posts');   // only load if not already loaded
+
+// ---- withCount: get relation count without hydrating models ----
+$users = User::withCount('posts')->get();
+echo $users->first()->posts_count; // no extra query for each user`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Soft deletes & model events",
+        np: "Soft deletes र Model events",
+        jp: "ソフトデリートとモデルイベント",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Soft deletes give you a safety net — deleted records aren't really gone, just hidden.\n\n<b>How soft deletes work</b>\n• When you call `$post->delete()` on a model using `SoftDeletes`, Laravel sets `deleted_at` to the current timestamp instead of running `DELETE FROM posts`\n  ↳ The row stays in the database — it's just marked as deleted\n• All normal queries automatically add `WHERE deleted_at IS NULL` so soft-deleted rows are invisible\n  ↳ You don't need to add any filtering yourself — it's handled behind the scenes\n\n<b>Working with soft-deleted records</b>\n• `Post::withTrashed()->get()` — returns all records, including soft-deleted ones\n• `Post::onlyTrashed()->get()` — returns only the soft-deleted records\n• `$post->restore()` — clears `deleted_at` and brings the record back\n• `$post->forceDelete()` — physically removes the row from the database permanently",
+            np: "`SoftDeletes` trait ले `deleted_at` set गर्छ। Normal query मा filter। `withTrashed()` ले सब देखाउँछ।",
+            jp: "`SoftDeletes` トレイトは物理削除の代わりに `deleted_at` を記録。通常クエリは自動的にフィルタ。`withTrashed()` で全件、`onlyTrashed()` で削除済みのみ取得できます。",
+          },
         },
         {
           type: "code",
           title: {
-            en: "Signed URLs",
-            np: "Signed URL उदाहरण",
-            jp: "署名付き URL",
+            en: "SoftDeletes trait — setup and usage",
+            np: "SoftDeletes trait उदाहरण",
+            jp: "SoftDeletes トレイトの設定と使用",
           },
-          code: `use Illuminate\\Support\\Facades\\URL;
+          code: `// Migration: add the column
+$table->softDeletes(); // deleted_at TIMESTAMP NULL DEFAULT NULL
 
-// Permanent signed URL (no expiry)
-$link = URL::signedRoute('unsubscribe', ['user' => $user->id]);
+// app/Models/Post.php
+use Illuminate\\Database\\Eloquent\\SoftDeletes;
 
-// Temporary signed URL (valid for 30 minutes)
-$link = URL::temporarySignedRoute(
-    'password.reset',
-    now()->addMinutes(30),
-    ['token' => $token]
-);
+class Post extends Model
+{
+    use SoftDeletes;
+}
 
-// Use the 'signed' middleware to auto-validate
-Route::get('/unsubscribe/{user}', [UnsubscribeController::class, 'destroy'])
-    ->name('unsubscribe')
-    ->middleware('signed');
+// ---- Soft delete operations ----
+$post = Post::find(1);
+$post->delete();          // sets deleted_at = now()  (soft delete)
+$post->forceDelete();     // physically removes the row from DB
 
-// Or validate manually
-if (! URL::hasValidSignature($request)) {
-    abort(401, 'Invalid or expired link.');
+// ---- Querying soft-deleted records ----
+Post::all();              // excludes soft-deleted rows
+Post::withTrashed()->find(1);       // includes soft-deleted
+Post::withTrashed()->where('user_id', 1)->get();
+Post::onlyTrashed()->get();         // only soft-deleted
+
+// ---- Restore ----
+Post::withTrashed()->find(1)->restore(); // clears deleted_at
+
+// ---- Cascade soft deletes manually (no DB cascade for soft deletes) ----
+// In a model observer or in the delete() method:
+// $post->comments()->delete(); // soft-deletes related comments`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Model events let you run code automatically when something happens to a model — like auto-generating a slug when a post is created, or soft-deleting related comments when a post is deleted.\n\n<b>When each event fires</b>\n• `creating` / `created` — fires before and after a new record is inserted into the database\n• `updating` / `updated` — fires before and after an existing record is changed\n• `saving` / `saved` — fires on both creates and updates (a catch-all for either)\n• `deleting` / `deleted` — fires before and after a record is deleted\n• `restoring` / `restored` — fires when a soft-deleted record is brought back\n\n<b>Two ways to listen to events</b>\n• For simple cases: add an inline closure inside `boot()` in your model\n  ↳ Quick and easy, but gets messy when you stack up multiple events\n• For complex cases: create a dedicated <b>Observer</b> class with one method per event\n  ↳ All event logic lives in one organised file — easier to read, test, and maintain",
+            np: "Model events: `creating`, `created`, `updating`, `deleted` आदि। Simple: `boot()` मा inline। Complex: observer class।",
+            jp: "モデルイベントはライフサイクルの各段階で発火。シンプルなら `boot()` に直接、複雑なロジックはオブザーバクラスに切り出します。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Observer pattern — PostObserver",
+            np: "Observer उदाहरण",
+            jp: "オブザーバパターンの例",
+          },
+          code: `php artisan make:observer PostObserver --model=Post
+
+// app/Observers/PostObserver.php
+<?php
+
+namespace App\\Observers;
+
+use App\\Models\\Post;
+use Illuminate\\Support\\Str;
+
+class PostObserver
+{
+    public function creating(Post $post): void
+    {
+        // Auto-generate slug if not provided
+        if (empty($post->slug)) {
+            $post->slug = Str::slug($post->title);
+        }
+    }
+
+    public function created(Post $post): void
+    {
+        // Notify subscribers after a post is published
+        if ($post->is_published) {
+            // NotifySubscribers::dispatch($post);
+        }
+    }
+
+    public function deleting(Post $post): void
+    {
+        // Soft-delete related comments when post is deleted
+        $post->comments()->delete();
+    }
+}
+
+// Register in app/Providers/AppServiceProvider.php (or bootstrap/app.php)
+use App\\Models\\Post;
+use App\\Observers\\PostObserver;
+
+public function boot(): void
+{
+    Post::observe(PostObserver::class);
 }`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Response helpers & custom headers",
-            np: "Response helpers",
-            jp: "レスポンスヘルパとカスタムヘッダ",
-          },
-          code: `// JSON response with custom header
-return response()
-    ->json(['status' => 'ok', 'data' => $data])
-    ->header('X-Request-Id', $requestId)
-    ->header('Cache-Control', 'no-store');
-
-// Redirect with flash message
-return redirect()->route('posts.index')->with('success', 'Post created!');
-
-// Redirect back with validation errors
-return back()->withErrors($validator)->withInput();
-
-// File download
-return response()->download(storage_path('app/report.pdf'), 'report.pdf');
-
-// Stream large file without loading into memory
-return response()->streamDownload(function () use ($path) {
-    echo file_get_contents($path);
-}, 'export.csv');
-
-// No content (204)
-return response()->noContent();`,
         },
       ],
     },
@@ -400,74 +402,62 @@ return response()->noContent();`,
   faq: [
     {
       question: {
-        en: "How do I pass data from middleware to controllers?",
-        np: "Middleware बाट controller मा डेटा कसरी पठाउने?",
-        jp: "ミドルウェアからコントローラにデータを渡すには？",
+        en: "How does Laravel know the foreign key name for a relationship?",
+        np: "Laravel ले foreign key name कसरी थाहा पाउँछ?",
+        jp: "Laravel はどうやって外部キー名を知りますか？",
       },
       answer: {
-        en: "Middleware often resolves something useful — like the current tenant or a decoded API token — and needs to hand it to the controller.\n\n<b>Two ways to do it:</b>\n• `$request->merge(['key' => $value])` — adds it to the input bag\n  ↳ Read in controller with `$request->input('key')`\n  ↳ Drawback: users could potentially send a form field with the same name and interfere\n• `$request->attributes->set('key', $value)` — adds it to the server-side attributes bag\n  ↳ Read in controller with `$request->attributes->get('key')`\n  ↳ This bag is completely separate from user-submitted data — safe for internal use",
-        np: "`$request->merge()` वा `$request->attributes->set()` ले controller मा data पठाउनुस्। `attributes` bag user-tamper-proof छ।",
-        jp: "`$request->merge()` か `$request->attributes->set()` でデータを付加し、コントローラで `$request->get()` か `attributes->get()` で読み取ります。`attributes` バッグはユーザー入力から独立しています。",
+        en: "Laravel follows a naming convention so you don't have to spell out every column name.\n\n• For `belongsTo(User::class)` — Laravel looks for a `user_id` column on the current table\n• For `hasMany(Post::class)` on a `User` model — Laravel looks for `user_id` on the `posts` table\n  ↳ The pattern is always: the related model name in snake_case + `_id`\n\nIf your column has a different name (like `author_id` instead of `user_id`), pass it as the second argument:\n`$this->belongsTo(User::class, 'author_id')`\n  ↳ The third argument overrides the local key on your own table (defaults to `id`)",
+        np: "Snake_case model name + `_id`। Override: `$this->belongsTo(User::class, 'author_id')`।",
+        jp: "スネークケースのモデル名 + `_id` が規約です。上書きするには `$this->belongsTo(User::class, 'author_id')` のように第 2 引数で指定します。",
       },
     },
     {
       question: {
-        en: "What is the difference between the `web` and `api` middleware groups?",
-        np: "`web` र `api` group मा के फरक?",
-        jp: "`web` と `api` ミドルウェアグループの違いは？",
+        en: "What if my pivot table has a different name than the convention?",
+        np: "Pivot table को नाम convention अनुसार नभए?",
+        jp: "ピボットテーブル名が規約と異なる場合は？",
       },
       answer: {
-        en: "These two groups reflect two different ways applications work.\n\n<b>`web` group</b>\n• Enables cookies, sessions, and CSRF protection\n• Designed for browser-facing routes — the kind where a user logs in and gets a session cookie\n  ↳ Without CSRF protection, a malicious website could trick a logged-in user into submitting forms\n\n<b>`api` group</b>\n• Stateless — no session, no CSRF\n• Designed for mobile apps and frontends that send a token with every request instead of using cookies\n• Includes `throttle:api` rate limiting\n  ↳ Use `auth:sanctum` for token-based authentication on API routes, not `auth` (which relies on sessions)",
-        np: "`web` stateful (session, CSRF); `api` stateless (throttle)। API मा `auth:sanctum` प्रयोग।",
-        jp: "`web` はセッション・CSRF あり。`api` はステートレスでレート制限のみ。API には `auth:sanctum` などトークン認証を使います。",
+        en: "By convention, Laravel expects the pivot table to be named using both model names in alphabetical order, singular, joined with an underscore — for example, `role_user` for User and Role.\n\nIf your table has a different name, pass it as the second argument:\n`$this->belongsToMany(Role::class, 'user_role_assignments')`\n\nIf your foreign key column names also don't match the convention, pass them as the third and fourth arguments:\n`$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`\n  ↳ Third argument = the foreign key pointing to the current model's table\n  ↳ Fourth argument = the foreign key pointing to the related model's table",
+        np: "`$this->belongsToMany(Role::class, 'user_role_assignments')` — table name explicit।",
+        jp: "`belongsToMany(Role::class, 'user_role_assignments')` のように第 2 引数でテーブル名を指定します。外部キー列名は第 3・第 4 引数で上書きできます。",
       },
     },
     {
       question: {
-        en: "How does `throttle:api` differ from `throttle:60,1`?",
-        np: "`throttle:api` र `throttle:60,1` मा के फरक?",
-        jp: "`throttle:api` と `throttle:60,1` はどう違いますか？",
+        en: "How do I filter records based on a related model's columns?",
+        np: "Related model को column अनुसार filter गर्ने?",
+        jp: "リレーションのカラムでフィルタするには？",
       },
       answer: {
-        en: "Both limit how many requests a user can make, but in different ways.\n\n<b>`throttle:60,1`</b>\n• Hard-coded: 60 requests per 1 minute for every single caller — no exceptions\n  ↳ Simple but inflexible — an admin user gets the same limit as a free-tier user\n\n<b>`throttle:api`</b>\n• Reads a named rate limiter called `api` that you define in `bootstrap/app.php`\n• The named limiter is a function, so it can return different limits depending on context:\n  ↳ Authenticated users get 1000 requests/minute, guests get 60\n  ↳ Premium plan users get unlimited, free users get 100\n• Much more practical for real applications where different users deserve different limits",
-        np: "`throttle:60,1` fixed 60/min; `throttle:api` named limiter — tier अनुसार लचिलो।",
-        jp: "`throttle:60,1` は固定。`throttle:api` は `RateLimiter::for('api',…)` の名前付きリミッタで、ユーザープランに応じて上限を変えられます。",
+        en: "Use `whereHas()` — it lets you filter parent models based on a condition in their related records.\n\n<b>Examples</b>\n• Get all posts that have at least one approved comment:\n`Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`\n  ↳ Only returns posts where a matching comment exists — posts with no approved comments are excluded\n• `whereDoesntHave('comments')` — returns posts with zero comments (the inverse)\n• `has('comments', '>=', 3)` — returns posts with 3 or more comments\n\n<b>Counting without loading</b>\n• `withCount('comments')` adds a `comments_count` integer to each post — without loading the actual comment models\n  ↳ Perfect for showing \"12 comments\" in a list without fetching all 12 comment rows",
+        np: "`whereHas('comments', fn($q) => $q->where('approved', true))` — related condition। `withCount()` ले count।",
+        jp: "`whereHas('comments', fn($q) => $q->where('approved', true))` で条件付きリレーションフィルタ。`withCount()` は件数を追加属性として取得します。",
       },
     },
     {
       question: {
-        en: "Can middleware modify the response after the controller runs?",
-        np: "Middleware ले controller पछि response बदल्न सक्छ?",
-        jp: "コントローラ実行後にミドルウェアがレスポンスを変更できますか？",
+        en: "What is `withCount` and when should I use it?",
+        np: "`withCount` के हो र कहिले प्रयोग?",
+        jp: "`withCount` とは何ですか、どんな場面で使いますか？",
       },
       answer: {
-        en: "Yes — this is called <b>after middleware</b>, and it's just as common as before middleware.\n\n<b>How it works</b>\n• Instead of returning `$next($request)` directly, capture it: `$response = $next($request)`\n• The controller runs completely at that point\n• Now you can modify `$response` before returning it\n\n<b>Common uses</b>\n• Add security or debug headers to every response: `$response->headers->set('X-App-Version', '1.0')`\n• Log the HTTP status code of every response\n• Inject a debug toolbar (this is how Debugbar works)\n  ↳ Everything after `$next($request)` in `handle()` runs on the way back out",
-        np: "After middleware: `$response = $next($request)` capture, modify, return। Header थप्नु, log गर्नु।",
-        jp: "`$response = $next($request)` で取得後に変更して `return` する「after ミドルウェア」パターンです。レスポンスヘッダの追加や処理時間のログに使います。",
+        en: "`withCount()` gives you a number attached to each model — without loading all the related records.\n\n• `User::withCount('posts')->get()` adds a `posts_count` attribute to every User\n  ↳ Laravel runs a `COUNT(*)` in the SQL — no Post models are loaded into memory\n• Use it when you want to show \"Rajan has 12 posts\" in a list — you just need the number, not the posts themselves\n• You can also sort by it: `->orderByDesc('posts_count')` to rank users by most posts\n  ↳ Much more efficient than loading all posts and counting them in PHP",
+        np: "`withCount('posts')` ले `posts_count` attribute add — Post models load गर्दैन। List display को लागि।",
+        jp: "`withCount('posts')` は `posts_count` 属性を追加しますが Post モデルはロードしません。「X 件の投稿」表示や `orderByDesc('posts_count')` による並び替えに最適です。",
       },
     },
     {
       question: {
-        en: "What is a signed URL and when should I use it?",
-        np: "Signed URL के हो र कहिले प्रयोग गर्ने?",
-        jp: "署名付き URL とはいつ使いますか？",
+        en: "How do observers differ from listening to model events directly in boot()?",
+        np: "Observer र `boot()` direct event listener मा के फरक?",
+        jp: "オブザーバと `boot()` での直接イベントリスニングの違いは？",
       },
       answer: {
-        en: "A signed URL is a regular URL with a cryptographic signature added to it — if anyone changes even one character of the URL, the signature becomes invalid.\n\n<b>How it works</b>\n• Laravel generates the URL with `URL::signedRoute()` and appends a `signature` query parameter\n• When the user visits the URL, Laravel checks the signature with the `signed` middleware\n  ↳ If it's valid, the request proceeds; if tampered, it returns a 403 error\n\n<b>When to use signed URLs</b>\n• Email unsubscribe links — so one user can't unsubscribe another user by guessing the URL\n• Password reset links\n• Invoice or file download links\n• Any unauthenticated action that should only work for a specific intended recipient\n\n<b>Adding an expiry</b>\n• Use `URL::temporarySignedRoute()` to make the link expire after a set time\n  ↳ Prevents old links from being reused indefinitely",
-        np: "HMAC signature भएको URL — tamper करे invalid। Email unsubscribe, password reset, invoice download को लागि।",
-        jp: "HMAC 署名付きの URL で、改ざんすると無効になります。`signed` ミドルウェアか `URL::hasValidSignature()` で検証。メール解除・パスワードリセット・請求書 DL などに使います。",
-      },
-    },
-    {
-      question: {
-        en: "How do I apply middleware only to specific HTTP methods on a resource controller?",
-        np: "Resource controller मा specific method मा मात्र middleware?",
-        jp: "リソースコントローラの特定メソッドだけにミドルウェアを適用するには？",
-      },
-      answer: {
-        en: "Resource controllers register 7 routes (index, create, store, show, edit, update, destroy) by default — but you often only want middleware on some of them.\n\n<b>Option 1: Controller constructor</b>\n• Use `$this->middleware('auth')->only(['store', 'update', 'destroy'])` in the constructor\n  ↳ `index` and `show` stay public (no auth needed to browse)\n  ↳ `store`, `update`, `destroy` require authentication (write actions)\n• `->except(['index', 'show'])` is the inverse — apply to everything except the listed methods\n\n<b>Option 2: Route definition</b>\n• Use `->only()` or `->except()` on `Route::resource()` to limit which routes are even registered\n  ↳ Then attach middleware to individual named routes using their auto-generated names like `posts.store`",
-        np: "Controller constructor मा `$this->middleware('auth')->only(['store','update','destroy'])` — index/show public रहन्छ।",
-        jp: "コントローラのコンストラクタで `$this->middleware('auth')->only(['store','update','destroy'])` とすると、`index`・`show` は公開のまま書き込みだけ保護できます。",
+        en: "Both approaches work the same way at runtime — the difference is about keeping your code clean.\n\n<b>Inline listeners in `boot()`</b>\n• Quick to write for one or two simple events\n  ↳ Can get hard to read when you stack up many event closures in one method\n\n<b>Observer class</b>\n• All event methods (creating, updating, deleting, etc.) live in one file\n  ↳ Easy to find, read, test independently, and temporarily disable during tests\n\nAs a rule of thumb: use an observer as soon as you have more than 2–3 model events, or when the event logic is more than a couple of lines.",
+        np: "Runtime मा same। Observer ले सबै event एक file मा — test गर्न सजिलो। 2-3 events भन्दा बढी भए observer।",
+        jp: "ランタイムでの動作は同じ。オブザーバは全イベントを 1 ファイルにまとめ、テストでのモックや一時的な無効化が容易です。イベントが 2〜3 件を超えたらオブザーバへ移しましょう。",
       },
     },
   ],

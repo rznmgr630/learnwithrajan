@@ -3,398 +3,410 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Think of Eloquent relationships like the connections between people in real life — a user has many posts, a post belongs to a user, a student belongs to many courses.\n\nEloquent turns these real-world connections into simple PHP methods so you never have to write raw SQL joins.\n\n<b>The four core relationship types</b>\n• <b>hasOne</b> — one parent, one child (a user has one profile)\n• <b>hasMany</b> — one parent, many children (a user has many posts)\n• <b>belongsTo</b> — the child points back to its parent (a post belongs to a user)\n• <b>belongsToMany</b> — two models connected through a middle table called a pivot (a user belongs to many roles)\n\nRelationships are <b>lazy by default</b> — they only hit the database when you actually access them, not when you define them.",
-      np: "Eloquent relationship ले FK joins PHP methods मा। hasOne/hasMany parent; belongsTo child; belongsToMany pivot।",
-      jp: "Eloquent リレーションは外部キー結合を PHP メソッドで表現します。hasOne/hasMany が親側、belongsTo が子側、belongsToMany が多対多のピボットです。",
-    },
-    {
-      en: "Three more concepts round out this day:\n\n<b>N+1 problem</b>\n• Loading 100 posts then looping to get each post's author fires 101 queries — one for posts, then one per post for its author\n  ↳ Fix: use `with('author')` to load everything in 2 queries instead of 101\n\n<b>Soft deletes</b>\n• Instead of physically deleting a row, Laravel marks it with a timestamp in a `deleted_at` column\n  ↳ The row stays in the table but is invisible to normal queries — you can restore it any time\n\n<b>Observers</b>\n• An observer is a class that listens for model events (created, updated, deleted) and runs your code automatically\n  ↳ Keeps model-related side effects out of controllers and in one organised place",
-      np: "N+1 problem: `with()` ले solve। Soft delete: row physically remove नगरी mark। Observer ले event logic centralize।",
-      jp: "N+1 問題は `with()` で解決します。ソフトデリートは行を物理削除せず `deleted_at` を記録。オブザーバでモデルイベントロジックを集中管理できます。",
+      en: "These are two different questions every app needs to answer:\n\n<b>Authentication = who are you?</b>\n• Are you logged in? Who is this user?\n  ↳ Covered in Day 11 — sessions, tokens, Breeze\n\n<b>Authorization = what can you do?</b>\n• Can this logged-in user edit this post? Delete someone else's account?\n  ↳ That's what Day 12 covers — Gates and Policies\n\n<b>API Resources</b> — a separate but related topic: they control exactly what your JSON responses look like, so you don't accidentally expose sensitive model fields to API consumers.",
+      np: "Auth = who. Authz = what. Gate र Policy authz को लागि। API Resource = clean JSON।",
+      jp: "認証は「誰か」、認可は「何ができるか」。Gate はシンプルなクロージャ、Policy はモデル単位のクラス。API Resource で JSON を整形。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Core relationship types",
-        np: "Core relationship types",
-        jp: "基本のリレーション型",
+        en: "Gates — simple closure-based authorization",
+        np: "Gate — closure-based authorization",
+        jp: "Gate — クロージャベースの認可",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel figures out the foreign key automatically by looking at the model name.\n\n<b>How the naming convention works</b>\n• If you call `belongsTo(User::class)`, Laravel looks for a `user_id` column on the current table\n  ↳ It takes the model name, converts it to snake_case, and adds `_id`\n• You can override this by passing the column name as the second argument: `$this->belongsTo(User::class, 'author_id')`\n\n<b>Avoiding null errors with `withDefault()`</b>\n• If a post has no `user_id`, accessing `$post->user` returns `null` — which causes a crash if you then try `$post->user->name`\n  ↳ `withDefault(['name' => 'Anonymous'])` returns a placeholder User model instead of `null`\n  ↳ Much safer when dealing with optional relationships",
-            np: "Convention ले `user_id` infer। Override गर्न explicit argument। `withDefault()` ले null बाट जोगिन सकिन्छ।",
-            jp: "規約で `user_id` などを自動推定。上書きするには関係メソッドに引数を渡します。`withDefault()` で外部キーが null のとき空モデルを返せます。",
+            en: "A <b>Gate</b> is the simplest form of authorization — just a closure that returns `true` (allowed) or `false` (denied).\n\nThink of it like a bouncer at a door: you describe the rule once ('only admins and editors can enter'), then check it anywhere in your app.\n\n• Gates are defined in a service provider, usually inside `AppServiceProvider::boot()`\n• The first argument is always the authenticated user — Laravel injects it automatically\n• You can pass extra arguments (like a model) as additional parameters\n• Use Gates for one-off actions that don't belong to a specific model\n  ↳ Example: 'can this user view the analytics dashboard?' — not tied to any single record",
+            np: "Gate ले simple closure मा authorization। `AppServiceProvider::boot()` मा define।",
+            jp: "Gate はクロージャで認可ルールを定義。`AppServiceProvider::boot()` に記述するのが一般的。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "hasOne, hasMany, belongsTo",
-            np: "hasOne, hasMany, belongsTo उदाहरण",
-            jp: "hasOne・hasMany・belongsTo の定義",
-          },
-          code: `// app/Models/User.php
-class User extends Model
-{
-    // One user → one profile (FK: profiles.user_id)
-    public function profile(): HasOne
-    {
-        return $this->hasOne(Profile::class);
-        // Override FK: $this->hasOne(Profile::class, 'user_id', 'id');
-    }
-
-    // One user → many posts (FK: posts.user_id)
-    public function posts(): HasMany
-    {
-        return $this->hasMany(Post::class);
-    }
-}
-
-// app/Models/Post.php
-class Post extends Model
-{
-    // Many posts → one user (FK: posts.user_id)
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // withDefault: returns empty User model when user_id is null
-    public function author(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id')
-            ->withDefault(['name' => 'Anonymous']);
-    }
-}
-
-// ---- Accessing relationships ----
-$user    = User::find(1);
-$profile = $user->profile;          // hasOne → single model or null
-$posts   = $user->posts;            // hasMany → Collection
-$author  = Post::first()->user;     // belongsTo → single model or null`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "belongsToMany — pivot table operations",
-            np: "belongsToMany — pivot operations",
-            jp: "belongsToMany とピボットテーブル操作",
-          },
-          code: `// Pivot table convention: alphabetical singular model names → role_user
-// Migration: $table->foreignId('user_id'); $table->foreignId('role_id');
-
-// app/Models/User.php
-public function roles(): BelongsToMany
-{
-    return $this->belongsToMany(Role::class)
-        ->withTimestamps()                // created_at, updated_at on pivot
-        ->withPivot('assigned_by');       // extra pivot column
-}
-
-// app/Models/Role.php
-public function users(): BelongsToMany
-{
-    return $this->belongsToMany(User::class)->withTimestamps();
-}
-
-// ---- Pivot operations ----
-$user = User::find(1);
-
-$user->roles()->attach($roleId);              // add a role
-$user->roles()->attach($roleId, ['assigned_by' => auth()->id()]); // with pivot data
-$user->roles()->detach($roleId);              // remove a role
-$user->roles()->detach();                     // remove ALL roles
-
-// sync: detaches roles NOT in the array, attaches new ones
-$user->roles()->sync([1, 2, 3]);
-
-// syncWithoutDetaching: only attaches, never removes
-$user->roles()->syncWithoutDetaching([4]);
-
-// toggle: attaches if missing, detaches if present
-$user->roles()->toggle([1, 2]);
-
-// Access pivot columns
-foreach ($user->roles as $role) {
-    echo $role->pivot->assigned_by;
-    echo $role->pivot->created_at;
-}`,
-        },
-        {
-          type: "diagram",
-          id: "laravel-eloquent-relations",
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Pivot tables & advanced relations",
-        np: "Pivot tables र advanced relations",
-        jp: "ピボットテーブルと高度なリレーション",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Sometimes two models are connected through a third, and you want to jump straight to the end without a direct foreign key.\n\n<b>hasManyThrough explained with an analogy</b>\n• Think of it like: Country → has many Users → each User has many Posts\n  ↳ You want to ask \"give me all posts written by users in this country\" — but there's no direct `country_id` on the `posts` table\n• `hasManyThrough(Post::class, User::class)` builds the two-step join for you automatically\n  ↳ Laravel figures out the chain — you don't have to write raw SQL",
-            np: "hasOneThrough/hasManyThrough: Country→Users→Posts — direct FK बिना। Country ले Posts access।",
-            jp: "hasOneThrough / hasManyThrough で 2 つの外部キーをまたいでモデルにアクセス。Country→Users→Posts が典型例です。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "hasOneThrough / hasManyThrough",
-            np: "hasManyThrough उदाहरण",
-            jp: "hasManyThrough の使用例",
-          },
-          code: `// app/Models/Country.php
-class Country extends Model
-{
-    // Country → Users → Posts (through users)
-    public function posts(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            Post::class,    // final model
-            User::class,    // intermediate model
-            'country_id',   // FK on users table
-            'user_id',      // FK on posts table
-            'id',           // local key on countries
-            'id',           // local key on users
-        );
-    }
-}
-
-$country = Country::find(1);
-$posts   = $country->posts; // all posts by users in this country`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "A polymorphic relationship lets one model belong to multiple different model types — without creating a separate table for each.\n\n<b>Real-world example: comments</b>\n• Imagine you want users to leave comments on both blog posts and videos\n  ↳ Without polymorphism you'd need a `post_comments` table AND a `video_comments` table\n  ↳ With polymorphism, one `comments` table serves both — using two special columns\n• `commentable_type` stores which model owns the comment (e.g., `App\\Models\\Post` or `App\\Models\\Video`)\n• `commentable_id` stores the ID of that specific post or video\n  ↳ Together they uniquely identify the parent — no matter what type it is",
-            np: "Polymorphic: Comment ले Post वा Video दुवैमा belong गर्न सक्छ। `commentable_type` र `commentable_id`।",
-            jp: "ポリモーフィック関係で 1 つのリレーションが複数のモデル型につながります。Comment が Post にも Video にも属せる典型例です。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Polymorphic morphMany / morphTo",
-            np: "Polymorphic उदाहरण",
-            jp: "ポリモーフィックリレーションの例",
-          },
-          code: `// Migration: comments table
-// $table->morphs('commentable');
-// → adds commentable_type (VARCHAR) and commentable_id (BIGINT UNSIGNED)
-
-// app/Models/Comment.php
-class Comment extends Model
-{
-    public function commentable(): MorphTo
-    {
-        return $this->morphTo(); // resolves to Post or Video
-    }
-}
-
-// app/Models/Post.php
-class Post extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
-
-// app/Models/Video.php
-class Video extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
-
-// ---- Usage ----
-$post->comments()->create(['body' => 'Great post!']);
-$video->comments()->create(['body' => 'Nice video!']);
-
-$comment = Comment::first();
-$parent  = $comment->commentable; // returns Post or Video instance`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Eager loading & the N+1 problem",
-        np: "Eager loading र N+1 problem",
-        jp: "Eager loading と N+1 問題",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The N+1 problem is the most common performance mistake in Eloquent — and the easiest to fix once you spot it.\n\n<b>What is the N+1 problem?</b>\n• Imagine you load 100 blog posts, then loop through them to get each post's author\n  ↳ That's 1 query to get the posts + 100 queries to get each author = 101 total\n• The number of extra queries grows with your data — at 1,000 posts it becomes 1,001 queries\n  ↳ This kills performance and is easy to miss in development where datasets are small\n\n<b>The fix: eager loading with `with()`</b>\n• `Post::with('user')->get()` runs exactly 2 SQL queries — one for posts, one for all their users at once\n  ↳ Laravel connects them in memory — no extra query per post in the loop\n• Always use `with()` when you know you'll be accessing a relationship inside a loop",
-            np: "N+1: loop भित्र lazy relationship access — 1+N queries। `with()` ले 1+1 queries मात्र।",
-            jp: "N+1 問題はループ内で遅延リレーションにアクセスすることで発生。`with()` で `WHERE IN (...)` の 1 クエリに置き換えます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "N+1 demonstration — before and after",
-            np: "N+1 problem — before/after",
-            jp: "N+1 問題の before/after",
-          },
-          code: `// ❌ N+1 problem — fires 1 + N queries
-$posts = Post::all(); // 1 query: SELECT * FROM posts
-foreach ($posts as $post) {
-    echo $post->user->name; // N queries: SELECT * FROM users WHERE id = ?
-}
-// If $posts has 100 rows → 101 SQL queries
-
-// ✅ Eager loading — fires exactly 2 queries
-$posts = Post::with('user')->get();
-// query 1: SELECT * FROM posts
-// query 2: SELECT * FROM users WHERE id IN (1, 2, 3, …)
-foreach ($posts as $post) {
-    echo $post->user->name; // no extra query — already loaded
-}
-
-// ---- Deep / nested eager loading ----
-$posts = Post::with('user.profile')->get(); // posts + users + profiles
-$users = User::with(['posts', 'posts.comments'])->get(); // nested
-
-// ---- Constrained eager load ----
-$users = User::with(['posts' => function ($query) {
-    $query->published()->latest()->limit(5);
-}])->get();
-
-// Shorter closure syntax (PHP 7.4+)
-$users = User::with(['posts' => fn ($q) => $q->published()->latest()])->get();
-
-// ---- Lazy eager loading (after query already ran) ----
-$users = User::all();           // already fetched
-$users->load('posts');          // load relationship in-place
-$users->loadMissing('posts');   // only load if not already loaded
-
-// ---- withCount: get relation count without hydrating models ----
-$users = User::withCount('posts')->get();
-echo $users->first()->posts_count; // no extra query for each user`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Soft deletes & model events",
-        np: "Soft deletes र Model events",
-        jp: "ソフトデリートとモデルイベント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Soft deletes give you a safety net — deleted records aren't really gone, just hidden.\n\n<b>How soft deletes work</b>\n• When you call `$post->delete()` on a model using `SoftDeletes`, Laravel sets `deleted_at` to the current timestamp instead of running `DELETE FROM posts`\n  ↳ The row stays in the database — it's just marked as deleted\n• All normal queries automatically add `WHERE deleted_at IS NULL` so soft-deleted rows are invisible\n  ↳ You don't need to add any filtering yourself — it's handled behind the scenes\n\n<b>Working with soft-deleted records</b>\n• `Post::withTrashed()->get()` — returns all records, including soft-deleted ones\n• `Post::onlyTrashed()->get()` — returns only the soft-deleted records\n• `$post->restore()` — clears `deleted_at` and brings the record back\n• `$post->forceDelete()` — physically removes the row from the database permanently",
-            np: "`SoftDeletes` trait ले `deleted_at` set गर्छ। Normal query मा filter। `withTrashed()` ले सब देखाउँछ।",
-            jp: "`SoftDeletes` トレイトは物理削除の代わりに `deleted_at` を記録。通常クエリは自動的にフィルタ。`withTrashed()` で全件、`onlyTrashed()` で削除済みのみ取得できます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "SoftDeletes trait — setup and usage",
-            np: "SoftDeletes trait उदाहरण",
-            jp: "SoftDeletes トレイトの設定と使用",
-          },
-          code: `// Migration: add the column
-$table->softDeletes(); // deleted_at TIMESTAMP NULL DEFAULT NULL
-
-// app/Models/Post.php
-use Illuminate\\Database\\Eloquent\\SoftDeletes;
-
-class Post extends Model
-{
-    use SoftDeletes;
-}
-
-// ---- Soft delete operations ----
-$post = Post::find(1);
-$post->delete();          // sets deleted_at = now()  (soft delete)
-$post->forceDelete();     // physically removes the row from DB
-
-// ---- Querying soft-deleted records ----
-Post::all();              // excludes soft-deleted rows
-Post::withTrashed()->find(1);       // includes soft-deleted
-Post::withTrashed()->where('user_id', 1)->get();
-Post::onlyTrashed()->get();         // only soft-deleted
-
-// ---- Restore ----
-Post::withTrashed()->find(1)->restore(); // clears deleted_at
-
-// ---- Cascade soft deletes manually (no DB cascade for soft deletes) ----
-// In a model observer or in the delete() method:
-// $post->comments()->delete(); // soft-deletes related comments`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Model events let you run code automatically when something happens to a model — like auto-generating a slug when a post is created, or soft-deleting related comments when a post is deleted.\n\n<b>When each event fires</b>\n• `creating` / `created` — fires before and after a new record is inserted into the database\n• `updating` / `updated` — fires before and after an existing record is changed\n• `saving` / `saved` — fires on both creates and updates (a catch-all for either)\n• `deleting` / `deleted` — fires before and after a record is deleted\n• `restoring` / `restored` — fires when a soft-deleted record is brought back\n\n<b>Two ways to listen to events</b>\n• For simple cases: add an inline closure inside `boot()` in your model\n  ↳ Quick and easy, but gets messy when you stack up multiple events\n• For complex cases: create a dedicated <b>Observer</b> class with one method per event\n  ↳ All event logic lives in one organised file — easier to read, test, and maintain",
-            np: "Model events: `creating`, `created`, `updating`, `deleted` आदि। Simple: `boot()` मा inline। Complex: observer class।",
-            jp: "モデルイベントはライフサイクルの各段階で発火。シンプルなら `boot()` に直接、複雑なロジックはオブザーバクラスに切り出します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Observer pattern — PostObserver",
-            np: "Observer उदाहरण",
-            jp: "オブザーバパターンの例",
-          },
-          code: `php artisan make:observer PostObserver --model=Post
-
-// app/Observers/PostObserver.php
-<?php
-
-namespace App\\Observers;
-
-use App\\Models\\Post;
-use Illuminate\\Support\\Str;
-
-class PostObserver
-{
-    public function creating(Post $post): void
-    {
-        // Auto-generate slug if not provided
-        if (empty($post->slug)) {
-            $post->slug = Str::slug($post->title);
-        }
-    }
-
-    public function created(Post $post): void
-    {
-        // Notify subscribers after a post is published
-        if ($post->is_published) {
-            // NotifySubscribers::dispatch($post);
-        }
-    }
-
-    public function deleting(Post $post): void
-    {
-        // Soft-delete related comments when post is deleted
-        $post->comments()->delete();
-    }
-}
-
-// Register in app/Providers/AppServiceProvider.php (or bootstrap/app.php)
-use App\\Models\\Post;
-use App\\Observers\\PostObserver;
+          title: { en: "Defining and checking Gates", np: "Gate define र check", jp: "Gate の定義と確認" },
+          code: `// app/Providers/AppServiceProvider.php
+use Illuminate\\Support\\Facades\\Gate;
+use App\\Models\\{Post, User};
 
 public function boot(): void
 {
-    Post::observe(PostObserver::class);
+    // Simple gate — no model
+    Gate::define('view-reports', function (User $user): bool {
+        return in_array($user->role, ['admin', 'editor']);
+    });
+
+    // Gate with a model argument
+    Gate::define('update-post', function (User $user, Post $post): bool {
+        return $user->id === $post->user_id;
+    });
+
+    // Gate with before hook (super-admin bypass)
+    Gate::before(function (User $user, string $ability): ?bool {
+        if ($user->isSuperAdmin()) {
+            return true; // short-circuit all checks
+        }
+        return null;     // defer to normal gates
+    });
 }`,
+        },
+        {
+          type: "code",
+          title: { en: "Checking Gates in controllers & Blade", np: "Check गर्ने तरिका", jp: "Gate のチェック方法" },
+          code: `// In a controller
+use Illuminate\\Support\\Facades\\Gate;
+
+// Returns bool — use for conditional logic
+if (Gate::allows('update-post', $post)) {
+    // authorized
+}
+
+if (Gate::denies('update-post', $post)) {
+    abort(403);
+}
+
+// Throws HttpException 403 automatically
+Gate::authorize('update-post', $post);
+
+// Via the request user (equivalent to Gate::allows)
+if ($request->user()->can('update-post', $post)) {
+    // authorized
+}
+
+// In Blade
+@can('update-post', $post)
+    <button>Edit</button>
+@elsecan('delete-post', $post)
+    <button>Delete</button>
+@endcan
+
+@cannot('view-reports')
+    <p>Access denied.</p>
+@endcannot`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Policies — model-bound authorization",
+        np: "Policy — model-bound authorization",
+        jp: "Policy — モデルに紐づく認可",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When you have many rules that all relate to one model — 'who can view a Post, create a Post, update a Post, delete a Post?' — putting them all in individual Gates gets messy fast. That's what <b>Policies</b> are for.\n\nA Policy is a PHP class where each method is one authorization rule for that model:\n• `viewAny` — can the user see the list?\n• `view` — can the user see this specific record?\n• `create` — can the user create a new one?\n• `update` — can the user edit this record?\n• `delete` — can the user delete this record?\n\nLaravel auto-discovers policies using naming convention: `Post` model → `PostPolicy` class. No manual registration needed.",
+            np: "Policy ले model को सबै authorization logic एकठाउँ। `make:policy` ले generate।",
+            jp: "Policy は 1 モデルの認可ロジックをクラスにまとめたもの。命名規則で自動検出される。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Generate & implement a Policy", np: "Policy generate", jp: "Policy の生成と実装" },
+          code: `php artisan make:policy PostPolicy --model=Post`,
+        },
+        {
+          type: "code",
+          title: { en: "PostPolicy class", np: "Policy class", jp: "Policy クラス" },
+          code: `// app/Policies/PostPolicy.php
+namespace App\\Policies;
+
+use App\\Models\\{Post, User};
+use Illuminate\\Auth\\Access\\HandlesAuthorization;
+
+class PostPolicy
+{
+    use HandlesAuthorization;
+
+    /** Any user can list posts */
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    /** Any authenticated user can view a published post */
+    public function view(User $user, Post $post): bool
+    {
+        return $post->published || $user->id === $post->user_id;
+    }
+
+    /** Any authenticated user can create */
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    /** Only the owner can update */
+    public function update(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id;
+    }
+
+    /** Only the owner or an admin can delete */
+    public function delete(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id || $user->role === 'admin';
+    }
+
+    public function restore(User $user, Post $post): bool
+    {
+        return $user->role === 'admin';
+    }
+
+    public function forceDelete(User $user, Post $post): bool
+    {
+        return $user->role === 'admin';
+    }
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Using policies in controllers & Blade", np: "Controller र Blade मा", jp: "コントローラと Blade での使用" },
+          code: `// Controller — throws 403 if policy denies
+class PostController extends Controller
+{
+    public function update(Request $request, Post $post): RedirectResponse
+    {
+        $this->authorize('update', $post); // uses PostPolicy::update
+
+        $post->update($request->validated());
+        return redirect()->route('posts.show', $post);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $this->authorize('create', Post::class); // no model instance needed
+        // ...
+    }
+}
+
+// Route-model binding with middleware approach
+Route::put('/posts/{post}', [PostController::class, 'update'])
+    ->middleware('can:update,post'); // auto-resolves policy
+
+// Blade directives
+@can('update', $post)
+    <a href="{{ route('posts.edit', $post) }}">Edit</a>
+@endcan
+
+@can('delete', $post)
+    <form method="POST" action="{{ route('posts.destroy', $post) }}">
+        @csrf @method('DELETE')
+        <button>Delete</button>
+    </form>
+@endcan`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Need to manage roles and permissions from a database — so you can assign or revoke them at runtime without deploying code? The <b>Spatie Laravel Permission</b> package is the standard choice. It adds `assignRole()`, `hasRole()`, `givePermissionTo()`, and `can()` methods backed by database tables.",
+            np: "Roles/permissions को लागि Spatie package। DB मा store।",
+            jp: "大規模な RBAC には Spatie Laravel Permission パッケージが便利。DB ベースで権限を管理。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "API Resources — transform Eloquent to JSON",
+        np: "API Resource — Eloquent लाई JSON बनाउने",
+        jp: "API Resource — Eloquent を JSON に変換",
+      },
+      blocks: [
+        {
+          type: "diagram",
+          id: "laravel-api-resource",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you return an Eloquent model directly from a controller, every column in the database gets sent to the client — including things like `password`, `remember_token`, or internal timestamps you'd rather keep private.\n\n<b>API Resources</b> sit between your models and your JSON responses. They are a transformation layer where you decide exactly:\n• Which fields to include (and which to hide)\n• How to rename or reformat fields\n• Which relationships to include (and only if they're already loaded, to avoid N+1 queries)\n• Which fields to show only to certain users (like admins)\n\nThis keeps your API clean, consistent, and safe — your internal database structure stays private.",
+            np: "API Resource ले model र JSON बीच layer। `toArray()` मा field control।",
+            jp: "API Resource は Eloquent とレスポンスの間の変換レイヤー。公開フィールドを完全にコントロール。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Generate and implement a Resource", np: "Resource generate", jp: "Resource の生成と実装" },
+          code: `php artisan make:resource PostResource
+php artisan make:resource PostCollection  # or use ::collection()`,
+        },
+        {
+          type: "code",
+          title: { en: "PostResource class", np: "PostResource", jp: "PostResource クラス" },
+          code: `// app/Http/Resources/PostResource.php
+namespace App\\Http\\Resources;
+
+use Illuminate\\Http\\Request;
+use Illuminate\\Http\\Resources\\Json\\JsonResource;
+
+class PostResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'         => $this->id,
+            'title'      => $this->title,
+            'slug'       => $this->slug,
+            'body'       => $this->body,
+            'published'  => $this->published_at?->toIso8601String(),
+            'author'     => [
+                'id'   => $this->user->id,
+                'name' => $this->user->name,
+            ],
+
+            // Only include 'views' for admin users
+            'views' => $this->when(
+                $request->user()?->role === 'admin',
+                $this->view_count
+            ),
+
+            // Only include 'comments' if already eager-loaded (avoids N+1)
+            'comments' => CommentResource::collection(
+                $this->whenLoaded('comments')
+            ),
+
+            // Merge additional fields conditionally
+            $this->mergeWhen($this->trashed(), [
+                'deleted_at' => $this->deleted_at,
+            ]),
+
+            'created_at' => $this->created_at->toIso8601String(),
+        ];
+    }
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Returning Resources from controllers", np: "Controller मा return", jp: "コントローラで Resource を返す" },
+          code: `use App\\Http\\Resources\\PostResource;
+use App\\Models\\Post;
+
+class PostController extends Controller
+{
+    // Single resource
+    public function show(Post $post): PostResource
+    {
+        $post->load('comments', 'user');
+        return new PostResource($post);
+    }
+
+    // Collection (adds 'data' wrapper automatically)
+    public function index(): AnonymousResourceCollection
+    {
+        $posts = Post::with('user')->latest()->paginate(15);
+        return PostResource::collection($posts);
+        // Pagination metadata is included automatically
+    }
+}
+
+// JSON response for single resource:
+// { "data": { "id": 1, "title": "...", ... } }
+
+// JSON response for collection with pagination:
+// {
+//   "data": [ {...}, {...} ],
+//   "links": { "first": "...", "next": "...", ... },
+//   "meta": { "current_page": 1, "total": 42, ... }
+// }`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "For <b>API versioning</b>, group your routes under a version prefix and keep controllers in versioned namespaces.\n\n• Routes go in: `routes/api/v1.php`\n• Controllers live in: `App\\Http\\Controllers\\Api\\V1\\`\n• You can use different Resource classes per version if the response shape changes between versions\n\nThis way, old API clients keep working on `v1` while new clients use `v2`.",
+            np: "API versioning: `v1` prefix र versioned namespace।",
+            jp: "API バージョニングは `v1` プレフィックスと名前空間で管理。バージョンごとに Resource クラスを切り替えることもできます。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "API versioning route setup", np: "API versioning", jp: "API バージョン設定" },
+          code: `// routes/api.php
+use App\\Http\\Controllers\\Api\\V1\\PostController as V1PostController;
+use App\\Http\\Controllers\\Api\\V2\\PostController as V2PostController;
+
+Route::prefix('v1')->group(function () {
+    Route::apiResource('posts', V1PostController::class);
+});
+
+Route::prefix('v2')->group(function () {
+    Route::apiResource('posts', V2PostController::class);
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanctum API tokens in practice",
+        np: "Sanctum API token व्यवहारमा",
+        jp: "Sanctum API トークンの実践",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Here's the full flow of a typical token-authenticated API:\n\n• Client sends `POST /api/login` with email and password\n• Laravel verifies credentials, issues a token, returns it in the response\n• Client stores the token and sends it as `Authorization: Bearer <token>` on every subsequent request\n• API controllers return <b>API Resources</b> so responses are clean and consistent\n\nIf the API will be called from a web browser on a different domain, you also need to configure CORS to allow that domain.",
+            np: "Login → token → Bearer header → API Resource response। Browser को लागि CORS।",
+            jp: "ログイン → トークン取得 → Bearer ヘッダーで送信 → API Resource で応答。ブラウザは CORS 設定が必要。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Full Sanctum API auth flow", np: "Sanctum flow", jp: "Sanctum 認証フロー" },
+          code: `// routes/api.php
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => new UserResource($request->user()));
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::apiResource('posts', PostController::class);
+});
+
+// app/Http/Controllers/Api/AuthController.php
+class AuthController extends Controller
+{
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        $user  = Auth::user();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user'  => new UserResource($user),
+            'token' => $token,
+        ]);
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+}
+
+// config/cors.php — allow your SPA origin
+'allowed_origins' => ['https://app.example.com'],
+'supports_credentials' => true,`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "For a <b>same-domain SPA</b> (your React/Vue frontend is served from the same domain as the API), you can skip tokens entirely and use cookie-based auth instead:\n\n• Call `GET /sanctum/csrf-cookie` first — this sets the CSRF cookie in the browser\n• Then log in normally via `POST /login`\n• The browser automatically sends the session cookie with every request\n• No `Authorization: Bearer` header needed",
+            np: "SPA cookie auth: `/sanctum/csrf-cookie` पहिले call। Bearer token चाहिँदैन।",
+            jp: "SPA クッキー認証は `/sanctum/csrf-cookie` で初期化後、通常ログイン。Bearer 不要。",
+          },
         },
       ],
     },
@@ -402,62 +414,74 @@ public function boot(): void
   faq: [
     {
       question: {
-        en: "How does Laravel know the foreign key name for a relationship?",
-        np: "Laravel ले foreign key name कसरी थाहा पाउँछ?",
-        jp: "Laravel はどうやって外部キー名を知りますか？",
+        en: "What is the difference between a Gate and a Policy?",
+        np: "Gate र Policy फरक के हो?",
+        jp: "Gate と Policy の違いは？",
       },
       answer: {
-        en: "Laravel follows a naming convention so you don't have to spell out every column name.\n\n• For `belongsTo(User::class)` — Laravel looks for a `user_id` column on the current table\n• For `hasMany(Post::class)` on a `User` model — Laravel looks for `user_id` on the `posts` table\n  ↳ The pattern is always: the related model name in snake_case + `_id`\n\nIf your column has a different name (like `author_id` instead of `user_id`), pass it as the second argument:\n`$this->belongsTo(User::class, 'author_id')`\n  ↳ The third argument overrides the local key on your own table (defaults to `id`)",
-        np: "Snake_case model name + `_id`। Override: `$this->belongsTo(User::class, 'author_id')`।",
-        jp: "スネークケースのモデル名 + `_id` が規約です。上書きするには `$this->belongsTo(User::class, 'author_id')` のように第 2 引数で指定します。",
+        en: "Both are authorization tools — they check whether a user is allowed to do something. The difference is scope:\n\n• <b>Gates</b> — a single closure for a single one-off rule. Best for actions not tied to a specific model (e.g. 'can this user view the reports dashboard?').\n• <b>Policies</b> — a class that groups all the rules for one model. Best when you have multiple CRUD-style checks on the same model (view, create, update, delete).\n\nInternally, calling `$this->authorize('update', $post)` in a controller automatically resolves to `PostPolicy::update` — you don't need to register anything manually.",
+        np: "Gate = simple, model-agnostic। Policy = model-specific class। Controller मा `authorize()` ले auto resolve।",
+        jp: "Gate はシンプルなクロージャ、Policy はモデル単位のクラス。`authorize()` は Policy を自動解決。",
       },
     },
     {
       question: {
-        en: "What if my pivot table has a different name than the convention?",
-        np: "Pivot table को नाम convention अनुसार नभए?",
-        jp: "ピボットテーブル名が規約と異なる場合は？",
+        en: "How do I return a 403 from a policy?",
+        np: "Policy मा 403 कसरी फर्काउने?",
+        jp: "Policy から 403 を返す方法は？",
       },
       answer: {
-        en: "By convention, Laravel expects the pivot table to be named using both model names in alphabetical order, singular, joined with an underscore — for example, `role_user` for User and Role.\n\nIf your table has a different name, pass it as the second argument:\n`$this->belongsToMany(Role::class, 'user_role_assignments')`\n\nIf your foreign key column names also don't match the convention, pass them as the third and fourth arguments:\n`$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`\n  ↳ Third argument = the foreign key pointing to the current model's table\n  ↳ Fourth argument = the foreign key pointing to the related model's table",
-        np: "`$this->belongsToMany(Role::class, 'user_role_assignments')` — table name explicit।",
-        jp: "`belongsToMany(Role::class, 'user_role_assignments')` のように第 2 引数でテーブル名を指定します。外部キー列名は第 3・第 4 引数で上書きできます。",
+        en: "Return `false` from a policy method. When you call `$this->authorize()` in a controller and the policy returns `false`, Laravel automatically throws a 403 `AuthorizationException`.\n\nIf you want to include a custom error message, return a `Response` object instead:\n`return Response::deny('You do not own this post.', 403)`\n\nNote: in Blade, `@can` simply hides or shows the HTML — it doesn't throw an exception.",
+        np: "`false` return गर्नु → 403। `Response::deny()` custom message।",
+        jp: "`false` を返すと 403 になる。`Response::deny('message')` でカスタムメッセージも可能。",
       },
     },
     {
       question: {
-        en: "How do I filter records based on a related model's columns?",
-        np: "Related model को column अनुसार filter गर्ने?",
-        jp: "リレーションのカラムでフィルタするには？",
+        en: "Can `@can` check policies in Blade?",
+        np: "`@can` ले Blade मा policy check गर्छ?",
+        jp: "`@can` で Blade に Policy をチェックできますか？",
       },
       answer: {
-        en: "Use `whereHas()` — it lets you filter parent models based on a condition in their related records.\n\n<b>Examples</b>\n• Get all posts that have at least one approved comment:\n`Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`\n  ↳ Only returns posts where a matching comment exists — posts with no approved comments are excluded\n• `whereDoesntHave('comments')` — returns posts with zero comments (the inverse)\n• `has('comments', '>=', 3)` — returns posts with 3 or more comments\n\n<b>Counting without loading</b>\n• `withCount('comments')` adds a `comments_count` integer to each post — without loading the actual comment models\n  ↳ Perfect for showing \"12 comments\" in a list without fetching all 12 comment rows",
-        np: "`whereHas('comments', fn($q) => $q->where('approved', true))` — related condition। `withCount()` ले count।",
-        jp: "`whereHas('comments', fn($q) => $q->where('approved', true))` で条件付きリレーションフィルタ。`withCount()` は件数を追加属性として取得します。",
+        en: "Yes. `@can('update', $post)` works exactly the same as `Gate::allows('update', $post)` — it resolves `PostPolicy::update` automatically.\n\n• Pass the model instance when checking model-bound rules: `@can('update', $post)`\n• Pass the class name when there's no instance yet (for create): `@can('create', App\\Models\\Post::class)`\n\n`@can` just shows or hides HTML — it doesn't abort the request. Always also check in the controller or use `$this->authorize()` to enforce the rule on the server side.",
+        np: "`@can('update', $post)` — Policy::update call। Model class pass गर्न सकिन्छ।",
+        jp: "`@can('update', $post)` は Gate と同じ仕組みで Policy を解決します。",
       },
     },
     {
       question: {
-        en: "What is `withCount` and when should I use it?",
-        np: "`withCount` के हो र कहिले प्रयोग?",
-        jp: "`withCount` とは何ですか、どんな場面で使いますか？",
+        en: "How do I add metadata to an API Resource response?",
+        np: "API Resource response मा metadata थप्ने?",
+        jp: "API Resource レスポンスにメタデータを追加する方法は？",
       },
       answer: {
-        en: "`withCount()` gives you a number attached to each model — without loading all the related records.\n\n• `User::withCount('posts')->get()` adds a `posts_count` attribute to every User\n  ↳ Laravel runs a `COUNT(*)` in the SQL — no Post models are loaded into memory\n• Use it when you want to show \"Rajan has 12 posts\" in a list — you just need the number, not the posts themselves\n• You can also sort by it: `->orderByDesc('posts_count')` to rank users by most posts\n  ↳ Much more efficient than loading all posts and counting them in PHP",
-        np: "`withCount('posts')` ले `posts_count` attribute add — Post models load गर्दैन। List display को लागि।",
-        jp: "`withCount('posts')` は `posts_count` 属性を追加しますが Post モデルはロードしません。「X 件の投稿」表示や `orderByDesc('posts_count')` による並び替えに最適です。",
+        en: "Override the `with(Request $request): array` method in your Resource or ResourceCollection class. Whatever you return from `with()` appears alongside `data` at the top level of the JSON response.\n\nFor example: `return ['meta' => ['version' => 'v1', 'generated_at' => now()]]`\n\nAlternatively, in the controller you can call `->additional(['meta' => [...]])` when constructing the resource — useful when the metadata depends on something only the controller knows.",
+        np: "`with()` method override गर्नु वा `additional()` call।",
+        jp: "`with()` をオーバーライドするか、コントローラで `additional()` を呼ぶとメタデータを追加できます。",
       },
     },
     {
       question: {
-        en: "How do observers differ from listening to model events directly in boot()?",
-        np: "Observer र `boot()` direct event listener मा के फरक?",
-        jp: "オブザーバと `boot()` での直接イベントリスニングの違いは？",
+        en: "How do I version an API in Laravel?",
+        np: "Laravel मा API version कसरी?",
+        jp: "Laravel で API をバージョニングする方法は？",
       },
       answer: {
-        en: "Both approaches work the same way at runtime — the difference is about keeping your code clean.\n\n<b>Inline listeners in `boot()`</b>\n• Quick to write for one or two simple events\n  ↳ Can get hard to read when you stack up many event closures in one method\n\n<b>Observer class</b>\n• All event methods (creating, updating, deleting, etc.) live in one file\n  ↳ Easy to find, read, test independently, and temporarily disable during tests\n\nAs a rule of thumb: use an observer as soon as you have more than 2–3 model events, or when the event logic is more than a couple of lines.",
-        np: "Runtime मा same। Observer ले सबै event एक file मा — test गर्न सजिलो। 2-3 events भन्दा बढी भए observer।",
-        jp: "ランタイムでの動作は同じ。オブザーバは全イベントを 1 ファイルにまとめ、テストでのモックや一時的な無効化が容易です。イベントが 2〜3 件を超えたらオブザーバへ移しましょう。",
+        en: "The simplest and most practical approach is <b>URL versioning</b>:\n\n• Prefix your routes: `Route::prefix('v1')->group(...)`\n• Keep controllers in versioned namespaces: `App\\Http\\Controllers\\Api\\V1\\`\n• Use separate Resource classes per version if the response shape changes\n\nAvoid header-based versioning (sending a version in HTTP headers) — it's harder to test, harder to debug in a browser, and harder to document.\n\nLaravel 11 supports loading dedicated route files per version via `bootstrap/app.php`.",
+        np: "URL prefix `v1`, `v2`। Versioned namespace। Header versioning सिफारिश होइन।",
+        jp: "URL プレフィックス `v1`/`v2` が最もシンプル。バージョン別に名前空間とリソースを分ける。",
+      },
+    },
+    {
+      question: {
+        en: "What is the `api_token` field vs Sanctum tokens?",
+        np: "`api_token` column र Sanctum tokens फरक?",
+        jp: "`api_token` カラムと Sanctum トークンの違いは？",
+      },
+      answer: {
+        en: "The old `api_token` column was Laravel's original built-in token system (`driver: token` in `config/auth.php`). It stored a single plain-text token directly in the `users` table — one token per user, no scopes, no revocation, no tracking. Very basic.\n\n<b>Sanctum</b> is the modern replacement. It uses a separate `personal_access_tokens` table and supports:\n• Multiple tokens per user (different apps, different devices)\n• Abilities (scopes) to limit what each token can do\n• Last-used tracking\n• Individual or bulk revocation\n\nNever use the legacy `api_token` approach in a new project.",
+        np: "`api_token` पुरानो simple approach। Sanctum ले `personal_access_tokens` table use गर्छ।",
+        jp: "`api_token` は古い単一トークン方式。Sanctum は複数トークン・スコープ・失効管理対応の現代的な仕組みです。",
       },
     },
   ],

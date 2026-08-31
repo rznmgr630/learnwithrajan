@@ -3,433 +3,280 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_10_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "When a user submits a form, you need to check the data before your app does anything with it — this is called validation.\n\n<b>Why validation matters</b>\n• Without it, a user could submit an empty email, a password with 1 character, or a negative price\n  ↳ Validation catches bad data at the door, before it reaches your database\n\n<b>How Laravel handles it</b>\n• Inline: call `$request->validate([...])` right inside your controller method — quick for simple forms\n• <b>Form Request</b>: a dedicated class that holds validation rules, authorization checks, and lifecycle hooks — better for complex forms\n• Built-in rules: Laravel ships with 70+ rules like `required`, `email`, `min:8`, `unique` — no extra code needed\n• Custom Rule classes: write your own rule when built-ins aren't enough\n\n<b>What happens when validation fails?</b>\n• Web request (browser form): Laravel automatically redirects back to the form with the errors flashed to the session\n• API request (JSON): Laravel returns a `422 Unprocessable Entity` response with a JSON `errors` object",
-      np: "Validation HTTP input र application logic बीचको gatekeeper। inline, built-in rules, custom Rule, Form Request। Web = redirect; API = 422 JSON।",
-      jp: "バリデーションは HTTP 入力とアプリロジックの門番です。インライン検証・組み込みルール・カスタムルール・フォームリクエストを使い分けます。Web は redirect、API は 422 JSON で失敗を返します。",
+      en: "When a user logs in and then navigates to the next page, how does Laravel know they're still logged in? HTTP is stateless — each request is completely independent.\n\n• <b>Sessions</b> solve this by storing data server-side (tied to the user's browser cookie) so it persists across requests\n  ↳ Anything you put in the session is private to that user\n• <b>Flash data</b> is a special type of session data that lives for exactly one request, then disappears automatically\n  ↳ Perfect for \"Profile updated successfully!\" messages after a redirect",
+      np: "Session ले per-user state राख्छ। Flash data एक request मात्र — success/error message को लागि।",
+      jp: "**セッション** はユーザーごとのサーバー側の状態を管理。**フラッシュデータ** は次のリクエストまでだけ保持され、リダイレクト後のメッセージに最適です。",
+    },
+    {
+      en: "Some operations are slow — hitting the database on every page load for the same data is wasteful.\n\n• <b>Caching</b> stores the result of an expensive operation (a DB query, an API call) and serves it from memory on the next request\n  ↳ `Cache::remember()` checks, fetches-if-missing, stores, and returns — all in one line\n• <b>Redis</b> is the go-to production driver for both sessions and cache — it's fast, supports TTLs natively, and works across multiple servers\n• <b>Localization</b> lets you translate your UI into any language using `lang/` files and the `__()` helper\n  ↳ Switch locale at runtime with `App::setLocale('np')`",
+      np: "Cache ले DB queries cache। Redis production driver। Localization ले `lang/` files द्वारा UI translate।",
+      jp: "**キャッシュ** は高コストなクエリ結果を保存して高速化。Redis が本番向けドライバ。**ローカライゼーション** は `lang/` と `__()` で UI を多言語化します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Built-in validation rules reference",
-        np: "Built-in validation rules सन्दर्भ",
-        jp: "組み込みバリデーションルール リファレンス",
+        en: "Session & flash data",
+        np: "Session र Flash data",
+        jp: "セッションとフラッシュデータ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel gives you two ways to write validation rules — and it matters which one you choose.\n\n<b>Pipe string syntax</b> `'required|email|max:255'`\n• Short and readable for simple rules\n  ↳ Gets messy when you mix in objects like `Rule::unique()` or `Rule::in()`\n\n<b>Array syntax</b> `['required', 'email', 'max:255']`\n• Cleaner when mixing plain string rules with `Rule::*` objects\n  ↳ Use this as your default — it scales better and avoids quoting issues",
-            np: "Rules pipe string `'required|email'` वा array `['required', 'email']`। `Rule::*` object सहित array syntax राम्रो।",
-            jp: "ルールはパイプ区切り文字列または配列で記述できます。`Rule::*` オブジェクトと混在させる場合は配列形式を使いましょう。",
+            en: "Think of a session like a locker at a train station — the user gets a key (a cookie), and the server stores their belongings inside.\n\n• Configure which storage backend to use via `SESSION_DRIVER` in `.env`\n  ↳ `file` — stores sessions as files on disk, zero setup, fine for local development\n  ↳ `database` — stores sessions in a SQL table, inspectable, but adds one DB query per request\n  ↳ `redis` — stores sessions in Redis memory, fast and shared across multiple servers\n• When using `database`, first run `php artisan session:table` then `php artisan migrate` to create the `sessions` table",
+            np: "`.env` मा `SESSION_DRIVER` — `file` local; `redis` वा `database` production।",
+            jp: "`.env` の `SESSION_DRIVER` でドライバを選択。ローカルは `file`、本番は `redis` または `database` が一般的です。`database` 使用時は `session:table` + migrate が必要です。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Inline validation with array syntax",
-            np: "Array syntax inline validation",
-            jp: "配列形式のインライン検証",
+            en: "Session methods",
+            np: "Session methods उदाहरण",
+            jp: "セッションメソッドの使用例",
           },
-          code: `use Illuminate\\Validation\\Rule;
+          code: `// ---- Store / retrieve ----
+session()->put('cart_id', 42);
+session()->put(['user_name' => 'Alice', 'theme' => 'dark']); // multiple
 
-$validated = $request->validate([
-    'name'     => ['required', 'string', 'max:255'],
-    'email'    => ['required', 'email:rfc,dns', Rule::unique('users')->ignore($user->id)],
-    'password' => ['required', 'string', 'min:8', 'confirmed'],  // expects password_confirmation
-    'age'      => ['nullable', 'integer', 'between:18,120'],
-    'role'     => ['required', Rule::in(['admin', 'editor', 'viewer'])],
-    'avatar'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-    'tags'     => ['nullable', 'array', 'max:5'],
-    'tags.*'   => ['string', 'max:50'],
-    'items.0.price' => ['required', 'numeric', 'min:0'],  // nested array
-], [
-    // Custom messages (field.rule => message)
-    'email.unique'    => 'That email is already taken.',
-    'password.min'    => 'Passwords must be at least 8 characters.',
-]);`,
+$cartId = session()->get('cart_id');
+$cartId = session()->get('cart_id', 0);     // with default
+$all    = session()->all();
+
+// ---- Presence checks ----
+session()->has('cart_id');      // true even if value is null
+session()->exists('cart_id');   // true only if key is in the session
+session()->missing('cart_id');  // opposite of has()
+
+// ---- Removal ----
+session()->forget('cart_id');           // remove one key
+session()->forget(['cart_id', 'theme']); // remove multiple
+session()->flush();                      // clear entire session
+
+// ---- Regenerate session ID (do this on login to prevent fixation) ----
+session()->regenerate();
+session()->invalidate(); // flush + regenerate (on logout)
+
+// ---- Flash data: persists for the NEXT request only ----
+session()->flash('status', 'Profile updated!');
+session()->flash('error', 'Something went wrong.');
+
+// Keep flash data for one more request (e.g., after another redirect)
+session()->reflash();
+session()->keep(['status']); // keep only specific keys
+
+// ---- Blade: read flash data ----
+// @if (session('status'))
+//   <div class="alert">{{ session('status') }}</div>
+// @endif`,
         },
         {
           type: "table",
           caption: {
-            en: "Most-used built-in validation rules",
-            np: "सबैभन्दा धेरै प्रयोग हुने rules",
-            jp: "よく使う組み込みバリデーションルール",
+            en: "Session driver comparison",
+            np: "Session driver तुलना",
+            jp: "セッションドライバの比較",
           },
           headers: [
-            { en: "Rule", np: "Rule", jp: "ルール" },
-            { en: "Description", np: "विवरण", jp: "内容" },
+            { en: "Driver", np: "Driver", jp: "ドライバ" },
+            { en: "Pros", np: "फाइदा", jp: "利点" },
+            { en: "Cons / notes", np: "बेफाइदा", jp: "注意点" },
           ],
           rows: [
             [
-              { en: "`required`", np: "`required`", jp: "`required`" },
-              { en: "Field must be present and not empty", np: "उपस्थित र non-empty", jp: "存在かつ空でないこと" },
-            ],
-            [
-              { en: "`nullable`", np: "`nullable`", jp: "`nullable`" },
-              { en: "Allow null / empty (combine with other rules)", np: "null/empty अनुमति", jp: "null や空を許可（他ルールと併用）" },
-            ],
-            [
-              { en: "`sometimes`", np: "`sometimes`", jp: "`sometimes`" },
-              { en: "Apply rules only when the field is present in the request", np: "field present भएमा मात्र check", jp: "フィールドがリクエストに存在する場合のみ適用" },
-            ],
-            [
-              { en: "`string` / `integer` / `numeric` / `boolean` / `array`", np: "type rules", jp: "型ルール" },
-              { en: "Type constraints", np: "type check", jp: "型チェック" },
-            ],
-            [
-              { en: "`email`", np: "`email`", jp: "`email`" },
-              { en: "Valid email format (use `email:rfc,dns` for stricter checks)", np: "valid email; `rfc,dns` कडा check", jp: "メールアドレス形式。`email:rfc,dns` で厳密に" },
-            ],
-            [
-              { en: "`url`", np: "`url`", jp: "`url`" },
-              { en: "Valid URL", np: "valid URL", jp: "有効な URL" },
-            ],
-            [
-              { en: "`min:n` / `max:n`", np: "`min` / `max`", jp: "`min` / `max`" },
-              { en: "Min/max length (string), value (numeric), size (file KB)", np: "min/max length, value, file KB", jp: "最小/最大 — 文字長・数値・ファイルサイズ" },
-            ],
-            [
-              { en: "`between:min,max`", np: "`between`", jp: "`between`" },
-              { en: "Value/length/size between two boundaries", np: "min～max 間", jp: "2 つの境界値の間" },
-            ],
-            [
-              { en: "`in:a,b,c`", np: "`in`", jp: "`in`" },
-              { en: "Value must be one of the listed options", np: "listed values मा हुनुपर्छ", jp: "列挙された値のどれか" },
-            ],
-            [
-              { en: "`not_in:a,b`", np: "`not_in`", jp: "`not_in`" },
-              { en: "Value must NOT be in the listed options", np: "listed values मा हुनु हुँदैन", jp: "列挙値に含まれないこと" },
-            ],
-            [
-              { en: "`unique:table,column,ignore`", np: "`unique`", jp: "`unique`" },
-              { en: "Value must be unique in a DB column; ignore a specific ID on update", np: "DB unique; update मा ignore", jp: "DB カラムで一意。更新時に自分の ID を除外" },
-            ],
-            [
-              { en: "`exists:table,column`", np: "`exists`", jp: "`exists`" },
-              { en: "Value must exist in a DB column", np: "DB column मा exist", jp: "DB カラムに存在すること" },
-            ],
-            [
-              { en: "`confirmed`", np: "`confirmed`", jp: "`confirmed`" },
-              { en: "Field must have a matching `{field}_confirmation` field", np: "`{field}_confirmation` match हुनुपर्छ", jp: "`{field}_confirmation` フィールドと一致すること" },
-            ],
-            [
-              { en: "`date` / `date_format:Y-m-d`", np: "`date`", jp: "`date`" },
-              { en: "Valid date string (optionally with specific format)", np: "valid date; optional format", jp: "有効な日付文字列（フォーマット指定可）" },
-            ],
-            [
-              { en: "`regex:/pattern/`", np: "`regex`", jp: "`regex`" },
-              { en: "Value must match a regular expression", np: "regex match हुनुपर्छ", jp: "正規表現にマッチすること" },
-            ],
-            [
-              { en: "`image`", np: "`image`", jp: "`image`" },
-              { en: "Uploaded file must be an image (jpg/png/gif/svg/webp)", np: "image file", jp: "画像ファイル（jpg/png/gif/svg/webp）" },
-            ],
-            [
-              { en: "`mimes:jpg,pdf`", np: "`mimes`", jp: "`mimes`" },
-              { en: "Uploaded file must match given MIME types", np: "MIME type check", jp: "指定 MIME タイプのファイルであること" },
-            ],
-            [
               { en: "`file`", np: "`file`", jp: "`file`" },
-              { en: "Field must be a successfully uploaded file", np: "uploaded file", jp: "正常にアップロードされたファイル" },
+              { en: "Zero config, fast for dev", np: "सजिलो setup", jp: "設定不要、開発向け" },
+              { en: "Not shared between servers", np: "single server मात्र", jp: "複数サーバーで共有不可" },
             ],
             [
-              { en: "`size:n`", np: "`size`", jp: "`size`" },
-              { en: "File size must equal n kilobytes exactly", np: "file size n KB", jp: "ファイルサイズが n KB であること" },
+              { en: "`database`", np: "`database`", jp: "`database`" },
+              { en: "Persistent, inspectable SQL rows", np: "DB मा inspect गर्न सकिन्छ", jp: "SQL で確認可能" },
+              { en: "Adds query per request", np: "हरेक request DB query", jp: "リクエストごとにクエリが発生" },
             ],
             [
-              { en: "`required_if:other,value`", np: "`required_if`", jp: "`required_if`" },
-              { en: "Required when another field equals a given value", np: "अर्को field value हुँदा required", jp: "別フィールドが指定値のとき必須" },
+              { en: "`redis`", np: "`redis`", jp: "`redis`" },
+              { en: "Fast, shared across servers, TTL built-in", np: "तेज, multi-server, TTL", jp: "高速・マルチサーバ・TTL 組み込み" },
+              { en: "Redis server required", np: "Redis server चाहिन्छ", jp: "Redis サーバーが必要" },
             ],
             [
-              { en: "`required_unless:other,value`", np: "`required_unless`", jp: "`required_unless`" },
-              { en: "Required unless another field equals a given value", np: "अर्को field value नहुँदा required", jp: "別フィールドが指定値でない限り必須" },
-            ],
-            [
-              { en: "`required_with:field1,field2`", np: "`required_with`", jp: "`required_with`" },
-              { en: "Required when any of the listed fields are present", np: "listed fields present हुँदा required", jp: "列挙フィールドのどれかが存在するとき必須" },
+              { en: "`cookie`", np: "`cookie`", jp: "`cookie`" },
+              { en: "Stateless server side", np: "Server stateless", jp: "サーバー側ステートレス" },
+              { en: "4 KB limit, client-side exposure", np: "4 KB सीमा", jp: "4 KB 制限・クライアントに保存" },
             ],
           ],
         },
-        {
-          type: "code",
-          title: {
-            en: "Fluent Rule objects and conditional rules",
-            np: "Fluent Rule objects र conditional rules",
-            jp: "Fluent Rule オブジェクトと条件ルール",
-          },
-          code: `use Illuminate\\Validation\\Rule;
-use Illuminate\\Validation\\Rules\\Password;
-
-$request->validate([
-    // Unique, ignoring the current record on update
-    'email' => [
-        'required',
-        'email',
-        Rule::unique('users', 'email')->ignore($user->id),
-    ],
-
-    // Exists scoped to a condition
-    'country_id' => [
-        'required',
-        Rule::exists('countries', 'id')->where('active', 1),
-    ],
-
-    // Built-in Password rule (min 8, mixed case, symbols, uncompromised)
-    'password' => ['required', 'confirmed', Password::defaults()],
-
-    // Conditional: only validate 'company' when 'type' is 'business'
-    'company' => Rule::when(
-        fn () => $request->input('type') === 'business',
-        ['required', 'string', 'max:100'],
-    ),
-]);`,
-        },
       ],
     },
     {
       title: {
-        en: "Custom Rule classes",
-        np: "Custom Rule classes",
-        jp: "カスタムルールクラス",
+        en: "Caching — drivers & patterns",
+        np: "Cache — drivers र patterns",
+        jp: "キャッシュ — ドライバとパターン",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Sometimes Laravel's built-in rules won't cover your exact need — for example, validating that a username contains no spaces, or that a product code follows a company-specific format.\n\n<b>Custom Rule classes let you package that logic cleanly</b>\n• Generate one with `php artisan make:rule RuleName`\n• Implement the `validate()` method — call `$fail('message')` if the value is invalid\n  ↳ If `$fail()` is never called, the rule passes\n• In Laravel 10/11, implement `ValidationRule` — the single-method modern approach\n  ↳ The older `Rule` interface still works but the modern style is cleaner",
-            np: "Built-in rules पुग्दैन भने custom Rule class बनाउनुस्। Laravel 10/11 मा `ValidationRule` implement गर्ने `validate()` method modern approach।",
-            jp: "組み込みルールで対応できない場合はカスタムルールクラスを作成します。Laravel 10/11 では `ValidationRule` の `validate()` メソッドを実装するのが現代的なアプローチです。",
+            en: "The <b>cache-aside pattern</b> is the most common caching strategy — and `Cache::remember()` implements all of it in a single line.\n\nHere's what happens step by step:\n• Check the cache for the key — if found, return it immediately (cache hit, no DB query)\n• If not found (cache miss) — run the closure to load fresh data from the database\n• Store the result in the cache with a TTL (time to live) so it expires automatically\n• Return the value\n\nSet the cache backend via `CACHE_STORE` (Laravel 11) or `CACHE_DRIVER` (Laravel 10) in `.env`.",
+            np: "`.env` मा `CACHE_STORE`। Cache-aside pattern: cache miss भए DB load, store, return। `Cache::remember()` एक line।",
+            jp: "`.env` に `CACHE_STORE` を設定。キャッシュアサイドパターンが最も一般的です。`Cache::remember()` がこれを 1 行で実装します。",
           },
         },
         {
           type: "code",
           title: {
-            en: "Generate a custom rule",
-            np: "Custom rule बनाउने",
-            jp: "カスタムルールの生成",
+            en: "Cache facade — store, retrieve, remember, tags",
+            np: "Cache facade उदाहरण",
+            jp: "Cache ファサードの使用例",
           },
-          code: `php artisan make:rule Uppercase`,
+          code: `use Illuminate\\Support\\Facades\\Cache;
+
+// ---- Basic put / get ----
+Cache::put('key', 'value', 3600);             // 3600 seconds TTL
+Cache::put('key', 'value', now()->addHour()); // Carbon TTL
+Cache::forever('key', 'value');               // no expiry
+$value = Cache::get('key');
+$value = Cache::get('key', 'default');        // fallback if missing
+
+// ---- Presence / removal ----
+Cache::has('key');      // true if present AND not expired
+Cache::missing('key');
+Cache::forget('key');
+Cache::flush();         // clear the entire cache store
+
+// ---- cache-aside pattern in one call ----
+$posts = Cache::remember('home.posts', 3600, function () {
+    return Post::published()->latest()->take(10)->get();
+});
+
+// RememberForever (no TTL)
+$settings = Cache::rememberForever('site.settings', fn () => Setting::all());
+
+// ---- Atomic increment / decrement ----
+Cache::increment('api_calls');
+Cache::increment('api_calls', 5);
+Cache::decrement('stock');
+
+// ---- Cache tags (Redis / Memcached only) ----
+Cache::tags(['posts', 'homepage'])->put('featured', $featured, 600);
+$featured = Cache::tags(['posts', 'homepage'])->get('featured');
+Cache::tags('posts')->flush(); // invalidate all 'posts'-tagged entries
+
+// ---- Retrieve and delete in one call ----
+$job = Cache::pull('pending_job');  // get + forget`,
         },
         {
           type: "code",
           title: {
-            en: "app/Rules/Uppercase.php — modern ValidationRule",
-            np: "Uppercase.php — modern style",
-            jp: "Uppercase.php — 現代スタイル",
+            en: "Redis facade — direct key operations",
+            np: "Redis facade उदाहरण",
+            jp: "Redis ファサードの直接操作",
           },
-          code: `<?php
-namespace App\\Rules;
+          code: `# .env
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 
-use Closure;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
+use Illuminate\\Support\\Facades\\Redis;
 
-class Uppercase implements ValidationRule
-{
-    /**
-     * Run the validation rule.
-     * Call $fail() with a message to indicate failure.
-     */
-    public function validate(string $attribute, mixed $value, Closure $fail): void
+// Basic key operations
+Redis::set('user:1:score', 100);
+$score = Redis::get('user:1:score');
+Redis::expire('user:1:score', 3600);   // TTL in seconds
+Redis::del('user:1:score');
+
+// Hash (model-like structure)
+Redis::hset('user:1', 'name', 'Alice');
+Redis::hset('user:1', 'email', 'alice@example.com');
+$name = Redis::hget('user:1', 'name');
+$all  = Redis::hgetall('user:1');
+
+// Atomic increment
+Redis::incr('page:views');
+Redis::incrby('page:views', 5);
+
+// Connect to a non-default connection
+Redis::connection('cache')->set('foo', 'bar');`,
+        },
+      ],
+    },
     {
-        if (strtoupper((string) $value) !== (string) $value) {
-            $fail("The :attribute must be uppercase.");
-        }
-    }
-}`,
+      title: {
+        en: "Localization & translations",
+        np: "Localization र Translations",
+        jp: "ローカライゼーションと翻訳",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel's localization system lets you write your UI strings once and translate them for any language.\n\n• In Laravel 11, the built-in translation strings live inside the vendor package\n  ↳ Run `php artisan lang:publish` to copy them into your project's `lang/` folder so you can edit them\n• Your own strings go in either:\n  ↳ `lang/{locale}/file.php` — PHP array format, organized by file (e.g. `lang/en/messages.php`)\n  ↳ `lang/{locale}.json` — JSON format, keyed by the original English string\n• Use `__('messages.welcome', ['name' => $user->name])` to look up and interpolate a translation",
+            np: "`php artisan lang:publish` ले vendor बाट copy। `lang/{locale}/file.php` वा `lang/{locale}.json`।",
+            jp: "`php artisan lang:publish` でベンダーから `lang/` にコピー。`lang/{locale}/file.php` か `lang/{locale}.json` に翻訳を書きます。",
+          },
         },
         {
           type: "code",
           title: {
-            en: "Using a custom rule in validation",
-            np: "Validation मा custom rule प्रयोग",
-            jp: "バリデーションでカスタムルールを使う",
+            en: "Translation file structure",
+            np: "Translation file structure",
+            jp: "翻訳ファイルの構造",
           },
-          code: `use App\\Rules\\Uppercase;
+          code: `// lang/en/messages.php  — PHP array format
+return [
+    'welcome'    => 'Welcome, :name!',
+    'goodbye'    => 'See you later, :name.',
+    'item_count' => '{0} No items|{1} One item|[2,*] :count items',
+];
 
-$request->validate([
-    'code' => ['required', 'string', 'max:10', new Uppercase],
-]);
-
-// Or in a Form Request's rules()
-public function rules(): array
+// lang/en.json  — JSON format (keyed by the English string)
 {
-    return [
-        'code' => ['required', 'string', 'max:10', new Uppercase],
-    ];
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "Rule with constructor arguments",
-            np: "Constructor arguments सहित Rule",
-            jp: "コンストラクタ引数付きのルール",
-          },
-          code: `<?php
-namespace App\\Rules;
-
-use Closure;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
-
-class AllowedDomain implements ValidationRule
-{
-    public function __construct(private array $domains) {}
-
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        $domain = substr(strrchr((string) $value, '@'), 1);
-
-        if (! in_array($domain, $this->domains, true)) {
-            $fail("The :attribute must use an allowed email domain.");
-        }
-    }
+  "I love Laravel": "I love Laravel",
+  "Save changes": "Save changes"
 }
 
-// Usage
-'email' => ['required', 'email', new AllowedDomain(['example.com', 'company.org'])],`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Form Requests in depth",
-        np: "Form Requests विस्तारमा",
-        jp: "フォームリクエストの深掘り",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A Form Request is a dedicated PHP class that bundles everything related to handling a form — all in one place.\n\n<b>The two required methods</b>\n• `authorize()` — returns `true` if the current user is allowed to make this request, `false` for a 403 Forbidden\n• `rules()` — returns the array of validation rules\n\n<b>Optional lifecycle hooks</b>\n• `prepareForValidation()` — runs before rules, lets you normalize input (e.g. trim whitespace, lowercase an email)\n• `passedValidation()` — runs after rules pass, lets you enrich data (e.g. generate a slug)\n• `messages()` — customize the error messages for specific rules\n• `attributes()` — rename field labels in error messages (e.g. `bio` → `biography`)\n\n<b>The key benefit: `$request->validated()`</b>\n• Returns only the fields defined in `rules()` — nothing more\n  ↳ Safe to pass directly to `Model::create($request->validated())` without mass-assignment risk",
-            np: "Form Request: `authorize()`, `rules()`, `prepareForValidation()`, `passedValidation()`, `messages()`, `attributes()`। `$request->validated()` ले rules मा defined fields मात्र।",
-            jp: "フォームリクエストは `authorize()`・`rules()` に加えて複数のライフサイクルフックを持ちます。`$request->validated()` は `rules()` に定義されたフィールドのみを返すので、`Model::create()` に安全に渡せます。",
-          },
+// lang/np/messages.php  — Nepali translation
+return [
+    'welcome' => 'स्वागत छ, :name!',
+    'goodbye' => 'फेरि भेटौँला, :name।',
+    'item_count' => '{0} कुनै वस्तु छैन|{1} एक वस्तु|[2,*] :count वस्तुहरू',
+];`,
         },
         {
           type: "code",
           title: {
-            en: "Full Form Request with all hooks",
-            np: "सबै hooks सहित Form Request",
-            jp: "すべてのフックを持つフォームリクエスト",
+            en: "Using translations in PHP and Blade",
+            np: "PHP र Blade मा translation",
+            jp: "PHP と Blade での翻訳使用",
           },
-          code: `<?php
-namespace App\\Http\\Requests;
+          code: `// PHP / Controllers
+$msg  = __('messages.welcome', ['name' => $user->name]);
+$msg  = trans('messages.welcome', ['name' => $user->name]);   // alias
 
-use App\\Rules\\AllowedDomain;
-use Illuminate\\Foundation\\Http\\FormRequest;
-use Illuminate\\Contracts\\Validation\\ValidationRule;
-use Illuminate\\Validation\\Rule;
-use Illuminate\\Validation\\Rules\\Password;
+// Pluralization with trans_choice
+$line = trans_choice('messages.item_count', $count, ['count' => $count]);
 
-class UpdateUserRequest extends FormRequest
-{
-    /**
-     * false → 403 Forbidden. Can also return Gate::allows() result.
-     */
-    public function authorize(): bool
-    {
-        $user = $this->route('user'); // model bound from route {user}
-        return $this->user()->can('update', $user);
-    }
+// JSON keys (no file prefix needed)
+$label = __('Save changes');     // looks up lang/en.json
 
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        $userId = $this->route('user')->id;
+// ---- Setting locale ----
+use Illuminate\\Support\\Facades\\App;
 
-        return [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => [
-                'required',
-                'email:rfc',
-                Rule::unique('users', 'email')->ignore($userId),
-                new AllowedDomain(['example.com']),
-            ],
-            'password' => ['sometimes', 'confirmed', Password::min(8)->mixedCase()->numbers()],
-            'bio'      => ['nullable', 'string', 'max:1000'],
-            'avatar'   => ['nullable', 'image', 'mimes:jpg,png,webp', 'max:2048'],
-            'role'     => ['required', Rule::in(['admin', 'editor', 'viewer'])],
-        ];
-    }
+App::setLocale('np');            // runtime switch
+$locale = App::getLocale();      // 'np'
+App::isLocale('np');             // true/false
+// or set APP_LOCALE=np in .env for the default
 
-    public function messages(): array
-    {
-        return [
-            'email.unique'       => 'That email address is already registered.',
-            'password.confirmed' => 'The password confirmation does not match.',
-        ];
-    }
+// ---- Blade templates ----
+// {{ __('messages.welcome', ['name' => $user->name]) }}
+// @lang('messages.goodbye', ['name' => $user->name])
+// @choice('messages.item_count', $count, ['count' => $count])
 
-    public function attributes(): array
-    {
-        return [
-            'bio'    => 'biography',
-            'avatar' => 'profile photo',
-        ];
-    }
-
-    /**
-     * Runs BEFORE rules(). Normalize or transform raw input here.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'name'  => trim($this->name ?? ''),
-            'email' => strtolower(trim($this->email ?? '')),
-        ]);
-    }
-
-    /**
-     * Runs AFTER rules() pass. Enrich or log here.
-     */
-    protected function passedValidation(): void
-    {
-        // e.g. $this->merge(['slug' => Str::slug($this->name)]);
-    }
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Forms sometimes send arrays of data — like a list of order items. Laravel handles this cleanly with dot notation.\n\n• `'items' => ['required', 'array', 'min:1']` — validate the array itself first (must exist, must have at least 1 item)\n• `'items.*.name'` — validate the `name` key on every item in the array\n  ↳ The `*` is a wildcard that means \"every element\"\n• `'items.0.price'` — validate the `price` of the first element only\n  ↳ Use a number index when you need to target a specific position",
-            np: "Nested arrays: `'items.*.name'` ले every item को `name` validate। `'items.0.price'` पहिलो element।",
-            jp: "ネスト配列はドット記法で: `'items.*.name'` で全要素の `name` を検証。`'items.0.price'` で最初の要素だけ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Displaying errors in Blade",
-            np: "Blade मा errors देखाउने",
-            jp: "Blade でエラーを表示する",
-          },
-          code: `{{-- Single field error --}}
-<input name="email" value="{{ old('email') }}">
-@error('email')
-    <p class="text-red-500 text-sm">{{ $message }}</p>
-@enderror
-
-{{-- Check if a field has any error --}}
-<input class="{{ $errors->has('name') ? 'border-red-500' : '' }}" name="name">
-
-{{-- All errors as a list --}}
-@if ($errors->any())
-    <ul class="alert alert-danger">
-        @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-@endif
-
-{{-- Named error bag (multiple forms on one page) --}}
-<form>
-    @error('email', 'loginForm')
-        <span>{{ $message }}</span>
-    @enderror
-</form>`,
+// ---- Fallback locale ----
+// APP_FALLBACK_LOCALE=en  in .env
+// If the key is missing in the current locale, Laravel falls back to this`,
         },
       ],
     },
@@ -437,62 +284,74 @@ class UpdateUserRequest extends FormRequest
   faq: [
     {
       question: {
-        en: "What is the difference between `$request->validate()` and a Form Request?",
-        np: "`validate()` र Form Request को फरक?",
-        jp: "`$request->validate()` とフォームリクエストの違いは？",
+        en: "How do I configure Redis for both sessions and cache?",
+        np: "Redis ले session र cache दुवै कसरी?",
+        jp: "Redis でセッションとキャッシュの両方を使うには？",
       },
       answer: {
-        en: "Both use the same validation engine under the hood — the difference is where the logic lives.\n\n• `$request->validate([...])` — written directly inside your controller method\n  ↳ Great for simple forms with 2–4 rules\n  ↳ Gets messy when rules grow, authorization is needed, or error messages need customizing\n• <b>Form Request</b> — a separate class dedicated to one form\n  ↳ Keeps the controller clean — the controller just calls `$request->validated()` and moves on\n  ↳ Better when rules are complex, when you need `authorize()`, or when you want `prepareForValidation()`\n  ↳ Easier to unit-test in isolation\n\nRule of thumb: start with `$request->validate()`, switch to a Form Request once you need more than rules.",
-        np: "दुवैले same validation engine। `validate()` inline, simple। Form Request — complex, auth, lifecycle hooks, testable।",
-        jp: "どちらも同じ検証エンジンを使います。`validate()` はインラインで簡潔。フォームリクエストはルール・認可・フックを専用クラスに分離し、単体テストもしやすくなります。",
+        en: "Add these to `.env`:\n• `SESSION_DRIVER=redis`\n• `CACHE_STORE=redis`\n• `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`, and `REDIS_PASSWORD` if your Redis server requires one\n\nThen install a PHP Redis client — either `composer require predis/predis` (pure PHP, easy to install) or the `phpredis` PHP extension (faster, but requires server-level access).\n\nOptionally separate session and cache into different Redis databases to avoid key collisions: set `REDIS_CACHE_DB=1` in `config/database.php` (sessions use DB 0 by default).",
+        np: "`.env` मा `SESSION_DRIVER=redis` र `CACHE_STORE=redis`। `predis/predis` install गर्नुस्।",
+        jp: "`.env` に `SESSION_DRIVER=redis` と `CACHE_STORE=redis` を設定。`predis/predis` をインストールするか `phpredis` 拡張を使います。",
       },
     },
     {
       question: {
-        en: "How do I show all validation errors at once?",
-        np: "सबै validation errors एकैपटक कसरी देखाउने?",
-        jp: "全バリデーションエラーを一度に表示するには？",
+        en: "What is the difference between `session()` and `Cache`?",
+        np: "`session()` र `Cache` मा के फरक?",
+        jp: "`session()` と `Cache` の違いは？",
       },
       answer: {
-        en: "Laravel automatically passes validation errors to your Blade views — no manual passing needed.\n\n• `$errors->any()` — returns `true` if there are any errors at all (use to show/hide an error banner)\n• `$errors->all()` — returns a flat array of all error messages across all fields\n• `@error('fieldname') ... @enderror` — Blade directive that only renders when that specific field has an error\n  ↳ `$message` inside the block contains the error text\n• `$errors->first('fieldname')` — returns just the first error for a specific field\n\n<b>On API requests:</b>\n• The `$errors` variable is not used\n  ↳ Laravel returns a `422` JSON response with an `errors` object keyed by field name",
-        np: "`$errors->all()` ले सबै messages। `@error('field')` single field। API = 422 JSON `errors` object।",
-        jp: "`$errors->all()` で全メッセージを取得。フィールド別は `@error('field')`。API では 422 JSON の `errors` オブジェクトを参照します。",
+        en: "They look similar but serve completely different purposes.\n\n• <b>Sessions</b> are scoped to one user — identified by their session cookie\n  ↳ Data is private: only that user's requests can see it\n  ↳ Examples: \"is the user logged in?\", \"what's in their shopping cart?\"\n• <b>Cache</b> is shared across all users and all server instances (when using Redis)\n  ↳ Data is public: every request on every server can read it\n  ↳ Examples: the homepage posts list (same for every visitor), computed site settings\n\nGolden rule: never store sensitive user-specific data (passwords, tokens, personal info) in the shared cache.",
+        np: "Session user-specific (private); Cache सबैले share गर्छन् — query result, rendered HTML। Cache मा sensitive data नराख्नुस्।",
+        jp: "セッションはユーザーごとのプライベートなデータ。キャッシュは全ユーザーで共有する公開データ（クエリ結果・HTML など）。機密情報をキャッシュに入れないでください。",
       },
     },
     {
       question: {
-        en: "How do I validate file uploads?",
-        np: "File upload validate कसरी गर्ने?",
-        jp: "ファイルアップロードの検証方法は？",
+        en: "How do I translate validation error messages?",
+        np: "Validation error messages translate कसरी गर्ने?",
+        jp: "バリデーションエラーメッセージを翻訳するには？",
       },
       answer: {
-        en: "File validation uses the same `validate()` call — just with file-specific rules.\n\n<b>Common file rules</b>\n• `'file'` — any successfully uploaded file\n• `'image'` — image file only (jpg, png, gif, svg, webp)\n• `'mimes:jpg,png,pdf'` — restrict to specific file types\n• `'max:2048'` — maximum file size in kilobytes (2 MB here)\n• `'dimensions:min_width=100,min_height=100'` — image dimension constraints\n\n<b>Storing the file safely</b>\n• Never use the original filename from the user — it could contain path traversal characters\n  ↳ Use `$request->file('avatar')->store('avatars', 'public')` — Laravel generates a safe random filename\n\n<b>One more thing to check</b>\n• Your HTML form must have `enctype=\"multipart/form-data\"` for file uploads to work\n  ↳ Without it, the file will not be sent to PHP at all",
-        np: "`file`, `image`, `mimes`, `max` (KB), `dimensions`। Store: `->store('dir', 'public')`। Form: `enctype=\"multipart/form-data\"`।",
-        jp: "`file`・`image`・`mimes`・`max`（KB 単位）・`dimensions` を組み合わせます。保存は `->store()` を使用。フォームには `enctype=\"multipart/form-data\"` が必要です。",
+        en: "Run `php artisan lang:publish` to copy Laravel's built-in `validation.php` file into `lang/en/validation.php` in your project.\n\nThen create a new file at `lang/{locale}/validation.php` (e.g. `lang/np/validation.php`) with the same array keys but translated values.\n\nLaravel automatically picks up the active locale when generating validation error messages — no extra code needed. To customize attribute names so errors say \"Email address\" instead of \"email\", override the `attributes` array at the bottom of the file.",
+        np: "`php artisan lang:publish` गरेर `lang/en/validation.php` copy। `lang/np/validation.php` बनाउनुस्।",
+        jp: "`php artisan lang:publish` で `lang/en/validation.php` をコピーし、`lang/{locale}/validation.php` に翻訳します。属性名は `attributes` 配列でカスタマイズできます。",
       },
     },
     {
       question: {
-        en: "What does the `sometimes` rule do?",
-        np: "`sometimes` rule के गर्छ?",
-        jp: "`sometimes` ルールは何をする？",
+        en: "What are named translation parameters?",
+        np: "Named translation parameters के हुन्?",
+        jp: "翻訳の名前付きパラメータとは？",
       },
       answer: {
-        en: "By default, if a field is missing from the request, Laravel still runs all its rules — which can cause unexpected failures.\n\n`sometimes` fixes this by making all other rules on that field conditional:\n• <b>Without `sometimes`</b>: a missing `phone` field fails `max:20` even if the user didn't send it\n• <b>With `sometimes`</b>: rules only apply when the field is actually present in the request\n  ↳ If the field is absent, all rules are skipped\n\n<b>When to use it:</b>\n• PATCH endpoints — only changed fields are sent, not the entire form\n• Optional fields that still need validation rules when they are provided (e.g. a phone number field that, if filled, must be max 20 characters)",
-        np: "`sometimes` ले field present भएमा मात्र अन्य rules apply गर्छ। PATCH endpoint वा optional field मा उपयोगी।",
-        jp: "`sometimes` は他のルールを「フィールドが存在するときのみ」に限定します。PATCH エンドポイントや、入力があれば検証したいオプションフィールドに便利です。",
+        en: "Translation strings can contain `:name` placeholders — pass the replacements as an array to `__()` or `trans()`.\n\nExample: `__('messages.welcome', ['name' => 'Alice'])` turns `'Welcome, :name!'` into `'Welcome, Alice!'`.\n\nCase variants work automatically:\n• `:name` — uses the replacement value as-is\n• `:Name` — capitalizes the first letter of the replacement\n• `:NAME` — uppercases the entire replacement value",
+        np: "`:name` placeholder — `['name' => 'Alice']` pass गर्नुस्। `:Name` first letter capitalize; `:NAME` uppercase।",
+        jp: "`:name` プレースホルダに第 2 引数で値を渡します。`:Name` で先頭を大文字、`:NAME` で全大文字にもなります。",
       },
     },
     {
       question: {
-        en: "How do I validate a JSON body in an API controller?",
-        np: "API controller मा JSON body validate कसरी?",
-        jp: "API コントローラで JSON ボディを検証するには？",
+        en: "Can I lazy-load translations by locale to avoid loading all language files at once?",
+        np: "Locale अनुसार translation lazy-load गर्न सकिन्छ?",
+        jp: "ロケール別に翻訳を遅延ロードできますか？",
       },
       answer: {
-        en: "The same validation code works for both browser forms and API JSON requests — no changes needed.\n\n<b>What happens automatically</b>\n• When the client sends `Content-Type: application/json`, Laravel reads and parses the JSON body\n• Add `Accept: application/json` in the request header to tell Laravel you want a JSON error response\n  ↳ Without it, Laravel might redirect instead of returning JSON on failure\n\n<b>On failure</b>\n• Laravel returns a `422 Unprocessable Entity` response with an `errors` JSON object\n  ↳ No redirect, no flashed session data — just clean JSON your frontend can read\n\n<b>Tip:</b> Routes inside the `api` middleware group always return JSON errors, even without the `Accept` header",
-        np: "Same `validate()` वा Form Request। `Content-Type: application/json` भए JSON body read। fail = 422 JSON। `Accept: application/json` चाहिन्छ।",
-        jp: "全く同じ方法です。`Content-Type: application/json` で Laravel は JSON ボディを読みます。失敗時は **422 JSON** を返します。`Accept: application/json` ヘッダーがない場合も API ルートグループなら JSON レスポンスになります。",
+        en: "Yes — Laravel is lazy about loading translation files. It only loads a file when a key from it is first accessed.\n\n• Calling `__('messages.welcome')` with locale `en` loads only `lang/en/messages.php`\n  ↳ `lang/np/messages.php` and any other locale files are never touched during that request\n• `lang/{locale}.json` is loaded once per request the first time any of its keys are accessed\n\nThis means you can safely add dozens of translation files for different languages — they won't slow down requests for users in other locales.",
+        np: "Laravel ले called भएका files मात्र load गर्छ — सबै at once होइन।",
+        jp: "Laravel は実際に呼び出されたファイルだけをロードします。JSON 翻訳は最初のキーアクセス時に 1 回だけ読み込まれます。",
+      },
+    },
+    {
+      question: {
+        en: "What is the `cache-aside` pattern and how does `Cache::remember()` implement it?",
+        np: "Cache-aside pattern के हो र `Cache::remember()` कसरी implement गर्छ?",
+        jp: "キャッシュアサイドパターンと `Cache::remember()` の関係は？",
+      },
+      answer: {
+        en: "The <b>cache-aside pattern</b> means the application code is responsible for managing the cache — the cache is not automatically kept in sync with the database.\n\nThe four steps:\n• Check the cache for the key\n• If missing (cache miss) — load fresh data from the source, usually the database\n• Store the result in the cache with a TTL so it expires automatically\n• Return the value\n\n`Cache::remember('key', $ttl, fn() => DB::query())` does all four steps in one call:\n• You provide the key, the TTL in seconds, and a closure that fetches fresh data\n  ↳ The closure only runs on a cache miss — on a hit, it is never called at all",
+        np: "Cache-aside: cache miss भए DB load, cache store, return। `Cache::remember()` ले सबै एक call मा।",
+        jp: "キャッシュアサイドは (1) キャッシュを参照、(2) ミスなら DB からロード、(3) TTL 付きでキャッシュに保存、(4) 返却 — の 4 ステップ。`Cache::remember()` がこれをアトミックに 1 行で行います。",
       },
     },
   ],

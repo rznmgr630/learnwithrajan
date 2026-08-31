@@ -3,467 +3,394 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Most real applications need to save files (profile pictures, PDF invoices, CSV exports) and call external APIs (payment gateways, weather data, third-party services). Day 10 covers both.\n\n<b>File storage</b>\n• Laravel's `Storage` facade gives you one consistent API whether you're saving files to your local server or to Amazon S3\n  ↳ Swap from local disk to S3 by changing one line in `.env` — no code changes needed\n\n<b>HTTP Client</b>\n• Laravel's built-in HTTP Client lets you call external APIs cleanly, with retry logic and easy test support\n  ↳ No need to install Guzzle yourself — it wraps Guzzle behind a simple, readable interface",
-      np: "Storage facade ले local/S3 abstract। HTTP Client ले Guzzle wrap — fluent API।",
-      jp: "Storage ファサードでローカル・S3・クラウドを抽象化。HTTP クライアントは Guzzle を流暢な API でラップします。",
-    },
-    {
-      en: "<b>Mail</b>\n• Laravel represents each type of email as its own class called a <b>Mailable</b>\n  ↳ You define the subject, template, and attachments in that class — then just call `Mail::to($user)->send(new WelcomeEmail($user))`\n• Works with any mail provider: SMTP, Mailgun, Amazon SES, Postmark — all swappable via `.env`\n\n<b>Notifications</b>\n• Notifications are a step above email — one Notification class can deliver the same message through multiple channels at once\n  ↳ Send an email AND store a record in the database AND ping Slack — all from one `$user->notify()` call\n• Think of it as a universal alert system for your app",
-      np: "Mail: Mailable class, SMTP/Mailgun/SES driver। Notification: mail, database, Slack एकैपटक।",
-      jp: "Mail は Mailable クラスで SMTP・Mailgun・SES などに対応。Notification はメール・SMS・Slack・DB など複数チャネルを 1 クラスで管理します。",
+      en: "Day 13 covers three tools for doing work <b>outside</b> the web request cycle.\n\n<b>Queues</b> — for tasks that are too slow for a web request (sending emails, resizing images, calling external APIs)\n  ↳ Hand the work off to a background worker so users get an instant response\n\n<b>Events & Listeners</b> — for notifying different parts of your app when something happens\n  ↳ Instead of calling services directly, you fire an event and let listeners react independently\n\n<b>Task Scheduling</b> — for running commands on a timer (daily reports, cleanup jobs)\n  ↳ One PHP file replaces a messy pile of cron job configs on the server",
+      np: "Queue (slow task), Event/Listener (decoupled), Scheduling (cron)। तीन tool एउटै day।",
+      jp: "Queue は重い処理を非同期化、Event/Listener は疎結合な通知、Scheduling は cron の代替。3 つのツールを習得。",
     },
   ],
   sections: [
     {
       title: {
-        en: "File storage & uploads",
-        np: "File storage र uploads",
-        jp: "ファイルストレージとアップロード",
+        en: "Jobs & queue dispatching",
+        np: "Job र queue dispatch",
+        jp: "Job とキューディスパッチ",
       },
       blocks: [
         {
-          type: "paragraph",
-          text: {
-            en: "Laravel uses the concept of <b>disks</b> — named storage locations you configure once and then refer to by name throughout your code.\n\n<b>The two built-in disks</b>\n• `local` — saves files to `storage/app` on your server (not accessible via browser URL)\n  ↳ Use for private files like invoices, internal reports, or anything users shouldn't access directly\n• `public` — saves files to `storage/app/public` and makes them web-accessible at `/storage/filename`\n  ↳ Before this works, run `php artisan storage:link` once to create the symlink from `public/storage` to `storage/app/public`\n\n<b>Using S3</b>\n• Add your AWS credentials to `.env` and set `FILESYSTEM_DISK=s3`\n  ↳ Every `Storage::put()` call now saves to S3 instead of local — same code, different destination",
-            np: "`config/filesystems.php` मा disk configure। `php artisan storage:link` ले symlink बनाउँछ। S3 को लागि `.env` मा credentials।",
-            jp: "`config/filesystems.php` でディスクを設定。S3 は `.env` に認証情報を追加し `FILESYSTEM_DISK=s3` に設定。`php artisan storage:link` でシンボリックリンクを作成します。",
-          },
+          type: "diagram",
+          id: "laravel-queue-job",
         },
-        {
-          type: "code",
-          title: {
-            en: "Storage facade — read, write, delete",
-            np: "Storage facade उदाहरण",
-            jp: "Storage ファサードの操作",
-          },
-          code: `use Illuminate\\Support\\Facades\\Storage;
-
-// ---- Write ----
-Storage::put('reports/report.txt', $content);
-Storage::disk('s3')->put('exports/data.csv', $csvContent);
-Storage::prepend('logs/app.log', 'New entry');   // add to top
-Storage::append('logs/app.log', 'New entry');    // add to bottom
-
-// ---- Read ----
-$content = Storage::get('reports/report.txt');
-$url     = Storage::url('images/photo.jpg');     // public URL
-$tempUrl = Storage::temporaryUrl('private/doc.pdf', now()->addMinutes(10)); // S3 only
-
-// ---- Existence / metadata ----
-Storage::exists('images/photo.jpg');
-Storage::missing('images/photo.jpg');
-Storage::size('images/photo.jpg');               // bytes
-Storage::lastModified('images/photo.jpg');       // Unix timestamp
-Storage::mimeType('images/photo.jpg');
-
-// ---- Delete / copy / move ----
-Storage::delete('images/old.jpg');
-Storage::delete(['old1.jpg', 'old2.jpg']);
-Storage::copy('from.jpg', 'to.jpg');
-Storage::move('old.jpg', 'new.jpg');
-
-// ---- List files ----
-$files = Storage::files('avatars');
-$all   = Storage::allFiles('avatars');           // recursive`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "File upload in a controller",
-            np: "Controller मा file upload",
-            jp: "コントローラでのファイルアップロード",
-          },
-          code: `use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Storage;
-
-public function store(Request $request)
-{
-    $request->validate([
-        'avatar' => ['required', 'image', 'max:2048'], // 2 MB limit
-    ]);
-
-    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-        $file = $request->file('avatar');
-
-        // store() auto-generates a unique filename and returns the path
-        $path = $file->store('avatars', 'public');
-
-        // storeAs() lets you set the filename explicitly
-        $path = $file->storeAs('avatars', 'user-' . auth()->id() . '.jpg', 'public');
-
-        // storeAs() on S3
-        $path = $file->storeAs('avatars', $file->hashName(), 's3');
-
-        // File metadata
-        $originalName = $file->getClientOriginalName();  // original filename
-        $extension    = $file->getClientOriginalExtension();
-        $size         = $file->getSize();                 // bytes
-        $mime         = $file->getMimeType();             // e.g. image/jpeg
-
-        // Save path to DB
-        auth()->user()->update(['avatar' => $path]);
-
-        // Public URL
-        $url = Storage::disk('public')->url($path);
-    }
-
-    return back()->with('success', 'Avatar uploaded!');
-}`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "S3 configuration (.env)",
-            np: "S3 configuration",
-            jp: "S3 の設定",
-          },
-          code: `# .env
-FILESYSTEM_DISK=s3
-
-AWS_ACCESS_KEY_ID=your-key-id
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_DEFAULT_REGION=ap-southeast-1
-AWS_BUCKET=my-app-bucket
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-# composer
-composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "HTTP Client",
-        np: "HTTP Client",
-        jp: "HTTP クライアント",
-      },
-      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "When your app needs to talk to an external API — a payment processor, a weather service, a CRM — Laravel's HTTP Client makes it clean and straightforward.\n\n<b>What it gives you</b>\n• A readable, chainable interface: `Http::withToken($token)->get('https://api.example.com/users')`\n  ↳ No manual Guzzle setup — just chain methods to build your request\n• Built-in retry logic: `->retry(3, 500)` tries the request 3 times with a 500ms gap between attempts\n• Easy response helpers:\n  ↳ `->json()` — decode the JSON response body into a PHP array\n  ↳ `->status()` — get the HTTP status code (200, 404, 500…)\n  ↳ `->successful()` — returns `true` if the status code is in the 2xx range\n  ↳ `->throw()` — throws an exception automatically if the request fails\n• Test-friendly: `Http::fake()` intercepts outgoing requests in tests so you never make real API calls",
-            np: "`Http` facade ले Guzzle wrap। `->json()`, `->status()`, `->successful()`, `->throw()`। Test मा `Http::fake()`।",
-            jp: "`Http` ファサードは Guzzle をラップ。`->json()`・`->status()`・`->successful()`・`->throw()` などで便利に操作。テストは `Http::fake()` で完結します。",
+            en: "Think of a queue like a restaurant ticket system — the waiter (your web request) takes the order and hands a ticket to the kitchen (the worker), then immediately goes back to take the next customer's order.\n\n<b>Why use queues?</b>\n• Some tasks are slow: sending emails, resizing images, calling external APIs\n  ↳ If you do these during a web request, the user waits 3–5 seconds staring at a spinner\n• With a queue, the web request finishes in milliseconds and hands the slow work to a background worker\n  ↳ The user gets a response immediately — the email sends a second later\n\n<b>How it works</b>\n• Create a <b>Job class</b> — a PHP class that implements `ShouldQueue` with a `handle()` method\n• <b>Dispatch</b> the job from your controller — Laravel serializes it and puts it on the queue\n• A separate <b>worker process</b> (`php artisan queue:work`) runs in the background, picks jobs off the queue, and calls `handle()`\n  ↳ The worker runs independently of your web server — you can scale them separately",
+            np: "`ShouldQueue` implement गर्नु। Worker ले `handle()` call। HTTP fast।",
+            jp: "`ShouldQueue` を実装したクラスがジョブ。ワーカーが `handle()` を実行。HTTP を速く保つ。",
           },
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Queue driver comparison",
+            np: "Queue driver तुलना",
+            jp: "Queue ドライバー比較",
+          },
+          headers: [
+            { en: "Driver", np: "Driver", jp: "ドライバー" },
+            { en: "Best for", np: "प्रयोग", jp: "用途" },
+            { en: "Requires", np: "आवश्यक", jp: "必要なもの" },
+            { en: "Production-ready?", np: "Production?", jp: "本番対応？" },
+          ],
+          rows: [
+            [
+              { en: "`sync`", np: "`sync`", jp: "`sync`" },
+              { en: "Local development / testing", np: "Dev/test", jp: "開発・テスト用" },
+              { en: "Nothing", np: "केही होइन", jp: "不要" },
+              { en: "No (runs inline)", np: "होइन", jp: "No（同期実行）" },
+            ],
+            [
+              { en: "`database`", np: "`database`", jp: "`database`" },
+              { en: "Small apps, low volume", np: "Small app", jp: "小規模アプリ" },
+              { en: "`jobs` table migration", np: "`jobs` table", jp: "`jobs` テーブル" },
+              { en: "Yes (limited throughput)", np: "हो (सीमित)", jp: "Yes（低スループット）" },
+            ],
+            [
+              { en: "`redis`", np: "`redis`", jp: "`redis`" },
+              { en: "High-volume production", np: "High volume", jp: "高負荷本番" },
+              { en: "Redis server + predis/phpredis", np: "Redis", jp: "Redis サーバー" },
+              { en: "Yes (recommended)", np: "हो (सिफारिश)", jp: "Yes（推奨）" },
+            ],
+            [
+              { en: "`sqs`", np: "`sqs`", jp: "`sqs`" },
+              { en: "AWS-hosted workloads", np: "AWS", jp: "AWS 環境" },
+              { en: "AWS credentials + `aws/aws-sdk-php`", np: "AWS credentials", jp: "AWS 認証情報" },
+              { en: "Yes (fully managed)", np: "हो (managed)", jp: "Yes（フルマネージド）" },
+            ],
+          ],
         },
         {
           type: "code",
-          title: {
-            en: "GET, POST with headers, auth, retries",
-            np: "HTTP Client — GET, POST, headers, auth",
-            jp: "GET・POST・認証・リトライの使用例",
-          },
-          code: `use Illuminate\\Support\\Facades\\Http;
-
-// ---- GET ----
-$response = Http::get('https://api.example.com/users');
-$users    = $response->json();             // decode JSON body as array
-$status   = $response->status();          // 200, 404, etc.
-$ok       = $response->successful();      // 2xx
-$failed   = $response->failed();          // 4xx or 5xx
-$body     = $response->body();            // raw string
-
-// ---- POST with JSON body ----
-$response = Http::post('https://api.example.com/users', [
-    'name'  => 'Alice',
-    'email' => 'alice@example.com',
-]);
-
-// ---- POST as form data (application/x-www-form-urlencoded) ----
-$response = Http::asForm()->post('https://api.example.com/login', [
-    'username' => 'alice',
-    'password' => 'secret',
-]);
-
-// ---- Custom headers ----
-$response = Http::withHeaders([
-    'X-App-Key'  => config('services.example.key'),
-    'Accept'     => 'application/json',
-])->get('https://api.example.com/items');
-
-// ---- Authentication ----
-Http::withToken($apiToken)->get('https://api.example.com/me');          // Bearer
-Http::withBasicAuth('user', 'pass')->get('https://api.example.com/');   // Basic
-
-// ---- Timeout & retry ----
-$response = Http::timeout(10)
-    ->retry(3, 500)   // 3 attempts, 500ms delay between
-    ->get('https://api.example.com/slow-endpoint');
-
-// ---- Throw on HTTP error (4xx / 5xx) ----
-$response = Http::throw()->get('https://api.example.com/users');
-// throws Illuminate\\Http\\Client\\RequestException on error
-
-// Throw conditionally
-$response->throwIf($response->status() === 429, 'Rate limited.');
-$response->throwUnlessStatus(200);
-
-// ---- Query parameters ----
-Http::get('https://api.example.com/search', ['q' => 'laravel', 'page' => 2]);
-
-// ---- File upload ----
-Http::attach('photo', file_get_contents($path), 'photo.jpg')
-    ->post('https://api.example.com/upload');`,
+          title: { en: "Creating a Job", np: "Job बनाउने", jp: "Job の作成" },
+          code: `php artisan make:job SendWelcomeEmail`,
         },
         {
           type: "code",
-          title: {
-            en: "Testing with Http::fake()",
-            np: "Http::fake() — testing",
-            jp: "Http::fake() でテスト",
-          },
-          code: `// In your test
-Http::fake([
-    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Alice'], 200),
-    'api.example.com/error' => Http::response(['message' => 'Not Found'], 404),
-    '*' => Http::response([], 200), // catch-all fallback
-]);
-
-// Assert requests were made
-Http::assertSent(function ($request) {
-    return $request->url() === 'https://api.example.com/users'
-        && $request->method() === 'GET';
-});
-
-Http::assertNotSent(fn ($r) => str_contains($r->url(), 'payment'));`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Mailable classes & mail config",
-        np: "Mailable classes र mail config",
-        jp: "Mailable クラスとメール設定",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A <b>Mailable</b> is a PHP class that represents one type of email — like a welcome email, a password reset, or an invoice receipt.\n\n<b>Three methods you define</b>\n• `envelope()` — sets the subject line, the from address, CC, and BCC\n  ↳ Think of this as filling in the email's header information before writing the body\n• `content()` — points to the Blade view (or Markdown template) that becomes the email body\n  ↳ Any public property on the Mailable class is automatically available in that view\n• `attachments()` — returns an array of files to attach to the email\n  ↳ Can attach local files, Storage disk files, or files from S3\n\n<b>A note on performance</b>\n• Sending email via SMTP during a web request blocks the user from getting a response until the mail server replies\n  ↳ Always use `Mail::to($user)->queue(new WelcomeEmail($user))` in production — it hands the work off to a background queue worker so the user's response is instant",
-            np: "Mailable: `envelope()` (subject/from), `content()` (view), `attachments()`। Production मा queue।",
-            jp: "Mailable は `envelope()` で件名・差出人、`content()` でテンプレート、`attachments()` で添付ファイルを設定します。本番の遅い SMTP には必ずキュー送信を使います。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Create and define a Mailable",
-            np: "Mailable बनाउनु",
-            jp: "Mailable の生成と定義",
-          },
-          code: `php artisan make:mail WelcomeEmail
-php artisan make:mail InvoicePaid --markdown=emails.invoice  # Markdown template
-
-// app/Mail/WelcomeEmail.php
-<?php
-
-namespace App\\Mail;
+          title: { en: "Job class anatomy", np: "Job class", jp: "Job クラスの構造" },
+          code: `// app/Jobs/SendWelcomeEmail.php
+namespace App\\Jobs;
 
 use App\\Models\\User;
+use App\\Mail\\WelcomeMail;
 use Illuminate\\Bus\\Queueable;
-use Illuminate\\Mail\\Mailable;
-use Illuminate\\Mail\\Mailables\\Content;
-use Illuminate\\Mail\\Mailables\\Envelope;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Foundation\\Bus\\Dispatchable;
+use Illuminate\\Queue\\InteractsWithQueue;
 use Illuminate\\Queue\\SerializesModels;
+use Illuminate\\Support\\Facades\\Mail;
 
-class WelcomeEmail extends Mailable
+class SendWelcomeEmail implements ShouldQueue
 {
-    use Queueable, SerializesModels; // SerializesModels for queueing
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /** Number of times the job may be attempted. */
+    public int $tries = 3;
+
+    /** Timeout in seconds before the job is considered failed. */
+    public int $timeout = 60;
+
+    /** Number of seconds to wait before retrying. */
+    public int $backoff = 30;
 
     public function __construct(
-        public readonly User $user, // public = auto-available in the view
+        public readonly User $user
     ) {}
 
-    public function envelope(): Envelope
+    public function handle(): void
     {
-        return new Envelope(
-            from: new Address('noreply@myapp.com', 'MyApp'),
-            replyTo: [new Address('support@myapp.com', 'Support')],
-            subject: 'Welcome to MyApp, ' . $this->user->name . '!',
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.welcome',          // resources/views/emails/welcome.blade.php
-            // markdown: 'emails.welcome',   // or Markdown-based
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [
-            // Attachment::fromPath('/path/to/file.pdf')->as('guide.pdf'),
-        ];
+        Mail::to($this->user->email)
+            ->send(new WelcomeMail($this->user));
     }
 }`,
         },
         {
           type: "code",
-          title: {
-            en: "Sending mail & SMTP .env config",
-            np: "Mail पठाउनु र .env config",
-            jp: "メール送信と .env 設定",
-          },
-          code: `use App\\Mail\\WelcomeEmail;
-use Illuminate\\Support\\Facades\\Mail;
+          title: { en: "Dispatching jobs", np: "Job dispatch", jp: "Job のディスパッチ" },
+          code: `use App\\Jobs\\SendWelcomeEmail;
+use App\\Jobs\\GenerateThumbnail;
+use App\\Jobs\\SendInvoice;
+use Illuminate\\Support\\Facades\\Bus;
 
-// Send immediately
-Mail::to($user->email)->send(new WelcomeEmail($user));
+// Immediate dispatch
+SendWelcomeEmail::dispatch($user);
 
-// Send to multiple
-Mail::to($user)
-    ->cc('manager@myapp.com')
-    ->bcc('audit@myapp.com')
-    ->send(new WelcomeEmail($user));
+// Delayed dispatch — run 5 minutes from now
+SendWelcomeEmail::dispatch($user)->delay(now()->addMinutes(5));
 
-// Queue (async — much better for production SMTP)
-Mail::to($user)->queue(new WelcomeEmail($user));
+// Specific queue channel
+SendWelcomeEmail::dispatch($user)->onQueue('emails');
 
-// Queue with delay
-Mail::to($user)->later(now()->addMinutes(5), new WelcomeEmail($user));
+// Dispatch to a specific connection + queue
+SendWelcomeEmail::dispatch($user)
+    ->onConnection('redis')
+    ->onQueue('high');
 
-// ---- .env SMTP config ----
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com          # or smtp.mailgun.org, email-smtp.us-east-1.amazonaws.com
-MAIL_PORT=587
-MAIL_USERNAME=your@gmail.com
-MAIL_PASSWORD="your-app-password"  # Gmail: use App Password, NOT your account password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@myapp.com
-MAIL_FROM_NAME="MyApp"
+// Chained jobs — run sequentially, stop on failure
+Bus::chain([
+    new GenerateThumbnail($post),
+    new SendInvoice($order),
+    new SendWelcomeEmail($user),
+])->onQueue('default')->dispatch();
 
-# Preview emails locally without sending (catches all mail to log file)
-MAIL_MAILER=log
-
-# Or use Mailpit (https://github.com/axllent/mailpit) — an SMTP trap with web UI
-MAIL_MAILER=smtp
-MAIL_HOST=127.0.0.1
-MAIL_PORT=1025`,
+// Run queue worker
+// php artisan queue:work --queue=high,emails,default
+// php artisan queue:work redis --tries=3 --timeout=90`,
         },
       ],
     },
     {
       title: {
-        en: "Notifications",
-        np: "Notifications",
-        jp: "通知",
+        en: "Failed jobs & retry strategy",
+        np: "Failed job र retry",
+        jp: "失敗したジョブとリトライ戦略",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A <b>Notification</b> is like a Mailable but smarter — it can deliver the same message through multiple channels at the same time.\n\n<b>How it works</b>\n• You define a `via()` method that returns the list of channels to use: `return ['mail', 'database']`\n  ↳ Laravel calls the matching method for each channel: `toMail()`, `toDatabase()`, `toBroadcast()`, etc.\n• Every channel gets the same information — you just shape it differently per channel\n  ↳ Email gets a nicely formatted `MailMessage`; the database channel gets a plain PHP array\n\n<b>Built-in channels</b>\n• `mail` — send an email\n• `database` — store a record in a `notifications` table for in-app notification bells\n• `broadcast` — push to the browser via WebSockets for real-time alerts\n• `vonage` — send an SMS\n• Community packages add Slack, Telegram, Discord, and more",
-            np: "Notification ले `via()` method मा multiple channel define गर्छ — mail, database, Slack।",
-            jp: "Notification は `via()` で複数チャネルを宣言します。組み込みは `mail`・`database`・`broadcast`。コミュニティ製の Slack・Telegram チャネルも豊富です。",
+            en: "Even reliable workers fail sometimes — the email service goes down, a network request times out, or bad data causes an exception.\n\n<b>What happens when a job fails</b>\n• If a job throws an exception, Laravel retries it up to `$tries` times (you set this on the job class)\n  ↳ Between retries it waits `$backoff` seconds — giving external services time to recover\n• After all retries are exhausted, the job is marked as <b>failed</b> and stored in the `failed_jobs` database table\n  ↳ Laravel records the exception message and stack trace so you can see exactly what went wrong\n• The `failed(Throwable $exception)` method on the job is called — use it to clean up partial work or send an alert\n\n<b>What you can do next</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific failed job back onto the queue\n• `php artisan queue:flush` — delete all records from `failed_jobs`",
+            np: "`$tries` पार भए `failed_jobs` table। `failed()` method clean up गर्न।",
+            jp: "`$tries` を超えるか例外が起きると `failed_jobs` に記録。`failed()` でクリーンアップ。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Create and define a Notification",
-            np: "Notification बनाउनु",
-            jp: "Notification の生成と定義",
-          },
-          code: `php artisan make:notification InvoicePaid
-
-// app/Notifications/InvoicePaid.php
-<?php
-
-namespace App\\Notifications;
-
-use App\\Models\\Invoice;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Notifications\\Notification;
-use Illuminate\\Notifications\\Messages\\MailMessage;
-
-class InvoicePaid extends Notification
+          title: { en: "failed() method + artisan commands", np: "failed() र artisan", jp: "failed() とコマンド" },
+          code: `// Inside the job class
+public function failed(\\Throwable $exception): void
 {
-    use Queueable;
+    // Notify the user, clean up partial work, send alert
+    $this->user->notify(new JobFailedNotification($exception->getMessage()));
+
+    Log::error('SendWelcomeEmail failed', [
+        'user_id' => $this->user->id,
+        'error'   => $exception->getMessage(),
+    ]);
+}
+
+// Manually fail from inside handle()
+public function handle(): void
+{
+    if (! $this->user->isActive()) {
+        $this->fail(new \\RuntimeException('User is not active'));
+        return;
+    }
+    // ...
+}
+
+// Artisan commands for failed jobs
+// php artisan queue:failed              — list all failed jobs
+// php artisan queue:retry <id>          — retry one job by ID
+// php artisan queue:retry all           — retry all failed jobs
+// php artisan queue:forget <id>         — delete one failed job
+// php artisan queue:flush               — delete ALL failed jobs
+// php artisan queue:failed-table        — create failed_jobs migration`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Laravel Horizon</b> is a real-time dashboard for Redis queues — think of it as the control room for all your background workers.\n• Install it with `composer require laravel/horizon` then visit `/horizon` in your browser\n• It shows: how many jobs are waiting, how fast they're being processed, which ones failed, and how long each one took\n  ↳ Essential for production systems where you need to catch problems before users notice them",
+            np: "Horizon — Redis queue dashboard। `/horizon` UI। Production मा essential।",
+            jp: "Horizon は Redis キューのダッシュボード。スループット・失敗・深さをリアルタイム表示。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Events & Listeners",
+        np: "Event र Listener",
+        jp: "イベントとリスナー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Imagine a package delivery system: when an order ships, you want to (1) email the customer, (2) update the inventory, and (3) log it for analytics.\n\n<b>The naive approach</b>\n• Call each service directly from your controller — works, but your controller now knows about email, inventory, AND analytics\n  ↳ When you add a fourth action, you have to touch the controller again\n\n<b>The Event / Listener approach</b>\n• Fire a single `OrderShipped` <b>event</b> from your controller — it just carries the order data\n• Three separate <b>Listeners</b> each subscribe to that event and handle their own piece\n  ↳ Your controller only knows it shipped an order — it doesn't care what happens next\n  ↳ Adding a fourth action means adding a fourth listener, not touching the controller\n• In Laravel 11, listeners are auto-discovered — no registration file needed",
+            np: "Event = something happened। Listener = respond। Laravel 11 मा auto-discover।",
+            jp: "Event は「何かが起きた」の通知、Listener が「対応する」。Laravel 11 は自動検出。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Generate Event & Listener", np: "Generate", jp: "生成コマンド" },
+          code: `php artisan make:event OrderShipped
+php artisan make:listener SendShipmentNotification --event=OrderShipped
+php artisan make:listener UpdateInventory --event=OrderShipped`,
+        },
+        {
+          type: "code",
+          title: { en: "Event class", np: "Event class", jp: "Event クラス" },
+          code: `// app/Events/OrderShipped.php
+namespace App\\Events;
+
+use App\\Models\\Order;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+use Illuminate\\Queue\\SerializesModels;
+
+class OrderShipped
+{
+    use Dispatchable, SerializesModels;
 
     public function __construct(
-        public readonly Invoice $invoice,
+        public readonly Order $order
     ) {}
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Queueable Listener", np: "Queueable Listener", jp: "キュー対応リスナー" },
+          code: `// app/Listeners/SendShipmentNotification.php
+namespace App\\Listeners;
 
-    // Which channels to use
-    public function via(object $notifiable): array
+use App\\Events\\OrderShipped;
+use App\\Notifications\\OrderShippedNotification;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Queue\\InteractsWithQueue;
+
+class SendShipmentNotification implements ShouldQueue
+{
+    use InteractsWithQueue;
+
+    public string $queue = 'notifications';
+    public int $delay = 10; // seconds
+
+    public function handle(OrderShipped $event): void
     {
-        return ['mail', 'database'];  // send email AND store in DB
+        $event->order->user->notify(
+            new OrderShippedNotification($event->order)
+        );
     }
 
-    // Mail channel
-    public function toMail(object $notifiable): MailMessage
+    public function failed(OrderShipped $event, \\Throwable $exception): void
     {
-        return (new MailMessage)
-            ->subject('Invoice #' . $this->invoice->id . ' Paid')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your invoice has been paid.')
-            ->action('View Invoice', route('invoices.show', $this->invoice))
-            ->line('Thank you for your business!');
-    }
-
-    // Database channel — stored in notifications table
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'invoice_id' => $this->invoice->id,
-            'amount'     => $this->invoice->amount,
-            'message'    => 'Invoice #' . $this->invoice->id . ' was paid.',
-        ];
-    }
-
-    // toArray() is used by the database channel if toDatabase() is absent
-    public function toArray(object $notifiable): array
-    {
-        return $this->toDatabase($notifiable);
+        Log::error('Shipment notification failed', ['order' => $event->order->id]);
     }
 }`,
         },
         {
           type: "code",
-          title: {
-            en: "Sending notifications & reading from DB",
-            np: "Notification पठाउनु र DB बाट पढ्नु",
-            jp: "通知の送信と DB からの読み取り",
+          title: { en: "Dispatching events", np: "Event dispatch", jp: "Event のディスパッチ" },
+          code: `use App\\Events\\OrderShipped;
+
+// Option 1: global helper
+event(new OrderShipped($order));
+
+// Option 2: static dispatch method (same result)
+OrderShipped::dispatch($order);
+
+// Option 3: fire-and-forget on Eloquent model event
+// (define in boot() or as Model::observe())
+Order::created(fn (Order $order) => OrderShipped::dispatch($order));
+
+// Manual registration (Laravel 10 / if auto-discovery disabled)
+// app/Providers/EventServiceProvider.php
+protected $listen = [
+    OrderShipped::class => [
+        SendShipmentNotification::class,
+        UpdateInventory::class,
+    ],
+];`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Sometimes you want to push an event to the browser in real time — for example, updating a live dashboard when a job finishes.\n• This is called <b>broadcasting</b> and uses a WebSocket server (Pusher, Ably, or a self-hosted Soketi)\n• The event implements `ShouldBroadcast`, and your frontend JavaScript subscribes using Laravel Echo\n  ↳ This is a more advanced topic — see the official Laravel Broadcasting docs when you're ready for it",
+            np: "Broadcasting — Pusher/Soketi। Frontend subscribe गर्छ। Separate topic।",
+            jp: "ブロードキャストは Pusher/Soketi でフロントエンドにリアルタイム通知。`ShouldBroadcast` を実装。",
           },
-          code: `use App\\Notifications\\InvoicePaid;
-use Illuminate\\Support\\Facades\\Notification;
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Task Scheduling",
+        np: "Task Scheduling",
+        jp: "タスクスケジューリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Cron jobs are powerful but painful to manage — each one is a separate line in a server config file, and you need server access to add or change them.\n\n<b>Laravel's scheduler solves this</b>\n• You add <b>one single cron entry</b> to the server that runs every minute: `* * * * * php artisan schedule:run`\n• Then you define every scheduled task in your PHP code — no more touching server config files\n  ↳ In Laravel 11 all schedules live in `routes/console.php`\n  ↳ In Laravel 10 they live in `app/Console/Kernel.php`\n• This means schedules are version-controlled, reviewable in pull requests, and testable locally\n  ↳ `php artisan schedule:work` polls every minute in your terminal so you can test without deploying",
+            np: "One cron entry (every minute), baaki sab PHP maa। Laravel 11 मा `routes/console.php`।",
+            jp: "1 分ごとの cron 1 エントリーで動く。Laravel 11 は `routes/console.php` にスケジュール定義。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Creating a scheduled command", np: "Command बनाउने", jp: "コマンドの作成" },
+          code: `php artisan make:command SendWeeklyReport`,
+        },
+        {
+          type: "code",
+          title: { en: "Schedule definitions (Laravel 11 — routes/console.php)", np: "Schedule define", jp: "スケジュール定義" },
+          code: `// routes/console.php (Laravel 11)
+use Illuminate\\Support\\Facades\\Schedule;
 
-// ---- Send to a single user (using Notifiable trait) ----
-// The User model uses Illuminate\\Notifications\\Notifiable;
-$user->notify(new InvoicePaid($invoice));
+// Artisan commands
+Schedule::command('emails:send')->dailyAt('09:00');
+Schedule::command('reports:weekly')->weekly()->mondays()->at('08:00');
+Schedule::command('db:backup')->daily()->timezone('Asia/Kathmandu');
+Schedule::command('queue:prune-failed', ['--hours=48'])->daily();
 
-// ---- Send to multiple users at once ----
-Notification::send($users, new InvoicePaid($invoice));
+// Every N minutes
+Schedule::command('app:sync-inventory')->everyFiveMinutes();
+Schedule::command('app:poll-webhooks')->everyMinute();
 
-// ---- On-demand notification (no User model needed) ----
-Notification::route('mail', 'client@example.com')
-    ->notify(new InvoicePaid($invoice));
+// Closures (for quick one-off tasks)
+Schedule::call(function () {
+    DB::table('sessions')->where('last_activity', '<', now()->subHours(2))->delete();
+})->hourly();
 
-// ---- Database notifications table ----
-// Run: php artisan notifications:table && php artisan migrate
+// Overlap prevention — skip if previous run still executing
+Schedule::command('app:process-images')
+    ->everyMinute()
+    ->withoutOverlapping();
 
-// Read unread notifications
-$unread = $user->unreadNotifications;   // Collection of DatabaseNotification
-foreach ($unread as $notification) {
-    $data = $notification->data;        // the array from toDatabase()
-    echo $data['message'];
-}
+// Run in background (don't block the scheduler process)
+Schedule::command('app:heavy-report')
+    ->daily()
+    ->runInBackground()
+    ->onSuccess(function () { Log::info('Report done'); })
+    ->onFailure(function () { Log::error('Report failed'); });
 
-// Mark as read
-$user->unreadNotifications->markAsRead();
-$notification->markAsRead();
+// Send output to a log file
+Schedule::command('inspire')
+    ->hourly()
+    ->appendOutputTo(storage_path('logs/inspire.log'));`,
+        },
+        {
+          type: "code",
+          title: { en: "Single server cron entry (add to server crontab)", np: "Server cron", jp: "サーバーの cron エントリー" },
+          code: `# Run this ONE entry on your server — Laravel handles the rest
+* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
 
-// All notifications (read + unread)
-$all = $user->notifications;
+# For local development
+php artisan schedule:work    # polls every minute in foreground
 
-// Delete old notifications
-$user->notifications()->delete();
+# Test a specific scheduled task immediately
+php artisan schedule:run
 
-// ---- Notifiable trait on User model ----
-// The User model must use Illuminate\\Notifications\\Notifiable;
-// This adds: notifications(), unreadNotifications(), readNotifications()`,
+# List all scheduled tasks
+php artisan schedule:list`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you run multiple servers (a cluster), every server runs the scheduler every minute — by default, the same scheduled task runs on every server simultaneously.\n• Add `->onOneServer()` to prevent this — only the first server to claim the job actually runs it\n  ↳ It uses a shared Redis cache as a locking mechanism to coordinate across servers\n  ↳ Requires `CACHE_STORE=redis` in `.env` so all servers see the same lock",
+            np: "Cluster मा एक मात्र server मा run: `->onOneServer()`। Shared cache चाहिन्छ।",
+            jp: "クラスター環境で 1 台だけ実行したい場合は `->onOneServer()`。共有キャッシュが必要。",
+          },
         },
       ],
     },
@@ -471,74 +398,86 @@ $user->notifications()->delete();
   faq: [
     {
       question: {
-        en: "How do I configure S3 storage and make files publicly accessible?",
-        np: "S3 storage configure गरेर files public कसरी गर्ने?",
-        jp: "S3 ストレージの設定とファイルの公開方法は？",
+        en: "When should I use Queues vs Events?",
+        np: "Queue र Event कहिले प्रयोग गर्ने?",
+        jp: "Queue と Event はどう使い分けますか？",
       },
       answer: {
-        en: "Four steps to connect S3:\n\n• Add your AWS credentials to `.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`\n• Set `FILESYSTEM_DISK=s3` in `.env`\n• Run `composer require league/flysystem-aws-s3-v3` to install the S3 adapter\n• That's it — all `Storage::put()` calls now go to S3\n\n<b>Public vs private files</b>\n• For files you want anyone to access via a URL (profile pictures, public downloads):\n  ↳ Use `Storage::disk('s3')->setVisibility($path, 'public')` after uploading, or set the S3 bucket ACL\n• For files that should only be accessible to specific users (contracts, private documents):\n  ↳ Use `Storage::temporaryUrl($path, now()->addMinutes(30))` to generate a signed URL that expires automatically",
-        np: "`.env` मा AWS credentials, `FILESYSTEM_DISK=s3`, flysystem package install। Public: visibility `public`; Private: `temporaryUrl()`।",
-        jp: "`.env` に AWS 認証情報を設定し `FILESYSTEM_DISK=s3`、`league/flysystem-aws-s3-v3` をインストール。公開ファイルは `setVisibility('path', 'public')`、非公開は `temporaryUrl()` を使います。",
+        en: "Think of it this way:\n\n<b>Use a Queue when</b>\n• You have a single slow task (sending an email, calling an external API, generating a PDF)\n• The task doesn't need to happen before the user gets a response\n  ↳ The user clicks 'Register' → your code creates the account → then a queued job sends the welcome email separately\n\n<b>Use Events when</b>\n• Multiple unrelated parts of your app need to react when something happens\n• You want those reactions to stay decoupled from the code that triggered them\n  ↳ An order ships → email the customer AND update inventory AND log analytics — three listeners, all independent\n\nThey're not mutually exclusive — a listener can also implement `ShouldQueue` to run its logic in the background too.",
+        np: "Queue = slow deferred task। Event = decoupled reaction। Listener लाई ShouldQueue थप्न सकिन्छ।",
+        jp: "Queue は遅い単発タスクの非同期化、Event は複数の疎結合な反応。Listener に `ShouldQueue` を付ければ両立できます。",
       },
     },
     {
       question: {
-        en: "What is the difference between `store()` and `storeAs()`?",
-        np: "`store()` र `storeAs()` मा के फरक?",
-        jp: "`store()` と `storeAs()` の違いは？",
+        en: "How do I monitor queue workers in production?",
+        np: "Production मा queue worker monitor?",
+        jp: "本番でキューワーカーを監視する方法は？",
       },
       answer: {
-        en: "Both methods save a file — they just handle the filename differently.\n\n• `store('avatars', 'public')` — Laravel generates a random unique filename automatically (based on a hash)\n  ↳ Safe from filename collisions: two users uploading `photo.jpg` won't overwrite each other\n  ↳ Use this for most uploads where the filename doesn't matter\n• `storeAs('avatars', 'user-42-avatar.jpg', 'public')` — you choose the exact filename\n  ↳ Use this when the filename needs to be predictable — like replacing a user's avatar each time they upload",
-        np: "`store()` ले random unique name। `storeAs()` ले exact name। Collision-free upload: `store()`।",
-        jp: "`store()` はハッシュベースのランダムなファイル名を生成。`storeAs()` はファイル名を指定します。衝突を避けたいアップロードには `store()`、ファイル名が決まっている場合は `storeAs()` を使います。",
+        en: "For <b>Redis queues</b>: install <b>Laravel Horizon</b> — it gives you a live web dashboard at `/horizon` showing job throughput, failures, and queue depth. Horizon also integrates with Supervisor (a Linux process manager) to keep your workers running automatically.\n\nFor <b>non-Redis queues</b>: use Supervisor directly with a config that keeps `php artisan queue:work --tries=3` running as a service.\n\nWhenever you deploy new code, run `php artisan horizon:terminate` (or restart the queue:work process) so workers pick up the latest code — stale workers run old code indefinitely otherwise.",
+        np: "Horizon — Redis dashboard। Supervisor — process manager। Deploy मा `horizon:terminate`।",
+        jp: "Redis なら Horizon が最適。Supervisor でワーカープロセスを管理。デプロイ後は `horizon:terminate`。",
       },
     },
     {
       question: {
-        en: "How do I preview emails locally without sending them?",
-        np: "Local मा email send नगरी preview कसरी?",
-        jp: "メールをローカルで送信せずにプレビューするには？",
+        en: "What happens if a job fails all retries?",
+        np: "Job सबै retry fail भए के हुन्छ?",
+        jp: "全リトライが失敗したらどうなりますか？",
       },
       answer: {
-        en: "You have three good options for developing with email locally without actually sending anything:\n\n• <b>Log driver</b> — set `MAIL_MAILER=log` and all emails get written to `storage/logs/laravel.log` as plain text\n  ↳ Easiest option — no extra tools needed, just check the log file\n• <b>Mailpit</b> — a local SMTP trap that catches all outgoing mail and shows it in a web UI at `localhost:8025`\n  ↳ Set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025` — emails show up visually, exactly as the user would see them\n  ↳ Laravel Sail includes Mailpit automatically\n• <b>Route preview</b> — return a Mailable directly from a route for instant browser rendering:\n`Route::get('/preview', fn() => new WelcomeEmail(User::first()))`\n  ↳ Great for tweaking the email design — just refresh the browser to see changes",
-        np: "`MAIL_MAILER=log` (log file मा लेख्छ); Mailpit (local SMTP trap); route मा Mailable return गरेर preview।",
-        jp: "`MAIL_MAILER=log` でログファイルに書き出し、Mailpit でローカル SMTP トラップ、またはルートから Mailable を直接返してブラウザプレビューできます。",
+        en: "When all retries are exhausted, the job lands in the `failed_jobs` database table along with the full exception and stack trace.\n\n<b>What you can do</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific job back onto the queue\n• `php artisan queue:retry all` — retry every failed job at once\n• `php artisan queue:flush` — delete all records from `failed_jobs`\n\nTip: define a `failed(Throwable $exception)` method on your job class and use it to send a Slack alert or undo partial work (like rolling back a payment attempt).",
+        np: "`failed_jobs` table मा जान्छ। `failed()` call। `queue:retry` ले retry।",
+        jp: "`failed_jobs` テーブルに移動し `failed()` が呼ばれる。`queue:retry` で再試行可能。",
       },
     },
     {
       question: {
-        en: "What is the `Notifiable` trait and which models need it?",
-        np: "`Notifiable` trait के हो र कुन model मा चाहिन्छ?",
-        jp: "`Notifiable` トレイトとはどのモデルに必要ですか？",
+        en: "How do I test queued jobs?",
+        np: "Queued job test कसरी?",
+        jp: "キュージョブをテストする方法は？",
       },
       answer: {
-        en: "The `Notifiable` trait is what gives a model the ability to receive notifications.\n\n<b>What it adds to your model</b>\n• `$user->notify(new InvoicePaid($invoice))` — send a notification to that model\n• `$user->notifications` — fetch all notifications (read + unread) from the database\n• `$user->unreadNotifications` — fetch only unread ones\n• `$user->readNotifications` — fetch only already-read ones\n\n<b>Who needs it?</b>\n• The default `User` model already has it — you don't need to add anything\n• If you want to send notifications to a different model (like a `Team` or a `Company`), just add `use Notifiable;` to that class\n\n<b>Custom routing</b>\n• If your model stores the email address in a column other than `email`, define a `routeNotificationForMail()` method to return the right address\n  ↳ Same pattern for other channels: `routeNotificationForVonage()`, `routeNotificationForSlack()`, etc.",
-        np: "`Notifiable` trait ले `notify()` र notification relationships थप्छ। User model मा default छ। अरू model मा manually use।",
-        jp: "`Notifiable` トレイトは `notify()` と関係ヘルパを追加します。デフォルトの `User` モデルに含まれています。他のモデルにも `use Notifiable;` で追加できます。",
+        en: "You don't want tests to actually send emails or hit external services — use `Queue::fake()` to intercept jobs without running them.\n\n• Call `Queue::fake()` at the top of your test\n• Run the code that should dispatch a job\n• Assert the job was (or wasn't) pushed:\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — confirms the job was dispatched\n  ↳ `Queue::assertPushedOn('emails', SendWelcomeEmail::class)` — confirms it was sent to the right queue\n  ↳ `Queue::assertNotPushed(SomeOtherJob::class)` — confirms a job was NOT dispatched\n\nTo test the job's logic itself, just call `(new SendWelcomeEmail($user))->handle()` directly — no queue or worker needed.",
+        np: "`Queue::fake()` — job push assert। `handle()` direct call test।",
+        jp: "`Queue::fake()` でキューを偽装し `assertPushed()` で確認。`handle()` の単体テストは直接呼び出す。",
       },
     },
     {
       question: {
-        en: "How do database notifications differ from email notifications?",
-        np: "Database notification र email notification मा के फरक?",
-        jp: "データベース通知とメール通知の違いは？",
+        en: "Can I dispatch an event inside a job?",
+        np: "Job भित्र event dispatch गर्न मिल्छ?",
+        jp: "Job の中でイベントをディスパッチできますか？",
       },
       answer: {
-        en: "They serve completely different purposes — most real apps use both at once.\n\n<b>Email notifications</b>\n• Go to an external mail server and that's it — you can't read them back in PHP\n  ↳ Great for alerts the user sees in their inbox (new message, invoice ready)\n  ↳ Your app has no record of whether they read it\n\n<b>Database notifications</b>\n• Stored in a `notifications` table in your own database — fully queryable\n  ↳ Run `php artisan notifications:table && php artisan migrate` to create the table first\n  ↳ Access them with `$user->unreadNotifications` — perfect for in-app notification bells\n  ↳ You can track read/unread status, show a history, and mark individual notifications as read\n\n• Use both together by returning `['mail', 'database']` from `via()` — one `notify()` call handles both channels",
-        np: "Email notification fire-and-forget; Database notification `notifications` table मा store — PHP बाट read गर्न सकिन्छ। In-app bell को लागि।",
-        jp: "メール通知は送りっぱなし。データベース通知は `notifications` テーブルに保存され、`$user->unreadNotifications` で参照可能。アプリ内の通知ベルや履歴表示に最適です。`via()` で両チャネルを同時に指定できます。",
+        en: "Yes — calling `event(new SomeEvent($data))` or `SomeEvent::dispatch($data)` inside a job's `handle()` method works fine.\n\nOne thing to watch: if that event has queueable listeners, those listeners are queued separately and fail independently.\n  ↳ A failing listener won't automatically roll back or fail the parent job\n  ↳ If you need strict ordering (do A, then B, then C — stop if any fail), use `Bus::chain()` instead of events",
+        np: "`handle()` भित्र `event()` call गर्न मिल्छ। Listener failure parent job rollback गर्दैन।",
+        jp: "`handle()` 内で `event()` を呼べます。リスナー失敗は親ジョブをロールバックしません。順序が必要なら `Bus::chain()` を使用。",
       },
     },
     {
       question: {
-        en: "How does Laravel's HTTP Client handle retries and what happens on failure?",
-        np: "HTTP Client retry कसरी काम गर्छ र failure मा के हुन्छ?",
-        jp: "HTTP クライアントのリトライの仕組みと失敗時の動作は？",
+        en: "How does `->withoutOverlapping()` work?",
+        np: "`withoutOverlapping()` कसरी काम गर्छ?",
+        jp: "`->withoutOverlapping()` の仕組みは？",
       },
       answer: {
-        en: "`->retry($times, $sleepMilliseconds)` automatically re-attempts a request when it fails — useful for flaky APIs or temporary network hiccups.\n\n<b>How it works</b>\n• `->retry(3, 500)` — tries up to 3 times, waiting 500 milliseconds between each attempt\n  ↳ Retries on connection errors and 5xx server errors (like 503 Service Unavailable)\n  ↳ Does NOT retry on 4xx errors — those mean your request was wrong, not the server\n• If all 3 attempts fail, Laravel throws a `RequestException`\n  ↳ Catch it with `try/catch` to handle the failure gracefully\n\n<b>Throwing on failure</b>\n• `->throw()` — throw an exception automatically for any 4xx or 5xx response (without needing retry)\n• `->throwIf($condition)` — throw only when a custom condition is true\n• `->throwUnlessStatus(200)` — throw unless the status code is exactly 200",
-        np: "`->retry(3, 500)` ले 3 attempts। सबै fail भए `RequestException`। `->throw()` ले 4xx/5xx मा exception।",
-        jp: "`->retry(3, 500)` で最大 3 回、500ms 間隔でリトライ。全て失敗すると `RequestException` がスロー。`->throw()` で 4xx/5xx を常に例外にします。",
+        en: "Before running a scheduled task, `->withoutOverlapping()` tries to claim an atomic lock in your cache.\n• If the lock is free, the task runs and holds the lock until it's done\n• If the lock is already claimed (the previous run is still going), this invocation is skipped entirely\n  ↳ The lock expires after 24 hours by default so a crashed job doesn't block things forever\n\n<b>When to use it</b>\n• Any long-running command that runs more frequently than it takes to finish\n  ↳ Example: a 90-second image processing command scheduled every minute would normally stack up — `->withoutOverlapping()` prevents this\n\nRequires a cache driver that supports atomic locks: Redis, Memcached, or `database`.",
+        np: "Cache lock acquire। Previous run चलिरहेको छ भने skip। Redis/DB cache चाहिन्छ।",
+        jp: "アトミックキャッシュロックを取得。前の実行が残っていればスキップ。Redis か DB キャッシュが必要。",
+      },
+    },
+    {
+      question: {
+        en: "How do I handle tasks that must run only on one server in a cluster?",
+        np: "Cluster मा एक server मा मात्र run?",
+        jp: "クラスターで 1 台だけ実行する方法は？",
+      },
+      answer: {
+        en: "Without `->onOneServer()`, every server in your cluster runs every scheduled task independently — you'd send the daily report email three times if you have three servers.\n\n• Chain `->onOneServer()` to any scheduled task\n  ↳ All servers race to claim a shared cache lock when the scheduler fires\n  ↳ Only the winner runs the task — the others see the lock is taken and skip\n• Example: `Schedule::command('reports:generate')->daily()->onOneServer()`\n• Requires a shared Redis cache (`CACHE_STORE=redis` in `.env`) so all servers see the same lock",
+        np: "`->onOneServer()` — shared cache lock। पहिलो server मात्र run।",
+        jp: "`->onOneServer()` で共有キャッシュロックを使い 1 台だけ実行。Redis の共有キャッシュが必要。",
       },
     },
   ],
