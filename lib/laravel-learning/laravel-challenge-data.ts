@@ -110,6 +110,7 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [
       laravelDayRow(23, ["sanctum", "rest-api"]),
       laravelDayRow(24, ["livewire", "inertia"]),
+      laravelDayRow(25, ["i18n", "collections"]),
     ],
   },
   {
@@ -117,7 +118,6 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w6"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#a78bfa)]",
     days: [
-      laravelDayRow(25, ["i18n", "collections"]),
       laravelDayRow(26, ["mail", "foundation"]),
       laravelDayRow(27, ["auth", "foundation"]),
       laravelDayRow(28, ["authorization", "api"]),
