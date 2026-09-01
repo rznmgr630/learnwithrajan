@@ -3,372 +3,300 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_38_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Traditional web apps work on a request-response cycle — the browser asks, the server answers. Real-time apps <b>push updates from the server to the browser</b> without the browser asking first.\n\nThink of the difference between:\n• Checking your phone for messages every minute (polling — wasteful, slow)\n• Getting a push notification the instant someone messages you (WebSockets — instant, efficient)\n\n<b>Common use cases:</b>\n• Live notifications (\"You have a new order\")\n• Chat and messaging\n• Collaborative editing (Google Docs-style)\n• Live dashboards (sports scores, stock prices)\n• Delivery and order tracking",
-      np: "Real-time = server बाट browser मा push। WebSocket = instant notification। Chat, notification, dashboard मा use हुन्छ।",
-      jp: "リアルタイムとはサーバーからブラウザへの Push。チャット・通知・ライブダッシュボードに使う。",
+      en: "Artisan is Laravel's built-in command-line tool — think of it like a remote control for your application. Every `php artisan` command you've used so far was built-in. Today you build your own.\n\nCustom commands are perfect for:\n• Database seeders and one-off data migrations\n• Scheduled background tasks (sending digest emails, cleaning old records)\n• Dev utilities (generating fake test data, syncing API data)\n• Admin operations you don't want to expose in a UI",
+      np: "Artisan = Laravel को command-line tool। Custom commands build गर्न सिक्ने।",
+      jp: "Artisan は Laravel の CLI ツール。カスタムコマンドの作り方を学びます。",
     },
     {
-      en: "Laravel's real-time stack has four pieces:\n• <b>Events</b> — PHP classes that implement `ShouldBroadcast`; they carry the data to push\n  ↳ You already know Laravel events from Day 19; broadcasting is just events that go to the browser\n• <b>Channels</b> — named \"rooms\" the browser subscribes to (public, private, or presence)\n• <b>Broadcasting driver</b> — the WebSocket transport layer\n  ↳ <b>Reverb</b>: self-hosted, free, built by Laravel team (recommended for new projects)\n  ↳ <b>Pusher</b>: managed cloud service, generous free tier, no server management\n• <b>Laravel Echo</b> — the JavaScript library that subscribes to channels and triggers callbacks",
-      np: "4 pieces: Events (ShouldBroadcast), Channels, Driver (Reverb/Pusher), Echo (JS library)।",
-      jp: "4 要素: Events (ShouldBroadcast)、Channels、ドライバ (Reverb/Pusher)、Echo (JS)。",
+      en: "Today's topics:\n• <b>`make:command` scaffold</b> — generate a command class with one line\n• <b>Command signature</b> — define the name, arguments, options, and flags\n• <b>`handle()` method</b> — where your command logic lives\n• <b>I/O helpers</b> — `info`, `error`, `warn`, `table`, `ask`, `confirm`, `progressBar`\n• <b>Calling commands from code</b> — `Artisan::call()` and `Artisan::queue()`\n• <b>Scheduling</b> — define recurring tasks in PHP instead of raw cron",
+      np: "make:command, signature, handle(), I/O helpers, Artisan::call(), scheduling।",
+      jp: "make:command、シグネチャ、handle()、I/O、Artisan::call()、スケジュールを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "How broadcasting works — the full picture",
-        np: "Broadcasting कसरी काम गर्छ",
-        jp: "ブロードキャストの仕組み",
+        en: "Creating your first command",
+        np: "पहिलो command बनाउने",
+        jp: "最初のコマンドを作る",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The full flow, step by step:\n\n1. User submits a form → controller saves data to the database\n2. Controller fires `event(new PostCreated($post))`\n3. The `PostCreated` event implements `ShouldBroadcast`\n4. Laravel serialises the event and sends it to the WebSocket server (Reverb or Pusher)\n5. All browsers currently subscribed to the `posts` channel instantly receive the payload\n6. Echo triggers your JavaScript callback — you update the UI\n\nNo page refresh. No polling. The browser reacts in under 100ms.",
-            np: "Controller → event fire → ShouldBroadcast → WebSocket server → Echo → UI update। Page refresh नचाहिने।",
-            jp: "コントローラ → イベント → ShouldBroadcast → WebSocket サーバ → Echo → UI 更新。リロード不要。",
+            en: "Every Artisan command is a PHP class that extends `Command`. Running `php artisan make:command` generates the boilerplate. The `$signature` property defines the command name and its inputs — think of it like a function signature but for the terminal. The `$description` is shown in `php artisan list`.",
+            np: "`Command` extend गर्ने PHP class। `$signature` = command को नाम र inputs।",
+            jp: "`Command` を継承した PHP クラス。`$signature` でコマンド名と入力を定義。",
           },
         },
         {
           type: "code",
-          title: { en: "PostCreated event + controller dispatch", np: "Event class र dispatch", jp: "イベントクラスとディスパッチ" },
-          code: `// app/Events/PostCreated.php
-namespace App\\Events;
+          title: { en: "Generate and run a custom command", np: "Custom command बनाउने", jp: "カスタムコマンドを生成する" },
+          code: `# Generate the command class
+php artisan make:command SendWeeklyDigest
 
-use App\\Models\\Post;
-use Illuminate\\Broadcasting\\Channel;
-use Illuminate\\Broadcasting\\InteractsWithSockets;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-use Illuminate\\Queue\\SerializesModels;
+# app/Console/Commands/SendWeeklyDigest.php
+namespace App\\Console\\Commands;
 
-class PostCreated implements ShouldBroadcast
+use Illuminate\\Console\\Command;
+
+class SendWeeklyDigest extends Command
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    protected $signature = 'emails:digest {--dry-run : Preview without sending}';
+    protected $description = 'Send the weekly digest email to all subscribers';
 
-    public function __construct(public Post $post) {}
-
-    // Which channel to broadcast on
-    public function broadcastOn(): array
+    public function handle(): int
     {
-        return [new Channel('posts')]; // public channel
-    }
+        if ($this->option('dry-run')) {
+            $this->info('DRY RUN — no emails will be sent.');
+        } else {
+            $this->info('Sending digest...');
+            // dispatch(new SendDigestJob());
+        }
 
-    // What data to send (keep this lean — only what the frontend needs)
-    public function broadcastWith(): array
-    {
-        return [
-            'id'         => $this->post->id,
-            'title'      => $this->post->title,
-            'author'     => $this->post->user->name,
-            'created_at' => $this->post->created_at->toISOString(),
-        ];
+        return self::SUCCESS; // returns exit code 0
     }
 }
 
-// app/Http/Controllers/PostController.php — fire the event
-public function store(Request $request): JsonResponse
+# Run it
+php artisan emails:digest
+php artisan emails:digest --dry-run`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Command naming convention:</b> use `noun:verb` format (e.g. `emails:digest`, `users:cleanup`, `reports:generate`). This groups related commands together in `php artisan list`. The namespace (before the colon) is just a label — it does not map to a PHP namespace.",
+            np: "`noun:verb` format use गर्ने — e.g. `emails:digest`, `users:cleanup`।",
+            jp: "`noun:verb` 形式を使う。コロンの前は PHP 名前空間とは無関係のラベル。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Arguments, options & flags",
+        np: "Arguments, options र flags",
+        jp: "引数・オプション・フラグ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "The command signature syntax borrows from Unix conventions. Think of it like ordering at a coffee shop:\n• The <b>drink name</b> is an argument (required, positional)\n• <b>Milk type</b> is an option (has a value, starts with `--`)\n• <b>\"To go\"</b> is a flag (boolean — present means true, absent means false)\n\nArguments are required by default. Options and flags are always optional.",
+            np: "Argument = required positional। Option = `--name=value`। Flag = `--force` (boolean)।",
+            jp: "引数は位置指定で必須。オプションは `--name=value`。フラグは `--force` のような真偽値。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Rich signature with arguments, options & flags", np: "Complex signature", jp: "引数・オプション・フラグのサンプル" },
+          code: `// Signature with argument, options, and a flag
+protected $signature = 'users:export
+    {environment : The environment to export from (e.g. production)}
+    {--format=csv : Output format — csv or json}
+    {--limit=100 : Maximum number of records to export}
+    {--force : Skip the confirmation prompt}';
+
+public function handle(): int
 {
-    $post = Post::create($request->validated());
-    event(new PostCreated($post)); // broadcast to all subscribers
-    return response()->json($post, 201);
+    $env    = $this->argument('environment');    // e.g. "production"
+    $format = $this->option('format');           // "csv" or "json"
+    $limit  = (int) $this->option('limit');      // 100 by default
+    $force  = $this->option('force');            // true if --force passed
+
+    if (!in_array($format, ['csv', 'json'])) {
+        $this->error("Invalid format: {$format}. Use csv or json.");
+        return self::FAILURE;
+    }
+
+    if (!$force && !$this->confirm("Export {$limit} users from {$env}?")) {
+        $this->line('Cancelled.');
+        return self::SUCCESS;
+    }
+
+    $this->info("Exporting {$limit} users as {$format}...");
+    return self::SUCCESS;
+}
+
+// Optional argument with a default value
+// {environment=production}  ← uses "production" if not provided`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Artisan does NOT validate argument types automatically — everything arrives as a string. Validate inside `handle()` with `if (!in_array(...))` or `if (!is_numeric(...))`. This is intentional — you decide what constitutes a valid value for your specific command.",
+            np: "Artisan ले type validate गर्दैन — handle() भित्र आफैं validate गर्नुपर्छ।",
+            jp: "Artisan は型バリデーションをしない。`handle()` の中で自分でバリデーションする。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Console output — tables, progress bars & prompts",
+        np: "Console output — table, progress bar र prompt",
+        jp: "コンソール出力 — テーブル・プログレスバー・プロンプト",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Good CLI tools give clear, coloured feedback:\n• `$this->info('...')` — green (success messages)\n• `$this->error('...')` — red (errors)\n• `$this->warn('...')` — yellow (warnings)\n• `$this->line('...')` — plain white (neutral output)\n\nFor structured data use `$this->table()`. For long loops use a progress bar. For interactive scripts use `ask()` and `confirm()`.",
+            np: "info() = green, error() = red, warn() = yellow। Table, progress bar, ask/confirm।",
+            jp: "info() 緑・error() 赤・warn() 黄色。テーブル、プログレスバー、ask/confirm も使える。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Tables, progress bars & prompts", np: "Table, progress bar, prompt", jp: "テーブル・プログレスバー・プロンプト" },
+          code: `// Table output
+$users = User::select('name', 'email', 'role')->get();
+$this->table(
+    ['Name', 'Email', 'Role'],
+    $users->map(fn($u) => [$u->name, $u->email, $u->role])
+);
+
+// Progress bar (manual)
+$items = Post::all();
+$bar = $this->output->createProgressBar(count($items));
+$bar->start();
+foreach ($items as $item) {
+    // process $item...
+    $bar->advance();
+}
+$bar->finish();
+$this->newLine(); // move cursor to next line after bar
+
+// Progress bar (shorthand — handles start/advance/finish for you)
+$this->withProgressBar($items, function (Post $post) {
+    // process $post...
+});
+
+// Interactive prompts
+$name  = $this->ask('What is the user\\'s name?');
+$email = $this->ask('Email address', 'default@example.com');
+$role  = $this->choice('Select role', ['admin', 'editor', 'viewer'], 'viewer');
+
+if ($this->confirm('Are you sure you want to delete all records?')) {
+    // proceed
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "`broadcastWith()` controls exactly what data is sent to the browser. Return only what the frontend needs — never broadcast passwords, tokens, or sensitive internal fields. If you omit `broadcastWith()`, Laravel serialises all public properties of the event class automatically.",
-            np: "`broadcastWith()` = browser मा जाने data control गर्छ। Sensitive data never broadcast गर्ने।",
-            jp: "`broadcastWith()` で送信データを制御。パスワード等の機密情報は絶対に送らない。",
+            en: "Use `$this->newLine()` to add blank lines for visual breathing room. Use `$this->newLine(2)` for two blank lines. For very long output, consider piping to `less` (`php artisan cmd | less`) rather than flooding the terminal.",
+            np: "`newLine()` = blank line। Long output लाई `| less` मा pipe गर्न सकिन्छ।",
+            jp: "`newLine()` で空行を挿入。長い出力は `| less` にパイプするのがおすすめ。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Channels — public, private & presence",
-        np: "Channels — public, private र presence",
-        jp: "チャンネル — public・private・presence",
+        en: "Calling commands from code & chaining",
+        np: "Code बाट command call गर्ने",
+        jp: "コードからコマンドを呼ぶ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Channels are like TV channels — you tune in to receive a specific broadcast.\n\n• <b>Public channels</b> — open to everyone, no auth check required\n  ↳ Use for: news feeds, live sports scores, public dashboards\n• <b>Private channels</b> — require authentication; the server verifies the user can access this channel\n  ↳ Use for: order status updates, user-specific notifications\n• <b>Presence channels</b> — like a private channel but the server also tells you who else is subscribed\n  ↳ Use for: chat rooms, collaborative editing (\"Alice and Bob are viewing this document\")",
-            np: "Public = सबैका लागि। Private = auth required। Presence = members को list पनि थाहा हुन्छ।",
-            jp: "Public は誰でも受信可能。Private は認証必須。Presence は誰が参加しているかも分かる。",
+            en: "You can call Artisan commands from controllers, jobs, or other commands. This is useful for:\n• Running a command from a web UI trigger (e.g. an admin \"Run now\" button)\n• Chaining commands in a workflow (clear cache → rebuild index)\n• Testing commands programmatically\n\nUse `Artisan::call()` for synchronous execution, or `Artisan::queue()` to dispatch to the queue.",
+            np: "Artisan::call() = synchronous। Artisan::queue() = queue मा dispatch।",
+            jp: "Artisan::call() で同期実行。Artisan::queue() でキューに投入。",
           },
         },
         {
           type: "code",
-          title: { en: "Channel authorisation in routes/channels.php", np: "Channel auth define गर्ने", jp: "チャンネルの認可設定" },
-          code: `// routes/channels.php
+          title: { en: "Artisan::call(), output capture & chaining", np: "Command call गर्ने", jp: "コマンドを呼び出す" },
+          code: `use Illuminate\\Support\\Facades\\Artisan;
 
-use App\\Models\\Order;
-use Illuminate\\Support\\Facades\\Broadcast;
+// Call from a controller
+Artisan::call('emails:digest', ['--dry-run' => true]);
 
-// PUBLIC channel — no auth needed, anyone can subscribe
-Broadcast::channel('posts', function () {
-    return true; // always allow
-});
+// Capture the command's output
+Artisan::call('reports:generate', ['--format' => 'csv']);
+$output = Artisan::output(); // returns the printed text as a string
 
-// PRIVATE channel — user must own the order
-Broadcast::channel('orders.{orderId}', function ($user, $orderId) {
-    $order = Order::find($orderId);
-    return $order && $user->id === $order->user_id;
-    // return false or null = denied (Echo gets a 403)
-});
-
-// PRESENCE channel — must return an array of member data (not just true/false)
-Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
-    if ($user->canJoinRoom($roomId)) {
-        return [
-            'id'     => $user->id,
-            'name'   => $user->name,
-            'avatar' => $user->avatar_url,
-        ];
-    }
-    return false; // deny access
-});`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Channel type comparison",
-            np: "Channel types को तुलना",
-            jp: "チャンネルタイプの比較",
-          },
-          headers: [
-            { en: "Type", np: "प्रकार", jp: "タイプ" },
-            { en: "Class", np: "Class", jp: "クラス" },
-            { en: "Auth required?", np: "Auth चाहिन्छ?", jp: "認証必須?" },
-            { en: "Best for", np: "उपयुक्त", jp: "用途" },
-          ],
-          rows: [
-            [
-              { en: "Public", np: "Public", jp: "Public" },
-              { en: "`Channel`", np: "`Channel`", jp: "`Channel`" },
-              { en: "No", np: "छैन", jp: "不要" },
-              { en: "News feeds, live scores, public dashboards", np: "News, scores, dashboard", jp: "ニュース・スコア・ダッシュボード" },
-            ],
-            [
-              { en: "Private", np: "Private", jp: "Private" },
-              { en: "`PrivateChannel`", np: "`PrivateChannel`", jp: "`PrivateChannel`" },
-              { en: "Yes — user must be authorised", np: "छ — user authorize हुनुपर्छ", jp: "必須 — ユーザー認可が必要" },
-              { en: "Order status, user notifications", np: "Order status, notifications", jp: "注文状況・ユーザー通知" },
-            ],
-            [
-              { en: "Presence", np: "Presence", jp: "Presence" },
-              { en: "`PresenceChannel`", np: "`PresenceChannel`", jp: "`PresenceChannel`" },
-              { en: "Yes — must return member data", np: "छ — member data return गर्नुपर्छ", jp: "必須 — メンバーデータを返す" },
-              { en: "Chat rooms, collaborative editing", np: "Chat, collaborative editing", jp: "チャット・共同編集" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Setting up Laravel Reverb (self-hosted WebSocket server)",
-        np: "Laravel Reverb setup गर्ने",
-        jp: "Laravel Reverb のセットアップ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Reverb</b> is Laravel's own WebSocket server — introduced in Laravel 11, free, and runs on your own server alongside PHP-FPM and Nginx. It's the recommended default for new projects.\n\n<b>Pusher</b> is the cloud alternative:\n• <b>Pros:</b> zero server management, instant setup, generous free tier (200 concurrent connections, 800k messages/day)\n• <b>Cons:</b> costs money beyond the free tier, third-party dependency\n\nFor most new projects: start with Pusher free tier, migrate to Reverb if you hit limits or need more control.",
-            np: "Reverb = self-hosted, free। Pusher = managed cloud। Start मा Pusher free tier, later Reverb।",
-            jp: "Reverb は自己ホスト型で無料。Pusher はクラウドで簡単。まず Pusher 無料プランで始めてもよい。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Installing and running Reverb", np: "Reverb install र run गर्ने", jp: "Reverb のインストールと起動" },
-          code: `# Install Reverb and scaffold the broadcasting config
-php artisan install:broadcasting
-# (chooses Reverb by default in Laravel 11, installs the package and publishes config)
-
-# .env settings for Reverb
-BROADCAST_CONNECTION=reverb
-
-REVERB_APP_ID=my-app
-REVERB_APP_KEY=my-app-key
-REVERB_APP_SECRET=my-app-secret
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http  # use https in production
-
-# Start Reverb in development
-php artisan reverb:start
-# Reverb runs on ws://localhost:8080
-
-# In production — run Reverb via Supervisor so it restarts on crash
-# /etc/supervisor/conf.d/reverb.conf
-# [program:reverb]
-# command=php /var/www/myapp/artisan reverb:start --host=0.0.0.0 --port=8080
-# autostart=true
-# autorestart=true
-# redirect_stderr=true
-# stdout_logfile=/var/log/reverb.log`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "In production, run Reverb behind <b>Nginx as a reverse proxy</b> so WebSocket connections get HTTPS (WSS). Add an Nginx `location /app/` block that proxies to `http://localhost:8080`. The Laravel Reverb docs include the exact Nginx config.\n\n↳ Reverb also supports <b>horizontal scaling</b> via Redis — multiple Reverb nodes share state through Redis pub/sub, so you can run Reverb on multiple servers behind a load balancer",
-            np: "Production मा Nginx reverse proxy पछाडि run गर्ने। Redis ले horizontal scaling support गर्छ।",
-            jp: "本番は Nginx リバースプロキシの後ろで動かす。Redis で水平スケーリングも可能。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Laravel Echo — the frontend WebSocket listener",
-        np: "Laravel Echo — frontend listener",
-        jp: "Laravel Echo — フロントエンドの WebSocket リスナー",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Echo is the JavaScript companion to Laravel broadcasting. It wraps the raw WebSocket API into a clean, readable interface. Install it once, configure it once, then use it anywhere in your JavaScript (vanilla, React, Vue, etc.).",
-            np: "Echo = Laravel broadcasting को JS companion। Install र configure एकपटक, जहाँ पनि use गर्न सकिन्छ।",
-            jp: "Echo は Laravel ブロードキャストの JS ライブラリ。一度設定すれば React・Vue どこでも使える。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Installing Echo + Reverb configuration", np: "Echo install र configure", jp: "Echo のインストールと設定" },
-          code: `# Install Echo and the Pusher JS driver (used by both Pusher and Reverb)
-npm install --save-dev laravel-echo pusher-js
-
-// resources/js/bootstrap.js — configure Echo for Reverb
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
-
-// --- Three channel patterns ---
-
-// 1. PUBLIC channel
-Echo.channel('posts')
-    .listen('PostCreated', (e) => {
-        console.log('New post:', e.title);
-        addPostToFeed(e); // update your UI
-    });
-
-// 2. PRIVATE channel (user must be authenticated)
-Echo.private('orders.' + orderId)
-    .listen('OrderShipped', (e) => {
-        showNotification('Your order has shipped!');
-    });
-
-// 3. PRESENCE channel (also tracks who's online)
-Echo.join('chat.' + roomId)
-    .here((members) => { setOnlineUsers(members); })     // initial member list
-    .joining((member) => { addUser(member); })            // someone joined
-    .leaving((member) => { removeUser(member); })         // someone left
-    .listen('MessageSent', (e) => { addMessage(e); });`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Echo re-connects automatically with exponential backoff if the WebSocket drops. In React/Vue, call `Echo.leaveChannel('posts')` or `Echo.disconnect()` in your component's cleanup function to avoid memory leaks.\n\n↳ Echo works with both Reverb and Pusher — just change `broadcaster: 'reverb'` to `broadcaster: 'pusher'` and update the key/cluster env vars",
-            np: "Echo auto-reconnect गर्छ। Component cleanup मा `leaveChannel()` call गर्नुपर्छ।",
-            jp: "Echo は自動再接続する。コンポーネントのクリーンアップで `leaveChannel()` を必ず呼ぶ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Practical example — live notification badge",
-        np: "Practical example — live notification",
-        jp: "実践例 — リアルタイム通知バッジ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A complete end-to-end walkthrough: when any user creates a post, all other users see their notification badge increment in real-time — without refreshing the page. This covers the entire stack.",
-            np: "User ले post create गर्दा अरू users को notification badge instant update हुन्छ।",
-            jp: "投稿作成時に他ユーザーの通知バッジがリアルタイムで増える実装例。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "ShouldBroadcast event → Echo listener", np: "Event र Echo listener", jp: "ShouldBroadcast イベントと Echo リスナー" },
-          code: `// app/Events/NewPostPublished.php
-use Illuminate\\Broadcasting\\PrivateChannel;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-
-class NewPostPublished implements ShouldBroadcast
+// Call from inside another command
+public function handle(): int
 {
-    public function __construct(
-        public Post $post,
-        public int $targetUserId  // the user to notify
-    ) {}
-
-    public function broadcastOn(): array
-    {
-        // Every user has their own private channel: App.Models.User.{id}
-        return [new PrivateChannel('App.Models.User.' . $this->targetUserId)];
-    }
-
-    public function broadcastWith(): array
-    {
-        return [
-            'type'    => 'NewPostPublished',
-            'message' => "{$this->post->user->name} published a new post",
-            'postId'  => $this->post->id,
-        ];
-    }
+    $this->call('cache:clear');           // runs synchronously, inherits I/O
+    $this->callSilently('config:cache');  // runs silently (no output)
+    return self::SUCCESS;
 }
 
-// Controller — notify all followers when a post is published
-public function store(Request $request): JsonResponse
-{
-    $post = Post::create([...$request->validated(), 'user_id' => auth()->id()]);
-
-    // Notify each follower (in a real app, dispatch a job for large follower lists)
-    auth()->user()->followers->each(function ($follower) use ($post) {
-        event(new NewPostPublished($post, $follower->id));
-    });
-
-    return response()->json($post, 201);
-}
-
-// Frontend — React component
-useEffect(() => {
-    const channel = Echo.private('App.Models.User.' + userId);
-
-    channel.notification((notification) => {
-        if (notification.type === 'NewPostPublished') {
-            setUnreadCount(c => c + 1);  // bump the badge
-            toast(notification.message);
-        }
-    });
-
-    return () => Echo.leaveChannel('App.Models.User.' + userId); // cleanup
-}, [userId]);`,
+// Dispatch to the queue (non-blocking)
+Artisan::queue('reports:generate', ['--format' => 'csv'])
+    ->onQueue('reports')
+    ->onConnection('redis');`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>`ShouldBroadcast` vs `ShouldBroadcastNow`:</b>\n\n• `ShouldBroadcast` (recommended) — event is pushed to the queue; the HTTP response returns immediately; the broadcast happens in the background\n• `ShouldBroadcastNow` — event broadcasts synchronously inline, before the HTTP response returns\n  ↳ Useful in development for testing without running a queue worker\n  ↳ Avoid in production — it slows down every HTTP request that fires the event",
-            np: "ShouldBroadcast = queued (production मा use गर्ने)। ShouldBroadcastNow = synchronous (dev मा only)।",
-            jp: "ShouldBroadcast はキュー経由で非同期。ShouldBroadcastNow は同期で遅くなる。本番は前者を使う。",
+            en: "<b>Testing commands in Pest:</b> use the `artisan()` helper to make assertions on the command's output, exit code, and interactions.\n\n↳ `$this->artisan('emails:digest')->assertExitCode(0)->expectsOutput('Sending digest...')`\n↳ `$this->artisan('users:export', ['environment' => 'staging'])->expectsQuestion(...)->assertExitCode(0)`\n\nDependencies injected via the service container can be mocked with `$this->mock(MyService::class, ...)` before calling `artisan()`.",
+            np: "Test मा artisan() helper use गर्ने। assertExitCode(0), expectsOutput() use गर्ने।",
+            jp: "テストでは artisan() ヘルパーを使い assertExitCode() や expectsOutput() で検証する。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Scheduling commands with the console kernel",
+        np: "Commands schedule गर्ने",
+        jp: "コマンドをスケジュールする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Instead of setting up a separate cron job for every task, Laravel uses a single cron entry that fires every minute. You define all your recurring tasks in PHP code — Laravel figures out which ones to run right now. Think of it like a weekly planner: you write all your tasks in one place and your assistant ticks off what's due.",
+            np: "एउटा cron entry मात्र। बाँकी schedule PHP code मा define गर्ने।",
+            jp: "cron エントリは 1 つだけ。スケジュールは PHP コードで定義する。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Server cron entry + routes/console.php schedule", np: "Cron entry र schedule", jp: "cron エントリとスケジュール定義" },
+          code: `# Add ONE cron entry to the server (runs every minute)
+* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1
+
+# routes/console.php (Laravel 11 style — no Kernel class needed)
+use Illuminate\\Support\\Facades\\Schedule;
+
+// Send weekly digest every Monday at 8:00 AM
+Schedule::command('emails:digest')
+    ->weeklyOn(1, '8:00')
+    ->withoutOverlapping()  // skip if previous run is still going
+    ->runInBackground();    // don't block other scheduled jobs
+
+// Clean up expired sessions every day at midnight
+Schedule::command('sessions:cleanup')
+    ->daily()
+    ->at('00:00')
+    ->timezone('Asia/Tokyo');
+
+// Cache reports every hour
+Schedule::command('reports:cache')
+    ->hourly()
+    ->withoutOverlapping();
+
+// Other frequency helpers
+// ->everyFiveMinutes()
+// ->everyThirtyMinutes()
+// ->monthly()
+// ->monthlyOn(15, '09:00')  // 15th of each month at 9am
+
+# Test scheduling locally (runs due tasks and waits)
+php artisan schedule:work`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`withoutOverlapping()` prevents a second run from starting if the previous one is still running — crucial for slow tasks like report generation. Combine it with `runInBackground()` so slow tasks don't block shorter jobs that are scheduled at the same time.\n\n↳ Without `runInBackground()`, scheduled tasks execute sequentially — if task A takes 5 minutes, task B misses its window\n↳ With `runInBackground()`, both spawn as separate OS processes and run in parallel",
+            np: "withoutOverlapping() = duplicate run रोक्छ। runInBackground() = parallel run।",
+            jp: "withoutOverlapping() で二重実行を防ぎ、runInBackground() で並列実行する。",
           },
         },
       ],
@@ -377,62 +305,62 @@ useEffect(() => {
   faq: [
     {
       question: {
-        en: "When should I use Reverb vs Pusher?",
-        np: "Reverb vs Pusher — कहिले कुन use गर्ने?",
-        jp: "Reverb と Pusher はどちらを選ぶ？",
+        en: "Where should I register my custom commands in Laravel 11?",
+        np: "Laravel 11 मा custom commands कहाँ register गर्ने?",
+        jp: "Laravel 11 でカスタムコマンドはどこに登録する？",
       },
       answer: {
-        en: "Use <b>Pusher free tier</b> to start: zero config, no server to manage, 200 concurrent connections and 800k messages/day is enough for most small-to-medium apps.\n\nSwitch to <b>Reverb</b> when:\n• You hit Pusher's limits or pricing becomes significant\n• Your data is privacy-sensitive (healthcare, finance) and you need on-premise hosting\n• You want full control over horizontal scaling\n\nReverb is drop-in compatible — switching is a `.env` change and an `npm install`.",
-        np: "Start मा Pusher free tier। Privacy-sensitive वा large-scale भएमा Reverb।",
-        jp: "最初は Pusher 無料プランで。規模が大きくなったり、データをオンプレに置きたい時は Reverb へ。",
+        en: "In Laravel 11, commands in `app/Console/Commands/` are auto-discovered — no registration needed. If you place commands elsewhere, add the directory path via `withConsoleCommands()` in `bootstrap/app.php`:\n\n`->withConsoleCommands(base_path('app/Admin/Commands'))`\n\nThe old `app/Console/Kernel.php` with a `$commands` array was removed in Laravel 11.",
+        np: "`app/Console/Commands/` मा auto-discover हुन्छ। अन्यत्र राखे bootstrap/app.php मा register गर्नुपर्छ।",
+        jp: "`app/Console/Commands/` は自動検出される。別の場所は `bootstrap/app.php` で登録する。",
       },
     },
     {
       question: {
-        en: "What is the difference between Broadcasting and Notifications?",
-        np: "Broadcasting र Notifications को फरक के हो?",
-        jp: "ブロードキャストと通知の違いは？",
+        en: "How do I pass an array of values as an option?",
+        np: "Option मा array values कसरी pass गर्ने?",
+        jp: "オプションに配列を渡すには？",
       },
       answer: {
-        en: "Laravel <b>Notifications</b> (Day 16) send messages via channels like email, SMS, and Slack — they are fire-and-forget messages to external services.\n\nLaravel <b>Broadcasting</b> pushes real-time data directly to browsers via WebSockets — it's for updating UI instantly.\n\nThey overlap via the `broadcast` notification channel: a Notification can implement `toBroadcast()` to push a notification payload over a WebSocket AND send an email at the same time.",
-        np: "Notification = email/SMS/Slack। Broadcasting = browser मा real-time push। toBroadcast() ले combine गर्न सकिन्छ।",
-        jp: "Notification はメール・SMS・Slack 送信。Broadcasting はブラウザへのリアルタイム Push。",
+        en: "Define the option as variadic using `*`:\n\n`{--user=* : User IDs to process}`\n\nAccess with `$this->option('user')` — it returns an array. Call it like:\n\n`php artisan users:notify --user=1 --user=2 --user=5`\n\nIf no `--user` is passed, `$this->option('user')` returns an empty array `[]`.",
+        np: "`{--user=*}` syntax use गर्ने। `$this->option('user')` ले array return गर्छ।",
+        jp: "`{--user=*}` で可変引数オプションを定義。`$this->option('user')` が配列を返す。",
       },
     },
     {
       question: {
-        en: "Does every event need to implement ShouldBroadcast?",
-        np: "हरेक event ले ShouldBroadcast implement गर्नु पर्छ?",
-        jp: "すべてのイベントに ShouldBroadcast が必要？",
+        en: "Can I use Auth inside a console command?",
+        np: "Console command भित्र Auth use गर्न सकिन्छ?",
+        jp: "コンソールコマンドの中で Auth を使える？",
       },
       answer: {
-        en: "No — only events that the browser needs to know about immediately require `ShouldBroadcast`. Regular Laravel events (used with Listeners, Day 19) run server-side only.\n\nAdd `ShouldBroadcast` only when:\n• A browser needs to react within seconds of the event occurring\n• The data payload is appropriate for public/private transmission\n\nOver-broadcasting creates unnecessary WebSocket traffic. Not every model update needs to reach the browser.",
-        np: "No। Browser ले instant थाहा पाउनु पर्ने events मात्र ShouldBroadcast implement गर्ने।",
-        jp: "いいえ。ブラウザがすぐ知る必要があるイベントだけに ShouldBroadcast を実装する。",
+        en: "Don't use `Auth::login()` in console commands — the session that login creates only lasts the duration of the HTTP request lifecycle. Instead, pass a user ID as an argument and load the user manually:\n\n`$user = User::findOrFail($this->argument('userId'));`\n\nThen pass `$user` directly to any service that needs it. In tests, use `$this->actingAs($user)` before `artisan()`.",
+        np: "Console मा `Auth::login()` नगर्ने। User ID argument मा pass गरेर manually load गर्ने।",
+        jp: "コンソールで `Auth::login()` は使わない。引数でユーザー ID を受け取り手動で取得する。",
       },
     },
     {
       question: {
-        en: "How do I broadcast from inside a queued job?",
-        np: "Queued job बाट broadcast कसरी गर्ने?",
-        jp: "キュージョブの中からブロードキャストするには？",
+        en: "Can I run scheduled tasks in parallel?",
+        np: "Scheduled tasks parallel मा run गर्न सकिन्छ?",
+        jp: "スケジュールタスクを並列実行できる？",
       },
       answer: {
-        en: "If your event implements `ShouldBroadcast`, Laravel automatically dispatches it to the queue (the `default` queue by default). The queue worker processes it and sends the WebSocket message.\n\nTo use a specific queue for broadcasting: implement `ShouldBroadcastNow` won't queue it; instead override `broadcastQueue()` on your event:\n\n`public function broadcastQueue(): string { return 'broadcasts'; }`\n\nEnsure `QUEUE_CONNECTION` is not `sync` in production — otherwise broadcasts happen inline and defeat the purpose.",
-        np: "ShouldBroadcast ले automatically queue मा dispatch गर्छ। broadcastQueue() override गरेर queue छान्न सकिन्छ।",
-        jp: "ShouldBroadcast は自動でキューに投入。`broadcastQueue()` でキュー名を指定できる。",
+        en: "Yes — use `->runInBackground()` on each command. This spawns each task as a separate OS process so they run simultaneously instead of one after another.\n\nWithout `runInBackground()`: tasks run sequentially. A slow task at 2:00 AM delays every other task scheduled for the same minute.\n\nWith `runInBackground()`: each task spawns independently. The scheduler finishes in milliseconds and all tasks run in parallel.",
+        np: "`runInBackground()` use गर्ने। Parallel मा spawn हुन्छ।",
+        jp: "`runInBackground()` で並列実行。付けないと直列で動き、遅いタスクが後続を遅らせる。",
       },
     },
     {
       question: {
-        en: "How do I handle events missed while the client was disconnected?",
-        np: "Client disconnect हुँदा miss भएका events कसरी handle गर्ने?",
-        jp: "切断中に見逃したイベントはどう処理する？",
+        en: "How do I test that a scheduled command fires at the right time?",
+        np: "Scheduled command सही time मा fire हुन्छ भनेर कसरी test गर्ने?",
+        jp: "スケジュールが正しい時刻に実行されるかテストするには？",
       },
       answer: {
-        en: "Echo auto-reconnects after disconnection, but it cannot replay events that were sent while it was offline.\n\nThe standard pattern:\n1. On reconnect, make a normal REST API call to fetch the latest state (`GET /api/posts?after=lastSeenId`)\n2. Re-sync the UI from the API response\n3. Resume listening via Echo\n\nFor critical state (unread counts, order status), never rely solely on WebSocket events — always have a REST fallback that the client can call to reconcile state.",
-        np: "Reconnect मा REST API call गरेर latest state fetch गर्ने। WebSocket मात्रमा depend नगर्ने।",
-        jp: "再接続時は REST API で最新状態を取得して同期。WebSocket だけに頼らない設計が重要。",
+        en: "Use Laravel's time-travel helpers to simulate a specific date/time, then inspect the schedule:\n\n`$this->travelTo(Carbon::parse('2025-01-06 08:00')); // a Monday at 8am`\n`$event = collect(app(Schedule::class)->events())->first(fn($e) => str_contains($e->command, 'emails:digest'));`\n`$this->assertTrue($event->isDue(app()));`\n\nAlso useful: `$event->getSummaryForDisplay()` returns the cron expression as a human-readable string.",
+        np: "`travelTo()` + `Schedule::events()` use गरेर test गर्ने।",
+        jp: "`travelTo()` で時刻を固定し `Schedule::events()` でスケジュールを検証する。",
       },
     },
   ],
