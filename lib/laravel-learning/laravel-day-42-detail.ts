@@ -3,392 +3,372 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_42_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Modern Laravel apps almost always have a frontend story. You have three main paths: <b>Blade + Livewire</b> (server-rendered, reactive without writing JavaScript), <b>Inertia.js</b> (SPA feel with Vue or React, using Laravel routing and controllers), or a fully decoupled <b>API + frontend</b> (Sanctum + Next.js/Nuxt — covered in Day 21). Today covers Livewire and Inertia — the two \"integrated\" approaches that keep your team in one codebase.",
-      np: "Laravel frontend: Livewire (PHP-centric, reactive), Inertia.js (Vue/React + Laravel routing), वा Sanctum API। आज Livewire र Inertia cover गर्छौं।",
-      jp: "Laravel のフロントエンド: Livewire（PHP 中心）、Inertia.js（Vue/React + Laravel ルーティング）、Sanctum API の 3 択。今日は Livewire と Inertia を学ぶ。",
+      en: "Traditional web apps work on a request-response cycle — the browser asks, the server answers. Real-time apps <b>push updates from the server to the browser</b> without the browser asking first.\n\nThink of the difference between:\n• Checking your phone for messages every minute (polling — wasteful, slow)\n• Getting a push notification the instant someone messages you (WebSockets — instant, efficient)\n\n<b>Common use cases:</b>\n• Live notifications (\"You have a new order\")\n• Chat and messaging\n• Collaborative editing (Google Docs-style)\n• Live dashboards (sports scores, stock prices)\n• Delivery and order tracking",
+      np: "Real-time = server बाट browser मा push। WebSocket = instant notification। Chat, notification, dashboard मा use हुन्छ।",
+      jp: "リアルタイムとはサーバーからブラウザへの Push。チャット・通知・ライブダッシュボードに使う。",
     },
     {
-      en: "What each option is best for:\n\n<b>Livewire</b> — best when your team prefers PHP and minimal JavaScript\n↳ Think of it as interactive Blade — components re-render server-side on user interaction\n• No JavaScript framework to learn\n• Two-way data binding with `wire:model`\n• Full access to Laravel validation, auth, and Eloquent\n\n<b>Inertia.js</b> — best when your team knows Vue or React and wants a proper SPA\n↳ Think of it as using Laravel as a JSON API but with server-side routing (no `/api` prefix, no token management)\n• Controllers return Inertia responses instead of JSON\n• Vue/React page components receive props directly from controllers\n\n<b>Vite</b> — the asset bundler used by both; replaces Laravel Mix\n↳ Hot Module Replacement, near-instant builds, works with React, Vue, TypeScript",
-      np: "Livewire: PHP-first, reactive Blade। Inertia: Vue/React + Laravel routing। Vite: asset bundler (Laravel Mix को replacement)।",
-      jp: "Livewire: PHP 重視・Blade 拡張。Inertia: Vue/React + Laravel ルーティング。Vite: アセットバンドラー（Mix の後継）。",
+      en: "Laravel's real-time stack has four pieces:\n• <b>Events</b> — PHP classes that implement `ShouldBroadcast`; they carry the data to push\n  ↳ You already know Laravel events from Day 19; broadcasting is just events that go to the browser\n• <b>Channels</b> — named \"rooms\" the browser subscribes to (public, private, or presence)\n• <b>Broadcasting driver</b> — the WebSocket transport layer\n  ↳ <b>Reverb</b>: self-hosted, free, built by Laravel team (recommended for new projects)\n  ↳ <b>Pusher</b>: managed cloud service, generous free tier, no server management\n• <b>Laravel Echo</b> — the JavaScript library that subscribes to channels and triggers callbacks",
+      np: "4 pieces: Events (ShouldBroadcast), Channels, Driver (Reverb/Pusher), Echo (JS library)।",
+      jp: "4 要素: Events (ShouldBroadcast)、Channels、ドライバ (Reverb/Pusher)、Echo (JS)。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Vite — asset bundling in Laravel",
-        np: "Vite — asset bundling",
-        jp: "Vite — アセットバンドル",
+        en: "How broadcasting works — the full picture",
+        np: "Broadcasting कसरी काम गर्छ",
+        jp: "ブロードキャストの仕組み",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Before diving into Livewire or Inertia, you need to understand the asset pipeline. <b>Vite</b> is a build tool — it takes your JS, CSS, and TypeScript files and bundles them for the browser. It replaced Laravel Mix in Laravel 10+.\n\nThe key win over Mix:\n• Dev server starts instantly (no webpack cold start)\n• Hot-reloads changes in milliseconds instead of seconds\n• Native TypeScript and JSX support with zero config\n• Smaller production bundles via tree-shaking",
-            np: "Vite = JS/CSS build tool। Laravel 10+ मा Laravel Mix को replacement। Hot reload instant छ।",
-            jp: "Vite は JS/CSS ビルドツール。Laravel 10 以降 Mix の後継。ホットリロードが高速。",
+            en: "The full flow, step by step:\n\n1. User submits a form → controller saves data to the database\n2. Controller fires `event(new PostCreated($post))`\n3. The `PostCreated` event implements `ShouldBroadcast`\n4. Laravel serialises the event and sends it to the WebSocket server (Reverb or Pusher)\n5. All browsers currently subscribed to the `posts` channel instantly receive the payload\n6. Echo triggers your JavaScript callback — you update the UI\n\nNo page refresh. No polling. The browser reacts in under 100ms.",
+            np: "Controller → event fire → ShouldBroadcast → WebSocket server → Echo → UI update। Page refresh नचाहिने।",
+            jp: "コントローラ → イベント → ShouldBroadcast → WebSocket サーバ → Echo → UI 更新。リロード不要。",
           },
         },
         {
           type: "code",
-          title: { en: "vite.config.js + Blade integration", np: "vite.config.js", jp: "vite.config.js" },
-          code: `// vite.config.js (default Laravel setup)
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+          title: { en: "PostCreated event + controller dispatch", np: "Event class र dispatch", jp: "イベントクラスとディスパッチ" },
+          code: `// app/Events/PostCreated.php
+namespace App\\Events;
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true, // auto-refresh Blade on change
-        }),
-    ],
-});
-
-// Adding React support
-// npm install @vitejs/plugin-react
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-    plugins: [
-        laravel({ input: ['resources/js/app.jsx'], refresh: true }),
-        react(),
-    ],
-});
-
-// In Blade layouts — include compiled assets
-// resources/views/layouts/app.blade.php
-@vite(['resources/css/app.css', 'resources/js/app.js'])
-
-// Dev: npm run dev   (starts Vite dev server with HMR)
-// Prod: npm run build  (outputs to public/build/ with hashed filenames)`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Vite in production (`npm run build`) outputs versioned files to `public/build/manifest.json`. The `@vite()` directive reads this manifest to inject the correct hashed filenames. Never commit the `public/build/` folder to git — always run `npm run build` in your CI/CD pipeline.",
-            np: "Production मा `npm run build` चलाउनुस्। `public/build/` git मा commit नगर्नुस् — CI/CD मा build गर्नुस्।",
-            jp: "本番は `npm run build`。`public/build/` は git に含めず、CI/CD でビルドする。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Livewire — reactive PHP components",
-        np: "Livewire — reactive PHP components",
-        jp: "Livewire — リアクティブ PHP コンポーネント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Livewire works by rendering a component as HTML on the server, sending it to the browser, and then — when the user interacts (types, clicks, submits) — sending a small Ajax request back to re-render just that component. No page refresh, no JavaScript state management, no REST API needed.\n\nAnalogy: it's like a turbo-charged Blade component that can react to user input.",
-            np: "Livewire = server-side HTML render गर्छ। User interact गर्दा Ajax request पठाउँछ, component फेरि render हुन्छ। JavaScript framework चाहिँदैन।",
-            jp: "Livewire はサーバー側で HTML をレンダリングし、ユーザー操作時に Ajax で再レンダリング。JS フレームワーク不要。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "SearchPosts Livewire component", np: "Livewire component example", jp: "Livewire コンポーネント例" },
-          code: `// php artisan make:livewire SearchPosts
-// Creates: app/Livewire/SearchPosts.php + resources/views/livewire/search-posts.blade.php
-
-// app/Livewire/SearchPosts.php
-namespace App\\Livewire;
-
-use Livewire\\Component;
 use App\\Models\\Post;
+use Illuminate\\Broadcasting\\Channel;
+use Illuminate\\Broadcasting\\InteractsWithSockets;
+use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+use Illuminate\\Queue\\SerializesModels;
 
-class SearchPosts extends Component
+class PostCreated implements ShouldBroadcast
 {
-    public string $search = '';
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    // Runs automatically whenever $search changes
-    public function updatedSearch(): void
+    public function __construct(public Post $post) {}
+
+    // Which channel to broadcast on
+    public function broadcastOn(): array
     {
-        $this->resetPage(); // reset pagination on new search
+        return [new Channel('posts')]; // public channel
     }
 
-    public function render()
+    // What data to send (keep this lean — only what the frontend needs)
+    public function broadcastWith(): array
     {
-        return view('livewire.search-posts', [
-            'posts' => Post::where('title', 'like', "%{$this->search}%")
-                ->latest()
-                ->limit(20)
-                ->get(),
-        ]);
+        return [
+            'id'         => $this->post->id,
+            'title'      => $this->post->title,
+            'author'     => $this->post->user->name,
+            'created_at' => $this->post->created_at->toISOString(),
+        ];
     }
 }
 
-// resources/views/livewire/search-posts.blade.php
-<div>
-    <input wire:model.live.debounce.300ms="search"
-           type="text"
-           placeholder="Search posts..."
-           class="w-full border rounded px-3 py-2" />
-
-    <ul class="mt-4 space-y-2">
-        @foreach ($posts as $post)
-            <li>{{ $post->title }}</li>
-        @endforeach
-    </ul>
-</div>
-
-{{-- Include in any Blade view --}}
-<livewire:search-posts />`,
+// app/Http/Controllers/PostController.php — fire the event
+public function store(Request $request): JsonResponse
+{
+    $post = Post::create($request->validated());
+    event(new PostCreated($post)); // broadcast to all subscribers
+    return response()->json($post, 201);
+}`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Key Livewire directives:\n• `wire:model` — two-way data binding (input ↔ PHP property)\n  ↳ `wire:model.live` updates on every keystroke; `wire:model.blur` updates on focus-out\n  ↳ `wire:model.live.debounce.300ms` waits 300ms after the user stops typing\n• `wire:click` — call a PHP method on click: `wire:click=\"deletePost({{ $post->id }})\"`\n• `wire:submit` — handle form submission server-side\n• `wire:loading` — show/hide an element while a network request is in flight\n  ↳ `wire:loading.class=\"opacity-50\"` dims the component while loading",
-            np: "`wire:model`, `wire:click`, `wire:submit`, `wire:loading` — Livewire का मुख्य directives।",
-            jp: "`wire:model`（双方向バインド）、`wire:click`（メソッド呼び出し）、`wire:submit`、`wire:loading` が主なディレクティブ。",
+            en: "`broadcastWith()` controls exactly what data is sent to the browser. Return only what the frontend needs — never broadcast passwords, tokens, or sensitive internal fields. If you omit `broadcastWith()`, Laravel serialises all public properties of the event class automatically.",
+            np: "`broadcastWith()` = browser मा जाने data control गर्छ। Sensitive data never broadcast गर्ने।",
+            jp: "`broadcastWith()` で送信データを制御。パスワード等の機密情報は絶対に送らない。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Livewire — forms, validation & lifecycle hooks",
-        np: "Livewire forms, validation र lifecycle",
-        jp: "Livewire のフォーム・バリデーション・ライフサイクル",
+        en: "Channels — public, private & presence",
+        np: "Channels — public, private र presence",
+        jp: "チャンネル — public・private・presence",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Livewire form handling feels like writing a normal PHP form but without the redirect cycle. Define properties, validate with the same rules as Form Requests, and show errors with `@error`. For complex forms, use the `Form` object class (Livewire 3) to encapsulate form state and validation in one place.",
-            np: "Livewire forms = PHP properties + validate() + @error। Redirect cycle नभई direct update हुन्छ।",
-            jp: "Livewire のフォームは PHP プロパティ + `validate()` + `@error`。リダイレットなしで即更新。",
+            en: "Channels are like TV channels — you tune in to receive a specific broadcast.\n\n• <b>Public channels</b> — open to everyone, no auth check required\n  ↳ Use for: news feeds, live sports scores, public dashboards\n• <b>Private channels</b> — require authentication; the server verifies the user can access this channel\n  ↳ Use for: order status updates, user-specific notifications\n• <b>Presence channels</b> — like a private channel but the server also tells you who else is subscribed\n  ↳ Use for: chat rooms, collaborative editing (\"Alice and Bob are viewing this document\")",
+            np: "Public = सबैका लागि। Private = auth required। Presence = members को list पनि थाहा हुन्छ।",
+            jp: "Public は誰でも受信可能。Private は認証必須。Presence は誰が参加しているかも分かる。",
           },
         },
         {
           type: "code",
-          title: { en: "CreatePost Livewire form", np: "CreatePost form", jp: "CreatePost フォーム" },
-          code: `// app/Livewire/CreatePost.php
-namespace App\\Livewire;
+          title: { en: "Channel authorisation in routes/channels.php", np: "Channel auth define गर्ने", jp: "チャンネルの認可設定" },
+          code: `// routes/channels.php
 
-use Livewire\\Component;
-use App\\Models\\Post;
+use App\\Models\\Order;
+use Illuminate\\Support\\Facades\\Broadcast;
 
-class CreatePost extends Component
-{
-    public string $title = '';
-    public string $body  = '';
-
-    // Livewire 3: attribute-based validation
-    #[\\Livewire\\Attributes\\Validate('required|min:3|max:255')]
-    public string $titleField = '';
-
-    protected $rules = [
-        'title' => 'required|min:3|max:255',
-        'body'  => 'required|min:10',
-    ];
-
-    public function save(): void
-    {
-        $validated = $this->validate();
-
-        Post::create([
-            ...$validated,
-            'user_id' => auth()->id(),
-        ]);
-
-        $this->reset(['title', 'body']); // clear form
-        session()->flash('message', 'Post created successfully.');
-    }
-
-    public function render()
-    {
-        return view('livewire.create-post');
-    }
-}
-
-{{-- resources/views/livewire/create-post.blade.php --}}
-<form wire:submit="save">
-    <div>
-        <input wire:model="title" type="text" placeholder="Post title" />
-        @error('title') <span class="text-red-500">{{ $message }}</span> @enderror
-    </div>
-    <div class="mt-3">
-        <textarea wire:model="body" placeholder="Post body"></textarea>
-        @error('body') <span class="text-red-500">{{ $message }}</span> @enderror
-    </div>
-    <button type="submit" wire:loading.attr="disabled">
-        <span wire:loading>Saving...</span>
-        <span wire:loading.remove>Save Post</span>
-    </button>
-</form>`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Livewire lifecycle hooks</b>:\n• `mount()` — runs once when the component is first created (like a constructor)\n  ↳ Use it to load initial data: `$this->post = Post::find($id)`\n• `updated($property)` — runs after any property changes\n  ↳ Avoid expensive queries here; debounce or use `updatedTitle()` for specific properties\n• `hydrate()` / `dehydrate()` — run before/after each network request\n  ↳ Use for re-initialising non-serialisable state (e.g. DB connections)\n• `#[Lazy]` attribute — defers component rendering until after the page loads (great for heavy components)",
-            np: "`mount()`, `updated()`, `hydrate()`/`dehydrate()` — Livewire lifecycle hooks।",
-            jp: "`mount()`（初期化）、`updated()`（プロパティ変更後）、`hydrate()`/`dehydrate()`（リクエスト前後）が主なライフサイクル。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Inertia.js — SPA feel, server-side routing",
-        np: "Inertia.js — SPA feel with server-side routing",
-        jp: "Inertia.js — SPA 感覚＋サーバー側ルーティング",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Inertia is not a framework — it's a protocol. It sits between Laravel (server) and Vue/React (client) and lets them speak the same language.\n\nYour Laravel controller returns an Inertia response: `Inertia::render('PostIndex', ['posts' => $posts])`. On first load, the full HTML is returned. Subsequent navigations return a JSON payload that swaps out just the current page component — no full page reload, no routing library needed on the frontend.\n\nAnalogy: imagine a TV remote that changes what's showing on screen without turning the TV off and on again.",
-            np: "Inertia = Laravel controller + Vue/React page components। Page navigation = JSON swap (no full reload)।",
-            jp: "Inertia は Laravel コントローラーと Vue/React ページコンポーネントをつなぐプロトコル。ページ遷移は JSON スワップ（フルリロードなし）。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Inertia setup + controller + Vue page", np: "Inertia example", jp: "Inertia の例" },
-          code: `// Install
-// composer require inertiajs/inertia-laravel
-// npm install @inertiajs/vue3 vue
-
-// resources/views/app.blade.php (root layout)
-<!DOCTYPE html>
-<html>
-<head>
-    @vite(['resources/js/app.js'])
-    @inertiaHead
-</head>
-<body>
-    @inertia
-</body>
-</html>
-
-// resources/js/app.js
-import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
-
-createInertiaApp({
-    resolve: name => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
-        return pages[\`./Pages/\${name}.vue\`];
-    },
-    setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .mount(el);
-    },
+// PUBLIC channel — no auth needed, anyone can subscribe
+Broadcast::channel('posts', function () {
+    return true; // always allow
 });
 
-// app/Http/Controllers/PostController.php
-use Inertia\\Inertia;
-use App\\Http\\Resources\\PostResource;
+// PRIVATE channel — user must own the order
+Broadcast::channel('orders.{orderId}', function ($user, $orderId) {
+    $order = Order::find($orderId);
+    return $order && $user->id === $order->user_id;
+    // return false or null = denied (Echo gets a 403)
+});
 
-public function index()
-{
-    return Inertia::render('Posts/Index', [
-        'posts' => PostResource::collection(Post::with('author')->latest()->paginate(15)),
-    ]);
-}
-
-// resources/js/Pages/Posts/Index.vue
-<script setup>
-import { Link } from '@inertiajs/vue3';
-
-defineProps({ posts: Object });
-</script>
-
-<template>
-  <div>
-    <Link href="/posts/create">New Post</Link>
-    <div v-for="post in posts.data" :key="post.id">
-      <Link :href="\`/posts/\${post.id}\`">{{ post.title }}</Link>
-    </div>
-  </div>
-</template>`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Shared data</b> — auth user, flash messages, and app-wide props belong in `HandleInertiaRequests` middleware's `share()` method, so they're available in every page component:\n• `auth.user` → `usePage().props.auth.user` in Vue/React\n• `flash.message` → show success/error banners globally\n• `ziggy` → share named routes to the frontend (with the Ziggy package)\n\nThis is the Inertia equivalent of Blade's `@auth` / `view()->share()` — define once, use everywhere.",
-            np: "`HandleInertiaRequests::share()` मा auth user, flash messages राख्नुस् — सबै pages मा available हुन्छ।",
-            jp: "`HandleInertiaRequests::share()` に認証ユーザーやフラッシュを設定すると全ページで利用できる。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Choosing your stack & SSR considerations",
-        np: "Stack छनोट र SSR",
-        jp: "スタック選択と SSR",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Which frontend approach to choose — the honest decision matrix:\n• Full PHP team, existing Blade app → add Livewire incrementally to specific components\n  ↳ No big rewrite; Blade and Livewire coexist perfectly\n• Vue/React team, wants tight Laravel integration → Inertia\n  ↳ Controllers, validation, auth all stay in PHP — just the views move to Vue/React\n• Separate mobile app OR third-party consumers → Sanctum API (Day 21)\n  ↳ Completely decoupled; frontend can be any technology\n• Need SEO on a Vue/React Inertia app → enable Inertia SSR with `php artisan inertia:start-ssr`",
-            np: "PHP team → Livewire। Vue/React team → Inertia। Mobile/API → Sanctum। SEO चाहिने → Inertia SSR।",
-            jp: "PHP チーム→ Livewire。Vue/React チーム→ Inertia。モバイル/API→ Sanctum。SEO 必要→ Inertia SSR。",
-          },
+// PRESENCE channel — must return an array of member data (not just true/false)
+Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
+    if ($user->canJoinRoom($roomId)) {
+        return [
+            'id'     => $user->id,
+            'name'   => $user->name,
+            'avatar' => $user->avatar_url,
+        ];
+    }
+    return false; // deny access
+});`,
         },
         {
           type: "table",
           caption: {
-            en: "Frontend approach comparison",
-            np: "Frontend approaches",
-            jp: "フロントエンドアプローチ比較",
+            en: "Channel type comparison",
+            np: "Channel types को तुलना",
+            jp: "チャンネルタイプの比較",
           },
           headers: [
-            { en: "Approach", np: "Approach", jp: "アプローチ" },
-            { en: "JS required", np: "JS", jp: "JS 必要" },
-            { en: "Routing", np: "Routing", jp: "ルーティング" },
-            { en: "Auth", np: "Auth", jp: "認証" },
-            { en: "SEO", np: "SEO", jp: "SEO" },
-            { en: "Best for", np: "Best for", jp: "向いている用途" },
+            { en: "Type", np: "प्रकार", jp: "タイプ" },
+            { en: "Class", np: "Class", jp: "クラス" },
+            { en: "Auth required?", np: "Auth चाहिन्छ?", jp: "認証必須?" },
+            { en: "Best for", np: "उपयुक्त", jp: "用途" },
           ],
           rows: [
             [
-              { en: "Blade", np: "Blade", jp: "Blade" },
-              { en: "None", np: "नभएको", jp: "不要" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Excellent", np: "उत्तम", jp: "優秀" },
-              { en: "Content sites", np: "Content sites", jp: "コンテンツサイト" },
+              { en: "Public", np: "Public", jp: "Public" },
+              { en: "`Channel`", np: "`Channel`", jp: "`Channel`" },
+              { en: "No", np: "छैन", jp: "不要" },
+              { en: "News feeds, live scores, public dashboards", np: "News, scores, dashboard", jp: "ニュース・スコア・ダッシュボード" },
             ],
             [
-              { en: "Livewire", np: "Livewire", jp: "Livewire" },
-              { en: "Minimal", np: "न्यूनतम", jp: "最小限" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Excellent", np: "उत्तम", jp: "優秀" },
-              { en: "Admin UIs / forms", np: "Admin UIs", jp: "管理 UI・フォーム" },
+              { en: "Private", np: "Private", jp: "Private" },
+              { en: "`PrivateChannel`", np: "`PrivateChannel`", jp: "`PrivateChannel`" },
+              { en: "Yes — user must be authorised", np: "छ — user authorize हुनुपर्छ", jp: "必須 — ユーザー認可が必要" },
+              { en: "Order status, user notifications", np: "Order status, notifications", jp: "注文状況・ユーザー通知" },
             ],
             [
-              { en: "Inertia + Vue/React", np: "Inertia", jp: "Inertia" },
-              { en: "Vue or React", np: "Vue वा React", jp: "Vue か React" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Needs SSR", np: "SSR चाहिन्छ", jp: "SSR が必要" },
-              { en: "SPA with Laravel backend", np: "SPA + Laravel", jp: "Laravel バックエンド SPA" },
-            ],
-            [
-              { en: "Decoupled API", np: "API", jp: "分離 API" },
-              { en: "Any framework", np: "कुनै पनि", jp: "任意" },
-              { en: "Client-side", np: "Client", jp: "クライアント" },
-              { en: "Sanctum tokens", np: "Sanctum tokens", jp: "Sanctum トークン" },
-              { en: "Client-side", np: "Client", jp: "クライアント側" },
-              { en: "Mobile / headless", np: "Mobile / headless", jp: "モバイル・ヘッドレス" },
+              { en: "Presence", np: "Presence", jp: "Presence" },
+              { en: "`PresenceChannel`", np: "`PresenceChannel`", jp: "`PresenceChannel`" },
+              { en: "Yes — must return member data", np: "छ — member data return गर्नुपर्छ", jp: "必須 — メンバーデータを返す" },
+              { en: "Chat rooms, collaborative editing", np: "Chat, collaborative editing", jp: "チャット・共同編集" },
             ],
           ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Setting up Laravel Reverb (self-hosted WebSocket server)",
+        np: "Laravel Reverb setup गर्ने",
+        jp: "Laravel Reverb のセットアップ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Reverb</b> is Laravel's own WebSocket server — introduced in Laravel 11, free, and runs on your own server alongside PHP-FPM and Nginx. It's the recommended default for new projects.\n\n<b>Pusher</b> is the cloud alternative:\n• <b>Pros:</b> zero server management, instant setup, generous free tier (200 concurrent connections, 800k messages/day)\n• <b>Cons:</b> costs money beyond the free tier, third-party dependency\n\nFor most new projects: start with Pusher free tier, migrate to Reverb if you hit limits or need more control.",
+            np: "Reverb = self-hosted, free। Pusher = managed cloud। Start मा Pusher free tier, later Reverb।",
+            jp: "Reverb は自己ホスト型で無料。Pusher はクラウドで簡単。まず Pusher 無料プランで始めてもよい。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Installing and running Reverb", np: "Reverb install र run गर्ने", jp: "Reverb のインストールと起動" },
+          code: `# Install Reverb and scaffold the broadcasting config
+php artisan install:broadcasting
+# (chooses Reverb by default in Laravel 11, installs the package and publishes config)
+
+# .env settings for Reverb
+BROADCAST_CONNECTION=reverb
+
+REVERB_APP_ID=my-app
+REVERB_APP_KEY=my-app-key
+REVERB_APP_SECRET=my-app-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http  # use https in production
+
+# Start Reverb in development
+php artisan reverb:start
+# Reverb runs on ws://localhost:8080
+
+# In production — run Reverb via Supervisor so it restarts on crash
+# /etc/supervisor/conf.d/reverb.conf
+# [program:reverb]
+# command=php /var/www/myapp/artisan reverb:start --host=0.0.0.0 --port=8080
+# autostart=true
+# autorestart=true
+# redirect_stderr=true
+# stdout_logfile=/var/log/reverb.log`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Inertia SSR runs a Node.js server (`php artisan inertia:start-ssr`) that renders the first page server-side for SEO and faster initial load. It's an opt-in — most admin apps don't need it. For public-facing marketing pages with SEO requirements, enable SSR or use a static site generator for those specific pages.",
-            np: "Inertia SSR: Node.js server ले first page server-side render गर्छ। SEO चाहिने apps मा enable गर्नुस्।",
-            jp: "Inertia SSR: Node.js が初回ページをサーバー側でレンダリング。SEO が必要な場合に有効化。",
+            en: "In production, run Reverb behind <b>Nginx as a reverse proxy</b> so WebSocket connections get HTTPS (WSS). Add an Nginx `location /app/` block that proxies to `http://localhost:8080`. The Laravel Reverb docs include the exact Nginx config.\n\n↳ Reverb also supports <b>horizontal scaling</b> via Redis — multiple Reverb nodes share state through Redis pub/sub, so you can run Reverb on multiple servers behind a load balancer",
+            np: "Production मा Nginx reverse proxy पछाडि run गर्ने। Redis ले horizontal scaling support गर्छ।",
+            jp: "本番は Nginx リバースプロキシの後ろで動かす。Redis で水平スケーリングも可能。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Laravel Echo — the frontend WebSocket listener",
+        np: "Laravel Echo — frontend listener",
+        jp: "Laravel Echo — フロントエンドの WebSocket リスナー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Echo is the JavaScript companion to Laravel broadcasting. It wraps the raw WebSocket API into a clean, readable interface. Install it once, configure it once, then use it anywhere in your JavaScript (vanilla, React, Vue, etc.).",
+            np: "Echo = Laravel broadcasting को JS companion। Install र configure एकपटक, जहाँ पनि use गर्न सकिन्छ।",
+            jp: "Echo は Laravel ブロードキャストの JS ライブラリ。一度設定すれば React・Vue どこでも使える。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Installing Echo + Reverb configuration", np: "Echo install र configure", jp: "Echo のインストールと設定" },
+          code: `# Install Echo and the Pusher JS driver (used by both Pusher and Reverb)
+npm install --save-dev laravel-echo pusher-js
+
+// resources/js/bootstrap.js — configure Echo for Reverb
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
+
+// --- Three channel patterns ---
+
+// 1. PUBLIC channel
+Echo.channel('posts')
+    .listen('PostCreated', (e) => {
+        console.log('New post:', e.title);
+        addPostToFeed(e); // update your UI
+    });
+
+// 2. PRIVATE channel (user must be authenticated)
+Echo.private('orders.' + orderId)
+    .listen('OrderShipped', (e) => {
+        showNotification('Your order has shipped!');
+    });
+
+// 3. PRESENCE channel (also tracks who's online)
+Echo.join('chat.' + roomId)
+    .here((members) => { setOnlineUsers(members); })     // initial member list
+    .joining((member) => { addUser(member); })            // someone joined
+    .leaving((member) => { removeUser(member); })         // someone left
+    .listen('MessageSent', (e) => { addMessage(e); });`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Echo re-connects automatically with exponential backoff if the WebSocket drops. In React/Vue, call `Echo.leaveChannel('posts')` or `Echo.disconnect()` in your component's cleanup function to avoid memory leaks.\n\n↳ Echo works with both Reverb and Pusher — just change `broadcaster: 'reverb'` to `broadcaster: 'pusher'` and update the key/cluster env vars",
+            np: "Echo auto-reconnect गर्छ। Component cleanup मा `leaveChannel()` call गर्नुपर्छ।",
+            jp: "Echo は自動再接続する。コンポーネントのクリーンアップで `leaveChannel()` を必ず呼ぶ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Practical example — live notification badge",
+        np: "Practical example — live notification",
+        jp: "実践例 — リアルタイム通知バッジ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A complete end-to-end walkthrough: when any user creates a post, all other users see their notification badge increment in real-time — without refreshing the page. This covers the entire stack.",
+            np: "User ले post create गर्दा अरू users को notification badge instant update हुन्छ।",
+            jp: "投稿作成時に他ユーザーの通知バッジがリアルタイムで増える実装例。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "ShouldBroadcast event → Echo listener", np: "Event र Echo listener", jp: "ShouldBroadcast イベントと Echo リスナー" },
+          code: `// app/Events/NewPostPublished.php
+use Illuminate\\Broadcasting\\PrivateChannel;
+use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
+
+class NewPostPublished implements ShouldBroadcast
+{
+    public function __construct(
+        public Post $post,
+        public int $targetUserId  // the user to notify
+    ) {}
+
+    public function broadcastOn(): array
+    {
+        // Every user has their own private channel: App.Models.User.{id}
+        return [new PrivateChannel('App.Models.User.' . $this->targetUserId)];
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'type'    => 'NewPostPublished',
+            'message' => "{$this->post->user->name} published a new post",
+            'postId'  => $this->post->id,
+        ];
+    }
+}
+
+// Controller — notify all followers when a post is published
+public function store(Request $request): JsonResponse
+{
+    $post = Post::create([...$request->validated(), 'user_id' => auth()->id()]);
+
+    // Notify each follower (in a real app, dispatch a job for large follower lists)
+    auth()->user()->followers->each(function ($follower) use ($post) {
+        event(new NewPostPublished($post, $follower->id));
+    });
+
+    return response()->json($post, 201);
+}
+
+// Frontend — React component
+useEffect(() => {
+    const channel = Echo.private('App.Models.User.' + userId);
+
+    channel.notification((notification) => {
+        if (notification.type === 'NewPostPublished') {
+            setUnreadCount(c => c + 1);  // bump the badge
+            toast(notification.message);
+        }
+    });
+
+    return () => Echo.leaveChannel('App.Models.User.' + userId); // cleanup
+}, [userId]);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>`ShouldBroadcast` vs `ShouldBroadcastNow`:</b>\n\n• `ShouldBroadcast` (recommended) — event is pushed to the queue; the HTTP response returns immediately; the broadcast happens in the background\n• `ShouldBroadcastNow` — event broadcasts synchronously inline, before the HTTP response returns\n  ↳ Useful in development for testing without running a queue worker\n  ↳ Avoid in production — it slows down every HTTP request that fires the event",
+            np: "ShouldBroadcast = queued (production मा use गर्ने)। ShouldBroadcastNow = synchronous (dev मा only)।",
+            jp: "ShouldBroadcast はキュー経由で非同期。ShouldBroadcastNow は同期で遅くなる。本番は前者を使う。",
           },
         },
       ],
@@ -397,62 +377,62 @@ defineProps({ posts: Object });
   faq: [
     {
       question: {
-        en: "Can I mix Livewire and Inertia in the same app?",
-        np: "एउटै app मा Livewire र Inertia दुवै प्रयोग गर्न सकिन्छ?",
-        jp: "同じアプリで Livewire と Inertia を混在できますか?",
+        en: "When should I use Reverb vs Pusher?",
+        np: "Reverb vs Pusher — कहिले कुन use गर्ने?",
+        jp: "Reverb と Pusher はどちらを選ぶ？",
       },
       answer: {
-        en: "Technically yes, but it creates two frontend systems to maintain. Typical pattern: use Inertia for the main app and Blade/Livewire for a simpler admin panel. Mixing them in the same views is unsupported and creates confusing state management.",
-        np: "हुन्छ, तर maintenance double हुन्छ। Main app मा Inertia, admin panel मा Livewire — यो common pattern हो।",
-        jp: "技術的には可能ですが、2 つのフロントエンドシステムを管理することになります。メインアプリに Inertia、管理パネルに Livewire が一般的なパターンです。",
+        en: "Use <b>Pusher free tier</b> to start: zero config, no server to manage, 200 concurrent connections and 800k messages/day is enough for most small-to-medium apps.\n\nSwitch to <b>Reverb</b> when:\n• You hit Pusher's limits or pricing becomes significant\n• Your data is privacy-sensitive (healthcare, finance) and you need on-premise hosting\n• You want full control over horizontal scaling\n\nReverb is drop-in compatible — switching is a `.env` change and an `npm install`.",
+        np: "Start मा Pusher free tier। Privacy-sensitive वा large-scale भएमा Reverb।",
+        jp: "最初は Pusher 無料プランで。規模が大きくなったり、データをオンプレに置きたい時は Reverb へ。",
       },
     },
     {
       question: {
-        en: "Does Livewire work with Alpine.js?",
-        np: "Livewire र Alpine.js सँगसँगै काम गर्छन्?",
-        jp: "Livewire は Alpine.js と連携できますか?",
+        en: "What is the difference between Broadcasting and Notifications?",
+        np: "Broadcasting र Notifications को फरक के हो?",
+        jp: "ブロードキャストと通知の違いは？",
       },
       answer: {
-        en: "Yes, they are designed to work together. Alpine.js handles client-side interactions (toggles, animations, dropdowns) while Livewire handles server interactions. Livewire ships with Alpine included — you don't need to install it separately. Rule: use `x-data`, `x-show`, `x-on:click` for purely visual JavaScript; use `wire:click` when a server round-trip is needed.",
-        np: "हो, सँगसँगै काम गर्छन्। Alpine = client-side UI। Livewire = server interactions। Alpine Livewire मा included छ।",
-        jp: "はい、一緒に使えます。Alpine は UI インタラクション、Livewire はサーバー通信を担当。Livewire に Alpine が同梱されています。",
+        en: "Laravel <b>Notifications</b> (Day 16) send messages via channels like email, SMS, and Slack — they are fire-and-forget messages to external services.\n\nLaravel <b>Broadcasting</b> pushes real-time data directly to browsers via WebSockets — it's for updating UI instantly.\n\nThey overlap via the `broadcast` notification channel: a Notification can implement `toBroadcast()` to push a notification payload over a WebSocket AND send an email at the same time.",
+        np: "Notification = email/SMS/Slack। Broadcasting = browser मा real-time push। toBroadcast() ले combine गर्न सकिन्छ।",
+        jp: "Notification はメール・SMS・Slack 送信。Broadcasting はブラウザへのリアルタイム Push。",
       },
     },
     {
       question: {
-        en: "How does Inertia handle form validation errors?",
-        np: "Inertia मा form validation errors कसरी handle हुन्छ?",
-        jp: "Inertia のフォームバリデーションエラーはどう扱いますか?",
+        en: "Does every event need to implement ShouldBroadcast?",
+        np: "हरेक event ले ShouldBroadcast implement गर्नु पर्छ?",
+        jp: "すべてのイベントに ShouldBroadcast が必要？",
       },
       answer: {
-        en: "Inertia redirects back with a 422 response (Laravel validation failure) and includes the errors in the Inertia shared props. Use the `useForm()` helper in Vue/React — it automatically populates `form.errors` from the 422 response. No manual error parsing needed.",
-        np: "`useForm()` helper प्रयोग गर्नुस्। 422 response आउँदा `form.errors` automatically populate हुन्छ।",
-        jp: "`useForm()` ヘルパーを使うと、422 レスポンスから `form.errors` が自動的に設定されます。",
+        en: "No — only events that the browser needs to know about immediately require `ShouldBroadcast`. Regular Laravel events (used with Listeners, Day 19) run server-side only.\n\nAdd `ShouldBroadcast` only when:\n• A browser needs to react within seconds of the event occurring\n• The data payload is appropriate for public/private transmission\n\nOver-broadcasting creates unnecessary WebSocket traffic. Not every model update needs to reach the browser.",
+        np: "No। Browser ले instant थाहा पाउनु पर्ने events मात्र ShouldBroadcast implement गर्ने।",
+        jp: "いいえ。ブラウザがすぐ知る必要があるイベントだけに ShouldBroadcast を実装する。",
       },
     },
     {
       question: {
-        en: "What is the performance impact of Livewire's network requests?",
-        np: "Livewire का network requests को performance impact के हो?",
-        jp: "Livewire のネットワークリクエストがパフォーマンスに与える影響は?",
+        en: "How do I broadcast from inside a queued job?",
+        np: "Queued job बाट broadcast कसरी गर्ने?",
+        jp: "キュージョブの中からブロードキャストするには？",
       },
       answer: {
-        en: "Every `wire:model.live` keystroke triggers a network request. For search inputs, use `wire:model.live.debounce.500ms` to delay the request 500ms after the user stops typing. For non-interactive updates, use `wire:model.blur` (only fires on focus-out). Profile with browser DevTools network tab to see the frequency and payload size.",
-        np: "प्रत्येक keystroke मा request जान्छ। `wire:model.live.debounce.500ms` प्रयोग गर्नुस् search inputs मा।",
-        jp: "キーストロークごとにリクエストが発生します。検索入力には `wire:model.live.debounce.500ms` を使い、不要なリクエストを減らしましょう。",
+        en: "If your event implements `ShouldBroadcast`, Laravel automatically dispatches it to the queue (the `default` queue by default). The queue worker processes it and sends the WebSocket message.\n\nTo use a specific queue for broadcasting: implement `ShouldBroadcastNow` won't queue it; instead override `broadcastQueue()` on your event:\n\n`public function broadcastQueue(): string { return 'broadcasts'; }`\n\nEnsure `QUEUE_CONNECTION` is not `sync` in production — otherwise broadcasts happen inline and defeat the purpose.",
+        np: "ShouldBroadcast ले automatically queue मा dispatch गर्छ। broadcastQueue() override गरेर queue छान्न सकिन्छ।",
+        jp: "ShouldBroadcast は自動でキューに投入。`broadcastQueue()` でキュー名を指定できる。",
       },
     },
     {
       question: {
-        en: "Can Vite handle TypeScript out of the box?",
-        np: "Vite ले TypeScript automatically handle गर्छ?",
-        jp: "Vite は TypeScript をそのまま扱えますか?",
+        en: "How do I handle events missed while the client was disconnected?",
+        np: "Client disconnect हुँदा miss भएका events कसरी handle गर्ने?",
+        jp: "切断中に見逃したイベントはどう処理する？",
       },
       answer: {
-        en: "Yes. Vite processes TypeScript natively via esbuild without needing a separate `ts-loader`. Add `@types/node` and a `tsconfig.json`, then rename files to `.ts` or `.tsx`. Important caveat: Vite skips type-checking for speed — run `tsc --noEmit` separately in CI to catch type errors before deployment.",
-        np: "हो, Vite ले TypeScript native support गर्छ (esbuild मार्फत)। CI मा `tsc --noEmit` छुट्टै चलाउनुस्।",
-        jp: "はい、esbuild 経由でネイティブ対応。ただし型チェックはスキップされるため、CI で `tsc --noEmit` を別途実行してください。",
+        en: "Echo auto-reconnects after disconnection, but it cannot replay events that were sent while it was offline.\n\nThe standard pattern:\n1. On reconnect, make a normal REST API call to fetch the latest state (`GET /api/posts?after=lastSeenId`)\n2. Re-sync the UI from the API response\n3. Resume listening via Echo\n\nFor critical state (unread counts, order status), never rely solely on WebSocket events — always have a REST fallback that the client can call to reconcile state.",
+        np: "Reconnect मा REST API call गरेर latest state fetch गर्ने। WebSocket मात्रमा depend नगर्ने।",
+        jp: "再接続時は REST API で最新状態を取得して同期。WebSocket だけに頼らない設計が重要。",
       },
     },
   ],
