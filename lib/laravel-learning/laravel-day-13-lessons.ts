@@ -363,7 +363,7 @@ $users = DB::table('users')
       id: "specialised-where-clauses",
       title: "whereIn, ranges, NULL, dates & ordering",
       durationMinutes: 11,
-      explanation: "`where()` handles one column against one value. These handle everything else, and each one exists because writing it by hand is fiddly and easy to get wrong.\n\n---\n\n### 1. Basic — one of several, or somewhere in a range\n\n<b>`whereIn()`</b> matches any value in a list:\n\n```php\n->whereIn('role', ['admin', 'manager', 'editor'])\n```\n\n```text\nrole IN (admin, manager, editor)\n```\n\nWhich beats three `orWhere()` calls, and beats them by more as the list grows. `whereNotIn()` is the opposite.\n\n<b>`whereBetween()`</b> matches a range, and it includes both ends:\n\n```php\n->whereBetween('age', [18, 30])\n```\n\n```text\n18 ─────────────── 30\n     ↑\n   match\n```\n\nEighteen and thirty are both in. Useful for prices, dates, ages, scores, anything with a low and a high.\n\nBoth take arrays, and both bind every element, so a `whereIn()` built from request data is safe as long as the array itself is what you expect.\n\n---\n\n### 2. Intermediate — NULL and dates\n\n`NULL` is not a value you can compare with `=`. SQL needs `IS NULL`, and the builder has a method for it:\n\n```php\n->whereNull('deleted_at')\n->whereNotNull('email_verified_at')\n```\n\n```text\ndeleted_at IS NULL              never soft-deleted\nemail_verified_at IS NOT NULL   has confirmed their email\n```\n\n<b>`->where('deleted_at', null)` is not the same thing</b> and will not match. This is the one that catches people, because it looks perfectly reasonable.\n\nDates have their own problem. A `created_at` holds a moment, not a day:\n\n```text\ncreated_at\n2026-09-01 14:35:20\n       ↓\ndate portion\n2026-09-01\n```\n\nSo comparing it to `'2026-09-01'` matches only rows created at exactly midnight. `whereDate()` compares the date part:\n\n```php\n->whereDate('created_at', '2026-09-01')\n```\n\nThe family: `whereDate()`, `whereMonth()`, `whereDay()`, `whereYear()`, `whereTime()`.\n\n---\n\n### 3. Advanced — comparing two columns, and ordering\n\nEverything so far compares a column against a PHP value. <b>`whereColumn()`</b> compares two columns:\n\n```php\n$orders = DB::table('orders')\n    ->whereColumn('updated_at', '>', 'created_at')\n    ->get();\n```\n\n```text\ncolumn ↔ column        whereColumn()\ncolumn ↔ PHP value     where()\n```\n\nThat query finds orders that have been changed since they were made. Written with `where()` you would be comparing against the string `'created_at'`, which matches nothing.\n\nThen ordering:\n\n```php\n->orderBy('created_at')            // ascending\n->orderBy('created_at', 'desc')\n->orderByDesc('created_at')        // the same thing, more readable\n```\n\n```text\nNewest\n  ↓\nUser 5\nUser 4\nUser 3\nUser 2\nUser 1\n  ↓\nOldest\n```\n\nOrder by more than one column by calling it more than once, and the order of the calls is the order of precedence:\n\n```php\n->orderBy('role')->orderByDesc('created_at')\n```\n\nOne habit worth forming now, because it matters for pagination later: <b>an order that is not unique is not stable.</b> Sorting a thousand rows by `created_at` alone, where several share a timestamp, lets the database return those in any order it likes, and a row can appear on two pages or none. Adding `id` as a tie-breaker fixes it:\n\n```php\n->orderByDesc('created_at')->orderBy('id')\n```",
+      explanation: "`where()` handles one column against one value. These handle everything else, and each one exists because writing it by hand is fiddly and easy to get wrong.\n\n---\n\n### 1. Basic — one of several, or somewhere in a range\n\n<b>`whereIn()`</b> matches any value in a list:\n\n```php\n->whereIn('role', ['admin', 'manager', 'editor'])\n```\n\n```text\nrole IN (admin, manager, editor)\n```\n\nWhich beats three `orWhere()` calls, and beats them by more as the list grows. `whereNotIn()` is the opposite.\n\n<b>`whereBetween()`</b> matches a range, and it includes both ends:\n\n```php\n->whereBetween('age', [18, 30])\n```\n\n```text\n18 ─────────────── 30\n     ↑\n   match\n```\n\nEighteen and thirty are both in. Useful for prices, dates, ages, scores, anything with a low and a high.\n\nBoth take arrays, and both bind every element, so a `whereIn()` built from request data is safe as long as the array itself is what you expect.\n\n---\n\n### 2. Intermediate — NULL and dates\n\n`NULL` is not a value you can compare with `=`. SQL needs `IS NULL`, and the builder has a method for it:\n\n```php\n->whereNull('deleted_at')\n->whereNotNull('email_verified_at')\n```\n\n```text\ndeleted_at IS NULL              never soft-deleted\nemail_verified_at IS NOT NULL   has confirmed their email\n```\n\n<b>`->where('deleted_at', null)` is not the same thing</b> and will not match. This is the one that catches people, because it looks perfectly reasonable.\n\nDates have their own problem. A `created_at` holds a moment, not a day:\n\n```text\ncreated_at\n2026-09-01 14:35:20\n       ↓\ndate portion\n2026-09-01\n```\n\nSo comparing it to `'2026-09-01'` matches only rows created at exactly midnight. `whereDate()` compares the date part:\n\n```php\n->whereDate('created_at', '2026-09-01')\n```\n\nThe family: `whereDate()`, `whereMonth()`, `whereDay()`, `whereYear()`, `whereTime()`.\n\n---\n\n### 3. Advanced — comparing two columns, and ordering\n\nEverything so far compares a column against a PHP value. <b>`whereColumn()`</b> compares two columns:\n\n```php\n$orders = DB::table('orders')\n    ->whereColumn('updated_at', '>', 'created_at')\n    ->get();\n```\n\n```text\ncolumn ↔ column        whereColumn()\ncolumn ↔ PHP value     where()\n```\n\nThat query finds orders that have been changed since they were made. Written with `where()` you would be comparing against the string `'created_at'`, which matches nothing.\n\nAnd one more comparison the builder handles for you. A JSON column is not just text: you can reach inside it with arrow notation.\n\n```php\nPost::where('meta->color', 'red')->get();\n\nPost::where('meta->settings->theme', 'dark')->get();\n```\n\n```text\nmeta = {\"color\": \"red\", \"settings\": {\"theme\": \"dark\"}}\n        ↓\n  where('meta->color', 'red')\n        ↓\nthe database reads inside the JSON\n```\n\nThat runs in the database, on MySQL 5.7+, PostgreSQL and SQLite 3.38+, so it filters before the rows come back. <b>The `array` cast you will meet tomorrow converts the column for PHP; arrow notation is how you <i>query</i> it.</b> The two are unrelated, and needing one does not mean you have the other.\n\n---\n\nThen ordering:\n\n```php\n->orderBy('created_at')            // ascending\n->orderBy('created_at', 'desc')\n->orderByDesc('created_at')        // the same thing, more readable\n```\n\n```text\nNewest\n  ↓\nUser 5\nUser 4\nUser 3\nUser 2\nUser 1\n  ↓\nOldest\n```\n\nOrder by more than one column by calling it more than once, and the order of the calls is the order of precedence:\n\n```php\n->orderBy('role')->orderByDesc('created_at')\n```\n\nOne habit worth forming now, because it matters for pagination later: <b>an order that is not unique is not stable.</b> Sorting a thousand rows by `created_at` alone, where several share a timestamp, lets the database return those in any order it likes, and a row can appear on two pages or none. Adding `id` as a tie-breaker fixes it:\n\n```php\n->orderByDesc('created_at')->orderBy('id')\n```",
       diagram: `Matching a list or a range
 
   ->whereIn('role', ['admin', 'manager', 'editor'])
@@ -396,6 +396,20 @@ Dates hold a moment, not a day
   2026-09-01
 
   whereDate  whereMonth  whereDay  whereYear  whereTime
+
+
+JSON columns: reach inside with ->
+
+  meta = {"color": "red", "settings": {"theme": "dark"}}
+
+  ->where('meta->color', 'red')
+  ->where('meta->settings->theme', 'dark')
+
+  Runs in the database, so it filters before the rows
+  come back. MySQL 5.7+, PostgreSQL, SQLite 3.38+.
+
+  The array cast converts the column for PHP.
+  Arrow notation QUERIES it. Unrelated things.
 
 
 Column against column
@@ -463,6 +477,21 @@ DB::table('orders')->whereYear('created_at', 2026)->get();
 DB::table('orders')->whereMonth('created_at', 9)->get();
 
 
+// ---------- Inside a JSON column ----------
+
+// meta = {"color": "red", "settings": {"theme": "dark"}}
+
+DB::table('posts')->where('meta->color', 'red')->get();
+
+DB::table('posts')->where('meta->settings->theme', 'dark')->get();
+
+DB::table('posts')->whereJsonContains('meta->tags', 'laravel')->get();
+
+// The database does the filtering. The 'array' cast is a
+// separate thing: it converts the column for PHP, and does
+// not let you query it.
+
+
 // ---------- Column against column ----------
 
 $changed = DB::table('orders')
@@ -499,6 +528,7 @@ DB::table('posts')
         "<b>A timestamp column holds a moment, not a day</b>, so comparing it to a date string only matches midnight.",
         "`whereDate()`, `whereMonth()`, `whereDay()`, `whereYear()` and `whereTime()` compare the part you mean.",
         "<b>`whereColumn()` compares two columns</b>, where `where()` compares a column against a PHP value.",
+        "<b>Arrow notation queries inside a JSON column</b>, as in `where('meta->color', 'red')`, and runs in the database.",
         "<b>An ordering that is not unique is not stable</b>, so add `id` as a tie-breaker before you paginate.",
       ],
       commonMistakes: [
@@ -506,6 +536,7 @@ DB::table('posts')
         "<b>Comparing a timestamp column to a date string with `where()`.</b> Only rows created at exactly midnight match.",
         "<b>Using `where('updated_at', '>', 'created_at')`.</b> That compares against the literal text, not the column.",
         "<b>Chaining `orWhere()` for a list of values.</b> `whereIn()` is shorter and does not need grouping.",
+        "<b>Adding an `array` cast and expecting to query the JSON.</b> The cast converts it for PHP; arrow notation queries it.",
         "<b>Paginating on `created_at` alone.</b> Rows sharing a timestamp get duplicated or skipped between pages.",
       ],
       quiz: [

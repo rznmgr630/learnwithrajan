@@ -3,440 +3,300 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_27_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Eloquent has <b>magic features</b> beyond basic CRUD — think of it as a smart filing clerk.\n\nThis clerk can:\n• <b>Reformat documents</b> as they're filed or retrieved (<b>accessors</b> and <b>mutators</b>)\n• <b>Apply automatic labels</b> to every document that enters the system (<b>casts</b>)\n• <b>Save pre-built search filters</b> you can reuse any time (<b>scopes</b>)\n• <b>File documents</b> that could belong to any department — posts, videos, or products (<b>polymorphic relations</b>)\n• <b>Watch for changes</b> and react automatically (<b>observers</b>)\n\nToday we go beyond `find()`, `create()`, and `where()` — and unlock the full power of Eloquent.",
-      np: "Eloquent का advanced features: accessors, mutators, casts, scopes, polymorphic relations र observers।",
-      jp: "Eloquent の高度な機能 — アクセサ・キャスト・スコープ・ポリモーフィック・オブザーバを学びます。",
+      en: "Artisan is Laravel's built-in command-line tool — think of it like a remote control for your application. Every `php artisan` command you've used so far was built-in. Today you build your own.\n\nCustom commands are perfect for:\n• Database seeders and one-off data migrations\n• Scheduled background tasks (sending digest emails, cleaning old records)\n• Dev utilities (generating fake test data, syncing API data)\n• Admin operations you don't want to expose in a UI",
+      np: "Artisan = Laravel को command-line tool। Custom commands build गर्न सिक्ने।",
+      jp: "Artisan は Laravel の CLI ツール。カスタムコマンドの作り方を学びます。",
     },
     {
-      en: "Here is what we cover today:\n\n• <b>Accessors</b> — transform data as it is <b>READ</b> from the model (e.g. combine `first_name` + `last_name` into `full_name`)\n  ↳ The DB stores them separately; your code sees one tidy attribute\n• <b>Mutators</b> — transform data as it is <b>WRITTEN</b> to the model (e.g. always lowercase email before saving)\n  ↳ Great for normalising input so your DB stays consistent\n• <b>Casts</b> — auto-convert column values (JSON string ↔ PHP array, `0`/`1` ↔ boolean, timestamp ↔ Carbon date)\n  ↳ Define once in `$casts`; Eloquent handles conversion on every read and write\n• <b>Local scopes</b> — reusable named query fragments like `scopePublished()` that you chain fluently\n• <b>Global scopes</b> — filters that apply to EVERY query on a model automatically\n• <b>Polymorphic relations</b> — one `comments` table that works for posts, videos, products, and more\n• <b>Observers</b> — centralised event handlers that fire when models are created, updated, or deleted",
-      np: "Accessors (read), mutators (write), casts (type conversion), local/global scopes, polymorphic relations, observers।",
-      jp: "アクセサ・ミューテタ・キャスト・スコープ・ポリモーフィック・オブザーバを順に解説します。",
+      en: "Today's topics:\n• <b>`make:command` scaffold</b> — generate a command class with one line\n• <b>Command signature</b> — define the name, arguments, options, and flags\n• <b>`handle()` method</b> — where your command logic lives\n• <b>I/O helpers</b> — `info`, `error`, `warn`, `table`, `ask`, `confirm`, `progressBar`\n• <b>Calling commands from code</b> — `Artisan::call()` and `Artisan::queue()`\n• <b>Scheduling</b> — define recurring tasks in PHP instead of raw cron",
+      np: "make:command, signature, handle(), I/O helpers, Artisan::call(), scheduling।",
+      jp: "make:command、シグネチャ、handle()、I/O、Artisan::call()、スケジュールを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Accessors & mutators (new attribute syntax)",
-        np: "Accessors र mutators",
-        jp: "アクセサとミューテタ",
+        en: "Creating your first command",
+        np: "पहिलो command बनाउने",
+        jp: "最初のコマンドを作る",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The <b>old way</b> (Laravel 8 and below) required two separate methods:\n• `getFirstNameAttribute()` — called when you READ the attribute\n• `setFirstNameAttribute($value)` — called when you WRITE the attribute\n\nAnalogy: two separate post-office windows — one labelled <b>IN</b>, one labelled <b>OUT</b>.\n\n<b>Laravel 9+ replaces both with a single `Attribute::make()` call.</b>\n• One computed property handles both directions\n• The `get:` closure runs on read; the `set:` closure runs on write\n  ↳ If you only need one direction, omit the other closure entirely\n\nThis is now the standard — use the new syntax for all new code.",
-            np: "पुरानो: `getXAttribute()` / `setXAttribute()`। नयाँ (Laravel 9+): `Attribute::make(get:, set:)`।",
-            jp: "旧来の get/set メソッドは Laravel 9+ で `Attribute::make()` に統一されました。",
+            en: "Every Artisan command is a PHP class that extends `Command`. Running `php artisan make:command` generates the boilerplate. The `$signature` property defines the command name and its inputs — think of it like a function signature but for the terminal. The `$description` is shown in `php artisan list`.",
+            np: "`Command` extend गर्ने PHP class। `$signature` = command को नाम र inputs।",
+            jp: "`Command` を継承した PHP クラス。`$signature` でコマンド名と入力を定義。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "app/Models/User.php — accessor, mutator & auto-hash mutator",
-            np: "Accessor, mutator र auto-hash",
-            jp: "アクセサ・ミューテタの例",
-          },
-          code: `<?php
+          title: { en: "Generate and run a custom command", np: "Custom command बनाउने", jp: "カスタムコマンドを生成する" },
+          code: `# Generate the command class
+php artisan make:command SendWeeklyDigest
 
-use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
-use Illuminate\\Support\\Facades\\Hash;
+# app/Console/Commands/SendWeeklyDigest.php
+namespace App\\Console\\Commands;
 
-class User extends Model
+use Illuminate\\Console\\Command;
+
+class SendWeeklyDigest extends Command
 {
-    // Accessor: combine first_name + last_name into a virtual attribute
-    protected function fullName(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => "{$this->first_name} {$this->last_name}",
-        );
-    }
+    protected $signature = 'emails:digest {--dry-run : Preview without sending}';
+    protected $description = 'Send the weekly digest email to all subscribers';
 
-    // Mutator: always store email as lowercase
-    protected function email(): Attribute
+    public function handle(): int
     {
-        return Attribute::make(
-            get: fn (string $value) => $value,
-            set: fn (string $value) => strtolower($value),
-        );
-    }
+        if ($this->option('dry-run')) {
+            $this->info('DRY RUN — no emails will be sent.');
+        } else {
+            $this->info('Sending digest...');
+            // dispatch(new SendDigestJob());
+        }
 
-    // Mutator only: auto-hash password on assignment
-    protected function password(): Attribute
-    {
-        return Attribute::make(
-            set: fn (string $value) => Hash::make($value),
-        );
+        return self::SUCCESS; // returns exit code 0
     }
 }
 
-// Usage
-$user = User::find(1);
-echo $user->full_name;   // "Jane Doe"  ← accessor fires
-$user->email = 'JANE@EXAMPLE.COM';  // stored as "jane@example.com"
-$user->password = 'secret123';     // stored as hashed value`,
+# Run it
+php artisan emails:digest
+php artisan emails:digest --dry-run`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Accessor vs database computed column — when to use each:</b>\n\n• <b>Use an accessor</b> when the transformation is cheap and you do not need to search/sort by the result in SQL\n  ↳ Examples: formatting a phone number for display, combining name parts, masking a card number\n• <b>Use a DB computed column</b> when you need to `WHERE`, `ORDER BY`, or index the result\n  ↳ Example: `full_name` as a stored generated column so `WHERE full_name LIKE '%Jane%'` uses an index\n\nAccessors are PHP-side — fast and free, but invisible to the database.",
-            np: "Accessor = PHP-side transformation। DB computed column = SQL मा searchable।",
-            jp: "アクセサは PHP 側の変換。SQL で検索したい場合は DB 計算列を使う。",
+            en: "<b>Command naming convention:</b> use `noun:verb` format (e.g. `emails:digest`, `users:cleanup`, `reports:generate`). This groups related commands together in `php artisan list`. The namespace (before the colon) is just a label — it does not map to a PHP namespace.",
+            np: "`noun:verb` format use गर्ने — e.g. `emails:digest`, `users:cleanup`।",
+            jp: "`noun:verb` 形式を使う。コロンの前は PHP 名前空間とは無関係のラベル。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Model casts — auto-converting column types",
-        np: "Model casts",
-        jp: "モデルキャスト",
+        en: "Arguments, options & flags",
+        np: "Arguments, options र flags",
+        jp: "引数・オプション・フラグ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Think of casts as a <b>universal power adapter</b>.\n\nThe database stores data in its own formats: `1`/`0` for booleans, JSON strings for arrays, Unix timestamps for dates. Without casts, your PHP code would need to manually convert every time.\n\n<b>Casts declare the conversion once</b> in the `$casts` property — Eloquent handles the rest automatically on every read and write.\n\n• <b>`boolean`</b> — `0`/`1` in DB becomes `true`/`false` in PHP\n• <b>`array`</b> — JSON string in DB becomes PHP array (and back)\n• <b>`datetime`</b> — timestamp string becomes a Carbon object\n• <b>`encrypted`</b> — value is encrypted before saving, decrypted on read\n• <b>`AsCollection`</b> — like `array`, but returns a Laravel Collection\n  ↳ Collections have `map()`, `filter()`, `sum()`, etc. built in",
-            np: "Casts: `boolean`, `array`, `datetime`, `encrypted`, `AsCollection` — DB format ↔ PHP format।",
-            jp: "`$casts` で DB 型と PHP 型の変換を自動化。boolean・array・datetime・encrypted など。",
+            en: "The command signature syntax borrows from Unix conventions. Think of it like ordering at a coffee shop:\n• The <b>drink name</b> is an argument (required, positional)\n• <b>Milk type</b> is an option (has a value, starts with `--`)\n• <b>\"To go\"</b> is a flag (boolean — present means true, absent means false)\n\nArguments are required by default. Options and flags are always optional.",
+            np: "Argument = required positional। Option = `--name=value`। Flag = `--force` (boolean)।",
+            jp: "引数は位置指定で必須。オプションは `--name=value`。フラグは `--force` のような真偽値。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "app/Models/Post.php — built-in casts + custom cast class",
-            np: "Built-in casts र custom cast",
-            jp: "組み込みキャストとカスタムキャスト",
-          },
-          code: `<?php
+          title: { en: "Rich signature with arguments, options & flags", np: "Complex signature", jp: "引数・オプション・フラグのサンプル" },
+          code: `// Signature with argument, options, and a flag
+protected $signature = 'users:export
+    {environment : The environment to export from (e.g. production)}
+    {--format=csv : Output format — csv or json}
+    {--limit=100 : Maximum number of records to export}
+    {--force : Skip the confirmation prompt}';
 
-use Illuminate\\Database\\Eloquent\\Casts\\AsCollection;
-
-class Post extends Model
+public function handle(): int
 {
-    protected $casts = [
-        'is_published' => 'boolean',        // 0/1 → true/false
-        'metadata'     => 'array',          // JSON string → PHP array
-        'settings'     => AsCollection::class, // JSON string → Collection
-        'published_at' => 'datetime',       // string → Carbon
-        'price'        => 'decimal:2',      // stored as string, precision 2
-        'secret_token' => 'encrypted',      // auto encrypt/decrypt
-    ];
-}
+    $env    = $this->argument('environment');    // e.g. "production"
+    $format = $this->option('format');           // "csv" or "json"
+    $limit  = (int) $this->option('limit');      // 100 by default
+    $force  = $this->option('force');            // true if --force passed
 
-// Custom cast class — for reusable type conversions
-// app/Casts/Money.php
-namespace App\\Casts;
-
-use Illuminate\\Contracts\\Database\\Eloquent\\CastsAttributes;
-
-class Money implements CastsAttributes
-{
-    public function get($model, $key, $value, $attributes): string
-    {
-        return '$' . number_format($value / 100, 2); // stored in cents
+    if (!in_array($format, ['csv', 'json'])) {
+        $this->error("Invalid format: {$format}. Use csv or json.");
+        return self::FAILURE;
     }
 
-    public function set($model, $key, $value, $attributes): int
-    {
-        return (int) ($value * 100); // convert dollars to cents for DB
+    if (!$force && !$this->confirm("Export {$limit} users from {$env}?")) {
+        $this->line('Cancelled.');
+        return self::SUCCESS;
     }
+
+    $this->info("Exporting {$limit} users as {$format}...");
+    return self::SUCCESS;
 }
 
-// In the model
-protected $casts = [
-    'price' => Money::class,
-];
-
-// Usage
-$post->price = 19.99;   // stored as 1999 (cents)
-echo $post->price;       // "$19.99"`,
+// Optional argument with a default value
+// {environment=production}  ← uses "production" if not provided`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>`array` vs `AsCollection` — which one to pick:</b>\n\n• <b>`array`</b> — returns a plain PHP array. Use when you just need to read/write key-value data and don't need transformation methods.\n• <b>`AsCollection`</b> — returns a Laravel Collection object. Use when you want to call `->filter()`, `->map()`, `->sum()`, `->pluck()`, etc. on the data.\n\n↳ Both store the same JSON in the database — the difference is only what PHP hands you back on read.\n\nPro tip: add `->sortBy()` or `->groupBy()` to a Collection cast and your model method becomes a clean one-liner.",
-            np: "`array` = PHP array। `AsCollection` = Laravel Collection (map, filter, etc.)।",
-            jp: "`array` は PHP 配列、`AsCollection` は Collection — どちらも DB は JSON。",
+            en: "Artisan does NOT validate argument types automatically — everything arrives as a string. Validate inside `handle()` with `if (!in_array(...))` or `if (!is_numeric(...))`. This is intentional — you decide what constitutes a valid value for your specific command.",
+            np: "Artisan ले type validate गर्दैन — handle() भित्र आफैं validate गर्नुपर्छ।",
+            jp: "Artisan は型バリデーションをしない。`handle()` の中で自分でバリデーションする。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Local scopes — reusable query filters",
-        np: "Local scopes",
-        jp: "ローカルスコープ",
+        en: "Console output — tables, progress bars & prompts",
+        np: "Console output — table, progress bar र prompt",
+        jp: "コンソール出力 — テーブル・プログレスバー・プロンプト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A <b>scope</b> is a saved, named query fragment — like a saved search in your email inbox.\n\nInstead of writing `->where('status', 'published')->where('published_at', '<=', now())` in every controller, you name it once as `scopePublished()` and chain it anywhere.\n\n<b>Two types of scopes:</b>\n• <b>Local scope</b> — opt-in, called explicitly: `Post::published()->get()`\n  ↳ Defined as a method prefixed with `scope` on the model\n  ↳ The `scope` prefix is stripped when you call it: `scopePublished()` → `->published()`\n• <b>Global scope</b> — automatic, applies to EVERY query on the model\n  ↳ Useful for multi-tenancy (always filter by `company_id`) or soft-deletes\n  ↳ Use sparingly — invisible filters make queries hard to debug",
-            np: "Local scope = opt-in query fragment। Global scope = automatic filter on every query।",
-            jp: "ローカルスコープは明示的に呼ぶ再利用可能フィルタ。グローバルスコープは全クエリに自動適用。",
+            en: "Good CLI tools give clear, coloured feedback:\n• `$this->info('...')` — green (success messages)\n• `$this->error('...')` — red (errors)\n• `$this->warn('...')` — yellow (warnings)\n• `$this->line('...')` — plain white (neutral output)\n\nFor structured data use `$this->table()`. For long loops use a progress bar. For interactive scripts use `ask()` and `confirm()`.",
+            np: "info() = green, error() = red, warn() = yellow। Table, progress bar, ask/confirm।",
+            jp: "info() 緑・error() 赤・warn() 黄色。テーブル、プログレスバー、ask/confirm も使える。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "app/Models/Post.php — local scopes + global scope",
-            np: "Local र global scope",
-            jp: "ローカル・グローバルスコープ",
-          },
-          code: `<?php
+          title: { en: "Tables, progress bars & prompts", np: "Table, progress bar, prompt", jp: "テーブル・プログレスバー・プロンプト" },
+          code: `// Table output
+$users = User::select('name', 'email', 'role')->get();
+$this->table(
+    ['Name', 'Email', 'Role'],
+    $users->map(fn($u) => [$u->name, $u->email, $u->role])
+);
 
-use Illuminate\\Database\\Eloquent\\Builder;
-use Illuminate\\Database\\Eloquent\\Model;
-
-class Post extends Model
-{
-    // ── LOCAL SCOPES ──────────────────────────────────────────
-
-    // No extra parameters
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('status', 'published')
-                     ->whereNotNull('published_at');
-    }
-
-    // With a required parameter
-    public function scopeByUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    // With an optional parameter (default value)
-    public function scopeRecent(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('published_at', '>=', now()->subDays($days));
-    }
-
-    // ── GLOBAL SCOPE ──────────────────────────────────────────
-    protected static function booted(): void
-    {
-        // Always filter to the authenticated user's posts
-        static::addGlobalScope('owner', function (Builder $query) {
-            if (auth()->check()) {
-                $query->where('user_id', auth()->id());
-            }
-        });
-    }
+// Progress bar (manual)
+$items = Post::all();
+$bar = $this->output->createProgressBar(count($items));
+$bar->start();
+foreach ($items as $item) {
+    // process $item...
+    $bar->advance();
 }
+$bar->finish();
+$this->newLine(); // move cursor to next line after bar
 
-// Chaining local scopes
-$posts = Post::published()
-             ->byUser(auth()->id())
-             ->recent(7)
-             ->orderByDesc('published_at')
-             ->get();
-
-// Removing a global scope when you need all posts (e.g. admin panel)
-$allPosts = Post::withoutGlobalScope('owner')->get();`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Global scope gotcha — the invisible filter problem:</b>\n\nGlobal scopes are powerful but can surprise you:\n• A new developer calls `Post::all()` expecting every post — but only their posts come back\n  ↳ The global scope is invisible in the controller code\n• Unit tests may fail unexpectedly because no user is logged in and the scope returns nothing\n\n<b>Best practices:</b>\n• Name your global scope (second argument to `addGlobalScope`) so it can be removed with `withoutGlobalScope('name')`\n• Document global scopes prominently in the model's docblock\n• For multi-tenancy, consider a dedicated package (Tenancy for Laravel) instead of hand-rolled global scopes",
-            np: "Global scope invisible हुन्छ — debug गाह्रो। नाम दिनुहोस् र document गर्नुहोस्।",
-            jp: "グローバルスコープは見えないフィルタ — 名前付きで追加して `withoutGlobalScope` で除外可能。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Polymorphic relationships",
-        np: "Polymorphic relationships",
-        jp: "ポリモーフィックリレーション",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Polymorphic</b> means \"many shapes.\" It solves a specific problem:\n\n<b>Problem:</b> You want `Comment` to belong to both `Post` and `Video`. Without polymorphic, you'd need:\n• A `post_comments` table with a `post_id` foreign key\n• A `video_comments` table with a `video_id` foreign key\n• Two separate models, two sets of routes, two sets of controllers\n\n<b>Solution:</b> One `comments` table with two special columns:\n• `commentable_id` — stores the ID of the parent (e.g. `42`)\n• `commentable_type` — stores the class name of the parent (e.g. `App\\Models\\Post`)\n\nLaravel's `morphTo()` and `morphMany()` handle the magic of knowing which table to join based on the `_type` column.\n\n↳ One table, one model, works with any number of parent types.",
-            np: "Polymorphic = एउटै `comments` table जुन Post, Video, Product सबैमा काम गर्छ।",
-            jp: "ポリモーフィックは 1 テーブルが複数の親モデルに属せる仕組み（`_id` + `_type` カラム）。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Migration + Comment model + Post & Video models",
-            np: "Polymorphic migration र models",
-            jp: "マイグレーションとモデルの実装",
-          },
-          code: `// database/migrations/create_comments_table.php
-Schema::create('comments', function (Blueprint $table) {
-    $table->id();
-    $table->text('body');
-    $table->morphs('commentable'); // creates commentable_id + commentable_type
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->timestamps();
+// Progress bar (shorthand — handles start/advance/finish for you)
+$this->withProgressBar($items, function (Post $post) {
+    // process $post...
 });
 
-// app/Models/Comment.php
-class Comment extends Model
-{
-    protected $fillable = ['body', 'user_id'];
+// Interactive prompts
+$name  = $this->ask('What is the user\\'s name?');
+$email = $this->ask('Email address', 'default@example.com');
+$role  = $this->choice('Select role', ['admin', 'editor', 'viewer'], 'viewer');
 
-    // "I can belong to anything"
-    public function commentable(): MorphTo
-    {
-        return $this->morphTo();
-    }
-}
-
-// app/Models/Post.php
-class Post extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
-
-// app/Models/Video.php
-class Video extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
-
-// Usage
-$post->comments()->create(['body' => 'Great post!', 'user_id' => 1]);
-$video->comments()->create(['body' => 'Nice video!', 'user_id' => 2]);
-
-// Get the parent of a comment (either a Post or Video)
-$comment = Comment::find(1);
-$parent = $comment->commentable; // returns Post or Video instance`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Eloquent relationship cheat-sheet — pick the right one for your data shape",
-            np: "Relationship cheat-sheet",
-            jp: "リレーション早見表",
-          },
-          headers: [
-            { en: "Relationship", np: "Relationship", jp: "リレーション" },
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "Use when…", np: "कहिले प्रयोग", jp: "使う場面" },
-          ],
-          rows: [
-            [
-              { en: "Has one", np: "Has one", jp: "hasOne" },
-              { en: "`hasOne()`", np: "`hasOne()`", jp: "`hasOne()`" },
-              { en: "User → one Profile", np: "User → एउटा Profile", jp: "User → 1つの Profile" },
-            ],
-            [
-              { en: "Has many", np: "Has many", jp: "hasMany" },
-              { en: "`hasMany()`", np: "`hasMany()`", jp: "`hasMany()`" },
-              { en: "User → many Posts", np: "User → धेरै Posts", jp: "User → 複数の Post" },
-            ],
-            [
-              { en: "Belongs to", np: "Belongs to", jp: "belongsTo" },
-              { en: "`belongsTo()`", np: "`belongsTo()`", jp: "`belongsTo()`" },
-              { en: "Post → one User (owner)", np: "Post → एउटा User", jp: "Post → 1つの User" },
-            ],
-            [
-              { en: "Belongs to many", np: "Belongs to many", jp: "belongsToMany" },
-              { en: "`belongsToMany()`", np: "`belongsToMany()`", jp: "`belongsToMany()`" },
-              { en: "Post ↔ many Tags (pivot table)", np: "Post ↔ धेरै Tags", jp: "Post ↔ 複数の Tag（中間テーブル）" },
-            ],
-            [
-              { en: "Morph to", np: "Morph to", jp: "morphTo" },
-              { en: "`morphTo()`", np: "`morphTo()`", jp: "`morphTo()`" },
-              { en: "Comment → Post OR Video", np: "Comment → Post वा Video", jp: "Comment → Post か Video" },
-            ],
-            [
-              { en: "Morph many", np: "Morph many", jp: "morphMany" },
-              { en: "`morphMany()`", np: "`morphMany()`", jp: "`morphMany()`" },
-              { en: "Post → many Comments (poly)", np: "Post → धेरै Comments", jp: "Post → 複数の Comment（ポリ）" },
-            ],
-            [
-              { en: "Morph to many", np: "Morph to many", jp: "morphToMany" },
-              { en: "`morphToMany()`", np: "`morphToMany()`", jp: "`morphToMany()`" },
-              { en: "Post/Video → shared Tags", np: "Post/Video → shared Tags", jp: "Post/Video → 共通 Tag" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Model observers — reacting to lifecycle events",
-        np: "Model observers",
-        jp: "モデルオブザーバ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "An <b>observer</b> is like a security camera for your model.\n\nWhenever something happens — a record is created, updated, or deleted — the observer fires the matching handler automatically. No manual calls in your controllers needed.\n\n<b>Without observers</b>, side-effects scatter across controllers:\n• `PostController::store()` sends a welcome notification\n• `PostController::update()` logs the change\n• `PostController::destroy()` deletes related files\n• If someone adds another way to create a post (a command, a seeder, an API), they must remember to add the side-effect too\n\n<b>With observers</b>, the side-effect logic lives in one place — if a post is created anywhere in the app, the observer fires.\n\n↳ Think of it as a pub/sub pattern built into Eloquent.",
-            np: "Observer = model lifecycle events (created, updated, deleted) मा centralised reactions।",
-            jp: "オブザーバはモデルの lifecycle イベントに対する一元的なハンドラ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "PostObserver — generate, implement, register",
-            np: "PostObserver बनाउने र register गर्ने",
-            jp: "PostObserver の生成・実装・登録",
-          },
-          code: `// Generate the observer class
-php artisan make:observer PostObserver --model=Post
-
-// app/Observers/PostObserver.php
-namespace App\\Observers;
-
-use App\\Models\\Post;
-use Illuminate\\Support\\Facades\\Log;
-
-class PostObserver
-{
-    public function created(Post $post): void
-    {
-        // Side-effect: notify the author's followers
-        $post->user->notify(new PostPublishedNotification($post));
-    }
-
-    public function updating(Post $post): void
-    {
-        // Log who changed what (before the save)
-        if ($post->isDirty('status')) {
-            Log::info("Post #{$post->id} status changed", [
-                'from' => $post->getOriginal('status'),
-                'to'   => $post->status,
-                'by'   => auth()->id(),
-            ]);
-        }
-    }
-
-    public function deleted(Post $post): void
-    {
-        // Clean up associated files when a post is deleted
-        Storage::delete("posts/{$post->id}");
-    }
-}
-
-// Register in AppServiceProvider::boot()
-use App\\Models\\Post;
-use App\\Observers\\PostObserver;
-
-public function boot(): void
-{
-    Post::observe(PostObserver::class);
+if ($this->confirm('Are you sure you want to delete all records?')) {
+    // proceed
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Critical gotcha — bulk operations bypass observers:</b>\n\nObservers are Eloquent-level hooks. They fire when you call `->save()`, `->create()`, `->delete()` on a model instance. They do <b>NOT</b> fire for SQL-level bulk operations:\n\n• `Post::where('user_id', $id)->delete()` → NO observer\n• `Post::truncate()` → NO observer\n• `Post::insert([...])` → NO observer (also bypasses `$fillable`!)\n\n↳ If you need side-effects for bulk deletes, dispatch an event or job manually before/after the bulk query.\n\n↳ Available hooks: `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `restoring`, `restored` (for soft-deletes).",
-            np: "Bulk operations (`where()->delete()`, `truncate()`) ले observers trigger गर्दैन।",
-            jp: "バルク操作（`where()->delete()` など）はオブザーバを発火しない点に注意。",
+            en: "Use `$this->newLine()` to add blank lines for visual breathing room. Use `$this->newLine(2)` for two blank lines. For very long output, consider piping to `less` (`php artisan cmd | less`) rather than flooding the terminal.",
+            np: "`newLine()` = blank line। Long output लाई `| less` मा pipe गर्न सकिन्छ।",
+            jp: "`newLine()` で空行を挿入。長い出力は `| less` にパイプするのがおすすめ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Calling commands from code & chaining",
+        np: "Code बाट command call गर्ने",
+        jp: "コードからコマンドを呼ぶ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "You can call Artisan commands from controllers, jobs, or other commands. This is useful for:\n• Running a command from a web UI trigger (e.g. an admin \"Run now\" button)\n• Chaining commands in a workflow (clear cache → rebuild index)\n• Testing commands programmatically\n\nUse `Artisan::call()` for synchronous execution, or `Artisan::queue()` to dispatch to the queue.",
+            np: "Artisan::call() = synchronous। Artisan::queue() = queue मा dispatch।",
+            jp: "Artisan::call() で同期実行。Artisan::queue() でキューに投入。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Artisan::call(), output capture & chaining", np: "Command call गर्ने", jp: "コマンドを呼び出す" },
+          code: `use Illuminate\\Support\\Facades\\Artisan;
+
+// Call from a controller
+Artisan::call('emails:digest', ['--dry-run' => true]);
+
+// Capture the command's output
+Artisan::call('reports:generate', ['--format' => 'csv']);
+$output = Artisan::output(); // returns the printed text as a string
+
+// Call from inside another command
+public function handle(): int
+{
+    $this->call('cache:clear');           // runs synchronously, inherits I/O
+    $this->callSilently('config:cache');  // runs silently (no output)
+    return self::SUCCESS;
+}
+
+// Dispatch to the queue (non-blocking)
+Artisan::queue('reports:generate', ['--format' => 'csv'])
+    ->onQueue('reports')
+    ->onConnection('redis');`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Testing commands in Pest:</b> use the `artisan()` helper to make assertions on the command's output, exit code, and interactions.\n\n↳ `$this->artisan('emails:digest')->assertExitCode(0)->expectsOutput('Sending digest...')`\n↳ `$this->artisan('users:export', ['environment' => 'staging'])->expectsQuestion(...)->assertExitCode(0)`\n\nDependencies injected via the service container can be mocked with `$this->mock(MyService::class, ...)` before calling `artisan()`.",
+            np: "Test मा artisan() helper use गर्ने। assertExitCode(0), expectsOutput() use गर्ने।",
+            jp: "テストでは artisan() ヘルパーを使い assertExitCode() や expectsOutput() で検証する。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Scheduling commands with the console kernel",
+        np: "Commands schedule गर्ने",
+        jp: "コマンドをスケジュールする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Instead of setting up a separate cron job for every task, Laravel uses a single cron entry that fires every minute. You define all your recurring tasks in PHP code — Laravel figures out which ones to run right now. Think of it like a weekly planner: you write all your tasks in one place and your assistant ticks off what's due.",
+            np: "एउटा cron entry मात्र। बाँकी schedule PHP code मा define गर्ने।",
+            jp: "cron エントリは 1 つだけ。スケジュールは PHP コードで定義する。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Server cron entry + routes/console.php schedule", np: "Cron entry र schedule", jp: "cron エントリとスケジュール定義" },
+          code: `# Add ONE cron entry to the server (runs every minute)
+* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1
+
+# routes/console.php (Laravel 11 style — no Kernel class needed)
+use Illuminate\\Support\\Facades\\Schedule;
+
+// Send weekly digest every Monday at 8:00 AM
+Schedule::command('emails:digest')
+    ->weeklyOn(1, '8:00')
+    ->withoutOverlapping()  // skip if previous run is still going
+    ->runInBackground();    // don't block other scheduled jobs
+
+// Clean up expired sessions every day at midnight
+Schedule::command('sessions:cleanup')
+    ->daily()
+    ->at('00:00')
+    ->timezone('Asia/Tokyo');
+
+// Cache reports every hour
+Schedule::command('reports:cache')
+    ->hourly()
+    ->withoutOverlapping();
+
+// Other frequency helpers
+// ->everyFiveMinutes()
+// ->everyThirtyMinutes()
+// ->monthly()
+// ->monthlyOn(15, '09:00')  // 15th of each month at 9am
+
+# Test scheduling locally (runs due tasks and waits)
+php artisan schedule:work`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`withoutOverlapping()` prevents a second run from starting if the previous one is still running — crucial for slow tasks like report generation. Combine it with `runInBackground()` so slow tasks don't block shorter jobs that are scheduled at the same time.\n\n↳ Without `runInBackground()`, scheduled tasks execute sequentially — if task A takes 5 minutes, task B misses its window\n↳ With `runInBackground()`, both spawn as separate OS processes and run in parallel",
+            np: "withoutOverlapping() = duplicate run रोक्छ। runInBackground() = parallel run।",
+            jp: "withoutOverlapping() で二重実行を防ぎ、runInBackground() で並列実行する。",
           },
         },
       ],
@@ -445,62 +305,62 @@ public function boot(): void
   faq: [
     {
       question: {
-        en: "When should I use an accessor vs a plain getter method on the model?",
-        np: "Accessor vs getter method — कहिले कुन?",
-        jp: "アクセサとゲッターメソッドはどう使い分けますか？",
+        en: "Where should I register my custom commands in Laravel 11?",
+        np: "Laravel 11 मा custom commands कहाँ register गर्ने?",
+        jp: "Laravel 11 でカスタムコマンドはどこに登録する？",
       },
       answer: {
-        en: "<b>Use an accessor</b> when the value behaves like a natural attribute of the model:\n• It integrates with `$model->attribute_name` syntax automatically\n• It is included in `->toArray()` and JSON serialisation\n• Example: `full_name`, `avatar_url`, `formatted_price`\n\n<b>Use a plain method</b> when the operation reads like an action or requires parameters:\n• `$model->getFormattedAddress($format)` — takes a parameter\n• `$model->calculateTax($rate)` — performs a calculation, not just reading data\n• It's clearer that calling it has intent, not just property access\n\nRule of thumb: if you'd describe it as \"the model's X\", use an accessor. If you'd describe it as \"getting the model's X given Y\", use a method.",
-        np: "Accessor = attribute-like value (toArray मा पनि)। Method = parameter लिने वा calculation गर्ने।",
-        jp: "属性のように扱うならアクセサ、引数や計算が必要ならメソッドが適切。",
+        en: "In Laravel 11, commands in `app/Console/Commands/` are auto-discovered — no registration needed. If you place commands elsewhere, add the directory path via `withConsoleCommands()` in `bootstrap/app.php`:\n\n`->withConsoleCommands(base_path('app/Admin/Commands'))`\n\nThe old `app/Console/Kernel.php` with a `$commands` array was removed in Laravel 11.",
+        np: "`app/Console/Commands/` मा auto-discover हुन्छ। अन्यत्र राखे bootstrap/app.php मा register गर्नुपर्छ।",
+        jp: "`app/Console/Commands/` は自動検出される。別の場所は `bootstrap/app.php` で登録する。",
       },
     },
     {
       question: {
-        en: "What is the difference between `$casts` and `$dates`?",
-        np: "`$casts` र `$dates` को फरक?",
-        jp: "`$casts` と `$dates` の違いは？",
+        en: "How do I pass an array of values as an option?",
+        np: "Option मा array values कसरी pass गर्ने?",
+        jp: "オプションに配列を渡すには？",
       },
       answer: {
-        en: "`$dates` is the <b>old way</b> to tell Eloquent \"cast this column to a Carbon instance.\" It is <b>deprecated as of Laravel 10</b> and will be removed in a future version.\n\n<b>Always use `$casts` for new code:</b>\n• `'published_at' => 'datetime'` → Carbon (mutable)\n• `'published_at' => 'immutable_datetime'` → CarbonImmutable (preferred — mutations return a new instance)\n• `'created_at'` and `'updated_at'` are automatically cast to Carbon by Eloquent — no entry needed\n\n↳ `immutable_datetime` is safer in pipelines because you can't accidentally mutate the original value.",
-        np: "`$dates` deprecated छ। `$casts` मा `datetime` वा `immutable_datetime` प्रयोग गर्नुहोस्।",
-        jp: "`$dates` は非推奨。`$casts` で `datetime` または `immutable_datetime` を使用する。",
+        en: "Define the option as variadic using `*`:\n\n`{--user=* : User IDs to process}`\n\nAccess with `$this->option('user')` — it returns an array. Call it like:\n\n`php artisan users:notify --user=1 --user=2 --user=5`\n\nIf no `--user` is passed, `$this->option('user')` returns an empty array `[]`.",
+        np: "`{--user=*}` syntax use गर्ने। `$this->option('user')` ले array return गर्छ।",
+        jp: "`{--user=*}` で可変引数オプションを定義。`$this->option('user')` が配列を返す。",
       },
     },
     {
       question: {
-        en: "Can local scopes conflict with each other when chained?",
-        np: "Chained scopes conflict हुन्छन् कि?",
-        jp: "スコープをチェーンするとき競合しますか？",
+        en: "Can I use Auth inside a console command?",
+        np: "Console command भित्र Auth use गर्न सकिन्छ?",
+        jp: "コンソールコマンドの中で Auth を使える？",
       },
       answer: {
-        en: "No — local scopes are just query builder calls under the hood, and query builder calls stack cleanly. Each scope adds its `WHERE` clause to the same underlying query.\n\nThe only potential conflict is if <b>two global scopes</b> filter the same column with incompatible conditions:\n• Global scope A: `->where('status', 'published')`\n• Global scope B: `->where('status', 'draft')`\n→ Both apply; the query returns no results (impossible condition)\n\nFix: remove the conflicting scope with `withoutGlobalScope(MyScope::class)` or `withoutGlobalScopes()` (removes all).\n\nFor local scopes, the only thing to watch is ordering — `scopeRecent()` using `orderBy` after another `orderBy` can produce surprising results. Use `reorder()` to clear previous orderings first.",
-        np: "Local scopes stack cleanly। Global scopes same column filter गर्छन् भने conflict हुन सक्छ।",
-        jp: "ローカルスコープはスタックで問題なし。グローバルスコープ同士が同列を競合する場合は `withoutGlobalScope` で除外。",
+        en: "Don't use `Auth::login()` in console commands — the session that login creates only lasts the duration of the HTTP request lifecycle. Instead, pass a user ID as an argument and load the user manually:\n\n`$user = User::findOrFail($this->argument('userId'));`\n\nThen pass `$user` directly to any service that needs it. In tests, use `$this->actingAs($user)` before `artisan()`.",
+        np: "Console मा `Auth::login()` नगर्ने। User ID argument मा pass गरेर manually load गर्ने।",
+        jp: "コンソールで `Auth::login()` は使わない。引数でユーザー ID を受け取り手動で取得する。",
       },
     },
     {
       question: {
-        en: "What is a polymorphic many-to-many relationship?",
-        np: "Polymorphic many-to-many भनेको के हो?",
-        jp: "ポリモーフィック多対多とは？",
+        en: "Can I run scheduled tasks in parallel?",
+        np: "Scheduled tasks parallel मा run गर्न सकिन्छ?",
+        jp: "スケジュールタスクを並列実行できる？",
       },
       answer: {
-        en: "A regular `belongsToMany` links <b>two specific models</b> via a pivot table (e.g. `Post` ↔ `Tag`).\n\nA <b>polymorphic many-to-many</b> lets a model relate to <b>multiple different model types</b> via a single pivot table.\n\nExample: `Tag` can belong to both `Post` AND `Video`:\n• Migration: `taggables` pivot with `tag_id`, `taggable_id`, `taggable_type`\n• `Tag` model: `morphedByMany(Post::class, 'taggable')` and `morphedByMany(Video::class, 'taggable')`\n• `Post` and `Video` models: `morphToMany(Tag::class, 'taggable')`\n\nOne `tags` table, one `taggables` pivot — works for any model that needs tags.",
-        np: "Polymorphic many-to-many: Tag ले Post र Video दुवैमा belongsToMany हुन्छ।",
-        jp: "ポリモーフィック多対多は 1 つのピボットテーブルで複数モデルと多対多を実現（例: Tag ↔ Post/Video）。",
+        en: "Yes — use `->runInBackground()` on each command. This spawns each task as a separate OS process so they run simultaneously instead of one after another.\n\nWithout `runInBackground()`: tasks run sequentially. A slow task at 2:00 AM delays every other task scheduled for the same minute.\n\nWith `runInBackground()`: each task spawns independently. The scheduler finishes in milliseconds and all tasks run in parallel.",
+        np: "`runInBackground()` use गर्ने। Parallel मा spawn हुन्छ।",
+        jp: "`runInBackground()` で並列実行。付けないと直列で動き、遅いタスクが後続を遅らせる。",
       },
     },
     {
       question: {
-        en: "Do model observers run inside database transactions?",
-        np: "Observers DB transaction भित्र fire हुन्छन् कि?",
-        jp: "オブザーバはトランザクション内で実行されますか？",
+        en: "How do I test that a scheduled command fires at the right time?",
+        np: "Scheduled command सही time मा fire हुन्छ भनेर कसरी test गर्ने?",
+        jp: "スケジュールが正しい時刻に実行されるかテストするには？",
       },
       answer: {
-        en: "Yes — and this can cause a subtle bug.\n\nIf you run a save inside a `DB::transaction()` and the transaction is <b>rolled back</b>, the `created`/`updated` event has already fired and your observer's side-effects have already happened:\n• Email sent to user → cannot be unsent\n• File written to disk → file is now orphaned\n\n<b>Two solutions:</b>\n1. Use `DB::afterCommit()` to delay the observer logic until after a successful commit\n2. Set `public bool $afterCommit = true` on any listener/job dispatched from the observer — queued jobs won't dispatch until the transaction commits\n\n↳ For simple apps without transactions, this is a non-issue. For financial or critical data, always use the `$afterCommit` flag.",
-        np: "Transaction rollback हुँदा observer पहिल्यै fire भइसकेको हुन्छ। `$afterCommit = true` प्रयोग गर्नुहोस्।",
-        jp: "ロールバック後もオブザーバは発火済み。`$afterCommit = true` でコミット後のみ実行できる。",
+        en: "Use Laravel's time-travel helpers to simulate a specific date/time, then inspect the schedule:\n\n`$this->travelTo(Carbon::parse('2025-01-06 08:00')); // a Monday at 8am`\n`$event = collect(app(Schedule::class)->events())->first(fn($e) => str_contains($e->command, 'emails:digest'));`\n`$this->assertTrue($event->isDue(app()));`\n\nAlso useful: `$event->getSummaryForDisplay()` returns the cron expression as a human-readable string.",
+        np: "`travelTo()` + `Schedule::events()` use गरेर test गर्ने।",
+        jp: "`travelTo()` で時刻を固定し `Schedule::events()` でスケジュールを検証する。",
       },
     },
   ],

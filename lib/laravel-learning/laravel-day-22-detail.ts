@@ -3,369 +3,394 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_22_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
-      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
-      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
+      en: "Today covers three tools for doing work <b>outside</b> the web request cycle.\n\n<b>Queues</b> — for tasks that are too slow for a web request (sending emails, resizing images, calling external APIs)\n  ↳ Hand the work off to a background worker so users get an instant response\n\n<b>Events & Listeners</b> — for notifying different parts of your app when something happens\n  ↳ Instead of calling services directly, you fire an event and let listeners react independently\n\n<b>Task Scheduling</b> — for running commands on a timer (daily reports, cleanup jobs)\n  ↳ One PHP file replaces a messy pile of cron job configs on the server",
+      np: "Queue (slow task), Event/Listener (decoupled), Scheduling (cron)। तीन tool एउटै day।",
+      jp: "Queue は重い処理を非同期化、Event/Listener は疎結合な通知、Scheduling は cron の代替。3 つのツールを習得。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Auth guards & session-based login",
-        np: "Auth guard र session login",
-        jp: "Auth ガードとセッションログイン",
+        en: "Jobs & queue dispatching",
+        np: "Job र queue dispatch",
+        jp: "Job とキューディスパッチ",
       },
       blocks: [
         {
           type: "diagram",
-          id: "laravel-auth-guard",
+          id: "laravel-queue-job",
         },
         {
           type: "paragraph",
           text: {
-            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
-            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
-            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
+            en: "Think of a queue like a restaurant ticket system — the waiter (your web request) takes the order and hands a ticket to the kitchen (the worker), then immediately goes back to take the next customer's order.\n\n<b>Why use queues?</b>\n• Some tasks are slow: sending emails, resizing images, calling external APIs\n  ↳ If you do these during a web request, the user waits 3–5 seconds staring at a spinner\n• With a queue, the web request finishes in milliseconds and hands the slow work to a background worker\n  ↳ The user gets a response immediately — the email sends a second later\n\n<b>How it works</b>\n• Create a <b>Job class</b> — a PHP class that implements `ShouldQueue` with a `handle()` method\n• <b>Dispatch</b> the job from your controller — Laravel serializes it and puts it on the queue\n• A separate <b>worker process</b> (`php artisan queue:work`) runs in the background, picks jobs off the queue, and calls `handle()`\n  ↳ The worker runs independently of your web server — you can scale them separately",
+            np: "`ShouldQueue` implement गर्नु। Worker ले `handle()` call। HTTP fast।",
+            jp: "`ShouldQueue` を実装したクラスがジョブ。ワーカーが `handle()` を実行。HTTP を速く保つ。",
           },
-        },
-        {
-          type: "code",
-          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
-
-// Check if a user is logged in
-if (Auth::check()) {
-    $user = Auth::user();   // returns Authenticatable|null
-    $id   = Auth::id();     // returns int|null
-}
-
-// Attempt login (returns bool)
-$credentials = ['email' => $email, 'password' => $password];
-if (Auth::attempt($credentials, $remember)) {
-    $request->session()->regenerate();   // prevent session fixation
-    return redirect()->intended('/dashboard');
-}
-
-// Manual login (e.g., after registration)
-Auth::login($user);
-Auth::loginUsingId(1);
-
-// Logout
-Auth::logout();
-$request->session()->invalidate();
-$request->session()->regenerateToken();`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
-            np: "`auth` middleware route सुरक्षित गर्छ।",
-            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
-          code: `// routes/web.php
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class);
-    Route::resource('posts', PostController::class);
-});
-
-// Email-verified gate
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/billing', BillingController::class);
-});
-
-// API guard (Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/api/user', fn (Request $request) => $request->user());
-});`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Laravel Breeze install & what it gives you",
-        np: "Breeze install र features",
-        jp: "Breeze のインストールと提供機能",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
-            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
-            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
-          code: `# 1. Require the package
-composer require laravel/breeze --dev
-
-# 2. Scaffold (choose a stack)
-php artisan breeze:install blade        # Blade + Alpine.js (default)
-php artisan breeze:install livewire     # Livewire full-page
-php artisan breeze:install react        # Inertia + React
-php artisan breeze:install vue          # Inertia + Vue
-php artisan breeze:install api          # API-only (no views, for SPAs)
-
-# 3. Install frontend dependencies & build
-npm install
-npm run dev
-
-# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
-php artisan migrate`,
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
-              np: "Login — rate limiting सहित।",
-              jp: "ログイン — レート制限（5回/分）付き。",
-            },
-            {
-              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
-              np: "Registration — `bcrypt` पासवर्ड।",
-              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
-            },
-            {
-              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
-              np: "Password reset — signed mail।",
-              jp: "パスワードリセット — 署名付きメールで送信。",
-            },
-            {
-              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
-              np: "Email verify — `MustVerifyEmail` interface।",
-              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
-            },
-            {
-              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
-              np: "Profile edit पनि।",
-              jp: "プロフィール編集・アカウント削除もあり。",
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
-            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
-            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
-use Illuminate\\Support\\Facades\\Hash;
-use App\\Models\\User;
-
-public function store(Request $request): RedirectResponse
-{
-    $validated = $request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'min:8', 'confirmed'],
-    ]);
-
-    $user = User::create([
-        'name'     => $validated['name'],
-        'email'    => $validated['email'],
-        'password' => Hash::make($validated['password']),
-    ]);
-
-    Auth::login($user);
-
-    return redirect('/dashboard');
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Sanctum: API tokens & SPA auth",
-        np: "Sanctum: token र SPA auth",
-        jp: "Sanctum: API トークンと SPA 認証",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
-            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
-            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
-          code: `# Install (already included in Laravel 11 by default)
-composer require laravel/sanctum
-
-# Publish config + migrations
-php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
-
-php artisan migrate`,
-        },
-        {
-          type: "code",
-          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
-          code: `// app/Models/User.php
-use Laravel\\Sanctum\\HasApiTokens;
-
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, Notifiable;
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
-          code: `// Issue a token on login
-public function login(Request $request): JsonResponse
-{
-    $user = User::where('email', $request->email)->first();
-
-    if (! $user || ! Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    }
-
-    // Create token with optional abilities (scopes)
-    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
-                   ->plainTextToken;
-
-    return response()->json(['token' => $token]);
-}
-
-// Revoke current token (logout)
-public function logout(Request $request): JsonResponse
-{
-    $request->user()->currentAccessToken()->delete();
-    return response()->json(['message' => 'Logged out']);
-}
-
-// Revoke all tokens (e.g. "log out everywhere")
-$user->tokens()->delete();
-
-// Protect API routes — routes/api.php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::post('/posts', [PostController::class, 'store']);
-});`,
         },
         {
           type: "table",
           caption: {
-            en: "SPA cookie auth vs API token auth",
-            np: "दुई mode तुलना",
-            jp: "SPA クッキー vs API トークン",
+            en: "Queue driver comparison",
+            np: "Queue driver तुलना",
+            jp: "Queue ドライバー比較",
           },
           headers: [
-            { en: "Mode", np: "Mode", jp: "モード" },
-            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
-            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
-            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
+            { en: "Driver", np: "Driver", jp: "ドライバー" },
+            { en: "Best for", np: "प्रयोग", jp: "用途" },
+            { en: "Requires", np: "आवश्यक", jp: "必要なもの" },
+            { en: "Production-ready?", np: "Production?", jp: "本番対応？" },
           ],
           rows: [
             [
-              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
-              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
-              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
-              { en: "Yes", np: "हो", jp: "Yes" },
+              { en: "`sync`", np: "`sync`", jp: "`sync`" },
+              { en: "Local development / testing", np: "Dev/test", jp: "開発・テスト用" },
+              { en: "Nothing", np: "केही होइन", jp: "不要" },
+              { en: "No (runs inline)", np: "होइन", jp: "No（同期実行）" },
             ],
             [
-              { en: "API Token", np: "API Token", jp: "API トークン" },
-              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
-              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
-              { en: "No", np: "होइन", jp: "No" },
+              { en: "`database`", np: "`database`", jp: "`database`" },
+              { en: "Small apps, low volume", np: "Small app", jp: "小規模アプリ" },
+              { en: "`jobs` table migration", np: "`jobs` table", jp: "`jobs` テーブル" },
+              { en: "Yes (limited throughput)", np: "हो (सीमित)", jp: "Yes（低スループット）" },
+            ],
+            [
+              { en: "`redis`", np: "`redis`", jp: "`redis`" },
+              { en: "High-volume production", np: "High volume", jp: "高負荷本番" },
+              { en: "Redis server + predis/phpredis", np: "Redis", jp: "Redis サーバー" },
+              { en: "Yes (recommended)", np: "हो (सिफारिश)", jp: "Yes（推奨）" },
+            ],
+            [
+              { en: "`sqs`", np: "`sqs`", jp: "`sqs`" },
+              { en: "AWS-hosted workloads", np: "AWS", jp: "AWS 環境" },
+              { en: "AWS credentials + `aws/aws-sdk-php`", np: "AWS credentials", jp: "AWS 認証情報" },
+              { en: "Yes (fully managed)", np: "हो (managed)", jp: "Yes（フルマネージド）" },
             ],
           ],
+        },
+        {
+          type: "code",
+          title: { en: "Creating a Job", np: "Job बनाउने", jp: "Job の作成" },
+          code: `php artisan make:job SendWelcomeEmail`,
+        },
+        {
+          type: "code",
+          title: { en: "Job class anatomy", np: "Job class", jp: "Job クラスの構造" },
+          code: `// app/Jobs/SendWelcomeEmail.php
+namespace App\\Jobs;
+
+use App\\Models\\User;
+use App\\Mail\\WelcomeMail;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Foundation\\Bus\\Dispatchable;
+use Illuminate\\Queue\\InteractsWithQueue;
+use Illuminate\\Queue\\SerializesModels;
+use Illuminate\\Support\\Facades\\Mail;
+
+class SendWelcomeEmail implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /** Number of times the job may be attempted. */
+    public int $tries = 3;
+
+    /** Timeout in seconds before the job is considered failed. */
+    public int $timeout = 60;
+
+    /** Number of seconds to wait before retrying. */
+    public int $backoff = 30;
+
+    public function __construct(
+        public readonly User $user
+    ) {}
+
+    public function handle(): void
+    {
+        Mail::to($this->user->email)
+            ->send(new WelcomeMail($this->user));
+    }
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Dispatching jobs", np: "Job dispatch", jp: "Job のディスパッチ" },
+          code: `use App\\Jobs\\SendWelcomeEmail;
+use App\\Jobs\\GenerateThumbnail;
+use App\\Jobs\\SendInvoice;
+use Illuminate\\Support\\Facades\\Bus;
+
+// Immediate dispatch
+SendWelcomeEmail::dispatch($user);
+
+// Delayed dispatch — run 5 minutes from now
+SendWelcomeEmail::dispatch($user)->delay(now()->addMinutes(5));
+
+// Specific queue channel
+SendWelcomeEmail::dispatch($user)->onQueue('emails');
+
+// Dispatch to a specific connection + queue
+SendWelcomeEmail::dispatch($user)
+    ->onConnection('redis')
+    ->onQueue('high');
+
+// Chained jobs — run sequentially, stop on failure
+Bus::chain([
+    new GenerateThumbnail($post),
+    new SendInvoice($order),
+    new SendWelcomeEmail($user),
+])->onQueue('default')->dispatch();
+
+// Run queue worker
+// php artisan queue:work --queue=high,emails,default
+// php artisan queue:work redis --tries=3 --timeout=90`,
         },
       ],
     },
     {
       title: {
-        en: "Password reset & email verification",
-        np: "Password reset र email verification",
-        jp: "パスワードリセットとメール確認",
+        en: "Failed jobs & retry strategy",
+        np: "Failed job र retry",
+        jp: "失敗したジョブとリトライ戦略",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
-            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
-            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
+            en: "Even reliable workers fail sometimes — the email service goes down, a network request times out, or bad data causes an exception.\n\n<b>What happens when a job fails</b>\n• If a job throws an exception, Laravel retries it up to `$tries` times (you set this on the job class)\n  ↳ Between retries it waits `$backoff` seconds — giving external services time to recover\n• After all retries are exhausted, the job is marked as <b>failed</b> and stored in the `failed_jobs` database table\n  ↳ Laravel records the exception message and stack trace so you can see exactly what went wrong\n• The `failed(Throwable $exception)` method on the job is called — use it to clean up partial work or send an alert\n\n<b>What you can do next</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific failed job back onto the queue\n• `php artisan queue:flush` — delete all records from `failed_jobs`",
+            np: "`$tries` पार भए `failed_jobs` table। `failed()` method clean up गर्न।",
+            jp: "`$tries` を超えるか例外が起きると `failed_jobs` に記録。`failed()` でクリーンアップ。",
           },
         },
         {
           type: "code",
-          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Password;
+          title: { en: "failed() method + artisan commands", np: "failed() र artisan", jp: "failed() とコマンド" },
+          code: `// Inside the job class
+public function failed(\\Throwable $exception): void
+{
+    // Notify the user, clean up partial work, send alert
+    $this->user->notify(new JobFailedNotification($exception->getMessage()));
 
-// 1. Send reset link
-$status = Password::sendResetLink($request->only('email'));
-
-if ($status === Password::RESET_LINK_SENT) {
-    return back()->with('status', __($status));
+    Log::error('SendWelcomeEmail failed', [
+        'user_id' => $this->user->id,
+        'error'   => $exception->getMessage(),
+    ]);
 }
-return back()->withErrors(['email' => __($status)]);
 
-// 2. Reset password (called from reset form)
-$status = Password::reset(
-    $request->only('email', 'password', 'password_confirmation', 'token'),
-    function (User $user, string $password) {
-        $user->forceFill(['password' => Hash::make($password)])
-             ->setRememberToken(Str::random(60));
-        $user->save();
-        event(new PasswordReset($user));
+// Manually fail from inside handle()
+public function handle(): void
+{
+    if (! $this->user->isActive()) {
+        $this->fail(new \\RuntimeException('User is not active'));
+        return;
     }
-);
+    // ...
+}
 
-return $status === Password::PASSWORD_RESET
-    ? redirect()->route('login')->with('status', __($status))
-    : back()->withErrors(['email' => __($status)]);`,
+// Artisan commands for failed jobs
+// php artisan queue:failed              — list all failed jobs
+// php artisan queue:retry <id>          — retry one job by ID
+// php artisan queue:retry all           — retry all failed jobs
+// php artisan queue:forget <id>         — delete one failed job
+// php artisan queue:flush               — delete ALL failed jobs
+// php artisan queue:failed-table        — create failed_jobs migration`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
-            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
-            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
+            en: "<b>Laravel Horizon</b> is a real-time dashboard for Redis queues — think of it as the control room for all your background workers.\n• Install it with `composer require laravel/horizon` then visit `/horizon` in your browser\n• It shows: how many jobs are waiting, how fast they're being processed, which ones failed, and how long each one took\n  ↳ Essential for production systems where you need to catch problems before users notice them",
+            np: "Horizon — Redis queue dashboard। `/horizon` UI। Production मा essential।",
+            jp: "Horizon は Redis キューのダッシュボード。スループット・失敗・深さをリアルタイム表示。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Events & Listeners",
+        np: "Event र Listener",
+        jp: "イベントとリスナー",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Imagine a package delivery system: when an order ships, you want to (1) email the customer, (2) update the inventory, and (3) log it for analytics.\n\n<b>The naive approach</b>\n• Call each service directly from your controller — works, but your controller now knows about email, inventory, AND analytics\n  ↳ When you add a fourth action, you have to touch the controller again\n\n<b>The Event / Listener approach</b>\n• Fire a single `OrderShipped` <b>event</b> from your controller — it just carries the order data\n• Three separate <b>Listeners</b> each subscribe to that event and handle their own piece\n  ↳ Your controller only knows it shipped an order — it doesn't care what happens next\n  ↳ Adding a fourth action means adding a fourth listener, not touching the controller\n• In Laravel 11, listeners are auto-discovered — no registration file needed",
+            np: "Event = something happened। Listener = respond। Laravel 11 मा auto-discover।",
+            jp: "Event は「何かが起きた」の通知、Listener が「対応する」。Laravel 11 は自動検出。",
           },
         },
         {
           type: "code",
-          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
-          code: `// app/Models/User.php
-use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
+          title: { en: "Generate Event & Listener", np: "Generate", jp: "生成コマンド" },
+          code: `php artisan make:event OrderShipped
+php artisan make:listener SendShipmentNotification --event=OrderShipped
+php artisan make:listener UpdateInventory --event=OrderShipped`,
+        },
+        {
+          type: "code",
+          title: { en: "Event class", np: "Event class", jp: "Event クラス" },
+          code: `// app/Events/OrderShipped.php
+namespace App\\Events;
 
-class User extends Authenticatable implements MustVerifyEmail
+use App\\Models\\Order;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+use Illuminate\\Queue\\SerializesModels;
+
+class OrderShipped
 {
-    // Registration automatically sends verification email
-}
+    use Dispatchable, SerializesModels;
 
-// Check in code
-if (Auth::user()->hasVerifiedEmail()) {
-    // proceed
-}
+    public function __construct(
+        public readonly Order $order
+    ) {}
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Queueable Listener", np: "Queueable Listener", jp: "キュー対応リスナー" },
+          code: `// app/Listeners/SendShipmentNotification.php
+namespace App\\Listeners;
 
-// Manually trigger verification email
-$user->sendEmailVerificationNotification();
+use App\\Events\\OrderShipped;
+use App\\Notifications\\OrderShippedNotification;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Queue\\InteractsWithQueue;
 
-// routes/web.php — Breeze adds these automatically
-Route::get('/email/verify', EmailVerificationPromptController::class)
-    ->middleware('auth')
-    ->name('verification.notice');
+class SendShipmentNotification implements ShouldQueue
+{
+    use InteractsWithQueue;
 
-Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');`,
+    public string $queue = 'notifications';
+    public int $delay = 10; // seconds
+
+    public function handle(OrderShipped $event): void
+    {
+        $event->order->user->notify(
+            new OrderShippedNotification($event->order)
+        );
+    }
+
+    public function failed(OrderShipped $event, \\Throwable $exception): void
+    {
+        Log::error('Shipment notification failed', ['order' => $event->order->id]);
+    }
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Dispatching events", np: "Event dispatch", jp: "Event のディスパッチ" },
+          code: `use App\\Events\\OrderShipped;
+
+// Option 1: global helper
+event(new OrderShipped($order));
+
+// Option 2: static dispatch method (same result)
+OrderShipped::dispatch($order);
+
+// Option 3: fire-and-forget on Eloquent model event
+// (define in boot() or as Model::observe())
+Order::created(fn (Order $order) => OrderShipped::dispatch($order));
+
+// Manual registration (Laravel 10 / if auto-discovery disabled)
+// app/Providers/EventServiceProvider.php
+protected $listen = [
+    OrderShipped::class => [
+        SendShipmentNotification::class,
+        UpdateInventory::class,
+    ],
+];`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Sometimes you want to push an event to the browser in real time — for example, updating a live dashboard when a job finishes.\n• This is called <b>broadcasting</b> and uses a WebSocket server (Pusher, Ably, or a self-hosted Soketi)\n• The event implements `ShouldBroadcast`, and your frontend JavaScript subscribes using Laravel Echo\n  ↳ This is a more advanced topic — see the official Laravel Broadcasting docs when you're ready for it",
+            np: "Broadcasting — Pusher/Soketi। Frontend subscribe गर्छ। Separate topic।",
+            jp: "ブロードキャストは Pusher/Soketi でフロントエンドにリアルタイム通知。`ShouldBroadcast` を実装。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Task Scheduling",
+        np: "Task Scheduling",
+        jp: "タスクスケジューリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Cron jobs are powerful but painful to manage — each one is a separate line in a server config file, and you need server access to add or change them.\n\n<b>Laravel's scheduler solves this</b>\n• You add <b>one single cron entry</b> to the server that runs every minute: `* * * * * php artisan schedule:run`\n• Then you define every scheduled task in your PHP code — no more touching server config files\n  ↳ In Laravel 11 all schedules live in `routes/console.php`\n  ↳ In Laravel 10 they live in `app/Console/Kernel.php`\n• This means schedules are version-controlled, reviewable in pull requests, and testable locally\n  ↳ `php artisan schedule:work` polls every minute in your terminal so you can test without deploying",
+            np: "One cron entry (every minute), baaki sab PHP maa। Laravel 11 मा `routes/console.php`।",
+            jp: "1 分ごとの cron 1 エントリーで動く。Laravel 11 は `routes/console.php` にスケジュール定義。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Creating a scheduled command", np: "Command बनाउने", jp: "コマンドの作成" },
+          code: `php artisan make:command SendWeeklyReport`,
+        },
+        {
+          type: "code",
+          title: { en: "Schedule definitions (Laravel 11 — routes/console.php)", np: "Schedule define", jp: "スケジュール定義" },
+          code: `// routes/console.php (Laravel 11)
+use Illuminate\\Support\\Facades\\Schedule;
+
+// Artisan commands
+Schedule::command('emails:send')->dailyAt('09:00');
+Schedule::command('reports:weekly')->weekly()->mondays()->at('08:00');
+Schedule::command('db:backup')->daily()->timezone('Asia/Kathmandu');
+Schedule::command('queue:prune-failed', ['--hours=48'])->daily();
+
+// Every N minutes
+Schedule::command('app:sync-inventory')->everyFiveMinutes();
+Schedule::command('app:poll-webhooks')->everyMinute();
+
+// Closures (for quick one-off tasks)
+Schedule::call(function () {
+    DB::table('sessions')->where('last_activity', '<', now()->subHours(2))->delete();
+})->hourly();
+
+// Overlap prevention — skip if previous run still executing
+Schedule::command('app:process-images')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+// Run in background (don't block the scheduler process)
+Schedule::command('app:heavy-report')
+    ->daily()
+    ->runInBackground()
+    ->onSuccess(function () { Log::info('Report done'); })
+    ->onFailure(function () { Log::error('Report failed'); });
+
+// Send output to a log file
+Schedule::command('inspire')
+    ->hourly()
+    ->appendOutputTo(storage_path('logs/inspire.log'));`,
+        },
+        {
+          type: "code",
+          title: { en: "Single server cron entry (add to server crontab)", np: "Server cron", jp: "サーバーの cron エントリー" },
+          code: `# Run this ONE entry on your server — Laravel handles the rest
+* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
+
+# For local development
+php artisan schedule:work    # polls every minute in foreground
+
+# Test a specific scheduled task immediately
+php artisan schedule:run
+
+# List all scheduled tasks
+php artisan schedule:list`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you run multiple servers (a cluster), every server runs the scheduler every minute — by default, the same scheduled task runs on every server simultaneously.\n• Add `->onOneServer()` to prevent this — only the first server to claim the job actually runs it\n  ↳ It uses a shared Redis cache as a locking mechanism to coordinate across servers\n  ↳ Requires `CACHE_STORE=redis` in `.env` so all servers see the same lock",
+            np: "Cluster मा एक मात्र server मा run: `->onOneServer()`। Shared cache चाहिन्छ।",
+            jp: "クラスター環境で 1 台だけ実行したい場合は `->onOneServer()`。共有キャッシュが必要。",
+          },
         },
       ],
     },
@@ -373,86 +398,86 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
   faq: [
     {
       question: {
-        en: "What is the difference between Breeze, Jetstream, and Fortify?",
-        np: "Breeze, Jetstream, Fortify फरक के हो?",
-        jp: "Breeze・Jetstream・Fortify の違いは？",
+        en: "When should I use Queues vs Events?",
+        np: "Queue र Event कहिले प्रयोग गर्ने?",
+        jp: "Queue と Event はどう使い分けますか？",
       },
       answer: {
-        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
-        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
-        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
+        en: "Think of it this way:\n\n<b>Use a Queue when</b>\n• You have a single slow task (sending an email, calling an external API, generating a PDF)\n• The task doesn't need to happen before the user gets a response\n  ↳ The user clicks 'Register' → your code creates the account → then a queued job sends the welcome email separately\n\n<b>Use Events when</b>\n• Multiple unrelated parts of your app need to react when something happens\n• You want those reactions to stay decoupled from the code that triggered them\n  ↳ An order ships → email the customer AND update inventory AND log analytics — three listeners, all independent\n\nThey're not mutually exclusive — a listener can also implement `ShouldQueue` to run its logic in the background too.",
+        np: "Queue = slow deferred task। Event = decoupled reaction। Listener लाई ShouldQueue थप्न सकिन्छ।",
+        jp: "Queue は遅い単発タスクの非同期化、Event は複数の疎結合な反応。Listener に `ShouldQueue` を付ければ両立できます。",
       },
     },
     {
       question: {
-        en: "Is Sanctum suitable for mobile apps?",
-        np: "Mobile app को लागि Sanctum ठीक छ?",
-        jp: "Sanctum はモバイルアプリに適していますか？",
+        en: "How do I monitor queue workers in production?",
+        np: "Production मा queue worker monitor?",
+        jp: "本番でキューワーカーを監視する方法は？",
       },
       answer: {
-        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
-        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
-        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
+        en: "For <b>Redis queues</b>: install <b>Laravel Horizon</b> — it gives you a live web dashboard at `/horizon` showing job throughput, failures, and queue depth. Horizon also integrates with Supervisor (a Linux process manager) to keep your workers running automatically.\n\nFor <b>non-Redis queues</b>: use Supervisor directly with a config that keeps `php artisan queue:work --tries=3` running as a service.\n\nWhenever you deploy new code, run `php artisan horizon:terminate` (or restart the queue:work process) so workers pick up the latest code — stale workers run old code indefinitely otherwise.",
+        np: "Horizon — Redis dashboard। Supervisor — process manager। Deploy मा `horizon:terminate`।",
+        jp: "Redis なら Horizon が最適。Supervisor でワーカープロセスを管理。デプロイ後は `horizon:terminate`。",
       },
     },
     {
       question: {
-        en: "How do I add roles to authenticated users?",
-        np: "User मा role कसरी थप्ने?",
-        jp: "認証済みユーザーにロールを追加する方法は？",
+        en: "What happens if a job fails all retries?",
+        np: "Job सबै retry fail भए के हुन्छ?",
+        jp: "全リトライが失敗したらどうなりますか？",
       },
       answer: {
-        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 18) to authorize actions without needing a formal role system at all.",
-        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
-        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
+        en: "When all retries are exhausted, the job lands in the `failed_jobs` database table along with the full exception and stack trace.\n\n<b>What you can do</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific job back onto the queue\n• `php artisan queue:retry all` — retry every failed job at once\n• `php artisan queue:flush` — delete all records from `failed_jobs`\n\nTip: define a `failed(Throwable $exception)` method on your job class and use it to send a Slack alert or undo partial work (like rolling back a payment attempt).",
+        np: "`failed_jobs` table मा जान्छ। `failed()` call। `queue:retry` ले retry।",
+        jp: "`failed_jobs` テーブルに移動し `failed()` が呼ばれる。`queue:retry` で再試行可能。",
       },
     },
     {
       question: {
-        en: "What is the `remember_token` field for?",
-        np: "`remember_token` किस लागि?",
-        jp: "`remember_token` フィールドは何のためにあるの？",
+        en: "How do I test queued jobs?",
+        np: "Queued job test कसरी?",
+        jp: "キュージョブをテストする方法は？",
       },
       answer: {
-        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
-        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
-        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
+        en: "You don't want tests to actually send emails or hit external services — use `Queue::fake()` to intercept jobs without running them.\n\n• Call `Queue::fake()` at the top of your test\n• Run the code that should dispatch a job\n• Assert the job was (or wasn't) pushed:\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — confirms the job was dispatched\n  ↳ `Queue::assertPushedOn('emails', SendWelcomeEmail::class)` — confirms it was sent to the right queue\n  ↳ `Queue::assertNotPushed(SomeOtherJob::class)` — confirms a job was NOT dispatched\n\nTo test the job's logic itself, just call `(new SendWelcomeEmail($user))->handle()` directly — no queue or worker needed.",
+        np: "`Queue::fake()` — job push assert। `handle()` direct call test।",
+        jp: "`Queue::fake()` でキューを偽装し `assertPushed()` で確認。`handle()` の単体テストは直接呼び出す。",
       },
     },
     {
       question: {
-        en: "Can I have multiple auth guards?",
-        np: "धेरै auth guard राख्न मिल्छ?",
-        jp: "複数の認証ガードは持てますか？",
+        en: "Can I dispatch an event inside a job?",
+        np: "Job भित्र event dispatch गर्न मिल्छ?",
+        jp: "Job の中でイベントをディスパッチできますか？",
       },
       answer: {
-        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
-        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
-        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
+        en: "Yes — calling `event(new SomeEvent($data))` or `SomeEvent::dispatch($data)` inside a job's `handle()` method works fine.\n\nOne thing to watch: if that event has queueable listeners, those listeners are queued separately and fail independently.\n  ↳ A failing listener won't automatically roll back or fail the parent job\n  ↳ If you need strict ordering (do A, then B, then C — stop if any fail), use `Bus::chain()` instead of events",
+        np: "`handle()` भित्र `event()` call गर्न मिल्छ। Listener failure parent job rollback गर्दैन।",
+        jp: "`handle()` 内で `event()` を呼べます。リスナー失敗は親ジョブをロールバックしません。順序が必要なら `Bus::chain()` を使用。",
       },
     },
     {
       question: {
-        en: "How do I protect a route for specific user types?",
-        np: "विशेष user type को लागि route protect?",
-        jp: "特定ユーザータイプのみルートを保護する方法は？",
+        en: "How does `->withoutOverlapping()` work?",
+        np: "`withoutOverlapping()` कसरी काम गर्छ?",
+        jp: "`->withoutOverlapping()` の仕組みは？",
       },
       answer: {
-        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 18.",
-        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
-        jp: "カスタムミドルウェアか Gate/Policy（Day 18 参照）。`abort(403)` で弾く。",
+        en: "Before running a scheduled task, `->withoutOverlapping()` tries to claim an atomic lock in your cache.\n• If the lock is free, the task runs and holds the lock until it's done\n• If the lock is already claimed (the previous run is still going), this invocation is skipped entirely\n  ↳ The lock expires after 24 hours by default so a crashed job doesn't block things forever\n\n<b>When to use it</b>\n• Any long-running command that runs more frequently than it takes to finish\n  ↳ Example: a 90-second image processing command scheduled every minute would normally stack up — `->withoutOverlapping()` prevents this\n\nRequires a cache driver that supports atomic locks: Redis, Memcached, or `database`.",
+        np: "Cache lock acquire। Previous run चलिरहेको छ भने skip। Redis/DB cache चाहिन्छ।",
+        jp: "アトミックキャッシュロックを取得。前の実行が残っていればスキップ。Redis か DB キャッシュが必要。",
       },
     },
     {
       question: {
-        en: "How do I test authentication in feature tests?",
-        np: "Feature test मा auth कसरी test गर्ने?",
-        jp: "フィーチャーテストで認証をテストする方法は？",
+        en: "How do I handle tasks that must run only on one server in a cluster?",
+        np: "Cluster मा एक server मा मात्र run?",
+        jp: "クラスターで 1 台だけ実行する方法は？",
       },
       answer: {
-        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
-        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
-        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
+        en: "Without `->onOneServer()`, every server in your cluster runs every scheduled task independently — you'd send the daily report email three times if you have three servers.\n\n• Chain `->onOneServer()` to any scheduled task\n  ↳ All servers race to claim a shared cache lock when the scheduler fires\n  ↳ Only the winner runs the task — the others see the lock is taken and skip\n• Example: `Schedule::command('reports:generate')->daily()->onOneServer()`\n• Requires a shared Redis cache (`CACHE_STORE=redis` in `.env`) so all servers see the same lock",
+        np: "`->onOneServer()` — shared cache lock। पहिलो server मात्र run।",
+        jp: "`->onOneServer()` で共有キャッシュロックを使い 1 台だけ実行。Redis の共有キャッシュが必要。",
       },
     },
   ],
