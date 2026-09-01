@@ -3,369 +3,467 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_32_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
-      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
-      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
+      en: "Most real applications need to save files (profile pictures, PDF invoices, CSV exports) and call external APIs (payment gateways, weather data, third-party services). Today covers both.\n\n<b>File storage</b>\n• Laravel's `Storage` facade gives you one consistent API whether you're saving files to your local server or to Amazon S3\n  ↳ Swap from local disk to S3 by changing one line in `.env` — no code changes needed\n\n<b>HTTP Client</b>\n• Laravel's built-in HTTP Client lets you call external APIs cleanly, with retry logic and easy test support\n  ↳ No need to install Guzzle yourself — it wraps Guzzle behind a simple, readable interface",
+      np: "Storage facade ले local/S3 abstract। HTTP Client ले Guzzle wrap — fluent API।",
+      jp: "Storage ファサードでローカル・S3・クラウドを抽象化。HTTP クライアントは Guzzle を流暢な API でラップします。",
+    },
+    {
+      en: "<b>Mail</b>\n• Laravel represents each type of email as its own class called a <b>Mailable</b>\n  ↳ You define the subject, template, and attachments in that class — then just call `Mail::to($user)->send(new WelcomeEmail($user))`\n• Works with any mail provider: SMTP, Mailgun, Amazon SES, Postmark — all swappable via `.env`\n\n<b>Notifications</b>\n• Notifications are a step above email — one Notification class can deliver the same message through multiple channels at once\n  ↳ Send an email AND store a record in the database AND ping Slack — all from one `$user->notify()` call\n• Think of it as a universal alert system for your app",
+      np: "Mail: Mailable class, SMTP/Mailgun/SES driver। Notification: mail, database, Slack एकैपटक।",
+      jp: "Mail は Mailable クラスで SMTP・Mailgun・SES などに対応。Notification はメール・SMS・Slack・DB など複数チャネルを 1 クラスで管理します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Auth guards & session-based login",
-        np: "Auth guard र session login",
-        jp: "Auth ガードとセッションログイン",
+        en: "File storage & uploads",
+        np: "File storage र uploads",
+        jp: "ファイルストレージとアップロード",
       },
       blocks: [
         {
-          type: "diagram",
-          id: "laravel-auth-guard",
-        },
-        {
           type: "paragraph",
           text: {
-            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
-            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
-            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
+            en: "Laravel uses the concept of <b>disks</b> — named storage locations you configure once and then refer to by name throughout your code.\n\n<b>The two built-in disks</b>\n• `local` — saves files to `storage/app` on your server (not accessible via browser URL)\n  ↳ Use for private files like invoices, internal reports, or anything users shouldn't access directly\n• `public` — saves files to `storage/app/public` and makes them web-accessible at `/storage/filename`\n  ↳ Before this works, run `php artisan storage:link` once to create the symlink from `public/storage` to `storage/app/public`\n\n<b>Using S3</b>\n• Add your AWS credentials to `.env` and set `FILESYSTEM_DISK=s3`\n  ↳ Every `Storage::put()` call now saves to S3 instead of local — same code, different destination",
+            np: "`config/filesystems.php` मा disk configure। `php artisan storage:link` ले symlink बनाउँछ। S3 को लागि `.env` मा credentials।",
+            jp: "`config/filesystems.php` でディスクを設定。S3 は `.env` に認証情報を追加し `FILESYSTEM_DISK=s3` に設定。`php artisan storage:link` でシンボリックリンクを作成します。",
           },
         },
         {
           type: "code",
-          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
-
-// Check if a user is logged in
-if (Auth::check()) {
-    $user = Auth::user();   // returns Authenticatable|null
-    $id   = Auth::id();     // returns int|null
-}
-
-// Attempt login (returns bool)
-$credentials = ['email' => $email, 'password' => $password];
-if (Auth::attempt($credentials, $remember)) {
-    $request->session()->regenerate();   // prevent session fixation
-    return redirect()->intended('/dashboard');
-}
-
-// Manual login (e.g., after registration)
-Auth::login($user);
-Auth::loginUsingId(1);
-
-// Logout
-Auth::logout();
-$request->session()->invalidate();
-$request->session()->regenerateToken();`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
-            np: "`auth` middleware route सुरक्षित गर्छ।",
-            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
+          title: {
+            en: "Storage facade — read, write, delete",
+            np: "Storage facade उदाहरण",
+            jp: "Storage ファサードの操作",
           },
+          code: `use Illuminate\\Support\\Facades\\Storage;
+
+// ---- Write ----
+Storage::put('reports/report.txt', $content);
+Storage::disk('s3')->put('exports/data.csv', $csvContent);
+Storage::prepend('logs/app.log', 'New entry');   // add to top
+Storage::append('logs/app.log', 'New entry');    // add to bottom
+
+// ---- Read ----
+$content = Storage::get('reports/report.txt');
+$url     = Storage::url('images/photo.jpg');     // public URL
+$tempUrl = Storage::temporaryUrl('private/doc.pdf', now()->addMinutes(10)); // S3 only
+
+// ---- Existence / metadata ----
+Storage::exists('images/photo.jpg');
+Storage::missing('images/photo.jpg');
+Storage::size('images/photo.jpg');               // bytes
+Storage::lastModified('images/photo.jpg');       // Unix timestamp
+Storage::mimeType('images/photo.jpg');
+
+// ---- Delete / copy / move ----
+Storage::delete('images/old.jpg');
+Storage::delete(['old1.jpg', 'old2.jpg']);
+Storage::copy('from.jpg', 'to.jpg');
+Storage::move('old.jpg', 'new.jpg');
+
+// ---- List files ----
+$files = Storage::files('avatars');
+$all   = Storage::allFiles('avatars');           // recursive`,
         },
         {
           type: "code",
-          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
-          code: `// routes/web.php
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class);
-    Route::resource('posts', PostController::class);
-});
+          title: {
+            en: "File upload in a controller",
+            np: "Controller मा file upload",
+            jp: "コントローラでのファイルアップロード",
+          },
+          code: `use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Storage;
 
-// Email-verified gate
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/billing', BillingController::class);
-});
+public function store(Request $request)
+{
+    $request->validate([
+        'avatar' => ['required', 'image', 'max:2048'], // 2 MB limit
+    ]);
 
-// API guard (Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/api/user', fn (Request $request) => $request->user());
-});`,
+    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        $file = $request->file('avatar');
+
+        // store() auto-generates a unique filename and returns the path
+        $path = $file->store('avatars', 'public');
+
+        // storeAs() lets you set the filename explicitly
+        $path = $file->storeAs('avatars', 'user-' . auth()->id() . '.jpg', 'public');
+
+        // storeAs() on S3
+        $path = $file->storeAs('avatars', $file->hashName(), 's3');
+
+        // File metadata
+        $originalName = $file->getClientOriginalName();  // original filename
+        $extension    = $file->getClientOriginalExtension();
+        $size         = $file->getSize();                 // bytes
+        $mime         = $file->getMimeType();             // e.g. image/jpeg
+
+        // Save path to DB
+        auth()->user()->update(['avatar' => $path]);
+
+        // Public URL
+        $url = Storage::disk('public')->url($path);
+    }
+
+    return back()->with('success', 'Avatar uploaded!');
+}`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "S3 configuration (.env)",
+            np: "S3 configuration",
+            jp: "S3 の設定",
+          },
+          code: `# .env
+FILESYSTEM_DISK=s3
+
+AWS_ACCESS_KEY_ID=your-key-id
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_DEFAULT_REGION=ap-southeast-1
+AWS_BUCKET=my-app-bucket
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# composer
+composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies`,
         },
       ],
     },
     {
       title: {
-        en: "Laravel Breeze install & what it gives you",
-        np: "Breeze install र features",
-        jp: "Breeze のインストールと提供機能",
+        en: "HTTP Client",
+        np: "HTTP Client",
+        jp: "HTTP クライアント",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
-            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
-            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
+            en: "When your app needs to talk to an external API — a payment processor, a weather service, a CRM — Laravel's HTTP Client makes it clean and straightforward.\n\n<b>What it gives you</b>\n• A readable, chainable interface: `Http::withToken($token)->get('https://api.example.com/users')`\n  ↳ No manual Guzzle setup — just chain methods to build your request\n• Built-in retry logic: `->retry(3, 500)` tries the request 3 times with a 500ms gap between attempts\n• Easy response helpers:\n  ↳ `->json()` — decode the JSON response body into a PHP array\n  ↳ `->status()` — get the HTTP status code (200, 404, 500…)\n  ↳ `->successful()` — returns `true` if the status code is in the 2xx range\n  ↳ `->throw()` — throws an exception automatically if the request fails\n• Test-friendly: `Http::fake()` intercepts outgoing requests in tests so you never make real API calls",
+            np: "`Http` facade ले Guzzle wrap। `->json()`, `->status()`, `->successful()`, `->throw()`। Test मा `Http::fake()`।",
+            jp: "`Http` ファサードは Guzzle をラップ。`->json()`・`->status()`・`->successful()`・`->throw()` などで便利に操作。テストは `Http::fake()` で完結します。",
           },
         },
         {
           type: "code",
-          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
-          code: `# 1. Require the package
-composer require laravel/breeze --dev
+          title: {
+            en: "GET, POST with headers, auth, retries",
+            np: "HTTP Client — GET, POST, headers, auth",
+            jp: "GET・POST・認証・リトライの使用例",
+          },
+          code: `use Illuminate\\Support\\Facades\\Http;
 
-# 2. Scaffold (choose a stack)
-php artisan breeze:install blade        # Blade + Alpine.js (default)
-php artisan breeze:install livewire     # Livewire full-page
-php artisan breeze:install react        # Inertia + React
-php artisan breeze:install vue          # Inertia + Vue
-php artisan breeze:install api          # API-only (no views, for SPAs)
+// ---- GET ----
+$response = Http::get('https://api.example.com/users');
+$users    = $response->json();             // decode JSON body as array
+$status   = $response->status();          // 200, 404, etc.
+$ok       = $response->successful();      // 2xx
+$failed   = $response->failed();          // 4xx or 5xx
+$body     = $response->body();            // raw string
 
-# 3. Install frontend dependencies & build
-npm install
-npm run dev
+// ---- POST with JSON body ----
+$response = Http::post('https://api.example.com/users', [
+    'name'  => 'Alice',
+    'email' => 'alice@example.com',
+]);
 
-# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
-php artisan migrate`,
+// ---- POST as form data (application/x-www-form-urlencoded) ----
+$response = Http::asForm()->post('https://api.example.com/login', [
+    'username' => 'alice',
+    'password' => 'secret',
+]);
+
+// ---- Custom headers ----
+$response = Http::withHeaders([
+    'X-App-Key'  => config('services.example.key'),
+    'Accept'     => 'application/json',
+])->get('https://api.example.com/items');
+
+// ---- Authentication ----
+Http::withToken($apiToken)->get('https://api.example.com/me');          // Bearer
+Http::withBasicAuth('user', 'pass')->get('https://api.example.com/');   // Basic
+
+// ---- Timeout & retry ----
+$response = Http::timeout(10)
+    ->retry(3, 500)   // 3 attempts, 500ms delay between
+    ->get('https://api.example.com/slow-endpoint');
+
+// ---- Throw on HTTP error (4xx / 5xx) ----
+$response = Http::throw()->get('https://api.example.com/users');
+// throws Illuminate\\Http\\Client\\RequestException on error
+
+// Throw conditionally
+$response->throwIf($response->status() === 429, 'Rate limited.');
+$response->throwUnlessStatus(200);
+
+// ---- Query parameters ----
+Http::get('https://api.example.com/search', ['q' => 'laravel', 'page' => 2]);
+
+// ---- File upload ----
+Http::attach('photo', file_get_contents($path), 'photo.jpg')
+    ->post('https://api.example.com/upload');`,
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
-              np: "Login — rate limiting सहित।",
-              jp: "ログイン — レート制限（5回/分）付き。",
-            },
-            {
-              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
-              np: "Registration — `bcrypt` पासवर्ड।",
-              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
-            },
-            {
-              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
-              np: "Password reset — signed mail।",
-              jp: "パスワードリセット — 署名付きメールで送信。",
-            },
-            {
-              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
-              np: "Email verify — `MustVerifyEmail` interface।",
-              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
-            },
-            {
-              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
-              np: "Profile edit पनि।",
-              jp: "プロフィール編集・アカウント削除もあり。",
-            },
-          ],
+          type: "code",
+          title: {
+            en: "Testing with Http::fake()",
+            np: "Http::fake() — testing",
+            jp: "Http::fake() でテスト",
+          },
+          code: `// In your test
+Http::fake([
+    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Alice'], 200),
+    'api.example.com/error' => Http::response(['message' => 'Not Found'], 404),
+    '*' => Http::response([], 200), // catch-all fallback
+]);
+
+// Assert requests were made
+Http::assertSent(function ($request) {
+    return $request->url() === 'https://api.example.com/users'
+        && $request->method() === 'GET';
+});
+
+Http::assertNotSent(fn ($r) => str_contains($r->url(), 'payment'));`,
         },
+      ],
+    },
+    {
+      title: {
+        en: "Mailable classes & mail config",
+        np: "Mailable classes र mail config",
+        jp: "Mailable クラスとメール設定",
+      },
+      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
-            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
-            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
+            en: "A <b>Mailable</b> is a PHP class that represents one type of email — like a welcome email, a password reset, or an invoice receipt.\n\n<b>Three methods you define</b>\n• `envelope()` — sets the subject line, the from address, CC, and BCC\n  ↳ Think of this as filling in the email's header information before writing the body\n• `content()` — points to the Blade view (or Markdown template) that becomes the email body\n  ↳ Any public property on the Mailable class is automatically available in that view\n• `attachments()` — returns an array of files to attach to the email\n  ↳ Can attach local files, Storage disk files, or files from S3\n\n<b>A note on performance</b>\n• Sending email via SMTP during a web request blocks the user from getting a response until the mail server replies\n  ↳ Always use `Mail::to($user)->queue(new WelcomeEmail($user))` in production — it hands the work off to a background queue worker so the user's response is instant",
+            np: "Mailable: `envelope()` (subject/from), `content()` (view), `attachments()`। Production मा queue।",
+            jp: "Mailable は `envelope()` で件名・差出人、`content()` でテンプレート、`attachments()` で添付ファイルを設定します。本番の遅い SMTP には必ずキュー送信を使います。",
           },
         },
         {
           type: "code",
-          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
-use Illuminate\\Support\\Facades\\Hash;
+          title: {
+            en: "Create and define a Mailable",
+            np: "Mailable बनाउनु",
+            jp: "Mailable の生成と定義",
+          },
+          code: `php artisan make:mail WelcomeEmail
+php artisan make:mail InvoicePaid --markdown=emails.invoice  # Markdown template
+
+// app/Mail/WelcomeEmail.php
+<?php
+
+namespace App\\Mail;
+
 use App\\Models\\User;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Mail\\Mailable;
+use Illuminate\\Mail\\Mailables\\Content;
+use Illuminate\\Mail\\Mailables\\Envelope;
+use Illuminate\\Queue\\SerializesModels;
 
-public function store(Request $request): RedirectResponse
+class WelcomeEmail extends Mailable
 {
-    $validated = $request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'min:8', 'confirmed'],
-    ]);
+    use Queueable, SerializesModels; // SerializesModels for queueing
 
-    $user = User::create([
-        'name'     => $validated['name'],
-        'email'    => $validated['email'],
-        'password' => Hash::make($validated['password']),
-    ]);
+    public function __construct(
+        public readonly User $user, // public = auto-available in the view
+    ) {}
 
-    Auth::login($user);
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            from: new Address('noreply@myapp.com', 'MyApp'),
+            replyTo: [new Address('support@myapp.com', 'Support')],
+            subject: 'Welcome to MyApp, ' . $this->user->name . '!',
+        );
+    }
 
-    return redirect('/dashboard');
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.welcome',          // resources/views/emails/welcome.blade.php
+            // markdown: 'emails.welcome',   // or Markdown-based
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [
+            // Attachment::fromPath('/path/to/file.pdf')->as('guide.pdf'),
+        ];
+    }
 }`,
+        },
+        {
+          type: "code",
+          title: {
+            en: "Sending mail & SMTP .env config",
+            np: "Mail पठाउनु र .env config",
+            jp: "メール送信と .env 設定",
+          },
+          code: `use App\\Mail\\WelcomeEmail;
+use Illuminate\\Support\\Facades\\Mail;
+
+// Send immediately
+Mail::to($user->email)->send(new WelcomeEmail($user));
+
+// Send to multiple
+Mail::to($user)
+    ->cc('manager@myapp.com')
+    ->bcc('audit@myapp.com')
+    ->send(new WelcomeEmail($user));
+
+// Queue (async — much better for production SMTP)
+Mail::to($user)->queue(new WelcomeEmail($user));
+
+// Queue with delay
+Mail::to($user)->later(now()->addMinutes(5), new WelcomeEmail($user));
+
+// ---- .env SMTP config ----
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com          # or smtp.mailgun.org, email-smtp.us-east-1.amazonaws.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD="your-app-password"  # Gmail: use App Password, NOT your account password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@myapp.com
+MAIL_FROM_NAME="MyApp"
+
+# Preview emails locally without sending (catches all mail to log file)
+MAIL_MAILER=log
+
+# Or use Mailpit (https://github.com/axllent/mailpit) — an SMTP trap with web UI
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025`,
         },
       ],
     },
     {
       title: {
-        en: "Sanctum: API tokens & SPA auth",
-        np: "Sanctum: token र SPA auth",
-        jp: "Sanctum: API トークンと SPA 認証",
+        en: "Notifications",
+        np: "Notifications",
+        jp: "通知",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
-            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
-            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
+            en: "A <b>Notification</b> is like a Mailable but smarter — it can deliver the same message through multiple channels at the same time.\n\n<b>How it works</b>\n• You define a `via()` method that returns the list of channels to use: `return ['mail', 'database']`\n  ↳ Laravel calls the matching method for each channel: `toMail()`, `toDatabase()`, `toBroadcast()`, etc.\n• Every channel gets the same information — you just shape it differently per channel\n  ↳ Email gets a nicely formatted `MailMessage`; the database channel gets a plain PHP array\n\n<b>Built-in channels</b>\n• `mail` — send an email\n• `database` — store a record in a `notifications` table for in-app notification bells\n• `broadcast` — push to the browser via WebSockets for real-time alerts\n• `vonage` — send an SMS\n• Community packages add Slack, Telegram, Discord, and more",
+            np: "Notification ले `via()` method मा multiple channel define गर्छ — mail, database, Slack।",
+            jp: "Notification は `via()` で複数チャネルを宣言します。組み込みは `mail`・`database`・`broadcast`。コミュニティ製の Slack・Telegram チャネルも豊富です。",
           },
         },
         {
           type: "code",
-          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
-          code: `# Install (already included in Laravel 11 by default)
-composer require laravel/sanctum
+          title: {
+            en: "Create and define a Notification",
+            np: "Notification बनाउनु",
+            jp: "Notification の生成と定義",
+          },
+          code: `php artisan make:notification InvoicePaid
 
-# Publish config + migrations
-php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
+// app/Notifications/InvoicePaid.php
+<?php
 
-php artisan migrate`,
-        },
-        {
-          type: "code",
-          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
-          code: `// app/Models/User.php
-use Laravel\\Sanctum\\HasApiTokens;
+namespace App\\Notifications;
 
-class User extends Authenticatable
+use App\\Models\\Invoice;
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Notifications\\Notification;
+use Illuminate\\Notifications\\Messages\\MailMessage;
+
+class InvoicePaid extends Notification
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use Queueable;
+
+    public function __construct(
+        public readonly Invoice $invoice,
+    ) {}
+
+    // Which channels to use
+    public function via(object $notifiable): array
+    {
+        return ['mail', 'database'];  // send email AND store in DB
+    }
+
+    // Mail channel
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject('Invoice #' . $this->invoice->id . ' Paid')
+            ->greeting('Hello ' . $notifiable->name . '!')
+            ->line('Your invoice has been paid.')
+            ->action('View Invoice', route('invoices.show', $this->invoice))
+            ->line('Thank you for your business!');
+    }
+
+    // Database channel — stored in notifications table
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'invoice_id' => $this->invoice->id,
+            'amount'     => $this->invoice->amount,
+            'message'    => 'Invoice #' . $this->invoice->id . ' was paid.',
+        ];
+    }
+
+    // toArray() is used by the database channel if toDatabase() is absent
+    public function toArray(object $notifiable): array
+    {
+        return $this->toDatabase($notifiable);
+    }
 }`,
         },
         {
           type: "code",
-          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
-          code: `// Issue a token on login
-public function login(Request $request): JsonResponse
-{
-    $user = User::where('email', $request->email)->first();
-
-    if (! $user || ! Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    }
-
-    // Create token with optional abilities (scopes)
-    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
-                   ->plainTextToken;
-
-    return response()->json(['token' => $token]);
-}
-
-// Revoke current token (logout)
-public function logout(Request $request): JsonResponse
-{
-    $request->user()->currentAccessToken()->delete();
-    return response()->json(['message' => 'Logged out']);
-}
-
-// Revoke all tokens (e.g. "log out everywhere")
-$user->tokens()->delete();
-
-// Protect API routes — routes/api.php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::post('/posts', [PostController::class, 'store']);
-});`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "SPA cookie auth vs API token auth",
-            np: "दुई mode तुलना",
-            jp: "SPA クッキー vs API トークン",
+          title: {
+            en: "Sending notifications & reading from DB",
+            np: "Notification पठाउनु र DB बाट पढ्नु",
+            jp: "通知の送信と DB からの読み取り",
           },
-          headers: [
-            { en: "Mode", np: "Mode", jp: "モード" },
-            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
-            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
-            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
-          ],
-          rows: [
-            [
-              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
-              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
-              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
-              { en: "Yes", np: "हो", jp: "Yes" },
-            ],
-            [
-              { en: "API Token", np: "API Token", jp: "API トークン" },
-              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
-              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
-              { en: "No", np: "होइन", jp: "No" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Password reset & email verification",
-        np: "Password reset र email verification",
-        jp: "パスワードリセットとメール確認",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
-            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
-            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Password;
+          code: `use App\\Notifications\\InvoicePaid;
+use Illuminate\\Support\\Facades\\Notification;
 
-// 1. Send reset link
-$status = Password::sendResetLink($request->only('email'));
+// ---- Send to a single user (using Notifiable trait) ----
+// The User model uses Illuminate\\Notifications\\Notifiable;
+$user->notify(new InvoicePaid($invoice));
 
-if ($status === Password::RESET_LINK_SENT) {
-    return back()->with('status', __($status));
-}
-return back()->withErrors(['email' => __($status)]);
+// ---- Send to multiple users at once ----
+Notification::send($users, new InvoicePaid($invoice));
 
-// 2. Reset password (called from reset form)
-$status = Password::reset(
-    $request->only('email', 'password', 'password_confirmation', 'token'),
-    function (User $user, string $password) {
-        $user->forceFill(['password' => Hash::make($password)])
-             ->setRememberToken(Str::random(60));
-        $user->save();
-        event(new PasswordReset($user));
-    }
-);
+// ---- On-demand notification (no User model needed) ----
+Notification::route('mail', 'client@example.com')
+    ->notify(new InvoicePaid($invoice));
 
-return $status === Password::PASSWORD_RESET
-    ? redirect()->route('login')->with('status', __($status))
-    : back()->withErrors(['email' => __($status)]);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
-            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
-            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
-          code: `// app/Models/User.php
-use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
+// ---- Database notifications table ----
+// Run: php artisan notifications:table && php artisan migrate
 
-class User extends Authenticatable implements MustVerifyEmail
-{
-    // Registration automatically sends verification email
+// Read unread notifications
+$unread = $user->unreadNotifications;   // Collection of DatabaseNotification
+foreach ($unread as $notification) {
+    $data = $notification->data;        // the array from toDatabase()
+    echo $data['message'];
 }
 
-// Check in code
-if (Auth::user()->hasVerifiedEmail()) {
-    // proceed
-}
+// Mark as read
+$user->unreadNotifications->markAsRead();
+$notification->markAsRead();
 
-// Manually trigger verification email
-$user->sendEmailVerificationNotification();
+// All notifications (read + unread)
+$all = $user->notifications;
 
-// routes/web.php — Breeze adds these automatically
-Route::get('/email/verify', EmailVerificationPromptController::class)
-    ->middleware('auth')
-    ->name('verification.notice');
+// Delete old notifications
+$user->notifications()->delete();
 
-Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');`,
+// ---- Notifiable trait on User model ----
+// The User model must use Illuminate\\Notifications\\Notifiable;
+// This adds: notifications(), unreadNotifications(), readNotifications()`,
         },
       ],
     },
@@ -373,86 +471,74 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
   faq: [
     {
       question: {
-        en: "What is the difference between Breeze, Jetstream, and Fortify?",
-        np: "Breeze, Jetstream, Fortify फरक के हो?",
-        jp: "Breeze・Jetstream・Fortify の違いは？",
+        en: "How do I configure S3 storage and make files publicly accessible?",
+        np: "S3 storage configure गरेर files public कसरी गर्ने?",
+        jp: "S3 ストレージの設定とファイルの公開方法は？",
       },
       answer: {
-        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
-        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
-        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
+        en: "Four steps to connect S3:\n\n• Add your AWS credentials to `.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`\n• Set `FILESYSTEM_DISK=s3` in `.env`\n• Run `composer require league/flysystem-aws-s3-v3` to install the S3 adapter\n• That's it — all `Storage::put()` calls now go to S3\n\n<b>Public vs private files</b>\n• For files you want anyone to access via a URL (profile pictures, public downloads):\n  ↳ Use `Storage::disk('s3')->setVisibility($path, 'public')` after uploading, or set the S3 bucket ACL\n• For files that should only be accessible to specific users (contracts, private documents):\n  ↳ Use `Storage::temporaryUrl($path, now()->addMinutes(30))` to generate a signed URL that expires automatically",
+        np: "`.env` मा AWS credentials, `FILESYSTEM_DISK=s3`, flysystem package install। Public: visibility `public`; Private: `temporaryUrl()`।",
+        jp: "`.env` に AWS 認証情報を設定し `FILESYSTEM_DISK=s3`、`league/flysystem-aws-s3-v3` をインストール。公開ファイルは `setVisibility('path', 'public')`、非公開は `temporaryUrl()` を使います。",
       },
     },
     {
       question: {
-        en: "Is Sanctum suitable for mobile apps?",
-        np: "Mobile app को लागि Sanctum ठीक छ?",
-        jp: "Sanctum はモバイルアプリに適していますか？",
+        en: "What is the difference between `store()` and `storeAs()`?",
+        np: "`store()` र `storeAs()` मा के फरक?",
+        jp: "`store()` と `storeAs()` の違いは？",
       },
       answer: {
-        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
-        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
-        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
+        en: "Both methods save a file — they just handle the filename differently.\n\n• `store('avatars', 'public')` — Laravel generates a random unique filename automatically (based on a hash)\n  ↳ Safe from filename collisions: two users uploading `photo.jpg` won't overwrite each other\n  ↳ Use this for most uploads where the filename doesn't matter\n• `storeAs('avatars', 'user-42-avatar.jpg', 'public')` — you choose the exact filename\n  ↳ Use this when the filename needs to be predictable — like replacing a user's avatar each time they upload",
+        np: "`store()` ले random unique name। `storeAs()` ले exact name। Collision-free upload: `store()`।",
+        jp: "`store()` はハッシュベースのランダムなファイル名を生成。`storeAs()` はファイル名を指定します。衝突を避けたいアップロードには `store()`、ファイル名が決まっている場合は `storeAs()` を使います。",
       },
     },
     {
       question: {
-        en: "How do I add roles to authenticated users?",
-        np: "User मा role कसरी थप्ने?",
-        jp: "認証済みユーザーにロールを追加する方法は？",
+        en: "How do I preview emails locally without sending them?",
+        np: "Local मा email send नगरी preview कसरी?",
+        jp: "メールをローカルで送信せずにプレビューするには？",
       },
       answer: {
-        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 18) to authorize actions without needing a formal role system at all.",
-        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
-        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
+        en: "You have three good options for developing with email locally without actually sending anything:\n\n• <b>Log driver</b> — set `MAIL_MAILER=log` and all emails get written to `storage/logs/laravel.log` as plain text\n  ↳ Easiest option — no extra tools needed, just check the log file\n• <b>Mailpit</b> — a local SMTP trap that catches all outgoing mail and shows it in a web UI at `localhost:8025`\n  ↳ Set `MAIL_HOST=127.0.0.1` and `MAIL_PORT=1025` — emails show up visually, exactly as the user would see them\n  ↳ Laravel Sail includes Mailpit automatically\n• <b>Route preview</b> — return a Mailable directly from a route for instant browser rendering:\n`Route::get('/preview', fn() => new WelcomeEmail(User::first()))`\n  ↳ Great for tweaking the email design — just refresh the browser to see changes",
+        np: "`MAIL_MAILER=log` (log file मा लेख्छ); Mailpit (local SMTP trap); route मा Mailable return गरेर preview।",
+        jp: "`MAIL_MAILER=log` でログファイルに書き出し、Mailpit でローカル SMTP トラップ、またはルートから Mailable を直接返してブラウザプレビューできます。",
       },
     },
     {
       question: {
-        en: "What is the `remember_token` field for?",
-        np: "`remember_token` किस लागि?",
-        jp: "`remember_token` フィールドは何のためにあるの？",
+        en: "What is the `Notifiable` trait and which models need it?",
+        np: "`Notifiable` trait के हो र कुन model मा चाहिन्छ?",
+        jp: "`Notifiable` トレイトとはどのモデルに必要ですか？",
       },
       answer: {
-        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
-        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
-        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
+        en: "The `Notifiable` trait is what gives a model the ability to receive notifications.\n\n<b>What it adds to your model</b>\n• `$user->notify(new InvoicePaid($invoice))` — send a notification to that model\n• `$user->notifications` — fetch all notifications (read + unread) from the database\n• `$user->unreadNotifications` — fetch only unread ones\n• `$user->readNotifications` — fetch only already-read ones\n\n<b>Who needs it?</b>\n• The default `User` model already has it — you don't need to add anything\n• If you want to send notifications to a different model (like a `Team` or a `Company`), just add `use Notifiable;` to that class\n\n<b>Custom routing</b>\n• If your model stores the email address in a column other than `email`, define a `routeNotificationForMail()` method to return the right address\n  ↳ Same pattern for other channels: `routeNotificationForVonage()`, `routeNotificationForSlack()`, etc.",
+        np: "`Notifiable` trait ले `notify()` र notification relationships थप्छ। User model मा default छ। अरू model मा manually use।",
+        jp: "`Notifiable` トレイトは `notify()` と関係ヘルパを追加します。デフォルトの `User` モデルに含まれています。他のモデルにも `use Notifiable;` で追加できます。",
       },
     },
     {
       question: {
-        en: "Can I have multiple auth guards?",
-        np: "धेरै auth guard राख्न मिल्छ?",
-        jp: "複数の認証ガードは持てますか？",
+        en: "How do database notifications differ from email notifications?",
+        np: "Database notification र email notification मा के फरक?",
+        jp: "データベース通知とメール通知の違いは？",
       },
       answer: {
-        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
-        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
-        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
+        en: "They serve completely different purposes — most real apps use both at once.\n\n<b>Email notifications</b>\n• Go to an external mail server and that's it — you can't read them back in PHP\n  ↳ Great for alerts the user sees in their inbox (new message, invoice ready)\n  ↳ Your app has no record of whether they read it\n\n<b>Database notifications</b>\n• Stored in a `notifications` table in your own database — fully queryable\n  ↳ Run `php artisan notifications:table && php artisan migrate` to create the table first\n  ↳ Access them with `$user->unreadNotifications` — perfect for in-app notification bells\n  ↳ You can track read/unread status, show a history, and mark individual notifications as read\n\n• Use both together by returning `['mail', 'database']` from `via()` — one `notify()` call handles both channels",
+        np: "Email notification fire-and-forget; Database notification `notifications` table मा store — PHP बाट read गर्न सकिन्छ। In-app bell को लागि।",
+        jp: "メール通知は送りっぱなし。データベース通知は `notifications` テーブルに保存され、`$user->unreadNotifications` で参照可能。アプリ内の通知ベルや履歴表示に最適です。`via()` で両チャネルを同時に指定できます。",
       },
     },
     {
       question: {
-        en: "How do I protect a route for specific user types?",
-        np: "विशेष user type को लागि route protect?",
-        jp: "特定ユーザータイプのみルートを保護する方法は？",
+        en: "How does Laravel's HTTP Client handle retries and what happens on failure?",
+        np: "HTTP Client retry कसरी काम गर्छ र failure मा के हुन्छ?",
+        jp: "HTTP クライアントのリトライの仕組みと失敗時の動作は？",
       },
       answer: {
-        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 18.",
-        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
-        jp: "カスタムミドルウェアか Gate/Policy（Day 18 参照）。`abort(403)` で弾く。",
-      },
-    },
-    {
-      question: {
-        en: "How do I test authentication in feature tests?",
-        np: "Feature test मा auth कसरी test गर्ने?",
-        jp: "フィーチャーテストで認証をテストする方法は？",
-      },
-      answer: {
-        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
-        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
-        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
+        en: "`->retry($times, $sleepMilliseconds)` automatically re-attempts a request when it fails — useful for flaky APIs or temporary network hiccups.\n\n<b>How it works</b>\n• `->retry(3, 500)` — tries up to 3 times, waiting 500 milliseconds between each attempt\n  ↳ Retries on connection errors and 5xx server errors (like 503 Service Unavailable)\n  ↳ Does NOT retry on 4xx errors — those mean your request was wrong, not the server\n• If all 3 attempts fail, Laravel throws a `RequestException`\n  ↳ Catch it with `try/catch` to handle the failure gracefully\n\n<b>Throwing on failure</b>\n• `->throw()` — throw an exception automatically for any 4xx or 5xx response (without needing retry)\n• `->throwIf($condition)` — throw only when a custom condition is true\n• `->throwUnlessStatus(200)` — throw unless the status code is exactly 200",
+        np: "`->retry(3, 500)` ले 3 attempts। सबै fail भए `RequestException`। `->throw()` ले 4xx/5xx मा exception।",
+        jp: "`->retry(3, 500)` で最大 3 回、500ms 間隔でリトライ。全て失敗すると `RequestException` がスロー。`->throw()` で 4xx/5xx を常に例外にします。",
       },
     },
   ],
