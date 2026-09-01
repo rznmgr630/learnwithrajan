@@ -272,9 +272,9 @@ const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "Phase 4 · セキュリティ（Day 19–22）",
   },
   "laravel-w5b": {
-    en: "Phase 5 · APIs and Frontend (Days 23–24)",
-    np: "Phase 5 · APIs र Frontend (दिन 23–24)",
-    jp: "Phase 5 · API とフロントエンド（Day 23–24）",
+    en: "Phase 5 · APIs and Frontend (Days 23–25)",
+    np: "Phase 5 · APIs र Frontend (दिन 23–25)",
+    jp: "Phase 5 · API とフロントエンド（Day 23–25）",
   },
   "laravel-w6": {
     en: "Production — queues, APIs & testing",
