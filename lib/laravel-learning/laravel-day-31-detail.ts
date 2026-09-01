@@ -3,341 +3,329 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_31_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Getting your app to production is the final mile — and often the most confusing part for beginners. There is no single \"right\" way to deploy Laravel; the right choice depends on your budget, team size, and traffic.\n\nAnalogy: it is like choosing how to get across town:\n• <b>Driving yourself</b> — a VPS with Laravel Forge (full control, you manage the car)\n• <b>Taking a taxi</b> — a Platform-as-a-Service (someone else drives, you just say the destination)\n• <b>Teleporting</b> — serverless Vapor on AWS Lambda (instant, no roads, pay per trip)\n\nEach has trade-offs in cost, control, and effort. Today covers the three main paths and the tooling that makes every deploy repeatable and safe.",
-      np: "Laravel deploy गर्ने तीन मुख्य तरिका: VPS + Forge, Docker, र serverless Vapor। CI/CD र env config पनि।",
-      jp: "本番デプロイの3つの主要な方法：Forge（VPS）、Docker、Vapor（サーバーレス）。CI/CDと環境設定も解説。",
+      en: "A slow app is a broken app — users leave pages that take more than 3 seconds to load, and search engines penalise slow sites. Performance in Laravel is mostly about three things: <b>database queries</b> (too many, or poorly structured), <b>caching</b> (not caching what you could), and <b>background work</b> (doing expensive work synchronously that could run in a queue). Most apps have at least one of these problems by default.",
+      np: "Slow app = broken app। Laravel performance: database queries optimize गर्नुस्, caching प्रयोग गर्नुस्, expensive work queue मा पठाउनुस्।",
+      jp: "遅いアプリは壊れたアプリ。Laravel のパフォーマンスは主に DB クエリ・キャッシュ・バックグラウンド処理の 3 点。",
     },
     {
-      en: "The four pillars of production deployment:\n\n• <b>Environment config</b> — `.env` files, config caching, secrets management\n  ↳ Never commit `.env` to git; cache config on every deploy for speed\n• <b>Docker / Sail</b> — containerising your app for consistent dev-to-prod environments\n  ↳ Sail is for development; write a production Dockerfile for real deploys\n• <b>Laravel Forge</b> — managed server provisioning and deployment for VPS\n  ↳ Click to create a server; Forge installs PHP, Nginx, MySQL, Redis, SSL automatically\n• <b>Laravel Vapor</b> — serverless deployment on AWS Lambda\n  ↳ Zero server management, auto-scaling, pay per request\n• <b>CI/CD with GitHub Actions</b> — automated test + deploy on every push\n  ↳ Tests pass → deploy fires automatically — no manual steps, no forgotten commands",
-      np: "Environment config, Docker/Sail, Forge, Vapor, र GitHub Actions CI/CD — पाँच pillars।",
-      jp: "環境設定・Docker/Sail・Forge・Vapor・GitHub Actions CI/CD — 5つの柱。",
+      en: "<b>N+1 query problem</b> — the single most common performance bug in Laravel apps\n↳ One query to get 100 posts, then 100 queries to get each post's author = 101 queries\n\n<b>Eager loading & withCount</b> — solving N+1 with `with()` and `withCount()`\n↳ Two queries instead of 101, regardless of how many records you have\n\n<b>Query debugging</b> — Laravel Telescope and Debugbar to spot slow queries\n↳ See every query, its execution time, and where it was called from\n\n<b>Redis caching</b> — caching query results, computed values, and sessions\n↳ ~1ms Redis read vs ~50ms database query\n\n<b>Laravel Horizon</b> — queue monitoring, worker scaling, and failure tracking\n↳ Dashboard showing throughput, wait time, and failed job stack traces",
+      np: "N+1 problem, eager loading, Telescope, Redis caching, Horizon — यी 5 topics cover हुन्छन्।",
+      jp: "N+1 問題、Eager ロード、Telescope、Redis キャッシュ、Horizon の 5 トピックを学ぶ。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Environment config & production checklist",
-        np: "Environment config र production checklist",
-        jp: "環境設定と本番チェックリスト",
+        en: "The N+1 query problem",
+        np: "N+1 query problem",
+        jp: "N+1 クエリ問題",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The `.env` file holds secrets that should never be in version control. In production, set values through your server's environment variables or a secrets manager — never by copying `.env` files between servers.\n\nLaravel caches the parsed config to disk for performance — run `php artisan config:cache` after every deploy. This turns hundreds of config file reads into one disk read per request.\n\nKey `.env` values for production:\n• `APP_ENV=production` and `APP_DEBUG=false` — debug mode exposes file paths, credentials, and stack traces to the browser\n• `APP_KEY` — used to encrypt cookies and sessions; if it changes, all sessions are invalidated\n  ↳ Generate once with `php artisan key:generate` and back it up\n• `CACHE_DRIVER=redis`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis` — use Redis for all three in production",
-            np: "`.env` git मा राख्नु हुँदैन। `APP_DEBUG=false` र Redis drivers set गर्नुहोस्।",
-            jp: "`.env` は git に含めない。`APP_DEBUG=false` と Redis ドライバ設定が必須。",
+            en: "<b>N+1</b> is when you run 1 query to get a list of records, then run 1 more query for EACH record to fetch related data. With 100 posts, that is 101 database round trips instead of 2.\n\nIt's named \"N+1\" because:\n• 1 query to get the list (the \"1\")\n• N queries to get each item's related data (the \"N\")\n• Total: N+1 queries\n\nEach round trip has overhead: network latency, connection setup, query parsing, index lookup. At scale this tanks response time. A page that loads in 50ms with 10 items takes 5 seconds with 1,000 items.",
+            np: "N+1 = 1 query list लिन + N queries प्रत्येक item को related data लिन। 100 posts = 101 queries! Eager loading ले यो fix गर्छ।",
+            jp: "N+1 は 1 回のリスト取得 + N 回の関連データ取得。100 件で 101 クエリ。Eager loading で解決。",
           },
         },
         {
           type: "code",
-          title: { en: "Production .env values & deploy command sequence", np: "Production .env र deploy commands", jp: "本番 .env とデプロイコマンド" },
-          code: `# .env (production — set these via server panel, not a committed file)
-APP_ENV=production
-APP_DEBUG=false
-APP_KEY=base64:YOUR_KEY_HERE
+          title: { en: "N+1 problem and the fix", np: "N+1 र fix", jp: "N+1 と解決策" },
+          code: `// BAD — N+1 problem (101 queries for 100 posts)
+$posts = Post::all(); // 1 query
+foreach ($posts as $post) {
+    echo $post->author->name; // 1 query per post = 100 more queries
+    echo $post->comments->count(); // another 100 queries!
+}
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_DATABASE=my_app
-DB_USERNAME=forge
-DB_PASSWORD=secret
+// GOOD — Eager loading (3 queries total, regardless of count)
+$posts = Post::with(['author', 'comments'])->get();
+// Query 1: SELECT * FROM posts
+// Query 2: SELECT * FROM users WHERE id IN (1, 2, 3, ...)
+// Query 3: SELECT * FROM comments WHERE post_id IN (1, 2, 3, ...)
 
-CACHE_DRIVER=redis
-SESSION_DRIVER=redis
-QUEUE_CONNECTION=redis
-REDIS_HOST=127.0.0.1
+// BETTER — withCount when you only need the count, not the records
+$posts = Post::with('author')->withCount('comments')->get();
+// $post->comments_count is now available as a virtual column
+// Only 2 queries total — no loading all comment rows into memory
 
-# ─── Deploy command sequence (run in this order every deploy) ───
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
-php artisan queue:restart
-npm run build`,
+// DETECT N+1 in development — add to AppServiceProvider::boot()
+if (app()->isLocal()) {
+    \\Illuminate\\Database\\Eloquent\\Model::preventLazyLoading(true);
+    // Now Laravel throws an exception instantly when lazy loading is detected
+}`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Why the order matters:</b>\n1. Install dependencies first (migration classes need them)\n2. Migrate before caching (new config may reference new DB structure)\n3. Cache everything after migration (stale cache during migration = errors)\n4. Restart queue workers last (they pick up new code after restart)\n\n`php artisan optimize` is a shorthand for config + route + view cache in one command — use it in Laravel 11+.",
-            np: "Deploy order: install → migrate → cache → queue:restart। `php artisan optimize` shorthand।",
-            jp: "デプロイ順序：install→migrate→cache→queue:restart。`php artisan optimize` でまとめて実行可。",
+            en: "The `preventLazyLoading(true)` call is the single most effective way to catch N+1 before it reaches production. It throws a `LazyLoadingViolationException` with the model name and relationship that was lazily loaded, so you can fix it immediately.\n\nUseful variants:\n• `Post::with(['author:id,name', 'tags:id,name'])` — only load specific columns from related models\n• `Post::with(['comments' => fn($q) => $q->latest()->limit(3)])` — constrain eager load queries\n• `$posts->load('author')` — eager load on an already-retrieved collection",
+            np: "`preventLazyLoading(true)` production deployment अघि N+1 catch गर्ने best tool हो।",
+            jp: "`preventLazyLoading(true)` は N+1 を本番前に検出する最良の方法。関係の制約にも対応。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Docker & Laravel Sail",
-        np: "Docker र Laravel Sail",
-        jp: "DockerとLaravel Sail",
+        en: "Query optimization — indexes, select & chunking",
+        np: "Query optimization — indexes, select र chunking",
+        jp: "クエリ最適化 — インデックス・select・チャンク",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Docker packages your app and all its dependencies (PHP, Nginx, MySQL, Redis) into containers — isolated processes that run identically on any machine.\n\nAnalogy: instead of telling a new team member \"install PHP 8.3, enable these extensions, configure Nginx to point to `public/`...\" you say \"run `docker compose up`\" and they have the exact same environment in minutes.\n\n<b>Laravel Sail</b> is Laravel's pre-built Docker development environment. It wraps common commands (`artisan`, `composer`, `npm`, `pest`) so you never need to install PHP or Node locally.",
-            np: "Docker = consistent environment। Sail = Laravel को dev Docker wrapper — PHP locally install गर्नु पर्दैन।",
-            jp: "Docker = 一貫した環境。Sail = Laravel の開発用 Docker ラッパー — PHP をローカルにインストール不要。",
+            en: "Even with N+1 solved, individual queries can be slow. Three common causes:\n\n• <b>Missing indexes</b> — without an index, the database reads every row to find matches\n  ↳ Think of it like a book with no index — you'd read every page to find a word\n  ↳ Add indexes on columns you filter (`WHERE`), sort (`ORDER BY`), or join on\n• <b>Selecting too many columns</b> — `SELECT *` loads every column even if you use only 2\n  ↳ A `posts` table with a `body` TEXT column sends megabytes of data you don't render\n• <b>Loading too many rows at once</b> — `Post::all()` on a million-row table exhausts PHP memory",
+            np: "Missing indexes, SELECT *, र large datasets — यी तीन common query performance issues हुन्।",
+            jp: "インデックス不足・SELECT * による過剰取得・大量行ロードが遅いクエリの主な原因。",
           },
         },
         {
           type: "code",
-          title: { en: "Laravel Sail — setup & daily commands", np: "Sail setup र commands", jp: "Sail セットアップとコマンド" },
-          code: `# Create a new Laravel project with Sail (MySQL + Redis)
-curl -s "https://laravel.build/my-app?with=mysql,redis" | bash
-cd my-app
+          title: { en: "Indexes, column selection & chunking", np: "Indexes, select, chunk", jp: "インデックス・select・チャンク" },
+          code: `// INDEXES — add to your migrations
+Schema::table('posts', function (Blueprint $table) {
+    $table->index('user_id');                        // single column
+    $table->index(['user_id', 'published_at']);      // composite (queries filter both)
+    $table->index('published_at');                   // for ORDER BY published_at DESC
+});
 
-# Add a shell alias so you type 'sail' instead of './vendor/bin/sail'
-alias sail='./vendor/bin/sail'
+// COLUMN SELECTION — only load what you need
+Post::select(['id', 'title', 'published_at', 'user_id'])
+    ->with('author:id,name')  // constrain relation columns too
+    ->get();
 
-# Start all containers in the background
-sail up -d
+// CHUNKING — process large tables without exhausting memory
+// chunk(): loads 500 rows at a time
+Post::chunk(500, function (\\Illuminate\\Support\\Collection $posts) {
+    foreach ($posts as $post) {
+        // process each post
+    }
+});
 
-# Common Sail commands (these run inside the container)
-sail artisan migrate
-sail artisan tinker
-sail composer require laravel/horizon
-sail npm install
-sail npm run dev
+// cursor(): memory-efficient generator (one row at a time)
+// Good for very large tables; holds DB connection open throughout
+foreach (Post::cursor() as $post) {
+    // process each post
+}
 
-# Stop all containers
-sail down
+// LOG ALL QUERIES in development
+\\DB::enableQueryLog();
+$posts = Post::with('author')->get();
+$queries = \\DB::getQueryLog();
+// $queries is an array of ['query' => '...', 'bindings' => [...], 'time' => 1.23]
 
-# View running containers
-sail ps`,
+// Use DB::listen() for live logging
+\\DB::listen(function ($query) {
+    if ($query->time > 100) { // log queries slower than 100ms
+        logger()->warning("Slow query: {$query->sql}", ['time' => $query->time]);
+    }
+});`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Sail is for development only.</b> For production Docker you need:\n• A production `Dockerfile` — no Xdebug, no dev dependencies, optimised PHP-FPM config\n• A production `docker-compose.yml` — with proper volume mounts, restart policies, healthchecks\n• An Nginx or Caddy container as the web server\n\nThe `serversideup/php` Docker Hub image is a popular production-ready base for Laravel. In large deployments, use Kubernetes to orchestrate the containers across multiple servers.",
-            np: "Sail = development मात्र। Production मा production Dockerfile चाहिन्छ।",
-            jp: "Sail は開発専用。本番では本番用 Dockerfile が必要。",
+            en: "For production query analysis, install Laravel Telescope (`composer require laravel/telescope --dev`) — it records every query with its SQL, bindings, execution time, and the exact line of code that triggered it. It also highlights slow queries in red. Never run Telescope in production without restricting access to admin IPs.",
+            np: "Production मा Laravel Telescope install गर्नुस् — सबै queries देखिन्छन् execution time सहित।",
+            jp: "本番のクエリ分析には Laravel Telescope を使用。SQL・実行時間・呼び出し元を記録し、遅いクエリを赤でハイライト。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Laravel Forge — VPS deployment made easy",
-        np: "Laravel Forge — VPS deployment",
-        jp: "Laravel Forge — VPS デプロイを簡単に",
+        en: "Caching with Redis",
+        np: "Redis caching",
+        jp: "Redis によるキャッシュ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Forge</b> is a web UI that provisions and manages Linux servers on any cloud provider — DigitalOcean, AWS, Linode, Hetzner, Vultr.\n\nAnalogy: Forge is the experienced sysadmin you don't have on the team. You click \"create server\" and it:\n• Installs PHP (your chosen version), Nginx, MySQL, Redis\n• Configures Nginx as a reverse proxy pointing to `public/`\n• Sets up Let's Encrypt SSL (auto-renewing)\n• Creates a `forge` deploy user with correct filesystem permissions\n• Configures Supervisor to keep queue workers running\n\nCost: $15/month for unlimited servers — far cheaper than a sysadmin.",
-            np: "Forge = server provision गर्ने web UI। PHP, Nginx, MySQL, Redis, SSL सबै automatically।",
-            jp: "Forge = サーバーを自動構成する Web UI。PHP・Nginx・MySQL・Redis・SSL を自動設定。",
+            en: "Caching means storing the result of an expensive operation so you can reuse it without re-computing. <b>Redis</b> is an in-memory key-value store — reads take ~1ms vs ~50ms for a database query.\n\nAnalogy: Redis is like keeping a sticky note on your desk (instant) vs going to the filing cabinet (slower) vs going to the library archive (slowest).\n\nUse Redis for:\n• Frequently-read data that changes rarely (featured posts, nav menus, config)\n• Computed aggregates (leaderboards, total counts)\n• Sessions (faster than database sessions)\n• Rate limiting (Laravel's throttle middleware uses Redis by default)\n• Queue backend (jobs stored in Redis, consumed by workers)",
+            np: "Redis = in-memory key-value store। ~1ms read। Frequently-read data, sessions, queues, rate limiting मा प्रयोग गर्नुस्।",
+            jp: "Redis はメモリ内 KV ストア。読み取り約 1ms。頻繁に読まれるデータ・セッション・キュー・レート制限に活用。",
           },
         },
         {
           type: "code",
-          title: { en: "Forge deploy script & queue worker config", np: "Forge deploy script", jp: "Forge デプロイスクリプト" },
-          code: `# ─── Forge deploy script (runs on every git push) ───
-cd /home/forge/my-app
-git pull origin main
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan optimize
-php artisan queue:restart
-npm ci
-npm run build
+          title: { en: "Cache::remember, tags & invalidation", np: "Cache examples", jp: "キャッシュの例" },
+          code: `// Basic caching — compute on miss, serve from cache on hit
+$posts = Cache::remember('posts.featured', 3600, function () {
+    return Post::featured()->with('author')->orderByDesc('views')->limit(10)->get();
+});
+// 3600 = TTL in seconds (1 hour)
 
-# ─── Forge daemon (queue worker — runs 24/7 via Supervisor) ───
-# Command:
-php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
-# Processes: 2  (run 2 workers in parallel)
-# Stop waiting seconds: 10
+// Invalidate when data changes (e.g. in PostObserver)
+public function updated(Post $post): void
+{
+    Cache::forget('posts.featured');
+}
 
-# ─── Forge daemon for Laravel Reverb (WebSocket server) ───
-# Command:
-php artisan reverb:start --port=8080
-# Processes: 1`,
+// Tag-based invalidation — requires Redis (not available with file driver)
+// Cache all post-related data under the 'posts' tag
+$featured = Cache::tags(['posts'])->remember('featured', 3600, fn() => ...);
+$trending = Cache::tags(['posts'])->remember('trending', 1800, fn() => ...);
+
+// Invalidate ALL post caches at once
+Cache::tags(['posts'])->flush();
+
+// Per-user cache (prevents cache key collisions)
+$key = "user:{$userId}:dashboard";
+$dashboard = Cache::remember($key, 600, fn() => buildDashboard($userId));
+
+// Store arbitrary data
+Cache::put('maintenance_mode', true, 300); // expires in 5 minutes
+Cache::forever('app_version', '2.4.1');    // no expiry
+$value = Cache::get('app_version', 'unknown'); // default if missing
+
+// .env configuration
+// CACHE_DRIVER=redis
+// REDIS_HOST=127.0.0.1
+// REDIS_PORT=6379
+// SESSION_DRIVER=redis  (store sessions in Redis)`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Forge <b>Quick Deploy</b> fires the deploy script automatically when you push to the connected branch. Disable it for staging environments where you want manual control.\n\nForge also manages:\n• <b>SSL certificates</b> — Let's Encrypt, auto-renewing every 90 days\n• <b>Scheduled tasks</b> — adds the Laravel cron entry automatically\n• <b>Firewall rules</b> — opens only ports 80, 443, and 22 by default\n• <b>PHP version</b> — upgrade PHP without touching your server manually\n• <b>Server monitoring</b> — CPU, disk, memory alerts",
-            np: "Quick Deploy = push गर्दा automatically deploy। SSL, cron, firewall सबै Forge ले manage।",
-            jp: "Quick Deploy = プッシュで自動デプロイ。SSL・cron・ファイアウォールも Forge が管理。",
+            en: "<b>Cache key naming rules</b>:\n• Be specific: `posts.featured` is wrong if multiple tenants share a cache\n• Include IDs: `\"user:{$userId}:posts\"` instead of `\"user_posts\"`\n• Include version if the data structure changes: `\"posts.v2.featured\"`\n• Set sensible TTLs — cache that never expires grows forever and goes stale\n\n<b>When NOT to cache</b>:\n• Data that must be real-time (inventory counts, account balances)\n• Data that changes on every request without a user-specific key\n• Tiny queries that are already fast (single-row primary key lookups — DB buffers those itself)",
+            np: "Cache key naming: specific र unique राख्नुस्। TTL sensible राख्नुस्। Inventory/balance जस्ता real-time data cache नगर्नुस्।",
+            jp: "キャッシュキーは具体的かつユニークに。TTL を適切に設定。在庫・残高などリアルタイムデータはキャッシュ不可。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Laravel Vapor — serverless on AWS",
-        np: "Laravel Vapor — serverless deployment",
-        jp: "Laravel Vapor — AWS サーバーレス",
+        en: "Laravel Horizon — queue monitoring & scaling",
+        np: "Laravel Horizon — queue monitoring",
+        jp: "Laravel Horizon — キュー監視とスケーリング",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Vapor</b> deploys Laravel to AWS Lambda — a \"serverless\" environment where you don't manage any servers.\n\nAnalogy: instead of owning a restaurant (a server that runs 24/7 with fixed costs), you rent a kitchen by the minute, only when customers arrive. No customers = no cost. 10,000 customers at once = 10,000 kitchens spin up automatically.\n\nLambda runs your PHP code in response to HTTP requests, scales to zero when idle, and scales to thousands of concurrent executions under load — all automatically.",
-            np: "Vapor = AWS Lambda मा Laravel। Server manage गर्नु पर्दैन, traffic अनुसार automatically scale।",
-            jp: "Vapor = AWS Lambda で Laravel を動かす。サーバー管理不要、自動スケーリング。",
+            en: "Horizon is a dashboard and process manager for Laravel queues. Without it, you manage queue workers manually — launching them with supervisor, guessing how many you need, flying blind when jobs fail.\n\nHorizon gives you:\n• Live dashboard with jobs-per-minute, wait time, throughput\n• Failed jobs with full stack traces and retry button\n• Auto-balancing workers across queues based on real load\n• Slack/email alerts when jobs fail or queues back up",
+            np: "Horizon = queue dashboard + process manager। Failed jobs, throughput, auto-balancing — सबै एकै ठाउँमा।",
+            jp: "Horizon はキューのダッシュボード＋プロセスマネージャー。失敗ジョブ・スループット・自動バランスを一元管理。",
           },
         },
         {
           type: "code",
-          title: { en: "vapor.yml config & deploy commands", np: "vapor.yml र deploy", jp: "vapor.yml とデプロイ" },
-          code: `# Install Vapor CLI
-composer global require laravel/vapor-cli
+          title: { en: "Horizon setup & config", np: "Horizon setup", jp: "Horizon セットアップ" },
+          code: `// Install
+composer require laravel/horizon
+php artisan horizon:install
+php artisan migrate  // creates horizon tables
 
-# vapor.yml (in project root)
-id: 12345
-name: my-app
-environments:
-  production:
-    runtime: php-8.3:al2
-    memory: 1024
-    cli-memory: 512
-    timeout: 30
-    build:
-      - npm ci
-      - npm run build
-      - php artisan event:cache
-    deploy:
-      - php artisan migrate --force
-    queues:
-      - default
-      - high
+// config/horizon.php — define worker environments
+'environments' => [
+    'production' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['high', 'default', 'low'],
+            'balance'      => 'auto',     // smart auto-scaling
+            'maxProcesses' => 10,         // max total worker processes
+            'memory'       => 128,        // MB per worker (restart if exceeded)
+            'timeout'      => 60,         // job time limit in seconds
+            'tries'        => 3,          // retry failed jobs 3 times
+        ],
+    ],
+    'local' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['default'],
+            'balance'      => 'simple',
+            'maxProcesses' => 3,
+        ],
+    ],
+],
 
-# Deploy to production
-vapor deploy production
+// Run Horizon
+php artisan horizon         // start in foreground (dev)
+php artisan horizon:status  // check if running
+php artisan horizon:pause   // pause all workers
+php artisan horizon:continue
 
-# Roll back the last deploy
-vapor rollback production
+// Prioritise critical jobs
+SendWelcomeEmail::dispatch($user)->onQueue('high');
+GenerateReport::dispatch($data)->onQueue('low');
 
-# Open the Vapor dashboard
-vapor open`,
+// Supervisor config for production (/etc/supervisor/conf.d/horizon.conf)
+// [program:horizon]
+// command=php /var/www/artisan horizon
+// autostart=true
+// autorestart=true
+// user=www-data`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Forge vs Vapor — when to use each",
-            np: "Forge vs Vapor comparison",
-            jp: "Forge vs Vapor — 使い分け",
+          type: "paragraph",
+          text: {
+            en: "`balance: auto` monitors each queue's depth and spins up more workers for queues with a backlog — it responds to real load rather than distributing blindly. Key settings:\n• `maxProcesses` — set to your server's CPU count (not total RAM)\n• `memory: 128` — worker restarts after using 128MB, preventing gradual memory leaks\n• `tries: 3` — retries a failing job 3 times before marking it as \"failed\"\n• `timeout: 60` — kills a job that runs longer than 60 seconds (prevents zombie workers)\n\nAlways monitor the Horizon dashboard after a new deployment — a new bug can cause jobs to fail silently without Horizon.",
+            np: "`balance: auto` real load हेरेर workers थप्छ। `maxProcesses`, `memory`, `tries`, `timeout` सेट गर्नुस्।",
+            jp: "`balance: auto` はキューの深さに応じてワーカーを増減。`maxProcesses`・`memory`・`tries`・`timeout` を適切に設定。",
           },
-          headers: [
-            { en: "Factor", np: "Factor", jp: "要素" },
-            { en: "Forge (VPS)", np: "Forge (VPS)", jp: "Forge（VPS）" },
-            { en: "Vapor (Serverless)", np: "Vapor (Serverless)", jp: "Vapor（サーバーレス）" },
-          ],
-          rows: [
-            [
-              { en: "Server management", np: "Server management", jp: "サーバー管理" },
-              { en: "You manage (Forge automates it)", np: "Forge ले automate", jp: "Forge が自動化" },
-              { en: "None — AWS manages everything", np: "AWS ले manage", jp: "AWS がすべて管理" },
-            ],
-            [
-              { en: "Scaling", np: "Scaling", jp: "スケーリング" },
-              { en: "Manual — add more servers", np: "Manual scaling", jp: "手動でサーバー追加" },
-              { en: "Automatic — zero to millions", np: "Auto scale", jp: "自動スケーリング" },
-            ],
-            [
-              { en: "Long-running jobs", np: "Long-running jobs", jp: "長時間ジョブ" },
-              { en: "Fine — no time limit", np: "Time limit छैन", jp: "時間制限なし" },
-              { en: "15-minute Lambda limit", np: "15 min limit", jp: "15分制限あり" },
-            ],
-            [
-              { en: "Cost model", np: "Cost model", jp: "コストモデル" },
-              { en: "Fixed per server/month", np: "Fixed monthly", jp: "月額固定" },
-              { en: "Pay per request", np: "Per request pay", jp: "リクエスト課金" },
-            ],
-            [
-              { en: "Best for", np: "Best for", jp: "向いている用途" },
-              { en: "Predictable traffic, full control", np: "Predictable traffic", jp: "トラフィックが予測可能な場合" },
-              { en: "Unpredictable spikes, zero ops", np: "Traffic spikes", jp: "急激なスパイクや運用ゼロ希望" },
-            ],
-          ],
         },
       ],
     },
     {
       title: {
-        en: "CI/CD with GitHub Actions",
-        np: "CI/CD with GitHub Actions",
-        jp: "GitHub Actions で CI/CD",
+        en: "Telescope — profiling in development",
+        np: "Telescope — development debugging",
+        jp: "Telescope — 開発時のプロファイリング",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>CI/CD</b> automates the \"run tests → deploy\" pipeline.\n\n• <b>CI (Continuous Integration)</b> — run tests on every push to catch bugs before they merge\n• <b>CD (Continuous Deployment)</b> — deploy automatically after tests pass\n\nWithout CI/CD: every deploy is manual (and risky — you might forget to run migrations, cache config, or restart workers). With CI/CD: push to `main` → tests run → deploy fires automatically — a repeatable, auditable process.\n\nGitHub Actions is free for public repos and has 2,000 free minutes/month for private repos.",
-            np: "CI = tests run automatically। CD = tests pass भएपछि auto deploy। GitHub Actions = free।",
-            jp: "CI = 自動テスト、CD = テスト通過後の自動デプロイ。GitHub Actions は無料。",
+            en: "Laravel Telescope is a development debugging dashboard. It records every request, query, job, mail, notification, cache hit/miss, schedule firing, and exception — with full context.\n\nAnalogy: it's like having a flight data recorder for your application — when something goes wrong, you replay exactly what happened.\n\nInstall it in development only — never in production without IP restrictions, as it exposes sensitive request data, query results, and environment variables.",
+            np: "Telescope = development debugging dashboard। Requests, queries, jobs, mails, exceptions सबै record गर्छ।",
+            jp: "Telescope は開発用デバッグダッシュボード。リクエスト・クエリ・ジョブ・例外をすべて記録。本番では IP 制限必須。",
           },
         },
         {
           type: "code",
-          title: { en: ".github/workflows/deploy.yml — test & deploy pipeline", np: "GitHub Actions workflow", jp: "GitHub Actions ワークフロー" },
-          code: `# .github/workflows/deploy.yml
-name: Test & Deploy
+          title: { en: "Telescope install & restrict to local", np: "Telescope setup", jp: "Telescope のセットアップ" },
+          code: `// Install (dev-only)
+composer require laravel/telescope --dev
+php artisan telescope:install
+php artisan migrate
 
-on:
-  push:
-    branches: [main]
+// Visit /telescope in your browser
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: testing
-          MYSQL_ROOT_PASSWORD: password
-        ports: ['3306:3306']
-        options: --health-cmd="mysqladmin ping" --health-interval=10s
+// Restrict to local environment — app/Providers/TelescopeServiceProvider.php
+use Laravel\\Telescope\\Telescope;
 
-    steps:
-      - uses: actions/checkout@v4
+protected function gate(): void
+{
+    Gate::define('viewTelescope', function ($user = null) {
+        return app()->isLocal() || in_array($user?->email, [
+            'admin@example.com',
+        ]);
+    });
+}
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: pdo_mysql
+// Only register in local environment (prevents telescope from loading in prod)
+// bootstrap/providers.php — wrap in env check:
+// Or in AppServiceProvider::register():
+if ($this->app->isLocal()) {
+    $this->app->register(\\Laravel\\Telescope\\TelescopeServiceProvider::class);
+}
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Prepare environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-
-      - name: Run migrations
-        run: php artisan migrate --force
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: password
-
-      - name: Run tests
-        run: php artisan test
-
-  deploy:
-    needs: test          # only runs if 'test' job passes
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Forge deploy
-        run: curl -s "\${{ secrets.FORGE_DEPLOY_URL }}"`,
+// Key things to watch in Telescope:
+// /telescope/requests  — all HTTP requests with query count + duration
+// /telescope/queries   — all SQL queries; red = slow (>100ms)
+// /telescope/jobs      — queued jobs with payload, attempts, execution time
+// /telescope/cache     — hits vs misses per key
+// /telescope/exceptions — full stack trace with request context`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Setting up the Forge deploy webhook:</b>\n1. In Forge → Sites → Your Site → Deployments → copy the \"Deploy Webhook\" URL\n2. In GitHub → Settings → Secrets → Actions → New secret: `FORGE_DEPLOY_URL`\n3. Paste the webhook URL as the secret value\n\nNow every push to `main` that passes tests triggers an automatic Forge deploy.\n\n<b>For Vapor deployments</b> replace the deploy step with:\n`vapor deploy production` using `VAPOR_API_TOKEN` as a GitHub secret.",
-            np: "Forge webhook URL GitHub secret मा राख्नुहोस्। Push → test → deploy automatically।",
-            jp: "Forge の Webhook URL を GitHub シークレットに登録。プッシュ→テスト→自動デプロイ。",
+            en: "Key performance metrics to monitor in Telescope:\n• <b>More than 10 queries per request</b> → likely N+1; add `with()` eager loading\n• <b>Any query over 100ms</b> → missing index, or a JOIN scanning too many rows\n• <b>Cache miss rate over 50%</b> → TTL too short, or cache never warming on first request\n• <b>Job memory > 64MB</b> → loading too much data into memory; use `chunk()` or `cursor()`\n• <b>Many duplicate queries</b> → same query running in a loop; move it outside the loop\n\nRun Telescope for a week after every major launch to build a performance baseline before optimising.",
+            np: "10+ queries per request → N+1। 100ms+ query → missing index। Cache miss 50%+ → TTL छोटो।",
+            jp: "10 クエリ以上→ N+1。100ms 超→インデックス不足。キャッシュミス 50% 超→ TTL 短すぎ。",
           },
         },
       ],
@@ -346,74 +334,62 @@ jobs:
   faq: [
     {
       question: {
-        en: "What is the difference between Forge and Envoyer?",
-        np: "Forge र Envoyer मा के फरक छ?",
-        jp: "Forge と Envoyer の違いは？",
+        en: "What is the difference between Cache::remember() and Cache::rememberForever()?",
+        np: "`Cache::remember()` र `Cache::rememberForever()` को फरक के हो?",
+        jp: "`Cache::remember()` と `Cache::rememberForever()` の違いは?",
       },
       answer: {
-        en: "Forge provisions and manages the server — installs PHP, Nginx, MySQL, SSL, manages Supervisor daemons. Envoyer handles zero-downtime deployments — it deploys to a new directory, runs migrations and cache commands, then atomically symlinks the web root to the new release so there is no downtime window.\n\nThey work together: Forge manages the server, Envoyer manages the release process. For most apps, Forge alone is sufficient. Add Envoyer when downtime during the 10-30 second deploy window becomes a real problem.",
-        np: "Forge = server manage। Envoyer = zero-downtime deployment। दुवै सँगै काम गर्छन्।",
-        jp: "Forge はサーバー管理、Envoyer はゼロダウンタイムデプロイ。一緒に使うことも可能。",
+        en: "`remember()` takes a TTL in seconds; the cache auto-expires and re-computes on the next access. `rememberForever()` never expires — you must manually call `Cache::forget()` when the data changes. Use `rememberForever()` only when you have a reliable cache-busting strategy (e.g. invalidate in a model observer or event listener). If you forget to bust the cache, users see stale data indefinitely.",
+        np: "`remember()` = TTL पछि auto-expire। `rememberForever()` = manual forget चाहिन्छ। Observer मा invalidate गर्नुस्।",
+        jp: "`remember()` は TTL 後に自動失効。`rememberForever()` は手動 `forget()` が必要。Observer で確実に無効化できる場合のみ使用。",
       },
     },
     {
       question: {
-        en: "Should I use Sail in production?",
-        np: "Sail production मा use गर्नुहुन्छ?",
-        jp: "Sail を本番環境で使うべき？",
+        en: "Does with() always fix N+1?",
+        np: "`with()` ले हमेशा N+1 fix गर्छ?",
+        jp: "`with()` は常に N+1 を修正しますか?",
       },
       answer: {
-        en: "No. Sail is a development tool. Running Docker in production requires a production-grade Dockerfile (no Xdebug, no dev dependencies, optimised PHP-FPM settings), orchestration (Docker Compose or Kubernetes), healthcheck configuration, and careful resource limits.\n\nUse Sail to eliminate \"works on my machine\" problems between developers — everyone uses the same PHP version, extensions, and database. Then deploy to Forge or Vapor for production.",
-        np: "Sail = development only। Production मा production Dockerfile चाहिन्छ।",
-        jp: "Sail は開発専用。本番環境には本番用 Dockerfile が必要。",
+        en: "`with()` fixes N+1 for standard Eloquent relationships when you define the eager load upfront. It does NOT help when: (1) you call a relationship method inside a loop on an already-loaded collection (use `$posts->load('author')` instead), (2) a relationship is accessed in a computed attribute that doesn't know about the eager load, (3) you use raw DB queries instead of Eloquent. Enable `preventLazyLoading()` in development to catch all cases automatically.",
+        np: "`with()` standard relationships fix गर्छ। Loop भित्र lazy access गर्दा `$posts->load()` प्रयोग गर्नुस्।",
+        jp: "`with()` は標準リレーションに有効。ループ内のアクセスには `$posts->load()` を。`preventLazyLoading()` で全ケースを検出。",
       },
     },
     {
       question: {
-        en: "How do I handle database migrations in a zero-downtime deploy?",
-        np: "Zero-downtime deploy मा migrations कसरी handle गर्ने?",
-        jp: "ゼロダウンタイムデプロイで DB マイグレーションをどう扱う？",
+        en: "How many queue workers should I run?",
+        np: "कति queue workers चलाउनु पर्छ?",
+        jp: "キューワーカーはいくつ実行すべきですか?",
       },
       answer: {
-        en: "Write only backwards-compatible migrations — never drop a column or rename it in the same deploy as the code change. Use the <b>expand/contract pattern</b>:\n\n1. Deploy 1 — add the new column with a default value (old code still works)\n2. Deploy 2 — update the code to write to the new column\n3. Deploy 3 — remove the old column (new code no longer reads it)\n\nThis ensures old code and new code can run simultaneously during the brief overlap window of a zero-downtime deploy.",
-        np: "Expand/contract pattern: add column → update code → remove old column। 3 deploys।",
-        jp: "Expand/contract パターン：列追加→コード更新→旧列削除の3段階デプロイ。",
+        en: "Start with 1 worker per CPU core. Monitor queue depth with Horizon — if jobs are consistently waiting more than 5 seconds, add workers. For mixed-priority workloads, run dedicated workers for the `high` queue (customer-facing, fast) and shared workers for `default` and `low` (background processing). Memory is usually the bottleneck before CPU — if workers are restarting frequently due to the `memory` limit, your jobs are loading too much data.",
+        np: "CPU core प्रति 1 worker बाट सुरु गर्नुस्। Horizon मा queue depth monitor गर्नुस्। High queue मा dedicated workers राख्नुस्।",
+        jp: "CPU コアあたり 1 ワーカーから開始。Horizon でキュー深度を監視し、待機が多ければ増やす。優先度別のキューには専用ワーカーを。",
       },
     },
     {
       question: {
-        en: "How do I store secrets in CI/CD?",
-        np: "CI/CD मा secrets कसरी store गर्ने?",
-        jp: "CI/CD でシークレットはどう管理する？",
+        en: "What is the difference between chunk() and cursor()?",
+        np: "`chunk()` र `cursor()` को फरक के हो?",
+        jp: "`chunk()` と `cursor()` の違いは?",
       },
       answer: {
-        en: "Never put real credentials in `.yml` files — they are committed to git and visible to anyone with repo access.\n\n• <b>GitHub Actions</b> — use GitHub Secrets (Settings → Secrets → Actions). Reference as `${{ secrets.MY_SECRET }}`. They are masked in logs automatically.\n• <b>Forge</b> — set environment variables in the Forge server panel (encrypted at rest). They are injected into the PHP process environment on every request.\n• <b>Vapor</b> — set environment variables in the Vapor dashboard (encrypted at rest). Never commit them to `vapor.yml`.",
-        np: "GitHub Secrets, Forge env panel, र Vapor dashboard — yaml file मा secrets राख्नु हुँदैन।",
-        jp: "GitHub Secrets・Forge 環境変数パネル・Vapor ダッシュボードを使う。yml ファイルに書かない。",
+        en: "`chunk()` loads N records at a time into memory, processes them, discards them, then loads the next N. Good for batch operations (bulk inserts, file exports). `cursor()` uses a database cursor — it returns a PHP generator that loads one record at a time, using constant memory regardless of table size. `cursor()` holds the database connection open for the entire operation. Rule: use `cursor()` for read-only iteration over huge tables; use `chunk()` when you need the records as a Collection (for batch DB writes).",
+        np: "`chunk()` = N rows एकैपटक memory मा। `cursor()` = one row at a time (generator)। `cursor()` memory-efficient, `chunk()` batch operations मा राम्रो।",
+        jp: "`chunk()` は N 件ずつロード。`cursor()` はジェネレーターで 1 件ずつ、メモリ使用量一定。巨大テーブルの読み取りには `cursor()`、バッチ書き込みには `chunk()`。",
       },
     },
     {
       question: {
-        en: "What is the difference between `config:cache` and `config:clear`?",
-        np: "`config:cache` र `config:clear` मा के फरक?",
-        jp: "`config:cache` と `config:clear` の違いは？",
+        en: "When should I NOT use Redis caching?",
+        np: "Redis caching कहिले प्रयोग नगर्ने?",
+        jp: "Redis キャッシュを使うべきでない場合は?",
       },
       answer: {
-        en: "`config:cache` compiles all config files into a single cached file (`bootstrap/cache/config.php`) — every request reads one file instead of dozens. Config changes are NOT visible until you re-run `config:cache`.\n\n`config:clear` deletes the cache so Laravel reads fresh config files on every request — useful when debugging a config issue locally, but slower in production.\n\nRule: always run `php artisan optimize` (which includes `config:cache`) after every production deploy. Run `php artisan optimize:clear` when debugging locally.",
-        np: "`config:cache` = speed (cached)। `config:clear` = fresh read (slower)। Deploy पछि cache गर्नुहोस्।",
-        jp: "`config:cache` = 高速（キャッシュ済み）。`config:clear` = 毎回読み直し（デバッグ用）。",
-      },
-    },
-    {
-      question: {
-        en: "How do I roll back a bad deployment?",
-        np: "Bad deployment rollback कसरी गर्ने?",
-        jp: "デプロイ失敗時のロールバック方法は？",
-      },
-      answer: {
-        en: "The method depends on your deployment tool:\n• <b>Forge</b> — push the previous commit to your branch: `git revert HEAD && git push`, or in the Forge UI trigger a deploy of the last known-good commit hash\n• <b>Envoyer</b> — click \"Rollback\" in the UI — it symlinks back to the previous release directory instantly (< 1 second)\n• <b>Vapor</b> — run `vapor rollback production` — it redeploys the previous Lambda version\n\nThe safest practice: run database migrations in a separate step BEFORE deploying code. That way, a code rollback never requires a schema rollback (which is very risky on production data).",
-        np: "Forge = previous commit push। Envoyer = Rollback button। Vapor = `vapor rollback production`।",
-        jp: "Forge = 旧コミットをプッシュ。Envoyer = Rollback ボタン。Vapor = `vapor rollback production`。",
+        en: "Don't cache: (1) data that must always be fresh — inventory counts, account balances, anything where a stale read causes a real problem; (2) data that changes on every request without a user-specific cache key (you'd always miss); (3) tiny queries that are already fast — single-row primary key lookups are served from the DB's own buffer cache; (4) data the user just wrote — always read directly from DB after writes to avoid showing stale data (read-your-own-writes consistency).",
+        np: "Real-time data (inventory, balance), per-request changing data, fast PK lookups — यिनीहरू cache नगर्नुस्।",
+        jp: "在庫・残高などリアルタイムデータ、毎リクエスト変わるデータ、高速な PK ルックアップはキャッシュ不要。書き込み直後は DB から直接読む。",
       },
     },
   ],
