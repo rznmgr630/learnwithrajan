@@ -33,6 +33,7 @@ import { LARAVEL_DAY_22_LESSONS } from "@/lib/laravel-learning/laravel-day-22-le
 import { LARAVEL_DAY_23_LESSONS } from "@/lib/laravel-learning/laravel-day-23-lessons";
 import { LARAVEL_DAY_24_LESSONS } from "@/lib/laravel-learning/laravel-day-24-lessons";
 import { LARAVEL_DAY_25_LESSONS } from "@/lib/laravel-learning/laravel-day-25-lessons";
+import { LARAVEL_DAY_26_LESSONS } from "@/lib/laravel-learning/laravel-day-26-lessons";
 import { LARAVEL_ROADMAP_WEEKS, LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 
@@ -65,6 +66,7 @@ const LARAVEL_LESSON_DAYS: Record<number, LessonDay> = {
   23: LARAVEL_DAY_23_LESSONS,
   24: LARAVEL_DAY_24_LESSONS,
   25: LARAVEL_DAY_25_LESSONS,
+  26: LARAVEL_DAY_26_LESSONS,
 };
 
 export function LaravelRoadmap() {
