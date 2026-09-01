@@ -3,398 +3,369 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_20_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Think of Eloquent relationships like the connections between people in real life — a user has many posts, a post belongs to a user, a student belongs to many courses.\n\nEloquent turns these real-world connections into simple PHP methods so you never have to write raw SQL joins.\n\n<b>The four core relationship types</b>\n• <b>hasOne</b> — one parent, one child (a user has one profile)\n• <b>hasMany</b> — one parent, many children (a user has many posts)\n• <b>belongsTo</b> — the child points back to its parent (a post belongs to a user)\n• <b>belongsToMany</b> — two models connected through a middle table called a pivot (a user belongs to many roles)\n\nRelationships are <b>lazy by default</b> — they only hit the database when you actually access them, not when you define them.",
-      np: "Eloquent relationship ले FK joins PHP methods मा। hasOne/hasMany parent; belongsTo child; belongsToMany pivot।",
-      jp: "Eloquent リレーションは外部キー結合を PHP メソッドで表現します。hasOne/hasMany が親側、belongsTo が子側、belongsToMany が多対多のピボットです。",
-    },
-    {
-      en: "Three more concepts round out this day:\n\n<b>N+1 problem</b>\n• Loading 100 posts then looping to get each post's author fires 101 queries — one for posts, then one per post for its author\n  ↳ Fix: use `with('author')` to load everything in 2 queries instead of 101\n\n<b>Soft deletes</b>\n• Instead of physically deleting a row, Laravel marks it with a timestamp in a `deleted_at` column\n  ↳ The row stays in the table but is invisible to normal queries — you can restore it any time\n\n<b>Observers</b>\n• An observer is a class that listens for model events (created, updated, deleted) and runs your code automatically\n  ↳ Keeps model-related side effects out of controllers and in one organised place",
-      np: "N+1 problem: `with()` ले solve। Soft delete: row physically remove नगरी mark। Observer ले event logic centralize।",
-      jp: "N+1 問題は `with()` で解決します。ソフトデリートは行を物理削除せず `deleted_at` を記録。オブザーバでモデルイベントロジックを集中管理できます。",
+      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
+      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
+      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Core relationship types",
-        np: "Core relationship types",
-        jp: "基本のリレーション型",
+        en: "Auth guards & session-based login",
+        np: "Auth guard र session login",
+        jp: "Auth ガードとセッションログイン",
       },
       blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Laravel figures out the foreign key automatically by looking at the model name.\n\n<b>How the naming convention works</b>\n• If you call `belongsTo(User::class)`, Laravel looks for a `user_id` column on the current table\n  ↳ It takes the model name, converts it to snake_case, and adds `_id`\n• You can override this by passing the column name as the second argument: `$this->belongsTo(User::class, 'author_id')`\n\n<b>Avoiding null errors with `withDefault()`</b>\n• If a post has no `user_id`, accessing `$post->user` returns `null` — which causes a crash if you then try `$post->user->name`\n  ↳ `withDefault(['name' => 'Anonymous'])` returns a placeholder User model instead of `null`\n  ↳ Much safer when dealing with optional relationships",
-            np: "Convention ले `user_id` infer। Override गर्न explicit argument। `withDefault()` ले null बाट जोगिन सकिन्छ।",
-            jp: "規約で `user_id` などを自動推定。上書きするには関係メソッドに引数を渡します。`withDefault()` で外部キーが null のとき空モデルを返せます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "hasOne, hasMany, belongsTo",
-            np: "hasOne, hasMany, belongsTo उदाहरण",
-            jp: "hasOne・hasMany・belongsTo の定義",
-          },
-          code: `// app/Models/User.php
-class User extends Model
-{
-    // One user → one profile (FK: profiles.user_id)
-    public function profile(): HasOne
-    {
-        return $this->hasOne(Profile::class);
-        // Override FK: $this->hasOne(Profile::class, 'user_id', 'id');
-    }
-
-    // One user → many posts (FK: posts.user_id)
-    public function posts(): HasMany
-    {
-        return $this->hasMany(Post::class);
-    }
-}
-
-// app/Models/Post.php
-class Post extends Model
-{
-    // Many posts → one user (FK: posts.user_id)
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // withDefault: returns empty User model when user_id is null
-    public function author(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id')
-            ->withDefault(['name' => 'Anonymous']);
-    }
-}
-
-// ---- Accessing relationships ----
-$user    = User::find(1);
-$profile = $user->profile;          // hasOne → single model or null
-$posts   = $user->posts;            // hasMany → Collection
-$author  = Post::first()->user;     // belongsTo → single model or null`,
-        },
-        {
-          type: "code",
-          title: {
-            en: "belongsToMany — pivot table operations",
-            np: "belongsToMany — pivot operations",
-            jp: "belongsToMany とピボットテーブル操作",
-          },
-          code: `// Pivot table convention: alphabetical singular model names → role_user
-// Migration: $table->foreignId('user_id'); $table->foreignId('role_id');
-
-// app/Models/User.php
-public function roles(): BelongsToMany
-{
-    return $this->belongsToMany(Role::class)
-        ->withTimestamps()                // created_at, updated_at on pivot
-        ->withPivot('assigned_by');       // extra pivot column
-}
-
-// app/Models/Role.php
-public function users(): BelongsToMany
-{
-    return $this->belongsToMany(User::class)->withTimestamps();
-}
-
-// ---- Pivot operations ----
-$user = User::find(1);
-
-$user->roles()->attach($roleId);              // add a role
-$user->roles()->attach($roleId, ['assigned_by' => auth()->id()]); // with pivot data
-$user->roles()->detach($roleId);              // remove a role
-$user->roles()->detach();                     // remove ALL roles
-
-// sync: detaches roles NOT in the array, attaches new ones
-$user->roles()->sync([1, 2, 3]);
-
-// syncWithoutDetaching: only attaches, never removes
-$user->roles()->syncWithoutDetaching([4]);
-
-// toggle: attaches if missing, detaches if present
-$user->roles()->toggle([1, 2]);
-
-// Access pivot columns
-foreach ($user->roles as $role) {
-    echo $role->pivot->assigned_by;
-    echo $role->pivot->created_at;
-}`,
-        },
         {
           type: "diagram",
-          id: "laravel-eloquent-relations",
+          id: "laravel-auth-guard",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
+            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
+            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
+
+// Check if a user is logged in
+if (Auth::check()) {
+    $user = Auth::user();   // returns Authenticatable|null
+    $id   = Auth::id();     // returns int|null
+}
+
+// Attempt login (returns bool)
+$credentials = ['email' => $email, 'password' => $password];
+if (Auth::attempt($credentials, $remember)) {
+    $request->session()->regenerate();   // prevent session fixation
+    return redirect()->intended('/dashboard');
+}
+
+// Manual login (e.g., after registration)
+Auth::login($user);
+Auth::loginUsingId(1);
+
+// Logout
+Auth::logout();
+$request->session()->invalidate();
+$request->session()->regenerateToken();`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
+            np: "`auth` middleware route सुरक्षित गर्छ।",
+            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
+          code: `// routes/web.php
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
+    Route::resource('posts', PostController::class);
+});
+
+// Email-verified gate
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/billing', BillingController::class);
+});
+
+// API guard (Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/api/user', fn (Request $request) => $request->user());
+});`,
         },
       ],
     },
     {
       title: {
-        en: "Pivot tables & advanced relations",
-        np: "Pivot tables र advanced relations",
-        jp: "ピボットテーブルと高度なリレーション",
+        en: "Laravel Breeze install & what it gives you",
+        np: "Breeze install र features",
+        jp: "Breeze のインストールと提供機能",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Sometimes two models are connected through a third, and you want to jump straight to the end without a direct foreign key.\n\n<b>hasManyThrough explained with an analogy</b>\n• Think of it like: Country → has many Users → each User has many Posts\n  ↳ You want to ask \"give me all posts written by users in this country\" — but there's no direct `country_id` on the `posts` table\n• `hasManyThrough(Post::class, User::class)` builds the two-step join for you automatically\n  ↳ Laravel figures out the chain — you don't have to write raw SQL",
-            np: "hasOneThrough/hasManyThrough: Country→Users→Posts — direct FK बिना। Country ले Posts access।",
-            jp: "hasOneThrough / hasManyThrough で 2 つの外部キーをまたいでモデルにアクセス。Country→Users→Posts が典型例です。",
+            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
+            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
+            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "hasOneThrough / hasManyThrough",
-            np: "hasManyThrough उदाहरण",
-            jp: "hasManyThrough の使用例",
-          },
-          code: `// app/Models/Country.php
-class Country extends Model
-{
-    // Country → Users → Posts (through users)
-    public function posts(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            Post::class,    // final model
-            User::class,    // intermediate model
-            'country_id',   // FK on users table
-            'user_id',      // FK on posts table
-            'id',           // local key on countries
-            'id',           // local key on users
-        );
-    }
-}
+          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
+          code: `# 1. Require the package
+composer require laravel/breeze --dev
 
-$country = Country::find(1);
-$posts   = $country->posts; // all posts by users in this country`,
+# 2. Scaffold (choose a stack)
+php artisan breeze:install blade        # Blade + Alpine.js (default)
+php artisan breeze:install livewire     # Livewire full-page
+php artisan breeze:install react        # Inertia + React
+php artisan breeze:install vue          # Inertia + Vue
+php artisan breeze:install api          # API-only (no views, for SPAs)
+
+# 3. Install frontend dependencies & build
+npm install
+npm run dev
+
+# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
+php artisan migrate`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
+              np: "Login — rate limiting सहित।",
+              jp: "ログイン — レート制限（5回/分）付き。",
+            },
+            {
+              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
+              np: "Registration — `bcrypt` पासवर्ड।",
+              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
+            },
+            {
+              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
+              np: "Password reset — signed mail।",
+              jp: "パスワードリセット — 署名付きメールで送信。",
+            },
+            {
+              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
+              np: "Email verify — `MustVerifyEmail` interface।",
+              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
+            },
+            {
+              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
+              np: "Profile edit पनि।",
+              jp: "プロフィール編集・アカウント削除もあり。",
+            },
+          ],
         },
         {
           type: "paragraph",
           text: {
-            en: "A polymorphic relationship lets one model belong to multiple different model types — without creating a separate table for each.\n\n<b>Real-world example: comments</b>\n• Imagine you want users to leave comments on both blog posts and videos\n  ↳ Without polymorphism you'd need a `post_comments` table AND a `video_comments` table\n  ↳ With polymorphism, one `comments` table serves both — using two special columns\n• `commentable_type` stores which model owns the comment (e.g., `App\\Models\\Post` or `App\\Models\\Video`)\n• `commentable_id` stores the ID of that specific post or video\n  ↳ Together they uniquely identify the parent — no matter what type it is",
-            np: "Polymorphic: Comment ले Post वा Video दुवैमा belong गर्न सक्छ। `commentable_type` र `commentable_id`।",
-            jp: "ポリモーフィック関係で 1 つのリレーションが複数のモデル型につながります。Comment が Post にも Video にも属せる典型例です。",
+            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
+            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
+            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Polymorphic morphMany / morphTo",
-            np: "Polymorphic उदाहरण",
-            jp: "ポリモーフィックリレーションの例",
-          },
-          code: `// Migration: comments table
-// $table->morphs('commentable');
-// → adds commentable_type (VARCHAR) and commentable_id (BIGINT UNSIGNED)
+          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
+          code: `use Illuminate\\Support\\Facades\\Auth;
+use Illuminate\\Support\\Facades\\Hash;
+use App\\Models\\User;
 
-// app/Models/Comment.php
-class Comment extends Model
+public function store(Request $request): RedirectResponse
 {
-    public function commentable(): MorphTo
-    {
-        return $this->morphTo(); // resolves to Post or Video
-    }
-}
+    $validated = $request->validate([
+        'name'     => ['required', 'string', 'max:255'],
+        'email'    => ['required', 'email', 'unique:users'],
+        'password' => ['required', 'min:8', 'confirmed'],
+    ]);
 
-// app/Models/Post.php
-class Post extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
+    $user = User::create([
+        'name'     => $validated['name'],
+        'email'    => $validated['email'],
+        'password' => Hash::make($validated['password']),
+    ]);
 
-// app/Models/Video.php
-class Video extends Model
-{
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-}
+    Auth::login($user);
 
-// ---- Usage ----
-$post->comments()->create(['body' => 'Great post!']);
-$video->comments()->create(['body' => 'Nice video!']);
-
-$comment = Comment::first();
-$parent  = $comment->commentable; // returns Post or Video instance`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Eager loading & the N+1 problem",
-        np: "Eager loading र N+1 problem",
-        jp: "Eager loading と N+1 問題",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "The N+1 problem is the most common performance mistake in Eloquent — and the easiest to fix once you spot it.\n\n<b>What is the N+1 problem?</b>\n• Imagine you load 100 blog posts, then loop through them to get each post's author\n  ↳ That's 1 query to get the posts + 100 queries to get each author = 101 total\n• The number of extra queries grows with your data — at 1,000 posts it becomes 1,001 queries\n  ↳ This kills performance and is easy to miss in development where datasets are small\n\n<b>The fix: eager loading with `with()`</b>\n• `Post::with('user')->get()` runs exactly 2 SQL queries — one for posts, one for all their users at once\n  ↳ Laravel connects them in memory — no extra query per post in the loop\n• Always use `with()` when you know you'll be accessing a relationship inside a loop",
-            np: "N+1: loop भित्र lazy relationship access — 1+N queries। `with()` ले 1+1 queries मात्र।",
-            jp: "N+1 問題はループ内で遅延リレーションにアクセスすることで発生。`with()` で `WHERE IN (...)` の 1 クエリに置き換えます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "N+1 demonstration — before and after",
-            np: "N+1 problem — before/after",
-            jp: "N+1 問題の before/after",
-          },
-          code: `// ❌ N+1 problem — fires 1 + N queries
-$posts = Post::all(); // 1 query: SELECT * FROM posts
-foreach ($posts as $post) {
-    echo $post->user->name; // N queries: SELECT * FROM users WHERE id = ?
-}
-// If $posts has 100 rows → 101 SQL queries
-
-// ✅ Eager loading — fires exactly 2 queries
-$posts = Post::with('user')->get();
-// query 1: SELECT * FROM posts
-// query 2: SELECT * FROM users WHERE id IN (1, 2, 3, …)
-foreach ($posts as $post) {
-    echo $post->user->name; // no extra query — already loaded
-}
-
-// ---- Deep / nested eager loading ----
-$posts = Post::with('user.profile')->get(); // posts + users + profiles
-$users = User::with(['posts', 'posts.comments'])->get(); // nested
-
-// ---- Constrained eager load ----
-$users = User::with(['posts' => function ($query) {
-    $query->published()->latest()->limit(5);
-}])->get();
-
-// Shorter closure syntax (PHP 7.4+)
-$users = User::with(['posts' => fn ($q) => $q->published()->latest()])->get();
-
-// ---- Lazy eager loading (after query already ran) ----
-$users = User::all();           // already fetched
-$users->load('posts');          // load relationship in-place
-$users->loadMissing('posts');   // only load if not already loaded
-
-// ---- withCount: get relation count without hydrating models ----
-$users = User::withCount('posts')->get();
-echo $users->first()->posts_count; // no extra query for each user`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Soft deletes & model events",
-        np: "Soft deletes र Model events",
-        jp: "ソフトデリートとモデルイベント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Soft deletes give you a safety net — deleted records aren't really gone, just hidden.\n\n<b>How soft deletes work</b>\n• When you call `$post->delete()` on a model using `SoftDeletes`, Laravel sets `deleted_at` to the current timestamp instead of running `DELETE FROM posts`\n  ↳ The row stays in the database — it's just marked as deleted\n• All normal queries automatically add `WHERE deleted_at IS NULL` so soft-deleted rows are invisible\n  ↳ You don't need to add any filtering yourself — it's handled behind the scenes\n\n<b>Working with soft-deleted records</b>\n• `Post::withTrashed()->get()` — returns all records, including soft-deleted ones\n• `Post::onlyTrashed()->get()` — returns only the soft-deleted records\n• `$post->restore()` — clears `deleted_at` and brings the record back\n• `$post->forceDelete()` — physically removes the row from the database permanently",
-            np: "`SoftDeletes` trait ले `deleted_at` set गर्छ। Normal query मा filter। `withTrashed()` ले सब देखाउँछ।",
-            jp: "`SoftDeletes` トレイトは物理削除の代わりに `deleted_at` を記録。通常クエリは自動的にフィルタ。`withTrashed()` で全件、`onlyTrashed()` で削除済みのみ取得できます。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "SoftDeletes trait — setup and usage",
-            np: "SoftDeletes trait उदाहरण",
-            jp: "SoftDeletes トレイトの設定と使用",
-          },
-          code: `// Migration: add the column
-$table->softDeletes(); // deleted_at TIMESTAMP NULL DEFAULT NULL
-
-// app/Models/Post.php
-use Illuminate\\Database\\Eloquent\\SoftDeletes;
-
-class Post extends Model
-{
-    use SoftDeletes;
-}
-
-// ---- Soft delete operations ----
-$post = Post::find(1);
-$post->delete();          // sets deleted_at = now()  (soft delete)
-$post->forceDelete();     // physically removes the row from DB
-
-// ---- Querying soft-deleted records ----
-Post::all();              // excludes soft-deleted rows
-Post::withTrashed()->find(1);       // includes soft-deleted
-Post::withTrashed()->where('user_id', 1)->get();
-Post::onlyTrashed()->get();         // only soft-deleted
-
-// ---- Restore ----
-Post::withTrashed()->find(1)->restore(); // clears deleted_at
-
-// ---- Cascade soft deletes manually (no DB cascade for soft deletes) ----
-// In a model observer or in the delete() method:
-// $post->comments()->delete(); // soft-deletes related comments`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Model events let you run code automatically when something happens to a model — like auto-generating a slug when a post is created, or soft-deleting related comments when a post is deleted.\n\n<b>When each event fires</b>\n• `creating` / `created` — fires before and after a new record is inserted into the database\n• `updating` / `updated` — fires before and after an existing record is changed\n• `saving` / `saved` — fires on both creates and updates (a catch-all for either)\n• `deleting` / `deleted` — fires before and after a record is deleted\n• `restoring` / `restored` — fires when a soft-deleted record is brought back\n\n<b>Two ways to listen to events</b>\n• For simple cases: add an inline closure inside `boot()` in your model\n  ↳ Quick and easy, but gets messy when you stack up multiple events\n• For complex cases: create a dedicated <b>Observer</b> class with one method per event\n  ↳ All event logic lives in one organised file — easier to read, test, and maintain",
-            np: "Model events: `creating`, `created`, `updating`, `deleted` आदि। Simple: `boot()` मा inline। Complex: observer class।",
-            jp: "モデルイベントはライフサイクルの各段階で発火。シンプルなら `boot()` に直接、複雑なロジックはオブザーバクラスに切り出します。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Observer pattern — PostObserver",
-            np: "Observer उदाहरण",
-            jp: "オブザーバパターンの例",
-          },
-          code: `php artisan make:observer PostObserver --model=Post
-
-// app/Observers/PostObserver.php
-<?php
-
-namespace App\\Observers;
-
-use App\\Models\\Post;
-use Illuminate\\Support\\Str;
-
-class PostObserver
-{
-    public function creating(Post $post): void
-    {
-        // Auto-generate slug if not provided
-        if (empty($post->slug)) {
-            $post->slug = Str::slug($post->title);
-        }
-    }
-
-    public function created(Post $post): void
-    {
-        // Notify subscribers after a post is published
-        if ($post->is_published) {
-            // NotifySubscribers::dispatch($post);
-        }
-    }
-
-    public function deleting(Post $post): void
-    {
-        // Soft-delete related comments when post is deleted
-        $post->comments()->delete();
-    }
-}
-
-// Register in app/Providers/AppServiceProvider.php (or bootstrap/app.php)
-use App\\Models\\Post;
-use App\\Observers\\PostObserver;
-
-public function boot(): void
-{
-    Post::observe(PostObserver::class);
+    return redirect('/dashboard');
 }`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanctum: API tokens & SPA auth",
+        np: "Sanctum: token र SPA auth",
+        jp: "Sanctum: API トークンと SPA 認証",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
+            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
+            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
+          code: `# Install (already included in Laravel 11 by default)
+composer require laravel/sanctum
+
+# Publish config + migrations
+php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
+
+php artisan migrate`,
+        },
+        {
+          type: "code",
+          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
+          code: `// app/Models/User.php
+use Laravel\\Sanctum\\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
+          code: `// Issue a token on login
+public function login(Request $request): JsonResponse
+{
+    $user = User::where('email', $request->email)->first();
+
+    if (! $user || ! Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
+    // Create token with optional abilities (scopes)
+    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
+                   ->plainTextToken;
+
+    return response()->json(['token' => $token]);
+}
+
+// Revoke current token (logout)
+public function logout(Request $request): JsonResponse
+{
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Logged out']);
+}
+
+// Revoke all tokens (e.g. "log out everywhere")
+$user->tokens()->delete();
+
+// Protect API routes — routes/api.php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+});`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "SPA cookie auth vs API token auth",
+            np: "दुई mode तुलना",
+            jp: "SPA クッキー vs API トークン",
+          },
+          headers: [
+            { en: "Mode", np: "Mode", jp: "モード" },
+            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
+            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
+            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
+          ],
+          rows: [
+            [
+              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
+              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
+              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
+              { en: "Yes", np: "हो", jp: "Yes" },
+            ],
+            [
+              { en: "API Token", np: "API Token", jp: "API トークン" },
+              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
+              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
+              { en: "No", np: "होइन", jp: "No" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Password reset & email verification",
+        np: "Password reset र email verification",
+        jp: "パスワードリセットとメール確認",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
+            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
+            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
+          code: `use Illuminate\\Support\\Facades\\Password;
+
+// 1. Send reset link
+$status = Password::sendResetLink($request->only('email'));
+
+if ($status === Password::RESET_LINK_SENT) {
+    return back()->with('status', __($status));
+}
+return back()->withErrors(['email' => __($status)]);
+
+// 2. Reset password (called from reset form)
+$status = Password::reset(
+    $request->only('email', 'password', 'password_confirmation', 'token'),
+    function (User $user, string $password) {
+        $user->forceFill(['password' => Hash::make($password)])
+             ->setRememberToken(Str::random(60));
+        $user->save();
+        event(new PasswordReset($user));
+    }
+);
+
+return $status === Password::PASSWORD_RESET
+    ? redirect()->route('login')->with('status', __($status))
+    : back()->withErrors(['email' => __($status)]);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
+            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
+            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
+          code: `// app/Models/User.php
+use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
+
+class User extends Authenticatable implements MustVerifyEmail
+{
+    // Registration automatically sends verification email
+}
+
+// Check in code
+if (Auth::user()->hasVerifiedEmail()) {
+    // proceed
+}
+
+// Manually trigger verification email
+$user->sendEmailVerificationNotification();
+
+// routes/web.php — Breeze adds these automatically
+Route::get('/email/verify', EmailVerificationPromptController::class)
+    ->middleware('auth')
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->name('verification.verify');`,
         },
       ],
     },
@@ -402,62 +373,86 @@ public function boot(): void
   faq: [
     {
       question: {
-        en: "How does Laravel know the foreign key name for a relationship?",
-        np: "Laravel ले foreign key name कसरी थाहा पाउँछ?",
-        jp: "Laravel はどうやって外部キー名を知りますか？",
+        en: "What is the difference between Breeze, Jetstream, and Fortify?",
+        np: "Breeze, Jetstream, Fortify फरक के हो?",
+        jp: "Breeze・Jetstream・Fortify の違いは？",
       },
       answer: {
-        en: "Laravel follows a naming convention so you don't have to spell out every column name.\n\n• For `belongsTo(User::class)` — Laravel looks for a `user_id` column on the current table\n• For `hasMany(Post::class)` on a `User` model — Laravel looks for `user_id` on the `posts` table\n  ↳ The pattern is always: the related model name in snake_case + `_id`\n\nIf your column has a different name (like `author_id` instead of `user_id`), pass it as the second argument:\n`$this->belongsTo(User::class, 'author_id')`\n  ↳ The third argument overrides the local key on your own table (defaults to `id`)",
-        np: "Snake_case model name + `_id`। Override: `$this->belongsTo(User::class, 'author_id')`।",
-        jp: "スネークケースのモデル名 + `_id` が規約です。上書きするには `$this->belongsTo(User::class, 'author_id')` のように第 2 引数で指定します。",
+        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
+        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
+        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
       },
     },
     {
       question: {
-        en: "What if my pivot table has a different name than the convention?",
-        np: "Pivot table को नाम convention अनुसार नभए?",
-        jp: "ピボットテーブル名が規約と異なる場合は？",
+        en: "Is Sanctum suitable for mobile apps?",
+        np: "Mobile app को लागि Sanctum ठीक छ?",
+        jp: "Sanctum はモバイルアプリに適していますか？",
       },
       answer: {
-        en: "By convention, Laravel expects the pivot table to be named using both model names in alphabetical order, singular, joined with an underscore — for example, `role_user` for User and Role.\n\nIf your table has a different name, pass it as the second argument:\n`$this->belongsToMany(Role::class, 'user_role_assignments')`\n\nIf your foreign key column names also don't match the convention, pass them as the third and fourth arguments:\n`$this->belongsToMany(Role::class, 'user_role_assignments', 'member_id', 'permission_id')`\n  ↳ Third argument = the foreign key pointing to the current model's table\n  ↳ Fourth argument = the foreign key pointing to the related model's table",
-        np: "`$this->belongsToMany(Role::class, 'user_role_assignments')` — table name explicit।",
-        jp: "`belongsToMany(Role::class, 'user_role_assignments')` のように第 2 引数でテーブル名を指定します。外部キー列名は第 3・第 4 引数で上書きできます。",
+        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
+        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
+        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
       },
     },
     {
       question: {
-        en: "How do I filter records based on a related model's columns?",
-        np: "Related model को column अनुसार filter गर्ने?",
-        jp: "リレーションのカラムでフィルタするには？",
+        en: "How do I add roles to authenticated users?",
+        np: "User मा role कसरी थप्ने?",
+        jp: "認証済みユーザーにロールを追加する方法は？",
       },
       answer: {
-        en: "Use `whereHas()` — it lets you filter parent models based on a condition in their related records.\n\n<b>Examples</b>\n• Get all posts that have at least one approved comment:\n`Post::whereHas('comments', fn ($q) => $q->where('approved', true))->get()`\n  ↳ Only returns posts where a matching comment exists — posts with no approved comments are excluded\n• `whereDoesntHave('comments')` — returns posts with zero comments (the inverse)\n• `has('comments', '>=', 3)` — returns posts with 3 or more comments\n\n<b>Counting without loading</b>\n• `withCount('comments')` adds a `comments_count` integer to each post — without loading the actual comment models\n  ↳ Perfect for showing \"12 comments\" in a list without fetching all 12 comment rows",
-        np: "`whereHas('comments', fn($q) => $q->where('approved', true))` — related condition। `withCount()` ले count।",
-        jp: "`whereHas('comments', fn($q) => $q->where('approved', true))` で条件付きリレーションフィルタ。`withCount()` は件数を追加属性として取得します。",
+        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 18) to authorize actions without needing a formal role system at all.",
+        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
+        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
       },
     },
     {
       question: {
-        en: "What is `withCount` and when should I use it?",
-        np: "`withCount` के हो र कहिले प्रयोग?",
-        jp: "`withCount` とは何ですか、どんな場面で使いますか？",
+        en: "What is the `remember_token` field for?",
+        np: "`remember_token` किस लागि?",
+        jp: "`remember_token` フィールドは何のためにあるの？",
       },
       answer: {
-        en: "`withCount()` gives you a number attached to each model — without loading all the related records.\n\n• `User::withCount('posts')->get()` adds a `posts_count` attribute to every User\n  ↳ Laravel runs a `COUNT(*)` in the SQL — no Post models are loaded into memory\n• Use it when you want to show \"Rajan has 12 posts\" in a list — you just need the number, not the posts themselves\n• You can also sort by it: `->orderByDesc('posts_count')` to rank users by most posts\n  ↳ Much more efficient than loading all posts and counting them in PHP",
-        np: "`withCount('posts')` ले `posts_count` attribute add — Post models load गर्दैन। List display को लागि।",
-        jp: "`withCount('posts')` は `posts_count` 属性を追加しますが Post モデルはロードしません。「X 件の投稿」表示や `orderByDesc('posts_count')` による並び替えに最適です。",
+        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
+        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
+        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
       },
     },
     {
       question: {
-        en: "How do observers differ from listening to model events directly in boot()?",
-        np: "Observer र `boot()` direct event listener मा के फरक?",
-        jp: "オブザーバと `boot()` での直接イベントリスニングの違いは？",
+        en: "Can I have multiple auth guards?",
+        np: "धेरै auth guard राख्न मिल्छ?",
+        jp: "複数の認証ガードは持てますか？",
       },
       answer: {
-        en: "Both approaches work the same way at runtime — the difference is about keeping your code clean.\n\n<b>Inline listeners in `boot()`</b>\n• Quick to write for one or two simple events\n  ↳ Can get hard to read when you stack up many event closures in one method\n\n<b>Observer class</b>\n• All event methods (creating, updating, deleting, etc.) live in one file\n  ↳ Easy to find, read, test independently, and temporarily disable during tests\n\nAs a rule of thumb: use an observer as soon as you have more than 2–3 model events, or when the event logic is more than a couple of lines.",
-        np: "Runtime मा same। Observer ले सबै event एक file मा — test गर्न सजिलो। 2-3 events भन्दा बढी भए observer।",
-        jp: "ランタイムでの動作は同じ。オブザーバは全イベントを 1 ファイルにまとめ、テストでのモックや一時的な無効化が容易です。イベントが 2〜3 件を超えたらオブザーバへ移しましょう。",
+        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
+        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
+        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
+      },
+    },
+    {
+      question: {
+        en: "How do I protect a route for specific user types?",
+        np: "विशेष user type को लागि route protect?",
+        jp: "特定ユーザータイプのみルートを保護する方法は？",
+      },
+      answer: {
+        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 18.",
+        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
+        jp: "カスタムミドルウェアか Gate/Policy（Day 18 参照）。`abort(403)` で弾く。",
+      },
+    },
+    {
+      question: {
+        en: "How do I test authentication in feature tests?",
+        np: "Feature test मा auth कसरी test गर्ने?",
+        jp: "フィーチャーテストで認証をテストする方法は？",
+      },
+      answer: {
+        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
+        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
+        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
       },
     },
   ],

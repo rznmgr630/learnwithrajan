@@ -3,372 +3,329 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_30_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Traditional web apps work on a request-response cycle — the browser asks, the server answers. Real-time apps <b>push updates from the server to the browser</b> without the browser asking first.\n\nThink of the difference between:\n• Checking your phone for messages every minute (polling — wasteful, slow)\n• Getting a push notification the instant someone messages you (WebSockets — instant, efficient)\n\n<b>Common use cases:</b>\n• Live notifications (\"You have a new order\")\n• Chat and messaging\n• Collaborative editing (Google Docs-style)\n• Live dashboards (sports scores, stock prices)\n• Delivery and order tracking",
-      np: "Real-time = server बाट browser मा push। WebSocket = instant notification। Chat, notification, dashboard मा use हुन्छ।",
-      jp: "リアルタイムとはサーバーからブラウザへの Push。チャット・通知・ライブダッシュボードに使う。",
+      en: "A slow app is a broken app — users leave pages that take more than 3 seconds to load, and search engines penalise slow sites. Performance in Laravel is mostly about three things: <b>database queries</b> (too many, or poorly structured), <b>caching</b> (not caching what you could), and <b>background work</b> (doing expensive work synchronously that could run in a queue). Most apps have at least one of these problems by default.",
+      np: "Slow app = broken app। Laravel performance: database queries optimize गर्नुस्, caching प्रयोग गर्नुस्, expensive work queue मा पठाउनुस्।",
+      jp: "遅いアプリは壊れたアプリ。Laravel のパフォーマンスは主に DB クエリ・キャッシュ・バックグラウンド処理の 3 点。",
     },
     {
-      en: "Laravel's real-time stack has four pieces:\n• <b>Events</b> — PHP classes that implement `ShouldBroadcast`; they carry the data to push\n  ↳ You already know Laravel events from Day 19; broadcasting is just events that go to the browser\n• <b>Channels</b> — named \"rooms\" the browser subscribes to (public, private, or presence)\n• <b>Broadcasting driver</b> — the WebSocket transport layer\n  ↳ <b>Reverb</b>: self-hosted, free, built by Laravel team (recommended for new projects)\n  ↳ <b>Pusher</b>: managed cloud service, generous free tier, no server management\n• <b>Laravel Echo</b> — the JavaScript library that subscribes to channels and triggers callbacks",
-      np: "4 pieces: Events (ShouldBroadcast), Channels, Driver (Reverb/Pusher), Echo (JS library)।",
-      jp: "4 要素: Events (ShouldBroadcast)、Channels、ドライバ (Reverb/Pusher)、Echo (JS)。",
+      en: "<b>N+1 query problem</b> — the single most common performance bug in Laravel apps\n↳ One query to get 100 posts, then 100 queries to get each post's author = 101 queries\n\n<b>Eager loading & withCount</b> — solving N+1 with `with()` and `withCount()`\n↳ Two queries instead of 101, regardless of how many records you have\n\n<b>Query debugging</b> — Laravel Telescope and Debugbar to spot slow queries\n↳ See every query, its execution time, and where it was called from\n\n<b>Redis caching</b> — caching query results, computed values, and sessions\n↳ ~1ms Redis read vs ~50ms database query\n\n<b>Laravel Horizon</b> — queue monitoring, worker scaling, and failure tracking\n↳ Dashboard showing throughput, wait time, and failed job stack traces",
+      np: "N+1 problem, eager loading, Telescope, Redis caching, Horizon — यी 5 topics cover हुन्छन्।",
+      jp: "N+1 問題、Eager ロード、Telescope、Redis キャッシュ、Horizon の 5 トピックを学ぶ。",
     },
   ],
   sections: [
     {
       title: {
-        en: "How broadcasting works — the full picture",
-        np: "Broadcasting कसरी काम गर्छ",
-        jp: "ブロードキャストの仕組み",
+        en: "The N+1 query problem",
+        np: "N+1 query problem",
+        jp: "N+1 クエリ問題",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The full flow, step by step:\n\n1. User submits a form → controller saves data to the database\n2. Controller fires `event(new PostCreated($post))`\n3. The `PostCreated` event implements `ShouldBroadcast`\n4. Laravel serialises the event and sends it to the WebSocket server (Reverb or Pusher)\n5. All browsers currently subscribed to the `posts` channel instantly receive the payload\n6. Echo triggers your JavaScript callback — you update the UI\n\nNo page refresh. No polling. The browser reacts in under 100ms.",
-            np: "Controller → event fire → ShouldBroadcast → WebSocket server → Echo → UI update। Page refresh नचाहिने।",
-            jp: "コントローラ → イベント → ShouldBroadcast → WebSocket サーバ → Echo → UI 更新。リロード不要。",
+            en: "<b>N+1</b> is when you run 1 query to get a list of records, then run 1 more query for EACH record to fetch related data. With 100 posts, that is 101 database round trips instead of 2.\n\nIt's named \"N+1\" because:\n• 1 query to get the list (the \"1\")\n• N queries to get each item's related data (the \"N\")\n• Total: N+1 queries\n\nEach round trip has overhead: network latency, connection setup, query parsing, index lookup. At scale this tanks response time. A page that loads in 50ms with 10 items takes 5 seconds with 1,000 items.",
+            np: "N+1 = 1 query list लिन + N queries प्रत्येक item को related data लिन। 100 posts = 101 queries! Eager loading ले यो fix गर्छ।",
+            jp: "N+1 は 1 回のリスト取得 + N 回の関連データ取得。100 件で 101 クエリ。Eager loading で解決。",
           },
         },
         {
           type: "code",
-          title: { en: "PostCreated event + controller dispatch", np: "Event class र dispatch", jp: "イベントクラスとディスパッチ" },
-          code: `// app/Events/PostCreated.php
-namespace App\\Events;
-
-use App\\Models\\Post;
-use Illuminate\\Broadcasting\\Channel;
-use Illuminate\\Broadcasting\\InteractsWithSockets;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-use Illuminate\\Queue\\SerializesModels;
-
-class PostCreated implements ShouldBroadcast
-{
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public function __construct(public Post $post) {}
-
-    // Which channel to broadcast on
-    public function broadcastOn(): array
-    {
-        return [new Channel('posts')]; // public channel
-    }
-
-    // What data to send (keep this lean — only what the frontend needs)
-    public function broadcastWith(): array
-    {
-        return [
-            'id'         => $this->post->id,
-            'title'      => $this->post->title,
-            'author'     => $this->post->user->name,
-            'created_at' => $this->post->created_at->toISOString(),
-        ];
-    }
+          title: { en: "N+1 problem and the fix", np: "N+1 र fix", jp: "N+1 と解決策" },
+          code: `// BAD — N+1 problem (101 queries for 100 posts)
+$posts = Post::all(); // 1 query
+foreach ($posts as $post) {
+    echo $post->author->name; // 1 query per post = 100 more queries
+    echo $post->comments->count(); // another 100 queries!
 }
 
-// app/Http/Controllers/PostController.php — fire the event
-public function store(Request $request): JsonResponse
-{
-    $post = Post::create($request->validated());
-    event(new PostCreated($post)); // broadcast to all subscribers
-    return response()->json($post, 201);
+// GOOD — Eager loading (3 queries total, regardless of count)
+$posts = Post::with(['author', 'comments'])->get();
+// Query 1: SELECT * FROM posts
+// Query 2: SELECT * FROM users WHERE id IN (1, 2, 3, ...)
+// Query 3: SELECT * FROM comments WHERE post_id IN (1, 2, 3, ...)
+
+// BETTER — withCount when you only need the count, not the records
+$posts = Post::with('author')->withCount('comments')->get();
+// $post->comments_count is now available as a virtual column
+// Only 2 queries total — no loading all comment rows into memory
+
+// DETECT N+1 in development — add to AppServiceProvider::boot()
+if (app()->isLocal()) {
+    \\Illuminate\\Database\\Eloquent\\Model::preventLazyLoading(true);
+    // Now Laravel throws an exception instantly when lazy loading is detected
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "`broadcastWith()` controls exactly what data is sent to the browser. Return only what the frontend needs — never broadcast passwords, tokens, or sensitive internal fields. If you omit `broadcastWith()`, Laravel serialises all public properties of the event class automatically.",
-            np: "`broadcastWith()` = browser मा जाने data control गर्छ। Sensitive data never broadcast गर्ने।",
-            jp: "`broadcastWith()` で送信データを制御。パスワード等の機密情報は絶対に送らない。",
+            en: "The `preventLazyLoading(true)` call is the single most effective way to catch N+1 before it reaches production. It throws a `LazyLoadingViolationException` with the model name and relationship that was lazily loaded, so you can fix it immediately.\n\nUseful variants:\n• `Post::with(['author:id,name', 'tags:id,name'])` — only load specific columns from related models\n• `Post::with(['comments' => fn($q) => $q->latest()->limit(3)])` — constrain eager load queries\n• `$posts->load('author')` — eager load on an already-retrieved collection",
+            np: "`preventLazyLoading(true)` production deployment अघि N+1 catch गर्ने best tool हो।",
+            jp: "`preventLazyLoading(true)` は N+1 を本番前に検出する最良の方法。関係の制約にも対応。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Channels — public, private & presence",
-        np: "Channels — public, private र presence",
-        jp: "チャンネル — public・private・presence",
+        en: "Query optimization — indexes, select & chunking",
+        np: "Query optimization — indexes, select र chunking",
+        jp: "クエリ最適化 — インデックス・select・チャンク",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Channels are like TV channels — you tune in to receive a specific broadcast.\n\n• <b>Public channels</b> — open to everyone, no auth check required\n  ↳ Use for: news feeds, live sports scores, public dashboards\n• <b>Private channels</b> — require authentication; the server verifies the user can access this channel\n  ↳ Use for: order status updates, user-specific notifications\n• <b>Presence channels</b> — like a private channel but the server also tells you who else is subscribed\n  ↳ Use for: chat rooms, collaborative editing (\"Alice and Bob are viewing this document\")",
-            np: "Public = सबैका लागि। Private = auth required। Presence = members को list पनि थाहा हुन्छ।",
-            jp: "Public は誰でも受信可能。Private は認証必須。Presence は誰が参加しているかも分かる。",
+            en: "Even with N+1 solved, individual queries can be slow. Three common causes:\n\n• <b>Missing indexes</b> — without an index, the database reads every row to find matches\n  ↳ Think of it like a book with no index — you'd read every page to find a word\n  ↳ Add indexes on columns you filter (`WHERE`), sort (`ORDER BY`), or join on\n• <b>Selecting too many columns</b> — `SELECT *` loads every column even if you use only 2\n  ↳ A `posts` table with a `body` TEXT column sends megabytes of data you don't render\n• <b>Loading too many rows at once</b> — `Post::all()` on a million-row table exhausts PHP memory",
+            np: "Missing indexes, SELECT *, र large datasets — यी तीन common query performance issues हुन्।",
+            jp: "インデックス不足・SELECT * による過剰取得・大量行ロードが遅いクエリの主な原因。",
           },
         },
         {
           type: "code",
-          title: { en: "Channel authorisation in routes/channels.php", np: "Channel auth define गर्ने", jp: "チャンネルの認可設定" },
-          code: `// routes/channels.php
-
-use App\\Models\\Order;
-use Illuminate\\Support\\Facades\\Broadcast;
-
-// PUBLIC channel — no auth needed, anyone can subscribe
-Broadcast::channel('posts', function () {
-    return true; // always allow
+          title: { en: "Indexes, column selection & chunking", np: "Indexes, select, chunk", jp: "インデックス・select・チャンク" },
+          code: `// INDEXES — add to your migrations
+Schema::table('posts', function (Blueprint $table) {
+    $table->index('user_id');                        // single column
+    $table->index(['user_id', 'published_at']);      // composite (queries filter both)
+    $table->index('published_at');                   // for ORDER BY published_at DESC
 });
 
-// PRIVATE channel — user must own the order
-Broadcast::channel('orders.{orderId}', function ($user, $orderId) {
-    $order = Order::find($orderId);
-    return $order && $user->id === $order->user_id;
-    // return false or null = denied (Echo gets a 403)
-});
+// COLUMN SELECTION — only load what you need
+Post::select(['id', 'title', 'published_at', 'user_id'])
+    ->with('author:id,name')  // constrain relation columns too
+    ->get();
 
-// PRESENCE channel — must return an array of member data (not just true/false)
-Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
-    if ($user->canJoinRoom($roomId)) {
-        return [
-            'id'     => $user->id,
-            'name'   => $user->name,
-            'avatar' => $user->avatar_url,
-        ];
+// CHUNKING — process large tables without exhausting memory
+// chunk(): loads 500 rows at a time
+Post::chunk(500, function (\\Illuminate\\Support\\Collection $posts) {
+    foreach ($posts as $post) {
+        // process each post
     }
-    return false; // deny access
+});
+
+// cursor(): memory-efficient generator (one row at a time)
+// Good for very large tables; holds DB connection open throughout
+foreach (Post::cursor() as $post) {
+    // process each post
+}
+
+// LOG ALL QUERIES in development
+\\DB::enableQueryLog();
+$posts = Post::with('author')->get();
+$queries = \\DB::getQueryLog();
+// $queries is an array of ['query' => '...', 'bindings' => [...], 'time' => 1.23]
+
+// Use DB::listen() for live logging
+\\DB::listen(function ($query) {
+    if ($query->time > 100) { // log queries slower than 100ms
+        logger()->warning("Slow query: {$query->sql}", ['time' => $query->time]);
+    }
 });`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Channel type comparison",
-            np: "Channel types को तुलना",
-            jp: "チャンネルタイプの比較",
-          },
-          headers: [
-            { en: "Type", np: "प्रकार", jp: "タイプ" },
-            { en: "Class", np: "Class", jp: "クラス" },
-            { en: "Auth required?", np: "Auth चाहिन्छ?", jp: "認証必須?" },
-            { en: "Best for", np: "उपयुक्त", jp: "用途" },
-          ],
-          rows: [
-            [
-              { en: "Public", np: "Public", jp: "Public" },
-              { en: "`Channel`", np: "`Channel`", jp: "`Channel`" },
-              { en: "No", np: "छैन", jp: "不要" },
-              { en: "News feeds, live scores, public dashboards", np: "News, scores, dashboard", jp: "ニュース・スコア・ダッシュボード" },
-            ],
-            [
-              { en: "Private", np: "Private", jp: "Private" },
-              { en: "`PrivateChannel`", np: "`PrivateChannel`", jp: "`PrivateChannel`" },
-              { en: "Yes — user must be authorised", np: "छ — user authorize हुनुपर्छ", jp: "必須 — ユーザー認可が必要" },
-              { en: "Order status, user notifications", np: "Order status, notifications", jp: "注文状況・ユーザー通知" },
-            ],
-            [
-              { en: "Presence", np: "Presence", jp: "Presence" },
-              { en: "`PresenceChannel`", np: "`PresenceChannel`", jp: "`PresenceChannel`" },
-              { en: "Yes — must return member data", np: "छ — member data return गर्नुपर्छ", jp: "必須 — メンバーデータを返す" },
-              { en: "Chat rooms, collaborative editing", np: "Chat, collaborative editing", jp: "チャット・共同編集" },
-            ],
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Setting up Laravel Reverb (self-hosted WebSocket server)",
-        np: "Laravel Reverb setup गर्ने",
-        jp: "Laravel Reverb のセットアップ",
-      },
-      blocks: [
-        {
           type: "paragraph",
           text: {
-            en: "<b>Reverb</b> is Laravel's own WebSocket server — introduced in Laravel 11, free, and runs on your own server alongside PHP-FPM and Nginx. It's the recommended default for new projects.\n\n<b>Pusher</b> is the cloud alternative:\n• <b>Pros:</b> zero server management, instant setup, generous free tier (200 concurrent connections, 800k messages/day)\n• <b>Cons:</b> costs money beyond the free tier, third-party dependency\n\nFor most new projects: start with Pusher free tier, migrate to Reverb if you hit limits or need more control.",
-            np: "Reverb = self-hosted, free। Pusher = managed cloud। Start मा Pusher free tier, later Reverb।",
-            jp: "Reverb は自己ホスト型で無料。Pusher はクラウドで簡単。まず Pusher 無料プランで始めてもよい。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Installing and running Reverb", np: "Reverb install र run गर्ने", jp: "Reverb のインストールと起動" },
-          code: `# Install Reverb and scaffold the broadcasting config
-php artisan install:broadcasting
-# (chooses Reverb by default in Laravel 11, installs the package and publishes config)
-
-# .env settings for Reverb
-BROADCAST_CONNECTION=reverb
-
-REVERB_APP_ID=my-app
-REVERB_APP_KEY=my-app-key
-REVERB_APP_SECRET=my-app-secret
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http  # use https in production
-
-# Start Reverb in development
-php artisan reverb:start
-# Reverb runs on ws://localhost:8080
-
-# In production — run Reverb via Supervisor so it restarts on crash
-# /etc/supervisor/conf.d/reverb.conf
-# [program:reverb]
-# command=php /var/www/myapp/artisan reverb:start --host=0.0.0.0 --port=8080
-# autostart=true
-# autorestart=true
-# redirect_stderr=true
-# stdout_logfile=/var/log/reverb.log`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "In production, run Reverb behind <b>Nginx as a reverse proxy</b> so WebSocket connections get HTTPS (WSS). Add an Nginx `location /app/` block that proxies to `http://localhost:8080`. The Laravel Reverb docs include the exact Nginx config.\n\n↳ Reverb also supports <b>horizontal scaling</b> via Redis — multiple Reverb nodes share state through Redis pub/sub, so you can run Reverb on multiple servers behind a load balancer",
-            np: "Production मा Nginx reverse proxy पछाडि run गर्ने। Redis ले horizontal scaling support गर्छ।",
-            jp: "本番は Nginx リバースプロキシの後ろで動かす。Redis で水平スケーリングも可能。",
+            en: "For production query analysis, install Laravel Telescope (`composer require laravel/telescope --dev`) — it records every query with its SQL, bindings, execution time, and the exact line of code that triggered it. It also highlights slow queries in red. Never run Telescope in production without restricting access to admin IPs.",
+            np: "Production मा Laravel Telescope install गर्नुस् — सबै queries देखिन्छन् execution time सहित।",
+            jp: "本番のクエリ分析には Laravel Telescope を使用。SQL・実行時間・呼び出し元を記録し、遅いクエリを赤でハイライト。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Laravel Echo — the frontend WebSocket listener",
-        np: "Laravel Echo — frontend listener",
-        jp: "Laravel Echo — フロントエンドの WebSocket リスナー",
+        en: "Caching with Redis",
+        np: "Redis caching",
+        jp: "Redis によるキャッシュ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Echo is the JavaScript companion to Laravel broadcasting. It wraps the raw WebSocket API into a clean, readable interface. Install it once, configure it once, then use it anywhere in your JavaScript (vanilla, React, Vue, etc.).",
-            np: "Echo = Laravel broadcasting को JS companion। Install र configure एकपटक, जहाँ पनि use गर्न सकिन्छ।",
-            jp: "Echo は Laravel ブロードキャストの JS ライブラリ。一度設定すれば React・Vue どこでも使える。",
+            en: "Caching means storing the result of an expensive operation so you can reuse it without re-computing. <b>Redis</b> is an in-memory key-value store — reads take ~1ms vs ~50ms for a database query.\n\nAnalogy: Redis is like keeping a sticky note on your desk (instant) vs going to the filing cabinet (slower) vs going to the library archive (slowest).\n\nUse Redis for:\n• Frequently-read data that changes rarely (featured posts, nav menus, config)\n• Computed aggregates (leaderboards, total counts)\n• Sessions (faster than database sessions)\n• Rate limiting (Laravel's throttle middleware uses Redis by default)\n• Queue backend (jobs stored in Redis, consumed by workers)",
+            np: "Redis = in-memory key-value store। ~1ms read। Frequently-read data, sessions, queues, rate limiting मा प्रयोग गर्नुस्।",
+            jp: "Redis はメモリ内 KV ストア。読み取り約 1ms。頻繁に読まれるデータ・セッション・キュー・レート制限に活用。",
           },
         },
         {
           type: "code",
-          title: { en: "Installing Echo + Reverb configuration", np: "Echo install र configure", jp: "Echo のインストールと設定" },
-          code: `# Install Echo and the Pusher JS driver (used by both Pusher and Reverb)
-npm install --save-dev laravel-echo pusher-js
-
-// resources/js/bootstrap.js — configure Echo for Reverb
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
+          title: { en: "Cache::remember, tags & invalidation", np: "Cache examples", jp: "キャッシュの例" },
+          code: `// Basic caching — compute on miss, serve from cache on hit
+$posts = Cache::remember('posts.featured', 3600, function () {
+    return Post::featured()->with('author')->orderByDesc('views')->limit(10)->get();
 });
+// 3600 = TTL in seconds (1 hour)
 
-// --- Three channel patterns ---
+// Invalidate when data changes (e.g. in PostObserver)
+public function updated(Post $post): void
+{
+    Cache::forget('posts.featured');
+}
 
-// 1. PUBLIC channel
-Echo.channel('posts')
-    .listen('PostCreated', (e) => {
-        console.log('New post:', e.title);
-        addPostToFeed(e); // update your UI
-    });
+// Tag-based invalidation — requires Redis (not available with file driver)
+// Cache all post-related data under the 'posts' tag
+$featured = Cache::tags(['posts'])->remember('featured', 3600, fn() => ...);
+$trending = Cache::tags(['posts'])->remember('trending', 1800, fn() => ...);
 
-// 2. PRIVATE channel (user must be authenticated)
-Echo.private('orders.' + orderId)
-    .listen('OrderShipped', (e) => {
-        showNotification('Your order has shipped!');
-    });
+// Invalidate ALL post caches at once
+Cache::tags(['posts'])->flush();
 
-// 3. PRESENCE channel (also tracks who's online)
-Echo.join('chat.' + roomId)
-    .here((members) => { setOnlineUsers(members); })     // initial member list
-    .joining((member) => { addUser(member); })            // someone joined
-    .leaving((member) => { removeUser(member); })         // someone left
-    .listen('MessageSent', (e) => { addMessage(e); });`,
+// Per-user cache (prevents cache key collisions)
+$key = "user:{$userId}:dashboard";
+$dashboard = Cache::remember($key, 600, fn() => buildDashboard($userId));
+
+// Store arbitrary data
+Cache::put('maintenance_mode', true, 300); // expires in 5 minutes
+Cache::forever('app_version', '2.4.1');    // no expiry
+$value = Cache::get('app_version', 'unknown'); // default if missing
+
+// .env configuration
+// CACHE_DRIVER=redis
+// REDIS_HOST=127.0.0.1
+// REDIS_PORT=6379
+// SESSION_DRIVER=redis  (store sessions in Redis)`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Echo re-connects automatically with exponential backoff if the WebSocket drops. In React/Vue, call `Echo.leaveChannel('posts')` or `Echo.disconnect()` in your component's cleanup function to avoid memory leaks.\n\n↳ Echo works with both Reverb and Pusher — just change `broadcaster: 'reverb'` to `broadcaster: 'pusher'` and update the key/cluster env vars",
-            np: "Echo auto-reconnect गर्छ। Component cleanup मा `leaveChannel()` call गर्नुपर्छ।",
-            jp: "Echo は自動再接続する。コンポーネントのクリーンアップで `leaveChannel()` を必ず呼ぶ。",
+            en: "<b>Cache key naming rules</b>:\n• Be specific: `posts.featured` is wrong if multiple tenants share a cache\n• Include IDs: `\"user:{$userId}:posts\"` instead of `\"user_posts\"`\n• Include version if the data structure changes: `\"posts.v2.featured\"`\n• Set sensible TTLs — cache that never expires grows forever and goes stale\n\n<b>When NOT to cache</b>:\n• Data that must be real-time (inventory counts, account balances)\n• Data that changes on every request without a user-specific key\n• Tiny queries that are already fast (single-row primary key lookups — DB buffers those itself)",
+            np: "Cache key naming: specific र unique राख्नुस्। TTL sensible राख्नुस्। Inventory/balance जस्ता real-time data cache नगर्नुस्।",
+            jp: "キャッシュキーは具体的かつユニークに。TTL を適切に設定。在庫・残高などリアルタイムデータはキャッシュ不可。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Practical example — live notification badge",
-        np: "Practical example — live notification",
-        jp: "実践例 — リアルタイム通知バッジ",
+        en: "Laravel Horizon — queue monitoring & scaling",
+        np: "Laravel Horizon — queue monitoring",
+        jp: "Laravel Horizon — キュー監視とスケーリング",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A complete end-to-end walkthrough: when any user creates a post, all other users see their notification badge increment in real-time — without refreshing the page. This covers the entire stack.",
-            np: "User ले post create गर्दा अरू users को notification badge instant update हुन्छ।",
-            jp: "投稿作成時に他ユーザーの通知バッジがリアルタイムで増える実装例。",
+            en: "Horizon is a dashboard and process manager for Laravel queues. Without it, you manage queue workers manually — launching them with supervisor, guessing how many you need, flying blind when jobs fail.\n\nHorizon gives you:\n• Live dashboard with jobs-per-minute, wait time, throughput\n• Failed jobs with full stack traces and retry button\n• Auto-balancing workers across queues based on real load\n• Slack/email alerts when jobs fail or queues back up",
+            np: "Horizon = queue dashboard + process manager। Failed jobs, throughput, auto-balancing — सबै एकै ठाउँमा।",
+            jp: "Horizon はキューのダッシュボード＋プロセスマネージャー。失敗ジョブ・スループット・自動バランスを一元管理。",
           },
         },
         {
           type: "code",
-          title: { en: "ShouldBroadcast event → Echo listener", np: "Event र Echo listener", jp: "ShouldBroadcast イベントと Echo リスナー" },
-          code: `// app/Events/NewPostPublished.php
-use Illuminate\\Broadcasting\\PrivateChannel;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
+          title: { en: "Horizon setup & config", np: "Horizon setup", jp: "Horizon セットアップ" },
+          code: `// Install
+composer require laravel/horizon
+php artisan horizon:install
+php artisan migrate  // creates horizon tables
 
-class NewPostPublished implements ShouldBroadcast
-{
-    public function __construct(
-        public Post $post,
-        public int $targetUserId  // the user to notify
-    ) {}
+// config/horizon.php — define worker environments
+'environments' => [
+    'production' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['high', 'default', 'low'],
+            'balance'      => 'auto',     // smart auto-scaling
+            'maxProcesses' => 10,         // max total worker processes
+            'memory'       => 128,        // MB per worker (restart if exceeded)
+            'timeout'      => 60,         // job time limit in seconds
+            'tries'        => 3,          // retry failed jobs 3 times
+        ],
+    ],
+    'local' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['default'],
+            'balance'      => 'simple',
+            'maxProcesses' => 3,
+        ],
+    ],
+],
 
-    public function broadcastOn(): array
-    {
-        // Every user has their own private channel: App.Models.User.{id}
-        return [new PrivateChannel('App.Models.User.' . $this->targetUserId)];
-    }
+// Run Horizon
+php artisan horizon         // start in foreground (dev)
+php artisan horizon:status  // check if running
+php artisan horizon:pause   // pause all workers
+php artisan horizon:continue
 
-    public function broadcastWith(): array
-    {
-        return [
-            'type'    => 'NewPostPublished',
-            'message' => "{$this->post->user->name} published a new post",
-            'postId'  => $this->post->id,
-        ];
-    }
-}
+// Prioritise critical jobs
+SendWelcomeEmail::dispatch($user)->onQueue('high');
+GenerateReport::dispatch($data)->onQueue('low');
 
-// Controller — notify all followers when a post is published
-public function store(Request $request): JsonResponse
-{
-    $post = Post::create([...$request->validated(), 'user_id' => auth()->id()]);
-
-    // Notify each follower (in a real app, dispatch a job for large follower lists)
-    auth()->user()->followers->each(function ($follower) use ($post) {
-        event(new NewPostPublished($post, $follower->id));
-    });
-
-    return response()->json($post, 201);
-}
-
-// Frontend — React component
-useEffect(() => {
-    const channel = Echo.private('App.Models.User.' + userId);
-
-    channel.notification((notification) => {
-        if (notification.type === 'NewPostPublished') {
-            setUnreadCount(c => c + 1);  // bump the badge
-            toast(notification.message);
-        }
-    });
-
-    return () => Echo.leaveChannel('App.Models.User.' + userId); // cleanup
-}, [userId]);`,
+// Supervisor config for production (/etc/supervisor/conf.d/horizon.conf)
+// [program:horizon]
+// command=php /var/www/artisan horizon
+// autostart=true
+// autorestart=true
+// user=www-data`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>`ShouldBroadcast` vs `ShouldBroadcastNow`:</b>\n\n• `ShouldBroadcast` (recommended) — event is pushed to the queue; the HTTP response returns immediately; the broadcast happens in the background\n• `ShouldBroadcastNow` — event broadcasts synchronously inline, before the HTTP response returns\n  ↳ Useful in development for testing without running a queue worker\n  ↳ Avoid in production — it slows down every HTTP request that fires the event",
-            np: "ShouldBroadcast = queued (production मा use गर्ने)। ShouldBroadcastNow = synchronous (dev मा only)।",
-            jp: "ShouldBroadcast はキュー経由で非同期。ShouldBroadcastNow は同期で遅くなる。本番は前者を使う。",
+            en: "`balance: auto` monitors each queue's depth and spins up more workers for queues with a backlog — it responds to real load rather than distributing blindly. Key settings:\n• `maxProcesses` — set to your server's CPU count (not total RAM)\n• `memory: 128` — worker restarts after using 128MB, preventing gradual memory leaks\n• `tries: 3` — retries a failing job 3 times before marking it as \"failed\"\n• `timeout: 60` — kills a job that runs longer than 60 seconds (prevents zombie workers)\n\nAlways monitor the Horizon dashboard after a new deployment — a new bug can cause jobs to fail silently without Horizon.",
+            np: "`balance: auto` real load हेरेर workers थप्छ। `maxProcesses`, `memory`, `tries`, `timeout` सेट गर्नुस्।",
+            jp: "`balance: auto` はキューの深さに応じてワーカーを増減。`maxProcesses`・`memory`・`tries`・`timeout` を適切に設定。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Telescope — profiling in development",
+        np: "Telescope — development debugging",
+        jp: "Telescope — 開発時のプロファイリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel Telescope is a development debugging dashboard. It records every request, query, job, mail, notification, cache hit/miss, schedule firing, and exception — with full context.\n\nAnalogy: it's like having a flight data recorder for your application — when something goes wrong, you replay exactly what happened.\n\nInstall it in development only — never in production without IP restrictions, as it exposes sensitive request data, query results, and environment variables.",
+            np: "Telescope = development debugging dashboard। Requests, queries, jobs, mails, exceptions सबै record गर्छ।",
+            jp: "Telescope は開発用デバッグダッシュボード。リクエスト・クエリ・ジョブ・例外をすべて記録。本番では IP 制限必須。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Telescope install & restrict to local", np: "Telescope setup", jp: "Telescope のセットアップ" },
+          code: `// Install (dev-only)
+composer require laravel/telescope --dev
+php artisan telescope:install
+php artisan migrate
+
+// Visit /telescope in your browser
+
+// Restrict to local environment — app/Providers/TelescopeServiceProvider.php
+use Laravel\\Telescope\\Telescope;
+
+protected function gate(): void
+{
+    Gate::define('viewTelescope', function ($user = null) {
+        return app()->isLocal() || in_array($user?->email, [
+            'admin@example.com',
+        ]);
+    });
+}
+
+// Only register in local environment (prevents telescope from loading in prod)
+// bootstrap/providers.php — wrap in env check:
+// Or in AppServiceProvider::register():
+if ($this->app->isLocal()) {
+    $this->app->register(\\Laravel\\Telescope\\TelescopeServiceProvider::class);
+}
+
+// Key things to watch in Telescope:
+// /telescope/requests  — all HTTP requests with query count + duration
+// /telescope/queries   — all SQL queries; red = slow (>100ms)
+// /telescope/jobs      — queued jobs with payload, attempts, execution time
+// /telescope/cache     — hits vs misses per key
+// /telescope/exceptions — full stack trace with request context`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Key performance metrics to monitor in Telescope:\n• <b>More than 10 queries per request</b> → likely N+1; add `with()` eager loading\n• <b>Any query over 100ms</b> → missing index, or a JOIN scanning too many rows\n• <b>Cache miss rate over 50%</b> → TTL too short, or cache never warming on first request\n• <b>Job memory > 64MB</b> → loading too much data into memory; use `chunk()` or `cursor()`\n• <b>Many duplicate queries</b> → same query running in a loop; move it outside the loop\n\nRun Telescope for a week after every major launch to build a performance baseline before optimising.",
+            np: "10+ queries per request → N+1। 100ms+ query → missing index। Cache miss 50%+ → TTL छोटो।",
+            jp: "10 クエリ以上→ N+1。100ms 超→インデックス不足。キャッシュミス 50% 超→ TTL 短すぎ。",
           },
         },
       ],
@@ -377,62 +334,62 @@ useEffect(() => {
   faq: [
     {
       question: {
-        en: "When should I use Reverb vs Pusher?",
-        np: "Reverb vs Pusher — कहिले कुन use गर्ने?",
-        jp: "Reverb と Pusher はどちらを選ぶ？",
+        en: "What is the difference between Cache::remember() and Cache::rememberForever()?",
+        np: "`Cache::remember()` र `Cache::rememberForever()` को फरक के हो?",
+        jp: "`Cache::remember()` と `Cache::rememberForever()` の違いは?",
       },
       answer: {
-        en: "Use <b>Pusher free tier</b> to start: zero config, no server to manage, 200 concurrent connections and 800k messages/day is enough for most small-to-medium apps.\n\nSwitch to <b>Reverb</b> when:\n• You hit Pusher's limits or pricing becomes significant\n• Your data is privacy-sensitive (healthcare, finance) and you need on-premise hosting\n• You want full control over horizontal scaling\n\nReverb is drop-in compatible — switching is a `.env` change and an `npm install`.",
-        np: "Start मा Pusher free tier। Privacy-sensitive वा large-scale भएमा Reverb।",
-        jp: "最初は Pusher 無料プランで。規模が大きくなったり、データをオンプレに置きたい時は Reverb へ。",
+        en: "`remember()` takes a TTL in seconds; the cache auto-expires and re-computes on the next access. `rememberForever()` never expires — you must manually call `Cache::forget()` when the data changes. Use `rememberForever()` only when you have a reliable cache-busting strategy (e.g. invalidate in a model observer or event listener). If you forget to bust the cache, users see stale data indefinitely.",
+        np: "`remember()` = TTL पछि auto-expire। `rememberForever()` = manual forget चाहिन्छ। Observer मा invalidate गर्नुस्।",
+        jp: "`remember()` は TTL 後に自動失効。`rememberForever()` は手動 `forget()` が必要。Observer で確実に無効化できる場合のみ使用。",
       },
     },
     {
       question: {
-        en: "What is the difference between Broadcasting and Notifications?",
-        np: "Broadcasting र Notifications को फरक के हो?",
-        jp: "ブロードキャストと通知の違いは？",
+        en: "Does with() always fix N+1?",
+        np: "`with()` ले हमेशा N+1 fix गर्छ?",
+        jp: "`with()` は常に N+1 を修正しますか?",
       },
       answer: {
-        en: "Laravel <b>Notifications</b> (Day 16) send messages via channels like email, SMS, and Slack — they are fire-and-forget messages to external services.\n\nLaravel <b>Broadcasting</b> pushes real-time data directly to browsers via WebSockets — it's for updating UI instantly.\n\nThey overlap via the `broadcast` notification channel: a Notification can implement `toBroadcast()` to push a notification payload over a WebSocket AND send an email at the same time.",
-        np: "Notification = email/SMS/Slack। Broadcasting = browser मा real-time push। toBroadcast() ले combine गर्न सकिन्छ।",
-        jp: "Notification はメール・SMS・Slack 送信。Broadcasting はブラウザへのリアルタイム Push。",
+        en: "`with()` fixes N+1 for standard Eloquent relationships when you define the eager load upfront. It does NOT help when: (1) you call a relationship method inside a loop on an already-loaded collection (use `$posts->load('author')` instead), (2) a relationship is accessed in a computed attribute that doesn't know about the eager load, (3) you use raw DB queries instead of Eloquent. Enable `preventLazyLoading()` in development to catch all cases automatically.",
+        np: "`with()` standard relationships fix गर्छ। Loop भित्र lazy access गर्दा `$posts->load()` प्रयोग गर्नुस्।",
+        jp: "`with()` は標準リレーションに有効。ループ内のアクセスには `$posts->load()` を。`preventLazyLoading()` で全ケースを検出。",
       },
     },
     {
       question: {
-        en: "Does every event need to implement ShouldBroadcast?",
-        np: "हरेक event ले ShouldBroadcast implement गर्नु पर्छ?",
-        jp: "すべてのイベントに ShouldBroadcast が必要？",
+        en: "How many queue workers should I run?",
+        np: "कति queue workers चलाउनु पर्छ?",
+        jp: "キューワーカーはいくつ実行すべきですか?",
       },
       answer: {
-        en: "No — only events that the browser needs to know about immediately require `ShouldBroadcast`. Regular Laravel events (used with Listeners, Day 19) run server-side only.\n\nAdd `ShouldBroadcast` only when:\n• A browser needs to react within seconds of the event occurring\n• The data payload is appropriate for public/private transmission\n\nOver-broadcasting creates unnecessary WebSocket traffic. Not every model update needs to reach the browser.",
-        np: "No। Browser ले instant थाहा पाउनु पर्ने events मात्र ShouldBroadcast implement गर्ने।",
-        jp: "いいえ。ブラウザがすぐ知る必要があるイベントだけに ShouldBroadcast を実装する。",
+        en: "Start with 1 worker per CPU core. Monitor queue depth with Horizon — if jobs are consistently waiting more than 5 seconds, add workers. For mixed-priority workloads, run dedicated workers for the `high` queue (customer-facing, fast) and shared workers for `default` and `low` (background processing). Memory is usually the bottleneck before CPU — if workers are restarting frequently due to the `memory` limit, your jobs are loading too much data.",
+        np: "CPU core प्रति 1 worker बाट सुरु गर्नुस्। Horizon मा queue depth monitor गर्नुस्। High queue मा dedicated workers राख्नुस्।",
+        jp: "CPU コアあたり 1 ワーカーから開始。Horizon でキュー深度を監視し、待機が多ければ増やす。優先度別のキューには専用ワーカーを。",
       },
     },
     {
       question: {
-        en: "How do I broadcast from inside a queued job?",
-        np: "Queued job बाट broadcast कसरी गर्ने?",
-        jp: "キュージョブの中からブロードキャストするには？",
+        en: "What is the difference between chunk() and cursor()?",
+        np: "`chunk()` र `cursor()` को फरक के हो?",
+        jp: "`chunk()` と `cursor()` の違いは?",
       },
       answer: {
-        en: "If your event implements `ShouldBroadcast`, Laravel automatically dispatches it to the queue (the `default` queue by default). The queue worker processes it and sends the WebSocket message.\n\nTo use a specific queue for broadcasting: implement `ShouldBroadcastNow` won't queue it; instead override `broadcastQueue()` on your event:\n\n`public function broadcastQueue(): string { return 'broadcasts'; }`\n\nEnsure `QUEUE_CONNECTION` is not `sync` in production — otherwise broadcasts happen inline and defeat the purpose.",
-        np: "ShouldBroadcast ले automatically queue मा dispatch गर्छ। broadcastQueue() override गरेर queue छान्न सकिन्छ।",
-        jp: "ShouldBroadcast は自動でキューに投入。`broadcastQueue()` でキュー名を指定できる。",
+        en: "`chunk()` loads N records at a time into memory, processes them, discards them, then loads the next N. Good for batch operations (bulk inserts, file exports). `cursor()` uses a database cursor — it returns a PHP generator that loads one record at a time, using constant memory regardless of table size. `cursor()` holds the database connection open for the entire operation. Rule: use `cursor()` for read-only iteration over huge tables; use `chunk()` when you need the records as a Collection (for batch DB writes).",
+        np: "`chunk()` = N rows एकैपटक memory मा। `cursor()` = one row at a time (generator)। `cursor()` memory-efficient, `chunk()` batch operations मा राम्रो।",
+        jp: "`chunk()` は N 件ずつロード。`cursor()` はジェネレーターで 1 件ずつ、メモリ使用量一定。巨大テーブルの読み取りには `cursor()`、バッチ書き込みには `chunk()`。",
       },
     },
     {
       question: {
-        en: "How do I handle events missed while the client was disconnected?",
-        np: "Client disconnect हुँदा miss भएका events कसरी handle गर्ने?",
-        jp: "切断中に見逃したイベントはどう処理する？",
+        en: "When should I NOT use Redis caching?",
+        np: "Redis caching कहिले प्रयोग नगर्ने?",
+        jp: "Redis キャッシュを使うべきでない場合は?",
       },
       answer: {
-        en: "Echo auto-reconnects after disconnection, but it cannot replay events that were sent while it was offline.\n\nThe standard pattern:\n1. On reconnect, make a normal REST API call to fetch the latest state (`GET /api/posts?after=lastSeenId`)\n2. Re-sync the UI from the API response\n3. Resume listening via Echo\n\nFor critical state (unread counts, order status), never rely solely on WebSocket events — always have a REST fallback that the client can call to reconcile state.",
-        np: "Reconnect मा REST API call गरेर latest state fetch गर्ने। WebSocket मात्रमा depend नगर्ने।",
-        jp: "再接続時は REST API で最新状態を取得して同期。WebSocket だけに頼らない設計が重要。",
+        en: "Don't cache: (1) data that must always be fresh — inventory counts, account balances, anything where a stale read causes a real problem; (2) data that changes on every request without a user-specific cache key (you'd always miss); (3) tiny queries that are already fast — single-row primary key lookups are served from the DB's own buffer cache; (4) data the user just wrote — always read directly from DB after writes to avoid showing stale data (read-your-own-writes consistency).",
+        np: "Real-time data (inventory, balance), per-request changing data, fast PK lookups — यिनीहरू cache नगर्नुस्।",
+        jp: "在庫・残高などリアルタイムデータ、毎リクエスト変わるデータ、高速な PK ルックアップはキャッシュ不要。書き込み直後は DB から直接読む。",
       },
     },
   ],
