@@ -172,66 +172,71 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Sanctum で REST API を作る",
   },
   24: {
+    en: "Frontend integration — Vite, Livewire & Inertia",
+    np: "Frontend integration — Vite, Livewire र Inertia",
+    jp: "フロントエンド統合 — Vite・Livewire・Inertia",
+  },
+  25: {
     en: "File storage, HTTP client, mail & Notifications",
     np: "File storage, HTTP client, mail र Notifications",
     jp: "ファイルストレージ・HTTP クライアント・メール・通知",
   },
-  25: {
+  26: {
     en: "Authentication — Breeze, Sanctum & user registration",
     np: "Authentication — Breeze, Sanctum र user registration",
     jp: "認証 — Breeze・Sanctum・ユーザー登録",
   },
-  26: {
+  27: {
     en: "Authorization — Gates, Policies & API Resources",
     np: "Authorization — Gates, Policies र API Resources",
     jp: "認可 — Gates・Policies・API リソース",
   },
-  27: {
+  28: {
     en: "Queues, Jobs, Events, Listeners & Task Scheduling",
     np: "Queues, Jobs, Events, Listeners र Task Scheduling",
     jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
   },
-  28: {
+  29: {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
-  29: {
+  30: {
     en: "Sanctum REST API — auth endpoints & full CRUD",
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
-  30: {
+  31: {
     en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
     np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
     jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
   },
-  31: {
+  32: {
     en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
     np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
     jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
   },
-  32: {
+  33: {
     en: "Custom Artisan commands — arguments, options & console I/O",
     np: "Custom Artisan commands — arguments, options र console I/O",
     jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
   },
-  33: {
+  34: {
     en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
     np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
     jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
   },
-  34: {
+  35: {
     en: "Frontend integration — Livewire, Inertia.js & Vite",
     np: "Frontend — Livewire, Inertia.js र Vite",
     jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
   },
-  35: {
+  36: {
     en: "Performance — query optimization, N+1, Redis & queue scaling",
     np: "Performance — query optimization, N+1, Redis र queue scaling",
     jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
   },
-  36: {
+  37: {
     en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
     np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
     jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",
