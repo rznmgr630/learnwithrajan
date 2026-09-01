@@ -3,392 +3,300 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_37_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Modern Laravel apps almost always have a frontend story. You have three main paths: <b>Blade + Livewire</b> (server-rendered, reactive without writing JavaScript), <b>Inertia.js</b> (SPA feel with Vue or React, using Laravel routing and controllers), or a fully decoupled <b>API + frontend</b> (Sanctum + Next.js/Nuxt — covered in Day 21). Today covers Livewire and Inertia — the two \"integrated\" approaches that keep your team in one codebase.",
-      np: "Laravel frontend: Livewire (PHP-centric, reactive), Inertia.js (Vue/React + Laravel routing), वा Sanctum API। आज Livewire र Inertia cover गर्छौं।",
-      jp: "Laravel のフロントエンド: Livewire（PHP 中心）、Inertia.js（Vue/React + Laravel ルーティング）、Sanctum API の 3 択。今日は Livewire と Inertia を学ぶ。",
+      en: "Artisan is Laravel's built-in command-line tool — think of it like a remote control for your application. Every `php artisan` command you've used so far was built-in. Today you build your own.\n\nCustom commands are perfect for:\n• Database seeders and one-off data migrations\n• Scheduled background tasks (sending digest emails, cleaning old records)\n• Dev utilities (generating fake test data, syncing API data)\n• Admin operations you don't want to expose in a UI",
+      np: "Artisan = Laravel को command-line tool। Custom commands build गर्न सिक्ने।",
+      jp: "Artisan は Laravel の CLI ツール。カスタムコマンドの作り方を学びます。",
     },
     {
-      en: "What each option is best for:\n\n<b>Livewire</b> — best when your team prefers PHP and minimal JavaScript\n↳ Think of it as interactive Blade — components re-render server-side on user interaction\n• No JavaScript framework to learn\n• Two-way data binding with `wire:model`\n• Full access to Laravel validation, auth, and Eloquent\n\n<b>Inertia.js</b> — best when your team knows Vue or React and wants a proper SPA\n↳ Think of it as using Laravel as a JSON API but with server-side routing (no `/api` prefix, no token management)\n• Controllers return Inertia responses instead of JSON\n• Vue/React page components receive props directly from controllers\n\n<b>Vite</b> — the asset bundler used by both; replaces Laravel Mix\n↳ Hot Module Replacement, near-instant builds, works with React, Vue, TypeScript",
-      np: "Livewire: PHP-first, reactive Blade। Inertia: Vue/React + Laravel routing। Vite: asset bundler (Laravel Mix को replacement)।",
-      jp: "Livewire: PHP 重視・Blade 拡張。Inertia: Vue/React + Laravel ルーティング。Vite: アセットバンドラー（Mix の後継）。",
+      en: "Today's topics:\n• <b>`make:command` scaffold</b> — generate a command class with one line\n• <b>Command signature</b> — define the name, arguments, options, and flags\n• <b>`handle()` method</b> — where your command logic lives\n• <b>I/O helpers</b> — `info`, `error`, `warn`, `table`, `ask`, `confirm`, `progressBar`\n• <b>Calling commands from code</b> — `Artisan::call()` and `Artisan::queue()`\n• <b>Scheduling</b> — define recurring tasks in PHP instead of raw cron",
+      np: "make:command, signature, handle(), I/O helpers, Artisan::call(), scheduling।",
+      jp: "make:command、シグネチャ、handle()、I/O、Artisan::call()、スケジュールを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Vite — asset bundling in Laravel",
-        np: "Vite — asset bundling",
-        jp: "Vite — アセットバンドル",
+        en: "Creating your first command",
+        np: "पहिलो command बनाउने",
+        jp: "最初のコマンドを作る",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Before diving into Livewire or Inertia, you need to understand the asset pipeline. <b>Vite</b> is a build tool — it takes your JS, CSS, and TypeScript files and bundles them for the browser. It replaced Laravel Mix in Laravel 10+.\n\nThe key win over Mix:\n• Dev server starts instantly (no webpack cold start)\n• Hot-reloads changes in milliseconds instead of seconds\n• Native TypeScript and JSX support with zero config\n• Smaller production bundles via tree-shaking",
-            np: "Vite = JS/CSS build tool। Laravel 10+ मा Laravel Mix को replacement। Hot reload instant छ।",
-            jp: "Vite は JS/CSS ビルドツール。Laravel 10 以降 Mix の後継。ホットリロードが高速。",
+            en: "Every Artisan command is a PHP class that extends `Command`. Running `php artisan make:command` generates the boilerplate. The `$signature` property defines the command name and its inputs — think of it like a function signature but for the terminal. The `$description` is shown in `php artisan list`.",
+            np: "`Command` extend गर्ने PHP class। `$signature` = command को नाम र inputs।",
+            jp: "`Command` を継承した PHP クラス。`$signature` でコマンド名と入力を定義。",
           },
         },
         {
           type: "code",
-          title: { en: "vite.config.js + Blade integration", np: "vite.config.js", jp: "vite.config.js" },
-          code: `// vite.config.js (default Laravel setup)
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+          title: { en: "Generate and run a custom command", np: "Custom command बनाउने", jp: "カスタムコマンドを生成する" },
+          code: `# Generate the command class
+php artisan make:command SendWeeklyDigest
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true, // auto-refresh Blade on change
-        }),
-    ],
-});
+# app/Console/Commands/SendWeeklyDigest.php
+namespace App\\Console\\Commands;
 
-// Adding React support
-// npm install @vitejs/plugin-react
-import react from '@vitejs/plugin-react';
+use Illuminate\\Console\\Command;
 
-export default defineConfig({
-    plugins: [
-        laravel({ input: ['resources/js/app.jsx'], refresh: true }),
-        react(),
-    ],
-});
-
-// In Blade layouts — include compiled assets
-// resources/views/layouts/app.blade.php
-@vite(['resources/css/app.css', 'resources/js/app.js'])
-
-// Dev: npm run dev   (starts Vite dev server with HMR)
-// Prod: npm run build  (outputs to public/build/ with hashed filenames)`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Vite in production (`npm run build`) outputs versioned files to `public/build/manifest.json`. The `@vite()` directive reads this manifest to inject the correct hashed filenames. Never commit the `public/build/` folder to git — always run `npm run build` in your CI/CD pipeline.",
-            np: "Production मा `npm run build` चलाउनुस्। `public/build/` git मा commit नगर्नुस् — CI/CD मा build गर्नुस्।",
-            jp: "本番は `npm run build`。`public/build/` は git に含めず、CI/CD でビルドする。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Livewire — reactive PHP components",
-        np: "Livewire — reactive PHP components",
-        jp: "Livewire — リアクティブ PHP コンポーネント",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Livewire works by rendering a component as HTML on the server, sending it to the browser, and then — when the user interacts (types, clicks, submits) — sending a small Ajax request back to re-render just that component. No page refresh, no JavaScript state management, no REST API needed.\n\nAnalogy: it's like a turbo-charged Blade component that can react to user input.",
-            np: "Livewire = server-side HTML render गर्छ। User interact गर्दा Ajax request पठाउँछ, component फेरि render हुन्छ। JavaScript framework चाहिँदैन।",
-            jp: "Livewire はサーバー側で HTML をレンダリングし、ユーザー操作時に Ajax で再レンダリング。JS フレームワーク不要。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "SearchPosts Livewire component", np: "Livewire component example", jp: "Livewire コンポーネント例" },
-          code: `// php artisan make:livewire SearchPosts
-// Creates: app/Livewire/SearchPosts.php + resources/views/livewire/search-posts.blade.php
-
-// app/Livewire/SearchPosts.php
-namespace App\\Livewire;
-
-use Livewire\\Component;
-use App\\Models\\Post;
-
-class SearchPosts extends Component
+class SendWeeklyDigest extends Command
 {
-    public string $search = '';
+    protected $signature = 'emails:digest {--dry-run : Preview without sending}';
+    protected $description = 'Send the weekly digest email to all subscribers';
 
-    // Runs automatically whenever $search changes
-    public function updatedSearch(): void
+    public function handle(): int
     {
-        $this->resetPage(); // reset pagination on new search
-    }
+        if ($this->option('dry-run')) {
+            $this->info('DRY RUN — no emails will be sent.');
+        } else {
+            $this->info('Sending digest...');
+            // dispatch(new SendDigestJob());
+        }
 
-    public function render()
-    {
-        return view('livewire.search-posts', [
-            'posts' => Post::where('title', 'like', "%{$this->search}%")
-                ->latest()
-                ->limit(20)
-                ->get(),
-        ]);
+        return self::SUCCESS; // returns exit code 0
     }
 }
 
-// resources/views/livewire/search-posts.blade.php
-<div>
-    <input wire:model.live.debounce.300ms="search"
-           type="text"
-           placeholder="Search posts..."
-           class="w-full border rounded px-3 py-2" />
-
-    <ul class="mt-4 space-y-2">
-        @foreach ($posts as $post)
-            <li>{{ $post->title }}</li>
-        @endforeach
-    </ul>
-</div>
-
-{{-- Include in any Blade view --}}
-<livewire:search-posts />`,
+# Run it
+php artisan emails:digest
+php artisan emails:digest --dry-run`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Key Livewire directives:\n• `wire:model` — two-way data binding (input ↔ PHP property)\n  ↳ `wire:model.live` updates on every keystroke; `wire:model.blur` updates on focus-out\n  ↳ `wire:model.live.debounce.300ms` waits 300ms after the user stops typing\n• `wire:click` — call a PHP method on click: `wire:click=\"deletePost({{ $post->id }})\"`\n• `wire:submit` — handle form submission server-side\n• `wire:loading` — show/hide an element while a network request is in flight\n  ↳ `wire:loading.class=\"opacity-50\"` dims the component while loading",
-            np: "`wire:model`, `wire:click`, `wire:submit`, `wire:loading` — Livewire का मुख्य directives।",
-            jp: "`wire:model`（双方向バインド）、`wire:click`（メソッド呼び出し）、`wire:submit`、`wire:loading` が主なディレクティブ。",
+            en: "<b>Command naming convention:</b> use `noun:verb` format (e.g. `emails:digest`, `users:cleanup`, `reports:generate`). This groups related commands together in `php artisan list`. The namespace (before the colon) is just a label — it does not map to a PHP namespace.",
+            np: "`noun:verb` format use गर्ने — e.g. `emails:digest`, `users:cleanup`।",
+            jp: "`noun:verb` 形式を使う。コロンの前は PHP 名前空間とは無関係のラベル。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Livewire — forms, validation & lifecycle hooks",
-        np: "Livewire forms, validation र lifecycle",
-        jp: "Livewire のフォーム・バリデーション・ライフサイクル",
+        en: "Arguments, options & flags",
+        np: "Arguments, options र flags",
+        jp: "引数・オプション・フラグ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Livewire form handling feels like writing a normal PHP form but without the redirect cycle. Define properties, validate with the same rules as Form Requests, and show errors with `@error`. For complex forms, use the `Form` object class (Livewire 3) to encapsulate form state and validation in one place.",
-            np: "Livewire forms = PHP properties + validate() + @error। Redirect cycle नभई direct update हुन्छ।",
-            jp: "Livewire のフォームは PHP プロパティ + `validate()` + `@error`。リダイレットなしで即更新。",
+            en: "The command signature syntax borrows from Unix conventions. Think of it like ordering at a coffee shop:\n• The <b>drink name</b> is an argument (required, positional)\n• <b>Milk type</b> is an option (has a value, starts with `--`)\n• <b>\"To go\"</b> is a flag (boolean — present means true, absent means false)\n\nArguments are required by default. Options and flags are always optional.",
+            np: "Argument = required positional। Option = `--name=value`। Flag = `--force` (boolean)।",
+            jp: "引数は位置指定で必須。オプションは `--name=value`。フラグは `--force` のような真偽値。",
           },
         },
         {
           type: "code",
-          title: { en: "CreatePost Livewire form", np: "CreatePost form", jp: "CreatePost フォーム" },
-          code: `// app/Livewire/CreatePost.php
-namespace App\\Livewire;
+          title: { en: "Rich signature with arguments, options & flags", np: "Complex signature", jp: "引数・オプション・フラグのサンプル" },
+          code: `// Signature with argument, options, and a flag
+protected $signature = 'users:export
+    {environment : The environment to export from (e.g. production)}
+    {--format=csv : Output format — csv or json}
+    {--limit=100 : Maximum number of records to export}
+    {--force : Skip the confirmation prompt}';
 
-use Livewire\\Component;
-use App\\Models\\Post;
-
-class CreatePost extends Component
+public function handle(): int
 {
-    public string $title = '';
-    public string $body  = '';
+    $env    = $this->argument('environment');    // e.g. "production"
+    $format = $this->option('format');           // "csv" or "json"
+    $limit  = (int) $this->option('limit');      // 100 by default
+    $force  = $this->option('force');            // true if --force passed
 
-    // Livewire 3: attribute-based validation
-    #[\\Livewire\\Attributes\\Validate('required|min:3|max:255')]
-    public string $titleField = '';
-
-    protected $rules = [
-        'title' => 'required|min:3|max:255',
-        'body'  => 'required|min:10',
-    ];
-
-    public function save(): void
-    {
-        $validated = $this->validate();
-
-        Post::create([
-            ...$validated,
-            'user_id' => auth()->id(),
-        ]);
-
-        $this->reset(['title', 'body']); // clear form
-        session()->flash('message', 'Post created successfully.');
+    if (!in_array($format, ['csv', 'json'])) {
+        $this->error("Invalid format: {$format}. Use csv or json.");
+        return self::FAILURE;
     }
 
-    public function render()
-    {
-        return view('livewire.create-post');
+    if (!$force && !$this->confirm("Export {$limit} users from {$env}?")) {
+        $this->line('Cancelled.');
+        return self::SUCCESS;
     }
+
+    $this->info("Exporting {$limit} users as {$format}...");
+    return self::SUCCESS;
 }
 
-{{-- resources/views/livewire/create-post.blade.php --}}
-<form wire:submit="save">
-    <div>
-        <input wire:model="title" type="text" placeholder="Post title" />
-        @error('title') <span class="text-red-500">{{ $message }}</span> @enderror
-    </div>
-    <div class="mt-3">
-        <textarea wire:model="body" placeholder="Post body"></textarea>
-        @error('body') <span class="text-red-500">{{ $message }}</span> @enderror
-    </div>
-    <button type="submit" wire:loading.attr="disabled">
-        <span wire:loading>Saving...</span>
-        <span wire:loading.remove>Save Post</span>
-    </button>
-</form>`,
+// Optional argument with a default value
+// {environment=production}  ← uses "production" if not provided`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Livewire lifecycle hooks</b>:\n• `mount()` — runs once when the component is first created (like a constructor)\n  ↳ Use it to load initial data: `$this->post = Post::find($id)`\n• `updated($property)` — runs after any property changes\n  ↳ Avoid expensive queries here; debounce or use `updatedTitle()` for specific properties\n• `hydrate()` / `dehydrate()` — run before/after each network request\n  ↳ Use for re-initialising non-serialisable state (e.g. DB connections)\n• `#[Lazy]` attribute — defers component rendering until after the page loads (great for heavy components)",
-            np: "`mount()`, `updated()`, `hydrate()`/`dehydrate()` — Livewire lifecycle hooks।",
-            jp: "`mount()`（初期化）、`updated()`（プロパティ変更後）、`hydrate()`/`dehydrate()`（リクエスト前後）が主なライフサイクル。",
+            en: "Artisan does NOT validate argument types automatically — everything arrives as a string. Validate inside `handle()` with `if (!in_array(...))` or `if (!is_numeric(...))`. This is intentional — you decide what constitutes a valid value for your specific command.",
+            np: "Artisan ले type validate गर्दैन — handle() भित्र आफैं validate गर्नुपर्छ।",
+            jp: "Artisan は型バリデーションをしない。`handle()` の中で自分でバリデーションする。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Inertia.js — SPA feel, server-side routing",
-        np: "Inertia.js — SPA feel with server-side routing",
-        jp: "Inertia.js — SPA 感覚＋サーバー側ルーティング",
+        en: "Console output — tables, progress bars & prompts",
+        np: "Console output — table, progress bar र prompt",
+        jp: "コンソール出力 — テーブル・プログレスバー・プロンプト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Inertia is not a framework — it's a protocol. It sits between Laravel (server) and Vue/React (client) and lets them speak the same language.\n\nYour Laravel controller returns an Inertia response: `Inertia::render('PostIndex', ['posts' => $posts])`. On first load, the full HTML is returned. Subsequent navigations return a JSON payload that swaps out just the current page component — no full page reload, no routing library needed on the frontend.\n\nAnalogy: imagine a TV remote that changes what's showing on screen without turning the TV off and on again.",
-            np: "Inertia = Laravel controller + Vue/React page components। Page navigation = JSON swap (no full reload)।",
-            jp: "Inertia は Laravel コントローラーと Vue/React ページコンポーネントをつなぐプロトコル。ページ遷移は JSON スワップ（フルリロードなし）。",
+            en: "Good CLI tools give clear, coloured feedback:\n• `$this->info('...')` — green (success messages)\n• `$this->error('...')` — red (errors)\n• `$this->warn('...')` — yellow (warnings)\n• `$this->line('...')` — plain white (neutral output)\n\nFor structured data use `$this->table()`. For long loops use a progress bar. For interactive scripts use `ask()` and `confirm()`.",
+            np: "info() = green, error() = red, warn() = yellow। Table, progress bar, ask/confirm।",
+            jp: "info() 緑・error() 赤・warn() 黄色。テーブル、プログレスバー、ask/confirm も使える。",
           },
         },
         {
           type: "code",
-          title: { en: "Inertia setup + controller + Vue page", np: "Inertia example", jp: "Inertia の例" },
-          code: `// Install
-// composer require inertiajs/inertia-laravel
-// npm install @inertiajs/vue3 vue
+          title: { en: "Tables, progress bars & prompts", np: "Table, progress bar, prompt", jp: "テーブル・プログレスバー・プロンプト" },
+          code: `// Table output
+$users = User::select('name', 'email', 'role')->get();
+$this->table(
+    ['Name', 'Email', 'Role'],
+    $users->map(fn($u) => [$u->name, $u->email, $u->role])
+);
 
-// resources/views/app.blade.php (root layout)
-<!DOCTYPE html>
-<html>
-<head>
-    @vite(['resources/js/app.js'])
-    @inertiaHead
-</head>
-<body>
-    @inertia
-</body>
-</html>
+// Progress bar (manual)
+$items = Post::all();
+$bar = $this->output->createProgressBar(count($items));
+$bar->start();
+foreach ($items as $item) {
+    // process $item...
+    $bar->advance();
+}
+$bar->finish();
+$this->newLine(); // move cursor to next line after bar
 
-// resources/js/app.js
-import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
-
-createInertiaApp({
-    resolve: name => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
-        return pages[\`./Pages/\${name}.vue\`];
-    },
-    setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .mount(el);
-    },
+// Progress bar (shorthand — handles start/advance/finish for you)
+$this->withProgressBar($items, function (Post $post) {
+    // process $post...
 });
 
-// app/Http/Controllers/PostController.php
-use Inertia\\Inertia;
-use App\\Http\\Resources\\PostResource;
+// Interactive prompts
+$name  = $this->ask('What is the user\\'s name?');
+$email = $this->ask('Email address', 'default@example.com');
+$role  = $this->choice('Select role', ['admin', 'editor', 'viewer'], 'viewer');
 
-public function index()
-{
-    return Inertia::render('Posts/Index', [
-        'posts' => PostResource::collection(Post::with('author')->latest()->paginate(15)),
-    ]);
-}
-
-// resources/js/Pages/Posts/Index.vue
-<script setup>
-import { Link } from '@inertiajs/vue3';
-
-defineProps({ posts: Object });
-</script>
-
-<template>
-  <div>
-    <Link href="/posts/create">New Post</Link>
-    <div v-for="post in posts.data" :key="post.id">
-      <Link :href="\`/posts/\${post.id}\`">{{ post.title }}</Link>
-    </div>
-  </div>
-</template>`,
+if ($this->confirm('Are you sure you want to delete all records?')) {
+    // proceed
+}`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Shared data</b> — auth user, flash messages, and app-wide props belong in `HandleInertiaRequests` middleware's `share()` method, so they're available in every page component:\n• `auth.user` → `usePage().props.auth.user` in Vue/React\n• `flash.message` → show success/error banners globally\n• `ziggy` → share named routes to the frontend (with the Ziggy package)\n\nThis is the Inertia equivalent of Blade's `@auth` / `view()->share()` — define once, use everywhere.",
-            np: "`HandleInertiaRequests::share()` मा auth user, flash messages राख्नुस् — सबै pages मा available हुन्छ।",
-            jp: "`HandleInertiaRequests::share()` に認証ユーザーやフラッシュを設定すると全ページで利用できる。",
+            en: "Use `$this->newLine()` to add blank lines for visual breathing room. Use `$this->newLine(2)` for two blank lines. For very long output, consider piping to `less` (`php artisan cmd | less`) rather than flooding the terminal.",
+            np: "`newLine()` = blank line। Long output लाई `| less` मा pipe गर्न सकिन्छ।",
+            jp: "`newLine()` で空行を挿入。長い出力は `| less` にパイプするのがおすすめ。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Choosing your stack & SSR considerations",
-        np: "Stack छनोट र SSR",
-        jp: "スタック選択と SSR",
+        en: "Calling commands from code & chaining",
+        np: "Code बाट command call गर्ने",
+        jp: "コードからコマンドを呼ぶ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Which frontend approach to choose — the honest decision matrix:\n• Full PHP team, existing Blade app → add Livewire incrementally to specific components\n  ↳ No big rewrite; Blade and Livewire coexist perfectly\n• Vue/React team, wants tight Laravel integration → Inertia\n  ↳ Controllers, validation, auth all stay in PHP — just the views move to Vue/React\n• Separate mobile app OR third-party consumers → Sanctum API (Day 21)\n  ↳ Completely decoupled; frontend can be any technology\n• Need SEO on a Vue/React Inertia app → enable Inertia SSR with `php artisan inertia:start-ssr`",
-            np: "PHP team → Livewire। Vue/React team → Inertia। Mobile/API → Sanctum। SEO चाहिने → Inertia SSR।",
-            jp: "PHP チーム→ Livewire。Vue/React チーム→ Inertia。モバイル/API→ Sanctum。SEO 必要→ Inertia SSR。",
+            en: "You can call Artisan commands from controllers, jobs, or other commands. This is useful for:\n• Running a command from a web UI trigger (e.g. an admin \"Run now\" button)\n• Chaining commands in a workflow (clear cache → rebuild index)\n• Testing commands programmatically\n\nUse `Artisan::call()` for synchronous execution, or `Artisan::queue()` to dispatch to the queue.",
+            np: "Artisan::call() = synchronous। Artisan::queue() = queue मा dispatch।",
+            jp: "Artisan::call() で同期実行。Artisan::queue() でキューに投入。",
           },
         },
         {
-          type: "table",
-          caption: {
-            en: "Frontend approach comparison",
-            np: "Frontend approaches",
-            jp: "フロントエンドアプローチ比較",
-          },
-          headers: [
-            { en: "Approach", np: "Approach", jp: "アプローチ" },
-            { en: "JS required", np: "JS", jp: "JS 必要" },
-            { en: "Routing", np: "Routing", jp: "ルーティング" },
-            { en: "Auth", np: "Auth", jp: "認証" },
-            { en: "SEO", np: "SEO", jp: "SEO" },
-            { en: "Best for", np: "Best for", jp: "向いている用途" },
-          ],
-          rows: [
-            [
-              { en: "Blade", np: "Blade", jp: "Blade" },
-              { en: "None", np: "नभएको", jp: "不要" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Excellent", np: "उत्तम", jp: "優秀" },
-              { en: "Content sites", np: "Content sites", jp: "コンテンツサイト" },
-            ],
-            [
-              { en: "Livewire", np: "Livewire", jp: "Livewire" },
-              { en: "Minimal", np: "न्यूनतम", jp: "最小限" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Excellent", np: "उत्तम", jp: "優秀" },
-              { en: "Admin UIs / forms", np: "Admin UIs", jp: "管理 UI・フォーム" },
-            ],
-            [
-              { en: "Inertia + Vue/React", np: "Inertia", jp: "Inertia" },
-              { en: "Vue or React", np: "Vue वा React", jp: "Vue か React" },
-              { en: "Server", np: "Server", jp: "サーバー" },
-              { en: "Session", np: "Session", jp: "セッション" },
-              { en: "Needs SSR", np: "SSR चाहिन्छ", jp: "SSR が必要" },
-              { en: "SPA with Laravel backend", np: "SPA + Laravel", jp: "Laravel バックエンド SPA" },
-            ],
-            [
-              { en: "Decoupled API", np: "API", jp: "分離 API" },
-              { en: "Any framework", np: "कुनै पनि", jp: "任意" },
-              { en: "Client-side", np: "Client", jp: "クライアント" },
-              { en: "Sanctum tokens", np: "Sanctum tokens", jp: "Sanctum トークン" },
-              { en: "Client-side", np: "Client", jp: "クライアント側" },
-              { en: "Mobile / headless", np: "Mobile / headless", jp: "モバイル・ヘッドレス" },
-            ],
-          ],
+          type: "code",
+          title: { en: "Artisan::call(), output capture & chaining", np: "Command call गर्ने", jp: "コマンドを呼び出す" },
+          code: `use Illuminate\\Support\\Facades\\Artisan;
+
+// Call from a controller
+Artisan::call('emails:digest', ['--dry-run' => true]);
+
+// Capture the command's output
+Artisan::call('reports:generate', ['--format' => 'csv']);
+$output = Artisan::output(); // returns the printed text as a string
+
+// Call from inside another command
+public function handle(): int
+{
+    $this->call('cache:clear');           // runs synchronously, inherits I/O
+    $this->callSilently('config:cache');  // runs silently (no output)
+    return self::SUCCESS;
+}
+
+// Dispatch to the queue (non-blocking)
+Artisan::queue('reports:generate', ['--format' => 'csv'])
+    ->onQueue('reports')
+    ->onConnection('redis');`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Inertia SSR runs a Node.js server (`php artisan inertia:start-ssr`) that renders the first page server-side for SEO and faster initial load. It's an opt-in — most admin apps don't need it. For public-facing marketing pages with SEO requirements, enable SSR or use a static site generator for those specific pages.",
-            np: "Inertia SSR: Node.js server ले first page server-side render गर्छ। SEO चाहिने apps मा enable गर्नुस्।",
-            jp: "Inertia SSR: Node.js が初回ページをサーバー側でレンダリング。SEO が必要な場合に有効化。",
+            en: "<b>Testing commands in Pest:</b> use the `artisan()` helper to make assertions on the command's output, exit code, and interactions.\n\n↳ `$this->artisan('emails:digest')->assertExitCode(0)->expectsOutput('Sending digest...')`\n↳ `$this->artisan('users:export', ['environment' => 'staging'])->expectsQuestion(...)->assertExitCode(0)`\n\nDependencies injected via the service container can be mocked with `$this->mock(MyService::class, ...)` before calling `artisan()`.",
+            np: "Test मा artisan() helper use गर्ने। assertExitCode(0), expectsOutput() use गर्ने।",
+            jp: "テストでは artisan() ヘルパーを使い assertExitCode() や expectsOutput() で検証する。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Scheduling commands with the console kernel",
+        np: "Commands schedule गर्ने",
+        jp: "コマンドをスケジュールする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Instead of setting up a separate cron job for every task, Laravel uses a single cron entry that fires every minute. You define all your recurring tasks in PHP code — Laravel figures out which ones to run right now. Think of it like a weekly planner: you write all your tasks in one place and your assistant ticks off what's due.",
+            np: "एउटा cron entry मात्र। बाँकी schedule PHP code मा define गर्ने।",
+            jp: "cron エントリは 1 つだけ。スケジュールは PHP コードで定義する。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Server cron entry + routes/console.php schedule", np: "Cron entry र schedule", jp: "cron エントリとスケジュール定義" },
+          code: `# Add ONE cron entry to the server (runs every minute)
+* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1
+
+# routes/console.php (Laravel 11 style — no Kernel class needed)
+use Illuminate\\Support\\Facades\\Schedule;
+
+// Send weekly digest every Monday at 8:00 AM
+Schedule::command('emails:digest')
+    ->weeklyOn(1, '8:00')
+    ->withoutOverlapping()  // skip if previous run is still going
+    ->runInBackground();    // don't block other scheduled jobs
+
+// Clean up expired sessions every day at midnight
+Schedule::command('sessions:cleanup')
+    ->daily()
+    ->at('00:00')
+    ->timezone('Asia/Tokyo');
+
+// Cache reports every hour
+Schedule::command('reports:cache')
+    ->hourly()
+    ->withoutOverlapping();
+
+// Other frequency helpers
+// ->everyFiveMinutes()
+// ->everyThirtyMinutes()
+// ->monthly()
+// ->monthlyOn(15, '09:00')  // 15th of each month at 9am
+
+# Test scheduling locally (runs due tasks and waits)
+php artisan schedule:work`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`withoutOverlapping()` prevents a second run from starting if the previous one is still running — crucial for slow tasks like report generation. Combine it with `runInBackground()` so slow tasks don't block shorter jobs that are scheduled at the same time.\n\n↳ Without `runInBackground()`, scheduled tasks execute sequentially — if task A takes 5 minutes, task B misses its window\n↳ With `runInBackground()`, both spawn as separate OS processes and run in parallel",
+            np: "withoutOverlapping() = duplicate run रोक्छ। runInBackground() = parallel run।",
+            jp: "withoutOverlapping() で二重実行を防ぎ、runInBackground() で並列実行する。",
           },
         },
       ],
@@ -397,62 +305,62 @@ defineProps({ posts: Object });
   faq: [
     {
       question: {
-        en: "Can I mix Livewire and Inertia in the same app?",
-        np: "एउटै app मा Livewire र Inertia दुवै प्रयोग गर्न सकिन्छ?",
-        jp: "同じアプリで Livewire と Inertia を混在できますか?",
+        en: "Where should I register my custom commands in Laravel 11?",
+        np: "Laravel 11 मा custom commands कहाँ register गर्ने?",
+        jp: "Laravel 11 でカスタムコマンドはどこに登録する？",
       },
       answer: {
-        en: "Technically yes, but it creates two frontend systems to maintain. Typical pattern: use Inertia for the main app and Blade/Livewire for a simpler admin panel. Mixing them in the same views is unsupported and creates confusing state management.",
-        np: "हुन्छ, तर maintenance double हुन्छ। Main app मा Inertia, admin panel मा Livewire — यो common pattern हो।",
-        jp: "技術的には可能ですが、2 つのフロントエンドシステムを管理することになります。メインアプリに Inertia、管理パネルに Livewire が一般的なパターンです。",
+        en: "In Laravel 11, commands in `app/Console/Commands/` are auto-discovered — no registration needed. If you place commands elsewhere, add the directory path via `withConsoleCommands()` in `bootstrap/app.php`:\n\n`->withConsoleCommands(base_path('app/Admin/Commands'))`\n\nThe old `app/Console/Kernel.php` with a `$commands` array was removed in Laravel 11.",
+        np: "`app/Console/Commands/` मा auto-discover हुन्छ। अन्यत्र राखे bootstrap/app.php मा register गर्नुपर्छ।",
+        jp: "`app/Console/Commands/` は自動検出される。別の場所は `bootstrap/app.php` で登録する。",
       },
     },
     {
       question: {
-        en: "Does Livewire work with Alpine.js?",
-        np: "Livewire र Alpine.js सँगसँगै काम गर्छन्?",
-        jp: "Livewire は Alpine.js と連携できますか?",
+        en: "How do I pass an array of values as an option?",
+        np: "Option मा array values कसरी pass गर्ने?",
+        jp: "オプションに配列を渡すには？",
       },
       answer: {
-        en: "Yes, they are designed to work together. Alpine.js handles client-side interactions (toggles, animations, dropdowns) while Livewire handles server interactions. Livewire ships with Alpine included — you don't need to install it separately. Rule: use `x-data`, `x-show`, `x-on:click` for purely visual JavaScript; use `wire:click` when a server round-trip is needed.",
-        np: "हो, सँगसँगै काम गर्छन्। Alpine = client-side UI। Livewire = server interactions। Alpine Livewire मा included छ।",
-        jp: "はい、一緒に使えます。Alpine は UI インタラクション、Livewire はサーバー通信を担当。Livewire に Alpine が同梱されています。",
+        en: "Define the option as variadic using `*`:\n\n`{--user=* : User IDs to process}`\n\nAccess with `$this->option('user')` — it returns an array. Call it like:\n\n`php artisan users:notify --user=1 --user=2 --user=5`\n\nIf no `--user` is passed, `$this->option('user')` returns an empty array `[]`.",
+        np: "`{--user=*}` syntax use गर्ने। `$this->option('user')` ले array return गर्छ।",
+        jp: "`{--user=*}` で可変引数オプションを定義。`$this->option('user')` が配列を返す。",
       },
     },
     {
       question: {
-        en: "How does Inertia handle form validation errors?",
-        np: "Inertia मा form validation errors कसरी handle हुन्छ?",
-        jp: "Inertia のフォームバリデーションエラーはどう扱いますか?",
+        en: "Can I use Auth inside a console command?",
+        np: "Console command भित्र Auth use गर्न सकिन्छ?",
+        jp: "コンソールコマンドの中で Auth を使える？",
       },
       answer: {
-        en: "Inertia redirects back with a 422 response (Laravel validation failure) and includes the errors in the Inertia shared props. Use the `useForm()` helper in Vue/React — it automatically populates `form.errors` from the 422 response. No manual error parsing needed.",
-        np: "`useForm()` helper प्रयोग गर्नुस्। 422 response आउँदा `form.errors` automatically populate हुन्छ।",
-        jp: "`useForm()` ヘルパーを使うと、422 レスポンスから `form.errors` が自動的に設定されます。",
+        en: "Don't use `Auth::login()` in console commands — the session that login creates only lasts the duration of the HTTP request lifecycle. Instead, pass a user ID as an argument and load the user manually:\n\n`$user = User::findOrFail($this->argument('userId'));`\n\nThen pass `$user` directly to any service that needs it. In tests, use `$this->actingAs($user)` before `artisan()`.",
+        np: "Console मा `Auth::login()` नगर्ने। User ID argument मा pass गरेर manually load गर्ने।",
+        jp: "コンソールで `Auth::login()` は使わない。引数でユーザー ID を受け取り手動で取得する。",
       },
     },
     {
       question: {
-        en: "What is the performance impact of Livewire's network requests?",
-        np: "Livewire का network requests को performance impact के हो?",
-        jp: "Livewire のネットワークリクエストがパフォーマンスに与える影響は?",
+        en: "Can I run scheduled tasks in parallel?",
+        np: "Scheduled tasks parallel मा run गर्न सकिन्छ?",
+        jp: "スケジュールタスクを並列実行できる？",
       },
       answer: {
-        en: "Every `wire:model.live` keystroke triggers a network request. For search inputs, use `wire:model.live.debounce.500ms` to delay the request 500ms after the user stops typing. For non-interactive updates, use `wire:model.blur` (only fires on focus-out). Profile with browser DevTools network tab to see the frequency and payload size.",
-        np: "प्रत्येक keystroke मा request जान्छ। `wire:model.live.debounce.500ms` प्रयोग गर्नुस् search inputs मा।",
-        jp: "キーストロークごとにリクエストが発生します。検索入力には `wire:model.live.debounce.500ms` を使い、不要なリクエストを減らしましょう。",
+        en: "Yes — use `->runInBackground()` on each command. This spawns each task as a separate OS process so they run simultaneously instead of one after another.\n\nWithout `runInBackground()`: tasks run sequentially. A slow task at 2:00 AM delays every other task scheduled for the same minute.\n\nWith `runInBackground()`: each task spawns independently. The scheduler finishes in milliseconds and all tasks run in parallel.",
+        np: "`runInBackground()` use गर्ने। Parallel मा spawn हुन्छ।",
+        jp: "`runInBackground()` で並列実行。付けないと直列で動き、遅いタスクが後続を遅らせる。",
       },
     },
     {
       question: {
-        en: "Can Vite handle TypeScript out of the box?",
-        np: "Vite ले TypeScript automatically handle गर्छ?",
-        jp: "Vite は TypeScript をそのまま扱えますか?",
+        en: "How do I test that a scheduled command fires at the right time?",
+        np: "Scheduled command सही time मा fire हुन्छ भनेर कसरी test गर्ने?",
+        jp: "スケジュールが正しい時刻に実行されるかテストするには？",
       },
       answer: {
-        en: "Yes. Vite processes TypeScript natively via esbuild without needing a separate `ts-loader`. Add `@types/node` and a `tsconfig.json`, then rename files to `.ts` or `.tsx`. Important caveat: Vite skips type-checking for speed — run `tsc --noEmit` separately in CI to catch type errors before deployment.",
-        np: "हो, Vite ले TypeScript native support गर्छ (esbuild मार्फत)। CI मा `tsc --noEmit` छुट्टै चलाउनुस्।",
-        jp: "はい、esbuild 経由でネイティブ対応。ただし型チェックはスキップされるため、CI で `tsc --noEmit` を別途実行してください。",
+        en: "Use Laravel's time-travel helpers to simulate a specific date/time, then inspect the schedule:\n\n`$this->travelTo(Carbon::parse('2025-01-06 08:00')); // a Monday at 8am`\n`$event = collect(app(Schedule::class)->events())->first(fn($e) => str_contains($e->command, 'emails:digest'));`\n`$this->assertTrue($event->isDue(app()));`\n\nAlso useful: `$event->getSummaryForDisplay()` returns the cron expression as a human-readable string.",
+        np: "`travelTo()` + `Schedule::events()` use गरेर test गर्ने।",
+        jp: "`travelTo()` で時刻を固定し `Schedule::events()` でスケジュールを検証する。",
       },
     },
   ],

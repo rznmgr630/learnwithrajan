@@ -189,66 +189,76 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "キューとジョブ — バッチ・リトライ・失敗・Horizon",
   },
   27: {
+    en: "Events, listeners, scheduling, mail & notifications",
+    np: "Events, listeners, scheduling, mail र notifications",
+    jp: "イベント・リスナー・スケジューラ・メール・通知",
+  },
+  28: {
+    en: "Broadcasting & real time — Reverb, channels & Echo",
+    np: "Broadcasting र real time — Reverb, channels र Echo",
+    jp: "ブロードキャストとリアルタイム — Reverb・チャンネル・Echo",
+  },
+  29: {
     en: "File storage, HTTP client, mail & Notifications",
     np: "File storage, HTTP client, mail र Notifications",
     jp: "ファイルストレージ・HTTP クライアント・メール・通知",
   },
-  28: {
+  30: {
     en: "Authentication — Breeze, Sanctum & user registration",
     np: "Authentication — Breeze, Sanctum र user registration",
     jp: "認証 — Breeze・Sanctum・ユーザー登録",
   },
-  29: {
+  31: {
     en: "Authorization — Gates, Policies & API Resources",
     np: "Authorization — Gates, Policies र API Resources",
     jp: "認可 — Gates・Policies・API リソース",
   },
-  30: {
+  32: {
     en: "Queues, Jobs, Events, Listeners & Task Scheduling",
     np: "Queues, Jobs, Events, Listeners र Task Scheduling",
     jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
   },
-  31: {
+  33: {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
-  32: {
+  34: {
     en: "Sanctum REST API — auth endpoints & full CRUD",
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
-  33: {
+  35: {
     en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
     np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
     jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
   },
-  34: {
+  36: {
     en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
     np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
     jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
   },
-  35: {
+  37: {
     en: "Custom Artisan commands — arguments, options & console I/O",
     np: "Custom Artisan commands — arguments, options र console I/O",
     jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
   },
-  36: {
+  38: {
     en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
     np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
     jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
   },
-  37: {
+  39: {
     en: "Frontend integration — Livewire, Inertia.js & Vite",
     np: "Frontend — Livewire, Inertia.js र Vite",
     jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
   },
-  38: {
+  40: {
     en: "Performance — query optimization, N+1, Redis & queue scaling",
     np: "Performance — query optimization, N+1, Redis र queue scaling",
     jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
   },
-  39: {
+  41: {
     en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
     np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
     jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",
