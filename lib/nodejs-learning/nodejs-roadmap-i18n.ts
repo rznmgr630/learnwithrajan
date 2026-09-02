@@ -55,66 +55,71 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "イベントループと非同期 — フェーズ・マイクロタスク・並行処理",
   },
   4: {
+    en: "Errors, process & lifecycle — crashing well and shutting down cleanly",
+    np: "त्रुटि, प्रोसेस र जीवनचक्र — सुरक्षित क्र्यास र सफा बन्द",
+    jp: "エラー・プロセス・ライフサイクル — 安全なクラッシュと停止",
+  },
+  5: {
     en: "Global object, CommonJS modules, Path & OS",
     np: "ग्लोबल वस्तु, मोड्युल, Path र OS",
     jp: "グローバル・CommonJS・path・os",
   },
-  5: {
+  6: {
     en: "File system, Events, EventEmitter & HTTP module",
     np: "फाइल प्रणाली, इभेन्ट, EventEmitter र HTTP",
     jp: "fs・イベント・EventEmitter・http",
   },
-  6: {
+  7: {
     en: "npm — package.json, semver, publishing & globals",
     np: "npm — package.json, semver, प्रकाशन र ग्लोबल",
     jp: "npm・package.json・semver・公開・グローバル",
   },
-  7: {
+  8: {
     en: "RESTful APIs with Express — routes, verbs & validation",
     np: "Express सँग REST — रूट, verb र प्रमाणीकरण",
     jp: "Express で REST — ルート・HTTP メソッド・検証",
   },
-  8: {
+  9: {
     en: "Express advanced — middleware, config & app structure",
     np: "Express उन्नत — मिडलवेयर, विन्यास र संरचना",
     jp: "Express 応用 — ミドルウェア・設定・アプリ構成",
   },
-  9: {
+  10: {
     en: "Asynchronous JavaScript — callbacks, promises & async/await",
     np: "असिंक JS — callback, promise र async/await",
     jp: "非同期 JS — コールバック・Promise・async/await",
   },
-  10: {
+  11: {
     en: "MongoDB & Mongoose — connect, schemas, queries & CRUD",
     np: "MongoDB र Mongoose — जडान, schema, प्रश्न र CRUD",
     jp: "MongoDB・Mongoose — 接続・スキーマ・クエリ・CRUD",
   },
-  11: {
+  12: {
     en: "Data validation — schemas, validators & persistence projects",
     np: "डाटा प्रमाणीकरण — schema, validators र persistence",
     jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
   },
-  12: {
+  13: {
     en: "Modelling relationships — refs, embed, population & transactions",
     np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
     jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
   },
-  13: {
+  14: {
     en: "Authentication & authorization — users, JWT & roles",
     np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
     jp: "認証・認可 — ユーザー・JWT・ロール",
   },
-  14: {
+  15: {
     en: "Errors, logging & extracting routes / services",
     np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
     jp: "エラー・ログ・ルートとサービスの分割",
   },
-  15: {
+  16: {
     en: "Unit tests, integration tests & test-driven habits",
     np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
     jp: "単体・結合テストと TDD の習慣",
   },
-  16: {
+  17: {
     en: "Deployment, MongoDB Atlas & what to learn next",
     np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
     jp: "デプロイ・Atlas・次に学ぶこと",
@@ -124,8 +129,8 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
 const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-w0": { en: "Before you start", np: "सुरु गर्नुअघि", jp: "はじめる前に" },
   "nodejs-w1": { en: "Phase 1 · The runtime", np: "Phase 1 · रनटाइम", jp: "Phase 1 · ランタイム" },
-  "nodejs-w2": { en: "npm & Express REST", np: "npm र Express REST", jp: "npm と Express REST" },
-  "nodejs-w3": { en: "Express advanced topics", np: "Express उन्नत विषय", jp: "Express の応用トピック" },
+  "nodejs-w2": { en: "Core modules & npm", np: "कोर मोड्युल र npm", jp: "コアモジュールと npm" },
+  "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
   "nodejs-w4": { en: "Async JavaScript & Mongoose CRUD", np: "async JS र Mongoose CRUD", jp: "非同期JSとMongoose CRUD" },
   "nodejs-w5": { en: "Validation & relationships", np: "प्रमाणीकरण र सम्बन्ध", jp: "検証とリレーション" },
   "nodejs-w6": { en: "Authentication & error handling", np: "प्रमाणीकरण र त्रुटि प्रबन्ध", jp: "認証とエラー処理" },
