@@ -3,181 +3,245 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_4_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
-      np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
-      jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
+      en: "The **`fs`** module is how Node reads and writes files. Every operation comes in two versions: a synchronous one that blocks everything while it works, and an async one that lets your server keep handling other requests while it waits. On a server, always use the async version.",
+      np: "`fs` — फाइल प्रणालीको प्रवेशद्वार। सर्भरमा सधैँ async variant प्रयोग गर्नुहोस्।",
+      jp: "**`fs`** はファイルシステムへの入口。サーバでは常に非同期版を使い、イベントループを解放する。",
     },
     {
-      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
-      np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
-      jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
+      en: "**EventEmitter** is Node's built-in way to broadcast events and react to them — like a simple publish/subscribe system. HTTP servers, streams, and timers are all built on top of it. The **`http`** module uses it too, which means you can build a basic server without installing any extra packages.",
+      np: "EventEmitter — Node को प्रकाशन/सदस्यता आधार। http सर्भर यसैमा बनेको छ।",
+      jp: "**EventEmitter** は Node 内蔵の pub/sub 基盤。http モジュールはこれを継承したサーバを提供する。",
     },
   ],
   sections: [
     {
-      title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
+      title: {
+        en: "fs — reading and writing files",
+        np: "fs — फाइल पढ्नु र लेख्नु",
+        jp: "fs — ファイルの読み書き",
+      },
       blocks: [
         {
           type: "youtube",
-          videoId: "jHDhaSSKmB0",
-          title: "npm Crash Course",
+          videoId: "Z_p1yFGS0Ak",
+          title: "Node.js fs Module - Reading & Writing Files",
         },
         {
           type: "code",
-          title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
-          code: `// Run once in an empty folder:
-//   npm init -y
+          title: {
+            en: "Three ways to read a file",
+            np: "फाइल पढ्ने तीन तरिका",
+            jp: "ファイルを読む 3 通り",
+          },
+          code: `const fs = require('fs');
+const fsp = require('fs').promises;
 
-{
-  "name": "my-app",
-  "version": "1.0.0",
-  "dependencies": {},
-  "scripts": {
-    "start": "node index.js"
-  }
+// 1. Callback — old-style but universal
+fs.readFile('./config.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(JSON.parse(data));
+});
+
+// 2. async/await with fs.promises (Node 10+)
+async function readConfig() {
+  const raw = await fsp.readFile('./config.json', 'utf8');
+  return JSON.parse(raw);
 }
 
-// Terminal:
-//   npm install lodash
-//   npm install --save-dev eslint
-//   npx eslint --version`,
+// 3. Synchronous — ONLY safe at startup, never in request handlers
+const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+
+// Writing a file
+await fsp.writeFile('./output.json', JSON.stringify({ ok: true }, null, 2));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
-            np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
-            jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
+            en: "Reading files synchronously is fine at **startup** — your app hasn't received any traffic yet, so blocking doesn't matter. But inside a **request handler**, always use the async version so other requests don't have to wait for one request's file read to finish.",
+            np: "सुरुवातमा sync ठीक; अनुरोध handler मा async चाहिन्छ ताकि अन्य अनुरोधहरू पर्खनु नपरोस्।",
+            jp: "起動時は同期も可。**リクエスト処理内**では必ず非同期を使い、他のリクエストをブロックしない。",
           },
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
-              np: "`npm run` ले टोलीको एउटै शब्दकोश।",
-              jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
-            },
+          type: "table",
+          caption: {
+            en: "fs.readFile vs fs.promises.readFile vs fs.readFileSync",
+            np: "तीन तरिका तुलना",
+            jp: "3 つの API 比較",
+          },
+          headers: [
+            { en: "Method", np: "विधि", jp: "メソッド" },
+            { en: "Returns", np: "फर्काउँछ", jp: "戻り値" },
+            { en: "When to use", np: "कहिले प्रयोग", jp: "使いどき" },
+          ],
+          rows: [
+            [
+              { en: "`fs.readFile(path, cb)`", np: "callback", jp: "`fs.readFile`" },
+              { en: "void — result in callback", np: "callback मा नतिजा", jp: "コールバックで受け取る" },
+              { en: "Legacy code; interop with older Node APIs", np: "पुरानो कोड", jp: "既存コードとの互換" },
+            ],
+            [
+              { en: "`fs.promises.readFile(path)`", np: "Promise", jp: "`fsp.readFile`" },
+              { en: "Promise<Buffer|string>", np: "Promise<Buffer|string>", jp: "Promise<Buffer|string>" },
+              { en: "Modern servers — works with async/await", np: "आधुनिक सर्भर", jp: "現代のサーバコード" },
+            ],
+            [
+              { en: "`fs.readFileSync(path)`", np: "sync", jp: "`readFileSync`" },
+              { en: "Buffer | string (blocks)", np: "Buffer — ब्लक गर्छ", jp: "Buffer（ブロックする）" },
+              { en: "App startup scripts only — not in HTTP handlers", np: "सुरुवात मात्र", jp: "起動スクリプトのみ" },
+            ],
           ],
         },
       ],
     },
     {
       title: {
-        en: "Installing, using packages & working with Git",
-        np: "स्थापना, प्रयोग र Git",
-        jp: "インストール・利用・Git",
+        en: "Streams — pipe large data",
+        np: "Streams — ठूलो डाटा पाइप गर्नुहोस्",
+        jp: "ストリーム — 大量データをパイプ",
       },
       blocks: [
         {
+          type: "youtube",
+          videoId: "EcznOgzOdxI",
+          title: "Node.js Streams Explained",
+        },
+        {
           type: "code",
-          title: { en: "Install production vs dev-only packages", np: "स्थापना उदाहरण", jp: "依存の入れ方" },
-          code: `# App dependency (recorded in "dependencies")
-npm install express
+          title: {
+            en: "Stream a file directly to an HTTP response",
+            np: "फाइल HTTP response मा stream गर्नुहोस्",
+            jp: "ファイルを HTTP レスポンスにストリーミング",
+          },
+          code: `const http = require('http');
+const fs = require('fs');
 
-# Tooling only — tests, linters (recorded in "devDependencies")
-npm install --save-dev jest eslint
+const server = http.createServer((req, res) => {
+  if (req.url === '/download') {
+    res.setHeader('Content-Type', 'text/csv');
+    // Chunk the file to res — never loads all into RAM
+    fs.createReadStream('./big.csv').pipe(res);
+    return;
+  }
+  res.end('ok');
+});
 
-// In code:
-const express = require('express');`,
+server.listen(3000);`,
+        },
+        {
+          type: "diagram",
+          id: "nodejs-stream-pipe",
         },
         {
           type: "paragraph",
           text: {
-            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
-            np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
-            jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
+            en: "When you call **`.pipe(destination)`**, Node automatically connects a readable source to a writable destination and handles the flow between them. **Backpressure** is built in — if the destination (like an HTTP response) can't keep up with the incoming data, Node pauses the source automatically so your app doesn't run out of memory trying to buffer everything.",
+            np: "`.pipe()` ले backpressure स्वतः सम्हाल्छ — RAM मा सम्पूर्ण फाइल लोड हुँदैन।",
+            jp: "**`.pipe()`** はバックプレッシャを自動処理。書き込み側が遅くても RAM に全データを溜めない。",
           },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
-              np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
-              jp: "**利用** — README と `exports` でエントリを確認。",
-            },
-            {
-              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
-              np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
-              jp: "**間接依存** — 見えないパッケージまでついてくる。",
-            },
-            {
-              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
-              np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
-              jp: "**秘密情報** — package.json に書かない。",
-            },
-          ],
         },
       ],
     },
     {
-      title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
+      title: {
+        en: "EventEmitter — pub/sub inside Node",
+        np: "EventEmitter — Node भित्र pub/sub",
+        jp: "EventEmitter — Node 内部の pub/sub",
+      },
       blocks: [
         {
-          type: "youtube",
-          videoId: "jHDhaSSKmB0",
-          title: "Semantic Versioning Explained",
-        },
-        {
           type: "code",
-          title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
-          code: `npm list --depth=0
-npm view lodash version
-npm install lodash@4.17.21
-npm update lodash
-npm uninstall lodash`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Quick semver cheat sheet — what changes when the left digit bumps",
-            np: "Semver संक्षिप्त तालिका",
-            jp: "セマバ早見",
+          title: {
+            en: "Subclass EventEmitter for a domain object",
+            np: "EventEmitter विस्तार गर्ने उदाहरण",
+            jp: "EventEmitter を継承したドメインオブジェクト",
           },
-          headers: [
-            { en: "Bump", np: "परिवर्तन", jp: "桁" },
-            { en: "Meaning (typical)", np: "अर्थ", jp: "意味（目安）" },
-            { en: "npm range hint", np: "रेञ्ज", jp: "範囲の例" },
-          ],
-          rows: [
-            [
-              { en: "**PATCH** (third number)", np: "PATCH", jp: "**PATCH**" },
-              { en: "Bug fixes, no API change", np: "बग फिक्स", jp: "バグ修正のみ" },
-              { en: "`~1.2.3` allows patch bumps", np: "`~`", jp: "`~` はパッチまで" },
-            ],
-            [
-              { en: "**MINOR** (middle)", np: "MINOR", jp: "**MINOR**" },
-              { en: "New features, backward compatible", np: "नयाँ, मिल्दो", jp: "後方互換の追加" },
-              { en: "`^1.2.3` allows minor + patch", np: "`^`", jp: "`^` は minor まで" },
-            ],
-            [
-              { en: "**MAJOR** (first)", np: "MAJOR", jp: "**MAJOR**" },
-              { en: "Breaking changes — read changelog", np: "ब्रेकिङ", jp: "**破壊的変更**" },
-              { en: "Pin exact version or migrate code", np: "जाँच गर्नुहोस्", jp: "固定か移行作業" },
-            ],
-          ],
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
-            np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
-            jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
-          },
+          code: `const EventEmitter = require('events');
+
+class OrderProcessor extends EventEmitter {
+  process(order) {
+    // ... business logic ...
+    this.emit('shipped', { orderId: order.id, trackingCode: 'TRK123' });
+    this.emit('invoice:ready', order);
+  }
+}
+
+const processor = new OrderProcessor();
+
+// Register listeners
+processor.on('shipped', ({ orderId }) => {
+  console.log('Notify warehouse for order', orderId);
+});
+
+// once() fires only on first emission, then removes itself
+processor.once('shipped', () => console.log('First shipment this session'));
+
+processor.process({ id: 'ORD-99' });
+// Output: "Notify warehouse for order ORD-99"
+//         "First shipment this session"`,
         },
         {
           type: "diagram",
-          id: "queue-backpressure",
+          id: "nodejs-event-emitter",
         },
         {
           type: "paragraph",
           text: {
-            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
-            np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
-            jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
+            en: "Every time you call `.emit()`, all listeners registered with **`.on()`** run immediately in the order you added them. Use **`.once()`** when you only need to react to something the first time it happens — it removes itself automatically after that. Use **`.off()`** to manually remove a listener you no longer need, especially in long-running apps where forgotten listeners can slowly leak memory.",
+            np: "`.on()` listener क्रममा synchronous — `.once()` पहिलो पटक मात्र — `.off()` हटाउन।",
+            jp: "**`.on()`** は登録順に同期実行。**`.once()`** は初回のみ。**`.off()`** でリスナーを解除しリーク防止。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "http module — a server from scratch",
+        np: "http module — शुरुदेखि सर्भर बनाउनु",
+        jp: "http モジュール — 素のサーバを作る",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Routing and reading the request body manually",
+            np: "रूटिङ र body पढ्नु",
+            jp: "ルーティングとリクエストボディの読み取り",
+          },
+          code: `const http = require('http');
+
+const server = http.createServer((req, res) => {
+  const { method, url } = req;
+
+  // Simple routing
+  if (method === 'GET' && url === '/ping') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ pong: true }));
+  }
+
+  if (method === 'POST' && url === '/echo') {
+    let body = '';
+    // req is a Readable stream — collect chunks
+    req.on('data', (chunk) => { body += chunk.toString(); });
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(body); // echo back
+    });
+    return;
+  }
+
+  res.writeHead(404);
+  res.end('Not found');
+});
+
+server.listen(3000, () => console.log('http://localhost:3000'));`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`req` and `res` are both EventEmitters under the hood. The request body comes in as chunks through `'data'` events and finishes with `'end'`. That is why **Express exists** — doing all of this by hand for every route (parsing JSON, matching URLs, handling errors) gets repetitive very quickly. Express is essentially a thin layer that handles all of that for you.",
+            np: "`req` र `res` EventEmitter — Express यहीँ माथि routing र parsing थप्छ।",
+            jp: "`req`/`res` は EventEmitter。Express はこの API にルーティングと JSON 解析を追加したラッパー。",
           },
         },
       ],
@@ -185,11 +249,27 @@ npm uninstall lodash`,
   ],
   faq: [
     {
-      question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
+      question: {
+        en: "When should I use streams instead of readFile?",
+        np: "streams कहिले प्रयोग गर्ने?",
+        jp: "ストリームをいつ使うべきか？",
+      },
       answer: {
-        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
-        np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
-        jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
+        en: "Use streams when files are **larger than a few MB** or when you are sending a file directly to an HTTP response. `fs.readFile` loads the whole file into memory at once — fine for a small config file, but if 100 users each request a 500 MB file at the same time, your server runs out of RAM fast. Streams avoid this by processing the data one small chunk at a time.",
+        np: "कुछ MB भन्दा ठूला फाइल वा HTTP response मा pipe गर्दा stream — readFile ले सम्पूर्ण RAM मा राख्छ।",
+        jp: "数 MB 以上のファイルや HTTP にパイプする場合はストリーム。readFile は全データを RAM に展開するため大ファイルに危険。",
+      },
+    },
+    {
+      question: {
+        en: "Can I use EventEmitter as a state manager?",
+        np: "EventEmitter state manager बन्न सक्छ?",
+        jp: "EventEmitter をステート管理に使えるか？",
+      },
+      answer: {
+        en: "It works fine for **simple internal events** — like tracking download progress or notifying parts of your app when an order ships. But if you need multiple consumers, event replay, or persistence across restarts, something like **RxJS**, **Redis pub/sub**, or a message broker is a better fit. EventEmitter does not scale well across services or complex listener setups.",
+        np: "साधारण in-process pub/sub मा ठीक — जटिल state का लागि RxJS वा Redis pub/sub।",
+        jp: "シンプルな in-process pub/sub には有効。複雑な状態管理には RxJS や Redis pub/sub の方が拡張しやすい。",
       },
     },
   ],
