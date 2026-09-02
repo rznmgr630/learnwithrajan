@@ -232,66 +232,51 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "デプロイ — CI/CD・ワーカー・スケジューラ・ゼロダウンタイム",
   },
   35: {
-    en: "File storage, HTTP client, mail & Notifications",
-    np: "File storage, HTTP client, mail र Notifications",
-    jp: "ファイルストレージ・HTTP クライアント・メール・通知",
-  },
-  36: {
-    en: "Authentication — Breeze, Sanctum & user registration",
-    np: "Authentication — Breeze, Sanctum र user registration",
-    jp: "認証 — Breeze・Sanctum・ユーザー登録",
-  },
-  37: {
-    en: "Authorization — Gates, Policies & API Resources",
-    np: "Authorization — Gates, Policies र API Resources",
-    jp: "認可 — Gates・Policies・API リソース",
-  },
-  38: {
     en: "Queues, Jobs, Events, Listeners & Task Scheduling",
     np: "Queues, Jobs, Events, Listeners र Task Scheduling",
     jp: "キュー・ジョブ・イベント・リスナー・スケジューリング",
   },
-  39: {
+  36: {
     en: "Testing with Pest — unit, feature, HTTP & database tests",
     np: "Pest सहित Testing — unit, feature, HTTP र database",
     jp: "Pest でテスト — ユニット・フィーチャー・HTTP・DB",
   },
-  40: {
+  37: {
     en: "Sanctum REST API — auth endpoints & full CRUD",
     np: "Sanctum REST API — auth endpoints र full CRUD",
     jp: "Sanctum REST API — 認証エンドポイントと全CRUD",
   },
-  41: {
+  38: {
     en: "Advanced Eloquent — accessors, mutators, casts, scopes & polymorphic relations",
     np: "Advanced Eloquent — accessors, mutators, casts, scopes र polymorphic",
     jp: "高度なEloquent — アクセサ・キャスト・スコープ・ポリモーフィック",
   },
-  42: {
+  39: {
     en: "Security — rate limiting, CSRF, XSS, SQL injection & headers",
     np: "Security — rate limiting, CSRF, XSS, SQL injection र headers",
     jp: "セキュリティ — レート制限・CSRF・XSS・SQLインジェクション",
   },
-  43: {
+  40: {
     en: "Custom Artisan commands — arguments, options & console I/O",
     np: "Custom Artisan commands — arguments, options र console I/O",
     jp: "カスタム Artisan コマンド — 引数・オプション・I/O",
   },
-  44: {
+  41: {
     en: "Real-time features — Broadcasting, WebSockets, Echo & Reverb",
     np: "Real-time — Broadcasting, WebSockets, Echo र Reverb",
     jp: "リアルタイム — ブロードキャスト・WebSocket・Echo・Reverb",
   },
-  45: {
+  42: {
     en: "Frontend integration — Livewire, Inertia.js & Vite",
     np: "Frontend — Livewire, Inertia.js र Vite",
     jp: "フロントエンド統合 — Livewire・Inertia.js・Vite",
   },
-  46: {
+  43: {
     en: "Performance — query optimization, N+1, Redis & queue scaling",
     np: "Performance — query optimization, N+1, Redis र queue scaling",
     jp: "パフォーマンス — クエリ最適化・N+1・Redis・キュースケーリング",
   },
-  47: {
+  44: {
     en: "Deployment — Docker, Forge, Vapor, CI/CD & environment config",
     np: "Deployment — Docker, Forge, Vapor, CI/CD र env config",
     jp: "デプロイ — Docker・Forge・Vapor・CI/CD・環境設定",

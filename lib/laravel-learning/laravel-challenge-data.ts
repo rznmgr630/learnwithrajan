@@ -11,14 +11,11 @@ import { LARAVEL_DAY_41_DETAIL } from "@/lib/laravel-learning/laravel-day-41-det
 import { LARAVEL_DAY_42_DETAIL } from "@/lib/laravel-learning/laravel-day-42-detail";
 import { LARAVEL_DAY_43_DETAIL } from "@/lib/laravel-learning/laravel-day-43-detail";
 import { LARAVEL_DAY_44_DETAIL } from "@/lib/laravel-learning/laravel-day-44-detail";
-import { LARAVEL_DAY_45_DETAIL } from "@/lib/laravel-learning/laravel-day-45-detail";
-import { LARAVEL_DAY_46_DETAIL } from "@/lib/laravel-learning/laravel-day-46-detail";
-import { LARAVEL_DAY_47_DETAIL } from "@/lib/laravel-learning/laravel-day-47-detail";
 import { laravelDayTitle, laravelTags, laravelWeekTitle } from "@/lib/laravel-learning/laravel-roadmap-i18n";
 
 export const LARAVEL_CURRENT_DAY = 1;
 
-export const LARAVEL_TOTAL_DAYS = 47;
+export const LARAVEL_TOTAL_DAYS = 44;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   18: LARAVEL_DAY_18_DETAIL,
@@ -32,9 +29,6 @@ const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   42: LARAVEL_DAY_42_DETAIL,
   43: LARAVEL_DAY_43_DETAIL,
   44: LARAVEL_DAY_44_DETAIL,
-  45: LARAVEL_DAY_45_DETAIL,
-  46: LARAVEL_DAY_46_DETAIL,
-  47: LARAVEL_DAY_47_DETAIL,
 };
 
 function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -155,12 +149,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w6"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#a78bfa)]",
     days: [
-      laravelDayRow(35, ["mail", "foundation"]),
-      laravelDayRow(36, ["auth", "foundation"]),
-      laravelDayRow(37, ["authorization", "api"]),
-      laravelDayRow(38, ["queues", "events"]),
-      laravelDayRow(39, ["testing", "pest"]),
-      laravelDayRow(40, ["sanctum", "rest-api"]),
+      laravelDayRow(35, ["queues", "events"]),
+      laravelDayRow(36, ["testing", "pest"]),
+      laravelDayRow(37, ["sanctum", "rest-api"]),
     ],
   },
   {
@@ -168,10 +159,10 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w7"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#f87171)]",
     days: [
-      laravelDayRow(41, ["advanced-eloquent", "eloquent"]),
-      laravelDayRow(42, ["security", "middleware"]),
-      laravelDayRow(43, ["artisan", "foundation"]),
-      laravelDayRow(44, ["broadcasting", "events"]),
+      laravelDayRow(38, ["advanced-eloquent", "eloquent"]),
+      laravelDayRow(39, ["security", "middleware"]),
+      laravelDayRow(40, ["artisan", "foundation"]),
+      laravelDayRow(41, ["broadcasting", "events"]),
     ],
   },
   {
@@ -179,9 +170,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w8"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_34%,#4ade80)]",
     days: [
-      laravelDayRow(45, ["livewire", "inertia"]),
-      laravelDayRow(46, ["performance", "redis"]),
-      laravelDayRow(47, ["deployment", "devops"]),
+      laravelDayRow(42, ["livewire", "inertia"]),
+      laravelDayRow(43, ["performance", "redis"]),
+      laravelDayRow(44, ["deployment", "devops"]),
     ],
   },
 ];

@@ -181,7 +181,35 @@ curl https://example.com/api/posts \\
   -H "Accept: application/json"
 
 # SPA: your own React app on your own domain, using the
-# session cookie the browser already holds. No token.`,
+# session cookie the browser already holds. No token.
+
+
+# ---------- The SPA flow, wired up ----------
+
+# .env — which domains count as "first party"
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.example.com
+SESSION_DOMAIN=.example.com
+
+# The frontend must do this ONCE, before logging in:
+#
+#   GET /sanctum/csrf-cookie
+#
+# It sets the XSRF-TOKEN cookie. Without it, your very
+# first POST /login returns 419 and looks like a broken
+# login rather than a missing setup step.
+
+// resources/js/bootstrap.js
+axios.defaults.withCredentials = true;      // send cookies
+axios.defaults.withXSRFToken  = true;       // echo the CSRF cookie
+
+// And then, in order:
+await axios.get('/sanctum/csrf-cookie');    // 1. get the cookie
+await axios.post('/login', { email, password });   // 2. log in
+await axios.get('/api/user');               // 3. authenticated by session
+
+// No token anywhere. The browser holds a session cookie,
+// exactly as it does for your Blade pages — which is why
+// CSRF still applies here and does not for tokens.`,
       },
       keyTakeaways: [
         "<b>An API is the same application answering a client that is not a browser.</b>",
@@ -192,12 +220,14 @@ curl https://example.com/api/posts \\
         "<b>Failures come back as JSON rather than a redirect</b>, which is the same validation presented differently.",
         "<b>Sanctum does two different jobs</b>: API tokens, and cookie authentication for a first-party SPA.",
         "Token authentication is stateless and header-based; SPA authentication uses the session cookie and still needs CSRF.",
+        "<b>SPA mode needs three things wired up</b>: `SANCTUM_STATEFUL_DOMAINS`, `withCredentials` on the client, and a `GET /sanctum/csrf-cookie` before the first login.",
         "<b>Use SPA cookies when you control the frontend and it runs on your domain</b>, and tokens for everything else.",
         "<b>A token is a credential, not a session</b>: anybody holding it is that user until it is revoked.",
       ],
       commonMistakes: [
         "<b>Putting API routes in `web.php`.</b> They pick up sessions and CSRF, and failures redirect instead of returning JSON.",
         "<b>Confusing the two Sanctum flows.</b> SPA authentication uses cookies and does need CSRF.",
+        "<b>Skipping `GET /sanctum/csrf-cookie`.</b> The first login returns 419 and looks like broken credentials.",
         "<b>Expecting a redirect to work for an API client.</b> It cannot follow one, and would not want the HTML.",
         "<b>Forgetting the `Accept: application/json` header when testing.</b> Laravel then answers as if you were a browser.",
         "<b>Treating a token like a session.</b> It survives everything until you revoke it.",
@@ -253,7 +283,7 @@ curl https://example.com/api/posts \\
       id: "tokens",
       title: "Issuing tokens & protecting routes",
       durationMinutes: 12,
-      explanation: "How a client gets a credential, and how the server recognises it.\n\n---\n\n### 1. Basic — issuing one\n\nThe model needs Sanctum's trait:\n\n```php\nuse Laravel\\Sanctum\\HasApiTokens;\n\nclass User extends Authenticatable\n{\n    use HasApiTokens;\n}\n```\n\nThen, after checking credentials:\n\n```php\n$token = $user->createToken('mobile-app');\n\nreturn ['token' => $token->plainTextToken];\n```\n\n```text\nuser\n ↓\ncreateToken()\n ↓\na row in personal_access_tokens\n ↓\nthe plain text token, once\n```\n\n<b>`plainTextToken` is available exactly once</b>, on the object you just created. The database stores a hash, exactly as it does for a password, so a leak of that table does not hand over anybody's tokens, and there is no way to look one up later.\n\nWhich means the client stores it, and \"I lost my token\" is answered by issuing a new one, never by retrieving the old one.\n\nThe name (`'mobile-app'`) is for humans: it is what a \"your devices\" screen lists, so the user can see and revoke them individually.\n\n---\n\n### 2. Intermediate — the login endpoint\n\nEverything from Day 19 still applies, minus the session:\n\n```php\n$request->validate([\n    'email'    => ['required', 'email'],\n    'password' => ['required'],\n]);\n\n$user = User::where('email', $request->email)->first();\n\nif (! $user || ! Hash::check($request->password, $user->password)) {\n    throw ValidationException::withMessages([\n        'email' => ['Invalid credentials.'],\n    ]);\n}\n\nreturn ['token' => $user->createToken($request->device_name)->plainTextToken];\n```\n\nNote what is <i>not</i> there. No `Auth::attempt()`, because there is no session to establish, and no `session()->regenerate()`, because there is no session to fix.\n\nWhat is still there: <b>one error message for a wrong password and an unknown email</b>, and <b>rate limiting on this route</b>. An API login is a better target than a web one, because there is no interface slowing anybody down.\n\n---\n\n### 3. Advanced — the request, and the guard\n\nThe client sends:\n\n```http\nAuthorization: Bearer 3|abcdef...\n```\n\n```text\nrequest\n  ↓\nBearer token\n  ↓\nSanctum: hash it, find the row, load the user\n  ↓\n$request->user()\n```\n\nAnd you protect routes with the guard:\n\n```php\nRoute::middleware('auth:sanctum')->group(function () {\n    Route::get('/user', fn (Request $request) => $request->user());\n    Route::apiResource('posts', PostController::class);\n});\n```\n\n```text\nGET /api/posts\n      ↓\nauth:sanctum\n  ┌───┴───┐\nvalid   invalid\n  ↓        ↓\nuser      401\n```\n\n<b>`auth:sanctum` is the guard name from Day 19</b>, doing exactly what that lesson described: the guard decides how identity is established, the provider fetches the user. Here the guard reads a header instead of a session, and the provider is the same one.\n\nInside a controller, `$request->user()` is the authenticated user, as always.\n\nTwo practical notes.\n\n<b>Ask for JSON.</b> Without `Accept: application/json`, an unauthenticated request gets redirected to a login page that does not exist, and you spend twenty minutes debugging a 302 that should have been a 401.\n\n<b>And the token is only as safe as its transport.</b> A bearer token over plain HTTP is readable by anybody on the network, and unlike a session cookie there is no `secure` flag to forget: it is your job to serve the API over HTTPS and nothing else.",
+      explanation: "How a client gets a credential, and how the server recognises it.\n\n---\n\n### 1. Basic — issuing one\n\nThe model needs Sanctum's trait:\n\n```php\nuse Laravel\\Sanctum\\HasApiTokens;\n\nclass User extends Authenticatable\n{\n    use HasApiTokens;\n}\n```\n\nThen, after checking credentials:\n\n```php\n$token = $user->createToken('mobile-app');\n\nreturn ['token' => $token->plainTextToken];\n```\n\n```text\nuser\n ↓\ncreateToken()\n ↓\na row in personal_access_tokens\n ↓\nthe plain text token, once\n```\n\n<b>`plainTextToken` is available exactly once</b>, on the object you just created. The database stores a hash, exactly as it does for a password, so a leak of that table does not hand over anybody's tokens, and there is no way to look one up later.\n\nWhich means the client stores it, and \"I lost my token\" is answered by issuing a new one, never by retrieving the old one.\n\nThe name (`'mobile-app'`) is for humans: it is what a \"your devices\" screen lists, so the user can see and revoke them individually.\n\n---\n\n### 2. Intermediate — the login endpoint\n\nEverything from Day 19 still applies, minus the session:\n\n```php\n$request->validate([\n    'email'    => ['required', 'email'],\n    'password' => ['required'],\n]);\n\n$user = User::where('email', $request->email)->first();\n\nif (! $user || ! Hash::check($request->password, $user->password)) {\n    throw ValidationException::withMessages([\n        'email' => ['Invalid credentials.'],\n    ]);\n}\n\nreturn ['token' => $user->createToken($request->device_name)->plainTextToken];\n```\n\nNote what is <i>not</i> there. No `Auth::attempt()`, because there is no session to establish, and no `session()->regenerate()`, because there is no session to fix.\n\nWhat is still there: <b>one error message for a wrong password and an unknown email</b>, and <b>rate limiting on this route</b>. An API login is a better target than a web one, because there is no interface slowing anybody down.\n\n---\n\n### 3. Advanced — the request, and the guard\n\nThe client sends:\n\n```http\nAuthorization: Bearer 3|abcdef...\n```\n\n```text\nrequest\n  ↓\nBearer token\n  ↓\nSanctum: hash it, find the row, load the user\n  ↓\n$request->user()\n```\n\nAnd you protect routes with the guard:\n\n```php\nRoute::middleware('auth:sanctum')->group(function () {\n    Route::get('/user', fn (Request $request) => $request->user());\n    Route::apiResource('posts', PostController::class);\n});\n```\n\n```text\nGET /api/posts\n      ↓\nauth:sanctum\n  ┌───┴───┐\nvalid   invalid\n  ↓        ↓\nuser      401\n```\n\n<b>`auth:sanctum` is the guard name from Day 19</b>, doing exactly what that lesson described: the guard decides how identity is established, the provider fetches the user. Here the guard reads a header instead of a session, and the provider is the same one.\n\nInside a controller, `$request->user()` is the authenticated user, as always.\n\nTwo practical notes.\n\n<b>Ask for JSON.</b> Without `Accept: application/json`, an unauthenticated request gets redirected to a login page that does not exist, and you spend twenty minutes debugging a 302 that should have been a 401.\n\n<b>And the token is only as safe as its transport.</b> A bearer token over plain HTTP is readable by anybody on the network, and unlike a session cookie there is no `secure` flag to forget: it is your job to serve the API over HTTPS and nothing else.\n\n<b>One piece of history, because you will meet it in older codebases.</b> Before Sanctum, Laravel shipped a `token` guard backed by a single `api_token` column on `users`:\n\n```php\n// config/auth.php — the old way\n'api' => ['driver' => 'token', 'provider' => 'users'],\n```\n\nOne token per user, stored in plain text, with no scopes, no expiry, no revocation short of overwriting the column, and no record of when it was last used. <b>Every one of those is a reason `personal_access_tokens` exists.</b> Recognise it, and never start a new project with it.",
       diagram: `Issuing a token
 
   use Laravel\\Sanctum\\HasApiTokens;
@@ -262,6 +292,18 @@ curl https://example.com/api/posts \\
   \$token->plainTextToken
 
     user → createToken() → a row in personal_access_tokens
+
+  ⚠️  What it replaced, still in older codebases:
+
+      config/auth.php
+        'api' => ['driver' => 'token', ...]
+
+      one api_token column on users:
+        plain text · one per user · no scopes
+        no expiry · no revocation · no last-used
+
+      Every one of those is why personal_access_tokens
+      exists. Recognise it; never start with it.
                                  ↓
                        the plain text token, ONCE
 
@@ -447,6 +489,7 @@ $request->user()->currentAccessToken();`,
         "<b>`auth:sanctum` is a guard</b>: the same Day 19 concept, reading a header instead of a session.",
         "<b>Send `Accept: application/json`</b>, or an unauthenticated request is redirected rather than answered with a 401.",
         "<b>A bearer token over plain HTTP is readable by anybody on the network</b>, so the API must be HTTPS only.",
+        "<b>The legacy `token` guard used one plain-text `api_token` column</b>: no scopes, no expiry, no revocation.",
       ],
       commonMistakes: [
         "<b>Trying to read a token back later.</b> Only the hash is stored; issue a new one instead.",

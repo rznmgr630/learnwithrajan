@@ -1473,7 +1473,7 @@ $users->groupedByCountry();`,
       id: "serialization-and-api-resources",
       title: "Serialization & API Resources",
       durationMinutes: 14,
-      explanation: "Returning a model from a controller works. That is the problem.\n\n---\n\n### 1. Basic — what a model gives you\n\n```php\n$user->toArray();\n$user->toJson();\n\nreturn $user;      // Laravel calls toJson() for you\n```\n\n```json\n{\"id\": 1, \"name\": \"Rajan\", \"email\": \"rajan@example.com\"}\n```\n\nThe controls from Day 14 shape it:\n\n```text\n$hidden    keep attributes out\n$visible   allow only these\n$appends   add computed ones\ncasts()    decide their types\n```\n\nDates need a decision too. Eloquent serialises them in ISO 8601, and you can change that:\n\n```php\nprotected function serializeDate(DateTimeInterface $date)\n{\n    return $date->format('Y-m-d H:i:s');\n}\n```\n\nBefore you do, be sure. <b>ISO 8601 with a timezone is what every client can parse.</b> A format of your own means every consumer writes a parser, and one of them gets the timezone wrong. Pick a format once, in UTC, and keep it across the whole API.\n\n---\n\n### 2. Intermediate — why models are not API responses\n\nReturning the model directly ties your API to your schema. Which sounds abstract until it happens:\n\n```text\nyou add a column          it appears in the API\nyou rename a column       every client breaks\nyou add a sensitive       it leaks until somebody\n  column                    remembers $hidden\nyou need a field the      you cannot, without\n  API should shape          changing the database\n```\n\nEvery migration becomes an API change, and nothing anywhere says what the API returns.\n\n<b>An <i>API Resource</i></b> (a class that turns a model into its API representation) puts a layer between them:\n\n```text\nDatabase Model\n      ↓\nAPI Resource\n      ↓\nJSON response\n```\n\n```bash\nphp artisan make:resource UserResource\n```\n\n```php\nclass UserResource extends JsonResource\n{\n    public function toArray(Request $request): array\n    {\n        return [\n            'id'    => $this->id,\n            'name'  => $this->name,\n            'email' => $this->email,\n        ];\n    }\n}\n```\n\n```php\nreturn new UserResource($user);\nreturn UserResource::collection($users);\n```\n\nNow the API contract is one file you can read, and a new column changes nothing until you decide it should.\n\nBy default the output is wrapped:\n\n```json\n{ \"data\": { \"id\": 1, \"name\": \"Rajan\" } }\n```\n\nand `public static $wrap = 'user';` changes the key. Return a paginated result through a resource collection and you get `meta` and `links` for free, which is the pagination from Day 13 arriving in the response.\n\n---\n\n### 3. Advanced — conditionals, and the one that matters\n\nA field only some callers should see:\n\n```php\n'email' => $this->when($request->user()?->isAdmin(), $this->email),\n```\n\nWhen the condition is false the key is <i>absent</i>, not null. That is usually what you want, and worth knowing when a client asks why the key vanished.\n\nAnd the important one:\n\n```php\n'posts' => PostResource::collection($this->whenLoaded('posts')),\n```\n\n<b>`whenLoaded()` includes the relationship only if the controller eager loaded it.</b> Without it, a resource that serialises a relationship triggers a query per model, and you have built an N+1 into your API where nobody will look for it.\n\n```text\nUser::with('posts')->get()      →  resource includes posts\nUser::all()->get()              →  resource omits them, silently\n                                   and runs no extra queries\n```\n\nThis is why yesterday's `Model::preventLazyLoading()` and `whenLoaded()` belong together: one makes the mistake impossible, the other makes the correct version easy.\n\nThe rest of the family:\n\n```text\nwhen($condition, $value)          include if true\nwhenLoaded('relation')            include if eager loaded\nwhenNotNull($value)               include if not null\nwhenCounted('posts')              include a withCount result\nmergeWhen($condition, [...])      several keys at once\n```\n\nAnd metadata, when a response needs more than the records:\n\n```php\nreturn UserResource::collection($users)->additional([\n    'meta' => ['version' => 'v1'],\n]);\n```\n\nThe distinction to leave with:\n\n```text\nModel        the database and domain representation\nResource     the API representation\n```\n\n<b>Do not confuse those two.</b> They change for different reasons and at different times, and keeping them separate is what lets your schema evolve without breaking anybody.",
+      explanation: "Returning a model from a controller works. That is the problem.\n\n---\n\n### 1. Basic — what a model gives you\n\n```php\n$user->toArray();\n$user->toJson();\n\nreturn $user;      // Laravel calls toJson() for you\n```\n\n```json\n{\"id\": 1, \"name\": \"Rajan\", \"email\": \"rajan@example.com\"}\n```\n\nThe controls from Day 14 shape it:\n\n```text\n$hidden    keep attributes out\n$visible   allow only these\n$appends   add computed ones\ncasts()    decide their types\n```\n\nDates need a decision too. Eloquent serialises them in ISO 8601, and you can change that:\n\n```php\nprotected function serializeDate(DateTimeInterface $date)\n{\n    return $date->format('Y-m-d H:i:s');\n}\n```\n\nBefore you do, be sure. <b>ISO 8601 with a timezone is what every client can parse.</b> A format of your own means every consumer writes a parser, and one of them gets the timezone wrong. Pick a format once, in UTC, and keep it across the whole API.\n\n---\n\n### 2. Intermediate — why models are not API responses\n\nReturning the model directly ties your API to your schema. Which sounds abstract until it happens:\n\n```text\nyou add a column          it appears in the API\nyou rename a column       every client breaks\nyou add a sensitive       it leaks until somebody\n  column                    remembers $hidden\nyou need a field the      you cannot, without\n  API should shape          changing the database\n```\n\nEvery migration becomes an API change, and nothing anywhere says what the API returns.\n\n<b>An <i>API Resource</i></b> (a class that turns a model into its API representation) puts a layer between them:\n\n```text\nDatabase Model\n      ↓\nAPI Resource\n      ↓\nJSON response\n```\n\n```bash\nphp artisan make:resource UserResource\n```\n\n```php\nclass UserResource extends JsonResource\n{\n    public function toArray(Request $request): array\n    {\n        return [\n            'id'    => $this->id,\n            'name'  => $this->name,\n            'email' => $this->email,\n        ];\n    }\n}\n```\n\n```php\nreturn new UserResource($user);\nreturn UserResource::collection($users);\n```\n\nNow the API contract is one file you can read, and a new column changes nothing until you decide it should.\n\nBy default the output is wrapped:\n\n```json\n{ \"data\": { \"id\": 1, \"name\": \"Rajan\" } }\n```\n\nand `public static $wrap = 'user';` changes the key. Return a paginated result through a resource collection and you get `meta` and `links` for free, which is the pagination from Day 13 arriving in the response.\n\n---\n\n### 3. Advanced — conditionals, and the one that matters\n\nA field only some callers should see:\n\n```php\n'email' => $this->when($request->user()?->isAdmin(), $this->email),\n```\n\nWhen the condition is false the key is <i>absent</i>, not null. That is usually what you want, and worth knowing when a client asks why the key vanished.\n\nAnd the important one:\n\n```php\n'posts' => PostResource::collection($this->whenLoaded('posts')),\n```\n\n<b>`whenLoaded()` includes the relationship only if the controller eager loaded it.</b> Without it, a resource that serialises a relationship triggers a query per model, and you have built an N+1 into your API where nobody will look for it.\n\n```text\nUser::with('posts')->get()      →  resource includes posts\nUser::all()->get()              →  resource omits them, silently\n                                   and runs no extra queries\n```\n\nThis is why yesterday's `Model::preventLazyLoading()` and `whenLoaded()` belong together: one makes the mistake impossible, the other makes the correct version easy.\n\nThe rest of the family:\n\n```text\nwhen($condition, $value)          include if true\nwhenLoaded('relation')            include if eager loaded\nwhenNotNull($value)               include if not null\nwhenCounted('posts')              include a withCount result\nmergeWhen($condition, [...])      several keys at once\n```\n\nAnd metadata, when a response needs more than the records:\n\n```php\nreturn UserResource::collection($users)->additional([\n    'meta' => ['version' => 'v1'],\n]);\n```\n\n`with()` is the other half of that pair, and it lives on the resource rather than the call site:\n\n```php\npublic function with(Request $request): array\n{\n    return ['meta' => ['version' => 'v1']];\n}\n```\n\n<b>Use `additional()` when the metadata depends on the request, and `with()` when it is true of every response from that resource.</b>\n\nAnd `::collection()` does not return the class you might assume. It returns an <i>AnonymousResourceCollection</i>, which is fine until the collection itself needs behaviour:\n\n```bash\nphp artisan make:resource UserCollection\n```\n\n```php\nclass UserCollection extends ResourceCollection\n{\n    public function toArray(Request $request): array\n    {\n        return [\n            'data'         => $this->collection,\n            'total_active' => $this->collection->where('active', true)->count(),\n        ];\n    }\n}\n```\n\n<b>Reach for a named collection class when the response needs something the individual records cannot express</b>: an aggregate, a summary, a count across the whole set. Otherwise `::collection()` is the right answer and a named class is ceremony.\n\nThe distinction to leave with:\n\n```text\nModel        the database and domain representation\nResource     the API representation\n```\n\n<b>Do not confuse those two.</b> They change for different reasons and at different times, and keeping them separate is what lets your schema evolve without breaking anybody.",
       diagram: `What a model gives you
 
   \$user->toArray()   \$user->toJson()   return \$user;
@@ -1540,6 +1540,31 @@ whenLoaded is the important one
 
   preventLazyLoading() makes the mistake impossible.
   whenLoaded() makes the correct version easy.
+
+
+Metadata, two ways
+
+  ->additional(['meta' => [...]])
+      per call — when it depends on the request
+
+  public function with(Request \$request): array
+      on the resource — when it is true of every
+      response from it
+
+
+::collection() returns an AnonymousResourceCollection
+
+  Fine, until the collection ITSELF needs behaviour:
+
+    php artisan make:resource UserCollection
+    class UserCollection extends ResourceCollection
+
+  Reach for a named class when the response needs
+  something the individual records cannot express —
+  an aggregate, a summary, a count across the set.
+
+  Otherwise ::collection() is right, and a named class
+  is ceremony.
 
 
   Model     →  the database and domain representation
@@ -1654,6 +1679,39 @@ return UserResource::collection($users)->additional([
     'meta' => ['version' => 'v1'],
 ]);
 
+// additional() is per call. with() is per resource:
+class UserResource extends JsonResource
+{
+    public function with(Request $request): array
+    {
+        return ['meta' => ['version' => 'v1']];
+    }
+}
+
+
+<?php
+// ---------- A named collection class ----------
+
+// ::collection() returns an AnonymousResourceCollection.
+// Name one only when the collection itself needs behaviour:
+php artisan make:resource UserCollection
+
+class UserCollection extends ResourceCollection
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'data'         => $this->collection,
+            'total_active' => $this->collection->where('active', true)->count(),
+        ];
+    }
+}
+
+return new UserCollection($users);
+
+// An aggregate the individual records cannot express.
+// Without one of those, ::collection() is the right call.
+
 
 <?php
 // ---------- The N+1 this prevents ----------
@@ -1677,6 +1735,9 @@ Model::preventLazyLoading(! app()->isProduction());`,
         "<b>`when()` includes a key only if a condition holds</b>, and a false condition omits the key entirely.",
         "<b>`whenLoaded()` includes a relationship only if it was eager loaded</b>, which prevents an N+1 inside your API.",
         "`whenNotNull()`, `whenCounted()` and `mergeWhen()` cover the rest of the conditional cases.",
+        "<b>`additional()` attaches metadata per call; `with()` attaches it to every response from that resource.</b>",
+        "<b>`::collection()` returns an `AnonymousResourceCollection`</b>, not a class you named.",
+        "<b>Write a `ResourceCollection` class only when the collection needs its own behaviour</b>, such as an aggregate or summary.",
         "<b>The model is the database representation and the resource is the API representation.</b> They change for different reasons.",
       ],
       commonMistakes: [
