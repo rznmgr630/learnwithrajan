@@ -3,165 +3,257 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_44_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Traditional web apps work on a request-response cycle — the browser asks, the server answers. Real-time apps <b>push updates from the server to the browser</b> without the browser asking first.\n\nThink of the difference between:\n• Checking your phone for messages every minute (polling — wasteful, slow)\n• Getting a push notification the instant someone messages you (WebSockets — instant, efficient)\n\n<b>Common use cases:</b>\n• Live notifications (\"You have a new order\")\n• Chat and messaging\n• Collaborative editing (Google Docs-style)\n• Live dashboards (sports scores, stock prices)\n• Delivery and order tracking",
-      np: "Real-time = server बाट browser मा push। WebSocket = instant notification। Chat, notification, dashboard मा use हुन्छ।",
-      jp: "リアルタイムとはサーバーからブラウザへの Push。チャット・通知・ライブダッシュボードに使う。",
+      en: "Getting your app to production is the final mile — and often the most confusing part for beginners. There is no single \"right\" way to deploy Laravel; the right choice depends on your budget, team size, and traffic.\n\nAnalogy: it is like choosing how to get across town:\n• <b>Driving yourself</b> — a VPS with Laravel Forge (full control, you manage the car)\n• <b>Taking a taxi</b> — a Platform-as-a-Service (someone else drives, you just say the destination)\n• <b>Teleporting</b> — serverless Vapor on AWS Lambda (instant, no roads, pay per trip)\n\nEach has trade-offs in cost, control, and effort. Today covers the three main paths and the tooling that makes every deploy repeatable and safe.",
+      np: "Laravel deploy गर्ने तीन मुख्य तरिका: VPS + Forge, Docker, र serverless Vapor। CI/CD र env config पनि।",
+      jp: "本番デプロイの3つの主要な方法：Forge（VPS）、Docker、Vapor（サーバーレス）。CI/CDと環境設定も解説。",
     },
     {
-      en: "Laravel's real-time stack has four pieces:\n• <b>Events</b> — PHP classes that implement `ShouldBroadcast`; they carry the data to push\n  ↳ You already know Laravel events from Day 19; broadcasting is just events that go to the browser\n• <b>Channels</b> — named \"rooms\" the browser subscribes to (public, private, or presence)\n• <b>Broadcasting driver</b> — the WebSocket transport layer\n  ↳ <b>Reverb</b>: self-hosted, free, built by Laravel team (recommended for new projects)\n  ↳ <b>Pusher</b>: managed cloud service, generous free tier, no server management\n• <b>Laravel Echo</b> — the JavaScript library that subscribes to channels and triggers callbacks",
-      np: "4 pieces: Events (ShouldBroadcast), Channels, Driver (Reverb/Pusher), Echo (JS library)।",
-      jp: "4 要素: Events (ShouldBroadcast)、Channels、ドライバ (Reverb/Pusher)、Echo (JS)。",
+      en: "The four pillars of production deployment:\n\n• <b>Environment config</b> — `.env` files, config caching, secrets management\n  ↳ Never commit `.env` to git; cache config on every deploy for speed\n• <b>Docker / Sail</b> — containerising your app for consistent dev-to-prod environments\n  ↳ Sail is for development; write a production Dockerfile for real deploys\n• <b>Laravel Forge</b> — managed server provisioning and deployment for VPS\n  ↳ Click to create a server; Forge installs PHP, Nginx, MySQL, Redis, SSL automatically\n• <b>Laravel Vapor</b> — serverless deployment on AWS Lambda\n  ↳ Zero server management, auto-scaling, pay per request\n• <b>CI/CD with GitHub Actions</b> — automated test + deploy on every push\n  ↳ Tests pass → deploy fires automatically — no manual steps, no forgotten commands",
+      np: "Environment config, Docker/Sail, Forge, Vapor, र GitHub Actions CI/CD — पाँच pillars।",
+      jp: "環境設定・Docker/Sail・Forge・Vapor・GitHub Actions CI/CD — 5つの柱。",
     },
   ],
   sections: [
     {
       title: {
-        en: "How broadcasting works — the full picture",
-        np: "Broadcasting कसरी काम गर्छ",
-        jp: "ブロードキャストの仕組み",
+        en: "Environment config & production checklist",
+        np: "Environment config र production checklist",
+        jp: "環境設定と本番チェックリスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The full flow, step by step:\n\n1. User submits a form → controller saves data to the database\n2. Controller fires `event(new PostCreated($post))`\n3. The `PostCreated` event implements `ShouldBroadcast`\n4. Laravel serialises the event and sends it to the WebSocket server (Reverb or Pusher)\n5. All browsers currently subscribed to the `posts` channel instantly receive the payload\n6. Echo triggers your JavaScript callback — you update the UI\n\nNo page refresh. No polling. The browser reacts in under 100ms.",
-            np: "Controller → event fire → ShouldBroadcast → WebSocket server → Echo → UI update। Page refresh नचाहिने।",
-            jp: "コントローラ → イベント → ShouldBroadcast → WebSocket サーバ → Echo → UI 更新。リロード不要。",
+            en: "The `.env` file holds secrets that should never be in version control. In production, set values through your server's environment variables or a secrets manager — never by copying `.env` files between servers.\n\nLaravel caches the parsed config to disk for performance — run `php artisan config:cache` after every deploy. This turns hundreds of config file reads into one disk read per request.\n\nKey `.env` values for production:\n• `APP_ENV=production` and `APP_DEBUG=false` — debug mode exposes file paths, credentials, and stack traces to the browser\n• `APP_KEY` — used to encrypt cookies and sessions; if it changes, all sessions are invalidated\n  ↳ Generate once with `php artisan key:generate` and back it up\n• `CACHE_DRIVER=redis`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis` — use Redis for all three in production",
+            np: "`.env` git मा राख्नु हुँदैन। `APP_DEBUG=false` र Redis drivers set गर्नुहोस्।",
+            jp: "`.env` は git に含めない。`APP_DEBUG=false` と Redis ドライバ設定が必須。",
           },
         },
         {
           type: "code",
-          title: { en: "PostCreated event + controller dispatch", np: "Event class र dispatch", jp: "イベントクラスとディスパッチ" },
-          code: `// app/Events/PostCreated.php
-namespace App\\Events;
+          title: { en: "Production .env values & deploy command sequence", np: "Production .env र deploy commands", jp: "本番 .env とデプロイコマンド" },
+          code: `# .env (production — set these via server panel, not a committed file)
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:YOUR_KEY_HERE
 
-use App\\Models\\Post;
-use Illuminate\\Broadcasting\\Channel;
-use Illuminate\\Broadcasting\\InteractsWithSockets;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-use Illuminate\\Queue\\SerializesModels;
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=my_app
+DB_USERNAME=forge
+DB_PASSWORD=secret
 
-class PostCreated implements ShouldBroadcast
-{
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
 
-    public function __construct(public Post $post) {}
-
-    // Which channel to broadcast on
-    public function broadcastOn(): array
-    {
-        return [new Channel('posts')]; // public channel
-    }
-
-    // What data to send (keep this lean — only what the frontend needs)
-    public function broadcastWith(): array
-    {
-        return [
-            'id'         => $this->post->id,
-            'title'      => $this->post->title,
-            'author'     => $this->post->user->name,
-            'created_at' => $this->post->created_at->toISOString(),
-        ];
-    }
-}
-
-// app/Http/Controllers/PostController.php — fire the event
-public function store(Request $request): JsonResponse
-{
-    $post = Post::create($request->validated());
-    event(new PostCreated($post)); // broadcast to all subscribers
-    return response()->json($post, 201);
-}`,
+# ─── Deploy command sequence (run in this order every deploy) ───
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+php artisan queue:restart
+npm run build`,
         },
         {
           type: "paragraph",
           text: {
-            en: "`broadcastWith()` controls exactly what data is sent to the browser. Return only what the frontend needs — never broadcast passwords, tokens, or sensitive internal fields. If you omit `broadcastWith()`, Laravel serialises all public properties of the event class automatically.",
-            np: "`broadcastWith()` = browser मा जाने data control गर्छ। Sensitive data never broadcast गर्ने।",
-            jp: "`broadcastWith()` で送信データを制御。パスワード等の機密情報は絶対に送らない。",
+            en: "<b>Why the order matters:</b>\n1. Install dependencies first (migration classes need them)\n2. Migrate before caching (new config may reference new DB structure)\n3. Cache everything after migration (stale cache during migration = errors)\n4. Restart queue workers last (they pick up new code after restart)\n\n`php artisan optimize` is a shorthand for config + route + view cache in one command — use it in Laravel 11+.",
+            np: "Deploy order: install → migrate → cache → queue:restart। `php artisan optimize` shorthand।",
+            jp: "デプロイ順序：install→migrate→cache→queue:restart。`php artisan optimize` でまとめて実行可。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Channels — public, private & presence",
-        np: "Channels — public, private र presence",
-        jp: "チャンネル — public・private・presence",
+        en: "Docker & Laravel Sail",
+        np: "Docker र Laravel Sail",
+        jp: "DockerとLaravel Sail",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Channels are like TV channels — you tune in to receive a specific broadcast.\n\n• <b>Public channels</b> — open to everyone, no auth check required\n  ↳ Use for: news feeds, live sports scores, public dashboards\n• <b>Private channels</b> — require authentication; the server verifies the user can access this channel\n  ↳ Use for: order status updates, user-specific notifications\n• <b>Presence channels</b> — like a private channel but the server also tells you who else is subscribed\n  ↳ Use for: chat rooms, collaborative editing (\"Alice and Bob are viewing this document\")",
-            np: "Public = सबैका लागि। Private = auth required। Presence = members को list पनि थाहा हुन्छ।",
-            jp: "Public は誰でも受信可能。Private は認証必須。Presence は誰が参加しているかも分かる。",
+            en: "Docker packages your app and all its dependencies (PHP, Nginx, MySQL, Redis) into containers — isolated processes that run identically on any machine.\n\nAnalogy: instead of telling a new team member \"install PHP 8.3, enable these extensions, configure Nginx to point to `public/`...\" you say \"run `docker compose up`\" and they have the exact same environment in minutes.\n\n<b>Laravel Sail</b> is Laravel's pre-built Docker development environment. It wraps common commands (`artisan`, `composer`, `npm`, `pest`) so you never need to install PHP or Node locally.",
+            np: "Docker = consistent environment। Sail = Laravel को dev Docker wrapper — PHP locally install गर्नु पर्दैन।",
+            jp: "Docker = 一貫した環境。Sail = Laravel の開発用 Docker ラッパー — PHP をローカルにインストール不要。",
           },
         },
         {
           type: "code",
-          title: { en: "Channel authorisation in routes/channels.php", np: "Channel auth define गर्ने", jp: "チャンネルの認可設定" },
-          code: `// routes/channels.php
+          title: { en: "Laravel Sail — setup & daily commands", np: "Sail setup र commands", jp: "Sail セットアップとコマンド" },
+          code: `# Create a new Laravel project with Sail (MySQL + Redis)
+curl -s "https://laravel.build/my-app?with=mysql,redis" | bash
+cd my-app
 
-use App\\Models\\Order;
-use Illuminate\\Support\\Facades\\Broadcast;
+# Add a shell alias so you type 'sail' instead of './vendor/bin/sail'
+alias sail='./vendor/bin/sail'
 
-// PUBLIC channel — no auth needed, anyone can subscribe
-Broadcast::channel('posts', function () {
-    return true; // always allow
-});
+# Start all containers in the background
+sail up -d
 
-// PRIVATE channel — user must own the order
-Broadcast::channel('orders.{orderId}', function ($user, $orderId) {
-    $order = Order::find($orderId);
-    return $order && $user->id === $order->user_id;
-    // return false or null = denied (Echo gets a 403)
-});
+# Common Sail commands (these run inside the container)
+sail artisan migrate
+sail artisan tinker
+sail composer require laravel/horizon
+sail npm install
+sail npm run dev
 
-// PRESENCE channel — must return an array of member data (not just true/false)
-Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
-    if ($user->canJoinRoom($roomId)) {
-        return [
-            'id'     => $user->id,
-            'name'   => $user->name,
-            'avatar' => $user->avatar_url,
-        ];
-    }
-    return false; // deny access
-});`,
+# Stop all containers
+sail down
+
+# View running containers
+sail ps`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Sail is for development only.</b> For production Docker you need:\n• A production `Dockerfile` — no Xdebug, no dev dependencies, optimised PHP-FPM config\n• A production `docker-compose.yml` — with proper volume mounts, restart policies, healthchecks\n• An Nginx or Caddy container as the web server\n\nThe `serversideup/php` Docker Hub image is a popular production-ready base for Laravel. In large deployments, use Kubernetes to orchestrate the containers across multiple servers.",
+            np: "Sail = development मात्र। Production मा production Dockerfile चाहिन्छ।",
+            jp: "Sail は開発専用。本番では本番用 Dockerfile が必要。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Laravel Forge — VPS deployment made easy",
+        np: "Laravel Forge — VPS deployment",
+        jp: "Laravel Forge — VPS デプロイを簡単に",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Forge</b> is a web UI that provisions and manages Linux servers on any cloud provider — DigitalOcean, AWS, Linode, Hetzner, Vultr.\n\nAnalogy: Forge is the experienced sysadmin you don't have on the team. You click \"create server\" and it:\n• Installs PHP (your chosen version), Nginx, MySQL, Redis\n• Configures Nginx as a reverse proxy pointing to `public/`\n• Sets up Let's Encrypt SSL (auto-renewing)\n• Creates a `forge` deploy user with correct filesystem permissions\n• Configures Supervisor to keep queue workers running\n\nCost: $15/month for unlimited servers — far cheaper than a sysadmin.",
+            np: "Forge = server provision गर्ने web UI। PHP, Nginx, MySQL, Redis, SSL सबै automatically।",
+            jp: "Forge = サーバーを自動構成する Web UI。PHP・Nginx・MySQL・Redis・SSL を自動設定。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Forge deploy script & queue worker config", np: "Forge deploy script", jp: "Forge デプロイスクリプト" },
+          code: `# ─── Forge deploy script (runs on every git push) ───
+cd /home/forge/my-app
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize
+php artisan queue:restart
+npm ci
+npm run build
+
+# ─── Forge daemon (queue worker — runs 24/7 via Supervisor) ───
+# Command:
+php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+# Processes: 2  (run 2 workers in parallel)
+# Stop waiting seconds: 10
+
+# ─── Forge daemon for Laravel Reverb (WebSocket server) ───
+# Command:
+php artisan reverb:start --port=8080
+# Processes: 1`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Forge <b>Quick Deploy</b> fires the deploy script automatically when you push to the connected branch. Disable it for staging environments where you want manual control.\n\nForge also manages:\n• <b>SSL certificates</b> — Let's Encrypt, auto-renewing every 90 days\n• <b>Scheduled tasks</b> — adds the Laravel cron entry automatically\n• <b>Firewall rules</b> — opens only ports 80, 443, and 22 by default\n• <b>PHP version</b> — upgrade PHP without touching your server manually\n• <b>Server monitoring</b> — CPU, disk, memory alerts",
+            np: "Quick Deploy = push गर्दा automatically deploy। SSL, cron, firewall सबै Forge ले manage।",
+            jp: "Quick Deploy = プッシュで自動デプロイ。SSL・cron・ファイアウォールも Forge が管理。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Laravel Vapor — serverless on AWS",
+        np: "Laravel Vapor — serverless deployment",
+        jp: "Laravel Vapor — AWS サーバーレス",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Vapor</b> deploys Laravel to AWS Lambda — a \"serverless\" environment where you don't manage any servers.\n\nAnalogy: instead of owning a restaurant (a server that runs 24/7 with fixed costs), you rent a kitchen by the minute, only when customers arrive. No customers = no cost. 10,000 customers at once = 10,000 kitchens spin up automatically.\n\nLambda runs your PHP code in response to HTTP requests, scales to zero when idle, and scales to thousands of concurrent executions under load — all automatically.",
+            np: "Vapor = AWS Lambda मा Laravel। Server manage गर्नु पर्दैन, traffic अनुसार automatically scale।",
+            jp: "Vapor = AWS Lambda で Laravel を動かす。サーバー管理不要、自動スケーリング。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "vapor.yml config & deploy commands", np: "vapor.yml र deploy", jp: "vapor.yml とデプロイ" },
+          code: `# Install Vapor CLI
+composer global require laravel/vapor-cli
+
+# vapor.yml (in project root)
+id: 12345
+name: my-app
+environments:
+  production:
+    runtime: php-8.3:al2
+    memory: 1024
+    cli-memory: 512
+    timeout: 30
+    build:
+      - npm ci
+      - npm run build
+      - php artisan event:cache
+    deploy:
+      - php artisan migrate --force
+    queues:
+      - default
+      - high
+
+# Deploy to production
+vapor deploy production
+
+# Roll back the last deploy
+vapor rollback production
+
+# Open the Vapor dashboard
+vapor open`,
         },
         {
           type: "table",
           caption: {
-            en: "Channel type comparison",
-            np: "Channel types को तुलना",
-            jp: "チャンネルタイプの比較",
+            en: "Forge vs Vapor — when to use each",
+            np: "Forge vs Vapor comparison",
+            jp: "Forge vs Vapor — 使い分け",
           },
           headers: [
-            { en: "Type", np: "प्रकार", jp: "タイプ" },
-            { en: "Class", np: "Class", jp: "クラス" },
-            { en: "Auth required?", np: "Auth चाहिन्छ?", jp: "認証必須?" },
-            { en: "Best for", np: "उपयुक्त", jp: "用途" },
+            { en: "Factor", np: "Factor", jp: "要素" },
+            { en: "Forge (VPS)", np: "Forge (VPS)", jp: "Forge（VPS）" },
+            { en: "Vapor (Serverless)", np: "Vapor (Serverless)", jp: "Vapor（サーバーレス）" },
           ],
           rows: [
             [
-              { en: "Public", np: "Public", jp: "Public" },
-              { en: "`Channel`", np: "`Channel`", jp: "`Channel`" },
-              { en: "No", np: "छैन", jp: "不要" },
-              { en: "News feeds, live scores, public dashboards", np: "News, scores, dashboard", jp: "ニュース・スコア・ダッシュボード" },
+              { en: "Server management", np: "Server management", jp: "サーバー管理" },
+              { en: "You manage (Forge automates it)", np: "Forge ले automate", jp: "Forge が自動化" },
+              { en: "None — AWS manages everything", np: "AWS ले manage", jp: "AWS がすべて管理" },
             ],
             [
-              { en: "Private", np: "Private", jp: "Private" },
-              { en: "`PrivateChannel`", np: "`PrivateChannel`", jp: "`PrivateChannel`" },
-              { en: "Yes — user must be authorised", np: "छ — user authorize हुनुपर्छ", jp: "必須 — ユーザー認可が必要" },
-              { en: "Order status, user notifications", np: "Order status, notifications", jp: "注文状況・ユーザー通知" },
+              { en: "Scaling", np: "Scaling", jp: "スケーリング" },
+              { en: "Manual — add more servers", np: "Manual scaling", jp: "手動でサーバー追加" },
+              { en: "Automatic — zero to millions", np: "Auto scale", jp: "自動スケーリング" },
             ],
             [
-              { en: "Presence", np: "Presence", jp: "Presence" },
-              { en: "`PresenceChannel`", np: "`PresenceChannel`", jp: "`PresenceChannel`" },
-              { en: "Yes — must return member data", np: "छ — member data return गर्नुपर्छ", jp: "必須 — メンバーデータを返す" },
-              { en: "Chat rooms, collaborative editing", np: "Chat, collaborative editing", jp: "チャット・共同編集" },
+              { en: "Long-running jobs", np: "Long-running jobs", jp: "長時間ジョブ" },
+              { en: "Fine — no time limit", np: "Time limit छैन", jp: "時間制限なし" },
+              { en: "15-minute Lambda limit", np: "15 min limit", jp: "15分制限あり" },
+            ],
+            [
+              { en: "Cost model", np: "Cost model", jp: "コストモデル" },
+              { en: "Fixed per server/month", np: "Fixed monthly", jp: "月額固定" },
+              { en: "Pay per request", np: "Per request pay", jp: "リクエスト課金" },
+            ],
+            [
+              { en: "Best for", np: "Best for", jp: "向いている用途" },
+              { en: "Predictable traffic, full control", np: "Predictable traffic", jp: "トラフィックが予測可能な場合" },
+              { en: "Unpredictable spikes, zero ops", np: "Traffic spikes", jp: "急激なスパイクや運用ゼロ希望" },
             ],
           ],
         },
@@ -169,206 +261,83 @@ Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
     },
     {
       title: {
-        en: "Setting up Laravel Reverb (self-hosted WebSocket server)",
-        np: "Laravel Reverb setup गर्ने",
-        jp: "Laravel Reverb のセットアップ",
+        en: "CI/CD with GitHub Actions",
+        np: "CI/CD with GitHub Actions",
+        jp: "GitHub Actions で CI/CD",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Reverb</b> is Laravel's own WebSocket server — introduced in Laravel 11, free, and runs on your own server alongside PHP-FPM and Nginx. It's the recommended default for new projects.\n\n<b>Pusher</b> is the cloud alternative:\n• <b>Pros:</b> zero server management, instant setup, generous free tier (200 concurrent connections, 800k messages/day)\n• <b>Cons:</b> costs money beyond the free tier, third-party dependency\n\nFor most new projects: start with Pusher free tier, migrate to Reverb if you hit limits or need more control.",
-            np: "Reverb = self-hosted, free। Pusher = managed cloud। Start मा Pusher free tier, later Reverb।",
-            jp: "Reverb は自己ホスト型で無料。Pusher はクラウドで簡単。まず Pusher 無料プランで始めてもよい。",
+            en: "<b>CI/CD</b> automates the \"run tests → deploy\" pipeline.\n\n• <b>CI (Continuous Integration)</b> — run tests on every push to catch bugs before they merge\n• <b>CD (Continuous Deployment)</b> — deploy automatically after tests pass\n\nWithout CI/CD: every deploy is manual (and risky — you might forget to run migrations, cache config, or restart workers). With CI/CD: push to `main` → tests run → deploy fires automatically — a repeatable, auditable process.\n\nGitHub Actions is free for public repos and has 2,000 free minutes/month for private repos.",
+            np: "CI = tests run automatically। CD = tests pass भएपछि auto deploy। GitHub Actions = free।",
+            jp: "CI = 自動テスト、CD = テスト通過後の自動デプロイ。GitHub Actions は無料。",
           },
         },
         {
           type: "code",
-          title: { en: "Installing and running Reverb", np: "Reverb install र run गर्ने", jp: "Reverb のインストールと起動" },
-          code: `# Install Reverb and scaffold the broadcasting config
-php artisan install:broadcasting
-# (chooses Reverb by default in Laravel 11, installs the package and publishes config)
+          title: { en: ".github/workflows/deploy.yml — test & deploy pipeline", np: "GitHub Actions workflow", jp: "GitHub Actions ワークフロー" },
+          code: `# .github/workflows/deploy.yml
+name: Test & Deploy
 
-# .env settings for Reverb
-BROADCAST_CONNECTION=reverb
+on:
+  push:
+    branches: [main]
 
-REVERB_APP_ID=my-app
-REVERB_APP_KEY=my-app-key
-REVERB_APP_SECRET=my-app-secret
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http  # use https in production
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testing
+          MYSQL_ROOT_PASSWORD: password
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s
 
-# Start Reverb in development
-php artisan reverb:start
-# Reverb runs on ws://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
 
-# In production — run Reverb via Supervisor so it restarts on crash
-# /etc/supervisor/conf.d/reverb.conf
-# [program:reverb]
-# command=php /var/www/myapp/artisan reverb:start --host=0.0.0.0 --port=8080
-# autostart=true
-# autorestart=true
-# redirect_stderr=true
-# stdout_logfile=/var/log/reverb.log`,
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run tests
+        run: php artisan test
+
+  deploy:
+    needs: test          # only runs if 'test' job passes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Forge deploy
+        run: curl -s "\${{ secrets.FORGE_DEPLOY_URL }}"`,
         },
         {
           type: "paragraph",
           text: {
-            en: "In production, run Reverb behind <b>Nginx as a reverse proxy</b> so WebSocket connections get HTTPS (WSS). Add an Nginx `location /app/` block that proxies to `http://localhost:8080`. The Laravel Reverb docs include the exact Nginx config.\n\n↳ Reverb also supports <b>horizontal scaling</b> via Redis — multiple Reverb nodes share state through Redis pub/sub, so you can run Reverb on multiple servers behind a load balancer",
-            np: "Production मा Nginx reverse proxy पछाडि run गर्ने। Redis ले horizontal scaling support गर्छ।",
-            jp: "本番は Nginx リバースプロキシの後ろで動かす。Redis で水平スケーリングも可能。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Laravel Echo — the frontend WebSocket listener",
-        np: "Laravel Echo — frontend listener",
-        jp: "Laravel Echo — フロントエンドの WebSocket リスナー",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Echo is the JavaScript companion to Laravel broadcasting. It wraps the raw WebSocket API into a clean, readable interface. Install it once, configure it once, then use it anywhere in your JavaScript (vanilla, React, Vue, etc.).",
-            np: "Echo = Laravel broadcasting को JS companion। Install र configure एकपटक, जहाँ पनि use गर्न सकिन्छ।",
-            jp: "Echo は Laravel ブロードキャストの JS ライブラリ。一度設定すれば React・Vue どこでも使える。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Installing Echo + Reverb configuration", np: "Echo install र configure", jp: "Echo のインストールと設定" },
-          code: `# Install Echo and the Pusher JS driver (used by both Pusher and Reverb)
-npm install --save-dev laravel-echo pusher-js
-
-// resources/js/bootstrap.js — configure Echo for Reverb
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
-
-// --- Three channel patterns ---
-
-// 1. PUBLIC channel
-Echo.channel('posts')
-    .listen('PostCreated', (e) => {
-        console.log('New post:', e.title);
-        addPostToFeed(e); // update your UI
-    });
-
-// 2. PRIVATE channel (user must be authenticated)
-Echo.private('orders.' + orderId)
-    .listen('OrderShipped', (e) => {
-        showNotification('Your order has shipped!');
-    });
-
-// 3. PRESENCE channel (also tracks who's online)
-Echo.join('chat.' + roomId)
-    .here((members) => { setOnlineUsers(members); })     // initial member list
-    .joining((member) => { addUser(member); })            // someone joined
-    .leaving((member) => { removeUser(member); })         // someone left
-    .listen('MessageSent', (e) => { addMessage(e); });`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Echo re-connects automatically with exponential backoff if the WebSocket drops. In React/Vue, call `Echo.leaveChannel('posts')` or `Echo.disconnect()` in your component's cleanup function to avoid memory leaks.\n\n↳ Echo works with both Reverb and Pusher — just change `broadcaster: 'reverb'` to `broadcaster: 'pusher'` and update the key/cluster env vars",
-            np: "Echo auto-reconnect गर्छ। Component cleanup मा `leaveChannel()` call गर्नुपर्छ।",
-            jp: "Echo は自動再接続する。コンポーネントのクリーンアップで `leaveChannel()` を必ず呼ぶ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Practical example — live notification badge",
-        np: "Practical example — live notification",
-        jp: "実践例 — リアルタイム通知バッジ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A complete end-to-end walkthrough: when any user creates a post, all other users see their notification badge increment in real-time — without refreshing the page. This covers the entire stack.",
-            np: "User ले post create गर्दा अरू users को notification badge instant update हुन्छ।",
-            jp: "投稿作成時に他ユーザーの通知バッジがリアルタイムで増える実装例。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "ShouldBroadcast event → Echo listener", np: "Event र Echo listener", jp: "ShouldBroadcast イベントと Echo リスナー" },
-          code: `// app/Events/NewPostPublished.php
-use Illuminate\\Broadcasting\\PrivateChannel;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-
-class NewPostPublished implements ShouldBroadcast
-{
-    public function __construct(
-        public Post $post,
-        public int $targetUserId  // the user to notify
-    ) {}
-
-    public function broadcastOn(): array
-    {
-        // Every user has their own private channel: App.Models.User.{id}
-        return [new PrivateChannel('App.Models.User.' . $this->targetUserId)];
-    }
-
-    public function broadcastWith(): array
-    {
-        return [
-            'type'    => 'NewPostPublished',
-            'message' => "{$this->post->user->name} published a new post",
-            'postId'  => $this->post->id,
-        ];
-    }
-}
-
-// Controller — notify all followers when a post is published
-public function store(Request $request): JsonResponse
-{
-    $post = Post::create([...$request->validated(), 'user_id' => auth()->id()]);
-
-    // Notify each follower (in a real app, dispatch a job for large follower lists)
-    auth()->user()->followers->each(function ($follower) use ($post) {
-        event(new NewPostPublished($post, $follower->id));
-    });
-
-    return response()->json($post, 201);
-}
-
-// Frontend — React component
-useEffect(() => {
-    const channel = Echo.private('App.Models.User.' + userId);
-
-    channel.notification((notification) => {
-        if (notification.type === 'NewPostPublished') {
-            setUnreadCount(c => c + 1);  // bump the badge
-            toast(notification.message);
-        }
-    });
-
-    return () => Echo.leaveChannel('App.Models.User.' + userId); // cleanup
-}, [userId]);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>`ShouldBroadcast` vs `ShouldBroadcastNow`:</b>\n\n• `ShouldBroadcast` (recommended) — event is pushed to the queue; the HTTP response returns immediately; the broadcast happens in the background\n• `ShouldBroadcastNow` — event broadcasts synchronously inline, before the HTTP response returns\n  ↳ Useful in development for testing without running a queue worker\n  ↳ Avoid in production — it slows down every HTTP request that fires the event",
-            np: "ShouldBroadcast = queued (production मा use गर्ने)। ShouldBroadcastNow = synchronous (dev मा only)।",
-            jp: "ShouldBroadcast はキュー経由で非同期。ShouldBroadcastNow は同期で遅くなる。本番は前者を使う。",
+            en: "<b>Setting up the Forge deploy webhook:</b>\n1. In Forge → Sites → Your Site → Deployments → copy the \"Deploy Webhook\" URL\n2. In GitHub → Settings → Secrets → Actions → New secret: `FORGE_DEPLOY_URL`\n3. Paste the webhook URL as the secret value\n\nNow every push to `main` that passes tests triggers an automatic Forge deploy.\n\n<b>For Vapor deployments</b> replace the deploy step with:\n`vapor deploy production` using `VAPOR_API_TOKEN` as a GitHub secret.",
+            np: "Forge webhook URL GitHub secret मा राख्नुहोस्। Push → test → deploy automatically।",
+            jp: "Forge の Webhook URL を GitHub シークレットに登録。プッシュ→テスト→自動デプロイ。",
           },
         },
       ],
@@ -377,62 +346,74 @@ useEffect(() => {
   faq: [
     {
       question: {
-        en: "When should I use Reverb vs Pusher?",
-        np: "Reverb vs Pusher — कहिले कुन use गर्ने?",
-        jp: "Reverb と Pusher はどちらを選ぶ？",
+        en: "What is the difference between Forge and Envoyer?",
+        np: "Forge र Envoyer मा के फरक छ?",
+        jp: "Forge と Envoyer の違いは？",
       },
       answer: {
-        en: "Use <b>Pusher free tier</b> to start: zero config, no server to manage, 200 concurrent connections and 800k messages/day is enough for most small-to-medium apps.\n\nSwitch to <b>Reverb</b> when:\n• You hit Pusher's limits or pricing becomes significant\n• Your data is privacy-sensitive (healthcare, finance) and you need on-premise hosting\n• You want full control over horizontal scaling\n\nReverb is drop-in compatible — switching is a `.env` change and an `npm install`.",
-        np: "Start मा Pusher free tier। Privacy-sensitive वा large-scale भएमा Reverb।",
-        jp: "最初は Pusher 無料プランで。規模が大きくなったり、データをオンプレに置きたい時は Reverb へ。",
+        en: "Forge provisions and manages the server — installs PHP, Nginx, MySQL, SSL, manages Supervisor daemons. Envoyer handles zero-downtime deployments — it deploys to a new directory, runs migrations and cache commands, then atomically symlinks the web root to the new release so there is no downtime window.\n\nThey work together: Forge manages the server, Envoyer manages the release process. For most apps, Forge alone is sufficient. Add Envoyer when downtime during the 10-30 second deploy window becomes a real problem.",
+        np: "Forge = server manage। Envoyer = zero-downtime deployment। दुवै सँगै काम गर्छन्।",
+        jp: "Forge はサーバー管理、Envoyer はゼロダウンタイムデプロイ。一緒に使うことも可能。",
       },
     },
     {
       question: {
-        en: "What is the difference between Broadcasting and Notifications?",
-        np: "Broadcasting र Notifications को फरक के हो?",
-        jp: "ブロードキャストと通知の違いは？",
+        en: "Should I use Sail in production?",
+        np: "Sail production मा use गर्नुहुन्छ?",
+        jp: "Sail を本番環境で使うべき？",
       },
       answer: {
-        en: "Laravel <b>Notifications</b> (Day 16) send messages via channels like email, SMS, and Slack — they are fire-and-forget messages to external services.\n\nLaravel <b>Broadcasting</b> pushes real-time data directly to browsers via WebSockets — it's for updating UI instantly.\n\nThey overlap via the `broadcast` notification channel: a Notification can implement `toBroadcast()` to push a notification payload over a WebSocket AND send an email at the same time.",
-        np: "Notification = email/SMS/Slack। Broadcasting = browser मा real-time push। toBroadcast() ले combine गर्न सकिन्छ।",
-        jp: "Notification はメール・SMS・Slack 送信。Broadcasting はブラウザへのリアルタイム Push。",
+        en: "No. Sail is a development tool. Running Docker in production requires a production-grade Dockerfile (no Xdebug, no dev dependencies, optimised PHP-FPM settings), orchestration (Docker Compose or Kubernetes), healthcheck configuration, and careful resource limits.\n\nUse Sail to eliminate \"works on my machine\" problems between developers — everyone uses the same PHP version, extensions, and database. Then deploy to Forge or Vapor for production.",
+        np: "Sail = development only। Production मा production Dockerfile चाहिन्छ।",
+        jp: "Sail は開発専用。本番環境には本番用 Dockerfile が必要。",
       },
     },
     {
       question: {
-        en: "Does every event need to implement ShouldBroadcast?",
-        np: "हरेक event ले ShouldBroadcast implement गर्नु पर्छ?",
-        jp: "すべてのイベントに ShouldBroadcast が必要？",
+        en: "How do I handle database migrations in a zero-downtime deploy?",
+        np: "Zero-downtime deploy मा migrations कसरी handle गर्ने?",
+        jp: "ゼロダウンタイムデプロイで DB マイグレーションをどう扱う？",
       },
       answer: {
-        en: "No — only events that the browser needs to know about immediately require `ShouldBroadcast`. Regular Laravel events (used with Listeners, Day 19) run server-side only.\n\nAdd `ShouldBroadcast` only when:\n• A browser needs to react within seconds of the event occurring\n• The data payload is appropriate for public/private transmission\n\nOver-broadcasting creates unnecessary WebSocket traffic. Not every model update needs to reach the browser.",
-        np: "No। Browser ले instant थाहा पाउनु पर्ने events मात्र ShouldBroadcast implement गर्ने।",
-        jp: "いいえ。ブラウザがすぐ知る必要があるイベントだけに ShouldBroadcast を実装する。",
+        en: "Write only backwards-compatible migrations — never drop a column or rename it in the same deploy as the code change. Use the <b>expand/contract pattern</b>:\n\n1. Deploy 1 — add the new column with a default value (old code still works)\n2. Deploy 2 — update the code to write to the new column\n3. Deploy 3 — remove the old column (new code no longer reads it)\n\nThis ensures old code and new code can run simultaneously during the brief overlap window of a zero-downtime deploy.",
+        np: "Expand/contract pattern: add column → update code → remove old column। 3 deploys।",
+        jp: "Expand/contract パターン：列追加→コード更新→旧列削除の3段階デプロイ。",
       },
     },
     {
       question: {
-        en: "How do I broadcast from inside a queued job?",
-        np: "Queued job बाट broadcast कसरी गर्ने?",
-        jp: "キュージョブの中からブロードキャストするには？",
+        en: "How do I store secrets in CI/CD?",
+        np: "CI/CD मा secrets कसरी store गर्ने?",
+        jp: "CI/CD でシークレットはどう管理する？",
       },
       answer: {
-        en: "If your event implements `ShouldBroadcast`, Laravel automatically dispatches it to the queue (the `default` queue by default). The queue worker processes it and sends the WebSocket message.\n\nTo use a specific queue for broadcasting: implement `ShouldBroadcastNow` won't queue it; instead override `broadcastQueue()` on your event:\n\n`public function broadcastQueue(): string { return 'broadcasts'; }`\n\nEnsure `QUEUE_CONNECTION` is not `sync` in production — otherwise broadcasts happen inline and defeat the purpose.",
-        np: "ShouldBroadcast ले automatically queue मा dispatch गर्छ। broadcastQueue() override गरेर queue छान्न सकिन्छ।",
-        jp: "ShouldBroadcast は自動でキューに投入。`broadcastQueue()` でキュー名を指定できる。",
+        en: "Never put real credentials in `.yml` files — they are committed to git and visible to anyone with repo access.\n\n• <b>GitHub Actions</b> — use GitHub Secrets (Settings → Secrets → Actions). Reference as `${{ secrets.MY_SECRET }}`. They are masked in logs automatically.\n• <b>Forge</b> — set environment variables in the Forge server panel (encrypted at rest). They are injected into the PHP process environment on every request.\n• <b>Vapor</b> — set environment variables in the Vapor dashboard (encrypted at rest). Never commit them to `vapor.yml`.",
+        np: "GitHub Secrets, Forge env panel, र Vapor dashboard — yaml file मा secrets राख्नु हुँदैन।",
+        jp: "GitHub Secrets・Forge 環境変数パネル・Vapor ダッシュボードを使う。yml ファイルに書かない。",
       },
     },
     {
       question: {
-        en: "How do I handle events missed while the client was disconnected?",
-        np: "Client disconnect हुँदा miss भएका events कसरी handle गर्ने?",
-        jp: "切断中に見逃したイベントはどう処理する？",
+        en: "What is the difference between `config:cache` and `config:clear`?",
+        np: "`config:cache` र `config:clear` मा के फरक?",
+        jp: "`config:cache` と `config:clear` の違いは？",
       },
       answer: {
-        en: "Echo auto-reconnects after disconnection, but it cannot replay events that were sent while it was offline.\n\nThe standard pattern:\n1. On reconnect, make a normal REST API call to fetch the latest state (`GET /api/posts?after=lastSeenId`)\n2. Re-sync the UI from the API response\n3. Resume listening via Echo\n\nFor critical state (unread counts, order status), never rely solely on WebSocket events — always have a REST fallback that the client can call to reconcile state.",
-        np: "Reconnect मा REST API call गरेर latest state fetch गर्ने। WebSocket मात्रमा depend नगर्ने।",
-        jp: "再接続時は REST API で最新状態を取得して同期。WebSocket だけに頼らない設計が重要。",
+        en: "`config:cache` compiles all config files into a single cached file (`bootstrap/cache/config.php`) — every request reads one file instead of dozens. Config changes are NOT visible until you re-run `config:cache`.\n\n`config:clear` deletes the cache so Laravel reads fresh config files on every request — useful when debugging a config issue locally, but slower in production.\n\nRule: always run `php artisan optimize` (which includes `config:cache`) after every production deploy. Run `php artisan optimize:clear` when debugging locally.",
+        np: "`config:cache` = speed (cached)। `config:clear` = fresh read (slower)। Deploy पछि cache गर्नुहोस्।",
+        jp: "`config:cache` = 高速（キャッシュ済み）。`config:clear` = 毎回読み直し（デバッグ用）。",
+      },
+    },
+    {
+      question: {
+        en: "How do I roll back a bad deployment?",
+        np: "Bad deployment rollback कसरी गर्ने?",
+        jp: "デプロイ失敗時のロールバック方法は？",
+      },
+      answer: {
+        en: "The method depends on your deployment tool:\n• <b>Forge</b> — push the previous commit to your branch: `git revert HEAD && git push`, or in the Forge UI trigger a deploy of the last known-good commit hash\n• <b>Envoyer</b> — click \"Rollback\" in the UI — it symlinks back to the previous release directory instantly (< 1 second)\n• <b>Vapor</b> — run `vapor rollback production` — it redeploys the previous Lambda version\n\nThe safest practice: run database migrations in a separate step BEFORE deploying code. That way, a code rollback never requires a schema rollback (which is very risky on production data).",
+        np: "Forge = previous commit push। Envoyer = Rollback button। Vapor = `vapor rollback production`।",
+        jp: "Forge = 旧コミットをプッシュ。Envoyer = Rollback ボタン。Vapor = `vapor rollback production`。",
       },
     },
   ],

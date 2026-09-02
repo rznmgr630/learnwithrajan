@@ -1386,7 +1386,7 @@ php artisan schedule:test         # pick a task and run it
       id: "mail",
       title: "Mail — mailables, Markdown & attachments",
       durationMinutes: 11,
-      explanation: "Sending email, and the parts of it that are not obvious.\n\n---\n\n### 1. Basic — a mailable\n\n```text\napplication → Mailable → transport → provider → recipient\n```\n\n```bash\nphp artisan make:mail WelcomeEmail\n```\n\n<b>A mailable is a class representing one email:</b>\n\n```text\nsubject · content · view · data · attachments\n```\n\n```php\nMail::to($user)->send(new WelcomeEmail($user));\n```\n\nWhich reads well, and hides something worth knowing: <b>that line talks to an SMTP server during your request.</b> A slow mail provider is a slow page, and a mail provider that is down is a failed request for something that had nothing to do with mail.\n\n```php\nclass WelcomeEmail extends Mailable implements ShouldQueue\n{\n}\n```\n\n<b>Almost every mailable should be queued.</b> The exception is one the user is explicitly waiting for confirmation of, and even then the queue is usually right.\n\n---\n\n### 2. Intermediate — Markdown mail\n\nEmail HTML is not web HTML. Clients strip stylesheets, ignore flexbox, and require tables for layout, and the result has to survive Outlook, Gmail and a phone.\n\n<b>Markdown mailables give you components that already handle that:</b>\n\n```text\nMailable → Markdown → HTML email\n```\n\n```blade\n<x-mail::message>\n# Welcome, {{ $user->name }}\n\nThanks for joining.\n\n<x-mail::button :url=\"$url\">\nGet started\n</x-mail::button>\n</x-mail::message>\n```\n\n```text\nbutton · panel · table · subcopy\n```\n\n<b>Which is the difference between writing an email and writing email HTML.</b> The components are publishable if you need to restyle them, and the fallback plain-text version is generated for you.\n\nOne detail: <b>a mailable can define a plain-text version</b>, and some clients and filters prefer one. Markdown gives you it automatically; a hand-written HTML mailable does not.\n\n---\n\n### 3. Advanced — attachments, and their limits\n\n```text\nInvoice → PDF → attachment\n```\n\n```php\npublic function attachments(): array\n{\n    return [\n        Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)\n            ->as('invoice.pdf')\n            ->withMime('application/pdf'),\n    ];\n}\n```\n\n<b>And attachments are where email gets awkward.</b>\n\n```text\nsize      most providers reject over ~10–25 MB\nencoding  base64 adds about a third to the size\nspam      attachments raise the odds of being filtered\nmemory    the file is read into the message\n```\n\nSo the honest guidance: <b>attach small things, and link to large ones.</b> A signed temporary URL from Day 22 is better than a 20 MB attachment in every way, including that you can revoke it and see whether it was downloaded.\n\n<b>Inline images</b> are the other kind:\n\n```blade\n<img src=\"{{ $message->embed($pathToLogo) }}\">\n```\n\nWhich embeds the image in the message rather than linking to it. That matters because <b>most clients block remote images by default</b>, so a linked logo is an empty box until the reader clicks \"show images\". Embedding it costs message size and gains a header that renders.\n\nTwo last practical notes.\n\n<b>A queued mailable serialises its constructor</b>, exactly like a job. Passing a model passes an id, and the mail is rendered against the state when it sends.\n\n<b>And `Mail::to()` accepts anything with an email</b>: a user, a collection of users, or a bare address. Sending to a collection sends one message per recipient, which is what you want; putting fifty addresses in one `to()` shows all fifty to each of them.",
+      explanation: "Sending email, and the parts of it that are not obvious.\n\n---\n\n### 1. Basic — a mailable\n\n```text\napplication → Mailable → transport → provider → recipient\n```\n\n```bash\nphp artisan make:mail WelcomeEmail\n```\n\n<b>A mailable is a class representing one email:</b>\n\n```text\nsubject · content · view · data · attachments\n```\n\n```php\nMail::to($user)->send(new WelcomeEmail($user));\n```\n\nWhich reads well, and hides something worth knowing: <b>that line talks to an SMTP server during your request.</b> A slow mail provider is a slow page, and a mail provider that is down is a failed request for something that had nothing to do with mail.\n\n```php\nclass WelcomeEmail extends Mailable implements ShouldQueue\n{\n}\n```\n\n<b>Almost every mailable should be queued.</b> The exception is one the user is explicitly waiting for confirmation of, and even then the queue is usually right.\n\n---\n\n### 2. Intermediate — Markdown mail\n\nEmail HTML is not web HTML. Clients strip stylesheets, ignore flexbox, and require tables for layout, and the result has to survive Outlook, Gmail and a phone.\n\n<b>Markdown mailables give you components that already handle that:</b>\n\n```text\nMailable → Markdown → HTML email\n```\n\n```blade\n<x-mail::message>\n# Welcome, {{ $user->name }}\n\nThanks for joining.\n\n<x-mail::button :url=\"$url\">\nGet started\n</x-mail::button>\n</x-mail::message>\n```\n\n```text\nbutton · panel · table · subcopy\n```\n\n<b>Which is the difference between writing an email and writing email HTML.</b> The components are publishable if you need to restyle them, and the fallback plain-text version is generated for you.\n\nOne detail: <b>a mailable can define a plain-text version</b>, and some clients and filters prefer one. Markdown gives you it automatically; a hand-written HTML mailable does not.\n\n---\n\n### 3. Advanced — attachments, and their limits\n\n```text\nInvoice → PDF → attachment\n```\n\n```php\npublic function attachments(): array\n{\n    return [\n        Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)\n            ->as('invoice.pdf')\n            ->withMime('application/pdf'),\n    ];\n}\n```\n\n<b>And attachments are where email gets awkward.</b>\n\n```text\nsize      most providers reject over ~10–25 MB\nencoding  base64 adds about a third to the size\nspam      attachments raise the odds of being filtered\nmemory    the file is read into the message\n```\n\nSo the honest guidance: <b>attach small things, and link to large ones.</b> A signed temporary URL from Day 22 is better than a 20 MB attachment in every way, including that you can revoke it and see whether it was downloaded.\n\n<b>Inline images</b> are the other kind:\n\n```blade\n<img src=\"{{ $message->embed($pathToLogo) }}\">\n```\n\nWhich embeds the image in the message rather than linking to it. That matters because <b>most clients block remote images by default</b>, so a linked logo is an empty box until the reader clicks \"show images\". Embedding it costs message size and gains a header that renders.\n\nTwo last practical notes.\n\n<b>A queued mailable serialises its constructor</b>, exactly like a job. Passing a model passes an id, and the mail is rendered against the state when it sends.\n\n<b>And `Mail::to()` accepts anything with an email</b>: a user, a collection of users, or a bare address. Sending to a collection sends one message per recipient, which is what you want; putting fifty addresses in one `to()` shows all fifty to each of them.\n\nQueueing can also be decided at the call site rather than on the class:\n\n```php\nMail::to($user)->queue(new WelcomeEmail($user));\nMail::to($user)->later(now()->addHours(3), new OnboardingTip($user));\n```\n\n<b>`later()` is the one worth remembering</b>, because delayed mail is a whole category of feature: the tip three hours after signup, the reminder the day before the due date, the nudge a week after an abandoned draft. `ShouldQueue` on the class cannot express any of those.",
       diagram: `A mailable
 
   application → Mailable → transport → provider → recipient
@@ -1500,6 +1500,12 @@ class InvoicePaid extends Mailable implements ShouldQueue
     {
         return new Envelope(
             subject: "Invoice {$this->invoice->number} paid",
+
+            // Defaults to MAIL_FROM_ADDRESS / MAIL_FROM_NAME.
+            // Override per mailable when one message should
+            // come from somewhere else — billing, support:
+            from: new Address('billing@example.com', 'InvoiceHub Billing'),
+
             replyTo: [config('mail.support')],
         );
     }
@@ -1571,6 +1577,8 @@ Mail::to($fiftyAddresses)->send(new Announcement());
 // ❌ 20 MB: likely rejected, likely filtered, and base64
 //    makes it about 27 MB on the wire.
 Attachment::fromStorageDisk('s3', $export->path);
+Attachment::fromPath(storage_path('app/terms.pdf'));   // a local path
+Attachment::fromData(fn () => $pdfBytes, 'invoice.pdf'); // generated in memory
 
 // ✓ A signed temporary URL from Day 22. Revocable, and
 //   you can see whether it was downloaded.
@@ -1758,10 +1766,29 @@ MAIL_MAILER=log
 # Build a registration flow forty times without emailing
 # anybody.
 
-# Better: a local mail catcher with an inbox in the browser.
+# Better: Mailpit, a local catcher with an inbox in the
+# browser. Laravel Sail ships it; otherwise brew/docker.
 MAIL_MAILER=smtp
 MAIL_HOST=localhost
 MAIL_PORT=1025
+
+
+# ---------- Production SMTP ----------
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.postmarkapp.com
+MAIL_PORT=587
+MAIL_USERNAME=your-token
+MAIL_PASSWORD=your-token
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=hello@example.com
+MAIL_FROM_NAME="InvoiceHub"
+
+# ⚠️ Gmail will not accept your account password here.
+#    It needs an app password, with 2FA enabled on the
+#    account — and Gmail is a poor choice for
+#    transactional mail anyway: low limits, and your
+#    deliverability is somebody else's reputation.
 
 
 <?php
@@ -1940,7 +1967,7 @@ it('renders', function () {
       id: "notifications",
       title: "Notifications & the whole architecture",
       durationMinutes: 13,
-      explanation: "Mail is one way of telling somebody something. Notifications are the general case.\n\n---\n\n### 1. Basic — one message, several channels\n\n```text\n                Notification\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n       Mail       Database      Slack\n```\n\n```text\nMailable        one thing: email\nNotification    the message, and how it reaches somebody\n```\n\nWhich matters as soon as a message has more than one destination:\n\n```text\nInvoicePaid\n ├── email\n ├── the in-app bell\n └── the finance Slack channel\n```\n\nWith mailables that is three pieces of code that must agree. With a notification it is one class with a `via()` and three formatting methods.\n\n```php\npublic function via(object $notifiable): array\n{\n    return ['mail', 'database', 'slack'];\n}\n```\n\n<b>And `via()` can decide per recipient</b>, which is the real payoff: a user's notification preferences become one method rather than conditionals everywhere.\n\n---\n\n### 2. Intermediate — the channels\n\n<b>Database notifications</b> are stored, not sent:\n\n```text\nnotifications\n ├── \"Your invoice was paid\"\n ├── \"New comment\"\n └── \"Your report is ready\"\n```\n\n```text\n🔔 3\n```\n\nWhich is what gives an application a bell with a count, a read state and a history. Nothing is delivered anywhere; the frontend queries them.\n\n<b>Broadcast notifications</b> push to the browser over a websocket:\n\n```text\nLaravel → broadcast → WebSocket → the UI updates\n```\n\nSo the bell increments without a refresh, and that is tomorrow's topic.\n\n<b>On-demand notifications</b> are for when there is no user:\n\n```php\nNotification::route('mail', 'ops@example.com')->notify(new BackupFailed());\n```\n\nUseful for administrators, alerting, and anywhere the recipient is an address rather than a model.\n\n<b>Queued notifications</b> work exactly as queued mail:\n\n```text\nrequest → queue the notifications → response → workers send them\n```\n\nWhich matters more here, because a notification with three channels is three external calls.\n\n<b>And localization</b> connects straight back to Day 25:\n\n```php\n$user->notify((new InvoicePaid($invoice))->locale($user->locale));\n```\n\n```text\nUser A → en → English\nUser B → ja → Japanese\n```\n\nA notification sent from a queue worker has no request locale, so <b>if you do not set it, everybody gets the application default</b>. That is the bug where translations work perfectly on screen and every email is in English.\n\n---\n\n### 3. Advanced — the whole picture\n\nThree days now fit together:\n\n```text\n                 business action\n                       │\n                       ▼\n                     Event\n                       │\n           ┌───────────┼───────────┐\n           ▼           ▼           ▼\n       Listener    Listener    Listener\n           │           │           │\n           ▼           ▼           ▼\n         Queue       Queue       Queue\n           │           │           │\n           ▼           ▼           ▼\n         Mail    Notification   other work\n```\n\nand separately:\n\n```text\nScheduler → dispatch a job → Queue → Worker\n```\n\n<b>Both end in the same place and start from completely different reasons</b>, and that difference is the thing to take from today.\n\nSo the question is not \"how do I send an email\". It is:\n\n> <b>Should this happen during the request, through a queued listener, as a notification, or from a scheduled job?</b>\n\n```text\nsomething happened, and several things\n  should follow                          →  an event\n\nthe user should not wait for it          →  a queued listener\n\none message, several destinations,\n  per-user preferences                   →  a notification\n\nit happens because of the time,\n  not because of an action                →  the scheduler\n\nthe caller needs the result               →  none of these.\n                                             call the method.\n```\n\nA welcome email and a nightly summary both end as mail. <b>One is event-driven and one is time-driven, and building the second as the first is how a report ends up being sent whenever somebody logs in.</b>",
+      explanation: "Mail is one way of telling somebody something. Notifications are the general case.\n\n---\n\n### 1. Basic — one message, several channels\n\n```text\n                Notification\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n       Mail       Database      Slack\n```\n\n```text\nMailable        one thing: email\nNotification    the message, and how it reaches somebody\n```\n\nWhich matters as soon as a message has more than one destination:\n\n```text\nInvoicePaid\n ├── email\n ├── the in-app bell\n └── the finance Slack channel\n```\n\nWith mailables that is three pieces of code that must agree. With a notification it is one class with a `via()` and three formatting methods.\n\n```php\npublic function via(object $notifiable): array\n{\n    return ['mail', 'database', 'slack'];\n}\n```\n\nTwo pieces of setup make that work, and both are easy to miss because the default `User` already has one of them. <b>The `Notifiable` trait</b> is what puts `notify()` and the notification relations on a model, so a `Team` or a `Client` needs it added. And <b>the database channel needs a table</b>:\n\n```bash\nphp artisan make:notifications-table\nphp artisan migrate\n```\n\nBeyond mail, database, Slack and broadcast, there is a `vonage` channel for SMS, and community packages for most things you would want.\n\n<b>And `via()` can decide per recipient</b>, which is the real payoff: a user's notification preferences become one method rather than conditionals everywhere.\n\n---\n\n### 2. Intermediate — the channels\n\n<b>Database notifications</b> are stored, not sent:\n\n```text\nnotifications\n ├── \"Your invoice was paid\"\n ├── \"New comment\"\n └── \"Your report is ready\"\n```\n\n```text\n🔔 3\n```\n\nWhich is what gives an application a bell with a count, a read state and a history. Nothing is delivered anywhere; the frontend queries them.\n\nReading them back:\n\n```php\n$user->unreadNotifications;      // and $user->readNotifications\n$notification->data['message'];  // whatever toDatabase() returned\n$notification->markAsRead();\n```\n\n<b>If `toDatabase()` is absent the channel falls back to `toArray()`</b>, which is worth knowing because it means one method can serve both.\n\nAnd they are ordinary rows, which means <b>something has to delete them</b>. A notifications table nobody prunes is a table that grows for the life of the application.\n\n<b>Broadcast notifications</b> push to the browser over a websocket:\n\n```text\nLaravel → broadcast → WebSocket → the UI updates\n```\n\nSo the bell increments without a refresh, and that is tomorrow's topic.\n\n<b>On-demand notifications</b> are for when there is no user:\n\n```php\nNotification::route('mail', 'ops@example.com')->notify(new BackupFailed());\n```\n\nUseful for administrators, alerting, and anywhere the recipient is an address rather than a model.\n\nAnd when the recipient <i>is</i> a model but the address is not where the channel expects, the model says so:\n\n```php\npublic function routeNotificationForMail(): string\n{\n    return $this->billing_contact_email;\n}\n```\n\n<b>Each channel looks for a `routeNotificationFor{Channel}` method</b> before falling back to its default, which is what lets a `Team` receive mail at a billing address that has nothing to do with any user.\n\n<b>Queued notifications</b> work exactly as queued mail:\n\n```text\nrequest → queue the notifications → response → workers send them\n```\n\nWhich matters more here, because a notification with three channels is three external calls.\n\n<b>And localization</b> connects straight back to Day 25:\n\n```php\n$user->notify((new InvoicePaid($invoice))->locale($user->locale));\n```\n\n```text\nUser A → en → English\nUser B → ja → Japanese\n```\n\nA notification sent from a queue worker has no request locale, so <b>if you do not set it, everybody gets the application default</b>. That is the bug where translations work perfectly on screen and every email is in English.\n\n---\n\n### 3. Advanced — the whole picture\n\nThree days now fit together:\n\n```text\n                 business action\n                       │\n                       ▼\n                     Event\n                       │\n           ┌───────────┼───────────┐\n           ▼           ▼           ▼\n       Listener    Listener    Listener\n           │           │           │\n           ▼           ▼           ▼\n         Queue       Queue       Queue\n           │           │           │\n           ▼           ▼           ▼\n         Mail    Notification   other work\n```\n\nand separately:\n\n```text\nScheduler → dispatch a job → Queue → Worker\n```\n\n<b>Both end in the same place and start from completely different reasons</b>, and that difference is the thing to take from today.\n\nSo the question is not \"how do I send an email\". It is:\n\n> <b>Should this happen during the request, through a queued listener, as a notification, or from a scheduled job?</b>\n\n```text\nsomething happened, and several things\n  should follow                          →  an event\n\nthe user should not wait for it          →  a queued listener\n\none message, several destinations,\n  per-user preferences                   →  a notification\n\nit happens because of the time,\n  not because of an action                →  the scheduler\n\nthe caller needs the result               →  none of these.\n                                             call the method.\n```\n\nA welcome email and a nightly summary both end as mail. <b>One is event-driven and one is time-driven, and building the second as the first is how a report ends up being sent whenever somebody logs in.</b>",
       diagram: `One message, several channels
 
                   Notification
@@ -2061,6 +2088,25 @@ The question
       codeExample: {
         title: "One notification, three channels",
         code: `<?php
+// ---------- Two things that must exist first ----------
+
+// 1. The trait. It is what puts notify() and the
+//    notification relations on the model — and it is on
+//    the default User, which is why nobody notices it
+//    until they add notifications to a Team or a Client.
+use Illuminate\\Notifications\\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+}
+
+// 2. The table the database channel writes to:
+//    php artisan make:notifications-table
+//    php artisan migrate
+
+
+<?php
 // php artisan make:notification InvoicePaid
 
 namespace App\\Notifications;
@@ -2091,11 +2137,15 @@ class InvoicePaid extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject("Invoice {$this->invoice->number} paid")
+            ->greeting("Hello {$notifiable->name},")
             ->line("We received {$this->invoice->total->format()}.")
             ->action('View invoice', route('invoices.show', $this->invoice));
     }
 
     // Stored, not sent. This is what the bell reads.
+    // Omit it and the database channel falls back to
+    // toArray(), which is fine when both want the same
+    // payload — define toArray() and skip this one.
     public function toDatabase(object $notifiable): array
     {
         return [
@@ -2150,6 +2200,41 @@ public function __construct(public Invoice $invoice)
 $user->unreadNotifications->count();     // 🔔 3
 
 $user->notifications()->latest()->take(10)->get();
+$user->readNotifications;                // the other half
+
+foreach ($user->unreadNotifications as $notification) {
+    // The array you returned from toDatabase()/toArray()
+    echo $notification->data['message'];
+    echo $notification->created_at->diffForHumans();
+}
+
+$notification->markAsRead();
+$user->unreadNotifications->markAsRead();
+
+// And they are ordinary rows, so they delete like rows.
+// Something has to, or this table grows forever:
+$user->notifications()->where('created_at', '<', now()->subMonths(3))->delete();
+
+
+<?php
+// ---------- When the address is not on the model ----------
+
+class Team extends Model
+{
+    use Notifiable;
+
+    // The mail channel looks for an email column. When
+    // there is not one, say where to send instead:
+    public function routeNotificationForMail(): string
+    {
+        return $this->billing_contact_email;
+    }
+
+    public function routeNotificationForVonage(): string
+    {
+        return $this->owner->phone;
+    }
+}
 
 $user->unreadNotifications->markAsRead();
 
@@ -2189,6 +2274,11 @@ $total = $this->calculator->total($invoice);
         "<b>Database notifications are stored rather than sent</b>, giving you a bell with a count, a read state and history.",
         "<b>Broadcast notifications push to the browser</b> so the bell updates without a refresh.",
         "<b>On-demand notifications go to an address or webhook</b> when there is no user model.",
+        "<b>The `Notifiable` trait is what gives a model `notify()`</b>, and a `Team` or `Client` needs it added explicitly.",
+        "<b>The database channel needs its table</b>: `make:notifications-table` then `migrate`.",
+        "<b>`toArray()` is the database channel's fallback</b> when `toDatabase()` is absent, so one method can serve both.",
+        "<b>`routeNotificationForMail()` overrides where a channel sends</b>, for models with no `email` column.",
+        "<b>Read them back with `unreadNotifications`, `readNotifications` and `$notification->data`</b>, and prune them, or the table grows forever.",
         "<b>Queued notifications matter more than queued mail</b>, because three channels is three external calls.",
         "<b>A notification sent from a worker has no request locale</b>, so it must be set explicitly.",
         "<b>Events, queues, notifications and the scheduler all end in the same place for different reasons.</b>",
@@ -2196,6 +2286,8 @@ $total = $this->calculator->total($invoice);
         "<b>Building a time-driven task as an event-driven one</b> is how a nightly report gets sent whenever somebody logs in.",
       ],
       commonMistakes: [
+        "<b>Adding notifications to a model without `Notifiable`.</b> `notify()` simply does not exist on it.",
+        "<b>Never pruning the notifications table.</b> It grows for the life of the application.",
         "<b>Writing three mailables for one message with three destinations.</b> They drift, and only one gets updated.",
         "<b>Sending notifications synchronously.</b> Three channels is three external calls in the request.",
         "<b>Forgetting `->locale()` on a queued notification.</b> The interface translates and every email is in English.",

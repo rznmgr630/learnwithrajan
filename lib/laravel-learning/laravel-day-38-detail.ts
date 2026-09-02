@@ -3,393 +3,440 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_38_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Today covers three tools for doing work <b>outside</b> the web request cycle.\n\n<b>Queues</b> — for tasks that are too slow for a web request (sending emails, resizing images, calling external APIs)\n  ↳ Hand the work off to a background worker so users get an instant response\n\n<b>Events & Listeners</b> — for notifying different parts of your app when something happens\n  ↳ Instead of calling services directly, you fire an event and let listeners react independently\n\n<b>Task Scheduling</b> — for running commands on a timer (daily reports, cleanup jobs)\n  ↳ One PHP file replaces a messy pile of cron job configs on the server",
-      np: "Queue (slow task), Event/Listener (decoupled), Scheduling (cron)। तीन tool एउटै day।",
-      jp: "Queue は重い処理を非同期化、Event/Listener は疎結合な通知、Scheduling は cron の代替。3 つのツールを習得。",
+      en: "Eloquent has <b>magic features</b> beyond basic CRUD — think of it as a smart filing clerk.\n\nThis clerk can:\n• <b>Reformat documents</b> as they're filed or retrieved (<b>accessors</b> and <b>mutators</b>)\n• <b>Apply automatic labels</b> to every document that enters the system (<b>casts</b>)\n• <b>Save pre-built search filters</b> you can reuse any time (<b>scopes</b>)\n• <b>File documents</b> that could belong to any department — posts, videos, or products (<b>polymorphic relations</b>)\n• <b>Watch for changes</b> and react automatically (<b>observers</b>)\n\nToday we go beyond `find()`, `create()`, and `where()` — and unlock the full power of Eloquent.",
+      np: "Eloquent का advanced features: accessors, mutators, casts, scopes, polymorphic relations र observers।",
+      jp: "Eloquent の高度な機能 — アクセサ・キャスト・スコープ・ポリモーフィック・オブザーバを学びます。",
+    },
+    {
+      en: "Here is what we cover today:\n\n• <b>Accessors</b> — transform data as it is <b>READ</b> from the model (e.g. combine `first_name` + `last_name` into `full_name`)\n  ↳ The DB stores them separately; your code sees one tidy attribute\n• <b>Mutators</b> — transform data as it is <b>WRITTEN</b> to the model (e.g. always lowercase email before saving)\n  ↳ Great for normalising input so your DB stays consistent\n• <b>Casts</b> — auto-convert column values (JSON string ↔ PHP array, `0`/`1` ↔ boolean, timestamp ↔ Carbon date)\n  ↳ Define once in `$casts`; Eloquent handles conversion on every read and write\n• <b>Local scopes</b> — reusable named query fragments like `scopePublished()` that you chain fluently\n• <b>Global scopes</b> — filters that apply to EVERY query on a model automatically\n• <b>Polymorphic relations</b> — one `comments` table that works for posts, videos, products, and more\n• <b>Observers</b> — centralised event handlers that fire when models are created, updated, or deleted",
+      np: "Accessors (read), mutators (write), casts (type conversion), local/global scopes, polymorphic relations, observers।",
+      jp: "アクセサ・ミューテタ・キャスト・スコープ・ポリモーフィック・オブザーバを順に解説します。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Jobs & queue dispatching",
-        np: "Job र queue dispatch",
-        jp: "Job とキューディスパッチ",
+        en: "Accessors & mutators (new attribute syntax)",
+        np: "Accessors र mutators",
+        jp: "アクセサとミューテタ",
       },
       blocks: [
         {
-          type: "diagram",
-          id: "laravel-queue-job",
+          type: "paragraph",
+          text: {
+            en: "The <b>old way</b> (Laravel 8 and below) required two separate methods:\n• `getFirstNameAttribute()` — called when you READ the attribute\n• `setFirstNameAttribute($value)` — called when you WRITE the attribute\n\nAnalogy: two separate post-office windows — one labelled <b>IN</b>, one labelled <b>OUT</b>.\n\n<b>Laravel 9+ replaces both with a single `Attribute::make()` call.</b>\n• One computed property handles both directions\n• The `get:` closure runs on read; the `set:` closure runs on write\n  ↳ If you only need one direction, omit the other closure entirely\n\nThis is now the standard — use the new syntax for all new code.",
+            np: "पुरानो: `getXAttribute()` / `setXAttribute()`। नयाँ (Laravel 9+): `Attribute::make(get:, set:)`।",
+            jp: "旧来の get/set メソッドは Laravel 9+ で `Attribute::make()` に統一されました。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/Models/User.php — accessor, mutator & auto-hash mutator",
+            np: "Accessor, mutator र auto-hash",
+            jp: "アクセサ・ミューテタの例",
+          },
+          code: `<?php
+
+use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
+use Illuminate\\Support\\Facades\\Hash;
+
+class User extends Model
+{
+    // Accessor: combine first_name + last_name into a virtual attribute
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "{$this->first_name} {$this->last_name}",
+        );
+    }
+
+    // Mutator: always store email as lowercase
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value) => $value,
+            set: fn (string $value) => strtolower($value),
+        );
+    }
+
+    // Mutator only: auto-hash password on assignment
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => Hash::make($value),
+        );
+    }
+}
+
+// Usage
+$user = User::find(1);
+echo $user->full_name;   // "Jane Doe"  ← accessor fires
+$user->email = 'JANE@EXAMPLE.COM';  // stored as "jane@example.com"
+$user->password = 'secret123';     // stored as hashed value`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Think of a queue like a restaurant ticket system — the waiter (your web request) takes the order and hands a ticket to the kitchen (the worker), then immediately goes back to take the next customer's order.\n\n<b>Why use queues?</b>\n• Some tasks are slow: sending emails, resizing images, calling external APIs\n  ↳ If you do these during a web request, the user waits 3–5 seconds staring at a spinner\n• With a queue, the web request finishes in milliseconds and hands the slow work to a background worker\n  ↳ The user gets a response immediately — the email sends a second later\n\n<b>How it works</b>\n• Create a <b>Job class</b> — a PHP class that implements `ShouldQueue` with a `handle()` method\n• <b>Dispatch</b> the job from your controller — Laravel serializes it and puts it on the queue\n• A separate <b>worker process</b> (`php artisan queue:work`) runs in the background, picks jobs off the queue, and calls `handle()`\n  ↳ The worker runs independently of your web server — you can scale them separately",
-            np: "`ShouldQueue` implement गर्नु। Worker ले `handle()` call। HTTP fast।",
-            jp: "`ShouldQueue` を実装したクラスがジョブ。ワーカーが `handle()` を実行。HTTP を速く保つ。",
+            en: "<b>Accessor vs database computed column — when to use each:</b>\n\n• <b>Use an accessor</b> when the transformation is cheap and you do not need to search/sort by the result in SQL\n  ↳ Examples: formatting a phone number for display, combining name parts, masking a card number\n• <b>Use a DB computed column</b> when you need to `WHERE`, `ORDER BY`, or index the result\n  ↳ Example: `full_name` as a stored generated column so `WHERE full_name LIKE '%Jane%'` uses an index\n\nAccessors are PHP-side — fast and free, but invisible to the database.",
+            np: "Accessor = PHP-side transformation। DB computed column = SQL मा searchable।",
+            jp: "アクセサは PHP 側の変換。SQL で検索したい場合は DB 計算列を使う。",
           },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Model casts — auto-converting column types",
+        np: "Model casts",
+        jp: "モデルキャスト",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Think of casts as a <b>universal power adapter</b>.\n\nThe database stores data in its own formats: `1`/`0` for booleans, JSON strings for arrays, Unix timestamps for dates. Without casts, your PHP code would need to manually convert every time.\n\n<b>Casts declare the conversion once</b> in the `$casts` property — Eloquent handles the rest automatically on every read and write.\n\n• <b>`boolean`</b> — `0`/`1` in DB becomes `true`/`false` in PHP\n• <b>`array`</b> — JSON string in DB becomes PHP array (and back)\n• <b>`datetime`</b> — timestamp string becomes a Carbon object\n• <b>`encrypted`</b> — value is encrypted before saving, decrypted on read\n• <b>`AsCollection`</b> — like `array`, but returns a Laravel Collection\n  ↳ Collections have `map()`, `filter()`, `sum()`, etc. built in",
+            np: "Casts: `boolean`, `array`, `datetime`, `encrypted`, `AsCollection` — DB format ↔ PHP format।",
+            jp: "`$casts` で DB 型と PHP 型の変換を自動化。boolean・array・datetime・encrypted など。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/Models/Post.php — built-in casts + custom cast class",
+            np: "Built-in casts र custom cast",
+            jp: "組み込みキャストとカスタムキャスト",
+          },
+          code: `<?php
+
+use Illuminate\\Database\\Eloquent\\Casts\\AsCollection;
+
+class Post extends Model
+{
+    protected $casts = [
+        'is_published' => 'boolean',        // 0/1 → true/false
+        'metadata'     => 'array',          // JSON string → PHP array
+        'settings'     => AsCollection::class, // JSON string → Collection
+        'published_at' => 'datetime',       // string → Carbon
+        'price'        => 'decimal:2',      // stored as string, precision 2
+        'secret_token' => 'encrypted',      // auto encrypt/decrypt
+    ];
+}
+
+// Custom cast class — for reusable type conversions
+// app/Casts/Money.php
+namespace App\\Casts;
+
+use Illuminate\\Contracts\\Database\\Eloquent\\CastsAttributes;
+
+class Money implements CastsAttributes
+{
+    public function get($model, $key, $value, $attributes): string
+    {
+        return '$' . number_format($value / 100, 2); // stored in cents
+    }
+
+    public function set($model, $key, $value, $attributes): int
+    {
+        return (int) ($value * 100); // convert dollars to cents for DB
+    }
+}
+
+// In the model
+protected $casts = [
+    'price' => Money::class,
+];
+
+// Usage
+$post->price = 19.99;   // stored as 1999 (cents)
+echo $post->price;       // "$19.99"`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>`array` vs `AsCollection` — which one to pick:</b>\n\n• <b>`array`</b> — returns a plain PHP array. Use when you just need to read/write key-value data and don't need transformation methods.\n• <b>`AsCollection`</b> — returns a Laravel Collection object. Use when you want to call `->filter()`, `->map()`, `->sum()`, `->pluck()`, etc. on the data.\n\n↳ Both store the same JSON in the database — the difference is only what PHP hands you back on read.\n\nPro tip: add `->sortBy()` or `->groupBy()` to a Collection cast and your model method becomes a clean one-liner.",
+            np: "`array` = PHP array। `AsCollection` = Laravel Collection (map, filter, etc.)।",
+            jp: "`array` は PHP 配列、`AsCollection` は Collection — どちらも DB は JSON。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Local scopes — reusable query filters",
+        np: "Local scopes",
+        jp: "ローカルスコープ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A <b>scope</b> is a saved, named query fragment — like a saved search in your email inbox.\n\nInstead of writing `->where('status', 'published')->where('published_at', '<=', now())` in every controller, you name it once as `scopePublished()` and chain it anywhere.\n\n<b>Two types of scopes:</b>\n• <b>Local scope</b> — opt-in, called explicitly: `Post::published()->get()`\n  ↳ Defined as a method prefixed with `scope` on the model\n  ↳ The `scope` prefix is stripped when you call it: `scopePublished()` → `->published()`\n• <b>Global scope</b> — automatic, applies to EVERY query on the model\n  ↳ Useful for multi-tenancy (always filter by `company_id`) or soft-deletes\n  ↳ Use sparingly — invisible filters make queries hard to debug",
+            np: "Local scope = opt-in query fragment। Global scope = automatic filter on every query।",
+            jp: "ローカルスコープは明示的に呼ぶ再利用可能フィルタ。グローバルスコープは全クエリに自動適用。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "app/Models/Post.php — local scopes + global scope",
+            np: "Local र global scope",
+            jp: "ローカル・グローバルスコープ",
+          },
+          code: `<?php
+
+use Illuminate\\Database\\Eloquent\\Builder;
+use Illuminate\\Database\\Eloquent\\Model;
+
+class Post extends Model
+{
+    // ── LOCAL SCOPES ──────────────────────────────────────────
+
+    // No extra parameters
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published')
+                     ->whereNotNull('published_at');
+    }
+
+    // With a required parameter
+    public function scopeByUser(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    // With an optional parameter (default value)
+    public function scopeRecent(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('published_at', '>=', now()->subDays($days));
+    }
+
+    // ── GLOBAL SCOPE ──────────────────────────────────────────
+    protected static function booted(): void
+    {
+        // Always filter to the authenticated user's posts
+        static::addGlobalScope('owner', function (Builder $query) {
+            if (auth()->check()) {
+                $query->where('user_id', auth()->id());
+            }
+        });
+    }
+}
+
+// Chaining local scopes
+$posts = Post::published()
+             ->byUser(auth()->id())
+             ->recent(7)
+             ->orderByDesc('published_at')
+             ->get();
+
+// Removing a global scope when you need all posts (e.g. admin panel)
+$allPosts = Post::withoutGlobalScope('owner')->get();`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Global scope gotcha — the invisible filter problem:</b>\n\nGlobal scopes are powerful but can surprise you:\n• A new developer calls `Post::all()` expecting every post — but only their posts come back\n  ↳ The global scope is invisible in the controller code\n• Unit tests may fail unexpectedly because no user is logged in and the scope returns nothing\n\n<b>Best practices:</b>\n• Name your global scope (second argument to `addGlobalScope`) so it can be removed with `withoutGlobalScope('name')`\n• Document global scopes prominently in the model's docblock\n• For multi-tenancy, consider a dedicated package (Tenancy for Laravel) instead of hand-rolled global scopes",
+            np: "Global scope invisible हुन्छ — debug गाह्रो। नाम दिनुहोस् र document गर्नुहोस्।",
+            jp: "グローバルスコープは見えないフィルタ — 名前付きで追加して `withoutGlobalScope` で除外可能。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Polymorphic relationships",
+        np: "Polymorphic relationships",
+        jp: "ポリモーフィックリレーション",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Polymorphic</b> means \"many shapes.\" It solves a specific problem:\n\n<b>Problem:</b> You want `Comment` to belong to both `Post` and `Video`. Without polymorphic, you'd need:\n• A `post_comments` table with a `post_id` foreign key\n• A `video_comments` table with a `video_id` foreign key\n• Two separate models, two sets of routes, two sets of controllers\n\n<b>Solution:</b> One `comments` table with two special columns:\n• `commentable_id` — stores the ID of the parent (e.g. `42`)\n• `commentable_type` — stores the class name of the parent (e.g. `App\\Models\\Post`)\n\nLaravel's `morphTo()` and `morphMany()` handle the magic of knowing which table to join based on the `_type` column.\n\n↳ One table, one model, works with any number of parent types.",
+            np: "Polymorphic = एउटै `comments` table जुन Post, Video, Product सबैमा काम गर्छ।",
+            jp: "ポリモーフィックは 1 テーブルが複数の親モデルに属せる仕組み（`_id` + `_type` カラム）。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Migration + Comment model + Post & Video models",
+            np: "Polymorphic migration र models",
+            jp: "マイグレーションとモデルの実装",
+          },
+          code: `// database/migrations/create_comments_table.php
+Schema::create('comments', function (Blueprint $table) {
+    $table->id();
+    $table->text('body');
+    $table->morphs('commentable'); // creates commentable_id + commentable_type
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->timestamps();
+});
+
+// app/Models/Comment.php
+class Comment extends Model
+{
+    protected $fillable = ['body', 'user_id'];
+
+    // "I can belong to anything"
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+}
+
+// app/Models/Post.php
+class Post extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// app/Models/Video.php
+class Video extends Model
+{
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+}
+
+// Usage
+$post->comments()->create(['body' => 'Great post!', 'user_id' => 1]);
+$video->comments()->create(['body' => 'Nice video!', 'user_id' => 2]);
+
+// Get the parent of a comment (either a Post or Video)
+$comment = Comment::find(1);
+$parent = $comment->commentable; // returns Post or Video instance`,
         },
         {
           type: "table",
           caption: {
-            en: "Queue driver comparison",
-            np: "Queue driver तुलना",
-            jp: "Queue ドライバー比較",
+            en: "Eloquent relationship cheat-sheet — pick the right one for your data shape",
+            np: "Relationship cheat-sheet",
+            jp: "リレーション早見表",
           },
           headers: [
-            { en: "Driver", np: "Driver", jp: "ドライバー" },
-            { en: "Best for", np: "प्रयोग", jp: "用途" },
-            { en: "Requires", np: "आवश्यक", jp: "必要なもの" },
-            { en: "Production-ready?", np: "Production?", jp: "本番対応？" },
+            { en: "Relationship", np: "Relationship", jp: "リレーション" },
+            { en: "Method", np: "Method", jp: "メソッド" },
+            { en: "Use when…", np: "कहिले प्रयोग", jp: "使う場面" },
           ],
           rows: [
             [
-              { en: "`sync`", np: "`sync`", jp: "`sync`" },
-              { en: "Local development / testing", np: "Dev/test", jp: "開発・テスト用" },
-              { en: "Nothing", np: "केही होइन", jp: "不要" },
-              { en: "No (runs inline)", np: "होइन", jp: "No（同期実行）" },
+              { en: "Has one", np: "Has one", jp: "hasOne" },
+              { en: "`hasOne()`", np: "`hasOne()`", jp: "`hasOne()`" },
+              { en: "User → one Profile", np: "User → एउटा Profile", jp: "User → 1つの Profile" },
             ],
             [
-              { en: "`database`", np: "`database`", jp: "`database`" },
-              { en: "Small apps, low volume", np: "Small app", jp: "小規模アプリ" },
-              { en: "`jobs` table migration", np: "`jobs` table", jp: "`jobs` テーブル" },
-              { en: "Yes (limited throughput)", np: "हो (सीमित)", jp: "Yes（低スループット）" },
+              { en: "Has many", np: "Has many", jp: "hasMany" },
+              { en: "`hasMany()`", np: "`hasMany()`", jp: "`hasMany()`" },
+              { en: "User → many Posts", np: "User → धेरै Posts", jp: "User → 複数の Post" },
             ],
             [
-              { en: "`redis`", np: "`redis`", jp: "`redis`" },
-              { en: "High-volume production", np: "High volume", jp: "高負荷本番" },
-              { en: "Redis server + predis/phpredis", np: "Redis", jp: "Redis サーバー" },
-              { en: "Yes (recommended)", np: "हो (सिफारिश)", jp: "Yes（推奨）" },
+              { en: "Belongs to", np: "Belongs to", jp: "belongsTo" },
+              { en: "`belongsTo()`", np: "`belongsTo()`", jp: "`belongsTo()`" },
+              { en: "Post → one User (owner)", np: "Post → एउटा User", jp: "Post → 1つの User" },
             ],
             [
-              { en: "`sqs`", np: "`sqs`", jp: "`sqs`" },
-              { en: "AWS-hosted workloads", np: "AWS", jp: "AWS 環境" },
-              { en: "AWS credentials + `aws/aws-sdk-php`", np: "AWS credentials", jp: "AWS 認証情報" },
-              { en: "Yes (fully managed)", np: "हो (managed)", jp: "Yes（フルマネージド）" },
+              { en: "Belongs to many", np: "Belongs to many", jp: "belongsToMany" },
+              { en: "`belongsToMany()`", np: "`belongsToMany()`", jp: "`belongsToMany()`" },
+              { en: "Post ↔ many Tags (pivot table)", np: "Post ↔ धेरै Tags", jp: "Post ↔ 複数の Tag（中間テーブル）" },
+            ],
+            [
+              { en: "Morph to", np: "Morph to", jp: "morphTo" },
+              { en: "`morphTo()`", np: "`morphTo()`", jp: "`morphTo()`" },
+              { en: "Comment → Post OR Video", np: "Comment → Post वा Video", jp: "Comment → Post か Video" },
+            ],
+            [
+              { en: "Morph many", np: "Morph many", jp: "morphMany" },
+              { en: "`morphMany()`", np: "`morphMany()`", jp: "`morphMany()`" },
+              { en: "Post → many Comments (poly)", np: "Post → धेरै Comments", jp: "Post → 複数の Comment（ポリ）" },
+            ],
+            [
+              { en: "Morph to many", np: "Morph to many", jp: "morphToMany" },
+              { en: "`morphToMany()`", np: "`morphToMany()`", jp: "`morphToMany()`" },
+              { en: "Post/Video → shared Tags", np: "Post/Video → shared Tags", jp: "Post/Video → 共通 Tag" },
             ],
           ],
         },
-        {
-          type: "code",
-          title: { en: "Creating a Job", np: "Job बनाउने", jp: "Job の作成" },
-          code: `php artisan make:job SendWelcomeEmail`,
-        },
-        {
-          type: "code",
-          title: { en: "Job class anatomy", np: "Job class", jp: "Job クラスの構造" },
-          code: `// app/Jobs/SendWelcomeEmail.php
-namespace App\\Jobs;
-
-use App\\Models\\User;
-use App\\Mail\\WelcomeMail;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Foundation\\Bus\\Dispatchable;
-use Illuminate\\Queue\\InteractsWithQueue;
-use Illuminate\\Queue\\SerializesModels;
-use Illuminate\\Support\\Facades\\Mail;
-
-class SendWelcomeEmail implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /** Number of times the job may be attempted. */
-    public int $tries = 3;
-
-    /** Timeout in seconds before the job is considered failed. */
-    public int $timeout = 60;
-
-    /** Number of seconds to wait before retrying. */
-    public int $backoff = 30;
-
-    public function __construct(
-        public readonly User $user
-    ) {}
-
-    public function handle(): void
-    {
-        Mail::to($this->user->email)
-            ->send(new WelcomeMail($this->user));
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Dispatching jobs", np: "Job dispatch", jp: "Job のディスパッチ" },
-          code: `use App\\Jobs\\SendWelcomeEmail;
-use App\\Jobs\\GenerateThumbnail;
-use App\\Jobs\\SendInvoice;
-use Illuminate\\Support\\Facades\\Bus;
-
-// Immediate dispatch
-SendWelcomeEmail::dispatch($user);
-
-// Delayed dispatch — run 5 minutes from now
-SendWelcomeEmail::dispatch($user)->delay(now()->addMinutes(5));
-
-// Specific queue channel
-SendWelcomeEmail::dispatch($user)->onQueue('emails');
-
-// Dispatch to a specific connection + queue
-SendWelcomeEmail::dispatch($user)
-    ->onConnection('redis')
-    ->onQueue('high');
-
-// Chained jobs — run sequentially, stop on failure
-Bus::chain([
-    new GenerateThumbnail($post),
-    new SendInvoice($order),
-    new SendWelcomeEmail($user),
-])->onQueue('default')->dispatch();
-
-// Run queue worker
-// php artisan queue:work --queue=high,emails,default
-// php artisan queue:work redis --tries=3 --timeout=90`,
-        },
       ],
     },
     {
       title: {
-        en: "Failed jobs & retry strategy",
-        np: "Failed job र retry",
-        jp: "失敗したジョブとリトライ戦略",
+        en: "Model observers — reacting to lifecycle events",
+        np: "Model observers",
+        jp: "モデルオブザーバ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Even reliable workers fail sometimes — the email service goes down, a network request times out, or bad data causes an exception.\n\n<b>What happens when a job fails</b>\n• If a job throws an exception, Laravel retries it up to `$tries` times (you set this on the job class)\n  ↳ Between retries it waits `$backoff` seconds — giving external services time to recover\n• After all retries are exhausted, the job is marked as <b>failed</b> and stored in the `failed_jobs` database table\n  ↳ Laravel records the exception message and stack trace so you can see exactly what went wrong\n• The `failed(Throwable $exception)` method on the job is called — use it to clean up partial work or send an alert\n\n<b>What you can do next</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific failed job back onto the queue\n• `php artisan queue:flush` — delete all records from `failed_jobs`",
-            np: "`$tries` पार भए `failed_jobs` table। `failed()` method clean up गर्न।",
-            jp: "`$tries` を超えるか例外が起きると `failed_jobs` に記録。`failed()` でクリーンアップ。",
+            en: "An <b>observer</b> is like a security camera for your model.\n\nWhenever something happens — a record is created, updated, or deleted — the observer fires the matching handler automatically. No manual calls in your controllers needed.\n\n<b>Without observers</b>, side-effects scatter across controllers:\n• `PostController::store()` sends a welcome notification\n• `PostController::update()` logs the change\n• `PostController::destroy()` deletes related files\n• If someone adds another way to create a post (a command, a seeder, an API), they must remember to add the side-effect too\n\n<b>With observers</b>, the side-effect logic lives in one place — if a post is created anywhere in the app, the observer fires.\n\n↳ Think of it as a pub/sub pattern built into Eloquent.",
+            np: "Observer = model lifecycle events (created, updated, deleted) मा centralised reactions।",
+            jp: "オブザーバはモデルの lifecycle イベントに対する一元的なハンドラ。",
           },
         },
         {
           type: "code",
-          title: { en: "failed() method + artisan commands", np: "failed() र artisan", jp: "failed() とコマンド" },
-          code: `// Inside the job class
-public function failed(\\Throwable $exception): void
-{
-    // Notify the user, clean up partial work, send alert
-    $this->user->notify(new JobFailedNotification($exception->getMessage()));
+          title: {
+            en: "PostObserver — generate, implement, register",
+            np: "PostObserver बनाउने र register गर्ने",
+            jp: "PostObserver の生成・実装・登録",
+          },
+          code: `// Generate the observer class
+php artisan make:observer PostObserver --model=Post
 
-    Log::error('SendWelcomeEmail failed', [
-        'user_id' => $this->user->id,
-        'error'   => $exception->getMessage(),
-    ]);
+// app/Observers/PostObserver.php
+namespace App\\Observers;
+
+use App\\Models\\Post;
+use Illuminate\\Support\\Facades\\Log;
+
+class PostObserver
+{
+    public function created(Post $post): void
+    {
+        // Side-effect: notify the author's followers
+        $post->user->notify(new PostPublishedNotification($post));
+    }
+
+    public function updating(Post $post): void
+    {
+        // Log who changed what (before the save)
+        if ($post->isDirty('status')) {
+            Log::info("Post #{$post->id} status changed", [
+                'from' => $post->getOriginal('status'),
+                'to'   => $post->status,
+                'by'   => auth()->id(),
+            ]);
+        }
+    }
+
+    public function deleted(Post $post): void
+    {
+        // Clean up associated files when a post is deleted
+        Storage::delete("posts/{$post->id}");
+    }
 }
 
-// Manually fail from inside handle()
-public function handle(): void
+// Register in AppServiceProvider::boot()
+use App\\Models\\Post;
+use App\\Observers\\PostObserver;
+
+public function boot(): void
 {
-    if (! $this->user->isActive()) {
-        $this->fail(new \\RuntimeException('User is not active'));
-        return;
-    }
-    // ...
-}
-
-// Artisan commands for failed jobs
-// php artisan queue:failed              — list all failed jobs
-// php artisan queue:retry <id>          — retry one job by ID
-// php artisan queue:retry all           — retry all failed jobs
-// php artisan queue:forget <id>         — delete one failed job
-// php artisan queue:flush               — delete ALL failed jobs
-// php artisan queue:failed-table        — create failed_jobs migration`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Laravel Horizon</b> is a real-time dashboard for Redis queues — think of it as the control room for all your background workers.\n• Install it with `composer require laravel/horizon` then visit `/horizon` in your browser\n• It shows: how many jobs are waiting, how fast they're being processed, which ones failed, and how long each one took\n  ↳ Essential for production systems where you need to catch problems before users notice them",
-            np: "Horizon — Redis queue dashboard। `/horizon` UI। Production मा essential।",
-            jp: "Horizon は Redis キューのダッシュボード。スループット・失敗・深さをリアルタイム表示。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Events & Listeners",
-        np: "Event र Listener",
-        jp: "イベントとリスナー",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Imagine a package delivery system: when an order ships, you want to (1) email the customer, (2) update the inventory, and (3) log it for analytics.\n\n<b>The naive approach</b>\n• Call each service directly from your controller — works, but your controller now knows about email, inventory, AND analytics\n  ↳ When you add a fourth action, you have to touch the controller again\n\n<b>The Event / Listener approach</b>\n• Fire a single `OrderShipped` <b>event</b> from your controller — it just carries the order data\n• Three separate <b>Listeners</b> each subscribe to that event and handle their own piece\n  ↳ Your controller only knows it shipped an order — it doesn't care what happens next\n  ↳ Adding a fourth action means adding a fourth listener, not touching the controller\n• In Laravel 11, listeners are auto-discovered — no registration file needed",
-            np: "Event = something happened। Listener = respond। Laravel 11 मा auto-discover।",
-            jp: "Event は「何かが起きた」の通知、Listener が「対応する」。Laravel 11 は自動検出。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Generate Event & Listener", np: "Generate", jp: "生成コマンド" },
-          code: `php artisan make:event OrderShipped
-php artisan make:listener SendShipmentNotification --event=OrderShipped
-php artisan make:listener UpdateInventory --event=OrderShipped`,
-        },
-        {
-          type: "code",
-          title: { en: "Event class", np: "Event class", jp: "Event クラス" },
-          code: `// app/Events/OrderShipped.php
-namespace App\\Events;
-
-use App\\Models\\Order;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-use Illuminate\\Queue\\SerializesModels;
-
-class OrderShipped
-{
-    use Dispatchable, SerializesModels;
-
-    public function __construct(
-        public readonly Order $order
-    ) {}
+    Post::observe(PostObserver::class);
 }`,
         },
         {
-          type: "code",
-          title: { en: "Queueable Listener", np: "Queueable Listener", jp: "キュー対応リスナー" },
-          code: `// app/Listeners/SendShipmentNotification.php
-namespace App\\Listeners;
-
-use App\\Events\\OrderShipped;
-use App\\Notifications\\OrderShippedNotification;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Queue\\InteractsWithQueue;
-
-class SendShipmentNotification implements ShouldQueue
-{
-    use InteractsWithQueue;
-
-    public string $queue = 'notifications';
-    public int $delay = 10; // seconds
-
-    public function handle(OrderShipped $event): void
-    {
-        $event->order->user->notify(
-            new OrderShippedNotification($event->order)
-        );
-    }
-
-    public function failed(OrderShipped $event, \\Throwable $exception): void
-    {
-        Log::error('Shipment notification failed', ['order' => $event->order->id]);
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Dispatching events", np: "Event dispatch", jp: "Event のディスパッチ" },
-          code: `use App\\Events\\OrderShipped;
-
-// Option 1: global helper
-event(new OrderShipped($order));
-
-// Option 2: static dispatch method (same result)
-OrderShipped::dispatch($order);
-
-// Option 3: fire-and-forget on Eloquent model event
-// (define in boot() or as Model::observe())
-Order::created(fn (Order $order) => OrderShipped::dispatch($order));
-
-// Manual registration (Laravel 10 / if auto-discovery disabled)
-// app/Providers/EventServiceProvider.php
-protected $listen = [
-    OrderShipped::class => [
-        SendShipmentNotification::class,
-        UpdateInventory::class,
-    ],
-];`,
-        },
-        {
           type: "paragraph",
           text: {
-            en: "Sometimes you want to push an event to the browser in real time — for example, updating a live dashboard when a job finishes.\n• This is called <b>broadcasting</b> and uses a WebSocket server (Pusher, Ably, or a self-hosted Soketi)\n• The event implements `ShouldBroadcast`, and your frontend JavaScript subscribes using Laravel Echo\n  ↳ This is a more advanced topic — see the official Laravel Broadcasting docs when you're ready for it",
-            np: "Broadcasting — Pusher/Soketi। Frontend subscribe गर्छ। Separate topic।",
-            jp: "ブロードキャストは Pusher/Soketi でフロントエンドにリアルタイム通知。`ShouldBroadcast` を実装。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Task Scheduling",
-        np: "Task Scheduling",
-        jp: "タスクスケジューリング",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Cron jobs are powerful but painful to manage — each one is a separate line in a server config file, and you need server access to add or change them.\n\n<b>Laravel's scheduler solves this</b>\n• You add <b>one single cron entry</b> to the server that runs every minute: `* * * * * php artisan schedule:run`\n• Then you define every scheduled task in your PHP code — no more touching server config files\n  ↳ In Laravel 11 all schedules live in `routes/console.php`\n  ↳ In Laravel 10 they live in `app/Console/Kernel.php`\n• This means schedules are version-controlled, reviewable in pull requests, and testable locally\n  ↳ `php artisan schedule:work` polls every minute in your terminal so you can test without deploying",
-            np: "One cron entry (every minute), baaki sab PHP maa। Laravel 11 मा `routes/console.php`।",
-            jp: "1 分ごとの cron 1 エントリーで動く。Laravel 11 は `routes/console.php` にスケジュール定義。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Creating a scheduled command", np: "Command बनाउने", jp: "コマンドの作成" },
-          code: `php artisan make:command SendWeeklyReport`,
-        },
-        {
-          type: "code",
-          title: { en: "Schedule definitions (Laravel 11 — routes/console.php)", np: "Schedule define", jp: "スケジュール定義" },
-          code: `// routes/console.php (Laravel 11)
-use Illuminate\\Support\\Facades\\Schedule;
-
-// Artisan commands
-Schedule::command('emails:send')->dailyAt('09:00');
-Schedule::command('reports:weekly')->weekly()->mondays()->at('08:00');
-Schedule::command('db:backup')->daily()->timezone('Asia/Kathmandu');
-Schedule::command('queue:prune-failed', ['--hours=48'])->daily();
-
-// Every N minutes
-Schedule::command('app:sync-inventory')->everyFiveMinutes();
-Schedule::command('app:poll-webhooks')->everyMinute();
-
-// Closures (for quick one-off tasks)
-Schedule::call(function () {
-    DB::table('sessions')->where('last_activity', '<', now()->subHours(2))->delete();
-})->hourly();
-
-// Overlap prevention — skip if previous run still executing
-Schedule::command('app:process-images')
-    ->everyMinute()
-    ->withoutOverlapping();
-
-// Run in background (don't block the scheduler process)
-Schedule::command('app:heavy-report')
-    ->daily()
-    ->runInBackground()
-    ->onSuccess(function () { Log::info('Report done'); })
-    ->onFailure(function () { Log::error('Report failed'); });
-
-// Send output to a log file
-Schedule::command('inspire')
-    ->hourly()
-    ->appendOutputTo(storage_path('logs/inspire.log'));`,
-        },
-        {
-          type: "code",
-          title: { en: "Single server cron entry (add to server crontab)", np: "Server cron", jp: "サーバーの cron エントリー" },
-          code: `# Run this ONE entry on your server — Laravel handles the rest
-* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
-
-# For local development
-php artisan schedule:work    # polls every minute in foreground
-
-# Test a specific scheduled task immediately
-php artisan schedule:run
-
-# List all scheduled tasks
-php artisan schedule:list`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "When you run multiple servers (a cluster), every server runs the scheduler every minute — by default, the same scheduled task runs on every server simultaneously.\n• Add `->onOneServer()` to prevent this — only the first server to claim the job actually runs it\n  ↳ It uses a shared Redis cache as a locking mechanism to coordinate across servers\n  ↳ Requires `CACHE_STORE=redis` in `.env` so all servers see the same lock",
-            np: "Cluster मा एक मात्र server मा run: `->onOneServer()`। Shared cache चाहिन्छ।",
-            jp: "クラスター環境で 1 台だけ実行したい場合は `->onOneServer()`。共有キャッシュが必要。",
+            en: "<b>Critical gotcha — bulk operations bypass observers:</b>\n\nObservers are Eloquent-level hooks. They fire when you call `->save()`, `->create()`, `->delete()` on a model instance. They do <b>NOT</b> fire for SQL-level bulk operations:\n\n• `Post::where('user_id', $id)->delete()` → NO observer\n• `Post::truncate()` → NO observer\n• `Post::insert([...])` → NO observer (also bypasses `$fillable`!)\n\n↳ If you need side-effects for bulk deletes, dispatch an event or job manually before/after the bulk query.\n\n↳ Available hooks: `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `restoring`, `restored` (for soft-deletes).",
+            np: "Bulk operations (`where()->delete()`, `truncate()`) ले observers trigger गर्दैन।",
+            jp: "バルク操作（`where()->delete()` など）はオブザーバを発火しない点に注意。",
           },
         },
       ],
@@ -398,86 +445,62 @@ php artisan schedule:list`,
   faq: [
     {
       question: {
-        en: "When should I use Queues vs Events?",
-        np: "Queue र Event कहिले प्रयोग गर्ने?",
-        jp: "Queue と Event はどう使い分けますか？",
+        en: "When should I use an accessor vs a plain getter method on the model?",
+        np: "Accessor vs getter method — कहिले कुन?",
+        jp: "アクセサとゲッターメソッドはどう使い分けますか？",
       },
       answer: {
-        en: "Think of it this way:\n\n<b>Use a Queue when</b>\n• You have a single slow task (sending an email, calling an external API, generating a PDF)\n• The task doesn't need to happen before the user gets a response\n  ↳ The user clicks 'Register' → your code creates the account → then a queued job sends the welcome email separately\n\n<b>Use Events when</b>\n• Multiple unrelated parts of your app need to react when something happens\n• You want those reactions to stay decoupled from the code that triggered them\n  ↳ An order ships → email the customer AND update inventory AND log analytics — three listeners, all independent\n\nThey're not mutually exclusive — a listener can also implement `ShouldQueue` to run its logic in the background too.",
-        np: "Queue = slow deferred task। Event = decoupled reaction। Listener लाई ShouldQueue थप्न सकिन्छ।",
-        jp: "Queue は遅い単発タスクの非同期化、Event は複数の疎結合な反応。Listener に `ShouldQueue` を付ければ両立できます。",
+        en: "<b>Use an accessor</b> when the value behaves like a natural attribute of the model:\n• It integrates with `$model->attribute_name` syntax automatically\n• It is included in `->toArray()` and JSON serialisation\n• Example: `full_name`, `avatar_url`, `formatted_price`\n\n<b>Use a plain method</b> when the operation reads like an action or requires parameters:\n• `$model->getFormattedAddress($format)` — takes a parameter\n• `$model->calculateTax($rate)` — performs a calculation, not just reading data\n• It's clearer that calling it has intent, not just property access\n\nRule of thumb: if you'd describe it as \"the model's X\", use an accessor. If you'd describe it as \"getting the model's X given Y\", use a method.",
+        np: "Accessor = attribute-like value (toArray मा पनि)। Method = parameter लिने वा calculation गर्ने।",
+        jp: "属性のように扱うならアクセサ、引数や計算が必要ならメソッドが適切。",
       },
     },
     {
       question: {
-        en: "How do I monitor queue workers in production?",
-        np: "Production मा queue worker monitor?",
-        jp: "本番でキューワーカーを監視する方法は？",
+        en: "What is the difference between `$casts` and `$dates`?",
+        np: "`$casts` र `$dates` को फरक?",
+        jp: "`$casts` と `$dates` の違いは？",
       },
       answer: {
-        en: "For <b>Redis queues</b>: install <b>Laravel Horizon</b> — it gives you a live web dashboard at `/horizon` showing job throughput, failures, and queue depth. Horizon also integrates with Supervisor (a Linux process manager) to keep your workers running automatically.\n\nFor <b>non-Redis queues</b>: use Supervisor directly with a config that keeps `php artisan queue:work --tries=3` running as a service.\n\nWhenever you deploy new code, run `php artisan horizon:terminate` (or restart the queue:work process) so workers pick up the latest code — stale workers run old code indefinitely otherwise.",
-        np: "Horizon — Redis dashboard। Supervisor — process manager। Deploy मा `horizon:terminate`।",
-        jp: "Redis なら Horizon が最適。Supervisor でワーカープロセスを管理。デプロイ後は `horizon:terminate`。",
+        en: "`$dates` is the <b>old way</b> to tell Eloquent \"cast this column to a Carbon instance.\" It is <b>deprecated as of Laravel 10</b> and will be removed in a future version.\n\n<b>Always use `$casts` for new code:</b>\n• `'published_at' => 'datetime'` → Carbon (mutable)\n• `'published_at' => 'immutable_datetime'` → CarbonImmutable (preferred — mutations return a new instance)\n• `'created_at'` and `'updated_at'` are automatically cast to Carbon by Eloquent — no entry needed\n\n↳ `immutable_datetime` is safer in pipelines because you can't accidentally mutate the original value.",
+        np: "`$dates` deprecated छ। `$casts` मा `datetime` वा `immutable_datetime` प्रयोग गर्नुहोस्।",
+        jp: "`$dates` は非推奨。`$casts` で `datetime` または `immutable_datetime` を使用する。",
       },
     },
     {
       question: {
-        en: "What happens if a job fails all retries?",
-        np: "Job सबै retry fail भए के हुन्छ?",
-        jp: "全リトライが失敗したらどうなりますか？",
+        en: "Can local scopes conflict with each other when chained?",
+        np: "Chained scopes conflict हुन्छन् कि?",
+        jp: "スコープをチェーンするとき競合しますか？",
       },
       answer: {
-        en: "When all retries are exhausted, the job lands in the `failed_jobs` database table along with the full exception and stack trace.\n\n<b>What you can do</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific job back onto the queue\n• `php artisan queue:retry all` — retry every failed job at once\n• `php artisan queue:flush` — delete all records from `failed_jobs`\n\nTip: define a `failed(Throwable $exception)` method on your job class and use it to send a Slack alert or undo partial work (like rolling back a payment attempt).",
-        np: "`failed_jobs` table मा जान्छ। `failed()` call। `queue:retry` ले retry।",
-        jp: "`failed_jobs` テーブルに移動し `failed()` が呼ばれる。`queue:retry` で再試行可能。",
+        en: "No — local scopes are just query builder calls under the hood, and query builder calls stack cleanly. Each scope adds its `WHERE` clause to the same underlying query.\n\nThe only potential conflict is if <b>two global scopes</b> filter the same column with incompatible conditions:\n• Global scope A: `->where('status', 'published')`\n• Global scope B: `->where('status', 'draft')`\n→ Both apply; the query returns no results (impossible condition)\n\nFix: remove the conflicting scope with `withoutGlobalScope(MyScope::class)` or `withoutGlobalScopes()` (removes all).\n\nFor local scopes, the only thing to watch is ordering — `scopeRecent()` using `orderBy` after another `orderBy` can produce surprising results. Use `reorder()` to clear previous orderings first.",
+        np: "Local scopes stack cleanly। Global scopes same column filter गर्छन् भने conflict हुन सक्छ।",
+        jp: "ローカルスコープはスタックで問題なし。グローバルスコープ同士が同列を競合する場合は `withoutGlobalScope` で除外。",
       },
     },
     {
       question: {
-        en: "How do I test queued jobs?",
-        np: "Queued job test कसरी?",
-        jp: "キュージョブをテストする方法は？",
+        en: "What is a polymorphic many-to-many relationship?",
+        np: "Polymorphic many-to-many भनेको के हो?",
+        jp: "ポリモーフィック多対多とは？",
       },
       answer: {
-        en: "You don't want tests to actually send emails or hit external services — use `Queue::fake()` to intercept jobs without running them.\n\n• Call `Queue::fake()` at the top of your test\n• Run the code that should dispatch a job\n• Assert the job was (or wasn't) pushed:\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — confirms the job was dispatched\n  ↳ `Queue::assertPushedOn('emails', SendWelcomeEmail::class)` — confirms it was sent to the right queue\n  ↳ `Queue::assertNotPushed(SomeOtherJob::class)` — confirms a job was NOT dispatched\n\nTo test the job's logic itself, just call `(new SendWelcomeEmail($user))->handle()` directly — no queue or worker needed.",
-        np: "`Queue::fake()` — job push assert। `handle()` direct call test।",
-        jp: "`Queue::fake()` でキューを偽装し `assertPushed()` で確認。`handle()` の単体テストは直接呼び出す。",
+        en: "A regular `belongsToMany` links <b>two specific models</b> via a pivot table (e.g. `Post` ↔ `Tag`).\n\nA <b>polymorphic many-to-many</b> lets a model relate to <b>multiple different model types</b> via a single pivot table.\n\nExample: `Tag` can belong to both `Post` AND `Video`:\n• Migration: `taggables` pivot with `tag_id`, `taggable_id`, `taggable_type`\n• `Tag` model: `morphedByMany(Post::class, 'taggable')` and `morphedByMany(Video::class, 'taggable')`\n• `Post` and `Video` models: `morphToMany(Tag::class, 'taggable')`\n\nOne `tags` table, one `taggables` pivot — works for any model that needs tags.",
+        np: "Polymorphic many-to-many: Tag ले Post र Video दुवैमा belongsToMany हुन्छ।",
+        jp: "ポリモーフィック多対多は 1 つのピボットテーブルで複数モデルと多対多を実現（例: Tag ↔ Post/Video）。",
       },
     },
     {
       question: {
-        en: "Can I dispatch an event inside a job?",
-        np: "Job भित्र event dispatch गर्न मिल्छ?",
-        jp: "Job の中でイベントをディスパッチできますか？",
+        en: "Do model observers run inside database transactions?",
+        np: "Observers DB transaction भित्र fire हुन्छन् कि?",
+        jp: "オブザーバはトランザクション内で実行されますか？",
       },
       answer: {
-        en: "Yes — calling `event(new SomeEvent($data))` or `SomeEvent::dispatch($data)` inside a job's `handle()` method works fine.\n\nOne thing to watch: if that event has queueable listeners, those listeners are queued separately and fail independently.\n  ↳ A failing listener won't automatically roll back or fail the parent job\n  ↳ If you need strict ordering (do A, then B, then C — stop if any fail), use `Bus::chain()` instead of events",
-        np: "`handle()` भित्र `event()` call गर्न मिल्छ। Listener failure parent job rollback गर्दैन।",
-        jp: "`handle()` 内で `event()` を呼べます。リスナー失敗は親ジョブをロールバックしません。順序が必要なら `Bus::chain()` を使用。",
-      },
-    },
-    {
-      question: {
-        en: "How does `->withoutOverlapping()` work?",
-        np: "`withoutOverlapping()` कसरी काम गर्छ?",
-        jp: "`->withoutOverlapping()` の仕組みは？",
-      },
-      answer: {
-        en: "Before running a scheduled task, `->withoutOverlapping()` tries to claim an atomic lock in your cache.\n• If the lock is free, the task runs and holds the lock until it's done\n• If the lock is already claimed (the previous run is still going), this invocation is skipped entirely\n  ↳ The lock expires after 24 hours by default so a crashed job doesn't block things forever\n\n<b>When to use it</b>\n• Any long-running command that runs more frequently than it takes to finish\n  ↳ Example: a 90-second image processing command scheduled every minute would normally stack up — `->withoutOverlapping()` prevents this\n\nRequires a cache driver that supports atomic locks: Redis, Memcached, or `database`.",
-        np: "Cache lock acquire। Previous run चलिरहेको छ भने skip। Redis/DB cache चाहिन्छ।",
-        jp: "アトミックキャッシュロックを取得。前の実行が残っていればスキップ。Redis か DB キャッシュが必要。",
-      },
-    },
-    {
-      question: {
-        en: "How do I handle tasks that must run only on one server in a cluster?",
-        np: "Cluster मा एक server मा मात्र run?",
-        jp: "クラスターで 1 台だけ実行する方法は？",
-      },
-      answer: {
-        en: "Without `->onOneServer()`, every server in your cluster runs every scheduled task independently — you'd send the daily report email three times if you have three servers.\n\n• Chain `->onOneServer()` to any scheduled task\n  ↳ All servers race to claim a shared cache lock when the scheduler fires\n  ↳ Only the winner runs the task — the others see the lock is taken and skip\n• Example: `Schedule::command('reports:generate')->daily()->onOneServer()`\n• Requires a shared Redis cache (`CACHE_STORE=redis` in `.env`) so all servers see the same lock",
-        np: "`->onOneServer()` — shared cache lock। पहिलो server मात्र run।",
-        jp: "`->onOneServer()` で共有キャッシュロックを使い 1 台だけ実行。Redis の共有キャッシュが必要。",
+        en: "Yes — and this can cause a subtle bug.\n\nIf you run a save inside a `DB::transaction()` and the transaction is <b>rolled back</b>, the `created`/`updated` event has already fired and your observer's side-effects have already happened:\n• Email sent to user → cannot be unsent\n• File written to disk → file is now orphaned\n\n<b>Two solutions:</b>\n1. Use `DB::afterCommit()` to delay the observer logic until after a successful commit\n2. Set `public bool $afterCommit = true` on any listener/job dispatched from the observer — queued jobs won't dispatch until the transaction commits\n\n↳ For simple apps without transactions, this is a non-issue. For financial or critical data, always use the `$afterCommit` flag.",
+        np: "Transaction rollback हुँदा observer पहिल्यै fire भइसकेको हुन्छ। `$afterCommit = true` प्रयोग गर्नुहोस्।",
+        jp: "ロールバック後もオブザーバは発火済み。`$afterCommit = true` でコミット後のみ実行できる。",
       },
     },
   ],

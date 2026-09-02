@@ -3,286 +3,247 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_36_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Every real app needs to answer one question: <b>who is this person, and are they allowed to be here?</b> That's authentication. Laravel gives you three ways to handle it:\n\n• <b>Session-based auth</b> — for web browsers. Log in once, get a cookie, stay logged in across pages.\n• <b>Token-based auth via Sanctum</b> — for APIs and mobile apps. Log in once, get a token, send it with every API request.\n• <b>Breeze</b> — a starter kit that writes all the login/register screens for you so you don't start from scratch.",
-      np: "Laravel मा session auth (web) र token auth (API)। Breeze ले सबै screen scaffold गर्छ।",
-      jp: "Web はセッション認証、API は Sanctum のトークン認証。Breeze でログイン・登録・パスワードリセット・メール確認を一括生成。",
+      en: "Writing tests sounds like extra work, but it's actually the fastest way to move forward without fear.\n• A good test suite means you can change code confidently — if something breaks, you find out in seconds, not after a user reports a bug\n\n<b>What Laravel gives you</b>\n• <b>Pest</b> — a modern, readable testing framework built on top of PHPUnit\n  ↳ No class boilerplate — just `it('does something', fn() => ...)` functions\n• <b>HTTP helpers</b> — simulate requests like `$this->get('/users')` without a real browser\n• <b>Database helpers</b> — check that data was saved or deleted correctly\n• <b>Fake facades</b> — intercept emails, queued jobs, and events so tests stay fast and isolated",
+      np: "Laravel testing first-class। Pest = PHPUnit माथि functional syntax। HTTP, DB, mail, queue assert।",
+      jp: "Laravel はテストを標準サポート。Pest は PHPUnit 上のクリーンな構文。HTTP・DB・メール・キューのアサーションが簡単。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Auth guards & session-based login",
-        np: "Auth guard र session login",
-        jp: "Auth ガードとセッションログイン",
+        en: "Pest setup & syntax",
+        np: "Pest setup र syntax",
+        jp: "Pest のセットアップと構文",
       },
       blocks: [
         {
           type: "diagram",
-          id: "laravel-auth-guard",
+          id: "laravel-test-pyramid",
         },
         {
           type: "paragraph",
           text: {
-            en: "Think of a <b>guard</b> as a checkpoint — it decides how to identify who is making a request.\n\nLaravel ships with two default guards:\n• <b>`web` guard</b> — reads the session cookie. Used for browser-based web pages.\n• <b>`api` guard</b> — reads a token. Used for API requests.\n\nGuards are configured in `config/auth.php`. By default `Auth::check()` and `Auth::user()` use the `web` guard. To check a different guard, call `Auth::guard('api')->check()` — each guard is completely independent.",
-            np: "`web` guard session, `api` guard token। `config/auth.php` मा config।",
-            jp: "デフォルトは `web`（セッション）と `api`（トークン）。`config/auth.php` でガードを設定。",
+            en: "PHPUnit is the traditional PHP testing framework — it works, but every test file requires a class, every method name starts with `test_`, and the assertion syntax can feel clunky.\n\n<b>Pest is the modern alternative</b>\n• It wraps PHPUnit under the hood — every PHPUnit assertion still works, nothing is lost\n• But the outer syntax is much cleaner:\n  ↳ No class required — just call `it()` or `test()` with a closure\n  ↳ `it('can create a post', fn() => ...)` reads like a plain English sentence\n  ↳ The `expect()` API chains naturally: `expect($user)->not->toBeNull()->name->toBe('Alice')`\n• Laravel 11 ships with Pest pre-installed — zero extra setup needed",
+            np: "Pest Laravel 11 मा pre-installed। PHPUnit को wrapper। Class boilerplate छैन।",
+            jp: "Pest は Laravel 11 にプリインストール。PHPUnit のラッパーなのでアサーションはすべて使える。クラス不要で `it()` / `test()` だけ。",
           },
         },
         {
           type: "code",
-          title: { en: "Auth facade core methods", np: "Auth facade", jp: "Auth ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
+          title: { en: "Install Pest in Laravel 10", np: "Laravel 10 मा install", jp: "Laravel 10 でのインストール" },
+          code: `composer require pestphp/pest --dev --with-all-dependencies
+composer require pestphp/pest-plugin-laravel --dev
 
-// Check if a user is logged in
-if (Auth::check()) {
-    $user = Auth::user();   // returns Authenticatable|null
-    $id   = Auth::id();     // returns int|null
-}
+# Initialize Pest (creates Pest.php, updates phpunit.xml)
+php artisan pest:install
 
-// Attempt login (returns bool)
-$credentials = ['email' => $email, 'password' => $password];
-if (Auth::attempt($credentials, $remember)) {
-    $request->session()->regenerate();   // prevent session fixation
-    return redirect()->intended('/dashboard');
-}
-
-// Manual login (e.g., after registration)
-Auth::login($user);
-Auth::loginUsingId(1);
-
-// Logout
-Auth::logout();
-$request->session()->invalidate();
-$request->session()->regenerateToken();`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "To lock down a route so only logged-in users can access it, attach the `auth` middleware. Any visitor who isn't logged in gets redirected to the login page automatically.\n\n• `auth` — must be logged in\n• `verified` — must be logged in <b>and</b> have confirmed their email address\n  ↳ Checks that `email_verified_at` is not null on the user record",
-            np: "`auth` middleware route सुरक्षित गर्छ।",
-            jp: "`auth` ミドルウェアでルートを保護。`verified` でメール確認済みかを確認。",
-          },
+# Generate test files
+php artisan make:test PostTest --pest           # Feature test (in tests/Feature/)
+php artisan make:test PostUnitTest --pest --unit # Unit test (in tests/Unit/)`,
         },
         {
           type: "code",
-          title: { en: "Protecting routes with middleware", np: "Middleware", jp: "ルート保護" },
-          code: `// routes/web.php
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class);
-    Route::resource('posts', PostController::class);
+          title: { en: "Pest test anatomy", np: "Pest test structure", jp: "Pest テストの構造" },
+          code: `<?php
+// tests/Feature/PostTest.php
+
+use App\\Models\\{Post, User};
+
+// beforeEach runs before every test in this file
+beforeEach(function () {
+    $this->user = User::factory()->create();
 });
 
-// Email-verified gate
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/billing', BillingController::class);
+// 'it' reads as a sentence: "it can create a post"
+it('can create a post', function () {
+    $response = $this->actingAs($this->user)
+        ->post('/posts', [
+            'title' => 'Hello World',
+            'body'  => 'My first post.',
+        ]);
+
+    $response->assertRedirect('/posts');
+    expect(Post::count())->toBe(1);
 });
 
-// API guard (Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/api/user', fn (Request $request) => $request->user());
-});`,
+// 'test' is an alias
+test('guests cannot create posts', function () {
+    $response = $this->post('/posts', ['title' => 'Hack']);
+    $response->assertRedirect('/login');
+});
+
+// Datasets — run the same test with multiple inputs
+it('validates post title length', function (string $title) {
+    $this->actingAs($this->user)
+         ->post('/posts', ['title' => $title, 'body' => 'x'])
+         ->assertSessionHasErrors('title');
+})->with([
+    'empty string'    => [''],
+    'too long'        => [str_repeat('a', 256)],
+]);`,
+        },
+        {
+          type: "code",
+          title: { en: "Pest expectations cheat-sheet", np: "Expectations", jp: "Expectations チートシート" },
+          code: `// Pest's expect() wraps PHPUnit assertions in a fluent API
+
+expect($value)
+    ->toBe(42)                  // strict equality (===)
+    ->toEqual(['a' => 1])       // loose equality (==)
+    ->toBeNull()                // === null
+    ->not->toBeNull()           // negation
+    ->toBeTrue()                // === true
+    ->toBeFalse()               // === false
+    ->toBeString()
+    ->toBeInt()
+    ->toBeArray()
+    ->toBeInstanceOf(User::class)
+    ->toContain('needle')       // string or array contains
+    ->toHaveCount(3)            // array/collection count
+    ->toHaveKey('id')           // array has key
+    ->toHaveKeys(['id', 'name'])
+    ->toMatchArray(['name' => 'Alice'])  // subset match
+    ->toThrow(\\Exception::class)
+    ->toThrow(\\Exception::class, 'message')
+    ->toBeGreaterThan(0)
+    ->toBeLessThanOrEqual(100);
+
+// Multiple assertions chained
+expect(User::find(1))
+    ->not->toBeNull()
+    ->name->toBe('Alice')
+    ->email->toContain('@');`,
         },
       ],
     },
     {
       title: {
-        en: "Laravel Breeze install & what it gives you",
-        np: "Breeze install र features",
-        jp: "Breeze のインストールと提供機能",
+        en: "HTTP feature tests",
+        np: "HTTP feature test",
+        jp: "HTTP フィーチャーテスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Laravel Breeze</b> is a starter kit that builds all the auth screens for you — login, register, password reset, email verification, and profile editing — so you can skip the boring boilerplate and focus on your actual app.\n\nYou pick a frontend stack when you install it:\n• <b>Blade</b> — plain HTML templates with Alpine.js sprinkles (great default for most apps)\n• <b>Livewire</b> — reactive components without writing JavaScript\n• <b>React or Vue via Inertia</b> — full SPA feel with Laravel on the backend\n• <b>API only</b> — no views at all, just the backend routes for your own SPA\n\nNeed teams, two-factor auth, or API token management built in? Look at <b>Jetstream</b> instead — it's the heavier option.",
-            np: "Breeze minimal auth starter। नयाँ project को लागि उपयुक्त।",
-            jp: "Breeze は軽量の認証スターター。重い要件（チーム・2FA）は Jetstream を検討。",
+            en: "A feature test simulates a real HTTP request through your entire application — the route resolves, middleware runs, the controller executes, and the database is hit.\n• You don't need a running server or a browser — Laravel handles the full request/response cycle in memory\n  ↳ `$this->get('/posts')` fires a GET request and returns a response object you can assert against\n  ↳ `$this->actingAs($user)->post('/posts', [...])` simulates a logged-in user submitting a form\n• These tests are the most valuable kind — they test your app the same way a real user would interact with it",
+            np: "Feature test = full stack। Real server चाहिँदैन। Response assert methods।",
+            jp: "フィーチャーテストはルーティングから DB まで全スタックを通す。実サーバーは不要。",
           },
         },
         {
           type: "code",
-          title: { en: "Installation steps", np: "Install", jp: "インストール手順" },
-          code: `# 1. Require the package
-composer require laravel/breeze --dev
+          title: { en: "Full HTTP test example with actingAs", np: "HTTP test + actingAs", jp: "actingAs を使った HTTP テスト" },
+          code: `<?php
+// tests/Feature/PostControllerTest.php
 
-# 2. Scaffold (choose a stack)
-php artisan breeze:install blade        # Blade + Alpine.js (default)
-php artisan breeze:install livewire     # Livewire full-page
-php artisan breeze:install react        # Inertia + React
-php artisan breeze:install vue          # Inertia + Vue
-php artisan breeze:install api          # API-only (no views, for SPAs)
+use App\\Models\\{Post, User};
+use Illuminate\\Http\\UploadedFile;
+use Illuminate\\Support\\Facades\\Storage;
 
-# 3. Install frontend dependencies & build
-npm install
-npm run dev
+uses(\\Illuminate\\Foundation\\Testing\\RefreshDatabase::class);
 
-# 4. Run migrations (creates users, password_reset_tokens, sessions tables)
-php artisan migrate`,
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "<b>Login</b> — `GET /login` + `POST /login` with rate-limiting (5 attempts per minute).",
-              np: "Login — rate limiting सहित।",
-              jp: "ログイン — レート制限（5回/分）付き。",
-            },
-            {
-              en: "<b>Registration</b> — `GET /register` + `POST /register`; passwords are hashed automatically with `bcrypt`.",
-              np: "Registration — `bcrypt` पासवर्ड।",
-              jp: "登録 — パスワードは `bcrypt` でハッシュ。",
-            },
-            {
-              en: "<b>Password reset</b> — `forgot-password` → `reset-password` pages; sends a signed reset email.",
-              np: "Password reset — signed mail।",
-              jp: "パスワードリセット — 署名付きメールで送信。",
-            },
-            {
-              en: "<b>Email verification</b> — `GET /verify-email` with a re-send button; add `MustVerifyEmail` to the User model to enable it.",
-              np: "Email verify — `MustVerifyEmail` interface।",
-              jp: "メール確認 — `MustVerifyEmail` をモデルに実装。",
-            },
-            {
-              en: "<b>Profile edit</b> — update name, email, and password; delete account.",
-              np: "Profile edit पनि।",
-              jp: "プロフィール編集・アカウント削除もあり。",
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "If you're not using Breeze and want to register users manually, the steps are:\n• Hash the password with `Hash::make($password)` — <b>never store plain text passwords</b>\n• Create the user record in the database\n• Call `Auth::login($user)` to log them in immediately after creation",
-            np: "Manual: `Hash::make()`, user create, `Auth::login()`।",
-            jp: "手動登録: `Hash::make()` でハッシュ → ユーザー作成 → `Auth::login()`。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Manual registration example", np: "Manual register", jp: "手動登録の例" },
-          code: `use Illuminate\\Support\\Facades\\Auth;
-use Illuminate\\Support\\Facades\\Hash;
-use App\\Models\\User;
+it('shows a paginated list of posts', function () {
+    Post::factory()->count(20)->create();
 
-public function store(Request $request): RedirectResponse
-{
-    $validated = $request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'min:8', 'confirmed'],
+    $response = $this->get('/posts');
+
+    $response
+        ->assertStatus(200)    // same as assertOk()
+        ->assertSee('Posts')
+        ->assertViewIs('posts.index')
+        ->assertViewHas('posts');
+});
+
+it('authenticated user can create a post', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/posts', [
+        'title' => 'Test Post',
+        'body'  => 'Some body content here.',
     ]);
 
-    $user = User::create([
-        'name'     => $validated['name'],
-        'email'    => $validated['email'],
-        'password' => Hash::make($validated['password']),
+    $response->assertRedirect(route('posts.index'));
+    $this->assertDatabaseHas('posts', [
+        'title'   => 'Test Post',
+        'user_id' => $user->id,
     ]);
+});
 
-    Auth::login($user);
+it('returns 401 for unauthenticated API request', function () {
+    $this->getJson('/api/posts')->assertUnauthorized(); // 401
+});
 
-    return redirect('/dashboard');
-}`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Sanctum: API tokens & SPA auth",
-        np: "Sanctum: token र SPA auth",
-        jp: "Sanctum: API トークンと SPA 認証",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "When a mobile app or a separate frontend (React, Vue) needs to talk to your Laravel backend, it can't use session cookies the way a browser does. That's where <b>Laravel Sanctum</b> comes in.\n\nSanctum supports two modes:\n• <b>API token mode</b> — the client logs in once, gets a token string, and sends that token as a header (`Authorization: Bearer <token>`) on every request.\n  ↳ Best for: mobile apps, third-party API clients\n• <b>SPA cookie mode</b> — for a frontend hosted on the same domain. Uses session cookies just like the web guard, but CSRF-safe.\n  ↳ Best for: a React/Vue app served from the same domain as the API\n\nSanctum is <b>not</b> OAuth2. If you need to let other companies log in via your app (like 'Sign in with MyApp'), use Laravel Passport.",
-            np: "Sanctum — SPA cookie auth र API token। OAuth2 को लागि Passport।",
-            jp: "Sanctum は SPA クッキー認証と API トークンの 2 モード。OAuth2 は Passport を使用。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Sanctum setup", np: "Setup", jp: "セットアップ" },
-          code: `# Install (already included in Laravel 11 by default)
-composer require laravel/sanctum
+it('returns JSON post list from API', function () {
+    $user  = User::factory()->create();
+    $posts = Post::factory()->count(3)->for($user)->create();
 
-# Publish config + migrations
-php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
+    $this->actingAs($user, 'sanctum')
+         ->getJson('/api/posts')
+         ->assertOk()
+         ->assertJsonCount(3, 'data')
+         ->assertJsonStructure([
+             'data' => [['id', 'title', 'body', 'author']],
+             'links',
+             'meta',
+         ]);
+});
 
-php artisan migrate`,
-        },
-        {
-          type: "code",
-          title: { en: "HasApiTokens on User model", np: "User model", jp: "User モデル" },
-          code: `// app/Models/User.php
-use Laravel\\Sanctum\\HasApiTokens;
+it('validates post creation fields', function () {
+    $user = User::factory()->create();
 
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, Notifiable;
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Issuing & revoking tokens", np: "Token बनाउने र मेट्ने", jp: "トークン発行と削除" },
-          code: `// Issue a token on login
-public function login(Request $request): JsonResponse
-{
-    $user = User::where('email', $request->email)->first();
+    $this->actingAs($user)
+         ->post('/posts', [])              // empty payload
+         ->assertSessionHasErrors(['title', 'body']);
+});
 
-    if (! $user || ! Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    }
-
-    // Create token with optional abilities (scopes)
-    $token = $user->createToken('mobile-app', ['posts:read', 'posts:write'])
-                   ->plainTextToken;
-
-    return response()->json(['token' => $token]);
-}
-
-// Revoke current token (logout)
-public function logout(Request $request): JsonResponse
-{
-    $request->user()->currentAccessToken()->delete();
-    return response()->json(['message' => 'Logged out']);
-}
-
-// Revoke all tokens (e.g. "log out everywhere")
-$user->tokens()->delete();
-
-// Protect API routes — routes/api.php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::post('/posts', [PostController::class, 'store']);
+it('redirects guests to login', function () {
+    $this->get('/dashboard')->assertRedirect('/login');
 });`,
         },
         {
           type: "table",
           caption: {
-            en: "SPA cookie auth vs API token auth",
-            np: "दुई mode तुलना",
-            jp: "SPA クッキー vs API トークン",
+            en: "Common response assertion methods",
+            np: "Response assertions",
+            jp: "主要レスポンスアサーション",
           },
           headers: [
-            { en: "Mode", np: "Mode", jp: "モード" },
-            { en: "Use case", np: "प्रयोग", jp: "ユースケース" },
-            { en: "Credentials sent as", np: "credential", jp: "認証情報" },
-            { en: "Stateful?", np: "Stateful?", jp: "Stateful?" },
+            { en: "Method", np: "Method", jp: "メソッド" },
+            { en: "What it checks", np: "के check गर्छ", jp: "確認内容" },
           ],
           rows: [
             [
-              { en: "SPA Cookie", np: "SPA Cookie", jp: "SPA クッキー" },
-              { en: "Same-domain SPA (React, Vue)", np: "Same-domain SPA", jp: "同一ドメイン SPA" },
-              { en: "Session cookie (CSRF token required)", np: "Cookie + CSRF", jp: "Cookie + CSRF" },
-              { en: "Yes", np: "हो", jp: "Yes" },
+              { en: "`assertStatus(200)`", np: "`assertStatus(200)`", jp: "`assertStatus(200)`" },
+              { en: "HTTP status code", np: "Status code", jp: "HTTP ステータスコード" },
             ],
             [
-              { en: "API Token", np: "API Token", jp: "API トークン" },
-              { en: "Mobile apps, 3rd-party clients", np: "Mobile app", jp: "モバイル・外部クライアント" },
-              { en: "`Authorization: Bearer <token>` header", np: "Bearer header", jp: "Bearer ヘッダー" },
-              { en: "No", np: "होइन", jp: "No" },
+              { en: "`assertOk()` / `assertNotFound()`", np: "`assertOk()`", jp: "`assertOk()`" },
+              { en: "200 / 404 shorthand", np: "Shorthand", jp: "200 / 404 の省略形" },
+            ],
+            [
+              { en: "`assertJson(['key' => 'val'])`", np: "`assertJson()`", jp: "`assertJson()`" },
+              { en: "JSON contains subset", np: "JSON subset", jp: "JSON のサブセット一致" },
+            ],
+            [
+              { en: "`assertJsonCount(3, 'data')`", np: "`assertJsonCount()`", jp: "`assertJsonCount()`" },
+              { en: "Array length at JSON path", np: "Array length", jp: "JSON パスの配列長" },
+            ],
+            [
+              { en: "`assertSee('text')`", np: "`assertSee()`", jp: "`assertSee()`" },
+              { en: "Text appears in response body", np: "Text present", jp: "レスポンスボディにテキスト存在" },
+            ],
+            [
+              { en: "`assertRedirect('/login')`", np: "`assertRedirect()`", jp: "`assertRedirect()`" },
+              { en: "Location header matches", np: "Redirect", jp: "リダイレクト先の一致" },
+            ],
+            [
+              { en: "`assertSessionHasErrors('field')`", np: "`assertSessionHasErrors()`", jp: "`assertSessionHasErrors()`" },
+              { en: "Validation error in session", np: "Validation error", jp: "セッションにバリデーションエラー" },
+            ],
+            [
+              { en: "`assertUnauthorized()` / `assertForbidden()`", np: "401 / 403", jp: "401 / 403" },
+              { en: "401 / 403 responses", np: "401 / 403", jp: "401 / 403 レスポンス" },
             ],
           ],
         },
@@ -290,82 +251,257 @@ Route::middleware('auth:sanctum')->group(function () {
     },
     {
       title: {
-        en: "Password reset & email verification",
-        np: "Password reset र email verification",
-        jp: "パスワードリセットとメール確認",
+        en: "Database testing",
+        np: "Database testing",
+        jp: "データベーステスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Laravel's <b>password broker</b> handles the full forgot-password flow for you:\n• User submits their email → Laravel generates a short-lived signed token and emails a reset link\n• User clicks the link → Laravel validates the token and lets them set a new password\n• Password is updated → token is deleted so it can't be reused\n\nIf you're using Breeze, all this is wired up automatically. The code below shows how the underlying `Password` facade works — useful if you're building a custom flow.",
-            np: "Password broker ले reset flow सम्हाल्छ। Breeze ले automatic गर्छ।",
-            jp: "パスワードブローカーがリセット全体を処理。Breeze を使えば自動、カスタムフローにも対応。",
+            en: "Tests that touch the database need a clean slate before each test — otherwise results from one test bleed into the next.\n\n<b>`RefreshDatabase`</b> handles this automatically:\n• Before the first test runs, it migrates the database from scratch\n• Before each subsequent test, it wraps everything in a transaction — then rolls it back after\n  ↳ Every test starts with a completely empty database\n\n<b>Factories</b> are how you create test data without hand-writing SQL `INSERT` statements:\n• `User::factory()->create()` — creates a real database row with realistic fake data\n• `User::factory()->count(10)->create()` — create 10 rows at once\n• `User::factory()->admin()->create()` — use a custom state defined in the factory class",
+            np: "`RefreshDatabase` — clean DB। Factory ले test data बनाउँछ।",
+            jp: "`RefreshDatabase` でテストごとに DB をクリーン。Factory でリアルなテストデータを生成。",
           },
         },
         {
           type: "code",
-          title: { en: "Password reset with Password facade", np: "Password facade", jp: "Password ファサード" },
-          code: `use Illuminate\\Support\\Facades\\Password;
+          title: { en: "RefreshDatabase + assertDatabaseHas", np: "DB assert", jp: "DB アサーション" },
+          code: `<?php
+// tests/Feature/UserRegistrationTest.php
 
-// 1. Send reset link
-$status = Password::sendResetLink($request->only('email'));
+use App\\Models\\User;
+use Illuminate\\Foundation\\Testing\\RefreshDatabase;
 
-if ($status === Password::RESET_LINK_SENT) {
-    return back()->with('status', __($status));
-}
-return back()->withErrors(['email' => __($status)]);
+uses(RefreshDatabase::class);
 
-// 2. Reset password (called from reset form)
-$status = Password::reset(
-    $request->only('email', 'password', 'password_confirmation', 'token'),
-    function (User $user, string $password) {
-        $user->forceFill(['password' => Hash::make($password)])
-             ->setRememberToken(Str::random(60));
-        $user->save();
-        event(new PasswordReset($user));
-    }
-);
+it('registers a new user', function () {
+    $response = $this->post('/register', [
+        'name'                  => 'Alice',
+        'email'                 => 'alice@example.com',
+        'password'              => 'password',
+        'password_confirmation' => 'password',
+    ]);
 
-return $status === Password::PASSWORD_RESET
-    ? redirect()->route('login')->with('status', __($status))
-    : back()->withErrors(['email' => __($status)]);`,
+    $response->assertRedirect('/dashboard');
+
+    // Assert a row exists with exact column values
+    $this->assertDatabaseHas('users', [
+        'name'  => 'Alice',
+        'email' => 'alice@example.com',
+    ]);
+
+    // Assert user count
+    $this->assertDatabaseCount('users', 1);
+});
+
+it('does not store plain-text password', function () {
+    $this->post('/register', [
+        'name'                  => 'Bob',
+        'email'                 => 'bob@example.com',
+        'password'              => 'secret123',
+        'password_confirmation' => 'secret123',
+    ]);
+
+    // Row should NOT have this value
+    $this->assertDatabaseMissing('users', [
+        'email'    => 'bob@example.com',
+        'password' => 'secret123',
+    ]);
+});`,
         },
+        {
+          type: "code",
+          title: { en: "Factories — creating test data", np: "Factory", jp: "Factory でテストデータ生成" },
+          code: `// Basic factory usage
+$user    = User::factory()->create();         // persisted
+$user    = User::factory()->make();           // in memory only
+$users   = User::factory()->count(10)->create();
+
+// States defined in the factory class
+$admin   = User::factory()->admin()->create();
+$unverified = User::factory()->unverified()->create();
+
+// With relationships
+$post = Post::factory()
+    ->for(User::factory()->create())    // belongsTo
+    ->has(Comment::factory()->count(3)) // hasMany
+    ->create();
+
+// Inline attribute override
+$post = Post::factory()->create([
+    'title'     => 'Custom Title',
+    'published' => true,
+]);
+
+// UserFactory example
+// database/factories/UserFactory.php
+public function definition(): array
+{
+    return [
+        'name'              => fake()->name(),
+        'email'             => fake()->unique()->safeEmail(),
+        'password'          => Hash::make('password'),
+        'email_verified_at' => now(),
+    ];
+}
+
+public function admin(): static
+{
+    return $this->state(['role' => 'admin']);
+}
+
+public function unverified(): static
+{
+    return $this->state(['email_verified_at' => null]);
+}`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Faking external services",
+        np: "External service fake",
+        jp: "外部サービスのフェイク",
+      },
+      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Email verification</b> lets you require users to confirm their email address before they can access certain parts of your app.\n\nTo enable it:\n• Add `implements MustVerifyEmail` to your `User` model\n• Laravel will automatically send a verification email after registration\n• Protect routes with the `verified` middleware — users who haven't verified get redirected to `/email/verify`",
-            np: "`MustVerifyEmail` implement गर्नु। `verified` middleware थप्नु।",
-            jp: "`MustVerifyEmail` を実装するとメール確認が有効。`verified` ミドルウェアで未確認ユーザーをブロック。",
+            en: "Testing code that calls external services (email, queues, events) is tricky — you don't want real emails sent or real jobs running during tests.\n\n<b>Laravel's fake facades solve this</b>\n• Call `Mail::fake()`, `Queue::fake()`, or `Event::fake()` at the start of a test\n  ↳ From that point on, nothing is actually sent or dispatched — Laravel just records what would have happened\n• After running the code under test, use assertion methods to verify the right things were triggered:\n  ↳ `Mail::assertSent(WelcomeMail::class)` — was this email triggered?\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — was this job queued?\n  ↳ `Event::assertDispatched(OrderShipped::class)` — was this event fired?\n• Tests stay fast (no network calls) and reliable (no flaky external dependencies)",
+            np: "Fake facade ले real implementation replace। Assert ले check। Real service hit हुँदैन।",
+            jp: "フェイクファサードは実装をスタブに差し替え。実際には何も送らずアサーションのみ。高速・決定的。",
           },
         },
         {
           type: "code",
-          title: { en: "Email verification setup", np: "Email verify", jp: "メール確認の設定" },
-          code: `// app/Models/User.php
-use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
+          title: { en: "Mail::fake() — email assertions", np: "Mail fake", jp: "Mail::fake()" },
+          code: `<?php
+use App\\Mail\\WelcomeMail;
+use Illuminate\\Support\\Facades\\Mail;
 
-class User extends Authenticatable implements MustVerifyEmail
-{
-    // Registration automatically sends verification email
-}
+it('sends a welcome email after registration', function () {
+    Mail::fake();
 
-// Check in code
-if (Auth::user()->hasVerifiedEmail()) {
-    // proceed
-}
+    $this->post('/register', [
+        'name'                  => 'Carol',
+        'email'                 => 'carol@example.com',
+        'password'              => 'password',
+        'password_confirmation' => 'password',
+    ]);
 
-// Manually trigger verification email
-$user->sendEmailVerificationNotification();
+    // Assert a specific mailable was sent to an address
+    Mail::assertSent(WelcomeMail::class, function (WelcomeMail $mail) {
+        return $mail->hasTo('carol@example.com');
+    });
 
-// routes/web.php — Breeze adds these automatically
-Route::get('/email/verify', EmailVerificationPromptController::class)
-    ->middleware('auth')
-    ->name('verification.notice');
+    // Assert exactly one email was sent
+    Mail::assertSent(WelcomeMail::class, 1);
 
-Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');`,
+    // Assert nothing else was sent
+    Mail::assertNothingQueued();
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Queue::fake() — job assertions", np: "Queue fake", jp: "Queue::fake()" },
+          code: `<?php
+use App\\Jobs\\SendWelcomeEmail;
+use App\\Jobs\\GenerateThumbnail;
+use Illuminate\\Support\\Facades\\Queue;
+
+it('dispatches a welcome email job on registration', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/posts', ['title' => 'Hi', 'body' => 'World']);
+
+    Queue::assertPushed(GenerateThumbnail::class);
+
+    Queue::assertPushedOn('emails', SendWelcomeEmail::class);
+
+    Queue::assertPushed(SendWelcomeEmail::class, function ($job) use ($user) {
+        return $job->user->id === $user->id;
+    });
+
+    // Opposite — nothing of this type was dispatched
+    Queue::assertNotPushed(SomeOtherJob::class);
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Event::fake() — event & notification assertions", np: "Event fake", jp: "Event::fake()" },
+          code: `<?php
+use App\\Events\\OrderShipped;
+use App\\Notifications\\OrderShippedNotification;
+use Illuminate\\Support\\Facades\\{Event, Notification};
+
+it('fires OrderShipped event when order is shipped', function () {
+    Event::fake();
+
+    $order = Order::factory()->create();
+    $order->ship();
+
+    Event::assertDispatched(OrderShipped::class, function ($event) use ($order) {
+        return $event->order->id === $order->id;
+    });
+
+    Event::assertDispatchedTimes(OrderShipped::class, 1);
+    Event::assertNotDispatched(SomeOtherEvent::class);
+});
+
+it('notifies user when order ships', function () {
+    Notification::fake();
+
+    $user  = User::factory()->create();
+    $order = Order::factory()->for($user)->create();
+    $order->ship();
+
+    Notification::assertSentTo($user, OrderShippedNotification::class);
+    Notification::assertSentToTimes($user, OrderShippedNotification::class, 1);
+});`,
+        },
+        {
+          type: "code",
+          title: { en: "Storage::fake() + Http::fake() + artisan command tests", np: "Other fakes", jp: "その他のフェイク" },
+          code: `<?php
+use Illuminate\\Http\\UploadedFile;
+use Illuminate\\Support\\Facades\\{Http, Storage};
+
+// Storage::fake — test file uploads without touching disk
+it('stores an uploaded avatar', function () {
+    Storage::fake('avatars');
+
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->image('avatar.jpg', 200, 200);
+
+    $this->actingAs($user)
+         ->post('/profile/avatar', ['avatar' => $file])
+         ->assertOk();
+
+    Storage::disk('avatars')->assertExists("avatars/{$user->id}.jpg");
+});
+
+// Http::fake — fake outbound HTTP calls
+it('syncs data from external API', function () {
+    Http::fake([
+        'api.example.com/items' => Http::response([
+            ['id' => 1, 'name' => 'Widget'],
+            ['id' => 2, 'name' => 'Gadget'],
+        ], 200),
+        '*' => Http::response([], 500), // catch-all fallback
+    ]);
+
+    $this->artisan('app:sync-items')->assertSuccessful();
+    $this->assertDatabaseCount('items', 2);
+});
+
+// Artisan command tests
+it('runs the weekly report command', function () {
+    $this->artisan('reports:weekly')
+         ->expectsOutput('Report generated.')
+         ->assertExitCode(0);   // or assertSuccessful()
+});`,
         },
       ],
     },
@@ -373,86 +509,86 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
   faq: [
     {
       question: {
-        en: "What is the difference between Breeze, Jetstream, and Fortify?",
-        np: "Breeze, Jetstream, Fortify फरक के हो?",
-        jp: "Breeze・Jetstream・Fortify の違いは？",
+        en: "Should I use Pest or PHPUnit?",
+        np: "Pest वा PHPUnit?",
+        jp: "Pest と PHPUnit どちらを使うべき？",
       },
       answer: {
-        en: "Think of them as three tiers of auth scaffolding:\n\n• <b>Fortify</b> — the engine. Backend routes and logic only, no views. You build the UI yourself.\n• <b>Breeze</b> — Fortify with simple, clean views added. Covers login, register, password reset, email verify, and profile. Perfect for most projects.\n• <b>Jetstream</b> — the full package. Adds team management, two-factor authentication, API token management, and a richer UI. Use this only if you specifically need teams or 2FA.\n\nFor a new project, start with Breeze.",
-        np: "Fortify = headless backend। Breeze = Fortify + views। Jetstream = team, 2FA सहित।",
-        jp: "Fortify はビューなしのバックエンドのみ。Breeze は Fortify + シンプルなビュー。Jetstream はチーム・2FA まで含む大型キット。",
+        en: "<b>Pest</b> is the recommended default for all new Laravel projects — here's why:\n• Less boilerplate: no class, no `setUp()`, no `public function test_...` naming convention\n  ↳ A Pest test is just an `it()` call with a closure — much easier to read and write\n• Better assertions: `expect($value)->toBe(42)` reads more like English than `$this->assertEquals(42, $value)`\n• Extras built in: datasets (`it()->with([...])`), architecture tests (`arch()`), and parallel test execution\n• No feature loss: it compiles to PHPUnit under the hood — every PHPUnit assertion works inside Pest\n\nThe only reason to stick with PHPUnit is if you have an existing test suite you're not ready to migrate yet.",
+        np: "New project मा Pest। PHPUnit wrapper, feature loss छैन। Old project छ भने PHPUnit ठीक।",
+        jp: "新規プロジェクトは Pest が推奨。PHPUnit のラッパーなので機能差なし。既存スイートがある場合は PHPUnit をそのまま使ってよい。",
       },
     },
     {
       question: {
-        en: "Is Sanctum suitable for mobile apps?",
-        np: "Mobile app को लागि Sanctum ठीक छ?",
-        jp: "Sanctum はモバイルアプリに適していますか？",
+        en: "What does `RefreshDatabase` do to performance?",
+        np: "`RefreshDatabase` performance मा असर?",
+        jp: "`RefreshDatabase` はパフォーマンスにどう影響しますか？",
       },
       answer: {
-        en: "Yes — Sanctum's <b>API token mode</b> is the recommended approach for mobile apps.\n\nThe flow is simple:\n• The app logs in once with email + password\n• Laravel returns a plain-text token\n• The app stores the token securely (iOS Keychain / Android Keystore)\n• Every API request sends the token as `Authorization: Bearer <token>`\n\nTokens can have abilities (scopes) to limit what they can do, and can be revoked individually.\n\nIf you need complex OAuth2 flows — for example, letting third-party apps authenticate via your platform — use Laravel Passport instead.",
-        np: "API token mode mobile को लागि राम्रो। Passport OAuth2 को लागि।",
-        jp: "API トークンモードがモバイルに最適。OAuth2 が必要なら Passport を。",
+        en: "`RefreshDatabase` is the most common approach and works like this:\n• <b>First test in the suite</b>: runs all your migrations from scratch against the test database\n• <b>Every subsequent test</b>: wraps the test in a database transaction, then rolls it back after\n  ↳ Each test starts clean without re-running migrations — so it's fast after the first one\n\n<b>Speed tips</b>\n• Use an in-memory SQLite database for tests: set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`\n  ↳ SQLite migrations run almost instantly — great for local development\n• For very large migration suites, `LazilyRefreshDatabase` only migrates when a test actually needs the database",
+        np: "First test मा migrate एकपटक, बाकी transaction rollback। SQLite in-memory सबभन्दा fast।",
+        jp: "最初の 1 回だけマイグレーション実行、以降はトランザクションロールバック。SQLite インメモリが最速。",
       },
     },
     {
       question: {
-        en: "How do I add roles to authenticated users?",
-        np: "User मा role कसरी थप्ने?",
-        jp: "認証済みユーザーにロールを追加する方法は？",
+        en: "How do I test validation errors?",
+        np: "Validation error test कसरी?",
+        jp: "バリデーションエラーをテストする方法は？",
       },
       answer: {
-        en: "The simplest approach: add a `role` column to your `users` table with values like `admin`, `editor`, or `viewer`. Then check it wherever you need to: `$user->role === 'admin'`.\n\nFor more advanced role and permission management with database-backed rules (assign/revoke at runtime without redeploying code), use the <b>Spatie Laravel Permission</b> package: `composer require spatie/laravel-permission`. It adds helpful methods like `hasRole()`, `can()`, and `givePermissionTo()`.\n\nYou can also use Gates and Policies (Day 18) to authorize actions without needing a formal role system at all.",
-        np: "`role` column सरल। Spatie permission package advanced RBAC को लागि।",
-        jp: "`users` テーブルに `role` カラムが最もシンプル。高度な RBAC は Spatie Permission パッケージを使用。",
+        en: "It depends on whether the route returns HTML or JSON:\n\n<b>Web (Blade) routes</b> — validation errors are flashed to the session and the user is redirected back:\n• `->assertSessionHasErrors('title')` — one field failed\n• `->assertSessionHasErrors(['title', 'body'])` — multiple fields failed\n\n<b>API (JSON) routes</b> — Laravel returns a 422 response with an errors object:\n• `->assertUnprocessable()` — confirms a 422 status code\n• `->assertJsonValidationErrors('email')` — confirms the field appears in the errors list\n• `->assertJsonValidationErrors(['email' => 'The email field is required.'])` — checks the exact message",
+        np: "Web: `assertSessionHasErrors()`। API: `assertJsonValidationErrors()`। 422 = `assertUnprocessable()`।",
+        jp: "Web は `assertSessionHasErrors()`、API は `assertJsonValidationErrors()` と `assertUnprocessable()`（422）。",
       },
     },
     {
       question: {
-        en: "What is the `remember_token` field for?",
-        np: "`remember_token` किस लागि?",
-        jp: "`remember_token` フィールドは何のためにあるの？",
+        en: "How do I assert a notification was sent?",
+        np: "Notification send भयो कि भएन assert?",
+        jp: "通知が送信されたことをアサートする方法は？",
       },
       answer: {
-        en: "It powers the <b>\"remember me\"</b> checkbox on login forms.\n\nWhen a user logs in with `Auth::attempt($credentials, true)`, Laravel:\n• Stores a long-lived token in the `remember_token` column\n• Sets a persistent cookie in the browser\n\nOn future visits, the browser sends the cookie, Laravel validates it against the database, and the user stays logged in — without re-entering their password.\n\nThe token is rotated every time it's used (so stolen cookies can't be replayed) and cleared completely on logout. Don't remove this column from the `users` migration if you want remember-me to work.",
-        np: "\"Remember me\" को लागि। Persistent cookie check गर्छ।",
-        jp: "\"Remember me\" ログイン用。永続クッキーと DB トークンを照合して自動ログイン。",
+        en: "Call `Notification::fake()` at the start of your test — after that, no notifications actually go out.\n\nThen, after running the action that should trigger the notification:\n• `Notification::assertSentTo($user, MyNotification::class)` — was this notification sent to this user?\n• Pass a callback as a third argument to check the notification's data:\n  ↳ `Notification::assertSentTo($user, MyNotification::class, fn($n) => $n->order->id === 5)`\n• `Notification::assertNothingSent()` — confirms nothing was sent at all\n\nThis works regardless of which channel the notification uses — email, Slack, SMS, database — because `Notification::fake()` intercepts all of them.",
+        np: "`Notification::fake()` → assert। `assertSentTo()` user र class दिनु।",
+        jp: "`Notification::fake()` 後に `assertSentTo($user, MyNotification::class)`。チャンネル問わず動作。",
       },
     },
     {
       question: {
-        en: "Can I have multiple auth guards?",
-        np: "धेरै auth guard राख्न मिल्छ?",
-        jp: "複数の認証ガードは持てますか？",
+        en: "Can I test middleware in isolation?",
+        np: "Middleware isolation मा test?",
+        jp: "ミドルウェアを独立してテストできますか？",
       },
       answer: {
-        en: "Yes. Add as many guards as you need in `config/auth.php`.\n\nA common pattern: a separate `admin` guard backed by an `admins` table with its own session. Admins log in via `Auth::guard('admin')->attempt($credentials)` and hit routes protected by `Route::middleware('auth:admin')`.\n\nEach guard is completely independent — an authenticated admin user is not recognized by the `web` guard, and vice versa.",
-        np: "`config/auth.php` मा guard थप्न मिल्छ। प्रत्येक guard स्वतन्त्र।",
-        jp: "`config/auth.php` に追加可能。`admin` ガードなど別テーブルで独立した認証ができます。",
+        en: "Yes, though the most practical approach is to test middleware <b>indirectly through feature tests</b>:\n• `$this->get('/dashboard')->assertRedirect('/login')` — confirms the auth middleware is working\n  ↳ You don't need to instantiate the middleware class itself — the full stack proves it\n\nFor direct unit testing of a middleware class:\n• Instantiate it, pass a `Request` object and a `$next` closure, and assert the response\n  ↳ Useful when middleware has complex internal logic that's hard to test via HTTP\n\nTo isolate a controller by skipping middleware in a test, call `$this->withoutMiddleware()` at the top — it disables all middleware for that test only.",
+        np: "Feature test मा indirect test सजिलो। Direct unit test को लागि Request र Closure pass।",
+        jp: "HTTPテストで間接的にテストが一般的。直接 `new Middleware()` して Request と Closure を渡す方法もある。",
       },
     },
     {
       question: {
-        en: "How do I protect a route for specific user types?",
-        np: "विशेष user type को लागि route protect?",
-        jp: "特定ユーザータイプのみルートを保護する方法は？",
+        en: "How do I test exception handling?",
+        np: "Exception handling test?",
+        jp: "例外処理をテストする方法は？",
       },
       answer: {
-        en: "Three options, from simplest to most structured:\n\n• <b>Custom middleware</b> — `php artisan make:middleware EnsureUserIsAdmin`. Inside `handle()`, check `$request->user()?->role === 'admin'` and call `abort(403)` if not. Register the middleware with an alias in `bootstrap/app.php` (Laravel 11).\n• <b>Gate</b> — define a one-off rule in `AppServiceProvider::boot()` and check it with `Gate::authorize()`.\n• <b>Policy</b> — for model-based checks, covered in Day 18.",
-        np: "Custom middleware वा Gate/Policy। `abort(403)` फर्काउनु।",
-        jp: "カスタムミドルウェアか Gate/Policy（Day 18 参照）。`abort(403)` で弾く。",
+        en: "For <b>HTTP responses</b>, assert the status code — that's usually all you need:\n• `->assertNotFound()` — 404 (e.g. when a model isn't found)\n• `->assertForbidden()` — 403 (e.g. when authorization fails)\n• `->assertStatus(500)` — any specific code\n\nFor <b>non-HTTP code</b> that throws an exception, use Pest's `expect()` wrapper:\n• `expect(fn() => $thing->doSomething())->toThrow(ModelNotFoundException::class)`\n\n<b>Debugging tip</b>: by default, Laravel's exception handler catches exceptions and converts them to HTTP responses (like a 500 page). If you want to see the raw exception instead of a response, call `$this->withoutExceptionHandling()` at the top of your test.",
+        np: "HTTP: status code assert। Raw exception: `toThrow()`। `withoutExceptionHandling()` debug को लागि।",
+        jp: "HTTP は `assertNotFound()` など。例外を直接テストは `toThrow()`。`withoutExceptionHandling()` で生の例外を確認。",
       },
     },
     {
       question: {
-        en: "How do I test authentication in feature tests?",
-        np: "Feature test मा auth कसरी test गर्ने?",
-        jp: "フィーチャーテストで認証をテストする方法は？",
+        en: "How do I test that a queued mailable was queued (not sent immediately)?",
+        np: "Queued mailable test कसरी?",
+        jp: "キューに入れられたメールをテストする方法は？",
       },
       answer: {
-        en: "Use `$this->actingAs($user)` to act as a logged-in user for the duration of a test request — no need to actually go through the login form.\n\n• For web routes: `$this->actingAs($user)` (uses the `web` guard)\n• For Sanctum API routes: `$this->actingAs($user, 'sanctum')`\n• Create test users with factories: `$user = User::factory()->create()`\n• Assert unauthenticated access redirects: `->assertRedirect('/login')`\n• Assert authenticated access succeeds: `->assertOk()`",
-        np: "`actingAs($user)` test मा auth। Factory ले user बनाउने।",
-        jp: "`actingAs($user)` でテスト内で認証。Sanctum は第2引数に `'sanctum'` を渡す。",
+        en: "There are two different assertion methods and they check different things:\n\n• `Mail::assertSent()` — checks for mail that was sent <b>immediately</b> (synchronous, no queue)\n• `Mail::assertQueued()` — checks for mail that was <b>pushed onto the queue</b> (the mailable implements `ShouldQueue`)\n\nIf your mailable implements `ShouldQueue` and you use `assertSent()`, the assertion will fail even if the code is working — because the mail was queued, not sent directly.\n\nUse `assertQueued()` for any mailable with `ShouldQueue`. After calling `Mail::fake()`, both kinds are intercepted — no real email goes out either way.",
+        np: "`Mail::assertQueued()` — `assertSent()` होइन। `ShouldQueue` implement भएको mailable को लागि।",
+        jp: "`ShouldQueue` を実装したメールは `assertQueued()` でチェック。`assertSent()` は同期送信のみ。",
       },
     },
   ],

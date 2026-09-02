@@ -125,10 +125,23 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+
+            // For MinIO, DigitalOcean Spaces and anything
+            // else S3-compatible but not S3 itself:
+            'endpoint'                => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
 
     ],
 ];
+
+
+# ---------- The S3 driver is a separate package ----------
+
+composer require league/flysystem-aws-s3-v3
+
+# Laravel ships the disk configuration; the adapter that
+# talks to S3 is not installed by default.
 
 
 # ---------- The link ----------
@@ -370,6 +383,11 @@ $file->storeAs('documents', 'report.pdf', 'public');  // you name it
 // ❌ The name came from the browser.
 $file->storeAs('documents', $file->getClientOriginalName());
 
+// The generated name on its own, when you want Laravel's
+// name but your own directory or disk:
+$name = $file->hashName();            // 8f3c…d1.pdf
+$file->storeAs('invoices/2026', $name, 's3');
+
 // A filename is user input:
 //   ../../.env          path traversal
 //   report.pdf.php      an executable extension
@@ -560,6 +578,12 @@ Storage::exists('documents/report.pdf');       // true / false
 $contents = Storage::get('documents/report.pdf');
 $size = Storage::size('documents/report.pdf');
 $when = Storage::lastModified('documents/report.pdf');
+$type = Storage::mimeType('documents/report.pdf');   // application/pdf
+
+// The inverse of exists(), which reads better in a guard:
+if (Storage::missing($path)) {
+    abort(404);
+}
 
 // A public URL, on a disk that has one.
 $url = Storage::disk('public')->url('avatars/user.jpg');
@@ -810,6 +834,24 @@ The read-through driver
         code: `<?php
 
 use Illuminate\\Support\\Facades\\Storage;
+
+// ---------- Copying and moving ----------
+
+Storage::copy('invoices/draft.pdf', 'invoices/archive/draft.pdf');
+Storage::move('invoices/draft.pdf', 'invoices/final.pdf');
+
+// Both stay on the same disk. Across disks, read and write:
+Storage::disk('s3')->put($path, Storage::disk('local')->get($path));
+
+
+// ---------- Appending to a file ----------
+
+Storage::append('logs/import.log', "row {$id} skipped");
+Storage::prepend('logs/import.log', '--- newest first ---');
+
+// Fine for a small audit trail. Not a substitute for a
+// log channel, and not safe with several writers at once.
+
 
 // ---------- Deleting ----------
 
@@ -1355,6 +1397,28 @@ $response->successful();         // 2xx
 $response->failed();
 
 
+// ---------- Not everything wants JSON ----------
+
+// Older APIs and almost every OAuth token endpoint want
+// application/x-www-form-urlencoded, not JSON:
+Http::asForm()->post('https://api.example.com/oauth/token', [
+    'grant_type'    => 'client_credentials',
+    'client_id'     => config('services.example.id'),
+    'client_secret' => config('services.example.secret'),
+]);
+
+// Sending a file to somebody else's API is multipart:
+Http::attach(
+    'document',
+    Storage::get($invoice->path),
+    'invoice.pdf',
+)->post('https://api.example.com/documents');
+
+// attach() switches the request to multipart, so do not
+// also call asJson() — pass the other fields as the
+// second argument to post().
+
+
 // ---------- Headers and auth ----------
 
 Http::withHeaders([
@@ -1695,6 +1759,7 @@ $users = Http::get('https://api.example.com/users')
 // Conditionally:
 $response->throwIf($response->serverError());
 $response->throwUnless($response->successful());
+$response->throwUnlessStatus(201);      // anything but 201 throws
 
 
 <?php
@@ -1952,6 +2017,11 @@ class InvoiceSyncTest extends TestCase
         Http::assertSent(fn ($request) =>
             $request->url() === 'https://api.example.com/invoices'
             && $request->hasHeader('Authorization'));
+
+        // And the half people skip: proving you did NOT
+        // call something.
+        Http::assertNotSent(fn ($request) =>
+            str_contains($request->url(), '/charge'));
     }
 
     public function test_it_survives_a_server_error(): void
