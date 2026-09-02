@@ -3,393 +3,409 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_36_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Today covers three tools for doing work <b>outside</b> the web request cycle.\n\n<b>Queues</b> — for tasks that are too slow for a web request (sending emails, resizing images, calling external APIs)\n  ↳ Hand the work off to a background worker so users get an instant response\n\n<b>Events & Listeners</b> — for notifying different parts of your app when something happens\n  ↳ Instead of calling services directly, you fire an event and let listeners react independently\n\n<b>Task Scheduling</b> — for running commands on a timer (daily reports, cleanup jobs)\n  ↳ One PHP file replaces a messy pile of cron job configs on the server",
-      np: "Queue (slow task), Event/Listener (decoupled), Scheduling (cron)। तीन tool एउटै day।",
-      jp: "Queue は重い処理を非同期化、Event/Listener は疎結合な通知、Scheduling は cron の代替。3 つのツールを習得。",
+      en: "These are two different questions every app needs to answer:\n\n<b>Authentication = who are you?</b>\n• Are you logged in? Who is this user?\n  ↳ Covered in Day 17 — sessions, tokens, Breeze\n\n<b>Authorization = what can you do?</b>\n• Can this logged-in user edit this post? Delete someone else's account?\n  ↳ That's what today covers — Gates and Policies\n\n<b>API Resources</b> — a separate but related topic: they control exactly what your JSON responses look like, so you don't accidentally expose sensitive model fields to API consumers.",
+      np: "Auth = who. Authz = what. Gate र Policy authz को लागि। API Resource = clean JSON।",
+      jp: "認証は「誰か」、認可は「何ができるか」。Gate はシンプルなクロージャ、Policy はモデル単位のクラス。API Resource で JSON を整形。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Jobs & queue dispatching",
-        np: "Job र queue dispatch",
-        jp: "Job とキューディスパッチ",
+        en: "Gates — simple closure-based authorization",
+        np: "Gate — closure-based authorization",
+        jp: "Gate — クロージャベースの認可",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "A <b>Gate</b> is the simplest form of authorization — just a closure that returns `true` (allowed) or `false` (denied).\n\nThink of it like a bouncer at a door: you describe the rule once ('only admins and editors can enter'), then check it anywhere in your app.\n\n• Gates are defined in a service provider, usually inside `AppServiceProvider::boot()`\n• The first argument is always the authenticated user — Laravel injects it automatically\n• You can pass extra arguments (like a model) as additional parameters\n• Use Gates for one-off actions that don't belong to a specific model\n  ↳ Example: 'can this user view the analytics dashboard?' — not tied to any single record",
+            np: "Gate ले simple closure मा authorization। `AppServiceProvider::boot()` मा define।",
+            jp: "Gate はクロージャで認可ルールを定義。`AppServiceProvider::boot()` に記述するのが一般的。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Defining and checking Gates", np: "Gate define र check", jp: "Gate の定義と確認" },
+          code: `// app/Providers/AppServiceProvider.php
+use Illuminate\\Support\\Facades\\Gate;
+use App\\Models\\{Post, User};
+
+public function boot(): void
+{
+    // Simple gate — no model
+    Gate::define('view-reports', function (User $user): bool {
+        return in_array($user->role, ['admin', 'editor']);
+    });
+
+    // Gate with a model argument
+    Gate::define('update-post', function (User $user, Post $post): bool {
+        return $user->id === $post->user_id;
+    });
+
+    // Gate with before hook (super-admin bypass)
+    Gate::before(function (User $user, string $ability): ?bool {
+        if ($user->isSuperAdmin()) {
+            return true; // short-circuit all checks
+        }
+        return null;     // defer to normal gates
+    });
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Checking Gates in controllers & Blade", np: "Check गर्ने तरिका", jp: "Gate のチェック方法" },
+          code: `// In a controller
+use Illuminate\\Support\\Facades\\Gate;
+
+// Returns bool — use for conditional logic
+if (Gate::allows('update-post', $post)) {
+    // authorized
+}
+
+if (Gate::denies('update-post', $post)) {
+    abort(403);
+}
+
+// Throws HttpException 403 automatically
+Gate::authorize('update-post', $post);
+
+// Via the request user (equivalent to Gate::allows)
+if ($request->user()->can('update-post', $post)) {
+    // authorized
+}
+
+// In Blade
+@can('update-post', $post)
+    <button>Edit</button>
+@elsecan('delete-post', $post)
+    <button>Delete</button>
+@endcan
+
+@cannot('view-reports')
+    <p>Access denied.</p>
+@endcannot`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Policies — model-bound authorization",
+        np: "Policy — model-bound authorization",
+        jp: "Policy — モデルに紐づく認可",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "When you have many rules that all relate to one model — 'who can view a Post, create a Post, update a Post, delete a Post?' — putting them all in individual Gates gets messy fast. That's what <b>Policies</b> are for.\n\nA Policy is a PHP class where each method is one authorization rule for that model:\n• `viewAny` — can the user see the list?\n• `view` — can the user see this specific record?\n• `create` — can the user create a new one?\n• `update` — can the user edit this record?\n• `delete` — can the user delete this record?\n\nLaravel auto-discovers policies using naming convention: `Post` model → `PostPolicy` class. No manual registration needed.",
+            np: "Policy ले model को सबै authorization logic एकठाउँ। `make:policy` ले generate।",
+            jp: "Policy は 1 モデルの認可ロジックをクラスにまとめたもの。命名規則で自動検出される。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Generate & implement a Policy", np: "Policy generate", jp: "Policy の生成と実装" },
+          code: `php artisan make:policy PostPolicy --model=Post`,
+        },
+        {
+          type: "code",
+          title: { en: "PostPolicy class", np: "Policy class", jp: "Policy クラス" },
+          code: `// app/Policies/PostPolicy.php
+namespace App\\Policies;
+
+use App\\Models\\{Post, User};
+use Illuminate\\Auth\\Access\\HandlesAuthorization;
+
+class PostPolicy
+{
+    use HandlesAuthorization;
+
+    /** Any user can list posts */
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    /** Any authenticated user can view a published post */
+    public function view(User $user, Post $post): bool
+    {
+        return $post->published || $user->id === $post->user_id;
+    }
+
+    /** Any authenticated user can create */
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    /** Only the owner can update */
+    public function update(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id;
+    }
+
+    /** Only the owner or an admin can delete */
+    public function delete(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id || $user->role === 'admin';
+    }
+
+    public function restore(User $user, Post $post): bool
+    {
+        return $user->role === 'admin';
+    }
+
+    public function forceDelete(User $user, Post $post): bool
+    {
+        return $user->role === 'admin';
+    }
+}`,
+        },
+        {
+          type: "code",
+          title: { en: "Using policies in controllers & Blade", np: "Controller र Blade मा", jp: "コントローラと Blade での使用" },
+          code: `// Controller — throws 403 if policy denies
+class PostController extends Controller
+{
+    public function update(Request $request, Post $post): RedirectResponse
+    {
+        $this->authorize('update', $post); // uses PostPolicy::update
+
+        $post->update($request->validated());
+        return redirect()->route('posts.show', $post);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $this->authorize('create', Post::class); // no model instance needed
+        // ...
+    }
+}
+
+// Route-model binding with middleware approach
+Route::put('/posts/{post}', [PostController::class, 'update'])
+    ->middleware('can:update,post'); // auto-resolves policy
+
+// Blade directives
+@can('update', $post)
+    <a href="{{ route('posts.edit', $post) }}">Edit</a>
+@endcan
+
+@can('delete', $post)
+    <form method="POST" action="{{ route('posts.destroy', $post) }}">
+        @csrf @method('DELETE')
+        <button>Delete</button>
+    </form>
+@endcan`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Need to manage roles and permissions from a database — so you can assign or revoke them at runtime without deploying code? The <b>Spatie Laravel Permission</b> package is the standard choice. It adds `assignRole()`, `hasRole()`, `givePermissionTo()`, and `can()` methods backed by database tables.",
+            np: "Roles/permissions को लागि Spatie package। DB मा store।",
+            jp: "大規模な RBAC には Spatie Laravel Permission パッケージが便利。DB ベースで権限を管理。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "API Resources — transform Eloquent to JSON",
+        np: "API Resource — Eloquent लाई JSON बनाउने",
+        jp: "API Resource — Eloquent を JSON に変換",
       },
       blocks: [
         {
           type: "diagram",
-          id: "laravel-queue-job",
+          id: "laravel-api-resource",
         },
         {
           type: "paragraph",
           text: {
-            en: "Think of a queue like a restaurant ticket system — the waiter (your web request) takes the order and hands a ticket to the kitchen (the worker), then immediately goes back to take the next customer's order.\n\n<b>Why use queues?</b>\n• Some tasks are slow: sending emails, resizing images, calling external APIs\n  ↳ If you do these during a web request, the user waits 3–5 seconds staring at a spinner\n• With a queue, the web request finishes in milliseconds and hands the slow work to a background worker\n  ↳ The user gets a response immediately — the email sends a second later\n\n<b>How it works</b>\n• Create a <b>Job class</b> — a PHP class that implements `ShouldQueue` with a `handle()` method\n• <b>Dispatch</b> the job from your controller — Laravel serializes it and puts it on the queue\n• A separate <b>worker process</b> (`php artisan queue:work`) runs in the background, picks jobs off the queue, and calls `handle()`\n  ↳ The worker runs independently of your web server — you can scale them separately",
-            np: "`ShouldQueue` implement गर्नु। Worker ले `handle()` call। HTTP fast।",
-            jp: "`ShouldQueue` を実装したクラスがジョブ。ワーカーが `handle()` を実行。HTTP を速く保つ。",
+            en: "When you return an Eloquent model directly from a controller, every column in the database gets sent to the client — including things like `password`, `remember_token`, or internal timestamps you'd rather keep private.\n\n<b>API Resources</b> sit between your models and your JSON responses. They are a transformation layer where you decide exactly:\n• Which fields to include (and which to hide)\n• How to rename or reformat fields\n• Which relationships to include (and only if they're already loaded, to avoid N+1 queries)\n• Which fields to show only to certain users (like admins)\n\nThis keeps your API clean, consistent, and safe — your internal database structure stays private.",
+            np: "API Resource ले model र JSON बीच layer। `toArray()` मा field control।",
+            jp: "API Resource は Eloquent とレスポンスの間の変換レイヤー。公開フィールドを完全にコントロール。",
           },
         },
         {
-          type: "table",
-          caption: {
-            en: "Queue driver comparison",
-            np: "Queue driver तुलना",
-            jp: "Queue ドライバー比較",
-          },
-          headers: [
-            { en: "Driver", np: "Driver", jp: "ドライバー" },
-            { en: "Best for", np: "प्रयोग", jp: "用途" },
-            { en: "Requires", np: "आवश्यक", jp: "必要なもの" },
-            { en: "Production-ready?", np: "Production?", jp: "本番対応？" },
-          ],
-          rows: [
-            [
-              { en: "`sync`", np: "`sync`", jp: "`sync`" },
-              { en: "Local development / testing", np: "Dev/test", jp: "開発・テスト用" },
-              { en: "Nothing", np: "केही होइन", jp: "不要" },
-              { en: "No (runs inline)", np: "होइन", jp: "No（同期実行）" },
-            ],
-            [
-              { en: "`database`", np: "`database`", jp: "`database`" },
-              { en: "Small apps, low volume", np: "Small app", jp: "小規模アプリ" },
-              { en: "`jobs` table migration", np: "`jobs` table", jp: "`jobs` テーブル" },
-              { en: "Yes (limited throughput)", np: "हो (सीमित)", jp: "Yes（低スループット）" },
-            ],
-            [
-              { en: "`redis`", np: "`redis`", jp: "`redis`" },
-              { en: "High-volume production", np: "High volume", jp: "高負荷本番" },
-              { en: "Redis server + predis/phpredis", np: "Redis", jp: "Redis サーバー" },
-              { en: "Yes (recommended)", np: "हो (सिफारिश)", jp: "Yes（推奨）" },
-            ],
-            [
-              { en: "`sqs`", np: "`sqs`", jp: "`sqs`" },
-              { en: "AWS-hosted workloads", np: "AWS", jp: "AWS 環境" },
-              { en: "AWS credentials + `aws/aws-sdk-php`", np: "AWS credentials", jp: "AWS 認証情報" },
-              { en: "Yes (fully managed)", np: "हो (managed)", jp: "Yes（フルマネージド）" },
-            ],
-          ],
+          type: "code",
+          title: { en: "Generate and implement a Resource", np: "Resource generate", jp: "Resource の生成と実装" },
+          code: `php artisan make:resource PostResource
+php artisan make:resource PostCollection  # or use ::collection()`,
         },
         {
           type: "code",
-          title: { en: "Creating a Job", np: "Job बनाउने", jp: "Job の作成" },
-          code: `php artisan make:job SendWelcomeEmail`,
-        },
-        {
-          type: "code",
-          title: { en: "Job class anatomy", np: "Job class", jp: "Job クラスの構造" },
-          code: `// app/Jobs/SendWelcomeEmail.php
-namespace App\\Jobs;
+          title: { en: "PostResource class", np: "PostResource", jp: "PostResource クラス" },
+          code: `// app/Http/Resources/PostResource.php
+namespace App\\Http\\Resources;
 
-use App\\Models\\User;
-use App\\Mail\\WelcomeMail;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Foundation\\Bus\\Dispatchable;
-use Illuminate\\Queue\\InteractsWithQueue;
-use Illuminate\\Queue\\SerializesModels;
-use Illuminate\\Support\\Facades\\Mail;
+use Illuminate\\Http\\Request;
+use Illuminate\\Http\\Resources\\Json\\JsonResource;
 
-class SendWelcomeEmail implements ShouldQueue
+class PostResource extends JsonResource
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /** Number of times the job may be attempted. */
-    public int $tries = 3;
-
-    /** Timeout in seconds before the job is considered failed. */
-    public int $timeout = 60;
-
-    /** Number of seconds to wait before retrying. */
-    public int $backoff = 30;
-
-    public function __construct(
-        public readonly User $user
-    ) {}
-
-    public function handle(): void
+    public function toArray(Request $request): array
     {
-        Mail::to($this->user->email)
-            ->send(new WelcomeMail($this->user));
+        return [
+            'id'         => $this->id,
+            'title'      => $this->title,
+            'slug'       => $this->slug,
+            'body'       => $this->body,
+            'published'  => $this->published_at?->toIso8601String(),
+            'author'     => [
+                'id'   => $this->user->id,
+                'name' => $this->user->name,
+            ],
+
+            // Only include 'views' for admin users
+            'views' => $this->when(
+                $request->user()?->role === 'admin',
+                $this->view_count
+            ),
+
+            // Only include 'comments' if already eager-loaded (avoids N+1)
+            'comments' => CommentResource::collection(
+                $this->whenLoaded('comments')
+            ),
+
+            // Merge additional fields conditionally
+            $this->mergeWhen($this->trashed(), [
+                'deleted_at' => $this->deleted_at,
+            ]),
+
+            'created_at' => $this->created_at->toIso8601String(),
+        ];
     }
 }`,
         },
         {
           type: "code",
-          title: { en: "Dispatching jobs", np: "Job dispatch", jp: "Job のディスパッチ" },
-          code: `use App\\Jobs\\SendWelcomeEmail;
-use App\\Jobs\\GenerateThumbnail;
-use App\\Jobs\\SendInvoice;
-use Illuminate\\Support\\Facades\\Bus;
+          title: { en: "Returning Resources from controllers", np: "Controller मा return", jp: "コントローラで Resource を返す" },
+          code: `use App\\Http\\Resources\\PostResource;
+use App\\Models\\Post;
 
-// Immediate dispatch
-SendWelcomeEmail::dispatch($user);
-
-// Delayed dispatch — run 5 minutes from now
-SendWelcomeEmail::dispatch($user)->delay(now()->addMinutes(5));
-
-// Specific queue channel
-SendWelcomeEmail::dispatch($user)->onQueue('emails');
-
-// Dispatch to a specific connection + queue
-SendWelcomeEmail::dispatch($user)
-    ->onConnection('redis')
-    ->onQueue('high');
-
-// Chained jobs — run sequentially, stop on failure
-Bus::chain([
-    new GenerateThumbnail($post),
-    new SendInvoice($order),
-    new SendWelcomeEmail($user),
-])->onQueue('default')->dispatch();
-
-// Run queue worker
-// php artisan queue:work --queue=high,emails,default
-// php artisan queue:work redis --tries=3 --timeout=90`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Failed jobs & retry strategy",
-        np: "Failed job र retry",
-        jp: "失敗したジョブとリトライ戦略",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Even reliable workers fail sometimes — the email service goes down, a network request times out, or bad data causes an exception.\n\n<b>What happens when a job fails</b>\n• If a job throws an exception, Laravel retries it up to `$tries` times (you set this on the job class)\n  ↳ Between retries it waits `$backoff` seconds — giving external services time to recover\n• After all retries are exhausted, the job is marked as <b>failed</b> and stored in the `failed_jobs` database table\n  ↳ Laravel records the exception message and stack trace so you can see exactly what went wrong\n• The `failed(Throwable $exception)` method on the job is called — use it to clean up partial work or send an alert\n\n<b>What you can do next</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific failed job back onto the queue\n• `php artisan queue:flush` — delete all records from `failed_jobs`",
-            np: "`$tries` पार भए `failed_jobs` table। `failed()` method clean up गर्न।",
-            jp: "`$tries` を超えるか例外が起きると `failed_jobs` に記録。`failed()` でクリーンアップ。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "failed() method + artisan commands", np: "failed() र artisan", jp: "failed() とコマンド" },
-          code: `// Inside the job class
-public function failed(\\Throwable $exception): void
+class PostController extends Controller
 {
-    // Notify the user, clean up partial work, send alert
-    $this->user->notify(new JobFailedNotification($exception->getMessage()));
+    // Single resource
+    public function show(Post $post): PostResource
+    {
+        $post->load('comments', 'user');
+        return new PostResource($post);
+    }
 
-    Log::error('SendWelcomeEmail failed', [
-        'user_id' => $this->user->id,
-        'error'   => $exception->getMessage(),
-    ]);
+    // Collection (adds 'data' wrapper automatically)
+    public function index(): AnonymousResourceCollection
+    {
+        $posts = Post::with('user')->latest()->paginate(15);
+        return PostResource::collection($posts);
+        // Pagination metadata is included automatically
+    }
 }
 
-// Manually fail from inside handle()
-public function handle(): void
+// JSON response for single resource:
+// { "data": { "id": 1, "title": "...", ... } }
+
+// JSON response for collection with pagination:
+// {
+//   "data": [ {...}, {...} ],
+//   "links": { "first": "...", "next": "...", ... },
+//   "meta": { "current_page": 1, "total": 42, ... }
+// }`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "For <b>API versioning</b>, group your routes under a version prefix and keep controllers in versioned namespaces.\n\n• Routes go in: `routes/api/v1.php`\n• Controllers live in: `App\\Http\\Controllers\\Api\\V1\\`\n• You can use different Resource classes per version if the response shape changes between versions\n\nThis way, old API clients keep working on `v1` while new clients use `v2`.",
+            np: "API versioning: `v1` prefix र versioned namespace।",
+            jp: "API バージョニングは `v1` プレフィックスと名前空間で管理。バージョンごとに Resource クラスを切り替えることもできます。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "API versioning route setup", np: "API versioning", jp: "API バージョン設定" },
+          code: `// routes/api.php
+use App\\Http\\Controllers\\Api\\V1\\PostController as V1PostController;
+use App\\Http\\Controllers\\Api\\V2\\PostController as V2PostController;
+
+Route::prefix('v1')->group(function () {
+    Route::apiResource('posts', V1PostController::class);
+});
+
+Route::prefix('v2')->group(function () {
+    Route::apiResource('posts', V2PostController::class);
+});`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanctum API tokens in practice",
+        np: "Sanctum API token व्यवहारमा",
+        jp: "Sanctum API トークンの実践",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Here's the full flow of a typical token-authenticated API:\n\n• Client sends `POST /api/login` with email and password\n• Laravel verifies credentials, issues a token, returns it in the response\n• Client stores the token and sends it as `Authorization: Bearer <token>` on every subsequent request\n• API controllers return <b>API Resources</b> so responses are clean and consistent\n\nIf the API will be called from a web browser on a different domain, you also need to configure CORS to allow that domain.",
+            np: "Login → token → Bearer header → API Resource response। Browser को लागि CORS।",
+            jp: "ログイン → トークン取得 → Bearer ヘッダーで送信 → API Resource で応答。ブラウザは CORS 設定が必要。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Full Sanctum API auth flow", np: "Sanctum flow", jp: "Sanctum 認証フロー" },
+          code: `// routes/api.php
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => new UserResource($request->user()));
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::apiResource('posts', PostController::class);
+});
+
+// app/Http/Controllers/Api/AuthController.php
+class AuthController extends Controller
 {
-    if (! $this->user->isActive()) {
-        $this->fail(new \\RuntimeException('User is not active'));
-        return;
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        $user  = Auth::user();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user'  => new UserResource($user),
+            'token' => $token,
+        ]);
     }
-    // ...
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out successfully']);
+    }
 }
 
-// Artisan commands for failed jobs
-// php artisan queue:failed              — list all failed jobs
-// php artisan queue:retry <id>          — retry one job by ID
-// php artisan queue:retry all           — retry all failed jobs
-// php artisan queue:forget <id>         — delete one failed job
-// php artisan queue:flush               — delete ALL failed jobs
-// php artisan queue:failed-table        — create failed_jobs migration`,
+// config/cors.php — allow your SPA origin
+'allowed_origins' => ['https://app.example.com'],
+'supports_credentials' => true,`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Laravel Horizon</b> is a real-time dashboard for Redis queues — think of it as the control room for all your background workers.\n• Install it with `composer require laravel/horizon` then visit `/horizon` in your browser\n• It shows: how many jobs are waiting, how fast they're being processed, which ones failed, and how long each one took\n  ↳ Essential for production systems where you need to catch problems before users notice them",
-            np: "Horizon — Redis queue dashboard। `/horizon` UI। Production मा essential।",
-            jp: "Horizon は Redis キューのダッシュボード。スループット・失敗・深さをリアルタイム表示。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Events & Listeners",
-        np: "Event र Listener",
-        jp: "イベントとリスナー",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Imagine a package delivery system: when an order ships, you want to (1) email the customer, (2) update the inventory, and (3) log it for analytics.\n\n<b>The naive approach</b>\n• Call each service directly from your controller — works, but your controller now knows about email, inventory, AND analytics\n  ↳ When you add a fourth action, you have to touch the controller again\n\n<b>The Event / Listener approach</b>\n• Fire a single `OrderShipped` <b>event</b> from your controller — it just carries the order data\n• Three separate <b>Listeners</b> each subscribe to that event and handle their own piece\n  ↳ Your controller only knows it shipped an order — it doesn't care what happens next\n  ↳ Adding a fourth action means adding a fourth listener, not touching the controller\n• In Laravel 11, listeners are auto-discovered — no registration file needed",
-            np: "Event = something happened। Listener = respond। Laravel 11 मा auto-discover।",
-            jp: "Event は「何かが起きた」の通知、Listener が「対応する」。Laravel 11 は自動検出。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Generate Event & Listener", np: "Generate", jp: "生成コマンド" },
-          code: `php artisan make:event OrderShipped
-php artisan make:listener SendShipmentNotification --event=OrderShipped
-php artisan make:listener UpdateInventory --event=OrderShipped`,
-        },
-        {
-          type: "code",
-          title: { en: "Event class", np: "Event class", jp: "Event クラス" },
-          code: `// app/Events/OrderShipped.php
-namespace App\\Events;
-
-use App\\Models\\Order;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-use Illuminate\\Queue\\SerializesModels;
-
-class OrderShipped
-{
-    use Dispatchable, SerializesModels;
-
-    public function __construct(
-        public readonly Order $order
-    ) {}
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Queueable Listener", np: "Queueable Listener", jp: "キュー対応リスナー" },
-          code: `// app/Listeners/SendShipmentNotification.php
-namespace App\\Listeners;
-
-use App\\Events\\OrderShipped;
-use App\\Notifications\\OrderShippedNotification;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Queue\\InteractsWithQueue;
-
-class SendShipmentNotification implements ShouldQueue
-{
-    use InteractsWithQueue;
-
-    public string $queue = 'notifications';
-    public int $delay = 10; // seconds
-
-    public function handle(OrderShipped $event): void
-    {
-        $event->order->user->notify(
-            new OrderShippedNotification($event->order)
-        );
-    }
-
-    public function failed(OrderShipped $event, \\Throwable $exception): void
-    {
-        Log::error('Shipment notification failed', ['order' => $event->order->id]);
-    }
-}`,
-        },
-        {
-          type: "code",
-          title: { en: "Dispatching events", np: "Event dispatch", jp: "Event のディスパッチ" },
-          code: `use App\\Events\\OrderShipped;
-
-// Option 1: global helper
-event(new OrderShipped($order));
-
-// Option 2: static dispatch method (same result)
-OrderShipped::dispatch($order);
-
-// Option 3: fire-and-forget on Eloquent model event
-// (define in boot() or as Model::observe())
-Order::created(fn (Order $order) => OrderShipped::dispatch($order));
-
-// Manual registration (Laravel 10 / if auto-discovery disabled)
-// app/Providers/EventServiceProvider.php
-protected $listen = [
-    OrderShipped::class => [
-        SendShipmentNotification::class,
-        UpdateInventory::class,
-    ],
-];`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Sometimes you want to push an event to the browser in real time — for example, updating a live dashboard when a job finishes.\n• This is called <b>broadcasting</b> and uses a WebSocket server (Pusher, Ably, or a self-hosted Soketi)\n• The event implements `ShouldBroadcast`, and your frontend JavaScript subscribes using Laravel Echo\n  ↳ This is a more advanced topic — see the official Laravel Broadcasting docs when you're ready for it",
-            np: "Broadcasting — Pusher/Soketi। Frontend subscribe गर्छ। Separate topic।",
-            jp: "ブロードキャストは Pusher/Soketi でフロントエンドにリアルタイム通知。`ShouldBroadcast` を実装。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Task Scheduling",
-        np: "Task Scheduling",
-        jp: "タスクスケジューリング",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Cron jobs are powerful but painful to manage — each one is a separate line in a server config file, and you need server access to add or change them.\n\n<b>Laravel's scheduler solves this</b>\n• You add <b>one single cron entry</b> to the server that runs every minute: `* * * * * php artisan schedule:run`\n• Then you define every scheduled task in your PHP code — no more touching server config files\n  ↳ In Laravel 11 all schedules live in `routes/console.php`\n  ↳ In Laravel 10 they live in `app/Console/Kernel.php`\n• This means schedules are version-controlled, reviewable in pull requests, and testable locally\n  ↳ `php artisan schedule:work` polls every minute in your terminal so you can test without deploying",
-            np: "One cron entry (every minute), baaki sab PHP maa। Laravel 11 मा `routes/console.php`।",
-            jp: "1 分ごとの cron 1 エントリーで動く。Laravel 11 は `routes/console.php` にスケジュール定義。",
-          },
-        },
-        {
-          type: "code",
-          title: { en: "Creating a scheduled command", np: "Command बनाउने", jp: "コマンドの作成" },
-          code: `php artisan make:command SendWeeklyReport`,
-        },
-        {
-          type: "code",
-          title: { en: "Schedule definitions (Laravel 11 — routes/console.php)", np: "Schedule define", jp: "スケジュール定義" },
-          code: `// routes/console.php (Laravel 11)
-use Illuminate\\Support\\Facades\\Schedule;
-
-// Artisan commands
-Schedule::command('emails:send')->dailyAt('09:00');
-Schedule::command('reports:weekly')->weekly()->mondays()->at('08:00');
-Schedule::command('db:backup')->daily()->timezone('Asia/Kathmandu');
-Schedule::command('queue:prune-failed', ['--hours=48'])->daily();
-
-// Every N minutes
-Schedule::command('app:sync-inventory')->everyFiveMinutes();
-Schedule::command('app:poll-webhooks')->everyMinute();
-
-// Closures (for quick one-off tasks)
-Schedule::call(function () {
-    DB::table('sessions')->where('last_activity', '<', now()->subHours(2))->delete();
-})->hourly();
-
-// Overlap prevention — skip if previous run still executing
-Schedule::command('app:process-images')
-    ->everyMinute()
-    ->withoutOverlapping();
-
-// Run in background (don't block the scheduler process)
-Schedule::command('app:heavy-report')
-    ->daily()
-    ->runInBackground()
-    ->onSuccess(function () { Log::info('Report done'); })
-    ->onFailure(function () { Log::error('Report failed'); });
-
-// Send output to a log file
-Schedule::command('inspire')
-    ->hourly()
-    ->appendOutputTo(storage_path('logs/inspire.log'));`,
-        },
-        {
-          type: "code",
-          title: { en: "Single server cron entry (add to server crontab)", np: "Server cron", jp: "サーバーの cron エントリー" },
-          code: `# Run this ONE entry on your server — Laravel handles the rest
-* * * * * cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1
-
-# For local development
-php artisan schedule:work    # polls every minute in foreground
-
-# Test a specific scheduled task immediately
-php artisan schedule:run
-
-# List all scheduled tasks
-php artisan schedule:list`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "When you run multiple servers (a cluster), every server runs the scheduler every minute — by default, the same scheduled task runs on every server simultaneously.\n• Add `->onOneServer()` to prevent this — only the first server to claim the job actually runs it\n  ↳ It uses a shared Redis cache as a locking mechanism to coordinate across servers\n  ↳ Requires `CACHE_STORE=redis` in `.env` so all servers see the same lock",
-            np: "Cluster मा एक मात्र server मा run: `->onOneServer()`। Shared cache चाहिन्छ।",
-            jp: "クラスター環境で 1 台だけ実行したい場合は `->onOneServer()`。共有キャッシュが必要。",
+            en: "For a <b>same-domain SPA</b> (your React/Vue frontend is served from the same domain as the API), you can skip tokens entirely and use cookie-based auth instead:\n\n• Call `GET /sanctum/csrf-cookie` first — this sets the CSRF cookie in the browser\n• Then log in normally via `POST /login`\n• The browser automatically sends the session cookie with every request\n• No `Authorization: Bearer` header needed",
+            np: "SPA cookie auth: `/sanctum/csrf-cookie` पहिले call। Bearer token चाहिँदैन।",
+            jp: "SPA クッキー認証は `/sanctum/csrf-cookie` で初期化後、通常ログイン。Bearer 不要。",
           },
         },
       ],
@@ -398,86 +414,74 @@ php artisan schedule:list`,
   faq: [
     {
       question: {
-        en: "When should I use Queues vs Events?",
-        np: "Queue र Event कहिले प्रयोग गर्ने?",
-        jp: "Queue と Event はどう使い分けますか？",
+        en: "What is the difference between a Gate and a Policy?",
+        np: "Gate र Policy फरक के हो?",
+        jp: "Gate と Policy の違いは？",
       },
       answer: {
-        en: "Think of it this way:\n\n<b>Use a Queue when</b>\n• You have a single slow task (sending an email, calling an external API, generating a PDF)\n• The task doesn't need to happen before the user gets a response\n  ↳ The user clicks 'Register' → your code creates the account → then a queued job sends the welcome email separately\n\n<b>Use Events when</b>\n• Multiple unrelated parts of your app need to react when something happens\n• You want those reactions to stay decoupled from the code that triggered them\n  ↳ An order ships → email the customer AND update inventory AND log analytics — three listeners, all independent\n\nThey're not mutually exclusive — a listener can also implement `ShouldQueue` to run its logic in the background too.",
-        np: "Queue = slow deferred task। Event = decoupled reaction। Listener लाई ShouldQueue थप्न सकिन्छ।",
-        jp: "Queue は遅い単発タスクの非同期化、Event は複数の疎結合な反応。Listener に `ShouldQueue` を付ければ両立できます。",
+        en: "Both are authorization tools — they check whether a user is allowed to do something. The difference is scope:\n\n• <b>Gates</b> — a single closure for a single one-off rule. Best for actions not tied to a specific model (e.g. 'can this user view the reports dashboard?').\n• <b>Policies</b> — a class that groups all the rules for one model. Best when you have multiple CRUD-style checks on the same model (view, create, update, delete).\n\nInternally, calling `$this->authorize('update', $post)` in a controller automatically resolves to `PostPolicy::update` — you don't need to register anything manually.",
+        np: "Gate = simple, model-agnostic। Policy = model-specific class। Controller मा `authorize()` ले auto resolve।",
+        jp: "Gate はシンプルなクロージャ、Policy はモデル単位のクラス。`authorize()` は Policy を自動解決。",
       },
     },
     {
       question: {
-        en: "How do I monitor queue workers in production?",
-        np: "Production मा queue worker monitor?",
-        jp: "本番でキューワーカーを監視する方法は？",
+        en: "How do I return a 403 from a policy?",
+        np: "Policy मा 403 कसरी फर्काउने?",
+        jp: "Policy から 403 を返す方法は？",
       },
       answer: {
-        en: "For <b>Redis queues</b>: install <b>Laravel Horizon</b> — it gives you a live web dashboard at `/horizon` showing job throughput, failures, and queue depth. Horizon also integrates with Supervisor (a Linux process manager) to keep your workers running automatically.\n\nFor <b>non-Redis queues</b>: use Supervisor directly with a config that keeps `php artisan queue:work --tries=3` running as a service.\n\nWhenever you deploy new code, run `php artisan horizon:terminate` (or restart the queue:work process) so workers pick up the latest code — stale workers run old code indefinitely otherwise.",
-        np: "Horizon — Redis dashboard। Supervisor — process manager। Deploy मा `horizon:terminate`।",
-        jp: "Redis なら Horizon が最適。Supervisor でワーカープロセスを管理。デプロイ後は `horizon:terminate`。",
+        en: "Return `false` from a policy method. When you call `$this->authorize()` in a controller and the policy returns `false`, Laravel automatically throws a 403 `AuthorizationException`.\n\nIf you want to include a custom error message, return a `Response` object instead:\n`return Response::deny('You do not own this post.', 403)`\n\nNote: in Blade, `@can` simply hides or shows the HTML — it doesn't throw an exception.",
+        np: "`false` return गर्नु → 403। `Response::deny()` custom message।",
+        jp: "`false` を返すと 403 になる。`Response::deny('message')` でカスタムメッセージも可能。",
       },
     },
     {
       question: {
-        en: "What happens if a job fails all retries?",
-        np: "Job सबै retry fail भए के हुन्छ?",
-        jp: "全リトライが失敗したらどうなりますか？",
+        en: "Can `@can` check policies in Blade?",
+        np: "`@can` ले Blade मा policy check गर्छ?",
+        jp: "`@can` で Blade に Policy をチェックできますか？",
       },
       answer: {
-        en: "When all retries are exhausted, the job lands in the `failed_jobs` database table along with the full exception and stack trace.\n\n<b>What you can do</b>\n• `php artisan queue:failed` — list all failed jobs with their IDs and error messages\n• `php artisan queue:retry <id>` — push a specific job back onto the queue\n• `php artisan queue:retry all` — retry every failed job at once\n• `php artisan queue:flush` — delete all records from `failed_jobs`\n\nTip: define a `failed(Throwable $exception)` method on your job class and use it to send a Slack alert or undo partial work (like rolling back a payment attempt).",
-        np: "`failed_jobs` table मा जान्छ। `failed()` call। `queue:retry` ले retry।",
-        jp: "`failed_jobs` テーブルに移動し `failed()` が呼ばれる。`queue:retry` で再試行可能。",
+        en: "Yes. `@can('update', $post)` works exactly the same as `Gate::allows('update', $post)` — it resolves `PostPolicy::update` automatically.\n\n• Pass the model instance when checking model-bound rules: `@can('update', $post)`\n• Pass the class name when there's no instance yet (for create): `@can('create', App\\Models\\Post::class)`\n\n`@can` just shows or hides HTML — it doesn't abort the request. Always also check in the controller or use `$this->authorize()` to enforce the rule on the server side.",
+        np: "`@can('update', $post)` — Policy::update call। Model class pass गर्न सकिन्छ।",
+        jp: "`@can('update', $post)` は Gate と同じ仕組みで Policy を解決します。",
       },
     },
     {
       question: {
-        en: "How do I test queued jobs?",
-        np: "Queued job test कसरी?",
-        jp: "キュージョブをテストする方法は？",
+        en: "How do I add metadata to an API Resource response?",
+        np: "API Resource response मा metadata थप्ने?",
+        jp: "API Resource レスポンスにメタデータを追加する方法は？",
       },
       answer: {
-        en: "You don't want tests to actually send emails or hit external services — use `Queue::fake()` to intercept jobs without running them.\n\n• Call `Queue::fake()` at the top of your test\n• Run the code that should dispatch a job\n• Assert the job was (or wasn't) pushed:\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — confirms the job was dispatched\n  ↳ `Queue::assertPushedOn('emails', SendWelcomeEmail::class)` — confirms it was sent to the right queue\n  ↳ `Queue::assertNotPushed(SomeOtherJob::class)` — confirms a job was NOT dispatched\n\nTo test the job's logic itself, just call `(new SendWelcomeEmail($user))->handle()` directly — no queue or worker needed.",
-        np: "`Queue::fake()` — job push assert। `handle()` direct call test।",
-        jp: "`Queue::fake()` でキューを偽装し `assertPushed()` で確認。`handle()` の単体テストは直接呼び出す。",
+        en: "Override the `with(Request $request): array` method in your Resource or ResourceCollection class. Whatever you return from `with()` appears alongside `data` at the top level of the JSON response.\n\nFor example: `return ['meta' => ['version' => 'v1', 'generated_at' => now()]]`\n\nAlternatively, in the controller you can call `->additional(['meta' => [...]])` when constructing the resource — useful when the metadata depends on something only the controller knows.",
+        np: "`with()` method override गर्नु वा `additional()` call।",
+        jp: "`with()` をオーバーライドするか、コントローラで `additional()` を呼ぶとメタデータを追加できます。",
       },
     },
     {
       question: {
-        en: "Can I dispatch an event inside a job?",
-        np: "Job भित्र event dispatch गर्न मिल्छ?",
-        jp: "Job の中でイベントをディスパッチできますか？",
+        en: "How do I version an API in Laravel?",
+        np: "Laravel मा API version कसरी?",
+        jp: "Laravel で API をバージョニングする方法は？",
       },
       answer: {
-        en: "Yes — calling `event(new SomeEvent($data))` or `SomeEvent::dispatch($data)` inside a job's `handle()` method works fine.\n\nOne thing to watch: if that event has queueable listeners, those listeners are queued separately and fail independently.\n  ↳ A failing listener won't automatically roll back or fail the parent job\n  ↳ If you need strict ordering (do A, then B, then C — stop if any fail), use `Bus::chain()` instead of events",
-        np: "`handle()` भित्र `event()` call गर्न मिल्छ। Listener failure parent job rollback गर्दैन।",
-        jp: "`handle()` 内で `event()` を呼べます。リスナー失敗は親ジョブをロールバックしません。順序が必要なら `Bus::chain()` を使用。",
+        en: "The simplest and most practical approach is <b>URL versioning</b>:\n\n• Prefix your routes: `Route::prefix('v1')->group(...)`\n• Keep controllers in versioned namespaces: `App\\Http\\Controllers\\Api\\V1\\`\n• Use separate Resource classes per version if the response shape changes\n\nAvoid header-based versioning (sending a version in HTTP headers) — it's harder to test, harder to debug in a browser, and harder to document.\n\nLaravel 11 supports loading dedicated route files per version via `bootstrap/app.php`.",
+        np: "URL prefix `v1`, `v2`। Versioned namespace। Header versioning सिफारिश होइन।",
+        jp: "URL プレフィックス `v1`/`v2` が最もシンプル。バージョン別に名前空間とリソースを分ける。",
       },
     },
     {
       question: {
-        en: "How does `->withoutOverlapping()` work?",
-        np: "`withoutOverlapping()` कसरी काम गर्छ?",
-        jp: "`->withoutOverlapping()` の仕組みは？",
+        en: "What is the `api_token` field vs Sanctum tokens?",
+        np: "`api_token` column र Sanctum tokens फरक?",
+        jp: "`api_token` カラムと Sanctum トークンの違いは？",
       },
       answer: {
-        en: "Before running a scheduled task, `->withoutOverlapping()` tries to claim an atomic lock in your cache.\n• If the lock is free, the task runs and holds the lock until it's done\n• If the lock is already claimed (the previous run is still going), this invocation is skipped entirely\n  ↳ The lock expires after 24 hours by default so a crashed job doesn't block things forever\n\n<b>When to use it</b>\n• Any long-running command that runs more frequently than it takes to finish\n  ↳ Example: a 90-second image processing command scheduled every minute would normally stack up — `->withoutOverlapping()` prevents this\n\nRequires a cache driver that supports atomic locks: Redis, Memcached, or `database`.",
-        np: "Cache lock acquire। Previous run चलिरहेको छ भने skip। Redis/DB cache चाहिन्छ।",
-        jp: "アトミックキャッシュロックを取得。前の実行が残っていればスキップ。Redis か DB キャッシュが必要。",
-      },
-    },
-    {
-      question: {
-        en: "How do I handle tasks that must run only on one server in a cluster?",
-        np: "Cluster मा एक server मा मात्र run?",
-        jp: "クラスターで 1 台だけ実行する方法は？",
-      },
-      answer: {
-        en: "Without `->onOneServer()`, every server in your cluster runs every scheduled task independently — you'd send the daily report email three times if you have three servers.\n\n• Chain `->onOneServer()` to any scheduled task\n  ↳ All servers race to claim a shared cache lock when the scheduler fires\n  ↳ Only the winner runs the task — the others see the lock is taken and skip\n• Example: `Schedule::command('reports:generate')->daily()->onOneServer()`\n• Requires a shared Redis cache (`CACHE_STORE=redis` in `.env`) so all servers see the same lock",
-        np: "`->onOneServer()` — shared cache lock। पहिलो server मात्र run।",
-        jp: "`->onOneServer()` で共有キャッシュロックを使い 1 台だけ実行。Redis の共有キャッシュが必要。",
+        en: "The old `api_token` column was Laravel's original built-in token system (`driver: token` in `config/auth.php`). It stored a single plain-text token directly in the `users` table — one token per user, no scopes, no revocation, no tracking. Very basic.\n\n<b>Sanctum</b> is the modern replacement. It uses a separate `personal_access_tokens` table and supports:\n• Multiple tokens per user (different apps, different devices)\n• Abilities (scopes) to limit what each token can do\n• Last-used tracking\n• Individual or bulk revocation\n\nNever use the legacy `api_token` approach in a new project.",
+        np: "`api_token` पुरानो simple approach। Sanctum ले `personal_access_tokens` table use गर्छ।",
+        jp: "`api_token` は古い単一トークン方式。Sanctum は複数トークン・スコープ・失効管理対応の現代的な仕組みです。",
       },
     },
   ],
