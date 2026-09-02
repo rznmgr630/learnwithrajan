@@ -310,11 +310,6 @@ const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
     np: "Phase 9 · Performance र Deployment (Electives)",
     jp: "Phase 9 · パフォーマンスとデプロイ（選択）",
   },
-  "laravel-w6": {
-    en: "Production — queues, APIs & testing",
-    np: "उत्पादन — queues, APIs र testing",
-    jp: "本番 — キュー・API・テスト",
-  },
   "laravel-w7": {
     en: "Advanced features",
     np: "Advanced features",
